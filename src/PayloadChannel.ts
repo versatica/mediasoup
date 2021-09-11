@@ -1,8 +1,8 @@
+import * as os from 'os';
 import { Duplex } from 'stream';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
-import * as os from 'os';
 
 const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('PayloadChannel');
@@ -17,7 +17,7 @@ type Sent =
 	close: () => void;
 }
 
-// binary length for a 4194304 bytes payload.
+// Binary length for a 4194304 bytes payload.
 const MESSAGE_MAX_LEN = 4194308;
 const PAYLOAD_MAX_LEN = 4194304;
 

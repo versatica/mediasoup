@@ -12,7 +12,7 @@ namespace Channel
 {
 	/* Static. */
 
-	// binary length for a 4194304 bytes payload.
+	// Binary length for a 4194304 bytes payload.
 	static constexpr size_t MessageMaxLen{ 4194308 };
 	static constexpr size_t PayloadMaxLen{ 4194304 };
 
@@ -91,20 +91,20 @@ namespace Channel
 		SendImpl(message, messageLen);
 	}
 
-	inline void ChannelSocket::SendImpl(const void* nsPayload, uint32_t nsPayloadLen)
+	inline void ChannelSocket::SendImpl(const void* payload, uint32_t payloadLen)
 	{
 		MS_TRACE_STD();
 
-		std::memcpy(this->writeBuffer, &nsPayloadLen, sizeof(uint32_t));
+		std::memcpy(this->writeBuffer, &payloadLen, sizeof(uint32_t));
 
-		if (nsPayloadLen != 0)
+		if (payloadLen != 0)
 		{
-			std::memcpy(this->writeBuffer + sizeof(uint32_t), nsPayload, nsPayloadLen);
+			std::memcpy(this->writeBuffer + sizeof(uint32_t), payload, payloadLen);
 		}
 
-		size_t nsLen = sizeof(uint32_t) + nsPayloadLen;
+		size_t len = sizeof(uint32_t) + payloadLen;
 
-		this->producerSocket.Write(this->writeBuffer, nsLen);
+		this->producerSocket.Write(this->writeBuffer, len);
 	}
 
 	void ChannelSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, char* msg, size_t msgLen)

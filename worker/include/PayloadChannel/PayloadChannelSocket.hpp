@@ -80,7 +80,7 @@ namespace PayloadChannel
 		void Send(json& jsonMessage);
 
 	private:
-		void SendImpl(const void* nsPayload, uint32_t nsPayloadLen);
+		void SendImpl(const void* payload, uint32_t payloadLen);
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
