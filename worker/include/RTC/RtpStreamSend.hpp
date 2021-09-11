@@ -65,6 +65,7 @@ namespace RTC
 		uint32_t sentPriorScore{ 0u }; // Packets sent at last interval for score calculation.
 		std::vector<StorageItem*> buffer;
 		uint16_t bufferStartSeq{ 0u };
+		uint32_t retransmissionBufferSize;
 		bool firstPacket{ true };
 		uint16_t rtxSeq{ 0u };
 		RTC::RtpDataCounter transmissionCounter;

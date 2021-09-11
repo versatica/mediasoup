@@ -16,6 +16,7 @@ namespace RTC
 	static constexpr size_t MaxRequestedPackets{ 17 };
 	thread_local static std::vector<RTC::RtpStreamSend::StorageItem*> RetransmissionContainer(
 	  MaxRequestedPackets + 1);
+	static constexpr uint32_t MinRetransmissionDelay{ 200 };
 	// Don't retransmit packets older than this (ms).
 	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
@@ -39,7 +40,8 @@ namespace RTC
 
 	RtpStreamSend::RtpStreamSend(
 	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, bool useNack)
-	  : RTC::RtpStream::RtpStream(listener, params, 10), buffer(useNack ? SeqRange : 0, nullptr)
+	  : RTC::RtpStream::RtpStream(listener, params, 10), buffer(useNack ? SeqRange : 0, nullptr),
+	    retransmissionBufferSize(MaxRetransmissionDelay)
 	{
 		MS_TRACE();
 	}
@@ -179,7 +181,17 @@ namespace RTC
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
 		if (this->rtt > 0.0f)
+		{
 			this->hasRtt = true;
+		}
+
+		// Smoothly change retransmission buffer size towards RTT + 100ms, but not more than
+		// `MaxRetransmissionDelay`.
+		auto newRetransmissionBufferSize = static_cast<uint32_t>(this->rtt + 100.0);
+		auto avgRetransmissionBufferSize =
+		  (this->retransmissionBufferSize * 7 + newRetransmissionBufferSize) / 8;
+		this->retransmissionBufferSize = std::max(
+		  std::min(avgRetransmissionBufferSize, MaxRetransmissionDelay), MinRetransmissionDelay);
 
 		this->packetsLost  = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
@@ -336,7 +348,7 @@ namespace RTC
 
 						// Cleanup is finished if we found an item with recent enough packet, but also account
 						// for out-of-order packets.
-						if (diffMs < MaxRetransmissionDelay || packetTs < checkedPacketTs)
+						if (diffMs < this->retransmissionBufferSize || packetTs < checkedPacketTs)
 							break;
 
 						// Reset (free RTP packet) the old storage item.
