@@ -1,1 +1,1 @@
-{"version":3,"file":"supportedRtpCapabilities.d.ts","sourceRoot":"","sources":["../src/supportedRtpCapabilities.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,iBAAiB,CAAC;AAElD,QAAA,MAAM,wBAAwB,EAAE,eAqV/B,CAAC;AAEF,OAAO,EAAE,wBAAwB,EAAE,CAAC"}
+{"version":3,"file":"supportedRtpCapabilities.d.ts","sourceRoot":"","sources":["../src/supportedRtpCapabilities.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,iBAAiB,CAAC;AAElD,QAAA,MAAM,wBAAwB,EAAE,eAwY/B,CAAC;AAEF,OAAO,EAAE,wBAAwB,EAAE,CAAC"}

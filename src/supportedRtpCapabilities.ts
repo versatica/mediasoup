@@ -15,6 +15,57 @@ const supportedRtpCapabilities: RtpCapabilities =
 			]
 		},
 		{
+			kind       : 'audio',
+			mimeType   : 'audio/multiopus',
+			clockRate  : 48000,
+			channels   : 4,
+			// Quad channel.
+			parameters :
+			{
+				'channel_mapping' : '0,1,2,3',
+				'num_streams'     : 2,
+				'coupled_streams' : 2
+			},
+			rtcpFeedback :
+			[
+				{ type: 'transport-cc' }
+			]
+		},
+		{
+			kind       : 'audio',
+			mimeType   : 'audio/multiopus',
+			clockRate  : 48000,
+			channels   : 6,
+			// 5.1.
+			parameters :
+			{
+				'channel_mapping' : '0,4,1,2,3,5',
+				'num_streams'     : 4,
+				'coupled_streams' : 2
+			},
+			rtcpFeedback :
+			[
+				{ type: 'transport-cc' }
+			]
+		},
+		{
+			kind       : 'audio',
+			mimeType   : 'audio/multiopus',
+			clockRate  : 48000,
+			channels   : 8,
+			// 7.1.
+			parameters :
+			{
+				'channel_mapping' : '0,6,1,2,3,4,5,7',
+				'num_streams'     : 5,
+				'coupled_streams' : 3
+			},
+			rtcpFeedback :
+			[
+				{ type: 'transport-cc' }
+			]
+		},
+		{
 			kind                 : 'audio',
 			mimeType             : 'audio/PCMU',
 			preferredPayloadType : 0,

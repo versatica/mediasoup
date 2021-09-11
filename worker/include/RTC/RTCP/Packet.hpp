@@ -44,18 +44,19 @@ namespace RTC
 				uint8_t padding : 1;
 				uint8_t count : 5;
 #endif
-				uint8_t packetType : 8;
-				uint16_t length : 16;
+				uint8_t packetType;
+				uint16_t length;
 			};
 
 		public:
+			static const size_t CommonHeaderSize{ 4 };
 			static bool IsRtcp(const uint8_t* data, size_t len)
 			{
 				auto header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 				// clang-format off
 				return (
-					(len >= sizeof(CommonHeader)) &&
+					(len >= CommonHeaderSize) &&
 					// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
 					(data[0] > 127 && data[0] < 192) &&
 					// RTP Version must be 2.

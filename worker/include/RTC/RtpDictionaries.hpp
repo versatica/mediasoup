@@ -49,6 +49,8 @@ namespace RTC
 			UNSET = 0,
 			// Audio codecs:
 			OPUS = 100,
+			// Multi-channel Opus.
+			MULTIOPUS,
 			PCMA,
 			PCMU,
 			ISAC,

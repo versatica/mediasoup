@@ -21,6 +21,7 @@ namespace RTC
 			};
 
 		public:
+			static const size_t HeaderSize{ 8 };
 			static RTCP::Type rtcpType;
 			static FeedbackPacket<T>* Parse(const uint8_t* data, size_t len);
 			static const std::string& MessageType2String(typename T::MessageType type);
@@ -60,7 +61,7 @@ namespace RTC
 			}
 			size_t GetSize() const override
 			{
-				return sizeof(CommonHeader) + sizeof(Header);
+				return Packet::CommonHeaderSize + HeaderSize;
 			}
 
 		protected:

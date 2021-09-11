@@ -37,7 +37,7 @@ namespace RTC
 			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// data size must be >= header + length value.
-			if (len < sizeof(Header) || len < (1u * 2) + header->length)
+			if (len < HeaderSize || len < (1u * 2) + header->length)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for SDES item, discarded");
 
@@ -188,7 +188,7 @@ namespace RTC
 			// Get the header.
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 			std::unique_ptr<SdesPacket> packet(new SdesPacket(header));
-			size_t offset = sizeof(Packet::CommonHeader);
+			size_t offset = Packet::CommonHeaderSize;
 			uint8_t count = header->count;
 
 			while ((count-- != 0u) && (len > offset))

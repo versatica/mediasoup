@@ -31,6 +31,7 @@ namespace RTC
 			};
 
 		public:
+			static const size_t HeaderSize{ 8 };
 			static const FeedbackRtp::MessageType messageType;
 
 		public:
@@ -70,7 +71,7 @@ namespace RTC
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetSize() const override
 			{
-				return sizeof(Header);
+				return FeedbackRtpTmmbItem::HeaderSize;
 			}
 
 		private:

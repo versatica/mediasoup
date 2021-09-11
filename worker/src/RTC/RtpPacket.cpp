@@ -24,7 +24,7 @@ namespace RTC
 		auto* header = reinterpret_cast<Header*>(ptr);
 
 		// Inspect data after the minimum header size.
-		ptr += sizeof(Header);
+		ptr += HeaderSize;
 
 		// Check CSRC list.
 		size_t csrcListSize{ 0u };
@@ -113,7 +113,7 @@ namespace RTC
 		}
 
 		MS_ASSERT(
-		  len == sizeof(Header) + csrcListSize + (headerExtension ? 4 + extensionValueSize : 0) +
+		  len == HeaderSize + csrcListSize + (headerExtension ? 4 + extensionValueSize : 0) +
 		           payloadLength + size_t{ payloadPadding },
 		  "packet's computed size does not match received size");
 
@@ -138,7 +138,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->header->csrcCount != 0u)
-			this->csrcList = reinterpret_cast<uint8_t*>(header) + sizeof(Header);
+			this->csrcList = reinterpret_cast<uint8_t*>(header) + HeaderSize;
 
 		// Parse RFC 5285 header extension.
 		ParseExtensions();
@@ -640,7 +640,7 @@ namespace RTC
 		size_t numBytes{ 0 };
 
 		// Copy the minimum header.
-		numBytes = sizeof(Header);
+		numBytes = HeaderSize;
 		std::memcpy(ptr, GetData(), numBytes);
 
 		// Set header pointer.

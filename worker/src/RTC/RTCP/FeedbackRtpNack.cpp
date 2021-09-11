@@ -13,7 +13,7 @@ namespace RTC
 		/* Instance methods. */
 		FeedbackRtpNackItem::FeedbackRtpNackItem(uint16_t packetId, uint16_t lostPacketBitmask)
 		{
-			this->raw    = new uint8_t[sizeof(Header)];
+			this->raw    = new uint8_t[HeaderSize];
 			this->header = reinterpret_cast<Header*>(this->raw);
 
 			this->header->packetId          = uint16_t{ htons(packetId) };
@@ -25,9 +25,9 @@ namespace RTC
 			MS_TRACE();
 
 			// Add minimum header.
-			std::memcpy(buffer, this->header, sizeof(Header));
+			std::memcpy(buffer, this->header, HeaderSize);
 
-			return sizeof(Header);
+			return HeaderSize;
 		}
 
 		void FeedbackRtpNackItem::Dump() const

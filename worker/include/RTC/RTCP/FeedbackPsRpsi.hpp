@@ -29,12 +29,18 @@ namespace RTC
 			struct Header
 			{
 				uint8_t paddingBits;
+#if defined(MS_LITTLE_ENDIAN)
+				uint8_t payloadType : 7;
+				uint8_t zero : 1;
+#elif defined(MS_BIG_ENDIAN)
 				uint8_t zero : 1;
 				uint8_t payloadType : 7;
+#endif
 				uint8_t bitString[maxBitStringSize];
 			};
 
 		public:
+			static const size_t HeaderSize = 8;
 			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::RPSI };
 
 		public:
@@ -68,7 +74,7 @@ namespace RTC
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetSize() const override
 			{
-				return sizeof(Header);
+				return FeedbackPsRpsiItem::HeaderSize;
 			}
 
 		private:

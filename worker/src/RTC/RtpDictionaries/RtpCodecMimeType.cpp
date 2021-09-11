@@ -25,6 +25,7 @@ namespace RTC
 	{
 		// Audio codecs:
 		{ "opus",            RtpCodecMimeType::Subtype::OPUS            },
+		{ "multiopus",       RtpCodecMimeType::Subtype::MULTIOPUS       },
 		{ "pcma",            RtpCodecMimeType::Subtype::PCMA            },
 		{ "pcmu",            RtpCodecMimeType::Subtype::PCMU            },
 		{ "isac",            RtpCodecMimeType::Subtype::ISAC            },
@@ -51,6 +52,7 @@ namespace RTC
 	{
 		// Audio codecs:
 		{ RtpCodecMimeType::Subtype::OPUS,            "opus"            },
+		{ RtpCodecMimeType::Subtype::MULTIOPUS,       "multiopus"       },
 		{ RtpCodecMimeType::Subtype::PCMA,            "PCMA"            },
 		{ RtpCodecMimeType::Subtype::PCMU,            "PCMU"            },
 		{ RtpCodecMimeType::Subtype::ISAC,            "ISAC"            },

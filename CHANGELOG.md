@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 3.8.4 (WIP)
+
+* OPUS multi-channel (Surround sound) support (PR #647).
+* Fix big endian issues (PR #639).
+* Update NPM deps.
+
+
 ### 3.8.3
 
 * Fix wrong `size_t*` to `int*` conversion in 64bit Big-Endian hosts (PR #637).

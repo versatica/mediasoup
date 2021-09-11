@@ -30,9 +30,9 @@ namespace RTC
 			auto* header     = reinterpret_cast<Header*>(buffer);
 
 			header->compact = uint32_t{ htonl(compact) };
-			std::memcpy(buffer, header, sizeof(Header));
+			std::memcpy(buffer, header, HeaderSize);
 
-			return sizeof(Header);
+			return HeaderSize;
 		}
 
 		void FeedbackPsSliItem::Dump() const
