@@ -3,7 +3,7 @@
 
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpStream.hpp"
-#include <vector>
+#include <deque>
 
 namespace RTC
 {
@@ -30,6 +30,25 @@ namespace RTC
 			uint8_t sentTimes{ 0u };
 			// Whether the packet has been already RTX encoded.
 			bool rtxEncoded{ false };
+		};
+
+	private:
+		// Special container that can store `StorageItem*` elements addressable by their `uint16_t`
+		// sequence number, while only taking as little memory as necessary to store the range between
+		// minimum and maximum sequence number instead all 65536 potential elements.
+		class StorageItemBuffer
+		{
+		public:
+			~StorageItemBuffer();
+
+			StorageItem* Get(uint16_t seq);
+			bool Insert(uint16_t seq, StorageItem* storageItem);
+			bool Remove(uint16_t seq);
+			void Clear();
+
+		private:
+			uint16_t startSeq{ 0 };
+			std::deque<StorageItem*> buffer;
 		};
 
 	public:
@@ -63,8 +82,9 @@ namespace RTC
 	private:
 		uint32_t lostPriorScore{ 0u }; // Packets lost at last interval for score calculation.
 		uint32_t sentPriorScore{ 0u }; // Packets sent at last interval for score calculation.
-		std::vector<StorageItem*> buffer;
+		StorageItemBuffer storageItemBuffer;
 		uint16_t bufferStartSeq{ 0u };
+		bool useNack;
 		uint32_t retransmissionBufferSize;
 		bool firstPacket{ true };
 		uint16_t rtxSeq{ 0u };
