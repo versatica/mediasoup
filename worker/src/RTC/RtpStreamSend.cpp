@@ -29,7 +29,8 @@ namespace RTC
 
 		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
 
-		RtpPacket::ReturnIntoPool(storageItem->packet);
+		if (storageItem->packet)
+			storageItem->packet->DecRefCount();
 
 		storageItem->packet     = nullptr;
 		storageItem->resentAtMs = 0;

@@ -609,7 +609,7 @@ namespace RTC
 				  packet->GetPayloadType(),
 				  packet->GetSequenceNumber());
 
-				RTC::RtpPacket::ReturnIntoPool(packet);
+				packet->DecRefCount();
 			}
 
 			return;
@@ -632,7 +632,7 @@ namespace RTC
 			// Remove this SSRC.
 			RecvStreamClosed(packet->GetSsrc());
 
-			RTC::RtpPacket::ReturnIntoPool(packet);
+			packet->DecRefCount();
 
 			return;
 		}

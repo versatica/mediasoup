@@ -182,7 +182,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	uint8_t buffer[len + 16];
 	auto* clonedPacket = packet->Clone(buffer);
 
-	::RTC::RtpPacket::ReturnIntoPool(clonedPacket);
+	clonedPacket->DecRefCount();
 
 	// TODO: packet->RtxEncode(); // This cannot be tested this way.
 	// TODO: packet->RtxDecode(); // This cannot be tested this way.
@@ -191,5 +191,5 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	// TODO: packet->ProcessPayload();
 	// TODO: packet->ShiftPayload();
 
-	::RTC::RtpPacket::ReturnIntoPool(packet);
+	packet->DecRefCount();
 }

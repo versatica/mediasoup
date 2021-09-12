@@ -1009,7 +1009,7 @@ namespace RTC
 				  packet->GetPayloadType(),
 				  packet->GetSequenceNumber());
 
-				RTC::RtpPacket::ReturnIntoPool(packet);
+				packet->DecRefCount();
 			}
 
 			return;

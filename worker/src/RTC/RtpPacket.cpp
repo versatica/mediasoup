@@ -146,7 +146,23 @@ namespace RTC
 		ParseExtensions();
 	}
 
-	// Return packet into object pool for future reuse of memory allocation
+	void RtpPacket::IncRefCount()
+	{
+		MS_ASSERT(
+		  this->referenceCount > 0,
+		  "Can only increase reference count for packets that are still alive");
+		this->referenceCount++;
+	}
+
+	void RtpPacket::DecRefCount()
+	{
+		this->referenceCount--;
+		if (this->referenceCount == 0)
+		{
+			ReturnIntoPool(this);
+		}
+	}
+
 	void RtpPacket::ReturnIntoPool(RtpPacket* packet)
 	{
 		if (packet)

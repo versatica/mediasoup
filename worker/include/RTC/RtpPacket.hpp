@@ -134,8 +134,6 @@ namespace RTC
 
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
 
-		static void ReturnIntoPool(RtpPacket* packet);
-
 	private:
 		RtpPacket(
 		  Header* header,
@@ -145,10 +143,16 @@ namespace RTC
 		  uint8_t payloadPadding,
 		  size_t size);
 
-		// Use `RtpPacket::ReturnIntoPool()` instead
+		// Use `RtpPacket::DecRefCount()` instead
 		~RtpPacket();
 
 	public:
+		// Increase reference count for the packet.
+		void IncRefCount();
+
+		// Decrease reference count for the packet, packet will be removed when reference count reaches zero.
+		void DecRefCount();
+
 		void Dump() const;
 
 		void FillJson(json& jsonObject) const;
@@ -611,6 +615,8 @@ namespace RTC
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
 
 	private:
+		// Return packet into object pool for future reuse of memory allocation.
+		static void ReturnIntoPool(RtpPacket* packet);
 		void ParseExtensions();
 
 	private:
@@ -638,6 +644,7 @@ namespace RTC
 		size_t size{ 0u }; // Full size of the packet in bytes.
 		// Codecs
 		std::unique_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
+		size_t referenceCount{ 1 };
 	};
 } // namespace RTC
 
