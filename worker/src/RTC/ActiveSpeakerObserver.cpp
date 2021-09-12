@@ -426,7 +426,7 @@ namespace RTC
 				b = level;
 			}
 
-			// The algorithm expect to have an update every 20 milliseconds.  If the producer is paused,
+			// The algorithm expect to have an update every 20 milliseconds. If the producer is paused,
 			// using a different packetization time or using DTX we need to update more than one sample
 			// when receiving an audio packet.
 			uint32_t intervalsUpdated =
@@ -436,6 +436,7 @@ namespace RTC
 				this->levels[this->nextLevelIndex] = b;
 				this->nextLevelIndex               = (this->nextLevelIndex + 1) % LevelsBuffLen;
 			}
+
 			UpdateMinLevel(b);
 		}
 	}
@@ -457,7 +458,7 @@ namespace RTC
 		for (uint32_t i = 0; i < ImmediateBuffLen; ++i)
 		{
 			// this->levels is a circular buffer where new samples are written in the
-			// next vector index.   this->immediates is a buffer where the most recent
+			// next vector index. this->immediates is a buffer where the most recent
 			// value is always in index 0.
 			size_t levelIndex = this->nextLevelIndex >= (i + 1)
 			                      ? this->nextLevelIndex - i - 1
