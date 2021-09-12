@@ -39,11 +39,6 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		};
 		// clang-format on
 
-		uint8_t rtpBuffer2[65536];
-		uint8_t rtpBuffer3[65536];
-		uint8_t rtpBuffer4[65536];
-		uint8_t rtpBuffer5[65536];
-
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
 		RtpPacket* packet1 = RtpPacket::Parse(rtpBuffer1, sizeof(rtpBuffer1));
 
@@ -52,7 +47,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet1->GetTimestamp() == 1533790901);
 
 		// packet2 [pt:123, seq:21007, timestamp:1533791173]
-		RtpPacket* packet2 = packet1->Clone(rtpBuffer2);
+		RtpPacket* packet2 = packet1->Clone();
 
 		packet2->SetSequenceNumber(21007);
 		packet2->SetTimestamp(1533791173);
@@ -61,7 +56,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet2->GetTimestamp() == 1533791173);
 
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
-		RtpPacket* packet3 = packet1->Clone(rtpBuffer3);
+		RtpPacket* packet3 = packet1->Clone();
 
 		packet3->SetSequenceNumber(21008);
 		packet3->SetTimestamp(1533793871);
@@ -70,7 +65,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet3->GetTimestamp() == 1533793871);
 
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
-		RtpPacket* packet4 = packet1->Clone(rtpBuffer4);
+		RtpPacket* packet4 = packet1->Clone();
 
 		packet4->SetSequenceNumber(21009);
 		packet4->SetTimestamp(1533793871);
@@ -79,7 +74,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet4->GetTimestamp() == 1533793871);
 
 		// packet5 [pt:123, seq:21010, timestamp:1533971078]
-		RtpPacket* packet5 = packet1->Clone(rtpBuffer5);
+		RtpPacket* packet5 = packet1->Clone();
 
 		packet5->SetSequenceNumber(21010);
 		packet5->SetTimestamp(1533971078);

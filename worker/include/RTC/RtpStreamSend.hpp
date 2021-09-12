@@ -20,10 +20,10 @@ namespace RTC
 	public:
 		struct StorageItem
 		{
+			// Original packet.
+			RTC::RtpPacket* originalPacket{ nullptr };
 			// Cloned packet.
-			RTC::RtpPacket* packet{ nullptr };
-			// Memory to hold the cloned packet (with extra space for RTX encoding).
-			uint8_t store[RTC::MtuSize + 100];
+			RTC::RtpPacket* clonedPacket{ nullptr };
 			// Last time this packet was resent.
 			uint64_t resentAtMs{ 0u };
 			// Number of times this packet was resent.

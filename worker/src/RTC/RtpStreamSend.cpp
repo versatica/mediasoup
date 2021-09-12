@@ -29,13 +29,17 @@ namespace RTC
 
 		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
 
-		if (storageItem->packet)
-			storageItem->packet->DecRefCount();
+		if (storageItem->clonedPacket)
+			storageItem->clonedPacket->DecRefCount();
 
-		storageItem->packet     = nullptr;
-		storageItem->resentAtMs = 0;
-		storageItem->sentTimes  = 0;
-		storageItem->rtxEncoded = false;
+		if (storageItem->originalPacket)
+			storageItem->originalPacket->DecRefCount();
+
+		storageItem->clonedPacket   = nullptr;
+		storageItem->originalPacket = nullptr;
+		storageItem->resentAtMs     = 0;
+		storageItem->sentTimes      = 0;
+		storageItem->rtxEncoded     = false;
 	}
 
 	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::Get(uint16_t seq)
@@ -224,7 +228,7 @@ namespace RTC
 
 				// Note that this is an already RTX encoded packet if RTX is used
 				// (FillRetransmissionContainer() did it).
-				auto* packet = storageItem->packet;
+				auto* packet = storageItem->clonedPacket;
 
 				// Retransmit the packet.
 				static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
@@ -408,7 +412,7 @@ namespace RTC
 		// storage with the new packet or just ignore it (if duplicated packet).
 		if (storageItem)
 		{
-			auto* storedPacket = storageItem->packet;
+			auto* storedPacket = storageItem->originalPacket;
 
 			if (packet->GetTimestamp() == storedPacket->GetTimestamp())
 				return;
@@ -448,10 +452,10 @@ namespace RTC
 					if (checkedStorageItem)
 					{
 						// This is the storage item we have just inserted, no need to go further.
-						if (!checkedStorageItem->packet)
+						if (!checkedStorageItem->originalPacket)
 							break;
 
-						uint32_t checkedPacketTs{ checkedStorageItem->packet->GetTimestamp() };
+						uint32_t checkedPacketTs{ checkedStorageItem->originalPacket->GetTimestamp() };
 						uint32_t diffMs{ (packetTs - checkedPacketTs) * 1000 / clockRate };
 
 						// Cleanup is finished if we found an item with recent enough packet, but also account
@@ -475,7 +479,7 @@ namespace RTC
 		}
 
 		// Clone the packet into the retrieved storage item.
-		storageItem->packet = packet->Clone(storageItem->store);
+		storageItem->originalPacket = packet->Clone();
 	}
 
 	void RtpStreamSend::ClearBuffer()
@@ -531,14 +535,15 @@ namespace RTC
 			if (requested)
 			{
 				auto* storageItem = this->storageItemBuffer.Get(currentSeq);
-				RTC::RtpPacket* packet{ nullptr };
+				RTC::RtpPacket* packet;
 				uint32_t diffMs;
 
 				// Calculate the elapsed time between the max timestamp seen and the
 				// requested packet's timestamp (in ms).
 				if (storageItem)
 				{
-					packet = storageItem->packet;
+					packet                    = storageItem->originalPacket->Clone();
+					storageItem->clonedPacket = packet;
 
 					uint32_t diffTs = this->maxPacketTs - packet->GetTimestamp();
 

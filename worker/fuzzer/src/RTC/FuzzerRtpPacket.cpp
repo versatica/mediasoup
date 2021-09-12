@@ -179,8 +179,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->GetPayloadPadding();
 	packet->IsKeyFrame();
 
-	uint8_t buffer[len + 16];
-	auto* clonedPacket = packet->Clone(buffer);
+	auto* clonedPacket = packet->Clone();
 
 	clonedPacket->DecRefCount();
 

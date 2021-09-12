@@ -9,7 +9,6 @@
 using namespace RTC;
 
 static uint8_t buffer[65536];
-static uint8_t buffer2[65536];
 
 SCENARIO("parse RTP packets", "[parser][rtp]")
 {
@@ -128,7 +127,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
-		auto* clonedPacket = packet->Clone(buffer2);
+		auto* clonedPacket = packet->Clone();
 
 		std::memset(buffer, '0', sizeof(buffer));
 
@@ -339,9 +338,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions() == false);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
-		static uint8_t RtxBuffer[MtuSize];
-
-		auto rtxPacket = packet->Clone(RtxBuffer);
+		auto rtxPacket = packet->Clone();
 
 		packet->DecRefCount();
 

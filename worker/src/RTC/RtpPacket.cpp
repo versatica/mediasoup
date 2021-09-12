@@ -10,6 +10,8 @@
 namespace RTC
 {
 	thread_local static Utils::ObjectPool<RtpPacket> RtpPacketPool;
+	// Memory to hold the cloned packet (with extra space for RTX encoding).
+	thread_local static Utils::ObjectPool<RtpPacket::RtpPacketBuffer> RtpPacketBufferPool;
 
 	/* Class methods. */
 
@@ -149,18 +151,20 @@ namespace RTC
 	void RtpPacket::IncRefCount()
 	{
 		MS_ASSERT(
-		  this->referenceCount > 0,
-		  "Can only increase reference count for packets that are still alive");
+		  this->referenceCount > 0, "Can only increase reference count for packets that are still alive");
+
 		this->referenceCount++;
 	}
 
 	void RtpPacket::DecRefCount()
 	{
+		MS_ASSERT(
+		  this->referenceCount > 0, "Can only decrease reference count for packets that are still alive");
+
 		this->referenceCount--;
+
 		if (this->referenceCount == 0)
-		{
 			ReturnIntoPool(this);
-		}
 	}
 
 	void RtpPacket::ReturnIntoPool(RtpPacket* packet)
@@ -175,6 +179,13 @@ namespace RTC
 	RtpPacket::~RtpPacket()
 	{
 		MS_TRACE();
+
+		if (this->buffer)
+		{
+			this->buffer->~array();
+			RtpPacketBufferPool.Return(this->buffer);
+			this->buffer = nullptr;
+		}
 	}
 
 	void RtpPacket::Dump() const
@@ -659,11 +670,14 @@ namespace RTC
 		SetPayloadPaddingFlag(false);
 	}
 
-	RtpPacket* RtpPacket::Clone(const uint8_t* buffer) const
+	RtpPacket* RtpPacket::Clone() const
 	{
 		MS_TRACE();
 
-		auto* ptr = const_cast<uint8_t*>(buffer);
+		auto* buffer = RtpPacketBufferPool.Allocate();
+		new (buffer) RtpPacketBuffer();
+
+		auto* ptr = const_cast<uint8_t*>(buffer->data());
 		size_t numBytes{ 0 };
 
 		// Copy the minimum header.
@@ -716,8 +730,6 @@ namespace RTC
 			ptr += size_t{ this->payloadPadding };
 		}
 
-		MS_ASSERT(static_cast<size_t>(ptr - buffer) == this->size, "ptr - buffer == this->size");
-
 		// Create the new RtpPacket instance and return it.
 		auto* packet = RtpPacketPool.Allocate();
 		new (packet) RtpPacket(
@@ -733,6 +745,8 @@ namespace RTC
 		packet->frameMarkingExtensionId      = this->frameMarkingExtensionId;
 		packet->ssrcAudioLevelExtensionId    = this->ssrcAudioLevelExtensionId;
 		packet->videoOrientationExtensionId  = this->videoOrientationExtensionId;
+		// Store allocated buffer.
+		packet->buffer = buffer;
 
 		return packet;
 	}
