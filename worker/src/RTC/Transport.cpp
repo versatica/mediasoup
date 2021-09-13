@@ -552,6 +552,14 @@ namespace RTC
 		// Add maxIncomingBitrate.
 		if (this->maxIncomingBitrate != 0u)
 			jsonObject["maxIncomingBitrate"] = this->maxIncomingBitrate;
+
+		// Add packetLossReceived.
+		if (this->tccServer)
+			jsonObject["rtpPacketLossReceived"] = this->tccServer->GetPacketLoss();
+
+		// Add packetLossSent.
+		if (this->tccClient)
+			jsonObject["rtpPacketLossSent"] = this->tccClient->GetPacketLoss();
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)

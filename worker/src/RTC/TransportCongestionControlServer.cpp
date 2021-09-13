@@ -15,6 +15,7 @@ namespace RTC
 	static constexpr uint64_t TransportCcFeedbackSendInterval{ 100u }; // In ms.
 	static constexpr uint64_t LimitationRembInterval{ 1500u };         // In ms.
 	static constexpr uint8_t UnlimitedRembNumPackets{ 4u };
+	static constexpr size_t PacketLossHistogramLength{ 24 };
 
 	/* Instance methods. */
 
@@ -101,6 +102,13 @@ namespace RTC
 		}
 	}
 
+	double TransportCongestionControlServer::GetPacketLoss() const
+	{
+		MS_TRACE();
+
+		return this->packetLoss;
+	}
+
 	void TransportCongestionControlServer::IncomingPacket(uint64_t nowMs, const RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
@@ -119,7 +127,7 @@ namespace RTC
 				this->transportCcFeedbackMediaSsrc  = packet->GetSsrc();
 
 				this->transportCcFeedbackPacket->SetSenderSsrc(0u);
-				this->transportCcFeedbackPacket->SetMediaSsrc(packet->GetSsrc());
+				this->transportCcFeedbackPacket->SetMediaSsrc(this->transportCcFeedbackMediaSsrc);
 
 				// Provide the feedback packet with the RTP packet info. If it fails,
 				// send current feedback and add the packet info to a new one.
@@ -223,6 +231,17 @@ namespace RTC
 		this->listener->OnTransportCongestionControlServerSendRtcpPacket(
 		  this, this->transportCcFeedbackPacket.get());
 
+		// Update packet loss history.
+		size_t expected_packets = this->transportCcFeedbackPacket->GetPacketStatusCount();
+		size_t lost_packets     = 0;
+		for (const auto& result : this->transportCcFeedbackPacket->GetPacketResults())
+		{
+			if (!result.received)
+				lost_packets += 1;
+		}
+
+		this->UpdatePacketLoss(static_cast<double>(lost_packets) / expected_packets);
+
 		// Create a new feedback packet.
 		this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
 		  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
@@ -278,6 +297,32 @@ namespace RTC
 			if (this->unlimitedRembCounter > 0u)
 				this->unlimitedRembCounter--;
 		}
+	}
+
+	void TransportCongestionControlServer::UpdatePacketLoss(double packetLoss)
+	{
+		// Add the score into the histogram.
+		if (this->packetLossHistory.size() == PacketLossHistogramLength)
+			this->packetLossHistory.pop_front();
+
+		this->packetLossHistory.push_back(packetLoss);
+
+		// Calculate a weighted average
+		size_t weight{ 0 };
+		size_t samples{ 0 };
+		double totalPacketLoss{ 0 };
+
+		for (auto packetLossEntry : this->packetLossHistory)
+		{
+			weight++;
+			samples += weight;
+			totalPacketLoss += weight * packetLossEntry;
+		}
+
+		// clang-tidy "thinks" that this can lead to division by zero but we are
+		// smarter.
+		// NOLINTNEXTLINE(clang-analyzer-core.DivideZero)
+		this->packetLoss = totalPacketLoss / samples;
 	}
 
 	inline void TransportCongestionControlServer::OnRembServerAvailableBitrate(
