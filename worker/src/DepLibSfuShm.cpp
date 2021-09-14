@@ -233,11 +233,10 @@ namespace DepLibSfuShm {
     
     // If pkt's timestamp AND seqId is older than last frame already written into shm
     // it is too late to write it in, just ignore it, do not update mediastate stats.
-    // TBD: same with audio?
     if (this->media[1].last_written_ts != UINT64_UNSET
         && this->media[1].last_written_rtp_seq != UINT64_UNSET
-        && ts < this->media[1].last_written_ts
-        && seqid < this->media[1].last_written_rtp_seq)
+        && (ts < this->media[1].last_written_ts
+          || seqid < this->media[1].last_written_rtp_seq))
     {
       MS_WARN_TAG(xcode, "shm[%s] ignore old pkt [seq=%" PRIu64 " ts=%" PRIu64 "] last_written_seq=%" PRIu64 " last_written_ts=%" PRIu64 " qsize=%zu",
           this->stream_name.c_str(), seqid, ts, this->media[1].last_written_rtp_seq, this->media[1].last_written_ts, videoPktBuffer.size());

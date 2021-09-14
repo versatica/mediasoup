@@ -67,7 +67,7 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
           prev_timestamp_group_.last_system_time_ms;
       if (*arrival_time_delta_ms - system_time_delta_ms >=
           kArrivalTimeOffsetThresholdMs) {
-        MS_WARN_TAG(bwe,
+        MS_DEBUG_TAG(bwe,
             "the arrival time clock offset has changed (diff = %" PRIi64 "ms, resetting",
             *arrival_time_delta_ms - system_time_delta_ms);
         Reset();
@@ -78,7 +78,7 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
         // arrival timestamp.
         ++num_consecutive_reordered_packets_;
         if (num_consecutive_reordered_packets_ >= kReorderedResetThreshold) {
-          MS_WARN_TAG(bwe,
+          MS_DEBUG_TAG(bwe,
                  "packets are being reordered on the path from the "
                  "socket to the bandwidth estimator. Ignoring this "
                  "packet for bandwidth estimation, resetting");

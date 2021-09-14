@@ -48,7 +48,7 @@ void SendTimeHistory::AddNewPacket(PacketFeedback packet) {
 
 void SendTimeHistory::AddUntracked(size_t packet_size, int64_t send_time_ms) {
   if (send_time_ms < last_send_time_ms_) {
-    MS_WARN_TAG(bwe, "ignoring untracked data for out of order packet");
+    MS_DEBUG_TAG(bwe, "ignoring untracked data for out of order packet");
   }
   pending_untracked_size_ += packet_size;
   last_untracked_send_time_ms_ =
@@ -68,7 +68,7 @@ SendTimeHistory::Status SendTimeHistory::OnSentPacket(uint16_t sequence_number,
     AddPacketBytes(it->second);
   if (pending_untracked_size_ > 0) {
     if (send_time_ms < last_untracked_send_time_ms_) {
-      MS_WARN_TAG(bwe,
+      MS_DEBUG_TAG(bwe,
           "appending acknowledged data for out of order packet."
           " (Diff:%" PRIi64 " ms)",
           last_untracked_send_time_ms_ - send_time_ms);

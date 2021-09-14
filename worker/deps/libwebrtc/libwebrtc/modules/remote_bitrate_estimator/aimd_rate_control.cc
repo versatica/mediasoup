@@ -49,15 +49,15 @@ double ReadBackoffFactor(const WebRtcKeyValueConfig& key_value_config) {
       sscanf(experiment_string.c_str(), "Enabled-%lf", &backoff_factor);
   if (parsed_values == 1) {
     if (backoff_factor >= 1.0) {
-      MS_WARN_TAG(bwe, "Back-off factor must be less than 1.");
+      MS_DEBUG_TAG(bwe, "Back-off factor must be less than 1.");
     } else if (backoff_factor <= 0.0) {
-      MS_WARN_TAG(bwe, "Back-off factor must be greater than 0.");
+      MS_DEBUG_TAG(bwe, "Back-off factor must be greater than 0.");
     } else {
       return backoff_factor;
     }
   }
 
-  MS_WARN_TAG(bwe, "Failed to parse parameters for AimdRateControl experiment from field trial string. Using default.");
+  MS_DEBUG_TAG(bwe, "Failed to parse parameters for AimdRateControl experiment from field trial string. Using default.");
 
   return kDefaultBackoffFactor;
 }

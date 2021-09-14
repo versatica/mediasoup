@@ -284,7 +284,7 @@ namespace RTC
 		// Also emit the event fast if we detect a high BWE value decrease.
 		else if (this->bitrates.availableBitrate < previousAvailableBitrate * 0.75)
 		{
-			MS_WARN_TAG(
+			MS_DEBUG_TAG(
 			  bwe,
 			  "high BWE value decrease detected, notifying the listener [now:%" PRIu32 ", before:%" PRIu32
 			  "]",
