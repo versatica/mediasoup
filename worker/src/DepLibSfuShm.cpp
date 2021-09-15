@@ -231,6 +231,18 @@ namespace DepLibSfuShm {
   {
     MS_TRACE();
     
+    // If pkt's timestamp AND seqId is older than last frame already written into shm
+    // it is too late to write it in, just ignore it, do not update mediastate stats.
+    if (this->media[1].last_written_ts != UINT64_UNSET
+        && this->media[1].last_written_rtp_seq != UINT64_UNSET
+        && (ts < this->media[1].last_written_ts
+          || seqid < this->media[1].last_written_rtp_seq))
+    {
+      MS_WARN_TAG(xcode, "shm[%s] ignore old pkt [seq=%" PRIu64 " ts=%" PRIu64 "] last_written_seq=%" PRIu64 " last_written_ts=%" PRIu64 " qsize=%zu",
+          this->stream_name.c_str(), seqid, ts, this->media[1].last_written_rtp_seq, this->media[1].last_written_ts, videoPktBuffer.size());
+      return SHM_Q_PKT_QUEUED_TOO_OLD;
+    }
+
     if (iskeyframe && (ts > this->lastKeyFrameTs || this->lastKeyFrameTs == UINT64_UNSET))
     {
       this->lastKeyFrameTs = ts;
@@ -504,9 +516,13 @@ namespace DepLibSfuShm {
     int err = sfushm_av_write_audio(wrt_ctx, data);
     if (IsError(err))
     {
-      MS_WARN_TAG(xcode, "shm[%s] error writing audio ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " inv=%d: %d - %s", this->stream_name.c_str(), data->ssrc, data->first_rtp_seq, data->rtp_time, data->invalid, err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "shm[%s] error writing audio ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " inv=%d: %d - %s", 
+        this->stream_name.c_str(), data->ssrc, data->first_rtp_seq, data->rtp_time, data->invalid, err, GetErrorString(err));
       bin_log_record.a_num_wr_err += 1;
     }
+    // TBD for audio
+    this->media[0].last_written_ts = data->rtp_time;
+    this->media[0].last_written_rtp_seq = data->first_rtp_seq;
   }
 
   void ShmCtx::WriteVideoRtpDataToShm(
@@ -543,8 +559,8 @@ namespace DepLibSfuShm {
                                               ispictureend,
                                               iskeyframe))
     {
-      MS_WARN_TAG(xcode, "shm[%s] enqueue() put nothing in", this->stream_name.c_str()); // TBD: see if there is ever a reason for Enqueue() to reject an item, right now it always enqueues
-      return;
+      //MS_WARN_TAG(xcode, "shm[%s] Enqueue() ignored pkt", this->stream_name.c_str());
+      //return;
     }
 
     if ( ts - this->videoPktBuffer.begin()->ts > this->maxVideoPktDelay || tsIncrement > 0)
@@ -619,8 +635,8 @@ namespace DepLibSfuShm {
     int err = sfushm_av_write_video(wrt_ctx, &frag);
     if (IsError(err))
     {
-      MS_WARN_TAG(xcode, "shm[%s] error writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " len=%zu inv=%d: %d - %s",
-        this->stream_name.c_str(), frag.ssrc, frag.first_rtp_seq, frag.rtp_time, frag.len, frag.invalid, err, GetErrorString(err));
+      MS_WARN_TAG(xcode, "shm[%s] error writing chunk ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " nal=%" PRIu8 " len=%zu inv=%d: %d - %s",
+        this->stream_name.c_str(), frag.ssrc, frag.first_rtp_seq, frag.rtp_time, item->nal, frag.len, frag.invalid, err, GetErrorString(err));
       bin_log_record.v_num_wr_err += 1;
     }
     /*else
@@ -632,6 +648,9 @@ namespace DepLibSfuShm {
       MS_DEBUG_TAG(xcode, "OK ssrc=%" PRIu32 " seq=%" PRIu64 " ts=%" PRIu64 " begin=%d end=%d len=%zu [%s]",
         frag.ssrc, frag.first_rtp_seq, frag.rtp_time, frag.begin, frag.end, frag.len, dump);
     }*/
+    
+    this->media[1].last_written_ts = frag.rtp_time;
+    this->media[1].last_written_rtp_seq = frag.first_rtp_seq;
   }
 
 

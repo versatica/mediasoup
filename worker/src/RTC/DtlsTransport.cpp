@@ -812,7 +812,7 @@ namespace RTC
 			// It is allowed to receive DTLS data even before validating remote fingerprint.
 			if (!this->handshakeDone)
 			{
-				MS_WARN_TAG(dtls, "ignoring application data received while DTLS handshake not done");
+				MS_DEBUG_TAG(dtls, "ignoring application data received while DTLS handshake not done");
 
 				return;
 			}
@@ -830,14 +830,14 @@ namespace RTC
 		// We cannot send data to the peer if its remote fingerprint is not validated.
 		if (this->state != DtlsState::CONNECTED)
 		{
-			MS_WARN_TAG(dtls, "cannot send application data while DTLS is not fully connected");
+			MS_DEBUG_TAG(dtls, "cannot send application data while DTLS is not fully connected");
 
 			return;
 		}
 
 		if (len == 0)
 		{
-			MS_WARN_TAG(dtls, "ignoring 0 length data");
+			MS_DEBUG_TAG(dtls, "ignoring 0 length data");
 
 			return;
 		}
@@ -872,7 +872,7 @@ namespace RTC
 		if (!IsRunning())
 			return;
 
-		MS_WARN_TAG(dtls, "resetting DTLS transport");
+		MS_DEBUG_TAG(dtls, "resetting DTLS transport");
 
 		// Stop the DTLS timer.
 		this->timer->Stop();
@@ -975,7 +975,7 @@ namespace RTC
 			}
 			else
 			{
-				MS_WARN_TAG(dtls, "connection failed");
+				MS_DEBUG_TAG(dtls, "connection failed");
 
 				Reset();
 
@@ -1054,7 +1054,7 @@ namespace RTC
 		// NOTE: Don't start the timer again if the timeout is greater than 30 seconds.
 		else
 		{
-			MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeoutMs);
+			MS_DEBUG_TAG(dtls, "DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeoutMs);
 
 			Reset();
 
@@ -1416,7 +1416,7 @@ namespace RTC
 
 			if ((where & SSL_CB_READ) != 0)
 			{
-				MS_WARN_TAG(dtls, "received DTLS %s alert: %s", alertType, SSL_alert_desc_string_long(ret));
+				MS_DEBUG_TAG(dtls, "received DTLS %s alert: %s", alertType, SSL_alert_desc_string_long(ret));
 			}
 			else if ((where & SSL_CB_WRITE) != 0)
 			{

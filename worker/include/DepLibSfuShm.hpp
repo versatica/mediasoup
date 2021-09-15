@@ -35,7 +35,8 @@ namespace DepLibSfuShm
 	// Need this to keep a buffer of roughly 2-3 video frames
 	enum EnqueueResult
 	{
-		SHM_Q_PKT_QUEUED_OK     // added pkt data into the queue
+    SHM_Q_PKT_QUEUED_OK,     // added pkt data into the queue
+    SHM_Q_PKT_QUEUED_TOO_OLD // incoming pkt is older than data already written into shm, ignored
 	};
 
   enum AnnexB
@@ -48,11 +49,13 @@ namespace DepLibSfuShm
   // If Sender Report arrived but shm writer could not be initialized yet, we can save it and write it in as soon as shm writer is initialized
   struct MediaState
   {
-    uint64_t last_rtp_seq{ UINT64_UNSET }; // last RTP pkt sequence processed by this input
-	  uint64_t last_ts{ UINT64_UNSET };      // the timestamp of the last processed RTP message
-    uint32_t new_ssrc{ 0 };                // mapped ssrc - always generated
-    bool     sr_received{ false };         // if sender report was received
-    bool     sr_written{ false };          // if sender report was written into shm
+    uint64_t last_rtp_seq{ UINT64_UNSET };         // last RTP pkt sequence processed by this input
+    uint64_t last_ts{ UINT64_UNSET };              // the timestamp of the last processed RTP message
+    uint64_t last_written_rtp_seq{ UINT64_UNSET }; // last RTP pkt sequence processed by this input
+    uint64_t last_written_ts{ UINT64_UNSET };      // the timestamp of the last processed RTP message
+    uint32_t new_ssrc{ 0 };                        // mapped ssrc - always generated
+    bool     sr_received{ false };                 // if sender report was received
+    bool     sr_written{ false };                  // if sender report was written into shm
     uint32_t sr_ntp_msb{ 0 };
     uint32_t sr_ntp_lsb{ 0 };
     uint64_t sr_rtp_tm{ 0 };

@@ -75,12 +75,12 @@ void ParseFieldTrial(
     auto field = field_map.find(key);
     if (field != field_map.end()) {
       if (!field->second->Parse(std::move(opt_value))) {
-        MS_WARN_TAG(bwe, "Failed to read field with key: '%s' in trial: \"%s\"",
+        MS_DEBUG_TAG(bwe, "Failed to read field with key: '%s' in trial: \"%s\"",
            key.c_str(), trial_string.c_str());
       }
     } else if (!opt_value && keyless_field && !key.empty()) {
       if (!keyless_field->Parse(key)) {
-        MS_WARN_TAG(bwe, "Failed to read empty key field with value: '%s' in trial: \"%s\"",
+        MS_DEBUG_TAG(bwe, "Failed to read empty key field with value: '%s' in trial: \"%s\"",
            key.c_str(), trial_string.c_str());
       }
     } else {

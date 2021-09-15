@@ -338,7 +338,7 @@ std::vector<ProbeClusterConfig> ProbeController::RequestProbe(
       if (min_expected_probe_result_bps > estimated_bitrate_bps_ &&
           time_since_drop_ms < kBitrateDropTimeoutMs &&
           time_since_probe_ms > kMinTimeBetweenAlrProbesMs) {
-        MS_WARN_TAG(bwe, "detected big bandwidth drop, start probing");
+        MS_DEBUG_TAG(bwe, "detected big bandwidth drop, start probing");
         // Track how often we probe in response to bandwidth drop in ALR.
         // RTC_HISTOGRAM_COUNTS_10000(
         //     "WebRTC.BWE.BweDropProbingIntervalInS",
@@ -382,7 +382,7 @@ std::vector<ProbeClusterConfig> ProbeController::Process(int64_t at_time_ms) {
     mid_call_probing_waiting_for_result_ = false;
 
     if (state_ == State::kWaitingForProbingResult) {
-      MS_WARN_TAG(bwe, "kWaitingForProbingResult: timeout");
+      MS_DEBUG_TAG(bwe, "kWaitingForProbingResult: timeout");
       state_ = State::kProbingComplete;
       min_bitrate_to_probe_further_bps_ = kExponentialProbingDisabled;
     }

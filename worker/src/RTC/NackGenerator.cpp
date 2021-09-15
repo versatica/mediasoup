@@ -82,7 +82,7 @@ namespace RTC
 			// Out of order packet or already handled NACKed packet.
 			if (!isRecovered)
 			{
-				MS_WARN_DEV(
+				MS_DEBUG_DEV(
 				  "ignoring older packet not present in the NACK list [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber());
@@ -243,7 +243,7 @@ namespace RTC
 
 				if (nackInfo.retries >= MaxNackRetries)
 				{
-					MS_WARN_TAG(
+					MS_DEBUG_TAG(
 					  rtx,
 					  "sequence number removed from the NACK list due to max retries [filter:seq, seq:%" PRIu16
 					  "]",
@@ -267,7 +267,7 @@ namespace RTC
 
 				if (nackInfo.retries >= MaxNackRetries)
 				{
-					MS_WARN_TAG(
+					MS_DEBUG_TAG(
 					  rtx,
 					  "sequence number removed from the NACK list due to max retries [filter:time, seq:%" PRIu16
 					  "]",
