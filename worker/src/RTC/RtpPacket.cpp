@@ -745,6 +745,8 @@ namespace RTC
 		packet->frameMarkingExtensionId      = this->frameMarkingExtensionId;
 		packet->ssrcAudioLevelExtensionId    = this->ssrcAudioLevelExtensionId;
 		packet->videoOrientationExtensionId  = this->videoOrientationExtensionId;
+		// Clone payload descriptor handler.
+		packet->payloadDescriptorHandler = this->payloadDescriptorHandler;
 		// Store allocated buffer.
 		packet->buffer = buffer;
 

@@ -29,11 +29,11 @@ namespace RTC
 
 		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
 
-		if (storageItem->clonedPacket)
-			storageItem->clonedPacket->DecRefCount();
-
 		if (storageItem->originalPacket)
 			storageItem->originalPacket->DecRefCount();
+
+		if (storageItem->clonedPacket)
+			storageItem->clonedPacket->DecRefCount();
 
 		storageItem->clonedPacket   = nullptr;
 		storageItem->originalPacket = nullptr;
@@ -151,8 +151,8 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpStreamSend::RtpStreamSend(
-	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, bool useNack)
-	  : RTC::RtpStream::RtpStream(listener, params, 10), useNack(useNack),
+	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, std::string& mid, bool useNack)
+	  : RTC::RtpStream::RtpStream(listener, params, 10), mid(mid), useNack(useNack),
 	    retransmissionBufferSize(MaxRetransmissionDelay)
 	{
 		MS_TRACE();
@@ -478,8 +478,11 @@ namespace RTC
 			}
 		}
 
-		// Clone the packet into the retrieved storage item.
-		storageItem->originalPacket = packet->Clone();
+		// Store original packet and some extra info into the retrieved storage item.
+		storageItem->originalPacket = packet;
+		packet->IncRefCount();
+		storageItem->ssrc           = packet->GetSsrc();
+		storageItem->sequenceNumber = packet->GetSequenceNumber();
 	}
 
 	void RtpStreamSend::ClearBuffer()
@@ -542,7 +545,18 @@ namespace RTC
 				// requested packet's timestamp (in ms).
 				if (storageItem)
 				{
-					packet                    = storageItem->originalPacket->Clone();
+					packet = storageItem->originalPacket->Clone();
+					// Put correct SSRC and sequence number into cloned packet.
+					packet->SetSsrc(storageItem->ssrc);
+					packet->SetSequenceNumber(storageItem->sequenceNumber);
+
+					// Update MID RTP extension value.
+					if (!this->mid.empty())
+						packet->UpdateMid(mid);
+
+					if (storageItem->clonedPacket)
+						storageItem->clonedPacket->DecRefCount();
+
 					storageItem->clonedPacket = packet;
 
 					uint32_t diffTs = this->maxPacketTs - packet->GetTimestamp();

@@ -643,7 +643,7 @@ namespace RTC
 		uint8_t payloadPadding{ 0u };
 		size_t size{ 0u }; // Full size of the packet in bytes.
 		// Codecs
-		std::unique_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
+		std::shared_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
 		// Buffer where this packet is allocated, can be `nullptr` if packet was parsed from externally
 		// provided buffer.
 		RtpPacketBuffer* buffer{ nullptr };

@@ -22,6 +22,10 @@ namespace RTC
 		{
 			// Original packet.
 			RTC::RtpPacket* originalPacket{ nullptr };
+			// Correct SSRC since original packet will have original ssrc.
+			uint32_t ssrc{ 0 };
+			// Correct sequence number since original packet will have original sequence number.
+			uint16_t sequenceNumber{ 0 };
 			// Cloned packet.
 			RTC::RtpPacket* clonedPacket{ nullptr };
 			// Last time this packet was resent.
@@ -52,7 +56,11 @@ namespace RTC
 		};
 
 	public:
-		RtpStreamSend(RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, bool useNack);
+		RtpStreamSend(
+		  RTC::RtpStreamSend::Listener* listener,
+		  RTC::RtpStream::Params& params,
+		  std::string& mid,
+		  bool useNack);
 		~RtpStreamSend() override;
 
 		void FillJsonStats(json& jsonObject) override;
@@ -84,6 +92,7 @@ namespace RTC
 		uint32_t sentPriorScore{ 0u }; // Packets sent at last interval for score calculation.
 		StorageItemBuffer storageItemBuffer;
 		uint16_t bufferStartSeq{ 0u };
+		std::string mid;
 		bool useNack;
 		uint32_t retransmissionBufferSize;
 		bool firstPacket{ true };

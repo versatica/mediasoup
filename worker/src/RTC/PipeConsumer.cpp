@@ -557,7 +557,7 @@ namespace RTC
 			}
 
 			// Create a RtpStreamSend for sending a single media stream.
-			auto* rtpStream = new RTC::RtpStreamSend(this, params, params.useNack);
+			auto* rtpStream = new RTC::RtpStreamSend(this, params, this->rtpParameters.mid, params.useNack);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())
