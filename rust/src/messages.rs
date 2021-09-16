@@ -307,8 +307,9 @@ request_response!(
         data: RouterCreatePlainTransportData,
     },
     PlainTransportData {
-        rtcp_mux: bool,
-        comedia: bool,
+        // The following fields are present, but unused
+        // rtcp_mux: bool,
+        // comedia: bool,
         tuple: Mutex<TransportTuple>,
         rtcp_tuple: Mutex<Option<TransportTuple>>,
         sctp_parameters: Option<SctpParameters>,

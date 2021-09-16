@@ -64,12 +64,16 @@ enum ChannelReceiveMessage {
     },
     ResponseSuccess {
         id: u32,
+        // The following field is present, unused, but needed for differentiating successful
+        // response from error case
+        #[allow(dead_code)]
         accepted: bool,
         data: Option<Value>,
     },
     ResponseError {
         id: u32,
-        error: Value,
+        // The following field is present, but unused
+        // error: Value,
         reason: String,
     },
     Event(InternalMessage),
@@ -189,11 +193,7 @@ impl Channel {
                         }
                         event_handlers.call_callbacks_with_single_value(&target_id, message);
                     }
-                    ChannelReceiveMessage::ResponseSuccess {
-                        id,
-                        accepted: _,
-                        data,
-                    } => {
+                    ChannelReceiveMessage::ResponseSuccess { id, data, .. } => {
                         let sender = requests_container.lock().handlers.remove(&id);
                         if let Some(mut sender) = sender {
                             let _ = sender.send(Ok(data));
@@ -204,11 +204,7 @@ impl Channel {
                             );
                         }
                     }
-                    ChannelReceiveMessage::ResponseError {
-                        id,
-                        error: _,
-                        reason,
-                    } => {
+                    ChannelReceiveMessage::ResponseError { id, reason } => {
                         let sender = requests_container.lock().handlers.remove(&id);
                         if let Some(mut sender) = sender {
                             let _ = sender.send(Err(ResponseError { reason }));
