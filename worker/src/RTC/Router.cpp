@@ -697,9 +697,10 @@ namespace RTC
 
 		if (!consumers.empty())
 		{
-			// Create a cloned ref-counted packet that consumers will all store for as long as needed
+			// Cloned ref-counted packet that consumers will all store for as long as needed
 			// while also avoiding multiple allocations unless absolutely necessary.
-			auto* clonedPacket = packet->Clone();
+			// Clone only happens if needed though.
+			RtpPacket* clonedPacket{ nullptr };
 
 			for (auto* consumer : consumers)
 			{
@@ -707,12 +708,10 @@ namespace RTC
 				const auto& mid = consumer->GetRtpParameters().mid;
 
 				if (!mid.empty())
-					clonedPacket->UpdateMid(mid);
+					packet->UpdateMid(mid);
 
-				consumer->SendRtpPacket(clonedPacket);
+				consumer->SendRtpPacket(packet, &clonedPacket);
 			}
-
-			clonedPacket->DecRefCount();
 		}
 
 		auto it = this->mapProducerRtpObservers.find(producer);

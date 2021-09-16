@@ -114,7 +114,6 @@ namespace RTC
 		{
 			return this->params.temporalLayers;
 		}
-		virtual bool ReceivePacket(RTC::RtpPacket* packet);
 		virtual void Pause()                                                                     = 0;
 		virtual void Resume()                                                                    = 0;
 		virtual uint32_t GetBitrate(uint64_t nowMs)                                              = 0;
@@ -160,6 +159,7 @@ namespace RTC
 		}
 
 	protected:
+		bool ReceiveStreamPacket(RTC::RtpPacket* packet);
 		bool UpdateSeq(RTC::RtpPacket* packet);
 		void UpdateScore(uint8_t score);
 		void PacketRetransmitted(RTC::RtpPacket* packet);

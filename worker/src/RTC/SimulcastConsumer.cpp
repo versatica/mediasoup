@@ -640,7 +640,7 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	void SimulcastConsumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void SimulcastConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket)
 	{
 		MS_TRACE();
 
@@ -890,7 +890,7 @@ namespace RTC
 		}
 
 		// Process the packet.
-		if (this->rtpStream->ReceivePacket(packet))
+		if (this->rtpStream->ReceivePacket(packet, clonedPacket))
 		{
 			if (this->rtpSeqManager.GetMaxOutput() == packet->GetSequenceNumber())
 				this->lastSentPacketHasMarker = packet->HasMarker();

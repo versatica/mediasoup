@@ -184,7 +184,7 @@ namespace RTC
 		return 0u;
 	}
 
-	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket)
 	{
 		MS_TRACE();
 
@@ -253,7 +253,7 @@ namespace RTC
 		}
 
 		// Process the packet.
-		if (rtpStream->ReceivePacket(packet))
+		if (rtpStream->ReceivePacket(packet, clonedPacket))
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);

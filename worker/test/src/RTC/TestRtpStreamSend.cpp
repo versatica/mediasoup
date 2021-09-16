@@ -93,14 +93,38 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		RtpStreamSend* stream = new RtpStreamSend(&testRtpStreamListener, params, mid, true);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
-		stream->ReceivePacket(packet1);
-		stream->ReceivePacket(packet3);
-		stream->ReceivePacket(packet2);
-		stream->ReceivePacket(packet3);
-		stream->ReceivePacket(packet4);
-		stream->ReceivePacket(packet4);
-		stream->ReceivePacket(packet5);
-		stream->ReceivePacket(packet5);
+		{
+			RtpPacket* clonedPacket{ nullptr };
+			stream->ReceivePacket(packet1, &clonedPacket);
+		}
+		{
+			RtpPacket* clonedPacket{ nullptr };
+			stream->ReceivePacket(packet3, &clonedPacket);
+		}
+		{
+			RtpPacket* clonedPacket{ nullptr };
+			stream->ReceivePacket(packet2, &clonedPacket);
+		}
+		{
+			RtpPacket* clonedPacket{ nullptr };
+			stream->ReceivePacket(packet3, &clonedPacket);
+		}
+		{
+			RtpPacket* clonedPacket{ nullptr };
+			stream->ReceivePacket(packet4, &clonedPacket);
+		}
+		{
+			RtpPacket* clonedPacket{ nullptr };
+			stream->ReceivePacket(packet4, &clonedPacket);
+		}
+		{
+			RtpPacket* clonedPacket{ nullptr };
+			stream->ReceivePacket(packet5, &clonedPacket);
+		}
+		{
+			RtpPacket* clonedPacket{ nullptr };
+			stream->ReceivePacket(packet5, &clonedPacket);
+		}
 
 		// Create a NACK item that request for all the packets.
 		RTCP::FeedbackRtpNackPacket nackPacket(0, params.ssrc);

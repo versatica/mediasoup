@@ -189,17 +189,17 @@ namespace RTC
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
-	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet)
+	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket)
 	{
 		MS_TRACE();
 
 		// Call the parent method.
-		if (!RtpStream::ReceivePacket(packet))
+		if (!RtpStream::ReceiveStreamPacket(packet))
 			return false;
 
 		// If buffer is present, store the packet into the buffer.
 		if (this->useNack)
-			StorePacket(packet);
+			StorePacket(packet, clonedPacket);
 
 		// Increase transmission counter.
 		this->transmissionCounter.Update(packet);
@@ -389,7 +389,7 @@ namespace RTC
 		MS_ABORT("invalid method call");
 	}
 
-	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet)
+	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket)
 	{
 		MS_TRACE();
 
@@ -479,10 +479,20 @@ namespace RTC
 		}
 
 		// Store original packet and some extra info into the retrieved storage item.
-		storageItem->originalPacket = packet;
-		packet->IncRefCount();
-		storageItem->ssrc           = packet->GetSsrc();
-		storageItem->sequenceNumber = packet->GetSequenceNumber();
+		if (*clonedPacket)
+		{
+			(*clonedPacket)->IncRefCount();
+			storageItem->originalPacket = *clonedPacket;
+			storageItem->ssrc           = (*clonedPacket)->GetSsrc();
+			storageItem->sequenceNumber = (*clonedPacket)->GetSequenceNumber();
+		}
+		else
+		{
+			*clonedPacket               = packet->Clone();
+			storageItem->originalPacket = *clonedPacket;
+			storageItem->ssrc           = (*clonedPacket)->GetSsrc();
+			storageItem->sequenceNumber = (*clonedPacket)->GetSequenceNumber();
+		}
 	}
 
 	void RtpStreamSend::ClearBuffer()
