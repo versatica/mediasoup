@@ -24,6 +24,16 @@ const mediaCodecs =
 		}
 	},
 	{
+		kind                 : 'audio',
+		mimeType             : 'audio/PCMU',
+		preferredPayloadType : 0,
+		clockRate            : 48000,
+		rtcpFeedback         :
+		[
+			{ type: 'transport-cc' }
+		]
+	},
+	{
 		kind      : 'video',
 		mimeType  : 'video/VP8',
 		clockRate : 90000
