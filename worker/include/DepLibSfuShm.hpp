@@ -35,7 +35,8 @@ namespace DepLibSfuShm
 	// Need this to keep a buffer of roughly 2-3 video frames
 	enum EnqueueResult
 	{
-		SHM_Q_PKT_QUEUED_OK     // added pkt data into the queue
+    SHM_Q_PKT_QUEUED_OK,     // added pkt data into the queue
+    SHM_Q_PKT_QUEUED_TOO_OLD // incoming pkt is older than data already written into shm, ignored
 	};
 
   enum AnnexB
@@ -48,11 +49,13 @@ namespace DepLibSfuShm
   // If Sender Report arrived but shm writer could not be initialized yet, we can save it and write it in as soon as shm writer is initialized
   struct MediaState
   {
-    uint64_t last_rtp_seq{ UINT64_UNSET }; // last RTP pkt sequence processed by this input
-	  uint64_t last_ts{ UINT64_UNSET };      // the timestamp of the last processed RTP message
-    uint32_t new_ssrc{ 0 };                // mapped ssrc - always generated
-    bool     sr_received{ false };         // if sender report was received
-    bool     sr_written{ false };          // if sender report was written into shm
+    uint64_t last_rtp_seq{ UINT64_UNSET };         // last RTP pkt sequence processed by this input
+    uint64_t last_ts{ UINT64_UNSET };              // the timestamp of the last processed RTP message
+    uint64_t last_written_rtp_seq{ UINT64_UNSET }; // last RTP pkt sequence processed by this input
+    uint64_t last_written_ts{ UINT64_UNSET };      // the timestamp of the last processed RTP message
+    uint32_t new_ssrc{ 0 };                        // mapped ssrc - always generated
+    bool     sr_received{ false };                 // if sender report was received
+    bool     sr_written{ false };                  // if sender report was written into shm
     uint32_t sr_ntp_msb{ 0 };
     uint32_t sr_ntp_lsb{ 0 };
     uint64_t sr_rtp_tm{ 0 };
@@ -69,13 +72,14 @@ namespace DepLibSfuShm
     uint64_t ts;                     // RTP timestamp
     uint8_t  nal{ 0 };               // NALU type
     bool     fragment{ false };      // If this is a picture's fragment (can be whole NALU or NALU's fragment)
-    bool     firstfragment{ false }; // Only makes sense if fragment == true; means the first picture frame's fragment in case when SPS and PPS were just sent (then SPS begins the picture)
-		bool     beginpicture{ false };  // The first (or only) picture's fragment
-		bool     endpicture{ false };    // Picture's last (or only) fragment
+    bool     firstfragment{ false }; // Only makes sense if fragment == true, fragment with start bit set; means the first picture frame's fragment in case when SPS and PPS were just sent (then SPS begins the picture)
+    bool     endfragment{ false };   // Only makes sense if fragment == true; fragment that had end bit set
+    bool     beginpicture{ false };  // The first (or only) picture's fragment
+    bool     endpicture{ false };    // Picture's last (or only) fragment
     bool     keyframe{ false };      // This item belongs to key frame
 
     ShmQueueItem() = default;
-    ShmQueueItem(uint8_t* data, size_t datalen, uint64_t seq, uint64_t timestamp,uint8_t nalu, bool isfragment, bool isfirstfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe);
+    ShmQueueItem(uint8_t* data, size_t datalen, uint64_t seq, uint64_t timestamp,uint8_t nalu, bool isfragment, bool isfirstfrag, bool isendfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe);
 	};
 
   // Contains shm configuration, writer context (if initialized), writer status 
@@ -94,7 +98,7 @@ namespace DepLibSfuShm
 
     static uint8_t* hex_dump(uint8_t *dst, uint8_t *src, size_t len);
 
-    void InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level);
+    void InitializeShmWriterCtx(std::string shm, int queueAge, bool useReverse, int testNack, std::string log, int level, std::string shmAppData);
     void CloseShmWriterCtx();
 
     std::string StreamName() const { return this->stream_name; }
@@ -117,7 +121,7 @@ namespace DepLibSfuShm
     uint64_t LastVideoSeq() const;
 
     void WriteAudioRtpDataToShm(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts);
-    void WriteVideoRtpDataToShm(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts, uint8_t nal, bool isfragment, bool isfirstfragment, bool ispicturebegin, bool ispictureend, bool iskeyframe);
+    void WriteVideoRtpDataToShm(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts, uint8_t nal, bool isfragment, bool isfirstfragment, bool isendfragment, bool ispicturebegin, bool ispictureend, bool iskeyframe);
     void WriteRtcpSenderReportTs(uint64_t lastSenderReportNtpMs, uint32_t lastSenderReportTs, Media kind);
     int WriteStreamMeta(std::string metadata, std::string shm);
     void WriteVideoOrientation(uint16_t rotation);
@@ -137,10 +141,10 @@ namespace DepLibSfuShm
     
     void WriteSR(Media kind);
 
-    EnqueueResult Enqueue(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts, uint8_t nal, bool isfragment, bool isfirstfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe);
+    EnqueueResult Enqueue(uint8_t *data, size_t len, uint64_t seqid, uint64_t ts, uint8_t nal, bool isfragment, bool isfirstfrag, bool isendfrag, bool isbeginpicture, bool isendpicture, bool iskeyframe);
     void Dequeue();
     void WriteFrame(std::list<ShmQueueItem>::iterator& firstIt, std::list<ShmQueueItem>::iterator& lastIt, bool invalid);
-    bool GetNextFrame(std::list<ShmQueueItem>::iterator& firstIt, std::list<ShmQueueItem>::iterator& lastIt, bool& hasGaps, bool& complete);
+    bool GetNextFrame(std::list<ShmQueueItem>::iterator& firstIt, std::list<ShmQueueItem>::iterator& lastIt, bool& gaps);
   
 	  bool IsError(int err_code);
 	  const char* GetErrorString(int err_code);

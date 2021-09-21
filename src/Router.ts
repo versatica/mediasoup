@@ -746,8 +746,9 @@ export class Router extends EnhancedEventEmitter
 			...,
 			shm: {
 				name: "...",
-				log: "...",
-				status: "..."
+				queueAge: ...,
+				...
+				shmAppData: "..."
 			}
 		}
 		*/
