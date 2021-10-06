@@ -487,6 +487,16 @@ namespace RTC
 					continue;
 				}
 
+				if (
+					this->preferredTemporalLayer != -1 &&
+					temporalLayer > this->preferredTemporalLayer
+				)
+				{
+					requiredBitrate = 1u; // Don't set 0 since it would be ignored.
+					// don't use any bandwidth for this one as it will be disabled later on
+					goto done;
+				}
+
 				requiredBitrate = producerRtpStream->GetLayerBitrate(nowMs, 0, temporalLayer);
 
 				// This is simulcast so we must substract the bitrate of the current temporal
@@ -571,6 +581,11 @@ namespace RTC
 
 		auto provisionalTargetSpatialLayer  = this->provisionalTargetSpatialLayer;
 		auto provisionalTargetTemporalLayer = this->provisionalTargetTemporalLayer;
+
+		if (this->preferredTemporalLayer != -1)
+		{
+			provisionalTargetTemporalLayer = std::min(provisionalTargetTemporalLayer, this->preferredTemporalLayer);
+		}
 
 		// Reset provisional target layers.
 		this->provisionalTargetSpatialLayer  = -1;
@@ -1311,12 +1326,7 @@ namespace RTC
 
 		if (newTargetSpatialLayer != -1)
 		{
-			if (newTargetSpatialLayer == this->preferredSpatialLayer)
-				newTargetTemporalLayer = this->preferredTemporalLayer;
-			else if (newTargetSpatialLayer < this->preferredSpatialLayer)
-				newTargetTemporalLayer = this->rtpStream->GetTemporalLayers() - 1;
-			else
-				newTargetTemporalLayer = 0;
+			newTargetTemporalLayer = this->preferredTemporalLayer;
 		}
 
 		// Return true if any target layer changed.
