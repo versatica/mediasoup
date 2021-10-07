@@ -1,6 +1,11 @@
 # Changelog
 
 
+### WIP
+
+* Worker communication optimization (aka removing netstring dependency) (PR #644).
+
+
 ### 3.8.4
 
 * OPUS multi-channel (Surround sound) support (PR #647).
