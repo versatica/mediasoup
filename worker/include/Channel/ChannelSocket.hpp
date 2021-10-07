@@ -31,8 +31,6 @@ namespace Channel
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		// Others.
-		size_t msgStart{ 0u }; // Where the latest message starts.
 	};
 
 	class ProducerSocket : public ::UnixStreamSocket
@@ -72,10 +70,10 @@ namespace Channel
 		void Close();
 		void SetListener(Listener* listener);
 		void Send(json& jsonMessage);
-		void SendLog(char* message, size_t messageLen);
+		void SendLog(char* message, uint32_t messageLen);
 
 	private:
-		void SendImpl(const void* nsPayload, size_t nsPayloadLen);
+		void SendImpl(const void* payload, uint32_t payloadLen);
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:

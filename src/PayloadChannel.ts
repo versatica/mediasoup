@@ -1,10 +1,10 @@
+import * as os from 'os';
 import { Duplex } from 'stream';
-// @ts-ignore
-import * as netstring from 'netstring';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
 
+const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('PayloadChannel');
 
 type Sent =
@@ -17,9 +17,9 @@ type Sent =
 	close: () => void;
 }
 
-// netstring length for a 4194304 bytes payload.
-const NS_MESSAGE_MAX_LEN = 4194313;
-const NS_PAYLOAD_MAX_LEN = 4194304;
+// Binary length for a 4194304 bytes payload.
+const MESSAGE_MAX_LEN = 4194308;
+const PAYLOAD_MAX_LEN = 4194304;
 
 export class PayloadChannel extends EnhancedEventEmitter
 {
@@ -39,7 +39,7 @@ export class PayloadChannel extends EnhancedEventEmitter
 	private readonly _sents: Map<number, Sent> = new Map();
 
 	// Buffer for reading messages from the worker.
-	private _recvBuffer?: Buffer;
+	private _recvBuffer = Buffer.alloc(0);
 
 	// Ongoing notification (waiting for its payload).
 	private _ongoingNotification?: { targetId: string; event: string; data?: any };
@@ -67,7 +67,7 @@ export class PayloadChannel extends EnhancedEventEmitter
 		// Read PayloadChannel notifications from the worker.
 		this._consumerSocket.on('data', (buffer: Buffer) =>
 		{
-			if (!this._recvBuffer)
+			if (!this._recvBuffer.length)
 			{
 				this._recvBuffer = buffer;
 			}
@@ -78,52 +78,49 @@ export class PayloadChannel extends EnhancedEventEmitter
 					this._recvBuffer.length + buffer.length);
 			}
 
-			if (this._recvBuffer!.length > NS_PAYLOAD_MAX_LEN)
+			if (this._recvBuffer.length > PAYLOAD_MAX_LEN)
 			{
-				logger.error('receiving buffer is full, discarding all data into it');
+				logger.error('receiving buffer is full, discarding all data in it');
 
 				// Reset the buffer and exit.
-				this._recvBuffer = undefined;
+				this._recvBuffer = Buffer.alloc(0);
 
 				return;
 			}
 
+			let msgStart = 0;
+
 			while (true) // eslint-disable-line no-constant-condition
 			{
-				let nsPayload;
+				const readLen = this._recvBuffer.length - msgStart;
 
-				try
+				if (readLen < 4)
 				{
-					nsPayload = netstring.nsPayload(this._recvBuffer);
-				}
-				catch (error)
-				{
-					logger.error(
-						'invalid netstring data received from the worker process: %s',
-						String(error));
-
-					// Reset the buffer and exit.
-					this._recvBuffer = undefined;
-
-					return;
+					// Incomplete data.
+					break;
 				}
 
-				// Incomplete netstring message.
-				if (nsPayload === -1)
-					return;
+				const dataView = new DataView(
+					this._recvBuffer.buffer,
+					this._recvBuffer.byteOffset + msgStart);
+				const msgLen = dataView.getUint32(0, littleEndian);
 
-				this._processData(nsPayload);
-
-				// Remove the read payload from the buffer.
-				this._recvBuffer =
-					this._recvBuffer!.slice(netstring.nsLength(this._recvBuffer));
-
-				if (!this._recvBuffer.length)
+				if (readLen < 4 + msgLen)
 				{
-					this._recvBuffer = undefined;
-
-					return;
+					// Incomplete data.
+					break;
 				}
+
+				const payload = this._recvBuffer.subarray(msgStart + 4, msgStart + 4 + msgLen);
+
+				msgStart += 4 + msgLen;
+
+				this._processData(payload);
+			}
+
+			if (msgStart != 0)
+			{
+				this._recvBuffer = this._recvBuffer.slice(msgStart);
 			}
 		});
 
@@ -191,19 +188,19 @@ export class PayloadChannel extends EnhancedEventEmitter
 		if (this._closed)
 			throw new InvalidStateError('PayloadChannel closed');
 
-		const notification = { event, internal, data };
-		const ns1 = netstring.nsWrite(JSON.stringify(notification));
-		const ns2 = netstring.nsWrite(payload);
+		const notification = JSON.stringify({ event, internal, data });
 
-		if (Buffer.byteLength(ns1) > NS_MESSAGE_MAX_LEN)
+		if (Buffer.byteLength(notification) > MESSAGE_MAX_LEN)
 			throw new Error('PayloadChannel notification too big');
-		else if (Buffer.byteLength(ns2) > NS_MESSAGE_MAX_LEN)
+		else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
 			throw new Error('PayloadChannel payload too big');
 
 		try
 		{
 			// This may throw if closed or remote side ended.
-			this._producerSocket.write(ns1);
+			this._producerSocket.write(
+				Buffer.from(Uint32Array.of(Buffer.byteLength(notification)).buffer));
+			this._producerSocket.write(notification);
 		}
 		catch (error)
 		{
@@ -215,7 +212,9 @@ export class PayloadChannel extends EnhancedEventEmitter
 		try
 		{
 			// This may throw if closed or remote side ended.
-			this._producerSocket.write(ns2);
+			this._producerSocket.write(
+				Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
+			this._producerSocket.write(payload);
 		}
 		catch (error)
 		{
@@ -243,18 +242,20 @@ export class PayloadChannel extends EnhancedEventEmitter
 		if (this._closed)
 			throw new InvalidStateError('Channel closed');
 
-		const request = { id, method, internal, data };
-		const ns1 = netstring.nsWrite(JSON.stringify(request));
-		const ns2 = netstring.nsWrite(payload);
+		const request = JSON.stringify({ id, method, internal, data });
 
-		if (Buffer.byteLength(ns1) > NS_MESSAGE_MAX_LEN)
+		if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');
-		else if (Buffer.byteLength(ns2) > NS_MESSAGE_MAX_LEN)
+		else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
 			throw new Error('PayloadChannel payload too big');
 
 		// This may throw if closed or remote side ended.
-		this._producerSocket.write(ns1);
-		this._producerSocket.write(ns2);
+		this._producerSocket.write(
+			Buffer.from(Uint32Array.of(Buffer.byteLength(request)).buffer));
+		this._producerSocket.write(request);
+		this._producerSocket.write(
+			Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
+		this._producerSocket.write(payload);
 
 		return new Promise((pResolve, pReject) =>
 		{

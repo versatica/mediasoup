@@ -68,15 +68,6 @@ function get_json()
 		${DEST}/third_party/
 }
 
-function get_netstring()
-{
-	GIT_REPO="https://github.com/PeterScott/netstring-c.git"
-	GIT_TAG="master"
-	DEST="deps/netstring/netstring-c"
-
-	get_dep "${GIT_REPO}" "${GIT_TAG}" "${DEST}"
-}
-
 function get_libuv()
 {
 	GIT_REPO="https://github.com/libuv/libuv.git"
@@ -183,7 +174,7 @@ function get_win_getopt()
 case "${DEP}" in
 	'-h')
 		echo "Usage:"
-		echo "  ./scripts/$(basename $0) [gyp|json|netstring|libuv|openssl|libsrtp|usrsctp|abseil-cpp|catch|lcov|clang-fuzzer|fuzzer-corpora|win-getopt]"
+		echo "  ./scripts/$(basename $0) [gyp|json|libuv|openssl|libsrtp|usrsctp|abseil-cpp|catch|lcov|clang-fuzzer|fuzzer-corpora|win-getopt]"
 		echo
 		;;
 	gyp)
@@ -191,9 +182,6 @@ case "${DEP}" in
 		;;
 	json)
 		get_json
-		;;
-	netstring)
-		get_netstring
 		;;
 	libuv)
 		get_libuv

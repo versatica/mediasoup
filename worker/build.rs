@@ -95,7 +95,6 @@ fn main() {
         }
 
         for file in &[
-            "libnetstring.a",
             "libuv.a",
             "libopenssl.a",
             "libsrtp.a",
@@ -133,7 +132,6 @@ fn main() {
         }
     }
 
-    println!("cargo:rustc-link-lib=static=netstring");
     println!("cargo:rustc-link-lib=static=uv");
     println!("cargo:rustc-link-lib=static=openssl");
     println!("cargo:rustc-link-lib=static=srtp");
