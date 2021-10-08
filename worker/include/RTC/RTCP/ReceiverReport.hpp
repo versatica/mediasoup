@@ -26,6 +26,7 @@ namespace RTC
 			};
 
 		public:
+			static const size_t HeaderSize{ 24 };
 			static ReceiverReport* Parse(const uint8_t* data, size_t len);
 
 		public:
@@ -46,7 +47,7 @@ namespace RTC
 			size_t Serialize(uint8_t* buffer);
 			size_t GetSize() const
 			{
-				return sizeof(Header);
+				return HeaderSize;
 			}
 			uint32_t GetSsrc() const
 			{
@@ -123,7 +124,7 @@ namespace RTC
 
 		private:
 			Header* header{ nullptr };
-			uint8_t raw[sizeof(Header)]{ 0u };
+			uint8_t raw[HeaderSize]{ 0u };
 		};
 
 		class ReceiverReportPacket : public Packet
@@ -188,7 +189,7 @@ namespace RTC
 			}
 			size_t GetSize() const override
 			{
-				size_t size = sizeof(Packet::CommonHeader) + 4u /* this->ssrc */;
+				size_t size = Packet::CommonHeaderSize + 4u /* this->ssrc */;
 
 				for (auto* report : reports)
 				{

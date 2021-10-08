@@ -19,7 +19,7 @@ namespace RTC
 			// Get the header.
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 			std::unique_ptr<ByePacket> packet(new ByePacket(header));
-			size_t offset = sizeof(Packet::CommonHeader);
+			size_t offset = Packet::CommonHeaderSize;
 			uint8_t count = header->count;
 
 			while (((count--) != 0u) && (len > offset))

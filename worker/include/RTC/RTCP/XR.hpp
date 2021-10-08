@@ -46,6 +46,7 @@ namespace RTC
 			};
 
 		public:
+			static const size_t CommonHeaderSize{ 4 };
 			static ExtendedReportBlock* Parse(const uint8_t* data, size_t len);
 
 		public:
@@ -71,7 +72,7 @@ namespace RTC
 			CommonHeader* header{ nullptr };
 
 		private:
-			uint8_t raw[sizeof(CommonHeader)] = { 0 };
+			uint8_t raw[Packet::CommonHeaderSize] = { 0 };
 		};
 
 		class ExtendedReportPacket : public Packet
@@ -128,7 +129,7 @@ namespace RTC
 			}
 			size_t GetSize() const override
 			{
-				size_t size = sizeof(Packet::CommonHeader) + 4u /*ssrc*/;
+				size_t size = Packet::CommonHeaderSize + 4u /*ssrc*/;
 
 				for (auto* report : this->reports)
 				{

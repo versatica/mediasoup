@@ -411,6 +411,8 @@ fn get_stats_succeeds() {
         assert_eq!(stats[0].rtx_send_bitrate, 0);
         assert_eq!(stats[0].probation_bytes_sent, 0);
         assert_eq!(stats[0].probation_send_bitrate, 0);
+        assert_eq!(stats[0].rtp_packet_loss_received, None);
+        assert_eq!(stats[0].rtp_packet_loss_sent, None);
         assert!(matches!(
             stats[0].tuple,
             Some(TransportTuple::LocalOnly { .. }),

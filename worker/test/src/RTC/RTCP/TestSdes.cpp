@@ -23,7 +23,7 @@ namespace TestSdes
 	};
 	// clang-format on
 
-	uint8_t* chunkBuffer = buffer + sizeof(Packet::CommonHeader);
+	uint8_t* chunkBuffer = buffer + Packet::CommonHeaderSize;
 
 	// SDES values.
 	uint32_t ssrc{ 0x9f65e742 };
@@ -58,14 +58,13 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 		SECTION("serialize SdesChunk instance")
 		{
-			uint8_t serialized[sizeof(buffer) - sizeof(Packet::CommonHeader)] = { 0 };
+			uint8_t serialized[sizeof(buffer) - Packet::CommonHeaderSize] = { 0 };
 
 			chunk->Serialize(serialized);
 
 			SECTION("compare serialized SdesChunk with original buffer")
 			{
-				REQUIRE(
-				  std::memcmp(chunkBuffer, serialized, sizeof(buffer) - sizeof(Packet::CommonHeader)) == 0);
+				REQUIRE(std::memcmp(chunkBuffer, serialized, sizeof(buffer) - Packet::CommonHeaderSize) == 0);
 			}
 		}
 		delete packet;

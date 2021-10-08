@@ -213,7 +213,7 @@ namespace RTC
 			this->header->packetType = static_cast<uint8_t>(GetType());
 			this->header->length     = uint16_t{ htons(length) };
 
-			return sizeof(CommonHeader);
+			return CommonHeaderSize;
 		}
 	} // namespace RTCP
 } // namespace RTC

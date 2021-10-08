@@ -4,6 +4,11 @@ import { MediaKind, RtpCapabilities, RtpParameters } from 'mediasoup-client/lib/
 import { DtlsParameters, TransportOptions, Transport } from 'mediasoup-client/lib/Transport';
 import { ConsumerOptions } from 'mediasoup-client/lib/Consumer';
 
+type Brand<K, T> = K & { __brand: T };
+
+type ConsumerId = Brand<string, 'ConsumerId'>;
+type ProducerId = Brand<string, 'ProducerId'>;
+
 interface ServerInit {
     action: 'Init';
     consumerTransportOptions: TransportOptions;
@@ -17,7 +22,7 @@ interface ServerConnectedProducerTransport {
 
 interface ServerProduced {
 	action: 'Produced';
-	id: string;
+	id: ProducerId;
 }
 
 interface ServerConnectedConsumerTransport {
@@ -26,7 +31,7 @@ interface ServerConnectedConsumerTransport {
 
 interface ServerConsumed {
 	action: 'Consumed';
-	id: string;
+	id: ConsumerId;
 	kind: MediaKind;
 	rtpParameters: RtpParameters;
 }
@@ -61,12 +66,12 @@ interface ClientProduce {
 
 interface ClientConsume {
     action: 'Consume';
-    producerId: string;
+    producerId: ProducerId;
 }
 
 interface ClientConsumerResume {
     action: 'ConsumerResume';
-    id: string;
+    id: ConsumerId;
 }
 
 type ClientMessage =
@@ -91,7 +96,7 @@ async function init()
 		receivePreview.play();
 	};
 
-	let receiveMediaStream: MediaStream | undefined;
+	const receiveMediaStream = new MediaStream();
 
 	const ws = new WebSocket('ws://localhost:3000/ws');
 
@@ -195,7 +200,7 @@ async function init()
 						console.log(`${track.kind} producer created:`, producer);
 					}
 
-					// Producer transport is now needed to receive previously produced
+					// Consumer transport is now needed to receive previously produced
 					// tracks back
 					consumerTransport = device.createRecvTransport(
 						decodedMessage.consumerTransportOptions
@@ -227,7 +232,7 @@ async function init()
 							// Send request to consume producer
 							send({
 								action     : 'Consume',
-								producerId : producer.id
+								producerId : producer.id as ProducerId
 							});
 							// And wait for confirmation, but, obviously, no error handling,
 							// which you should definitely have in real-world applications
@@ -246,19 +251,12 @@ async function init()
 								// https://mediasoup.org/documentation/v3/mediasoup/api/#transport-consume)
 								send({
 									action : 'ConsumerResume',
-									id     : consumer.id
+									id     : consumer.id as ConsumerId
 								});
 
-								if (receiveMediaStream)
-								{
-									receiveMediaStream.addTrack(consumer.track);
-									receivePreview.srcObject = receiveMediaStream;
-								}
-								else
-								{
-									receiveMediaStream = new MediaStream([ consumer.track ]);
-									receivePreview.srcObject = receiveMediaStream;
-								}
+								receiveMediaStream.addTrack(consumer.track);
+								receivePreview.srcObject = receiveMediaStream;
+
 								resolve(undefined);
 							});
 						});

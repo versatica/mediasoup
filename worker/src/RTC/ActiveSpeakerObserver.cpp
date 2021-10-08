@@ -196,11 +196,12 @@ namespace RTC
 		if (IsPaused())
 			return;
 
-		uint8_t volume;
+		uint8_t level;
 		bool voice;
 
-		if (!packet->ReadSsrcAudioLevel(volume, voice))
+		if (!packet->ReadSsrcAudioLevel(level, voice))
 			return;
+		uint8_t volume = 127 - level;
 
 		auto it = this->mapProducerSpeaker.find(producer->id);
 
@@ -238,10 +239,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t now             = DepLibUV::GetTimeMs();
-		int64_t levelIdleTimeout = LevelIdleTimeout - (now - this->lastLevelIdleTime);
+		uint64_t now = DepLibUV::GetTimeMs();
 
-		if (levelIdleTimeout <= 0)
+		if (now - this->lastLevelIdleTime >= LevelIdleTimeout)
 		{
 			if (this->lastLevelIdleTime != 0)
 			{
@@ -310,13 +310,12 @@ namespace RTC
 				for (int interval = 0; interval < this->relativeSpeachActivitiesLen; ++interval)
 				{
 					this->relativeSpeachActivities[interval] = std::log(
-					  dominantSpeaker->GetActivityScore(interval) / speaker->GetActivityScore(interval));
+					  speaker->GetActivityScore(interval) / dominantSpeaker->GetActivityScore(interval));
 				}
 
 				double c1 = this->relativeSpeachActivities[0];
 				double c2 = this->relativeSpeachActivities[1];
 				double c3 = this->relativeSpeachActivities[2];
-
 				if ((c1 > C1) && (c2 > C2) && (c3 > C3) && (c2 > newDominantC2))
 				{
 					newDominantC2 = c2;
@@ -351,27 +350,18 @@ namespace RTC
 			}
 			else if (LevelIdleTimeout < idle)
 			{
-				speaker->LevelTimedOut();
+				speaker->LevelTimedOut(now);
 			}
 		}
 	}
 
 	ActiveSpeakerObserver::Speaker::Speaker()
+	  : immediateActivityScore(MinActivityScore), mediumActivityScore(MinActivityScore),
+	    longActivityScore(MinActivityScore), lastLevelChangeTime(DepLibUV::GetTimeMs()),
+	    minLevel(MinLevel), nextMinLevel(MinLevel), immediates(ImmediateBuffLen, 0),
+	    mediums(MediumsBuffLen, 0), longs(LongsBuffLen, 0), levels(LevelsBuffLen, 0), nextLevelIndex(0)
 	{
 		MS_TRACE();
-
-		this->minLevel               = MinLevel;
-		this->nextMinLevel           = MinLevel;
-		this->immediateActivityScore = MinActivityScore;
-		this->mediumActivityScore    = MinActivityScore;
-		this->longActivityScore      = MinActivityScore;
-
-		this->immediates.resize(ImmediateBuffLen);
-		this->mediums.resize(MediumsBuffLen);
-		this->longs.resize(LongsBuffLen);
-		this->levels.resize(LevelsBuffLen);
-
-		this->lastLevelChangeTime = DepLibUV::GetTimeMs();
 	}
 
 	void ActiveSpeakerObserver::Speaker::EvalActivityScores()
@@ -413,11 +403,13 @@ namespace RTC
 		return 0;
 	}
 
-	void ActiveSpeakerObserver::Speaker::LevelChanged(uint32_t level, uint64_t time)
+	void ActiveSpeakerObserver::Speaker::LevelChanged(uint32_t level, uint64_t now)
 	{
-		if (this->lastLevelChangeTime <= time)
+		if (this->lastLevelChangeTime <= now)
 		{
-			this->lastLevelChangeTime = time;
+			uint64_t elapsed = now - this->lastLevelChangeTime;
+
+			this->lastLevelChangeTime = now;
 
 			int8_t b = 0;
 
@@ -434,19 +426,26 @@ namespace RTC
 				b = level;
 			}
 
-			std::copy(this->levels.begin(), this->levels.end() - 1, this->levels.begin() + 1);
+			// The algorithm expect to have an update every 20 milliseconds. If the producer is paused,
+			// using a different packetization time or using DTX we need to update more than one sample
+			// when receiving an audio packet.
+			uint32_t intervalsUpdated =
+			  std::min(std::max(static_cast<uint32_t>(elapsed / 20), 1U), LevelsBuffLen);
+			for (uint32_t i = 0; i < intervalsUpdated; i++)
+			{
+				this->levels[this->nextLevelIndex] = b;
+				this->nextLevelIndex               = (this->nextLevelIndex + 1) % LevelsBuffLen;
+			}
 
-			this->levels[0] = b;
 			UpdateMinLevel(b);
-			this->paused = false;
 		}
 	}
 
-	void ActiveSpeakerObserver::Speaker::LevelTimedOut()
+	void ActiveSpeakerObserver::Speaker::LevelTimedOut(uint64_t now)
 	{
 		MS_TRACE();
 
-		LevelChanged(MinLevel, this->lastLevelChangeTime);
+		LevelChanged(MinLevel, now);
 	}
 
 	bool ActiveSpeakerObserver::Speaker::ComputeImmediates()
@@ -458,7 +457,13 @@ namespace RTC
 
 		for (uint32_t i = 0; i < ImmediateBuffLen; ++i)
 		{
-			uint8_t level = this->levels[i];
+			// this->levels is a circular buffer where new samples are written in the
+			// next vector index. this->immediates is a buffer where the most recent
+			// value is always in index 0.
+			size_t levelIndex = this->nextLevelIndex >= (i + 1)
+			                      ? this->nextLevelIndex - i - 1
+			                      : this->nextLevelIndex + LevelsBuffLen - i - 1;
+			uint8_t level = this->levels[levelIndex];
 
 			if (level < minLevel)
 			{

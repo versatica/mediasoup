@@ -17,7 +17,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (len < sizeof(CommonHeader) + sizeof(FeedbackPacket::Header))
+			if (len < Packet::CommonHeaderSize + FeedbackPacket::HeaderSize)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 
@@ -29,12 +29,12 @@ namespace RTC
 
 			std::unique_ptr<FeedbackPsAfbPacket> packet;
 
-			constexpr size_t Offset = sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
+			constexpr size_t Offset = Packet::CommonHeaderSize + FeedbackPacket::HeaderSize;
 
 			// clang-format off
 			if (
-				len >= sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + 4 &&
-				Utils::Byte::Get4Bytes(data, Offset) == FeedbackPsRembPacket::uniqueIdentifier
+				len >= Packet::CommonHeaderSize + FeedbackPacket::HeaderSize + 4 &&
+				Utils::Byte::Get4Bytes(data, Offset) == FeedbackPsRembPacket::UniqueIdentifier
 			)
 			// clang-format on
 			{

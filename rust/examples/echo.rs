@@ -3,6 +3,7 @@ use actix_web::web::{Data, Payload};
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
 use mediasoup::prelude::*;
+use mediasoup::worker::{WorkerLogLevel, WorkerLogTag};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::num::{NonZeroU32, NonZeroU8};
@@ -137,7 +138,7 @@ struct EchoConnection {
     consumers: HashMap<ConsumerId, Consumer>,
     /// Producers associated with this client, preventing them from being destroyed
     producers: Vec<Producer>,
-    /// Producers associated with this client, useful to get its RTP capabilities later
+    /// Router associated with this client, useful to get its RTP capabilities later
     router: Router,
     /// Consumer and producer transports associated with this client
     transports: Transports,
@@ -147,7 +148,27 @@ impl EchoConnection {
     /// Create a new instance representing WebSocket connection
     async fn new(worker_manager: &WorkerManager) -> Result<Self, String> {
         let worker = worker_manager
-            .create_worker(WorkerSettings::default())
+            .create_worker({
+                let mut settings = WorkerSettings::default();
+                settings.log_level = WorkerLogLevel::Debug;
+                settings.log_tags = vec![
+                    WorkerLogTag::Info,
+                    WorkerLogTag::Ice,
+                    WorkerLogTag::Dtls,
+                    WorkerLogTag::Rtp,
+                    WorkerLogTag::Srtp,
+                    WorkerLogTag::Rtcp,
+                    WorkerLogTag::Rtx,
+                    WorkerLogTag::Bwe,
+                    WorkerLogTag::Score,
+                    WorkerLogTag::Simulcast,
+                    WorkerLogTag::Svc,
+                    WorkerLogTag::Sctp,
+                    WorkerLogTag::Message,
+                ];
+
+                settings
+            })
             .await
             .map_err(|error| format!("Failed to create worker: {}", error))?;
         let router = worker

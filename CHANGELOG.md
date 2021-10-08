@@ -1,6 +1,20 @@
 # Changelog
 
 
+### WIP
+
+* Worker communication optimization (aka removing netstring dependency) (PR #644).
+
+
+### 3.8.4
+
+* OPUS multi-channel (Surround sound) support (PR #647).
+* Add `packetLoss` stats to transport (PR #648 by @ggarber).
+* Fixes for active speaker observer (PR #655 by @ggarber).
+* Fix big endian issues (PR #639).
+* Update NPM deps.
+
+
 ### 3.8.3
 
 * Fix wrong `size_t*` to `int*` conversion in 64bit Big-Endian hosts (PR #637).

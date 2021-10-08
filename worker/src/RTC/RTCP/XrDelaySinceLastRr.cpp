@@ -16,7 +16,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Ensure there is space for the common header and the SSRC of packet sender.
-			if (len < sizeof(Body))
+			if (len < BodySize)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for a extended DSLR sub-block, sub-block discarded");
 
@@ -49,9 +49,9 @@ namespace RTC
 			MS_TRACE();
 
 			// Copy the body.
-			std::memcpy(buffer, this->body, sizeof(DelaySinceLastRr::SsrcInfo::Body));
+			std::memcpy(buffer, this->body, DelaySinceLastRr::SsrcInfo::BodySize);
 
-			return sizeof(DelaySinceLastRr::SsrcInfo::Body);
+			return DelaySinceLastRr::SsrcInfo::BodySize;
 		}
 
 		/* Class methods. */
@@ -63,10 +63,10 @@ namespace RTC
 			auto* header = const_cast<ExtendedReportBlock::CommonHeader*>(
 			  reinterpret_cast<const ExtendedReportBlock::CommonHeader*>(data));
 			std::unique_ptr<DelaySinceLastRr> report(new DelaySinceLastRr(header));
-			size_t offset{ sizeof(ExtendedReportBlock::CommonHeader) };
+			size_t offset{ ExtendedReportBlock::CommonHeaderSize };
 			uint16_t reportLength = ntohs(header->length) * 4;
 
-			while (len > offset && reportLength >= sizeof(DelaySinceLastRr::SsrcInfo::Body))
+			while (len > offset && reportLength >= DelaySinceLastRr::SsrcInfo::BodySize)
 			{
 				DelaySinceLastRr::SsrcInfo* ssrcInfo =
 				  DelaySinceLastRr::SsrcInfo::Parse(data + offset, len - offset);
@@ -82,7 +82,7 @@ namespace RTC
 				}
 
 				offset += ssrcInfo->GetSize();
-				reportLength -= sizeof(DelaySinceLastRr::SsrcInfo::Body);
+				reportLength -= DelaySinceLastRr::SsrcInfo::BodySize;
 			}
 
 			return report.release();
@@ -94,16 +94,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t length = static_cast<uint16_t>((sizeof(SsrcInfo::Body) * this->ssrcInfos.size() / 4));
+			size_t length = static_cast<uint16_t>((SsrcInfo::BodySize * this->ssrcInfos.size() / 4));
 
 			// Fill the common header.
 			this->header->blockType = static_cast<uint8_t>(this->type);
 			this->header->reserved  = 0;
 			this->header->length    = uint16_t{ htons(length) };
 
-			std::memcpy(buffer, this->header, sizeof(ExtendedReportBlock::CommonHeader));
+			std::memcpy(buffer, this->header, ExtendedReportBlock::CommonHeaderSize);
 
-			size_t offset{ sizeof(ExtendedReportBlock::CommonHeader) };
+			size_t offset{ ExtendedReportBlock::CommonHeaderSize };
 
 			// Serialize sub-blocks.
 			for (auto* ssrcInfo : this->ssrcInfos)
@@ -123,7 +123,7 @@ namespace RTC
 			MS_DUMP("  reserved   : 0");
 			MS_DUMP(
 			  "  length     : %" PRIu16,
-			  static_cast<uint16_t>((sizeof(SsrcInfo::Body) * this->ssrcInfos.size() / 4)));
+			  static_cast<uint16_t>((SsrcInfo::BodySize * this->ssrcInfos.size() / 4)));
 			for (auto* ssrcInfo : this->ssrcInfos)
 			{
 				ssrcInfo->Dump();

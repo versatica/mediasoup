@@ -6,7 +6,7 @@ export declare class PayloadChannel extends EnhancedEventEmitter {
     private readonly _consumerSocket;
     private _nextId;
     private readonly _sents;
-    private _recvBuffer?;
+    private _recvBuffer;
     private _ongoingNotification?;
     /**
      * @private
