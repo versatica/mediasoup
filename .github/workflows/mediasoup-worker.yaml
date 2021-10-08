@@ -26,14 +26,19 @@ jobs:
           - os: macos-10.15
             cc: clang
             cxx: clang++
-          # macOS 11 is in private preview currently.
-          # - os: macos-11.0
-          - os: windows-2019
+          - os: macos-11
             cc: gcc
             cxx: g++
-          - os: windows-2019
+          - os: macos-11
             cc: clang
             cxx: clang++
+          # TODO: These build, but don't run, unlock if you figure out why
+          # - os: windows-2019
+          #   cc: gcc
+          #   cxx: g++
+          # - os: windows-2019
+          #   cc: clang
+          #   cxx: clang++
           - os: windows-2019
             cc: cl
             cxx: cl
