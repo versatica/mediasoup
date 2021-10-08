@@ -28,7 +28,7 @@
 
 void IgnoreSignals();
 
-extern "C" int run_worker(
+extern "C" int mediasoup_worker_run(
   int argc,
   char* argv[],
   const char* version,

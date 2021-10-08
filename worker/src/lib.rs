@@ -72,7 +72,7 @@ extern "C" {
     /// Returns `0` on success, or an error code `< 0` on failure
     pub fn uv_async_send(handle: UvAsyncT) -> c_int;
 
-    pub fn run_worker(
+    pub fn mediasoup_worker_run(
         argc: c_int,
         argv: *const *const c_char,
         version: *const c_char,

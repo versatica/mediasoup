@@ -89,7 +89,7 @@ pub(super) fn run_worker_with_channels(
                     _payload_channel_read_callback,
                 ) = prepared_payload_channel_write.deconstruct();
 
-                mediasoup_sys::run_worker(
+                mediasoup_sys::mediasoup_worker_run(
                     argc,
                     argv.as_ptr(),
                     version.as_ptr(),
