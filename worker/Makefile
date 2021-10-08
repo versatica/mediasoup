@@ -20,7 +20,7 @@ export PYTHONDONTWRITEBYTECODE = 1
 # Instruct `meson` where to look for ninja binary.
 ifeq ($(OS),Windows_NT)
 	# Windows is, of course, special.
-    export NINJA = $(PIP_DIR)/bin/ninja.exe
+	export NINJA = $(PIP_DIR)/bin/ninja.exe
 else
     export NINJA = $(PIP_DIR)/bin/ninja
 endif
