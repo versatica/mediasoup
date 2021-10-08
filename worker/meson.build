@@ -186,12 +186,6 @@ abseil_cpp_proj = subproject(
     'warning_level=0',
   ],
 )
-netstring_c_proj = subproject(
-  'netstring-c',
-  default_options: [
-    'warning_level=0',
-  ],
-)
 libwebrtc_include_directories = include_directories('include')
 subdir('deps/libwebrtc')
 
@@ -201,7 +195,6 @@ dependencies = [
   libuv_proj.get_variable('libuv_dep'),
   libsrtp2_proj.get_variable('libsrtp2_dep'),
   usrsctp_proj.get_variable('usrsctp_dep'),
-  netstring_c_proj.get_variable('netstring_c_dep'),
   libwebrtc_dep,
 ]
 
@@ -211,7 +204,6 @@ link_whole = [
   libuv_proj.get_variable('libuv'),
   libsrtp2_proj.get_variable('libsrtp2'),
   usrsctp_proj.get_variable('usrsctp'),
-  netstring_c_proj.get_variable('netstring_c_lib'),
   libwebrtc,
 ]
 
