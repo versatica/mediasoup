@@ -69,17 +69,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
       - run: npm run install-clang-tools
         # TODO: Maybe fix this one day
         if: runner.os != 'Windows'
       - run: npm run lint:worker
         # TODO: Maybe fix this one day
         if: runner.os != 'Windows'
-
-      - name: Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node }}
 
       - name: Configure cache
         uses: actions/cache@v2
@@ -90,7 +90,7 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
-      - run: npm run postinstall
+      - run: npm run worker:build
       - run: npm run test:worker
         # All compilers on Windows can build everything, but tests fail to run on GCC/Clang with "Error -1073741511",
         # remove condition below if you fixed it.
