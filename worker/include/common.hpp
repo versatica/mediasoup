@@ -32,7 +32,7 @@ using ChannelReadFreeFn = void (*)(uint8_t*, uint32_t, size_t);
 using ChannelReadFn = ChannelReadFreeFn (*)(
   uint8_t** /* message */,
   uint32_t* /* messageLen */,
-  size_t* /* messageCapacity */,
+  size_t* /* messageCtx */,
   // This is `uv_async_t` handle that can be called later with `uv_async_send()` when there is more
   // data to read
   const void* /* handle */,
@@ -48,7 +48,7 @@ using PayloadChannelReadFreeFn = void (*)(uint8_t*, uint32_t, size_t);
 using PayloadChannelReadFn = PayloadChannelReadFreeFn (*)(
   uint8_t** /* message */,
   uint32_t* /* messageLen */,
-  size_t* /* messageCapacity */,
+  size_t* /* messageCtx */,
   uint8_t** /* payload */,
   uint32_t* /* payloadLen */,
   size_t* /* payloadCapacity */,

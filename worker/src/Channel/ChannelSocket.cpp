@@ -165,10 +165,10 @@ namespace Channel
 
 		uint8_t* message{ nullptr };
 		uint32_t messageLen;
-		size_t messageCapacity;
+		size_t messageCtx;
 
 		auto free = this->channelReadFn(
-		  &message, &messageLen, &messageCapacity, this->uvReadHandle, this->channelReadCtx);
+		  &message, &messageLen, &messageCtx, this->uvReadHandle, this->channelReadCtx);
 
 		if (free)
 		{
@@ -203,7 +203,7 @@ namespace Channel
 				MS_ERROR_STD("discarding wrong Channel request");
 			}
 
-			free(message, messageLen, messageCapacity);
+			free(message, messageLen, messageCtx);
 		}
 
 		return free != nullptr;

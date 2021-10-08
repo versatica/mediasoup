@@ -180,7 +180,7 @@ namespace PayloadChannel
 
 		uint8_t* message{ nullptr };
 		uint32_t messageLen;
-		size_t messageCapacity;
+		size_t messageCtx;
 
 		uint8_t* payload{ nullptr };
 		uint32_t payloadLen;
@@ -189,7 +189,7 @@ namespace PayloadChannel
 		auto free = this->payloadChannelReadFn(
 		  &message,
 		  &messageLen,
-		  &messageCapacity,
+		  &messageCtx,
 		  &payload,
 		  &payloadLen,
 		  &payloadCapacity,
@@ -280,7 +280,7 @@ namespace PayloadChannel
 				MS_ERROR("discarding wrong Channel request");
 			}
 
-			free(message, messageLen, messageCapacity);
+			free(message, messageLen, messageCtx);
 			free(payload, payloadLen, payloadCapacity);
 		}
 
