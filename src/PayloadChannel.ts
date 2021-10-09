@@ -13,7 +13,6 @@ type Sent =
 	method: string;
 	resolve: (data?: any) => void;
 	reject: (error: Error) => void;
-	timer: NodeJS.Timer;
 	close: () => void;
 }
 
@@ -259,7 +258,6 @@ export class PayloadChannel extends EnhancedEventEmitter
 
 		return new Promise((pResolve, pReject) =>
 		{
-			const timeout = 1000 * (15 + (0.1 * this._sents.size));
 			const sent: Sent =
 			{
 				id      : id,
@@ -269,7 +267,6 @@ export class PayloadChannel extends EnhancedEventEmitter
 					if (!this._sents.delete(id))
 						return;
 
-					clearTimeout(sent.timer);
 					pResolve(data2);
 				},
 				reject : (error) =>
@@ -277,19 +274,10 @@ export class PayloadChannel extends EnhancedEventEmitter
 					if (!this._sents.delete(id))
 						return;
 
-					clearTimeout(sent.timer);
 					pReject(error);
 				},
-				timer : setTimeout(() =>
-				{
-					if (!this._sents.delete(id))
-						return;
-
-					pReject(new Error('Channel request timeout'));
-				}, timeout),
 				close : () =>
 				{
-					clearTimeout(sent.timer);
 					pReject(new InvalidStateError('Channel closed'));
 				}
 			};
