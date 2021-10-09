@@ -7,6 +7,7 @@
 * Significant worker communication optimizations (especially latency)
 * Switch from file descriptors to function calls when communicating with worker
 * Various optimizations that caused minor breaking changes to public API
+* Requests no longer have internal timeout, but they can now be cancelled, add your own timeouts on top if needed
 
 # 0.8.5
 

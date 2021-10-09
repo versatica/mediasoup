@@ -3,7 +3,7 @@ use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers
 use crate::worker::utils;
 use crate::worker::utils::{PreparedChannelRead, PreparedChannelWrite};
 use crate::worker::{RequestError, SubscriptionHandler};
-use futures_lite::future;
+use atomic_take::AtomicTake;
 use hash_hasher::HashedMap;
 use log::{debug, error, trace, warn};
 use lru::LruCache;
@@ -14,7 +14,6 @@ use serde_json::Value;
 use std::collections::VecDeque;
 use std::fmt::Debug;
 use std::sync::{Arc, Weak};
-use std::time::Duration;
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -104,21 +103,57 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
     }
 }
 
+#[derive(Debug, Serialize)]
+struct RequestMessage<'a, R: Serialize> {
+    id: u32,
+    method: &'static str,
+    #[serde(flatten)]
+    request: &'a R,
+}
+
 struct ResponseError {
     reason: String,
 }
 
-type Response<T> = Result<Option<T>, ResponseError>;
+type ResponseResult<T> = Result<Option<T>, ResponseError>;
+
+struct RequestDropGuard<'a> {
+    id: u32,
+    message: Arc<AtomicTake<Vec<u8>>>,
+    channel: &'a Channel,
+    removed: bool,
+}
+
+impl<'a> Drop for RequestDropGuard<'a> {
+    fn drop(&mut self) {
+        if self.removed {
+            return;
+        }
+
+        // Drop pending message from memory
+        self.message.take();
+        // Remove request handler from the container
+        if let Some(requests_container) = self.channel.inner.requests_container_weak.upgrade() {
+            requests_container.lock().handlers.remove(&self.id);
+        }
+    }
+}
+
+impl<'a> RequestDropGuard<'a> {
+    fn remove(mut self) {
+        self.removed = true;
+    }
+}
 
 #[derive(Default)]
 struct RequestsContainer {
     next_id: u32,
-    handlers: HashedMap<u32, async_oneshot::Sender<Response<Value>>>,
+    handlers: HashedMap<u32, async_oneshot::Sender<ResponseResult<Value>>>,
 }
 
 struct OutgoingMessageBuffer {
     handle: Option<UvAsyncT>,
-    messages: VecDeque<Vec<u8>>,
+    messages: VecDeque<Arc<AtomicTake<Vec<u8>>>>,
 }
 
 struct Inner {
@@ -144,7 +179,7 @@ impl Channel {
     pub(super) fn new() -> (Self, PreparedChannelRead, PreparedChannelWrite) {
         let outgoing_message_buffer = Arc::new(Mutex::new(OutgoingMessageBuffer {
             handle: None,
-            messages: VecDeque::<Vec<u8>>::with_capacity(10),
+            messages: VecDeque::with_capacity(10),
         }));
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
         let requests_container_weak = Arc::downgrade(&requests_container);
@@ -162,7 +197,14 @@ impl Channel {
                     outgoing_message_buffer.handle.replace(handle);
                 }
 
-                outgoing_message_buffer.messages.pop_front()
+                while let Some(maybe_message) = outgoing_message_buffer.messages.pop_front() {
+                    // Request might have already been cancelled
+                    if let Some(message) = maybe_message.take() {
+                        return Some(message);
+                    }
+                }
+
+                None
             }
         });
 
@@ -263,16 +305,7 @@ impl Channel {
     {
         let method = request.as_method();
 
-        #[derive(Debug, Serialize)]
-        struct RequestMessagePrivate<'a, R: Serialize> {
-            id: u32,
-            method: &'static str,
-            #[serde(flatten)]
-            request: &'a R,
-        }
-
         let id;
-        let queue_len;
         let (result_sender, result_receiver) = async_oneshot::oneshot();
 
         {
@@ -284,7 +317,6 @@ impl Channel {
             let mut requests_container = requests_container_lock.lock();
 
             id = requests_container.next_id;
-            queue_len = requests_container.handlers.len();
 
             requests_container.next_id = requests_container.next_id.wrapping_add(1);
             requests_container.handlers.insert(id, result_sender);
@@ -292,16 +324,20 @@ impl Channel {
 
         debug!("request() [method:{}, id:{}]: {:?}", method, id, request);
 
-        let message = serde_json::to_vec(&RequestMessagePrivate {
-            id,
-            method,
-            request: &request,
-        })
-        .unwrap();
+        let message = Arc::new(AtomicTake::new(
+            serde_json::to_vec(&RequestMessage {
+                id,
+                method,
+                request: &request,
+            })
+            .unwrap(),
+        ));
 
         {
             let mut outgoing_message_buffer = self.inner.outgoing_message_buffer.lock();
-            outgoing_message_buffer.messages.push_back(message);
+            outgoing_message_buffer
+                .messages
+                .push_back(Arc::clone(&message));
             if let Some(handle) = &outgoing_message_buffer.handle {
                 unsafe {
                     // Notify worker that there is something to read
@@ -314,45 +350,35 @@ impl Channel {
             }
         }
 
-        let result = future::or(
-            async {
-                result_receiver
-                    .await
-                    .map_err(|_| RequestError::ChannelClosed {})
-            },
-            async {
-                async_io::Timer::after(Duration::from_millis(
-                    (1000.0 * (15.0 + (0.1 * queue_len as f64))).round() as u64,
-                ))
-                .await;
+        // Drop guard to make sure to drop pending request when future is cancelled
+        let request_drop_guard = RequestDropGuard {
+            id,
+            message,
+            channel: self,
+            removed: false,
+        };
 
-                if let Some(requests_container) = self.inner.requests_container_weak.upgrade() {
-                    requests_container.lock().handlers.remove(&id);
-                }
+        let response_result_fut = result_receiver.await;
 
-                Err(RequestError::TimedOut)
-            },
-        )
-        .await?;
+        request_drop_guard.remove();
 
-        let data = match result {
+        match response_result_fut.map_err(|_| RequestError::ChannelClosed {})? {
             Ok(data) => {
                 debug!("request succeeded [method:{}, id:{}]", method, id);
-                data
+
+                // Default will work for `()` response
+                serde_json::from_value(data.unwrap_or_default()).map_err(|error| {
+                    RequestError::FailedToParse {
+                        error: error.to_string(),
+                    }
+                })
             }
             Err(ResponseError { reason }) => {
                 debug!("request failed [method:{}, id:{}]: {}", method, id, reason);
 
-                return Err(RequestError::Response { reason });
+                Err(RequestError::Response { reason })
             }
-        };
-
-        // Default will work for `()` response
-        serde_json::from_value(data.unwrap_or_default()).map_err(|error| {
-            RequestError::FailedToParse {
-                error: error.to_string(),
-            }
-        })
+        }
     }
 
     pub(crate) fn subscribe_to_notifications<F>(
