@@ -16,7 +16,7 @@ namespace Channel
 	{
 		while (static_cast<ChannelSocket*>(handle->data)->CallbackRead())
 		{
-			// Read while there are new messages
+			// Read while there are new messages.
 		}
 	}
 
@@ -106,6 +106,7 @@ namespace Channel
 		{
 			this->consumerSocket->Close();
 		}
+
 		if (this->producerSocket)
 		{
 			this->producerSocket->Close();

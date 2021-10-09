@@ -17,7 +17,7 @@ namespace PayloadChannel
 	{
 		while (static_cast<PayloadChannelSocket*>(handle->data)->CallbackRead())
 		{
-			// Read while there are new messages
+			// Read while there are new messages.
 		}
 	}
 
