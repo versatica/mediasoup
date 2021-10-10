@@ -170,8 +170,8 @@ export type WorkerResourceUsage =
 const workerBin = process.env.MEDIASOUP_WORKER_BIN
 	? process.env.MEDIASOUP_WORKER_BIN
 	: process.env.MEDIASOUP_BUILDTYPE === 'Debug'
-		? path.join(__dirname, '..', 'worker', 'out', 'Debug', 'mediasoup-worker')
-		: path.join(__dirname, '..', 'worker', 'out', 'Release', 'mediasoup-worker');
+		? path.join(__dirname, '..', '..', 'worker', 'out', 'Debug', 'mediasoup-worker')
+		: path.join(__dirname, '..', '..', 'worker', 'out', 'Release', 'mediasoup-worker');
 
 const logger = new Logger('Worker');
 const workerLogger = new Logger('Worker');

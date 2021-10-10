@@ -1,7 +1,8 @@
 const os = require('os');
 const process = require('process');
+const path = require('path');
 const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../');
+const mediasoup = require('../lib/');
 const { createWorker, observer } = mediasoup;
 const { InvalidStateError } = require('../lib/errors');
 
@@ -36,8 +37,8 @@ test('createWorker() succeeds', async () =>
 			logTags             : [ 'info' ],
 			rtcMinPort          : 0,
 			rtcMaxPort          : 9999,
-			dtlsCertificateFile : 'test/data/dtls-cert.pem',
-			dtlsPrivateKeyFile  : 'test/data/dtls-key.pem',
+			dtlsCertificateFile : path.join(__dirname, 'data', 'dtls-cert.pem'),
+			dtlsPrivateKeyFile  : path.join(__dirname, 'data', 'dtls-key.pem'),
 			appData             : { bar: 456 }
 		});
 	expect(worker).toBeType('object');

@@ -1,7 +1,7 @@
 const { toBeType } = require('jest-tobetype');
 const dgram = require('dgram');
 const sctp = require('sctp');
-const mediasoup = require('../');
+const mediasoup = require('../lib/');
 const { createWorker } = mediasoup;
 
 expect.extend({ toBeType });

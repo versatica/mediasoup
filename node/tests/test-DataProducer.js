@@ -1,5 +1,5 @@
 const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../');
+const mediasoup = require('../lib/');
 const { createWorker } = mediasoup;
 
 expect.extend({ toBeType });

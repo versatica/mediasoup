@@ -1,6 +1,6 @@
 const { toBeType } = require('jest-tobetype');
 const pickPort = require('pick-port');
-const mediasoup = require('../');
+const mediasoup = require('../lib/');
 const { createWorker } = mediasoup;
 
 expect.extend({ toBeType });

@@ -1,6 +1,6 @@
 const { toBeType } = require('jest-tobetype');
-const pkg = require('../package.json');
-const mediasoup = require('../');
+const pkg = require('../../package.json');
+const mediasoup = require('../lib/');
 const {
 	version,
 	getSupportedRtpCapabilities,

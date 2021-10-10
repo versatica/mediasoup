@@ -16,8 +16,8 @@ const Router_1 = require("./Router");
 const workerBin = process.env.MEDIASOUP_WORKER_BIN
     ? process.env.MEDIASOUP_WORKER_BIN
     : process.env.MEDIASOUP_BUILDTYPE === 'Debug'
-        ? path.join(__dirname, '..', 'worker', 'out', 'Debug', 'mediasoup-worker')
-        : path.join(__dirname, '..', 'worker', 'out', 'Release', 'mediasoup-worker');
+        ? path.join(__dirname, '..', '..', 'worker', 'out', 'Debug', 'mediasoup-worker')
+        : path.join(__dirname, '..', '..', 'worker', 'out', 'Release', 'mediasoup-worker');
 const logger = new Logger_1.Logger('Worker');
 const workerLogger = new Logger_1.Logger('Worker');
 class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
