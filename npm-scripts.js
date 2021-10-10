@@ -11,20 +11,6 @@ const task = process.argv.slice(2).join(' ');
 // mediasoup mayor version.
 const MAYOR_VERSION = 3;
 
-// Just for Windows.
-let PYTHON;
-let MSBUILD;
-let MEDIASOUP_BUILDTYPE;
-let MEDIASOUP_TEST_TAGS;
-
-if (isWindows)
-{
-	PYTHON = process.env.PYTHON || 'python';
-	MSBUILD = process.env.MSBUILD || 'MSBuild';
-	MEDIASOUP_BUILDTYPE = process.env.MEDIASOUP_BUILDTYPE || 'Release';
-	MEDIASOUP_TEST_TAGS = process.env.MEDIASOUP_TEST_TAGS || '';
-}
-
 let MAKE;
 
 if (isFreeBSD)
@@ -79,6 +65,16 @@ switch (task)
 		break;
 	}
 
+	case 'worker:build':
+	{
+		if (!process.env.MEDIASOUP_WORKER_BIN)
+		{
+			execute(`${MAKE} -C worker`);
+		}
+
+		break;
+	}
+
 	case 'lint:node':
 	{
 		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c .eslintrc.js --max-warnings 0 --ext=ts src/');
@@ -119,17 +115,7 @@ switch (task)
 
 	case 'test:worker':
 	{
-		if (!isWindows)
-		{
-			execute(`${MAKE} test -C worker`);
-		}
-		else if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			execute(`${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker-test`);
-			execute(`${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`);
-			execute(`cd worker && .\\out\\${MEDIASOUP_BUILDTYPE}\\mediasoup-worker-test.exe --invisibles --use-colour=yes ${MEDIASOUP_TEST_TAGS}`);
-		}
-
+		execute(`${MAKE} test -C worker`);
 		break;
 	}
 
@@ -144,18 +130,9 @@ switch (task)
 
 	case 'postinstall':
 	{
-		if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			if (!isWindows)
-			{
-				execute(`${MAKE} -C worker`);
-			}
-			else
-			{
-				execute(`${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker`);
-				execute(`${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`);
-			}
-		}
+		execute('node npm-scripts.js worker:build');
+		execute(`${MAKE} clean-pip -C worker`);
+		execute(`${MAKE} clean-subprojects -C worker`);
 
 		break;
 	}
@@ -206,7 +183,19 @@ function execute(command)
 
 	try
 	{
-		execSync(command,	{ stdio: [ 'ignore', process.stdout, process.stderr ] });
+		// Set MSVC compiler as default on Windows
+		const env = isWindows ? {
+			CC  : process.env.CC || 'cl',
+			CXX : process.env.CXX || 'cl',
+			...process.env
+		} : process.env;
+
+		execSync(
+			command,
+			{
+				env   : env,
+				stdio : [ 'ignore', process.stdout, process.stderr ]
+			});
 	}
 	catch (error)
 	{

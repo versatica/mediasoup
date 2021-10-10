@@ -1,0 +1,8 @@
+[wrap-file]
+directory = libsrtp-2.4.2
+source_url = https://github.com/cisco/libsrtp/archive/refs/tags/v2.4.2.zip
+source_filename = libsrtp-2.4.2.zip
+source_hash = 35b1ae7a6256224feb058f1feb42170537a44896340f80e77b49cc59af686a82
+
+[provide]
+libsrtp2 = libsrtp2_dep
