@@ -165,29 +165,20 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         __classPrivateFieldGet(this, _producerSocket).write(Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
         __classPrivateFieldGet(this, _producerSocket).write(payload);
         return new Promise((pResolve, pReject) => {
-            const timeout = 1000 * (15 + (0.1 * __classPrivateFieldGet(this, _sents).size));
             const sent = {
                 id: id,
                 method: method,
                 resolve: (data2) => {
                     if (!__classPrivateFieldGet(this, _sents).delete(id))
                         return;
-                    clearTimeout(sent.timer);
                     pResolve(data2);
                 },
                 reject: (error) => {
                     if (!__classPrivateFieldGet(this, _sents).delete(id))
                         return;
-                    clearTimeout(sent.timer);
                     pReject(error);
                 },
-                timer: setTimeout(() => {
-                    if (!__classPrivateFieldGet(this, _sents).delete(id))
-                        return;
-                    pReject(new Error('Channel request timeout'));
-                }, timeout),
                 close: () => {
-                    clearTimeout(sent.timer);
                     pReject(new errors_1.InvalidStateError('Channel closed'));
                 }
             };
