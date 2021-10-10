@@ -4,7 +4,8 @@
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
-    "José Luis Millán <jmillan@aliax.net> (https://github.com/jmillan)"
+    "José Luis Millán <jmillan@aliax.net> (https://github.com/jmillan)",
+    "Nazar Mokynskyi (https://github.com/nazar-pc)"
   ],
   "homepage": "https://mediasoup.org",
   "license": "ISC",
@@ -16,10 +17,10 @@
     "type": "opencollective",
     "url": "https://opencollective.com/mediasoup"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "node/lib/index.js",
+  "types": "node/lib/index.d.ts",
   "files": [
-    "lib",
+    "node/lib",
     "worker/deps/libwebrtc",
     "worker/fuzzer/include",
     "worker/fuzzer/src",
@@ -44,7 +45,7 @@
     "nodejs"
   ],
   "engines": {
-    "node": ">=10"
+    "node": ">=12"
   },
   "scripts": {
     "install-clang-tools": "node npm-scripts.js install-clang-tools",
@@ -65,7 +66,7 @@
   "jest": {
     "verbose": true,
     "testEnvironment": "node",
-    "testRegex": "test/test.*\\.js"
+    "testRegex": "node/tests/test.*\\.js"
   },
   "dependencies": {
     "@types/node": "^16.9.1",

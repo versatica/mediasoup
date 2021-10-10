@@ -9,18 +9,10 @@ const isWindows = os.platform() === 'win32';
 const task = process.argv.slice(2).join(' ');
 
 // mediasoup mayor version.
-const MAYOR_VERSION = 3;
+const MAYOR_VERSION = version.split('.')[0];
 
-let MAKE;
-
-if (isFreeBSD)
-{
-	MAKE = process.env.MAKE || 'gmake';
-}
-else
-{
-	MAKE = process.env.MAKE || 'make';
-}
+// make command to use.
+const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 
 // eslint-disable-next-line no-console
 console.log(`npm-scripts.js [INFO] running task "${task}"`);
@@ -31,14 +23,14 @@ switch (task)
 	{
 		if (!isWindows)
 		{
-			execute('rm -rf lib');
+			execute('rm -rf node/lib');
 		}
 		else
 		{
-			execute('rmdir /s /q lib');
+			execute('rmdir /s /q node/lib');
 		}
 
-		execute('tsc');
+		execute('tsc --project node');
 		taskReplaceVersion();
 
 		break;
@@ -50,17 +42,17 @@ switch (task)
 
 		if (!isWindows)
 		{
-			execute('rm -rf lib');
+			execute('rm -rf node/lib');
 		}
 		else
 		{
-			execute('rmdir /s /q lib');
+			execute('rmdir /s /q node/lib');
 		}
 
 		const watch = new TscWatchClient();
 
 		watch.on('success', taskReplaceVersion);
-		watch.start('--pretty');
+		watch.start('--project', 'node', '--pretty');
 
 		break;
 	}
@@ -77,8 +69,8 @@ switch (task)
 
 	case 'lint:node':
 	{
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c .eslintrc.js --max-warnings 0 --ext=ts src/');
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c .eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!.eslintrc.js\' .eslintrc.js npm-scripts.js test/ worker/scripts/gulpfile.js');
+		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c node/.eslintrc.js --max-warnings 0 --ext=ts node/src/');
+		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c node/.eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!node/.eslintrc.js\' node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
 
 		break;
 	}
@@ -165,7 +157,12 @@ switch (task)
 
 function taskReplaceVersion()
 {
-	const files = [ 'lib/index.js', 'lib/index.d.ts', 'lib/Worker.js' ];
+	const files =
+	[
+		'node/lib/index.js',
+		'node/lib/index.d.ts',
+		'node/lib/Worker.js'
+	];
 
 	for (const file of files)
 	{
