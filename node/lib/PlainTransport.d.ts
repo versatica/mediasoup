@@ -1,4 +1,3 @@
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
@@ -92,15 +91,7 @@ export declare type PlainTransportStat = {
  */
 export declare type PlainRtpTransportStat = PlainTransportStat;
 export declare class PlainTransport extends Transport {
-    protected readonly _data: {
-        rtcpMux?: boolean;
-        comedia?: boolean;
-        tuple: TransportTuple;
-        rtcpTuple?: TransportTuple;
-        sctpParameters?: SctpParameters;
-        sctpState?: SctpState;
-        srtpParameters?: SrtpParameters;
-    };
+    #private;
     /**
      * @private
      * @emits tuple - (tuple: TransportTuple)
@@ -143,7 +134,6 @@ export declare class PlainTransport extends Transport {
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
-    get observer(): EnhancedEventEmitter;
     /**
      * Close the PlainTransport.
      *
@@ -174,7 +164,7 @@ export declare class PlainTransport extends Transport {
         rtcpPort?: number;
         srtpParameters?: SrtpParameters;
     }): Promise<void>;
-    private _handleWorkerNotifications;
+    private handleWorkerNotifications;
 }
 /**
  * DEPRECATED: Use PlainTransport.

@@ -1,4 +1,18 @@
 "use strict";
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var _data;
 Object.defineProperty(exports, "__esModule", { value: true });
 const Logger_1 = require("./Logger");
 const Transport_1 = require("./Transport");
@@ -14,82 +28,83 @@ class WebRtcTransport extends Transport_1.Transport {
      */
     constructor(params) {
         super(params);
+        // WebRtcTransport data.
+        _data.set(this, void 0);
         logger.debug('constructor()');
         const { data } = params;
-        this._data =
-            {
-                iceRole: data.iceRole,
-                iceParameters: data.iceParameters,
-                iceCandidates: data.iceCandidates,
-                iceState: data.iceState,
-                iceSelectedTuple: data.iceSelectedTuple,
-                dtlsParameters: data.dtlsParameters,
-                dtlsState: data.dtlsState,
-                dtlsRemoteCert: data.dtlsRemoteCert,
-                sctpParameters: data.sctpParameters,
-                sctpState: data.sctpState
-            };
-        this._handleWorkerNotifications();
+        __classPrivateFieldSet(this, _data, {
+            iceRole: data.iceRole,
+            iceParameters: data.iceParameters,
+            iceCandidates: data.iceCandidates,
+            iceState: data.iceState,
+            iceSelectedTuple: data.iceSelectedTuple,
+            dtlsParameters: data.dtlsParameters,
+            dtlsState: data.dtlsState,
+            dtlsRemoteCert: data.dtlsRemoteCert,
+            sctpParameters: data.sctpParameters,
+            sctpState: data.sctpState
+        });
+        this.handleWorkerNotifications();
     }
     /**
      * ICE role.
      */
     get iceRole() {
-        return this._data.iceRole;
+        return __classPrivateFieldGet(this, _data).iceRole;
     }
     /**
      * ICE parameters.
      */
     get iceParameters() {
-        return this._data.iceParameters;
+        return __classPrivateFieldGet(this, _data).iceParameters;
     }
     /**
      * ICE candidates.
      */
     get iceCandidates() {
-        return this._data.iceCandidates;
+        return __classPrivateFieldGet(this, _data).iceCandidates;
     }
     /**
      * ICE state.
      */
     get iceState() {
-        return this._data.iceState;
+        return __classPrivateFieldGet(this, _data).iceState;
     }
     /**
      * ICE selected tuple.
      */
     get iceSelectedTuple() {
-        return this._data.iceSelectedTuple;
+        return __classPrivateFieldGet(this, _data).iceSelectedTuple;
     }
     /**
      * DTLS parameters.
      */
     get dtlsParameters() {
-        return this._data.dtlsParameters;
+        return __classPrivateFieldGet(this, _data).dtlsParameters;
     }
     /**
      * DTLS state.
      */
     get dtlsState() {
-        return this._data.dtlsState;
+        return __classPrivateFieldGet(this, _data).dtlsState;
     }
     /**
      * Remote certificate in PEM format.
      */
     get dtlsRemoteCert() {
-        return this._data.dtlsRemoteCert;
+        return __classPrivateFieldGet(this, _data).dtlsRemoteCert;
     }
     /**
      * SCTP parameters.
      */
     get sctpParameters() {
-        return this._data.sctpParameters;
+        return __classPrivateFieldGet(this, _data).sctpParameters;
     }
     /**
      * SCTP state.
      */
     get sctpState() {
-        return this._data.sctpState;
+        return __classPrivateFieldGet(this, _data).sctpState;
     }
     /**
      * Observer.
@@ -106,22 +121,20 @@ class WebRtcTransport extends Transport_1.Transport {
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
-    get observer() {
-        return this._observer;
-    }
+    // get observer(): EnhancedEventEmitter
     /**
      * Close the WebRtcTransport.
      *
      * @override
      */
     close() {
-        if (this._closed)
+        if (this.closed)
             return;
-        this._data.iceState = 'closed';
-        this._data.iceSelectedTuple = undefined;
-        this._data.dtlsState = 'closed';
-        if (this._data.sctpState)
-            this._data.sctpState = 'closed';
+        __classPrivateFieldGet(this, _data).iceState = 'closed';
+        __classPrivateFieldGet(this, _data).iceSelectedTuple = undefined;
+        __classPrivateFieldGet(this, _data).dtlsState = 'closed';
+        if (__classPrivateFieldGet(this, _data).sctpState)
+            __classPrivateFieldGet(this, _data).sctpState = 'closed';
         super.close();
     }
     /**
@@ -131,13 +144,13 @@ class WebRtcTransport extends Transport_1.Transport {
      * @override
      */
     routerClosed() {
-        if (this._closed)
+        if (this.closed)
             return;
-        this._data.iceState = 'closed';
-        this._data.iceSelectedTuple = undefined;
-        this._data.dtlsState = 'closed';
-        if (this._data.sctpState)
-            this._data.sctpState = 'closed';
+        __classPrivateFieldGet(this, _data).iceState = 'closed';
+        __classPrivateFieldGet(this, _data).iceSelectedTuple = undefined;
+        __classPrivateFieldGet(this, _data).dtlsState = 'closed';
+        if (__classPrivateFieldGet(this, _data).sctpState)
+            __classPrivateFieldGet(this, _data).sctpState = 'closed';
         super.routerClosed();
     }
     /**
@@ -147,7 +160,7 @@ class WebRtcTransport extends Transport_1.Transport {
      */
     async getStats() {
         logger.debug('getStats()');
-        return this._channel.request('transport.getStats', this._internal);
+        return this.channel.request('transport.getStats', this.internal);
     }
     /**
      * Provide the WebRtcTransport remote parameters.
@@ -157,60 +170,60 @@ class WebRtcTransport extends Transport_1.Transport {
     async connect({ dtlsParameters }) {
         logger.debug('connect()');
         const reqData = { dtlsParameters };
-        const data = await this._channel.request('transport.connect', this._internal, reqData);
+        const data = await this.channel.request('transport.connect', this.internal, reqData);
         // Update data.
-        this._data.dtlsParameters.role = data.dtlsLocalRole;
+        __classPrivateFieldGet(this, _data).dtlsParameters.role = data.dtlsLocalRole;
     }
     /**
      * Restart ICE.
      */
     async restartIce() {
         logger.debug('restartIce()');
-        const data = await this._channel.request('transport.restartIce', this._internal);
+        const data = await this.channel.request('transport.restartIce', this.internal);
         const { iceParameters } = data;
-        this._data.iceParameters = iceParameters;
+        __classPrivateFieldGet(this, _data).iceParameters = iceParameters;
         return iceParameters;
     }
-    _handleWorkerNotifications() {
-        this._channel.on(this._internal.transportId, (event, data) => {
+    handleWorkerNotifications() {
+        this.channel.on(this.internal.transportId, (event, data) => {
             switch (event) {
                 case 'icestatechange':
                     {
                         const iceState = data.iceState;
-                        this._data.iceState = iceState;
+                        __classPrivateFieldGet(this, _data).iceState = iceState;
                         this.safeEmit('icestatechange', iceState);
                         // Emit observer event.
-                        this._observer.safeEmit('icestatechange', iceState);
+                        this.observer.safeEmit('icestatechange', iceState);
                         break;
                     }
                 case 'iceselectedtuplechange':
                     {
                         const iceSelectedTuple = data.iceSelectedTuple;
-                        this._data.iceSelectedTuple = iceSelectedTuple;
+                        __classPrivateFieldGet(this, _data).iceSelectedTuple = iceSelectedTuple;
                         this.safeEmit('iceselectedtuplechange', iceSelectedTuple);
                         // Emit observer event.
-                        this._observer.safeEmit('iceselectedtuplechange', iceSelectedTuple);
+                        this.observer.safeEmit('iceselectedtuplechange', iceSelectedTuple);
                         break;
                     }
                 case 'dtlsstatechange':
                     {
                         const dtlsState = data.dtlsState;
                         const dtlsRemoteCert = data.dtlsRemoteCert;
-                        this._data.dtlsState = dtlsState;
+                        __classPrivateFieldGet(this, _data).dtlsState = dtlsState;
                         if (dtlsState === 'connected')
-                            this._data.dtlsRemoteCert = dtlsRemoteCert;
+                            __classPrivateFieldGet(this, _data).dtlsRemoteCert = dtlsRemoteCert;
                         this.safeEmit('dtlsstatechange', dtlsState);
                         // Emit observer event.
-                        this._observer.safeEmit('dtlsstatechange', dtlsState);
+                        this.observer.safeEmit('dtlsstatechange', dtlsState);
                         break;
                     }
                 case 'sctpstatechange':
                     {
                         const sctpState = data.sctpState;
-                        this._data.sctpState = sctpState;
+                        __classPrivateFieldGet(this, _data).sctpState = sctpState;
                         this.safeEmit('sctpstatechange', sctpState);
                         // Emit observer event.
-                        this._observer.safeEmit('sctpstatechange', sctpState);
+                        this.observer.safeEmit('sctpstatechange', sctpState);
                         break;
                     }
                 case 'trace':
@@ -218,7 +231,7 @@ class WebRtcTransport extends Transport_1.Transport {
                         const trace = data;
                         this.safeEmit('trace', trace);
                         // Emit observer event.
-                        this._observer.safeEmit('trace', trace);
+                        this.observer.safeEmit('trace', trace);
                         break;
                     }
                 default:
@@ -230,3 +243,4 @@ class WebRtcTransport extends Transport_1.Transport {
     }
 }
 exports.WebRtcTransport = WebRtcTransport;
+_data = new WeakMap();

@@ -1,4 +1,18 @@
 "use strict";
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var _child, _pid, _channel, _payloadChannel, _closed, _appData, _routers, _observer;
 Object.defineProperty(exports, "__esModule", { value: true });
 const process = require("process");
 const path = require("path");
@@ -29,12 +43,22 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     constructor({ logLevel, logTags, rtcMinPort, rtcMaxPort, dtlsCertificateFile, dtlsPrivateKeyFile, appData }) {
         super();
+        // mediasoup-worker child process.
+        _child.set(this, void 0);
+        // Worker process PID.
+        _pid.set(this, void 0);
+        // Channel instance.
+        _channel.set(this, void 0);
+        // PayloadChannel instance.
+        _payloadChannel.set(this, void 0);
         // Closed flag.
-        this._closed = false;
+        _closed.set(this, false);
+        // Custom app data.
+        _appData.set(this, void 0);
         // Routers set.
-        this._routers = new Set();
+        _routers.set(this, new Set());
         // Observer instance.
-        this._observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
+        _observer.set(this, new EnhancedEventEmitter_1.EnhancedEventEmitter());
         logger.debug('constructor()');
         let spawnBin = workerBin;
         let spawnArgs = [];
@@ -60,7 +84,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         if (typeof dtlsPrivateKeyFile === 'string' && dtlsPrivateKeyFile)
             spawnArgs.push(`--dtlsPrivateKeyFile=${dtlsPrivateKeyFile}`);
         logger.debug('spawning worker process: %s %s', spawnBin, spawnArgs.join(' '));
-        this._child = child_process_1.spawn(
+        __classPrivateFieldSet(this, _child, child_process_1.spawn(
         // command
         spawnBin, 
         // args
@@ -84,71 +108,71 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             // fd 6 (channel) : Consumer PayloadChannel fd.
             stdio: ['ignore', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe'],
             windowsHide: true
-        });
-        this._pid = this._child.pid;
-        this._channel = new Channel_1.Channel({
-            producerSocket: this._child.stdio[3],
-            consumerSocket: this._child.stdio[4],
-            pid: this._pid
-        });
-        this._payloadChannel = new PayloadChannel_1.PayloadChannel({
+        }));
+        __classPrivateFieldSet(this, _pid, __classPrivateFieldGet(this, _child).pid);
+        __classPrivateFieldSet(this, _channel, new Channel_1.Channel({
+            producerSocket: __classPrivateFieldGet(this, _child).stdio[3],
+            consumerSocket: __classPrivateFieldGet(this, _child).stdio[4],
+            pid: __classPrivateFieldGet(this, _pid)
+        }));
+        __classPrivateFieldSet(this, _payloadChannel, new PayloadChannel_1.PayloadChannel({
             // NOTE: TypeScript does not like more than 5 fds.
             // @ts-ignore
-            producerSocket: this._child.stdio[5],
+            producerSocket: __classPrivateFieldGet(this, _child).stdio[5],
             // @ts-ignore
-            consumerSocket: this._child.stdio[6]
-        });
-        this._appData = appData;
+            consumerSocket: __classPrivateFieldGet(this, _child).stdio[6]
+        }));
+        __classPrivateFieldSet(this, _appData, appData);
         let spawnDone = false;
         // Listen for 'running' notification.
-        this._channel.once(String(this._pid), (event) => {
+        __classPrivateFieldGet(this, _channel).once(String(__classPrivateFieldGet(this, _pid)), (event) => {
             if (!spawnDone && event === 'running') {
                 spawnDone = true;
-                logger.debug('worker process running [pid:%s]', this._pid);
+                logger.debug('worker process running [pid:%s]', __classPrivateFieldGet(this, _pid));
                 this.emit('@success');
             }
         });
-        this._child.on('exit', (code, signal) => {
-            this._child = undefined;
+        __classPrivateFieldGet(this, _child).on('exit', (code, signal) => {
+            __classPrivateFieldSet(this, _child, undefined);
             this.close();
             if (!spawnDone) {
                 spawnDone = true;
                 if (code === 42) {
-                    logger.error('worker process failed due to wrong settings [pid:%s]', this._pid);
+                    logger.error('worker process failed due to wrong settings [pid:%s]', __classPrivateFieldGet(this, _pid));
                     this.emit('@failure', new TypeError('wrong settings'));
                 }
                 else {
-                    logger.error('worker process failed unexpectedly [pid:%s, code:%s, signal:%s]', this._pid, code, signal);
-                    this.emit('@failure', new Error(`[pid:${this._pid}, code:${code}, signal:${signal}]`));
+                    logger.error('worker process failed unexpectedly [pid:%s, code:%s, signal:%s]', __classPrivateFieldGet(this, _pid), code, signal);
+                    this.emit('@failure', new Error(`[pid:${__classPrivateFieldGet(this, _pid)}, code:${code}, signal:${signal}]`));
                 }
             }
             else {
-                logger.error('worker process died unexpectedly [pid:%s, code:%s, signal:%s]', this._pid, code, signal);
-                this.safeEmit('died', new Error(`[pid:${this._pid}, code:${code}, signal:${signal}]`));
+                logger.error('worker process died unexpectedly [pid:%s, code:%s, signal:%s]', __classPrivateFieldGet(this, _pid), code, signal);
+                this.safeEmit('died', new Error(`[pid:${__classPrivateFieldGet(this, _pid)}, code:${code}, signal:${signal}]`));
             }
         });
-        this._child.on('error', (error) => {
-            this._child = undefined;
+        __classPrivateFieldGet(this, _child).on('error', (error) => {
+            __classPrivateFieldSet(this, _child, undefined);
             this.close();
             if (!spawnDone) {
                 spawnDone = true;
-                logger.error('worker process failed [pid:%s]: %s', this._pid, error.message);
+                logger.error('worker process failed [pid:%s]: %s', __classPrivateFieldGet(this, _pid), error.message);
                 this.emit('@failure', error);
             }
             else {
-                logger.error('worker process error [pid:%s]: %s', this._pid, error.message);
+                logger.error('worker process error [pid:%s]: %s', __classPrivateFieldGet(this, _pid), error.message);
                 this.safeEmit('died', error);
             }
         });
         // Be ready for 3rd party worker libraries logging to stdout.
-        this._child.stdout.on('data', (buffer) => {
+        __classPrivateFieldGet(this, _child).stdout.on('data', (buffer) => {
             for (const line of buffer.toString('utf8').split('\n')) {
                 if (line)
                     workerLogger.debug(`(stdout) ${line}`);
             }
         });
         // In case of a worker bug, mediasoup will log to stderr.
-        this._child.stderr.on('data', (buffer) => {
+        __classPrivateFieldGet(this, _child).stderr.on('data', (buffer) => {
             for (const line of buffer.toString('utf8').split('\n')) {
                 if (line)
                     workerLogger.error(`(stderr) ${line}`);
@@ -159,19 +183,19 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Worker process identifier (PID).
      */
     get pid() {
-        return this._pid;
+        return __classPrivateFieldGet(this, _pid);
     }
     /**
      * Whether the Worker is closed.
      */
     get closed() {
-        return this._closed;
+        return __classPrivateFieldGet(this, _closed);
     }
     /**
      * App custom data.
      */
     get appData() {
-        return this._appData;
+        return __classPrivateFieldGet(this, _appData);
     }
     /**
      * Invalid setter.
@@ -186,51 +210,58 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @emits newrouter - (router: Router)
      */
     get observer() {
-        return this._observer;
+        return __classPrivateFieldGet(this, _observer);
+    }
+    /**
+     * @private
+     * Just for testing purposes.
+     */
+    get routersForTesting() {
+        return __classPrivateFieldGet(this, _routers);
     }
     /**
      * Close the Worker.
      */
     close() {
-        if (this._closed)
+        if (__classPrivateFieldGet(this, _closed))
             return;
         logger.debug('close()');
-        this._closed = true;
+        __classPrivateFieldSet(this, _closed, true);
         // Kill the worker process.
-        if (this._child) {
+        if (__classPrivateFieldGet(this, _child)) {
             // Remove event listeners but leave a fake 'error' hander to avoid
             // propagation.
-            this._child.removeAllListeners('exit');
-            this._child.removeAllListeners('error');
-            this._child.on('error', () => { });
-            this._child.kill('SIGTERM');
-            this._child = undefined;
+            __classPrivateFieldGet(this, _child).removeAllListeners('exit');
+            __classPrivateFieldGet(this, _child).removeAllListeners('error');
+            __classPrivateFieldGet(this, _child).on('error', () => { });
+            __classPrivateFieldGet(this, _child).kill('SIGTERM');
+            __classPrivateFieldSet(this, _child, undefined);
         }
         // Close the Channel instance.
-        this._channel.close();
+        __classPrivateFieldGet(this, _channel).close();
         // Close the PayloadChannel instance.
-        this._payloadChannel.close();
+        __classPrivateFieldGet(this, _payloadChannel).close();
         // Close every Router.
-        for (const router of this._routers) {
+        for (const router of __classPrivateFieldGet(this, _routers)) {
             router.workerClosed();
         }
-        this._routers.clear();
+        __classPrivateFieldGet(this, _routers).clear();
         // Emit observer event.
-        this._observer.safeEmit('close');
+        __classPrivateFieldGet(this, _observer).safeEmit('close');
     }
     /**
      * Dump Worker.
      */
     async dump() {
         logger.debug('dump()');
-        return this._channel.request('worker.dump');
+        return __classPrivateFieldGet(this, _channel).request('worker.dump');
     }
     /**
      * Get mediasoup-worker process resource usage.
      */
     async getResourceUsage() {
         logger.debug('getResourceUsage()');
-        return this._channel.request('worker.getResourceUsage');
+        return __classPrivateFieldGet(this, _channel).request('worker.getResourceUsage');
     }
     /**
      * Update settings.
@@ -238,7 +269,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async updateSettings({ logLevel, logTags } = {}) {
         logger.debug('updateSettings()');
         const reqData = { logLevel, logTags };
-        await this._channel.request('worker.updateSettings', undefined, reqData);
+        await __classPrivateFieldGet(this, _channel).request('worker.updateSettings', undefined, reqData);
     }
     /**
      * Create a Router.
@@ -250,20 +281,21 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // This may throw.
         const rtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
         const internal = { routerId: uuid_1.v4() };
-        await this._channel.request('worker.createRouter', internal);
+        await __classPrivateFieldGet(this, _channel).request('worker.createRouter', internal);
         const data = { rtpCapabilities };
         const router = new Router_1.Router({
             internal,
             data,
-            channel: this._channel,
-            payloadChannel: this._payloadChannel,
+            channel: __classPrivateFieldGet(this, _channel),
+            payloadChannel: __classPrivateFieldGet(this, _payloadChannel),
             appData
         });
-        this._routers.add(router);
-        router.on('@close', () => this._routers.delete(router));
+        __classPrivateFieldGet(this, _routers).add(router);
+        router.on('@close', () => __classPrivateFieldGet(this, _routers).delete(router));
         // Emit observer event.
-        this._observer.safeEmit('newrouter', router);
+        __classPrivateFieldGet(this, _observer).safeEmit('newrouter', router);
         return router;
     }
 }
 exports.Worker = Worker;
+_child = new WeakMap(), _pid = new WeakMap(), _channel = new WeakMap(), _payloadChannel = new WeakMap(), _closed = new WeakMap(), _appData = new WeakMap(), _routers = new WeakMap(), _observer = new WeakMap();

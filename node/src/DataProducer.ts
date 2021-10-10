@@ -53,7 +53,7 @@ const logger = new Logger('DataProducer');
 export class DataProducer extends EnhancedEventEmitter
 {
 	// Internal data.
-	private readonly _internal:
+	readonly #internal:
 	{
 		routerId: string;
 		transportId: string;
@@ -61,7 +61,7 @@ export class DataProducer extends EnhancedEventEmitter
 	};
 
 	// DataProducer data.
-	private readonly _data:
+	readonly #data:
 	{
 		type: DataProducerType;
 		sctpStreamParameters?: SctpStreamParameters;
@@ -70,19 +70,19 @@ export class DataProducer extends EnhancedEventEmitter
 	};
 
 	// Channel instance.
-	private readonly _channel: Channel;
+	readonly #channel: Channel;
 
 	// PayloadChannel instance.
-	private readonly _payloadChannel: PayloadChannel;
+	readonly #payloadChannel: PayloadChannel;
 
 	// Closed flag.
-	private _closed = false;
+	#closed = false;
 
 	// Custom app data.
-	private readonly _appData?: any;
+	readonly #appData?: any;
 
 	// Observer instance.
-	private readonly _observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter();
 
 	/**
 	 * @private
@@ -110,13 +110,13 @@ export class DataProducer extends EnhancedEventEmitter
 
 		logger.debug('constructor()');
 
-		this._internal = internal;
-		this._data = data;
-		this._channel = channel;
-		this._payloadChannel = payloadChannel;
-		this._appData = appData;
+		this.#internal = internal;
+		this.#data = data;
+		this.#channel = channel;
+		this.#payloadChannel = payloadChannel;
+		this.#appData = appData;
 
-		this._handleWorkerNotifications();
+		this.handleWorkerNotifications();
 	}
 
 	/**
@@ -124,7 +124,7 @@ export class DataProducer extends EnhancedEventEmitter
 	 */
 	get id(): string
 	{
-		return this._internal.dataProducerId;
+		return this.#internal.dataProducerId;
 	}
 
 	/**
@@ -132,7 +132,7 @@ export class DataProducer extends EnhancedEventEmitter
 	 */
 	get closed(): boolean
 	{
-		return this._closed;
+		return this.#closed;
 	}
 
 	/**
@@ -140,7 +140,7 @@ export class DataProducer extends EnhancedEventEmitter
 	 */
 	get type(): DataProducerType
 	{
-		return this._data.type;
+		return this.#data.type;
 	}
 
 	/**
@@ -148,7 +148,7 @@ export class DataProducer extends EnhancedEventEmitter
 	 */
 	get sctpStreamParameters(): SctpStreamParameters | undefined
 	{
-		return this._data.sctpStreamParameters;
+		return this.#data.sctpStreamParameters;
 	}
 
 	/**
@@ -156,7 +156,7 @@ export class DataProducer extends EnhancedEventEmitter
 	 */
 	get label(): string
 	{
-		return this._data.label;
+		return this.#data.label;
 	}
 
 	/**
@@ -164,7 +164,7 @@ export class DataProducer extends EnhancedEventEmitter
 	 */
 	get protocol(): string
 	{
-		return this._data.protocol;
+		return this.#data.protocol;
 	}
 
 	/**
@@ -172,7 +172,7 @@ export class DataProducer extends EnhancedEventEmitter
 	 */
 	get appData(): any
 	{
-		return this._appData;
+		return this.#appData;
 	}
 
 	/**
@@ -190,7 +190,7 @@ export class DataProducer extends EnhancedEventEmitter
 	 */
 	get observer(): EnhancedEventEmitter
 	{
-		return this._observer;
+		return this.#observer;
 	}
 
 	/**
@@ -198,24 +198,24 @@ export class DataProducer extends EnhancedEventEmitter
 	 */
 	close(): void
 	{
-		if (this._closed)
+		if (this.#closed)
 			return;
 
 		logger.debug('close()');
 
-		this._closed = true;
+		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this._channel.removeAllListeners(this._internal.dataProducerId);
-		this._payloadChannel.removeAllListeners(this._internal.dataProducerId);
+		this.#channel.removeAllListeners(this.#internal.dataProducerId);
+		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
 
-		this._channel.request('dataProducer.close', this._internal)
+		this.#channel.request('dataProducer.close', this.#internal)
 			.catch(() => {});
 
 		this.emit('@close');
 
 		// Emit observer event.
-		this._observer.safeEmit('close');
+		this.#observer.safeEmit('close');
 	}
 
 	/**
@@ -225,21 +225,21 @@ export class DataProducer extends EnhancedEventEmitter
 	 */
 	transportClosed(): void
 	{
-		if (this._closed)
+		if (this.#closed)
 			return;
 
 		logger.debug('transportClosed()');
 
-		this._closed = true;
+		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this._channel.removeAllListeners(this._internal.dataProducerId);
-		this._payloadChannel.removeAllListeners(this._internal.dataProducerId);
+		this.#channel.removeAllListeners(this.#internal.dataProducerId);
+		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
 
 		this.safeEmit('transportclose');
 
 		// Emit observer event.
-		this._observer.safeEmit('close');
+		this.#observer.safeEmit('close');
 	}
 
 	/**
@@ -249,7 +249,7 @@ export class DataProducer extends EnhancedEventEmitter
 	{
 		logger.debug('dump()');
 
-		return this._channel.request('dataProducer.dump', this._internal);
+		return this.#channel.request('dataProducer.dump', this.#internal);
 	}
 
 	/**
@@ -259,7 +259,7 @@ export class DataProducer extends EnhancedEventEmitter
 	{
 		logger.debug('getStats()');
 
-		return this._channel.request('dataProducer.getStats', this._internal);
+		return this.#channel.request('dataProducer.getStats', this.#internal);
 	}
 
 	/**
@@ -303,11 +303,11 @@ export class DataProducer extends EnhancedEventEmitter
 
 		const notifData = { ppid };
 
-		this._payloadChannel.notify(
-			'dataProducer.send', this._internal, notifData, message);
+		this.#payloadChannel.notify(
+			'dataProducer.send', this.#internal, notifData, message);
 	}
 
-	private _handleWorkerNotifications(): void
+	private handleWorkerNotifications(): void
 	{
 		// No need to subscribe to any event.
 	}

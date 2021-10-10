@@ -145,7 +145,7 @@ const logger = new Logger('Producer');
 export class Producer extends EnhancedEventEmitter
 {
 	// Internal data.
-	private readonly _internal:
+	readonly #internal:
 	{
 		routerId: string;
 		transportId: string;
@@ -153,7 +153,7 @@ export class Producer extends EnhancedEventEmitter
 	};
 
 	// Producer data.
-	private readonly _data:
+	readonly #data:
 	{
 		kind: MediaKind;
 		rtpParameters: RtpParameters;
@@ -162,25 +162,25 @@ export class Producer extends EnhancedEventEmitter
 	};
 
 	// Channel instance.
-	private readonly _channel: Channel;
+	readonly #channel: Channel;
 
 	// PayloadChannel instance.
-	private readonly _payloadChannel: PayloadChannel;
+	readonly #payloadChannel: PayloadChannel;
 
 	// Closed flag.
-	private _closed = false;
+	#closed = false;
 
 	// Custom app data.
-	private readonly _appData?: any;
+	readonly #appData?: any;
 
 	// Paused flag.
-	private _paused = false;
+	#paused = false;
 
 	// Current score.
-	private _score: ProducerScore[] = [];
+	#score: ProducerScore[] = [];
 
 	// Observer instance.
-	private readonly _observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter();
 
 	/**
 	 * @private
@@ -213,14 +213,14 @@ export class Producer extends EnhancedEventEmitter
 
 		logger.debug('constructor()');
 
-		this._internal = internal;
-		this._data = data;
-		this._channel = channel;
-		this._payloadChannel = payloadChannel;
-		this._appData = appData;
-		this._paused = paused;
+		this.#internal = internal;
+		this.#data = data;
+		this.#channel = channel;
+		this.#payloadChannel = payloadChannel;
+		this.#appData = appData;
+		this.#paused = paused;
 
-		this._handleWorkerNotifications();
+		this.handleWorkerNotifications();
 	}
 
 	/**
@@ -228,7 +228,7 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	get id(): string
 	{
-		return this._internal.producerId;
+		return this.#internal.producerId;
 	}
 
 	/**
@@ -236,7 +236,7 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	get closed(): boolean
 	{
-		return this._closed;
+		return this.#closed;
 	}
 
 	/**
@@ -244,7 +244,7 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	get kind(): MediaKind
 	{
-		return this._data.kind;
+		return this.#data.kind;
 	}
 
 	/**
@@ -252,7 +252,7 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	get rtpParameters(): RtpParameters
 	{
-		return this._data.rtpParameters;
+		return this.#data.rtpParameters;
 	}
 
 	/**
@@ -260,7 +260,7 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	get type(): ProducerType
 	{
-		return this._data.type;
+		return this.#data.type;
 	}
 
 	/**
@@ -270,7 +270,7 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	get consumableRtpParameters(): RtpParameters
 	{
-		return this._data.consumableRtpParameters;
+		return this.#data.consumableRtpParameters;
 	}
 
 	/**
@@ -278,7 +278,7 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	get paused(): boolean
 	{
-		return this._paused;
+		return this.#paused;
 	}
 
 	/**
@@ -286,7 +286,7 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	get score(): ProducerScore[]
 	{
-		return this._score;
+		return this.#score;
 	}
 
 	/**
@@ -294,7 +294,7 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	get appData(): any
 	{
-		return this._appData;
+		return this.#appData;
 	}
 
 	/**
@@ -317,7 +317,16 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	get observer(): EnhancedEventEmitter
 	{
-		return this._observer;
+		return this.#observer;
+	}
+
+	/**
+	 * @private
+	 * Just for testing purposes.
+	 */
+	get channelForTesting(): Channel
+	{
+		return this.#channel;
 	}
 
 	/**
@@ -325,24 +334,24 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	close(): void
 	{
-		if (this._closed)
+		if (this.#closed)
 			return;
 
 		logger.debug('close()');
 
-		this._closed = true;
+		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this._channel.removeAllListeners(this._internal.producerId);
-		this._payloadChannel.removeAllListeners(this._internal.producerId);
+		this.#channel.removeAllListeners(this.#internal.producerId);
+		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
 
-		this._channel.request('producer.close', this._internal)
+		this.#channel.request('producer.close', this.#internal)
 			.catch(() => {});
 
 		this.emit('@close');
 
 		// Emit observer event.
-		this._observer.safeEmit('close');
+		this.#observer.safeEmit('close');
 	}
 
 	/**
@@ -352,21 +361,21 @@ export class Producer extends EnhancedEventEmitter
 	 */
 	transportClosed(): void
 	{
-		if (this._closed)
+		if (this.#closed)
 			return;
 
 		logger.debug('transportClosed()');
 
-		this._closed = true;
+		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this._channel.removeAllListeners(this._internal.producerId);
-		this._payloadChannel.removeAllListeners(this._internal.producerId);
+		this.#channel.removeAllListeners(this.#internal.producerId);
+		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
 
 		this.safeEmit('transportclose');
 
 		// Emit observer event.
-		this._observer.safeEmit('close');
+		this.#observer.safeEmit('close');
 	}
 
 	/**
@@ -376,7 +385,7 @@ export class Producer extends EnhancedEventEmitter
 	{
 		logger.debug('dump()');
 
-		return this._channel.request('producer.dump', this._internal);
+		return this.#channel.request('producer.dump', this.#internal);
 	}
 
 	/**
@@ -386,7 +395,7 @@ export class Producer extends EnhancedEventEmitter
 	{
 		logger.debug('getStats()');
 
-		return this._channel.request('producer.getStats', this._internal);
+		return this.#channel.request('producer.getStats', this.#internal);
 	}
 
 	/**
@@ -396,15 +405,15 @@ export class Producer extends EnhancedEventEmitter
 	{
 		logger.debug('pause()');
 
-		const wasPaused = this._paused;
+		const wasPaused = this.#paused;
 
-		await this._channel.request('producer.pause', this._internal);
+		await this.#channel.request('producer.pause', this.#internal);
 
-		this._paused = true;
+		this.#paused = true;
 
 		// Emit observer event.
 		if (!wasPaused)
-			this._observer.safeEmit('pause');
+			this.#observer.safeEmit('pause');
 	}
 
 	/**
@@ -414,15 +423,15 @@ export class Producer extends EnhancedEventEmitter
 	{
 		logger.debug('resume()');
 
-		const wasPaused = this._paused;
+		const wasPaused = this.#paused;
 
-		await this._channel.request('producer.resume', this._internal);
+		await this.#channel.request('producer.resume', this.#internal);
 
-		this._paused = false;
+		this.#paused = false;
 
 		// Emit observer event.
 		if (wasPaused)
-			this._observer.safeEmit('resume');
+			this.#observer.safeEmit('resume');
 	}
 
 	/**
@@ -434,8 +443,8 @@ export class Producer extends EnhancedEventEmitter
 
 		const reqData = { types };
 
-		await this._channel.request(
-			'producer.enableTraceEvent', this._internal, reqData);
+		await this.#channel.request(
+			'producer.enableTraceEvent', this.#internal, reqData);
 	}
 
 	/**
@@ -448,13 +457,13 @@ export class Producer extends EnhancedEventEmitter
 			throw new TypeError('rtpPacket must be a Buffer');
 		}
 
-		this._payloadChannel.notify(
-			'producer.send', this._internal, undefined, rtpPacket);
+		this.#payloadChannel.notify(
+			'producer.send', this.#internal, undefined, rtpPacket);
 	}
 
-	private _handleWorkerNotifications(): void
+	private handleWorkerNotifications(): void
 	{
-		this._channel.on(this._internal.producerId, (event: string, data?: any) =>
+		this.#channel.on(this.#internal.producerId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{
@@ -462,12 +471,12 @@ export class Producer extends EnhancedEventEmitter
 				{
 					const score = data as ProducerScore[];
 
-					this._score = score;
+					this.#score = score;
 
 					this.safeEmit('score', score);
 
 					// Emit observer event.
-					this._observer.safeEmit('score', score);
+					this.#observer.safeEmit('score', score);
 
 					break;
 				}
@@ -479,7 +488,7 @@ export class Producer extends EnhancedEventEmitter
 					this.safeEmit('videoorientationchange', videoOrientation);
 
 					// Emit observer event.
-					this._observer.safeEmit('videoorientationchange', videoOrientation);
+					this.#observer.safeEmit('videoorientationchange', videoOrientation);
 
 					break;
 				}
@@ -491,7 +500,7 @@ export class Producer extends EnhancedEventEmitter
 					this.safeEmit('trace', trace);
 
 					// Emit observer event.
-					this._observer.safeEmit('trace', trace);
+					this.#observer.safeEmit('trace', trace);
 
 					break;
 				}

@@ -1,4 +1,3 @@
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
 import { Consumer } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
@@ -83,13 +82,7 @@ export declare type PipeConsumerOptions = {
     appData?: any;
 };
 export declare class PipeTransport extends Transport {
-    protected readonly _data: {
-        tuple: TransportTuple;
-        sctpParameters?: SctpParameters;
-        sctpState?: SctpState;
-        rtx: boolean;
-        srtpParameters?: SrtpParameters;
-    };
+    #private;
     /**
      * @private
      * @emits sctpstatechange - (sctpState: SctpState)
@@ -124,7 +117,6 @@ export declare class PipeTransport extends Transport {
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
-    get observer(): EnhancedEventEmitter;
     /**
      * Close the PipeTransport.
      *
@@ -160,6 +152,6 @@ export declare class PipeTransport extends Transport {
      * @override
      */
     consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>;
-    private _handleWorkerNotifications;
+    private handleWorkerNotifications;
 }
 //# sourceMappingURL=PipeTransport.d.ts.map

@@ -1,4 +1,3 @@
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { RtpObserver } from './RtpObserver';
 import { Producer } from './Producer';
 export interface ActiveSpeakerObserverOptions {
@@ -22,7 +21,6 @@ export declare class ActiveSpeakerObserver extends RtpObserver {
     /**
      * Observer.
      */
-    get observer(): EnhancedEventEmitter;
-    private _handleWorkerNotifications;
+    private handleWorkerNotifications;
 }
 //# sourceMappingURL=ActiveSpeakerObserver.d.ts.map

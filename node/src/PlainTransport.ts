@@ -1,5 +1,4 @@
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import {
 	Transport,
 	TransportListenIp,
@@ -122,7 +121,7 @@ const logger = new Logger('PlainTransport');
 export class PlainTransport extends Transport
 {
 	// PlainTransport data.
-	protected readonly _data:
+	readonly #data:
 	{
 		rtcpMux?: boolean;
 		comedia?: boolean;
@@ -148,7 +147,7 @@ export class PlainTransport extends Transport
 
 		const { data } = params;
 
-		this._data =
+		this.#data =
 		{
 			rtcpMux        : data.rtcpMux,
 			comedia        : data.comedia,
@@ -159,7 +158,7 @@ export class PlainTransport extends Transport
 			srtpParameters : data.srtpParameters
 		};
 
-		this._handleWorkerNotifications();
+		this.handleWorkerNotifications();
 	}
 
 	/**
@@ -167,7 +166,7 @@ export class PlainTransport extends Transport
 	 */
 	get tuple(): TransportTuple
 	{
-		return this._data.tuple;
+		return this.#data.tuple;
 	}
 
 	/**
@@ -175,7 +174,7 @@ export class PlainTransport extends Transport
 	 */
 	get rtcpTuple(): TransportTuple | undefined
 	{
-		return this._data.rtcpTuple;
+		return this.#data.rtcpTuple;
 	}
 
 	/**
@@ -183,7 +182,7 @@ export class PlainTransport extends Transport
 	 */
 	get sctpParameters(): SctpParameters | undefined
 	{
-		return this._data.sctpParameters;
+		return this.#data.sctpParameters;
 	}
 
 	/**
@@ -191,7 +190,7 @@ export class PlainTransport extends Transport
 	 */
 	get sctpState(): SctpState | undefined
 	{
-		return this._data.sctpState;
+		return this.#data.sctpState;
 	}
 
 	/**
@@ -199,7 +198,7 @@ export class PlainTransport extends Transport
 	 */
 	get srtpParameters(): SrtpParameters | undefined
 	{
-		return this._data.srtpParameters;
+		return this.#data.srtpParameters;
 	}
 
 	/**
@@ -216,10 +215,7 @@ export class PlainTransport extends Transport
 	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
-	get observer(): EnhancedEventEmitter
-	{
-		return this._observer;
-	}
+	// get observer(): EnhancedEventEmitter
 
 	/**
 	 * Close the PlainTransport.
@@ -228,11 +224,11 @@ export class PlainTransport extends Transport
 	 */
 	close(): void
 	{
-		if (this._closed)
+		if (this.closed)
 			return;
 
-		if (this._data.sctpState)
-			this._data.sctpState = 'closed';
+		if (this.#data.sctpState)
+			this.#data.sctpState = 'closed';
 
 		super.close();
 	}
@@ -245,11 +241,11 @@ export class PlainTransport extends Transport
 	 */
 	routerClosed(): void
 	{
-		if (this._closed)
+		if (this.closed)
 			return;
 
-		if (this._data.sctpState)
-			this._data.sctpState = 'closed';
+		if (this.#data.sctpState)
+			this.#data.sctpState = 'closed';
 
 		super.routerClosed();
 	}
@@ -263,7 +259,7 @@ export class PlainTransport extends Transport
 	{
 		logger.debug('getStats()');
 
-		return this._channel.request('transport.getStats', this._internal);
+		return this.channel.request('transport.getStats', this.internal);
 	}
 
 	/**
@@ -291,21 +287,21 @@ export class PlainTransport extends Transport
 		const reqData = { ip, port, rtcpPort, srtpParameters };
 
 		const data =
-			await this._channel.request('transport.connect', this._internal, reqData);
+			await this.channel.request('transport.connect', this.internal, reqData);
 
 		// Update data.
 		if (data.tuple)
-			this._data.tuple = data.tuple;
+			this.#data.tuple = data.tuple;
 
 		if (data.rtcpTuple)
-			this._data.rtcpTuple = data.rtcpTuple;
+			this.#data.rtcpTuple = data.rtcpTuple;
 
-		this._data.srtpParameters = data.srtpParameters;
+		this.#data.srtpParameters = data.srtpParameters;
 	}
 
-	private _handleWorkerNotifications(): void
+	private handleWorkerNotifications(): void
 	{
-		this._channel.on(this._internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{
@@ -313,12 +309,12 @@ export class PlainTransport extends Transport
 				{
 					const tuple = data.tuple as TransportTuple;
 
-					this._data.tuple = tuple;
+					this.#data.tuple = tuple;
 
 					this.safeEmit('tuple', tuple);
 
 					// Emit observer event.
-					this._observer.safeEmit('tuple', tuple);
+					this.observer.safeEmit('tuple', tuple);
 
 					break;
 				}
@@ -327,12 +323,12 @@ export class PlainTransport extends Transport
 				{
 					const rtcpTuple = data.rtcpTuple as TransportTuple;
 
-					this._data.rtcpTuple = rtcpTuple;
+					this.#data.rtcpTuple = rtcpTuple;
 
 					this.safeEmit('rtcptuple', rtcpTuple);
 
 					// Emit observer event.
-					this._observer.safeEmit('rtcptuple', rtcpTuple);
+					this.observer.safeEmit('rtcptuple', rtcpTuple);
 
 					break;
 				}
@@ -341,12 +337,12 @@ export class PlainTransport extends Transport
 				{
 					const sctpState = data.sctpState as SctpState;
 
-					this._data.sctpState = sctpState;
+					this.#data.sctpState = sctpState;
 
 					this.safeEmit('sctpstatechange', sctpState);
 
 					// Emit observer event.
-					this._observer.safeEmit('sctpstatechange', sctpState);
+					this.observer.safeEmit('sctpstatechange', sctpState);
 
 					break;
 				}
@@ -358,7 +354,7 @@ export class PlainTransport extends Transport
 					this.safeEmit('trace', trace);
 
 					// Emit observer event.
-					this._observer.safeEmit('trace', trace);
+					this.observer.safeEmit('trace', trace);
 
 					break;
 				}

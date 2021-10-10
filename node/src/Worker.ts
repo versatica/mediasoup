@@ -179,28 +179,28 @@ const workerLogger = new Logger('Worker');
 export class Worker extends EnhancedEventEmitter
 {
 	// mediasoup-worker child process.
-	private _child?: ChildProcess;
+	#child?: ChildProcess;
 
 	// Worker process PID.
-	private readonly _pid: number;
+	readonly #pid: number;
 
 	// Channel instance.
-	private readonly _channel: Channel;
+	readonly #channel: Channel;
 
 	// PayloadChannel instance.
-	private readonly _payloadChannel: PayloadChannel;
+	readonly #payloadChannel: PayloadChannel;
 
 	// Closed flag.
-	private _closed = false;
+	#closed = false;
 
 	// Custom app data.
-	private readonly _appData?: any;
+	readonly #appData?: any;
 
 	// Routers set.
-	private readonly _routers: Set<Router> = new Set();
+	readonly #routers: Set<Router> = new Set();
 
 	// Observer instance.
-	private readonly _observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter();
 
 	/**
 	 * @private
@@ -262,7 +262,7 @@ export class Worker extends EnhancedEventEmitter
 		logger.debug(
 			'spawning worker process: %s %s', spawnBin, spawnArgs.join(' '));
 
-		this._child = spawn(
+		this.#child = spawn(
 			// command
 			spawnBin,
 			// args
@@ -291,44 +291,44 @@ export class Worker extends EnhancedEventEmitter
 				windowsHide : true
 			});
 
-		this._pid = this._child.pid!;
+		this.#pid = this.#child.pid!;
 
-		this._channel = new Channel(
+		this.#channel = new Channel(
 			{
-				producerSocket : this._child.stdio[3],
-				consumerSocket : this._child.stdio[4],
-				pid            : this._pid
+				producerSocket : this.#child.stdio[3],
+				consumerSocket : this.#child.stdio[4],
+				pid            : this.#pid
 			});
 
-		this._payloadChannel = new PayloadChannel(
+		this.#payloadChannel = new PayloadChannel(
 			{
 				// NOTE: TypeScript does not like more than 5 fds.
 				// @ts-ignore
-				producerSocket : this._child.stdio[5],
+				producerSocket : this.#child.stdio[5],
 				// @ts-ignore
-				consumerSocket : this._child.stdio[6]
+				consumerSocket : this.#child.stdio[6]
 			});
 
-		this._appData = appData;
+		this.#appData = appData;
 
 		let spawnDone = false;
 
 		// Listen for 'running' notification.
-		this._channel.once(String(this._pid), (event: string) =>
+		this.#channel.once(String(this.#pid), (event: string) =>
 		{
 			if (!spawnDone && event === 'running')
 			{
 				spawnDone = true;
 
-				logger.debug('worker process running [pid:%s]', this._pid);
+				logger.debug('worker process running [pid:%s]', this.#pid);
 
 				this.emit('@success');
 			}
 		});
 
-		this._child.on('exit', (code, signal) =>
+		this.#child.on('exit', (code, signal) =>
 		{
-			this._child = undefined;
+			this.#child = undefined;
 			this.close();
 
 			if (!spawnDone)
@@ -338,7 +338,7 @@ export class Worker extends EnhancedEventEmitter
 				if (code === 42)
 				{
 					logger.error(
-						'worker process failed due to wrong settings [pid:%s]', this._pid);
+						'worker process failed due to wrong settings [pid:%s]', this.#pid);
 
 					this.emit('@failure', new TypeError('wrong settings'));
 				}
@@ -346,28 +346,28 @@ export class Worker extends EnhancedEventEmitter
 				{
 					logger.error(
 						'worker process failed unexpectedly [pid:%s, code:%s, signal:%s]',
-						this._pid, code, signal);
+						this.#pid, code, signal);
 
 					this.emit(
 						'@failure',
-						new Error(`[pid:${this._pid}, code:${code}, signal:${signal}]`));
+						new Error(`[pid:${this.#pid}, code:${code}, signal:${signal}]`));
 				}
 			}
 			else
 			{
 				logger.error(
 					'worker process died unexpectedly [pid:%s, code:%s, signal:%s]',
-					this._pid, code, signal);
+					this.#pid, code, signal);
 
 				this.safeEmit(
 					'died',
-					new Error(`[pid:${this._pid}, code:${code}, signal:${signal}]`));
+					new Error(`[pid:${this.#pid}, code:${code}, signal:${signal}]`));
 			}
 		});
 
-		this._child.on('error', (error) =>
+		this.#child.on('error', (error) =>
 		{
-			this._child = undefined;
+			this.#child = undefined;
 			this.close();
 
 			if (!spawnDone)
@@ -375,21 +375,21 @@ export class Worker extends EnhancedEventEmitter
 				spawnDone = true;
 
 				logger.error(
-					'worker process failed [pid:%s]: %s', this._pid, error.message);
+					'worker process failed [pid:%s]: %s', this.#pid, error.message);
 
 				this.emit('@failure', error);
 			}
 			else
 			{
 				logger.error(
-					'worker process error [pid:%s]: %s', this._pid, error.message);
+					'worker process error [pid:%s]: %s', this.#pid, error.message);
 
 				this.safeEmit('died', error);
 			}
 		});
 
 		// Be ready for 3rd party worker libraries logging to stdout.
-		this._child.stdout!.on('data', (buffer) =>
+		this.#child.stdout!.on('data', (buffer) =>
 		{
 			for (const line of buffer.toString('utf8').split('\n'))
 			{
@@ -399,7 +399,7 @@ export class Worker extends EnhancedEventEmitter
 		});
 
 		// In case of a worker bug, mediasoup will log to stderr.
-		this._child.stderr!.on('data', (buffer) =>
+		this.#child.stderr!.on('data', (buffer) =>
 		{
 			for (const line of buffer.toString('utf8').split('\n'))
 			{
@@ -414,7 +414,7 @@ export class Worker extends EnhancedEventEmitter
 	 */
 	get pid(): number
 	{
-		return this._pid;
+		return this.#pid;
 	}
 
 	/**
@@ -422,7 +422,7 @@ export class Worker extends EnhancedEventEmitter
 	 */
 	get closed(): boolean
 	{
-		return this._closed;
+		return this.#closed;
 	}
 
 	/**
@@ -430,7 +430,7 @@ export class Worker extends EnhancedEventEmitter
 	 */
 	get appData(): any
 	{
-		return this._appData;
+		return this.#appData;
 	}
 
 	/**
@@ -449,7 +449,16 @@ export class Worker extends EnhancedEventEmitter
 	 */
 	get observer(): EnhancedEventEmitter
 	{
-		return this._observer;
+		return this.#observer;
+	}
+
+	/**
+	 * @private
+	 * Just for testing purposes.
+	 */
+	get routersForTesting(): Set<Router>
+	{
+		return this.#routers;
 	}
 
 	/**
@@ -457,40 +466,40 @@ export class Worker extends EnhancedEventEmitter
 	 */
 	close(): void
 	{
-		if (this._closed)
+		if (this.#closed)
 			return;
 
 		logger.debug('close()');
 
-		this._closed = true;
+		this.#closed = true;
 
 		// Kill the worker process.
-		if (this._child)
+		if (this.#child)
 		{
 			// Remove event listeners but leave a fake 'error' hander to avoid
 			// propagation.
-			this._child.removeAllListeners('exit');
-			this._child.removeAllListeners('error');
-			this._child.on('error', () => {});
-			this._child.kill('SIGTERM');
-			this._child = undefined;
+			this.#child.removeAllListeners('exit');
+			this.#child.removeAllListeners('error');
+			this.#child.on('error', () => {});
+			this.#child.kill('SIGTERM');
+			this.#child = undefined;
 		}
 
 		// Close the Channel instance.
-		this._channel.close();
+		this.#channel.close();
 
 		// Close the PayloadChannel instance.
-		this._payloadChannel.close();
+		this.#payloadChannel.close();
 
 		// Close every Router.
-		for (const router of this._routers)
+		for (const router of this.#routers)
 		{
 			router.workerClosed();
 		}
-		this._routers.clear();
+		this.#routers.clear();
 
 		// Emit observer event.
-		this._observer.safeEmit('close');
+		this.#observer.safeEmit('close');
 	}
 
 	/**
@@ -500,7 +509,7 @@ export class Worker extends EnhancedEventEmitter
 	{
 		logger.debug('dump()');
 
-		return this._channel.request('worker.dump');
+		return this.#channel.request('worker.dump');
 	}
 
 	/**
@@ -510,7 +519,7 @@ export class Worker extends EnhancedEventEmitter
 	{
 		logger.debug('getResourceUsage()');
 
-		return this._channel.request('worker.getResourceUsage');
+		return this.#channel.request('worker.getResourceUsage');
 	}
 
 	/**
@@ -527,7 +536,7 @@ export class Worker extends EnhancedEventEmitter
 
 		const reqData = { logLevel, logTags };
 
-		await this._channel.request('worker.updateSettings', undefined, reqData);
+		await this.#channel.request('worker.updateSettings', undefined, reqData);
 	}
 
 	/**
@@ -549,23 +558,23 @@ export class Worker extends EnhancedEventEmitter
 
 		const internal = { routerId: uuidv4() };
 
-		await this._channel.request('worker.createRouter', internal);
+		await this.#channel.request('worker.createRouter', internal);
 
 		const data = { rtpCapabilities };
 		const router = new Router(
 			{
 				internal,
 				data,
-				channel        : this._channel,
-				payloadChannel : this._payloadChannel,
+				channel        : this.#channel,
+				payloadChannel : this.#payloadChannel,
 				appData
 			});
 
-		this._routers.add(router);
-		router.on('@close', () => this._routers.delete(router));
+		this.#routers.add(router);
+		router.on('@close', () => this.#routers.delete(router));
 
 		// Emit observer event.
-		this._observer.safeEmit('newrouter', router);
+		this.#observer.safeEmit('newrouter', router);
 
 		return router;
 	}

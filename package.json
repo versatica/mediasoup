@@ -45,7 +45,7 @@
     "nodejs"
   ],
   "engines": {
-    "node": ">=10"
+    "node": ">=12"
   },
   "scripts": {
     "install-clang-tools": "node npm-scripts.js install-clang-tools",

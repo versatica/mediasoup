@@ -407,7 +407,7 @@ test('transport.enableTraceEvent() with wrong arguments rejects with TypeError',
 test('WebRtcTransport events succeed', async () =>
 {
 	// Private API.
-	const channel = transport._channel;
+	const channel = transport.channelForTesting;
 	const onIceStateChange = jest.fn();
 
 	transport.on('icestatechange', onIceStateChange);

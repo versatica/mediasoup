@@ -39,13 +39,7 @@ export declare type DataProducerStat = {
  */
 export declare type DataProducerType = 'sctp' | 'direct';
 export declare class DataProducer extends EnhancedEventEmitter {
-    private readonly _internal;
-    private readonly _data;
-    private readonly _channel;
-    private readonly _payloadChannel;
-    private _closed;
-    private readonly _appData?;
-    private readonly _observer;
+    #private;
     /**
      * @private
      * @emits transportclose
@@ -118,6 +112,6 @@ export declare class DataProducer extends EnhancedEventEmitter {
      * Send data (just valid for DataProducers created on a DirectTransport).
      */
     send(message: string | Buffer, ppid?: number): void;
-    private _handleWorkerNotifications;
+    private handleWorkerNotifications;
 }
 //# sourceMappingURL=DataProducer.d.ts.map

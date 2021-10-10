@@ -1,5 +1,4 @@
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { UnsupportedError } from './errors';
 import { Transport, TransportTraceEventData } from './Transport';
 
@@ -47,7 +46,7 @@ const logger = new Logger('DirectTransport');
 export class DirectTransport extends Transport
 {
 	// DirectTransport data.
-	protected readonly _data:
+	readonly #data:
 	{
 		// Nothing for now.
 	};
@@ -63,12 +62,12 @@ export class DirectTransport extends Transport
 
 		logger.debug('constructor()');
 
-		this._data =
+		this.#data =
 		{
 			// Nothing for now.
 		};
 
-		this._handleWorkerNotifications();
+		this.handleWorkerNotifications();
 	}
 
 	/**
@@ -80,10 +79,7 @@ export class DirectTransport extends Transport
 	 * @emits newdataconsumer - (dataProducer: DataProducer)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
-	get observer(): EnhancedEventEmitter
-	{
-		return this._observer;
-	}
+	// get observer(): EnhancedEventEmitter
 
 	/**
 	 * Close the DirectTransport.
@@ -92,7 +88,7 @@ export class DirectTransport extends Transport
 	 */
 	close(): void
 	{
-		if (this._closed)
+		if (this.closed)
 			return;
 
 		super.close();
@@ -106,7 +102,7 @@ export class DirectTransport extends Transport
 	 */
 	routerClosed(): void
 	{
-		if (this._closed)
+		if (this.closed)
 			return;
 
 		super.routerClosed();
@@ -121,7 +117,7 @@ export class DirectTransport extends Transport
 	{
 		logger.debug('getStats()');
 
-		return this._channel.request('transport.getStats', this._internal);
+		return this.channel.request('transport.getStats', this.internal);
 	}
 
 	/**
@@ -164,13 +160,13 @@ export class DirectTransport extends Transport
 			throw new TypeError('rtcpPacket must be a Buffer');
 		}
 
-		this._payloadChannel.notify(
-			'transport.sendRtcp', this._internal, undefined, rtcpPacket);
+		this.payloadChannel.notify(
+			'transport.sendRtcp', this.internal, undefined, rtcpPacket);
 	}
 
-	private _handleWorkerNotifications(): void
+	private handleWorkerNotifications(): void
 	{
-		this._channel.on(this._internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{
@@ -181,7 +177,7 @@ export class DirectTransport extends Transport
 					this.safeEmit('trace', trace);
 
 					// Emit observer event.
-					this._observer.safeEmit('trace', trace);
+					this.observer.safeEmit('trace', trace);
 
 					break;
 				}
@@ -193,15 +189,15 @@ export class DirectTransport extends Transport
 			}
 		});
 
-		this._payloadChannel.on(
-			this._internal.transportId,
+		this.payloadChannel.on(
+			this.internal.transportId,
 			(event: string, data: any | undefined, payload: Buffer) =>
 			{
 				switch (event)
 				{
 					case 'rtcp':
 					{
-						if (this._closed)
+						if (this.closed)
 							break;
 
 						const packet = payload;

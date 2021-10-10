@@ -899,7 +899,7 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 test('Consumer emits "score"', async () =>
 {
 	// Private API.
-	const channel = audioConsumer._channel;
+	const channel = audioConsumer.channelForTesting;
 	const onScore = jest.fn();
 
 	audioConsumer.on('score', onScore);

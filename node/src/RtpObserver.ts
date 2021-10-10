@@ -17,32 +17,32 @@ export type RtpObserverAddRemoveProducerOptions =
 export class RtpObserver extends EnhancedEventEmitter
 {
 	// Internal data.
-	protected readonly _internal:
+	protected readonly internal:
 	{
 		routerId: string;
 		rtpObserverId: string;
 	};
 
 	// Channel instance.
-	protected readonly _channel: Channel;
+	protected readonly channel: Channel;
 
 	// PayloadChannel instance.
-	protected readonly _payloadChannel: PayloadChannel;
+	protected readonly payloadChannel: PayloadChannel;
 
 	// Closed flag.
-	protected _closed = false;
+	#closed = false;
 
 	// Paused flag.
-	protected _paused = false;
+	#paused = false;
 
 	// Custom app data.
-	private readonly _appData?: any;
+	readonly #appData?: any;
 
 	// Method to retrieve a Producer.
-	protected readonly _getProducerById: (producerId: string) => Producer;
+	protected readonly getProducerById: (producerId: string) => Producer;
 
 	// Observer instance.
-	protected readonly _observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter();
 
 	/**
 	 * @private
@@ -71,11 +71,11 @@ export class RtpObserver extends EnhancedEventEmitter
 
 		logger.debug('constructor()');
 
-		this._internal = internal;
-		this._channel = channel;
-		this._payloadChannel = payloadChannel;
-		this._appData = appData;
-		this._getProducerById = getProducerById;
+		this.internal = internal;
+		this.channel = channel;
+		this.payloadChannel = payloadChannel;
+		this.#appData = appData;
+		this.getProducerById = getProducerById;
 	}
 
 	/**
@@ -83,7 +83,7 @@ export class RtpObserver extends EnhancedEventEmitter
 	 */
 	get id(): string
 	{
-		return this._internal.rtpObserverId;
+		return this.internal.rtpObserverId;
 	}
 
 	/**
@@ -91,7 +91,7 @@ export class RtpObserver extends EnhancedEventEmitter
 	 */
 	get closed(): boolean
 	{
-		return this._closed;
+		return this.#closed;
 	}
 
 	/**
@@ -99,7 +99,7 @@ export class RtpObserver extends EnhancedEventEmitter
 	 */
 	get paused(): boolean
 	{
-		return this._paused;
+		return this.#paused;
 	}
 
 	/**
@@ -107,7 +107,7 @@ export class RtpObserver extends EnhancedEventEmitter
 	 */
 	get appData(): any
 	{
-		return this._appData;
+		return this.#appData;
 	}
 
 	/**
@@ -129,7 +129,7 @@ export class RtpObserver extends EnhancedEventEmitter
 	 */
 	get observer(): EnhancedEventEmitter
 	{
-		return this._observer;
+		return this.#observer;
 	}
 
 	/**
@@ -137,24 +137,24 @@ export class RtpObserver extends EnhancedEventEmitter
 	 */
 	close(): void
 	{
-		if (this._closed)
+		if (this.#closed)
 			return;
 
 		logger.debug('close()');
 
-		this._closed = true;
+		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this._channel.removeAllListeners(this._internal.rtpObserverId);
-		this._payloadChannel.removeAllListeners(this._internal.rtpObserverId);
+		this.channel.removeAllListeners(this.internal.rtpObserverId);
+		this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
 
-		this._channel.request('rtpObserver.close', this._internal)
+		this.channel.request('rtpObserver.close', this.internal)
 			.catch(() => {});
 
 		this.emit('@close');
 
 		// Emit observer event.
-		this._observer.safeEmit('close');
+		this.#observer.safeEmit('close');
 	}
 
 	/**
@@ -164,21 +164,21 @@ export class RtpObserver extends EnhancedEventEmitter
 	 */
 	routerClosed(): void
 	{
-		if (this._closed)
+		if (this.#closed)
 			return;
 
 		logger.debug('routerClosed()');
 
-		this._closed = true;
+		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this._channel.removeAllListeners(this._internal.rtpObserverId);
-		this._payloadChannel.removeAllListeners(this._internal.rtpObserverId);
+		this.channel.removeAllListeners(this.internal.rtpObserverId);
+		this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
 
 		this.safeEmit('routerclose');
 
 		// Emit observer event.
-		this._observer.safeEmit('close');
+		this.#observer.safeEmit('close');
 	}
 
 	/**
@@ -188,15 +188,15 @@ export class RtpObserver extends EnhancedEventEmitter
 	{
 		logger.debug('pause()');
 
-		const wasPaused = this._paused;
+		const wasPaused = this.#paused;
 
-		await this._channel.request('rtpObserver.pause', this._internal);
+		await this.channel.request('rtpObserver.pause', this.internal);
 
-		this._paused = true;
+		this.#paused = true;
 
 		// Emit observer event.
 		if (!wasPaused)
-			this._observer.safeEmit('pause');
+			this.#observer.safeEmit('pause');
 	}
 
 	/**
@@ -206,15 +206,15 @@ export class RtpObserver extends EnhancedEventEmitter
 	{
 		logger.debug('resume()');
 
-		const wasPaused = this._paused;
+		const wasPaused = this.#paused;
 
-		await this._channel.request('rtpObserver.resume', this._internal);
+		await this.channel.request('rtpObserver.resume', this.internal);
 
-		this._paused = false;
+		this.#paused = false;
 
 		// Emit observer event.
 		if (wasPaused)
-			this._observer.safeEmit('resume');
+			this.#observer.safeEmit('resume');
 	}
 
 	/**
@@ -224,13 +224,13 @@ export class RtpObserver extends EnhancedEventEmitter
 	{
 		logger.debug('addProducer()');
 
-		const producer = this._getProducerById(producerId);
+		const producer = this.getProducerById(producerId);
 		const reqData = { producerId };
 
-		await this._channel.request('rtpObserver.addProducer', this._internal, reqData);
+		await this.channel.request('rtpObserver.addProducer', this.internal, reqData);
 
 		// Emit observer event.
-		this._observer.safeEmit('addproducer', producer);
+		this.#observer.safeEmit('addproducer', producer);
 	}
 
 	/**
@@ -240,12 +240,12 @@ export class RtpObserver extends EnhancedEventEmitter
 	{
 		logger.debug('removeProducer()');
 
-		const producer = this._getProducerById(producerId);
+		const producer = this.getProducerById(producerId);
 		const reqData = { producerId };
 
-		await this._channel.request('rtpObserver.removeProducer', this._internal, reqData);
+		await this.channel.request('rtpObserver.removeProducer', this.internal, reqData);
 
 		// Emit observer event.
-		this._observer.safeEmit('removeproducer', producer);
+		this.#observer.safeEmit('removeproducer', producer);
 	}
 }

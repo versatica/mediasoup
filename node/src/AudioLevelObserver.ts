@@ -1,5 +1,4 @@
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { RtpObserver } from './RtpObserver';
 import { Producer } from './Producer';
 
@@ -54,7 +53,7 @@ export class AudioLevelObserver extends RtpObserver
 	{
 		super(params);
 
-		this._handleWorkerNotifications();
+		this.handleWorkerNotifications();
 	}
 
 	/**
@@ -68,14 +67,11 @@ export class AudioLevelObserver extends RtpObserver
 	 * @emits volumes - (volumes: AudioLevelObserverVolume[])
 	 * @emits silence
 	 */
-	get observer(): EnhancedEventEmitter
-	{
-		return this._observer;
-	}
+	// get observer(): EnhancedEventEmitter
 
-	private _handleWorkerNotifications(): void
+	private handleWorkerNotifications(): void
 	{
-		this._channel.on(this._internal.rtpObserverId, (event: string, data?: any) =>
+		this.channel.on(this.internal.rtpObserverId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{
@@ -86,7 +82,7 @@ export class AudioLevelObserver extends RtpObserver
 					const volumes: AudioLevelObserverVolume[] = data
 						.map(({ producerId, volume }: { producerId: string; volume: number }) => (
 							{
-								producer : this._getProducerById(producerId),
+								producer : this.getProducerById(producerId),
 								volume
 							}
 						))
@@ -97,7 +93,7 @@ export class AudioLevelObserver extends RtpObserver
 						this.safeEmit('volumes', volumes);
 
 						// Emit observer event.
-						this._observer.safeEmit('volumes', volumes);
+						this.observer.safeEmit('volumes', volumes);
 					}
 
 					break;
@@ -108,7 +104,7 @@ export class AudioLevelObserver extends RtpObserver
 					this.safeEmit('silence');
 
 					// Emit observer event.
-					this._observer.safeEmit('silence');
+					this.observer.safeEmit('silence');
 
 					break;
 				}

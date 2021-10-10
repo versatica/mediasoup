@@ -9,24 +9,22 @@ class ActiveSpeakerObserver extends RtpObserver_1.RtpObserver {
      */
     constructor(params) {
         super(params);
-        this._handleWorkerNotifications();
+        this.handleWorkerNotifications();
     }
     /**
      * Observer.
      */
-    get observer() {
-        return this._observer;
-    }
-    _handleWorkerNotifications() {
-        this._channel.on(this._internal.rtpObserverId, (event, data) => {
+    // get observer(): EnhancedEventEmitter
+    handleWorkerNotifications() {
+        this.channel.on(this.internal.rtpObserverId, (event, data) => {
             switch (event) {
                 case 'dominantspeaker':
                     {
                         const dominantSpeaker = {
-                            producer: this._getProducerById(data.producerId)
+                            producer: this.getProducerById(data.producerId)
                         };
                         this.safeEmit('dominantspeaker', dominantSpeaker);
-                        this._observer.safeEmit('dominantspeaker', dominantSpeaker);
+                        this.observer.safeEmit('dominantspeaker', dominantSpeaker);
                         break;
                     }
                 default:

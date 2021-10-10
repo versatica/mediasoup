@@ -124,19 +124,7 @@ export declare type ConsumerStat = {
  */
 export declare type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
 export declare class Consumer extends EnhancedEventEmitter {
-    private readonly _internal;
-    private readonly _data;
-    private readonly _channel;
-    private readonly _payloadChannel;
-    private _closed;
-    private readonly _appData?;
-    private _paused;
-    private _producerPaused;
-    private _priority;
-    private _score;
-    private _preferredLayers?;
-    private _currentLayers?;
-    private readonly _observer;
+    #private;
     /**
      * @private
      * @emits transportclose
@@ -229,6 +217,11 @@ export declare class Consumer extends EnhancedEventEmitter {
      */
     get observer(): EnhancedEventEmitter;
     /**
+     * @private
+     * Just for testing purposes.
+     */
+    get channelForTesting(): Channel;
+    /**
      * Close the Consumer.
      */
     close(): void;
@@ -274,6 +267,6 @@ export declare class Consumer extends EnhancedEventEmitter {
      * Enable 'trace' event.
      */
     enableTraceEvent(types?: ConsumerTraceEventType[]): Promise<void>;
-    private _handleWorkerNotifications;
+    private handleWorkerNotifications;
 }
 //# sourceMappingURL=Consumer.d.ts.map

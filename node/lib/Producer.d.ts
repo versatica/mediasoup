@@ -114,15 +114,7 @@ export declare type ProducerStat = {
  */
 export declare type ProducerType = 'simple' | 'simulcast' | 'svc';
 export declare class Producer extends EnhancedEventEmitter {
-    private readonly _internal;
-    private readonly _data;
-    private readonly _channel;
-    private readonly _payloadChannel;
-    private _closed;
-    private readonly _appData?;
-    private _paused;
-    private _score;
-    private readonly _observer;
+    #private;
     /**
      * @private
      * @emits transportclose
@@ -193,6 +185,11 @@ export declare class Producer extends EnhancedEventEmitter {
      */
     get observer(): EnhancedEventEmitter;
     /**
+     * @private
+     * Just for testing purposes.
+     */
+    get channelForTesting(): Channel;
+    /**
      * Close the Producer.
      */
     close(): void;
@@ -226,6 +223,6 @@ export declare class Producer extends EnhancedEventEmitter {
      * Send RTP packet (just valid for Producers created on a DirectTransport).
      */
     send(rtpPacket: Buffer): void;
-    private _handleWorkerNotifications;
+    private handleWorkerNotifications;
 }
 //# sourceMappingURL=Producer.d.ts.map

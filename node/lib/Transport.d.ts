@@ -6,7 +6,6 @@ import { Consumer, ConsumerOptions } from './Consumer';
 import { DataProducer, DataProducerOptions } from './DataProducer';
 import { DataConsumer, DataConsumerOptions } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
-import { SctpParameters } from './SctpParameters';
 export interface TransportListenIp {
     /**
      * Listening IPv4 or IPv6.
@@ -56,30 +55,18 @@ export interface TransportTraceEventData {
 }
 export declare type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 export declare class Transport extends EnhancedEventEmitter {
-    protected readonly _internal: {
+    #private;
+    protected readonly internal: {
         routerId: string;
         transportId: string;
     };
-    protected readonly _data: {
-        sctpParameters?: SctpParameters;
-        sctpState?: SctpState;
-    };
-    protected readonly _channel: Channel;
-    protected readonly _payloadChannel: PayloadChannel;
-    protected _closed: boolean;
-    private readonly _appData?;
-    protected readonly _getRouterRtpCapabilities: () => RtpCapabilities;
-    protected readonly _getProducerById: (producerId: string) => Producer;
-    protected readonly _getDataProducerById: (dataProducerId: string) => DataProducer;
-    protected readonly _producers: Map<string, Producer>;
-    protected readonly _consumers: Map<string, Consumer>;
-    protected readonly _dataProducers: Map<string, DataProducer>;
-    protected readonly _dataConsumers: Map<string, DataConsumer>;
-    private _cnameForProducers?;
-    private _nextMidForConsumers;
-    private _sctpStreamIds?;
-    private _nextSctpStreamId;
-    protected readonly _observer: EnhancedEventEmitter;
+    protected readonly channel: Channel;
+    protected readonly payloadChannel: PayloadChannel;
+    protected readonly getProducerById: (producerId: string) => Producer;
+    protected readonly getDataProducerById: (dataProducerId: string) => DataProducer;
+    protected readonly consumers: Map<string, Consumer>;
+    protected readonly dataProducers: Map<string, DataProducer>;
+    protected readonly dataConsumers: Map<string, DataConsumer>;
     /**
      * @private
      * @interface
@@ -126,6 +113,11 @@ export declare class Transport extends EnhancedEventEmitter {
      * @emits newdataconsumer - (dataProducer: DataProducer)
      */
     get observer(): EnhancedEventEmitter;
+    /**
+     * @private
+     * Just for testing purposes.
+     */
+    get channelForTesting(): Channel;
     /**
      * Close the Transport.
      */
@@ -183,6 +175,6 @@ export declare class Transport extends EnhancedEventEmitter {
      * Enable 'trace' event.
      */
     enableTraceEvent(types?: TransportTraceEventType[]): Promise<void>;
-    private _getNextSctpStreamId;
+    private getNextSctpStreamId;
 }
 //# sourceMappingURL=Transport.d.ts.map

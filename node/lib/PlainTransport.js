@@ -1,4 +1,18 @@
 "use strict";
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var _data;
 Object.defineProperty(exports, "__esModule", { value: true });
 const Logger_1 = require("./Logger");
 const Transport_1 = require("./Transport");
@@ -13,49 +27,50 @@ class PlainTransport extends Transport_1.Transport {
      */
     constructor(params) {
         super(params);
+        // PlainTransport data.
+        _data.set(this, void 0);
         logger.debug('constructor()');
         const { data } = params;
-        this._data =
-            {
-                rtcpMux: data.rtcpMux,
-                comedia: data.comedia,
-                tuple: data.tuple,
-                rtcpTuple: data.rtcpTuple,
-                sctpParameters: data.sctpParameters,
-                sctpState: data.sctpState,
-                srtpParameters: data.srtpParameters
-            };
-        this._handleWorkerNotifications();
+        __classPrivateFieldSet(this, _data, {
+            rtcpMux: data.rtcpMux,
+            comedia: data.comedia,
+            tuple: data.tuple,
+            rtcpTuple: data.rtcpTuple,
+            sctpParameters: data.sctpParameters,
+            sctpState: data.sctpState,
+            srtpParameters: data.srtpParameters
+        });
+        this.handleWorkerNotifications();
     }
     /**
      * Transport tuple.
      */
     get tuple() {
-        return this._data.tuple;
+        return __classPrivateFieldGet(this, _data).tuple;
     }
     /**
      * Transport RTCP tuple.
      */
     get rtcpTuple() {
-        return this._data.rtcpTuple;
+        return __classPrivateFieldGet(this, _data).rtcpTuple;
     }
     /**
      * SCTP parameters.
      */
     get sctpParameters() {
-        return this._data.sctpParameters;
+        return __classPrivateFieldGet(this, _data).sctpParameters;
     }
     /**
      * SCTP state.
      */
     get sctpState() {
-        return this._data.sctpState;
+        return __classPrivateFieldGet(this, _data).sctpState;
     }
     /**
      * SRTP parameters.
      */
     get srtpParameters() {
-        return this._data.srtpParameters;
+        return __classPrivateFieldGet(this, _data).srtpParameters;
     }
     /**
      * Observer.
@@ -71,19 +86,17 @@ class PlainTransport extends Transport_1.Transport {
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
-    get observer() {
-        return this._observer;
-    }
+    // get observer(): EnhancedEventEmitter
     /**
      * Close the PlainTransport.
      *
      * @override
      */
     close() {
-        if (this._closed)
+        if (this.closed)
             return;
-        if (this._data.sctpState)
-            this._data.sctpState = 'closed';
+        if (__classPrivateFieldGet(this, _data).sctpState)
+            __classPrivateFieldGet(this, _data).sctpState = 'closed';
         super.close();
     }
     /**
@@ -93,10 +106,10 @@ class PlainTransport extends Transport_1.Transport {
      * @override
      */
     routerClosed() {
-        if (this._closed)
+        if (this.closed)
             return;
-        if (this._data.sctpState)
-            this._data.sctpState = 'closed';
+        if (__classPrivateFieldGet(this, _data).sctpState)
+            __classPrivateFieldGet(this, _data).sctpState = 'closed';
         super.routerClosed();
     }
     /**
@@ -106,7 +119,7 @@ class PlainTransport extends Transport_1.Transport {
      */
     async getStats() {
         logger.debug('getStats()');
-        return this._channel.request('transport.getStats', this._internal);
+        return this.channel.request('transport.getStats', this.internal);
     }
     /**
      * Provide the PlainTransport remote parameters.
@@ -116,42 +129,42 @@ class PlainTransport extends Transport_1.Transport {
     async connect({ ip, port, rtcpPort, srtpParameters }) {
         logger.debug('connect()');
         const reqData = { ip, port, rtcpPort, srtpParameters };
-        const data = await this._channel.request('transport.connect', this._internal, reqData);
+        const data = await this.channel.request('transport.connect', this.internal, reqData);
         // Update data.
         if (data.tuple)
-            this._data.tuple = data.tuple;
+            __classPrivateFieldGet(this, _data).tuple = data.tuple;
         if (data.rtcpTuple)
-            this._data.rtcpTuple = data.rtcpTuple;
-        this._data.srtpParameters = data.srtpParameters;
+            __classPrivateFieldGet(this, _data).rtcpTuple = data.rtcpTuple;
+        __classPrivateFieldGet(this, _data).srtpParameters = data.srtpParameters;
     }
-    _handleWorkerNotifications() {
-        this._channel.on(this._internal.transportId, (event, data) => {
+    handleWorkerNotifications() {
+        this.channel.on(this.internal.transportId, (event, data) => {
             switch (event) {
                 case 'tuple':
                     {
                         const tuple = data.tuple;
-                        this._data.tuple = tuple;
+                        __classPrivateFieldGet(this, _data).tuple = tuple;
                         this.safeEmit('tuple', tuple);
                         // Emit observer event.
-                        this._observer.safeEmit('tuple', tuple);
+                        this.observer.safeEmit('tuple', tuple);
                         break;
                     }
                 case 'rtcptuple':
                     {
                         const rtcpTuple = data.rtcpTuple;
-                        this._data.rtcpTuple = rtcpTuple;
+                        __classPrivateFieldGet(this, _data).rtcpTuple = rtcpTuple;
                         this.safeEmit('rtcptuple', rtcpTuple);
                         // Emit observer event.
-                        this._observer.safeEmit('rtcptuple', rtcpTuple);
+                        this.observer.safeEmit('rtcptuple', rtcpTuple);
                         break;
                     }
                 case 'sctpstatechange':
                     {
                         const sctpState = data.sctpState;
-                        this._data.sctpState = sctpState;
+                        __classPrivateFieldGet(this, _data).sctpState = sctpState;
                         this.safeEmit('sctpstatechange', sctpState);
                         // Emit observer event.
-                        this._observer.safeEmit('sctpstatechange', sctpState);
+                        this.observer.safeEmit('sctpstatechange', sctpState);
                         break;
                     }
                 case 'trace':
@@ -159,7 +172,7 @@ class PlainTransport extends Transport_1.Transport {
                         const trace = data;
                         this.safeEmit('trace', trace);
                         // Emit observer event.
-                        this._observer.safeEmit('trace', trace);
+                        this.observer.safeEmit('trace', trace);
                         break;
                     }
                 default:
@@ -171,6 +184,7 @@ class PlainTransport extends Transport_1.Transport {
     }
 }
 exports.PlainTransport = PlainTransport;
+_data = new WeakMap();
 /**
  * DEPRECATED: Use PlainTransport.
  */

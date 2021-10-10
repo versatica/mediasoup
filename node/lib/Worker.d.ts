@@ -111,14 +111,7 @@ export declare type WorkerResourceUsage = {
     ru_nivcsw: number;
 };
 export declare class Worker extends EnhancedEventEmitter {
-    private _child?;
-    private readonly _pid;
-    private readonly _channel;
-    private readonly _payloadChannel;
-    private _closed;
-    private readonly _appData?;
-    private readonly _routers;
-    private readonly _observer;
+    #private;
     /**
      * @private
      * @emits died - (error: Error)
@@ -149,6 +142,11 @@ export declare class Worker extends EnhancedEventEmitter {
      * @emits newrouter - (router: Router)
      */
     get observer(): EnhancedEventEmitter;
+    /**
+     * @private
+     * Just for testing purposes.
+     */
+    get routersForTesting(): Set<Router>;
     /**
      * Close the Worker.
      */

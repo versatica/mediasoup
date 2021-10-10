@@ -1,4 +1,3 @@
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport, TransportListenIp, TransportProtocol, TransportTuple, SctpState } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 export declare type WebRtcTransportOptions = {
@@ -114,18 +113,7 @@ export declare type WebRtcTransportStat = {
     dtlsState: DtlsState;
 };
 export declare class WebRtcTransport extends Transport {
-    protected readonly _data: {
-        iceRole: 'controlled';
-        iceParameters: IceParameters;
-        iceCandidates: IceCandidate[];
-        iceState: IceState;
-        iceSelectedTuple?: TransportTuple;
-        dtlsParameters: DtlsParameters;
-        dtlsState: DtlsState;
-        dtlsRemoteCert?: string;
-        sctpParameters?: SctpParameters;
-        sctpState?: SctpState;
-    };
+    #private;
     /**
      * @private
      * @emits icestatechange - (iceState: IceState)
@@ -190,7 +178,6 @@ export declare class WebRtcTransport extends Transport {
      * @emits sctpstatechange - (sctpState: SctpState)
      * @emits trace - (trace: TransportTraceEventData)
      */
-    get observer(): EnhancedEventEmitter;
     /**
      * Close the WebRtcTransport.
      *
@@ -222,6 +209,6 @@ export declare class WebRtcTransport extends Transport {
      * Restart ICE.
      */
     restartIce(): Promise<IceParameters>;
-    private _handleWorkerNotifications;
+    private handleWorkerNotifications;
 }
 //# sourceMappingURL=WebRtcTransport.d.ts.map

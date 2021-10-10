@@ -48,13 +48,7 @@ export declare type DataConsumerStat = {
  */
 export declare type DataConsumerType = 'sctp' | 'direct';
 export declare class DataConsumer extends EnhancedEventEmitter {
-    private readonly _internal;
-    private readonly _data;
-    private readonly _channel;
-    private readonly _payloadChannel;
-    private _closed;
-    private readonly _appData?;
-    private readonly _observer;
+    #private;
     /**
      * @private
      * @emits transportclose
@@ -144,6 +138,6 @@ export declare class DataConsumer extends EnhancedEventEmitter {
      * Get buffered amount size.
      */
     getBufferedAmount(): Promise<number>;
-    private _handleWorkerNotifications;
+    private handleWorkerNotifications;
 }
 //# sourceMappingURL=DataConsumer.d.ts.map

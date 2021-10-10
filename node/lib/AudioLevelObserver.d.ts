@@ -1,4 +1,3 @@
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { RtpObserver } from './RtpObserver';
 import { Producer } from './Producer';
 export interface AudioLevelObserverOptions {
@@ -49,7 +48,6 @@ export declare class AudioLevelObserver extends RtpObserver {
      * @emits volumes - (volumes: AudioLevelObserverVolume[])
      * @emits silence
      */
-    get observer(): EnhancedEventEmitter;
-    private _handleWorkerNotifications;
+    private handleWorkerNotifications;
 }
 //# sourceMappingURL=AudioLevelObserver.d.ts.map

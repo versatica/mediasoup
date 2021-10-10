@@ -1,4 +1,18 @@
 "use strict";
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var _closed, _producerSocket, _consumerSocket, _nextId, _sents, _recvBuffer, _ongoingNotification;
 Object.defineProperty(exports, "__esModule", { value: true });
 const os = require("os");
 const Logger_1 = require("./Logger");
@@ -16,81 +30,87 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     constructor({ producerSocket, consumerSocket }) {
         super();
         // Closed flag.
-        this._closed = false;
+        _closed.set(this, false);
+        // Unix Socket instance for sending messages to the worker process.
+        _producerSocket.set(this, void 0);
+        // Unix Socket instance for receiving messages to the worker process.
+        _consumerSocket.set(this, void 0);
         // Next id for messages sent to the worker process.
-        this._nextId = 0;
+        _nextId.set(this, 0);
         // Map of pending sent requests.
-        this._sents = new Map();
+        _sents.set(this, new Map());
         // Buffer for reading messages from the worker.
-        this._recvBuffer = Buffer.alloc(0);
+        _recvBuffer.set(this, Buffer.alloc(0));
+        // Ongoing notification (waiting for its payload).
+        _ongoingNotification.set(this, void 0);
         logger.debug('constructor()');
-        this._producerSocket = producerSocket;
-        this._consumerSocket = consumerSocket;
+        __classPrivateFieldSet(this, _producerSocket, producerSocket);
+        __classPrivateFieldSet(this, _consumerSocket, consumerSocket);
         // Read PayloadChannel notifications from the worker.
-        this._consumerSocket.on('data', (buffer) => {
-            if (!this._recvBuffer.length) {
-                this._recvBuffer = buffer;
+        __classPrivateFieldGet(this, _consumerSocket).on('data', (buffer) => {
+            if (!__classPrivateFieldGet(this, _recvBuffer).length) {
+                __classPrivateFieldSet(this, _recvBuffer, buffer);
             }
             else {
-                this._recvBuffer = Buffer.concat([this._recvBuffer, buffer], this._recvBuffer.length + buffer.length);
+                __classPrivateFieldSet(this, _recvBuffer, Buffer.concat([__classPrivateFieldGet(this, _recvBuffer), buffer], __classPrivateFieldGet(this, _recvBuffer).length + buffer.length));
             }
-            if (this._recvBuffer.length > PAYLOAD_MAX_LEN) {
+            if (__classPrivateFieldGet(this, _recvBuffer).length > PAYLOAD_MAX_LEN) {
                 logger.error('receiving buffer is full, discarding all data in it');
                 // Reset the buffer and exit.
-                this._recvBuffer = Buffer.alloc(0);
+                __classPrivateFieldSet(this, _recvBuffer, Buffer.alloc(0));
                 return;
             }
             let msgStart = 0;
             while (true) // eslint-disable-line no-constant-condition
              {
-                const readLen = this._recvBuffer.length - msgStart;
+                const readLen = __classPrivateFieldGet(this, _recvBuffer).length - msgStart;
                 if (readLen < 4) {
                     // Incomplete data.
                     break;
                 }
-                const dataView = new DataView(this._recvBuffer.buffer, this._recvBuffer.byteOffset + msgStart);
+                const dataView = new DataView(__classPrivateFieldGet(this, _recvBuffer).buffer, __classPrivateFieldGet(this, _recvBuffer).byteOffset + msgStart);
                 const msgLen = dataView.getUint32(0, littleEndian);
                 if (readLen < 4 + msgLen) {
                     // Incomplete data.
                     break;
                 }
-                const payload = this._recvBuffer.subarray(msgStart + 4, msgStart + 4 + msgLen);
+                const payload = __classPrivateFieldGet(this, _recvBuffer).subarray(msgStart + 4, msgStart + 4 + msgLen);
                 msgStart += 4 + msgLen;
-                this._processData(payload);
+                this.processData(payload);
             }
             if (msgStart != 0) {
-                this._recvBuffer = this._recvBuffer.slice(msgStart);
+                __classPrivateFieldSet(this, _recvBuffer, __classPrivateFieldGet(this, _recvBuffer).slice(msgStart));
             }
         });
-        this._consumerSocket.on('end', () => (logger.debug('Consumer PayloadChannel ended by the worker process')));
-        this._consumerSocket.on('error', (error) => (logger.error('Consumer PayloadChannel error: %s', String(error))));
-        this._producerSocket.on('end', () => (logger.debug('Producer PayloadChannel ended by the worker process')));
-        this._producerSocket.on('error', (error) => (logger.error('Producer PayloadChannel error: %s', String(error))));
+        __classPrivateFieldGet(this, _consumerSocket).on('end', () => (logger.debug('Consumer PayloadChannel ended by the worker process')));
+        __classPrivateFieldGet(this, _consumerSocket).on('error', (error) => (logger.error('Consumer PayloadChannel error: %s', String(error))));
+        __classPrivateFieldGet(this, _producerSocket).on('end', () => (logger.debug('Producer PayloadChannel ended by the worker process')));
+        __classPrivateFieldGet(this, _producerSocket).on('error', (error) => (logger.error('Producer PayloadChannel error: %s', String(error))));
     }
     /**
      * @private
      */
     close() {
-        if (this._closed)
+        if (__classPrivateFieldGet(this, _closed))
             return;
         logger.debug('close()');
-        this._closed = true;
+        __classPrivateFieldSet(this, _closed, true);
         // Remove event listeners but leave a fake 'error' hander to avoid
         // propagation.
-        this._consumerSocket.removeAllListeners('end');
-        this._consumerSocket.removeAllListeners('error');
-        this._consumerSocket.on('error', () => { });
-        this._producerSocket.removeAllListeners('end');
-        this._producerSocket.removeAllListeners('error');
-        this._producerSocket.on('error', () => { });
+        __classPrivateFieldGet(this, _consumerSocket).removeAllListeners('end');
+        __classPrivateFieldGet(this, _consumerSocket).removeAllListeners('error');
+        __classPrivateFieldGet(this, _consumerSocket).on('error', () => { });
+        __classPrivateFieldGet(this, _producerSocket).removeAllListeners('end');
+        __classPrivateFieldGet(this, _producerSocket).removeAllListeners('error');
+        __classPrivateFieldGet(this, _producerSocket).on('error', () => { });
         // Destroy the socket after a while to allow pending incoming messages.
         setTimeout(() => {
             try {
-                this._producerSocket.destroy();
+                __classPrivateFieldGet(this, _producerSocket).destroy();
             }
             catch (error) { }
             try {
-                this._consumerSocket.destroy();
+                __classPrivateFieldGet(this, _consumerSocket).destroy();
             }
             catch (error) { }
         }, 200);
@@ -100,7 +120,7 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     notify(event, internal, data, payload) {
         logger.debug('notify() [event:%s]', event);
-        if (this._closed)
+        if (__classPrivateFieldGet(this, _closed))
             throw new errors_1.InvalidStateError('PayloadChannel closed');
         const notification = JSON.stringify({ event, internal, data });
         if (Buffer.byteLength(notification) > MESSAGE_MAX_LEN)
@@ -109,8 +129,8 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             throw new Error('PayloadChannel payload too big');
         try {
             // This may throw if closed or remote side ended.
-            this._producerSocket.write(Buffer.from(Uint32Array.of(Buffer.byteLength(notification)).buffer));
-            this._producerSocket.write(notification);
+            __classPrivateFieldGet(this, _producerSocket).write(Buffer.from(Uint32Array.of(Buffer.byteLength(notification)).buffer));
+            __classPrivateFieldGet(this, _producerSocket).write(notification);
         }
         catch (error) {
             logger.warn('notify() | sending notification failed: %s', String(error));
@@ -118,8 +138,8 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         }
         try {
             // This may throw if closed or remote side ended.
-            this._producerSocket.write(Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
-            this._producerSocket.write(payload);
+            __classPrivateFieldGet(this, _producerSocket).write(Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
+            __classPrivateFieldGet(this, _producerSocket).write(payload);
         }
         catch (error) {
             logger.warn('notify() | sending payload failed: %s', String(error));
@@ -130,10 +150,10 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @private
      */
     async request(method, internal, data, payload) {
-        this._nextId < 4294967295 ? ++this._nextId : (this._nextId = 1);
-        const id = this._nextId;
+        __classPrivateFieldGet(this, _nextId) < 4294967295 ? __classPrivateFieldSet(this, _nextId, +__classPrivateFieldGet(this, _nextId) + 1) : (__classPrivateFieldSet(this, _nextId, 1));
+        const id = __classPrivateFieldGet(this, _nextId);
         logger.debug('request() [method:%s, id:%s]', method, id);
-        if (this._closed)
+        if (__classPrivateFieldGet(this, _closed))
             throw new errors_1.InvalidStateError('Channel closed');
         const request = JSON.stringify({ id, method, internal, data });
         if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
@@ -141,29 +161,29 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
             throw new Error('PayloadChannel payload too big');
         // This may throw if closed or remote side ended.
-        this._producerSocket.write(Buffer.from(Uint32Array.of(Buffer.byteLength(request)).buffer));
-        this._producerSocket.write(request);
-        this._producerSocket.write(Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
-        this._producerSocket.write(payload);
+        __classPrivateFieldGet(this, _producerSocket).write(Buffer.from(Uint32Array.of(Buffer.byteLength(request)).buffer));
+        __classPrivateFieldGet(this, _producerSocket).write(request);
+        __classPrivateFieldGet(this, _producerSocket).write(Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
+        __classPrivateFieldGet(this, _producerSocket).write(payload);
         return new Promise((pResolve, pReject) => {
-            const timeout = 1000 * (15 + (0.1 * this._sents.size));
+            const timeout = 1000 * (15 + (0.1 * __classPrivateFieldGet(this, _sents).size));
             const sent = {
                 id: id,
                 method: method,
                 resolve: (data2) => {
-                    if (!this._sents.delete(id))
+                    if (!__classPrivateFieldGet(this, _sents).delete(id))
                         return;
                     clearTimeout(sent.timer);
                     pResolve(data2);
                 },
                 reject: (error) => {
-                    if (!this._sents.delete(id))
+                    if (!__classPrivateFieldGet(this, _sents).delete(id))
                         return;
                     clearTimeout(sent.timer);
                     pReject(error);
                 },
                 timer: setTimeout(() => {
-                    if (!this._sents.delete(id))
+                    if (!__classPrivateFieldGet(this, _sents).delete(id))
                         return;
                     pReject(new Error('Channel request timeout'));
                 }, timeout),
@@ -173,11 +193,11 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 }
             };
             // Add sent stuff to the map.
-            this._sents.set(id, sent);
+            __classPrivateFieldGet(this, _sents).set(id, sent);
         });
     }
-    _processData(data) {
-        if (!this._ongoingNotification) {
+    processData(data) {
+        if (!__classPrivateFieldGet(this, _ongoingNotification)) {
             let msg;
             try {
                 msg = JSON.parse(data.toString('utf8'));
@@ -188,7 +208,7 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             }
             // If a response, retrieve its associated request.
             if (msg.id) {
-                const sent = this._sents.get(msg.id);
+                const sent = __classPrivateFieldGet(this, _sents).get(msg.id);
                 if (!sent) {
                     logger.error('received response does not match any sent request [id:%s]', msg.id);
                     return;
@@ -213,12 +233,11 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             }
             // If a notification, create the ongoing notification instance.
             else if (msg.targetId && msg.event) {
-                this._ongoingNotification =
-                    {
-                        targetId: msg.targetId,
-                        event: msg.event,
-                        data: msg.data
-                    };
+                __classPrivateFieldSet(this, _ongoingNotification, {
+                    targetId: msg.targetId,
+                    event: msg.event,
+                    data: msg.data
+                });
             }
             else {
                 logger.error('received data is not a notification nor a response');
@@ -228,10 +247,11 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         else {
             const payload = data;
             // Emit the corresponding event.
-            this.emit(this._ongoingNotification.targetId, this._ongoingNotification.event, this._ongoingNotification.data, payload);
+            this.emit(__classPrivateFieldGet(this, _ongoingNotification).targetId, __classPrivateFieldGet(this, _ongoingNotification).event, __classPrivateFieldGet(this, _ongoingNotification).data, payload);
             // Unset ongoing notification.
-            this._ongoingNotification = undefined;
+            __classPrivateFieldSet(this, _ongoingNotification, undefined);
         }
     }
 }
 exports.PayloadChannel = PayloadChannel;
+_closed = new WeakMap(), _producerSocket = new WeakMap(), _consumerSocket = new WeakMap(), _nextId = new WeakMap(), _sents = new WeakMap(), _recvBuffer = new WeakMap(), _ongoingNotification = new WeakMap();

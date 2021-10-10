@@ -4,44 +4,44 @@ const APP_NAME = 'mediasoup';
 
 export class Logger
 {
-	private readonly _debug: debug.Debugger;
-	private readonly _warn: debug.Debugger;
-	private readonly _error: debug.Debugger;
+	readonly #debug: debug.Debugger;
+	readonly #warn: debug.Debugger;
+	readonly #error: debug.Debugger;
 
 	constructor(prefix?: string)
 	{
 		if (prefix)
 		{
-			this._debug = debug(`${APP_NAME}:${prefix}`);
-			this._warn = debug(`${APP_NAME}:WARN:${prefix}`);
-			this._error = debug(`${APP_NAME}:ERROR:${prefix}`);
+			this.#debug = debug(`${APP_NAME}:${prefix}`);
+			this.#warn = debug(`${APP_NAME}:WARN:${prefix}`);
+			this.#error = debug(`${APP_NAME}:ERROR:${prefix}`);
 		}
 		else
 		{
-			this._debug = debug(APP_NAME);
-			this._warn = debug(`${APP_NAME}:WARN`);
-			this._error = debug(`${APP_NAME}:ERROR`);
+			this.#debug = debug(APP_NAME);
+			this.#warn = debug(`${APP_NAME}:WARN`);
+			this.#error = debug(`${APP_NAME}:ERROR`);
 		}
 
 		/* eslint-disable no-console */
-		this._debug.log = console.info.bind(console);
-		this._warn.log = console.warn.bind(console);
-		this._error.log = console.error.bind(console);
+		this.#debug.log = console.info.bind(console);
+		this.#warn.log = console.warn.bind(console);
+		this.#error.log = console.error.bind(console);
 		/* eslint-enable no-console */
 	}
 
 	get debug(): debug.Debugger
 	{
-		return this._debug;
+		return this.#debug;
 	}
 
 	get warn(): debug.Debugger
 	{
-		return this._warn;
+		return this.#warn;
 	}
 
 	get error(): debug.Debugger
 	{
-		return this._error;
+		return this.#error;
 	}
 }

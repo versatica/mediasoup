@@ -24,22 +24,22 @@ const PAYLOAD_MAX_LEN = 4194304;
 export class Channel extends EnhancedEventEmitter
 {
 	// Closed flag.
-	private _closed = false;
+	#closed = false;
 
 	// Unix Socket instance for sending messages to the worker process.
-	private readonly _producerSocket: Duplex;
+	readonly #producerSocket: Duplex;
 
 	// Unix Socket instance for receiving messages to the worker process.
-	private readonly _consumerSocket: Duplex;
+	readonly #consumerSocket: Duplex;
 
 	// Next id for messages sent to the worker process.
-	private _nextId = 0;
+	#nextId = 0;
 
 	// Map of pending sent requests.
-	private readonly _sents: Map<number, Sent> = new Map();
+	readonly #sents: Map<number, Sent> = new Map();
 
 	// Buffer for reading messages from the worker.
-	private _recvBuffer = Buffer.alloc(0);
+	#recvBuffer = Buffer.alloc(0);
 
 	/**
 	 * @private
@@ -60,29 +60,29 @@ export class Channel extends EnhancedEventEmitter
 
 		logger.debug('constructor()');
 
-		this._producerSocket = producerSocket as Duplex;
-		this._consumerSocket = consumerSocket as Duplex;
+		this.#producerSocket = producerSocket as Duplex;
+		this.#consumerSocket = consumerSocket as Duplex;
 
 		// Read Channel responses/notifications from the worker.
-		this._consumerSocket.on('data', (buffer: Buffer) =>
+		this.#consumerSocket.on('data', (buffer: Buffer) =>
 		{
-			if (!this._recvBuffer.length)
+			if (!this.#recvBuffer.length)
 			{
-				this._recvBuffer = buffer;
+				this.#recvBuffer = buffer;
 			}
 			else
 			{
-				this._recvBuffer = Buffer.concat(
-					[ this._recvBuffer, buffer ],
-					this._recvBuffer.length + buffer.length);
+				this.#recvBuffer = Buffer.concat(
+					[ this.#recvBuffer, buffer ],
+					this.#recvBuffer.length + buffer.length);
 			}
 
-			if (this._recvBuffer.length > PAYLOAD_MAX_LEN)
+			if (this.#recvBuffer.length > PAYLOAD_MAX_LEN)
 			{
 				logger.error('receiving buffer is full, discarding all data in it');
 
 				// Reset the buffer and exit.
-				this._recvBuffer = Buffer.alloc(0);
+				this.#recvBuffer = Buffer.alloc(0);
 
 				return;
 			}
@@ -91,7 +91,7 @@ export class Channel extends EnhancedEventEmitter
 
 			while (true) // eslint-disable-line no-constant-condition
 			{
-				const readLen = this._recvBuffer.length - msgStart;
+				const readLen = this.#recvBuffer.length - msgStart;
 
 				if (readLen < 4)
 				{
@@ -100,8 +100,8 @@ export class Channel extends EnhancedEventEmitter
 				}
 
 				const dataView = new DataView(
-					this._recvBuffer.buffer,
-					this._recvBuffer.byteOffset + msgStart);
+					this.#recvBuffer.buffer,
+					this.#recvBuffer.byteOffset + msgStart);
 				const msgLen = dataView.getUint32(0, littleEndian);
 
 				if (readLen < 4 + msgLen)
@@ -110,7 +110,7 @@ export class Channel extends EnhancedEventEmitter
 					break;
 				}
 
-				const payload = this._recvBuffer.subarray(msgStart + 4, msgStart + 4 + msgLen);
+				const payload = this.#recvBuffer.subarray(msgStart + 4, msgStart + 4 + msgLen);
 
 				msgStart += 4 + msgLen;
 
@@ -121,7 +121,7 @@ export class Channel extends EnhancedEventEmitter
 					{
 						// 123 = '{' (a Channel JSON message).
 						case 123:
-							this._processMessage(JSON.parse(payload.toString('utf8')));
+							this.processMessage(JSON.parse(payload.toString('utf8')));
 							break;
 
 						// 68 = 'D' (a debug log).
@@ -162,23 +162,23 @@ export class Channel extends EnhancedEventEmitter
 
 			if (msgStart != 0)
 			{
-				this._recvBuffer = this._recvBuffer.slice(msgStart);
+				this.#recvBuffer = this.#recvBuffer.slice(msgStart);
 			}
 		});
 
-		this._consumerSocket.on('end', () => (
+		this.#consumerSocket.on('end', () => (
 			logger.debug('Consumer Channel ended by the worker process')
 		));
 
-		this._consumerSocket.on('error', (error) => (
+		this.#consumerSocket.on('error', (error) => (
 			logger.error('Consumer Channel error: %s', String(error))
 		));
 
-		this._producerSocket.on('end', () => (
+		this.#producerSocket.on('end', () => (
 			logger.debug('Producer Channel ended by the worker process')
 		));
 
-		this._producerSocket.on('error', (error) => (
+		this.#producerSocket.on('error', (error) => (
 			logger.error('Producer Channel error: %s', String(error))
 		));
 	}
@@ -188,35 +188,35 @@ export class Channel extends EnhancedEventEmitter
 	 */
 	close(): void
 	{
-		if (this._closed)
+		if (this.#closed)
 			return;
 
 		logger.debug('close()');
 
-		this._closed = true;
+		this.#closed = true;
 
 		// Close every pending sent.
-		for (const sent of this._sents.values())
+		for (const sent of this.#sents.values())
 		{
 			sent.close();
 		}
 
 		// Remove event listeners but leave a fake 'error' hander to avoid
 		// propagation.
-		this._consumerSocket.removeAllListeners('end');
-		this._consumerSocket.removeAllListeners('error');
-		this._consumerSocket.on('error', () => {});
+		this.#consumerSocket.removeAllListeners('end');
+		this.#consumerSocket.removeAllListeners('error');
+		this.#consumerSocket.on('error', () => {});
 
-		this._producerSocket.removeAllListeners('end');
-		this._producerSocket.removeAllListeners('error');
-		this._producerSocket.on('error', () => {});
+		this.#producerSocket.removeAllListeners('end');
+		this.#producerSocket.removeAllListeners('error');
+		this.#producerSocket.on('error', () => {});
 
 		// Destroy the socket after a while to allow pending incoming messages.
 		setTimeout(() =>
 		{
-			try { this._producerSocket.destroy(); }
+			try { this.#producerSocket.destroy(); }
 			catch (error) {}
-			try { this._consumerSocket.destroy(); }
+			try { this.#consumerSocket.destroy(); }
 			catch (error) {}
 		}, 200);
 	}
@@ -226,13 +226,13 @@ export class Channel extends EnhancedEventEmitter
 	 */
 	async request(method: string, internal?: object, data?: any): Promise<any>
 	{
-		this._nextId < 4294967295 ? ++this._nextId : (this._nextId = 1);
+		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
 
-		const id = this._nextId;
+		const id = this.#nextId;
 
 		logger.debug('request() [method:%s, id:%s]', method, id);
 
-		if (this._closed)
+		if (this.#closed)
 			throw new InvalidStateError('Channel closed');
 
 		const request = { id, method, internal, data };
@@ -242,20 +242,20 @@ export class Channel extends EnhancedEventEmitter
 			throw new Error('Channel request too big');
 
 		// This may throw if closed or remote side ended.
-		this._producerSocket.write(
+		this.#producerSocket.write(
 			Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
-		this._producerSocket.write(payload);
+		this.#producerSocket.write(payload);
 
 		return new Promise((pResolve, pReject) =>
 		{
-			const timeout = 1000 * (15 + (0.1 * this._sents.size));
+			const timeout = 1000 * (15 + (0.1 * this.#sents.size));
 			const sent: Sent =
 			{
 				id      : id,
 				method  : method,
 				resolve : (data2) =>
 				{
-					if (!this._sents.delete(id))
+					if (!this.#sents.delete(id))
 						return;
 
 					clearTimeout(sent.timer);
@@ -263,7 +263,7 @@ export class Channel extends EnhancedEventEmitter
 				},
 				reject : (error) =>
 				{
-					if (!this._sents.delete(id))
+					if (!this.#sents.delete(id))
 						return;
 
 					clearTimeout(sent.timer);
@@ -271,7 +271,7 @@ export class Channel extends EnhancedEventEmitter
 				},
 				timer : setTimeout(() =>
 				{
-					if (!this._sents.delete(id))
+					if (!this.#sents.delete(id))
 						return;
 
 					pReject(new Error('Channel request timeout'));
@@ -284,16 +284,16 @@ export class Channel extends EnhancedEventEmitter
 			};
 
 			// Add sent stuff to the map.
-			this._sents.set(id, sent);
+			this.#sents.set(id, sent);
 		});
 	}
 
-	private _processMessage(msg: any): void
+	private processMessage(msg: any): void
 	{
 		// If a response, retrieve its associated request.
 		if (msg.id)
 		{
-			const sent = this._sents.get(msg.id);
+			const sent = this.#sents.get(msg.id);
 
 			if (!sent)
 			{

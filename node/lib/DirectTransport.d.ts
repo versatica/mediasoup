@@ -1,5 +1,4 @@
 /// <reference types="node" />
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Transport } from './Transport';
 export declare type DirectTransportOptions = {
     /**
@@ -35,7 +34,7 @@ export declare type DirectTransportStat = {
     maxIncomingBitrate?: number;
 };
 export declare class DirectTransport extends Transport {
-    protected readonly _data: {};
+    #private;
     /**
      * @private
      * @emits rtcp - (packet: Buffer)
@@ -51,7 +50,6 @@ export declare class DirectTransport extends Transport {
      * @emits newdataconsumer - (dataProducer: DataProducer)
      * @emits trace - (trace: TransportTraceEventData)
      */
-    get observer(): EnhancedEventEmitter;
     /**
      * Close the DirectTransport.
      *
@@ -89,6 +87,6 @@ export declare class DirectTransport extends Transport {
      * Send RTCP packet.
      */
     sendRtcp(rtcpPacket: Buffer): void;
-    private _handleWorkerNotifications;
+    private handleWorkerNotifications;
 }
 //# sourceMappingURL=DirectTransport.d.ts.map

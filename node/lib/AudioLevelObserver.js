@@ -11,7 +11,7 @@ class AudioLevelObserver extends RtpObserver_1.RtpObserver {
      */
     constructor(params) {
         super(params);
-        this._handleWorkerNotifications();
+        this.handleWorkerNotifications();
     }
     /**
      * Observer.
@@ -24,11 +24,9 @@ class AudioLevelObserver extends RtpObserver_1.RtpObserver {
      * @emits volumes - (volumes: AudioLevelObserverVolume[])
      * @emits silence
      */
-    get observer() {
-        return this._observer;
-    }
-    _handleWorkerNotifications() {
-        this._channel.on(this._internal.rtpObserverId, (event, data) => {
+    // get observer(): EnhancedEventEmitter
+    handleWorkerNotifications() {
+        this.channel.on(this.internal.rtpObserverId, (event, data) => {
             switch (event) {
                 case 'volumes':
                     {
@@ -36,14 +34,14 @@ class AudioLevelObserver extends RtpObserver_1.RtpObserver {
                         // no Producer (it may have been closed in the meanwhile).
                         const volumes = data
                             .map(({ producerId, volume }) => ({
-                            producer: this._getProducerById(producerId),
+                            producer: this.getProducerById(producerId),
                             volume
                         }))
                             .filter(({ producer }) => producer);
                         if (volumes.length > 0) {
                             this.safeEmit('volumes', volumes);
                             // Emit observer event.
-                            this._observer.safeEmit('volumes', volumes);
+                            this.observer.safeEmit('volumes', volumes);
                         }
                         break;
                     }
@@ -51,7 +49,7 @@ class AudioLevelObserver extends RtpObserver_1.RtpObserver {
                     {
                         this.safeEmit('silence');
                         // Emit observer event.
-                        this._observer.safeEmit('silence');
+                        this.observer.safeEmit('silence');
                         break;
                     }
                 default:

@@ -1,4 +1,18 @@
 "use strict";
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var _internal, _data, _channel, _payloadChannel, _closed, _appData, _paused, _producerPaused, _priority, _score, _preferredLayers, _currentLayers, _observer;
 Object.defineProperty(exports, "__esModule", { value: true });
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
@@ -19,105 +33,121 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     constructor({ internal, data, channel, payloadChannel, appData, paused, producerPaused, score = { score: 10, producerScore: 10, producerScores: [] }, preferredLayers }) {
         super();
+        // Internal data.
+        _internal.set(this, void 0);
+        // Consumer data.
+        _data.set(this, void 0);
+        // Channel instance.
+        _channel.set(this, void 0);
+        // PayloadChannel instance.
+        _payloadChannel.set(this, void 0);
         // Closed flag.
-        this._closed = false;
+        _closed.set(this, false);
+        // Custom app data.
+        _appData.set(this, void 0);
         // Paused flag.
-        this._paused = false;
+        _paused.set(this, false);
         // Associated Producer paused flag.
-        this._producerPaused = false;
+        _producerPaused.set(this, false);
         // Current priority.
-        this._priority = 1;
+        _priority.set(this, 1);
+        // Current score.
+        _score.set(this, void 0);
+        // Preferred layers.
+        _preferredLayers.set(this, void 0);
+        // Curent layers.
+        _currentLayers.set(this, void 0);
         // Observer instance.
-        this._observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
+        _observer.set(this, new EnhancedEventEmitter_1.EnhancedEventEmitter());
         logger.debug('constructor()');
-        this._internal = internal;
-        this._data = data;
-        this._channel = channel;
-        this._payloadChannel = payloadChannel;
-        this._appData = appData;
-        this._paused = paused;
-        this._producerPaused = producerPaused;
-        this._score = score;
-        this._preferredLayers = preferredLayers;
-        this._handleWorkerNotifications();
+        __classPrivateFieldSet(this, _internal, internal);
+        __classPrivateFieldSet(this, _data, data);
+        __classPrivateFieldSet(this, _channel, channel);
+        __classPrivateFieldSet(this, _payloadChannel, payloadChannel);
+        __classPrivateFieldSet(this, _appData, appData);
+        __classPrivateFieldSet(this, _paused, paused);
+        __classPrivateFieldSet(this, _producerPaused, producerPaused);
+        __classPrivateFieldSet(this, _score, score);
+        __classPrivateFieldSet(this, _preferredLayers, preferredLayers);
+        this.handleWorkerNotifications();
     }
     /**
      * Consumer id.
      */
     get id() {
-        return this._internal.consumerId;
+        return __classPrivateFieldGet(this, _internal).consumerId;
     }
     /**
      * Associated Producer id.
      */
     get producerId() {
-        return this._internal.producerId;
+        return __classPrivateFieldGet(this, _internal).producerId;
     }
     /**
      * Whether the Consumer is closed.
      */
     get closed() {
-        return this._closed;
+        return __classPrivateFieldGet(this, _closed);
     }
     /**
      * Media kind.
      */
     get kind() {
-        return this._data.kind;
+        return __classPrivateFieldGet(this, _data).kind;
     }
     /**
      * RTP parameters.
      */
     get rtpParameters() {
-        return this._data.rtpParameters;
+        return __classPrivateFieldGet(this, _data).rtpParameters;
     }
     /**
      * Consumer type.
      */
     get type() {
-        return this._data.type;
+        return __classPrivateFieldGet(this, _data).type;
     }
     /**
      * Whether the Consumer is paused.
      */
     get paused() {
-        return this._paused;
+        return __classPrivateFieldGet(this, _paused);
     }
     /**
      * Whether the associate Producer is paused.
      */
     get producerPaused() {
-        return this._producerPaused;
+        return __classPrivateFieldGet(this, _producerPaused);
     }
     /**
      * Current priority.
      */
     get priority() {
-        return this._priority;
+        return __classPrivateFieldGet(this, _priority);
     }
     /**
      * Consumer score.
      */
     get score() {
-        return this._score;
+        return __classPrivateFieldGet(this, _score);
     }
     /**
      * Preferred video layers.
      */
     get preferredLayers() {
-        return this._preferredLayers;
+        return __classPrivateFieldGet(this, _preferredLayers);
     }
     /**
      * Current video layers.
      */
     get currentLayers() {
-        return this._currentLayers;
+        return __classPrivateFieldGet(this, _currentLayers);
     }
     /**
      * App custom data.
      */
     get appData() {
-        return this._appData;
+        return __classPrivateFieldGet(this, _appData);
     }
     /**
      * Invalid setter.
@@ -136,24 +166,31 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @emits trace - (trace: ConsumerTraceEventData)
      */
     get observer() {
-        return this._observer;
+        return __classPrivateFieldGet(this, _observer);
+    }
+    /**
+     * @private
+     * Just for testing purposes.
+     */
+    get channelForTesting() {
+        return __classPrivateFieldGet(this, _channel);
     }
     /**
      * Close the Consumer.
      */
     close() {
-        if (this._closed)
+        if (__classPrivateFieldGet(this, _closed))
             return;
         logger.debug('close()');
-        this._closed = true;
+        __classPrivateFieldSet(this, _closed, true);
         // Remove notification subscriptions.
-        this._channel.removeAllListeners(this._internal.consumerId);
-        this._payloadChannel.removeAllListeners(this._internal.consumerId);
-        this._channel.request('consumer.close', this._internal)
+        __classPrivateFieldGet(this, _channel).removeAllListeners(__classPrivateFieldGet(this, _internal).consumerId);
+        __classPrivateFieldGet(this, _payloadChannel).removeAllListeners(__classPrivateFieldGet(this, _internal).consumerId);
+        __classPrivateFieldGet(this, _channel).request('consumer.close', __classPrivateFieldGet(this, _internal))
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
-        this._observer.safeEmit('close');
+        __classPrivateFieldGet(this, _observer).safeEmit('close');
     }
     /**
      * Transport was closed.
@@ -161,54 +198,54 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @private
      */
     transportClosed() {
-        if (this._closed)
+        if (__classPrivateFieldGet(this, _closed))
             return;
         logger.debug('transportClosed()');
-        this._closed = true;
+        __classPrivateFieldSet(this, _closed, true);
         // Remove notification subscriptions.
-        this._channel.removeAllListeners(this._internal.consumerId);
-        this._payloadChannel.removeAllListeners(this._internal.consumerId);
+        __classPrivateFieldGet(this, _channel).removeAllListeners(__classPrivateFieldGet(this, _internal).consumerId);
+        __classPrivateFieldGet(this, _payloadChannel).removeAllListeners(__classPrivateFieldGet(this, _internal).consumerId);
         this.safeEmit('transportclose');
         // Emit observer event.
-        this._observer.safeEmit('close');
+        __classPrivateFieldGet(this, _observer).safeEmit('close');
     }
     /**
      * Dump Consumer.
      */
     async dump() {
         logger.debug('dump()');
-        return this._channel.request('consumer.dump', this._internal);
+        return __classPrivateFieldGet(this, _channel).request('consumer.dump', __classPrivateFieldGet(this, _internal));
     }
     /**
      * Get Consumer stats.
      */
     async getStats() {
         logger.debug('getStats()');
-        return this._channel.request('consumer.getStats', this._internal);
+        return __classPrivateFieldGet(this, _channel).request('consumer.getStats', __classPrivateFieldGet(this, _internal));
     }
     /**
      * Pause the Consumer.
      */
     async pause() {
         logger.debug('pause()');
-        const wasPaused = this._paused || this._producerPaused;
-        await this._channel.request('consumer.pause', this._internal);
-        this._paused = true;
+        const wasPaused = __classPrivateFieldGet(this, _paused) || __classPrivateFieldGet(this, _producerPaused);
+        await __classPrivateFieldGet(this, _channel).request('consumer.pause', __classPrivateFieldGet(this, _internal));
+        __classPrivateFieldSet(this, _paused, true);
         // Emit observer event.
         if (!wasPaused)
-            this._observer.safeEmit('pause');
+            __classPrivateFieldGet(this, _observer).safeEmit('pause');
     }
     /**
      * Resume the Consumer.
      */
     async resume() {
         logger.debug('resume()');
-        const wasPaused = this._paused || this._producerPaused;
-        await this._channel.request('consumer.resume', this._internal);
-        this._paused = false;
+        const wasPaused = __classPrivateFieldGet(this, _paused) || __classPrivateFieldGet(this, _producerPaused);
+        await __classPrivateFieldGet(this, _channel).request('consumer.resume', __classPrivateFieldGet(this, _internal));
+        __classPrivateFieldSet(this, _paused, false);
         // Emit observer event.
-        if (wasPaused && !this._producerPaused)
-            this._observer.safeEmit('resume');
+        if (wasPaused && !__classPrivateFieldGet(this, _producerPaused))
+            __classPrivateFieldGet(this, _observer).safeEmit('resume');
     }
     /**
      * Set preferred video layers.
@@ -216,8 +253,8 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setPreferredLayers({ spatialLayer, temporalLayer }) {
         logger.debug('setPreferredLayers()');
         const reqData = { spatialLayer, temporalLayer };
-        const data = await this._channel.request('consumer.setPreferredLayers', this._internal, reqData);
-        this._preferredLayers = data || undefined;
+        const data = await __classPrivateFieldGet(this, _channel).request('consumer.setPreferredLayers', __classPrivateFieldGet(this, _internal), reqData);
+        __classPrivateFieldSet(this, _preferredLayers, data || undefined);
     }
     /**
      * Set priority.
@@ -225,8 +262,8 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setPriority(priority) {
         logger.debug('setPriority()');
         const reqData = { priority };
-        const data = await this._channel.request('consumer.setPriority', this._internal, reqData);
-        this._priority = data.priority;
+        const data = await __classPrivateFieldGet(this, _channel).request('consumer.setPriority', __classPrivateFieldGet(this, _internal), reqData);
+        __classPrivateFieldSet(this, _priority, data.priority);
     }
     /**
      * Unset priority.
@@ -234,15 +271,15 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async unsetPriority() {
         logger.debug('unsetPriority()');
         const reqData = { priority: 1 };
-        const data = await this._channel.request('consumer.setPriority', this._internal, reqData);
-        this._priority = data.priority;
+        const data = await __classPrivateFieldGet(this, _channel).request('consumer.setPriority', __classPrivateFieldGet(this, _internal), reqData);
+        __classPrivateFieldSet(this, _priority, data.priority);
     }
     /**
      * Request a key frame to the Producer.
      */
     async requestKeyFrame() {
         logger.debug('requestKeyFrame()');
-        await this._channel.request('consumer.requestKeyFrame', this._internal);
+        await __classPrivateFieldGet(this, _channel).request('consumer.requestKeyFrame', __classPrivateFieldGet(this, _internal));
     }
     /**
      * Enable 'trace' event.
@@ -250,65 +287,65 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async enableTraceEvent(types = []) {
         logger.debug('enableTraceEvent()');
         const reqData = { types };
-        await this._channel.request('consumer.enableTraceEvent', this._internal, reqData);
+        await __classPrivateFieldGet(this, _channel).request('consumer.enableTraceEvent', __classPrivateFieldGet(this, _internal), reqData);
     }
-    _handleWorkerNotifications() {
-        this._channel.on(this._internal.consumerId, (event, data) => {
+    handleWorkerNotifications() {
+        __classPrivateFieldGet(this, _channel).on(__classPrivateFieldGet(this, _internal).consumerId, (event, data) => {
             switch (event) {
                 case 'producerclose':
                     {
-                        if (this._closed)
+                        if (__classPrivateFieldGet(this, _closed))
                             break;
-                        this._closed = true;
+                        __classPrivateFieldSet(this, _closed, true);
                         // Remove notification subscriptions.
-                        this._channel.removeAllListeners(this._internal.consumerId);
-                        this._payloadChannel.removeAllListeners(this._internal.consumerId);
+                        __classPrivateFieldGet(this, _channel).removeAllListeners(__classPrivateFieldGet(this, _internal).consumerId);
+                        __classPrivateFieldGet(this, _payloadChannel).removeAllListeners(__classPrivateFieldGet(this, _internal).consumerId);
                         this.emit('@producerclose');
                         this.safeEmit('producerclose');
                         // Emit observer event.
-                        this._observer.safeEmit('close');
+                        __classPrivateFieldGet(this, _observer).safeEmit('close');
                         break;
                     }
                 case 'producerpause':
                     {
-                        if (this._producerPaused)
+                        if (__classPrivateFieldGet(this, _producerPaused))
                             break;
-                        const wasPaused = this._paused || this._producerPaused;
-                        this._producerPaused = true;
+                        const wasPaused = __classPrivateFieldGet(this, _paused) || __classPrivateFieldGet(this, _producerPaused);
+                        __classPrivateFieldSet(this, _producerPaused, true);
                         this.safeEmit('producerpause');
                         // Emit observer event.
                         if (!wasPaused)
-                            this._observer.safeEmit('pause');
+                            __classPrivateFieldGet(this, _observer).safeEmit('pause');
                         break;
                     }
                 case 'producerresume':
                     {
-                        if (!this._producerPaused)
+                        if (!__classPrivateFieldGet(this, _producerPaused))
                             break;
-                        const wasPaused = this._paused || this._producerPaused;
-                        this._producerPaused = false;
+                        const wasPaused = __classPrivateFieldGet(this, _paused) || __classPrivateFieldGet(this, _producerPaused);
+                        __classPrivateFieldSet(this, _producerPaused, false);
                         this.safeEmit('producerresume');
                         // Emit observer event.
-                        if (wasPaused && !this._paused)
-                            this._observer.safeEmit('resume');
+                        if (wasPaused && !__classPrivateFieldGet(this, _paused))
+                            __classPrivateFieldGet(this, _observer).safeEmit('resume');
                         break;
                     }
                 case 'score':
                     {
                         const score = data;
-                        this._score = score;
+                        __classPrivateFieldSet(this, _score, score);
                         this.safeEmit('score', score);
                         // Emit observer event.
-                        this._observer.safeEmit('score', score);
+                        __classPrivateFieldGet(this, _observer).safeEmit('score', score);
                         break;
                     }
                 case 'layerschange':
                     {
                         const layers = data;
-                        this._currentLayers = layers;
+                        __classPrivateFieldSet(this, _currentLayers, layers);
                         this.safeEmit('layerschange', layers);
                         // Emit observer event.
-                        this._observer.safeEmit('layerschange', layers);
+                        __classPrivateFieldGet(this, _observer).safeEmit('layerschange', layers);
                         break;
                     }
                 case 'trace':
@@ -316,7 +353,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                         const trace = data;
                         this.safeEmit('trace', trace);
                         // Emit observer event.
-                        this._observer.safeEmit('trace', trace);
+                        __classPrivateFieldGet(this, _observer).safeEmit('trace', trace);
                         break;
                     }
                 default:
@@ -325,11 +362,11 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                     }
             }
         });
-        this._payloadChannel.on(this._internal.consumerId, (event, data, payload) => {
+        __classPrivateFieldGet(this, _payloadChannel).on(__classPrivateFieldGet(this, _internal).consumerId, (event, data, payload) => {
             switch (event) {
                 case 'rtp':
                     {
-                        if (this._closed)
+                        if (__classPrivateFieldGet(this, _closed))
                             break;
                         const packet = payload;
                         this.safeEmit('rtp', packet);
@@ -344,3 +381,4 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
 }
 exports.Consumer = Consumer;
+_internal = new WeakMap(), _data = new WeakMap(), _channel = new WeakMap(), _payloadChannel = new WeakMap(), _closed = new WeakMap(), _appData = new WeakMap(), _paused = new WeakMap(), _producerPaused = new WeakMap(), _priority = new WeakMap(), _score = new WeakMap(), _preferredLayers = new WeakMap(), _currentLayers = new WeakMap(), _observer = new WeakMap();

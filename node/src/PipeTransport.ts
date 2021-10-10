@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import {
 	Transport,
@@ -114,7 +113,7 @@ const logger = new Logger('PipeTransport');
 export class PipeTransport extends Transport
 {
 	// PipeTransport data.
-	protected readonly _data:
+	readonly #data:
 	{
 		tuple: TransportTuple;
 		sctpParameters?: SctpParameters;
@@ -136,7 +135,7 @@ export class PipeTransport extends Transport
 
 		const { data } = params;
 
-		this._data =
+		this.#data =
 		{
 			tuple          : data.tuple,
 			sctpParameters : data.sctpParameters,
@@ -145,7 +144,7 @@ export class PipeTransport extends Transport
 			srtpParameters : data.srtpParameters
 		};
 
-		this._handleWorkerNotifications();
+		this.handleWorkerNotifications();
 	}
 
 	/**
@@ -153,7 +152,7 @@ export class PipeTransport extends Transport
 	 */
 	get tuple(): TransportTuple
 	{
-		return this._data.tuple;
+		return this.#data.tuple;
 	}
 
 	/**
@@ -161,7 +160,7 @@ export class PipeTransport extends Transport
 	 */
 	get sctpParameters(): SctpParameters | undefined
 	{
-		return this._data.sctpParameters;
+		return this.#data.sctpParameters;
 	}
 
 	/**
@@ -169,7 +168,7 @@ export class PipeTransport extends Transport
 	 */
 	get sctpState(): SctpState | undefined
 	{
-		return this._data.sctpState;
+		return this.#data.sctpState;
 	}
 
 	/**
@@ -177,7 +176,7 @@ export class PipeTransport extends Transport
 	 */
 	get srtpParameters(): SrtpParameters | undefined
 	{
-		return this._data.srtpParameters;
+		return this.#data.srtpParameters;
 	}
 
 	/**
@@ -192,10 +191,7 @@ export class PipeTransport extends Transport
 	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
-	get observer(): EnhancedEventEmitter
-	{
-		return this._observer;
-	}
+	// get observer(): EnhancedEventEmitter
 
 	/**
 	 * Close the PipeTransport.
@@ -204,11 +200,11 @@ export class PipeTransport extends Transport
 	 */
 	close(): void
 	{
-		if (this._closed)
+		if (this.closed)
 			return;
 
-		if (this._data.sctpState)
-			this._data.sctpState = 'closed';
+		if (this.#data.sctpState)
+			this.#data.sctpState = 'closed';
 
 		super.close();
 	}
@@ -221,11 +217,11 @@ export class PipeTransport extends Transport
 	 */
 	routerClosed(): void
 	{
-		if (this._closed)
+		if (this.closed)
 			return;
 
-		if (this._data.sctpState)
-			this._data.sctpState = 'closed';
+		if (this.#data.sctpState)
+			this.#data.sctpState = 'closed';
 
 		super.routerClosed();
 	}
@@ -239,7 +235,7 @@ export class PipeTransport extends Transport
 	{
 		logger.debug('getStats()');
 
-		return this._channel.request('transport.getStats', this._internal);
+		return this.channel.request('transport.getStats', this.internal);
 	}
 
 	/**
@@ -265,10 +261,10 @@ export class PipeTransport extends Transport
 		const reqData = { ip, port, srtpParameters };
 
 		const data =
-			await this._channel.request('transport.connect', this._internal, reqData);
+			await this.channel.request('transport.connect', this.internal, reqData);
 
 		// Update data.
-		this._data.tuple = data.tuple;
+		this.#data.tuple = data.tuple;
 	}
 
 	/**
@@ -285,16 +281,16 @@ export class PipeTransport extends Transport
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		const producer = this._getProducerById(producerId);
+		const producer = this.getProducerById(producerId);
 
 		if (!producer)
 			throw Error(`Producer with id "${producerId}" not found`);
 
 		// This may throw.
 		const rtpParameters = ortc.getPipeConsumerRtpParameters(
-			producer.consumableRtpParameters, this._data.rtx);
+			producer.consumableRtpParameters, this.#data.rtx);
 
-		const internal = { ...this._internal, consumerId: uuidv4(), producerId };
+		const internal = { ...this.internal, consumerId: uuidv4(), producerId };
 		const reqData =
 		{
 			kind                   : producer.kind,
@@ -304,7 +300,7 @@ export class PipeTransport extends Transport
 		};
 
 		const status =
-			await this._channel.request('transport.consume', internal, reqData);
+			await this.channel.request('transport.consume', internal, reqData);
 
 		const data = { kind: producer.kind, rtpParameters, type: 'pipe' };
 
@@ -312,26 +308,26 @@ export class PipeTransport extends Transport
 			{
 				internal,
 				data,
-				channel        : this._channel,
-				payloadChannel : this._payloadChannel,
+				channel        : this.channel,
+				payloadChannel : this.payloadChannel,
 				appData,
 				paused         : status.paused,
 				producerPaused : status.producerPaused
 			});
 
-		this._consumers.set(consumer.id, consumer);
-		consumer.on('@close', () => this._consumers.delete(consumer.id));
-		consumer.on('@producerclose', () => this._consumers.delete(consumer.id));
+		this.consumers.set(consumer.id, consumer);
+		consumer.on('@close', () => this.consumers.delete(consumer.id));
+		consumer.on('@producerclose', () => this.consumers.delete(consumer.id));
 
 		// Emit observer event.
-		this._observer.safeEmit('newconsumer', consumer);
+		this.observer.safeEmit('newconsumer', consumer);
 
 		return consumer;
 	}
 
-	private _handleWorkerNotifications(): void
+	private handleWorkerNotifications(): void
 	{
-		this._channel.on(this._internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{
@@ -339,12 +335,12 @@ export class PipeTransport extends Transport
 				{
 					const sctpState = data.sctpState as SctpState;
 
-					this._data.sctpState = sctpState;
+					this.#data.sctpState = sctpState;
 
 					this.safeEmit('sctpstatechange', sctpState);
 
 					// Emit observer event.
-					this._observer.safeEmit('sctpstatechange', sctpState);
+					this.observer.safeEmit('sctpstatechange', sctpState);
 
 					break;
 				}
@@ -356,7 +352,7 @@ export class PipeTransport extends Transport
 					this.safeEmit('trace', trace);
 
 					// Emit observer event.
-					this._observer.safeEmit('trace', trace);
+					this.observer.safeEmit('trace', trace);
 
 					break;
 				}

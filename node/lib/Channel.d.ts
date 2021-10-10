@@ -1,11 +1,6 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 export declare class Channel extends EnhancedEventEmitter {
-    private _closed;
-    private readonly _producerSocket;
-    private readonly _consumerSocket;
-    private _nextId;
-    private readonly _sents;
-    private _recvBuffer;
+    #private;
     /**
      * @private
      */
@@ -22,6 +17,6 @@ export declare class Channel extends EnhancedEventEmitter {
      * @private
      */
     request(method: string, internal?: object, data?: any): Promise<any>;
-    private _processMessage;
+    private processMessage;
 }
 //# sourceMappingURL=Channel.d.ts.map

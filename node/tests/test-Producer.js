@@ -675,7 +675,7 @@ test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', 
 test('Producer emits "score"', async () =>
 {
 	// Private API.
-	const channel = videoProducer._channel;
+	const channel = videoProducer.channelForTesting;
 	const onScore = jest.fn();
 
 	videoProducer.on('score', onScore);

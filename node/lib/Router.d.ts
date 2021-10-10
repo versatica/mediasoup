@@ -77,19 +77,7 @@ export declare type PipeToRouterResult = {
     pipeDataProducer?: DataProducer;
 };
 export declare class Router extends EnhancedEventEmitter {
-    private readonly _internal;
-    private readonly _data;
-    private readonly _channel;
-    private readonly _payloadChannel;
-    private _closed;
-    private readonly _appData?;
-    private readonly _transports;
-    private readonly _producers;
-    private readonly _rtpObservers;
-    private readonly _dataProducers;
-    private readonly _mapRouterPipeTransports;
-    private readonly _pipeToRouterQueue;
-    private readonly _observer;
+    #private;
     /**
      * @private
      * @emits workerclose

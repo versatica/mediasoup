@@ -80,14 +80,14 @@ test('worker.createRouter() succeeds', async () =>
 			});
 
 	// Private API.
-	expect(worker._routers.size).toBe(1);
+	expect(worker.routersForTesting.size).toBe(1);
 
 	worker.close();
 
 	expect(router.closed).toBe(true);
 
 	// Private API.
-	expect(worker._routers.size).toBe(0);
+	expect(worker.routersForTesting.size).toBe(0);
 }, 2000);
 
 test('worker.createRouter() with wrong arguments rejects with TypeError', async () =>

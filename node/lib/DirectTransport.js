@@ -1,4 +1,12 @@
 "use strict";
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var _data;
 Object.defineProperty(exports, "__esModule", { value: true });
 const Logger_1 = require("./Logger");
 const errors_1 = require("./errors");
@@ -12,12 +20,13 @@ class DirectTransport extends Transport_1.Transport {
      */
     constructor(params) {
         super(params);
+        // DirectTransport data.
+        _data.set(this, void 0);
         logger.debug('constructor()');
-        this._data =
-            {
-            // Nothing for now.
-            };
-        this._handleWorkerNotifications();
+        __classPrivateFieldSet(this, _data, {
+        // Nothing for now.
+        });
+        this.handleWorkerNotifications();
     }
     /**
      * Observer.
@@ -28,16 +37,14 @@ class DirectTransport extends Transport_1.Transport {
      * @emits newdataconsumer - (dataProducer: DataProducer)
      * @emits trace - (trace: TransportTraceEventData)
      */
-    get observer() {
-        return this._observer;
-    }
+    // get observer(): EnhancedEventEmitter
     /**
      * Close the DirectTransport.
      *
      * @override
      */
     close() {
-        if (this._closed)
+        if (this.closed)
             return;
         super.close();
     }
@@ -48,7 +55,7 @@ class DirectTransport extends Transport_1.Transport {
      * @override
      */
     routerClosed() {
-        if (this._closed)
+        if (this.closed)
             return;
         super.routerClosed();
     }
@@ -59,7 +66,7 @@ class DirectTransport extends Transport_1.Transport {
      */
     async getStats() {
         logger.debug('getStats()');
-        return this._channel.request('transport.getStats', this._internal);
+        return this.channel.request('transport.getStats', this.internal);
     }
     /**
      * NO-OP method in DirectTransport.
@@ -90,17 +97,17 @@ class DirectTransport extends Transport_1.Transport {
         if (!Buffer.isBuffer(rtcpPacket)) {
             throw new TypeError('rtcpPacket must be a Buffer');
         }
-        this._payloadChannel.notify('transport.sendRtcp', this._internal, undefined, rtcpPacket);
+        this.payloadChannel.notify('transport.sendRtcp', this.internal, undefined, rtcpPacket);
     }
-    _handleWorkerNotifications() {
-        this._channel.on(this._internal.transportId, (event, data) => {
+    handleWorkerNotifications() {
+        this.channel.on(this.internal.transportId, (event, data) => {
             switch (event) {
                 case 'trace':
                     {
                         const trace = data;
                         this.safeEmit('trace', trace);
                         // Emit observer event.
-                        this._observer.safeEmit('trace', trace);
+                        this.observer.safeEmit('trace', trace);
                         break;
                     }
                 default:
@@ -109,11 +116,11 @@ class DirectTransport extends Transport_1.Transport {
                     }
             }
         });
-        this._payloadChannel.on(this._internal.transportId, (event, data, payload) => {
+        this.payloadChannel.on(this.internal.transportId, (event, data, payload) => {
             switch (event) {
                 case 'rtcp':
                     {
-                        if (this._closed)
+                        if (this.closed)
                             break;
                         const packet = payload;
                         this.safeEmit('rtcp', packet);
@@ -128,3 +135,4 @@ class DirectTransport extends Transport_1.Transport {
     }
 }
 exports.DirectTransport = DirectTransport;
+_data = new WeakMap();

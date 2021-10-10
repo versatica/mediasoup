@@ -1,5 +1,4 @@
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import {
 	Transport,
 	TransportListenIp,
@@ -155,7 +154,7 @@ const logger = new Logger('WebRtcTransport');
 export class WebRtcTransport extends Transport
 {
 	// WebRtcTransport data.
-	protected readonly _data:
+	readonly #data:
 	{
 		iceRole: 'controlled';
 		iceParameters: IceParameters;
@@ -185,7 +184,7 @@ export class WebRtcTransport extends Transport
 
 		const { data } = params;
 
-		this._data =
+		this.#data =
 		{
 			iceRole          : data.iceRole,
 			iceParameters    : data.iceParameters,
@@ -199,7 +198,7 @@ export class WebRtcTransport extends Transport
 			sctpState        : data.sctpState
 		};
 
-		this._handleWorkerNotifications();
+		this.handleWorkerNotifications();
 	}
 
 	/**
@@ -207,7 +206,7 @@ export class WebRtcTransport extends Transport
 	 */
 	get iceRole(): 'controlled'
 	{
-		return this._data.iceRole;
+		return this.#data.iceRole;
 	}
 
 	/**
@@ -215,7 +214,7 @@ export class WebRtcTransport extends Transport
 	 */
 	get iceParameters(): IceParameters
 	{
-		return this._data.iceParameters;
+		return this.#data.iceParameters;
 	}
 
 	/**
@@ -223,7 +222,7 @@ export class WebRtcTransport extends Transport
 	 */
 	get iceCandidates(): IceCandidate[]
 	{
-		return this._data.iceCandidates;
+		return this.#data.iceCandidates;
 	}
 
 	/**
@@ -231,7 +230,7 @@ export class WebRtcTransport extends Transport
 	 */
 	get iceState(): IceState
 	{
-		return this._data.iceState;
+		return this.#data.iceState;
 	}
 
 	/**
@@ -239,7 +238,7 @@ export class WebRtcTransport extends Transport
 	 */
 	get iceSelectedTuple(): TransportTuple | undefined
 	{
-		return this._data.iceSelectedTuple;
+		return this.#data.iceSelectedTuple;
 	}
 
 	/**
@@ -247,7 +246,7 @@ export class WebRtcTransport extends Transport
 	 */
 	get dtlsParameters(): DtlsParameters
 	{
-		return this._data.dtlsParameters;
+		return this.#data.dtlsParameters;
 	}
 
 	/**
@@ -255,7 +254,7 @@ export class WebRtcTransport extends Transport
 	 */
 	get dtlsState(): DtlsState
 	{
-		return this._data.dtlsState;
+		return this.#data.dtlsState;
 	}
 
 	/**
@@ -263,7 +262,7 @@ export class WebRtcTransport extends Transport
 	 */
 	get dtlsRemoteCert(): string | undefined
 	{
-		return this._data.dtlsRemoteCert;
+		return this.#data.dtlsRemoteCert;
 	}
 
 	/**
@@ -271,7 +270,7 @@ export class WebRtcTransport extends Transport
 	 */
 	get sctpParameters(): SctpParameters | undefined
 	{
-		return this._data.sctpParameters;
+		return this.#data.sctpParameters;
 	}
 
 	/**
@@ -279,7 +278,7 @@ export class WebRtcTransport extends Transport
 	 */
 	get sctpState(): SctpState | undefined
 	{
-		return this._data.sctpState;
+		return this.#data.sctpState;
 	}
 
 	/**
@@ -297,10 +296,7 @@ export class WebRtcTransport extends Transport
 	 * @emits sctpstatechange - (sctpState: SctpState)
 	 * @emits trace - (trace: TransportTraceEventData)
 	 */
-	get observer(): EnhancedEventEmitter
-	{
-		return this._observer;
-	}
+	// get observer(): EnhancedEventEmitter
 
 	/**
 	 * Close the WebRtcTransport.
@@ -309,15 +305,15 @@ export class WebRtcTransport extends Transport
 	 */
 	close(): void
 	{
-		if (this._closed)
+		if (this.closed)
 			return;
 
-		this._data.iceState = 'closed';
-		this._data.iceSelectedTuple = undefined;
-		this._data.dtlsState = 'closed';
+		this.#data.iceState = 'closed';
+		this.#data.iceSelectedTuple = undefined;
+		this.#data.dtlsState = 'closed';
 
-		if (this._data.sctpState)
-			this._data.sctpState = 'closed';
+		if (this.#data.sctpState)
+			this.#data.sctpState = 'closed';
 
 		super.close();
 	}
@@ -330,15 +326,15 @@ export class WebRtcTransport extends Transport
 	 */
 	routerClosed(): void
 	{
-		if (this._closed)
+		if (this.closed)
 			return;
 
-		this._data.iceState = 'closed';
-		this._data.iceSelectedTuple = undefined;
-		this._data.dtlsState = 'closed';
+		this.#data.iceState = 'closed';
+		this.#data.iceSelectedTuple = undefined;
+		this.#data.dtlsState = 'closed';
 
-		if (this._data.sctpState)
-			this._data.sctpState = 'closed';
+		if (this.#data.sctpState)
+			this.#data.sctpState = 'closed';
 
 		super.routerClosed();
 	}
@@ -352,7 +348,7 @@ export class WebRtcTransport extends Transport
 	{
 		logger.debug('getStats()');
 
-		return this._channel.request('transport.getStats', this._internal);
+		return this.channel.request('transport.getStats', this.internal);
 	}
 
 	/**
@@ -367,10 +363,10 @@ export class WebRtcTransport extends Transport
 		const reqData = { dtlsParameters };
 
 		const data =
-			await this._channel.request('transport.connect', this._internal, reqData);
+			await this.channel.request('transport.connect', this.internal, reqData);
 
 		// Update data.
-		this._data.dtlsParameters.role = data.dtlsLocalRole;
+		this.#data.dtlsParameters.role = data.dtlsLocalRole;
 	}
 
 	/**
@@ -381,18 +377,18 @@ export class WebRtcTransport extends Transport
 		logger.debug('restartIce()');
 
 		const data =
-			await this._channel.request('transport.restartIce', this._internal);
+			await this.channel.request('transport.restartIce', this.internal);
 
 		const { iceParameters } = data;
 
-		this._data.iceParameters = iceParameters;
+		this.#data.iceParameters = iceParameters;
 
 		return iceParameters;
 	}
 
-	private _handleWorkerNotifications(): void
+	private handleWorkerNotifications(): void
 	{
-		this._channel.on(this._internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{
@@ -400,12 +396,12 @@ export class WebRtcTransport extends Transport
 				{
 					const iceState = data.iceState as IceState;
 
-					this._data.iceState = iceState;
+					this.#data.iceState = iceState;
 
 					this.safeEmit('icestatechange', iceState);
 
 					// Emit observer event.
-					this._observer.safeEmit('icestatechange', iceState);
+					this.observer.safeEmit('icestatechange', iceState);
 
 					break;
 				}
@@ -414,12 +410,12 @@ export class WebRtcTransport extends Transport
 				{
 					const iceSelectedTuple = data.iceSelectedTuple as TransportTuple;
 
-					this._data.iceSelectedTuple = iceSelectedTuple;
+					this.#data.iceSelectedTuple = iceSelectedTuple;
 
 					this.safeEmit('iceselectedtuplechange', iceSelectedTuple);
 
 					// Emit observer event.
-					this._observer.safeEmit('iceselectedtuplechange', iceSelectedTuple);
+					this.observer.safeEmit('iceselectedtuplechange', iceSelectedTuple);
 
 					break;
 				}
@@ -429,15 +425,15 @@ export class WebRtcTransport extends Transport
 					const dtlsState = data.dtlsState as DtlsState;
 					const dtlsRemoteCert = data.dtlsRemoteCert as string;
 
-					this._data.dtlsState = dtlsState;
+					this.#data.dtlsState = dtlsState;
 
 					if (dtlsState === 'connected')
-						this._data.dtlsRemoteCert = dtlsRemoteCert;
+						this.#data.dtlsRemoteCert = dtlsRemoteCert;
 
 					this.safeEmit('dtlsstatechange', dtlsState);
 
 					// Emit observer event.
-					this._observer.safeEmit('dtlsstatechange', dtlsState);
+					this.observer.safeEmit('dtlsstatechange', dtlsState);
 
 					break;
 				}
@@ -446,12 +442,12 @@ export class WebRtcTransport extends Transport
 				{
 					const sctpState = data.sctpState as SctpState;
 
-					this._data.sctpState = sctpState;
+					this.#data.sctpState = sctpState;
 
 					this.safeEmit('sctpstatechange', sctpState);
 
 					// Emit observer event.
-					this._observer.safeEmit('sctpstatechange', sctpState);
+					this.observer.safeEmit('sctpstatechange', sctpState);
 
 					break;
 				}
@@ -463,7 +459,7 @@ export class WebRtcTransport extends Transport
 					this.safeEmit('trace', trace);
 
 					// Emit observer event.
-					this._observer.safeEmit('trace', trace);
+					this.observer.safeEmit('trace', trace);
 
 					break;
 				}

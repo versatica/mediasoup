@@ -1,10 +1,10 @@
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { RtpObserver } from './RtpObserver';
 import { Producer } from './Producer';
 
 export interface ActiveSpeakerObserverOptions {
 	interval?: number;
+
 	/**
 	 * Custom application data.
 	 */
@@ -29,31 +29,28 @@ export class ActiveSpeakerObserver extends RtpObserver
 	{
 		super(params);
 
-		this._handleWorkerNotifications();
+		this.handleWorkerNotifications();
 	}
 
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter
-	{
-		return this._observer;
-	}
+	// get observer(): EnhancedEventEmitter
 
-	private _handleWorkerNotifications(): void
+	private handleWorkerNotifications(): void
 	{
-		this._channel.on(this._internal.rtpObserverId, (event: string, data?: any) =>
+		this.channel.on(this.internal.rtpObserverId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{
 				case 'dominantspeaker':
 				{
 					const dominantSpeaker = {
-						producer : this._getProducerById(data.producerId)
+						producer : this.getProducerById(data.producerId)
 					};
 
 					this.safeEmit('dominantspeaker', dominantSpeaker);
-					this._observer.safeEmit('dominantspeaker', dominantSpeaker);
+					this.observer.safeEmit('dominantspeaker', dominantSpeaker);
 
 					break;
 				}
