@@ -186,6 +186,12 @@ abseil_cpp_proj = subproject(
     'warning_level=0',
   ],
 )
+catch2_proj = subproject(
+  'catch2',
+  default_options: [
+    'warning_level=0',
+  ],
+)
 libwebrtc_include_directories = include_directories('include')
 subdir('deps/libwebrtc')
 
@@ -247,7 +253,7 @@ mediasoup_worker_test = executable(
   'mediasoup-worker-test',
   build_by_default: false,
   dependencies: dependencies + [
-    dependency('catch2'),
+    catch2_proj.get_variable('catch2_dep'),
   ],
   sources: common_sources + [
     'test/src/tests.cpp',
