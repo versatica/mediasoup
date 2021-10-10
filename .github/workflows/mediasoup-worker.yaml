@@ -39,9 +39,10 @@ jobs:
           # - os: windows-2019
           #   cc: clang
           #   cxx: clang++
-          - os: windows-2019
-            cc: cl
-            cxx: cl
+          # TODO: Unlock when intermittent unexplainable CI errors are resolved
+          # - os: windows-2019
+          #   cc: cl
+          #   cxx: cl
         # A single Node.js version should be fine for C++.
         node:
           - 14
