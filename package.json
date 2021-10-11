@@ -4,7 +4,8 @@
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
-    "José Luis Millán <jmillan@aliax.net> (https://github.com/jmillan)"
+    "José Luis Millán <jmillan@aliax.net> (https://github.com/jmillan)",
+    "Nazar Mokynskyi (https://github.com/nazar-pc)"
   ],
   "homepage": "https://mediasoup.org",
   "license": "ISC",
@@ -16,8 +17,27 @@
     "type": "opencollective",
     "url": "https://opencollective.com/mediasoup"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "node/lib/index.js",
+  "types": "node/lib/index.d.ts",
+  "files": [
+    "node/lib",
+    "worker/deps/libwebrtc",
+    "worker/fuzzer/include",
+    "worker/fuzzer/src",
+    "worker/include",
+    "worker/scripts/*.py",
+    "worker/scripts/*.sh",
+    "worker/scripts/*.js",
+    "worker/scripts/*.json",
+    "worker/src",
+    "worker/subprojects/packagefiles",
+    "worker/subprojects/*.wrap",
+    "worker/test/include",
+    "worker/test/src",
+    "worker/Makefile",
+    "worker/meson.build",
+    "npm-scripts.js"
+  ],
   "keywords": [
     "webrtc",
     "ortc",
@@ -25,30 +45,31 @@
     "nodejs"
   ],
   "engines": {
-    "node": ">=10"
+    "node": ">=12"
   },
   "scripts": {
     "install-clang-tools": "node npm-scripts.js install-clang-tools",
     "typescript:build": "node npm-scripts.js typescript:build",
     "typescript:watch": "node npm-scripts.js typescript:watch",
+    "worker:build": "node npm-scripts.js worker:build",
     "lint": "npm run lint:node && npm run lint:worker",
     "lint:node": "node npm-scripts.js lint:node",
     "lint:worker": "node npm-scripts.js lint:worker",
     "format:worker": "node npm-scripts.js format:worker",
     "test": "npm run test:node && npm run test:worker",
-    "test:node": "npm run postinstall && node npm-scripts.js test:node",
+    "test:node": "npm run worker:build && node npm-scripts.js test:node",
     "test:worker": "node npm-scripts.js test:worker",
-    "coverage": "npm run postinstall && node npm-scripts.js coverage",
+    "coverage": "npm run worker:build && node npm-scripts.js coverage",
     "postinstall": "node npm-scripts.js postinstall",
     "release": "node npm-scripts.js release"
   },
   "jest": {
     "verbose": true,
     "testEnvironment": "node",
-    "testRegex": "test/test.*\\.js"
+    "testRegex": "node/tests/test.*\\.js"
   },
   "dependencies": {
-    "@types/node": "^16.9.1",
+    "@types/node": "^16.10.3",
     "awaitqueue": "^2.3.3",
     "debug": "^4.3.2",
     "h264-profile-level-id": "^1.0.1",
@@ -60,12 +81,12 @@
     "@types/debug": "^4.1.7",
     "@types/random-number": "^0.0.1",
     "@types/uuid": "^8.3.1",
-    "@typescript-eslint/eslint-plugin": "^4.31.0",
-    "@typescript-eslint/parser": "^4.31.0",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
     "cross-env": "^7.0.3",
     "eslint": "^7.32.0",
-    "eslint-plugin-jest": "^24.4.0",
-    "jest": "^27.2.0",
+    "eslint-plugin-jest": "^25.0.1",
+    "jest": "^27.2.5",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^7.0.1",
     "pick-port": "^1.0.0",

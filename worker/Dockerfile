@@ -7,7 +7,7 @@ RUN \
 	&& apt-get install --yes \
 	   bash-completion wget curl subversion screen gcc g++ cmake ninja-build golang \
 	   autoconf libtool apache2 python-dev pkg-config zlib1g-dev libgcrypt11-dev \
-	   libgss-dev libssl-dev libxml2-dev nasm libarchive-dev make bear automake \
+	   libgss-dev libssl-dev libxml2-dev nasm libarchive-dev make automake \
 	   libdbus-1-dev libboost-dev autoconf-archive bash-completion python-yaml
 
 # Install node 10.
