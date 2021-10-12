@@ -151,6 +151,9 @@ namespace RTC
 	void RtpPacket::IncRefCount()
 	{
 		MS_ASSERT(
+		  this->buffer != nullptr, "Can only increase reference count for packets that own their memory");
+
+		MS_ASSERT(
 		  this->referenceCount > 0, "Can only increase reference count for packets that are still alive");
 
 		this->referenceCount++;
