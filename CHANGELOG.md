@@ -1,7 +1,7 @@
 # Changelog
 
 
-### WIP
+### 3.9.0
 
 * Replaces GYP build system with fully-functional Meson build system (PR #622).
 * Worker communication optimization (aka removing netstring dependency) (PR #644).
