@@ -114,6 +114,8 @@ namespace RTC
 				// Pass the packet to the parent transport.
 				RTC::Transport::ReceiveRtpPacket(packet);
 
+				packet->DecRefCount();
+
 				break;
 			}
 
