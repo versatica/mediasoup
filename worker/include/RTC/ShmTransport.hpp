@@ -65,6 +65,18 @@ namespace RTC
 	public:
 		std::string ShmName() const { return this->shmCtx.StreamName().c_str();}
 
+	/* Pure virtual methods inherited from Timer. */
+	protected:
+		void OnTimer(Timer* timer) override;
+
+	private:
+		Timer* shmNoConsumeTimer{ nullptr }; // Timer to monitor 
+		void   OnNoConsume();                // Close shm if a consumer has not been created within 60 seconds after a call to transport's ctor 
+
+	/* Use this function to notify shm transport that a new consumer was set up and stop a timer */
+	public:
+		void StopNoConsumeTimer();
+
 	private:
 		// Allocated by this.
 		// Others.
