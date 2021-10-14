@@ -1,0 +1,12 @@
+[wrap-file]
+directory = libuv-v1.41.0
+source_url = https://dist.libuv.org/dist/v1.41.0/libuv-v1.41.0.tar.gz
+source_filename = libuv-v1.41.0.tar.gz
+source_hash = 1184533907e1ddad9c0dcd30a5abb0fe25288c287ff7fee303fff7b9b2d6eb6e
+patch_url = https://wrapdb.mesonbuild.com/v2/libuv_1.41.0-1/get_patch
+patch_filename = libuv-1.41.0-1-wrap.zip
+patch_hash = 66cab50ca1f002d823a2015611c08401b69d6f7c1ecd0059cb6afd34e1138b40
+
+[provide]
+libuv = libuv_dep
+

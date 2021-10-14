@@ -1,5 +1,9 @@
 # Changelog
 
+# Unreleased
+
+* Fix for receiving data over payload channel
+
 # 0.8.5
 
 * Fix types for `round_trip_time` and `bitrate_by_layer` fields `ProducerStat` and `ConsumerStat`
