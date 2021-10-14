@@ -11,17 +11,33 @@ namespace Lively
 {
   class AppData;
 
-  //void to_json(json& j, const AppData& d);
-  //void from_json(const json& j, AppData& d);
-  inline void to_json(json& j, const AppData& d) {
-    j = json{{"callId", d.callId}, {"peerId", d.peerId}, {"mirrorId", d.mirrorId}, {"streamKey", d.streamKey}};
+  inline void to_json(json& j, const AppData& d)
+  {
+    j = json{{"callId", d.callId}, {"peerId", d.peerId}, {"mirrorId", d.mirrorId}, {"streamName", d.streamName}};
   }
 
-  inline void from_json(const json& j, AppData& d) {
-    j.at("callId").get_to(d.callId);
-    j.at("peerId").get_to(d.peerId);
-    j.at("mirrorId").get_to(d.mirrorId);
-    j.at("streamKey").get_to(d.streamKey);
+  inline void from_json(const json& j, AppData& d)
+  {
+    try {
+      j.at("callId").get_to(d.callId);
+    }	catch (const std::exception& e) {
+      d.callId = "";
+		}
+    try {
+      j.at("peerId").get_to(d.peerId);
+    }	catch (const std::exception& e) {
+      d.peerId = "";
+		}
+    try {
+      j.at("mirrorId").get_to(d.mirrorId);
+    }	catch (const std::exception& e) {
+      d.mirrorId = "";
+		}
+    try {
+      j.at("streamName").get_to(d.streamName);
+    }	catch (const std::exception& e) {
+      d.streamName = "";
+		}
   }
 }; // namespace Lively
 #endif

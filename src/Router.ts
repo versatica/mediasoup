@@ -738,11 +738,11 @@ export class Router extends EnhancedEventEmitter
 			listenIp,
 			shm,
 			log,
-			appData
+			appData,
 		};
 
 		/*
-		data: {
+		data = {
 			...,
 			shm: {
 				name: "...",

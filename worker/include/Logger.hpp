@@ -241,6 +241,19 @@ public:
 	while (false)
 
 
+#define MS_WARN_TAG_LIVELYAPP(tag, appdatastr, desc, ...) \
+	do \
+	{ \
+		if (Settings::configuration.logLevel >= LogLevel::LOG_WARN && _MS_TAG_ENABLED(tag)) \
+		{ \
+			Logger::levelPrefix = "warn"; \
+			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, _MS_LOG_STR_DESC_LIVELYAPP desc, _MS_LOG_ARG_LIVELYAPP, ##__VA_ARGS__); \
+			Logger::MSlogwrite(loggerWritten); \
+		} \
+	} \
+	while (false)
+
+
 #define MS_WARN_TAG(tag, desc, ...) \
 	do \
 	{ \
@@ -261,6 +274,19 @@ public:
 		{ \
 			std::fprintf(stderr, _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
 			std::fflush(stderr); \
+		} \
+	} \
+	while (false)
+
+
+#define MS_DEBUG_2TAGS_LIVELYAPP(tag1, tag2, appdatastr, desc, ...) \
+	do \
+	{ \
+		if (Settings::configuration.logLevel == LogLevel::LOG_DEBUG && _MS_TAG_ENABLED_2(tag1, tag2)) \
+		{ \
+			Logger::levelPrefix = "debug"; \
+			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, _MS_LOG_STR_DESC_LIVELYAPP desc, _MS_LOG_ARG_LIVELYAPP, ##__VA_ARGS__); \
+			Logger::MSlogwrite(loggerWritten); \
 		} \
 	} \
 	while (false)

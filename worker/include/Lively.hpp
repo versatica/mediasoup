@@ -11,46 +11,15 @@ namespace Lively
     std::string callId;
     std::string peerId;
     std::string mirrorId;
-    std::string streamKey;
+    std::string streamName;
 
   public:
     AppData() = default;
-    AppData(const AppData& d) : callId(d.callId), peerId(d.peerId), mirrorId(d.mirrorId), streamKey(d.streamKey) {}
+    AppData(const AppData& d) : callId(d.callId), peerId(d.peerId), mirrorId(d.mirrorId), streamName(d.streamName) {}
     
-    AppData& operator=(const AppData& d) { callId = d.callId; peerId = d.peerId; mirrorId = d.mirrorId; streamKey = d.streamKey; return *this; }
+    AppData& operator=(const AppData& d) { callId = d.callId; peerId = d.peerId; mirrorId = d.mirrorId; streamName = d.streamName; return *this; }
 
     std::string ToStr() const;
   };
-
-/*
-  std::string AppData::ToStr() const
-  {
-    std::string appstr;
-    
-    if (!this->callId.empty())
-    {
-      appstr.append("callId=\"").append(this->callId).append("\"");
-    }
-    if (!this->peerId.empty())
-    {
-      if (!appstr.empty())
-        appstr.append(" ");
-      appstr.append("peerId=\"").append(this->peerId).append("\"");
-    }
-    if (!this->mirrorId.empty())
-    {
-      if (!appstr.empty())
-        appstr.append(" ");
-      appstr.append("mirrorId=\"").append(this->mirrorId).append("\"");
-    }
-    if (!this->streamKey.empty())
-    {
-      if (!appstr.empty())
-        appstr.append(" ");
-      appstr.append("streamKey=\"").append(this->streamKey).append("\"");
-    }
-
-    return appstr;
-  }*/
 }; // namespace Lively
 #endif

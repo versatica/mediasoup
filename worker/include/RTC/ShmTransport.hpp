@@ -3,7 +3,6 @@
 
 #include <nlohmann/json.hpp>
 #include "DepLibSfuShm.hpp"
-#include "Lively.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
@@ -67,7 +66,8 @@ namespace RTC
 		std::string ShmName() const { return this->shmCtx.StreamName().c_str();}
 
 	public:
-		Lively::AppData appData;
+		//Lively::AppData appData;
+		std::string appData;
 
 	private:
 		// Allocated by this.

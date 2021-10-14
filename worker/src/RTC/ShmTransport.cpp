@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "Lively.hpp"
 #include "LivelyAppDataToJson.hpp"
 
 namespace RTC
@@ -25,6 +26,12 @@ namespace RTC
 					"reverseIt": 0,
 					"shmAppData": "..."
 				},
+				appData: {
+					callId: "...",
+					streamName: "...",
+					peerId: "...",
+					mirrorId: "...",
+				},
 				"log": {
 					"name": /var/log/sg/nginx/test_sfu_shm.log",
 					"level": 9,
@@ -32,26 +39,31 @@ namespace RTC
 				}
 			}
 		*/
-		// Optional appData
-		auto jsonAppDataIt = data.find("appData");
-		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
-		{
-			this->appData = jsonAppDataIt->get<Lively::AppData>();
-			MS_DEBUG_TAG_LIVELYAPP(xcode, this->appData.ToStr(), "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
-		}
-		else
-		{
-			MS_DEBUG_TAG(xcode, "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
-		}
+		MS_DEBUG_TAG(xcode, "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
 
-		// Read shm.name
-		std::string shm;
 		auto jsonShmIt = data.find("shm");
 		if (jsonShmIt == data.end())
 			MS_THROW_TYPE_ERROR("missing shm in [%s]", data.dump().c_str());
 		else if (!jsonShmIt->is_object())
 			MS_THROW_TYPE_ERROR("wrong shm (not an object) in [%s]", data.dump().c_str());
 
+		// appData (optional)
+		auto jsonAppDataIt = data.find("appData");
+		Lively::AppData lively;
+		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
+		{
+			try {
+				lively = jsonAppDataIt->get<Lively::AppData>();
+				this->appData = lively.ToStr();
+			}
+			catch (const std::exception& e) {
+				MS_WARN_TAG(xcode, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
+			}
+			//MS_DEBUG_TAG_LIVELYAPP(xcode, this->appData, "ShmTransport [transportId:%s]");
+		}
+
+		// Read shm.name
+		std::string shm;
 		auto jsonShmNameIt = jsonShmIt->find("name");
 		if (jsonShmNameIt == jsonShmIt->end())
 			MS_THROW_TYPE_ERROR("missing shm.name in [%s]", data.dump().c_str());
@@ -158,7 +170,7 @@ namespace RTC
 	ShmTransport::~ShmTransport()
 	{
 		MS_TRACE();
-		MS_DEBUG_TAG(xcode, "shm[%s] ShmTransport dtor[transportId:%s]", this->shmCtx.StreamName().c_str(), this->id.c_str());
+		MS_DEBUG_TAG_LIVELYAPP(xcode, this->appData, "shm[%s] ShmTransport dtor[transportId:%s]", this->shmCtx.StreamName().c_str(), this->id.c_str());
 		this->shmCtx.CloseShmWriterCtx();
 	}
 
@@ -409,7 +421,7 @@ namespace RTC
 						shm: ...
 					};
 */
-		MS_DEBUG_TAG(xcode, "shm[%s] received stream metadata [%s]", this->shmCtx.StreamName().c_str(), data.dump().c_str());
+		MS_DEBUG_TAG_LIVELYAPP(xcode, this->appData, "shm[%s] received stream metadata [%s]", this->shmCtx.StreamName().c_str(), data.dump().c_str());
 
 		std::string metadata;
 		auto jsonMetaIt = data.find("meta");

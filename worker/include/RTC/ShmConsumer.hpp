@@ -2,7 +2,6 @@
 #define MS_RTC_SHM_CONSUMER_HPP
 
 #include <nlohmann/json.hpp>
-#include "Lively.hpp"
 #include "DepLibSfuShm.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
@@ -129,7 +128,7 @@ namespace RTC
 		Timer* shmIdleCheckTimer{ nullptr }; // Check for incoming RTP packets, declare idle after 20 seconds
 		bool 	 idle{ false };                // Idle if inactivityCheckTime is not reset within 20 seconds
 	public:
-		Lively::AppData appData;
+		std::string appData;
 	};
 
 	/* Inline methods. */
