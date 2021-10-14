@@ -102,12 +102,12 @@ namespace RTC
 			useReverse = (jsonReverseIt->get<int>() != 0) ? true : false;
 		}
 		
-        // Read shmAppData
-        std::string shmAppData;
-        auto shmAppDataIt = jsonShmIt->find("shmAppData");
-        if (shmAppDataIt != jsonShmIt->end() && shmAppDataIt->is_string()) {
-            shmAppData.assign(shmAppDataIt->get<std::string>());
-        }
+		// Read shmAppData
+		std::string shmAppData;
+		auto shmAppDataIt = jsonShmIt->find("shmAppData");
+		if (shmAppDataIt != jsonShmIt->end() && shmAppDataIt->is_string()) {
+				shmAppData.assign(shmAppDataIt->get<std::string>());
+		}
 
 		// ngxshm log name and level
 		auto jsonLogIt = data.find("log");
@@ -165,6 +165,9 @@ namespace RTC
 		}
 
  	  this->shmCtx.InitializeShmWriterCtx(shm, queueAge, useReverse, testNack, logname /* + "." + shm + "." + this->id */, loglevel, shmAppData);
+	
+		this->shmNoConsumeTimer = new Timer(this);
+		this->shmNoConsumeTimer->Start(60000);
 	}
 
 	ShmTransport::~ShmTransport()
@@ -172,7 +175,43 @@ namespace RTC
 		MS_TRACE();
 		MS_DEBUG_TAG_LIVELYAPP(xcode, this->appData, "shm[%s] ShmTransport dtor[transportId:%s]", this->shmCtx.StreamName().c_str(), this->id.c_str());
 		this->shmCtx.CloseShmWriterCtx();
+		delete this->shmNoConsumeTimer;
 	}
+
+
+	inline void ShmTransport::OnTimer(Timer* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->shmNoConsumeTimer)
+			this->OnNoConsume();
+		else
+			// Call the base
+			RTC::Transport::OnTimer(timer);
+	}
+
+
+	void ShmTransport::StopNoConsumeTimer()
+	{
+		MS_TRACE();
+
+		this->shmNoConsumeTimer->Stop();
+	}
+
+	void ShmTransport::OnNoConsume()
+	{
+		MS_TRACE();
+
+		MS_WARN_TAG(xcode, "shm[%s] idle timeout: no consumers created in ShmTransport [transportId:%s]", this->shmCtx.StreamName().c_str(), this->id.c_str());
+	
+		// Close shm writer and let go of shm.
+		this->shmCtx.CloseShmWriterCtx();
+
+		// TBD: ShmTransport object will live until someone calls a dtor.
+		// Stop the time so that nothing ever happens here.
+		this->shmNoConsumeTimer->Stop();
+	}
+
 
 	void ShmTransport::FillJson(json& jsonObject) const
 	{
