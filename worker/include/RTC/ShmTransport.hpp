@@ -65,6 +65,9 @@ namespace RTC
 	public:
 		std::string ShmName() const { return this->shmCtx.StreamName().c_str();}
 
+	public:
+		std::string appData;
+
 	/* Pure virtual methods inherited from Timer. */
 	protected:
 		void OnTimer(Timer* timer) override;

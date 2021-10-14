@@ -339,6 +339,8 @@ namespace DepLibSfuShm {
     bool frameTsExpired = (lastItemTs > frameTs) && (lastItemTs - frameTs > this->maxVideoPktDelay);
     bool keyframe = false;
 
+    // TODO: only when we are dequeueing and ready to write whatever we have of a frame, we can finally set beginpicture and endpicture flags.
+    // TODO: we can detect gaps in seqids; we can have identical timestamps and seqids
     while(it != this->videoPktBuffer.end() && frameTs == it->ts)
     {
       if (it->keyframe)

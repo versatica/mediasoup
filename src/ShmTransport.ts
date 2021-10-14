@@ -215,7 +215,8 @@ export class ShmTransport extends Transport
 			shm                    : shmData,
 			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
 			paused,
-			preferredLayers
+			preferredLayers,
+			appData,
 		};
 
 		const status =

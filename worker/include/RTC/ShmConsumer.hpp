@@ -127,7 +127,8 @@ namespace RTC
 		void   OnIdleShmConsumer();          // Call from OnTimer() to notify nodejs Consumer
 		Timer* shmIdleCheckTimer{ nullptr }; // Check for incoming RTP packets, declare idle after 20 seconds
 		bool 	 idle{ false };                // Idle if inactivityCheckTime is not reset within 20 seconds
-
+	public:
+		std::string appData;
 	};
 
 	/* Inline methods. */

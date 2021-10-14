@@ -9,6 +9,8 @@
 #include "RTC/Codecs/Tools.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RtpStreamRecv.hpp"
+#include "Lively.hpp"
+#include "LivelyAppDataToJson.hpp"
 
 
 namespace RTC
@@ -66,7 +68,21 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("%s codec not supported for shm", mediaCodec->mimeType.ToString().c_str());
 		}
 
-		MS_DEBUG_TAG(rtp, "ShmConsumer ctor() data [%s] media codec [%s]", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
+		MS_DEBUG_TAG(xcode, "ShmConsumer ctor() data [%s] media codec [%s]", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
+		
+		// Optional appData
+		auto jsonAppDataIt = data.find("appData");
+		Lively::AppData lively;
+		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
+		{
+			try {
+				lively = jsonAppDataIt->get<Lively::AppData>();
+				this->appData = lively.ToStr();
+			}
+			catch (const std::exception& e) {
+				MS_WARN_TAG(xcode, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
+			}
+		}
 
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
@@ -174,7 +190,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_WARN_TAG(xcode, "shm[%s] idle shm consumer", this->shmCtx->StreamName().c_str());
+		MS_WARN_TAG_LIVELYAPP(xcode, this->appData, "shm[%s] idle shm consumer", this->shmCtx->StreamName().c_str());
 
 		Channel::ChannelNotifier::Emit(this->id, "idleshmconsumer");
 	}
@@ -233,7 +249,7 @@ namespace RTC
 
 		if (!this->producerRtpStream || !this->producerRtpStream->GetSenderReportNtpMs() || !this->producerRtpStream->GetSenderReportTs())
 		{
-			MS_DEBUG_2TAGS(rtcp, xcode, "shm[%s] Producer stream failed to read SR RTCP msg", this->shmCtx->StreamName().c_str());
+			MS_DEBUG_2TAGS_LIVELYAPP(rtcp, xcode, this->appData, "shm[%s] Producer stream failed to read SR RTCP msg", this->shmCtx->StreamName().c_str());
 			return;
 		}
 
@@ -310,7 +326,7 @@ namespace RTC
 		// Check for video orientation changes and discover ssrc.
 		if (VideoOrientationChanged(packet))
 		{
-				MS_DEBUG_2TAGS(rtp, xcode, "shm[%s] video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				MS_DEBUG_2TAGS_LIVELYAPP(rtp, xcode, this->appData, "shm[%s] video orientation changed to %d in packet[ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 					this->shmCtx->StreamName().c_str(),
 					this->rotation,
 					packet->GetSsrc(),
@@ -538,7 +554,7 @@ namespace RTC
 																					keyframe);
 				}
 				else{
-					MS_WARN_TAG(xcode, "shm[%s] NALU data len < 1: %lu", this->shmCtx->StreamName().c_str(), len);
+					MS_WARN_TAG_LIVELYAPP(xcode, this->appData, "shm[%s] NALU data len < 1: %lu", this->shmCtx->StreamName().c_str(), len);
 				}
 			}
 			else
@@ -577,7 +593,7 @@ namespace RTC
 							uint16_t naluSize = Utils::Byte::Get2Bytes(data, offset);
 
 							if ( offset + naluSize > len) {
-								MS_WARN_TAG(xcode, "shm[%s] payload left to read from STAP-A is too short: %zu > %zu",
+								MS_WARN_TAG_LIVELYAPP(xcode, this->appData, "shm[%s] payload left to read from STAP-A is too short: %zu > %zu",
 									this->shmCtx->StreamName().c_str(), offset + naluSize, len);
 								break;
 							}
@@ -621,7 +637,7 @@ namespace RTC
 					{
 						if (len < 3)
 						{
-							MS_WARN_TAG(xcode, "shm[%s] FU-A payload too short", this->shmCtx->StreamName().c_str());
+							MS_WARN_TAG_LIVELYAPP(xcode, this->appData, "shm[%s] FU-A payload too short", this->shmCtx->StreamName().c_str());
 							break;
 						}
 						// Parse FU header octet
@@ -672,13 +688,13 @@ namespace RTC
 					case 27: // MTAP-24
 					case 29: // FU-B
 					{
-						MS_WARN_TAG(xcode, "shm[%s] Unsupported NALU type %u in video packet",
+						MS_WARN_TAG_LIVELYAPP(xcode, this->appData, "shm[%s] Unsupported NALU type %u in video packet",
 							this->shmCtx->StreamName().c_str(), nal);
 						break;
 					}
 					default: // ignore the rest
 					{
-						MS_WARN_TAG(xcode, "shm[%s] unknown NALU type %u in video packet",
+						MS_WARN_TAG_LIVELYAPP(xcode, this->appData, "shm[%s] unknown NALU type %u in video packet",
 							this->shmCtx->StreamName().c_str(), nal);
 						break;
 					}
@@ -927,7 +943,7 @@ namespace RTC
 		if (this->kind != RTC::Media::Kind::VIDEO)
 			return;
 
-		MS_DEBUG_2TAGS(rtp, xcode, "shm[%s] writer needs kf: consumer.IsActive()=%d consumer.syncRequired=%d", 
+		MS_DEBUG_2TAGS_LIVELYAPP(rtp, xcode, this->appData, "shm[%s] writer needs kf: consumer.IsActive()=%d consumer.syncRequired=%d", 
 			this->shmCtx->StreamName().c_str(), IsActive(), this->syncRequired);
 
 		if (this->syncRequired)
