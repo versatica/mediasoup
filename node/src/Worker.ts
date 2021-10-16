@@ -329,7 +329,6 @@ export class Worker extends EnhancedEventEmitter
 		this.#child.on('exit', (code, signal) =>
 		{
 			this.#child = undefined;
-			this.close();
 
 			if (!spawnDone)
 			{
@@ -362,15 +361,14 @@ export class Worker extends EnhancedEventEmitter
 				this.safeEmit(
 					'died',
 					new Error(`[pid:${this.#pid}, code:${code}, signal:${signal}]`));
-
-				this.#observer.safeEmit('close');
 			}
+
+			this.close();
 		});
 
 		this.#child.on('error', (error) =>
 		{
 			this.#child = undefined;
-			this.close();
 
 			if (!spawnDone)
 			{
@@ -387,9 +385,9 @@ export class Worker extends EnhancedEventEmitter
 					'worker process error [pid:%s]: %s', this.#pid, error.message);
 
 				this.safeEmit('died', error);
-
-				this.#observer.safeEmit('close');
 			}
+
+			this.close();
 		});
 
 		// Be ready for 3rd party worker libraries logging to stdout.
