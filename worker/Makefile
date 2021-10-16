@@ -25,7 +25,7 @@ else
     export NINJA = $(PIP_DIR)/bin/ninja
 endif
 # Instruct Python where to look for modules it needs, such that `meson` actually runs from installed location.
-export PYTHONPATH = $(PIP_DIR)
+export PYTHONPATH := $(PIP_DIR):${PYTHONPATH}
 
 .PHONY:	\
 	default meson-ninja setup clean clean-pip clean-subprojects clean-all mediasoup-worker xcode lint format test tidy \
@@ -42,7 +42,7 @@ ifeq ($(wildcard $(PIP_DIR)),)
 		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools || \
 		echo "Installation failed, likely because PIP is unavailable, if you are on Debian/Ubuntu or derivative please install the python3-pip package"
 	# Install `meson` and `ninja` using `pip` into custom location, so we don't depend on system-wide installation.
-	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) meson ninja
+	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) --no-binary ":all:" meson ninja
 endif
 
 setup: meson-ninja
