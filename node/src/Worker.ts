@@ -362,6 +362,8 @@ export class Worker extends EnhancedEventEmitter
 				this.safeEmit(
 					'died',
 					new Error(`[pid:${this.#pid}, code:${code}, signal:${signal}]`));
+
+				this.#observer.safeEmit('close');
 			}
 		});
 
@@ -385,6 +387,8 @@ export class Worker extends EnhancedEventEmitter
 					'worker process error [pid:%s]: %s', this.#pid, error.message);
 
 				this.safeEmit('died', error);
+
+				this.#observer.safeEmit('close');
 			}
 		});
 

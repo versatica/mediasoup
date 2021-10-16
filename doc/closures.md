@@ -10,11 +10,13 @@ Some considerations:
 
 * Public API.
 * Kills the mediasoup-worker process (if not already died) via signal.
+* The JS Worker observer emits public JS `worker.on('close')`.
 * Iterates all JS Routers and calls `router.workerClosed()`.
 
 ## mediasoup-worker process dies unexpectely
 
 * The JS Worker emits public JS `worker.on('died')`.
+* The JS Worker observer emits public JS `worker.on('close')`.
 * Iterates all JS Routers and calls `router.workerClosed()`.
 
 ## C++ Worker::Close()

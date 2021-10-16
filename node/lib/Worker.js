@@ -149,6 +149,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             else {
                 logger.error('worker process died unexpectedly [pid:%s, code:%s, signal:%s]', __classPrivateFieldGet(this, _pid), code, signal);
                 this.safeEmit('died', new Error(`[pid:${__classPrivateFieldGet(this, _pid)}, code:${code}, signal:${signal}]`));
+                __classPrivateFieldGet(this, _observer).safeEmit('close');
             }
         });
         __classPrivateFieldGet(this, _child).on('error', (error) => {
@@ -162,6 +163,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             else {
                 logger.error('worker process error [pid:%s]: %s', __classPrivateFieldGet(this, _pid), error.message);
                 this.safeEmit('died', error);
+                __classPrivateFieldGet(this, _observer).safeEmit('close');
             }
         });
         // Be ready for 3rd party worker libraries logging to stdout.
