@@ -134,34 +134,35 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         });
         __classPrivateFieldGet(this, _child).on('exit', (code, signal) => {
             __classPrivateFieldSet(this, _child, undefined);
-            this.close();
             if (!spawnDone) {
                 spawnDone = true;
                 if (code === 42) {
                     logger.error('worker process failed due to wrong settings [pid:%s]', __classPrivateFieldGet(this, _pid));
+                    this.close();
                     this.emit('@failure', new TypeError('wrong settings'));
                 }
                 else {
                     logger.error('worker process failed unexpectedly [pid:%s, code:%s, signal:%s]', __classPrivateFieldGet(this, _pid), code, signal);
+                    this.close();
                     this.emit('@failure', new Error(`[pid:${__classPrivateFieldGet(this, _pid)}, code:${code}, signal:${signal}]`));
                 }
             }
             else {
                 logger.error('worker process died unexpectedly [pid:%s, code:%s, signal:%s]', __classPrivateFieldGet(this, _pid), code, signal);
-                this.safeEmit('died', new Error(`[pid:${__classPrivateFieldGet(this, _pid)}, code:${code}, signal:${signal}]`));
+                this.died(new Error(`[pid:${__classPrivateFieldGet(this, _pid)}, code:${code}, signal:${signal}]`));
             }
         });
         __classPrivateFieldGet(this, _child).on('error', (error) => {
             __classPrivateFieldSet(this, _child, undefined);
-            this.close();
             if (!spawnDone) {
                 spawnDone = true;
                 logger.error('worker process failed [pid:%s]: %s', __classPrivateFieldGet(this, _pid), error.message);
+                this.close();
                 this.emit('@failure', error);
             }
             else {
                 logger.error('worker process error [pid:%s]: %s', __classPrivateFieldGet(this, _pid), error.message);
-                this.safeEmit('died', error);
+                this.died(error);
             }
         });
         // Be ready for 3rd party worker libraries logging to stdout.
@@ -295,6 +296,24 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Emit observer event.
         __classPrivateFieldGet(this, _observer).safeEmit('newrouter', router);
         return router;
+    }
+    died(error) {
+        if (__classPrivateFieldGet(this, _closed))
+            return;
+        logger.debug(`died() [error:${error}]`);
+        __classPrivateFieldSet(this, _closed, true);
+        // Close the Channel instance.
+        __classPrivateFieldGet(this, _channel).close();
+        // Close the PayloadChannel instance.
+        __classPrivateFieldGet(this, _payloadChannel).close();
+        // Close every Router.
+        for (const router of __classPrivateFieldGet(this, _routers)) {
+            router.workerClosed();
+        }
+        __classPrivateFieldGet(this, _routers).clear();
+        this.safeEmit('died', error);
+        // Emit observer event.
+        __classPrivateFieldGet(this, _observer).safeEmit('close');
     }
 }
 exports.Worker = Worker;
