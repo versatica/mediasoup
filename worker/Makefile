@@ -14,6 +14,7 @@ DOCKER ?= docker
 PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_ARGS ?= ""
+PIP_BUILD_BINARIES = $(shell [ -f /etc/NIXOS -o -d /etc/guix ] && echo "--no-binary :all:")
 
 # Disable `*.pyc` files creation.
 export PYTHONDONTWRITEBYTECODE = 1
@@ -42,7 +43,7 @@ ifeq ($(wildcard $(PIP_DIR)),)
 		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools || \
 		echo "Installation failed, likely because PIP is unavailable, if you are on Debian/Ubuntu or derivative please install the python3-pip package"
 	# Install `meson` and `ninja` using `pip` into custom location, so we don't depend on system-wide installation.
-	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) --no-binary ":all:" meson ninja
+	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) $(PIP_BUILD_BINARIES) meson ninja
 endif
 
 setup: meson-ninja
