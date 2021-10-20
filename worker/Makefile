@@ -14,6 +14,8 @@ DOCKER ?= docker
 PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_ARGS ?= ""
+# Workaround for NixOS and Guix that don't work with pre-built binaries, see:
+# https://github.com/NixOS/nixpkgs/issues/142383.
 PIP_BUILD_BINARIES = $(shell [ -f /etc/NIXOS -o -d /etc/guix ] && echo "--no-binary :all:")
 
 # Disable `*.pyc` files creation.
