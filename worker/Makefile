@@ -14,6 +14,9 @@ DOCKER ?= docker
 PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_ARGS ?= ""
+# Workaround for NixOS and Guix that don't work with pre-built binaries, see:
+# https://github.com/NixOS/nixpkgs/issues/142383.
+PIP_BUILD_BINARIES = $(shell [ -f /etc/NIXOS -o -d /etc/guix ] && echo "--no-binary :all:")
 
 # Disable `*.pyc` files creation.
 export PYTHONDONTWRITEBYTECODE = 1
@@ -25,7 +28,7 @@ else
     export NINJA = $(PIP_DIR)/bin/ninja
 endif
 # Instruct Python where to look for modules it needs, such that `meson` actually runs from installed location.
-export PYTHONPATH = $(PIP_DIR)
+export PYTHONPATH := $(PIP_DIR):${PYTHONPATH}
 
 .PHONY:	\
 	default meson-ninja setup clean clean-pip clean-subprojects clean-all mediasoup-worker xcode lint format test tidy \
@@ -42,7 +45,7 @@ ifeq ($(wildcard $(PIP_DIR)),)
 		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools || \
 		echo "Installation failed, likely because PIP is unavailable, if you are on Debian/Ubuntu or derivative please install the python3-pip package"
 	# Install `meson` and `ninja` using `pip` into custom location, so we don't depend on system-wide installation.
-	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) meson ninja
+	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) $(PIP_BUILD_BINARIES) meson ninja
 endif
 
 setup: meson-ninja
