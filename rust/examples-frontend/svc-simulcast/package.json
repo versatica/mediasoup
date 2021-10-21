@@ -7,7 +7,7 @@
   "scripts": {
     "start": "webpack serve"
   },
-  "author": "Nazar Mokrynskyi <nazar@mokrynskyi.com>",
+  "author": "Tarsis Maksym <tarsis.maksym@gmail.com>",
   "dependencies": {
     "mediasoup-client": "^3.6.51"
   },

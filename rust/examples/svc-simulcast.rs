@@ -32,6 +32,19 @@ fn media_codecs() -> Vec<RtpCodecCapability> {
                 RtcpFeedback::TransportCc,
             ],
         },
+        RtpCodecCapability::Video {
+            mime_type: MimeTypeVideo::Vp9,
+            preferred_payload_type: None,
+            clock_rate: NonZeroU32::new(90000).unwrap(),
+            parameters: RtpCodecParametersParameters::default(),
+            rtcp_feedback: vec![
+                RtcpFeedback::Nack,
+                RtcpFeedback::NackPli,
+                RtcpFeedback::CcmFir,
+                RtcpFeedback::GoogRemb,
+                RtcpFeedback::TransportCc,
+            ],
+        },
     ]
 }
 
@@ -63,7 +76,7 @@ enum ServerMessage {
     /// is just dropped, in real-world application you probably want to handle it better)
     ConnectedProducerTransport,
     /// Notification that producer was created on the server, in this simple example client will try
-    /// to consume it right away, hence `echo` example
+    /// to consume it right away
     #[serde(rename_all = "camelCase")]
     Produced { id: ProducerId },
     /// Notification that consumer transport was connected successfully (in case of error connection
@@ -107,6 +120,19 @@ enum ClientMessage {
     /// Request to resume consumer that was previously created
     #[serde(rename_all = "camelCase")]
     ConsumerResume { id: ConsumerId },
+    /// Request to set preferred spatial and temporal layers
+    #[serde(rename_all = "camelCase")]
+    SetConsumerPreferredLayers {
+        id: ConsumerId,
+        preferred_layers: ConsumerLayers,
+    },
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct PreferredLayers {
+    spatial_layer: u32,
+    temporal_layer: u32,
 }
 
 /// Internal actor messages for convenience
@@ -131,7 +157,7 @@ struct Transports {
 /// outbound WebSocket messages in JSON.
 ///
 /// See https://actix.rs/docs/websockets/ for official `actix-web` documentation.
-struct EchoConnection {
+struct SvcSimulcastConnection {
     /// RTP capabilities received from the client
     client_rtp_capabilities: Option<RtpCapabilities>,
     /// Consumers associated with this client, preventing them from being destroyed
@@ -144,7 +170,7 @@ struct EchoConnection {
     transports: Transports,
 }
 
-impl EchoConnection {
+impl SvcSimulcastConnection {
     /// Create a new instance representing WebSocket connection
     async fn new(worker_manager: &WorkerManager) -> Result<Self, String> {
         let worker = worker_manager
@@ -176,7 +202,8 @@ impl EchoConnection {
             .await
             .map_err(|error| format!("Failed to create router: {}", error))?;
 
-        // We know that for echo example we'll need 2 transports, so we can create both right away.
+        // We know that for svc-simulcast example we'll need 2 transports, so we can create both
+        // right away.
         // This may not be the case for real-world applications or you may create this at a
         // different time and/or in different order.
         let transport_options =
@@ -207,7 +234,7 @@ impl EchoConnection {
     }
 }
 
-impl Actor for EchoConnection {
+impl Actor for SvcSimulcastConnection {
     type Context = ws::WebsocketContext<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
@@ -240,7 +267,7 @@ impl Actor for EchoConnection {
     }
 }
 
-impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for EchoConnection {
+impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for SvcSimulcastConnection {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         // Here we handle incoming WebSocket messages, intentionally not handling continuation
         // messages since we know all messages will fit into a single frame, but in real-world apps
@@ -273,7 +300,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for EchoConnection {
     }
 }
 
-impl Handler<ClientMessage> for EchoConnection {
+impl Handler<ClientMessage> for SvcSimulcastConnection {
     type Result = ();
 
     fn handle(&mut self, message: ClientMessage, ctx: &mut Self::Context) {
@@ -282,6 +309,32 @@ impl Handler<ClientMessage> for EchoConnection {
                 // We need to know client's RTP capabilities, those are sent using initialization
                 // message and are stored in connection struct for future use
                 self.client_rtp_capabilities.replace(rtp_capabilities);
+            }
+            ClientMessage::SetConsumerPreferredLayers {
+                id,
+                preferred_layers,
+            } => {
+                if let Some(consumer) = self.consumers.get(&id).cloned() {
+                    actix::spawn(async move {
+                        match consumer.set_preferred_layers(preferred_layers).await {
+                            Ok(_) => {
+                                println!(
+                                    "Successfully set preferred layers {:?} consumer {}",
+                                    preferred_layers,
+                                    consumer.id(),
+                                );
+                            }
+                            Err(error) => {
+                                println!(
+                                    "Failed to set preferred layers {:?} consumer {}: {}",
+                                    preferred_layers,
+                                    consumer.id(),
+                                    error,
+                                );
+                            }
+                        }
+                    });
+                }
             }
             ClientMessage::ConnectProducerTransport { dtls_parameters } => {
                 let address = ctx.address();
@@ -421,7 +474,7 @@ impl Handler<ClientMessage> for EchoConnection {
 
 /// Simple handler that will transform typed server messages into JSON and send them over to the
 /// client over WebSocket connection
-impl Handler<ServerMessage> for EchoConnection {
+impl Handler<ServerMessage> for SvcSimulcastConnection {
     type Result = ();
 
     fn handle(&mut self, message: ServerMessage, ctx: &mut Self::Context) {
@@ -432,7 +485,7 @@ impl Handler<ServerMessage> for EchoConnection {
 /// Convenience handler for internal messages, these actions require mutable access to the
 /// connection struct and having such message handler makes it easy to use from background tasks
 /// where otherwise Mutex would have to be used instead
-impl Handler<InternalMessage> for EchoConnection {
+impl Handler<InternalMessage> for SvcSimulcastConnection {
     type Result = ();
 
     fn handle(&mut self, message: InternalMessage, ctx: &mut Self::Context) {
@@ -459,8 +512,8 @@ async fn ws_index(
     worker_manager: Data<WorkerManager>,
     stream: Payload,
 ) -> Result<HttpResponse, Error> {
-    match EchoConnection::new(&worker_manager).await {
-        Ok(echo_server) => ws::start(echo_server, &request, stream),
+    match SvcSimulcastConnection::new(&worker_manager).await {
+        Ok(svc_simulcast_connection) => ws::start(svc_simulcast_connection, &request, stream),
         Err(error) => {
             eprintln!("{}", error);
 

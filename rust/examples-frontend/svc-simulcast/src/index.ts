@@ -1,7 +1,8 @@
 /* eslint-disable no-console */
-import { Device } from 'mediasoup-client';
+import { Device, parseScalabilityMode } from 'mediasoup-client';
 import { MediaKind, RtpCapabilities, RtpParameters } from 'mediasoup-client/lib/RtpParameters';
 import { DtlsParameters, TransportOptions, Transport } from 'mediasoup-client/lib/Transport';
+import { Consumer } from 'mediasoup-client/lib/types';
 import { ConsumerOptions } from 'mediasoup-client/lib/Consumer';
 
 type Brand<K, T> = K & { __brand: T };
@@ -74,16 +75,27 @@ interface ClientConsumerResume {
     id: ConsumerId;
 }
 
+interface ClientSetConsumerPreferredLayers {
+	action: 'SetConsumerPreferredLayers';
+	id: ConsumerId;
+	preferredLayers: {
+		spatialLayer: number
+		temporalLayer: number
+	}
+}
+
 type ClientMessage =
 	ClientInit |
 	ClientConnectProducerTransport |
 	ClientProduce |
 	ClientConnectConsumerTransport |
 	ClientConsume |
-	ClientConsumerResume;
+	ClientConsumerResume |
+	ClientSetConsumerPreferredLayers;
 
 async function init()
 {
+	const isFirefox = navigator.userAgent.toLowerCase().includes('firefox')
 	const sendPreview = document.querySelector('#preview-send') as HTMLVideoElement;
 	const receivePreview = document.querySelector('#preview-receive') as HTMLVideoElement;
 
@@ -95,6 +107,85 @@ async function init()
 	{
 		receivePreview.play();
 	};
+
+	const decreaseLayer = document.querySelector('#decreaseLayer') as HTMLButtonElement;
+	const increaseLayer = document.querySelector('#increaseLayer') as HTMLButtonElement;
+	const spatialLayerNode = document.querySelector('#spatial') as HTMLSpanElement
+	const temporalLayerNode = document.querySelector('#temporal') as HTMLSpanElement
+	temporalLayerNode.innerText = 'none'
+
+	let videoConsumer: Consumer | null = null;
+	let spatialLayers = 0;
+	let temporalLayers = 0;
+	let preferredSpatialLayer = 0;
+	let preferredTemporalLayer = 0;
+
+	decreaseLayer.addEventListener('click', () => {
+		let newPreferredSpatialLayer: number;
+		let newPreferredTemporalLayer: number;
+
+		if (isFirefox) {
+			setPreferredLayers(preferredSpatialLayer > 0 ? preferredSpatialLayer - 1 : spatialLayers - 1)
+			return
+		}
+
+		if (preferredTemporalLayer > 0) {
+			newPreferredSpatialLayer = preferredSpatialLayer;
+			newPreferredTemporalLayer = preferredTemporalLayer - 1;
+		} else if (preferredSpatialLayer > 0) {
+			newPreferredSpatialLayer = preferredSpatialLayer - 1;
+			newPreferredTemporalLayer = temporalLayers - 1;
+		} else {
+			newPreferredSpatialLayer = spatialLayers - 1;
+			newPreferredTemporalLayer = temporalLayers - 1;
+		}
+
+		setPreferredLayers(newPreferredSpatialLayer, newPreferredTemporalLayer)
+	});
+	increaseLayer.addEventListener('click', () => {
+		let newPreferredSpatialLayer: number;
+		let newPreferredTemporalLayer: number;
+
+		if (isFirefox) {
+			setPreferredLayers(preferredSpatialLayer < 2 ? preferredSpatialLayer + 1 : 0)
+			return
+		}
+
+		if (preferredTemporalLayer < 2) {
+			newPreferredSpatialLayer = preferredSpatialLayer;
+			newPreferredTemporalLayer = preferredTemporalLayer + 1;
+		} else if (preferredSpatialLayer < 2) {
+			newPreferredSpatialLayer = preferredSpatialLayer + 1;
+			newPreferredTemporalLayer = 0;
+		} else {
+			newPreferredSpatialLayer = 0;
+			newPreferredTemporalLayer = 0;
+		}
+
+		setPreferredLayers(newPreferredSpatialLayer, newPreferredTemporalLayer)
+	});
+
+
+	const setPreferredLayers = (spatialLayer: number, temporalLayer: number = 0): void => {
+		if (!videoConsumer) {
+			throw new Error('Failed to update preferred layers: video consumer not found.')
+		}
+
+		preferredSpatialLayer = spatialLayer
+		preferredTemporalLayer = temporalLayer
+
+		spatialLayerNode.innerText = String(spatialLayer);
+
+		if (!isFirefox) {
+			temporalLayerNode.innerText = String(temporalLayer);
+		}
+
+		send({
+			action: 'SetConsumerPreferredLayers',
+			id: videoConsumer.id as ConsumerId,
+			preferredLayers: {spatialLayer, temporalLayer}
+		});
+	}
 
 	const receiveMediaStream = new MediaStream();
 
@@ -194,7 +285,29 @@ async function init()
 					// And create producers for all tracks that were previously requested
 					for (const track of mediaStream.getTracks())
 					{
-						const producer = await producerTransport.produce({ track });
+						const codec = track.kind === 'video' ? device.rtpCapabilities.codecs?.find((codec) => codec.mimeType.toLowerCase() === 'video/vp9' && !isFirefox) ?? device.rtpCapabilities.codecs?.find((codec) => codec.mimeType.toLowerCase() === 'video/vp8') : undefined
+						let encodings
+
+						if (codec?.mimeType.toLowerCase() === 'video/vp8')
+						{
+							encodings = [
+								{scaleResolutionDownBy: 4, maxBitrate: 500000},
+								{scaleResolutionDownBy: 2, maxBitrate: 1000000},
+								{scaleResolutionDownBy: 1, maxBitrate: 5000000}
+							]
+						}
+						else if (codec?.mimeType.toLowerCase() === 'video/vp9')
+						{
+							encodings = [
+								{scalabilityMode: 'S3T3'},
+							]
+						}
+
+						const producer = await producerTransport.produce({
+							track,
+							encodings,
+							codec
+						});
 
 						producers.push(producer);
 						console.log(`${track.kind} producer created:`, producer);
@@ -256,6 +369,25 @@ async function init()
 
 								receiveMediaStream.addTrack(consumer.track);
 								receivePreview.srcObject = receiveMediaStream;
+
+								if (consumer.kind === 'video')
+								{
+									videoConsumer = consumer
+
+									const encodings = videoConsumer.rtpParameters.encodings ?? [];
+
+									if (encodings[0]) {
+										const {spatialLayers: _spatialLayers, temporalLayers: _temporalLayers} =
+											parseScalabilityMode(encodings[0].scalabilityMode)
+
+										spatialLayers = _spatialLayers;
+										temporalLayers = _temporalLayers;
+										preferredSpatialLayer = _spatialLayers - 1;
+										preferredTemporalLayer = _temporalLayers - 1;
+
+										setPreferredLayers(preferredSpatialLayer, preferredTemporalLayer);
+									}
+								}
 
 								resolve(undefined);
 							});
