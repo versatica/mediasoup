@@ -1931,6 +1931,12 @@ namespace RTC
 							continue;
 						}
 
+						// Special case for (unused) RTCP-RR from the RTX stream.
+						if (GetConsumerByRtxSsrc(report->GetSsrc()) != nullptr)
+						{
+							continue;
+						}
+
 						MS_DEBUG_TAG(
 						  rtcp,
 						  "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
