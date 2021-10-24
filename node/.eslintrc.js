@@ -175,71 +175,59 @@ const eslintConfig =
 		'strict'          : 2,
 		'valid-typeof'    : 2,
 		'yoda'            : 2
-	}
+	},
+	overrides : []
 };
 
-switch (process.env.MEDIASOUP_NODE_LANGUAGE)
-{
-	case 'typescript':
-	{
-		eslintConfig.parser = '@typescript-eslint/parser';
-		eslintConfig.plugins =
-		[
-			...eslintConfig.plugins,
-			'@typescript-eslint'
-		];
-		eslintConfig.extends =
-		[
-			'eslint:recommended',
-			'plugin:@typescript-eslint/eslint-recommended',
-			'plugin:@typescript-eslint/recommended'
-		];
-		eslintConfig.rules =
-		{
-			...eslintConfig.rules,
-			'no-unused-vars'                                    : 0,
-			'@typescript-eslint/ban-types'                      : 0,
-			'@typescript-eslint/ban-ts-comment'                 : 0,
-			'@typescript-eslint/ban-ts-ignore'                  : 0,
-			'@typescript-eslint/explicit-module-boundary-types' : 0,
-			'@typescript-eslint/member-delimiter-style'         : [ 2,
-				{
-					multiline  : { delimiter: 'semi', requireLast: true },
-					singleline : { delimiter: 'semi', requireLast: false }
-				}
-			],
-			'@typescript-eslint/no-explicit-any' : 0,
-			'@typescript-eslint/no-unused-vars'  : [ 2,
-				{
-					vars               : 'all',
-					args               : 'after-used',
-					ignoreRestSiblings : false
-				}
-			],
-			'@typescript-eslint/no-use-before-define'  : [ 2, { functions: false } ],
-			'@typescript-eslint/no-empty-function'     : 0,
-			'@typescript-eslint/no-non-null-assertion' : 0
-		};
-
-		break;
+eslintConfig.overrides.push({
+	files   : [ '*.ts' ],
+	parser  : '@typescript-eslint/parser',
+	plugins : [
+		...eslintConfig.plugins,
+		'@typescript-eslint'
+	],
+	extends : [
+		'eslint:recommended',
+		'plugin:@typescript-eslint/eslint-recommended',
+		'plugin:@typescript-eslint/recommended'
+	],
+	rules : {
+		...eslintConfig.rules,
+		'no-unused-vars'                                    : 0,
+		'@typescript-eslint/ban-types'                      : 0,
+		'@typescript-eslint/ban-ts-comment'                 : 0,
+		'@typescript-eslint/ban-ts-ignore'                  : 0,
+		'@typescript-eslint/explicit-module-boundary-types' : 0,
+		'@typescript-eslint/member-delimiter-style'         : [ 2,
+			{
+				multiline  : { delimiter: 'semi', requireLast: true },
+				singleline : { delimiter: 'semi', requireLast: false }
+			}
+		],
+		'@typescript-eslint/no-explicit-any' : 0,
+		'@typescript-eslint/no-unused-vars'  : [ 2,
+			{
+				vars               : 'all',
+				args               : 'after-used',
+				ignoreRestSiblings : false
+			}
+		],
+		'@typescript-eslint/no-use-before-define'  : [ 2, { functions: false } ],
+		'@typescript-eslint/no-empty-function'     : 0,
+		'@typescript-eslint/no-non-null-assertion' : 0
 	}
+});
 
-	case 'javascript':
-	{
-		eslintConfig.env['jest/globals'] = true;
-		eslintConfig.plugins =
-		[
-			...eslintConfig.plugins,
-			'jest'
-		];
-
-		break;
-	}
-
-	default:
-	{
-		throw new TypeError('wrong/missing MEDIASOUP_NODE_LANGUAGE env');
-	}
-}
+eslintConfig.overrides.push({
+	files : [ '*.js' ],
+	env   : {
+		...eslintConfig.env,
+		'jest/globals' : true
+	},
+	plugins : [
+		...eslintConfig.plugins,
+		'jest'
+	]
+});
 
 module.exports = eslintConfig;

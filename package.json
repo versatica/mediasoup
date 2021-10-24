@@ -83,7 +83,6 @@
     "@types/uuid": "^8.3.1",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
-    "cross-env": "^7.0.3",
     "eslint": "^7.32.0",
     "eslint-plugin-jest": "^25.0.5",
     "jest": "^27.2.5",
