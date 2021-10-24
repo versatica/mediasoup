@@ -69,8 +69,7 @@ switch (task)
 
 	case 'lint:node':
 	{
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c node/.eslintrc.js --max-warnings 0 --ext=ts node/src/');
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c node/.eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!node/.eslintrc.js\' node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
+		execute('eslint -c node/.eslintrc.js --max-warnings 0 node/src/ node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
 
 		break;
 	}
