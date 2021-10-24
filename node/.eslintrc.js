@@ -179,55 +179,57 @@ const eslintConfig =
 	overrides : []
 };
 
-eslintConfig.overrides.push({
-	files   : [ '*.ts' ],
-	parser  : '@typescript-eslint/parser',
-	plugins : [
-		...eslintConfig.plugins,
-		'@typescript-eslint'
-	],
-	extends : [
-		'eslint:recommended',
-		'plugin:@typescript-eslint/eslint-recommended',
-		'plugin:@typescript-eslint/recommended'
-	],
-	rules : {
-		...eslintConfig.rules,
-		'no-unused-vars'                                    : 0,
-		'@typescript-eslint/ban-types'                      : 0,
-		'@typescript-eslint/ban-ts-comment'                 : 0,
-		'@typescript-eslint/ban-ts-ignore'                  : 0,
-		'@typescript-eslint/explicit-module-boundary-types' : 0,
-		'@typescript-eslint/member-delimiter-style'         : [ 2,
-			{
-				multiline  : { delimiter: 'semi', requireLast: true },
-				singleline : { delimiter: 'semi', requireLast: false }
-			}
+eslintConfig.overrides.push(
+	{
+		files   : [ '*.ts' ],
+		parser  : '@typescript-eslint/parser',
+		plugins : [
+			...eslintConfig.plugins,
+			'@typescript-eslint'
 		],
-		'@typescript-eslint/no-explicit-any' : 0,
-		'@typescript-eslint/no-unused-vars'  : [ 2,
-			{
-				vars               : 'all',
-				args               : 'after-used',
-				ignoreRestSiblings : false
-			}
+		extends : [
+			'eslint:recommended',
+			'plugin:@typescript-eslint/eslint-recommended',
+			'plugin:@typescript-eslint/recommended'
 		],
-		'@typescript-eslint/no-use-before-define'  : [ 2, { functions: false } ],
-		'@typescript-eslint/no-empty-function'     : 0,
-		'@typescript-eslint/no-non-null-assertion' : 0
-	}
-});
+		rules : {
+			...eslintConfig.rules,
+			'no-unused-vars'                                    : 0,
+			'@typescript-eslint/ban-types'                      : 0,
+			'@typescript-eslint/ban-ts-comment'                 : 0,
+			'@typescript-eslint/ban-ts-ignore'                  : 0,
+			'@typescript-eslint/explicit-module-boundary-types' : 0,
+			'@typescript-eslint/member-delimiter-style'         : [ 2,
+				{
+					multiline  : { delimiter: 'semi', requireLast: true },
+					singleline : { delimiter: 'semi', requireLast: false }
+				}
+			],
+			'@typescript-eslint/no-explicit-any' : 0,
+			'@typescript-eslint/no-unused-vars'  : [ 2,
+				{
+					vars               : 'all',
+					args               : 'after-used',
+					ignoreRestSiblings : false
+				}
+			],
+			'@typescript-eslint/no-use-before-define'  : [ 2, { functions: false } ],
+			'@typescript-eslint/no-empty-function'     : 0,
+			'@typescript-eslint/no-non-null-assertion' : 0
+		}
+	});
 
-eslintConfig.overrides.push({
-	files : [ '*.js' ],
-	env   : {
-		...eslintConfig.env,
-		'jest/globals' : true
-	},
-	plugins : [
-		...eslintConfig.plugins,
-		'jest'
-	]
-});
+eslintConfig.overrides.push(
+	{
+		files : [ '*.js' ],
+		env   : {
+			...eslintConfig.env,
+			'jest/globals' : true
+		},
+		plugins : [
+			...eslintConfig.plugins,
+			'jest'
+		]
+	});
 
 module.exports = eslintConfig;
