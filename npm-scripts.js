@@ -179,19 +179,7 @@ function execute(command)
 
 	try
 	{
-		// Set MSVC compiler as default on Windows
-		const env = isWindows ? {
-			CC  : process.env.CC || 'cl',
-			CXX : process.env.CXX || 'cl',
-			...process.env
-		} : process.env;
-
-		execSync(
-			command,
-			{
-				env   : env,
-				stdio : [ 'ignore', process.stdout, process.stderr ]
-			});
+		execSync(command, { stdio: [ 'ignore', process.stdout, process.stderr ] });
 	}
 	catch (error)
 	{
