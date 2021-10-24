@@ -25,10 +25,16 @@ ifeq ($(OS),Windows_NT)
 	# Windows is, of course, special.
 	export NINJA = $(PIP_DIR)/bin/ninja.exe
 else
-    export NINJA = $(PIP_DIR)/bin/ninja
+	export NINJA = $(PIP_DIR)/bin/ninja
 endif
+
 # Instruct Python where to look for modules it needs, such that `meson` actually runs from installed location.
-export PYTHONPATH := $(PIP_DIR):${PYTHONPATH}
+# For some reason on Windows adding `:${PYTHONPATH}` breaks things.
+ifeq ($(OS),Windows_NT)
+	export PYTHONPATH := $(PIP_DIR)
+else
+	export PYTHONPATH := $(PIP_DIR):${PYTHONPATH}
+endif
 
 .PHONY:	\
 	default meson-ninja setup clean clean-pip clean-subprojects clean-all mediasoup-worker xcode lint format test tidy \
