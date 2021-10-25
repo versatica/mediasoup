@@ -28,7 +28,8 @@ else
 	export NINJA = $(PIP_DIR)/bin/ninja
 endif
 
-# Instruct Python where to look for modules it needs, such that `meson` actually runs from installed location.
+# Instruct Python where to look for modules it needs, such that `meson` actually
+# runs from installed location.
 # For some reason on Windows adding `:${PYTHONPATH}` breaks things.
 ifeq ($(OS),Windows_NT)
 	export PYTHONPATH := $(PIP_DIR)
@@ -45,17 +46,21 @@ default: mediasoup-worker
 meson-ninja:
 ifeq ($(wildcard $(PIP_DIR)),)
 	# Updated pip and setuptools are needed for meson
-	# `--system` is not present everywhere and is only needed as workaround for Debian-specific issue (copied from
-	# https://github.com/gluster/gstatus/pull/33), fallback to command without `--system` if the first one fails.
+	# `--system` is not present everywhere and is only needed as workaround for
+	# Debian-specific issue (copied from
+	# https://github.com/gluster/gstatus/pull/33), fallback to command without
+	# `--system` if the first one fails.
 	$(PYTHON) -m pip install --system --target=$(PIP_DIR) pip setuptools || \
 		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools || \
 		echo "Installation failed, likely because PIP is unavailable, if you are on Debian/Ubuntu or derivative please install the python3-pip package"
-	# Install `meson` and `ninja` using `pip` into custom location, so we don't depend on system-wide installation.
+	# Install `meson` and `ninja` using `pip` into custom location, so we don't
+	# depend on system-wide installation.
 	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) $(PIP_BUILD_BINARIES) meson ninja
 endif
 
 setup: meson-ninja
-# We try to call `--reconfigure` first as a workaround for https://github.com/ninja-build/ninja/issues/1997
+# We try to call `--reconfigure` first as a workaround for this issue:
+# https://github.com/ninja-build/ninja/issues/1997
 ifeq ($(MEDIASOUP_BUILDTYPE),Release)
 	$(MESON) setup \
 		--buildtype release \
@@ -135,7 +140,8 @@ format:
 test: setup
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) mediasoup-worker-test
-	# On Windows lcov doesn't work (at least not yet) and we need to add `.exe` to the binary path.
+	# On Windows lcov doesn't work (at least not yet) and we need to add `.exe` to
+	# the binary path.
 ifeq ($(OS),Windows_NT)
 	$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test.exe --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 else
