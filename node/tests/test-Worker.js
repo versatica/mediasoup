@@ -240,10 +240,10 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 
 	await new Promise((resolve, reject) =>
 	{
-		onDied();
-
 		worker.on('died', () =>
 		{
+			onDied();
+
 			if (onObserverClose.mock.calls.length > 0)
 			{
 				reject(
