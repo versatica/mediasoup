@@ -59,10 +59,7 @@ switch (task)
 
 	case 'worker:build':
 	{
-		if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			execute(`${MAKE} -C worker`);
-		}
+		execute(`${MAKE} -C worker`);
 
 		break;
 	}
@@ -121,9 +118,12 @@ switch (task)
 
 	case 'postinstall':
 	{
-		execute('node npm-scripts.js worker:build');
-		execute(`${MAKE} clean-pip -C worker`);
-		execute(`${MAKE} clean-subprojects -C worker`);
+		if (!process.env.MEDIASOUP_WORKER_BIN)
+		{
+			execute('node npm-scripts.js worker:build');
+			execute(`${MAKE} clean-pip -C worker`);
+			execute(`${MAKE} clean-subprojects -C worker`);
+		}
 
 		break;
 	}
