@@ -104,6 +104,15 @@ const logger = new Logger('Router');
 
 export class Router extends EnhancedEventEmitter
 {
+	// Map of PipeTransports indexed by a string computed with the ids of both
+	// involved Routers.
+	private static readonly mapRouterPipeTransports: Map<string, PipeTransport[]> =
+		new Map();
+
+	// AwaitQueue instance to make pipeToRouter tasks happen sequentially.
+	private static readonly pipeToRouterQueue =
+		new AwaitQueue({ ClosedErrorClass: InvalidStateError });
+
 	// Internal data.
 	readonly #internal:
 	{
@@ -140,15 +149,15 @@ export class Router extends EnhancedEventEmitter
 	// DataProducers map.
 	readonly #dataProducers: Map<string, DataProducer> = new Map();
 
-	// Router to PipeTransport map.
-	readonly #mapRouterPipeTransports: Map<Router, PipeTransport[]> = new Map();
-
-	// AwaitQueue instance to make pipeToRouter tasks happen sequentially.
-	readonly #pipeToRouterQueue =
-		new AwaitQueue({ ClosedErrorClass: InvalidStateError });
-
 	// Observer instance.
 	readonly #observer = new EnhancedEventEmitter();
+
+	private static getPipeTransportPairKey(router1: Router, router2: Router): string
+	{
+		return router1.id <= router2.id
+			? `${router1.id}_${router2.id}`
+			: `${router2.id}_${router1.id}`;
+	}
 
 	/**
 	 * @private
@@ -270,12 +279,6 @@ export class Router extends EnhancedEventEmitter
 		// Clear the DataProducers map.
 		this.#dataProducers.clear();
 
-		// Clear map of Router/PipeTransports.
-		this.#mapRouterPipeTransports.clear();
-
-		// Close the pipeToRouter AwaitQueue instance.
-		this.#pipeToRouterQueue.close();
-
 		this.emit('@close');
 
 		// Emit observer event.
@@ -315,9 +318,6 @@ export class Router extends EnhancedEventEmitter
 
 		// Clear the DataProducers map.
 		this.#dataProducers.clear();
-
-		// Clear map of Router/PipeTransports.
-		this.#mapRouterPipeTransports.clear();
 
 		this.safeEmit('workerclose');
 
@@ -737,9 +737,10 @@ export class Router extends EnhancedEventEmitter
 		let localPipeTransport: PipeTransport | undefined;
 		let remotePipeTransport: PipeTransport | undefined;
 
-		await this.#pipeToRouterQueue.push(async () =>
+		await Router.pipeToRouterQueue.push(async () =>
 		{
-			let pipeTransportPair = this.#mapRouterPipeTransports.get(router);
+			const key = Router.getPipeTransportPairKey(this, router);
+			let pipeTransportPair = Router.mapRouterPipeTransports.get(key);
 
 			if (pipeTransportPair)
 			{
@@ -782,17 +783,17 @@ export class Router extends EnhancedEventEmitter
 					localPipeTransport.observer.on('close', () =>
 					{
 						remotePipeTransport!.close();
-						this.#mapRouterPipeTransports.delete(router);
+						Router.mapRouterPipeTransports.delete(key);
 					});
 
 					remotePipeTransport.observer.on('close', () =>
 					{
 						localPipeTransport!.close();
-						this.#mapRouterPipeTransports.delete(router);
+						Router.mapRouterPipeTransports.delete(key);
 					});
 
-					this.#mapRouterPipeTransports.set(
-						router, [ localPipeTransport, remotePipeTransport ]);
+					Router.mapRouterPipeTransports.set(
+						key, [ localPipeTransport, remotePipeTransport ]);
 				}
 				catch (error)
 				{

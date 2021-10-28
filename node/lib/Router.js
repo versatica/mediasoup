@@ -12,7 +12,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     }
     return privateMap.get(receiver);
 };
-var _internal, _data, _channel, _payloadChannel, _closed, _appData, _transports, _producers, _rtpObservers, _dataProducers, _mapRouterPipeTransports, _pipeToRouterQueue, _observer;
+var _internal, _data, _channel, _payloadChannel, _closed, _appData, _transports, _producers, _rtpObservers, _dataProducers, _observer;
 Object.defineProperty(exports, "__esModule", { value: true });
 const uuid_1 = require("uuid");
 const awaitqueue_1 = require("awaitqueue");
@@ -55,10 +55,6 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         _rtpObservers.set(this, new Map());
         // DataProducers map.
         _dataProducers.set(this, new Map());
-        // Router to PipeTransport map.
-        _mapRouterPipeTransports.set(this, new Map());
-        // AwaitQueue instance to make pipeToRouter tasks happen sequentially.
-        _pipeToRouterQueue.set(this, new awaitqueue_1.AwaitQueue({ ClosedErrorClass: errors_1.InvalidStateError }));
         // Observer instance.
         _observer.set(this, new EnhancedEventEmitter_1.EnhancedEventEmitter());
         logger.debug('constructor()');
@@ -67,6 +63,11 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         __classPrivateFieldSet(this, _channel, channel);
         __classPrivateFieldSet(this, _payloadChannel, payloadChannel);
         __classPrivateFieldSet(this, _appData, appData);
+    }
+    static getPipeTransportPairKey(router1, router2) {
+        return router1.id <= router2.id
+            ? `${router1.id}_${router2.id}`
+            : `${router2.id}_${router1.id}`;
     }
     /**
      * Router id.
@@ -132,10 +133,6 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         __classPrivateFieldGet(this, _rtpObservers).clear();
         // Clear the DataProducers map.
         __classPrivateFieldGet(this, _dataProducers).clear();
-        // Clear map of Router/PipeTransports.
-        __classPrivateFieldGet(this, _mapRouterPipeTransports).clear();
-        // Close the pipeToRouter AwaitQueue instance.
-        __classPrivateFieldGet(this, _pipeToRouterQueue).close();
         this.emit('@close');
         // Emit observer event.
         __classPrivateFieldGet(this, _observer).safeEmit('close');
@@ -164,8 +161,6 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         __classPrivateFieldGet(this, _rtpObservers).clear();
         // Clear the DataProducers map.
         __classPrivateFieldGet(this, _dataProducers).clear();
-        // Clear map of Router/PipeTransports.
-        __classPrivateFieldGet(this, _mapRouterPipeTransports).clear();
         this.safeEmit('workerclose');
         // Emit observer event.
         __classPrivateFieldGet(this, _observer).safeEmit('close');
@@ -417,8 +412,9 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // use an async queue.
         let localPipeTransport;
         let remotePipeTransport;
-        await __classPrivateFieldGet(this, _pipeToRouterQueue).push(async () => {
-            let pipeTransportPair = __classPrivateFieldGet(this, _mapRouterPipeTransports).get(router);
+        await Router.pipeToRouterQueue.push(async () => {
+            const key = Router.getPipeTransportPairKey(this, router);
+            let pipeTransportPair = Router.mapRouterPipeTransports.get(key);
             if (pipeTransportPair) {
                 localPipeTransport = pipeTransportPair[0];
                 remotePipeTransport = pipeTransportPair[1];
@@ -445,13 +441,13 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                     ]);
                     localPipeTransport.observer.on('close', () => {
                         remotePipeTransport.close();
-                        __classPrivateFieldGet(this, _mapRouterPipeTransports).delete(router);
+                        Router.mapRouterPipeTransports.delete(key);
                     });
                     remotePipeTransport.observer.on('close', () => {
                         localPipeTransport.close();
-                        __classPrivateFieldGet(this, _mapRouterPipeTransports).delete(router);
+                        Router.mapRouterPipeTransports.delete(key);
                     });
-                    __classPrivateFieldGet(this, _mapRouterPipeTransports).set(router, [localPipeTransport, remotePipeTransport]);
+                    Router.mapRouterPipeTransports.set(key, [localPipeTransport, remotePipeTransport]);
                 }
                 catch (error) {
                     logger.error('pipeToRouter() | error creating PipeTransport pair:%o', error);
@@ -610,4 +606,9 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
 }
 exports.Router = Router;
-_internal = new WeakMap(), _data = new WeakMap(), _channel = new WeakMap(), _payloadChannel = new WeakMap(), _closed = new WeakMap(), _appData = new WeakMap(), _transports = new WeakMap(), _producers = new WeakMap(), _rtpObservers = new WeakMap(), _dataProducers = new WeakMap(), _mapRouterPipeTransports = new WeakMap(), _pipeToRouterQueue = new WeakMap(), _observer = new WeakMap();
+_internal = new WeakMap(), _data = new WeakMap(), _channel = new WeakMap(), _payloadChannel = new WeakMap(), _closed = new WeakMap(), _appData = new WeakMap(), _transports = new WeakMap(), _producers = new WeakMap(), _rtpObservers = new WeakMap(), _dataProducers = new WeakMap(), _observer = new WeakMap();
+// Map of PipeTransports indexed by a string computed with the ids of both
+// involved Routers.
+Router.mapRouterPipeTransports = new Map();
+// AwaitQueue instance to make pipeToRouter tasks happen sequentially.
+Router.pipeToRouterQueue = new awaitqueue_1.AwaitQueue({ ClosedErrorClass: errors_1.InvalidStateError });
