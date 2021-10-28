@@ -78,7 +78,7 @@ export declare type PipeToRouterResult = {
 };
 export declare class Router extends EnhancedEventEmitter {
     #private;
-    private static readonly mapRouterPipeTransports;
+    private static readonly mapRouterPairPipeTransportPair;
     private static readonly pipeToRouterQueue;
     private static getPipeTransportPairKey;
     /**

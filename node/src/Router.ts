@@ -102,11 +102,16 @@ export type PipeToRouterResult =
 
 const logger = new Logger('Router');
 
+type PipeTransportPair =
+{
+	[key: string]: PipeTransport;
+};
+
 export class Router extends EnhancedEventEmitter
 {
-	// Map of PipeTransports indexed by a string computed with the ids of both
-	// involved Routers.
-	private static readonly mapRouterPipeTransports: Map<string, PipeTransport[]> =
+	// Map of PipeTransport pairs indexed by a string computed with the ids of
+	// both involved Routers.
+	private static readonly mapRouterPairPipeTransportPair: Map<string, PipeTransportPair> =
 		new Map();
 
 	// AwaitQueue instance to make pipeToRouter tasks happen sequentially.
@@ -740,18 +745,18 @@ export class Router extends EnhancedEventEmitter
 		await Router.pipeToRouterQueue.push(async () =>
 		{
 			const key = Router.getPipeTransportPairKey(this, router);
-			let pipeTransportPair = Router.mapRouterPipeTransports.get(key);
+			const pipeTransportPair = Router.mapRouterPairPipeTransportPair.get(key);
 
 			if (pipeTransportPair)
 			{
-				localPipeTransport = pipeTransportPair[0];
-				remotePipeTransport = pipeTransportPair[1];
+				localPipeTransport = pipeTransportPair[this.id];
+				remotePipeTransport = pipeTransportPair[router.id];
 			}
 			else
 			{
 				try
 				{
-					pipeTransportPair = await Promise.all(
+					const pipeTransports = await Promise.all(
 						[
 							this.createPipeTransport(
 								{ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }),
@@ -760,8 +765,8 @@ export class Router extends EnhancedEventEmitter
 								{ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp })
 						]);
 
-					localPipeTransport = pipeTransportPair[0];
-					remotePipeTransport = pipeTransportPair[1];
+					localPipeTransport = pipeTransports[0];
+					remotePipeTransport = pipeTransports[1];
 
 					await Promise.all(
 						[
@@ -783,17 +788,22 @@ export class Router extends EnhancedEventEmitter
 					localPipeTransport.observer.on('close', () =>
 					{
 						remotePipeTransport!.close();
-						Router.mapRouterPipeTransports.delete(key);
+						Router.mapRouterPairPipeTransportPair.delete(key);
 					});
 
 					remotePipeTransport.observer.on('close', () =>
 					{
 						localPipeTransport!.close();
-						Router.mapRouterPipeTransports.delete(key);
+						Router.mapRouterPairPipeTransportPair.delete(key);
 					});
 
-					Router.mapRouterPipeTransports.set(
-						key, [ localPipeTransport, remotePipeTransport ]);
+					Router.mapRouterPairPipeTransportPair.set(
+						key,
+						{
+							[this.id]   : localPipeTransport,
+							[router.id] : remotePipeTransport
+						}
+					);
 				}
 				catch (error)
 				{

@@ -1,6 +1,7 @@
 const { toBeType } = require('jest-tobetype');
 const pickPort = require('pick-port');
 const mediasoup = require('../lib/');
+const { Router } = require('../lib/types');
 const { createWorker } = mediasoup;
 
 expect.extend({ toBeType });
@@ -661,6 +662,20 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 	pipeTransport.close();
 }, 2000);
 
+test('router.createPipeTransport() with fixed port succeeds', async () =>
+{
+	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
+	const pipeTransport = await router1.createPipeTransport(
+		{
+			listenIp : '127.0.0.1',
+			port
+		});
+
+	expect(pipeTransport.tuple.localPort).toEqual(port);
+
+	pipeTransport.close();
+}, 2000);
+
 test('transport.consume() for a pipe Producer succeeds', async () =>
 {
 	videoConsumer = await transport2.consume(
@@ -849,20 +864,20 @@ test('router.pipeToRouter() called twice generates a single PipeTransport pair',
 	const routerB = await worker.createRouter({ mediaCodecs });
 	const transportA1 = await routerA.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] });
 	const transportA2 = await routerA.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] });
-	const audioProducer1 = await transportA1.produce(audioProducerParameters);
-	const audioProducer2 = await transportA2.produce(audioProducerParameters);
+	const audioProducerA1 = await transportA1.produce(audioProducerParameters);
+	const audioProducerA2 = await transportA2.produce(audioProducerParameters);
 	let dump;
 
 	await Promise.all(
 		[
 			routerA.pipeToRouter(
 				{
-					producerId : audioProducer1.id,
+					producerId : audioProducerA1.id,
 					router     : routerB
 				}),
 			routerA.pipeToRouter(
 				{
-					producerId : audioProducer2.id,
+					producerId : audioProducerA2.id,
 					router     : routerB
 				})
 		]);
@@ -870,7 +885,7 @@ test('router.pipeToRouter() called twice generates a single PipeTransport pair',
 	dump = await routerA.dump();
 
 	// There should be 3 Transports in routerA:
-	// - WebRtcTransport for audioProducer1 and audioProducer2.
+	// - WebRtcTransport for audioProducerA1 and audioProducerA2.
 	// - PipeTransport between routerA and routerB.
 	expect(dump.transportIds.length).toBe(3);
 
@@ -879,18 +894,43 @@ test('router.pipeToRouter() called twice generates a single PipeTransport pair',
 	// There should be 1 Transport in routerB:
 	// - PipeTransport between routerA and routerB.
 	expect(dump.transportIds.length).toBe(1);
+
+	routerA.close();
+	routerB.close();
 }, 2000);
 
-test('router.createPipeTransport() with fixed port succeeds', async () =>
+test('router.pipeToRouter() called in two Routers passing one to each other as argument generates a single a single PipeTransport pair', async () =>
 {
-	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
-	const pipeTransport = await router1.createPipeTransport(
-		{
-			listenIp : '127.0.0.1',
-			port
-		});
+	// We must close other Routers so previously generated PipeTransports are
+	// closed and removed from the map.
+	router1.close();
+	router2.close();
 
-	expect(pipeTransport.tuple.localPort).toEqual(port);
+	const routerA = await worker.createRouter({ mediaCodecs });
+	const routerB = await worker.createRouter({ mediaCodecs });
+	const transportA = await routerA.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] });
+	const transportB = await routerB.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] });
+	const audioProducerA = await transportA.produce(audioProducerParameters);
+	const audioProducerB = await transportB.produce(audioProducerParameters);
 
-	pipeTransport.close();
+	await Promise.all(
+		[
+			routerA.pipeToRouter(
+				{
+					producerId : audioProducerA.id,
+					router     : routerB
+				}),
+			routerB.pipeToRouter(
+				{
+					producerId : audioProducerB.id,
+					router     : routerA
+				})
+		]);
+
+	// There should be a single PlainTransport pair in
+	// Router.mapRouterPairPipeTransportPair private map.
+	const key = Router.getPipeTransportPairKey(routerA, routerB);
+
+	expect(Router.mapRouterPairPipeTransportPair.size).toBe(1);
+	expect(Array.from(Router.mapRouterPairPipeTransportPair.keys())[0]).toBe(key);
 }, 2000);
