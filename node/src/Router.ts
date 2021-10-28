@@ -154,7 +154,7 @@ export class Router extends EnhancedEventEmitter
 
 	private static getPipeTransportPairKey(router1: Router, router2: Router): string
 	{
-		return router1.id <= router2.id
+		return router1.id < router2.id
 			? `${router1.id}_${router2.id}`
 			: `${router2.id}_${router1.id}`;
 	}

@@ -65,7 +65,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         __classPrivateFieldSet(this, _appData, appData);
     }
     static getPipeTransportPairKey(router1, router2) {
-        return router1.id <= router2.id
+        return router1.id < router2.id
             ? `${router1.id}_${router2.id}`
             : `${router2.id}_${router1.id}`;
     }
