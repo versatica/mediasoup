@@ -1,6 +1,17 @@
 # Changelog
 
 
+### 3.9.1
+
+* NixOS friendly build process (PR #683).
+* `Worker: emit "died" event before observer "close" (PR #684).
+* Transport: Hide debug message for RTX RTCP-RR packets (PR #688).
+* Update `libuv to 1.42.0.
+* Improve Windows support (PR #692).
+* Avoid build commands when MEDIASOUP_WORKER_BIN is set (PR #695).
+* Update NPM deps.
+
+
 ### 3.9.0
 
 * Replaces GYP build system with fully-functional Meson build system (PR #622).
