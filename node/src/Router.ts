@@ -114,7 +114,7 @@ export class Router extends EnhancedEventEmitter
 	readonly #data:
 	{
 		rtpCapabilities: RtpCapabilities;
-	}
+	};
 
 	// Channel instance.
 	readonly #channel: Channel;
