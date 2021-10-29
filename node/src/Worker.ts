@@ -594,14 +594,14 @@ export class Worker extends EnhancedEventEmitter
 		// Close the PayloadChannel instance.
 		this.#payloadChannel.close();
 
+		this.safeEmit('died', error);
+
 		// Close every Router.
 		for (const router of this.#routers)
 		{
 			router.workerClosed();
 		}
 		this.#routers.clear();
-
-		this.safeEmit('died', error);
 
 		// Emit observer event.
 		this.#observer.safeEmit('close');
