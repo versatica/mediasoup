@@ -99,12 +99,12 @@ export type PipeToRouterResult =
 	pipeDataProducer?: DataProducer;
 }
 
-const logger = new Logger('Router');
-
 type PipeTransportPair =
 {
 	[key: string]: PipeTransport;
 };
+
+const logger = new Logger('Router');
 
 export class Router extends EnhancedEventEmitter
 {
@@ -151,13 +151,6 @@ export class Router extends EnhancedEventEmitter
 
 	// Observer instance.
 	readonly #observer = new EnhancedEventEmitter();
-
-	private static getPipeTransportPairKey(router1: Router, router2: Router): string
-	{
-		return router1.id < router2.id
-			? `${router1.id}_${router2.id}`
-			: `${router2.id}_${router1.id}`;
-	}
 
 	/**
 	 * @private
@@ -242,16 +235,6 @@ export class Router extends EnhancedEventEmitter
 	get observer(): EnhancedEventEmitter
 	{
 		return this.#observer;
-	}
-
-	/**
-	 * @private
-	 * Just for testing purposes.
-	 */
-	get mapRouterPairPipeTransportPairPromiseForTesting():
-		Map<string, Promise<PipeTransportPair>>
-	{
-		return this.#mapRouterPairPipeTransportPairPromise;
 	}
 
 	/**
@@ -739,7 +722,7 @@ export class Router extends EnhancedEventEmitter
 				throw new TypeError('DataProducer not found');
 		}
 
-		const pipeTransportPairKey = Router.getPipeTransportPairKey(this, router);
+		const pipeTransportPairKey = router.id;
 		let pipeTransportPairPromise =
 			this.#mapRouterPairPipeTransportPairPromise.get(pipeTransportPairKey);
 		let pipeTransportPair: PipeTransportPair;
@@ -827,8 +810,7 @@ export class Router extends EnhancedEventEmitter
 			this.#mapRouterPairPipeTransportPairPromise.set(
 				pipeTransportPairKey, pipeTransportPairPromise);
 
-			router.addPipeTransportPairPromise(
-				pipeTransportPairKey, pipeTransportPairPromise);
+			router.addPipeTransport(this.id, pipeTransportPairPromise);
 
 			await pipeTransportPairPromise;
 		}
@@ -950,7 +932,7 @@ export class Router extends EnhancedEventEmitter
 	/**
 	 * @private
 	 */
-	addPipeTransportPairPromise(
+	addPipeTransport(
 		pipeTransportPairKey: string,
 		pipeTransportPairPromise: Promise<PipeTransportPair>
 	): void

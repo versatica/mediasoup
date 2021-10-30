@@ -66,11 +66,6 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         __classPrivateFieldSet(this, _payloadChannel, payloadChannel);
         __classPrivateFieldSet(this, _appData, appData);
     }
-    static getPipeTransportPairKey(router1, router2) {
-        return router1.id < router2.id
-            ? `${router1.id}_${router2.id}`
-            : `${router2.id}_${router1.id}`;
-    }
     /**
      * Router id.
      */
@@ -110,13 +105,6 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     get observer() {
         return __classPrivateFieldGet(this, _observer);
-    }
-    /**
-     * @private
-     * Just for testing purposes.
-     */
-    get mapRouterPairPipeTransportPairPromiseForTesting() {
-        return __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise);
     }
     /**
      * Close the Router.
@@ -414,7 +402,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             if (!dataProducer)
                 throw new TypeError('DataProducer not found');
         }
-        const pipeTransportPairKey = Router.getPipeTransportPairKey(this, router);
+        const pipeTransportPairKey = router.id;
         let pipeTransportPairPromise = __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).get(pipeTransportPairKey);
         let pipeTransportPair;
         let localPipeTransport;
@@ -472,7 +460,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 });
             });
             __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).set(pipeTransportPairKey, pipeTransportPairPromise);
-            router.addPipeTransportPairPromise(pipeTransportPairKey, pipeTransportPairPromise);
+            router.addPipeTransport(this.id, pipeTransportPairPromise);
             await pipeTransportPairPromise;
         }
         if (producer) {
@@ -556,7 +544,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * @private
      */
-    addPipeTransportPairPromise(pipeTransportPairKey, pipeTransportPairPromise) {
+    addPipeTransport(pipeTransportPairKey, pipeTransportPairPromise) {
         if (__classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).has(pipeTransportPairKey)) {
             throw new Error('given pipeTransportPairKey already exists in this Router');
         }

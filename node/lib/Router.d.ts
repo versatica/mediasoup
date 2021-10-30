@@ -81,7 +81,6 @@ declare type PipeTransportPair = {
 };
 export declare class Router extends EnhancedEventEmitter {
     #private;
-    private static getPipeTransportPairKey;
     /**
      * @private
      * @emits workerclose
@@ -123,11 +122,6 @@ export declare class Router extends EnhancedEventEmitter {
      */
     get observer(): EnhancedEventEmitter;
     /**
-     * @private
-     * Just for testing purposes.
-     */
-    get mapRouterPairPipeTransportPairPromiseForTesting(): Map<string, Promise<PipeTransportPair>>;
-    /**
      * Close the Router.
      */
     close(): void;
@@ -168,7 +162,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * @private
      */
-    addPipeTransportPairPromise(pipeTransportPairKey: string, pipeTransportPairPromise: Promise<PipeTransportPair>): void;
+    addPipeTransport(pipeTransportPairKey: string, pipeTransportPairPromise: Promise<PipeTransportPair>): void;
     /**
      * Create an ActiveSpeakerObserver
      */

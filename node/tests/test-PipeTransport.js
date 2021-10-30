@@ -1,7 +1,6 @@
 const { toBeType } = require('jest-tobetype');
 const pickPort = require('pick-port');
 const mediasoup = require('../lib/');
-const { Router } = require('../lib/types');
 const { createWorker } = mediasoup;
 
 expect.extend({ toBeType });
@@ -912,6 +911,28 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 	const transportB = await routerB.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] });
 	const audioProducerA = await transportA.produce(audioProducerParameters);
 	const audioProducerB = await transportB.produce(audioProducerParameters);
+	const pipeTransportsA = new Map();
+	const pipeTransportsB = new Map();
+
+	routerA.observer.on('newtransport', (transport) =>
+	{
+		if (transport.constructor.name !== 'PipeTransport')
+			return;
+
+		pipeTransportsA.set(transport.id, transport);
+
+		transport.observer.on('close', () => pipeTransportsA.delete(transport.id));
+	});
+
+	routerB.observer.on('newtransport', (transport) =>
+	{
+		if (transport.constructor.name !== 'PipeTransport')
+			return;
+
+		pipeTransportsB.set(transport.id, transport);
+
+		transport.observer.on('close', () => pipeTransportsB.delete(transport.id));
+	});
 
 	await Promise.all(
 		[
@@ -927,27 +948,22 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 				})
 		]);
 
-	// There should be a single PlainTransport pair in both Routers and they must
-	// be the same one
+	// There should be a single PipeTransport in each Router and they must be
+	// connected.
 
-	const key = Router.getPipeTransportPairKey(routerA, routerB);
-	const mapA = routerA.mapRouterPairPipeTransportPairPromiseForTesting;
-	const mapB = routerB.mapRouterPairPipeTransportPairPromiseForTesting;
+	expect(pipeTransportsA.size).toBe(1);
+	expect(pipeTransportsB.size).toBe(1);
 
-	expect(mapA.size).toBe(1);
-	expect(Array.from(mapA.keys())[0]).toBe(key);
-	expect(mapB.size).toBe(1);
-	expect(Array.from(mapB.keys())[0]).toBe(key);
+	const pipeTransportA = Array.from(pipeTransportsA.values())[0];
+	const pipeTransportB = Array.from(pipeTransportsB.values())[0];
 
-	const pipeTransportPairA = await Array.from(mapA.values())[0];
-	const pipeTransportPairB = await Array.from(mapB.values())[0];
-
-	expect(pipeTransportPairA).toEqual(pipeTransportPairB);
+	expect(pipeTransportA.tuple.localPort).toBe(pipeTransportB.tuple.remotePort);
+	expect(pipeTransportB.tuple.localPort).toBe(pipeTransportA.tuple.remotePort);
 
 	routerA.close();
 
-	expect(mapA.size).toBe(0);
-	expect(mapB.size).toBe(0);
+	expect(pipeTransportsA.size).toBe(0);
+	expect(pipeTransportsB.size).toBe(0);
 
 	routerB.close();
 }, 2000);
