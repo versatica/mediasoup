@@ -1,6 +1,11 @@
 # Changelog
 
 
+### WIP
+
+* `pipeToRouter()`: Reuse same `PipeTransport` when possible (PR #697).
+
+
 ### 3.9.1
 
 * NixOS friendly build process (PR #683).
