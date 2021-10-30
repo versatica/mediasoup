@@ -144,8 +144,8 @@ export class Router extends EnhancedEventEmitter
 	// DataProducers map.
 	readonly #dataProducers: Map<string, DataProducer> = new Map();
 
-	// Map of PipeTransport pair Promises indexed by a string computed with the
-	// ids of both involved Routers.
+	// Map of PipeTransport pair Promises indexed by the id of the Router in
+	// which pipeToRouter() was called.
 	readonly #mapRouterPairPipeTransportPairPromise:
 		Map<string, Promise<PipeTransportPair>> = new Map();
 

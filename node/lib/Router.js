@@ -54,8 +54,8 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         _rtpObservers.set(this, new Map());
         // DataProducers map.
         _dataProducers.set(this, new Map());
-        // Map of PipeTransport pair Promises indexed by a string computed with the
-        // ids of both involved Routers.
+        // Map of PipeTransport pair Promises indexed by the id of the Router in
+        // which pipeToRouter() was called.
         _mapRouterPairPipeTransportPairPromise.set(this, new Map());
         // Observer instance.
         _observer.set(this, new EnhancedEventEmitter_1.EnhancedEventEmitter());
