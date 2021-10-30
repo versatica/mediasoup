@@ -193,6 +193,9 @@ export class Worker extends EnhancedEventEmitter
 	// Closed flag.
 	#closed = false;
 
+	// Died dlag.
+	#died = false;
+
 	// Custom app data.
 	readonly #appData?: any;
 
@@ -360,7 +363,7 @@ export class Worker extends EnhancedEventEmitter
 					'worker process died unexpectedly [pid:%s, code:%s, signal:%s]',
 					this.#pid, code, signal);
 
-				this.died(
+				this.workerDied(
 					new Error(`[pid:${this.#pid}, code:${code}, signal:${signal}]`));
 			}
 		});
@@ -384,7 +387,7 @@ export class Worker extends EnhancedEventEmitter
 				logger.error(
 					'worker process error [pid:%s]: %s', this.#pid, error.message);
 
-				this.died(error);
+				this.workerDied(error);
 			}
 		});
 
@@ -423,6 +426,14 @@ export class Worker extends EnhancedEventEmitter
 	get closed(): boolean
 	{
 		return this.#closed;
+	}
+
+	/**
+	 * Whether the Worker died.
+	 */
+	get died(): boolean
+	{
+		return this.#died;
 	}
 
 	/**
@@ -579,7 +590,7 @@ export class Worker extends EnhancedEventEmitter
 		return router;
 	}
 
-	private died(error: Error): void
+	private workerDied(error: Error): void
 	{
 		if (this.#closed)
 			return;
@@ -587,6 +598,7 @@ export class Worker extends EnhancedEventEmitter
 		logger.debug(`died() [error:${error}]`);
 
 		this.#closed = true;
+		this.#died = true;
 
 		// Close the Channel instance.
 		this.#channel.close();

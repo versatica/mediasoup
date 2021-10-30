@@ -12,7 +12,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     }
     return privateMap.get(receiver);
 };
-var _child, _pid, _channel, _payloadChannel, _closed, _appData, _routers, _observer;
+var _child, _pid, _channel, _payloadChannel, _closed, _died, _appData, _routers, _observer;
 Object.defineProperty(exports, "__esModule", { value: true });
 const process = require("process");
 const path = require("path");
@@ -53,6 +53,8 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         _payloadChannel.set(this, void 0);
         // Closed flag.
         _closed.set(this, false);
+        // Died dlag.
+        _died.set(this, false);
         // Custom app data.
         _appData.set(this, void 0);
         // Routers set.
@@ -149,7 +151,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             }
             else {
                 logger.error('worker process died unexpectedly [pid:%s, code:%s, signal:%s]', __classPrivateFieldGet(this, _pid), code, signal);
-                this.died(new Error(`[pid:${__classPrivateFieldGet(this, _pid)}, code:${code}, signal:${signal}]`));
+                this.workerDied(new Error(`[pid:${__classPrivateFieldGet(this, _pid)}, code:${code}, signal:${signal}]`));
             }
         });
         __classPrivateFieldGet(this, _child).on('error', (error) => {
@@ -162,7 +164,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             }
             else {
                 logger.error('worker process error [pid:%s]: %s', __classPrivateFieldGet(this, _pid), error.message);
-                this.died(error);
+                this.workerDied(error);
             }
         });
         // Be ready for 3rd party worker libraries logging to stdout.
@@ -191,6 +193,12 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     get closed() {
         return __classPrivateFieldGet(this, _closed);
+    }
+    /**
+     * Whether the Worker died.
+     */
+    get died() {
+        return __classPrivateFieldGet(this, _died);
     }
     /**
      * App custom data.
@@ -297,11 +305,12 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         __classPrivateFieldGet(this, _observer).safeEmit('newrouter', router);
         return router;
     }
-    died(error) {
+    workerDied(error) {
         if (__classPrivateFieldGet(this, _closed))
             return;
         logger.debug(`died() [error:${error}]`);
         __classPrivateFieldSet(this, _closed, true);
+        __classPrivateFieldSet(this, _died, true);
         // Close the Channel instance.
         __classPrivateFieldGet(this, _channel).close();
         // Close the PayloadChannel instance.
@@ -317,4 +326,4 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
 }
 exports.Worker = Worker;
-_child = new WeakMap(), _pid = new WeakMap(), _channel = new WeakMap(), _payloadChannel = new WeakMap(), _closed = new WeakMap(), _appData = new WeakMap(), _routers = new WeakMap(), _observer = new WeakMap();
+_child = new WeakMap(), _pid = new WeakMap(), _channel = new WeakMap(), _payloadChannel = new WeakMap(), _closed = new WeakMap(), _died = new WeakMap(), _appData = new WeakMap(), _routers = new WeakMap(), _observer = new WeakMap();

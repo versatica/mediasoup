@@ -4,6 +4,7 @@
 ### WIP
 
 * `pipeToRouter()`: Reuse same `PipeTransport` when possible (PR #697).
+* Add `worker.died` boolean getter.
 
 
 ### 3.9.1
