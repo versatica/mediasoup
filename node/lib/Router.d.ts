@@ -162,7 +162,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * @private
      */
-    addPipeTransport(pipeTransportPairKey: string, pipeTransportPairPromise: Promise<PipeTransportPair>): void;
+    addPipeTransportPair(pipeTransportPairKey: string, pipeTransportPairPromise: Promise<PipeTransportPair>): void;
     /**
      * Create an ActiveSpeakerObserver
      */

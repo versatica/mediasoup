@@ -460,7 +460,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 });
             });
             __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).set(pipeTransportPairKey, pipeTransportPairPromise);
-            router.addPipeTransport(this.id, pipeTransportPairPromise);
+            router.addPipeTransportPair(this.id, pipeTransportPairPromise);
             await pipeTransportPairPromise;
         }
         if (producer) {
@@ -544,7 +544,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * @private
      */
-    addPipeTransport(pipeTransportPairKey, pipeTransportPairPromise) {
+    addPipeTransportPair(pipeTransportPairKey, pipeTransportPairPromise) {
         if (__classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).has(pipeTransportPairKey)) {
             throw new Error('given pipeTransportPairKey already exists in this Router');
         }
