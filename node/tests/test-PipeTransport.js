@@ -927,10 +927,27 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 				})
 		]);
 
-	// There should be a single PlainTransport pair in
-	// Router.mapRouterPairPipeTransportPair private map.
-	const key = Router.getPipeTransportPairKey(routerA, routerB);
+	// There should be a single PlainTransport pair in both Routers and they must
+	// be the same one
 
-	expect(Router.mapRouterPairPipeTransportPair.size).toBe(1);
-	expect(Array.from(Router.mapRouterPairPipeTransportPair.keys())[0]).toBe(key);
+	const key = Router.getPipeTransportPairKey(routerA, routerB);
+	const mapA = routerA.mapRouterPairPipeTransportPairPromiseForTesting;
+	const mapB = routerB.mapRouterPairPipeTransportPairPromiseForTesting;
+
+	expect(mapA.size).toBe(1);
+	expect(Array.from(mapA.keys())[0]).toBe(key);
+	expect(mapB.size).toBe(1);
+	expect(Array.from(mapB.keys())[0]).toBe(key);
+
+	const pipeTransportPairA = await Array.from(mapA.values())[0];
+	const pipeTransportPairB = await Array.from(mapB.values())[0];
+
+	expect(pipeTransportPairA).toEqual(pipeTransportPairB);
+
+	routerA.close();
+
+	expect(mapA.size).toBe(0);
+	expect(mapB.size).toBe(0);
+
+	routerB.close();
 }, 2000);

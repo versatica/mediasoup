@@ -12,10 +12,9 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     }
     return privateMap.get(receiver);
 };
-var _internal, _data, _channel, _payloadChannel, _closed, _appData, _transports, _producers, _rtpObservers, _dataProducers, _observer;
+var _internal, _data, _channel, _payloadChannel, _closed, _appData, _transports, _producers, _rtpObservers, _dataProducers, _mapRouterPairPipeTransportPairPromise, _observer;
 Object.defineProperty(exports, "__esModule", { value: true });
 const uuid_1 = require("uuid");
-const awaitqueue_1 = require("awaitqueue");
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const ortc = require("./ortc");
@@ -55,6 +54,9 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         _rtpObservers.set(this, new Map());
         // DataProducers map.
         _dataProducers.set(this, new Map());
+        // Map of PipeTransport pair Promises indexed by a string computed with the
+        // ids of both involved Routers.
+        _mapRouterPairPipeTransportPairPromise.set(this, new Map());
         // Observer instance.
         _observer.set(this, new EnhancedEventEmitter_1.EnhancedEventEmitter());
         logger.debug('constructor()');
@@ -108,6 +110,13 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     get observer() {
         return __classPrivateFieldGet(this, _observer);
+    }
+    /**
+     * @private
+     * Just for testing purposes.
+     */
+    get mapRouterPairPipeTransportPairPromiseForTesting() {
+        return __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise);
     }
     /**
      * Close the Router.
@@ -384,6 +393,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Pipes the given Producer or DataProducer into another Router in same host.
      */
     async pipeToRouter({ producerId, dataProducerId, router, listenIp = '127.0.0.1', enableSctp = true, numSctpStreams = { OS: 1024, MIS: 1024 }, enableRtx = false, enableSrtp = false }) {
+        logger.debug('pipeToRouter()');
         if (!producerId && !dataProducerId)
             throw new TypeError('missing producerId or dataProducerId');
         else if (producerId && dataProducerId)
@@ -404,30 +414,28 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             if (!dataProducer)
                 throw new TypeError('DataProducer not found');
         }
-        // Here we may have to create a new PipeTransport pair to connect source and
-        // destination Routers. We just want to keep a PipeTransport pair for each
-        // pair of Routers. Since this operation is async, it may happen that two
-        // simultaneous calls to router1.pipeToRouter({ producerId: xxx, router: router2 })
-        // would end up generating two pairs of PipeTranports. To prevent that, let's
-        // use an async queue.
+        const pipeTransportPairKey = Router.getPipeTransportPairKey(this, router);
+        let pipeTransportPairPromise = __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).get(pipeTransportPairKey);
+        let pipeTransportPair;
         let localPipeTransport;
         let remotePipeTransport;
-        await Router.pipeToRouterQueue.push(async () => {
-            const key = Router.getPipeTransportPairKey(this, router);
-            const pipeTransportPair = Router.mapRouterPairPipeTransportPair.get(key);
-            if (pipeTransportPair) {
-                localPipeTransport = pipeTransportPair[this.id];
-                remotePipeTransport = pipeTransportPair[router.id];
-            }
-            else {
-                try {
-                    const pipeTransports = await Promise.all([
-                        this.createPipeTransport({ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }),
-                        router.createPipeTransport({ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp })
-                    ]);
+        if (pipeTransportPairPromise) {
+            pipeTransportPair = await pipeTransportPairPromise;
+            localPipeTransport = pipeTransportPair[this.id];
+            remotePipeTransport = pipeTransportPair[router.id];
+        }
+        else {
+            pipeTransportPairPromise = new Promise((resolve, reject) => {
+                Promise.all([
+                    this.createPipeTransport({ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }),
+                    router.createPipeTransport({ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp })
+                ])
+                    .then((pipeTransports) => {
                     localPipeTransport = pipeTransports[0];
                     remotePipeTransport = pipeTransports[1];
-                    await Promise.all([
+                })
+                    .then(() => {
+                    return Promise.all([
                         localPipeTransport.connect({
                             ip: remotePipeTransport.tuple.localIp,
                             port: remotePipeTransport.tuple.localPort,
@@ -439,29 +447,34 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                             srtpParameters: localPipeTransport.srtpParameters
                         })
                     ]);
+                })
+                    .then(() => {
                     localPipeTransport.observer.on('close', () => {
                         remotePipeTransport.close();
-                        Router.mapRouterPairPipeTransportPair.delete(key);
+                        __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).delete(pipeTransportPairKey);
                     });
                     remotePipeTransport.observer.on('close', () => {
                         localPipeTransport.close();
-                        Router.mapRouterPairPipeTransportPair.delete(key);
+                        __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).delete(pipeTransportPairKey);
                     });
-                    Router.mapRouterPairPipeTransportPair.set(key, {
+                    resolve({
                         [this.id]: localPipeTransport,
                         [router.id]: remotePipeTransport
                     });
-                }
-                catch (error) {
+                })
+                    .catch((error) => {
                     logger.error('pipeToRouter() | error creating PipeTransport pair:%o', error);
                     if (localPipeTransport)
                         localPipeTransport.close();
                     if (remotePipeTransport)
                         remotePipeTransport.close();
-                    throw error;
-                }
-            }
-        });
+                    reject(error);
+                });
+            });
+            __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).set(pipeTransportPairKey, pipeTransportPairPromise);
+            router.addPipeTransportPairPromise(pipeTransportPairKey, pipeTransportPairPromise);
+            await pipeTransportPairPromise;
+        }
         if (producer) {
             let pipeConsumer;
             let pipeProducer;
@@ -541,6 +554,27 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         }
     }
     /**
+     * @private
+     */
+    addPipeTransportPairPromise(pipeTransportPairKey, pipeTransportPairPromise) {
+        if (__classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).has(pipeTransportPairKey)) {
+            throw new Error('given pipeTransportPairKey already exists in this Router');
+        }
+        __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).set(pipeTransportPairKey, pipeTransportPairPromise);
+        pipeTransportPairPromise
+            .then((pipeTransportPair) => {
+            const localPipeTransport = pipeTransportPair[this.id];
+            // NOTE: No need to do any other cleanup here since that is done by the
+            // Router calling this method on us.
+            localPipeTransport.observer.on('close', () => {
+                __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).delete(pipeTransportPairKey);
+            });
+        })
+            .catch(() => {
+            __classPrivateFieldGet(this, _mapRouterPairPipeTransportPairPromise).delete(pipeTransportPairKey);
+        });
+    }
+    /**
      * Create an ActiveSpeakerObserver
      */
     async createActiveSpeakerObserver({ interval = 300, appData = {} } = {}) {
@@ -609,9 +643,4 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
 }
 exports.Router = Router;
-_internal = new WeakMap(), _data = new WeakMap(), _channel = new WeakMap(), _payloadChannel = new WeakMap(), _closed = new WeakMap(), _appData = new WeakMap(), _transports = new WeakMap(), _producers = new WeakMap(), _rtpObservers = new WeakMap(), _dataProducers = new WeakMap(), _observer = new WeakMap();
-// Map of PipeTransport pairs indexed by a string computed with the ids of
-// both involved Routers.
-Router.mapRouterPairPipeTransportPair = new Map();
-// AwaitQueue instance to make pipeToRouter tasks happen sequentially.
-Router.pipeToRouterQueue = new awaitqueue_1.AwaitQueue({ ClosedErrorClass: errors_1.InvalidStateError });
+_internal = new WeakMap(), _data = new WeakMap(), _channel = new WeakMap(), _payloadChannel = new WeakMap(), _closed = new WeakMap(), _appData = new WeakMap(), _transports = new WeakMap(), _producers = new WeakMap(), _rtpObservers = new WeakMap(), _dataProducers = new WeakMap(), _mapRouterPairPipeTransportPairPromise = new WeakMap(), _observer = new WeakMap();

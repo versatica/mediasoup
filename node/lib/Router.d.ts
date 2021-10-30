@@ -76,10 +76,11 @@ export declare type PipeToRouterResult = {
      */
     pipeDataProducer?: DataProducer;
 };
+declare type PipeTransportPair = {
+    [key: string]: PipeTransport;
+};
 export declare class Router extends EnhancedEventEmitter {
     #private;
-    private static readonly mapRouterPairPipeTransportPair;
-    private static readonly pipeToRouterQueue;
     private static getPipeTransportPairKey;
     /**
      * @private
@@ -122,6 +123,11 @@ export declare class Router extends EnhancedEventEmitter {
      */
     get observer(): EnhancedEventEmitter;
     /**
+     * @private
+     * Just for testing purposes.
+     */
+    get mapRouterPairPipeTransportPairPromiseForTesting(): Map<string, Promise<PipeTransportPair>>;
+    /**
      * Close the Router.
      */
     close(): void;
@@ -160,6 +166,10 @@ export declare class Router extends EnhancedEventEmitter {
      */
     pipeToRouter({ producerId, dataProducerId, router, listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }: PipeToRouterOptions): Promise<PipeToRouterResult>;
     /**
+     * @private
+     */
+    addPipeTransportPairPromise(pipeTransportPairKey: string, pipeTransportPairPromise: Promise<PipeTransportPair>): void;
+    /**
      * Create an ActiveSpeakerObserver
      */
     createActiveSpeakerObserver({ interval, appData }?: ActiveSpeakerObserverOptions): Promise<ActiveSpeakerObserver>;
@@ -175,4 +185,5 @@ export declare class Router extends EnhancedEventEmitter {
         rtpCapabilities: RtpCapabilities;
     }): boolean;
 }
+export {};
 //# sourceMappingURL=Router.d.ts.map
