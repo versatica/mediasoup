@@ -810,7 +810,7 @@ export class Router extends EnhancedEventEmitter
 			this.#mapRouterPairPipeTransportPairPromise.set(
 				pipeTransportPairKey, pipeTransportPairPromise);
 
-			router.addPipeTransport(this.id, pipeTransportPairPromise);
+			router.addPipeTransportPair(this.id, pipeTransportPairPromise);
 
 			await pipeTransportPairPromise;
 		}
@@ -932,7 +932,7 @@ export class Router extends EnhancedEventEmitter
 	/**
 	 * @private
 	 */
-	addPipeTransport(
+	addPipeTransportPair(
 		pipeTransportPairKey: string,
 		pipeTransportPairPromise: Promise<PipeTransportPair>
 	): void
