@@ -76,6 +76,9 @@ export declare type PipeToRouterResult = {
      */
     pipeDataProducer?: DataProducer;
 };
+declare type PipeTransportPair = {
+    [key: string]: PipeTransport;
+};
 export declare class Router extends EnhancedEventEmitter {
     #private;
     /**
@@ -157,6 +160,10 @@ export declare class Router extends EnhancedEventEmitter {
      */
     pipeToRouter({ producerId, dataProducerId, router, listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }: PipeToRouterOptions): Promise<PipeToRouterResult>;
     /**
+     * @private
+     */
+    addPipeTransportPair(pipeTransportPairKey: string, pipeTransportPairPromise: Promise<PipeTransportPair>): void;
+    /**
      * Create an ActiveSpeakerObserver
      */
     createActiveSpeakerObserver({ interval, appData }?: ActiveSpeakerObserverOptions): Promise<ActiveSpeakerObserver>;
@@ -172,4 +179,5 @@ export declare class Router extends EnhancedEventEmitter {
         rtpCapabilities: RtpCapabilities;
     }): boolean;
 }
+export {};
 //# sourceMappingURL=Router.d.ts.map
