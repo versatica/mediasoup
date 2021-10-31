@@ -110,14 +110,11 @@ impl Inner {
                         rtp_observer_id: self.id,
                     },
                 };
-                let router = self.router.clone();
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("active speaker observer closing failed on drop: {}", error);
                         }
-
-                        drop(router);
                     })
                     .detach();
             }
