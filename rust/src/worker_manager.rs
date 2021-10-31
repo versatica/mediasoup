@@ -3,14 +3,18 @@
 #[cfg(test)]
 mod tests;
 
-use crate::worker::{Worker, WorkerSettings};
+use crate::worker::{Worker, WorkerId, WorkerSettings};
 use async_executor::Executor;
 use async_oneshot::Sender;
 use event_listener_primitives::{Bag, HandlerId};
 use futures_lite::future;
 use log::debug;
+use parking_lot::Mutex;
+use std::collections::HashMap;
+use std::ops::DerefMut;
+use std::sync::mpsc;
 use std::sync::Arc;
-use std::{fmt, io};
+use std::{fmt, io, mem};
 
 #[derive(Default)]
 struct Handlers {
@@ -20,10 +24,22 @@ struct Handlers {
 struct Inner {
     executor: Arc<Executor<'static>>,
     handlers: Handlers,
+    /// Mapping from worker ID to the close event receiver
+    workers: Arc<Mutex<HashMap<WorkerId, mpsc::Receiver<()>>>>,
     /// This field is only used in order to be dropped with the worker manager itself to stop the
     /// thread created with `WorkerManager::new()` call
     _stop_sender: Option<Sender<()>>,
 }
+
+impl Drop for Inner {
+    fn drop(&mut self) {
+        let workers = mem::take(self.workers.lock().deref_mut());
+        for exit_receiver in workers.into_values() {
+            let _ = exit_receiver.recv();
+        }
+    }
+}
+
 /// Container that creates [`Worker`] instances.
 ///
 /// # Examples
@@ -83,6 +99,7 @@ impl WorkerManager {
         let inner = Arc::new(Inner {
             executor,
             handlers,
+            workers: Arc::default(),
             _stop_sender: Some(stop_sender),
         });
 
@@ -96,6 +113,7 @@ impl WorkerManager {
         let inner = Arc::new(Inner {
             executor,
             handlers,
+            workers: Arc::default(),
             _stop_sender: None,
         });
 
@@ -108,15 +126,32 @@ impl WorkerManager {
     pub async fn create_worker(&self, worker_settings: WorkerSettings) -> io::Result<Worker> {
         debug!("create_worker()");
 
+        let (exit_sender, exit_receiver) = mpsc::channel();
+        let id = Arc::new(Mutex::new(None));
         let worker = Worker::new(
             Arc::clone(&self.inner.executor),
             worker_settings,
             self.clone(),
+            {
+                let id = Arc::clone(&id);
+                let workers = Arc::clone(&self.inner.workers);
+
+                move || {
+                    let _ = exit_sender.send(());
+                    let id = id.lock().take().unwrap();
+                    workers.lock().remove(&id);
+                }
+            },
         )
         .await?;
+
         self.inner.handlers.new_worker.call(|callback| {
             callback(&worker);
         });
+
+        id.lock().replace(worker.id());
+
+        self.inner.workers.lock().insert(worker.id(), exit_receiver);
 
         Ok(worker)
     }
