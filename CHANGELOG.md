@@ -5,6 +5,7 @@
 
 * `pipeToRouter()`: Reuse same `PipeTransport` when possible (PR #697).
 * Add `worker.died` boolean getter.
+* Update TypeScript version to 4.X.X and use `target: "esnext"` so transpilation of ECMAScript private fields (`#xxxxx`) don't use `WeakMaps` tricks but use standard syntax instead.
 
 
 ### 3.9.1

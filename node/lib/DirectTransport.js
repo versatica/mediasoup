@@ -1,18 +1,13 @@
 "use strict";
-var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to set private field on non-instance");
-    }
-    privateMap.set(receiver, value);
-    return value;
-};
-var _data;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DirectTransport = void 0;
 const Logger_1 = require("./Logger");
 const errors_1 = require("./errors");
 const Transport_1 = require("./Transport");
 const logger = new Logger_1.Logger('DirectTransport');
 class DirectTransport extends Transport_1.Transport {
+    // DirectTransport data.
+    #data;
     /**
      * @private
      * @emits rtcp - (packet: Buffer)
@@ -20,12 +15,11 @@ class DirectTransport extends Transport_1.Transport {
      */
     constructor(params) {
         super(params);
-        // DirectTransport data.
-        _data.set(this, void 0);
         logger.debug('constructor()');
-        __classPrivateFieldSet(this, _data, {
-        // Nothing for now.
-        });
+        this.#data =
+            {
+            // Nothing for now.
+            };
         this.handleWorkerNotifications();
     }
     /**
@@ -135,4 +129,3 @@ class DirectTransport extends Transport_1.Transport {
     }
 }
 exports.DirectTransport = DirectTransport;
-_data = new WeakMap();
