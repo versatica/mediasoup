@@ -60,7 +60,7 @@ namespace RTC
 
 			Utils::Byte::Set4Bytes(buffer, 4, compact);
 
-			return sizeof(Header);
+			return HeaderSize;
 		}
 
 		template<typename T>

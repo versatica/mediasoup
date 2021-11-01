@@ -29,6 +29,45 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 rtcp_feedback: vec![RtcpFeedback::TransportCc],
             },
             RtpCodecCapability::Audio {
+                mime_type: MimeTypeAudio::MultiChannelOpus,
+                preferred_payload_type: None,
+                clock_rate: NonZeroU32::new(48000).unwrap(),
+                channels: NonZeroU8::new(4).unwrap(),
+                // Quad channel
+                parameters: RtpCodecParametersParameters::from([
+                    ("channel_mapping", "0,1,2,3".into()),
+                    ("num_streams", 2_u32.into()),
+                    ("coupled_streams", 2_u32.into()),
+                ]),
+                rtcp_feedback: vec![RtcpFeedback::TransportCc],
+            },
+            RtpCodecCapability::Audio {
+                mime_type: MimeTypeAudio::MultiChannelOpus,
+                preferred_payload_type: None,
+                clock_rate: NonZeroU32::new(48000).unwrap(),
+                channels: NonZeroU8::new(6).unwrap(),
+                // 5.1
+                parameters: RtpCodecParametersParameters::from([
+                    ("channel_mapping", "0,4,1,2,3,5".into()),
+                    ("num_streams", 4_u32.into()),
+                    ("coupled_streams", 2_u32.into()),
+                ]),
+                rtcp_feedback: vec![RtcpFeedback::TransportCc],
+            },
+            RtpCodecCapability::Audio {
+                mime_type: MimeTypeAudio::MultiChannelOpus,
+                preferred_payload_type: None,
+                clock_rate: NonZeroU32::new(48000).unwrap(),
+                channels: NonZeroU8::new(8).unwrap(),
+                // 7.1
+                parameters: RtpCodecParametersParameters::from([
+                    ("channel_mapping", "0,6,1,2,3,4,5,7".into()),
+                    ("num_streams", 5_u32.into()),
+                    ("coupled_streams", 3_u32.into()),
+                ]),
+                rtcp_feedback: vec![RtcpFeedback::TransportCc],
+            },
+            RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::Pcmu,
                 preferred_payload_type: Some(0),
                 clock_rate: NonZeroU32::new(8000).unwrap(),

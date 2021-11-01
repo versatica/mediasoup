@@ -31,6 +31,7 @@ namespace RTC
 	};
 	// clang-format on
 
+	static constexpr size_t ProbationPacketHeaderSize{ 32 };
 	static constexpr size_t MaxProbationPacketSize{ 1400u };
 	static const std::string MidValue{ "probator" }; // 8 bytes, same as RTC::MidMaxLength.
 
@@ -44,7 +45,7 @@ namespace RTC
 		this->probationPacketBuffer = new uint8_t[MaxProbationPacketSize];
 
 		// Copy the generic probation RTP packet header into the buffer.
-		std::memcpy(this->probationPacketBuffer, ProbationPacketHeader, sizeof(ProbationPacketHeader));
+		std::memcpy(this->probationPacketBuffer, ProbationPacketHeader, ProbationPacketHeaderSize);
 
 		// Create the probation RTP packet.
 		this->probationPacket =
@@ -139,8 +140,8 @@ namespace RTC
 		// Make the packet length fit into our available limits.
 		if (size > MaxProbationPacketSize)
 			size = MaxProbationPacketSize;
-		else if (size < sizeof(ProbationPacketHeader))
-			size = sizeof(ProbationPacketHeader);
+		else if (size < ProbationPacketHeaderSize)
+			size = ProbationPacketHeaderSize;
 
 		// Just send up to StepNumPackets per step.
 		// Increase RTP seq number and timestamp.
@@ -154,7 +155,7 @@ namespace RTC
 		this->probationPacket->SetTimestamp(timestamp);
 
 		// Set probation packet payload size.
-		this->probationPacket->SetPayloadLength(size - sizeof(ProbationPacketHeader));
+		this->probationPacket->SetPayloadLength(size - ProbationPacketHeaderSize);
 
 		return this->probationPacket;
 	}

@@ -1,0 +1,6 @@
+[wrap-file]
+directory = wingetopt-0.95
+source_url = https://github.com/alex85k/wingetopt/archive/v0.95.zip
+source_filename = wingetopt-0.95.zip
+source_hash = 7b535dd753b93446539504a76cd561282e9a8a9969fe06e0d8691fc3048987c5
+patch_directory = wingetopt

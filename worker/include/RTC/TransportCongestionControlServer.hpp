@@ -8,6 +8,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "handles/Timer.hpp"
 #include <libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h>
+#include <deque>
 
 namespace RTC
 {
@@ -50,12 +51,14 @@ namespace RTC
 					return 0u;
 			}
 		}
+		double GetPacketLoss() const;
 		void IncomingPacket(uint64_t nowMs, const RTC::RtpPacket* packet);
 		void SetMaxIncomingBitrate(uint32_t bitrate);
 
 	private:
 		void SendTransportCcFeedback();
 		void MaySendLimitationRembFeedback();
+		void UpdatePacketLoss(double packetLoss);
 
 		/* Pure virtual methods inherited from webrtc::RemoteBitrateEstimator::Listener. */
 	public:
@@ -84,6 +87,8 @@ namespace RTC
 		uint32_t maxIncomingBitrate{ 0u };
 		uint64_t limitationRembSentAtMs{ 0u };
 		uint8_t unlimitedRembCounter{ 0u };
+		std::deque<double> packetLossHistory;
+		double packetLoss{ 0 };
 	};
 } // namespace RTC
 

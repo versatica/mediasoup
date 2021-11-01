@@ -34,10 +34,6 @@ namespace PayloadChannel
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		// Allocated by this.
-		uint8_t* readBuffer{ nullptr };
-		// Others.
-		size_t msgStart{ 0u }; // Where the latest message starts.
 	};
 
 	class ProducerSocket : public ::UnixStreamSocket
@@ -84,7 +80,7 @@ namespace PayloadChannel
 		void Send(json& jsonMessage);
 
 	private:
-		void SendImpl(const void* nsPayload, size_t nsPayloadLen);
+		void SendImpl(const void* payload, uint32_t payloadLen);
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:

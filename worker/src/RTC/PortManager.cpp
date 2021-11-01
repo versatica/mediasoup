@@ -429,7 +429,7 @@ namespace RTC
 					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
 
 					MS_THROW_ERROR(
-					  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ": %s",
+					  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
 					  transportStr.c_str(),
 					  ip.c_str(),
 					  port,

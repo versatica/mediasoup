@@ -1,8 +1,21 @@
 # Changelog
 
 
-### 3.8.4 (WIP)
+### 3.9.0
 
+* Replaces GYP build system with fully-functional Meson build system (PR #622).
+* Worker communication optimization (aka removing netstring dependency) (PR #644).
+* Move TypeScript and compiled JavaScript code to a new `node` folder.
+* Use ES6 private fields.
+* Require Node.js version >= 12.
+
+
+### 3.8.4
+
+* OPUS multi-channel (Surround sound) support (PR #647).
+* Add `packetLoss` stats to transport (PR #648 by @ggarber).
+* Fixes for active speaker observer (PR #655 by @ggarber).
+* Fix big endian issues (PR #639).
 * Update NPM deps.
 
 

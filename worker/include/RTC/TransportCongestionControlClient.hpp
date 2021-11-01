@@ -13,6 +13,7 @@
 #include <libwebrtc/api/transport/network_types.h>
 #include <libwebrtc/call/rtp_transport_controller_send.h>
 #include <libwebrtc/modules/pacing/packet_router.h>
+#include <deque>
 
 namespace RTC
 {
@@ -76,10 +77,12 @@ namespace RTC
 			return this->bitrates;
 		}
 		uint32_t GetAvailableBitrate() const;
+		double GetPacketLoss() const;
 		void RescheduleNextAvailableBitrateEvent();
 
 	private:
 		void MayEmitAvailableBitrateEvent(uint32_t previousAvailableBitrate);
+		void UpdatePacketLoss(double packetLoss);
 
 		// jmillan: missing.
 		// void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;
@@ -113,6 +116,8 @@ namespace RTC
 		bool availableBitrateEventCalled{ false };
 		uint64_t lastAvailableBitrateEventAtMs{ 0u };
 		RTC::TrendCalculator desiredBitrateTrend;
+		std::deque<double> packetLossHistory;
+		double packetLoss{ 0 };
 	};
 } // namespace RTC
 

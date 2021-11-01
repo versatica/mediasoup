@@ -9,32 +9,10 @@ const isWindows = os.platform() === 'win32';
 const task = process.argv.slice(2).join(' ');
 
 // mediasoup mayor version.
-const MAYOR_VERSION = 3;
+const MAYOR_VERSION = version.split('.')[0];
 
-// Just for Windows.
-let PYTHON;
-let MSBUILD;
-let MEDIASOUP_BUILDTYPE;
-let MEDIASOUP_TEST_TAGS;
-
-if (isWindows)
-{
-	PYTHON = process.env.PYTHON || 'python';
-	MSBUILD = process.env.MSBUILD || 'MSBuild';
-	MEDIASOUP_BUILDTYPE = process.env.MEDIASOUP_BUILDTYPE || 'Release';
-	MEDIASOUP_TEST_TAGS = process.env.MEDIASOUP_TEST_TAGS || '';
-}
-
-let MAKE;
-
-if (isFreeBSD)
-{
-	MAKE = process.env.MAKE || 'gmake';
-}
-else
-{
-	MAKE = process.env.MAKE || 'make';
-}
+// make command to use.
+const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 
 // eslint-disable-next-line no-console
 console.log(`npm-scripts.js [INFO] running task "${task}"`);
@@ -45,14 +23,14 @@ switch (task)
 	{
 		if (!isWindows)
 		{
-			execute('rm -rf lib');
+			execute('rm -rf node/lib');
 		}
 		else
 		{
-			execute('rmdir /s /q lib');
+			execute('rmdir /s /q node/lib');
 		}
 
-		execute('tsc');
+		execute('tsc --project node');
 		taskReplaceVersion();
 
 		break;
@@ -64,25 +42,35 @@ switch (task)
 
 		if (!isWindows)
 		{
-			execute('rm -rf lib');
+			execute('rm -rf node/lib');
 		}
 		else
 		{
-			execute('rmdir /s /q lib');
+			execute('rmdir /s /q node/lib');
 		}
 
 		const watch = new TscWatchClient();
 
 		watch.on('success', taskReplaceVersion);
-		watch.start('--pretty');
+		watch.start('--project', 'node', '--pretty');
+
+		break;
+	}
+
+	case 'worker:build':
+	{
+		if (!process.env.MEDIASOUP_WORKER_BIN)
+		{
+			execute(`${MAKE} -C worker`);
+		}
 
 		break;
 	}
 
 	case 'lint:node':
 	{
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c .eslintrc.js --max-warnings 0 --ext=ts src/');
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c .eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!.eslintrc.js\' .eslintrc.js npm-scripts.js test/ worker/scripts/gulpfile.js');
+		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c node/.eslintrc.js --max-warnings 0 --ext=ts node/src/');
+		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c node/.eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!node/.eslintrc.js\' node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
 
 		break;
 	}
@@ -119,17 +107,7 @@ switch (task)
 
 	case 'test:worker':
 	{
-		if (!isWindows)
-		{
-			execute(`${MAKE} test -C worker`);
-		}
-		else if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			execute(`${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker-test`);
-			execute(`${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`);
-			execute(`cd worker && .\\out\\${MEDIASOUP_BUILDTYPE}\\mediasoup-worker-test.exe --invisibles --use-colour=yes ${MEDIASOUP_TEST_TAGS}`);
-		}
-
+		execute(`${MAKE} test -C worker`);
 		break;
 	}
 
@@ -144,18 +122,9 @@ switch (task)
 
 	case 'postinstall':
 	{
-		if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			if (!isWindows)
-			{
-				execute(`${MAKE} -C worker`);
-			}
-			else
-			{
-				execute(`${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker`);
-				execute(`${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`);
-			}
-		}
+		execute('node npm-scripts.js worker:build');
+		execute(`${MAKE} clean-pip -C worker`);
+		execute(`${MAKE} clean-subprojects -C worker`);
 
 		break;
 	}
@@ -188,7 +157,12 @@ switch (task)
 
 function taskReplaceVersion()
 {
-	const files = [ 'lib/index.js', 'lib/index.d.ts', 'lib/Worker.js' ];
+	const files =
+	[
+		'node/lib/index.js',
+		'node/lib/index.d.ts',
+		'node/lib/Worker.js'
+	];
 
 	for (const file of files)
 	{
@@ -206,7 +180,19 @@ function execute(command)
 
 	try
 	{
-		execSync(command,	{ stdio: [ 'ignore', process.stdout, process.stderr ] });
+		// Set MSVC compiler as default on Windows
+		const env = isWindows ? {
+			CC  : process.env.CC || 'cl',
+			CXX : process.env.CXX || 'cl',
+			...process.env
+		} : process.env;
+
+		execSync(
+			command,
+			{
+				env   : env,
+				stdio : [ 'ignore', process.stdout, process.stderr ]
+			});
 	}
 	catch (error)
 	{

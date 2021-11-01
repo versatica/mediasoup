@@ -12,6 +12,7 @@ mod room {
     use crate::participant::ParticipantId;
     use event_listener_primitives::{Bag, BagOnce, HandlerId};
     use mediasoup::prelude::*;
+    use mediasoup::worker::{WorkerLogLevel, WorkerLogTag};
     use parking_lot::Mutex;
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
@@ -85,7 +86,27 @@ mod room {
             id: RoomId,
         ) -> Result<Room, String> {
             let worker = worker_manager
-                .create_worker(WorkerSettings::default())
+                .create_worker({
+                    let mut settings = WorkerSettings::default();
+                    settings.log_level = WorkerLogLevel::Debug;
+                    settings.log_tags = vec![
+                        WorkerLogTag::Info,
+                        WorkerLogTag::Ice,
+                        WorkerLogTag::Dtls,
+                        WorkerLogTag::Rtp,
+                        WorkerLogTag::Srtp,
+                        WorkerLogTag::Rtcp,
+                        WorkerLogTag::Rtx,
+                        WorkerLogTag::Bwe,
+                        WorkerLogTag::Score,
+                        WorkerLogTag::Simulcast,
+                        WorkerLogTag::Svc,
+                        WorkerLogTag::Sctp,
+                        WorkerLogTag::Message,
+                    ];
+
+                    settings
+                })
                 .await
                 .map_err(|error| format!("Failed to create worker: {}", error))?;
             let router = worker

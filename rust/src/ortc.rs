@@ -1,9 +1,9 @@
 use crate::rtp_parameters::{
-    MediaKind, MimeType, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCapabilities,
-    RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized, RtpCodecParameters,
-    RtpCodecParametersParameters, RtpCodecParametersParametersValue, RtpEncodingParameters,
-    RtpEncodingParametersRtx, RtpHeaderExtensionDirection, RtpHeaderExtensionParameters,
-    RtpHeaderExtensionUri, RtpParameters,
+    MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
+    RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized,
+    RtpCodecParameters, RtpCodecParametersParameters, RtpCodecParametersParametersValue,
+    RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtensionDirection,
+    RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
 };
 use crate::scalability_modes::ScalabilityMode;
 use crate::supported_rtp_capabilities;
@@ -984,6 +984,21 @@ fn match_codecs(
     }
     // Per codec special checks.
     match codec_a.mime_type {
+        MimeType::Audio(MimeTypeAudio::MultiChannelOpus) => {
+            let num_streams_a = codec_a.parameters.get("num_streams");
+            let num_streams_b = codec_b.parameters.get("num_streams");
+
+            if num_streams_a != num_streams_b {
+                return Err(());
+            }
+
+            let coupled_streams_a = codec_a.parameters.get("coupled_streams");
+            let coupled_streams_b = codec_b.parameters.get("coupled_streams");
+
+            if coupled_streams_a != coupled_streams_b {
+                return Err(());
+            }
+        }
         MimeType::Video(MimeTypeVideo::H264) => {
             let packetization_mode_a = codec_a
                 .parameters
@@ -1054,7 +1069,6 @@ fn match_codecs(
                 };
             }
         }
-
         MimeType::Video(MimeTypeVideo::Vp9) => {
             // If strict matching check profile-id.
             if strict {

@@ -214,6 +214,9 @@ pub enum MimeTypeAudio {
     /// Opus
     #[serde(rename = "audio/opus")]
     Opus,
+    /// Multi-channel Opus (Surround sound in Chromium)
+    #[serde(rename = "audio/multiopus")]
+    MultiChannelOpus,
     /// PCMU
     #[serde(rename = "audio/PCMU")]
     Pcmu,

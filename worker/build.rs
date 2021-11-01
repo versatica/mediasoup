@@ -7,11 +7,6 @@ fn main() {
         return;
     }
 
-    let current_dir = std::env::current_dir()
-        .unwrap()
-        .into_os_string()
-        .into_string()
-        .unwrap();
     let out_dir = env::var("OUT_DIR").unwrap();
 
     // Add C++ std lib
@@ -54,56 +49,21 @@ fn main() {
     }
     #[cfg(target_os = "macos")]
     {
-        let clang_llvm_version = "clang+llvm-12.0.0-x86_64-apple-darwin";
-        let status = Command::new("curl")
-            .args(&[
-                "-L",
-                "-s",
-                "-O",
-                &format!("https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/{}.tar.xz", clang_llvm_version),
-            ])
-            .current_dir(&out_dir)
-            .status()
-            .expect("Failed to start");
+        let path = Command::new("xcrun")
+            .args(&["--show-sdk-path"])
+            .output()
+            .expect("Failed to start")
+            .stdout;
 
-        if !status.success() {
-            panic!("Failed to download libc++");
-        }
-
-        let status = Command::new("tar")
-            .args(&[
-                "-xf",
-                &format!("{}.tar.xz", clang_llvm_version),
-                &format!("{}/lib/libc++.a", clang_llvm_version),
-                &format!("{}/lib/libc++abi.a", clang_llvm_version),
-            ])
-            .current_dir(&out_dir)
-            .status()
-            .expect("Failed to start");
-        if !status.success() {
-            panic!("Failed to download libc++");
-        }
-
-        for file in &["libc++.a", "libc++abi.a"] {
-            std::fs::copy(
-                format!("{}/{}/lib/{}", out_dir, clang_llvm_version, file),
-                format!("{}/{}", out_dir, file),
-            )
-            .unwrap_or_else(|_| {
-                panic!(
-                    "Failed to copy static library from {}/{}/lib/{} to {}/{}",
-                    out_dir, clang_llvm_version, file, out_dir, file
-                )
-            });
-        }
-
-        std::fs::remove_file(format!("{}/{}.tar.xz", out_dir, clang_llvm_version))
-            .expect("Failed to remove downloaded clang+llvm archive");
-        std::fs::remove_dir_all(format!("{}/{}", out_dir, clang_llvm_version))
-            .expect("Failed to remove extracted clang+llvm files");
-
-        println!("cargo:rustc-link-lib=static=c++");
-        println!("cargo:rustc-link-lib=static=c++abi");
+        let libpath = format!(
+            "{}/usr/lib",
+            String::from_utf8(path)
+                .expect("Failed to decode path")
+                .trim()
+        );
+        println!("cargo:rustc-link-search={}", libpath);
+        println!("cargo:rustc-link-lib=dylib=c++");
+        println!("cargo:rustc-link-lib=dylib=c++abi");
     }
     #[cfg(target_os = "windows")]
     {
@@ -120,6 +80,8 @@ fn main() {
         if !Command::new("make")
             .arg("libmediasoup-worker")
             .env("PYTHONDONTWRITEBYTECODE", "1")
+            .env("MEDIASOUP_OUT_DIR", &out_dir)
+            .env("MEDIASOUP_BUILDTYPE", "Release")
             .spawn()
             .expect("Failed to start")
             .wait()
@@ -129,34 +91,11 @@ fn main() {
             panic!("Failed to build libmediasoup-worker")
         }
 
-        for file in &[
-            "libnetstring.a",
-            "libuv.a",
-            "libopenssl.a",
-            "libsrtp.a",
-            "libusrsctp.a",
-            "libwebrtc.a",
-            "libmediasoup-worker.a",
-            "libabseil.a",
-            #[cfg(windows)]
-            "libgetopt.a",
-        ] {
-            std::fs::copy(
-                format!("{}/out/Release/{}", current_dir, file),
-                format!("{}/{}", out_dir, file),
-            )
-            .unwrap_or_else(|_| {
-                panic!(
-                    "Failed to copy static library from {}/out/Release/{} to {}/{}",
-                    current_dir, file, out_dir, file
-                )
-            });
-        }
-
         if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
             // Clean
             if !Command::new("make")
                 .arg("clean-all")
+                .env("PYTHONDONTWRITEBYTECODE", "1")
                 .spawn()
                 .expect("Failed to start")
                 .wait()
@@ -168,15 +107,7 @@ fn main() {
         }
     }
 
-    println!("cargo:rustc-link-lib=static=netstring");
-    println!("cargo:rustc-link-lib=static=uv");
-    println!("cargo:rustc-link-lib=static=openssl");
-    println!("cargo:rustc-link-lib=static=srtp");
-    println!("cargo:rustc-link-lib=static=usrsctp");
-    println!("cargo:rustc-link-lib=static=webrtc");
     println!("cargo:rustc-link-lib=static=mediasoup-worker");
-    println!("cargo:rustc-link-lib=static=abseil");
-    #[cfg(windows)]
-    println!("cargo:rustc-link-lib=static=getopt");
     println!("cargo:rustc-link-search=native={}", out_dir);
+    println!("cargo:rustc-link-search=native={}/Release", out_dir);
 }

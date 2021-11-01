@@ -5,7 +5,7 @@ use async_executor::Executor;
 use async_fs::File;
 use bytes::{BufMut, Bytes, BytesMut};
 use futures_lite::io::BufReader;
-use futures_lite::{future, AsyncBufReadExt, AsyncReadExt, AsyncWriteExt};
+use futures_lite::{future, AsyncReadExt, AsyncWriteExt};
 use log::{debug, error, trace, warn};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,6 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
-use std::io::Write;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 use thiserror::Error;
@@ -122,19 +121,13 @@ impl PayloadChannel {
 
             executor
                 .spawn(async move {
-                    let mut len_bytes = Vec::new();
+                    let mut len_bytes = [0u8; 4];
                     let mut bytes = Vec::new();
                     let mut reader = BufReader::new(reader);
 
                     loop {
-                        let read_bytes = reader.read_until(b':', &mut len_bytes).await?;
-                        if read_bytes == 0 {
-                            // EOF
-                            break;
-                        }
-                        let length = String::from_utf8_lossy(&len_bytes[..(read_bytes - 1)])
-                            .parse::<usize>()
-                            .unwrap();
+                        reader.read_exact(&mut len_bytes).await?;
+                        let length = u32::from_ne_bytes(len_bytes) as usize;
 
                         if length > NS_PAYLOAD_MAX_LEN {
                             warn!(
@@ -143,13 +136,11 @@ impl PayloadChannel {
                             );
                         }
 
-                        len_bytes.clear();
-                        if bytes.len() < length + 1 {
+                        if bytes.len() < length {
                             // Increase bytes size if/when needed
-                            bytes.resize(length + 1, 0);
+                            bytes.resize(length, 0);
                         }
-                        // +1 because of netstring `,` at the very end
-                        reader.read_exact(&mut bytes[..=length]).await?;
+                        reader.read_exact(&mut bytes[..length]).await?;
 
                         trace!(
                             "received raw message: {}",
@@ -197,15 +188,8 @@ impl PayloadChannel {
                                     })
                                 });
 
-                                let read_bytes = reader.read_until(b':', &mut len_bytes).await?;
-                                if read_bytes == 0 {
-                                    // EOF
-                                    break;
-                                }
-                                let length =
-                                    String::from_utf8_lossy(&len_bytes[..(read_bytes - 1)])
-                                        .parse::<usize>()
-                                        .unwrap();
+                                reader.read_exact(&mut len_bytes).await?;
+                                let length = u32::from_ne_bytes(len_bytes) as usize;
 
                                 if length > NS_PAYLOAD_MAX_LEN {
                                     warn!(
@@ -214,9 +198,11 @@ impl PayloadChannel {
                                     );
                                 }
 
-                                len_bytes.clear();
-                                // +1 because of netstring `,` at the very end
-                                reader.read_exact(&mut bytes[..=length]).await?;
+                                if bytes.len() < length {
+                                    // Increase bytes size if/when needed
+                                    bytes.resize(length, 0);
+                                }
+                                reader.read_exact(&mut bytes[..length]).await?;
 
                                 trace!("received notification payload of {} bytes", length);
 
@@ -259,19 +245,16 @@ impl PayloadChannel {
 
             executor
                 .spawn(async move {
-                    let mut len = Vec::new();
                     while let Ok(message) = receiver.recv().await {
-                        len.clear();
-                        write!(&mut len, "{}:", message.message.len()).unwrap();
-                        writer.write_all(&len).await?;
+                        writer
+                            .write_all(&(message.message.len() as u32).to_ne_bytes())
+                            .await?;
                         writer.write_all(&message.message).await?;
-                        writer.write_all(&[b',']).await?;
 
-                        len.clear();
-                        write!(&mut len, "{}:", message.payload.len()).unwrap();
-                        writer.write_all(&len).await?;
+                        writer
+                            .write_all(&(message.payload.len() as u32).to_ne_bytes())
+                            .await?;
                         writer.write_all(&message.payload).await?;
-                        writer.write_all(&[b',']).await?;
                     }
 
                     io::Result::Ok(())

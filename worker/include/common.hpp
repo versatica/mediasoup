@@ -9,9 +9,6 @@
 #include <memory>     // std::addressof()
 #ifdef _WIN32
 #include <winsock2.h>
-// https://stackoverflow.com/a/27443191/2085408
-#undef max
-#undef min
 // avoid uv/win.h: error C2628 'intptr_t' followed by 'int' is illegal.
 #if !defined(_SSIZE_T_) && !defined(_SSIZE_T_DEFINED)
 #include <BaseTsd.h>

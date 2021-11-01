@@ -30,13 +30,19 @@ namespace RTC
 			{
 				uint32_t ssrc;
 				uint8_t sequenceNumber;
+#if defined(MS_LITTLE_ENDIAN)
+				uint8_t payloadType : 7;
+				uint8_t zero : 1;
+#elif defined(MS_BIG_ENDIAN)
 				uint8_t zero : 1;
 				uint8_t payloadType : 7;
+#endif
 				uint16_t length;
 				uint8_t value[];
 			};
 
 		public:
+			static const size_t HeaderSize{ 8 };
 			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::FIR };
 
 		public:
@@ -77,7 +83,7 @@ namespace RTC
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetSize() const override
 			{
-				size_t size = 8 + static_cast<size_t>(GetLength());
+				size_t size = FeedbackPsVbcmItem::HeaderSize + static_cast<size_t>(GetLength());
 
 				// Consider pading to 32 bits (4 bytes) boundary.
 				return (size + 3) & ~3;

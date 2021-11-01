@@ -105,6 +105,10 @@ pub struct DirectTransportStat {
     pub available_incoming_bitrate: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_incoming_bitrate: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rtp_packet_loss_received: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rtp_packet_loss_sent: Option<f64>,
 }
 
 #[derive(Default)]

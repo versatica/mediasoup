@@ -23,7 +23,7 @@ namespace TestSenderReport
 	// clang-format on
 
 	// Sender Report buffer start point.
-	uint8_t* srBuffer = buffer + sizeof(Packet::CommonHeader);
+	uint8_t* srBuffer = buffer + Packet::CommonHeaderSize;
 
 	// SR values.
 	uint32_t ssrc{ 0x5d931534 };
@@ -73,7 +73,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 	SECTION("parse SR")
 	{
-		SenderReport* report = SenderReport::Parse(srBuffer, sizeof(SenderReport::Header));
+		SenderReport* report = SenderReport::Parse(srBuffer, SenderReport::HeaderSize);
 
 		REQUIRE(report);
 
@@ -81,13 +81,13 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 		SECTION("serialize SenderReport instance")
 		{
-			uint8_t serialized[sizeof(SenderReport::Header)] = { 0 };
+			uint8_t serialized[SenderReport::HeaderSize] = { 0 };
 
 			report->Serialize(serialized);
 
 			SECTION("compare serialized SenderReport with original buffer")
 			{
-				REQUIRE(std::memcmp(srBuffer, serialized, sizeof(SenderReport::Header)) == 0);
+				REQUIRE(std::memcmp(srBuffer, serialized, SenderReport::HeaderSize) == 0);
 			}
 		}
 

@@ -170,6 +170,7 @@ namespace RTC
 		this->shmNoConsumeTimer->Start(60000);
 	}
 
+
 	ShmTransport::~ShmTransport()
 	{
 		MS_TRACE();

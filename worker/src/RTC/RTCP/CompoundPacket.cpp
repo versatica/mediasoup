@@ -23,7 +23,7 @@ namespace RTC
 
 				if (this->receiverReportPacket.GetCount() != 0u)
 				{
-					this->size += sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount();
+					this->size += ReceiverReport::HeaderSize * this->receiverReportPacket.GetCount();
 				}
 			}
 			// If no sender nor receiver reports are present send an empty Receiver Report
@@ -56,8 +56,8 @@ namespace RTC
 				{
 					// Fix header length field.
 					size_t length =
-					  ((sizeof(SenderReport::Header) +
-					    (sizeof(ReceiverReport::Header) * this->receiverReportPacket.GetCount())) /
+					  ((SenderReport::HeaderSize +
+					    (ReceiverReport::HeaderSize * this->receiverReportPacket.GetCount())) /
 					   4);
 
 					header->length = uint16_t{ htons(length) };
@@ -72,7 +72,7 @@ namespace RTC
 						ReceiverReport* report = (*it);
 
 						report->Serialize(this->header + offset);
-						offset += sizeof(ReceiverReport::Header);
+						offset += ReceiverReport::HeaderSize;
 					}
 				}
 			}
