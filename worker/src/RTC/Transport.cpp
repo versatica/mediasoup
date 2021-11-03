@@ -2340,26 +2340,6 @@ namespace RTC
 		}
 	}
 
-	static inline uint32_t IncreaseConsumerLayer(
-	  Consumer* consumer, RTC::BweType bweType, uint32_t availableBitrate)
-	{
-		// Try to increase by 1 layer
-		uint32_t usedBitrate{ 0u };
-		switch (bweType)
-		{
-			case RTC::BweType::TRANSPORT_CC:
-				usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ false);
-				break;
-			case RTC::BweType::REMB:
-				usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ true);
-				break;
-		}
-
-		MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
-
-		return usedBitrate;
-	}
-
 	void Transport::DistributeAvailableOutgoingBitrate()
 	{
 		MS_TRACE();
@@ -2402,16 +2382,28 @@ namespace RTC
 				auto priority  = it->first;
 				auto* consumer = it->second;
 				auto bweType   = this->tccClient->GetBweType();
-				uint32_t usedBitrate{ 0u };
 
 				for (uint8_t i{ 1u }; i <= (baseAllocation ? 1u : priority); ++i)
 				{
-					usedBitrate = IncreaseConsumerLayer(consumer, bweType, availableBitrate);
+					uint32_t usedBitrate{ 0u };
 
-					if (usedBitrate == 0u)
-						break;
+					switch (bweType)
+					{
+						case RTC::BweType::TRANSPORT_CC:
+							usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ false);
+							break;
+						case RTC::BweType::REMB:
+							usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ true);
+							break;
+					}
+
+					MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
 
 					availableBitrate -= usedBitrate;
+
+					// Exit the loop fast if used bitrate is 0.
+					if (usedBitrate == 0u)
+						break;
 				}
 			}
 
