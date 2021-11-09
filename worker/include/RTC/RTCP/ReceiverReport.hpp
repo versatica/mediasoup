@@ -82,9 +82,8 @@ namespace RTC
 			void SetTotalLost(int32_t totalLost)
 			{
 				// Get the limit value for possitive and negative totalLost.
-				int32_t clamp = (totalLost >= 0)         ? totalLost > 0x07FFFFF ? 0x07FFFFF : totalLost
-				                : -totalLost > 0x0800000 ? 0x0800000
-				                                         : -totalLost;
+				int32_t clamp = (totalLost >= 0) ? totalLost > 0x07FFFFF ? 0x07FFFFF : totalLost
+				                                 : -totalLost > 0x0800000 ? 0x0800000 : -totalLost;
 
 				uint32_t value = (totalLost >= 0) ? (clamp & 0x07FFFFF) : (clamp | 0x0800000);
 

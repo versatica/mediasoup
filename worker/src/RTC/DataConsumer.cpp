@@ -222,15 +222,12 @@ namespace RTC
 					return;
 				}
 
-				const auto* cb = new onQueuedCallback(
-				  [&request](bool queued, bool sctpSendBufferFull)
-				  {
-					  if (queued)
-						  request->Accept();
-					  else
-						  request->Error(
-						    sctpSendBufferFull == true ? "sctpsendbufferfull" : "message send failed");
-				  });
+				const auto* cb = new onQueuedCallback([&request](bool queued, bool sctpSendBufferFull) {
+					if (queued)
+						request->Accept();
+					else
+						request->Error(sctpSendBufferFull == true ? "sctpsendbufferfull" : "message send failed");
+				});
 
 				SendMessage(ppid, msg, len, cb);
 

@@ -2598,27 +2598,23 @@ namespace RTC
 			sentInfo.size        = packet->GetSize();
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent)
-			  {
-				  if (sent)
-				  {
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+				if (sent)
+				{
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
-					  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
 
-					  senderBwe->RtpPacketSent(sentInfo);
-				  }
-			  });
+					senderBwe->RtpPacketSent(sentInfo);
+				}
+			});
 
 			SendRtpPacket(consumer, packet, cb);
 #else
-			const auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo](bool sent)
-			  {
-				  if (sent)
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
-			  });
+			const auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
+				if (sent)
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+			});
 
 			SendRtpPacket(consumer, packet, cb);
 #endif
@@ -2670,27 +2666,23 @@ namespace RTC
 			sentInfo.size        = packet->GetSize();
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent)
-			  {
-				  if (sent)
-				  {
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+				if (sent)
+				{
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
-					  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
 
-					  senderBwe->RtpPacketSent(sentInfo);
-				  }
-			  });
+					senderBwe->RtpPacketSent(sentInfo);
+				}
+			});
 
 			SendRtpPacket(consumer, packet, cb);
 #else
-			const auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo](bool sent)
-			  {
-				  if (sent)
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
-			  });
+			const auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
+				if (sent)
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+			});
 
 			SendRtpPacket(consumer, packet, cb);
 #endif
@@ -3009,27 +3001,23 @@ namespace RTC
 			sentInfo.isProbation = true;
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
-			auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent)
-			  {
-				  if (sent)
-				  {
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+			auto* cb = new onSendCallback([tccClient, &packetInfo, senderBwe, &sentInfo](bool sent) {
+				if (sent)
+				{
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
-					  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+					sentInfo.sentAtMs = DepLibUV::GetTimeMs();
 
-					  senderBwe->RtpPacketSent(sentInfo);
-				  }
-			  });
+					senderBwe->RtpPacketSent(sentInfo);
+				}
+			});
 
 			SendRtpPacket(nullptr, packet, cb);
 #else
-			const auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo](bool sent)
-			  {
-				  if (sent)
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
-			  });
+			const auto* cb = new onSendCallback([tccClient, &packetInfo](bool sent) {
+				if (sent)
+					tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+			});
 
 			SendRtpPacket(nullptr, packet, cb);
 #endif

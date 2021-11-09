@@ -46,10 +46,9 @@ namespace RTC
 			bool HasReceiverReferenceTime()
 			{
 				return std::any_of(
-				  this->xrPacket.Begin(),
-				  this->xrPacket.End(),
-				  [](const ExtendedReportBlock* report)
-				  { return report->GetType() == ExtendedReportBlock::Type::RRT; });
+				  this->xrPacket.Begin(), this->xrPacket.End(), [](const ExtendedReportBlock* report) {
+					  return report->GetType() == ExtendedReportBlock::Type::RRT;
+				  });
 			}
 			void Serialize(uint8_t* data);
 

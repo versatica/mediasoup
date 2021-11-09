@@ -17,13 +17,10 @@ void DepOpenSSL::ClassInit()
 {
 	MS_TRACE();
 
-	std::call_once(
-	  globalInitOnce,
-	  []
-	  {
-		  MS_DEBUG_TAG(info, "openssl version: \"%s\"", OpenSSL_version(OPENSSL_VERSION));
+	std::call_once(globalInitOnce, [] {
+		MS_DEBUG_TAG(info, "openssl version: \"%s\"", OpenSSL_version(OPENSSL_VERSION));
 
-		  // Initialize some crypto stuff.
-		  RAND_poll();
-	  });
+		// Initialize some crypto stuff.
+		RAND_poll();
+	});
 }
