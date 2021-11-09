@@ -69,7 +69,7 @@
     "testRegex": "node/tests/test.*\\.js"
   },
   "dependencies": {
-    "@types/node": "^16.11.6",
+    "@types/node": "^16.11.7",
     "debug": "^4.3.2",
     "h264-profile-level-id": "^1.0.1",
     "random-number": "^0.0.9",
@@ -80,10 +80,10 @@
     "@types/debug": "^4.1.7",
     "@types/random-number": "^0.0.1",
     "@types/uuid": "^8.3.1",
-    "@typescript-eslint/eslint-plugin": "^5.2.0",
-    "@typescript-eslint/parser": "^5.2.0",
-    "eslint": "^8.1.0",
-    "eslint-plugin-jest": "^25.2.2",
+    "@typescript-eslint/eslint-plugin": "^5.3.1",
+    "@typescript-eslint/parser": "^5.3.1",
+    "eslint": "^8.2.0",
+    "eslint-plugin-jest": "^25.2.4",
     "jest": "^27.3.1",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^7.0.1",
