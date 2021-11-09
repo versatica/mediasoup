@@ -2362,6 +2362,7 @@ namespace RTC
 		if (multimapPriorityConsumer.empty())
 			return;
 
+		bool baseAllocation       = true;
 		uint32_t availableBitrate = this->tccClient->GetAvailableBitrate();
 
 		this->tccClient->RescheduleNextAvailableBitrateEvent();
@@ -2369,8 +2370,9 @@ namespace RTC
 		MS_DEBUG_DEV("before layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 
 		// Redistribute the available bitrate by allowing Consumers to increase
-		// layer by layer. Take into account the priority of each Consumer to
-		// provide it with more bitrate.
+		// layer by layer. Initially try to spread the bitrate across all
+		// consumers. Then allocate the excess bitrate to Consumers starting
+		// with the highest priorty.
 		while (availableBitrate > 0u)
 		{
 			auto previousAvailableBitrate = availableBitrate;
@@ -2381,9 +2383,7 @@ namespace RTC
 				auto* consumer = it->second;
 				auto bweType   = this->tccClient->GetBweType();
 
-				// If a Consumer has priority > 1, call IncreaseLayer() more times to
-				// provide it with more available bitrate to choose its preferred layers.
-				for (uint8_t i{ 1u }; i <= priority; ++i)
+				for (uint8_t i{ 1u }; i <= (baseAllocation ? 1u : priority); ++i)
 				{
 					uint32_t usedBitrate{ 0u };
 
@@ -2410,6 +2410,8 @@ namespace RTC
 			// If no Consumer used bitrate, exit the loop.
 			if (availableBitrate == previousAvailableBitrate)
 				break;
+
+			baseAllocation = false;
 		}
 
 		MS_DEBUG_DEV("after layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
