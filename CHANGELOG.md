@@ -1,11 +1,14 @@
 # Changelog
 
 
-### WIP
+### 3.9.2
 
 * `pipeToRouter()`: Reuse same `PipeTransport` when possible (PR #697).
 * Add `worker.died` boolean getter.
 * Update TypeScript version to 4.X.X and use `target: "esnext"` so transpilation of ECMAScript private fields (`#xxxxx`) don't use `WeakMaps` tricks but use standard syntax instead.
+* Use more than one core for compilation on Windows (PR #709).
+* `Consumer`: Modification of bitrate allocation algorithm (PR #708).
+* Update NPM deps.
 
 
 ### 3.9.1
