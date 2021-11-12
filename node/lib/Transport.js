@@ -286,7 +286,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const consumableRtpParameters = ortc.getConsumableRtpParameters(kind, rtpParameters, routerRtpCapabilities, rtpMapping);
         logger.debug("produce(): consumableRtpParameters=%o", consumableRtpParameters);
         const internal = { ...this.internal, producerId: id || uuid_1.v4() };
-        const reqData = { kind, rtpParameters, rtpMapping, keyFrameRequestDelay, paused };
+        const reqData = { kind, rtpParameters, rtpMapping, keyFrameRequestDelay, paused, appData };
         const status = await this.channel.request('transport.produce', internal, reqData);
         const data = {
             kind,
@@ -354,7 +354,8 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             type: pipe ? 'pipe' : producer.type,
             consumableRtpEncodings: producer.consumableRtpParameters.encodings,
             paused,
-            preferredLayers
+            preferredLayers,
+            appData,
         };
         const status = await this.channel.request('transport.consume', internal, reqData);
         const data = {

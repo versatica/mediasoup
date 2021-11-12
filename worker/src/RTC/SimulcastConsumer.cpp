@@ -102,7 +102,7 @@ namespace RTC
 		// Create the encoding context.
 		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		MS_DEBUG_TAG(simulcast,
+	MS_DEBUG_TAG_LIVELYAPP(simulcast, this->appData, 
 			"SimulcastConsumer ctor() data [%s] media codec [%s] encoding.spatialLayers=%" PRIu8 " encoding.temporalLayers=%" PRIu8,
 			data.dump().c_str(),
 			mediaCodec->mimeType.ToString().c_str(),
@@ -124,7 +124,7 @@ namespace RTC
 
 		MS_ASSERT(this->encodingContext, "no encoding context for this codec");
 
-		MS_DEBUG_TAG(simulcast,
+		MS_DEBUG_TAG_LIVELYAPP(simulcast, this->appData,
 			"encodingContext spatialLayers=%" PRIu8 " temporalLayers=%" PRIu8,
 			this->encodingContext->GetSpatialLayers(),
 			this->encodingContext->GetTemporalLayers());
@@ -262,8 +262,14 @@ namespace RTC
 				{
 					this->preferredTemporalLayer = this->rtpStream->GetTemporalLayers() - 1;
 				}
-
+/*
 				MS_DEBUG_DEV(
+				  "preferred layers changed [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
+				  this->preferredSpatialLayer,
+				  this->preferredTemporalLayer,
+				  this->id.c_str());
+*/
+				MS_DEBUG_TAG_LIVELYAPP(simulcast, this->appData,
 				  "preferred layers changed [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
 				  this->preferredSpatialLayer,
 				  this->preferredTemporalLayer,
@@ -363,7 +369,7 @@ namespace RTC
 		if (!first)
 			return;
 
-		MS_DEBUG_TAG(simulcast, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
+		MS_DEBUG_TAG_LIVELYAPP(simulcast, this->appData, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
 		// If our current selected RTP stream does not yet have SR, do nothing since
 		// we know we won't be able to switch.
@@ -548,17 +554,27 @@ namespace RTC
 
 		// No higher active layers found.
 		if (!requiredBitrate)
+		{
+			MS_DEBUG_TAG_LIVELYAPP(simulcast, this->appData, "No higher active layers found");
 			return 0u;
+		}
 
 		// No luck.
 		if (requiredBitrate > virtualBitrate)
+		{
+			MS_DEBUG_TAG_LIVELYAPP(simulcast, this->appData, 
+				"required bitrate:%" PRIu32 " above virtual bitrate:%" PRIu32,
+				requiredBitrate,
+				virtualBitrate);
 			return 0u;
+		}
 
 		// Set provisional layers.
 		this->provisionalTargetSpatialLayer  = spatialLayer;
 		this->provisionalTargetTemporalLayer = temporalLayer;
 
-		MS_DEBUG_DEV(
+		//MS_DEBUG_DEV(
+		MS_DEBUG_TAG_LIVELYAPP(simulcast, this->appData,
 		  "setting provisional layers to %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
 		  ", required bitrate:%" PRIu32 "]",
 		  this->provisionalTargetSpatialLayer,
@@ -606,7 +622,8 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				MS_DEBUG_DEV(
+				//MS_DEBUG_DEV(
+				MS_DEBUG_TAG_LIVELYAPP(simulcast, this->appData,
 				  "possible target spatial layer downgrade (from %" PRIi16 " to %" PRIi16
 				  ") due to BWE limitation",
 				  this->currentSpatialLayer,
@@ -668,7 +685,8 @@ namespace RTC
 		// in the corresponding Producer.
 		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
 		{
-			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+			//MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+			MS_DEBUG_TAG_LIVELYAPP(simulcast, this->appData, "payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 			return;
 		}
@@ -707,7 +725,7 @@ namespace RTC
 		if (isSyncPacket)
 		{
 			if (packet->IsKeyFrame())
-				MS_DEBUG_TAG(rtp, "sync key frame received");
+				MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "sync key frame received");
 
 			uint32_t tsOffset{ 0u };
 
@@ -781,8 +799,8 @@ namespace RTC
 					// Give up and use the theoretical offset.
 					if (tsExtraOffset > maxTsExtraOffset)
 					{
-						MS_WARN_TAG(
-						  simulcast,
+						MS_WARN_TAG_LIVELYAPP(
+						  simulcast, this->appData,
 						  "giving up on proper stream switching after got a requested keyframe for which still too high RTP timestamp extra offset is needed (%" PRIu32
 						  ")",
 						  tsExtraOffset);
@@ -792,8 +810,8 @@ namespace RTC
 				}
 				else if (tsExtraOffset > maxTsExtraOffset)
 				{
-					MS_WARN_TAG(
-					  simulcast,
+					MS_WARN_TAG_LIVELYAPP(
+					  simulcast, this->appData,
 					  "cannot switch stream due to too high RTP timestamp extra offset needed (%" PRIu32
 					  "), requesting keyframe",
 					  tsExtraOffset);
@@ -807,8 +825,8 @@ namespace RTC
 
 				if (tsExtraOffset > 0u)
 				{
-					MS_DEBUG_TAG(
-					  simulcast,
+					MS_DEBUG_TAG_LIVELYAPP(
+					  simulcast, this->appData,
 					  "RTP timestamp extra offset generated for stream switching: %" PRIu32,
 					  tsExtraOffset);
 
@@ -889,8 +907,8 @@ namespace RTC
 
 		if (isSyncPacket)
 		{
-			MS_DEBUG_TAG(
-			  rtp,
+			MS_DEBUG_TAG_LIVELYAPP(
+			  rtp, this->appData,
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
 			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 			  packet->GetSsrc(),
@@ -915,8 +933,8 @@ namespace RTC
 		}
 		else
 		{
-			MS_WARN_TAG(
-			  rtp,
+			MS_WARN_TAG_LIVELYAPP(
+			  rtp, this->appData,
 			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
 			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 			  packet->GetSsrc(),
@@ -1114,7 +1132,7 @@ namespace RTC
 		// Check in band FEC in codec parameters.
 		if (mediaCodec->parameters.HasInteger("useinbandfec") && mediaCodec->parameters.GetInteger("useinbandfec") == 1)
 		{
-			MS_DEBUG_TAG(rtp, "in band FEC enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "in band FEC enabled");
 
 			params.useInBandFec = true;
 		}
@@ -1122,7 +1140,7 @@ namespace RTC
 		// Check DTX in codec parameters.
 		if (mediaCodec->parameters.HasInteger("usedtx") && mediaCodec->parameters.GetInteger("usedtx") == 1)
 		{
-			MS_DEBUG_TAG(rtp, "DTX enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "DTX enabled");
 
 			params.useDtx = true;
 		}
@@ -1130,7 +1148,7 @@ namespace RTC
 		// Check DTX in the encoding.
 		if (encoding.dtx)
 		{
-			MS_DEBUG_TAG(rtp, "DTX enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "DTX enabled");
 
 			params.useDtx = true;
 		}
@@ -1139,19 +1157,19 @@ namespace RTC
 		{
 			if (!params.useNack && fb.type == "nack" && fb.parameter.empty())
 			{
-				MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
+				MS_DEBUG_2TAGS_LIVELYAPP(rtp, rtcp, this->appData, "NACK supported");
 
 				params.useNack = true;
 			}
 			else if (!params.usePli && fb.type == "nack" && fb.parameter == "pli")
 			{
-				MS_DEBUG_2TAGS(rtp, rtcp, "PLI supported");
+				MS_DEBUG_2TAGS_LIVELYAPP(rtp, rtcp, this->appData, "PLI supported");
 
 				params.usePli = true;
 			}
 			else if (!params.useFir && fb.type == "ccm" && fb.parameter == "fir")
 			{
-				MS_DEBUG_2TAGS(rtp, rtcp, "FIR supported");
+				MS_DEBUG_2TAGS_LIVELYAPP(rtp, rtcp, this->appData, "FIR supported");
 
 				params.useFir = true;
 			}
@@ -1347,8 +1365,8 @@ namespace RTC
 		// If we don't have yet a RTP timestamp reference, set it now.
 		if (newTargetSpatialLayer != -1 && this->tsReferenceSpatialLayer == -1)
 		{
-			MS_DEBUG_TAG(
-			  simulcast, "using spatial layer %" PRIi16 " as RTP timestamp reference", newTargetSpatialLayer);
+			MS_DEBUG_TAG_LIVELYAPP(
+			  simulcast, this->appData, "using spatial layer %" PRIi16 " as RTP timestamp reference", newTargetSpatialLayer);
 
 			this->tsReferenceSpatialLayer = newTargetSpatialLayer;
 		}
@@ -1363,8 +1381,8 @@ namespace RTC
 			this->encodingContext->SetTargetTemporalLayer(-1);
 			this->encodingContext->SetCurrentTemporalLayer(-1);
 
-			MS_DEBUG_TAG(
-			  simulcast, "target layers changed [spatial:-1, temporal:-1, consumerId:%s]", this->id.c_str());
+			MS_DEBUG_TAG_LIVELYAPP(
+			  simulcast, this->appData, "target layers changed [spatial:-1, temporal:-1, consumerId:%s]", this->id.c_str());
 
 			EmitLayersChange();
 
@@ -1379,8 +1397,8 @@ namespace RTC
 		if (this->targetSpatialLayer == this->currentSpatialLayer)
 			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
 
-		MS_DEBUG_TAG(
-		  simulcast,
+		MS_DEBUG_TAG_LIVELYAPP(
+			simulcast, this->appData, 
 		  "target layers changed [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
 		  this->targetSpatialLayer,
 		  this->targetTemporalLayer,

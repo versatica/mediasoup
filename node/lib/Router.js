@@ -214,7 +214,8 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             numSctpStreams,
             maxSctpMessageSize,
             sctpSendBufferSize,
-            isDataChannel: true
+            isDataChannel: true,
+            appData,
         };
         const data = await __classPrivateFieldGet(this, _channel).request('router.createWebRtcTransport', internal, reqData);
         const transport = new WebRtcTransport_1.WebRtcTransport({
@@ -272,7 +273,8 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             sctpSendBufferSize,
             isDataChannel: false,
             enableSrtp,
-            srtpCryptoSuite
+            srtpCryptoSuite,
+            appData,
         };
         const data = await __classPrivateFieldGet(this, _channel).request('router.createPlainTransport', internal, reqData);
         const transport = new PlainTransport_1.PlainTransport({
@@ -335,7 +337,8 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             sctpSendBufferSize,
             isDataChannel: false,
             enableRtx,
-            enableSrtp
+            enableSrtp,
+            appData,
         };
         const data = await __classPrivateFieldGet(this, _channel).request('router.createPipeTransport', internal, reqData);
         const transport = new PipeTransport_1.PipeTransport({
@@ -366,7 +369,11 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }) {
         logger.debug('createDirectTransport()');
         const internal = { ...__classPrivateFieldGet(this, _internal), transportId: uuid_1.v4() };
-        const reqData = { direct: true, maxMessageSize };
+        const reqData = {
+            direct: true,
+            maxMessageSize,
+            appData,
+        };
         const data = await __classPrivateFieldGet(this, _channel).request('router.createDirectTransport', internal, reqData);
         const transport = new DirectTransport_1.DirectTransport({
             internal,

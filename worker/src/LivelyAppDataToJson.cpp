@@ -4,7 +4,7 @@ using json = nlohmann::json;
 
 namespace Lively {
   void to_json(json& j, const AppData& d) {
-    j = json{{"callId", d.callId}, {"peerId", d.peerId}, {"mirrorId", d.mirrorId}, {"streamKey", d.streamKey}};
+    j = json{{"callId", d.callId}, {"peerId", d.peerId}, {"mirrorId", d.mirrorId}, {"streamKey", d.streamKey}, {"objectId", d.id}};
   }
 
   void from_json(const json& j, AppData& d) {
@@ -12,5 +12,6 @@ namespace Lively {
     j.at("peerId").get_to(d.peerId);
     j.at("mirrorId").get_to(d.mirrorId);
     j.at("streamKey").get_to(d.streamKey);
+    j.at("objectId").get_to(d.id);
   }
 }

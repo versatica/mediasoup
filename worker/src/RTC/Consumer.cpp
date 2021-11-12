@@ -9,6 +9,9 @@
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
+#include "Lively.hpp"
+#include "LivelyAppDataToJson.hpp"
+
 namespace RTC
 {
 	/* Instance methods. */
@@ -33,6 +36,23 @@ namespace RTC
 
 		if (this->kind == RTC::Media::Kind::ALL)
 			MS_THROW_TYPE_ERROR("invalid empty kind");
+
+		// appData (optional)
+		auto jsonAppDataIt = data.find("appData");
+		
+		Lively::AppData lively;
+		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
+		{
+			try {
+				lively = jsonAppDataIt->get<Lively::AppData>();
+			}
+			catch (const std::exception& e) {
+				MS_WARN_TAG(rtp, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
+			}
+		}
+
+		lively.id = id;
+		this->appData = lively.ToStr();
 
 		auto jsonRtpParametersIt = data.find("rtpParameters");
 
@@ -375,7 +395,7 @@ namespace RTC
 
 		this->transportConnected = true;
 
-		MS_DEBUG_TAG(rtp, "Transport connected [consumerId:%s]", this->id.c_str());
+		MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "Transport connected");
 
 		UserOnTransportConnected();
 	}
@@ -386,7 +406,7 @@ namespace RTC
 
 		this->transportConnected = false;
 
-		MS_DEBUG_TAG(rtp, "Transport disconnected [consumerId:%s]", this->id.c_str());
+		MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "Transport disconnected");
 
 		UserOnTransportDisconnected();
 	}
@@ -402,7 +422,7 @@ namespace RTC
 
 		this->producerPaused = true;
 
-		MS_DEBUG_DEV("Producer paused [consumerId:%s]", this->id.c_str());
+		MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "Producer paused");
 
 		if (wasActive)
 			UserOnPaused();
@@ -419,7 +439,7 @@ namespace RTC
 
 		this->producerPaused = false;
 
-		MS_DEBUG_DEV("Producer resumed [consumerId:%s]", this->id.c_str());
+		MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "Producer resumed");
 
 		if (IsActive())
 			UserOnResumed();
@@ -443,7 +463,7 @@ namespace RTC
 
 		this->producerClosed = true;
 
-		MS_DEBUG_DEV("Producer closed [consumerId:%s]", this->id.c_str());
+		MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "Producer closed");
 
 		Channel::ChannelNotifier::Emit(this->id, "producerclose");
 

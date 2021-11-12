@@ -12,12 +12,13 @@ namespace Lively
     std::string peerId;
     std::string mirrorId;
     std::string streamName;
+    std::string id; // passed separately
 
   public:
     AppData() = default;
-    AppData(const AppData& d) : callId(d.callId), peerId(d.peerId), mirrorId(d.mirrorId), streamName(d.streamName) {}
+    AppData(const AppData& d) : callId(d.callId), peerId(d.peerId), mirrorId(d.mirrorId), streamName(d.streamName), id(d.id) {}
     
-    AppData& operator=(const AppData& d) { callId = d.callId; peerId = d.peerId; mirrorId = d.mirrorId; streamName = d.streamName; return *this; }
+    AppData& operator=(const AppData& d) { callId = d.callId; peerId = d.peerId; mirrorId = d.mirrorId; streamName = d.streamName; id = d.id; return *this; }
 
     std::string ToStr() const;
   };

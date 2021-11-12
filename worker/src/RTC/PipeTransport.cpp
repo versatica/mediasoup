@@ -607,12 +607,12 @@ namespace RTC
 
 			if (!packet)
 			{
-				MS_WARN_TAG(srtp, "DecryptSrtp() failed due to an invalid RTP packet");
+				MS_WARN_TAG_LIVELYAPP(srtp, this->appData, "DecryptSrtp() failed due to an invalid RTP packet");
 			}
 			else
 			{
-				MS_WARN_TAG(
-				  srtp,
+				MS_WARN_TAG_LIVELYAPP(
+				  srtp, this->appData,
 				  "DecryptSrtp() failed [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", seq:%" PRIu16 "]",
 				  packet->GetSsrc(),
 				  packet->GetPayloadType(),
@@ -628,7 +628,7 @@ namespace RTC
 
 		if (!packet)
 		{
-			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
+			MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "received data is not a valid RTP packet");
 
 			return;
 		}
@@ -636,7 +636,7 @@ namespace RTC
 		// Verify that the packet's tuple matches our tuple.
 		if (!this->disableOriginCheck && !this->tuple->Compare(tuple))
 		{
-			MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "ignoring RTP packet from unknown IP:port");
 
 			// Remove this SSRC.
 			RecvStreamClosed(packet->GetSsrc());
@@ -678,7 +678,7 @@ namespace RTC
 
 		if (!packet)
 		{
-			MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
+			MS_WARN_TAG_LIVELYAPP(rtcp, this->appData, "received data is not a valid RTCP compound or single packet");
 
 			return;
 		}
@@ -698,7 +698,7 @@ namespace RTC
 		// Verify that the packet's tuple matches our tuple.
 		if (!this->disableOriginCheck && !this->tuple->Compare(tuple))
 		{
-			MS_DEBUG_TAG(sctp, "ignoring SCTP packet from unknown IP:port");
+			MS_DEBUG_TAG_LIVELYAPP(sctp, this->appData, "ignoring SCTP packet from unknown IP:port");
 
 			return;
 		}

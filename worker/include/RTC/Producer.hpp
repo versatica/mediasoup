@@ -157,6 +157,9 @@ namespace RTC
 		// Passed by argument.
 		const std::string id;
 
+	public:
+		std::string appData;
+		
 	private:
 		// Passed by argument.
 		RTC::Producer::Listener* listener{ nullptr };

@@ -500,7 +500,7 @@ export class Transport extends EnhancedEventEmitter
 		logger.debug("produce(): consumableRtpParameters=%o", consumableRtpParameters);
 
 		const internal = { ...this.internal, producerId: id || uuidv4() };
-		const reqData = { kind, rtpParameters, rtpMapping, keyFrameRequestDelay, paused };
+		const reqData = { kind, rtpParameters, rtpMapping, keyFrameRequestDelay, paused, appData };
 
 		const status =
 			await this.channel.request('transport.produce', internal, reqData);
@@ -606,7 +606,8 @@ export class Transport extends EnhancedEventEmitter
 			type                   : pipe ? 'pipe' : producer.type,
 			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
 			paused,
-			preferredLayers
+			preferredLayers,
+			appData,
 		};
 
 		const status =

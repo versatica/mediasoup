@@ -29,6 +29,9 @@
 #include <map>                                                   // std::multimap
 #include <sstream>                                               // std::ostringstream
 
+#include "Lively.hpp"
+#include "LivelyAppDataToJson.hpp"
+
 namespace RTC
 {
 	static size_t DefaultSctpSendBufferSize{ 262144 }; // 2^18.
@@ -69,6 +72,23 @@ namespace RTC
 
 			this->maxMessageSize = jsonMaxMessageSizeIt->get<size_t>();
 		}
+		
+		// appData (optional)
+		auto jsonAppDataIt = data.find("appData");
+		
+		Lively::AppData lively;
+		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
+		{
+			try {
+				lively = jsonAppDataIt->get<Lively::AppData>();
+			}
+			catch (const std::exception& e) {
+				MS_WARN_TAG(rtp, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
+			}
+		}
+
+		lively.id = id;
+		this->appData = lively.ToStr();
 
 		auto jsonInitialAvailableOutgoingBitrateIt = data.find("initialAvailableOutgoingBitrate");
 
@@ -610,7 +630,8 @@ namespace RTC
 
 				this->maxIncomingBitrate = jsonBitrateIt->get<uint32_t>();
 
-				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIu32, this->maxIncomingBitrate);
+				MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData,
+					"maximum incoming bitrate set to %" PRIu32, this->maxIncomingBitrate);
 
 				request->Accept();
 
@@ -644,7 +665,8 @@ namespace RTC
 					this->tccClient->SetMaxOutgoingBitrate(bitrate);
 					this->maxOutgoingBitrate = bitrate;
 
-					MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIu32, this->maxOutgoingBitrate);
+					MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, 
+						"maximum outgoing bitrate set to %" PRIu32, this->maxOutgoingBitrate);
 
 					ComputeOutgoingDesiredBitrate();
 				}
@@ -672,7 +694,8 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
-					MS_DEBUG_TAG(rtp, "Failed to add producer, error: %s", error.what());
+					MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData,
+						"Failed to add producer, error: %s", error.what());
 					delete producer;
 
 					throw;
@@ -686,7 +709,8 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
-					MS_DEBUG_TAG(rtp, "Failed OnTransportNewProducer() call, error: %s", error.what());
+					MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData,
+						"Failed OnTransportNewProducer() call, error: %s", error.what());
 					this->rtpListener.RemoveProducer(producer);
 
 					delete producer;
@@ -768,7 +792,7 @@ namespace RTC
 					)
 					// clang-format on
 					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
+						MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, "enabling TransportCongestionControlServer with transport-cc");
 
 						createTccServer = true;
 						bweType         = RTC::BweType::TRANSPORT_CC;
@@ -792,7 +816,7 @@ namespace RTC
 					)
 					// clang-format on
 					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
+						MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, "enabling TransportCongestionControlServer with REMB");
 
 						createTccServer = true;
 						bweType         = RTC::BweType::REMB;
@@ -880,7 +904,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SHM:
 					{
 #ifdef TRANSCODE
-						MS_DEBUG_TAG(rtp, "ShmConsumer will be created with data [%s]", request->data.dump().c_str());
+						MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "ShmConsumer will be created with data [%s]", request->data.dump().c_str());
 
 						// This may throw.
 						consumer = new RTC::ShmConsumer(consumerId, producerId, this, request->data, dynamic_cast<RTC::ShmTransport*>(this)->ShmCtx());
@@ -969,7 +993,7 @@ namespace RTC
 					)
 					// clang-format on
 					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with transport-cc");
+						MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, "enabling TransportCongestionControlClient with transport-cc");
 
 						createTccClient = true;
 						bweType         = RTC::BweType::TRANSPORT_CC;
@@ -995,7 +1019,7 @@ namespace RTC
 					)
 					// clang-format on
 					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with REMB");
+						MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, "enabling TransportCongestionControlClient with REMB");
 
 						createTccClient = true;
 						bweType         = RTC::BweType::REMB;
@@ -1048,7 +1072,7 @@ namespace RTC
 				)
 				// clang-format on
 				{
-					MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");
+					MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, "enabling SenderBandwidthEstimator");
 
 					// Tell all the Consumers that we are gonna manage their bitrate.
 					for (auto& kv : this->mapConsumers)
@@ -1074,7 +1098,7 @@ namespace RTC
 				if (IsConnected())
 					consumer->TransportConnected();
 				else {
-					MS_DEBUG_TAG(rtp, "Channel::Request::MethodId::TRANSPORT_CONSUME received but Transport::IsConnected() == false");
+					MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "Channel::Request::MethodId::TRANSPORT_CONSUME received but Transport::IsConnected() == false");
 				}
 
 				break;
@@ -1692,8 +1716,9 @@ namespace RTC
 
 		if (!producer)
 		{
-			MS_WARN_TAG(
+			MS_WARN_TAG_LIVELYAPP(
 			  rtp,
+				this->appData,
 			  "no suitable Producer for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
 			  packet->GetSsrc(),
 			  packet->GetPayloadType());
@@ -1722,7 +1747,8 @@ namespace RTC
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
 				this->recvRtxTransmission.Update(packet);
-			  MS_DEBUG_TAG(rtp, "recvRtxTransmission.GetPacketCount()=%zu", this->recvRtxTransmission.GetPacketCount());
+			  MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData,
+					"recvRtxTransmission.GetPacketCount()=%zu", this->recvRtxTransmission.GetPacketCount());
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::DISCARDED:
 				// Tell the child class to remove this SSRC.
@@ -1757,7 +1783,8 @@ namespace RTC
 
 		if (!this->sctpAssociation)
 		{
-			MS_DEBUG_TAG(sctp, "ignoring SCTP packet (SCTP not enabled)");
+			MS_DEBUG_TAG_LIVELYAPP(sctp, this->appData,
+				"ignoring SCTP packet (SCTP not enabled)");
 
 			return;
 		}
@@ -1953,8 +1980,8 @@ namespace RTC
 							continue;
 						}
 
-						MS_DEBUG_TAG(
-						  rtcp,
+						MS_DEBUG_TAG_LIVELYAPP(
+						  rtcp, this->appData,
 						  "no Consumer found for received Receiver Report [ssrc:%" PRIu32 "]",
 						  report->GetSsrc());
 
@@ -2003,8 +2030,8 @@ namespace RTC
 						}
 						else if (!consumer)
 						{
-							MS_DEBUG_TAG(
-							  rtcp,
+							MS_DEBUG_TAG_LIVELYAPP(
+							  rtcp, this->appData,
 							  "no Consumer found for received PLI Feedback packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 							  feedback->GetSenderSsrc(),
@@ -2013,8 +2040,8 @@ namespace RTC
 							break;
 						}
 
-						MS_DEBUG_TAG(
-						  rtcp,
+						MS_DEBUG_TAG_LIVELYAPP(
+						  rtcp, this->appData,
 						  "PLI received, requesting key frame for Consumer "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 						  feedback->GetSenderSsrc(),
@@ -2042,8 +2069,8 @@ namespace RTC
 							}
 							else if (!consumer)
 							{
-								MS_DEBUG_TAG(
-								  rtcp,
+								MS_DEBUG_TAG_LIVELYAPP(
+								  rtcp, this->appData,
 								  "no Consumer found for received FIR Feedback packet "
 								  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 ", item ssrc:%" PRIu32 "]",
 								  feedback->GetSenderSsrc(),
@@ -2053,8 +2080,8 @@ namespace RTC
 								continue;
 							}
 
-							MS_DEBUG_TAG(
-							  rtcp,
+							MS_DEBUG_TAG_LIVELYAPP(
+							  rtcp, this->appData,
 							  "FIR received, requesting key frame for Consumer "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 ", item ssrc:%" PRIu32 "]",
 							  feedback->GetSenderSsrc(),
@@ -2091,8 +2118,8 @@ namespace RTC
 						}
 						else
 						{
-							MS_DEBUG_TAG(
-							  rtcp,
+							MS_DEBUG_TAG_LIVELYAPP(
+							  rtcp, this->appData,
 							  "ignoring unsupported %s Feedback PS AFB packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 							  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
@@ -2105,8 +2132,8 @@ namespace RTC
 
 					default:
 					{
-						MS_DEBUG_TAG(
-						  rtcp,
+						MS_DEBUG_TAG_LIVELYAPP(
+						  rtcp, this->appData,
 						  "ignoring unsupported %s Feedback packet "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 						  RTC::RTCP::FeedbackPsPacket::MessageType2String(feedback->GetMessageType()).c_str(),
@@ -2137,8 +2164,8 @@ namespace RTC
 				)
 				// clang-format on
 				{
-					MS_DEBUG_TAG(
-					  rtcp,
+					MS_DEBUG_TAG_LIVELYAPP(
+					  rtcp, this->appData,
 					  "no Consumer found for received Feedback packet "
 					  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 					  feedback->GetSenderSsrc(),
@@ -2153,8 +2180,8 @@ namespace RTC
 					{
 						if (!consumer)
 						{
-							MS_DEBUG_TAG(
-							  rtcp,
+							MS_DEBUG_TAG_LIVELYAPP(
+							  rtcp, this->appData,
 							  "no Consumer found for received NACK Feedback packet "
 							  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 							  feedback->GetSenderSsrc(),
@@ -2188,8 +2215,8 @@ namespace RTC
 
 					default:
 					{
-						MS_DEBUG_TAG(
-						  rtcp,
+						MS_DEBUG_TAG_LIVELYAPP(
+						  rtcp, this->appData,
 						  "ignoring unsupported %s Feedback packet "
 						  "[sender ssrc:%" PRIu32 ", media ssrc:%" PRIu32 "]",
 						  RTC::RTCP::FeedbackRtpPacket::MessageType2String(feedback->GetMessageType()).c_str(),
@@ -2213,8 +2240,8 @@ namespace RTC
 
 					if (!producer)
 					{
-						MS_DEBUG_TAG(
-						  rtcp,
+						MS_DEBUG_TAG_LIVELYAPP(
+						  rtcp, this->appData,
 						  "no Producer found for received Sender Report [ssrc:%" PRIu32 "]",
 						  report->GetSsrc());
 
@@ -2241,7 +2268,7 @@ namespace RTC
 
 			case RTC::RTCP::Type::BYE:
 			{
-				MS_DEBUG_TAG(rtcp, "ignoring received RTCP BYE");
+				MS_DEBUG_TAG_LIVELYAPP(rtcp,  this->appData, "ignoring received RTCP BYE");
 
 				break;
 			}
@@ -2272,8 +2299,8 @@ namespace RTC
 
 								if (!producer)
 								{
-									MS_DEBUG_TAG(
-									  rtcp,
+									MS_DEBUG_TAG_LIVELYAPP(
+									  rtcp, this->appData,
 									  "no Producer found for received Sender Extended Report [ssrc:%" PRIu32 "]",
 									  ssrcInfo->GetSsrc());
 
@@ -2295,8 +2322,8 @@ namespace RTC
 
 			default:
 			{
-				MS_DEBUG_TAG(
-				  rtcp,
+				MS_DEBUG_TAG_LIVELYAPP(
+				  rtcp, this->appData,
 				  "unhandled RTCP type received [type:%" PRIu8 "]",
 				  static_cast<uint8_t>(packet->GetType()));
 			}
@@ -2382,7 +2409,7 @@ namespace RTC
 
 		this->tccClient->RescheduleNextAvailableBitrateEvent();
 
-		MS_DEBUG_DEV("before layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, "before layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 
 		// Redistribute the available bitrate by allowing Consumers to increase
 		// layer by layer. Take into account the priority of each Consumer to
@@ -2428,7 +2455,7 @@ namespace RTC
 				break;
 		}
 
-		MS_DEBUG_DEV("after layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, "after layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
 
 		// Finally instruct Consumers to apply their computed layers.
 		for (auto it = multimapPriorityConsumer.rbegin(); it != multimapPriorityConsumer.rend(); ++it)
@@ -2450,12 +2477,15 @@ namespace RTC
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer      = kv.second;
-			auto desiredBitrate = consumer->GetDesiredBitrate();
+			auto desiredBitrate = consumer->GetDesiredBitrate(); 
 
 			totalDesiredBitrate += desiredBitrate;
 		}
-
-		MS_DEBUG_DEV("total desired bitrate: %" PRIu32, totalDesiredBitrate);
+		
+#ifdef TRANSCODE
+		if (dynamic_cast<RTC::ShmTransport*>(this) == nullptr)
+#endif
+			MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, "total desired bitrate: %" PRIu32, totalDesiredBitrate);
 
 		this->tccClient->SetDesiredBitrate(totalDesiredBitrate, forceBitrate);
 	}
@@ -2708,7 +2738,8 @@ namespace RTC
 
 		this->sendRtxTransmission.Update(packet);
 
-		MS_DEBUG_TAG(rtp, "sendRtxTransmission.GetPacketCount()=%zu", this->sendRtxTransmission.GetPacketCount());
+		MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData,
+			"sendRtxTransmission.GetPacketCount()=%zu", this->sendRtxTransmission.GetPacketCount());
 	}
 
 	inline void Transport::OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc)
@@ -2717,7 +2748,8 @@ namespace RTC
 
 		if (!IsConnected())
 		{
-			MS_WARN_TAG(rtcp, "ignoring key rame request (transport not connected)");
+			MS_WARN_TAG_LIVELYAPP(rtcp, this->appData, 
+				"ignoring key rame request (transport not connected)");
 
 			return;
 		}
@@ -2927,8 +2959,8 @@ namespace RTC
 
 		if (!dataProducer)
 		{
-			MS_WARN_TAG(
-			  sctp, "no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]", streamId);
+			MS_WARN_TAG_LIVELYAPP(sctp, this->appData,
+				"no suitable DataProducer for received SCTP message [streamId:%" PRIu16 "]", streamId);
 
 			return;
 		}
@@ -2963,8 +2995,11 @@ namespace RTC
 	  RTC::TransportCongestionControlClient::Bitrates& bitrates)
 	{
 		MS_TRACE();
-
-		MS_DEBUG_DEV("outgoing available bitrate:%" PRIu32, bitrates.availableBitrate);
+#ifdef TRANSCODE
+		if (dynamic_cast<RTC::ShmTransport*>(this) == nullptr)
+#endif
+			MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, 
+				"outgoing available bitrate:%" PRIu32, bitrates.availableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
@@ -3074,7 +3109,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV(
+		MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, 
 		  "outgoing available bitrate [now:%" PRIu32 ", before:%" PRIu32 "]",
 		  availableBitrate,
 		  previousAvailableBitrate);

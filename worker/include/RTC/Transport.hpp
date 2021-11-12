@@ -267,6 +267,10 @@ namespace RTC
 		// Passed by argument.
 		const std::string id;
 
+	public:
+	  // Optionally comes in the input json
+		std::string appData;
+
 	protected:
 		size_t maxMessageSize{ 262144u };
 		// Allocated by this.

@@ -15,6 +15,10 @@
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
+#include "Lively.hpp"
+#include "LivelyAppDataToJson.hpp"
+
+
 namespace RTC
 {
 	/* Instance methods. */
@@ -30,6 +34,23 @@ namespace RTC
 		{
 			MS_THROW_TYPE_ERROR("missing kind");
 		}
+
+		// appData (optional)
+		auto jsonAppDataIt = data.find("appData");
+		
+		Lively::AppData lively;
+		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
+		{
+			try {
+				lively = jsonAppDataIt->get<Lively::AppData>();
+			}
+			catch (const std::exception& e) {
+				MS_WARN_TAG(rtp, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
+			}
+		}
+
+		lively.id = id;
+		this->appData = lively.ToStr();
 
 		// This may throw.
 		this->kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
@@ -50,7 +71,7 @@ namespace RTC
 		this->rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
 
 		std::string s = jsonRtpParametersIt->dump();
-		MS_DEBUG_TAG(rtp,"Producer ctor RtpParameters: [%s]", s.c_str());
+		MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "Producer ctor RtpParameters: [%s]", s.c_str());
 
 		// Evaluate type.
 		this->type = RTC::RtpParameters::GetType(this->rtpParameters);
@@ -612,7 +633,7 @@ namespace RTC
 
 		if (!rtpStream)
 		{
-			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
 			return ReceiveRtpPacketResult::DISCARDED;
 		}
@@ -747,7 +768,7 @@ namespace RTC
 
 		if (it == this->mapSsrcRtpStream.end())
 		{
-			MS_WARN_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", ssrcInfo->GetSsrc());
+			MS_DEBUG_TAG_LIVELYAPP(rtcp, this->appData, "RtpStream not found [ssrc:%" PRIu32 "]", ssrcInfo->GetSsrc());
 
 			return;
 		}
@@ -936,8 +957,8 @@ namespace RTC
 
 						if (rtpStream->GetRid() == rid)
 						{
-							MS_WARN_TAG(
-							  rtp, "ignoring packet with unknown ssrc but already handled RID (RID lookup)");
+							MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, 
+								"ignoring packet with unknown ssrc but already handled RID (RID lookup)");
 
 							return nullptr;
 						}
@@ -980,7 +1001,7 @@ namespace RTC
 				}
 			}
 
-			MS_WARN_TAG(rtp, "ignoring packet with unknown RID (RID lookup)");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "ignoring packet with unknown RID (RID lookup)");
 
 			return nullptr;
 		}
@@ -1007,8 +1028,8 @@ namespace RTC
 				// Ensure there is no other RTP stream already.
 				if (!this->mapSsrcRtpStream.empty())
 				{
-					MS_WARN_TAG(
-					  rtp,
+					MS_DEBUG_TAG_LIVELYAPP(rtp, 
+						this->appData,
 					  "ignoring packet with unknown ssrc not matching the already existing stream (single RtpStream lookup)");
 
 					return nullptr;
@@ -1071,8 +1092,8 @@ namespace RTC
 		auto& encoding        = this->rtpParameters.encodings[encodingIdx];
 		auto& encodingMapping = this->rtpMapping.encodings[encodingIdx];
 
-		MS_DEBUG_TAG(
-		  rtp,
+		MS_DEBUG_TAG_LIVELYAPP(
+			rtp, this->appData, 
 		  "[encodingIdx:%zu, ssrc:%" PRIu32 ", rid:%s, payloadType:%" PRIu8 "]",
 		  encodingIdx,
 		  ssrc,
@@ -1095,7 +1116,7 @@ namespace RTC
 		// Check in band FEC in codec parameters.
 		if (mediaCodec.parameters.HasInteger("useinbandfec") && mediaCodec.parameters.GetInteger("useinbandfec") == 1)
 		{
-			MS_DEBUG_TAG(rtcp, "in band FEC enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData,  "in band FEC enabled");
 
 			params.useInBandFec = true;
 		}
@@ -1103,7 +1124,7 @@ namespace RTC
 		// Check DTX in codec parameters.
 		if (mediaCodec.parameters.HasInteger("usedtx") && mediaCodec.parameters.GetInteger("usedtx") == 1)
 		{
-			MS_DEBUG_TAG(rtp, "DTX enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "DTX enabled");
 
 			params.useDtx = true;
 		}
@@ -1111,7 +1132,7 @@ namespace RTC
 		// Check DTX in the encoding.
 		if (encoding.dtx)
 		{
-			MS_DEBUG_TAG(rtp, "DTX enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "DTX enabled");
 
 			params.useDtx = true;
 		}
@@ -1195,7 +1216,7 @@ namespace RTC
 
 			if (it == this->rtpMapping.codecs.end())
 			{
-				MS_WARN_TAG(rtp, "unknown payload type [payloadType:%" PRIu8 "]", payloadType);
+				MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "unknown payload type [payloadType:%" PRIu8 "]", payloadType);
 
 				return false;
 			}

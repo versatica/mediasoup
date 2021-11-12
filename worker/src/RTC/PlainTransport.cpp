@@ -799,12 +799,12 @@ namespace RTC
 
 			if (!packet)
 			{
-				MS_WARN_TAG(srtp, "DecryptSrtp() failed due to an invalid RTP packet");
+				MS_WARN_TAG_LIVELYAPP(srtp, this->appData, "DecryptSrtp() failed due to an invalid RTP packet");
 			}
 			else
 			{
-				MS_WARN_TAG(
-				  srtp,
+				MS_WARN_TAG_LIVELYAPP(
+				  srtp, this->appData,
 				  "DecryptSrtp() failed [ssrc:%" PRIu32 ", payloadType:%" PRIu8 ", seq:%" PRIu16 "]",
 				  packet->GetSsrc(),
 				  packet->GetPayloadType(),
@@ -820,7 +820,7 @@ namespace RTC
 
 		if (!packet)
 		{
-			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
+			MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "received data is not a valid RTP packet");
 
 			return;
 		}
@@ -830,7 +830,7 @@ namespace RTC
 		{
 			if (!this->comedia)
 			{
-				MS_DEBUG_TAG(rtp, "ignoring RTP packet while not connected");
+				MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "ignoring RTP packet while not connected");
 
 				// Remove this SSRC.
 				RecvStreamClosed(packet->GetSsrc());
@@ -840,7 +840,7 @@ namespace RTC
 				return;
 			}
 
-			MS_DEBUG_TAG(rtp, "setting RTP tuple (comedia mode enabled)");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "setting RTP tuple (comedia mode enabled)");
 
 			auto wasConnected = IsConnected();
 
@@ -866,7 +866,7 @@ namespace RTC
 		// of the packet.
 		else if (!this->disableOriginCheck && !this->tuple->Compare(tuple))
 		{
-			MS_DEBUG_TAG(rtp, "ignoring RTP packet from unknown IP:port");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "ignoring RTP packet from unknown IP:port");
 
 			// Remove this SSRC.
 			RecvStreamClosed(packet->GetSsrc());
@@ -902,12 +902,12 @@ namespace RTC
 		{
 			if (!this->comedia)
 			{
-				MS_DEBUG_TAG(rtcp, "ignoring RTCP packet while not connected");
+				MS_DEBUG_TAG_LIVELYAPP(rtcp, this->appData, "ignoring RTCP packet while not connected");
 
 				return;
 			}
 
-			MS_DEBUG_TAG(rtp, "setting RTP tuple (comedia mode enabled)");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "setting RTP tuple (comedia mode enabled)");
 
 			auto wasConnected = IsConnected();
 
@@ -935,12 +935,12 @@ namespace RTC
 		{
 			if (!this->comedia)
 			{
-				MS_DEBUG_TAG(rtcp, "ignoring RTCP packet while not connected");
+				MS_DEBUG_TAG_LIVELYAPP(rtcp, this->appData, "ignoring RTCP packet while not connected");
 
 				return;
 			}
 
-			MS_DEBUG_TAG(rtcp, "setting RTCP tuple (comedia mode enabled)");
+			MS_DEBUG_TAG_LIVELYAPP(rtcp, this->appData, "setting RTCP tuple (comedia mode enabled)");
 
 			this->rtcpTuple = new RTC::TransportTuple(tuple);
 
@@ -957,14 +957,14 @@ namespace RTC
 		// If RTCP-mux verify that the packet's tuple matches our RTP tuple.
 		else if (!this->disableOriginCheck && this->rtcpMux && !this->tuple->Compare(tuple))
 		{
-			MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
+			MS_DEBUG_TAG_LIVELYAPP(rtcp, this->appData, "ignoring RTCP packet from unknown IP:port");
 
 			return;
 		}
 		// If no RTCP-mux verify that the packet's tuple matches our RTCP tuple.
 		else if (!this->disableOriginCheck && !this->rtcpMux && !this->rtcpTuple->Compare(tuple))
 		{
-			MS_DEBUG_TAG(rtcp, "ignoring RTCP packet from unknown IP:port");
+			MS_DEBUG_TAG_LIVELYAPP(rtcp, this->appData, "ignoring RTCP packet from unknown IP:port");
 
 			return;
 		}
@@ -973,7 +973,7 @@ namespace RTC
 
 		if (!packet)
 		{
-			MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
+			MS_WARN_TAG_LIVELYAPP(rtcp, this->appData, "received data is not a valid RTCP compound or single packet");
 
 			return;
 		}
@@ -992,12 +992,12 @@ namespace RTC
 		{
 			if (!this->comedia)
 			{
-				MS_DEBUG_TAG(sctp, "ignoring SCTP packet while not connected");
+				MS_DEBUG_TAG_LIVELYAPP(sctp, this->appData, "ignoring SCTP packet while not connected");
 
 				return;
 			}
 
-			MS_DEBUG_TAG(sctp, "setting RTP/SCTP tuple (comedia mode enabled)");
+			MS_DEBUG_TAG_LIVELYAPP(sctp, this->appData, "setting RTP/SCTP tuple (comedia mode enabled)");
 
 			auto wasConnected = IsConnected();
 
@@ -1023,7 +1023,7 @@ namespace RTC
 		// of the packet.
 		if (!this->tuple->Compare(tuple))
 		{
-			MS_DEBUG_TAG(sctp, "ignoring SCTP packet from unknown IP:port");
+			MS_DEBUG_TAG_LIVELYAPP(sctp, this->appData, "ignoring SCTP packet from unknown IP:port");
 
 			return;
 		}

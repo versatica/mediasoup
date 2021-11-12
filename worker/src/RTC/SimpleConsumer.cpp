@@ -258,7 +258,7 @@ namespace RTC
 		if (isSyncPacket)
 		{
 			if (packet->IsKeyFrame())
-				MS_DEBUG_TAG(rtp, "sync key frame received");
+				MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "sync key frame received");
 
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
@@ -280,8 +280,8 @@ namespace RTC
 
 		if (isSyncPacket)
 		{
-			MS_DEBUG_TAG(
-			  rtp,
+			MS_DEBUG_TAG_LIVELYAPP(
+			  rtp, this->appData,
 			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
 			  "] from original [seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
@@ -301,8 +301,8 @@ namespace RTC
 		}
 		else
 		{
-			MS_WARN_TAG(
-			  rtp,
+			MS_WARN_TAG_LIVELYAPP(
+			  rtp, this->appData,
 			  "failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
 			  "] from original [seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
@@ -467,8 +467,8 @@ namespace RTC
 		auto& encoding         = this->rtpParameters.encodings[0];
 		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		MS_DEBUG_TAG(
-		  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
+		MS_DEBUG_TAG_LIVELYAPP(
+		  rtp, this->appData, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
 
 		// Set stream params.
 		RTC::RtpStream::Params params;
@@ -482,7 +482,7 @@ namespace RTC
 		// Check in band FEC in codec parameters.
 		if (mediaCodec->parameters.HasInteger("useinbandfec") && mediaCodec->parameters.GetInteger("useinbandfec") == 1)
 		{
-			MS_DEBUG_TAG(rtp, "in band FEC enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "in band FEC enabled");
 
 			params.useInBandFec = true;
 		}
@@ -490,7 +490,7 @@ namespace RTC
 		// Check DTX in codec parameters.
 		if (mediaCodec->parameters.HasInteger("usedtx") && mediaCodec->parameters.GetInteger("usedtx") == 1)
 		{
-			MS_DEBUG_TAG(rtp, "DTX enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "DTX enabled");
 
 			params.useDtx = true;
 		}
@@ -498,7 +498,7 @@ namespace RTC
 		// Check DTX in the encoding.
 		if (encoding.dtx)
 		{
-			MS_DEBUG_TAG(rtp, "DTX enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "DTX enabled");
 
 			params.useDtx = true;
 		}
@@ -507,19 +507,19 @@ namespace RTC
 		{
 			if (!params.useNack && fb.type == "nack" && fb.parameter.empty())
 			{
-				MS_DEBUG_2TAGS(rtp, rtcp, "NACK supported");
+				MS_DEBUG_2TAGS_LIVELYAPP(rtp, rtcp, this->appData, "NACK supported");
 
 				params.useNack = true;
 			}
 			else if (!params.usePli && fb.type == "nack" && fb.parameter == "pli")
 			{
-				MS_DEBUG_2TAGS(rtp, rtcp, "PLI supported");
+				MS_DEBUG_2TAGS_LIVELYAPP(rtp, rtcp, this->appData, "PLI supported");
 
 				params.usePli = true;
 			}
 			else if (!params.useFir && fb.type == "ccm" && fb.parameter == "fir")
 			{
-				MS_DEBUG_2TAGS(rtp, rtcp, "FIR supported");
+				MS_DEBUG_2TAGS_LIVELYAPP(rtp, rtcp, this->appData, "FIR supported");
 
 				params.useFir = true;
 			}

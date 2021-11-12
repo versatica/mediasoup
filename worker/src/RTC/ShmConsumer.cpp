@@ -68,21 +68,7 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("%s codec not supported for shm", mediaCodec->mimeType.ToString().c_str());
 		}
 
-		MS_DEBUG_TAG(xcode, "ShmConsumer ctor() data [%s] media codec [%s]", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
-		
-		// Optional appData
-		auto jsonAppDataIt = data.find("appData");
-		Lively::AppData lively;
-		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
-		{
-			try {
-				lively = jsonAppDataIt->get<Lively::AppData>();
-				this->appData = lively.ToStr();
-			}
-			catch (const std::exception& e) {
-				MS_WARN_TAG(xcode, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
-			}
-		}
+		MS_DEBUG_TAG_LIVELYAPP(xcode, this->appData, "ShmConsumer ctor() data [%s] media codec [%s]", data.dump().c_str(), mediaCodec->mimeType.ToString().c_str());
 
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
@@ -224,7 +210,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->producerRtpStream = rtpStream;
-		MS_DEBUG_TAG(rtp, "ShmConsumer's producerRtpStream is set up");
+		MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "ShmConsumer's producerRtpStream is set up");
 	}
 
 	void ShmConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t /*mappedSsrc*/)
@@ -270,7 +256,7 @@ namespace RTC
 			this->shmIdleCheckTimer->Restart();
 
 		if (!IsActive()) {
-			MS_DEBUG_TAG(rtp, "consumer is inactive, ignore pkt");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "consumer is inactive, ignore pkt");
 			return;
 		}
 
@@ -280,7 +266,7 @@ namespace RTC
 		// in the corresponding Producer.
 		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
 		{
-			MS_WARN_TAG(rtp, "payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+			MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 			return;
 		}
@@ -302,7 +288,7 @@ namespace RTC
 			// Whether this is the first packet after re-sync.
 			// Sync sequence number and timestamp if required.
 				if (packet->IsKeyFrame())
-					MS_DEBUG_TAG(rtp, "sync key frame received");
+					MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "sync key frame received");
 
 				this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
@@ -342,7 +328,7 @@ namespace RTC
 		// Done with this pkt
 		if (ignorePkt)
 		{
-			MS_DEBUG_TAG(rtp, "need to sync but this is not keyframe, ignore packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "need to sync but this is not keyframe, ignore packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
 				"] from original [seq:%" PRIu16 "]",
 				packet->GetSsrc(),
 				packet->GetSequenceNumber(),
@@ -359,8 +345,9 @@ namespace RTC
 
 		if (isSyncPacket)
 		{
-			MS_DEBUG_TAG(
-				rtp,
+			MS_DEBUG_TAG_LIVELYAPP(
+				rtp, 
+				this->appData, 
 				"sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
 				"] from original [seq:%" PRIu16 "]",
 				packet->GetSsrc(),
@@ -380,8 +367,9 @@ namespace RTC
 		}
 		else
 		{
-			MS_WARN_TAG(
+			MS_WARN_TAG_LIVELYAPP(
 				rtp,
+				this->appData, 
 				"failed to send packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
 				"] from original [seq:%" PRIu16 "]",
 				packet->GetSsrc(),
@@ -394,7 +382,7 @@ namespace RTC
 		{
 			if (this->TestNACK(packet))
 			{
-				MS_DEBUG_TAG(rtp, "Pretend NACK ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
+				MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "Pretend NACK ssrc:%" PRIu32 ", seq:%" PRIu16 " ts: %" PRIu32 " and wait for retransmission",
 				packet->GetSsrc(), packet->GetSequenceNumber(), packet->GetTimestamp());
 				return;
 			}
@@ -455,11 +443,11 @@ namespace RTC
 		if (it != nackPacket.End())
 		{
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;	
-			MS_DEBUG_TAG(rtp,"NACK packet NOT EMPTY");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "NACK packet NOT EMPTY");
 			item->Dump();		
 		}
 		else {
-			MS_DEBUG_TAG(rtp,"NACK packet EMPTY");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "NACK packet EMPTY");
 		}
 
 		this->ReceiveNack(&nackPacket);
@@ -866,8 +854,7 @@ namespace RTC
 		auto& encoding   = this->rtpParameters.encodings[0];
 		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		MS_DEBUG_TAG(
-		  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
+		MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
 
 		// Set stream params.
 		RTC::RtpStream::Params params;
@@ -881,7 +868,7 @@ namespace RTC
 		// Check in band FEC in codec parameters.
 		if (mediaCodec->parameters.HasInteger("useinbandfec") && mediaCodec->parameters.GetInteger("useinbandfec") == 1)
 		{
-			MS_DEBUG_TAG(rtp, "in band FEC enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "in band FEC enabled");
 
 			params.useInBandFec = true;
 		}
@@ -889,7 +876,7 @@ namespace RTC
 		// Check DTX in codec parameters.
 		if (mediaCodec->parameters.HasInteger("usedtx") && mediaCodec->parameters.GetInteger("usedtx") == 1)
 		{
-			MS_DEBUG_TAG(rtp, "DTX enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "DTX enabled");
 
 			params.useDtx = true;
 		}
@@ -897,7 +884,7 @@ namespace RTC
 		// Check DTX in the encoding.
 		if (encoding.dtx)
 		{
-			MS_DEBUG_TAG(rtp, "DTX enabled");
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "DTX enabled");
 
 			params.useDtx = true;
 		}

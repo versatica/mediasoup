@@ -24,6 +24,10 @@ if host_machine.system() == 'windows'
     # Introduced in VS 2017 15.8, allow overaligned types in aligned_storage.
     '-D_ENABLE_EXTENDED_ALIGNED_STORAGE',
   ]
+else
+  cpp_args += [
+    '-O3',
+  ]
 endif
 
 common_sources = [

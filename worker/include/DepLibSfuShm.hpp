@@ -89,6 +89,7 @@ namespace DepLibSfuShm
   	class Listener
 		{
 		public:
+      virtual ~Listener() = default;
 			virtual void OnNeedToSync() = 0;
 		};
 

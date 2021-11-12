@@ -39,28 +39,13 @@ namespace RTC
 				}
 			}
 		*/
-		MS_DEBUG_TAG(xcode, "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
+		MS_DEBUG_TAG_LIVELYAPP(xcode, this->appData, "ShmTransport ctor[transportId:%s] [%s]", this->id.c_str(), data.dump().c_str());
 
 		auto jsonShmIt = data.find("shm");
 		if (jsonShmIt == data.end())
 			MS_THROW_TYPE_ERROR("missing shm in [%s]", data.dump().c_str());
 		else if (!jsonShmIt->is_object())
 			MS_THROW_TYPE_ERROR("wrong shm (not an object) in [%s]", data.dump().c_str());
-
-		// appData (optional)
-		auto jsonAppDataIt = data.find("appData");
-		Lively::AppData lively;
-		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
-		{
-			try {
-				lively = jsonAppDataIt->get<Lively::AppData>();
-				this->appData = lively.ToStr();
-			}
-			catch (const std::exception& e) {
-				MS_WARN_TAG(xcode, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
-			}
-			//MS_DEBUG_TAG_LIVELYAPP(xcode, this->appData, "ShmTransport [transportId:%s]");
-		}
 
 		// Read shm.name
 		std::string shm;
@@ -203,7 +188,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_WARN_TAG(xcode, "shm[%s] idle timeout: no consumers created in ShmTransport [transportId:%s]", this->shmCtx.StreamName().c_str(), this->id.c_str());
+		MS_WARN_TAG_LIVELYAPP(xcode, this->appData, "shm[%s] idle timeout: no consumers created in ShmTransport [transportId:%s]", this->shmCtx.StreamName().c_str(), this->id.c_str());
 	
 		// Close shm writer and let go of shm.
 		this->shmCtx.CloseShmWriterCtx();
@@ -320,7 +305,7 @@ namespace RTC
 
 		if (packet == nullptr)
 		{
-			MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
+			MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "received data is not a valid RTP packet");
 
 			return;
 		}
@@ -341,7 +326,7 @@ namespace RTC
 
 		if (packet == nullptr)
 		{
-			MS_WARN_TAG(rtcp, "received data is not a valid RTCP compound or single packet");
+			MS_WARN_TAG_LIVELYAPP(rtcp, this->appData, "received data is not a valid RTCP compound or single packet");
 
 			return;
 		}

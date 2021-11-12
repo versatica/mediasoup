@@ -13,7 +13,7 @@ namespace Lively
 
   inline void to_json(json& j, const AppData& d)
   {
-    j = json{{"callId", d.callId}, {"peerId", d.peerId}, {"mirrorId", d.mirrorId}, {"streamName", d.streamName}};
+    j = json{{"callId", d.callId}, {"peerId", d.peerId}, {"mirrorId", d.mirrorId}, {"streamName", d.streamName}, {"objectId", d.id}};
   }
 
   inline void from_json(const json& j, AppData& d)
@@ -37,6 +37,11 @@ namespace Lively
       j.at("streamName").get_to(d.streamName);
     }	catch (const std::exception& e) {
       d.streamName = "";
+		}
+    try {
+      j.at("objectId").get_to(d.id);
+    }	catch (const std::exception& e) {
+      d.id = "";
 		}
   }
 }; // namespace Lively
