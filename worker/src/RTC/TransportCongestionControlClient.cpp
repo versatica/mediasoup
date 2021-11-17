@@ -122,45 +122,51 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->rtpTransportControllerSend != nullptr)
+		if (this->rtpTransportControllerSend == nullptr)
 		{
-			this->rtpTransportControllerSend->packet_sender()->InsertPacket(packetInfo.length);
-			this->rtpTransportControllerSend->OnAddPacket(packetInfo);
+			return;
 		}
+
+		this->rtpTransportControllerSend->packet_sender()->InsertPacket(packetInfo.length);
+		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
 	}
 
 	webrtc::PacedPacketInfo TransportCongestionControlClient::GetPacingInfo()
 	{
 		MS_TRACE();
 
-		if (this->rtpTransportControllerSend != nullptr)
+		if (this->rtpTransportControllerSend == nullptr)
 		{
-			return this->rtpTransportControllerSend->packet_sender()->GetPacingInfo();
+			return {};
 		}
 
-		return {};
+		return this->rtpTransportControllerSend->packet_sender()->GetPacingInfo();
 	}
 
 	void TransportCongestionControlClient::PacketSent(webrtc::RtpPacketSendInfo& packetInfo, int64_t nowMs)
 	{
 		MS_TRACE();
 
-		if (this->rtpTransportControllerSend != nullptr)
+		if (this->rtpTransportControllerSend == nullptr)
 		{
-			// Notify the transport feedback adapter about the sent packet.
-			rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, nowMs);
-			this->rtpTransportControllerSend->OnSentPacket(sentPacket, packetInfo.length);
+			return;
 		}
+
+		// Notify the transport feedback adapter about the sent packet.
+		rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, nowMs);
+		this->rtpTransportControllerSend->OnSentPacket(sentPacket, packetInfo.length);
 	}
 
 	void TransportCongestionControlClient::ReceiveEstimatedBitrate(uint32_t bitrate)
 	{
 		MS_TRACE();
 
-		if (this->rtpTransportControllerSend != nullptr)
+		if (this->rtpTransportControllerSend == nullptr)
 		{
-			this->rtpTransportControllerSend->OnReceivedEstimatedBitrate(bitrate);
+			return;
 		}
+
+		this->rtpTransportControllerSend->OnReceivedEstimatedBitrate(bitrate);
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpReceiverReport(
@@ -185,11 +191,13 @@ namespace RTC
 			  report->GetDelaySinceLastSenderReport());
 		}
 
-		if (this->rtpTransportControllerSend != nullptr)
+		if (this->rtpTransportControllerSend == nullptr)
 		{
-			this->rtpTransportControllerSend->OnReceivedRtcpReceiverReport(
-			  reportBlockList, static_cast<int64_t>(rtt), nowMs);
+			return;
 		}
+
+		this->rtpTransportControllerSend->OnReceivedRtcpReceiverReport(
+		  reportBlockList, static_cast<int64_t>(rtt), nowMs);
 	}
 
 	void TransportCongestionControlClient::ReceiveRtcpTransportFeedback(
@@ -207,10 +215,12 @@ namespace RTC
 		}
 		this->UpdatePacketLoss(static_cast<double>(lost_packets) / expected_packets);
 
-		if (this->rtpTransportControllerSend != nullptr)
+		if (this->rtpTransportControllerSend == nullptr)
 		{
-			this->rtpTransportControllerSend->OnTransportFeedback(*feedback);
+			return;
 		}
+
+		this->rtpTransportControllerSend->OnTransportFeedback(*feedback);
 	}
 
 	void TransportCongestionControlClient::UpdatePacketLoss(double packetLoss)
@@ -292,8 +302,9 @@ namespace RTC
 			// to avoid constant small fluctuations requiring extra probing and making the estimation
 			// less stable (requires constant redistribution of bitrate accross consumers).
 			auto maxBitrateMargin = this->bitrates.maxBitrate * MaxBitrateMarginFactor;
-			if (prevMaxBitrate > this->bitrates.maxBitrate - maxBitrateMargin &&
-				prevMaxBitrate < this->bitrates.maxBitrate + maxBitrateMargin)
+			if (
+			  prevMaxBitrate > this->bitrates.maxBitrate - maxBitrateMargin &&
+			  prevMaxBitrate < this->bitrates.maxBitrate + maxBitrateMargin)
 			{
 				this->bitrates.maxBitrate = prevMaxBitrate;
 			}
@@ -320,20 +331,22 @@ namespace RTC
 		  this->bitrates.maxBitrate,
 		  this->bitrates.maxPaddingBitrate);
 
-		if (this->rtpTransportControllerSend != nullptr)
+		if (this->rtpTransportControllerSend == nullptr)
 		{
-			this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
-			  this->bitrates.minBitrate, this->bitrates.maxPaddingBitrate, this->bitrates.maxBitrate);
-
-			webrtc::TargetRateConstraints constraints;
-
-			constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTimeMs());
-			constraints.min_data_rate = webrtc::DataRate::bps(this->bitrates.minBitrate);
-			constraints.max_data_rate = webrtc::DataRate::bps(this->bitrates.maxBitrate);
-			constraints.starting_rate = webrtc::DataRate::bps(this->bitrates.startBitrate);
-
-			this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
+			return;
 		}
+
+		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
+		  this->bitrates.minBitrate, this->bitrates.maxPaddingBitrate, this->bitrates.maxBitrate);
+
+		webrtc::TargetRateConstraints constraints;
+
+		constraints.at_time       = webrtc::Timestamp::ms(DepLibUV::GetTimeMs());
+		constraints.min_data_rate = webrtc::DataRate::bps(this->bitrates.minBitrate);
+		constraints.max_data_rate = webrtc::DataRate::bps(this->bitrates.maxBitrate);
+		constraints.starting_rate = webrtc::DataRate::bps(this->bitrates.startBitrate);
+
+		this->rtpTransportControllerSend->SetClientBitratePreferences(constraints);
 	}
 
 	uint32_t TransportCongestionControlClient::GetAvailableBitrate() const
