@@ -384,6 +384,7 @@ namespace Utils
 			if (ptr)
 				this->pool.push_back(ptr);
 		}
+
 	private:
 		std::vector<T*> pool;
 	};

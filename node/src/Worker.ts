@@ -193,6 +193,9 @@ export class Worker extends EnhancedEventEmitter
 	// Closed flag.
 	#closed = false;
 
+	// Died dlag.
+	#died = false;
+
 	// Custom app data.
 	readonly #appData?: any;
 
@@ -329,7 +332,6 @@ export class Worker extends EnhancedEventEmitter
 		this.#child.on('exit', (code, signal) =>
 		{
 			this.#child = undefined;
-			this.close();
 
 			if (!spawnDone)
 			{
@@ -340,6 +342,7 @@ export class Worker extends EnhancedEventEmitter
 					logger.error(
 						'worker process failed due to wrong settings [pid:%s]', this.#pid);
 
+					this.close();
 					this.emit('@failure', new TypeError('wrong settings'));
 				}
 				else
@@ -348,6 +351,7 @@ export class Worker extends EnhancedEventEmitter
 						'worker process failed unexpectedly [pid:%s, code:%s, signal:%s]',
 						this.#pid, code, signal);
 
+					this.close();
 					this.emit(
 						'@failure',
 						new Error(`[pid:${this.#pid}, code:${code}, signal:${signal}]`));
@@ -359,8 +363,7 @@ export class Worker extends EnhancedEventEmitter
 					'worker process died unexpectedly [pid:%s, code:%s, signal:%s]',
 					this.#pid, code, signal);
 
-				this.safeEmit(
-					'died',
+				this.workerDied(
 					new Error(`[pid:${this.#pid}, code:${code}, signal:${signal}]`));
 			}
 		});
@@ -368,7 +371,6 @@ export class Worker extends EnhancedEventEmitter
 		this.#child.on('error', (error) =>
 		{
 			this.#child = undefined;
-			this.close();
 
 			if (!spawnDone)
 			{
@@ -377,6 +379,7 @@ export class Worker extends EnhancedEventEmitter
 				logger.error(
 					'worker process failed [pid:%s]: %s', this.#pid, error.message);
 
+				this.close();
 				this.emit('@failure', error);
 			}
 			else
@@ -384,7 +387,7 @@ export class Worker extends EnhancedEventEmitter
 				logger.error(
 					'worker process error [pid:%s]: %s', this.#pid, error.message);
 
-				this.safeEmit('died', error);
+				this.workerDied(error);
 			}
 		});
 
@@ -423,6 +426,14 @@ export class Worker extends EnhancedEventEmitter
 	get closed(): boolean
 	{
 		return this.#closed;
+	}
+
+	/**
+	 * Whether the Worker died.
+	 */
+	get died(): boolean
+	{
+		return this.#died;
 	}
 
 	/**
@@ -577,5 +588,34 @@ export class Worker extends EnhancedEventEmitter
 		this.#observer.safeEmit('newrouter', router);
 
 		return router;
+	}
+
+	private workerDied(error: Error): void
+	{
+		if (this.#closed)
+			return;
+
+		logger.debug(`died() [error:${error}]`);
+
+		this.#closed = true;
+		this.#died = true;
+
+		// Close the Channel instance.
+		this.#channel.close();
+
+		// Close the PayloadChannel instance.
+		this.#payloadChannel.close();
+
+		// Close every Router.
+		for (const router of this.#routers)
+		{
+			router.workerClosed();
+		}
+		this.#routers.clear();
+
+		this.safeEmit('died', error);
+
+		// Emit observer event.
+		this.#observer.safeEmit('close');
 	}
 }

@@ -398,14 +398,11 @@ impl Inner {
                 let request = RouterCloseRequest {
                     internal: RouterInternal { router_id: self.id },
                 };
-                let worker = self.worker.clone();
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("router closing failed on drop: {}", error);
                         }
-
-                        drop(worker);
                     })
                     .detach();
             }

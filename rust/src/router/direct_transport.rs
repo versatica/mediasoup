@@ -176,14 +176,11 @@ impl Inner {
                         transport_id: self.id,
                     },
                 };
-                let router = self.router.clone();
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
-
-                        drop(router);
                     })
                     .detach();
             }

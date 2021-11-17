@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ActiveSpeakerObserver = void 0;
 const Logger_1 = require("./Logger");
 const RtpObserver_1 = require("./RtpObserver");
 const logger = new Logger_1.Logger('ActiveSpeakerObserver');

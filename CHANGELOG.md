@@ -1,7 +1,28 @@
 # Changelog
 
 
-### WIP
+### 3.9.2
+
+* `pipeToRouter()`: Reuse same `PipeTransport` when possible (PR #697).
+* Add `worker.died` boolean getter.
+* Update TypeScript version to 4.X.X and use `target: "esnext"` so transpilation of ECMAScript private fields (`#xxxxx`) don't use `WeakMaps` tricks but use standard syntax instead.
+* Use more than one core for compilation on Windows (PR #709).
+* `Consumer`: Modification of bitrate allocation algorithm (PR #708).
+* Update NPM deps.
+
+
+### 3.9.1
+
+* NixOS friendly build process (PR #683).
+* `Worker: emit "died" event before observer "close" (PR #684).
+* Transport: Hide debug message for RTX RTCP-RR packets (PR #688).
+* Update `libuv to 1.42.0.
+* Improve Windows support (PR #692).
+* Avoid build commands when MEDIASOUP_WORKER_BIN is set (PR #695).
+* Update NPM deps.
+
+
+### 3.9.0
 
 * Replaces GYP build system with fully-functional Meson build system (PR #622).
 * Worker communication optimization (aka removing netstring dependency) (PR #644).

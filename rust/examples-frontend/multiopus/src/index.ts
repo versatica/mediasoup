@@ -142,7 +142,7 @@ async function init()
 					//  this case properly
 					{
 						// @ts-ignore
-						const pc = consumerTransport._handler._pc as RTCPeerConnection;
+						const pc = consumerTransport._handler._pc;
 						const setLocalDescription = pc.setLocalDescription;
 
 						pc.setLocalDescription = (answer: {type: 'answer'; sdp: string}) =>
