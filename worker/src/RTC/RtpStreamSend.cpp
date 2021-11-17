@@ -58,6 +58,7 @@ namespace RTC
 		{
 			this->startSeq = seq;
 			this->buffer.push_back(storageItem);
+
 			return true;
 		}
 
@@ -66,6 +67,7 @@ namespace RTC
 		if (idx < static_cast<uint16_t>(this->buffer.size()))
 		{
 			this->buffer[idx] = storageItem;
+
 			return true;
 		}
 
