@@ -924,7 +924,8 @@ namespace RTC
 		packet->RestorePayload();
 	}
 
-	RTC::RTCP::CompoundPacket* SimulcastConsumer::GetRtcp(RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
+	RTC::RTCP::CompoundPacket::UniquePtr SimulcastConsumer::GetRtcp(
+	  RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -938,7 +939,7 @@ namespace RTC
 		if (!report)
 			return nullptr;
 
-		auto* packet = RTC::RTCP::CompoundPacket::Create();
+		auto packet = RTC::RTCP::CompoundPacket::Create();
 
 		packet->AddSenderReport(report);
 

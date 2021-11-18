@@ -752,14 +752,14 @@ namespace RTC
 		rtpStream->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo);
 	}
 
-	RTC::RTCP::CompoundPacket* Producer::GetRtcp(uint64_t nowMs)
+	RTC::RTCP::CompoundPacket::UniquePtr Producer::GetRtcp(uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return nullptr;
 
-		auto* packet = RTC::RTCP::CompoundPacket::Create();
+		auto packet = RTC::RTCP::CompoundPacket::Create();
 
 		for (auto& kv : this->mapSsrcRtpStream)
 		{

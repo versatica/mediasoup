@@ -15,8 +15,8 @@ namespace RTC
 		class CompoundPacket
 		{
 		public:
-			static CompoundPacket* Create();
-			static void ReturnIntoPool(CompoundPacket* packet);
+			using UniquePtr = std::unique_ptr<CompoundPacket>;
+			static UniquePtr Create();
 
 		public:
 			const uint8_t* GetData() const
@@ -60,6 +60,9 @@ namespace RTC
 			// Use `CompoundPacket::ReturnIntoPool()` instead
 			~CompoundPacket() = default;
 
+			friend struct std::default_delete<RTC::RTCP::CompoundPacket>;
+			static void ReturnIntoPool(CompoundPacket* packet);
+
 		private:
 			uint8_t* header{ nullptr };
 			size_t size{ 0 };
@@ -71,4 +74,15 @@ namespace RTC
 	} // namespace RTCP
 } // namespace RTC
 
+namespace std
+{
+	template<>
+	struct default_delete<RTC::RTCP::CompoundPacket>
+	{
+		void operator()(RTC::RTCP::CompoundPacket* ptr) const
+		{
+			RTC::RTCP::CompoundPacket::ReturnIntoPool(ptr);
+		}
+	};
+}; // namespace std
 #endif

@@ -12,12 +12,11 @@ namespace RTC
 
 		/* Instance methods. */
 
-		CompoundPacket* CompoundPacket::Create()
+		CompoundPacket::UniquePtr CompoundPacket::Create()
 		{
 			auto* packet = CompoundPacketPool.Allocate();
-			new (packet) CompoundPacket();
 
-			return packet;
+			return UniquePtr(new (packet) CompoundPacket());
 		}
 
 		void CompoundPacket::ReturnIntoPool(CompoundPacket* packet)

@@ -31,7 +31,7 @@ namespace RTC
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket) override;
-		RTC::RTCP::CompoundPacket* GetRtcp(RTC::RtpStreamSend* rtpStream, uint64_t nowMs) override;
+		RTC::RTCP::CompoundPacket::UniquePtr GetRtcp(RTC::RtpStreamSend* rtpStream, uint64_t nowMs) override;
 		const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const override
 		{
 			return this->rtpStreams;

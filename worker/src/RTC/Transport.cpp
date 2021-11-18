@@ -2312,7 +2312,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::RTCP::CompoundPacket* packet{ nullptr };
+		RTC::RTCP::CompoundPacket::UniquePtr packet(nullptr);
 
 		for (auto& kv : this->mapConsumers)
 		{
@@ -2320,37 +2320,32 @@ namespace RTC
 
 			for (const auto& rtpStream : consumer->GetRtpStreams())
 			{
-				RTC::RTCP::CompoundPacket::ReturnIntoPool(packet);
 				packet = consumer->GetRtcp(rtpStream, nowMs);
 
 				// Send the RTCP compound packet if there is a sender report.
 				if (packet != nullptr && packet->HasSenderReport())
 				{
 					packet->Serialize(RTC::RTCP::Buffer);
-					SendRtcpCompoundPacket(packet);
+					SendRtcpCompoundPacket(packet.get());
 				}
 			}
 		}
 
 		// Reset the Compound packet.
-		RTC::RTCP::CompoundPacket::ReturnIntoPool(packet);
 		packet = nullptr;
 
 		for (auto& kv : this->mapProducers)
 		{
 			auto* producer = kv.second;
 
-			RTC::RTCP::CompoundPacket::ReturnIntoPool(packet);
 			packet = producer->GetRtcp(nowMs);
 
 			// One more RR would exceed the MTU, send the compound packet now.
 			if (packet != nullptr && packet->GetSize() + sizeof(RTCP::ReceiverReport::Header) > RTC::MtuSize)
 			{
 				packet->Serialize(RTC::RTCP::Buffer);
-				SendRtcpCompoundPacket(packet);
+				SendRtcpCompoundPacket(packet.get());
 
-				// Reset the Compound packet.
-				RTC::RTCP::CompoundPacket::ReturnIntoPool(packet);
 				packet = nullptr;
 			}
 		}
@@ -2358,10 +2353,8 @@ namespace RTC
 		if (packet != nullptr && packet->GetReceiverReportCount() != 0u)
 		{
 			packet->Serialize(RTC::RTCP::Buffer);
-			SendRtcpCompoundPacket(packet);
+			SendRtcpCompoundPacket(packet.get());
 		}
-
-		RTC::RTCP::CompoundPacket::ReturnIntoPool(packet);
 	}
 
 	void Transport::DistributeAvailableOutgoingBitrate()

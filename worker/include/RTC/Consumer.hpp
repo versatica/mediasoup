@@ -138,13 +138,14 @@ namespace RTC
 		{
 			this->externallyManagedBitrate = true;
 		}
-		virtual uint8_t GetBitratePriority() const                                                = 0;
-		virtual uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss)                       = 0;
-		virtual void ApplyLayers()                                                                = 0;
-		virtual uint32_t GetDesiredBitrate() const                                                = 0;
-		virtual void SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket)         = 0;
-		virtual const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const                     = 0;
-		virtual RTC::RTCP::CompoundPacket* GetRtcp(RTC::RtpStreamSend* rtpStream, uint64_t nowMs) = 0;
+		virtual uint8_t GetBitratePriority() const                                        = 0;
+		virtual uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss)               = 0;
+		virtual void ApplyLayers()                                                        = 0;
+		virtual uint32_t GetDesiredBitrate() const                                        = 0;
+		virtual void SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket) = 0;
+		virtual const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const             = 0;
+		virtual RTC::RTCP::CompoundPacket::UniquePtr GetRtcp(
+		  RTC::RtpStreamSend* rtpStream, uint64_t nowMs) = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
 		virtual void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) = 0;
 		virtual void ReceiveKeyFrameRequest(

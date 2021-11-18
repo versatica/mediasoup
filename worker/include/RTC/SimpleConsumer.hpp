@@ -45,7 +45,7 @@ namespace RTC
 		{
 			return this->rtpStreams;
 		}
-		RTC::RTCP::CompoundPacket* GetRtcp(RTC::RtpStreamSend* rtpStream, uint64_t nowMs) override;
+		RTC::RTCP::CompoundPacket::UniquePtr GetRtcp(RTC::RtpStreamSend* rtpStream, uint64_t nowMs) override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
