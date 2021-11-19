@@ -22,7 +22,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		if (!helpers::readBinaryFile("data/packet1.raw", buffer, &len))
 			FAIL("cannot open file");
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, len);
+		auto packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -46,8 +46,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenValue == nullptr);
 		REQUIRE(packet->ReadRid(rid) == false);
 		REQUIRE(rid == "");
-
-		packet->DecRefCount();
 	}
 
 	SECTION("parse packet2.raw")
@@ -57,7 +55,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		if (!helpers::readBinaryFile("data/packet2.raw", buffer, &len))
 			FAIL("cannot open file");
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, len);
+		auto packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -72,8 +70,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetHeaderExtensionLength() == 0);
 		REQUIRE(packet->HasOneByteExtensions() == false);
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
-
-		packet->DecRefCount();
 	}
 
 	SECTION("parse packet3.raw")
@@ -88,7 +84,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		if (!helpers::readBinaryFile("data/packet3.raw", buffer, &len))
 			FAIL("cannot open file");
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, len);
+		auto packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -127,7 +123,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
-		auto* clonedPacket = packet->Clone();
+		auto clonedPacket = packet->Clone();
 
 		std::memset(buffer, '0', sizeof(buffer));
 
@@ -162,9 +158,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenValue[2] == 0x1e);
 		REQUIRE(clonedPacket->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
-
-		packet->DecRefCount();
-		clonedPacket->DecRefCount();
 	}
 
 	SECTION("create RtpPacket without header extension")
@@ -178,7 +171,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		};
 		// clang-format on
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+		auto packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -191,8 +184,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions() == false);
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetSsrc() == 5);
-
-		packet->DecRefCount();
 	}
 
 	SECTION("create RtpPacket with One-Byte header extension")
@@ -210,7 +201,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		};
 		// clang-format on
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+		auto packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -232,8 +223,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		REQUIRE(packet->GetPayloadLength() == 1000);
 		REQUIRE(packet->GetSize() == 1028);
-
-		packet->DecRefCount();
 	}
 
 	SECTION("create RtpPacket with Two-Bytes header extension")
@@ -255,7 +244,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint8_t extenLen;
 		uint8_t* extenValue;
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+		auto packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -298,8 +287,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasExtension(5) == false);
 		REQUIRE(extenValue == nullptr);
 		REQUIRE(extenLen == 0);
-
-		packet->DecRefCount();
 	}
 
 	SECTION("rtx encryption-decryption")
@@ -322,7 +309,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint32_t rtxSsrc{ 6 };
 		uint16_t rtxSeq{ 80 };
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+		auto packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -339,8 +326,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions());
 
 		auto rtxPacket = packet->Clone();
-
-		packet->DecRefCount();
 
 		std::memset(buffer, '0', sizeof(buffer));
 
@@ -369,8 +354,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(rtxPacket->GetHeaderExtensionLength() == 12);
 		REQUIRE(rtxPacket->HasOneByteExtensions() == false);
 		REQUIRE(rtxPacket->HasTwoBytesExtensions());
-
-		rtxPacket->DecRefCount();
 	}
 
 	SECTION("create RtpPacket and apply payload shift to it")
@@ -395,8 +378,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		};
 		// clang-format on
 
-		size_t len        = 40;
-		RtpPacket* packet = RtpPacket::Parse(buffer, len);
+		size_t len  = 40;
+		auto packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -480,8 +463,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadLength() == 1000);
 		REQUIRE(packet->GetPayloadPadding() == 0);
 		REQUIRE(packet->GetSize() == 1028);
-
-		packet->DecRefCount();
 	}
 
 	SECTION("set One-Byte header extensions")
@@ -505,7 +486,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		};
 		// clang-format on
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, 28);
+		auto packet = RtpPacket::Parse(buffer, 28);
 		std::vector<RTC::RtpPacket::GenericExtension> extensions;
 		uint8_t extenLen;
 		uint8_t* extenValue;
@@ -644,8 +625,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenValue[1] == 0x02);
 		REQUIRE(extenValue[2] == 0x03);
 		REQUIRE(extenValue[3] == 0x00);
-
-		packet->DecRefCount();
 	}
 
 	SECTION("set Two-Bytes header extensions")
@@ -668,7 +647,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		};
 		// clang-format on
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, 28);
+		auto packet = RtpPacket::Parse(buffer, 28);
 		std::vector<RTC::RtpPacket::GenericExtension> extensions;
 		uint8_t extenLen;
 		uint8_t* extenValue;
@@ -789,8 +768,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetExtension(24, extenLen));
 		REQUIRE(packet->HasExtension(24) == true);
 		REQUIRE(extenLen == 4);
-
-		packet->DecRefCount();
 	}
 
 	SECTION("read frame-marking extension")
@@ -807,7 +784,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		};
 		// clang-format on
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+		auto packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -839,7 +816,5 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(frameMarking->tid == 3);
 		REQUIRE(frameMarking->lid == 1);
 		REQUIRE(frameMarking->tl0picidx == 5);
-
-		packet->DecRefCount();
 	}
 }

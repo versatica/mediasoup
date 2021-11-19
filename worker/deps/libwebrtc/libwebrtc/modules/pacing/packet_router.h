@@ -35,7 +35,7 @@ class PacketRouter {
                           const PacedPacketInfo& cluster_info) = 0;
 
   // MS_NOTE: Changed to return a single RtpPacket pointer (maybe nullptr).
-  virtual RTC::RtpPacket* GeneratePadding(size_t target_size_bytes) = 0;
+  virtual RTC::RtpPacket::SharedPtr GeneratePadding(size_t target_size_bytes) = 0;
 };
 }  // namespace webrtc
 #endif  // MODULES_PACING_PACKET_ROUTER_H_

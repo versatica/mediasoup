@@ -40,14 +40,14 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		// clang-format on
 
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
-		RtpPacket* packet1 = RtpPacket::Parse(rtpBuffer1, sizeof(rtpBuffer1));
+		auto packet1 = RtpPacket::Parse(rtpBuffer1, sizeof(rtpBuffer1));
 
 		REQUIRE(packet1);
 		REQUIRE(packet1->GetSequenceNumber() == 21006);
 		REQUIRE(packet1->GetTimestamp() == 1533790901);
 
 		// packet2 [pt:123, seq:21007, timestamp:1533791173]
-		RtpPacket* packet2 = packet1->Clone();
+		auto packet2 = packet1->Clone();
 
 		packet2->SetSequenceNumber(21007);
 		packet2->SetTimestamp(1533791173);
@@ -56,7 +56,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet2->GetTimestamp() == 1533791173);
 
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
-		RtpPacket* packet3 = packet1->Clone();
+		auto packet3 = packet1->Clone();
 
 		packet3->SetSequenceNumber(21008);
 		packet3->SetTimestamp(1533793871);
@@ -65,7 +65,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet3->GetTimestamp() == 1533793871);
 
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
-		RtpPacket* packet4 = packet1->Clone();
+		auto packet4 = packet1->Clone();
 
 		packet4->SetSequenceNumber(21009);
 		packet4->SetTimestamp(1533793871);
@@ -74,7 +74,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet4->GetTimestamp() == 1533793871);
 
 		// packet5 [pt:123, seq:21010, timestamp:1533971078]
-		RtpPacket* packet5 = packet1->Clone();
+		auto packet5 = packet1->Clone();
 
 		packet5->SetSequenceNumber(21010);
 		packet5->SetTimestamp(1533971078);
@@ -94,36 +94,36 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 
 		// Receive all the packets (some of them not in order and/or duplicated).
 		{
-			RtpPacket* clonedPacket{ nullptr };
-			stream->ReceivePacket(packet1, &clonedPacket);
+			RtpPacket::SharedPtr clonedPacket{ nullptr };
+			stream->ReceivePacket(packet1.get(), &clonedPacket);
 		}
 		{
-			RtpPacket* clonedPacket{ nullptr };
-			stream->ReceivePacket(packet3, &clonedPacket);
+			RtpPacket::SharedPtr clonedPacket{ nullptr };
+			stream->ReceivePacket(packet3.get(), &clonedPacket);
 		}
 		{
-			RtpPacket* clonedPacket{ nullptr };
-			stream->ReceivePacket(packet2, &clonedPacket);
+			RtpPacket::SharedPtr clonedPacket{ nullptr };
+			stream->ReceivePacket(packet2.get(), &clonedPacket);
 		}
 		{
-			RtpPacket* clonedPacket{ nullptr };
-			stream->ReceivePacket(packet3, &clonedPacket);
+			RtpPacket::SharedPtr clonedPacket{ nullptr };
+			stream->ReceivePacket(packet3.get(), &clonedPacket);
 		}
 		{
-			RtpPacket* clonedPacket{ nullptr };
-			stream->ReceivePacket(packet4, &clonedPacket);
+			RtpPacket::SharedPtr clonedPacket{ nullptr };
+			stream->ReceivePacket(packet4.get(), &clonedPacket);
 		}
 		{
-			RtpPacket* clonedPacket{ nullptr };
-			stream->ReceivePacket(packet4, &clonedPacket);
+			RtpPacket::SharedPtr clonedPacket{ nullptr };
+			stream->ReceivePacket(packet4.get(), &clonedPacket);
 		}
 		{
-			RtpPacket* clonedPacket{ nullptr };
-			stream->ReceivePacket(packet5, &clonedPacket);
+			RtpPacket::SharedPtr clonedPacket{ nullptr };
+			stream->ReceivePacket(packet5.get(), &clonedPacket);
 		}
 		{
-			RtpPacket* clonedPacket{ nullptr };
-			stream->ReceivePacket(packet5, &clonedPacket);
+			RtpPacket::SharedPtr clonedPacket{ nullptr };
+			stream->ReceivePacket(packet5.get(), &clonedPacket);
 		}
 
 		// Create a NACK item that request for all the packets.
@@ -162,12 +162,6 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(rtxPacket4->GetSequenceNumber() == packet5->GetSequenceNumber());
 		REQUIRE(rtxPacket4->GetTimestamp() == packet5->GetTimestamp());
 
-		// Clean stuff.
-		packet1->DecRefCount();
-		packet2->DecRefCount();
-		packet3->DecRefCount();
-		packet4->DecRefCount();
-		packet5->DecRefCount();
 		delete stream;
 	}
 }

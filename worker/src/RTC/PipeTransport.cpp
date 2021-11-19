@@ -594,7 +594,7 @@ namespace RTC
 
 		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &intLen))
 		{
-			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, static_cast<size_t>(intLen));
+			auto packet = RTC::RtpPacket::Parse(data, static_cast<size_t>(intLen));
 
 			if (!packet)
 			{
@@ -608,14 +608,12 @@ namespace RTC
 				  packet->GetSsrc(),
 				  packet->GetPayloadType(),
 				  packet->GetSequenceNumber());
-
-				packet->DecRefCount();
 			}
 
 			return;
 		}
 
-		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, static_cast<size_t>(intLen));
+		auto packet = RTC::RtpPacket::Parse(data, static_cast<size_t>(intLen));
 
 		if (!packet)
 		{
@@ -632,15 +630,11 @@ namespace RTC
 			// Remove this SSRC.
 			RecvStreamClosed(packet->GetSsrc());
 
-			packet->DecRefCount();
-
 			return;
 		}
 
 		// Pass the packet to the parent transport.
-		RTC::Transport::ReceiveRtpPacket(packet);
-
-		packet->DecRefCount();
+		RTC::Transport::ReceiveRtpPacket(packet.get());
 	}
 
 	inline void PipeTransport::OnRtcpDataReceived(

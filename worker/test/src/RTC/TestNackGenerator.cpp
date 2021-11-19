@@ -116,7 +116,7 @@ uint8_t rtpBuffer[] =
 // clang-format on
 
 // [pt:123, seq:21006, timestamp:1533790901]
-RtpPacket* packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
+auto packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
 
 void validate(std::vector<TestNackGeneratorInput>& inputs)
 {
@@ -131,7 +131,7 @@ void validate(std::vector<TestNackGeneratorInput>& inputs)
 
 		packet->SetPayloadDescriptorHandler(tpdh);
 		packet->SetSequenceNumber(input.seq);
-		nackGenerator.ReceivePacket(packet, /*isRecovered*/ false);
+		nackGenerator.ReceivePacket(packet.get(), /*isRecovered*/ false);
 
 		listener.Check(nackGenerator);
 	}

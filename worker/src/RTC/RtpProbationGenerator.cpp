@@ -130,10 +130,10 @@ namespace RTC
 		delete[] this->probationPacketBuffer;
 
 		// Release the probation RTP packet.
-		this->probationPacket->DecRefCount();
+		this->probationPacket.reset();
 	}
 
-	RTC::RtpPacket* RtpProbationGenerator::GetNextPacket(size_t size)
+	RTC::RtpPacket::SharedPtr RtpProbationGenerator::GetNextPacket(size_t size)
 	{
 		MS_TRACE();
 

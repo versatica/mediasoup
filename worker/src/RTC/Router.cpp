@@ -700,7 +700,7 @@ namespace RTC
 			// Cloned ref-counted packet that consumers will all store for as long as needed
 			// while also avoiding multiple allocations unless absolutely necessary.
 			// Clone only happens if needed though.
-			RtpPacket* clonedPacket{ nullptr };
+			RtpPacket::SharedPtr clonedPacket{ nullptr };
 
 			for (auto* consumer : consumers)
 			{
