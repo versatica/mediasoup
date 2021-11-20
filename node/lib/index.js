@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getSupportedRtpCapabilities = exports.createWorker = exports.observer = exports.parseScalabilityMode = exports.version = exports.types = void 0;
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const Worker_1 = require("./Worker");
@@ -10,12 +11,12 @@ exports.types = types;
 /**
  * Expose mediasoup version.
  */
-exports.version = '3.8.4';
+exports.version = '3.9.2';
 /**
  * Expose parseScalabilityMode() function.
  */
 var scalabilityModes_1 = require("./scalabilityModes");
-exports.parseScalabilityMode = scalabilityModes_1.parse;
+Object.defineProperty(exports, "parseScalabilityMode", { enumerable: true, get: function () { return scalabilityModes_1.parse; } });
 const logger = new Logger_1.Logger();
 const observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
 exports.observer = observer;

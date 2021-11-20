@@ -1,19 +1,6 @@
 "use strict";
-var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to set private field on non-instance");
-    }
-    privateMap.set(receiver, value);
-    return value;
-};
-var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to get private field on non-instance");
-    }
-    return privateMap.get(receiver);
-};
-var _closed, _producerSocket, _consumerSocket, _nextId, _sents, _recvBuffer;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Channel = void 0;
 const os = require("os");
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
@@ -24,55 +11,55 @@ const logger = new Logger_1.Logger('Channel');
 const MESSAGE_MAX_LEN = 4194308;
 const PAYLOAD_MAX_LEN = 4194304;
 class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
+    // Closed flag.
+    #closed = false;
+    // Unix Socket instance for sending messages to the worker process.
+    #producerSocket;
+    // Unix Socket instance for receiving messages to the worker process.
+    #consumerSocket;
+    // Next id for messages sent to the worker process.
+    #nextId = 0;
+    // Map of pending sent requests.
+    #sents = new Map();
+    // Buffer for reading messages from the worker.
+    #recvBuffer = Buffer.alloc(0);
     /**
      * @private
      */
     constructor({ producerSocket, consumerSocket, pid }) {
         super();
-        // Closed flag.
-        _closed.set(this, false);
-        // Unix Socket instance for sending messages to the worker process.
-        _producerSocket.set(this, void 0);
-        // Unix Socket instance for receiving messages to the worker process.
-        _consumerSocket.set(this, void 0);
-        // Next id for messages sent to the worker process.
-        _nextId.set(this, 0);
-        // Map of pending sent requests.
-        _sents.set(this, new Map());
-        // Buffer for reading messages from the worker.
-        _recvBuffer.set(this, Buffer.alloc(0));
         logger.debug('constructor()');
-        __classPrivateFieldSet(this, _producerSocket, producerSocket);
-        __classPrivateFieldSet(this, _consumerSocket, consumerSocket);
+        this.#producerSocket = producerSocket;
+        this.#consumerSocket = consumerSocket;
         // Read Channel responses/notifications from the worker.
-        __classPrivateFieldGet(this, _consumerSocket).on('data', (buffer) => {
-            if (!__classPrivateFieldGet(this, _recvBuffer).length) {
-                __classPrivateFieldSet(this, _recvBuffer, buffer);
+        this.#consumerSocket.on('data', (buffer) => {
+            if (!this.#recvBuffer.length) {
+                this.#recvBuffer = buffer;
             }
             else {
-                __classPrivateFieldSet(this, _recvBuffer, Buffer.concat([__classPrivateFieldGet(this, _recvBuffer), buffer], __classPrivateFieldGet(this, _recvBuffer).length + buffer.length));
+                this.#recvBuffer = Buffer.concat([this.#recvBuffer, buffer], this.#recvBuffer.length + buffer.length);
             }
-            if (__classPrivateFieldGet(this, _recvBuffer).length > PAYLOAD_MAX_LEN) {
+            if (this.#recvBuffer.length > PAYLOAD_MAX_LEN) {
                 logger.error('receiving buffer is full, discarding all data in it');
                 // Reset the buffer and exit.
-                __classPrivateFieldSet(this, _recvBuffer, Buffer.alloc(0));
+                this.#recvBuffer = Buffer.alloc(0);
                 return;
             }
             let msgStart = 0;
             while (true) // eslint-disable-line no-constant-condition
              {
-                const readLen = __classPrivateFieldGet(this, _recvBuffer).length - msgStart;
+                const readLen = this.#recvBuffer.length - msgStart;
                 if (readLen < 4) {
                     // Incomplete data.
                     break;
                 }
-                const dataView = new DataView(__classPrivateFieldGet(this, _recvBuffer).buffer, __classPrivateFieldGet(this, _recvBuffer).byteOffset + msgStart);
+                const dataView = new DataView(this.#recvBuffer.buffer, this.#recvBuffer.byteOffset + msgStart);
                 const msgLen = dataView.getUint32(0, littleEndian);
                 if (readLen < 4 + msgLen) {
                     // Incomplete data.
                     break;
                 }
-                const payload = __classPrivateFieldGet(this, _recvBuffer).subarray(msgStart + 4, msgStart + 4 + msgLen);
+                const payload = this.#recvBuffer.subarray(msgStart + 4, msgStart + 4 + msgLen);
                 msgStart += 4 + msgLen;
                 try {
                     // We can receive JSON messages (Channel messages) or log strings.
@@ -108,42 +95,42 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 }
             }
             if (msgStart != 0) {
-                __classPrivateFieldSet(this, _recvBuffer, __classPrivateFieldGet(this, _recvBuffer).slice(msgStart));
+                this.#recvBuffer = this.#recvBuffer.slice(msgStart);
             }
         });
-        __classPrivateFieldGet(this, _consumerSocket).on('end', () => (logger.debug('Consumer Channel ended by the worker process')));
-        __classPrivateFieldGet(this, _consumerSocket).on('error', (error) => (logger.error('Consumer Channel error: %s', String(error))));
-        __classPrivateFieldGet(this, _producerSocket).on('end', () => (logger.debug('Producer Channel ended by the worker process')));
-        __classPrivateFieldGet(this, _producerSocket).on('error', (error) => (logger.error('Producer Channel error: %s', String(error))));
+        this.#consumerSocket.on('end', () => (logger.debug('Consumer Channel ended by the worker process')));
+        this.#consumerSocket.on('error', (error) => (logger.error('Consumer Channel error: %s', String(error))));
+        this.#producerSocket.on('end', () => (logger.debug('Producer Channel ended by the worker process')));
+        this.#producerSocket.on('error', (error) => (logger.error('Producer Channel error: %s', String(error))));
     }
     /**
      * @private
      */
     close() {
-        if (__classPrivateFieldGet(this, _closed))
+        if (this.#closed)
             return;
         logger.debug('close()');
-        __classPrivateFieldSet(this, _closed, true);
+        this.#closed = true;
         // Close every pending sent.
-        for (const sent of __classPrivateFieldGet(this, _sents).values()) {
+        for (const sent of this.#sents.values()) {
             sent.close();
         }
         // Remove event listeners but leave a fake 'error' hander to avoid
         // propagation.
-        __classPrivateFieldGet(this, _consumerSocket).removeAllListeners('end');
-        __classPrivateFieldGet(this, _consumerSocket).removeAllListeners('error');
-        __classPrivateFieldGet(this, _consumerSocket).on('error', () => { });
-        __classPrivateFieldGet(this, _producerSocket).removeAllListeners('end');
-        __classPrivateFieldGet(this, _producerSocket).removeAllListeners('error');
-        __classPrivateFieldGet(this, _producerSocket).on('error', () => { });
+        this.#consumerSocket.removeAllListeners('end');
+        this.#consumerSocket.removeAllListeners('error');
+        this.#consumerSocket.on('error', () => { });
+        this.#producerSocket.removeAllListeners('end');
+        this.#producerSocket.removeAllListeners('error');
+        this.#producerSocket.on('error', () => { });
         // Destroy the socket after a while to allow pending incoming messages.
         setTimeout(() => {
             try {
-                __classPrivateFieldGet(this, _producerSocket).destroy();
+                this.#producerSocket.destroy();
             }
             catch (error) { }
             try {
-                __classPrivateFieldGet(this, _consumerSocket).destroy();
+                this.#consumerSocket.destroy();
             }
             catch (error) { }
         }, 200);
@@ -152,29 +139,29 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @private
      */
     async request(method, internal, data) {
-        __classPrivateFieldGet(this, _nextId) < 4294967295 ? __classPrivateFieldSet(this, _nextId, +__classPrivateFieldGet(this, _nextId) + 1) : (__classPrivateFieldSet(this, _nextId, 1));
-        const id = __classPrivateFieldGet(this, _nextId);
+        this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
+        const id = this.#nextId;
         logger.debug('request() [method:%s, id:%s]', method, id);
-        if (__classPrivateFieldGet(this, _closed))
+        if (this.#closed)
             throw new errors_1.InvalidStateError('Channel closed');
         const request = { id, method, internal, data };
         const payload = JSON.stringify(request);
         if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
             throw new Error('Channel request too big');
         // This may throw if closed or remote side ended.
-        __classPrivateFieldGet(this, _producerSocket).write(Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
-        __classPrivateFieldGet(this, _producerSocket).write(payload);
+        this.#producerSocket.write(Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
+        this.#producerSocket.write(payload);
         return new Promise((pResolve, pReject) => {
             const sent = {
                 id: id,
                 method: method,
                 resolve: (data2) => {
-                    if (!__classPrivateFieldGet(this, _sents).delete(id))
+                    if (!this.#sents.delete(id))
                         return;
                     pResolve(data2);
                 },
                 reject: (error) => {
-                    if (!__classPrivateFieldGet(this, _sents).delete(id))
+                    if (!this.#sents.delete(id))
                         return;
                     pReject(error);
                 },
@@ -183,13 +170,13 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 }
             };
             // Add sent stuff to the map.
-            __classPrivateFieldGet(this, _sents).set(id, sent);
+            this.#sents.set(id, sent);
         });
     }
     processMessage(msg) {
         // If a response, retrieve its associated request.
         if (msg.id) {
-            const sent = __classPrivateFieldGet(this, _sents).get(msg.id);
+            const sent = this.#sents.get(msg.id);
             if (!sent) {
                 logger.error('received response does not match any sent request [id:%s]', msg.id);
                 return;
@@ -229,4 +216,3 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
 }
 exports.Channel = Channel;
-_closed = new WeakMap(), _producerSocket = new WeakMap(), _consumerSocket = new WeakMap(), _nextId = new WeakMap(), _sents = new WeakMap(), _recvBuffer = new WeakMap();

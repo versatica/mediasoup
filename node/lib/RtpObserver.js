@@ -1,23 +1,26 @@
 "use strict";
-var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to set private field on non-instance");
-    }
-    privateMap.set(receiver, value);
-    return value;
-};
-var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to get private field on non-instance");
-    }
-    return privateMap.get(receiver);
-};
-var _closed, _paused, _appData, _observer;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.RtpObserver = void 0;
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const logger = new Logger_1.Logger('RtpObserver');
 class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
+    // Internal data.
+    internal;
+    // Channel instance.
+    channel;
+    // PayloadChannel instance.
+    payloadChannel;
+    // Closed flag.
+    #closed = false;
+    // Paused flag.
+    #paused = false;
+    // Custom app data.
+    #appData;
+    // Method to retrieve a Producer.
+    getProducerById;
+    // Observer instance.
+    #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
      * @interface
@@ -26,19 +29,11 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     constructor({ internal, channel, payloadChannel, appData, getProducerById }) {
         super();
-        // Closed flag.
-        _closed.set(this, false);
-        // Paused flag.
-        _paused.set(this, false);
-        // Custom app data.
-        _appData.set(this, void 0);
-        // Observer instance.
-        _observer.set(this, new EnhancedEventEmitter_1.EnhancedEventEmitter());
         logger.debug('constructor()');
         this.internal = internal;
         this.channel = channel;
         this.payloadChannel = payloadChannel;
-        __classPrivateFieldSet(this, _appData, appData);
+        this.#appData = appData;
         this.getProducerById = getProducerById;
     }
     /**
@@ -51,19 +46,19 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Whether the RtpObserver is closed.
      */
     get closed() {
-        return __classPrivateFieldGet(this, _closed);
+        return this.#closed;
     }
     /**
      * Whether the RtpObserver is paused.
      */
     get paused() {
-        return __classPrivateFieldGet(this, _paused);
+        return this.#paused;
     }
     /**
      * App custom data.
      */
     get appData() {
-        return __classPrivateFieldGet(this, _appData);
+        return this.#appData;
     }
     /**
      * Invalid setter.
@@ -81,16 +76,16 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @emits removeproducer - (producer: Producer)
      */
     get observer() {
-        return __classPrivateFieldGet(this, _observer);
+        return this.#observer;
     }
     /**
      * Close the RtpObserver.
      */
     close() {
-        if (__classPrivateFieldGet(this, _closed))
+        if (this.#closed)
             return;
         logger.debug('close()');
-        __classPrivateFieldSet(this, _closed, true);
+        this.#closed = true;
         // Remove notification subscriptions.
         this.channel.removeAllListeners(this.internal.rtpObserverId);
         this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
@@ -98,7 +93,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
-        __classPrivateFieldGet(this, _observer).safeEmit('close');
+        this.#observer.safeEmit('close');
     }
     /**
      * Router was closed.
@@ -106,40 +101,40 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @private
      */
     routerClosed() {
-        if (__classPrivateFieldGet(this, _closed))
+        if (this.#closed)
             return;
         logger.debug('routerClosed()');
-        __classPrivateFieldSet(this, _closed, true);
+        this.#closed = true;
         // Remove notification subscriptions.
         this.channel.removeAllListeners(this.internal.rtpObserverId);
         this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
         this.safeEmit('routerclose');
         // Emit observer event.
-        __classPrivateFieldGet(this, _observer).safeEmit('close');
+        this.#observer.safeEmit('close');
     }
     /**
      * Pause the RtpObserver.
      */
     async pause() {
         logger.debug('pause()');
-        const wasPaused = __classPrivateFieldGet(this, _paused);
+        const wasPaused = this.#paused;
         await this.channel.request('rtpObserver.pause', this.internal);
-        __classPrivateFieldSet(this, _paused, true);
+        this.#paused = true;
         // Emit observer event.
         if (!wasPaused)
-            __classPrivateFieldGet(this, _observer).safeEmit('pause');
+            this.#observer.safeEmit('pause');
     }
     /**
      * Resume the RtpObserver.
      */
     async resume() {
         logger.debug('resume()');
-        const wasPaused = __classPrivateFieldGet(this, _paused);
+        const wasPaused = this.#paused;
         await this.channel.request('rtpObserver.resume', this.internal);
-        __classPrivateFieldSet(this, _paused, false);
+        this.#paused = false;
         // Emit observer event.
         if (wasPaused)
-            __classPrivateFieldGet(this, _observer).safeEmit('resume');
+            this.#observer.safeEmit('resume');
     }
     /**
      * Add a Producer to the RtpObserver.
@@ -150,7 +145,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const reqData = { producerId };
         await this.channel.request('rtpObserver.addProducer', this.internal, reqData);
         // Emit observer event.
-        __classPrivateFieldGet(this, _observer).safeEmit('addproducer', producer);
+        this.#observer.safeEmit('addproducer', producer);
     }
     /**
      * Remove a Producer from the RtpObserver.
@@ -161,8 +156,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const reqData = { producerId };
         await this.channel.request('rtpObserver.removeProducer', this.internal, reqData);
         // Emit observer event.
-        __classPrivateFieldGet(this, _observer).safeEmit('removeproducer', producer);
+        this.#observer.safeEmit('removeproducer', producer);
     }
 }
 exports.RtpObserver = RtpObserver;
-_closed = new WeakMap(), _paused = new WeakMap(), _appData = new WeakMap(), _observer = new WeakMap();

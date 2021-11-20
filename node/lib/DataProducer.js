@@ -1,23 +1,24 @@
 "use strict";
-var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to set private field on non-instance");
-    }
-    privateMap.set(receiver, value);
-    return value;
-};
-var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to get private field on non-instance");
-    }
-    return privateMap.get(receiver);
-};
-var _internal, _data, _channel, _payloadChannel, _closed, _appData, _observer;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DataProducer = void 0;
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const logger = new Logger_1.Logger('DataProducer');
 class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
+    // Internal data.
+    #internal;
+    // DataProducer data.
+    #data;
+    // Channel instance.
+    #channel;
+    // PayloadChannel instance.
+    #payloadChannel;
+    // Closed flag.
+    #closed = false;
+    // Custom app data.
+    #appData;
+    // Observer instance.
+    #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
      * @emits transportclose
@@ -25,69 +26,55 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     constructor({ internal, data, channel, payloadChannel, appData }) {
         super();
-        // Internal data.
-        _internal.set(this, void 0);
-        // DataProducer data.
-        _data.set(this, void 0);
-        // Channel instance.
-        _channel.set(this, void 0);
-        // PayloadChannel instance.
-        _payloadChannel.set(this, void 0);
-        // Closed flag.
-        _closed.set(this, false);
-        // Custom app data.
-        _appData.set(this, void 0);
-        // Observer instance.
-        _observer.set(this, new EnhancedEventEmitter_1.EnhancedEventEmitter());
         logger.debug('constructor()');
-        __classPrivateFieldSet(this, _internal, internal);
-        __classPrivateFieldSet(this, _data, data);
-        __classPrivateFieldSet(this, _channel, channel);
-        __classPrivateFieldSet(this, _payloadChannel, payloadChannel);
-        __classPrivateFieldSet(this, _appData, appData);
+        this.#internal = internal;
+        this.#data = data;
+        this.#channel = channel;
+        this.#payloadChannel = payloadChannel;
+        this.#appData = appData;
         this.handleWorkerNotifications();
     }
     /**
      * DataProducer id.
      */
     get id() {
-        return __classPrivateFieldGet(this, _internal).dataProducerId;
+        return this.#internal.dataProducerId;
     }
     /**
      * Whether the DataProducer is closed.
      */
     get closed() {
-        return __classPrivateFieldGet(this, _closed);
+        return this.#closed;
     }
     /**
      * DataProducer type.
      */
     get type() {
-        return __classPrivateFieldGet(this, _data).type;
+        return this.#data.type;
     }
     /**
      * SCTP stream parameters.
      */
     get sctpStreamParameters() {
-        return __classPrivateFieldGet(this, _data).sctpStreamParameters;
+        return this.#data.sctpStreamParameters;
     }
     /**
      * DataChannel label.
      */
     get label() {
-        return __classPrivateFieldGet(this, _data).label;
+        return this.#data.label;
     }
     /**
      * DataChannel protocol.
      */
     get protocol() {
-        return __classPrivateFieldGet(this, _data).protocol;
+        return this.#data.protocol;
     }
     /**
      * App custom data.
      */
     get appData() {
-        return __classPrivateFieldGet(this, _appData);
+        return this.#appData;
     }
     /**
      * Invalid setter.
@@ -101,24 +88,24 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @emits close
      */
     get observer() {
-        return __classPrivateFieldGet(this, _observer);
+        return this.#observer;
     }
     /**
      * Close the DataProducer.
      */
     close() {
-        if (__classPrivateFieldGet(this, _closed))
+        if (this.#closed)
             return;
         logger.debug('close()');
-        __classPrivateFieldSet(this, _closed, true);
+        this.#closed = true;
         // Remove notification subscriptions.
-        __classPrivateFieldGet(this, _channel).removeAllListeners(__classPrivateFieldGet(this, _internal).dataProducerId);
-        __classPrivateFieldGet(this, _payloadChannel).removeAllListeners(__classPrivateFieldGet(this, _internal).dataProducerId);
-        __classPrivateFieldGet(this, _channel).request('dataProducer.close', __classPrivateFieldGet(this, _internal))
+        this.#channel.removeAllListeners(this.#internal.dataProducerId);
+        this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
+        this.#channel.request('dataProducer.close', this.#internal)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
-        __classPrivateFieldGet(this, _observer).safeEmit('close');
+        this.#observer.safeEmit('close');
     }
     /**
      * Transport was closed.
@@ -126,30 +113,30 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @private
      */
     transportClosed() {
-        if (__classPrivateFieldGet(this, _closed))
+        if (this.#closed)
             return;
         logger.debug('transportClosed()');
-        __classPrivateFieldSet(this, _closed, true);
+        this.#closed = true;
         // Remove notification subscriptions.
-        __classPrivateFieldGet(this, _channel).removeAllListeners(__classPrivateFieldGet(this, _internal).dataProducerId);
-        __classPrivateFieldGet(this, _payloadChannel).removeAllListeners(__classPrivateFieldGet(this, _internal).dataProducerId);
+        this.#channel.removeAllListeners(this.#internal.dataProducerId);
+        this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
         this.safeEmit('transportclose');
         // Emit observer event.
-        __classPrivateFieldGet(this, _observer).safeEmit('close');
+        this.#observer.safeEmit('close');
     }
     /**
      * Dump DataProducer.
      */
     async dump() {
         logger.debug('dump()');
-        return __classPrivateFieldGet(this, _channel).request('dataProducer.dump', __classPrivateFieldGet(this, _internal));
+        return this.#channel.request('dataProducer.dump', this.#internal);
     }
     /**
      * Get DataProducer stats.
      */
     async getStats() {
         logger.debug('getStats()');
-        return __classPrivateFieldGet(this, _channel).request('dataProducer.getStats', __classPrivateFieldGet(this, _internal));
+        return this.#channel.request('dataProducer.getStats', this.#internal);
     }
     /**
      * Send data (just valid for DataProducers created on a DirectTransport).
@@ -184,11 +171,10 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         else if (ppid === 57)
             message = Buffer.alloc(1);
         const notifData = { ppid };
-        __classPrivateFieldGet(this, _payloadChannel).notify('dataProducer.send', __classPrivateFieldGet(this, _internal), notifData, message);
+        this.#payloadChannel.notify('dataProducer.send', this.#internal, notifData, message);
     }
     handleWorkerNotifications() {
         // No need to subscribe to any event.
     }
 }
 exports.DataProducer = DataProducer;
-_internal = new WeakMap(), _data = new WeakMap(), _channel = new WeakMap(), _payloadChannel = new WeakMap(), _closed = new WeakMap(), _appData = new WeakMap(), _observer = new WeakMap();

@@ -3,7 +3,6 @@ mod channel_write_fn;
 
 use crate::worker::channel::BufferMessagesGuard;
 use crate::worker::{Channel, PayloadChannel, WorkerId};
-use async_oneshot::Receiver;
 pub(super) use channel_read_fn::{
     prepare_channel_read_fn, prepare_payload_channel_read_fn, PreparedChannelRead,
     PreparedPayloadChannelRead,
@@ -40,17 +39,18 @@ pub enum ExitError {
 pub(super) struct WorkerRunResult {
     pub(super) channel: Channel,
     pub(super) payload_channel: PayloadChannel,
-    pub(super) status_receiver: Receiver<Result<(), ExitError>>,
     pub(super) buffer_worker_messages_guard: BufferMessagesGuard,
 }
 
-pub(super) fn run_worker_with_channels(
+pub(super) fn run_worker_with_channels<OE>(
     id: WorkerId,
     thread_initializer: Option<Arc<dyn Fn() + Send + Sync>>,
     args: Vec<String>,
-) -> WorkerRunResult {
-    let (mut status_sender, status_receiver) = async_oneshot::oneshot();
-
+    on_exit: OE,
+) -> WorkerRunResult
+where
+    OE: FnOnce(Result<(), ExitError>) + Send + 'static,
+{
     let (channel, prepared_channel_read, prepared_channel_write) = Channel::new();
     let (payload_channel, prepared_payload_channel_read, prepared_payload_channel_write) =
         PayloadChannel::new();
@@ -108,7 +108,7 @@ pub(super) fn run_worker_with_channels(
                 )
             };
 
-            let _ = status_sender.send(match status_code {
+            on_exit(match status_code {
                 0 => Ok(()),
                 1 => Err(ExitError::Generic),
                 42 => Err(ExitError::Settings),
@@ -120,7 +120,6 @@ pub(super) fn run_worker_with_channels(
     WorkerRunResult {
         channel,
         payload_channel,
-        status_receiver,
         buffer_worker_messages_guard,
     }
 }

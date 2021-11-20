@@ -290,7 +290,7 @@ impl Drop for Inner {
 }
 
 impl Inner {
-    async fn new(
+    async fn new<OE: FnOnce() + Send + 'static>(
         executor: Arc<Executor<'static>>,
         WorkerSettings {
             log_level,
@@ -301,6 +301,7 @@ impl Inner {
             app_data,
         }: WorkerSettings,
         worker_manager: WorkerManager,
+        on_exit: OE,
     ) -> io::Result<Arc<Self>> {
         debug!("new()");
 
@@ -344,12 +345,15 @@ impl Inner {
             spawn_args.join(" ")
         );
 
+        let (mut status_sender, status_receiver) = async_oneshot::oneshot();
         let WorkerRunResult {
             channel,
             payload_channel,
-            status_receiver,
             buffer_worker_messages_guard,
-        } = utils::run_worker_with_channels(id, thread_initializer, spawn_args);
+        } = utils::run_worker_with_channels(id, thread_initializer, spawn_args, move |result| {
+            let _ = status_sender.send(result);
+            on_exit();
+        });
 
         let handlers = Handlers::default();
 
@@ -535,12 +539,13 @@ impl fmt::Debug for Worker {
 }
 
 impl Worker {
-    pub(super) async fn new(
+    pub(super) async fn new<OE: FnOnce() + Send + 'static>(
         executor: Arc<Executor<'static>>,
         worker_settings: WorkerSettings,
         worker_manager: WorkerManager,
+        on_exit: OE,
     ) -> io::Result<Self> {
-        let inner = Inner::new(executor, worker_settings, worker_manager).await?;
+        let inner = Inner::new(executor, worker_settings, worker_manager, on_exit).await?;
 
         Ok(Self { inner })
     }
