@@ -211,9 +211,30 @@ const supportedRtpCapabilities: RtpCapabilities =
 			]
 		},
 		{
-			kind         : 'video',
-			mimeType     : 'video/VP9',
-			clockRate    : 90000,
+			kind       : 'video',
+			mimeType   : 'video/VP9',
+			clockRate  : 90000,
+			parameters :
+			{
+				'profile-id' : 0
+			},
+			rtcpFeedback :
+			[
+				{ type: 'nack' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'ccm', parameter: 'fir' },
+				{ type: 'goog-remb' },
+				{ type: 'transport-cc' }
+			]
+		},
+		{
+			kind       : 'video',
+			mimeType   : 'video/VP9',
+			clockRate  : 90000,
+			parameters :
+			{
+				'profile-id' : 2
+			},
 			rtcpFeedback :
 			[
 				{ type: 'nack' },
