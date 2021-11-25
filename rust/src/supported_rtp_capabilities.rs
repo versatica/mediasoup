@@ -234,23 +234,6 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 1_u32.into()),
-                    ("level-asymmetry-allowed", 1_u32.into()),
-                ]),
-                rtcp_feedback: vec![
-                    RtcpFeedback::Nack,
-                    RtcpFeedback::NackPli,
-                    RtcpFeedback::CcmFir,
-                    RtcpFeedback::GoogRemb,
-                    RtcpFeedback::TransportCc,
-                ],
-            },
-            RtpCodecCapability::Video {
-                mime_type: MimeTypeVideo::H264,
-                preferred_payload_type: None,
-                clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 0_u32.into()),
                     ("level-asymmetry-allowed", 1_u32.into()),
                 ]),
                 rtcp_feedback: vec![
@@ -266,23 +249,6 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 1_u32.into()),
-                    ("level-asymmetry-allowed", 1_u32.into()),
-                ]),
-                rtcp_feedback: vec![
-                    RtcpFeedback::Nack,
-                    RtcpFeedback::NackPli,
-                    RtcpFeedback::CcmFir,
-                    RtcpFeedback::GoogRemb,
-                    RtcpFeedback::TransportCc,
-                ],
-            },
-            RtpCodecCapability::Video {
-                mime_type: MimeTypeVideo::H265,
-                preferred_payload_type: None,
-                clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 0_u32.into()),
                     ("level-asymmetry-allowed", 1_u32.into()),
                 ]),
                 rtcp_feedback: vec![
