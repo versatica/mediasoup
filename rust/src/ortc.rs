@@ -1000,21 +1000,20 @@ fn match_codecs(
             }
         }
         MimeType::Video(MimeTypeVideo::H264) => {
-            let packetization_mode_a = codec_a
-                .parameters
-                .get("packetization-mode")
-                .unwrap_or(&RtpCodecParametersParametersValue::Number(0));
-            let packetization_mode_b = codec_b
-                .parameters
-                .get("packetization-mode")
-                .unwrap_or(&RtpCodecParametersParametersValue::Number(0));
-
-            if packetization_mode_a != packetization_mode_b {
-                return Err(());
-            }
-
-            // If strict matching check profile-level-id.
             if strict {
+                let packetization_mode_a = codec_a
+                    .parameters
+                    .get("packetization-mode")
+                    .unwrap_or(&RtpCodecParametersParametersValue::Number(0));
+                let packetization_mode_b = codec_b
+                    .parameters
+                    .get("packetization-mode")
+                    .unwrap_or(&RtpCodecParametersParametersValue::Number(0));
+
+                if packetization_mode_a != packetization_mode_b {
+                    return Err(());
+                }
+
                 let profile_level_id_a =
                     codec_a
                         .parameters
