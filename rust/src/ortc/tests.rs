@@ -115,17 +115,6 @@ fn generate_router_rtp_capabilities_unsupported() {
         }]),
         Err(RtpCapabilitiesError::UnsupportedCodec { .. })
     ));
-
-    assert!(matches!(
-        generate_router_rtp_capabilities(vec![RtpCodecCapability::Video {
-            mime_type: MimeTypeVideo::H264,
-            preferred_payload_type: None,
-            clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::from([("packetization-mode", 5u32.into())]),
-            rtcp_feedback: vec![],
-        }]),
-        Err(RtpCapabilitiesError::UnsupportedCodec { .. })
-    ));
 }
 
 #[test]
