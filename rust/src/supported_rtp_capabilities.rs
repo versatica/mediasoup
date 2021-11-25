@@ -233,9 +233,10 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 mime_type: MimeTypeVideo::H264,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([
-                    ("level-asymmetry-allowed", 1_u32.into()),
-                ]),
+                parameters: RtpCodecParametersParameters::from([(
+                    "level-asymmetry-allowed",
+                    1_u32.into(),
+                )]),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
                     RtcpFeedback::NackPli,
@@ -248,9 +249,10 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 mime_type: MimeTypeVideo::H265,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([
-                    ("level-asymmetry-allowed", 1_u32.into()),
-                ]),
+                parameters: RtpCodecParametersParameters::from([(
+                    "level-asymmetry-allowed",
+                    1_u32.into(),
+                )]),
                 rtcp_feedback: vec![
                     RtcpFeedback::Nack,
                     RtcpFeedback::NackPli,
