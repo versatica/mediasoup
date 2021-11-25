@@ -3,6 +3,7 @@
 
 ### WIP
 
+* Single H264/H265 codec configuration in `supportedRtpCapabilities` (PR #718).
 * Update NPM deps.
 
 
