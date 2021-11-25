@@ -207,23 +207,6 @@ const supportedRtpCapabilities = {
             mimeType: 'video/H264',
             clockRate: 90000,
             parameters: {
-                'packetization-mode': 1,
-                'level-asymmetry-allowed': 1
-            },
-            rtcpFeedback: [
-                { type: 'nack' },
-                { type: 'nack', parameter: 'pli' },
-                { type: 'ccm', parameter: 'fir' },
-                { type: 'goog-remb' },
-                { type: 'transport-cc' }
-            ]
-        },
-        {
-            kind: 'video',
-            mimeType: 'video/H264',
-            clockRate: 90000,
-            parameters: {
-                'packetization-mode': 0,
                 'level-asymmetry-allowed': 1
             },
             rtcpFeedback: [
@@ -239,23 +222,6 @@ const supportedRtpCapabilities = {
             mimeType: 'video/H265',
             clockRate: 90000,
             parameters: {
-                'packetization-mode': 1,
-                'level-asymmetry-allowed': 1
-            },
-            rtcpFeedback: [
-                { type: 'nack' },
-                { type: 'nack', parameter: 'pli' },
-                { type: 'ccm', parameter: 'fir' },
-                { type: 'goog-remb' },
-                { type: 'transport-cc' }
-            ]
-        },
-        {
-            kind: 'video',
-            mimeType: 'video/H265',
-            clockRate: 90000,
-            parameters: {
-                'packetization-mode': 0,
                 'level-asymmetry-allowed': 1
             },
             rtcpFeedback: [

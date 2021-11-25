@@ -829,12 +829,11 @@ function matchCodecs(aCodec, bCodec, { strict = false, modify = false } = {}) {
             }
         case 'video/h264':
             {
-                const aPacketizationMode = aCodec.parameters['packetization-mode'] || 0;
-                const bPacketizationMode = bCodec.parameters['packetization-mode'] || 0;
-                if (aPacketizationMode !== bPacketizationMode)
-                    return false;
-                // If strict matching check profile-level-id.
                 if (strict) {
+                    const aPacketizationMode = aCodec.parameters['packetization-mode'] || 0;
+                    const bPacketizationMode = bCodec.parameters['packetization-mode'] || 0;
+                    if (aPacketizationMode !== bPacketizationMode)
+                        return false;
                     if (!h264.isSameProfile(aCodec.parameters, bCodec.parameters))
                         return false;
                     let selectedProfileLevelId;
@@ -856,7 +855,6 @@ function matchCodecs(aCodec, bCodec, { strict = false, modify = false } = {}) {
             }
         case 'video/vp9':
             {
-                // If strict matching check profile-id.
                 if (strict) {
                     const aProfileId = aCodec.parameters['profile-id'] || 0;
                     const bProfileId = bCodec.parameters['profile-id'] || 0;

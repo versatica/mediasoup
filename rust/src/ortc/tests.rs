@@ -78,7 +78,10 @@ fn generate_router_rtp_capabilities_succeeds() {
                 preferred_payload_type: 102, // 102 is the third available dynamic PT.
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([
-                    ("packetization-mode", 0_u32.into()),
+                    // Since packetization-mode param was not included in the
+                    // H264 codec and it's default value is 0, it's not added
+                    // by ortc file.
+                    // ("packetization-mode", 0_u32.into()),
                     ("level-asymmetry-allowed", 1_u32.into()),
                     ("profile-level-id", "42e01f".into()),
                     ("foo", "bar".into()),
@@ -111,17 +114,6 @@ fn generate_router_rtp_capabilities_unsupported() {
             clock_rate: NonZeroU32::new(48000).unwrap(),
             channels: NonZeroU8::new(1).unwrap(),
             parameters: RtpCodecParametersParameters::default(),
-            rtcp_feedback: vec![],
-        }]),
-        Err(RtpCapabilitiesError::UnsupportedCodec { .. })
-    ));
-
-    assert!(matches!(
-        generate_router_rtp_capabilities(vec![RtpCodecCapability::Video {
-            mime_type: MimeTypeVideo::H264,
-            preferred_payload_type: None,
-            clock_rate: NonZeroU32::new(90000).unwrap(),
-            parameters: RtpCodecParametersParameters::from([("packetization-mode", 5u32.into())]),
             rtcp_feedback: vec![],
         }]),
         Err(RtpCapabilitiesError::UnsupportedCodec { .. })
