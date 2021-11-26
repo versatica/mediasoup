@@ -11,7 +11,7 @@
 
 namespace Channel
 {
-	/* Static. */
+	/* Static methods for UV callbacks. */
 	inline static void onAsync(uv_handle_t* handle)
 	{
 		while (static_cast<ChannelSocket*>(handle->data)->CallbackRead())
