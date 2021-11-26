@@ -23,13 +23,14 @@ use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::HandlerId;
+use hash_hasher::HashedMap;
 use log::{error, warn};
+use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use serde_json::Value;
 use std::fmt::Debug;
-use std::marker::PhantomData;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use thiserror::Error;
@@ -103,11 +104,11 @@ pub enum TransportTraceEventType {
 #[doc(hidden)]
 pub struct RtpListener {
     /// Map from Ssrc (as string) to producer ID
-    pub mid_table: HashMap<String, ProducerId>,
+    pub mid_table: HashedMap<String, ProducerId>,
     /// Map from Ssrc (as string) to producer ID
-    pub rid_table: HashMap<String, ProducerId>,
+    pub rid_table: HashedMap<String, ProducerId>,
     /// Map from Ssrc (as string) to producer ID
-    pub ssrc_table: HashMap<String, ProducerId>,
+    pub ssrc_table: HashedMap<String, ProducerId>,
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
@@ -126,7 +127,7 @@ pub struct RecvRtpHeaderExtensions {
 #[doc(hidden)]
 pub struct SctpListener {
     /// Map from stream ID (as string) to data producer ID
-    stream_id_table: HashMap<String, DataProducerId>,
+    stream_id_table: HashedMap<String, DataProducerId>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -236,31 +237,31 @@ pub trait Transport: Debug + Send + Sync + private::CloneTransport {
     /// Callback is called when a new producer is created.
     fn on_new_producer(
         &self,
-        callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&Producer) + Send + Sync + 'static>,
     ) -> HandlerId;
 
     /// Callback is called when a new consumer is created.
     fn on_new_consumer(
         &self,
-        callback: Box<dyn Fn(&Consumer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&Consumer) + Send + Sync + 'static>,
     ) -> HandlerId;
 
     /// Callback is called when a new data producer is created.
     fn on_new_data_producer(
         &self,
-        callback: Box<dyn Fn(&DataProducer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&DataProducer) + Send + Sync + 'static>,
     ) -> HandlerId;
 
     /// Callback is called when a new data consumer is created.
     fn on_new_data_consumer(
         &self,
-        callback: Box<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
     ) -> HandlerId;
 
     /// See [`Transport::enable_trace_event()`]
     fn on_trace(
         &self,
-        callback: Box<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
     ) -> HandlerId;
 
     /// Callback is called when the router this transport belongs to is closed for whatever reason.
@@ -371,7 +372,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
     fn next_mid_for_consumers(&self) -> &AtomicUsize;
 
-    fn used_sctp_stream_ids(&self) -> &Mutex<HashMap<u16, bool>>;
+    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>>;
 
     fn cname_for_producers(&self) -> &Mutex<Option<String>>;
 
@@ -395,26 +396,24 @@ pub(super) trait TransportImpl: TransportGeneric {
         }
     }
 
-    async fn dump_impl(&self) -> Result<Self::Dump, RequestError> {
+    async fn dump_impl(&self) -> Result<Value, RequestError> {
         self.channel()
             .request(TransportDumpRequest {
                 internal: TransportInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
                 },
-                phantom_data: PhantomData {},
             })
             .await
     }
 
-    async fn get_stats_impl(&self) -> Result<Vec<Self::Stat>, RequestError> {
+    async fn get_stats_impl(&self) -> Result<Value, RequestError> {
         self.channel()
             .request(TransportGetStatsRequest {
                 internal: TransportInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
                 },
-                phantom_data: PhantomData {},
             })
             .await
     }

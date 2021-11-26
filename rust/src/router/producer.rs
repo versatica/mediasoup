@@ -16,13 +16,12 @@ use crate::worker::{
     Channel, NotificationError, PayloadChannel, RequestError, SubscriptionHandler,
 };
 use async_executor::Executor;
-use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
+use hash_hasher::HashedMap;
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -101,7 +100,7 @@ pub struct RtpStreamRecv {
     pub packet_count: usize,
     pub byte_count: usize,
     pub bitrate: u32,
-    pub bitrate_by_layer: Option<HashMap<String, u32>>,
+    pub bitrate_by_layer: Option<HashedMap<String, u32>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -202,7 +201,7 @@ pub struct ProducerStat {
     pub rtx_packets_discarded: Option<u32>,
     // RtpStreamRecv specific.
     pub jitter: u32,
-    pub bitrate_by_layer: Option<HashMap<String, u32>>,
+    pub bitrate_by_layer: Option<HashedMap<String, u32>>,
 }
 
 /// 'trace' event data.
@@ -280,11 +279,11 @@ enum Notification {
 
 #[derive(Default)]
 struct Handlers {
-    score: Bag<Box<dyn Fn(&Vec<ProducerScore>) + Send + Sync>>,
-    video_orientation_change: Bag<Box<dyn Fn(ProducerVideoOrientation) + Send + Sync>>,
-    pause: Bag<Box<dyn Fn() + Send + Sync>>,
-    resume: Bag<Box<dyn Fn() + Send + Sync>>,
-    trace: Bag<Box<dyn Fn(&ProducerTraceEventData) + Send + Sync>>,
+    score: Bag<Arc<dyn Fn(&[ProducerScore]) + Send + Sync>>,
+    video_orientation_change: Bag<Arc<dyn Fn(ProducerVideoOrientation) + Send + Sync>>,
+    pause: Bag<Arc<dyn Fn() + Send + Sync>>,
+    resume: Bag<Arc<dyn Fn() + Send + Sync>>,
+    trace: Bag<Arc<dyn Fn(&ProducerTraceEventData) + Send + Sync>, ProducerTraceEventData>,
     transport_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -459,7 +458,7 @@ impl Producer {
             let score = Arc::clone(&score);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_value::<Notification>(notification) {
+                match serde_json::from_slice::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::Score(scores) => {
                             *score.lock() = scores.clone();
@@ -473,9 +472,7 @@ impl Producer {
                             });
                         }
                         Notification::Trace(trace_event_data) => {
-                            handlers.trace.call(|callback| {
-                                callback(&trace_event_data);
-                            });
+                            handlers.trace.call_simple(&trace_event_data);
                         }
                     },
                     Err(error) => {
@@ -666,11 +663,11 @@ impl Producer {
     }
 
     /// Callback is called when the producer score changes.
-    pub fn on_score<F: Fn(&Vec<ProducerScore>) + Send + Sync + 'static>(
+    pub fn on_score<F: Fn(&[ProducerScore]) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner().handlers.score.add(Box::new(callback))
+        self.inner().handlers.score.add(Arc::new(callback))
     }
 
     /// Callback is called when the video orientation changes. This is just possible if the
@@ -683,17 +680,17 @@ impl Producer {
         self.inner()
             .handlers
             .video_orientation_change
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Callback is called when the producer is paused.
     pub fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner().handlers.pause.add(Box::new(callback))
+        self.inner().handlers.pause.add(Arc::new(callback))
     }
 
     /// Callback is called when the producer is resumed.
     pub fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner().handlers.resume.add(Box::new(callback))
+        self.inner().handlers.resume.add(Arc::new(callback))
     }
 
     /// See [`Producer::enable_trace_event`] method.
@@ -701,7 +698,7 @@ impl Producer {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner().handlers.trace.add(Box::new(callback))
+        self.inner().handlers.trace.add(Arc::new(callback))
     }
 
     /// Callback is called when the transport this producer belongs to is closed for whatever
@@ -763,20 +760,17 @@ impl Producer {
 
 impl DirectProducer {
     /// Sends a RTP packet from the Rust process.
-    pub async fn send(&self, rtp_packet: Bytes) -> Result<(), NotificationError> {
-        self.inner
-            .payload_channel
-            .notify(
-                ProducerSendNotification {
-                    internal: ProducerInternal {
-                        router_id: self.inner.transport.router_id(),
-                        transport_id: self.inner.transport.id(),
-                        producer_id: self.inner.id,
-                    },
+    pub fn send(&self, rtp_packet: Vec<u8>) -> Result<(), NotificationError> {
+        self.inner.payload_channel.notify(
+            ProducerSendNotification {
+                internal: ProducerInternal {
+                    router_id: self.inner.transport.router_id(),
+                    transport_id: self.inner.transport.id(),
+                    producer_id: self.inner.id,
                 },
-                rtp_packet,
-            )
-            .await
+            },
+            rtp_packet,
+        )
     }
 }
 

@@ -213,7 +213,7 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             else if (msg.targetId && msg.event) {
                 this.#ongoingNotification =
                     {
-                        targetId: msg.targetId,
+                        targetId: String(msg.targetId),
                         event: msg.event,
                         data: msg.data
                     };

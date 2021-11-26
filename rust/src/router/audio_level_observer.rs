@@ -61,12 +61,12 @@ pub struct AudioLevelObserverVolume {
 
 #[derive(Default)]
 struct Handlers {
-    volumes: Bag<Box<dyn Fn(&Vec<AudioLevelObserverVolume>) + Send + Sync>>,
-    silence: Bag<Box<dyn Fn() + Send + Sync>>,
-    pause: Bag<Box<dyn Fn() + Send + Sync>>,
-    resume: Bag<Box<dyn Fn() + Send + Sync>>,
-    add_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
-    remove_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
+    volumes: Bag<Arc<dyn Fn(&[AudioLevelObserverVolume]) + Send + Sync>>,
+    silence: Bag<Arc<dyn Fn() + Send + Sync>>,
+    pause: Bag<Arc<dyn Fn() + Send + Sync>>,
+    resume: Bag<Arc<dyn Fn() + Send + Sync>>,
+    add_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
+    remove_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
     router_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -234,9 +234,7 @@ impl RtpObserver for AudioLevelObserver {
             })
             .await?;
 
-        self.inner.handlers.add_producer.call(|callback| {
-            callback(&producer);
-        });
+        self.inner.handlers.add_producer.call_simple(&producer);
 
         Ok(())
     }
@@ -256,33 +254,31 @@ impl RtpObserver for AudioLevelObserver {
             })
             .await?;
 
-        self.inner.handlers.remove_producer.call(|callback| {
-            callback(&producer);
-        });
+        self.inner.handlers.remove_producer.call_simple(&producer);
 
         Ok(())
     }
 
     fn on_pause(&self, callback: Box<dyn Fn() + Send + Sync + 'static>) -> HandlerId {
-        self.inner.handlers.pause.add(Box::new(callback))
+        self.inner.handlers.pause.add(Arc::new(callback))
     }
 
     fn on_resume(&self, callback: Box<dyn Fn() + Send + Sync + 'static>) -> HandlerId {
-        self.inner.handlers.resume.add(Box::new(callback))
+        self.inner.handlers.resume.add(Arc::new(callback))
     }
 
     fn on_add_producer(
         &self,
         callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
     ) -> HandlerId {
-        self.inner.handlers.add_producer.add(Box::new(callback))
+        self.inner.handlers.add_producer.add(Arc::new(callback))
     }
 
     fn on_remove_producer(
         &self,
         callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
     ) -> HandlerId {
-        self.inner.handlers.remove_producer.add(Box::new(callback))
+        self.inner.handlers.remove_producer.add(Arc::new(callback))
     }
 
     fn on_router_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId {
@@ -316,21 +312,24 @@ impl AudioLevelObserver {
             let handlers = Arc::clone(&handlers);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_value::<Notification>(notification) {
+                match serde_json::from_slice::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::Volumes(volumes) => {
                             let volumes = volumes
-                                .into_iter()
+                                .iter()
                                 .filter_map(|notification| {
                                     let VolumeNotification {
                                         producer_id,
                                         volume,
                                     } = notification;
-                                    router.get_producer(&producer_id).map(|producer| {
-                                        AudioLevelObserverVolume { producer, volume }
+                                    router.get_producer(producer_id).map(|producer| {
+                                        AudioLevelObserverVolume {
+                                            producer,
+                                            volume: *volume,
+                                        }
                                     })
                                 })
-                                .collect();
+                                .collect::<Vec<_>>();
 
                             handlers.volumes.call(|callback| {
                                 callback(&volumes);
@@ -379,17 +378,17 @@ impl AudioLevelObserver {
     /// Callback is called at most every interval (see [`AudioLevelObserverOptions`]).
     ///
     /// Audio volumes entries ordered by volume (louder ones go first).
-    pub fn on_volumes<F: Fn(&Vec<AudioLevelObserverVolume>) + Send + Sync + 'static>(
+    pub fn on_volumes<F: Fn(&[AudioLevelObserverVolume]) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.volumes.add(Box::new(callback))
+        self.inner.handlers.volumes.add(Arc::new(callback))
     }
 
     /// Callback is called when no one of the producers in this RTP observer is generating audio with a volume
     /// beyond the given threshold.
     pub fn on_silence<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.silence.add(Box::new(callback))
+        self.inner.handlers.silence.add(Arc::new(callback))
     }
 
     /// Downgrade `AudioLevelObserver` to [`WeakAudioLevelObserver`] instance.

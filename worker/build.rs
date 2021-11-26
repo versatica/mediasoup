@@ -7,6 +7,12 @@ fn main() {
         return;
     }
 
+    let build_type = if cfg!(debug_assertions) {
+        "Debug"
+    } else {
+        "Release"
+    };
+
     let out_dir = env::var("OUT_DIR").unwrap();
 
     // Add C++ std lib
@@ -79,9 +85,8 @@ fn main() {
         // Build
         if !Command::new("make")
             .arg("libmediasoup-worker")
-            .env("PYTHONDONTWRITEBYTECODE", "1")
             .env("MEDIASOUP_OUT_DIR", &out_dir)
-            .env("MEDIASOUP_BUILDTYPE", "Release")
+            .env("MEDIASOUP_BUILDTYPE", &build_type)
             .spawn()
             .expect("Failed to start")
             .wait()
@@ -95,7 +100,6 @@ fn main() {
             // Clean
             if !Command::new("make")
                 .arg("clean-all")
-                .env("PYTHONDONTWRITEBYTECODE", "1")
                 .spawn()
                 .expect("Failed to start")
                 .wait()
@@ -108,6 +112,5 @@ fn main() {
     }
 
     println!("cargo:rustc-link-lib=static=mediasoup-worker");
-    println!("cargo:rustc-link-search=native={}", out_dir);
-    println!("cargo:rustc-link-search=native={}/Release", out_dir);
+    println!("cargo:rustc-link-search=native={}/{}", out_dir, build_type);
 }

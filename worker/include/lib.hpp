@@ -1,8 +1,18 @@
-extern "C" int run_worker(
+#include "common.hpp"
+
+extern "C" int mediasoup_worker_run(
   int argc,
   char* argv[],
   const char* version,
   int consumerChannelFd,
   int producerChannelFd,
   int payloadConsumeChannelFd,
-  int payloadProduceChannelFd);
+  int payloadProduceChannelFd,
+  ChannelReadFn channelReadFn,
+  ChannelReadCtx channelReadCtx,
+  ChannelWriteFn channelWriteFn,
+  ChannelWriteCtx channelWriteCtx,
+  PayloadChannelReadFn payloadChannelReadFn,
+  PayloadChannelReadCtx payloadChannelReadCtx,
+  PayloadChannelWriteFn payloadChannelWriteFn,
+  PayloadChannelWriteCtx payloadChannelWriteCtx);
