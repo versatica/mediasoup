@@ -305,7 +305,7 @@ struct Inner {
     transport: Box<dyn Transport>,
     closed: AtomicBool,
     // Drop subscription to producer-specific notifications when producer itself is dropped
-    _subscription_handler: Option<SubscriptionHandler>,
+    subscription_handler: Mutex<Option<SubscriptionHandler>>,
     _on_transport_close_handler: Mutex<HandlerId>,
 }
 
@@ -333,10 +333,16 @@ impl Inner {
                         producer_id: self.id,
                     },
                 };
+                let subscription_handler = self.subscription_handler.lock().take();
+
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("producer closing failed on drop: {}", error);
+
+                            // Drop from a different thread to avoid deadlock with recursive dropping
+                            // from within another subscription drop.
+                            drop(subscription_handler);
                         }
                     })
                     .detach();
@@ -509,7 +515,7 @@ impl Producer {
             app_data,
             transport,
             closed: AtomicBool::new(false),
-            _subscription_handler: subscription_handler,
+            subscription_handler: Mutex::new(subscription_handler),
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 
