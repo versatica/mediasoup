@@ -19,10 +19,10 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
+use std::{fmt, mem};
 
 uuid_based_wrapper_type!(
     /// [`Consumer`] identifier.
@@ -378,7 +378,7 @@ struct Inner {
     weak_producer: WeakProducer,
     closed: Arc<AtomicBool>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
-    _subscription_handlers: Vec<Option<SubscriptionHandler>>,
+    subscription_handlers: Mutex<Vec<Option<SubscriptionHandler>>>,
     _on_transport_close_handler: Mutex<HandlerId>,
 }
 
@@ -407,6 +407,8 @@ impl Inner {
                         producer_id: self.producer_id,
                     },
                 };
+                let subscription_handlers: Vec<_> =
+                    mem::take(&mut self.subscription_handlers.lock());
                 let weak_producer = self.weak_producer.clone();
 
                 self.executor
@@ -415,6 +417,10 @@ impl Inner {
                             if let Err(error) = channel.request(request).await {
                                 error!("consumer closing failed on drop: {}", error);
                             }
+
+                            // Drop from a different thread to avoid deadlock with recursive dropping
+                            // from within another subscription drop.
+                            drop(subscription_handlers);
                         }
                     })
                     .detach();
@@ -592,7 +598,10 @@ impl Consumer {
             transport,
             weak_producer: producer.downgrade(),
             closed,
-            _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
+            subscription_handlers: Mutex::new(vec![
+                subscription_handler,
+                payload_subscription_handler,
+            ]),
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 

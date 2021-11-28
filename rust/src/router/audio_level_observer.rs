@@ -97,7 +97,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to audio level observer-specific notifications when observer itself is
     // dropped
-    _subscription_handler: Option<SubscriptionHandler>,
+    subscription_handler: Mutex<Option<SubscriptionHandler>>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 
@@ -124,11 +124,17 @@ impl Inner {
                         rtp_observer_id: self.id,
                     },
                 };
+                let subscription_handler = self.subscription_handler.lock().take();
+
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("audio level observer closing failed on drop: {}", error);
                         }
+
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handler);
                     })
                     .detach();
             }
@@ -366,7 +372,7 @@ impl AudioLevelObserver {
             app_data,
             router,
             closed: AtomicBool::new(false),
-            _subscription_handler: subscription_handler,
+            subscription_handler: Mutex::new(subscription_handler),
             _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 

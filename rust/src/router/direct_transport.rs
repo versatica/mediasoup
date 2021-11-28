@@ -25,9 +25,9 @@ use log::{debug, error};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
+use std::{fmt, mem};
 
 /// [`DirectTransport`] options.
 #[derive(Debug, Clone)]
@@ -147,7 +147,7 @@ struct Inner {
     router: Router,
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
-    _subscription_handlers: Vec<Option<SubscriptionHandler>>,
+    subscription_handlers: Mutex<Vec<Option<SubscriptionHandler>>>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 
@@ -174,11 +174,18 @@ impl Inner {
                         transport_id: self.id,
                     },
                 };
+                let subscription_handlers: Vec<_> =
+                    mem::take(&mut self.subscription_handlers.lock());
+
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
+
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handlers);
                     })
                     .detach();
             }
@@ -515,7 +522,10 @@ impl DirectTransport {
             app_data,
             router,
             closed: AtomicBool::new(false),
-            _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
+            subscription_handlers: Mutex::new(vec![
+                subscription_handler,
+                payload_subscription_handler,
+            ]),
             _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 

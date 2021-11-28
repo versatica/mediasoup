@@ -19,10 +19,10 @@ use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
+use std::{fmt, mem};
 
 uuid_based_wrapper_type!(
     /// [`DataConsumer`] identifier.
@@ -208,7 +208,7 @@ struct Inner {
     weak_data_producer: WeakDataProducer,
     closed: Arc<AtomicBool>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
-    _subscription_handlers: Vec<Option<SubscriptionHandler>>,
+    subscription_handlers: Mutex<Vec<Option<SubscriptionHandler>>>,
     _on_transport_close_handler: Mutex<HandlerId>,
 }
 
@@ -237,6 +237,8 @@ impl Inner {
                         data_producer_id: self.data_producer_id,
                     },
                 };
+                let subscription_handlers: Vec<_> =
+                    mem::take(&mut self.subscription_handlers.lock());
                 let weak_data_producer = self.weak_data_producer.clone();
 
                 self.executor
@@ -246,6 +248,10 @@ impl Inner {
                                 error!("consumer closing failed on drop: {}", error);
                             }
                         }
+
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handlers);
                     })
                     .detach();
             }
@@ -445,7 +451,10 @@ impl DataConsumer {
             transport,
             weak_data_producer: data_producer.downgrade(),
             closed,
-            _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
+            subscription_handlers: Mutex::new(vec![
+                subscription_handler,
+                payload_subscription_handler,
+            ]),
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 

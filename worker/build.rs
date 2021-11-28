@@ -7,7 +7,9 @@ fn main() {
         return;
     }
 
-    let build_type = if cfg!(debug_assertions) {
+    // On Windows Rust always links against release version of MSVC runtime, thus requires Release
+    // build here.
+    let build_type = if cfg!(all(debug_assertions, not(windows))) {
         "Debug"
     } else {
         "Release"
@@ -73,19 +75,15 @@ fn main() {
     }
     #[cfg(target_os = "windows")]
     {
-        panic!("Building on Windows is not currently supported");
-        // TODO: Didn't bother, feel free to PR
+        // Nothing special is needed so far
     }
 
-    // The build here is a bit awkward since we can't just specify custom target directory as
-    // openssl will fail to build with `make[1]: /bin/sh: Argument list too long` due to large
-    // number of files. So instead we build in place, copy files to out directory and then clean
-    // after ourselves
     {
         // Build
         if !Command::new("make")
             .arg("libmediasoup-worker")
-            .env("MEDIASOUP_OUT_DIR", &out_dir)
+            // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`
+            .env("MEDIASOUP_OUT_DIR", &out_dir.replace('\\', "/"))
             .env("MEDIASOUP_BUILDTYPE", &build_type)
             .spawn()
             .expect("Failed to start")
@@ -109,6 +107,37 @@ fn main() {
                 panic!("Failed to clean libmediasoup-worker")
             }
         }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let dot_a = format!("{}/{}/libmediasoup-worker.a", out_dir, build_type);
+        let dot_lib = format!("{}/{}/mediasoup-worker.lib", out_dir, build_type);
+
+        // Meson builds `libmediasoup-worker.a` on Windows instead of `*.lib` file under MinGW
+        if std::path::Path::new(&dot_a).exists() {
+            std::fs::copy(&dot_a, &dot_lib).unwrap_or_else(|_| {
+                panic!(
+                    "Failed to copy static library from {} to {}",
+                    dot_a, dot_lib,
+                )
+            });
+        }
+
+        // These are required by libuv on Windows
+        println!("cargo:rustc-link-lib=psapi");
+        println!("cargo:rustc-link-lib=user32");
+        println!("cargo:rustc-link-lib=advapi32");
+        println!("cargo:rustc-link-lib=iphlpapi");
+        println!("cargo:rustc-link-lib=userenv");
+        println!("cargo:rustc-link-lib=ws2_32");
+
+        // These are required by OpenSSL on Windows
+        println!("cargo:rustc-link-lib=ws2_32");
+        println!("cargo:rustc-link-lib=gdi32");
+        println!("cargo:rustc-link-lib=advapi32");
+        println!("cargo:rustc-link-lib=crypt32");
+        println!("cargo:rustc-link-lib=user32");
     }
 
     println!("cargo:rustc-link-lib=static=mediasoup-worker");
