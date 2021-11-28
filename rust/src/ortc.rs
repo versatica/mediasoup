@@ -57,7 +57,7 @@ pub struct RtpMapping {
 pub enum RtpParametersError {
     /// Invalid codec apt parameter.
     #[error("Invalid codec apt parameter {0}")]
-    InvalidAptParameter(String),
+    InvalidAptParameter(Cow<'static, str>),
 }
 
 /// Error caused by invalid RTP capabilities.
@@ -74,7 +74,7 @@ pub enum RtpCapabilitiesError {
     CannotAllocate,
     /// Invalid codec apt parameter.
     #[error("Invalid codec apt parameter {0}")]
-    InvalidAptParameter(String),
+    InvalidAptParameter(Cow<'static, str>),
     /// Duplicated preferred payload type
     #[error("Duplicated preferred payload type {0}")]
     DuplicatedPreferredPayloadType(u8),
@@ -135,7 +135,7 @@ pub(crate) fn validate_rtp_parameters(
 fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpParametersError> {
     for (key, value) in codec.parameters().iter() {
         // Specific parameters validation.
-        if key.as_str() == "apt" {
+        if key.as_ref() == "apt" {
             match value {
                 RtpCodecParametersParametersValue::Number(_) => {
                     // Good
@@ -154,7 +154,7 @@ fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpPa
 fn validate_rtp_codec_capability(codec: &RtpCodecCapability) -> Result<(), RtpCapabilitiesError> {
     for (key, value) in codec.parameters().iter() {
         // Specific parameters validation.
-        if key.as_str() == "apt" {
+        if key.as_ref() == "apt" {
             match value {
                 RtpCodecParametersParametersValue::Number(_) => {
                     // Good
@@ -1019,7 +1019,7 @@ fn match_codecs(
                         .parameters
                         .get("profile-level-id")
                         .and_then(|p| match p {
-                            RtpCodecParametersParametersValue::String(s) => Some(s.as_str()),
+                            RtpCodecParametersParametersValue::String(s) => Some(s.as_ref()),
                             RtpCodecParametersParametersValue::Number(_) => None,
                         });
                 let profile_level_id_b =
@@ -1027,7 +1027,7 @@ fn match_codecs(
                         .parameters
                         .get("profile-level-id")
                         .and_then(|p| match p {
-                            RtpCodecParametersParametersValue::String(s) => Some(s.as_str()),
+                            RtpCodecParametersParametersValue::String(s) => Some(s.as_ref()),
                             RtpCodecParametersParametersValue::Number(_) => None,
                         });
 
