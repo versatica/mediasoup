@@ -11,6 +11,7 @@ documentation = "https://docs.rs/mediasoup"
 repository = "https://github.com/versatica/mediasoup"
 readme = "README.md"
 include = [
+    "/benches",
     "/src",
     "/README.md"
 ]
