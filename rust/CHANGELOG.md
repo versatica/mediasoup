@@ -1,6 +1,6 @@
 # Changelog
 
-# Unreleased
+# 0.9.0
 
 * Fix for receiving data over payload channel
 * Support thread initializer function for worker threads, can be used for pinning worker threads to CPU cores
@@ -9,6 +9,10 @@
 * Various optimizations that caused minor breaking changes to public API
 * Requests no longer have internal timeout, but they can now be cancelled, add your own timeouts on top if needed
 * Windows support
+* General mediasoup changes:
+  * Replaces GYP build system with fully-functional Meson build system (PR #622).
+  * `Consumer`: Modification of bitrate allocation algorithm (PR #708).
+  * Single H264/H265 codec configuration in `supportedRtpCapabilities` (PR #718).
 
 # 0.8.5
 
