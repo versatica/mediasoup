@@ -21,13 +21,13 @@ namespace RTC
 		struct StorageItem
 		{
 			// Original packet.
-			RTC::RtpPacket* originalPacket{ nullptr };
+			RTC::RtpPacket::SharedPtr originalPacket{ nullptr };
 			// Correct SSRC since original packet will have original ssrc.
 			uint32_t ssrc{ 0 };
 			// Correct sequence number since original packet will have original sequence number.
 			uint16_t sequenceNumber{ 0 };
 			// Cloned packet.
-			RTC::RtpPacket* clonedPacket{ nullptr };
+			RTC::RtpPacket::SharedPtr clonedPacket{ nullptr };
 			// Last time this packet was resent.
 			uint64_t resentAtMs{ 0u };
 			// Number of times this packet was resent.
@@ -65,7 +65,7 @@ namespace RTC
 
 		void FillJsonStats(json& jsonObject) override;
 		void SetRtx(uint8_t payloadType, uint32_t ssrc) override;
-		bool ReceivePacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket);
+		bool ReceivePacket(RTC::RtpPacket* packet, RTC::RtpPacket::SharedPtr* clonedPacket);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
@@ -82,7 +82,7 @@ namespace RTC
 		uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 	private:
-		void StorePacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket);
+		void StorePacket(RTC::RtpPacket* packet, RTC::RtpPacket::SharedPtr* clonedPacket);
 		void ClearBuffer();
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);

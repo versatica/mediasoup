@@ -131,8 +131,75 @@ namespace RTC
 			);
 			// clang-format on
 		}
+		class SharedPtr
+		{
+		public:
+			RtpPacket* get()
+			{
+				return ptr;
+			}
+			explicit SharedPtr(RtpPacket* p) : ptr(p)
+			{
+			}
+			SharedPtr(std::nullptr_t p) : ptr(p)
+			{
+			}
+			SharedPtr(const SharedPtr& p) : ptr(p.ptr)
+			{
+				if (ptr)
+				{
+					ptr->IncRefCount();
+				}
+			}
+			SharedPtr(SharedPtr&& p) : ptr(p.ptr)
+			{
+				p.ptr = nullptr;
+			}
+			SharedPtr& operator=(SharedPtr&& p)
+			{
+				ptr   = p.ptr;
+				p.ptr = nullptr;
+				return *this;
+			}
+			SharedPtr& operator=(const SharedPtr& p)
+			{
+				if (p.ptr)
+				{
+					p.ptr->IncRefCount();
+				}
+				reset(p.ptr);
+				return *this;
+			}
+			~SharedPtr()
+			{
+				reset();
+			}
+			explicit operator bool() const
+			{
+				return ptr;
+			}
+			void reset(RtpPacket* p = nullptr)
+			{
+				if (ptr)
+				{
+					ptr->DecRefCount();
+				}
+				ptr = p;
+			}
+			RtpPacket& operator*() const noexcept
+			{
+				return *ptr;
+			}
+			RtpPacket* operator->() const noexcept
+			{
+				return ptr;
+			}
 
-		static RtpPacket* Parse(const uint8_t* data, size_t len);
+		private:
+			RtpPacket* ptr;
+		};
+
+		static RtpPacket::SharedPtr Parse(const uint8_t* data, size_t len);
 
 	private:
 		RtpPacket(
@@ -147,12 +214,6 @@ namespace RTC
 		~RtpPacket();
 
 	public:
-		// Increase reference count for the packet.
-		void IncRefCount();
-
-		// Decrease reference count for the packet, packet will be removed when reference count reaches zero.
-		void DecRefCount();
-
 		void Dump() const;
 
 		void FillJson(json& jsonObject) const;
@@ -597,7 +658,7 @@ namespace RTC
 			return this->payloadDescriptorHandler->IsKeyFrame();
 		}
 
-		RtpPacket* Clone() const;
+		RtpPacket::SharedPtr Clone() const;
 
 		void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
 
@@ -615,6 +676,14 @@ namespace RTC
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
 
 	private:
+		friend class SharedPtr;
+
+		// Increase reference count for the packet.
+		void IncRefCount();
+
+		// Decrease reference count for the packet, packet will be removed when reference count reaches zero.
+		void DecRefCount();
+
 		// Return packet into object pool for future reuse of memory allocation.
 		static void ReturnIntoPool(RtpPacket* packet);
 		void ParseExtensions();

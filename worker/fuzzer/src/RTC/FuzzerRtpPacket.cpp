@@ -28,7 +28,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 
 	std::memcpy(data2, data, len);
 
-	::RTC::RtpPacket* packet = ::RTC::RtpPacket::Parse(data2, len);
+	auto packet = ::RTC::RtpPacket::Parse(data2, len);
 
 	if (!packet)
 		return;
@@ -179,9 +179,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->GetPayloadPadding();
 	packet->IsKeyFrame();
 
-	auto* clonedPacket = packet->Clone();
-
-	clonedPacket->DecRefCount();
+	auto clonedPacket = packet->Clone();
 
 	// TODO: packet->RtxEncode(); // This cannot be tested this way.
 	// TODO: packet->RtxDecode(); // This cannot be tested this way.
@@ -189,6 +187,4 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	// TODO: packet->ProcessPayload();
 	// TODO: packet->ProcessPayload();
 	// TODO: packet->ShiftPayload();
-
-	packet->DecRefCount();
 }

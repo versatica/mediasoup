@@ -102,7 +102,7 @@ namespace RTC
 					return;
 				}
 
-				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+				auto packet = RTC::RtpPacket::Parse(data, len);
 
 				if (!packet)
 				{
@@ -112,9 +112,7 @@ namespace RTC
 				}
 
 				// Pass the packet to the parent transport.
-				RTC::Transport::ReceiveRtpPacket(packet);
-
-				packet->DecRefCount();
+				RTC::Transport::ReceiveRtpPacket(packet.get());
 
 				break;
 			}

@@ -29,12 +29,6 @@ namespace RTC
 
 		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
 
-		if (storageItem->originalPacket)
-			storageItem->originalPacket->DecRefCount();
-
-		if (storageItem->clonedPacket)
-			storageItem->clonedPacket->DecRefCount();
-
 		storageItem->clonedPacket   = nullptr;
 		storageItem->originalPacket = nullptr;
 		storageItem->resentAtMs     = 0;
@@ -191,7 +185,7 @@ namespace RTC
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
-	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket)
+	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, RTC::RtpPacket::SharedPtr* clonedPacket)
 	{
 		MS_TRACE();
 
@@ -230,18 +224,18 @@ namespace RTC
 
 				// Note that this is an already RTX encoded packet if RTX is used
 				// (FillRetransmissionContainer() did it).
-				auto* packet = storageItem->clonedPacket;
+				auto packet = storageItem->clonedPacket;
 
 				// Retransmit the packet.
 				static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
-				  ->OnRtpStreamRetransmitRtpPacket(this, packet);
+				  ->OnRtpStreamRetransmitRtpPacket(this, packet.get());
 
 				// Mark the packet as retransmitted.
-				RTC::RtpStream::PacketRetransmitted(packet);
+				RTC::RtpStream::PacketRetransmitted(packet.get());
 
 				// Mark the packet as repaired (only if this is the first retransmission).
 				if (storageItem->sentTimes == 1)
-					RTC::RtpStream::PacketRepaired(packet);
+					RTC::RtpStream::PacketRepaired(packet.get());
 			}
 		}
 	}
@@ -391,7 +385,7 @@ namespace RTC
 		MS_ABORT("invalid method call");
 	}
 
-	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket)
+	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, RTC::RtpPacket::SharedPtr* clonedPacket)
 	{
 		MS_TRACE();
 
@@ -414,7 +408,7 @@ namespace RTC
 		// storage with the new packet or just ignore it (if duplicated packet).
 		if (storageItem)
 		{
-			auto* storedPacket = storageItem->originalPacket;
+			auto storedPacket = storageItem->originalPacket;
 
 			if (packet->GetTimestamp() == storedPacket->GetTimestamp())
 				return;
@@ -483,7 +477,6 @@ namespace RTC
 		// Store original packet and some extra info into the retrieved storage item.
 		if (*clonedPacket)
 		{
-			(*clonedPacket)->IncRefCount();
 			storageItem->originalPacket = *clonedPacket;
 			storageItem->ssrc           = (*clonedPacket)->GetSsrc();
 			storageItem->sequenceNumber = (*clonedPacket)->GetSequenceNumber();
@@ -550,7 +543,7 @@ namespace RTC
 			if (requested)
 			{
 				auto* storageItem = this->storageItemBuffer.Get(currentSeq);
-				RTC::RtpPacket* packet;
+				RTC::RtpPacket::SharedPtr packet{ nullptr };
 				uint32_t diffMs;
 
 				// Calculate the elapsed time between the max timestamp seen and the
@@ -565,9 +558,6 @@ namespace RTC
 					// Update MID RTP extension value.
 					if (!this->mid.empty())
 						packet->UpdateMid(mid);
-
-					if (storageItem->clonedPacket)
-						storageItem->clonedPacket->DecRefCount();
 
 					storageItem->clonedPacket = packet;
 

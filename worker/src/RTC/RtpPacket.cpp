@@ -15,7 +15,7 @@ namespace RTC
 
 	/* Class methods. */
 
-	RtpPacket* RtpPacket::Parse(const uint8_t* data, size_t len)
+	RtpPacket::SharedPtr RtpPacket::Parse(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -124,7 +124,7 @@ namespace RTC
 		auto* packet = RtpPacketPool.Allocate();
 		new (packet) RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
 
-		return packet;
+		return SharedPtr(packet);
 	}
 
 	/* Instance methods. */
@@ -150,9 +150,6 @@ namespace RTC
 
 	void RtpPacket::IncRefCount()
 	{
-		MS_ASSERT(
-		  this->buffer != nullptr, "Can only increase reference count for packets that own their memory");
-
 		MS_ASSERT(
 		  this->referenceCount > 0, "Can only increase reference count for packets that are still alive");
 
@@ -673,7 +670,7 @@ namespace RTC
 		SetPayloadPaddingFlag(false);
 	}
 
-	RtpPacket* RtpPacket::Clone() const
+	RtpPacket::SharedPtr RtpPacket::Clone() const
 	{
 		MS_TRACE();
 
@@ -753,7 +750,7 @@ namespace RTC
 		// Store allocated buffer.
 		packet->buffer = buffer;
 
-		return packet;
+		return SharedPtr(packet);
 	}
 
 	// NOTE: The caller must ensure that the buffer/memmory of the packet has

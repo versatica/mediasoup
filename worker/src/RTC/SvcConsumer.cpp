@@ -532,7 +532,7 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	void SvcConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpPacket** clonedPacket)
+	void SvcConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpPacket::SharedPtr* clonedPacket)
 	{
 		MS_TRACE();
 
