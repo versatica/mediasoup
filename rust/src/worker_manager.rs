@@ -138,8 +138,9 @@ impl WorkerManager {
 
                 move || {
                     let _ = exit_sender.send(());
-                    let id = id.lock().take().unwrap();
-                    workers.lock().remove(&id);
+                    if let Some(id) = id.lock().take() {
+                        workers.lock().remove(&id);
+                    }
                 }
             },
         )
