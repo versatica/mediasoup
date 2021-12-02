@@ -267,6 +267,10 @@ export declare class Consumer extends EnhancedEventEmitter {
      * Enable 'trace' event.
      */
     enableTraceEvent(types?: ConsumerTraceEventType[]): Promise<void>;
+    /**
+     * Replaces the producer associated with this consumer.
+     */
+    changeProducer(producerId: string): Promise<any>;
     private handleWorkerNotifications;
 }
 //# sourceMappingURL=Consumer.d.ts.map

@@ -38,6 +38,7 @@ namespace RTC
 			virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer)                      = 0;
 			virtual void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer)                        = 0;
 			virtual void OnConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
+			virtual void OnConsumerChangeProducer(RTC::Consumer* consumer, std::string& producerId) = 0;
 		};
 
 	public:
@@ -117,6 +118,8 @@ namespace RTC
 		}
 		void TransportConnected();
 		void TransportDisconnected();
+		void Pause();
+		void Resume();
 		bool IsPaused() const
 		{
 			return this->paused;
@@ -170,7 +173,7 @@ namespace RTC
 	public:
 		// Passed by argument.
 		const std::string id;
-		const std::string producerId;
+		std::string producerId;
 
 	protected:
 		// Passed by argument.

@@ -778,6 +778,96 @@ namespace RTC
 		consumer->ProducerRtpStreamScores(producer->GetRtpStreamScores());
 	}
 
+	inline void Router::OnTransportConsumerChangeProducer(
+	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, std::string& producerId)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		  consumer->GetType() == RTC::RtpParameters::Type::SIMPLE,
+		  "Invalid consumer type [consumerId:%s type:%s]",
+		  consumer->id.c_str(),
+		  RTC::RtpParameters::GetTypeString(consumer->GetType()).c_str())
+
+		consumer->Pause();
+
+		// Remove current producer.
+		auto mapCurrentProducersIt = this->mapProducers.find(consumer->producerId);
+		if (mapCurrentProducersIt == this->mapProducers.end())
+			MS_THROW_ERROR("Current Producer not found [producerId:%s]", consumer->producerId.c_str());
+
+		auto* currentProducer              = mapCurrentProducersIt->second;
+		auto mapCurrentProducerConsumersIt = this->mapProducerConsumers.find(currentProducer);
+
+		MS_ASSERT(
+		  mapCurrentProducerConsumersIt != this->mapProducerConsumers.end(),
+		  "Current Producer not present in mapProducerConsumers [producerId: %s]",
+		  consumer->producerId.c_str());
+
+		// Remove the Consumer from the current consumers map.
+		auto& currentConsumers          = mapCurrentProducerConsumersIt->second;
+		auto currentConsumersConsumerIt = currentConsumers.find(consumer);
+
+		if (currentConsumersConsumerIt != currentConsumers.end())
+		{
+			currentConsumers.erase(currentConsumersConsumerIt);
+		}
+		else
+		{
+			MS_WARN_TAG(
+			  rtp, "Consumer not present in current consumers list [consumerId:%s]", consumer->id.c_str());
+		}
+
+		// Add new producer
+		auto mapProducersIt = this->mapProducers.find(producerId);
+		if (mapProducersIt == this->mapProducers.end())
+			MS_THROW_ERROR("Producer not found [producerId:%s]", producerId.c_str());
+
+		auto* producer              = mapProducersIt->second;
+		auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
+
+		MS_ASSERT(
+		  mapProducerConsumersIt != this->mapProducerConsumers.end(),
+		  "Producer not present in mapProducerConsumers [producerId:%s]",
+		  producerId.c_str());
+
+		consumer->producerId = producerId;
+
+		// Update the Consumer status based on the Producer status.
+		if (producer->IsPaused())
+			consumer->ProducerPaused();
+
+		// Insert the Consumer in the maps.
+		auto& consumers = mapProducerConsumersIt->second;
+
+		auto consumersConsumerIt = consumers.find(consumer);
+		if (consumersConsumerIt == consumers.end())
+		{
+			consumers.insert(consumer);
+		}
+		else
+		{
+			MS_WARN_TAG(
+			  rtp, "consumer already present in consumers list [consumerId:%s]", consumer->id.c_str());
+		}
+
+		this->mapConsumerProducer[consumer] = producer;
+
+		// Get all streams in the Producer and provide the Consumer with them.
+		for (const auto& kv : producer->GetRtpStreams())
+		{
+			auto* rtpStream     = kv.first;
+			uint32_t mappedSsrc = kv.second;
+
+			consumer->ProducerRtpStream(rtpStream, mappedSsrc);
+		}
+
+		// Provide the Consumer with the scores of all streams in the Producer.
+		consumer->ProducerRtpStreamScores(producer->GetRtpStreamScores());
+
+		consumer->Resume();
+	}
+
 	inline void Router::OnTransportConsumerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
 	{
 		MS_TRACE();

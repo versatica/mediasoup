@@ -104,6 +104,8 @@ namespace RTC
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
 			virtual void OnTransportDataConsumerDataProducerClosed(
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
+			virtual void OnTransportConsumerChangeProducer(
+			  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) = 0;
 		};
 
 	private:
@@ -199,6 +201,7 @@ namespace RTC
 		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) override;
 		void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) override;
 		void OnConsumerProducerClosed(RTC::Consumer* consumer) override;
+		void OnConsumerChangeProducer(RTC::Consumer* consumer, std::string& producerId) override;
 
 		/* Pure virtual methods inherited from RTC::DataProducer::Listener. */
 	public:
