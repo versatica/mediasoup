@@ -2,7 +2,7 @@
 	"compileOnSave": true,
 	"compilerOptions":
 	{
-		"lib": [ "es2021", "DOM" ],
+		"lib": [ "es2021" ],
 		"target": "esnext",
 		"module": "commonjs",
 		"moduleResolution": "node",
