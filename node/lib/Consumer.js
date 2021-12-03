@@ -282,6 +282,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async changeProducer(producerId) {
         logger.debug('changeProducer()');
         const data = await this.#channel.request('consumer.changeProducer', this.#internal, { producerId });
+        this.#internal.producerId = producerId;
         return data;
     }
     handleWorkerNotifications() {
