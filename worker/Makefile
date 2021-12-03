@@ -16,8 +16,6 @@ MEDIASOUP_BUILDTYPE ?= Release
 GULP = ./scripts/node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov
 DOCKER ?= docker
-PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
-MESON ?= $(PIP_DIR)/bin/meson
 MESON_ARGS ?= ""
 
 # Disable `*.pyc` files creation.
@@ -25,11 +23,15 @@ export PYTHONDONTWRITEBYTECODE = 1
 # Instruct `meson` where to look for ninja binary.
 ifeq ($(OS),Windows_NT)
 # Windows is, of course, special.
-	export NINJA = $(PIP_DIR)/bin/ninja.exe
+	PIP_DIR = $(MEDIASOUP_OUT_DIR)\pip
+	export NINJA = $(PIP_DIR)\bin\ninja.exe
+	MESON ?= $(PIP_DIR)\bin\meson
 	RRM = rmdir /q /s
 else
+	PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
 	export NINJA = $(PIP_DIR)/bin/ninja
 	RRM = rm -rf
+	MESON ?= $(PIP_DIR)/bin/meson
 # Workaround for NixOS and Guix that don't work with pre-built binaries, see:
 # https://github.com/NixOS/nixpkgs/issues/142383.
 	PIP_BUILD_BINARIES = $(shell [ -f /etc/NIXOS -o -d /etc/guix ] && echo "--no-binary :all:")
