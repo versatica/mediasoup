@@ -2,11 +2,16 @@
 # make tasks for mediasoup-worker.
 #
 
+ifeq ($(OS),Windows_NT)
+	MEDIASOUP_OUT_DIR ?= $(shell cd)\out
+else
+	MEDIASOUP_OUT_DIR ?= $(shell pwd)/out
+endif
+
 # We need Python 3 here.
 PYTHON ?= $(shell command -v python3 2> /dev/null || echo python)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh || echo 4)
-MEDIASOUP_OUT_DIR ?= $(shell pwd)/out
 MEDIASOUP_BUILDTYPE ?= Release
 GULP = ./scripts/node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov
@@ -14,18 +19,20 @@ DOCKER ?= docker
 PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_ARGS ?= ""
-# Workaround for NixOS and Guix that don't work with pre-built binaries, see:
-# https://github.com/NixOS/nixpkgs/issues/142383.
-PIP_BUILD_BINARIES = $(shell [ -f /etc/NIXOS -o -d /etc/guix ] && echo "--no-binary :all:")
 
 # Disable `*.pyc` files creation.
 export PYTHONDONTWRITEBYTECODE = 1
 # Instruct `meson` where to look for ninja binary.
 ifeq ($(OS),Windows_NT)
-	# Windows is, of course, special.
+# Windows is, of course, special.
 	export NINJA = $(PIP_DIR)/bin/ninja.exe
+	RRM = rmdir /q /s
 else
 	export NINJA = $(PIP_DIR)/bin/ninja
+	RRM = rm -rf
+# Workaround for NixOS and Guix that don't work with pre-built binaries, see:
+# https://github.com/NixOS/nixpkgs/issues/142383.
+	PIP_BUILD_BINARIES = $(shell [ -f /etc/NIXOS -o -d /etc/guix ] && echo "--no-binary :all:")
 endif
 
 # Instruct Python where to look for modules it needs, such that `meson` actually
@@ -45,16 +52,16 @@ default: mediasoup-worker
 
 meson-ninja:
 ifeq ($(wildcard $(PIP_DIR)),)
-	# Updated pip and setuptools are needed for meson
-	# `--system` is not present everywhere and is only needed as workaround for
-	# Debian-specific issue (copied from
-	# https://github.com/gluster/gstatus/pull/33), fallback to command without
-	# `--system` if the first one fails.
+# Updated pip and setuptools are needed for meson
+# `--system` is not present everywhere and is only needed as workaround for
+# Debian-specific issue (copied from
+# https://github.com/gluster/gstatus/pull/33), fallback to command without
+# `--system` if the first one fails.
 	$(PYTHON) -m pip install --system --target=$(PIP_DIR) pip setuptools || \
 		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools || \
 		echo "Installation failed, likely because PIP is unavailable, if you are on Debian/Ubuntu or derivative please install the python3-pip package"
-	# Install `meson` and `ninja` using `pip` into custom location, so we don't
-	# depend on system-wide installation.
+# Install `meson` and `ninja` using `pip` into custom location, so we don't
+# depend on system-wide installation.
 	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) $(PIP_BUILD_BINARIES) meson ninja
 endif
 
@@ -112,16 +119,16 @@ endif
 endif
 
 clean:
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+	$(RRM) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 
 clean-pip:
-	$(RM) -rf $(PIP_DIR)
+	$(RRM) $(PIP_DIR)
 
 clean-subprojects: meson-ninja
 	$(MESON) subprojects purge --include-cache --confirm
 
 clean-all: clean-subprojects
-	$(RM) -rf $(MEDIASOUP_OUT_DIR)
+	$(RRM) $(MEDIASOUP_OUT_DIR)
 
 mediasoup-worker: setup
 ifeq ($(MEDIASOUP_WORKER_BIN),)
