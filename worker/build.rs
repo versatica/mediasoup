@@ -82,8 +82,7 @@ fn main() {
         // Build
         if !Command::new("make")
             .arg("libmediasoup-worker")
-            // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`
-            .env("MEDIASOUP_OUT_DIR", &out_dir.replace('\\', "/"))
+            .env("MEDIASOUP_OUT_DIR", &out_dir)
             .env("MEDIASOUP_BUILDTYPE", &build_type)
             .spawn()
             .expect("Failed to start")
