@@ -98,6 +98,7 @@ fn main() {
             // Clean
             if !Command::new("make")
                 .arg("clean-all")
+                .env("MEDIASOUP_OUT_DIR", &out_dir.replace('\\', "/"))
                 .spawn()
                 .expect("Failed to start")
                 .wait()
