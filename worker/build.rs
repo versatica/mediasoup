@@ -16,6 +16,8 @@ fn main() {
     };
 
     let out_dir = env::var("OUT_DIR").unwrap();
+    // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`
+    let mediasoup_out_dir = format!("{}/out", out_dir.replace('\\', "/"));
 
     // Add C++ std lib
     #[cfg(target_os = "linux")]
@@ -78,51 +80,53 @@ fn main() {
         // Nothing special is needed so far
     }
 
+    // Build
+    if !Command::new("make")
+        .arg("libmediasoup-worker")
+        .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
+        .env("MEDIASOUP_BUILDTYPE", &build_type)
+        .spawn()
+        .expect("Failed to start")
+        .wait()
+        .expect("Wasn't running")
+        .success()
     {
-        // Build
-        if !Command::new("make")
-            .arg("libmediasoup-worker")
-            // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`
-            .env("MEDIASOUP_OUT_DIR", &out_dir.replace('\\', "/"))
-            .env("MEDIASOUP_BUILDTYPE", &build_type)
-            .spawn()
-            .expect("Failed to start")
-            .wait()
-            .expect("Wasn't running")
-            .success()
-        {
-            panic!("Failed to build libmediasoup-worker")
-        }
-
-        if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
-            // Clean
-            if !Command::new("make")
-                .arg("clean-all")
-                .spawn()
-                .expect("Failed to start")
-                .wait()
-                .expect("Wasn't running")
-                .success()
-            {
-                panic!("Failed to clean libmediasoup-worker")
-            }
-        }
+        panic!("Failed to build libmediasoup-worker")
     }
 
+    #[cfg(not(target_os = "windows"))]
+    {
+        let from = format!("{}/{}/libmediasoup-worker.a", mediasoup_out_dir, build_type);
+        let to = format!("{}/libmediasoup-worker.a", out_dir);
+        std::fs::copy(&from, &to).unwrap_or_else(|error| {
+            panic!(
+                "Failed to copy static library from {} to {}: {}",
+                from, to, error
+            )
+        });
+    }
     #[cfg(target_os = "windows")]
     {
-        let dot_a = format!("{}/{}/libmediasoup-worker.a", out_dir, build_type);
-        let dot_lib = format!("{}/{}/mediasoup-worker.lib", out_dir, build_type);
+        let dot_a = format!("{}/{}/libmediasoup-worker.a", mediasoup_out_dir, build_type);
+        let from = format!("{}/{}/mediasoup-worker.lib", mediasoup_out_dir, build_type);
+        let to = format!("{}/mediasoup-worker.lib", out_dir);
 
         // Meson builds `libmediasoup-worker.a` on Windows instead of `*.lib` file under MinGW
         if std::path::Path::new(&dot_a).exists() {
-            std::fs::copy(&dot_a, &dot_lib).unwrap_or_else(|_| {
+            std::fs::copy(&dot_a, &from).unwrap_or_else(|error| {
                 panic!(
-                    "Failed to copy static library from {} to {}",
-                    dot_a, dot_lib,
+                    "Failed to copy static library from {} to {}: {}",
+                    dot_a, from, error
                 )
             });
         }
+
+        std::fs::copy(&from, &to).unwrap_or_else(|error| {
+            panic!(
+                "Failed to copy static library from {} to {}: {}",
+                from, to, error
+            )
+        });
 
         // These are required by libuv on Windows
         println!("cargo:rustc-link-lib=psapi");
@@ -140,6 +144,21 @@ fn main() {
         println!("cargo:rustc-link-lib=user32");
     }
 
+    if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
+        // Clean
+        if !Command::new("make")
+            .arg("clean-all")
+            .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
+            .spawn()
+            .expect("Failed to start")
+            .wait()
+            .expect("Wasn't running")
+            .success()
+        {
+            panic!("Failed to clean libmediasoup-worker")
+        }
+    }
+
     println!("cargo:rustc-link-lib=static=mediasoup-worker");
-    println!("cargo:rustc-link-search=native={}/{}", out_dir, build_type);
+    println!("cargo:rustc-link-search=native={}", out_dir);
 }
