@@ -134,7 +134,7 @@ clean-all: clean-subprojects
 
 mediasoup-worker: setup
 ifeq ($(MEDIASOUP_WORKER_BIN),)
-	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) mediasoup-worker
+	$(MESON) compile -j $(CORES) $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) mediasoup-worker
 endif
 
 xcode: setup
