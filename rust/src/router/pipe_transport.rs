@@ -271,7 +271,7 @@ impl fmt::Debug for PipeTransport {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl Transport for PipeTransport {
     fn id(&self) -> TransportId {
         self.inner.id
@@ -414,7 +414,7 @@ impl Transport for PipeTransport {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl TransportGeneric for PipeTransport {
     type Dump = PipeTransportDump;
     type Stat = PipeTransportStat;
