@@ -356,7 +356,7 @@ impl fmt::Debug for WebRtcTransport {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl Transport for WebRtcTransport {
     fn id(&self) -> TransportId {
         self.inner.id
@@ -499,7 +499,7 @@ impl Transport for WebRtcTransport {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl TransportGeneric for WebRtcTransport {
     type Dump = WebRtcTransportDump;
     type Stat = WebRtcTransportStat;

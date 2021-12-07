@@ -301,7 +301,7 @@ impl fmt::Debug for PlainTransport {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl Transport for PlainTransport {
     fn id(&self) -> TransportId {
         self.inner.id
@@ -444,7 +444,7 @@ impl Transport for PlainTransport {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl TransportGeneric for PlainTransport {
     type Dump = PlainTransportDump;
     type Stat = PlainTransportStat;

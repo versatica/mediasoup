@@ -228,7 +228,7 @@ impl fmt::Debug for DirectTransport {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl Transport for DirectTransport {
     /// Transport id.
     fn id(&self) -> TransportId {
@@ -385,7 +385,7 @@ impl Transport for DirectTransport {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl TransportGeneric for DirectTransport {
     type Dump = DirectTransportDump;
     type Stat = DirectTransportStat;
