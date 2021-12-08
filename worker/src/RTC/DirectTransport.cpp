@@ -107,7 +107,7 @@ namespace RTC
 				// If this is the first time to reveive a rtp packet then allocate the receiving buffer now.
 				if (!this->buffer)
 					this->buffer = new uint8_t[RTC::MtuSize + 100];
-				
+
 				// Copy the received packet into this buffer so it can be expanded later.
 				std::memcpy(this->buffer, data, static_cast<size_t>(len));
 
