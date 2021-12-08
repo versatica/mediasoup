@@ -168,14 +168,11 @@ impl Inner {
                         data_producer_id: self.id,
                     },
                 };
-                let transport = self.transport.clone();
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("data producer closing failed on drop: {}", error);
                         }
-
-                        drop(transport);
                     })
                     .detach();
             }
@@ -440,24 +437,21 @@ impl DataProducer {
 }
 
 impl DirectDataProducer {
-    /// Sends direct messages from the Rust process.
-    pub async fn send(&self, message: WebRtcMessage) -> Result<(), NotificationError> {
+    /// Sends direct messages from the Rust to the worker.
+    pub fn send(&self, message: WebRtcMessage<'_>) -> Result<(), NotificationError> {
         let (ppid, payload) = message.into_ppid_and_payload();
 
-        self.inner
-            .payload_channel
-            .notify(
-                DataProducerSendNotification {
-                    internal: DataProducerInternal {
-                        router_id: self.inner.transport.router_id(),
-                        transport_id: self.inner.transport.id(),
-                        data_producer_id: self.inner.id,
-                    },
-                    data: DataProducerSendData { ppid },
+        self.inner.payload_channel.notify(
+            DataProducerSendNotification {
+                internal: DataProducerInternal {
+                    router_id: self.inner.transport.router_id(),
+                    transport_id: self.inner.transport.id(),
+                    data_producer_id: self.inner.id,
                 },
-                payload,
-            )
-            .await
+                data: DataProducerSendData { ppid },
+            },
+            payload.into_owned(),
+        )
     }
 }
 

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getPipeConsumerRtpParameters = exports.getConsumerRtpParameters = exports.canConsume = exports.getConsumableRtpParameters = exports.getProducerRtpParametersMapping = exports.generateRouterRtpCapabilities = exports.validateSctpStreamParameters = exports.validateSctpParameters = exports.validateNumSctpStreams = exports.validateSctpCapabilities = exports.validateRtcpParameters = exports.validateRtpEncodingParameters = exports.validateRtpHeaderExtensionParameters = exports.validateRtpCodecParameters = exports.validateRtpParameters = exports.validateRtpHeaderExtension = exports.validateRtcpFeedback = exports.validateRtpCodecCapability = exports.validateRtpCapabilities = void 0;
 const h264 = require("h264-profile-level-id");
 const utils = require("./utils");
 const errors_1 = require("./errors");
@@ -724,7 +725,7 @@ function getConsumerRtpParameters(consumableParams, caps, pipe) {
             : undefined;
         // If there is simulast, mangle spatial layers in scalabilityMode.
         if (consumableParams.encodings.length > 1) {
-            const { temporalLayers } = scalabilityModes_1.parse(scalabilityMode);
+            const { temporalLayers } = (0, scalabilityModes_1.parse)(scalabilityMode);
             scalabilityMode = `S${consumableParams.encodings.length}T${temporalLayers}`;
         }
         if (scalabilityMode)
@@ -828,12 +829,11 @@ function matchCodecs(aCodec, bCodec, { strict = false, modify = false } = {}) {
             }
         case 'video/h264':
             {
-                const aPacketizationMode = aCodec.parameters['packetization-mode'] || 0;
-                const bPacketizationMode = bCodec.parameters['packetization-mode'] || 0;
-                if (aPacketizationMode !== bPacketizationMode)
-                    return false;
-                // If strict matching check profile-level-id.
                 if (strict) {
+                    const aPacketizationMode = aCodec.parameters['packetization-mode'] || 0;
+                    const bPacketizationMode = bCodec.parameters['packetization-mode'] || 0;
+                    if (aPacketizationMode !== bPacketizationMode)
+                        return false;
                     if (!h264.isSameProfile(aCodec.parameters, bCodec.parameters))
                         return false;
                     let selectedProfileLevelId;
@@ -855,7 +855,6 @@ function matchCodecs(aCodec, bCodec, { strict = false, modify = false } = {}) {
             }
         case 'video/vp9':
             {
-                // If strict matching check profile-id.
                 if (strict) {
                     const aProfileId = aCodec.parameters['profile-id'] || 0;
                     const bProfileId = bCodec.parameters['profile-id'] || 0;

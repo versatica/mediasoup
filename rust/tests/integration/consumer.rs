@@ -1,5 +1,6 @@
 use async_io::Timer;
 use futures_lite::future;
+use hash_hasher::{HashedMap, HashedSet};
 use mediasoup::consumer::{
     ConsumableRtpEncoding, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType,
 };
@@ -20,7 +21,6 @@ use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTra
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use parking_lot::Mutex;
-use std::collections::{HashMap, HashSet};
 use std::env;
 use std::num::{NonZeroU32, NonZeroU8};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -350,7 +350,7 @@ fn consume_succeeds() {
             .on_new_consumer({
                 let new_consumer_count = Arc::clone(&new_consumer_count);
 
-                Box::new(move |_consumer| {
+                Arc::new(move |_consumer| {
                     new_consumer_count.fetch_add(1, Ordering::SeqCst);
                 })
             })
@@ -421,13 +421,13 @@ fn consume_succeeds() {
             let router_dump = router.dump().await.expect("Failed to get router dump");
 
             assert_eq!(router_dump.map_producer_id_consumer_ids, {
-                let mut map = HashMap::new();
+                let mut map = HashedMap::default();
                 map.insert(audio_producer.id(), {
-                    let mut set = HashSet::new();
+                    let mut set = HashedSet::default();
                     set.insert(audio_consumer.id());
                     set
                 });
-                map.insert(video_producer.id(), HashSet::new());
+                map.insert(video_producer.id(), HashedSet::default());
                 map
             });
 
@@ -525,14 +525,14 @@ fn consume_succeeds() {
             let router_dump = router.dump().await.expect("Failed to get router dump");
 
             assert_eq!(router_dump.map_producer_id_consumer_ids, {
-                let mut map = HashMap::new();
+                let mut map = HashedMap::default();
                 map.insert(audio_producer.id(), {
-                    let mut set = HashSet::new();
+                    let mut set = HashedSet::default();
                     set.insert(audio_consumer.id());
                     set
                 });
                 map.insert(video_producer.id(), {
-                    let mut set = HashSet::new();
+                    let mut set = HashedSet::default();
                     set.insert(video_consumer.id());
                     set
                 });
@@ -620,14 +620,14 @@ fn consume_succeeds() {
             let router_dump = router.dump().await.expect("Failed to get router dump");
 
             assert_eq!(router_dump.map_producer_id_consumer_ids, {
-                let mut map = HashMap::new();
+                let mut map = HashedMap::default();
                 map.insert(audio_producer.id(), {
-                    let mut set = HashSet::new();
+                    let mut set = HashedSet::default();
                     set.insert(audio_consumer.id());
                     set
                 });
                 map.insert(video_producer.id(), {
-                    let mut set = HashSet::new();
+                    let mut set = HashedSet::default();
                     set.insert(video_consumer.id());
                     set.insert(video_pipe_consumer.id());
                     set
@@ -1387,11 +1387,11 @@ fn close_event() {
             let dump = router.dump().await.expect("Failed to dump router");
 
             assert_eq!(dump.map_producer_id_consumer_ids, {
-                let mut map = HashMap::new();
-                map.insert(audio_producer.id(), HashSet::new());
+                let mut map = HashedMap::default();
+                map.insert(audio_producer.id(), HashedSet::default());
                 map
             });
-            assert_eq!(dump.map_consumer_id_producer_id, HashMap::new());
+            assert_eq!(dump.map_consumer_id_producer_id, HashedMap::default());
         }
 
         {

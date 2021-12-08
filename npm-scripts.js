@@ -59,18 +59,14 @@ switch (task)
 
 	case 'worker:build':
 	{
-		if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			execute(`${MAKE} -C worker`);
-		}
+		execute(`${MAKE} -C worker`);
 
 		break;
 	}
 
 	case 'lint:node':
 	{
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c node/.eslintrc.js --max-warnings 0 --ext=ts node/src/');
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c node/.eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!node/.eslintrc.js\' node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
+		execute('eslint -c node/.eslintrc.js --max-warnings 0 node/src/ node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
 
 		break;
 	}
@@ -122,9 +118,12 @@ switch (task)
 
 	case 'postinstall':
 	{
-		execute('node npm-scripts.js worker:build');
-		execute(`${MAKE} clean-pip -C worker`);
-		execute(`${MAKE} clean-subprojects -C worker`);
+		if (!process.env.MEDIASOUP_WORKER_BIN)
+		{
+			execute('node npm-scripts.js worker:build');
+			execute(`${MAKE} clean-pip -C worker`);
+			execute(`${MAKE} clean-subprojects -C worker`);
+		}
 
 		break;
 	}
@@ -144,7 +143,7 @@ switch (task)
 
 	case 'install-clang-tools':
 	{
-		execute('npm install --prefix worker/scripts');
+		execute('npm ci --prefix worker/scripts');
 
 		break;
 	}
@@ -180,19 +179,7 @@ function execute(command)
 
 	try
 	{
-		// Set MSVC compiler as default on Windows
-		const env = isWindows ? {
-			CC  : process.env.CC || 'cl',
-			CXX : process.env.CXX || 'cl',
-			...process.env
-		} : process.env;
-
-		execSync(
-			command,
-			{
-				env   : env,
-				stdio : [ 'ignore', process.stdout, process.stderr ]
-			});
+		execSync(command, { stdio: [ 'ignore', process.stdout, process.stderr ] });
 	}
 	catch (error)
 	{

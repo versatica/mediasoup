@@ -12,18 +12,17 @@ use crate::messages::{
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{
-    Channel, NotificationMessage, PayloadChannel, RequestError, SubscriptionHandler,
-};
+use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use std::borrow::Cow;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
+use std::{fmt, mem};
 
 uuid_based_wrapper_type!(
     /// [`DataConsumer`] identifier.
@@ -184,9 +183,9 @@ enum PayloadNotification {
 
 #[derive(Default)]
 struct Handlers {
-    message: Bag<Box<dyn Fn(&WebRtcMessage) + Send + Sync>>,
-    sctp_send_buffer_full: Bag<Box<dyn Fn() + Send + Sync>>,
-    buffered_amount_low: Bag<Box<dyn Fn(u32) + Send + Sync>>,
+    message: Bag<Arc<dyn Fn(&WebRtcMessage<'_>) + Send + Sync>>,
+    sctp_send_buffer_full: Bag<Arc<dyn Fn() + Send + Sync>>,
+    buffered_amount_low: Bag<Arc<dyn Fn(u32) + Send + Sync>>,
     data_producer_close: BagOnce<Box<dyn FnOnce() + Send>>,
     transport_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
@@ -209,7 +208,7 @@ struct Inner {
     weak_data_producer: WeakDataProducer,
     closed: Arc<AtomicBool>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
-    _subscription_handlers: Vec<Option<SubscriptionHandler>>,
+    subscription_handlers: Mutex<Vec<Option<SubscriptionHandler>>>,
     _on_transport_close_handler: Mutex<HandlerId>,
 }
 
@@ -238,19 +237,21 @@ impl Inner {
                         data_producer_id: self.data_producer_id,
                     },
                 };
-                let data_producer = self.weak_data_producer.upgrade();
-                let transport = self.transport.clone();
+                let subscription_handlers: Vec<_> =
+                    mem::take(&mut self.subscription_handlers.lock());
+                let weak_data_producer = self.weak_data_producer.clone();
 
                 self.executor
                     .spawn(async move {
-                        if data_producer.is_some() {
+                        if weak_data_producer.upgrade().is_some() {
                             if let Err(error) = channel.request(request).await {
                                 error!("consumer closing failed on drop: {}", error);
                             }
                         }
 
-                        drop(data_producer);
-                        drop(transport);
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handlers);
                     })
                     .detach();
             }
@@ -370,7 +371,7 @@ impl DataConsumer {
             let inner_weak = Arc::clone(&inner_weak);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_value::<Notification>(notification) {
+                match serde_json::from_slice::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::DataProducerClose => {
                             if !closed.load(Ordering::SeqCst) {
@@ -401,12 +402,11 @@ impl DataConsumer {
         let payload_subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            payload_channel.subscribe_to_notifications(id.into(), move |notification| {
-                let NotificationMessage { message, payload } = notification;
-                match serde_json::from_value::<PayloadNotification>(message) {
+            payload_channel.subscribe_to_notifications(id.into(), move |message, payload| {
+                match serde_json::from_slice::<PayloadNotification>(message) {
                     Ok(notification) => match notification {
                         PayloadNotification::Message { ppid } => {
-                            match WebRtcMessage::new(ppid, payload) {
+                            match WebRtcMessage::new(ppid, Cow::from(payload)) {
                                 Ok(message) => {
                                     handlers.message.call(|callback| {
                                         callback(&message);
@@ -451,7 +451,10 @@ impl DataConsumer {
             transport,
             weak_data_producer: data_producer.downgrade(),
             closed,
-            _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
+            subscription_handlers: Mutex::new(vec![
+                subscription_handler,
+                payload_subscription_handler,
+            ]),
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 
@@ -586,11 +589,11 @@ impl DataConsumer {
     /// # Notes on usage
     /// Just available in direct transports, this is, those created via
     /// [`Router::create_direct_transport`](crate::router::Router::create_direct_transport).
-    pub fn on_message<F: Fn(&WebRtcMessage) + Send + Sync + 'static>(
+    pub fn on_message<F: Fn(&WebRtcMessage<'_>) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner().handlers.message.add(Box::new(callback))
+        self.inner().handlers.message.add(Arc::new(callback))
     }
 
     /// Callback is called when a message could not be sent because the SCTP send buffer was full.
@@ -601,7 +604,7 @@ impl DataConsumer {
         self.inner()
             .handlers
             .sctp_send_buffer_full
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Emitted when the underlying SCTP association buffered bytes drop down to the value set with
@@ -616,7 +619,7 @@ impl DataConsumer {
         self.inner()
             .handlers
             .buffered_amount_low
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Callback is called when the associated data producer is closed for whatever reason. The data
@@ -675,7 +678,7 @@ impl DataConsumer {
 
 impl DirectDataConsumer {
     /// Sends direct messages from the Rust process.
-    pub async fn send(&self, message: WebRtcMessage) -> Result<(), RequestError> {
+    pub async fn send(&self, message: WebRtcMessage<'_>) -> Result<(), RequestError> {
         let (ppid, payload) = message.into_ppid_and_payload();
 
         self.inner
@@ -690,7 +693,7 @@ impl DirectDataConsumer {
                     },
                     data: DataConsumerSendRequestData { ppid },
                 },
-                payload,
+                payload.into_owned(),
             )
             .await
     }

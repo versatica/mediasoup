@@ -1,6 +1,6 @@
 [package]
 name = "mediasoup-sys"
-version = "0.2.5"
+version = "0.3.0"
 description = "FFI bindings to C++ libmediasoup-worker"
 authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
 edition = "2018"
@@ -9,7 +9,6 @@ documentation = "https://docs.rs/mediasoup-sys"
 repository = "https://github.com/versatica/mediasoup/tree/v3/worker"
 include = [
     "/deps/libwebrtc",
-    "!/deps/libwebrtc/deps/abseil-cpp",
     "/fuzzer/include",
     "/fuzzer/src",
     "/include",

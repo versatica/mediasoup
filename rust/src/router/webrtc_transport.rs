@@ -9,7 +9,7 @@ use crate::data_structures::{
     TransportListenIp, TransportTuple,
 };
 use crate::messages::{
-    TransportCloseRequest, TransportConnectRequestWebRtc, TransportConnectRequestWebRtcData,
+    TransportCloseRequest, TransportConnectRequestWebRtcData, TransportConnectWebRtcRequest,
     TransportInternal, TransportRestartIceRequest, WebRtcTransportData,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
@@ -27,9 +27,9 @@ use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
+use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt;
 use std::ops::Deref;
@@ -157,8 +157,8 @@ pub struct WebRtcTransportDump {
     pub direct: bool,
     pub producer_ids: Vec<ProducerId>,
     pub consumer_ids: Vec<ConsumerId>,
-    pub map_ssrc_consumer_id: HashMap<u32, ConsumerId>,
-    pub map_rtx_ssrc_consumer_id: HashMap<u32, ConsumerId>,
+    pub map_ssrc_consumer_id: IntMap<u32, ConsumerId>,
+    pub map_rtx_ssrc_consumer_id: IntMap<u32, ConsumerId>,
     pub data_producer_ids: Vec<DataProducerId>,
     pub data_consumer_ids: Vec<DataConsumerId>,
     pub recv_rtp_header_extensions: RecvRtpHeaderExtensions,
@@ -231,15 +231,15 @@ pub struct WebRtcTransportRemoteParameters {
 
 #[derive(Default)]
 struct Handlers {
-    new_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
-    new_consumer: Bag<Box<dyn Fn(&Consumer) + Send + Sync>>,
-    new_data_producer: Bag<Box<dyn Fn(&DataProducer) + Send + Sync>>,
-    new_data_consumer: Bag<Box<dyn Fn(&DataConsumer) + Send + Sync>>,
-    ice_state_change: Bag<Box<dyn Fn(IceState) + Send + Sync>>,
-    ice_selected_tuple_change: Bag<Box<dyn Fn(&TransportTuple) + Send + Sync>>,
-    dtls_state_change: Bag<Box<dyn Fn(DtlsState) + Send + Sync>>,
-    sctp_state_change: Bag<Box<dyn Fn(SctpState) + Send + Sync>>,
-    trace: Bag<Box<dyn Fn(&TransportTraceEventData) + Send + Sync>>,
+    new_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
+    new_consumer: Bag<Arc<dyn Fn(&Consumer) + Send + Sync>, Consumer>,
+    new_data_producer: Bag<Arc<dyn Fn(&DataProducer) + Send + Sync>, DataProducer>,
+    new_data_consumer: Bag<Arc<dyn Fn(&DataConsumer) + Send + Sync>, DataConsumer>,
+    ice_state_change: Bag<Arc<dyn Fn(IceState) + Send + Sync>>,
+    ice_selected_tuple_change: Bag<Arc<dyn Fn(&TransportTuple) + Send + Sync>, TransportTuple>,
+    dtls_state_change: Bag<Arc<dyn Fn(DtlsState) + Send + Sync>>,
+    sctp_state_change: Bag<Arc<dyn Fn(SctpState) + Send + Sync>>,
+    trace: Bag<Arc<dyn Fn(&TransportTraceEventData) + Send + Sync>, TransportTraceEventData>,
     router_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -270,7 +270,7 @@ enum Notification {
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
-    used_sctp_stream_ids: Mutex<HashMap<u16, bool>>,
+    used_sctp_stream_ids: Mutex<IntMap<u16, bool>>,
     cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
@@ -282,7 +282,7 @@ struct Inner {
     router: Router,
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
-    _subscription_handler: Option<SubscriptionHandler>,
+    subscription_handler: Mutex<Option<SubscriptionHandler>>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 
@@ -309,14 +309,17 @@ impl Inner {
                         transport_id: self.id,
                     },
                 };
-                let router = self.router.clone();
+                let subscription_handler = self.subscription_handler.lock().take();
+
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
 
-                        drop(router);
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handler);
                     })
                     .detach();
             }
@@ -353,7 +356,7 @@ impl fmt::Debug for WebRtcTransport {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl Transport for WebRtcTransport {
     fn id(&self) -> TransportId {
         self.inner.id
@@ -378,9 +381,7 @@ impl Transport for WebRtcTransport {
             .produce_impl(producer_options, TransportType::WebRtc)
             .await?;
 
-        self.inner.handlers.new_producer.call(|callback| {
-            callback(&producer);
-        });
+        self.inner.handlers.new_producer.call_simple(&producer);
 
         Ok(producer)
     }
@@ -392,9 +393,7 @@ impl Transport for WebRtcTransport {
             .consume_impl(consumer_options, TransportType::WebRtc, false)
             .await?;
 
-        self.inner.handlers.new_consumer.call(|callback| {
-            callback(&consumer);
-        });
+        self.inner.handlers.new_consumer.call_simple(&consumer);
 
         Ok(consumer)
     }
@@ -413,9 +412,10 @@ impl Transport for WebRtcTransport {
             )
             .await?;
 
-        self.inner.handlers.new_data_producer.call(|callback| {
-            callback(&data_producer);
-        });
+        self.inner
+            .handlers
+            .new_data_producer
+            .call_simple(&data_producer);
 
         Ok(data_producer)
     }
@@ -434,9 +434,10 @@ impl Transport for WebRtcTransport {
             )
             .await?;
 
-        self.inner.handlers.new_data_consumer.call(|callback| {
-            callback(&data_consumer);
-        });
+        self.inner
+            .handlers
+            .new_data_consumer
+            .call_simple(&data_consumer);
 
         Ok(data_consumer)
     }
@@ -452,35 +453,35 @@ impl Transport for WebRtcTransport {
 
     fn on_new_producer(
         &self,
-        callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&Producer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_producer.add(callback)
     }
 
     fn on_new_consumer(
         &self,
-        callback: Box<dyn Fn(&Consumer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&Consumer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_consumer.add(callback)
     }
 
     fn on_new_data_producer(
         &self,
-        callback: Box<dyn Fn(&DataProducer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&DataProducer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_data_producer.add(callback)
     }
 
     fn on_new_data_consumer(
         &self,
-        callback: Box<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&DataConsumer) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.new_data_consumer.add(callback)
     }
 
     fn on_trace(
         &self,
-        callback: Box<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
+        callback: Arc<dyn Fn(&TransportTraceEventData) + Send + Sync + 'static>,
     ) -> HandlerId {
         self.inner.handlers.trace.add(callback)
     }
@@ -498,7 +499,7 @@ impl Transport for WebRtcTransport {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl TransportGeneric for WebRtcTransport {
     type Dump = WebRtcTransportDump;
     type Stat = WebRtcTransportStat;
@@ -507,13 +508,21 @@ impl TransportGeneric for WebRtcTransport {
     async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
-        self.dump_impl().await
+        serde_json::from_value(self.dump_impl().await?).map_err(|error| {
+            RequestError::FailedToParse {
+                error: error.to_string(),
+            }
+        })
     }
 
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
-        self.get_stats_impl().await
+        serde_json::from_value(self.get_stats_impl().await?).map_err(|error| {
+            RequestError::FailedToParse {
+                error: error.to_string(),
+            }
+        })
     }
 }
 
@@ -538,7 +547,7 @@ impl TransportImpl for WebRtcTransport {
         &self.inner.next_mid_for_consumers
     }
 
-    fn used_sctp_stream_ids(&self) -> &Mutex<HashMap<u16, bool>> {
+    fn used_sctp_stream_ids(&self) -> &Mutex<IntMap<u16, bool>> {
         &self.inner.used_sctp_stream_ids
     }
 
@@ -567,7 +576,7 @@ impl WebRtcTransport {
             let data = Arc::clone(&data);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_value::<Notification>(notification) {
+                match serde_json::from_slice::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::IceStateChange { ice_state } => {
                             *data.ice_state.lock() = ice_state;
@@ -577,9 +586,9 @@ impl WebRtcTransport {
                         }
                         Notification::IceSelectedTupleChange { ice_selected_tuple } => {
                             data.ice_selected_tuple.lock().replace(ice_selected_tuple);
-                            handlers.ice_selected_tuple_change.call(|callback| {
-                                callback(&ice_selected_tuple);
-                            });
+                            handlers
+                                .ice_selected_tuple_change
+                                .call_simple(&ice_selected_tuple);
                         }
                         Notification::DtlsStateChange {
                             dtls_state,
@@ -603,9 +612,7 @@ impl WebRtcTransport {
                             });
                         }
                         Notification::Trace(trace_event_data) => {
-                            handlers.trace.call(|callback| {
-                                callback(&trace_event_data);
-                            });
+                            handlers.trace.call_simple(&trace_event_data);
                         }
                     },
                     Err(error) => {
@@ -617,7 +624,7 @@ impl WebRtcTransport {
 
         let next_mid_for_consumers = AtomicUsize::default();
         let used_sctp_stream_ids = Mutex::new({
-            let mut used_used_sctp_stream_ids = HashMap::new();
+            let mut used_used_sctp_stream_ids = IntMap::default();
             if let Some(sctp_parameters) = &data.sctp_parameters {
                 for i in 0..sctp_parameters.mis {
                     used_used_sctp_stream_ids.insert(i, false);
@@ -650,7 +657,7 @@ impl WebRtcTransport {
             app_data,
             router,
             closed: AtomicBool::new(false),
-            _subscription_handler: subscription_handler,
+            subscription_handler: Mutex::new(subscription_handler),
             _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 
@@ -698,7 +705,7 @@ impl WebRtcTransport {
         let response = self
             .inner
             .channel
-            .request(TransportConnectRequestWebRtc {
+            .request(TransportConnectWebRtcRequest {
                 internal: self.get_internal(),
                 data: TransportConnectRequestWebRtcData {
                     dtls_parameters: remote_parameters.dtls_parameters,
@@ -813,7 +820,7 @@ impl WebRtcTransport {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.ice_state_change.add(Box::new(callback))
+        self.inner.handlers.ice_state_change.add(Arc::new(callback))
     }
 
     /// Callback is called after ICE state becomes `Completed` and when the ICE selected tuple
@@ -825,7 +832,7 @@ impl WebRtcTransport {
         self.inner
             .handlers
             .ice_selected_tuple_change
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Callback is called when the transport DTLS state changes.
@@ -836,7 +843,7 @@ impl WebRtcTransport {
         self.inner
             .handlers
             .dtls_state_change
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Callback is called when the transport SCTP state changes.
@@ -847,7 +854,7 @@ impl WebRtcTransport {
         self.inner
             .handlers
             .sctp_state_change
-            .add(Box::new(callback))
+            .add(Arc::new(callback))
     }
 
     /// Downgrade `WebRtcTransport` to [`WeakWebRtcTransport`] instance.

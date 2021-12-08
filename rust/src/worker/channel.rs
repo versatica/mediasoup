@@ -1,23 +1,19 @@
 use crate::messages::Request;
 use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
+use crate::worker::utils;
+use crate::worker::utils::{PreparedChannelRead, PreparedChannelWrite};
 use crate::worker::{RequestError, SubscriptionHandler};
-use async_executor::Executor;
-use async_fs::File;
-use bytes::{BufMut, Bytes, BytesMut};
-use futures_lite::io::BufReader;
-use futures_lite::{future, AsyncReadExt, AsyncWriteExt};
-use log::{debug, trace, warn};
+use atomic_take::AtomicTake;
+use hash_hasher::HashedMap;
+use log::{debug, error, trace, warn};
 use lru::LruCache;
+use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::VecDeque;
 use std::fmt::Debug;
-use std::io;
 use std::sync::{Arc, Weak};
-use std::time::Duration;
-
-const NS_PAYLOAD_MAX_LEN: usize = 4_194_304;
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -41,8 +37,8 @@ pub(super) enum InternalMessage {
 
 pub(crate) struct BufferMessagesGuard {
     target_id: SubscriptionTarget,
-    buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>,
-    event_handlers_weak: WeakEventHandlers<Value>,
+    buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
+    event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(&[u8]) + Send + Sync + 'static>>,
 }
 
 impl Drop for BufferMessagesGuard {
@@ -51,7 +47,7 @@ impl Drop for BufferMessagesGuard {
         if let Some(notifications) = buffered_notifications_for.remove(&self.target_id) {
             if let Some(event_handlers) = self.event_handlers_weak.upgrade() {
                 for notification in notifications {
-                    event_handlers.call_callbacks_with_value(&self.target_id, notification);
+                    event_handlers.call_callbacks_with_single_value(&self.target_id, &notification);
                 }
             }
         }
@@ -61,17 +57,24 @@ impl Drop for BufferMessagesGuard {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum ChannelReceiveMessage {
+    #[serde(rename_all = "camelCase")]
+    Notification {
+        target_id: SubscriptionTarget,
+    },
     ResponseSuccess {
         id: u32,
+        // The following field is present, unused, but needed for differentiating successful
+        // response from error case
+        #[allow(dead_code)]
         accepted: bool,
         data: Option<Value>,
     },
     ResponseError {
         id: u32,
-        error: Value,
+        // The following field is present, but unused
+        // error: Value,
         reason: String,
     },
-    Notification(Value),
     Event(InternalMessage),
 }
 
@@ -100,29 +103,69 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
     }
 }
 
+#[derive(Debug, Serialize)]
+struct RequestMessage<'a, R: Serialize> {
+    id: u32,
+    method: &'static str,
+    #[serde(flatten)]
+    request: &'a R,
+}
+
 struct ResponseError {
     reason: String,
 }
 
-type Response<T> = Result<Option<T>, ResponseError>;
+type ResponseResult<T> = Result<Option<T>, ResponseError>;
+
+struct RequestDropGuard<'a> {
+    id: u32,
+    message: Arc<AtomicTake<Vec<u8>>>,
+    channel: &'a Channel,
+    removed: bool,
+}
+
+impl<'a> Drop for RequestDropGuard<'a> {
+    fn drop(&mut self) {
+        if self.removed {
+            return;
+        }
+
+        // Drop pending message from memory
+        self.message.take();
+        // Remove request handler from the container
+        if let Some(requests_container) = self.channel.inner.requests_container_weak.upgrade() {
+            requests_container.lock().handlers.remove(&self.id);
+        }
+    }
+}
+
+impl<'a> RequestDropGuard<'a> {
+    fn remove(mut self) {
+        self.removed = true;
+    }
+}
 
 #[derive(Default)]
 struct RequestsContainer {
     next_id: u32,
-    handlers: HashMap<u32, async_oneshot::Sender<Response<Value>>>,
+    handlers: HashedMap<u32, async_oneshot::Sender<ResponseResult<Value>>>,
+}
+
+struct OutgoingMessageBuffer {
+    handle: Option<UvAsyncT>,
+    messages: VecDeque<Arc<AtomicTake<Vec<u8>>>>,
 }
 
 struct Inner {
-    sender: async_channel::Sender<Bytes>,
+    outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
-    buffered_notifications_for: Arc<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>,
-    event_handlers_weak: WeakEventHandlers<Value>,
+    buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
+    event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(&[u8]) + Send + Sync + 'static>>,
 }
 
 impl Drop for Inner {
     fn drop(&mut self) {
-        self.sender.close();
         self.internal_message_receiver.close();
     }
 }
@@ -133,160 +176,107 @@ pub(crate) struct Channel {
 }
 
 impl Channel {
-    pub(super) fn new(executor: &Executor<'static>, reader: File, mut writer: File) -> Self {
+    pub(super) fn new() -> (Self, PreparedChannelRead, PreparedChannelWrite) {
+        let outgoing_message_buffer = Arc::new(Mutex::new(OutgoingMessageBuffer {
+            handle: None,
+            messages: VecDeque::with_capacity(10),
+        }));
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
         let requests_container_weak = Arc::downgrade(&requests_container);
         let buffered_notifications_for =
-            Arc::<Mutex<HashMap<SubscriptionTarget, Vec<Value>>>>::default();
+            Arc::<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>::default();
         let event_handlers = EventHandlers::new();
         let event_handlers_weak = event_handlers.downgrade();
 
-        let internal_message_receiver = {
-            let buffered_notifications_for = buffered_notifications_for.clone();
-            let (sender, receiver) = async_channel::bounded(1);
+        let prepared_channel_read = utils::prepare_channel_read_fn({
+            let outgoing_message_buffer = Arc::clone(&outgoing_message_buffer);
 
-            executor
-                .spawn(async move {
-                    let mut len_bytes = [0u8; 4];
-                    let mut bytes = Vec::new();
-                    let mut reader = BufReader::new(reader);
-                    // This this contain cache of targets that are known to not have buffering, so
-                    // that we can avoid Mutex locking overhead for them
-                    let mut non_buffered_notifications =
-                        LruCache::<SubscriptionTarget, ()>::new(1000);
+            move |handle| {
+                let mut outgoing_message_buffer = outgoing_message_buffer.lock();
+                if outgoing_message_buffer.handle.is_none() {
+                    outgoing_message_buffer.handle.replace(handle);
+                }
 
-                    loop {
-                        reader.read_exact(&mut len_bytes).await?;
-                        let length = u32::from_ne_bytes(len_bytes) as usize;
+                while let Some(maybe_message) = outgoing_message_buffer.messages.pop_front() {
+                    // Request might have already been cancelled
+                    if let Some(message) = maybe_message.take() {
+                        return Some(message);
+                    }
+                }
 
-                        if length > NS_PAYLOAD_MAX_LEN {
+                None
+            }
+        });
+
+        let (internal_message_sender, internal_message_receiver) = async_channel::unbounded();
+
+        let prepared_channel_write = utils::prepare_channel_write_fn({
+            let buffered_notifications_for = Arc::clone(&buffered_notifications_for);
+            // This this contain cache of targets that are known to not have buffering, so
+            // that we can avoid Mutex locking overhead for them
+            let mut non_buffered_notifications = LruCache::<SubscriptionTarget, ()>::new(1000);
+
+            move |message| {
+                trace!("received raw message: {}", String::from_utf8_lossy(message));
+
+                match deserialize_message(message) {
+                    ChannelReceiveMessage::Notification { target_id } => {
+                        if !non_buffered_notifications.contains(&target_id) {
+                            let mut buffer_notifications_for = buffered_notifications_for.lock();
+                            // Check if we need to buffer notifications for this
+                            // target_id
+                            if let Some(list) = buffer_notifications_for.get_mut(&target_id) {
+                                list.push(Vec::from(message));
+                                return;
+                            }
+
+                            // Remember we don't need to buffer these
+                            non_buffered_notifications.put(target_id, ());
+                        }
+                        event_handlers.call_callbacks_with_single_value(&target_id, message);
+                    }
+                    ChannelReceiveMessage::ResponseSuccess { id, data, .. } => {
+                        let sender = requests_container.lock().handlers.remove(&id);
+                        if let Some(mut sender) = sender {
+                            let _ = sender.send(Ok(data));
+                        } else {
                             warn!(
-                                "received message {} is too long, max supported is {}",
-                                length, NS_PAYLOAD_MAX_LEN,
+                                "received success response does not match any sent request [id:{}]",
+                                id,
                             );
                         }
-
-                        if bytes.len() < length {
-                            // Increase bytes size if/when needed
-                            bytes.resize(length, 0);
-                        }
-                        reader.read_exact(&mut bytes[..length]).await?;
-
-                        trace!(
-                            "received raw message: {}",
-                            String::from_utf8_lossy(&bytes[..length]),
-                        );
-
-                        match deserialize_message(&bytes[..length]) {
-                            ChannelReceiveMessage::ResponseSuccess {
+                    }
+                    ChannelReceiveMessage::ResponseError { id, reason } => {
+                        let sender = requests_container.lock().handlers.remove(&id);
+                        if let Some(mut sender) = sender {
+                            let _ = sender.send(Err(ResponseError { reason }));
+                        } else {
+                            warn!(
+                                "received error response does not match any sent request [id:{}]",
                                 id,
-                                accepted: _,
-                                data,
-                            } => {
-                                let sender = requests_container.lock().handlers.remove(&id);
-                                if let Some(mut sender) = sender {
-                                    let _ = sender.send(Ok(data));
-                                } else {
-                                    warn!(
-                                        "received success response does not match any sent request \
-                                        [id:{}]",
-                                        id,
-                                    );
-                                }
-                            }
-                            ChannelReceiveMessage::ResponseError {
-                                id,
-                                error: _,
-                                reason,
-                            } => {
-                                let sender = requests_container.lock().handlers.remove(&id);
-                                if let Some(mut sender) = sender {
-                                    let _ = sender.send(Err(ResponseError { reason }));
-                                } else {
-                                    warn!(
-                                        "received error response does not match any sent request \
-                                        [id:{}]",
-                                        id,
-                                    );
-                                }
-                            }
-                            ChannelReceiveMessage::Notification(notification) => {
-                                let target_id = notification.get("targetId").and_then(|value| {
-                                    let str = value.as_str()?;
-                                    str.parse().ok().map(SubscriptionTarget::Uuid).or_else(|| {
-                                        str.parse().ok().map(SubscriptionTarget::Number)
-                                    })
-                                });
-
-                                if let Some(target_id) = target_id {
-                                    if !non_buffered_notifications.contains(&target_id) {
-                                        let mut buffer_notifications_for =
-                                            buffered_notifications_for.lock();
-                                        // Check if we need to buffer notifications for this
-                                        // target_id
-                                        if let Some(list) =
-                                            buffer_notifications_for.get_mut(&target_id)
-                                        {
-                                            list.push(notification);
-                                            continue;
-                                        }
-
-                                        // Remember we don't need to buffer these
-                                        non_buffered_notifications.put(target_id, ());
-                                    }
-                                    event_handlers
-                                        .call_callbacks_with_value(&target_id, notification);
-                                } else {
-                                    let unexpected_message =
-                                        InternalMessage::Unexpected(Vec::from(&bytes[..length]));
-                                    if sender.send(unexpected_message).await.is_err() {
-                                        break;
-                                    }
-                                }
-                            }
-                            ChannelReceiveMessage::Event(event_message) => {
-                                if sender.send(event_message).await.is_err() {
-                                    break;
-                                }
-                            }
+                            );
                         }
                     }
-
-                    io::Result::Ok(())
-                })
-                .detach();
-
-            receiver
-        };
-
-        let sender = {
-            let (sender, receiver) = async_channel::bounded::<Bytes>(1);
-
-            executor
-                .spawn(async move {
-                    while let Ok(message) = receiver.recv().await {
-                        writer
-                            .write_all(&(message.len() as u32).to_ne_bytes())
-                            .await?;
-                        writer.write_all(&message).await?;
+                    ChannelReceiveMessage::Event(event_message) => {
+                        let _ = internal_message_sender.try_send(event_message);
                     }
-
-                    io::Result::Ok(())
-                })
-                .detach();
-
-            sender
-        };
+                }
+            }
+        });
 
         let inner = Arc::new(Inner {
-            sender,
+            outgoing_message_buffer,
             internal_message_receiver,
             requests_container_weak,
             buffered_notifications_for,
             event_handlers_weak,
         });
 
-        Self { inner }
+        (
+            Self { inner },
+            prepared_channel_read,
+            prepared_channel_write,
+        )
     }
 
     pub(super) fn get_internal_message_receiver(&self) -> async_channel::Receiver<InternalMessage> {
@@ -313,46 +303,9 @@ impl Channel {
     where
         R: Request,
     {
-        // Default will work for `()` response
-        let data = self
-            .request_internal(request.as_method(), serde_json::to_value(request).unwrap())
-            .await?
-            .unwrap_or_default();
-        serde_json::from_value(data).map_err(|error| RequestError::FailedToParse {
-            error: error.to_string(),
-        })
-    }
-
-    pub(crate) fn subscribe_to_notifications<F>(
-        &self,
-        target_id: SubscriptionTarget,
-        callback: F,
-    ) -> Option<SubscriptionHandler>
-    where
-        F: Fn(Value) + Send + Sync + 'static,
-    {
-        self.inner
-            .event_handlers_weak
-            .upgrade()
-            .map(|event_handlers| event_handlers.add(target_id, Box::new(callback)))
-    }
-
-    /// Non-generic method to avoid significant duplication in final binary
-    async fn request_internal(
-        &self,
-        method: &'static str,
-        message: Value,
-    ) -> Result<Option<Value>, RequestError> {
-        #[derive(Debug, Serialize)]
-        struct RequestMessagePrivate {
-            id: u32,
-            method: &'static str,
-            #[serde(flatten)]
-            message: Value,
-        }
+        let method = request.as_method();
 
         let id;
-        let queue_len;
         let (result_sender, result_receiver) = async_oneshot::oneshot();
 
         {
@@ -364,70 +317,61 @@ impl Channel {
             let mut requests_container = requests_container_lock.lock();
 
             id = requests_container.next_id;
-            queue_len = requests_container.handlers.len();
 
             requests_container.next_id = requests_container.next_id.wrapping_add(1);
             requests_container.handlers.insert(id, result_sender);
         }
 
-        debug!("request() [method:{}, id:{}]: {}", method, id, message);
+        debug!("request() [method:{}, id:{}]: {:?}", method, id, request);
 
-        let bytes = {
-            let mut bytes = BytesMut::new().writer();
-            serde_json::to_writer(
-                &mut bytes,
-                &RequestMessagePrivate {
-                    id,
-                    method,
-                    message,
-                },
-            )
-            .unwrap();
-            bytes.into_inner()
-        };
+        let message = Arc::new(AtomicTake::new(
+            serde_json::to_vec(&RequestMessage {
+                id,
+                method,
+                request: &request,
+            })
+            .unwrap(),
+        ));
 
-        if bytes.len() > NS_PAYLOAD_MAX_LEN {
-            self.inner
-                .requests_container_weak
-                .upgrade()
-                .ok_or(RequestError::ChannelClosed)?
-                .lock()
-                .handlers
-                .remove(&id);
-            return Err(RequestError::MessageTooLong);
+        {
+            let mut outgoing_message_buffer = self.inner.outgoing_message_buffer.lock();
+            outgoing_message_buffer
+                .messages
+                .push_back(Arc::clone(&message));
+            if let Some(handle) = &outgoing_message_buffer.handle {
+                unsafe {
+                    // Notify worker that there is something to read
+                    let ret = mediasoup_sys::uv_async_send(*handle);
+                    if ret != 0 {
+                        error!("uv_async_send call failed with code {}", ret);
+                        return Err(RequestError::ChannelClosed);
+                    }
+                }
+            }
         }
 
-        self.inner
-            .sender
-            .send(bytes.freeze())
-            .await
-            .map_err(|_| RequestError::ChannelClosed {})?;
+        // Drop guard to make sure to drop pending request when future is cancelled
+        let request_drop_guard = RequestDropGuard {
+            id,
+            message,
+            channel: self,
+            removed: false,
+        };
 
-        let result = future::or(
-            async {
-                result_receiver
-                    .await
-                    .map_err(|_| RequestError::ChannelClosed {})
-            },
-            async {
-                async_io::Timer::after(Duration::from_millis(
-                    (1000.0 * (15.0 + (0.1 * queue_len as f64))).round() as u64,
-                ))
-                .await;
+        let response_result_fut = result_receiver.await;
 
-                if let Some(requests_container) = self.inner.requests_container_weak.upgrade() {
-                    requests_container.lock().handlers.remove(&id);
-                }
+        request_drop_guard.remove();
 
-                Err(RequestError::TimedOut)
-            },
-        )
-        .await?;
-
-        match result {
+        match response_result_fut.map_err(|_| RequestError::ChannelClosed {})? {
             Ok(data) => {
                 debug!("request succeeded [method:{}, id:{}]", method, id);
-                Ok(data)
+
+                // Default will work for `()` response
+                serde_json::from_value(data.unwrap_or_default()).map_err(|error| {
+                    RequestError::FailedToParse {
+                        error: error.to_string(),
+                    }
+                })
             }
             Err(ResponseError { reason }) => {
                 debug!("request failed [method:{}, id:{}]: {}", method, id, reason);
@@ -435,5 +379,19 @@ impl Channel {
                 Err(RequestError::Response { reason })
             }
         }
+    }
+
+    pub(crate) fn subscribe_to_notifications<F>(
+        &self,
+        target_id: SubscriptionTarget,
+        callback: F,
+    ) -> Option<SubscriptionHandler>
+    where
+        F: Fn(&[u8]) + Send + Sync + 'static,
+    {
+        self.inner
+            .event_handlers_weak
+            .upgrade()
+            .map(|event_handlers| event_handlers.add(target_id, Arc::new(callback)))
     }
 }

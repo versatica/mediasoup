@@ -154,6 +154,10 @@ export declare class Worker extends EnhancedEventEmitter {
      */
     get closed(): boolean;
     /**
+     * Whether the Worker died.
+     */
+    get died(): boolean;
+    /**
      * App custom data.
      */
     get appData(): any;
@@ -201,6 +205,6 @@ export declare class Worker extends EnhancedEventEmitter {
      * Create a Router.
      */
     createRouter({ mediaCodecs, appData }?: RouterOptions): Promise<Router>;
-    private died;
+    private workerDied;
 }
 //# sourceMappingURL=Worker.d.ts.map

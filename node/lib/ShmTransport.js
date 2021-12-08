@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ShmTransport = void 0;
 const Logger_1 = require("./Logger");
 const uuid_1 = require("uuid");
 const ortc = require("./ortc");
@@ -7,6 +8,8 @@ const Consumer_1 = require("./Consumer");
 const Transport_1 = require("./Transport");
 const logger = new Logger_1.Logger('ShmTransport');
 class ShmTransport extends Transport_1.Transport {
+    _shm;
+    _log;
     /**
     * @private
      *
@@ -98,7 +101,7 @@ class ShmTransport extends Transport_1.Transport {
         // This may throw.
         const rtpParameters = ortc.getConsumerRtpParameters(producer.consumableRtpParameters, rtpCapabilities, pipe);
         // Skipped MID, see in Transport.ts: rtpParameters.mid = `${this._nextMidForConsumers++}`;
-        const internal = { ...this.internal, consumerId: uuid_1.v4(), producerId };
+        const internal = { ...this.internal, consumerId: (0, uuid_1.v4)(), producerId };
         const shmData = appData ?
             {
                 shm: (appData.shm !== undefined) ? appData.shm : {},

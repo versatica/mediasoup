@@ -103,8 +103,9 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			clockRate            : 90000,
 			parameters           :
 			{
-
-				'packetization-mode'      : 0,
+				// Since packetization-mode param was not included in the H264 codec
+				// and it's default value is 0, it's not added by ortc file.
+				// 'packetization-mode'      : 0,
 				'level-asymmetry-allowed' : 1,
 				'profile-level-id'        : '42e01f',
 				foo                       : 'bar'
@@ -158,22 +159,6 @@ test('generateRouterRtpCapabilities() with unsupported codecs throws Unsupported
 			mimeType  : 'audio/opus',
 			clockRate : 48000,
 			channels  : 1
-		}
-	];
-
-	expect(() => ortc.generateRouterRtpCapabilities(mediaCodecs))
-		.toThrow(UnsupportedError);
-
-	mediaCodecs =
-	[
-		{
-			kind       : 'video',
-			mimeType   : 'video/H264',
-			clockRate  : 90000,
-			parameters :
-			{
-				'packetization-mode' : 5
-			}
 		}
 	];
 
