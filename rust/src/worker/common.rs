@@ -85,9 +85,15 @@ impl<V: ?Sized> EventHandlers<Arc<dyn Fn(&V) + Send + Sync + 'static>> {
         target_id: &SubscriptionTarget,
         value: &V,
     ) {
-        let handlers = self.handlers.lock();
-        if let Some(list) = handlers.get(target_id) {
-            for callback in list.callbacks.values() {
+        // Workaround for deadlock. Copy callback list to invoke callback without lock.
+        let callbacks = self
+            .handlers
+            .lock()
+            .get(target_id)
+            .map(|list| list.callbacks.values().cloned().collect::<Vec<_>>());
+
+        if let Some(callbacks) = callbacks {
+            for callback in callbacks {
                 callback(value);
             }
         }
@@ -101,9 +107,15 @@ impl<V1: ?Sized, V2: ?Sized> EventHandlers<Arc<dyn Fn(&V1, &V2) + Send + Sync + 
         value1: &V1,
         value2: &V2,
     ) {
-        let handlers = self.handlers.lock();
-        if let Some(list) = handlers.get(target_id) {
-            for callback in list.callbacks.values() {
+        // Workaround for deadlock. Copy callback list to invoke callback without lock.
+        let callbacks = self
+            .handlers
+            .lock()
+            .get(target_id)
+            .map(|list| list.callbacks.values().cloned().collect::<Vec<_>>());
+
+        if let Some(callbacks) = callbacks {
+            for callback in callbacks {
                 callback(value1, value2);
             }
         }
