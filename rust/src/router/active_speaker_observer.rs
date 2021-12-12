@@ -105,6 +105,8 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
+            let subscription_handler = self.subscription_handler.lock().take();
+
             if close_request {
                 let channel = self.channel.clone();
                 let request = RtpObserverCloseRequest {
@@ -113,7 +115,6 @@ impl Inner {
                         rtp_observer_id: self.id,
                     },
                 };
-                let subscription_handler = self.subscription_handler.lock().take();
 
                 self.executor
                     .spawn(async move {
@@ -121,6 +122,14 @@ impl Inner {
                             error!("active speaker observer closing failed on drop: {}", error);
                         }
 
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handler);
+                    })
+                    .detach();
+            } else {
+                self.executor
+                    .spawn(async move {
                         // Drop from a different thread to avoid deadlock with recursive dropping
                         // from within another subscription drop.
                         drop(subscription_handler);
