@@ -96,7 +96,10 @@ fn main() {
 
     #[cfg(not(target_os = "windows"))]
     {
-        let from = format!("{}/{}/libmediasoup-worker.a", mediasoup_out_dir, build_type);
+        let from = format!(
+            "{}/{}/build/libmediasoup-worker.a",
+            mediasoup_out_dir, build_type
+        );
         let to = format!("{}/libmediasoup-worker.a", out_dir);
         std::fs::copy(&from, &to).unwrap_or_else(|error| {
             panic!(
@@ -107,8 +110,14 @@ fn main() {
     }
     #[cfg(target_os = "windows")]
     {
-        let dot_a = format!("{}/{}/libmediasoup-worker.a", mediasoup_out_dir, build_type);
-        let from = format!("{}/{}/mediasoup-worker.lib", mediasoup_out_dir, build_type);
+        let dot_a = format!(
+            "{}/{}/build/libmediasoup-worker.a",
+            mediasoup_out_dir, build_type
+        );
+        let from = format!(
+            "{}/{}/build/mediasoup-worker.lib",
+            mediasoup_out_dir, build_type
+        );
         let to = format!("{}/mediasoup-worker.lib", out_dir);
 
         // Meson builds `libmediasoup-worker.a` on Windows instead of `*.lib` file under MinGW

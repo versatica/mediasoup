@@ -94,6 +94,11 @@ Builds the `libmediasoup-worker` static library at `worker/out/Release/`.
 Cleans built objects and binaries.
 
 
+### `make clean-build`
+
+Cleans built objects and other artifacts, but keeps `mediasoup-worker` binary in place.
+
+
 ### `make clean-pip`
 
 Cleans `meson` and `ninja` installed in local prefix with pip.
