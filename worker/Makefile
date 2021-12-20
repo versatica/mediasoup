@@ -12,6 +12,7 @@ GULP = ./scripts/node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov
 DOCKER ?= docker
 PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
+BUILD_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/build
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_ARGS ?= ""
 # Workaround for NixOS and Guix that don't work with pre-built binaries, see:
@@ -69,14 +70,14 @@ ifeq ($(MEDIASOUP_BUILDTYPE),Release)
 		-Db_staticpic=true \
 		--reconfigure \
 		$(MESON_ARGS) \
-		$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
+		$(BUILD_DIR) || \
 		$(MESON) setup \
 			--buildtype release \
 			-Db_ndebug=true \
 			-Db_pie=true \
 			-Db_staticpic=true \
 			$(MESON_ARGS) \
-			$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+			$(BUILD_DIR)
 else
 ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
 	$(MESON) setup \
@@ -85,13 +86,13 @@ ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
 		-Db_staticpic=true \
 		--reconfigure \
 		$(MESON_ARGS) \
-		$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
+		$(BUILD_DIR) || \
 		$(MESON) setup \
 			--buildtype debug \
 			-Db_pie=true \
 			-Db_staticpic=true \
 			$(MESON_ARGS) \
-			$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+			$(BUILD_DIR)
 else
 	$(MESON) setup \
 		--buildtype $(MEDIASOUP_BUILDTYPE) \
@@ -100,19 +101,22 @@ else
 		-Db_staticpic=true \
 		--reconfigure \
 		$(MESON_ARGS) \
-		$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) || \
+		$(BUILD_DIR) || \
 		$(MESON) setup \
 			--buildtype $(MEDIASOUP_BUILDTYPE) \
 			-Db_ndebug=if-release \
 			-Db_pie=true \
 			-Db_staticpic=true \
 			$(MESON_ARGS) \
-			$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+			$(BUILD_DIR)
 endif
 endif
 
 clean:
 	$(RM) -rf $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+
+clean-build:
+	$(RM) -rf $(BUILD_DIR)
 
 clean-pip:
 	$(RM) -rf $(PIP_DIR)
@@ -125,7 +129,12 @@ clean-all: clean-subprojects
 
 mediasoup-worker: setup
 ifeq ($(MEDIASOUP_WORKER_BIN),)
-	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) mediasoup-worker
+	$(MESON) compile -j $(CORES) -C $(BUILD_DIR) mediasoup-worker
+endif
+ifeq ($(OS),Windows_NT)
+	copy $(BUILD_DIR)/mediasoup-worker.exe $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker.exe
+else
+	cp $(BUILD_DIR)/mediasoup-worker $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker
 endif
 
 xcode: setup
@@ -139,14 +148,14 @@ format:
 
 test: setup
 ifeq ($(MEDIASOUP_WORKER_BIN),)
-	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) mediasoup-worker-test
+	$(MESON) compile -j $(CORES) -C $(BUILD_DIR) mediasoup-worker-test
 	# On Windows lcov doesn't work (at least not yet) and we need to add `.exe` to
 	# the binary path.
 ifeq ($(OS),Windows_NT)
-	$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test.exe --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
+	$(BUILD_DIR)/mediasoup-worker-test.exe --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 else
 	$(LCOV) --directory ./ --zerocounters
-	$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
+	$(BUILD_DIR)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 endif
 endif
 
@@ -155,18 +164,18 @@ tidy:
 		-clang-tidy-binary=./scripts/node_modules/.bin/clang-tidy \
 		-clang-apply-replacements-binary=./scripts/node_modules/.bin/clang-apply-replacements \
 		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)' \
-		-p=$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) \
+		-p=$(BUILD_DIR) \
 		-j=$(CORES) \
 		-checks=$(MEDIASOUP_TIDY_CHECKS) \
 		-quiet
 
 fuzzer: setup
 ifeq ($(MEDIASOUP_WORKER_BIN),)
-	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) mediasoup-worker-fuzzer
+	$(MESON) compile -j $(CORES) -C $(BUILD_DIR) mediasoup-worker-fuzzer
 endif
 
 fuzzer-run-all:
-	LSAN_OPTIONS=verbosity=1:log_threads=1 ./$(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
+	LSAN_OPTIONS=verbosity=1:log_threads=1 ./$(BUILD_DIR)/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
 
 docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)
@@ -184,4 +193,4 @@ docker-run:
 		mediasoup/docker:latest
 
 libmediasoup-worker: setup
-	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) libmediasoup-worker
+	$(MESON) compile -j $(CORES) -C $(BUILD_DIR) libmediasoup-worker
