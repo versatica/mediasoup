@@ -166,6 +166,8 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
+            let subscription_handlers: Vec<_> = mem::take(&mut self.subscription_handlers.lock());
+
             if close_request {
                 let channel = self.channel.clone();
                 let request = TransportCloseRequest {
@@ -174,8 +176,6 @@ impl Inner {
                         transport_id: self.id,
                     },
                 };
-                let subscription_handlers: Vec<_> =
-                    mem::take(&mut self.subscription_handlers.lock());
 
                 self.executor
                     .spawn(async move {
@@ -188,6 +188,14 @@ impl Inner {
                         drop(subscription_handlers);
                     })
                     .detach();
+            } else {
+                self.executor
+                    .spawn(async move {
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handlers);
+                    })
+                    .detach()
             }
         }
     }

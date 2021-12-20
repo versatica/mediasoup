@@ -397,6 +397,8 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
+            let subscription_handlers: Vec<_> = mem::take(&mut self.subscription_handlers.lock());
+
             if close_request {
                 let channel = self.channel.clone();
                 let request = ConsumerCloseRequest {
@@ -407,8 +409,6 @@ impl Inner {
                         producer_id: self.producer_id,
                     },
                 };
-                let subscription_handlers: Vec<_> =
-                    mem::take(&mut self.subscription_handlers.lock());
                 let weak_producer = self.weak_producer.clone();
 
                 self.executor
@@ -417,11 +417,19 @@ impl Inner {
                             if let Err(error) = channel.request(request).await {
                                 error!("consumer closing failed on drop: {}", error);
                             }
-
-                            // Drop from a different thread to avoid deadlock with recursive dropping
-                            // from within another subscription drop.
-                            drop(subscription_handlers);
                         }
+
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handlers);
+                    })
+                    .detach();
+            } else {
+                self.executor
+                    .spawn(async move {
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handlers);
                     })
                     .detach();
             }
