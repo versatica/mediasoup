@@ -20,17 +20,6 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Add MSVC compiler
-        uses: ilammy/msvc-dev-cmd@v1
-        if: runner.os == 'Windows'
-
-      # This is needed as a workaround for GNU linker being first in PATH and thus preventing Meson from finding MSVC
-      # linker.
-      - name: Remove GNU linker for MSVC
-        shell: bash
-        run: rm /usr/bin/link
-        if: runner.os == 'Windows'
-
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -47,7 +36,6 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
           key: ${{ matrix.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
 
       - name: cargo fmt

@@ -38,6 +38,13 @@ else
 	export PYTHONPATH := $(PIP_DIR):${PYTHONPATH}
 endif
 
+# Activate VS environment on Windows by default.
+ifeq ($(OS),Windows_NT)
+ifeq ($(MESON_ARGS),"")
+	MESON_ARGS = $(subst $\",,"--vsenv")
+endif
+endif
+
 .PHONY:	\
 	default meson-ninja setup clean clean-pip clean-subprojects clean-all mediasoup-worker xcode lint format test tidy \
 	fuzzer fuzzer-run-all docker-build docker-run libmediasoup-worker
