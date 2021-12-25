@@ -139,7 +139,7 @@ ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(MESON) compile -j $(CORES) -C $(BUILD_DIR) mediasoup-worker
 endif
 ifeq ($(OS),Windows_NT)
-	copy $(BUILD_DIR)/mediasoup-worker.exe $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker.exe
+	cp $(BUILD_DIR)/mediasoup-worker.exe $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker.exe
 else
 	cp $(BUILD_DIR)/mediasoup-worker $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/mediasoup-worker
 endif
