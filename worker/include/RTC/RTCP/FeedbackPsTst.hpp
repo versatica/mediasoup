@@ -24,6 +24,12 @@ namespace RTC
 		class FeedbackPsTstItem : public FeedbackItem
 		{
 		public:
+#ifdef _WIN32
+#pragma pack(push, 1)
+#define MEDIASOUP_PACKED
+#else
+#define MEDIASOUP_PACKED __attribute__((packed))
+#endif
 			struct Header
 			{
 				uint32_t ssrc;
@@ -36,7 +42,11 @@ namespace RTC
 				uint8_t reserved2 : 3;
 				uint8_t index : 5;
 #endif
-			};
+			} MEDIASOUP_PACKED;
+#ifdef _WIN32
+#pragma pack(pop)
+#endif
+#undef SCTP_PACKED
 
 		public:
 			static const size_t HeaderSize{ 8 };
