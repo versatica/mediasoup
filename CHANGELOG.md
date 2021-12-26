@@ -1,9 +1,10 @@
 # Changelog
 
 
-### WIP
+### 3.9.3
 
 * Single H264/H265 codec configuration in `supportedRtpCapabilities` (PR #718).
+* Improve Windows support by not requiring MSVC configuration (PR #741).
 * Update NPM deps.
 
 
