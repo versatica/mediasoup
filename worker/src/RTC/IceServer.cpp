@@ -198,8 +198,15 @@ namespace RTC
 
 				delete response;
 
+				uint32_t nomination = 0;
+
+				if (packet->HasNomination())
+					nomination = packet->GetNomination();
+				else if (packet->HasUseCandidate())
+					nomination = 1;
+
 				// Handle the tuple.
-				HandleTuple(tuple, packet->HasUseCandidate());
+				HandleTuple(tuple, nomination);
 
 				break;
 			}
@@ -301,7 +308,7 @@ namespace RTC
 		SetSelectedTuple(storedTuple);
 	}
 
-	void IceServer::HandleTuple(RTC::TransportTuple* tuple, bool hasUseCandidate)
+	void IceServer::HandleTuple(RTC::TransportTuple* tuple, uint32_t nomination)
 	{
 		MS_TRACE();
 
@@ -316,7 +323,7 @@ namespace RTC
 				// There shouldn't be a selected tuple.
 				MS_ASSERT(!this->selectedTuple, "state is 'new' but there is selected tuple");
 
-				if (!hasUseCandidate)
+				if (nomination == 0)
 				{
 					MS_DEBUG_TAG(ice, "transition from state 'new' to 'connected'");
 
@@ -327,22 +334,29 @@ namespace RTC
 					SetSelectedTuple(storedTuple);
 					// Update state.
 					this->state = IceState::CONNECTED;
+					// Update nomination.
+					this->remoteNomination = nomination;
 					// Notify the listener.
 					this->listener->OnIceServerConnected(this);
 				}
 				else
 				{
-					MS_DEBUG_TAG(ice, "transition from state 'new' to 'completed'");
-
 					// Store the tuple.
 					auto* storedTuple = AddTuple(tuple);
 
-					// Mark it as selected tuple.
-					SetSelectedTuple(storedTuple);
-					// Update state.
-					this->state = IceState::COMPLETED;
-					// Notify the listener.
-					this->listener->OnIceServerCompleted(this);
+					if(nomination > this->remoteNomination)
+					{
+						MS_DEBUG_TAG(ice, "transition from state 'new' to 'completed'");
+
+						// Mark it as selected tuple.
+						SetSelectedTuple(storedTuple);
+						// Update state.
+						this->state = IceState::COMPLETED;
+						// Update nomination.
+						this->remoteNomination = nomination;
+						// Notify the listener.
+						this->listener->OnIceServerCompleted(this);
+					}
 				}
 
 				break;
@@ -359,7 +373,7 @@ namespace RTC
 				// There shouldn't be a selected tuple.
 				MS_ASSERT(!this->selectedTuple, "state is 'disconnected' but there is selected tuple");
 
-				if (!hasUseCandidate)
+				if (nomination == 0)
 				{
 					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'connected'");
 
@@ -370,22 +384,29 @@ namespace RTC
 					SetSelectedTuple(storedTuple);
 					// Update state.
 					this->state = IceState::CONNECTED;
+					// Update nomination.
+					this->remoteNomination = nomination;
 					// Notify the listener.
 					this->listener->OnIceServerConnected(this);
 				}
 				else
 				{
-					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'completed'");
-
 					// Store the tuple.
 					auto* storedTuple = AddTuple(tuple);
 
-					// Mark it as selected tuple.
-					SetSelectedTuple(storedTuple);
-					// Update state.
-					this->state = IceState::COMPLETED;
-					// Notify the listener.
-					this->listener->OnIceServerCompleted(this);
+					if(nomination > this->remoteNomination)
+					{
+						MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'completed'");
+
+						// Mark it as selected tuple.
+						SetSelectedTuple(storedTuple);
+						// Update state.
+						this->state = IceState::COMPLETED;
+						// Update nomination.
+						this->remoteNomination = nomination;
+						// Notify the listener.
+						this->listener->OnIceServerCompleted(this);
+					}
 				}
 
 				break;
@@ -399,7 +420,7 @@ namespace RTC
 				// There should be a selected tuple.
 				MS_ASSERT(this->selectedTuple, "state is 'connected' but there is not selected tuple");
 
-				if (!hasUseCandidate)
+				if (nomination == 0)
 				{
 					// If a new tuple store it.
 					if (!HasTuple(tuple))
@@ -415,12 +436,17 @@ namespace RTC
 					if (!storedTuple)
 						storedTuple = AddTuple(tuple);
 
-					// Mark it as selected tuple.
-					SetSelectedTuple(storedTuple);
-					// Update state.
-					this->state = IceState::COMPLETED;
-					// Notify the listener.
-					this->listener->OnIceServerCompleted(this);
+					if(nomination > this->remoteNomination)
+					{
+						// Mark it as selected tuple.
+						SetSelectedTuple(storedTuple);
+						// Update state.
+						this->state = IceState::COMPLETED;
+						// Update nomination.
+						this->remoteNomination = nomination;
+						// Notify the listener.
+						this->listener->OnIceServerCompleted(this);
+					}
 				}
 
 				break;
@@ -434,7 +460,7 @@ namespace RTC
 				// There should be a selected tuple.
 				MS_ASSERT(this->selectedTuple, "state is 'completed' but there is not selected tuple");
 
-				if (!hasUseCandidate)
+				if (nomination == 0)
 				{
 					// If a new tuple store it.
 					if (!HasTuple(tuple))
@@ -448,8 +474,13 @@ namespace RTC
 					if (!storedTuple)
 						storedTuple = AddTuple(tuple);
 
-					// Mark it as selected tuple.
-					SetSelectedTuple(storedTuple);
+					if(nomination > this->remoteNomination)
+					{
+						// Mark it as selected tuple.
+						SetSelectedTuple(storedTuple);
+						// Update nomination.
+						this->remoteNomination = nomination;
+					}
 				}
 
 				break;
