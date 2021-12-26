@@ -46,7 +46,7 @@ namespace RTC
 #ifdef _WIN32
 #pragma pack(pop)
 #endif
-#undef SCTP_PACKED
+#undef MEDIASOUP_PACKED
 
 		public:
 			static const size_t HeaderSize{ 8 };
