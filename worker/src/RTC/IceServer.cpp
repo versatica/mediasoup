@@ -344,7 +344,7 @@ namespace RTC
 					// Store the tuple.
 					auto* storedTuple = AddTuple(tuple);
 
-					if(nomination > this->remoteNomination)
+					if (nomination > this->remoteNomination)
 					{
 						MS_DEBUG_TAG(ice, "transition from state 'new' to 'completed'");
 
@@ -394,7 +394,7 @@ namespace RTC
 					// Store the tuple.
 					auto* storedTuple = AddTuple(tuple);
 
-					if(nomination > this->remoteNomination)
+					if (nomination > this->remoteNomination)
 					{
 						MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'completed'");
 
@@ -436,7 +436,7 @@ namespace RTC
 					if (!storedTuple)
 						storedTuple = AddTuple(tuple);
 
-					if(nomination > this->remoteNomination)
+					if (nomination > this->remoteNomination)
 					{
 						// Mark it as selected tuple.
 						SetSelectedTuple(storedTuple);
@@ -474,7 +474,7 @@ namespace RTC
 					if (!storedTuple)
 						storedTuple = AddTuple(tuple);
 
-					if(nomination > this->remoteNomination)
+					if (nomination > this->remoteNomination)
 					{
 						// Mark it as selected tuple.
 						SetSelectedTuple(storedTuple);
