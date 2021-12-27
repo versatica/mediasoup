@@ -61,7 +61,7 @@ namespace RTC
 		{
 			return this->selectedTuple;
 		}
-		void RestartIce(const std::string& usernameFragmnent, const std::string& password)
+		void RestartIce(const std::string& usernameFragment, const std::string& password)
 		{
 			this->oldUsernameFragment = this->usernameFragment;
 			this->usernameFragment    = usernameFragment;
