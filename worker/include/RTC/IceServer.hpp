@@ -101,7 +101,7 @@ namespace RTC
 		std::string password;
 		std::string oldUsernameFragment;
 		std::string oldPassword;
-		uint32_t remoteNomination{ 0 };
+		uint32_t remoteNomination{ 0u };
 		IceState state{ IceState::NEW };
 		std::list<RTC::TransportTuple> tuples;
 		RTC::TransportTuple* selectedTuple{ nullptr };

@@ -41,7 +41,8 @@ namespace RTC
 			ALTERNATE_SERVER   = 0x8023,
 			FINGERPRINT        = 0x8028,
 			ICE_CONTROLLED     = 0x8029,
-			ICE_CONTROLLING    = 0x802A
+			ICE_CONTROLLING    = 0x802A,
+			NOMINATION         = 0xC001
 		};
 
 		// Authentication result.
@@ -114,6 +115,10 @@ namespace RTC
 		{
 			this->hasUseCandidate = true;
 		}
+		void SetNomination(uint32_t nomination)
+		{
+			this->nomination = nomination;
+		}
 		void SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
 		{
 			this->xorMappedAddress = xorMappedAddress;
@@ -150,6 +155,14 @@ namespace RTC
 		{
 			return this->hasUseCandidate;
 		}
+		bool HasNomination() const
+		{
+			return (this->nomination ? true : false);
+		}
+		uint32_t GetNomination() const
+		{
+			return this->nomination;
+		}
 		uint16_t GetErrorCode() const
 		{
 			return this->errorCode;
@@ -181,6 +194,7 @@ namespace RTC
 		uint32_t priority{ 0u };                            // 4 bytes unsigned integer.
 		uint64_t iceControlling{ 0u };                      // 8 bytes unsigned integer.
 		uint64_t iceControlled{ 0u };                       // 8 bytes unsigned integer.
+		uint32_t nomination{ 0u };							// 4 bytes unsigned integer.
 		bool hasUseCandidate{ false };                      // 0 bytes.
 		const uint8_t* messageIntegrity{ nullptr };         // 20 bytes.
 		bool hasFingerprint{ false };                       // 4 bytes.
