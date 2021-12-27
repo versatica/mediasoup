@@ -194,7 +194,7 @@ namespace RTC
 		uint32_t priority{ 0u };                            // 4 bytes unsigned integer.
 		uint64_t iceControlling{ 0u };                      // 8 bytes unsigned integer.
 		uint64_t iceControlled{ 0u };                       // 8 bytes unsigned integer.
-		uint32_t nomination{ 0u };							// 4 bytes unsigned integer.
+		uint32_t nomination{ 0u };                          // 4 bytes unsigned integer.
 		bool hasUseCandidate{ false };                      // 0 bytes.
 		const uint8_t* messageIntegrity{ nullptr };         // 20 bytes.
 		bool hasFingerprint{ false };                       // 4 bytes.
