@@ -69,7 +69,7 @@ namespace RTC
 			this->oldPassword = this->password;
 			this->password    = password;
 
-			this->remoteNomination = 0;
+			this->remoteNomination = 0u;
 		}
 		bool IsValidTuple(const RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);

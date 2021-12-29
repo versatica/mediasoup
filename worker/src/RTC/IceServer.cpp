@@ -198,12 +198,12 @@ namespace RTC
 
 				delete response;
 
-				uint32_t nomination = 0;
+				uint32_t nomination = 0u;
 
 				if (packet->HasNomination())
 					nomination = packet->GetNomination();
 				else if (packet->HasUseCandidate())
-					nomination = 1;
+					nomination = 1u;
 
 				// Handle the tuple.
 				HandleTuple(tuple, nomination);
@@ -344,7 +344,7 @@ namespace RTC
 					// Store the tuple.
 					auto* storedTuple = AddTuple(tuple);
 
-					if (nomination > this->remoteNomination)
+					if (nomination >= this->remoteNomination)
 					{
 						MS_DEBUG_TAG(ice, "transition from state 'new' to 'completed'");
 
@@ -394,7 +394,7 @@ namespace RTC
 					// Store the tuple.
 					auto* storedTuple = AddTuple(tuple);
 
-					if (nomination > this->remoteNomination)
+					if (nomination >= this->remoteNomination)
 					{
 						MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'completed'");
 
@@ -436,7 +436,7 @@ namespace RTC
 					if (!storedTuple)
 						storedTuple = AddTuple(tuple);
 
-					if (nomination > this->remoteNomination)
+					if (nomination >= this->remoteNomination)
 					{
 						// Mark it as selected tuple.
 						SetSelectedTuple(storedTuple);
@@ -474,7 +474,7 @@ namespace RTC
 					if (!storedTuple)
 						storedTuple = AddTuple(tuple);
 
-					if (nomination > this->remoteNomination)
+					if (nomination >= this->remoteNomination)
 					{
 						// Mark it as selected tuple.
 						SetSelectedTuple(storedTuple);
