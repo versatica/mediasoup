@@ -164,6 +164,11 @@ namespace RTC
 			}
 			SharedPtr& operator=(const SharedPtr& sharedPtr)
 			{
+				if (this == &sharedPtr)
+				{
+					return *this;
+				}
+
 				if (sharedPtr.ptr)
 				{
 					sharedPtr.ptr->IncRefCount();
