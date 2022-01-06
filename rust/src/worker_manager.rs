@@ -18,7 +18,7 @@ use std::{fmt, io, mem};
 
 #[derive(Default)]
 struct Handlers {
-    new_worker: Bag<Box<dyn Fn(&Worker) + Send + Sync>>,
+    new_worker: Bag<Arc<dyn Fn(&Worker) + Send + Sync>, Worker>,
 }
 
 struct Inner {
@@ -138,16 +138,15 @@ impl WorkerManager {
 
                 move || {
                     let _ = exit_sender.send(());
-                    let id = id.lock().take().unwrap();
-                    workers.lock().remove(&id);
+                    if let Some(id) = id.lock().take() {
+                        workers.lock().remove(&id);
+                    }
                 }
             },
         )
         .await?;
 
-        self.inner.handlers.new_worker.call(|callback| {
-            callback(&worker);
-        });
+        self.inner.handlers.new_worker.call_simple(&worker);
 
         id.lock().replace(worker.id());
 
@@ -158,6 +157,6 @@ impl WorkerManager {
 
     /// Callback is called when a new worker is created.
     pub fn on_new_worker<F: Fn(&Worker) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.new_worker.add(Box::new(callback))
+        self.inner.handlers.new_worker.add(Arc::new(callback))
     }
 }

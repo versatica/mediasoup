@@ -330,7 +330,7 @@ export class Channel extends EnhancedEventEmitter
 			// the response, destroying the ordered delivery. So we must wait a bit
 			// here.
 			// See https://github.com/versatica/mediasoup/issues/510
-			setImmediate(() => this.emit(msg.targetId, msg.event, msg.data));
+			setImmediate(() => this.emit(String(msg.targetId), msg.event, msg.data));
 		}
 		// Otherwise unexpected message.
 		else

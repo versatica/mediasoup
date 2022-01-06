@@ -121,8 +121,12 @@ switch (task)
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
 			execute('node npm-scripts.js worker:build');
-			execute(`${MAKE} clean-pip -C worker`);
+			// Clean build artifacts except `mediasoup-worker`.
+			execute(`${MAKE} clean-build -C worker`);
+			// Clean downloaded dependencies.
 			execute(`${MAKE} clean-subprojects -C worker`);
+			// Clean PIP/Meson/Ninja.
+			execute(`${MAKE} clean-pip -C worker`);
 		}
 
 		break;

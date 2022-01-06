@@ -13,19 +13,16 @@ use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters}
 use crate::scalability_modes::ScalabilityMode;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{
-    Channel, NotificationMessage, PayloadChannel, RequestError, SubscriptionHandler,
-};
+use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
-use bytes::Bytes;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
+use std::{fmt, mem};
 
 uuid_based_wrapper_type!(
     /// [`Consumer`] identifier.
@@ -347,14 +344,15 @@ enum PayloadNotification {
 
 #[derive(Default)]
 struct Handlers {
-    rtp: Bag<Box<dyn Fn(&Bytes) + Send + Sync>>,
-    pause: Bag<Box<dyn Fn() + Send + Sync>>,
-    resume: Bag<Box<dyn Fn() + Send + Sync>>,
-    producer_pause: Bag<Box<dyn Fn() + Send + Sync>>,
-    producer_resume: Bag<Box<dyn Fn() + Send + Sync>>,
-    score: Bag<Box<dyn Fn(&ConsumerScore) + Send + Sync>>,
-    layers_change: Bag<Box<dyn Fn(&Option<ConsumerLayers>) + Send + Sync>>,
-    trace: Bag<Box<dyn Fn(&ConsumerTraceEventData) + Send + Sync>>,
+    rtp: Bag<Arc<dyn Fn(&[u8]) + Send + Sync>>,
+    pause: Bag<Arc<dyn Fn() + Send + Sync>>,
+    resume: Bag<Arc<dyn Fn() + Send + Sync>>,
+    producer_pause: Bag<Arc<dyn Fn() + Send + Sync>>,
+    producer_resume: Bag<Arc<dyn Fn() + Send + Sync>>,
+    score: Bag<Arc<dyn Fn(&ConsumerScore) + Send + Sync>, ConsumerScore>,
+    #[allow(clippy::type_complexity)]
+    layers_change: Bag<Arc<dyn Fn(&Option<ConsumerLayers>) + Send + Sync>, Option<ConsumerLayers>>,
+    trace: Bag<Arc<dyn Fn(&ConsumerTraceEventData) + Send + Sync>, ConsumerTraceEventData>,
     producer_close: BagOnce<Box<dyn FnOnce() + Send>>,
     transport_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
@@ -380,7 +378,7 @@ struct Inner {
     weak_producer: WeakProducer,
     closed: Arc<AtomicBool>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
-    _subscription_handlers: Vec<Option<SubscriptionHandler>>,
+    subscription_handlers: Mutex<Vec<Option<SubscriptionHandler>>>,
     _on_transport_close_handler: Mutex<HandlerId>,
 }
 
@@ -398,6 +396,8 @@ impl Inner {
             debug!("close()");
 
             self.handlers.close.call_simple();
+
+            let subscription_handlers: Vec<_> = mem::take(&mut self.subscription_handlers.lock());
 
             if close_request {
                 let channel = self.channel.clone();
@@ -418,6 +418,18 @@ impl Inner {
                                 error!("consumer closing failed on drop: {}", error);
                             }
                         }
+
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handlers);
+                    })
+                    .detach();
+            } else {
+                self.executor
+                    .spawn(async move {
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handlers);
                     })
                     .detach();
             }
@@ -492,7 +504,7 @@ impl Consumer {
             let inner_weak = Arc::clone(&inner_weak);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_value::<Notification>(notification) {
+                match serde_json::from_slice::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::ProducerClose => {
                             if !closed.load(Ordering::SeqCst) {
@@ -529,20 +541,14 @@ impl Consumer {
                         }
                         Notification::Score(consumer_score) => {
                             *score.lock() = consumer_score.clone();
-                            handlers.score.call(|callback| {
-                                callback(&consumer_score);
-                            });
+                            handlers.score.call_simple(&consumer_score);
                         }
                         Notification::LayersChange(consumer_layers) => {
                             *current_layers.lock() = consumer_layers;
-                            handlers.layers_change.call(|callback| {
-                                callback(&consumer_layers);
-                            });
+                            handlers.layers_change.call_simple(&consumer_layers);
                         }
                         Notification::Trace(trace_event_data) => {
-                            handlers.trace.call(|callback| {
-                                callback(&trace_event_data);
-                            });
+                            handlers.trace.call_simple(&trace_event_data);
                         }
                     },
                     Err(error) => {
@@ -555,13 +561,12 @@ impl Consumer {
         let payload_subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            payload_channel.subscribe_to_notifications(id.into(), move |notification| {
-                let NotificationMessage { message, payload } = notification;
-                match serde_json::from_value::<PayloadNotification>(message) {
+            payload_channel.subscribe_to_notifications(id.into(), move |message, payload| {
+                match serde_json::from_slice::<PayloadNotification>(message) {
                     Ok(notification) => match notification {
                         PayloadNotification::Rtp => {
                             handlers.rtp.call(|callback| {
-                                callback(&payload);
+                                callback(payload);
                             });
                         }
                     },
@@ -601,7 +606,10 @@ impl Consumer {
             transport,
             weak_producer: producer.downgrade(),
             closed,
-            _subscription_handlers: vec![subscription_handler, payload_subscription_handler],
+            subscription_handlers: Mutex::new(vec![
+                subscription_handler,
+                payload_subscription_handler,
+            ]),
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 
@@ -864,30 +872,30 @@ impl Consumer {
     /// # Notes on usage
     /// Just available in direct transports, this is, those created via
     /// [`Router::create_direct_transport`](crate::router::Router::create_direct_transport).
-    pub fn on_rtp<F: Fn(&Bytes) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.rtp.add(Box::new(callback))
+    pub fn on_rtp<F: Fn(&[u8]) + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+        self.inner.handlers.rtp.add(Arc::new(callback))
     }
 
     /// Callback is called when the consumer or its associated producer is paused and, as result,
     /// the consumer becomes paused.
     pub fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.pause.add(Box::new(callback))
+        self.inner.handlers.pause.add(Arc::new(callback))
     }
 
     /// Callback is called when the consumer or its associated producer is resumed and, as result,
     /// the consumer is no longer paused.
     pub fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.resume.add(Box::new(callback))
+        self.inner.handlers.resume.add(Arc::new(callback))
     }
 
     /// Callback is called when the associated producer is paused.
     pub fn on_producer_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.producer_pause.add(Box::new(callback))
+        self.inner.handlers.producer_pause.add(Arc::new(callback))
     }
 
     /// Callback is called when the associated producer is resumed.
     pub fn on_producer_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner.handlers.producer_resume.add(Box::new(callback))
+        self.inner.handlers.producer_resume.add(Arc::new(callback))
     }
 
     /// Callback is called when the consumer score changes.
@@ -895,7 +903,7 @@ impl Consumer {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.score.add(Box::new(callback))
+        self.inner.handlers.score.add(Arc::new(callback))
     }
 
     /// Callback is called when the spatial/temporal layers being sent to the endpoint change. Just
@@ -919,7 +927,7 @@ impl Consumer {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.layers_change.add(Box::new(callback))
+        self.inner.handlers.layers_change.add(Arc::new(callback))
     }
 
     /// See [`Consumer::enable_trace_event`] method.
@@ -927,7 +935,7 @@ impl Consumer {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.trace.add(Box::new(callback))
+        self.inner.handlers.trace.add(Arc::new(callback))
     }
 
     /// Callback is called when the associated producer is closed for whatever reason. The consumer

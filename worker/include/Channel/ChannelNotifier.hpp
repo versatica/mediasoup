@@ -12,6 +12,7 @@ namespace Channel
 	{
 	public:
 		static void ClassInit(Channel::ChannelSocket* channel);
+		static void Emit(uint64_t targetId, const char* event);
 		static void Emit(const std::string& targetId, const char* event);
 		static void Emit(const std::string& targetId, const char* event, json& data);
 

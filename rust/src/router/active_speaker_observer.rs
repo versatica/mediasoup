@@ -50,11 +50,14 @@ pub struct ActiveSpeakerObserverDominantSpeaker {
 
 #[derive(Default)]
 struct Handlers {
-    dominant_speaker: Bag<Box<dyn Fn(&ActiveSpeakerObserverDominantSpeaker) + Send + Sync>>,
-    pause: Bag<Box<dyn Fn() + Send + Sync>>,
-    resume: Bag<Box<dyn Fn() + Send + Sync>>,
-    add_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
-    remove_producer: Bag<Box<dyn Fn(&Producer) + Send + Sync>>,
+    dominant_speaker: Bag<
+        Arc<dyn Fn(&ActiveSpeakerObserverDominantSpeaker) + Send + Sync>,
+        ActiveSpeakerObserverDominantSpeaker,
+    >,
+    pause: Bag<Arc<dyn Fn() + Send + Sync>>,
+    resume: Bag<Arc<dyn Fn() + Send + Sync>>,
+    add_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
+    remove_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
     router_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -83,7 +86,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to audio speaker observer-specific notifications when observer itself is
     // dropped
-    _subscription_handler: Option<SubscriptionHandler>,
+    subscription_handler: Mutex<Option<SubscriptionHandler>>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 
@@ -102,6 +105,8 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
+            let subscription_handler = self.subscription_handler.lock().take();
+
             if close_request {
                 let channel = self.channel.clone();
                 let request = RtpObserverCloseRequest {
@@ -110,11 +115,24 @@ impl Inner {
                         rtp_observer_id: self.id,
                     },
                 };
+
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("active speaker observer closing failed on drop: {}", error);
                         }
+
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handler);
+                    })
+                    .detach();
+            } else {
+                self.executor
+                    .spawn(async move {
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handler);
                     })
                     .detach();
             }
@@ -220,9 +238,7 @@ impl RtpObserver for ActiveSpeakerObserver {
             })
             .await?;
 
-        self.inner.handlers.add_producer.call(|callback| {
-            callback(&producer);
-        });
+        self.inner.handlers.add_producer.call_simple(&producer);
 
         Ok(())
     }
@@ -242,33 +258,31 @@ impl RtpObserver for ActiveSpeakerObserver {
             })
             .await?;
 
-        self.inner.handlers.remove_producer.call(|callback| {
-            callback(&producer);
-        });
+        self.inner.handlers.remove_producer.call_simple(&producer);
 
         Ok(())
     }
 
     fn on_pause(&self, callback: Box<dyn Fn() + Send + Sync + 'static>) -> HandlerId {
-        self.inner.handlers.pause.add(Box::new(callback))
+        self.inner.handlers.pause.add(Arc::new(callback))
     }
 
     fn on_resume(&self, callback: Box<dyn Fn() + Send + Sync + 'static>) -> HandlerId {
-        self.inner.handlers.resume.add(Box::new(callback))
+        self.inner.handlers.resume.add(Arc::new(callback))
     }
 
     fn on_add_producer(
         &self,
         callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
     ) -> HandlerId {
-        self.inner.handlers.add_producer.add(Box::new(callback))
+        self.inner.handlers.add_producer.add(Arc::new(callback))
     }
 
     fn on_remove_producer(
         &self,
         callback: Box<dyn Fn(&Producer) + Send + Sync + 'static>,
     ) -> HandlerId {
-        self.inner.handlers.remove_producer.add(Box::new(callback))
+        self.inner.handlers.remove_producer.add(Arc::new(callback))
     }
 
     fn on_router_close(&self, callback: Box<dyn FnOnce() + Send + 'static>) -> HandlerId {
@@ -302,7 +316,7 @@ impl ActiveSpeakerObserver {
             let handlers = Arc::clone(&handlers);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_value::<Notification>(notification) {
+                match serde_json::from_slice::<Notification>(notification) {
                     Ok(notification) => match notification {
                         Notification::DominantSpeaker(dominant_speaker) => {
                             let DominantSpeakerNotification { producer_id } = dominant_speaker;
@@ -311,9 +325,7 @@ impl ActiveSpeakerObserver {
                                     let dominant_speaker =
                                         ActiveSpeakerObserverDominantSpeaker { producer };
 
-                                    handlers.dominant_speaker.call(|callback| {
-                                        callback(&dominant_speaker);
-                                    });
+                                    handlers.dominant_speaker.call_simple(&dominant_speaker);
                                 }
                                 None => {
                                     error!(
@@ -351,7 +363,7 @@ impl ActiveSpeakerObserver {
             app_data,
             router,
             closed: AtomicBool::new(false),
-            _subscription_handler: subscription_handler,
+            subscription_handler: Mutex::new(subscription_handler),
             _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 
@@ -367,7 +379,7 @@ impl ActiveSpeakerObserver {
         &self,
         callback: F,
     ) -> HandlerId {
-        self.inner.handlers.dominant_speaker.add(Box::new(callback))
+        self.inner.handlers.dominant_speaker.add(Arc::new(callback))
     }
 
     /// Downgrade `ActiveSpeakerObserver` to [`WeakActiveSpeakerObserver`] instance.
