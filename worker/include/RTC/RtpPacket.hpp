@@ -136,63 +136,66 @@ namespace RTC
 		public:
 			RtpPacket* get()
 			{
-				return ptr;
+				return this->ptr;
 			}
-			explicit SharedPtr(RtpPacket* p) : ptr(p)
+			explicit SharedPtr(RtpPacket* ptr) : ptr(ptr)
 			{
 			}
-			SharedPtr(std::nullptr_t p) : ptr(p)
+			explicit SharedPtr(std::nullptr_t aNullptr) : ptr(aNullptr)
 			{
 			}
-			SharedPtr(const SharedPtr& p) : ptr(p.ptr)
+			SharedPtr(const SharedPtr& sharedPtr) : ptr(sharedPtr.ptr)
 			{
-				if (ptr)
+				if (this->ptr)
 				{
-					ptr->IncRefCount();
+					this->ptr->IncRefCount();
 				}
 			}
-			SharedPtr(SharedPtr&& p) : ptr(p.ptr)
+			SharedPtr(SharedPtr&& sharedPtr) noexcept : ptr(sharedPtr.ptr)
 			{
-				p.ptr = nullptr;
+				sharedPtr.ptr = nullptr;
 			}
-			SharedPtr& operator=(SharedPtr&& p)
+			SharedPtr& operator=(SharedPtr&& sharedPtr) noexcept
 			{
-				ptr   = p.ptr;
-				p.ptr = nullptr;
+				this->ptr     = sharedPtr.ptr;
+				sharedPtr.ptr = nullptr;
+
 				return *this;
 			}
-			SharedPtr& operator=(const SharedPtr& p)
+			SharedPtr& operator=(const SharedPtr& sharedPtr)
 			{
-				if (p.ptr)
+				if (sharedPtr.ptr)
 				{
-					p.ptr->IncRefCount();
+					sharedPtr.ptr->IncRefCount();
 				}
-				reset(p.ptr);
+
+				Reset(sharedPtr.ptr);
+
 				return *this;
 			}
 			~SharedPtr()
 			{
-				reset();
+				Reset();
 			}
 			explicit operator bool() const
 			{
-				return ptr;
+				return this->ptr;
 			}
-			void reset(RtpPacket* p = nullptr)
+			void Reset(RtpPacket* ptr = nullptr)
 			{
-				if (ptr)
+				if (this->ptr)
 				{
-					ptr->DecRefCount();
+					this->ptr->DecRefCount();
 				}
-				ptr = p;
+				this->ptr = ptr;
 			}
 			RtpPacket& operator*() const noexcept
 			{
-				return *ptr;
+				return *this->ptr;
 			}
 			RtpPacket* operator->() const noexcept
 			{
-				return ptr;
+				return this->ptr;
 			}
 
 		private:

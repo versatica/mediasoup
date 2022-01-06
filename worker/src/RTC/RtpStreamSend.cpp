@@ -29,11 +29,11 @@ namespace RTC
 
 		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
 
-		storageItem->clonedPacket   = nullptr;
-		storageItem->originalPacket = nullptr;
-		storageItem->resentAtMs     = 0;
-		storageItem->sentTimes      = 0;
-		storageItem->rtxEncoded     = false;
+		storageItem->clonedPacket.Reset();
+		storageItem->originalPacket.Reset();
+		storageItem->resentAtMs = 0;
+		storageItem->sentTimes  = 0;
+		storageItem->rtxEncoded = false;
 	}
 
 	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::Get(uint16_t seq)

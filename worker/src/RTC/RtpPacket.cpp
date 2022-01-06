@@ -20,7 +20,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (!RtpPacket::IsRtp(data, len))
-			return nullptr;
+			return SharedPtr(nullptr);
 
 		auto* ptr = const_cast<uint8_t*>(data);
 
@@ -42,7 +42,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(rtp, "not enough space for the announced CSRC list, packet discarded");
 
-				return nullptr;
+				return SharedPtr(nullptr);
 			}
 			ptr += csrcListSize;
 		}
@@ -58,7 +58,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(rtp, "not enough space for the announced header extension, packet discarded");
 
-				return nullptr;
+				return SharedPtr(nullptr);
 			}
 
 			headerExtension = reinterpret_cast<HeaderExtension*>(ptr);
@@ -73,7 +73,7 @@ namespace RTC
 				MS_WARN_TAG(
 				  rtp, "not enough space for the announced header extension value, packet discarded");
 
-				return nullptr;
+				return SharedPtr(nullptr);
 			}
 			ptr += 4 + extensionValueSize;
 		}
@@ -93,7 +93,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(rtp, "padding bit is set but no space for a padding byte, packet discarded");
 
-				return nullptr;
+				return SharedPtr(nullptr);
 			}
 
 			payloadPadding = data[len - 1];
@@ -101,7 +101,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(rtp, "padding byte cannot be 0, packet discarded");
 
-				return nullptr;
+				return SharedPtr(nullptr);
 			}
 
 			if (payloadLength < size_t{ payloadPadding })
@@ -111,7 +111,7 @@ namespace RTC
 				  "number of padding octets is greater than available space for payload, packet "
 				  "discarded");
 
-				return nullptr;
+				return SharedPtr(nullptr);
 			}
 			payloadLength -= size_t{ payloadPadding };
 		}
