@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.9.2
+
+* Update `lru` dependency to fix security vulnerability
+
 # 0.9.1
 
 * Fix cleanup of build artifacts
