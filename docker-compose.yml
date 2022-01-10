@@ -1,0 +1,18 @@
+version: "2.0"
+services:
+  xcode:
+    image: docker.atg-corp.com/vdo/xcode.xcode4:latest
+    container_name: xcode
+    volumes:
+      - /Users/mythilikottalanka/workspace:/usr/local/sg:rw
+    shm_size: '1gb'
+    tmpfs: /run
+    restart: always
+    read_only: false
+    tty: true
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    privileged: true
+    entrypoint: /bin/bash

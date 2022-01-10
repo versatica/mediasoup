@@ -1,6 +1,6 @@
 {
   "name": "@livelyvideo/mediasoup",
-  "version": "3.9.2-lv1",
+  "version": "3.9.2-lv1-notranscode-mythilik",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -91,6 +91,6 @@
     "pick-port": "^1.0.0",
     "sctp": "^1.0.0",
     "tsc-watch": "^4.5.0",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.4"
   }
 }
