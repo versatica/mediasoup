@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.9.4
+
+* `Worker`: Fix bad printing of error messages from Worker (PR #750 by @j1elo).
+* Update NPM deps.
+
+
 ### 3.9.3
 
 * Single H264/H265 codec configuration in `supportedRtpCapabilities` (PR #718).
@@ -21,7 +27,7 @@
 ### 3.9.1
 
 * NixOS friendly build process (PR #683).
-* `Worker: emit "died" event before observer "close" (PR #684).
+* `Worker`: Emit "died" event before observer "close" (PR #684).
 * Transport: Hide debug message for RTX RTCP-RR packets (PR #688).
 * Update `libuv to 1.42.0.
 * Improve Windows support (PR #692).
