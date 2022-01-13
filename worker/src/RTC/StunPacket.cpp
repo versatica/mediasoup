@@ -220,6 +220,7 @@ namespace RTC
 						return nullptr;
 					}
 
+					packet->SetHasNomination();
 					packet->SetNomination(Utils::Byte::Get4Bytes(attrValuePos, 0));
 
 					break;

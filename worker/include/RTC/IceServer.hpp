@@ -78,7 +78,8 @@ namespace RTC
 		void ForceSelectedTuple(const RTC::TransportTuple* tuple);
 
 	private:
-		void HandleTuple(RTC::TransportTuple* tuple, uint32_t nomination);
+		void HandleTuple(
+		  RTC::TransportTuple* tuple, bool hasUseCandidate, bool hasNomination, uint32_t nomination);
 		/**
 		 * Store the given tuple and return its stored address.
 		 */

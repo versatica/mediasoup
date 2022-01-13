@@ -155,9 +155,13 @@ namespace RTC
 		{
 			return this->hasUseCandidate;
 		}
+		void SetHasNomination()
+		{
+			this->hasNomination = true;
+		}
 		bool HasNomination() const
 		{
-			return (this->nomination ? true : false);
+			return this->hasNomination;
 		}
 		uint32_t GetNomination() const
 		{
@@ -190,10 +194,11 @@ namespace RTC
 		uint8_t* data{ nullptr };                // Pointer to binary data.
 		size_t size{ 0u };                       // The full message size (including header).
 		// STUN attributes.
-		std::string username;                               // Less than 513 bytes.
-		uint32_t priority{ 0u };                            // 4 bytes unsigned integer.
-		uint64_t iceControlling{ 0u };                      // 8 bytes unsigned integer.
-		uint64_t iceControlled{ 0u };                       // 8 bytes unsigned integer.
+		std::string username;          // Less than 513 bytes.
+		uint32_t priority{ 0u };       // 4 bytes unsigned integer.
+		uint64_t iceControlling{ 0u }; // 8 bytes unsigned integer.
+		uint64_t iceControlled{ 0u };  // 8 bytes unsigned integer.
+		bool hasNomination{ false };
 		uint32_t nomination{ 0u };                          // 4 bytes unsigned integer.
 		bool hasUseCandidate{ false };                      // 0 bytes.
 		const uint8_t* messageIntegrity{ nullptr };         // 20 bytes.
