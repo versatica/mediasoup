@@ -233,6 +233,8 @@ libmediasoup_worker = library(
   'libmediasoup-worker',
   name_prefix: '',
   build_by_default: false,
+  install: true,
+  install_tag: 'libmediasoup-worker',
   dependencies: dependencies,
   sources: common_sources,
   include_directories: include_directories('include'),
@@ -243,6 +245,8 @@ libmediasoup_worker = library(
 executable(
   'mediasoup-worker',
   build_by_default: true,
+  install: true,
+  install_tag: 'mediasoup-worker',
   dependencies: dependencies,
   sources: common_sources + ['src/main.cpp'],
   include_directories: include_directories('include'),
@@ -252,6 +256,8 @@ executable(
 mediasoup_worker_test = executable(
   'mediasoup-worker-test',
   build_by_default: false,
+  install: true,
+  install_tag: 'mediasoup-worker-test',
   dependencies: dependencies + [
     catch2_proj.get_variable('catch2_dep'),
   ],
@@ -314,6 +320,8 @@ if host_machine.system() == 'linux'
   executable(
     'mediasoup-worker-fuzzer',
     build_by_default: false,
+    install: true,
+    install_tag: 'mediasoup-worker-fuzzer',
     dependencies: dependencies,
     sources: common_sources + [
       'fuzzer/src/fuzzer.cpp',
