@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 3.9.5
+
+* ICE renomination support (PR #756).
+* Update `libuv` to 1.43.0.
+* Update NPM deps.
+
+
 ### 3.9.4
 
 * `Worker`: Fix bad printing of error messages from Worker (PR #750 by @j1elo).
@@ -29,7 +36,7 @@
 * NixOS friendly build process (PR #683).
 * `Worker`: Emit "died" event before observer "close" (PR #684).
 * Transport: Hide debug message for RTX RTCP-RR packets (PR #688).
-* Update `libuv to 1.42.0.
+* Update `libuv` to 1.42.0.
 * Improve Windows support (PR #692).
 * Avoid build commands when MEDIASOUP_WORKER_BIN is set (PR #695).
 * Update NPM deps.
@@ -481,7 +488,7 @@
 ### 3.5.13
 
 * Simplify `GetDesiredBitrate()` in `SimulcastConsumer` and `SvcConsumer`.
-* Update libuv to 1.38.0.
+* Update `libuv` to 1.38.0.
 
 
 ### 3.5.12
@@ -507,16 +514,16 @@
 ### 3.5.9
 
 * `libwebrtc`: Apply patch by @sspanak and @Ivaka to avoid crash. Related issue: #357.
-* `PortManager.cpp`: Do not use `UV_UDP_RECVMMSG` in Windows due to a bug in libuv 1.37.0.
+* `PortManager.cpp`: Do not use `UV_UDP_RECVMMSG` in Windows due to a bug in `libuv` 1.37.0.
 * Update Node deps.
 
 
 ### 3.5.8
 
 * Enable `UV_UDP_RECVMMSG`:
-  - Upgrade libuv to 1.37.0.
+  - Upgrade `libuv` to 1.37.0.
   - Use `uv_udp_init_ex()` with `UV_UDP_RECVMMSG` flag.
-  - Add our own `uv.gyp` now that libuv has removed support for GYP (fixes #384).
+  - Add our own `uv.gyp` now that `libuv` has removed support for GYP (fixes #384).
 
 
 ### 3.5.7
@@ -540,7 +547,7 @@
 ### 3.5.4
 
 * `Transport.cpp`: Enable transport congestion client for the first video Consumer, no matter it's uses simulcast, SVC or a single stream.
-* Update libuv to 1.35.0.
+* Update `libuv` to 1.35.0.
 * `UdpSocket.cpp`: Ensure the new libuv's `uv__udp_recvmmsg()` is used, which is more efficient.
 
 
@@ -662,7 +669,7 @@
 
 * Add `worker.getResourceUsage()` API.
 * Update OpenSSL to 1.1.1d.
-* Update libuv to 1.34.0.
+* Update `libuv` to 1.34.0.
 * Update TypeScript and ESLint NPM dependencies.
 
 
@@ -816,7 +823,7 @@
 ### 3.0.9
 
 * `RtpStreamSend::ReceiveRtcpReceiverReport()`: improve `rtt` calculation if no Sender Report info is reported in received Received Report.
-* Update libuv to version 1.29.1.
+* Update `libuv` to version 1.29.1.
 
 
 ### 3.0.8
