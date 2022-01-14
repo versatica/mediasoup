@@ -33,7 +33,6 @@ impl RtpCodecParametersParameters {
     }
 
     /// Iterate over parameters in collection.
-    #[must_use]
     pub fn iter(
         &self,
     ) -> std::collections::btree_map::Iter<'_, Cow<'static, str>, RtpCodecParametersParametersValue>
@@ -54,7 +53,7 @@ where
     K: Into<Cow<'static, str>>,
 {
     fn from(array: [(K, RtpCodecParametersParametersValue); N]) -> Self {
-        std::array::IntoIter::new(array).collect()
+        IntoIterator::into_iter(array).collect()
     }
 }
 
