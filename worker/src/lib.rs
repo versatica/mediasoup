@@ -26,6 +26,8 @@ pub type ChannelReadFn = unsafe extern "C" fn(
     /* ctx: */ ChannelReadCtx,
 ) -> ChannelReadFreeFn;
 
+unsafe impl Send for ChannelReadCtx {}
+
 #[repr(transparent)]
 pub struct ChannelWriteCtx(pub *const c_void);
 pub type ChannelWriteFn = unsafe extern "C" fn(
@@ -33,6 +35,8 @@ pub type ChannelWriteFn = unsafe extern "C" fn(
     /* message_len: */ u32,
     /* ctx: */ ChannelWriteCtx,
 );
+
+unsafe impl Send for ChannelWriteCtx {}
 
 #[repr(transparent)]
 pub struct PayloadChannelReadCtx(pub *const c_void);
@@ -57,6 +61,8 @@ pub type PayloadChannelReadFn = unsafe extern "C" fn(
     /* ctx: */ PayloadChannelReadCtx,
 ) -> PayloadChannelReadFreeFn;
 
+unsafe impl Send for PayloadChannelReadCtx {}
+
 #[repr(transparent)]
 pub struct PayloadChannelWriteCtx(pub *const c_void);
 pub type PayloadChannelWriteFn = unsafe extern "C" fn(
@@ -66,6 +72,8 @@ pub type PayloadChannelWriteFn = unsafe extern "C" fn(
     /* payload_len: */ u32,
     /* ctx: */ PayloadChannelWriteCtx,
 );
+
+unsafe impl Send for PayloadChannelWriteCtx {}
 
 #[link(name = "mediasoup-worker", kind = "static")]
 extern "C" {
