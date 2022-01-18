@@ -10,7 +10,9 @@ namespace Lively {
     std::string appData;
     if(this != nullptr)
     {
-      appData = "callId= " + this->callId + " peerId= " + this->peerId + " mirrorId= " + this->mirrorId + " streamName= " + this->streamName + " objectId= " + this->id;
+      appData.append("callId= ").append("\" ").append(this->callId).append("\"").append(" peerId= ").append("\" ").append(this->peerId)
+      .append("\"").append(" mirrorId= ").append( "\" ").append(this->mirrorId).append( "\"").append(" streamName= ")
+      .append("\" ").append(this->streamName).append("\"").append(" objectId= ").append("\" ").append(this->id).append("\"") ;
     }
     return appData;
   }
