@@ -290,36 +290,39 @@ namespace RTC
 		// more stable values.
 		this->bitrates.startBitrate = std::max<uint32_t>(MinBitrate, this->bitrates.availableBitrate);
 
-		auto prevMaxBitrate = this->bitrates.maxBitrate;
+		auto currentMaxBitrate = this->bitrates.maxBitrate;
+		uint32_t newMaxBitrate = 0;
 
 		if (this->desiredBitrateTrend.GetValue() > 0u)
 		{
-			this->bitrates.maxBitrate = std::max<uint32_t>(
+			newMaxBitrate = std::max<uint32_t>(
 			  this->initialAvailableBitrate,
 			  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
 
 			// If max bitrate requested didn't change by more than a small % keep the previous settings
 			// to avoid constant small fluctuations requiring extra probing and making the estimation
 			// less stable (requires constant redistribution of bitrate accross consumers).
-			auto maxBitrateMargin = this->bitrates.maxBitrate * MaxBitrateMarginFactor;
-			if (
-			  prevMaxBitrate > this->bitrates.maxBitrate - maxBitrateMargin &&
-			  prevMaxBitrate < this->bitrates.maxBitrate + maxBitrateMargin)
+			auto maxBitrateMargin = newMaxBitrate * MaxBitrateMarginFactor;
+			if (currentMaxBitrate > newMaxBitrate - maxBitrateMargin && currentMaxBitrate < newMaxBitrate + maxBitrateMargin)
 			{
-				this->bitrates.maxBitrate = prevMaxBitrate;
+				newMaxBitrate = currentMaxBitrate;
 			}
 		}
 		else
 		{
-			this->bitrates.maxBitrate = this->initialAvailableBitrate;
+			newMaxBitrate = this->initialAvailableBitrate;
 		}
 
 		if (this->maxOutgoingBitrate > 0u)
 		{
-			this->bitrates.maxBitrate =
-			  std::min<uint32_t>(this->maxOutgoingBitrate, this->bitrates.maxBitrate);
+			newMaxBitrate = std::min<uint32_t>(this->maxOutgoingBitrate, newMaxBitrate);
 		}
-		this->bitrates.maxPaddingBitrate = this->bitrates.maxBitrate * MaxPaddingBitrateFactor;
+
+		if (newMaxBitrate != currentMaxBitrate)
+		{
+			this->bitrates.maxPaddingBitrate = newMaxBitrate * MaxPaddingBitrateFactor;
+			this->bitrates.maxBitrate        = newMaxBitrate;
+		}
 
 		MS_DEBUG_DEV(
 		  "[desiredBitrate:%" PRIu32 ", desiredBitrateTrend:%" PRIu32 ", startBitrate:%" PRIu32
