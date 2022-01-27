@@ -1,9 +1,11 @@
 # Changelog
 
 
-### WIP
+### 3.9.6
 
 * TCC client optimizations for faster and more stable BWE (PR #712 by @ggarber).
+* Added support for RTP abs-capture-time header (PR #761 by @oto313).
+* Update NPM deps.
 
 
 ### 3.9.5
