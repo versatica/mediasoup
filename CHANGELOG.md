@@ -1,6 +1,11 @@
 # Changelog
 
 
+### WIP
+
+* TCC client optimizations for faster and more stable BWE (PR #712 by @ggarber).
+
+
 ### 3.9.5
 
 * ICE renomination support (PR #756).
