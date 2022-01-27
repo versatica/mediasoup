@@ -273,6 +273,11 @@ namespace RTC
 			{
 				this->rtpHeaderExtensionIds.toffset = exten.id;
 			}
+
+			if (this->rtpHeaderExtensionIds.absCaptureTime == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME)
+			{
+				this->rtpHeaderExtensionIds.absCaptureTime = exten.id;
+			}
 		}
 
 		// Set the RTCP report generation interval.
@@ -1334,6 +1339,21 @@ namespace RTC
 
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TOFFSET), extenLen, bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
+				// Proxy http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time.
+				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.absCaptureTime, extenLen);
+
+				if (extenValue)
+				{
+					std::memcpy(bufferPtr, extenValue, extenLen);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
+					  extenLen,
+					  bufferPtr);
 
 					// Not needed since this is the latest added extension.
 					// bufferPtr += extenLen;
