@@ -13,9 +13,10 @@ namespace RTC
 	/* Static. */
 
 	static constexpr uint32_t MinBitrate{ 30000u };
+	static constexpr float MaxBitrateMarginFactor{ 0.1f };
 	static constexpr float MaxBitrateIncrementFactor{ 1.35f };
 	static constexpr float MaxPaddingBitrateFactor{ 0.85f };
-	static constexpr uint64_t AvailableBitrateEventInterval{ 2000u }; // In ms.
+	static constexpr uint64_t AvailableBitrateEventInterval{ 1000u }; // In ms.
 	static constexpr size_t PacketLossHistogramLength{ 24 };
 
 	/* Instance methods. */
@@ -37,9 +38,23 @@ namespace RTC
 		config.feedback_only = false;
 
 		this->controllerFactory = new webrtc::GoogCcNetworkControllerFactory(std::move(config));
+	}
+
+	TransportCongestionControlClient::~TransportCongestionControlClient()
+	{
+		MS_TRACE();
+
+		delete this->controllerFactory;
+		this->controllerFactory = nullptr;
+
+		DestroyController();
+	}
+
+	void TransportCongestionControlClient::InitializeController()
+	{
+		MS_ASSERT(this->rtpTransportControllerSend == nullptr, "transport controller already initialized");
 
 		webrtc::BitrateConstraints bitrateConfig;
-
 		bitrateConfig.start_bitrate_bps = static_cast<int>(this->initialAvailableBitrate);
 
 		this->rtpTransportControllerSend =
@@ -49,11 +64,12 @@ namespace RTC
 
 		this->probationGenerator = new RTC::RtpProbationGenerator();
 
-		this->processTimer = new Timer(this);
-
-		// NOTE: This is supposed to recover computed available bandwidth after
-		// network issues.
+		// This makes sure that periodic probing is used when the application is send
+		// less bitrate than needed to measure the bandwidth estimation.  (f.e. when
+		// videos are muted or using screensharing with still images)
 		this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
+
+		this->processTimer = new Timer(this);
 
 		// clang-format off
 		this->processTimer->Start(std::min(
@@ -65,13 +81,8 @@ namespace RTC
 		// clang-format on
 	}
 
-	TransportCongestionControlClient::~TransportCongestionControlClient()
+	void TransportCongestionControlClient::DestroyController()
 	{
-		MS_TRACE();
-
-		delete this->controllerFactory;
-		this->controllerFactory = nullptr;
-
 		delete this->rtpTransportControllerSend;
 		this->rtpTransportControllerSend = nullptr;
 
@@ -85,6 +96,11 @@ namespace RTC
 	void TransportCongestionControlClient::TransportConnected()
 	{
 		MS_TRACE();
+
+		if (this->rtpTransportControllerSend == nullptr)
+		{
+			InitializeController();
+		}
 
 		this->rtpTransportControllerSend->OnNetworkAvailability(true);
 	}
@@ -106,6 +122,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->rtpTransportControllerSend == nullptr)
+		{
+			return;
+		}
+
 		this->rtpTransportControllerSend->packet_sender()->InsertPacket(packetInfo.length);
 		this->rtpTransportControllerSend->OnAddPacket(packetInfo);
 	}
@@ -114,12 +135,22 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->rtpTransportControllerSend == nullptr)
+		{
+			return {};
+		}
+
 		return this->rtpTransportControllerSend->packet_sender()->GetPacingInfo();
 	}
 
 	void TransportCongestionControlClient::PacketSent(webrtc::RtpPacketSendInfo& packetInfo, int64_t nowMs)
 	{
 		MS_TRACE();
+
+		if (this->rtpTransportControllerSend == nullptr)
+		{
+			return;
+		}
 
 		// Notify the transport feedback adapter about the sent packet.
 		rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, nowMs);
@@ -129,6 +160,11 @@ namespace RTC
 	void TransportCongestionControlClient::ReceiveEstimatedBitrate(uint32_t bitrate)
 	{
 		MS_TRACE();
+
+		if (this->rtpTransportControllerSend == nullptr)
+		{
+			return;
+		}
 
 		this->rtpTransportControllerSend->OnReceivedEstimatedBitrate(bitrate);
 	}
@@ -155,6 +191,11 @@ namespace RTC
 			  report->GetDelaySinceLastSenderReport());
 		}
 
+		if (this->rtpTransportControllerSend == nullptr)
+		{
+			return;
+		}
+
 		this->rtpTransportControllerSend->OnReceivedRtcpReceiverReport(
 		  reportBlockList, static_cast<int64_t>(rtt), nowMs);
 	}
@@ -173,6 +214,11 @@ namespace RTC
 				lost_packets += 1;
 		}
 		this->UpdatePacketLoss(static_cast<double>(lost_packets) / expected_packets);
+
+		if (this->rtpTransportControllerSend == nullptr)
+		{
+			return;
+		}
 
 		this->rtpTransportControllerSend->OnTransportFeedback(*feedback);
 	}
@@ -244,34 +290,54 @@ namespace RTC
 		// more stable values.
 		this->bitrates.startBitrate = std::max<uint32_t>(MinBitrate, this->bitrates.availableBitrate);
 
+		auto currentMaxBitrate = this->bitrates.maxBitrate;
+		uint32_t newMaxBitrate = 0;
+
 		if (this->desiredBitrateTrend.GetValue() > 0u)
 		{
-			this->bitrates.maxBitrate = std::max<uint32_t>(
+			newMaxBitrate = std::max<uint32_t>(
 			  this->initialAvailableBitrate,
 			  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
 
-			if (this->maxOutgoingBitrate > 0u)
+			// If max bitrate requested didn't change by more than a small % keep the previous settings
+			// to avoid constant small fluctuations requiring extra probing and making the estimation
+			// less stable (requires constant redistribution of bitrate accross consumers).
+			auto maxBitrateMargin = newMaxBitrate * MaxBitrateMarginFactor;
+			if (currentMaxBitrate > newMaxBitrate - maxBitrateMargin && currentMaxBitrate < newMaxBitrate + maxBitrateMargin)
 			{
-				this->bitrates.maxBitrate =
-				  std::min<uint32_t>(this->maxOutgoingBitrate, this->bitrates.maxBitrate);
+				newMaxBitrate = currentMaxBitrate;
 			}
-
-			this->bitrates.maxPaddingBitrate = this->bitrates.maxBitrate * MaxPaddingBitrateFactor;
 		}
 		else
 		{
-			this->bitrates.maxBitrate        = this->initialAvailableBitrate;
-			this->bitrates.maxPaddingBitrate = 0u;
+			newMaxBitrate = this->initialAvailableBitrate;
+		}
+
+		if (this->maxOutgoingBitrate > 0u)
+		{
+			newMaxBitrate = std::min<uint32_t>(this->maxOutgoingBitrate, newMaxBitrate);
+		}
+
+		if (newMaxBitrate != currentMaxBitrate)
+		{
+			this->bitrates.maxPaddingBitrate = newMaxBitrate * MaxPaddingBitrateFactor;
+			this->bitrates.maxBitrate        = newMaxBitrate;
 		}
 
 		MS_DEBUG_DEV(
-		  "[desiredBitrate:%" PRIu32 ", startBitrate:%" PRIu32 ", minBitrate:%" PRIu32
-		  ", maxBitrate:%" PRIu32 ", maxPaddingBitrate:%" PRIu32 "]",
+		  "[desiredBitrate:%" PRIu32 ", desiredBitrateTrend:%" PRIu32 ", startBitrate:%" PRIu32
+		  ", minBitrate:%" PRIu32 ", maxBitrate:%" PRIu32 ", maxPaddingBitrate:%" PRIu32 "]",
 		  this->bitrates.desiredBitrate,
+		  this->desiredBitrateTrend.GetValue(),
 		  this->bitrates.startBitrate,
 		  this->bitrates.minBitrate,
 		  this->bitrates.maxBitrate,
 		  this->bitrates.maxPaddingBitrate);
+
+		if (this->rtpTransportControllerSend == nullptr)
+		{
+			return;
+		}
 
 		this->rtpTransportControllerSend->SetAllocatedSendBitrateLimits(
 		  this->bitrates.minBitrate, this->bitrates.maxPaddingBitrate, this->bitrates.maxBitrate);
@@ -417,6 +483,7 @@ namespace RTC
 	RTC::RtpPacket* TransportCongestionControlClient::GeneratePadding(size_t size)
 	{
 		MS_TRACE();
+		MS_ASSERT(this->probationGenerator, "probation generator not initialized")
 
 		return this->probationGenerator->GetNextPacket(size);
 	}
