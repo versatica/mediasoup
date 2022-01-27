@@ -210,7 +210,7 @@ public:
 		{ \
 			Logger::levelPrefix = "debug"; \
 			Logger::appdataBuffer.assign(appdatastr); \
-			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, _MS_LOG_STR_DESC_LIVELYAPP desc, _MS_LOG_ARG_LIVELYAPP, ##__VA_ARGS__); \
+			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, _MS_LOG_STR_DESC_LIVELYAPP, desc, _MS_LOG_ARG_LIVELYAPP, ##__VA_ARGS__); \
 			Logger::MSlogwrite(loggerWritten); \
 		} \
 	} \
