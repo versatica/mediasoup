@@ -209,6 +209,23 @@ namespace RTC
 					break;
 				}
 
+				case Attribute::NOMINATION:
+				{
+					// Ensure attribute length is 4 bytes.
+					if (attrLength != 4)
+					{
+						MS_WARN_TAG(ice, "attribute NOMINATION must be 4 bytes length, packet discarded");
+
+						delete packet;
+						return nullptr;
+					}
+
+					packet->SetHasNomination();
+					packet->SetNomination(Utils::Byte::Get4Bytes(attrValuePos, 0));
+
+					break;
+				}
+
 				case Attribute::MESSAGE_INTEGRITY:
 				{
 					// Ensure attribute length is 20 bytes.

@@ -22,7 +22,8 @@ namespace RTC
 		{ "urn:ietf:params:rtp-hdrext:framemarking",                                   RtpHeaderExtensionUri::Type::FRAME_MARKING          },
 		{ "urn:ietf:params:rtp-hdrext:ssrc-audio-level",                               RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL       },
 		{ "urn:3gpp:video-orientation",                                                RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION      },
-		{ "urn:ietf:params:rtp-hdrext:toffset",                                        RtpHeaderExtensionUri::Type::TOFFSET                }
+		{ "urn:ietf:params:rtp-hdrext:toffset",                                        RtpHeaderExtensionUri::Type::TOFFSET                },
+		{ "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time",             RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME       },
 	};
 	// clang-format on
 

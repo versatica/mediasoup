@@ -85,6 +85,8 @@ fn main() {
         .arg("libmediasoup-worker")
         .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
         .env("MEDIASOUP_BUILDTYPE", &build_type)
+        // Force forward slashes on Windows too, otherwise Meson thinks path is not absolute 🤷
+        .env("INSTALL_DIR", &out_dir.replace('\\', "/"))
         .spawn()
         .expect("Failed to start")
         .wait()
@@ -94,48 +96,20 @@ fn main() {
         panic!("Failed to build libmediasoup-worker")
     }
 
-    #[cfg(not(target_os = "windows"))]
-    {
-        let from = format!(
-            "{}/{}/build/libmediasoup-worker.a",
-            mediasoup_out_dir, build_type
-        );
-        let to = format!("{}/libmediasoup-worker.a", out_dir);
-        std::fs::copy(&from, &to).unwrap_or_else(|error| {
-            panic!(
-                "Failed to copy static library from {} to {}: {}",
-                from, to, error
-            )
-        });
-    }
     #[cfg(target_os = "windows")]
     {
-        let dot_a = format!(
-            "{}/{}/build/libmediasoup-worker.a",
-            mediasoup_out_dir, build_type
-        );
-        let from = format!(
-            "{}/{}/build/mediasoup-worker.lib",
-            mediasoup_out_dir, build_type
-        );
-        let to = format!("{}/mediasoup-worker.lib", out_dir);
+        let dot_a = format!("{}/libmediasoup-worker.a", out_dir);
+        let dot_lib = format!("{}/mediasoup-worker.lib", out_dir);
 
         // Meson builds `libmediasoup-worker.a` on Windows instead of `*.lib` file under MinGW
         if std::path::Path::new(&dot_a).exists() {
-            std::fs::copy(&dot_a, &from).unwrap_or_else(|error| {
+            std::fs::copy(&dot_a, &dot_lib).unwrap_or_else(|error| {
                 panic!(
                     "Failed to copy static library from {} to {}: {}",
-                    dot_a, from, error
+                    dot_a, dot_lib, error
                 )
             });
         }
-
-        std::fs::copy(&from, &to).unwrap_or_else(|error| {
-            panic!(
-                "Failed to copy static library from {} to {}: {}",
-                from, to, error
-            )
-        });
 
         // These are required by libuv on Windows
         println!("cargo:rustc-link-lib=psapi");

@@ -84,6 +84,9 @@ namespace RTC
 		void MayEmitAvailableBitrateEvent(uint32_t previousAvailableBitrate);
 		void UpdatePacketLoss(double packetLoss);
 
+		void InitializeController();
+		void DestroyController();
+
 		// jmillan: missing.
 		// void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;
 

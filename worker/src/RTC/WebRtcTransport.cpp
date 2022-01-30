@@ -585,8 +585,7 @@ namespace RTC
 				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
 				std::string password         = Utils::Crypto::GetRandomString(32);
 
-				this->iceServer->SetUsernameFragment(usernameFragment);
-				this->iceServer->SetPassword(password);
+				this->iceServer->RestartIce(usernameFragment, password);
 
 				MS_DEBUG_DEV(
 				  "WebRtcTransport ICE usernameFragment and password changed [id:%s]", this->id.c_str());
