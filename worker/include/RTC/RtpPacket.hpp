@@ -174,7 +174,12 @@ namespace RTC
 					sharedPtr.ptr->IncRefCount();
 				}
 
-				Reset(sharedPtr.ptr);
+				if (this->ptr)
+				{
+					this->ptr->DecRefCount();
+				}
+
+				this->ptr = sharedPtr.ptr;
 
 				return *this;
 			}
@@ -186,13 +191,14 @@ namespace RTC
 			{
 				return this->ptr;
 			}
-			void Reset(RtpPacket* ptr = nullptr)
+			void Reset()
 			{
 				if (this->ptr)
 				{
 					this->ptr->DecRefCount();
 				}
-				this->ptr = ptr;
+
+				this->ptr = nullptr;
 			}
 			RtpPacket& operator*() const noexcept
 			{
@@ -692,8 +698,6 @@ namespace RTC
 		// Decrease reference count for the packet, packet will be removed when reference count reaches zero.
 		void DecRefCount();
 
-		// Return packet into object pool for future reuse of memory allocation.
-		static void ReturnIntoPool(RtpPacket* packet);
 		void ParseExtensions();
 
 	private:

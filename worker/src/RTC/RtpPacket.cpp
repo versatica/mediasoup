@@ -164,15 +164,11 @@ namespace RTC
 		this->referenceCount--;
 
 		if (this->referenceCount == 0)
-			ReturnIntoPool(this);
-	}
-
-	void RtpPacket::ReturnIntoPool(RtpPacket* packet)
-	{
-		if (packet)
 		{
-			packet->~RtpPacket();
-			RtpPacketPool.Return(packet);
+			// Call destructor manually since memory was pre-allocated upfront.
+			this->~RtpPacket();
+			// Return packet into object pool for future reuse of memory allocation.
+			RtpPacketPool.Return(this);
 		}
 	}
 
