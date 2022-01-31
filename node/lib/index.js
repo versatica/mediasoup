@@ -11,7 +11,7 @@ exports.types = types;
 /**
  * Expose mediasoup version.
  */
-exports.version = '3.9.2-lv1-notranscode-mythilik1.1';
+exports.version = '3.9.2-lv1-notranscode-mythilik1.8';
 /**
  * Expose parseScalabilityMode() function.
  */
