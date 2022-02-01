@@ -12,8 +12,8 @@ namespace RTC
 	/* Instance methods. */
 
 	PipeConsumer::PipeConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
+	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, Lively::AppData* appData)
+	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::PIPE, appData)
 	{
 		MS_TRACE();
 
@@ -41,6 +41,7 @@ namespace RTC
 		this->rtpStreams.clear();
 		this->mapMappedSsrcSsrc.clear();
 		this->mapSsrcRtpStream.clear();
+		this->rtpStreamBinLogRecords.clear();
 	}
 
 	void PipeConsumer::FillJson(json& jsonObject) const
@@ -78,6 +79,58 @@ namespace RTC
 			rtpStream->FillJsonStats(jsonEntry);
 		}
 	}
+
+	void PipeConsumer::FillBinLogStats()
+	{
+		MS_TRACE();
+
+		if (this->rtpStreams.size() != 1)
+		{
+			MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "found %zu streams in %s, skipping bin stats", this->rtpStreams.size(), this->id.c_str());
+			return;
+		}
+
+		for (auto* rtpStream : this->rtpStreams)
+		{
+			if (!rtpStream)
+				continue;
+
+			Lively::CallStatsRecordCtx* ctx = this->rtpStreamBinLogRecords.at(rtpStream);
+			if (!ctx)
+				continue;
+
+			ctx->log_record.mime = static_cast<uint8_t>(rtpStream->GetMimeType().type);
+			ctx->AddStatsRecord(&binLog, rtpStream);
+
+			MS_DEBUG_TAG_LIVELYAPP(
+				rtp,
+				this->appData,
+				"pipeConsumer filled=%d:\t%" PRIu16 
+				"\t%" PRIu16 
+				"\t%" PRIu16 
+				"\t%" PRIu16
+				"\t%" PRIu16
+				"\t%" PRIu16
+				"\t%" PRIu16
+				"\t%" PRIu16
+				"\t%" PRIu16
+				"\t%" PRIu32
+				"\t%" PRIu32,
+				ctx->log_record.filled,
+				ctx->last_sample.epoch_len,
+				ctx->last_sample.packets_count,
+				ctx->last_sample.packets_lost,
+				ctx->last_sample.packets_discarded,
+				ctx->last_sample.packets_retransmitted,
+				ctx->last_sample.packets_repaired,
+				ctx->last_sample.nack_count,
+				ctx->last_sample.kf_count,
+				ctx->last_sample.rtt,
+				ctx->last_sample.max_pts,
+				ctx->last_sample.bytes_count
+			);
+		}
+	}	
 
 	void PipeConsumer::FillJsonScore(json& jsonObject) const
 	{
@@ -578,8 +631,19 @@ namespace RTC
 			this->mapSsrcRtpStream[encoding.ssrc]            = rtpStream;
 			this->mapRtpStreamSyncRequired[rtpStream]        = false;
 			this->mapRtpStreamRtpSeqManager[rtpStream];
+
+			MS_WARN_TAG_LIVELYAPP(
+				rtp,
+				this->appData,
+				"pipeConsumer call_id %s id %s", 
+				lively.callId.c_str(),
+				this->id.c_str());
+
+			// Binary log samples collection per stream
+			this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(lively.callId, this->id, 1);
 		}
 	}
+
 
 	void PipeConsumer::RequestKeyFrame()
 	{

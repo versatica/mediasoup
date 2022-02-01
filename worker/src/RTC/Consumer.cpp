@@ -9,7 +9,6 @@
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
-#include "Lively.hpp"
 #include "LivelyAppDataToJson.hpp"
 
 namespace RTC
@@ -21,7 +20,8 @@ namespace RTC
 	  const std::string& producerId,
 	  Listener* listener,
 	  json& data,
-	  RTC::RtpParameters::Type type)
+	  RTC::RtpParameters::Type type,
+		Lively::AppData* appData)
 	  : id(id), producerId(producerId), listener(listener), type(type)
 	{
 		MS_TRACE();
@@ -37,22 +37,36 @@ namespace RTC
 		if (this->kind == RTC::Media::Kind::ALL)
 			MS_THROW_TYPE_ERROR("invalid empty kind");
 
-		// appData (optional)
-		auto jsonAppDataIt = data.find("appData");
-		
-		Lively::AppData lively;
-		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
+		// appData: read from Transport, otherwise try reading from "appData" included into request
+		if (appData)
 		{
-			try {
-				lively = jsonAppDataIt->get<Lively::AppData>();
-			}
-			catch (const std::exception& e) {
-				MS_WARN_TAG(rtp, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
+			lively = *appData;
+		}
+		else
+		{
+			auto jsonAppDataIt = data.find("appData");
+			
+			if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
+			{
+				try {
+					lively = jsonAppDataIt->get<Lively::AppData>();
+				}
+				catch (const std::exception& e) {
+					MS_WARN_TAG(rtp, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
+				}
 			}
 		}
 
 		lively.id = id;
 		this->appData = lively.ToStr();
+		// Bin log
+		std::string path = "/var/log/sfu/" + lively.callId + "_" + lively.id + ".bin.log";
+		this->binLog.InitLog(path);
+		MS_DEBUG_TAG_LIVELYAPP(
+			rtp,
+			this->appData,
+			"Consumer bin log %s",
+			this->binLog.bin_log_file_path.c_str());
 
 		auto jsonRtpParametersIt = data.find("rtpParameters");
 
@@ -176,6 +190,8 @@ namespace RTC
 	Consumer::~Consumer()
 	{
 		MS_TRACE();
+
+		binLog.DeinitLog(nullptr);
 	}
 
 	void Consumer::FillJson(json& jsonObject) const

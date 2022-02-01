@@ -14,6 +14,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var _child, _pid, _mslog, _channel, _payloadChannel, _closed, _appData, _routers, _observer;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Worker = void 0;
 const process = require("process");
 const path = require("path");
 const child_process_1 = require("child_process");
@@ -97,7 +98,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // options
         {
             env: {
-                MEDIASOUP_VERSION: '3.9.0-lv3',
+                MEDIASOUP_VERSION: '3.9.0-lv4-notranscode-mariat36',
                 // Let the worker process inherit all environment variables, useful
                 // if a custom and not in the path GCC is used so the user can set
                 // LD_LIBRARY_PATH environment variable for runtime.

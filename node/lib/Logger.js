@@ -14,6 +14,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var _debug, _warn, _error;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Logger = void 0;
 const debug_1 = require("debug");
 const APP_NAME = 'mediasoup';
 class Logger {

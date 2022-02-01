@@ -208,7 +208,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 void Settings::PrintConfiguration()
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	std::vector<std::string> logTags;
 	std::ostringstream logTagsStream;
@@ -249,29 +249,29 @@ void Settings::PrintConfiguration()
 		logTagsStream << logTags.back();
 	}
 
-	MS_DEBUG_TAG(info, "<configuration>");
+	MS_DEBUG_TAG_STD(info, "<configuration>");
 
-	MS_DEBUG_TAG(
+	MS_DEBUG_TAG_STD(
 	  info,
 	  "  logLevel            : %s",
 	  Settings::logLevel2String[Settings::configuration.logLevel].c_str());
-	MS_DEBUG_TAG(
+	MS_DEBUG_TAG_STD(
 		info,
 	  "  logDevLevel         : %s",
 	  Settings::logDevLevel2String[Settings::configuration.logDevLevel].c_str());
-	MS_DEBUG_TAG(info, "  logTags             : %s", logTagsStream.str().c_str());
-	MS_DEBUG_TAG(info, "  logTraceEnabled     : %s", Settings::configuration.logTraceEnabled ? "true" : "false");
-	MS_DEBUG_TAG(info, "  rtcMinPort          : %" PRIu16, Settings::configuration.rtcMinPort);
-	MS_DEBUG_TAG(info, "  rtcMaxPort          : %" PRIu16, Settings::configuration.rtcMaxPort);
+	MS_DEBUG_TAG_STD(info, "  logTags             : %s", logTagsStream.str().c_str());
+	MS_DEBUG_TAG_STD(info, "  logTraceEnabled     : %s", Settings::configuration.logTraceEnabled ? "true" : "false");
+	MS_DEBUG_TAG_STD(info, "  rtcMinPort          : %" PRIu16, Settings::configuration.rtcMinPort);
+	MS_DEBUG_TAG_STD(info, "  rtcMaxPort          : %" PRIu16, Settings::configuration.rtcMaxPort);
 	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
-		MS_DEBUG_TAG(
+		MS_DEBUG_TAG_STD(
 		  info, "  dtlsCertificateFile : %s", Settings::configuration.dtlsCertificateFile.c_str());
-		MS_DEBUG_TAG(
+		MS_DEBUG_TAG_STD(
 		  info, "  dtlsPrivateKeyFile  : %s", Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
 
-	MS_DEBUG_TAG(info, "</configuration>");
+	MS_DEBUG_TAG_STD(info, "</configuration>");
 }
 
 void Settings::HandleRequest(Channel::ChannelRequest* request)

@@ -1,6 +1,7 @@
 #ifndef MS_RTC_RTP_STREAM_SEND_HPP
 #define MS_RTC_RTP_STREAM_SEND_HPP
 
+#include "LivelyBinLogs.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpStream.hpp"
 #include <vector>
@@ -36,6 +37,23 @@ namespace RTC
 		RtpStreamSend(
 		  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize);
 		~RtpStreamSend() override;
+
+		void FillStats(size_t& packetsCount, size_t& bytesCount, uint32_t& packetsLost, size_t& packetsDiscarded,
+									 size_t& packetsRetransmitted, size_t& packetsRepaired, size_t& nackCount,
+									 size_t& nackPacketCount, size_t& kfCount, float& rtt, uint32_t& maxPacketTs) override
+		{
+			packetsCount = this->transmissionCounter.GetPacketCount();
+			bytesCount = this->transmissionCounter.GetBytes();
+			packetsLost = this->packetsLost;
+			packetsDiscarded = this->packetsDiscarded;
+			packetsRetransmitted = this->packetsRetransmitted;
+			packetsRepaired = this->packetsRepaired;
+			nackCount = this->nackCount;
+			nackPacketCount = this->nackPacketCount;
+			kfCount = this->pliCount + this->firCount;
+			rtt = this->rtt;
+			maxPacketTs = this->maxPacketTs;
+		}
 
 		void FillJsonStats(json& jsonObject) override;
 		void SetRtx(uint8_t payloadType, uint32_t ssrc) override;

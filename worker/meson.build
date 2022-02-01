@@ -38,6 +38,7 @@ common_sources = [
   'src/DepOpenSSL.cpp',
   'src/DepUsrSCTP.cpp',
   'src/Lively.cpp',
+  'src/LivelyBinLogs.cpp',
   'src/Logger.cpp',
   'src/MediaSoupErrors.cpp',
   'src/Settings.cpp',
@@ -245,45 +246,47 @@ libmediasoup_worker = library(
   link_whole: link_whole,
 )
 
-#executable(
-#  'mediasoup-worker',
-#  build_by_default: true,
-#  dependencies: dependencies,
-#  sources: common_sources + ['src/main.cpp'],
-#  include_directories: include_directories('include'),
-#  cpp_args: cpp_args + ['-DMS_EXECUTABLE'],
-#)
-
-transcode_dependencies = dependencies + [
-  cpp.find_library('ffngxshm', required: true),
-  cpp.find_library('ngxshm', required: true),
-  cpp.find_library('pcre', required: true),
-  cpp.find_library('z', required: true),
-]
-
-transcode_sources = common_sources + [
-  'src/main.cpp',
-  'src/DepLibSfuShm.cpp',
-  'src/RTC/ShmConsumer.cpp',
-  'src/RTC/ShmTransport.cpp',  
-]
-
-transcode_args = cpp_args + [
-  '-DMS_EXECUTABLE',
-  '-DTRANSCODE',
-  '-DFFNGXSHM_MAX_NUM_CHANNELS=10',
-  '-DSFUSHM_AV_MAX_NUM_CHANNELS=10',
-  '-DSTREAM_SHM_MAX_CHANNELS=10',
-]
-
 executable(
   'mediasoup-worker',
   build_by_default: true,
-  dependencies: transcode_dependencies,
-  sources: transcode_sources,
+  dependencies: dependencies,
+  sources: common_sources + ['src/main.cpp'],
   include_directories: include_directories('include'),
-  cpp_args: transcode_args,
+  cpp_args: cpp_args + ['-g', '-DMS_EXECUTABLE'],
 )
+
+# '-fno-omit-frame-pointer', 
+
+#transcode_dependencies = dependencies + [
+#  cpp.find_library('ffngxshm', required: true),
+#  cpp.find_library('ngxshm', required: true),
+#  cpp.find_library('pcre', required: true),
+#  cpp.find_library('z', required: true),
+#]
+
+#transcode_sources = common_sources + [
+#  'src/main.cpp',
+#  'src/DepLibSfuShm.cpp',
+#  'src/RTC/ShmConsumer.cpp',
+#  'src/RTC/ShmTransport.cpp',  
+#]
+
+#transcode_args = cpp_args + [
+#  '-DMS_EXECUTABLE',
+#  '-DTRANSCODE',
+#  '-DFFNGXSHM_MAX_NUM_CHANNELS=10',
+#  '-DSFUSHM_AV_MAX_NUM_CHANNELS=10',
+#  '-DSTREAM_SHM_MAX_CHANNELS=10',
+#]
+
+#executable(
+#  'mediasoup-worker',
+#  build_by_default: true,
+#  dependencies: transcode_dependencies,
+#  sources: transcode_sources,
+#  include_directories: include_directories('include'),
+#  cpp_args: transcode_args,
+#)
 
 mediasoup_worker_test = executable(
   'mediasoup-worker-test',

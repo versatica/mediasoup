@@ -14,6 +14,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var _data;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.PipeTransport = void 0;
 const uuid_1 = require("uuid");
 const Logger_1 = require("./Logger");
 const ortc = require("./ortc");

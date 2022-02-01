@@ -14,6 +14,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var _closed, _producerSocket, _consumerSocket, _nextId, _sents, _recvBuffer;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Channel = void 0;
 const os = require("os");
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");

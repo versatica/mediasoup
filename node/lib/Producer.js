@@ -14,6 +14,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var _internal, _data, _channel, _payloadChannel, _closed, _appData, _paused, _score, _observer;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Producer = void 0;
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const logger = new Logger_1.Logger('Producer');

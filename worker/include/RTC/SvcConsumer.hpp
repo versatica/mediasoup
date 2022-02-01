@@ -1,6 +1,7 @@
 #ifndef MS_RTC_SVC_CONSUMER_HPP
 #define MS_RTC_SVC_CONSUMER_HPP
 
+#include "Lively.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
@@ -16,7 +17,8 @@ namespace RTC
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
-		  json& data);
+		  json& data,
+			Lively::AppData* appData = nullptr);
 		~SvcConsumer() override;
 
 	public:
@@ -82,6 +84,9 @@ namespace RTC
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
 
+	public:
+		void FillBinLogStats() override;
+
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
@@ -96,6 +101,8 @@ namespace RTC
 		int16_t provisionalTargetTemporalLayer{ -1 };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		uint64_t lastBweDowngradeAtMs{ 0u }; // Last time we moved to lower spatial layer due to BWE.
+		// bin log
+		Lively::CallStatsRecordCtx* rtpStreamBinLogRecord;
 	};
 } // namespace RTC
 

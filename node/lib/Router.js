@@ -14,6 +14,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var _internal, _data, _channel, _payloadChannel, _closed, _appData, _transports, _producers, _rtpObservers, _dataProducers, _mapRouterPipeTransports, _pipeToRouterQueue, _observer;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Router = void 0;
 const uuid_1 = require("uuid");
 const awaitqueue_1 = require("awaitqueue");
 const Logger_1 = require("./Logger");
@@ -181,7 +182,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a WebRtcTransport.
      */
-    async createWebRtcTransport({ listenIps, port, enableUdp = true, enableTcp = false, preferUdp = false, preferTcp = false, initialAvailableOutgoingBitrate = 600000, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 262144, sctpSendBufferSize = 262144, appData = {} }) {
+    async createWebRtcTransport({ listenIps, port, enableUdp = true, enableTcp = false, preferUdp = false, preferTcp = false, initialAvailableOutgoingBitrate = 600000, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 262144, sctpSendBufferSize = 262144, appData = {}, binlog = {}, }) {
         logger.debug('createWebRtcTransport()');
         if (!Array.isArray(listenIps))
             throw new TypeError('missing listenIps');
@@ -216,6 +217,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             sctpSendBufferSize,
             isDataChannel: true,
             appData,
+            binlog,
         };
         const data = await __classPrivateFieldGet(this, _channel).request('router.createWebRtcTransport', internal, reqData);
         const transport = new WebRtcTransport_1.WebRtcTransport({
@@ -241,7 +243,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a PlainTransport.
      */
-    async createPlainTransport({ listenIp, port, rtcpMux = true, comedia = false, disableOriginCheck = false, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 262144, sctpSendBufferSize = 262144, enableSrtp = false, srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80', appData = {} }) {
+    async createPlainTransport({ listenIp, port, rtcpMux = true, comedia = false, disableOriginCheck = false, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 262144, sctpSendBufferSize = 262144, enableSrtp = false, srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80', appData = {}, binlog = {}, }) {
         logger.debug('createPlainTransport()');
         if (!listenIp)
             throw new TypeError('missing listenIp');
@@ -275,6 +277,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             enableSrtp,
             srtpCryptoSuite,
             appData,
+            binlog,
         };
         const data = await __classPrivateFieldGet(this, _channel).request('router.createPlainTransport', internal, reqData);
         const transport = new PlainTransport_1.PlainTransport({
@@ -307,7 +310,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a PipeTransport.
      */
-    async createPipeTransport({ listenIp, disableOriginCheck = false, port, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 268435456, sctpSendBufferSize = 268435456, enableRtx = false, enableSrtp = false, appData = {} }) {
+    async createPipeTransport({ listenIp, disableOriginCheck = false, port, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 268435456, sctpSendBufferSize = 268435456, enableRtx = false, enableSrtp = false, appData = {}, binlog = {}, }) {
         logger.debug('createPipeTransport() listenIp:[%o] enableRtx:[%o] appData:[%o]', listenIp, enableRtx, appData);
         if (!listenIp)
             throw new TypeError('missing listenIp');
@@ -339,6 +342,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             enableRtx,
             enableSrtp,
             appData,
+            binlog,
         };
         const data = await __classPrivateFieldGet(this, _channel).request('router.createPipeTransport', internal, reqData);
         const transport = new PipeTransport_1.PipeTransport({
@@ -364,7 +368,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a DirectTransport.
      */
-    async createDirectTransport({ maxMessageSize = 262144, appData = {} } = {
+    async createDirectTransport({ maxMessageSize = 262144, appData = {}, binlog = {}, } = {
         maxMessageSize: 262144
     }) {
         logger.debug('createDirectTransport()');
@@ -373,6 +377,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             direct: true,
             maxMessageSize,
             appData,
+            binlog,
         };
         const data = await __classPrivateFieldGet(this, _channel).request('router.createDirectTransport', internal, reqData);
         const transport = new DirectTransport_1.DirectTransport({
@@ -406,7 +411,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @async
      * @returns {ShmTransport}
      */
-    async createShmTransport({ listenIp, shm, log, appData = {} }) {
+    async createShmTransport({ listenIp, shm, log, appData = {}, binlog = {}, }) {
         logger.debug('createShmTransport() [shm:%o]', shm);
         if (!listenIp)
             throw new TypeError('missing listenIp');

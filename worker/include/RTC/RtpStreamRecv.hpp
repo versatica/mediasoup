@@ -6,6 +6,7 @@
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpStream.hpp"
 #include "handles/Timer.hpp"
+#include "LivelyBinLogs.hpp"
 #include <vector>
 
 namespace RTC
@@ -44,6 +45,23 @@ namespace RTC
 	public:
 		RtpStreamRecv(RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params);
 		~RtpStreamRecv();
+
+		void FillStats(size_t& packetsCount, size_t& bytesCount, uint32_t& packetsLost, size_t& packetsDiscarded,
+		 							 size_t& packetsRetransmitted, size_t& packetsRepaired, size_t& nackCount,
+									 size_t& nackPacketCount, size_t& kfCount, float& rtt, uint32_t& maxPacketTs) override
+		{
+			packetsCount = this->transmissionCounter.GetPacketCount();
+			bytesCount = this->transmissionCounter.GetBytes();
+			packetsLost = this->packetsLost;
+			packetsDiscarded = this->packetsDiscarded;
+			packetsRetransmitted = this->packetsRetransmitted;
+			packetsRepaired = this->packetsRepaired;
+			nackCount = this->nackCount;
+			nackPacketCount = this->nackPacketCount;
+			kfCount = this->pliCount + this->firCount;
+			rtt = this->rtt;
+			maxPacketTs = this->maxPacketTs;
+		}
 
 		void FillJsonStats(json& jsonObject) override;
 		bool ReceivePacket(RTC::RtpPacket* packet) override;

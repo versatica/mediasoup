@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ShmTransport = void 0;
 const Logger_1 = require("./Logger");
 const uuid_1 = require("uuid");
 const ortc = require("./ortc");

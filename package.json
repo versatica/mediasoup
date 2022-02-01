@@ -1,6 +1,6 @@
 {
   "name": "@livelyvideo/mediasoup",
-  "version": "3.9.0-lv3",
+  "version": "3.9.0-lv4-notranscode-mariat36",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -76,6 +76,7 @@
     "h264-profile-level-id": "^1.0.1",
     "random-number": "^0.0.9",
     "supports-color": "^9.0.2",
+    "tsc": "^2.0.3",
     "uuid": "^7.0.3"
   },
   "devDependencies": {
@@ -93,6 +94,6 @@
     "pick-port": "^1.0.0",
     "sctp": "^1.0.0",
     "tsc-watch": "^4.5.0",
-    "typescript": "~3.8.3"
+    "typescript": "^3.9.10"
   }
 }

@@ -14,6 +14,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var _data, _closed, _appData, _getRouterRtpCapabilities, _producers, _cnameForProducers, _nextMidForConsumers, _sctpStreamIds, _nextSctpStreamId, _observer;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Transport = void 0;
 const uuid_1 = require("uuid");
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");

@@ -129,6 +129,9 @@ namespace RTC
 		bool 	 idle{ false };                // Idle if inactivityCheckTime is not reset within 20 seconds
 	public:
 		std::string appData;
+
+	public:
+		void FillBinLogStats() override {}
 	};
 
 	/* Inline methods. */

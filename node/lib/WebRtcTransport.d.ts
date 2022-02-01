@@ -53,6 +53,10 @@ export declare type WebRtcTransportOptions = {
      * Custom application data.
      */
     appData?: any;
+    /**
+     * Binary log info.
+     */
+    binlog?: any;
 };
 export declare type IceParameters = {
     usernameFragment: string;

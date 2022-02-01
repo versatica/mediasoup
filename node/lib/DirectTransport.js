@@ -8,6 +8,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 };
 var _data;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DirectTransport = void 0;
 const Logger_1 = require("./Logger");
 const errors_1 = require("./errors");
 const Transport_1 = require("./Transport");

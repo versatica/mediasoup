@@ -74,6 +74,11 @@ export type WebRtcTransportOptions =
 	 * Custom application data.
 	 */
 	appData?: any;
+
+	/**
+	 * Binary log info.
+	 */
+	binlog?: any;
 }
 
 export type IceParameters =

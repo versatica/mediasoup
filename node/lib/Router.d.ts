@@ -136,11 +136,11 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a WebRtcTransport.
      */
-    createWebRtcTransport({ listenIps, port, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
+    createWebRtcTransport({ listenIps, port, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, appData, binlog, }: WebRtcTransportOptions): Promise<WebRtcTransport>;
     /**
      * Create a PlainTransport.
      */
-    createPlainTransport({ listenIp, port, rtcpMux, comedia, disableOriginCheck, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
+    createPlainTransport({ listenIp, port, rtcpMux, comedia, disableOriginCheck, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableSrtp, srtpCryptoSuite, appData, binlog, }: PlainTransportOptions): Promise<PlainTransport>;
     /**
      * DEPRECATED: Use createPlainTransport().
      */
@@ -148,11 +148,11 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create a PipeTransport.
      */
-    createPipeTransport({ listenIp, disableOriginCheck, port, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableRtx, enableSrtp, appData }: PipeTransportOptions): Promise<PipeTransport>;
+    createPipeTransport({ listenIp, disableOriginCheck, port, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableRtx, enableSrtp, appData, binlog, }: PipeTransportOptions): Promise<PipeTransport>;
     /**
      * Create a DirectTransport.
      */
-    createDirectTransport({ maxMessageSize, appData }?: DirectTransportOptions): Promise<DirectTransport>;
+    createDirectTransport({ maxMessageSize, appData, binlog, }?: DirectTransportOptions): Promise<DirectTransport>;
     /**
      * Create a ShmTransport.
      *
@@ -164,7 +164,7 @@ export declare class Router extends EnhancedEventEmitter {
      * @async
      * @returns {ShmTransport}
      */
-    createShmTransport({ listenIp, shm, log, appData }: ShmTransportOptions): Promise<ShmTransport>;
+    createShmTransport({ listenIp, shm, log, appData, binlog, }: ShmTransportOptions): Promise<ShmTransport>;
     /**
      * Pipes the given Producer or DataProducer into another Router in same host.
      */

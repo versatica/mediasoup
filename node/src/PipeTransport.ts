@@ -72,6 +72,11 @@ export type PipeTransportOptions =
 	 * Custom application data.
 	 */
 	appData?: any;
+
+	/**
+	 * Binary log info.
+	 */
+	binlog?: any;
 }
 
 export type PipeTransportStat =

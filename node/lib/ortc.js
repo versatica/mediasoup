@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getPipeConsumerRtpParameters = exports.getConsumerRtpParameters = exports.canConsume = exports.getConsumableRtpParameters = exports.getProducerRtpParametersMapping = exports.generateRouterRtpCapabilities = exports.validateSctpStreamParameters = exports.validateSctpParameters = exports.validateNumSctpStreams = exports.validateSctpCapabilities = exports.validateRtcpParameters = exports.validateRtpEncodingParameters = exports.validateRtpHeaderExtensionParameters = exports.validateRtpCodecParameters = exports.validateRtpParameters = exports.validateRtpHeaderExtension = exports.validateRtcpFeedback = exports.validateRtpCodecCapability = exports.validateRtpCapabilities = void 0;
 const h264 = require("h264-profile-level-id");
 const utils = require("./utils");
 const errors_1 = require("./errors");

@@ -1,4 +1,4 @@
-#define MS_CLASS "DepLibSfuShm"
+#define MS_CLASS "ShmCtx"
 // #define MS_LOG_DEV
 
 #include "DepLibSfuShm.hpp"

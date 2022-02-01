@@ -1,6 +1,7 @@
 #ifndef MS_RTC_SIMPLE_CONSUMER_HPP
 #define MS_RTC_SIMPLE_CONSUMER_HPP
 
+#include "Lively.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
@@ -14,7 +15,8 @@ namespace RTC
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
-		  json& data);
+		  json& data,
+			Lively::AppData* appData = nullptr);
 		~SimpleConsumer() override;
 
 	public:
@@ -66,7 +68,10 @@ namespace RTC
 	public:
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
-
+	
+	public:
+		void FillBinLogStats() override;
+	
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
@@ -77,6 +82,8 @@ namespace RTC
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		bool managingBitrate{ false };
+		//bin log
+		Lively::CallStatsRecordCtx* rtpStreamBinLogRecord;
 	};
 } // namespace RTC
 

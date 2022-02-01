@@ -21,8 +21,8 @@ namespace RTC
 	/* Instance methods. */
 
 	SimulcastConsumer::SimulcastConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SIMULCAST)
+	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, Lively::AppData* appData)
+	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SIMULCAST, appData)
 	{
 		MS_TRACE();
 
@@ -138,6 +138,7 @@ namespace RTC
 		MS_TRACE();
 
 		delete this->rtpStream;
+		delete this->rtpStreamBinLogRecord;
 	}
 
 	void SimulcastConsumer::FillJson(json& jsonObject) const
@@ -203,6 +204,45 @@ namespace RTC
 			jsonObject["producerScore"] = 0;
 
 		jsonObject["producerScores"] = *this->producerRtpStreamScores;
+	}
+
+	void SimulcastConsumer::FillBinLogStats()
+	{
+		MS_TRACE();
+
+		Lively::CallStatsRecordCtx* ctx = this->rtpStreamBinLogRecord;
+		if (!ctx)
+			return;
+
+		ctx->log_record.mime = static_cast<uint8_t>(rtpStream->GetMimeType().type);
+		ctx->AddStatsRecord(&binLog, rtpStream);
+		MS_DEBUG_TAG_LIVELYAPP(
+			rtp,
+			this->appData,
+		  "simulcastConsumer filled=%d:\t%" PRIu16 
+			"\t%" PRIu16 
+			"\t%" PRIu16 
+			"\t%" PRIu16
+			"\t%" PRIu16
+			"\t%" PRIu16
+			"\t%" PRIu16
+			"\t%" PRIu16
+			"\t%" PRIu16
+			"\t%" PRIu32
+			"\t%" PRIu32,
+			ctx->log_record.filled,
+			ctx->last_sample.epoch_len,
+			ctx->last_sample.packets_count,
+			ctx->last_sample.packets_lost,
+			ctx->last_sample.packets_discarded,
+			ctx->last_sample.packets_retransmitted,
+			ctx->last_sample.packets_repaired,
+			ctx->last_sample.nack_count,
+			ctx->last_sample.kf_count,
+			ctx->last_sample.rtt,
+			ctx->last_sample.max_pts,
+			ctx->last_sample.bytes_count
+		);
 	}
 
 	void SimulcastConsumer::HandleRequest(Channel::ChannelRequest* request)
@@ -1180,6 +1220,9 @@ namespace RTC
 
 		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
 		this->rtpStreams.push_back(this->rtpStream);
+
+		// Binary log samples collection
+		this->rtpStreamBinLogRecord = new Lively::CallStatsRecordCtx(lively.callId, this->id, 1);			
 
 		// If the Consumer is paused, tell the RtpStreamSend.
 		if (IsPaused() || IsProducerPaused())
