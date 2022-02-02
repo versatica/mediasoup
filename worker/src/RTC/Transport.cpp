@@ -3016,7 +3016,7 @@ namespace RTC
 		if (dynamic_cast<RTC::ShmTransport*>(this) == nullptr)
 #endif
 			MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, 
-				" outgoing available bitrate= \"%" PRIu32, bitrates.availableBitrate);
+				" outgoing available bitrate=\"%" PRIu32, bitrates.availableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
