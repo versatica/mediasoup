@@ -149,9 +149,16 @@ export type WebRtcTransportStat =
 	dtlsState: DtlsState;
 }
 
+type ObserverEvents = {
+	icestatechange: [IceState];
+	iceselectedtuplechange: [TransportTuple];
+	dtlsstatechange: [DtlsState];
+	sctpstatechange: [SctpState];
+}
+
 const logger = new Logger('WebRtcTransport');
 
-export class WebRtcTransport extends Transport
+export class WebRtcTransport extends Transport<ObserverEvents>
 {
 	// WebRtcTransport data.
 	readonly #data:

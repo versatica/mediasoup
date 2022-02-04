@@ -41,9 +41,13 @@ export type DirectTransportStat =
 	maxIncomingBitrate?: number;
 }
 
+type ObserverEvents = {
+	rtcp: [Buffer];
+}
+
 const logger = new Logger('DirectTransport');
 
-export class DirectTransport extends Transport
+export class DirectTransport extends Transport<ObserverEvents>
 {
 	// DirectTransport data.
 	readonly #data:

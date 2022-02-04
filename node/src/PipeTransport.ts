@@ -108,9 +108,13 @@ export type PipeConsumerOptions =
 	appData?: any;
 }
 
+type ObserverEvents = {
+	sctpstatechange: [SctpState];
+}
+
 const logger = new Logger('PipeTransport');
 
-export class PipeTransport extends Transport
+export class PipeTransport extends Transport<ObserverEvents>
 {
 	// PipeTransport data.
 	readonly #data:
