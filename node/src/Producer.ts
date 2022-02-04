@@ -140,9 +140,19 @@ export type ProducerStat =
  */
 export type ProducerType = 'simple' | 'simulcast' | 'svc';
 
+type ObserverEvents = {
+	close: [];
+	pause: [];
+	resume: [];
+	score: [ProducerScore[]];
+	videoorientationchange: [ProducerVideoOrientation];
+	trace: [ProducerTraceEventData];
+}
+
 const logger = new Logger('Producer');
 
-export class Producer extends EnhancedEventEmitter
+export class Producer extends EnhancedEventEmitter<Pick<ObserverEvents, 'score' | 'videoorientationchange' | 'trace'>
+& { transportclose: [] }>
 {
 	// Internal data.
 	readonly #internal:
