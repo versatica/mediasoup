@@ -104,9 +104,15 @@ type PipeTransportPair =
 	[key: string]: PipeTransport;
 };
 
+type ObserverEvents = {
+	close: [];
+	newtransport: [Transport];
+	newrtpobserver: [RtpObserver];
+}
+
 const logger = new Logger('Router');
 
-export class Router extends EnhancedEventEmitter
+export class Router extends EnhancedEventEmitter<{ workerclose: [] }>
 {
 	// Internal data.
 	readonly #internal:
@@ -150,7 +156,7 @@ export class Router extends EnhancedEventEmitter
 		Map<string, Promise<PipeTransportPair>> = new Map();
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<ObserverEvents>();
 
 	/**
 	 * @private
@@ -232,7 +238,7 @@ export class Router extends EnhancedEventEmitter
 	 * @emits newtransport - (transport: Transport)
 	 * @emits newrtpobserver - (rtpObserver: RtpObserver)
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<ObserverEvents>
 	{
 		return this.#observer;
 	}
