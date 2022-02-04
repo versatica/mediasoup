@@ -154,9 +154,27 @@ export type ConsumerStat =
  */
 export type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
 
+type ObserverEvents = {
+	close: [];
+	pause: [];
+	resume: [];
+	score: [ConsumerScore];
+	layerschange: [ConsumerLayers?];
+	trace: [ConsumerTraceEventData];
+}
+
+type ConsumerEvents = Pick<ObserverEvents, 'score' | 'layerschange' | 'trace'>
+& { 
+	transportclose: [];
+	producerclose: [];
+	producerpause: [];
+	producerresume: [];
+	rtp: [Buffer];
+}
+
 const logger = new Logger('Consumer');
 
-export class Consumer extends EnhancedEventEmitter
+export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -206,7 +224,7 @@ export class Consumer extends EnhancedEventEmitter
 	#currentLayers?: ConsumerLayers;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<ObserverEvents>();
 
 	/**
 	 * @private
@@ -384,7 +402,7 @@ export class Consumer extends EnhancedEventEmitter
 	 * @emits layerschange - (layers: ConsumerLayers | undefined)
 	 * @emits trace - (trace: ConsumerTraceEventData)
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<ObserverEvents>
 	{
 		return this.#observer;
 	}
