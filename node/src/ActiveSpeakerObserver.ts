@@ -1,6 +1,7 @@
 import { Logger } from './Logger';
-import { RtpObserver } from './RtpObserver';
+import { RtpObserver, RtpObserverEvents } from './RtpObserver';
 import { Producer } from './Producer';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 
 export interface ActiveSpeakerObserverOptions {
 	interval?: number;
@@ -18,9 +19,17 @@ export interface ActiveSpeakerObserverActivity {
 	producer: Producer;
 }
 
+type ObserverEvents = RtpObserverEvents & {
+	dominantspeaker: [{ producer: Producer }];
+}
+
+type Events = {
+	routerclose: [];
+} & Pick<ObserverEvents, 'dominantspeaker'>
+
 const logger = new Logger('ActiveSpeakerObserver');
 
-export class ActiveSpeakerObserver extends RtpObserver
+export class ActiveSpeakerObserver extends RtpObserver<Events>
 {
 	/**
 	 * @private
@@ -35,7 +44,10 @@ export class ActiveSpeakerObserver extends RtpObserver
 	/**
 	 * Observer.
 	 */
-	// get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<ObserverEvents>
+	{
+		return super.observer;
+	}
 
 	private handleWorkerNotifications(): void
 	{
