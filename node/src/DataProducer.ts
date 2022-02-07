@@ -48,9 +48,13 @@ export type DataProducerStat =
  */
 export type DataProducerType = 'sctp' | 'direct';
 
+type ObserverEvents = {
+	close: [];
+}
+
 const logger = new Logger('DataProducer');
 
-export class DataProducer extends EnhancedEventEmitter
+export class DataProducer extends EnhancedEventEmitter<{ transportclose: [] }>
 {
 	// Internal data.
 	readonly #internal:
@@ -82,7 +86,7 @@ export class DataProducer extends EnhancedEventEmitter
 	readonly #appData?: any;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<ObserverEvents>();
 
 	/**
 	 * @private
@@ -188,7 +192,7 @@ export class DataProducer extends EnhancedEventEmitter
 	 *
 	 * @emits close
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<ObserverEvents>
 	{
 		return this.#observer;
 	}
