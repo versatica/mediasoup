@@ -1,7 +1,7 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
-import { TransportListenIp } from './Transport';
+import { Transport, TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
@@ -10,6 +10,7 @@ import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
 import { DataConsumer } from './DataConsumer';
+import { RtpObserver } from './RtpObserver';
 import { ActiveSpeakerObserver, ActiveSpeakerObserverOptions } from './ActiveSpeakerObserver';
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
@@ -79,7 +80,14 @@ export declare type PipeToRouterResult = {
 declare type PipeTransportPair = {
     [key: string]: PipeTransport;
 };
-export declare class Router extends EnhancedEventEmitter {
+declare type ObserverEvents = {
+    close: [];
+    newtransport: [Transport];
+    newrtpobserver: [RtpObserver];
+};
+export declare class Router extends EnhancedEventEmitter<{
+    workerclose: [];
+}> {
     #private;
     /**
      * @private
@@ -120,7 +128,7 @@ export declare class Router extends EnhancedEventEmitter {
      * @emits newtransport - (transport: Transport)
      * @emits newrtpobserver - (rtpObserver: RtpObserver)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<ObserverEvents>;
     /**
      * Close the Router.
      */

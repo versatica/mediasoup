@@ -54,7 +54,19 @@ export interface TransportTraceEventData {
     info: any;
 }
 export declare type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
-export declare class Transport extends EnhancedEventEmitter {
+export declare type TransportBaseEvents = {
+    routerclose: [];
+    trace: [TransportTraceEventData];
+};
+declare type ObserverEvents = {
+    close: [];
+    newproducer: [Producer];
+    newconsumer: [Consumer];
+    newdataproducer: [DataProducer];
+    newdataconsumer: [DataConsumer];
+    trace: [TransportTraceEventData];
+};
+export declare class Transport<ExtraEvents extends Record<string, any[]> & Partial<TransportBaseEvents> = TransportBaseEvents> extends EnhancedEventEmitter<ExtraEvents & TransportBaseEvents> {
     #private;
     protected readonly internal: {
         routerId: string;
@@ -112,7 +124,7 @@ export declare class Transport extends EnhancedEventEmitter {
      * @emits newdataproducer - (dataProducer: DataProducer)
      * @emits newdataconsumer - (dataProducer: DataProducer)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<ObserverEvents & ExtraEvents>;
     /**
      * @private
      * Just for testing purposes.
@@ -177,4 +189,5 @@ export declare class Transport extends EnhancedEventEmitter {
     enableTraceEvent(types?: TransportTraceEventType[]): Promise<void>;
     private getNextSctpStreamId;
 }
+export {};
 //# sourceMappingURL=Transport.d.ts.map

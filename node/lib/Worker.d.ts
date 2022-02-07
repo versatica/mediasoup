@@ -110,7 +110,13 @@ export declare type WorkerResourceUsage = {
      */
     ru_nivcsw: number;
 };
-export declare class Worker extends EnhancedEventEmitter {
+declare type ObserverEvents = {
+    close: [];
+    newrouter: [Router];
+};
+export declare class Worker extends EnhancedEventEmitter<{
+    died: [Error];
+}> {
     #private;
     /**
      * @private
@@ -145,7 +151,7 @@ export declare class Worker extends EnhancedEventEmitter {
      * @emits close
      * @emits newrouter - (router: Router)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<ObserverEvents>;
     /**
      * @private
      * Just for testing purposes.
@@ -173,4 +179,5 @@ export declare class Worker extends EnhancedEventEmitter {
     createRouter({ mediaCodecs, appData }?: RouterOptions): Promise<Router>;
     private workerDied;
 }
+export {};
 //# sourceMappingURL=Worker.d.ts.map

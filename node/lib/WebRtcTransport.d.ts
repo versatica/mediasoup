@@ -112,7 +112,13 @@ export declare type WebRtcTransportStat = {
     iceSelectedTuple?: TransportTuple;
     dtlsState: DtlsState;
 };
-export declare class WebRtcTransport extends Transport {
+declare type ObserverEvents = {
+    icestatechange: [IceState];
+    iceselectedtuplechange: [TransportTuple];
+    dtlsstatechange: [DtlsState];
+    sctpstatechange: [SctpState];
+};
+export declare class WebRtcTransport extends Transport<ObserverEvents> {
     #private;
     /**
      * @private
@@ -211,4 +217,5 @@ export declare class WebRtcTransport extends Transport {
     restartIce(): Promise<IceParameters>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=WebRtcTransport.d.ts.map

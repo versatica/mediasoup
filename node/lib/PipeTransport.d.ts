@@ -81,7 +81,10 @@ export declare type PipeConsumerOptions = {
      */
     appData?: any;
 };
-export declare class PipeTransport extends Transport {
+declare type ObserverEvents = {
+    sctpstatechange: [SctpState];
+};
+export declare class PipeTransport extends Transport<ObserverEvents> {
     #private;
     /**
      * @private
@@ -154,4 +157,5 @@ export declare class PipeTransport extends Transport {
     consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=PipeTransport.d.ts.map

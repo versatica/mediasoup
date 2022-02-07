@@ -1,5 +1,6 @@
-import { RtpObserver } from './RtpObserver';
+import { RtpObserver, RtpObserverEvents } from './RtpObserver';
 import { Producer } from './Producer';
+import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 export interface AudioLevelObserverOptions {
     /**
      * Maximum number of entries in the 'volumes”' event. Default 1.
@@ -30,7 +31,14 @@ export interface AudioLevelObserverVolume {
      */
     volume: number;
 }
-export declare class AudioLevelObserver extends RtpObserver {
+declare type ObserverEvents = RtpObserverEvents & {
+    volumes: [AudioLevelObserverVolume[]];
+    silence: [];
+};
+declare type Events = {
+    routerclose: [];
+} & Pick<ObserverEvents, 'volumes' | 'silence'>;
+export declare class AudioLevelObserver extends RtpObserver<Events> {
     /**
      * @private
      * @emits volumes - (volumes: AudioLevelObserverVolume[])
@@ -48,6 +56,8 @@ export declare class AudioLevelObserver extends RtpObserver {
      * @emits volumes - (volumes: AudioLevelObserverVolume[])
      * @emits silence
      */
+    get observer(): EnhancedEventEmitter<ObserverEvents>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=AudioLevelObserver.d.ts.map

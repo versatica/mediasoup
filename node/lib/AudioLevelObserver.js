@@ -25,7 +25,9 @@ class AudioLevelObserver extends RtpObserver_1.RtpObserver {
      * @emits volumes - (volumes: AudioLevelObserverVolume[])
      * @emits silence
      */
-    // get observer(): EnhancedEventEmitter
+    get observer() {
+        return super.observer;
+    }
     handleWorkerNotifications() {
         this.channel.on(this.internal.rtpObserverId, (event, data) => {
             switch (event) {

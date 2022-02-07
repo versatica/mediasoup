@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
@@ -123,7 +124,22 @@ export declare type ConsumerStat = {
  * Consumer type.
  */
 export declare type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
-export declare class Consumer extends EnhancedEventEmitter {
+declare type ObserverEvents = {
+    close: [];
+    pause: [];
+    resume: [];
+    score: [ConsumerScore];
+    layerschange: [ConsumerLayers?];
+    trace: [ConsumerTraceEventData];
+};
+declare type ConsumerEvents = Pick<ObserverEvents, 'score' | 'layerschange' | 'trace'> & {
+    transportclose: [];
+    producerclose: [];
+    producerpause: [];
+    producerresume: [];
+    rtp: [Buffer];
+};
+export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
     #private;
     /**
      * @private
@@ -215,7 +231,7 @@ export declare class Consumer extends EnhancedEventEmitter {
      * @emits layerschange - (layers: ConsumerLayers | undefined)
      * @emits trace - (trace: ConsumerTraceEventData)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<ObserverEvents>;
     /**
      * @private
      * Just for testing purposes.
@@ -269,4 +285,5 @@ export declare class Consumer extends EnhancedEventEmitter {
     enableTraceEvent(types?: ConsumerTraceEventType[]): Promise<void>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=Consumer.d.ts.map

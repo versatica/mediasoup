@@ -33,7 +33,10 @@ export declare type DirectTransportStat = {
     availableIncomingBitrate?: number;
     maxIncomingBitrate?: number;
 };
-export declare class DirectTransport extends Transport {
+declare type ObserverEvents = {
+    rtcp: [Buffer];
+};
+export declare class DirectTransport extends Transport<ObserverEvents> {
     #private;
     /**
      * @private
@@ -89,4 +92,5 @@ export declare class DirectTransport extends Transport {
     sendRtcp(rtcpPacket: Buffer): void;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=DirectTransport.d.ts.map

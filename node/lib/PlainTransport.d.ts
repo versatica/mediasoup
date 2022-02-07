@@ -90,7 +90,12 @@ export declare type PlainTransportStat = {
  * DEPRECATED: Use PlainTransportStat.
  */
 export declare type PlainRtpTransportStat = PlainTransportStat;
-export declare class PlainTransport extends Transport {
+declare type ObserverEvents = {
+    tuple: [TransportTuple];
+    rtcptuple: [TransportTuple];
+    sctpstatechange: [SctpState];
+};
+export declare class PlainTransport extends Transport<ObserverEvents> {
     #private;
     /**
      * @private
@@ -172,4 +177,5 @@ export declare class PlainTransport extends Transport {
 export declare class PlainRtpTransport extends PlainTransport {
     constructor(params: any);
 }
+export {};
 //# sourceMappingURL=PlainTransport.d.ts.map
