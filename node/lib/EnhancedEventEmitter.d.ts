@@ -9,8 +9,10 @@ export declare class EnhancedEventEmitter<PublicEvents extends Events = Events, 
     on<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void): this;
     off<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void): this;
     addListener<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void): this;
-    removeListener<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void): this;
+    prependListener<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void): this;
     once<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void): this;
+    prependOnceListener<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void): this;
+    removeListener<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void): this;
 }
 export {};
 //# sourceMappingURL=EnhancedEventEmitter.d.ts.map

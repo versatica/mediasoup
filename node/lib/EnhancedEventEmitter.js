@@ -42,12 +42,20 @@ class EnhancedEventEmitter extends events_1.EventEmitter {
         super.on(event, listener);
         return this;
     }
-    removeListener(event, listener) {
-        super.off(event, listener);
+    prependListener(event, listener) {
+        super.prependListener(event, listener);
         return this;
     }
     once(event, listener) {
         super.once(event, listener);
+        return this;
+    }
+    prependOnceListener(event, listener) {
+        super.prependOnceListener(event, listener);
+        return this;
+    }
+    removeListener(event, listener) {
+        super.off(event, listener);
         return this;
     }
 }

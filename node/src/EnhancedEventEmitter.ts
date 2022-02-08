@@ -73,17 +73,30 @@ E extends PublicEvents = PublicEvents & InternalEvents> extends EventEmitter
 
 		return this;
 	}
+	prependListener<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void)
+	{
+		super.prependListener(event, listener as (...args: any[]) => void);
+
+		return this;
+	}
+
+	once<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void) 
+	{
+		super.once(event, listener as (...args: any[]) => void);
+
+		return this;
+	}
+	prependOnceListener<K extends keyof E & string>(event: K,
+		listener: (...args: E[K]) => void)
+	{
+		super.prependOnceListener(event, listener as (...args: any[]) => void);
+	
+		return this;
+	}
 
 	removeListener<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void)
 	{
 		super.off(event, listener as (...args: any[]) => void);
-
-		return this;
-	}
-	
-	once<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void) 
-	{
-		super.once(event, listener as (...args: any[]) => void);
 
 		return this;
 	}
