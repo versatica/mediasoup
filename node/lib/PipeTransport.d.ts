@@ -81,10 +81,10 @@ export declare type PipeConsumerOptions = {
      */
     appData?: any;
 };
-declare type ObserverEvents = {
+declare type Events = {
     sctpstatechange: [SctpState];
 };
-export declare class PipeTransport extends Transport<ObserverEvents> {
+export declare class PipeTransport extends Transport<Events> {
     #private;
     /**
      * @private

@@ -37,7 +37,9 @@ declare type ObserverEvents = RtpObserverEvents & {
 };
 declare type Events = {
     routerclose: [];
-} & Pick<ObserverEvents, 'volumes' | 'silence'>;
+    volumes: [AudioLevelObserverVolume[]];
+    silence: [];
+};
 export declare class AudioLevelObserver extends RtpObserver<Events> {
     /**
      * @private

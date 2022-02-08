@@ -41,9 +41,10 @@ export declare type DataProducerType = 'sctp' | 'direct';
 declare type ObserverEvents = {
     close: [];
 };
-export declare class DataProducer extends EnhancedEventEmitter<{
+declare type Events = {
     transportclose: [];
-}> {
+};
+export declare class DataProducer extends EnhancedEventEmitter<Events> {
     #private;
     /**
      * @private

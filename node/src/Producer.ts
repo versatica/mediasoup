@@ -149,10 +149,16 @@ type ObserverEvents = {
 	trace: [ProducerTraceEventData];
 }
 
+type Events = {
+	transportclose: [];
+	score: [ProducerScore[]];
+	videoorientationchange: [ProducerVideoOrientation];
+	trace: [ProducerTraceEventData];
+}
+
 const logger = new Logger('Producer');
 
-export class Producer extends EnhancedEventEmitter<Pick<ObserverEvents, 'score' | 'videoorientationchange' | 'trace'>
-& { transportclose: [] }>
+export class Producer extends EnhancedEventEmitter<Events>
 {
 	// Internal data.
 	readonly #internal:
@@ -190,7 +196,7 @@ export class Producer extends EnhancedEventEmitter<Pick<ObserverEvents, 'score' 
 	#score: ProducerScore[] = [];
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<ObserverEvents>();
 
 	/**
 	 * @private
@@ -325,7 +331,7 @@ export class Producer extends EnhancedEventEmitter<Pick<ObserverEvents, 'score' 
 	 * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
 	 * @emits trace - (trace: ProducerTraceEventData)
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<ObserverEvents>
 	{
 		return this.#observer;
 	}

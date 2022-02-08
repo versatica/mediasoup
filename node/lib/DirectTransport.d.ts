@@ -33,10 +33,10 @@ export declare type DirectTransportStat = {
     availableIncomingBitrate?: number;
     maxIncomingBitrate?: number;
 };
-declare type ObserverEvents = {
+declare type Events = {
     rtcp: [Buffer];
 };
-export declare class DirectTransport extends Transport<ObserverEvents> {
+export declare class DirectTransport extends Transport<Events> {
     #private;
     /**
      * @private

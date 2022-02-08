@@ -121,9 +121,13 @@ declare type ObserverEvents = {
     videoorientationchange: [ProducerVideoOrientation];
     trace: [ProducerTraceEventData];
 };
-export declare class Producer extends EnhancedEventEmitter<Pick<ObserverEvents, 'score' | 'videoorientationchange' | 'trace'> & {
+declare type Events = {
     transportclose: [];
-}> {
+    score: [ProducerScore[]];
+    videoorientationchange: [ProducerVideoOrientation];
+    trace: [ProducerTraceEventData];
+};
+export declare class Producer extends EnhancedEventEmitter<Events> {
     #private;
     /**
      * @private
@@ -193,7 +197,7 @@ export declare class Producer extends EnhancedEventEmitter<Pick<ObserverEvents, 
      * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
      * @emits trace - (trace: ProducerTraceEventData)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<ObserverEvents>;
     /**
      * @private
      * Just for testing purposes.

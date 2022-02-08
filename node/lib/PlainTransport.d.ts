@@ -90,12 +90,12 @@ export declare type PlainTransportStat = {
  * DEPRECATED: Use PlainTransportStat.
  */
 export declare type PlainRtpTransportStat = PlainTransportStat;
-declare type ObserverEvents = {
+declare type Events = {
     tuple: [TransportTuple];
     rtcptuple: [TransportTuple];
     sctpstatechange: [SctpState];
 };
-export declare class PlainTransport extends Transport<ObserverEvents> {
+export declare class PlainTransport extends Transport<Events> {
     #private;
     /**
      * @private

@@ -116,7 +116,7 @@ export type PlainTransportStat =
  */
 export type PlainRtpTransportStat = PlainTransportStat;
 
-type ObserverEvents = {
+type Events = {
 	tuple: [TransportTuple];
 	rtcptuple: [TransportTuple];
 	sctpstatechange: [SctpState];
@@ -124,7 +124,7 @@ type ObserverEvents = {
 
 const logger = new Logger('PlainTransport');
 
-export class PlainTransport extends Transport<ObserverEvents>
+export class PlainTransport extends Transport<Events>
 {
 	// PlainTransport data.
 	readonly #data:

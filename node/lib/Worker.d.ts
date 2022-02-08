@@ -114,9 +114,10 @@ declare type ObserverEvents = {
     close: [];
     newrouter: [Router];
 };
-export declare class Worker extends EnhancedEventEmitter<{
+declare type Events = {
     died: [Error];
-}> {
+};
+export declare class Worker extends EnhancedEventEmitter<Events> {
     #private;
     /**
      * @private

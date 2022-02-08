@@ -25,7 +25,8 @@ type ObserverEvents = RtpObserverEvents & {
 
 type Events = {
 	routerclose: [];
-} & Pick<ObserverEvents, 'dominantspeaker'>
+	dominantspeaker: [{ producer: Producer }];
+}
 
 const logger = new Logger('ActiveSpeakerObserver');
 

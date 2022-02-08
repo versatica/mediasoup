@@ -48,7 +48,9 @@ type ObserverEvents = RtpObserverEvents & {
 
 type Events = {
 	routerclose: [];
-} & Pick<ObserverEvents, 'volumes' | 'silence'>
+	volumes: [AudioLevelObserverVolume[]];
+	silence: [];
+};
 
 const logger = new Logger('AudioLevelObserver');
 

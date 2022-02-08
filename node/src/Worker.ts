@@ -164,7 +164,9 @@ export type WorkerResourceUsage =
 	/* eslint-enable camelcase */
 }
 
-type ObserverEvents = { close: []; newrouter: [Router] }
+type ObserverEvents = { close: []; newrouter: [Router] };
+
+type Events = { died: [Error]};
 
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
@@ -178,7 +180,7 @@ const workerBin = process.env.MEDIASOUP_WORKER_BIN
 const logger = new Logger('Worker');
 const workerLogger = new Logger('Worker');
 
-export class Worker extends EnhancedEventEmitter<{ died: [Error]}>
+export class Worker extends EnhancedEventEmitter<Events>
 {
 	// mediasoup-worker child process.
 	#child?: ChildProcess;

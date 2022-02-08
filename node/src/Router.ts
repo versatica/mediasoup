@@ -110,9 +110,13 @@ type ObserverEvents = {
 	newrtpobserver: [RtpObserver];
 }
 
+type Events = { 
+	workerclose: [];
+}
+
 const logger = new Logger('Router');
 
-export class Router extends EnhancedEventEmitter<{ workerclose: [] }>
+export class Router extends EnhancedEventEmitter<Events>
 {
 	// Internal data.
 	readonly #internal:

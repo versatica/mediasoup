@@ -112,13 +112,13 @@ export declare type WebRtcTransportStat = {
     iceSelectedTuple?: TransportTuple;
     dtlsState: DtlsState;
 };
-declare type ObserverEvents = {
+declare type Events = {
     icestatechange: [IceState];
     iceselectedtuplechange: [TransportTuple];
     dtlsstatechange: [DtlsState];
     sctpstatechange: [SctpState];
 };
-export declare class WebRtcTransport extends Transport<ObserverEvents> {
+export declare class WebRtcTransport extends Transport<Events> {
     #private;
     /**
      * @private

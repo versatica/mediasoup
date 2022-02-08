@@ -52,9 +52,13 @@ type ObserverEvents = {
 	close: [];
 }
 
+type Events = {
+	transportclose: [];
+};
+
 const logger = new Logger('DataProducer');
 
-export class DataProducer extends EnhancedEventEmitter<{ transportclose: [] }>
+export class DataProducer extends EnhancedEventEmitter<Events>
 {
 	// Internal data.
 	readonly #internal:

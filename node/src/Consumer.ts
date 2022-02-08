@@ -163,12 +163,14 @@ type ObserverEvents = {
 	trace: [ConsumerTraceEventData];
 }
 
-type ConsumerEvents = Pick<ObserverEvents, 'score' | 'layerschange' | 'trace'>
-& { 
+type ConsumerEvents = { 
 	transportclose: [];
 	producerclose: [];
 	producerpause: [];
 	producerresume: [];
+	score: [ConsumerScore];
+	layerschange: [ConsumerLayers?];
+	trace: [ConsumerTraceEventData];
 	rtp: [Buffer];
 }
 

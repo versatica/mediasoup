@@ -85,9 +85,10 @@ declare type ObserverEvents = {
     newtransport: [Transport];
     newrtpobserver: [RtpObserver];
 };
-export declare class Router extends EnhancedEventEmitter<{
+declare type Events = {
     workerclose: [];
-}> {
+};
+export declare class Router extends EnhancedEventEmitter<Events> {
     #private;
     /**
      * @private

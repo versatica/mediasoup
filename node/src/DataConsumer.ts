@@ -57,8 +57,6 @@ export type DataConsumerStat =
  */
 export type DataConsumerType = 'sctp' | 'direct';
 
-const logger = new Logger('DataConsumer');
-
 type ObserverEvents = {
 	close: [];
 }
@@ -70,6 +68,8 @@ type Events = {
 	sctpsendbufferfull: [];
 	bufferedamountlow: [number];
 }
+
+const logger = new Logger('DataConsumer');
 
 export class DataConsumer extends EnhancedEventEmitter<Events>
 {

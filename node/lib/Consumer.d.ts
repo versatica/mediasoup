@@ -132,11 +132,14 @@ declare type ObserverEvents = {
     layerschange: [ConsumerLayers?];
     trace: [ConsumerTraceEventData];
 };
-declare type ConsumerEvents = Pick<ObserverEvents, 'score' | 'layerschange' | 'trace'> & {
+declare type ConsumerEvents = {
     transportclose: [];
     producerclose: [];
     producerpause: [];
     producerresume: [];
+    score: [ConsumerScore];
+    layerschange: [ConsumerLayers?];
+    trace: [ConsumerTraceEventData];
     rtp: [Buffer];
 };
 export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
