@@ -1,6 +1,6 @@
 import { Logger } from './Logger';
 import { UnsupportedError } from './errors';
-import { Transport, TransportTraceEventData } from './Transport';
+import { Transport, TransportTraceEventData, TransportEvents, TransportObserverEvents } from './Transport';
 
 export type DirectTransportOptions =
 {
@@ -41,13 +41,20 @@ export type DirectTransportStat =
 	maxIncomingBitrate?: number;
 }
 
-type Events = {
+export type DirectTransportEvents = TransportEvents &
+{
+	rtcp: [Buffer];
+}
+
+export type DirectTransportObserverEvents = TransportObserverEvents &
+{
 	rtcp: [Buffer];
 }
 
 const logger = new Logger('DirectTransport');
 
-export class DirectTransport extends Transport<Events>
+export class DirectTransport extends
+	Transport<DirectTransportEvents, DirectTransportObserverEvents>
 {
 	// DirectTransport data.
 	readonly #data:

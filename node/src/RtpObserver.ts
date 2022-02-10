@@ -4,16 +4,18 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Producer } from './Producer';
 
-export type RtpObserverEvents = {
+export type RtpObserverEvents =
+{
+	routerclose: [];
+}
+
+export type RtpObserverObserverEvents =
+{
 	close: [];
 	pause: [];
 	resume: [];
 	addproducer: [Producer];
 	removeproducer: [Producer];
-}
-
-type Events = {
-	routerclose: [];
 }
 
 const logger = new Logger('RtpObserver');
@@ -26,7 +28,8 @@ export type RtpObserverAddRemoveProducerOptions =
 	producerId: string;
 }
 
-export class RtpObserver<E extends Events = Events> extends EnhancedEventEmitter<E>
+export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
+	extends EnhancedEventEmitter<E>
 {
 	// Internal data.
 	protected readonly internal:
@@ -54,7 +57,7 @@ export class RtpObserver<E extends Events = Events> extends EnhancedEventEmitter
 	protected readonly getProducerById: (producerId: string) => Producer;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<RtpObserverEvents>();
+	readonly #observer = new EnhancedEventEmitter<RtpObserverObserverEvents>();
 
 	/**
 	 * @private
@@ -139,7 +142,7 @@ export class RtpObserver<E extends Events = Events> extends EnhancedEventEmitter
 	 * @emits addproducer - (producer: Producer)
 	 * @emits removeproducer - (producer: Producer)
 	 */
-	get observer(): EnhancedEventEmitter<RtpObserverEvents>
+	get observer(): EnhancedEventEmitter<RtpObserverObserverEvents>
 	{
 		return this.#observer;
 	}

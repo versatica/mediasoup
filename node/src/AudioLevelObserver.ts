@@ -1,5 +1,5 @@
 import { Logger } from './Logger';
-import { RtpObserver, RtpObserverEvents } from './RtpObserver';
+import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
 import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 
@@ -41,20 +41,21 @@ export interface AudioLevelObserverVolume
 	volume: number;
 }
 
-type ObserverEvents = RtpObserverEvents & {
+export type AudioLevelObserverEvents = RtpObserverEvents &
+{
 	volumes: [AudioLevelObserverVolume[]];
 	silence: [];
 }
 
-type Events = {
-	routerclose: [];
+export type AudioLevelObserverObserverEvents = RtpObserverObserverEvents & 
+{
 	volumes: [AudioLevelObserverVolume[]];
 	silence: [];
-};
+}
 
 const logger = new Logger('AudioLevelObserver');
 
-export class AudioLevelObserver extends RtpObserver<Events>
+export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
 {
 	/**
 	 * @private
@@ -79,7 +80,7 @@ export class AudioLevelObserver extends RtpObserver<Events>
 	 * @emits volumes - (volumes: AudioLevelObserverVolume[])
 	 * @emits silence
 	 */
-	get observer(): EnhancedEventEmitter<ObserverEvents>
+	get observer(): EnhancedEventEmitter<AudioLevelObserverObserverEvents>
 	{
 		return super.observer;
 	}

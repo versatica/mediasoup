@@ -5,6 +5,8 @@ import {
 	TransportProtocol,
 	TransportTuple,
 	TransportTraceEventData,
+	TransportEvents,
+	TransportObserverEvents,
 	SctpState
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
@@ -149,7 +151,16 @@ export type WebRtcTransportStat =
 	dtlsState: DtlsState;
 }
 
-type Events = {
+export type WebRtcTransportEvents = TransportEvents &
+{
+	icestatechange: [IceState];
+	iceselectedtuplechange: [TransportTuple];
+	dtlsstatechange: [DtlsState];
+	sctpstatechange: [SctpState];
+}
+
+export type WebRtcTransportObserverEvents = TransportObserverEvents &
+{
 	icestatechange: [IceState];
 	iceselectedtuplechange: [TransportTuple];
 	dtlsstatechange: [DtlsState];
@@ -158,7 +169,8 @@ type Events = {
 
 const logger = new Logger('WebRtcTransport');
 
-export class WebRtcTransport extends Transport<Events>
+export class WebRtcTransport extends
+	Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents>
 {
 	// WebRtcTransport data.
 	readonly #data:

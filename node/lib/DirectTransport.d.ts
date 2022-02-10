@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { Transport } from './Transport';
+import { Transport, TransportEvents, TransportObserverEvents } from './Transport';
 export declare type DirectTransportOptions = {
     /**
      * Maximum allowed size for direct messages sent from DataProducers.
@@ -33,10 +33,13 @@ export declare type DirectTransportStat = {
     availableIncomingBitrate?: number;
     maxIncomingBitrate?: number;
 };
-declare type Events = {
+export declare type DirectTransportEvents = TransportEvents & {
     rtcp: [Buffer];
 };
-export declare class DirectTransport extends Transport<Events> {
+export declare type DirectTransportObserverEvents = TransportObserverEvents & {
+    rtcp: [Buffer];
+};
+export declare class DirectTransport extends Transport<DirectTransportEvents, DirectTransportObserverEvents> {
     #private;
     /**
      * @private
@@ -92,5 +95,4 @@ export declare class DirectTransport extends Transport<Events> {
     sendRtcp(rtcpPacket: Buffer): void;
     private handleWorkerNotifications;
 }
-export {};
 //# sourceMappingURL=DirectTransport.d.ts.map

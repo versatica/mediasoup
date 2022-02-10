@@ -1,9 +1,10 @@
 import { Logger } from './Logger';
-import { RtpObserver, RtpObserverEvents } from './RtpObserver';
+import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
 import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 
-export interface ActiveSpeakerObserverOptions {
+export interface ActiveSpeakerObserverOptions 
+{
 	interval?: number;
 
 	/**
@@ -12,25 +13,27 @@ export interface ActiveSpeakerObserverOptions {
 	appData?: any;
 }
 
-export interface ActiveSpeakerObserverActivity {
+export interface ActiveSpeakerObserverActivity 
+{
 	/**
 	 * The producer instance.
 	 */
 	producer: Producer;
 }
 
-type ObserverEvents = RtpObserverEvents & {
+export type ActiveSpeakerObserverEvents = RtpObserverEvents &
+{
 	dominantspeaker: [{ producer: Producer }];
 }
 
-type Events = {
-	routerclose: [];
+export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents &
+{
 	dominantspeaker: [{ producer: Producer }];
 }
 
 const logger = new Logger('ActiveSpeakerObserver');
 
-export class ActiveSpeakerObserver extends RtpObserver<Events>
+export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEvents>
 {
 	/**
 	 * @private
@@ -45,7 +48,7 @@ export class ActiveSpeakerObserver extends RtpObserver<Events>
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<ObserverEvents>
+	get observer(): EnhancedEventEmitter<ActiveSpeakerObserverObserverEvents>
 	{
 		return super.observer;
 	}

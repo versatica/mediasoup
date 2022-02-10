@@ -3,14 +3,14 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Producer } from './Producer';
 export declare type RtpObserverEvents = {
+    routerclose: [];
+};
+export declare type RtpObserverObserverEvents = {
     close: [];
     pause: [];
     resume: [];
     addproducer: [Producer];
     removeproducer: [Producer];
-};
-declare type Events = {
-    routerclose: [];
 };
 export declare type RtpObserverAddRemoveProducerOptions = {
     /**
@@ -18,7 +18,7 @@ export declare type RtpObserverAddRemoveProducerOptions = {
      */
     producerId: string;
 };
-export declare class RtpObserver<E extends Events = Events> extends EnhancedEventEmitter<E> {
+export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents> extends EnhancedEventEmitter<E> {
     #private;
     protected readonly internal: {
         routerId: string;
@@ -69,7 +69,7 @@ export declare class RtpObserver<E extends Events = Events> extends EnhancedEven
      * @emits addproducer - (producer: Producer)
      * @emits removeproducer - (producer: Producer)
      */
-    get observer(): EnhancedEventEmitter<RtpObserverEvents>;
+    get observer(): EnhancedEventEmitter<RtpObserverObserverEvents>;
     /**
      * Close the RtpObserver.
      */
@@ -97,5 +97,4 @@ export declare class RtpObserver<E extends Events = Events> extends EnhancedEven
      */
     removeProducer({ producerId }: RtpObserverAddRemoveProducerOptions): Promise<void>;
 }
-export {};
 //# sourceMappingURL=RtpObserver.d.ts.map

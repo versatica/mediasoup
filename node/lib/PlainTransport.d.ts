@@ -1,4 +1,4 @@
-import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
+import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, SctpState } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 export declare type PlainTransportOptions = {
@@ -90,12 +90,17 @@ export declare type PlainTransportStat = {
  * DEPRECATED: Use PlainTransportStat.
  */
 export declare type PlainRtpTransportStat = PlainTransportStat;
-declare type Events = {
+export declare type PlainTransportEvents = TransportEvents & {
     tuple: [TransportTuple];
     rtcptuple: [TransportTuple];
     sctpstatechange: [SctpState];
 };
-export declare class PlainTransport extends Transport<Events> {
+export declare type PlainTransportObserverEvents = TransportObserverEvents & {
+    tuple: [TransportTuple];
+    rtcptuple: [TransportTuple];
+    sctpstatechange: [SctpState];
+};
+export declare class PlainTransport extends Transport<PlainTransportEvents, PlainTransportObserverEvents> {
     #private;
     /**
      * @private
@@ -177,5 +182,4 @@ export declare class PlainTransport extends Transport<Events> {
 export declare class PlainRtpTransport extends PlainTransport {
     constructor(params: any);
 }
-export {};
 //# sourceMappingURL=PlainTransport.d.ts.map

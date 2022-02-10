@@ -6,6 +6,8 @@ import {
 	TransportListenIp,
 	TransportTuple,
 	TransportTraceEventData,
+	TransportEvents,
+	TransportObserverEvents,
 	SctpState
 } from './Transport';
 import { Consumer } from './Consumer';
@@ -108,13 +110,20 @@ export type PipeConsumerOptions =
 	appData?: any;
 }
 
-type Events = {
+export type PipeTransportEvents = TransportEvents &
+{
+	sctpstatechange: [SctpState];
+}
+
+export type PipeTransportObserverEvents = TransportObserverEvents &
+{
 	sctpstatechange: [SctpState];
 }
 
 const logger = new Logger('PipeTransport');
 
-export class PipeTransport extends Transport<Events>
+export class PipeTransport
+	extends Transport<PipeTransportEvents, PipeTransportObserverEvents>
 {
 	// PipeTransport data.
 	readonly #data:

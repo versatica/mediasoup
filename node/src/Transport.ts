@@ -81,23 +81,27 @@ export interface TransportTraceEventData
 
 export type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 
-export type TransportBaseEvents = { routerclose: []; trace: [TransportTraceEventData] }
+export type TransportEvents = 
+{ 
+	routerclose: []; 
+	trace: [TransportTraceEventData];
+}
 
-type ObserverEvents = {
+export type TransportObserverEvents =
+{
 	close: [];
 	newproducer: [Producer];
 	newconsumer: [Consumer];
 	newdataproducer: [DataProducer];
 	newdataconsumer: [DataConsumer];
 	trace: [TransportTraceEventData];
-
 }
 
 const logger = new Logger('Transport');
 
-export class Transport<ExtraEvents extends Record<string, any[]> 
-& Partial<TransportBaseEvents> = TransportBaseEvents>
-	extends EnhancedEventEmitter<ExtraEvents & TransportBaseEvents>
+export class Transport<Events extends TransportEvents = TransportEvents,
+	ObserverEvents extends TransportObserverEvents = TransportObserverEvents>
+	extends EnhancedEventEmitter<Events>
 {
 	// Internal data.
 	protected readonly internal:
@@ -249,7 +253,7 @@ export class Transport<ExtraEvents extends Record<string, any[]>
 	 * @emits newdataproducer - (dataProducer: DataProducer)
 	 * @emits newdataconsumer - (dataProducer: DataProducer)
 	 */
-	get observer(): EnhancedEventEmitter<ObserverEvents & ExtraEvents>
+	get observer(): EnhancedEventEmitter<ObserverEvents>
 	{
 		return this.#observer;
 	}

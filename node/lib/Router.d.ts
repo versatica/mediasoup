@@ -80,15 +80,15 @@ export declare type PipeToRouterResult = {
 declare type PipeTransportPair = {
     [key: string]: PipeTransport;
 };
-declare type ObserverEvents = {
+export declare type RouterEvents = {
+    workerclose: [];
+};
+export declare type RouterObserverEvents = {
     close: [];
     newtransport: [Transport];
     newrtpobserver: [RtpObserver];
 };
-declare type Events = {
-    workerclose: [];
-};
-export declare class Router extends EnhancedEventEmitter<Events> {
+export declare class Router extends EnhancedEventEmitter<RouterEvents> {
     #private;
     /**
      * @private
@@ -129,7 +129,7 @@ export declare class Router extends EnhancedEventEmitter<Events> {
      * @emits newtransport - (transport: Transport)
      * @emits newrtpobserver - (rtpObserver: RtpObserver)
      */
-    get observer(): EnhancedEventEmitter<ObserverEvents>;
+    get observer(): EnhancedEventEmitter<RouterObserverEvents>;
     /**
      * Close the Router.
      */

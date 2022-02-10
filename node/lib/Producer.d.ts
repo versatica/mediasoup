@@ -113,7 +113,13 @@ export declare type ProducerStat = {
  * Producer type.
  */
 export declare type ProducerType = 'simple' | 'simulcast' | 'svc';
-declare type ObserverEvents = {
+export declare type ProducerEvents = {
+    transportclose: [];
+    score: [ProducerScore[]];
+    videoorientationchange: [ProducerVideoOrientation];
+    trace: [ProducerTraceEventData];
+};
+export declare type ProducerObserverEvents = {
     close: [];
     pause: [];
     resume: [];
@@ -121,13 +127,7 @@ declare type ObserverEvents = {
     videoorientationchange: [ProducerVideoOrientation];
     trace: [ProducerTraceEventData];
 };
-declare type Events = {
-    transportclose: [];
-    score: [ProducerScore[]];
-    videoorientationchange: [ProducerVideoOrientation];
-    trace: [ProducerTraceEventData];
-};
-export declare class Producer extends EnhancedEventEmitter<Events> {
+export declare class Producer extends EnhancedEventEmitter<ProducerEvents> {
     #private;
     /**
      * @private
@@ -197,7 +197,7 @@ export declare class Producer extends EnhancedEventEmitter<Events> {
      * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
      * @emits trace - (trace: ProducerTraceEventData)
      */
-    get observer(): EnhancedEventEmitter<ObserverEvents>;
+    get observer(): EnhancedEventEmitter<ProducerObserverEvents>;
     /**
      * @private
      * Just for testing purposes.
@@ -239,5 +239,4 @@ export declare class Producer extends EnhancedEventEmitter<Events> {
     send(rtpPacket: Buffer): void;
     private handleWorkerNotifications;
 }
-export {};
 //# sourceMappingURL=Producer.d.ts.map

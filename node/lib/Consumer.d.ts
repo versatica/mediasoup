@@ -124,15 +124,7 @@ export declare type ConsumerStat = {
  * Consumer type.
  */
 export declare type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe';
-declare type ObserverEvents = {
-    close: [];
-    pause: [];
-    resume: [];
-    score: [ConsumerScore];
-    layerschange: [ConsumerLayers?];
-    trace: [ConsumerTraceEventData];
-};
-declare type ConsumerEvents = {
+export declare type ConsumerEvents = {
     transportclose: [];
     producerclose: [];
     producerpause: [];
@@ -141,6 +133,14 @@ declare type ConsumerEvents = {
     layerschange: [ConsumerLayers?];
     trace: [ConsumerTraceEventData];
     rtp: [Buffer];
+};
+export declare type ConsumerObserverEvents = {
+    close: [];
+    pause: [];
+    resume: [];
+    score: [ConsumerScore];
+    layerschange: [ConsumerLayers?];
+    trace: [ConsumerTraceEventData];
 };
 export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
     #private;
@@ -234,7 +234,7 @@ export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
      * @emits layerschange - (layers: ConsumerLayers | undefined)
      * @emits trace - (trace: ConsumerTraceEventData)
      */
-    get observer(): EnhancedEventEmitter<ObserverEvents>;
+    get observer(): EnhancedEventEmitter<ConsumerObserverEvents>;
     /**
      * @private
      * Just for testing purposes.
@@ -288,5 +288,4 @@ export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
     enableTraceEvent(types?: ConsumerTraceEventType[]): Promise<void>;
     private handleWorkerNotifications;
 }
-export {};
 //# sourceMappingURL=Consumer.d.ts.map

@@ -1,4 +1,4 @@
-import { RtpObserver, RtpObserverEvents } from './RtpObserver';
+import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
 import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 export interface ActiveSpeakerObserverOptions {
@@ -14,18 +14,17 @@ export interface ActiveSpeakerObserverActivity {
      */
     producer: Producer;
 }
-declare type ObserverEvents = RtpObserverEvents & {
+export declare type ActiveSpeakerObserverEvents = RtpObserverEvents & {
     dominantspeaker: [{
         producer: Producer;
     }];
 };
-declare type Events = {
-    routerclose: [];
+export declare type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents & {
     dominantspeaker: [{
         producer: Producer;
     }];
 };
-export declare class ActiveSpeakerObserver extends RtpObserver<Events> {
+export declare class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEvents> {
     /**
      * @private
      */
@@ -33,8 +32,7 @@ export declare class ActiveSpeakerObserver extends RtpObserver<Events> {
     /**
      * Observer.
      */
-    get observer(): EnhancedEventEmitter<ObserverEvents>;
+    get observer(): EnhancedEventEmitter<ActiveSpeakerObserverObserverEvents>;
     private handleWorkerNotifications;
 }
-export {};
 //# sourceMappingURL=ActiveSpeakerObserver.d.ts.map

@@ -4,6 +4,8 @@ import {
 	TransportListenIp,
 	TransportTuple,
 	TransportTraceEventData,
+	TransportEvents,
+	TransportObserverEvents,
 	SctpState
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
@@ -116,15 +118,24 @@ export type PlainTransportStat =
  */
 export type PlainRtpTransportStat = PlainTransportStat;
 
-type Events = {
+export type PlainTransportEvents = TransportEvents &
+{
 	tuple: [TransportTuple];
 	rtcptuple: [TransportTuple];
 	sctpstatechange: [SctpState];
 }
 
+export type PlainTransportObserverEvents = TransportObserverEvents &
+{
+	tuple: [TransportTuple];
+	rtcptuple: [TransportTuple];
+	sctpstatechange: [SctpState];	
+}
+
 const logger = new Logger('PlainTransport');
 
-export class PlainTransport extends Transport<Events>
+export class PlainTransport extends
+	Transport<PlainTransportEvents, PlainTransportObserverEvents>
 {
 	// PlainTransport data.
 	readonly #data:

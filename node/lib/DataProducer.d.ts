@@ -38,13 +38,13 @@ export declare type DataProducerStat = {
  * DataProducer type.
  */
 export declare type DataProducerType = 'sctp' | 'direct';
-declare type ObserverEvents = {
-    close: [];
-};
-declare type Events = {
+export declare type DataProducerEvents = {
     transportclose: [];
 };
-export declare class DataProducer extends EnhancedEventEmitter<Events> {
+export declare type DataProducerObserverEvents = {
+    close: [];
+};
+export declare class DataProducer extends EnhancedEventEmitter<DataProducerEvents> {
     #private;
     /**
      * @private
@@ -95,7 +95,7 @@ export declare class DataProducer extends EnhancedEventEmitter<Events> {
      *
      * @emits close
      */
-    get observer(): EnhancedEventEmitter<ObserverEvents>;
+    get observer(): EnhancedEventEmitter<DataProducerObserverEvents>;
     /**
      * Close the DataProducer.
      */
@@ -120,5 +120,4 @@ export declare class DataProducer extends EnhancedEventEmitter<Events> {
     send(message: string | Buffer, ppid?: number): void;
     private handleWorkerNotifications;
 }
-export {};
 //# sourceMappingURL=DataProducer.d.ts.map
