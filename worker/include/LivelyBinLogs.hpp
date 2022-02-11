@@ -64,33 +64,24 @@ namespace Lively
     std::string bin_log_file_path;                               // binary log full file name: combo of call id, timestamp and "version"
     std::FILE*  fd {0};                                          // the file into which samples are written once the record is full
     uint64_t    sampling_interval {CALL_STATS_BIN_LOG_SAMPLING}; // frequency of collecting samples
-    
+  
+  private:
+    bool initialized {false};
+    std::string bin_log_name_template; // log name template, use to rotate log, keep same name except for timestamp
+    uint64_t log_start_ts {0};
+
   public:
     StatsBinLog() = default;
 
-    // TBD: review if old log should be reopened when broadcast is paused
-    // TODO: add timestamp to log name
-    void InitLog(std::string path)
-    {
-      this->bin_log_file_path.assign(path);
-      this->sampling_interval = CALL_STATS_BIN_LOG_SAMPLING;
-      initialized = true;
-    }
-
-    void DeinitLog(CallStatsRecordCtx* recordCtx)
-    {
-      if (this->fd)
-      {
-        this->LogClose(recordCtx);
-      }
-    }
-
-    int OnLogRotateSignal(CallStatsRecordCtx* ctx, bool signal_set);
+    int OnLogWrite(CallStatsRecordCtx* ctx);
     int LogOpen();
     int LogClose(CallStatsRecordCtx* recordCtx);
 
+    void InitLog(std::string id1, std::string id2);
+    void DeinitLog(CallStatsRecordCtx* recordCtx);
+
   private:
-    bool initialized {false};
+    void UpdateLogName();
   };
 };
 

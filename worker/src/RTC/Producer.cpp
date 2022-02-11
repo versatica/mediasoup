@@ -56,12 +56,13 @@ namespace RTC
 		this->appData = lively.ToStr();
 
 		// Bin log
-		std::string path = "/var/log/sfu/" + lively.callId + "_" + lively.id + ".bin.log";
-		this->binLog.InitLog(path);
+		this->binLog.InitLog(lively.callId, lively.id);
+
 		MS_DEBUG_TAG_LIVELYAPP(
 			rtp,
 			this->appData,
-			"Producer bin log %s",
+			"Producer %s bin.log %s",
+			lively.id.c_str(),
 			this->binLog.bin_log_file_path.c_str());
 
 		// This may throw.
@@ -482,7 +483,7 @@ namespace RTC
 
 		if (this->rtpStreamByEncodingIdx.size() != 1)
 		{
-			MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "found %zu streams in %s, skipping bin stats", this->id.c_str(), this->rtpStreamByEncodingIdx.size());
+			MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "found %zu streams in %s, skipping bin stats", this->rtpStreamByEncodingIdx.size(), this->id.c_str());
 			return;
 		}
 
@@ -497,9 +498,8 @@ namespace RTC
 
 			ctx->log_record.mime = static_cast<uint8_t>(rtpStream->GetMimeType().type);
 			ctx->AddStatsRecord(&binLog, rtpStream);
-			MS_DEBUG_TAG_LIVELYAPP(
+			MS_DEBUG_TAG(
 				rtp,
-				this->appData,
 				"producer filled=%d:\t%" PRIu16 
 				"\t%" PRIu16 
 				"\t%" PRIu16 

@@ -60,12 +60,13 @@ namespace RTC
 		lively.id = id;
 		this->appData = lively.ToStr();
 		// Bin log
-		std::string path = "/var/log/sfu/" + lively.callId + "_" + lively.id + ".bin.log";
-		this->binLog.InitLog(path);
+		this->binLog.InitLog(lively.callId, lively.id);
+
 		MS_DEBUG_TAG_LIVELYAPP(
 			rtp,
 			this->appData,
-			"Consumer bin log %s",
+			"Consumer %s bin.log %s",
+			lively.id.c_str(),
 			this->binLog.bin_log_file_path.c_str());
 
 		auto jsonRtpParametersIt = data.find("rtpParameters");

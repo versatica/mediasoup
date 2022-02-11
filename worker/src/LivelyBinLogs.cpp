@@ -21,10 +21,13 @@ CallStatsRecordCtx::CallStatsRecordCtx(std::string callId, std::string objId, ui
 
 void CallStatsRecordCtx::WriteIfFull(StatsBinLog* log)
 {
-  if (nullptr == log || log_record.filled < CALL_STATS_BIN_LOG_RECORDS_NUM)
+  if (log_record.filled < CALL_STATS_BIN_LOG_RECORDS_NUM)
     return;
 
-  log->OnLogRotateSignal(this, false);
+  if (nullptr != log)
+  {
+    log->OnLogWrite(this);
+  }
 
   // Remember the last sample and wipe the data off
   last_sample = log_record.samples[log_record.filled - 1];
@@ -86,19 +89,17 @@ int StatsBinLog::LogOpen()
   {
     MS_WARN_TAG(
       rtp,
-      "bin log failed to open %s", this->bin_log_file_path.c_str()
+      "bin log failed to open '%s'", this->bin_log_file_path.c_str()
     );
     ret = errno;
     initialized = false;
   }
   else
   {
-    MS_WARN_TAG(
+    MS_DEBUG_TAG(
       rtp,
-      "bin log opened  %s", this->bin_log_file_path.c_str()
+      "bin log opened '%s'", this->bin_log_file_path.c_str()
     );
-
-    //this->record_start_ts = DepLibUV::GetTimeMs();
   }
 
   return ret;
@@ -122,12 +123,13 @@ int StatsBinLog::LogClose(CallStatsRecordCtx* ctx)
       //if (rc <= 0) // TODO: different way of checking for errors, see std::ferror
       //  ret = errno;
     }
+    std::fflush(this->fd);
     std::fclose(this->fd);
     this->fd = 0;
     
-    MS_WARN_TAG(
+    MS_DEBUG_TAG(
       rtp,
-      "bin log closed  %s", this->bin_log_file_path.c_str()
+      "bin log closed '%s'", this->bin_log_file_path.c_str()
     );
   }
 
@@ -143,15 +145,27 @@ int StatsBinLog::LogClose(CallStatsRecordCtx* ctx)
 }
 
 
-int StatsBinLog::OnLogRotateSignal(CallStatsRecordCtx* ctx, bool signal_set)
+int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
 {
-  int ret = 0;
+  #define DAY_IN_MS (uint64_t)86400000
 
-  // TBD: how/when to rotate bin log
+  int ret = 0;
+  bool signal_set = false;
+
+  uint64_t now = DepLibUV::GetTimeMs();
+
+  if (now - this->log_start_ts > DAY_IN_MS)
+  {
+    this->log_start_ts = now;
+    UpdateLogName();    
+    signal_set = true;
+  }
+
   if(signal_set || !this->fd)
   {
     if (this->fd)
       std::fclose(this->fd);
+
     if (this->initialized)
     {
       LogOpen();
@@ -182,12 +196,45 @@ int StatsBinLog::OnLogRotateSignal(CallStatsRecordCtx* ctx, bool signal_set)
       std::fclose(this->fd);
       this->fd = 0;
     }
-
-    //rc = std::fputc('\n', this->fd); // TODO: for debugging
-    //if (rc <= 0) // TODO: see about different way of checking for errors, like std::ferror
-    //  ret = errno;
+    std::fflush(this->fd);
   }
-
   return ret;
+}
+
+
+void StatsBinLog::InitLog(std::string id1, std::string id2)
+{
+  char tmp[100];
+  memset(tmp, '\0', 100);
+  sprintf(tmp, "/var/log/sfu/%s_%s_%%u.bin.log", id1.c_str(), id2.c_str());
+  this->bin_log_name_template.assign(tmp);
+  
+  //this->bin_log_name_template.assign("/var/log/sfu/");
+  //this->bin_log_name_template += id1 + id2;
+
+  uint64_t now = DepLibUV::GetTimeMs();
+  this->log_start_ts = now;
+  UpdateLogName();
+  
+  this->sampling_interval = CALL_STATS_BIN_LOG_SAMPLING;
+  this->initialized = true;
+}
+
+void StatsBinLog::DeinitLog(CallStatsRecordCtx* recordCtx)
+{
+  if (this->fd)
+  {
+    LogClose(recordCtx);
+  }
+  this->initialized = false; // TBD: wipe off log name template?
+}
+
+
+void StatsBinLog::UpdateLogName()
+{
+  char buff[100];
+  memset(buff, '\0', 100);
+  sprintf(buff, this->bin_log_name_template.c_str(), this->log_start_ts);
+  this->bin_log_file_path.assign(buff); 
 }
 }

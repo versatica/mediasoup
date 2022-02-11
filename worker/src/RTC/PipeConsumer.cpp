@@ -102,9 +102,8 @@ namespace RTC
 			ctx->log_record.mime = static_cast<uint8_t>(rtpStream->GetMimeType().type);
 			ctx->AddStatsRecord(&binLog, rtpStream);
 
-			MS_DEBUG_TAG_LIVELYAPP(
+			MS_DEBUG_TAG(
 				rtp,
-				this->appData,
 				"pipeConsumer filled=%d:\t%" PRIu16 
 				"\t%" PRIu16 
 				"\t%" PRIu16 
@@ -130,7 +129,7 @@ namespace RTC
 				ctx->last_sample.bytes_count
 			);
 		}
-	}	
+	}
 
 	void PipeConsumer::FillJsonScore(json& jsonObject) const
 	{
