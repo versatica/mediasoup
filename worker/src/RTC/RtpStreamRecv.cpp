@@ -523,7 +523,7 @@ namespace RTC
 		ntp.fractions = report->GetNtpFrac();
 
 		this->lastSenderReportNtpMs = Utils::Time::Ntp2TimeMs(ntp);
-		this->lastSenderReporTs     = report->GetRtpTs();
+		this->lastSenderReportTs    = report->GetRtpTs();
 
 		// Update the score with the current RR.
 		UpdateScore();
