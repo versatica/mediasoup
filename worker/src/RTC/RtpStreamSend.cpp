@@ -20,8 +20,8 @@ namespace RTC
 	// Don't retransmit packets older than this (ms).
 	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
-	static constexpr size_t SeqRange{ 65536 };
 	static constexpr uint16_t MaxSeq = std::numeric_limits<uint16_t>::max();
+	static constexpr uint32_t MaxTs  = std::numeric_limits<uint32_t>::max();
 
 	static void resetStorageItem(RTC::RtpStreamSend::StorageItem* storageItem)
 	{
@@ -38,7 +38,7 @@ namespace RTC
 
 	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::Get(uint16_t seq)
 	{
-		auto idx{ static_cast<uint16_t>((seq - this->startSeq) % MaxSeq) };
+		uint16_t idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
 		if (this->buffer.empty() || idx >= static_cast<uint16_t>(this->buffer.size()))
 			return nullptr;
@@ -56,10 +56,11 @@ namespace RTC
 			return true;
 		}
 
-		auto idx{ static_cast<uint16_t>((seq - this->startSeq) % MaxSeq) };
+		uint16_t idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
 		if (idx < static_cast<uint16_t>(this->buffer.size()))
 		{
+			MS_ASSERT(this->buffer[idx] == nullptr, "Must insert into empty slot");
 			this->buffer[idx] = storageItem;
 
 			return true;
@@ -67,11 +68,10 @@ namespace RTC
 
 		// Calculate how many elements would it be necessary to add when pushing new item to the back of
 		// the deque.
-		auto addToBack{ static_cast<uint16_t>((seq - (this->startSeq + this->buffer.size() - 1))) %
-			              MaxSeq };
+		uint16_t addToBack{ static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1)) };
 		// Calculate how many elements would it be necessary to add when pushing new item to the front
 		// of the deque.
-		auto addToFront{ static_cast<uint16_t>((this->startSeq - seq) % MaxSeq) };
+		uint16_t addToFront{ static_cast<uint16_t>(this->startSeq - seq) };
 
 		// Select the side of deque where fewer elements need to be added, while preferring the end.
 		if (addToBack <= addToFront)
@@ -100,7 +100,7 @@ namespace RTC
 		if (this->buffer.empty())
 			return false;
 
-		auto idx{ static_cast<uint16_t>((seq - this->startSeq) % MaxSeq) };
+		uint16_t idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
 		this->buffer[idx] = nullptr;
 
@@ -440,7 +440,7 @@ namespace RTC
 
 				// Go through all buffer items starting with `this->bufferStartSeq` and free all storage
 				// items that contain packets older than `MaxRetransmissionDelay`.
-				for (uint32_t i{ 0 }; i < SeqRange; ++i)
+				for (uint16_t i{ 0 }; i <= MaxSeq; ++i)
 				{
 					auto* checkedStorageItem = this->storageItemBuffer.Get(this->bufferStartSeq);
 
@@ -452,11 +452,19 @@ namespace RTC
 							break;
 
 						uint32_t checkedPacketTs{ checkedStorageItem->originalPacket->GetTimestamp() };
-						uint32_t diffMs{ (packetTs - checkedPacketTs) * 1000 / clockRate };
+						uint32_t diffMs{ packetTs - checkedPacketTs };
+
+						// Account for wrapping around.
+						if (diffMs > MaxTs / 2)
+						{
+							diffMs = MaxTs - diffMs;
+						}
 
 						// Cleanup is finished if we found an item with recent enough packet, but also account
 						// for out-of-order packets.
-						if (diffMs < this->retransmissionBufferSize || packetTs < checkedPacketTs)
+						if (
+						  static_cast<uint32_t>(diffMs * 1000 / clockRate) < this->retransmissionBufferSize ||
+						  RTC::SeqManager<uint32_t>::IsSeqLowerThan(packetTs, checkedPacketTs))
 							break;
 
 						// Reset (free RTP packet) the old storage item.
