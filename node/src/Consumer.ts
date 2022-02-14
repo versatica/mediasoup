@@ -576,6 +576,21 @@ export class Consumer extends EnhancedEventEmitter
 			'consumer.enableTraceEvent', this.#internal, reqData);
 	}
 
+	/**
+	 * Replaces the producer associated with this consumer.
+	 */
+	async changeProducer(producerId: string): Promise<any>
+	{
+		logger.debug('changeProducer()');
+
+		const data =
+			await this.#channel.request('consumer.changeProducer', this.#internal, { producerId });
+
+		this.#internal.producerId = producerId;
+
+		return data;
+	}
+
 	private handleWorkerNotifications(): void
 	{
 		this.#channel.on(this.#internal.consumerId, (event: string, data?: any) =>

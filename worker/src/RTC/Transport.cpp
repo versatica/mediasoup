@@ -1385,6 +1385,7 @@ namespace RTC
 			case Channel::ChannelRequest::MethodId::CONSUMER_SET_PRIORITY:
 			case Channel::ChannelRequest::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			case Channel::ChannelRequest::MethodId::CONSUMER_ENABLE_TRACE_EVENT:
+			case Channel::ChannelRequest::MethodId::CONSUMER_CHANGE_PRODUCER:
 			{
 				// This may throw.
 				RTC::Consumer* consumer = GetConsumerFromInternal(request->internal);
@@ -2737,6 +2738,13 @@ namespace RTC
 
 		// This may be the latest active Consumer with BWE. If so we have to stop probation.
 		ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
+	}
+
+	inline void Transport::OnConsumerChangeProducer(RTC::Consumer* consumer, std::string& producerId)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportConsumerChangeProducer(this, consumer, producerId);
 	}
 
 	inline void Transport::OnConsumerProducerClosed(RTC::Consumer* consumer)

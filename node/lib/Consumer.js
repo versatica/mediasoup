@@ -276,6 +276,15 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const reqData = { types };
         await this.#channel.request('consumer.enableTraceEvent', this.#internal, reqData);
     }
+    /**
+     * Replaces the producer associated with this consumer.
+     */
+    async changeProducer(producerId) {
+        logger.debug('changeProducer()');
+        const data = await this.#channel.request('consumer.changeProducer', this.#internal, { producerId });
+        this.#internal.producerId = producerId;
+        return data;
+    }
     handleWorkerNotifications() {
         this.#channel.on(this.#internal.consumerId, (event, data) => {
             switch (event) {

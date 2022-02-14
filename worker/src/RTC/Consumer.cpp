@@ -267,14 +267,7 @@ namespace RTC
 					return;
 				}
 
-				bool wasActive = IsActive();
-
-				this->paused = true;
-
-				MS_DEBUG_DEV("Consumer paused [consumerId:%s]", this->id.c_str());
-
-				if (wasActive)
-					UserOnPaused();
+				this->Pause();
 
 				request->Accept();
 
@@ -290,12 +283,7 @@ namespace RTC
 					return;
 				}
 
-				this->paused = false;
-
-				MS_DEBUG_DEV("Consumer resumed [consumerId:%s]", this->id.c_str());
-
-				if (IsActive())
-					UserOnResumed();
+				this->Resume();
 
 				request->Accept();
 
@@ -362,11 +350,79 @@ namespace RTC
 				break;
 			}
 
+			case Channel::ChannelRequest::MethodId::CONSUMER_CHANGE_PRODUCER:
+			{
+				auto jsonProducerIdIt = request->data.find("producerId");
+
+				if (jsonProducerIdIt == request->data.end() || !jsonProducerIdIt->is_string())
+					MS_THROW_ERROR("missing data.producerId");
+
+				std::string producerId = jsonProducerIdIt->get<std::string>();
+
+				// Notify the listener.
+				// This may throw if no Producer is found.
+				try
+				{
+					this->listener->OnConsumerChangeProducer(this, producerId);
+				}
+				catch (const MediaSoupError& error)
+				{
+					throw;
+				}
+
+				MS_DEBUG_DEV(
+				  "Consumer Producer changed [consumerId:%s producerId:%s]",
+				  this->id.c_str(),
+				  producerId.c_str());
+
+				json data = json::object();
+
+				request->Accept();
+
+				break;
+			}
+
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
 			}
 		}
+	}
+
+	void Consumer::Pause()
+	{
+		MS_TRACE();
+
+		if (this->paused)
+		{
+			return;
+		}
+
+		bool wasActive = IsActive();
+
+		this->paused = true;
+
+		MS_DEBUG_DEV("Consumer paused [consumerId:%s]", this->id.c_str());
+
+		if (wasActive)
+			UserOnPaused();
+	}
+
+	void Consumer::Resume()
+	{
+		MS_TRACE();
+
+		if (!this->paused)
+		{
+			return;
+		}
+
+		this->paused = false;
+
+		MS_DEBUG_DEV("Consumer resumed [consumerId:%s]", this->id.c_str());
+
+		if (IsActive())
+			UserOnResumed();
 	}
 
 	void Consumer::TransportConnected()
