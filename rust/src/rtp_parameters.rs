@@ -33,7 +33,6 @@ impl RtpCodecParametersParameters {
     }
 
     /// Iterate over parameters in collection.
-    #[must_use]
     pub fn iter(
         &self,
     ) -> std::collections::btree_map::Iter<'_, Cow<'static, str>, RtpCodecParametersParametersValue>
@@ -54,7 +53,7 @@ where
     K: Into<Cow<'static, str>>,
 {
     fn from(array: [(K, RtpCodecParametersParametersValue); N]) -> Self {
-        std::array::IntoIter::new(array).collect()
+        IntoIterator::into_iter(array).collect()
     }
 }
 
@@ -433,6 +432,9 @@ pub enum RtpHeaderExtensionUri {
     /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")]
     AbsSendTime,
+    /// http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time
+    #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time")]
+    AbsCaptureTime,
     #[doc(hidden)]
     #[serde(other, rename = "unsupported")]
     Unsupported,
@@ -460,6 +462,9 @@ impl RtpHeaderExtensionUri {
             }
             RtpHeaderExtensionUri::AbsSendTime => {
                 "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time"
+            }
+            RtpHeaderExtensionUri::AbsCaptureTime => {
+                "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time"
             }
             RtpHeaderExtensionUri::Unsupported => "unsupported",
         }

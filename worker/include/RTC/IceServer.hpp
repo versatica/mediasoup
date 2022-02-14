@@ -61,15 +61,15 @@ namespace RTC
 		{
 			return this->selectedTuple;
 		}
-		void SetUsernameFragment(const std::string& usernameFragment)
+		void RestartIce(const std::string& usernameFragment, const std::string& password)
 		{
 			this->oldUsernameFragment = this->usernameFragment;
 			this->usernameFragment    = usernameFragment;
-		}
-		void SetPassword(const std::string& password)
-		{
+
 			this->oldPassword = this->password;
 			this->password    = password;
+
+			this->remoteNomination = 0u;
 		}
 		bool IsValidTuple(const RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);
@@ -78,7 +78,8 @@ namespace RTC
 		void ForceSelectedTuple(const RTC::TransportTuple* tuple);
 
 	private:
-		void HandleTuple(RTC::TransportTuple* tuple, bool hasUseCandidate);
+		void HandleTuple(
+		  RTC::TransportTuple* tuple, bool hasUseCandidate, bool hasNomination, uint32_t nomination);
 		/**
 		 * Store the given tuple and return its stored address.
 		 */
@@ -101,6 +102,7 @@ namespace RTC
 		std::string password;
 		std::string oldUsernameFragment;
 		std::string oldPassword;
+		uint32_t remoteNomination{ 0u };
 		IceState state{ IceState::NEW };
 		std::list<RTC::TransportTuple> tuples;
 		RTC::TransportTuple* selectedTuple{ nullptr };
