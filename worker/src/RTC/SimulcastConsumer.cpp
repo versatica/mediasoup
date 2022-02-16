@@ -222,26 +222,12 @@ namespace RTC
 			"\t%" PRIu16 
 			"\t%" PRIu16 
 			"\t%" PRIu16
-			"\t%" PRIu16
-			"\t%" PRIu16
-			"\t%" PRIu16
-			"\t%" PRIu16
-			"\t%" PRIu16
-			"\t%" PRIu32
 			"\t%" PRIu32,
 			ctx->log_record.filled,
-			ctx->last_sample.epoch_len,
-			ctx->last_sample.packets_count,
-			ctx->last_sample.packets_lost,
-			ctx->last_sample.packets_discarded,
-			ctx->last_sample.packets_retransmitted,
-			ctx->last_sample.packets_repaired,
-			ctx->last_sample.nack_count,
-			ctx->last_sample.kf_count,
-			ctx->last_sample.rtt,
-			ctx->last_sample.max_pts,
-			ctx->last_sample.bytes_count
-		);
+			ctx->log_record.samples[ctx->log_record.filled-1].epoch_len,
+			ctx->log_record.samples[ctx->log_record.filled-1].packets_count,
+			ctx->log_record.samples[ctx->log_record.filled-1].rtt,
+			ctx->log_record.samples[ctx->log_record.filled-1].max_pts);
 	}
 
 	void SimulcastConsumer::HandleRequest(Channel::ChannelRequest* request)

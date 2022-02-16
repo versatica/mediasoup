@@ -15,13 +15,13 @@ CallStatsRecordCtx::CallStatsRecordCtx(std::string callId, std::string objId, ui
   std::strncpy(log_record.object_id, objId.c_str(), 36);
   log_record.source = objType;
   log_record.start_tm = DepLibUV::GetTimeMs();
-  log_record.filled = 0;
+  log_record.filled = UINT16_UNSET;
 }
 
 
 void CallStatsRecordCtx::WriteIfFull(StatsBinLog* log)
 {
-  if (log_record.filled < CALL_STATS_BIN_LOG_RECORDS_NUM)
+  if (log_record.filled == UINT16_UNSET || log_record.filled < CALL_STATS_BIN_LOG_RECORDS_NUM)
     return;
 
   if (nullptr != log)
@@ -29,10 +29,9 @@ void CallStatsRecordCtx::WriteIfFull(StatsBinLog* log)
     log->OnLogWrite(this);
   }
 
-  // Remember the last sample and wipe the data off
-  last_sample = log_record.samples[log_record.filled - 1];
+  // Wipe the data off
   std::memset(log_record.samples, 0, sizeof(log_record.samples));
-  log_record.filled = 0;
+  log_record.filled = UINT16_UNSET;
 }
 
 
@@ -41,42 +40,36 @@ void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream
   WriteIfFull(log);
 
   uint64_t nowMs = DepLibUV::GetTimeMs();
-  if (0 == log_record.filled)
+  if (UINT16_UNSET == log_record.filled)
   {
     log_record.start_tm = nowMs;
+    stream->FillStats(last.packetsCount, last.bytesCount, last.packetsLost, last.packetsDiscarded,
+                      last.packetsRetransmitted, last.packetsRepaired, last.nackCount,
+                      last.nackPacketCount, last.kfCount, last.rtt, last.maxPacketTs);
+    log_record.filled = 0; // now start reading data
   }
+  else
+  {
+    stream->FillStats(curr.packetsCount, curr.bytesCount, curr.packetsLost, curr.packetsDiscarded,
+                      curr.packetsRetransmitted, curr.packetsRepaired, curr.nackCount,
+                      curr.nackPacketCount, curr.kfCount, curr.rtt, curr.maxPacketTs);
 
-  size_t packetsCount;
-  size_t bytesCount;
-  uint32_t packetsLost;
-  size_t packetsDiscarded;
-  size_t packetsRetransmitted;
-  size_t packetsRepaired;
-  size_t nackCount;
-  size_t nackPacketCount;
-  size_t kfCount;
-  float rtt;
-  uint32_t maxPacketTs;
-
-  stream->FillStats(packetsCount, bytesCount,  packetsLost, packetsDiscarded,
-										packetsRetransmitted, packetsRepaired, nackCount,
-										nackPacketCount, kfCount, rtt, maxPacketTs);
-
-  log_record.samples[log_record.filled].epoch_len = static_cast<uint16_t>(nowMs - log_record.start_tm);
-  log_record.samples[log_record.filled].packets_count = static_cast<uint16_t>(packetsCount - static_cast<size_t>(last_sample.packets_count));
-  log_record.samples[log_record.filled].bytes_count = static_cast<uint32_t>(bytesCount - static_cast<size_t>(last_sample.bytes_count));
-  log_record.samples[log_record.filled].packets_lost = static_cast<uint16_t>(packetsLost - static_cast<uint32_t>(last_sample.packets_lost));
-  log_record.samples[log_record.filled].packets_discarded = static_cast<uint16_t>(packetsDiscarded - static_cast<size_t>(last_sample.packets_discarded));
-  log_record.samples[log_record.filled].packets_repaired = static_cast<uint16_t>(packetsRepaired - static_cast<size_t>(last_sample.packets_repaired));
-  log_record.samples[log_record.filled].packets_retransmitted = static_cast<uint16_t>(packetsRetransmitted - static_cast<size_t>(last_sample.packets_retransmitted));
-  log_record.samples[log_record.filled].nack_count = static_cast<uint16_t>(nackCount - static_cast<size_t>(last_sample.nack_count));
-  log_record.samples[log_record.filled].nack_pkt_count = static_cast<uint16_t>(nackPacketCount - static_cast<size_t>(last_sample.nack_pkt_count));
-  log_record.samples[log_record.filled].kf_count = static_cast<uint16_t>(kfCount - static_cast<size_t>(last_sample.kf_count));
-  log_record.samples[log_record.filled].rtt = static_cast<uint16_t>(std::round(rtt));
-  log_record.samples[log_record.filled].max_pts = maxPacketTs;
-  
-  last_sample = log_record.samples[log_record.filled];
-  log_record.filled++;
+    log_record.samples[log_record.filled].epoch_len = static_cast<uint16_t>(nowMs - log_record.start_tm);
+    log_record.samples[log_record.filled].packets_count = static_cast<uint16_t>(curr.packetsCount - last.packetsCount);
+    log_record.samples[log_record.filled].bytes_count = static_cast<uint32_t>(curr.bytesCount - last.bytesCount);
+    log_record.samples[log_record.filled].packets_lost = static_cast<uint16_t>(curr.packetsLost - last.packetsLost);
+    log_record.samples[log_record.filled].packets_discarded = static_cast<uint16_t>(curr.packetsDiscarded - last.packetsDiscarded);
+    log_record.samples[log_record.filled].packets_repaired = static_cast<uint16_t>(curr.packetsRepaired - last.packetsRepaired);
+    log_record.samples[log_record.filled].packets_retransmitted = static_cast<uint16_t>(curr.packetsRetransmitted - last.packetsRetransmitted);
+    log_record.samples[log_record.filled].nack_count = static_cast<uint16_t>(curr.nackCount - last.nackCount);
+    log_record.samples[log_record.filled].nack_pkt_count = static_cast<uint16_t>(curr.nackPacketCount - last.nackPacketCount);
+    log_record.samples[log_record.filled].kf_count = static_cast<uint16_t>(curr.kfCount - last.kfCount);
+    log_record.samples[log_record.filled].rtt = static_cast<uint16_t>(std::round(curr.rtt));
+    log_record.samples[log_record.filled].max_pts = curr.maxPacketTs;
+    
+    this->last = this->curr;
+    log_record.filled++;
+  }
 }
 
 
@@ -136,9 +129,8 @@ int StatsBinLog::LogClose(CallStatsRecordCtx* ctx)
   // Save the last sample just in case and clean up recorded data
   if (ctx)
   {
-    ctx->last_sample = ctx->log_record.samples[ctx->log_record.filled - 1];
     std::memset(ctx->log_record.samples, 0, sizeof(ctx->log_record.samples));
-    ctx->log_record.filled = 0;
+    ctx->log_record.filled = UINT16_UNSET;
   }
 
   return ret;
@@ -226,7 +218,10 @@ void StatsBinLog::DeinitLog(CallStatsRecordCtx* recordCtx)
   {
     LogClose(recordCtx);
   }
-  this->initialized = false; // TBD: wipe off log name template?
+  this->initialized = false;
+  this->log_start_ts = UINT64_UNSET;
+  this->bin_log_name_template.clear();
+  this->bin_log_file_path.clear();
 }
 
 
@@ -237,4 +232,4 @@ void StatsBinLog::UpdateLogName()
   sprintf(buff, this->bin_log_name_template.c_str(), this->log_start_ts);
   this->bin_log_file_path.assign(buff); 
 }
-}
+} //Lively

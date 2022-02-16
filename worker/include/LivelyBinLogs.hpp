@@ -5,8 +5,12 @@
 #include <cstring>
 #include "RTC/RtpStream.hpp"
 
+
 #define CALL_STATS_BIN_LOG_RECORDS_NUM 30
 #define CALL_STATS_BIN_LOG_SAMPLING    2000
+#define UINT16_UNSET                   ((uint16_t)-1)
+#define UINT64_UNSET                   ((uint64_t)-1)
+
 
 namespace Lively
 {
@@ -33,7 +37,7 @@ namespace Lively
     char                        object_id[36]; // uuid4() no \0, producer or consumer id
     uint8_t                     source {0};        // 0 for producer or 1 for consumer
     uint8_t                     mime {0};          // mime type: unset, audio, video
-    uint16_t                    filled {0};        // number of filled records in the array below
+    uint16_t                    filled {UINT16_UNSET};        // number of filled records in the array below
     CallStatsSample             samples[CALL_STATS_BIN_LOG_RECORDS_NUM];
   };
 
@@ -45,11 +49,29 @@ namespace Lively
   {
   public:
     CallStatsRecord log_record {};
-    CallStatsSample last_sample {};
+  
+  private:
+    class InputStats
+    {
+    public:
+      size_t packetsCount;
+      size_t bytesCount;
+      uint32_t packetsLost;
+      size_t packetsDiscarded;
+      size_t packetsRetransmitted;
+      size_t packetsRepaired;
+      size_t nackCount;
+      size_t nackPacketCount;
+      size_t kfCount;
+      float rtt;
+      uint32_t maxPacketTs;
+    };
+
+    InputStats last {};
+    InputStats curr {};
 
   public:
     CallStatsRecordCtx(std::string callId, std::string objId, uint64_t objType);
-    
     void AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream); // either recv or send stream
 
   private:
@@ -61,28 +83,28 @@ namespace Lively
   class StatsBinLog
   {
   public:
-    std::string bin_log_file_path;                               // binary log full file name: combo of call id, timestamp and "version"
-    std::FILE*  fd {0};                                          // the file into which samples are written once the record is full
-    uint64_t    sampling_interval {CALL_STATS_BIN_LOG_SAMPLING}; // frequency of collecting samples
+    std::string   bin_log_file_path;                               // binary log's full file name: combo of call id, timestamp and "version"
+    std::FILE*    fd {0};                                          
+    uint64_t      sampling_interval {CALL_STATS_BIN_LOG_SAMPLING}; // frequency of collecting samples, non-configurable
   
   private:
-    bool initialized {false};
-    std::string bin_log_name_template; // log name template, use to rotate log, keep same name except for timestamp
-    uint64_t log_start_ts {0};
+    bool          initialized {false};
+    std::string   bin_log_name_template;       // Log name template, use to rotate log, keep same name except for timestamp
+    uint64_t      log_start_ts {UINT64_UNSET}; // Timestamp included into log's name; used to rotate logs daily
 
   public:
     StatsBinLog() = default;
 
-    int OnLogWrite(CallStatsRecordCtx* ctx);
     int LogOpen();
+    int OnLogWrite(CallStatsRecordCtx* ctx);
     int LogClose(CallStatsRecordCtx* recordCtx);
 
-    void InitLog(std::string id1, std::string id2);
-    void DeinitLog(CallStatsRecordCtx* recordCtx);
+    void InitLog(std::string id1, std::string id2); // Creates log name template combining 2 ids; sets up a log name and log_start_ts
+    void DeinitLog(CallStatsRecordCtx* recordCtx);  // Closes log file and deinitializes state variables
 
   private:
     void UpdateLogName();
   };
-};
+}; //Lively
 
 #endif // MS_LIVELY_BIN_LOGS_HPP

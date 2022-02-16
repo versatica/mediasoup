@@ -246,13 +246,13 @@ libmediasoup_worker = library(
   link_whole: link_whole,
 )
 
-executable(
+ executable(
   'mediasoup-worker',
   build_by_default: true,
   dependencies: dependencies,
   sources: common_sources + ['src/main.cpp'],
   include_directories: include_directories('include'),
-  cpp_args: cpp_args + ['-g', '-DMS_EXECUTABLE'],
+  cpp_args: cpp_args + ['-g', '-fno-omit-frame-pointer', '-O0', '-DMS_EXECUTABLE'],
 )
 
 # '-fno-omit-frame-pointer', 
