@@ -48,20 +48,20 @@
     "node": ">=12"
   },
   "scripts": {
+    "coverage": "npm run worker:build && node npm-scripts.js coverage",
+    "format:worker": "node npm-scripts.js format:worker",
     "install-clang-tools": "node npm-scripts.js install-clang-tools",
-    "typescript:build": "node npm-scripts.js typescript:build",
-    "typescript:watch": "node npm-scripts.js typescript:watch",
-    "worker:build": "node npm-scripts.js worker:build",
     "lint": "npm run lint:node && npm run lint:worker",
     "lint:node": "node npm-scripts.js lint:node",
     "lint:worker": "node npm-scripts.js lint:worker",
-    "format:worker": "node npm-scripts.js format:worker",
+    "postinstall": "node npm-scripts.js postinstall",
+    "release": "node npm-scripts.js release",
     "test": "npm run test:node && npm run test:worker",
     "test:node": "npm run worker:build && node npm-scripts.js test:node",
     "test:worker": "node npm-scripts.js test:worker",
-    "coverage": "npm run worker:build && node npm-scripts.js coverage",
-    "postinstall": "node npm-scripts.js postinstall",
-    "release": "node npm-scripts.js release"
+    "typescript:build": "node npm-scripts.js typescript:build",
+    "typescript:watch": "node npm-scripts.js typescript:watch",
+    "worker:build": "node npm-scripts.js worker:build"
   },
   "jest": {
     "verbose": true,
