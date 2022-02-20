@@ -45,8 +45,10 @@ namespace RTC
 		public:
 			~StorageItemBuffer();
 
+			StorageItem* GetFirst();
 			StorageItem* Get(uint16_t seq);
 			bool Insert(uint16_t seq, StorageItem* storageItem);
+			bool RemoveFirst();
 			bool Remove(uint16_t seq);
 			void Clear();
 
@@ -91,11 +93,9 @@ namespace RTC
 		uint32_t lostPriorScore{ 0u }; // Packets lost at last interval for score calculation.
 		uint32_t sentPriorScore{ 0u }; // Packets sent at last interval for score calculation.
 		StorageItemBuffer storageItemBuffer;
-		uint16_t bufferStartSeq{ 0u };
 		std::string mid;
 		bool useNack;
 		uint32_t retransmissionBufferSize;
-		bool firstPacket{ true };
 		uint16_t rtxSeq{ 0u };
 		RTC::RtpDataCounter transmissionCounter;
 	};

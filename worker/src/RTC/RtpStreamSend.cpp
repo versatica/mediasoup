@@ -36,6 +36,11 @@ namespace RTC
 		storageItem->rtxEncoded = false;
 	}
 
+	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::GetFirst()
+	{
+		return this->Get(this->startSeq);
+	}
+
 	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::Get(uint16_t seq)
 	{
 		auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
@@ -95,6 +100,11 @@ namespace RTC
 		return true;
 	}
 
+	bool RtpStreamSend::StorageItemBuffer::RemoveFirst()
+	{
+		return this->Remove(this->startSeq);
+	}
+
 	bool RtpStreamSend::StorageItemBuffer::Remove(uint16_t seq)
 	{
 		if (this->buffer.empty())
@@ -137,6 +147,7 @@ namespace RTC
 		}
 
 		this->buffer.clear();
+		this->startSeq = 0;
 	}
 
 	RtpStreamSend::StorageItemBuffer::~StorageItemBuffer()
@@ -426,58 +437,44 @@ namespace RTC
 			*storageItem = StorageItem{};
 			MS_ASSERT(this->storageItemBuffer.Insert(seq, storageItem), "sequence number must be empty");
 
-			// Set the beginning of the used buffer.
-			if (this->firstPacket)
-			{
-				this->firstPacket    = false;
-				this->bufferStartSeq = seq;
-			}
-			// Otherwise, try to clean up storage items with packets older than `MaxRetransmissionDelay`.
-			else
-			{
-				auto packetTs{ packet->GetTimestamp() };
-				auto clockRate{ this->params.clockRate };
+			auto packetTs{ packet->GetTimestamp() };
+			auto clockRate{ this->params.clockRate };
 
-				// Go through all buffer items starting with `this->bufferStartSeq` and free all storage
-				// items that contain packets older than `MaxRetransmissionDelay`.
-				for (uint16_t i{ 0 }; i <= MaxSeq; ++i)
+			// Go through all buffer items starting with the first and free all storage
+			// items that contain packets older than `MaxRetransmissionDelay`.
+			for (uint16_t i{ 0 }; i <= MaxSeq; ++i)
+			{
+				auto* checkedStorageItem = this->storageItemBuffer.GetFirst();
+
+				// Packets can arrive out of order, in which case we'll miss some storage items.
+				if (checkedStorageItem)
 				{
-					auto* checkedStorageItem = this->storageItemBuffer.Get(this->bufferStartSeq);
+					// This is the storage item we have just inserted, no need to go further.
+					if (!checkedStorageItem->originalPacket)
+						break;
 
-					// Packets can arrive out of order, in which case we'll miss some storage items.
-					if (checkedStorageItem)
+					auto checkedPacketTs{ checkedStorageItem->originalPacket->GetTimestamp() };
+					auto diffTs{ packetTs - checkedPacketTs };
+
+					// Account for wrapping around.
+					if (diffTs > MaxTs / 2)
 					{
-						// This is the storage item we have just inserted, no need to go further.
-						if (!checkedStorageItem->originalPacket)
-							break;
-
-						auto checkedPacketTs{ checkedStorageItem->originalPacket->GetTimestamp() };
-						auto diffTs{ packetTs - checkedPacketTs };
-
-						// Account for wrapping around.
-						if (diffTs > MaxTs / 2)
-						{
-							diffTs = MaxTs - diffTs;
-						}
-
-						// Cleanup is finished if we found an item with recent enough packet, but also account
-						// for out-of-order packets.
-						if (
-						  static_cast<uint32_t>(diffTs * 1000 / clockRate) < this->retransmissionBufferSize ||
-						  RTC::SeqManager<uint32_t>::IsSeqLowerThan(packetTs, checkedPacketTs))
-							break;
-
-						// Reset (free RTP packet) the old storage item.
-						resetStorageItem(checkedStorageItem);
-						// Return into the pool.
-						StorageItemPool.Return(checkedStorageItem);
-						// Unfill the buffer start item.
-						MS_ASSERT(
-						  this->storageItemBuffer.Remove(this->bufferStartSeq), "Storage item must be used");
+						diffTs = MaxTs - diffTs;
 					}
 
-					// Increase buffer start index.
-					this->bufferStartSeq++;
+					// Cleanup is finished if we found an item with recent enough packet, but also account
+					// for out-of-order packets.
+					if (
+					  static_cast<uint32_t>(diffTs * 1000 / clockRate) < this->retransmissionBufferSize ||
+					  RTC::SeqManager<uint32_t>::IsSeqLowerThan(packetTs, checkedPacketTs))
+						break;
+
+					// Reset (free RTP packet) the old storage item.
+					resetStorageItem(checkedStorageItem);
+					// Return into the pool.
+					StorageItemPool.Return(checkedStorageItem);
+					// Unfill the buffer start item.
+					MS_ASSERT(this->storageItemBuffer.RemoveFirst(), "Storage item must be used");
 				}
 			}
 		}
@@ -498,11 +495,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->storageItemBuffer.Clear();
-
 		// Reset buffer.
-		this->firstPacket    = true;
-		this->bufferStartSeq = 0;
+		this->storageItemBuffer.Clear();
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
