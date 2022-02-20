@@ -38,7 +38,7 @@ namespace RTC
 
 	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::Get(uint16_t seq)
 	{
-		uint16_t idx{ static_cast<uint16_t>(seq - this->startSeq) };
+		auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
 		if (this->buffer.empty() || idx >= static_cast<uint16_t>(this->buffer.size()))
 			return nullptr;
@@ -56,7 +56,7 @@ namespace RTC
 			return true;
 		}
 
-		uint16_t idx{ static_cast<uint16_t>(seq - this->startSeq) };
+		auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
 		if (idx < static_cast<uint16_t>(this->buffer.size()))
 		{
@@ -68,10 +68,10 @@ namespace RTC
 
 		// Calculate how many elements would it be necessary to add when pushing new item to the back of
 		// the deque.
-		uint16_t addToBack{ static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1)) };
+		auto addToBack{ static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1)) };
 		// Calculate how many elements would it be necessary to add when pushing new item to the front
 		// of the deque.
-		uint16_t addToFront{ static_cast<uint16_t>(this->startSeq - seq) };
+		auto addToFront{ static_cast<uint16_t>(this->startSeq - seq) };
 
 		// Select the side of deque where fewer elements need to be added, while preferring the end.
 		if (addToBack <= addToFront)
@@ -100,7 +100,7 @@ namespace RTC
 		if (this->buffer.empty())
 			return false;
 
-		uint16_t idx{ static_cast<uint16_t>(seq - this->startSeq) };
+		auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
 		this->buffer[idx] = nullptr;
 
@@ -435,8 +435,8 @@ namespace RTC
 			// Otherwise, try to clean up storage items with packets older than `MaxRetransmissionDelay`.
 			else
 			{
-				uint32_t packetTs{ packet->GetTimestamp() };
-				uint32_t clockRate{ this->params.clockRate };
+				auto packetTs{ packet->GetTimestamp() };
+				auto clockRate{ this->params.clockRate };
 
 				// Go through all buffer items starting with `this->bufferStartSeq` and free all storage
 				// items that contain packets older than `MaxRetransmissionDelay`.
@@ -451,19 +451,19 @@ namespace RTC
 						if (!checkedStorageItem->originalPacket)
 							break;
 
-						uint32_t checkedPacketTs{ checkedStorageItem->originalPacket->GetTimestamp() };
-						uint32_t diffMs{ packetTs - checkedPacketTs };
+						auto checkedPacketTs{ checkedStorageItem->originalPacket->GetTimestamp() };
+						auto diffTs{ packetTs - checkedPacketTs };
 
 						// Account for wrapping around.
-						if (diffMs > MaxTs / 2)
+						if (diffTs > MaxTs / 2)
 						{
-							diffMs = MaxTs - diffMs;
+							diffTs = MaxTs - diffTs;
 						}
 
 						// Cleanup is finished if we found an item with recent enough packet, but also account
 						// for out-of-order packets.
 						if (
-						  static_cast<uint32_t>(diffMs * 1000 / clockRate) < this->retransmissionBufferSize ||
+						  static_cast<uint32_t>(diffTs * 1000 / clockRate) < this->retransmissionBufferSize ||
 						  RTC::SeqManager<uint32_t>::IsSeqLowerThan(packetTs, checkedPacketTs))
 							break;
 
@@ -482,20 +482,16 @@ namespace RTC
 			}
 		}
 
+		// Only clone once and only if necessary.
+		if (!*clonedPacket)
+		{
+			*clonedPacket = packet->Clone();
+		}
+
 		// Store original packet and some extra info into the retrieved storage item.
-		if (*clonedPacket)
-		{
-			storageItem->originalPacket = *clonedPacket;
-			storageItem->ssrc           = (*clonedPacket)->GetSsrc();
-			storageItem->sequenceNumber = (*clonedPacket)->GetSequenceNumber();
-		}
-		else
-		{
-			*clonedPacket               = packet->Clone();
-			storageItem->originalPacket = *clonedPacket;
-			storageItem->ssrc           = (*clonedPacket)->GetSsrc();
-			storageItem->sequenceNumber = (*clonedPacket)->GetSequenceNumber();
-		}
+		storageItem->originalPacket = *clonedPacket;
+		storageItem->ssrc           = (*clonedPacket)->GetSsrc();
+		storageItem->sequenceNumber = (*clonedPacket)->GetSequenceNumber();
 	}
 
 	void RtpStreamSend::ClearBuffer()
