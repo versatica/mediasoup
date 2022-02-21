@@ -23,12 +23,12 @@
 # worker scripts node-modules.
 /worker/scripts/node_modules/
 
-# Vistual Studio generated Stuff.
+# Visual Studio generated Stuff.
 /worker/**/Debug/
 /worker/**/Release/
 /worker/.vs/
 
-# Vistual Studio Code stuff.
+# Visual Studio Code stuff.
 /.vscode/
 
 # JetBrains IDE stuff.
@@ -45,5 +45,6 @@
 # Meson.
 /worker/subprojects/*
 !/worker/subprojects/*.wrap
+
 # Temporarily included meson.build files
 !/worker/subprojects/packagefiles
