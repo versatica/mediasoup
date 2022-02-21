@@ -6,7 +6,7 @@
 PYTHON ?= $(shell command -v python3 2> /dev/null || echo python)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh || echo 4)
-MEDIASOUP_OUT_DIR ?= $(shell pwd)/out
+MEDIASOUP_OUT_DIR ?= $(shell pwd)/out/$(shell node ${ROOT_DIR}/scripts/getTriplet.js)
 MEDIASOUP_BUILDTYPE ?= Release
 GULP = ./scripts/node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov

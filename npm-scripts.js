@@ -1,8 +1,10 @@
 const process = require('process');
 const os = require('os');
 const fs = require('fs');
+const { join } = require('path');
 const { execSync } = require('child_process');
 const { version } = require('./package.json');
+const { getTriplet } = require('./node/lib/utils');
 
 const isFreeBSD = os.platform() === 'freebsd';
 const isWindows = os.platform() === 'win32';
@@ -118,16 +120,31 @@ switch (task)
 
 	case 'postinstall':
 	{
-		if (!process.env.MEDIASOUP_WORKER_BIN)
+		// Provided path to `mediasoup-worker` executable, use it and do nothing
+		if (process.env.MEDIASOUP_WORKER_BIN) break;
+
+		// Bundled `mediasoup-worker` executable available for this platform
+		let dirEntries;
+
+		try
 		{
-			execute('node npm-scripts.js worker:build');
-			// Clean build artifacts except `mediasoup-worker`.
-			execute(`${MAKE} clean-build -C worker`);
-			// Clean downloaded dependencies.
-			execute(`${MAKE} clean-subprojects -C worker`);
-			// Clean PIP/Meson/Ninja.
-			execute(`${MAKE} clean-pip -C worker`);
+			dirEntries = fs.readdirSync(join(__dirname, 'worker', 'out'));
 		}
+		catch (error)
+		{
+			if (error.code !== 'ENOENT') throw error;
+		}
+		if (dirEntries && dirEntries.includes(getTriplet())) break;
+
+		// `mediasoup-worker` executable not available, build and install it
+		execute('node npm-scripts.js worker:build');
+
+		// Clean build artifacts except `mediasoup-worker`.
+		execute(`${MAKE} clean-build -C worker`);
+		// Clean downloaded dependencies.
+		execute(`${MAKE} clean-subprojects -C worker`);
+		// Clean PIP/Meson/Ninja.
+		execute(`${MAKE} clean-pip -C worker`);
 
 		break;
 	}

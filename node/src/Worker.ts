@@ -8,6 +8,7 @@ import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
+import { getTriplet } from './utils';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
@@ -181,8 +182,8 @@ export type WorkerObserverEvents =
 const workerBin = process.env.MEDIASOUP_WORKER_BIN
 	? process.env.MEDIASOUP_WORKER_BIN
 	: process.env.MEDIASOUP_BUILDTYPE === 'Debug'
-		? path.join(__dirname, '..', '..', 'worker', 'out', 'Debug', 'mediasoup-worker')
-		: path.join(__dirname, '..', '..', 'worker', 'out', 'Release', 'mediasoup-worker');
+		? path.join(__dirname, '..', '..', 'worker', 'out', getTriplet(), 'Debug', 'mediasoup-worker')
+		: path.join(__dirname, '..', '..', 'worker', 'out', getTriplet(), 'Release', 'mediasoup-worker');
 
 const logger = new Logger('Worker');
 const workerLogger = new Logger('Worker');
