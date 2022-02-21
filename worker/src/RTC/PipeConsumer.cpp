@@ -184,7 +184,7 @@ namespace RTC
 		return 0u;
 	}
 
-	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpPacket::SharedPtr* clonedPacket)
+	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::RtpPacket::SharedPtr& clonedPacket)
 	{
 		MS_TRACE();
 

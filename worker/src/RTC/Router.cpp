@@ -710,7 +710,7 @@ namespace RTC
 				if (!mid.empty())
 					packet->UpdateMid(mid);
 
-				consumer->SendRtpPacket(packet, &clonedPacket);
+				consumer->SendRtpPacket(packet, clonedPacket);
 			}
 		}
 

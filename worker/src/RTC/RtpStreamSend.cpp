@@ -29,19 +29,19 @@ namespace RTC
 
 		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
 
-		storageItem->clonedPacket.Reset();
-		storageItem->originalPacket.Reset();
+		storageItem->clonedPacket.reset();
+		storageItem->originalPacket.reset();
 		storageItem->resentAtMs = 0;
 		storageItem->sentTimes  = 0;
 		storageItem->rtxEncoded = false;
 	}
 
-	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::GetFirst()
+	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::GetFirst() const
 	{
 		return this->Get(this->startSeq);
 	}
 
-	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::Get(uint16_t seq)
+	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::Get(uint16_t seq) const
 	{
 		auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
@@ -196,7 +196,7 @@ namespace RTC
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
-	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, RTC::RtpPacket::SharedPtr* clonedPacket)
+	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, RTC::RtpPacket::SharedPtr& clonedPacket)
 	{
 		MS_TRACE();
 
@@ -396,7 +396,7 @@ namespace RTC
 		MS_ABORT("invalid method call");
 	}
 
-	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, RTC::RtpPacket::SharedPtr* clonedPacket)
+	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, RTC::RtpPacket::SharedPtr& clonedPacket)
 	{
 		MS_TRACE();
 
@@ -432,9 +432,9 @@ namespace RTC
 		{
 			// Allocate a new storage item.
 			storageItem = StorageItemPool.Allocate();
-			// Memory is not initialized in any way, initialize with default values it to make sure
-			// contents is correct.
-			*storageItem = StorageItem{};
+			// Memory is not initialized in any way, reset it. Create a new StorageItem instance
+			// in this memory.
+			new (storageItem) StorageItem{};
 			MS_ASSERT(this->storageItemBuffer.Insert(seq, storageItem), "sequence number must be empty");
 
 			auto packetTs{ packet->GetTimestamp() };
@@ -480,15 +480,18 @@ namespace RTC
 		}
 
 		// Only clone once and only if necessary.
-		if (!*clonedPacket)
+		if (!clonedPacket.get())
 		{
-			*clonedPacket = packet->Clone();
+			auto clone = packet->Clone();
+
+			// Move the RtpPacket pointer into clonedPacket shared pointer.
+			clonedPacket.swap(clone);
 		}
 
 		// Store original packet and some extra info into the retrieved storage item.
-		storageItem->originalPacket = *clonedPacket;
-		storageItem->ssrc           = (*clonedPacket)->GetSsrc();
-		storageItem->sequenceNumber = (*clonedPacket)->GetSequenceNumber();
+		storageItem->originalPacket = clonedPacket;
+		storageItem->ssrc           = clonedPacket->GetSsrc();
+		storageItem->sequenceNumber = clonedPacket->GetSequenceNumber();
 	}
 
 	void RtpStreamSend::ClearBuffer()

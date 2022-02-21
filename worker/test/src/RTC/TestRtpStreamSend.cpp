@@ -95,35 +95,35 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		// Receive all the packets (some of them not in order and/or duplicated).
 		{
 			RtpPacket::SharedPtr clonedPacket{ nullptr };
-			stream->ReceivePacket(packet1.get(), &clonedPacket);
+			stream->ReceivePacket(packet1.get(), clonedPacket);
 		}
 		{
 			RtpPacket::SharedPtr clonedPacket{ nullptr };
-			stream->ReceivePacket(packet3.get(), &clonedPacket);
+			stream->ReceivePacket(packet3.get(), clonedPacket);
 		}
 		{
 			RtpPacket::SharedPtr clonedPacket{ nullptr };
-			stream->ReceivePacket(packet2.get(), &clonedPacket);
+			stream->ReceivePacket(packet2.get(), clonedPacket);
 		}
 		{
 			RtpPacket::SharedPtr clonedPacket{ nullptr };
-			stream->ReceivePacket(packet3.get(), &clonedPacket);
+			stream->ReceivePacket(packet3.get(), clonedPacket);
 		}
 		{
 			RtpPacket::SharedPtr clonedPacket{ nullptr };
-			stream->ReceivePacket(packet4.get(), &clonedPacket);
+			stream->ReceivePacket(packet4.get(), clonedPacket);
 		}
 		{
 			RtpPacket::SharedPtr clonedPacket{ nullptr };
-			stream->ReceivePacket(packet4.get(), &clonedPacket);
+			stream->ReceivePacket(packet4.get(), clonedPacket);
 		}
 		{
 			RtpPacket::SharedPtr clonedPacket{ nullptr };
-			stream->ReceivePacket(packet5.get(), &clonedPacket);
+			stream->ReceivePacket(packet5.get(), clonedPacket);
 		}
 		{
 			RtpPacket::SharedPtr clonedPacket{ nullptr };
-			stream->ReceivePacket(packet5.get(), &clonedPacket);
+			stream->ReceivePacket(packet5.get(), clonedPacket);
 		}
 
 		// Create a NACK item that request for all the packets.

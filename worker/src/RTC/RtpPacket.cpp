@@ -124,7 +124,18 @@ namespace RTC
 		auto* packet = RtpPacketPool.Allocate();
 		new (packet) RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
 
-		return SharedPtr(packet);
+		SharedPtr shared(
+		  packet,
+		  /*Deleter*/
+		  [](RtpPacket* packet)
+		  {
+			  // Call destructor manually since memory was pre-allocated upfront.
+			  packet->~RtpPacket();
+			  // Return packet into object pool for future reuse of memory allocation.
+			  RtpPacketPool.Return(packet);
+		  });
+
+		return shared;
 	}
 
 	/* Instance methods. */
@@ -146,30 +157,6 @@ namespace RTC
 
 		// Parse RFC 5285 header extension.
 		ParseExtensions();
-	}
-
-	void RtpPacket::IncRefCount()
-	{
-		MS_ASSERT(
-		  this->referenceCount > 0, "Can only increase reference count for packets that are still alive");
-
-		this->referenceCount++;
-	}
-
-	void RtpPacket::DecRefCount()
-	{
-		MS_ASSERT(
-		  this->referenceCount > 0, "Can only decrease reference count for packets that are still alive");
-
-		this->referenceCount--;
-
-		if (this->referenceCount == 0)
-		{
-			// Call destructor manually since memory was pre-allocated upfront.
-			this->~RtpPacket();
-			// Return packet into object pool for future reuse of memory allocation.
-			RtpPacketPool.Return(this);
-		}
 	}
 
 	RtpPacket::~RtpPacket()
@@ -731,6 +718,17 @@ namespace RTC
 		new (packet) RtpPacket(
 		  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
 
+		SharedPtr shared(
+		  packet,
+		  /*Deleter*/
+		  [](RtpPacket* packet)
+		  {
+			  // Call destructor manually since memory was pre-allocated upfront.
+			  packet->~RtpPacket();
+			  // Return packet into object pool for future reuse of memory allocation.
+			  RtpPacketPool.Return(packet);
+		  });
+
 		// Keep already set extension ids.
 		packet->midExtensionId               = this->midExtensionId;
 		packet->ridExtensionId               = this->ridExtensionId;
@@ -746,7 +744,7 @@ namespace RTC
 		// Store allocated buffer.
 		packet->buffer = buffer;
 
-		return SharedPtr(packet);
+		return shared;
 	}
 
 	// NOTE: The caller must ensure that the buffer/memmory of the packet has
