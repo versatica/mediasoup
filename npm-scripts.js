@@ -112,13 +112,14 @@ switch (task)
 	case 'coverage':
 	{
 		taskReplaceVersion();
+
 		execute('jest --coverage');
 		execute('open-cli coverage/lcov-report/index.html');
 
 		break;
 	}
 
-	case 'postinstall':
+	case 'install':
 	{
 		// Provided path to `mediasoup-worker` executable, use it and do nothing
 		if (process.env.MEDIASOUP_WORKER_BIN) break;

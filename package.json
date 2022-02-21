@@ -51,11 +51,11 @@
   "scripts": {
     "coverage": "node npm-scripts.js coverage",
     "format:worker": "node npm-scripts.js format:worker",
+    "install": "node npm-scripts.js install",
     "install-clang-tools": "node npm-scripts.js install-clang-tools",
     "lint": "npm run lint:node && npm run lint:worker",
     "lint:node": "node npm-scripts.js lint:node",
     "lint:worker": "node npm-scripts.js lint:worker",
-    "postinstall": "node npm-scripts.js postinstall",
     "precoverage": "npm run worker:build",
     "prepack": "npm run worker:build",
     "pretest:node": "npm run worker:build",
