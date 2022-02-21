@@ -1,6 +1,7 @@
 /node_modules/
 /coverage/
 /NO_GIT/
+*.tgz
 
 # Generated stuff.
 /worker/out/
