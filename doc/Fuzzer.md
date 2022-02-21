@@ -1,6 +1,6 @@
 # Fuzzer
 
-Once we have built the `mediasoup-worker-fuzzer` target in a Linux environment with `fuzzer` capable clang (see `make fuzzer` documentation in [Building](Building.md)) we can then execute the fuzzer binary at `worker/out/Release/mediasoup-worker-fuzzer`.
+Once we have built the `mediasoup-worker-fuzzer` target in a Linux environment with `fuzzer` capable clang (see `make fuzzer` documentation in [Building](Building.md)) we can then execute the fuzzer binary at `worker/out/*/Release/mediasoup-worker-fuzzer`.
 
 **NOTE:** From now on, we assume we are in the mediasoup `worker` directory.
 
@@ -56,35 +56,35 @@ The log level can also be set by setting the `MS_FUZZ_LOG_LEVEL` environment var
 * Detect memory leaks and just fuzz STUN:
 
 ```bash
-$ MS_FUZZ_STUN=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus
+$ MS_FUZZ_STUN=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/*/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus
 ```
 
 * Detect memory leaks and just fuzz RTP:
 
 ```bash
-$ MS_FUZZ_RTP=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus
+$ MS_FUZZ_RTP=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/*/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus
 ```
 
 * Detect memory leaks and just fuzz RTCP:
 
 ```bash
-$ MS_FUZZ_RTCP=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
+$ MS_FUZZ_RTCP=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/*/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
 ```
 
 * Detect memory leaks and just fuzz mediasoup-worker C++ utils:
 
 ```bash
-$ MS_FUZZ_UTILS=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=2000 fuzzer/new-corpus
+$ MS_FUZZ_UTILS=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/*/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=2000 fuzzer/new-corpus
 ```
 
 * Detect memory leaks and fuzz everything with log level "warn":
 
 ```bash
-$ MS_FUZZ_LOG_LEVEL=warn LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
+$ MS_FUZZ_LOG_LEVEL=warn LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/*/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
 ```
 
 * Verify that a specific crash is fixed:
 
 ```bash
-$ LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer fuzzer/reports/crash-f39771f7a03c0e7e539d4e52f48f7adad8976404
+$ LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/*/Release/mediasoup-worker-fuzzer fuzzer/reports/crash-f39771f7a03c0e7e539d4e52f48f7adad8976404
 ```
