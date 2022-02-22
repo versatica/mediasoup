@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.9.7
+
+* Typing event emitters in mediasoup Node (PR #764 by @unao).
+* Update NPM deps.
+
+
 ### 3.9.6
 
 * TCC client optimizations for faster and more stable BWE (PR #712 by @ggarber).
