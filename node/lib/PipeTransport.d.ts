@@ -1,4 +1,4 @@
-import { Transport, TransportListenIp, TransportTuple, SctpState } from './Transport';
+import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, SctpState } from './Transport';
 import { Consumer } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
@@ -81,7 +81,13 @@ export declare type PipeConsumerOptions = {
      */
     appData?: any;
 };
-export declare class PipeTransport extends Transport {
+export declare type PipeTransportEvents = TransportEvents & {
+    sctpstatechange: [SctpState];
+};
+export declare type PipeTransportObserverEvents = TransportObserverEvents & {
+    sctpstatechange: [SctpState];
+};
+export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTransportObserverEvents> {
     #private;
     /**
      * @private
