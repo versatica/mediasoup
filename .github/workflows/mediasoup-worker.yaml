@@ -76,3 +76,9 @@ jobs:
       - run: npm run worker:build
       - run: npm run test:worker
         if: runner.os != 'Windows'
+
+      - name: Release artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: mediasoup-worker-${{ matrix.build.os }}-${{ matrix.build.cc }}
+          path: worker/out/Release
