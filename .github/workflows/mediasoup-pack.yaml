@@ -1,0 +1,89 @@
+name: mediasoup-pack
+
+on: [release]
+
+jobs:
+  linux-x64:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Node.js
+        uses: actions/setup-node@v2
+
+      - run: npm run worker:build
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: linux-x64
+          path: worker/out/linux-x64/Release/mediasoup-worker
+          retention-days: 1
+
+  macos-x64:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Node.js
+        uses: actions/setup-node@v2
+
+      - run: npm run worker:build
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: darwin-x64
+          path: worker/out/darwin-x64/Release/mediasoup-worker
+          retention-days: 1
+
+  windows-x64:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Node.js
+        uses: actions/setup-node@v2
+
+      - run: npm run worker:build
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: win32-x64.exe
+          path: worker/out/win32-x64/Release/mediasoup-worker.exe
+          retention-days: 1
+
+  pack:
+    needs: [linux-x64, macos-x64, windows-x64]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: linux-x64
+          path: worker/out/linux-x64/Release/mediasoup-worker
+      - uses: actions/download-artifact@v2
+        with:
+          name: darwin-x64
+          path: worker/out/darwin-x64/Release/mediasoup-worker
+      - uses: actions/download-artifact@v2
+        with:
+          name: win32-x64.exe
+          path: worker/out/win32-x64/Release/mediasoup-worker.exe
+
+      - name: Node.js
+        uses: actions/setup-node@v2
+
+      - run: chmod +x worker/out/*/Release/mediasoup-worker
+
+      - run: npm publish  # This will build the package again too.
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
