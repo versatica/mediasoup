@@ -131,7 +131,7 @@ namespace RTC
 		std::string appData;
 
 	public:
-		void FillBinLogStats() override {}
+		void FillBinLogStats(Lively::StatsBinLog* log) override {}
 	};
 
 	/* Inline methods. */

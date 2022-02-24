@@ -180,10 +180,9 @@ namespace RTC
 	
 	protected:
 		Lively::AppData lively;
-		Lively::StatsBinLog binLog;
 
 	public:
-		virtual void FillBinLogStats() = 0;
+		virtual void FillBinLogStats(Lively::StatsBinLog* log) = 0;
 
 	protected:
 		// Passed by argument.

@@ -56,7 +56,7 @@ namespace RTC
 		this->appData = lively.ToStr();
 
 		// Bin log
-		this->binLog.InitLog(lively.callId, lively.id);
+		this->binLog.InitLog('p', lively.callId, lively.id);
 
 		MS_DEBUG_TAG_LIVELYAPP(
 			rtp,
@@ -496,20 +496,8 @@ namespace RTC
 			if (!ctx)
 				continue;
 
-			ctx->log_record.mime = static_cast<uint8_t>(rtpStream->GetMimeType().type);
+			ctx->record.mime = static_cast<uint8_t>(rtpStream->GetMimeType().type);
 			ctx->AddStatsRecord(&binLog, rtpStream);
-			MS_DEBUG_TAG(
-				rtp,
-				"producer filled=%d:\t%" PRIu16 
-				"\t%" PRIu16 
-				"\t%" PRIu16 
-				"\t%" PRIu16
-				"\t%" PRIu32,
-				ctx->log_record.filled,
-				ctx->log_record.samples[ctx->log_record.filled-1].epoch_len,
-				ctx->log_record.samples[ctx->log_record.filled-1].packets_count,
-				ctx->log_record.samples[ctx->log_record.filled-1].rtt,
-				ctx->log_record.samples[ctx->log_record.filled-1].max_pts);
 		}
 	}
 
@@ -1226,7 +1214,7 @@ namespace RTC
 		this->mapMappedSsrcSsrc[encodingMapping.mappedSsrc] = ssrc;
 
 		// Binary log samples collection per stream
-		this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(lively.callId, this->id, 0);
+		this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(0, lively.callId, this->id, ZERO_UUID);
 
 		// If the Producer is paused tell it to the new RtpStreamRecv.
 		if (this->paused)

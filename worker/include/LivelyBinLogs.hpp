@@ -10,10 +10,12 @@
 #define CALL_STATS_BIN_LOG_SAMPLING    2000
 #define UINT16_UNSET                   ((uint16_t)-1)
 #define UINT64_UNSET                   ((uint64_t)-1)
+#define ZERO_UUID "00000000-0000-0000-0000-000000000000"
 
 
 namespace Lively
 {
+  // Data sample
   struct CallStatsSample
   {
     uint16_t epoch_len;             // epoch duration in milliseconds
@@ -30,25 +32,31 @@ namespace Lively
     uint32_t bytes_count;
   };
 
+  // Data record: a header followed array of data samples
   struct CallStatsRecord
   {
-    uint64_t                    start_tm;      // the record start timestamp in milliseconds
-    char                        call_id[36];   // call id: uuid4() without \0
-    char                        object_id[36]; // uuid4() no \0, producer or consumer id
-    uint8_t                     source {0};        // 0 for producer or 1 for consumer
-    uint8_t                     mime {0};          // mime type: unset, audio, video
-    uint16_t                    filled {UINT16_UNSET};        // number of filled records in the array below
-    CallStatsSample             samples[CALL_STATS_BIN_LOG_RECORDS_NUM];
+    uint64_t          start_tm;                                // the record start timestamp in milliseconds
+    char              call_id[36];                             // call id: uuid4() without \0
+    char              object_id[36];                           // uuid4() no \0, producer or consumer id, depending on source
+    char              producer_id[36];                         // uuid4() no \0, ZERO_UUID if source is producer, or consumer's corresponding producer id
+    uint8_t           source {0};                              // 0 for producer or 1 for consumer
+    uint8_t           mime {0};                                // mime type: unset, audio, video
+    uint16_t          filled {UINT16_UNSET};                   // number of filled records in the array below
+    CallStatsSample   samples[CALL_STATS_BIN_LOG_RECORDS_NUM]; // collection of data samples
   };
+
 
   class StatsBinLog;
 
-  // BinLogRecordsCtx represents samples record with the previous data sample 
-  // Producers and Consumers' streams each have one.
+
+  // Data collecting management:
+  // Collects data samples,
+  // forms data records,
+  // dumps data out into a file
   class CallStatsRecordCtx
   {
   public:
-    CallStatsRecord log_record {};
+    CallStatsRecord record {};
   
   private:
     class InputStats
@@ -71,15 +79,16 @@ namespace Lively
     InputStats curr {};
 
   public:
-    CallStatsRecordCtx(std::string callId, std::string objId, uint64_t objType);
+    CallStatsRecordCtx(uint64_t objType, std::string callId, std::string objId, std::string producerId);
+
     void AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream); // either recv or send stream
 
   private:
-    void WriteIfFull(StatsBinLog* log); // writes out data into a log if enough records where gathered, and resets filled counter
+    void WriteIfFull(StatsBinLog* log);
   };
 
 
-// Bin log presentation, object in Transport
+  // Binary log presentation
   class StatsBinLog
   {
   public:
@@ -99,12 +108,12 @@ namespace Lively
     int OnLogWrite(CallStatsRecordCtx* ctx);
     int LogClose(CallStatsRecordCtx* recordCtx);
 
-    void InitLog(std::string id1, std::string id2); // Creates log name template combining 2 ids; sets up a log name and log_start_ts
+    void InitLog(char type, std::string id1, std::string id2); // if type is producer, then 
     void DeinitLog(CallStatsRecordCtx* recordCtx);  // Closes log file and deinitializes state variables
 
   private:
     void UpdateLogName();
   };
-}; //Lively
+} //Lively
 
 #endif // MS_LIVELY_BIN_LOGS_HPP

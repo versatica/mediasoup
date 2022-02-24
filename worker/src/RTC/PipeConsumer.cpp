@@ -80,7 +80,7 @@ namespace RTC
 		}
 	}
 
-	void PipeConsumer::FillBinLogStats()
+	void PipeConsumer::FillBinLogStats(Lively::StatsBinLog* log)
 	{
 		MS_TRACE();
 
@@ -99,21 +99,8 @@ namespace RTC
 			if (!ctx)
 				continue;
 
-			ctx->log_record.mime = static_cast<uint8_t>(rtpStream->GetMimeType().type);
-			ctx->AddStatsRecord(&binLog, rtpStream);
-
-			MS_DEBUG_TAG(
-				rtp,
-				"pipeConsumer filled=%d:\t%" PRIu16 
-				"\t%" PRIu16 
-				"\t%" PRIu16 
-				"\t%" PRIu16
-				"\t%" PRIu32,
-				ctx->log_record.filled,
-				ctx->log_record.samples[ctx->log_record.filled-1].epoch_len,
-				ctx->log_record.samples[ctx->log_record.filled-1].packets_count,
-				ctx->log_record.samples[ctx->log_record.filled-1].rtt,
-				ctx->log_record.samples[ctx->log_record.filled-1].max_pts);
+			ctx->record.mime = static_cast<uint8_t>(rtpStream->GetMimeType().type);
+			ctx->AddStatsRecord(log, rtpStream);
 		}
 	}
 
@@ -625,7 +612,7 @@ namespace RTC
 				this->id.c_str());
 
 			// Binary log samples collection per stream
-			this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(lively.callId, this->id, 1);
+			this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(1, lively.callId, this->id, this->producerId);
 		}
 	}
 

@@ -60,14 +60,7 @@ namespace RTC
 		lively.id = id;
 		this->appData = lively.ToStr();
 		// Bin log
-		this->binLog.InitLog(lively.callId, lively.id);
-
-		MS_DEBUG_TAG_LIVELYAPP(
-			rtp,
-			this->appData,
-			"Consumer %s bin.log %s",
-			lively.id.c_str(),
-			this->binLog.bin_log_file_path.c_str());
+		//this->binLog.InitLog('c', lively.callId, lively.id);
 
 		auto jsonRtpParametersIt = data.find("rtpParameters");
 
@@ -191,8 +184,6 @@ namespace RTC
 	Consumer::~Consumer()
 	{
 		MS_TRACE();
-
-		binLog.DeinitLog(nullptr);
 	}
 
 	void Consumer::FillJson(json& jsonObject) const

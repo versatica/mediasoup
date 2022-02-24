@@ -89,6 +89,7 @@ namespace RTC
 
 		lively.id = id;
 		this->appData = lively.ToStr();
+		this->binLog.InitLog('c', lively.callId, lively.id); // initialize consumers bin log here, it is shared btw all consumers
 
 		auto jsonInitialAvailableOutgoingBitrateIt = data.find("initialAvailableOutgoingBitrate");
 
@@ -259,6 +260,8 @@ namespace RTC
 
 		delete this->binLogTimer;
 		this->binLogTimer = nullptr;
+
+		binLog.DeinitLog(nullptr);
 
 		// Delete Transport-CC client.
 		delete this->tccClient;
@@ -3192,7 +3195,7 @@ namespace RTC
 				auto* consumer = kv.second;
 				if (consumer != nullptr)
 				{
-					consumer->FillBinLogStats();		
+					consumer->FillBinLogStats(&this->binLog);		
 				}
 			}
 			

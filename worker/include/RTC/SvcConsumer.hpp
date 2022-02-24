@@ -85,7 +85,7 @@ namespace RTC
 		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
 
 	public:
-		void FillBinLogStats() override;
+		void FillBinLogStats(Lively::StatsBinLog* log) override;
 
 	private:
 		// Allocated by this.
