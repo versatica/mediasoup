@@ -150,6 +150,23 @@ switch (task)
 		break;
 	}
 
+	case 'prepack':
+	{
+		const path = join(
+			__dirname, 'worker', 'out', getTriplet(), 'Release', 'mediasoup-worker'
+		);
+
+		let canAccess = false;
+		try {
+			fs.accessSync(path, fs.constants.X_OK);
+			canAccess = true;
+		}
+		catch{}
+		if(!canAccess) execute('node npm-scripts.js worker:build');
+
+		break;
+	}
+
 	case 'release':
 	{
 		execute('node npm-scripts.js typescript:build');

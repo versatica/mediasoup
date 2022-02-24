@@ -57,7 +57,7 @@
     "lint:node": "node npm-scripts.js lint:node",
     "lint:worker": "node npm-scripts.js lint:worker",
     "precoverage": "npm run worker:build",
-    "prepack": "npm run worker:build",
+    "prepack": "npm run prepack",
     "pretest:node": "npm run worker:build",
     "release": "node npm-scripts.js release",
     "test": "npm run test:node && npm run test:worker",
