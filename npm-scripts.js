@@ -157,12 +157,14 @@ switch (task)
 		);
 
 		let canAccess = false;
-		try {
+
+		try
+		{
 			fs.accessSync(path, fs.constants.X_OK);
 			canAccess = true;
 		}
-		catch{}
-		if(!canAccess) execute('node npm-scripts.js worker:build');
+		catch (e) {}
+		if (!canAccess) execute('node npm-scripts.js worker:build');
 
 		break;
 	}
