@@ -93,10 +93,10 @@ jobs:
           name: win32-x64.exe
           path: worker/out/win32-x64/Release/mediasoup-worker.exe
 
+      - run: chmod +x worker/out/*/Release/mediasoup-worker
+
       - name: Node.js
         uses: actions/setup-node@v2
-
-      - run: chmod +x worker/out/*/Release/mediasoup-worker
 
       - run: npm publish  # This will build the package again too.
         env:
