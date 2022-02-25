@@ -6,7 +6,7 @@ on:
     - v*  # Only build for tags that match new versions of `npm` packages
   # Manual dispatch, only for testing purposses
   # See https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
-  workflow_dispatch
+  workflow_dispatch:
 
 jobs:
   linux-x64:
