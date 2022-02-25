@@ -65,7 +65,7 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: win32-x64.exe
+          name: win32-x64
           path: worker/out/win32-x64/Release/mediasoup-worker.exe
           retention-days: 1
 
@@ -95,7 +95,7 @@ jobs:
       - name: Download prebuild image for Windows x86_64
         uses: actions/download-artifact@v2
         with:
-          name: win32-x64.exe
+          name: win32-x64
           path: worker/out/win32-x64/Release/mediasoup-worker.exe
 
       - run: chmod +x worker/out/*/Release/mediasoup-worker
