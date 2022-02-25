@@ -98,7 +98,7 @@ jobs:
           name: win32-x64
           path: worker/out/win32-x64/Release/mediasoup-worker.exe
 
-      - run: chmod +x worker/out/*/Release/mediasoup-worker
+      - run: chmod +x worker/out/*/Release/mediasoup-worker*
 
       - name: Node.js
         uses: actions/setup-node@v2
