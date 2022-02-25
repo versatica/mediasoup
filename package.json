@@ -72,13 +72,11 @@
     "@types/node": "^16.11.10",
     "debug": "^4.3.3",
     "h264-profile-level-id": "^1.0.1",
-    "random-number": "^0.0.9",
     "supports-color": "^9.2.1",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
-    "@types/random-number": "^0.0.1",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.12.1",
     "@typescript-eslint/parser": "^5.12.1",
