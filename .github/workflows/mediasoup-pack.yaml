@@ -10,6 +10,8 @@ on:
 
 jobs:
   linux-x64:
+    name: Create prebuild image for Linux x86_64
+
     runs-on: ubuntu-latest
 
     steps:
@@ -28,6 +30,8 @@ jobs:
           retention-days: 1
 
   macos-x64:
+    name: Create prebuild image for macOS x86_64
+
     runs-on: macos-latest
 
     steps:
@@ -46,6 +50,8 @@ jobs:
           retention-days: 1
 
   windows-x64:
+    name: Create prebuild image for Windows x86_64
+
     runs-on: windows-latest
 
     steps:
@@ -64,6 +70,8 @@ jobs:
           retention-days: 1
 
   pack:
+    name: Bundle the prebuild images and publish the package
+
     needs: [linux-x64, macos-x64, windows-x64]
 
     runs-on: ubuntu-latest
