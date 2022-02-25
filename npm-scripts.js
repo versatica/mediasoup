@@ -138,7 +138,7 @@ switch (task)
 		if (dirEntries && dirEntries.includes(getTriplet())) break;
 
 		// `mediasoup-worker` executable not available, build and install it
-		execute('node npm-scripts.js worker:build');
+		execute('npm run worker:build');
 
 		// Clean build artifacts except `mediasoup-worker`.
 		execute(`${MAKE} clean-build -C worker`);
@@ -164,14 +164,14 @@ switch (task)
 			canAccess = true;
 		}
 		catch (e) {}
-		if (!canAccess) execute('node npm-scripts.js worker:build');
+		if (!canAccess) execute('npm run worker:build');
 
 		break;
 	}
 
 	case 'release':
 	{
-		execute('node npm-scripts.js typescript:build');
+		execute('npm run typescript:build');
 		execute('npm run lint');
 		execute('npm run test');
 		execute(`git commit -am '${version}'`);
