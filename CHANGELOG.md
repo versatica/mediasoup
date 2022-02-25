@@ -1,6 +1,11 @@
 # Changelog
 
 
+### WIP
+
+* Replace outdated `random-numbers` package by native `crypto.randomInt()` (PR #776 by @piranna).
+
+
 ### 3.9.7
 
 * Typing event emitters in mediasoup Node (PR #764 by @unao).
