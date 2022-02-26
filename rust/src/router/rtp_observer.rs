@@ -31,7 +31,7 @@ impl RtpObserverAddProducerOptions {
 /// mediasoup implements the following RTP observers:
 /// * [`AudioLevelObserver`](crate::audio_level_observer::AudioLevelObserver)
 /// * [`ActiveSpeakerObserver`](crate::active_speaker_observer::ActiveSpeakerObserver)
-#[async_trait(?Send)]
+#[async_trait]
 pub trait RtpObserver {
     /// RtpObserver id.
     #[must_use]
