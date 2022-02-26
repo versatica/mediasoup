@@ -84,19 +84,19 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: linux-x64
-          path: worker/out/linux-x64/Release/mediasoup-worker
+          path: worker/out/linux-x64/Release
 
       - name: Download prebuild image for macOS x86_64
         uses: actions/download-artifact@v2
         with:
           name: darwin-x64
-          path: worker/out/darwin-x64/Release/mediasoup-worker
+          path: worker/out/darwin-x64/Release
 
       - name: Download prebuild image for Windows x86_64
         uses: actions/download-artifact@v2
         with:
           name: win32-x64
-          path: worker/out/win32-x64/Release/mediasoup-worker.exe
+          path: worker/out/win32-x64/Release
 
       - run: chmod +x worker/out/*/Release/mediasoup-worker*
 
