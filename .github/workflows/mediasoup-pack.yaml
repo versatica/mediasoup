@@ -103,6 +103,9 @@ jobs:
       - name: Node.js
         uses: actions/setup-node@v2
 
-      - run: npm publish  # This will build the package again too.
+      # This will not build the package again, if we already generated the
+      # prebuild for the operating system and CPU where this job is running.
+      - name: Publish to npmjs
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
