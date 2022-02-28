@@ -285,14 +285,12 @@ namespace RTC
 			// * higher than current one
 			// * different than the current one when KSVC is enabled and this is not a keyframe
 			// (interframe p bit = 1)
-			if (!isOldPacket)
+			if (
+			  !isOldPacket &&
+			  (packetSpatialLayer > tmpSpatialLayer ||
+			   (context->IsKSvc() && this->payloadDescriptor->p && packetSpatialLayer != tmpSpatialLayer)))
 			{
-				if (
-				  packetSpatialLayer > tmpSpatialLayer ||
-				  (context->IsKSvc() && this->payloadDescriptor->p && packetSpatialLayer != tmpSpatialLayer))
-				{
-					return false;
-				}
+				return false;
 			}
 
 			// Check and handle temporal layer (unless old packet).
