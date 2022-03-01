@@ -3,7 +3,9 @@
 
 ### WIP
 
+* Fix VP9 kSVC forwarding logic to not forward lower unneded layers (PR #778 by @ggarber).
 * Replace outdated `random-numbers` package by native `crypto.randomInt()` (PR #776 by @piranna).
+* Update NPM deps and TypeScript version.
 
 
 ### 3.9.7
