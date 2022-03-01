@@ -281,9 +281,17 @@ namespace RTC
 				}
 			}
 
-			// Filter spatial layers higher than current one (unless old packet).
-			if (packetSpatialLayer > tmpSpatialLayer && !isOldPacket)
+			// Unless old packet filter spatial layers that are either
+			// * higher than current one
+			// * different than the current one when KSVC is enabled and this is not a keyframe
+			// (interframe p bit = 1)
+			if (
+			  !isOldPacket &&
+			  (packetSpatialLayer > tmpSpatialLayer ||
+			   (context->IsKSvc() && this->payloadDescriptor->p && packetSpatialLayer != tmpSpatialLayer)))
+			{
 				return false;
+			}
 
 			// Check and handle temporal layer (unless old packet).
 			if (!isOldPacket)
