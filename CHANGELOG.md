@@ -4,6 +4,7 @@
 ### WIP
 
 * Fix VP9 kSVC forwarding logic to not forward lower unneded layers (PR #778 by @ggarber).
+* Fix update bandwidth estimation configuration and available bitrate when updating max outgoing bitrate (PR #779 by @ggarber).
 * Replace outdated `random-numbers` package by native `crypto.randomInt()` (PR #776 by @piranna).
 * Update NPM deps and TypeScript version.
 
