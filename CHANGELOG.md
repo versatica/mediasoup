@@ -1,7 +1,7 @@
 # Changelog
 
 
-### WIP
+### 3.9.8
 
 * Fix VP9 kSVC forwarding logic to not forward lower unneded layers (PR #778 by @ggarber).
 * Fix update bandwidth estimation configuration and available bitrate when updating max outgoing bitrate (PR #779 by @ggarber).
