@@ -186,6 +186,15 @@ namespace RTC
 		UpdateScore(report);
 	}
 
+	void RtpStreamSend::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+	{
+		MS_TRACE();
+
+		this->lastRrReceivedMs = DepLibUV::GetTimeMs();
+		this->lastRrTimestamp  = report->GetNtpSec() << 16;
+		this->lastRrTimestamp += report->GetNtpFrac() >> 16;
+	}
+
 	RTC::RTCP::SenderReport* RtpStreamSend::GetRtcpSenderReport(uint64_t nowMs)
 	{
 		MS_TRACE();
@@ -212,6 +221,29 @@ namespace RTC
 		this->lastSenderReportTs    = this->maxPacketTs + diffTs;
 
 		return report;
+	}
+
+	RTC::RTCP::DelaySinceLastRr::SsrcInfo* RtpStreamSend::GetRtcpXrDelaySinceLastRr(uint64_t nowMs)
+	{
+		MS_TRACE();
+
+		if (this->lastRrReceivedMs == 0u)
+			return nullptr;
+
+		// Get delay in milliseconds.
+		auto delayMs = static_cast<uint32_t>(nowMs - this->lastRrReceivedMs);
+		// Express delay in units of 1/65536 seconds.
+		uint32_t dlrr = (delayMs / 1000) << 16;
+
+		dlrr |= uint32_t{ (delayMs % 1000) * 65536 / 1000 };
+
+		auto* ssrcInfo = new RTC::RTCP::DelaySinceLastRr::SsrcInfo();
+
+		ssrcInfo->SetSsrc(GetSsrc());
+		ssrcInfo->SetDelaySinceLastReceiverReport(dlrr);
+		ssrcInfo->SetLastReceiverReport(this->lastRrTimestamp);
+
+		return ssrcInfo;
 	}
 
 	RTC::RTCP::SdesChunk* RtpStreamSend::GetRtcpSdesChunk()

@@ -2270,6 +2270,20 @@ namespace RTC
 							break;
 						}
 
+						case RTC::RTCP::ExtendedReportBlock::Type::RRT:
+						{
+							auto* rrt = static_cast<RTC::RTCP::ReceiverReferenceTime*>(report);
+
+							for (auto& kv : this->mapConsumers)
+							{
+								auto* consumer = kv.second;
+
+								consumer->ReceiveRtcpXrReceiverReferenceTime(rrt);
+							}
+
+							break;
+						}
+
 						default:;
 					}
 				}
