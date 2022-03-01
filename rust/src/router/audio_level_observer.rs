@@ -175,7 +175,7 @@ impl fmt::Debug for AudioLevelObserver {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl RtpObserver for AudioLevelObserver {
     fn id(&self) -> RtpObserverId {
         self.inner.id
