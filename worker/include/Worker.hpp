@@ -9,9 +9,9 @@
 #include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/Router.hpp"
 #include "handles/SignalsHandler.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 
 using json = nlohmann::json;
 
@@ -55,7 +55,7 @@ private:
 	PayloadChannel::PayloadChannelSocket* payloadChannel{ nullptr };
 	// Allocated by this.
 	SignalsHandler* signalsHandler{ nullptr };
-	std::unordered_map<std::string, RTC::Router*> mapRouters;
+	absl::flat_hash_map<std::string, RTC::Router*> mapRouters;
 	// Others.
 	bool closed{ false };
 };

@@ -11,7 +11,7 @@ namespace Channel
 	/* Class variables. */
 
 	// clang-format off
-	std::unordered_map<std::string, ChannelRequest::MethodId> ChannelRequest::string2MethodId =
+	absl::flat_hash_map<std::string, ChannelRequest::MethodId> ChannelRequest::string2MethodId =
 	{
 		{ "worker.close",                                ChannelRequest::MethodId::WORKER_CLOSE                                     },
 		{ "worker.dump",                                 ChannelRequest::MethodId::WORKER_DUMP                                      },

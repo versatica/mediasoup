@@ -146,7 +146,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::map<int8_t, RTC::Producer*> mapDBovsProducer;
+		absl::btree_map<int8_t, RTC::Producer*> mapDBovsProducer;
 
 		for (auto& kv : this->mapProducerDBovs)
 		{

@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-#include <map>
+#include <absl/container/btree_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -611,8 +611,8 @@ namespace RTC
 		Header* header{ nullptr };
 		uint8_t* csrcList{ nullptr };
 		HeaderExtension* headerExtension{ nullptr };
-		std::map<uint8_t, OneByteExtension*> mapOneByteExtensions;
-		std::map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
+		absl::btree_map<uint8_t, OneByteExtension*> mapOneByteExtensions;
+		absl::btree_map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
 		uint8_t midExtensionId{ 0u };
 		uint8_t ridExtensionId{ 0u };
 		uint8_t rridExtensionId{ 0u };

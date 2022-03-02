@@ -5,7 +5,7 @@
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
-#include <map>
+#include <absl/container/flat_hash_map.h>
 
 namespace RTC
 {
@@ -19,8 +19,8 @@ namespace RTC
 		};
 
 	private:
-		static std::map<std::string, RTC::SrtpSession::CryptoSuite> string2SrtpCryptoSuite;
-		static std::map<RTC::SrtpSession::CryptoSuite, std::string> srtpCryptoSuite2String;
+		static absl::flat_hash_map<std::string, RTC::SrtpSession::CryptoSuite> string2SrtpCryptoSuite;
+		static absl::flat_hash_map<RTC::SrtpSession::CryptoSuite, std::string> srtpCryptoSuite2String;
 		static size_t srtpMasterLength;
 
 	public:

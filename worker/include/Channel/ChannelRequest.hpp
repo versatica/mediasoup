@@ -2,9 +2,9 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 
 using json = nlohmann::json;
 
@@ -75,7 +75,7 @@ namespace Channel
 		};
 
 	private:
-		static std::unordered_map<std::string, MethodId> string2MethodId;
+		static absl::flat_hash_map<std::string, MethodId> string2MethodId;
 
 	public:
 		ChannelRequest(Channel::ChannelSocket* channel, json& jsonRequest);

@@ -2,9 +2,9 @@
 #define MS_PAYLOAD_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 
 using json = nlohmann::json;
 
@@ -26,7 +26,7 @@ namespace PayloadChannel
 		static bool IsRequest(json& jsonRequest);
 
 	private:
-		static std::unordered_map<std::string, MethodId> string2MethodId;
+		static absl::flat_hash_map<std::string, MethodId> string2MethodId;
 
 	public:
 		PayloadChannelRequest(PayloadChannel::PayloadChannelSocket* channel, json& jsonRequest);

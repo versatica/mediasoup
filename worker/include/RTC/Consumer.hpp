@@ -14,9 +14,9 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamSend.hpp"
+#include <absl/container/flat_hash_set.h>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 using json = nlohmann::json;
@@ -182,7 +182,7 @@ namespace RTC
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
-		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
+		absl::flat_hash_set<uint8_t> supportedCodecPayloadTypes;
 		uint64_t lastRtcpSentTime{ 0u };
 		uint16_t maxRtcpInterval{ 0u };
 		bool externallyManagedBitrate{ false };

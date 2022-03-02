@@ -2,9 +2,9 @@
 #define MS_RTC_PARAMETERS_HPP
 
 #include "common.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 using json = nlohmann::json;
@@ -78,7 +78,7 @@ namespace RTC
 		const std::vector<int32_t>& GetArrayOfIntegers(const std::string& key) const;
 
 	private:
-		std::unordered_map<std::string, Value> mapKeyValues;
+		absl::flat_hash_map<std::string, Value> mapKeyValues;
 	};
 } // namespace RTC
 

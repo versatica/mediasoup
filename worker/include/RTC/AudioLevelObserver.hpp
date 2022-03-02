@@ -3,8 +3,8 @@
 
 #include "RTC/RtpObserver.hpp"
 #include "handles/Timer.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
-#include <unordered_map>
 
 using json = nlohmann::json;
 
@@ -48,7 +48,7 @@ namespace RTC
 		// Allocated by this.
 		Timer* periodicTimer{ nullptr };
 		// Others.
-		std::unordered_map<RTC::Producer*, DBovs> mapProducerDBovs;
+		absl::flat_hash_map<RTC::Producer*, DBovs> mapProducerDBovs;
 		bool silence{ true };
 	};
 } // namespace RTC

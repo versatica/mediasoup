@@ -4,14 +4,14 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include <unordered_set>
+#include <absl/container/flat_hash_set.h>
 
 namespace RTC
 {
 	/* Class variables. */
 
 	// clang-format off
-	std::unordered_map<std::string, RtpParameters::Type> RtpParameters::string2Type =
+	absl::flat_hash_map<std::string, RtpParameters::Type> RtpParameters::string2Type =
 	{
 		{ "none",      RtpParameters::Type::NONE      },
 		{ "simple",    RtpParameters::Type::SIMPLE    },
@@ -19,7 +19,7 @@ namespace RTC
 		{ "svc",       RtpParameters::Type::SVC       },
 		{ "pipe",      RtpParameters::Type::PIPE      }
 	};
-	std::map<RtpParameters::Type, std::string> RtpParameters::type2String =
+	absl::flat_hash_map<RtpParameters::Type, std::string> RtpParameters::type2String =
 	{
 		{ RtpParameters::Type::NONE,      "none"      },
 		{ RtpParameters::Type::SIMPLE,    "simple"    },
@@ -266,7 +266,7 @@ namespace RTC
 
 		static const std::string AptString{ "apt" };
 
-		std::unordered_set<uint8_t> payloadTypes;
+		absl::flat_hash_set<uint8_t> payloadTypes;
 
 		for (auto& codec : this->codecs)
 		{
