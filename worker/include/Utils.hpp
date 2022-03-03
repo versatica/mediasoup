@@ -1,5 +1,6 @@
 #ifndef MS_UTILS_HPP
 #define MS_UTILS_HPP
+// #define MS_MEM_POOL_FREE_ON_RETURN 1
 
 #include "common.hpp"
 #include <openssl/hmac.h>
@@ -382,7 +383,13 @@ namespace Utils
 		void Return(T* ptr)
 		{
 			if (ptr)
+			{
+#ifdef MS_MEM_POOL_FREE_ON_RETURN
+				std::free(ptr);
+#else
 				this->pool.push_back(ptr);
+#endif
+			}
 		}
 
 	private:

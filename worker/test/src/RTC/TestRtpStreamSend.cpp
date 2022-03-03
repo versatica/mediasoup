@@ -8,7 +8,7 @@
 
 using namespace RTC;
 
-SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
+SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 {
 	class TestRtpStreamListener : public RtpStreamSend::Listener
 	{
@@ -161,6 +161,72 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(rtxPacket4);
 		REQUIRE(rtxPacket4->GetSequenceNumber() == packet5->GetSequenceNumber());
 		REQUIRE(rtxPacket4->GetTimestamp() == packet5->GetTimestamp());
+
+		delete stream;
+	}
+
+	SECTION("Cloned RTP packet differs from original, get retransmitted packets")
+	{
+		// clang-format off
+		uint8_t rtpBuffer1[] =
+		{
+			0b10000000, 0b01111011, 0b01010010, 0b00001110,
+			0b01011011, 0b01101011, 0b11001010, 0b10110101,
+			0, 0, 0, 2
+		};
+		// clang-format on
+
+		RtpStream::Params params;
+
+		params.ssrc      = 1111;
+		params.clockRate = 90000;
+		params.useNack   = true;
+
+		// Create a RtpStreamSend.
+		std::string mid{ "" };
+		RtpStreamSend* stream = new RtpStreamSend(&testRtpStreamListener, params, mid, true);
+
+		auto packet = RtpPacket::Parse(rtpBuffer1, sizeof(rtpBuffer1));
+
+		REQUIRE(packet);
+
+		// Original packet.
+		packet->SetSsrc(1111);
+		packet->SetSequenceNumber(2222);
+		packet->SetTimestamp(3333);
+
+		auto clonedPacket = packet->Clone();
+
+		REQUIRE(clonedPacket);
+
+		// Cloned packet.
+		clonedPacket->SetSsrc(4444);
+		clonedPacket->SetSequenceNumber(5555);
+		clonedPacket->SetTimestamp(6666);
+
+		stream->ReceivePacket(packet.get(), clonedPacket);
+
+		// Create a NACK item that requests the packet.
+		RTCP::FeedbackRtpNackPacket nackPacket(0, params.ssrc);
+		auto* nackItem = new RTCP::FeedbackRtpNackItem(packet->GetSequenceNumber(), 0b0000000000000000);
+
+		nackPacket.AddItem(nackItem);
+
+		REQUIRE(nackItem->GetPacketId() == packet->GetSequenceNumber());
+		REQUIRE(nackItem->GetLostPacketBitmask() == 0b0000000000000000);
+
+		stream->ReceiveNack(&nackPacket);
+
+		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 1);
+
+		auto rtxPacket = testRtpStreamListener.retransmittedPackets[0];
+
+		testRtpStreamListener.retransmittedPackets.clear();
+
+		// Make sure RTX packets correspond match the origina packet info.
+		REQUIRE(rtxPacket);
+		REQUIRE(rtxPacket->GetSequenceNumber() == 2222);
+		REQUIRE(rtxPacket->GetTimestamp() == 3333);
 
 		delete stream;
 	}
