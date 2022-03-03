@@ -38,7 +38,13 @@ export declare type DataProducerStat = {
  * DataProducer type.
  */
 export declare type DataProducerType = 'sctp' | 'direct';
-export declare class DataProducer extends EnhancedEventEmitter {
+export declare type DataProducerEvents = {
+    transportclose: [];
+};
+export declare type DataProducerObserverEvents = {
+    close: [];
+};
+export declare class DataProducer extends EnhancedEventEmitter<DataProducerEvents> {
     #private;
     /**
      * @private
@@ -89,7 +95,7 @@ export declare class DataProducer extends EnhancedEventEmitter {
      *
      * @emits close
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<DataProducerObserverEvents>;
     /**
      * Close the DataProducer.
      */

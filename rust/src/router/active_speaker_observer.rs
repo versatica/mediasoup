@@ -164,7 +164,7 @@ impl fmt::Debug for ActiveSpeakerObserver {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl RtpObserver for ActiveSpeakerObserver {
     fn id(&self) -> RtpObserverId {
         self.inner.id

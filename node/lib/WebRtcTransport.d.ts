@@ -1,4 +1,4 @@
-import { Transport, TransportListenIp, TransportProtocol, TransportTuple, SctpState } from './Transport';
+import { Transport, TransportListenIp, TransportProtocol, TransportTuple, TransportEvents, TransportObserverEvents, SctpState } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 export declare type WebRtcTransportOptions = {
     /**
@@ -112,7 +112,19 @@ export declare type WebRtcTransportStat = {
     iceSelectedTuple?: TransportTuple;
     dtlsState: DtlsState;
 };
-export declare class WebRtcTransport extends Transport {
+export declare type WebRtcTransportEvents = TransportEvents & {
+    icestatechange: [IceState];
+    iceselectedtuplechange: [TransportTuple];
+    dtlsstatechange: [DtlsState];
+    sctpstatechange: [SctpState];
+};
+export declare type WebRtcTransportObserverEvents = TransportObserverEvents & {
+    icestatechange: [IceState];
+    iceselectedtuplechange: [TransportTuple];
+    dtlsstatechange: [DtlsState];
+    sctpstatechange: [SctpState];
+};
+export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents> {
     #private;
     /**
      * @private
