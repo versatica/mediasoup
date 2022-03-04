@@ -490,7 +490,7 @@ namespace RTC
 					continue;
 
 				// Store the One-Byte extension element in an array.
-				// `-1` because we have 14 elements total 0..=13 and `id` is in the range 1..=14
+				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
 				this->oneByteExtensions[extension.id - 1] = reinterpret_cast<OneByteExtension*>(ptr);
 
 				*ptr = (extension.id << 4) | ((extension.len - 1) & 0x0F);
@@ -574,7 +574,7 @@ namespace RTC
 		}
 		else if (HasOneByteExtensions())
 		{
-			// `-1` because we have 14 elements total 0..=13 and `id` is in the range 1..=14
+			// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
 			auto* extension = this->oneByteExtensions[id - 1];
 
 			if (!extension)
@@ -885,7 +885,7 @@ namespace RTC
 					}
 
 					// Store the One-Byte extension element in an array.
-					// `-1` because we have 14 elements total 0..=13 and `id` is in the range 1..=14
+					// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
 					this->oneByteExtensions[id - 1] = reinterpret_cast<OneByteExtension*>(ptr);
 
 					ptr += (1 + len);
