@@ -616,7 +616,7 @@ namespace RTC
 		Header* header{ nullptr };
 		uint8_t* csrcList{ nullptr };
 		HeaderExtension* headerExtension{ nullptr };
-		// There might be up to one-byte header extensions
+		// There might be up to 14 one-byte header extensions
 		// (https://datatracker.ietf.org/doc/html/rfc5285#section-4.2), use std::array.
 		std::array<OneByteExtension*, 14> oneByteExtensions;
 		absl::flat_hash_map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
