@@ -477,7 +477,7 @@ namespace RTC
 				if (id > 14)
 					return false;
 
-				// `-1` because we have 14 elements total 0..=13 and `id` is in the range 1..=14
+				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
 				return this->oneByteExtensions[id - 1] != nullptr;
 			}
 			else if (HasTwoBytesExtensions())
@@ -514,7 +514,7 @@ namespace RTC
 				if (id > 14)
 					return nullptr;
 
-				// `-1` because we have 14 elements total 0..=13 and `id` is in the range 1..=14
+				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
 				auto* extension = this->oneByteExtensions[id - 1];
 
 				if (!extension)
