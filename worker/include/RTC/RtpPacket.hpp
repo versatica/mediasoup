@@ -5,6 +5,7 @@
 #include "Utils.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include <absl/container/flat_hash_map.h>
+#include <array>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -477,7 +478,7 @@ namespace RTC
 					return false;
 
 				// `-1` because we have 14 elements total 0..=13 and `id` is in the range 1..=14
-				return this->mapOneByteExtensions[id - 1] != nullptr;
+				return this->oneByteExtensions[id - 1] != nullptr;
 			}
 			else if (HasTwoBytesExtensions())
 			{
@@ -514,7 +515,7 @@ namespace RTC
 					return nullptr;
 
 				// `-1` because we have 14 elements total 0..=13 and `id` is in the range 1..=14
-				auto* extension = this->mapOneByteExtensions[id - 1];
+				auto* extension = this->oneByteExtensions[id - 1];
 
 				if (!extension)
 					return nullptr;
@@ -616,9 +617,8 @@ namespace RTC
 		uint8_t* csrcList{ nullptr };
 		HeaderExtension* headerExtension{ nullptr };
 		// There might be up to one-byte header extensions
-		// (https://datatracker.ietf.org/doc/html/rfc5285#section-4.2), which is why we'll just allocate
-		// a static array for them
-		OneByteExtension* mapOneByteExtensions[14];
+		// (https://datatracker.ietf.org/doc/html/rfc5285#section-4.2), use std::array.
+		std::array<OneByteExtension*, 14> oneByteExtensions;
 		absl::flat_hash_map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
 		uint8_t midExtensionId{ 0u };
 		uint8_t ridExtensionId{ 0u };

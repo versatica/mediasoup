@@ -177,7 +177,7 @@ namespace RTC
 
 			if (HasOneByteExtensions())
 			{
-				for (const auto& extension : this->mapOneByteExtensions)
+				for (const auto& extension : this->oneByteExtensions)
 				{
 					extIds.push_back(std::to_string(extension->id));
 				}
@@ -378,7 +378,7 @@ namespace RTC
 		this->videoOrientationExtensionId  = 0u;
 
 		// Clear the One-Byte and Two-Bytes extension elements maps.
-		std::fill(std::begin(this->mapOneByteExtensions), std::end(this->mapOneByteExtensions), nullptr);
+		std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), nullptr);
 		this->mapTwoBytesExtensions.clear();
 
 		// If One-Byte is requested and the packet already has One-Byte extensions,
@@ -491,7 +491,7 @@ namespace RTC
 
 				// Store the One-Byte extension element in an array.
 				// `-1` because we have 14 elements total 0..=13 and `id` is in the range 1..=14
-				this->mapOneByteExtensions[extension.id - 1] = reinterpret_cast<OneByteExtension*>(ptr);
+				this->oneByteExtensions[extension.id - 1] = reinterpret_cast<OneByteExtension*>(ptr);
 
 				*ptr = (extension.id << 4) | ((extension.len - 1) & 0x0F);
 				++ptr;
@@ -575,7 +575,7 @@ namespace RTC
 		else if (HasOneByteExtensions())
 		{
 			// `-1` because we have 14 elements total 0..=13 and `id` is in the range 1..=14
-			auto* extension = this->mapOneByteExtensions[id - 1];
+			auto* extension = this->oneByteExtensions[id - 1];
 
 			if (!extension)
 				return false;
@@ -857,7 +857,7 @@ namespace RTC
 		if (HasOneByteExtensions())
 		{
 			// Clear the One-Byte extension elements map.
-			std::fill(std::begin(this->mapOneByteExtensions), std::end(this->mapOneByteExtensions), nullptr);
+			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), nullptr);
 
 			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->headerExtension) + 4;
 			uint8_t* extensionEnd   = extensionStart + GetHeaderExtensionLength();
@@ -886,7 +886,7 @@ namespace RTC
 
 					// Store the One-Byte extension element in an array.
 					// `-1` because we have 14 elements total 0..=13 and `id` is in the range 1..=14
-					this->mapOneByteExtensions[id - 1] = reinterpret_cast<OneByteExtension*>(ptr);
+					this->oneByteExtensions[id - 1] = reinterpret_cast<OneByteExtension*>(ptr);
 
 					ptr += (1 + len);
 				}
