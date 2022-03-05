@@ -4,7 +4,8 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-#include <absl/container/btree_map.h>
+#include <absl/container/flat_hash_map.h>
+#include <array>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -473,9 +474,11 @@ namespace RTC
 			}
 			else if (HasOneByteExtensions())
 			{
-				auto it = this->mapOneByteExtensions.find(id);
+				if (id > 14)
+					return false;
 
-				return it != this->mapOneByteExtensions.end();
+				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
+				return this->oneByteExtensions[id - 1] != nullptr;
 			}
 			else if (HasTwoBytesExtensions())
 			{
@@ -508,12 +511,14 @@ namespace RTC
 			}
 			else if (HasOneByteExtensions())
 			{
-				auto it = this->mapOneByteExtensions.find(id);
-
-				if (it == this->mapOneByteExtensions.end())
+				if (id > 14)
 					return nullptr;
 
-				auto* extension = it->second;
+				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
+				auto* extension = this->oneByteExtensions[id - 1];
+
+				if (!extension)
+					return nullptr;
 
 				// In One-Byte extensions value length 0 means 1.
 				len = extension->len + 1;
@@ -611,8 +616,10 @@ namespace RTC
 		Header* header{ nullptr };
 		uint8_t* csrcList{ nullptr };
 		HeaderExtension* headerExtension{ nullptr };
-		absl::btree_map<uint8_t, OneByteExtension*> mapOneByteExtensions;
-		absl::btree_map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
+		// There might be up to 14 one-byte header extensions
+		// (https://datatracker.ietf.org/doc/html/rfc5285#section-4.2), use std::array.
+		std::array<OneByteExtension*, 14> oneByteExtensions;
+		absl::flat_hash_map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
 		uint8_t midExtensionId{ 0u };
 		uint8_t ridExtensionId{ 0u };
 		uint8_t rridExtensionId{ 0u };
