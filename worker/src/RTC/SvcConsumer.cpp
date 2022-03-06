@@ -763,8 +763,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->syncRequired = true;
-
 		if (IsActive())
 			MayChangeLayers();
 	}

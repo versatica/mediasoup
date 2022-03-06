@@ -1035,9 +1035,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->syncRequired                 = true;
-		this->keyFrameForTsOffsetRequested = false;
-
 		if (IsActive())
 			MayChangeLayers();
 	}
