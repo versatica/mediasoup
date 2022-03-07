@@ -373,6 +373,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->transportConnected)
+			return;
+
 		this->transportConnected = true;
 
 		MS_DEBUG_DEV("Transport connected [consumerId:%s]", this->id.c_str());
@@ -383,6 +386,9 @@ namespace RTC
 	void Consumer::TransportDisconnected()
 	{
 		MS_TRACE();
+
+		if (!this->transportConnected)
+			return;
 
 		this->transportConnected = false;
 
