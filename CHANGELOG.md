@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 3.9.9
+
+* Optimize RTP header extension handling (PR #786).
+* `RateCalculator`: Reset optimization (PR #785).
+* Fix frozen video due to double call to `Consumer::UserOnTransportDisconnected()` (PR #788, thanks to @ggarber for exposing this issue in PR #787).
+
+
 ### 3.9.8
 
 * Fix VP9 kSVC forwarding logic to not forward lower unneded layers (PR #778 by @ggarber).
