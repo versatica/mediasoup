@@ -8,11 +8,13 @@ This is a standalone C file with no build dependencies from mediasoup. However, 
 
 ## Workflow
 
-Build with gcc, for example: gcc -v -o msbingrep LivelyStatsBinGrep.c
+### Build with gcc, for example: gcc -v -o LivelyStatsBinGrep LivelyStatsBinGrep.c
+
+### Meson: (first time setup) meson setup out && meson compile -C out
 
 ## Usage
 
-usage: ./L [ -f <format> ] [ -t <interval ms> ] log_name
+usage: ./sfustatsgrep [ -f <format> ] [ -t <interval ms> ] log_name
     log_name           - full path to the log file to parse or wildcard pattern in case -a is used
     -f <format>        - format:
                          1 = CSV with no headers, comma separated (default)

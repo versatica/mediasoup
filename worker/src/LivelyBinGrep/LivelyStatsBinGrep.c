@@ -167,17 +167,12 @@ format_csv(FILE* fd, ms_binlog_config *conf)
     char                        *first;
     call_stats_record_t         *rec;
     char                        *samples_pos;
-    call_stats_record_t         rec_tm_align[MAX_TIME_ALIGN];
     call_stats_sample_t         *sample;
     call_stats_sample_t         sample_tm_align[MAX_TIME_ALIGN];
 
-    uint64_t                    record_start_ts;
     uint64_t                    sample_start_tm;
     uint16_t                    prev_sample_epoch_len, curr_sample_epoch_len;
     
-    char                        label_buf[MAX_LABEL_LEN];
-    size_t                      label_len;
-
     char                        call_id[37];
     char                        object_id[37]; 
     char                        producer_id[37]; 
@@ -209,8 +204,6 @@ format_csv(FILE* fd, ms_binlog_config *conf)
         memcpy(call_id, rec->call_id, 36);
         memcpy(object_id, rec->object_id, 36);
         memcpy(producer_id, rec->producer_id, 36);
-
-        record_start_ts = rec->start_tm;
     
         samples_pos = ((char*)rec) + CALL_STATS_HEADER_LEN;
         prev_sample_epoch_len = curr_sample_epoch_len = 0; // we need delta between current and previous epoch len to time alignment function
@@ -237,14 +230,12 @@ format_csv(FILE* fd, ms_binlog_config *conf)
           {
             if (1 == conf->format)
               fprintf(stdout, 
-                "%s"
                 "%s,%s,%s"
                 ",%"PRIu64
                 ",%s,%s,%"PRIu16
                 ",%"PRIu16",%"PRIu16",%"PRIu16
                 ",%"PRIu16",%"PRIu16",%"PRIu16
                 ",%"PRIu16",%"PRIu16",%"PRIu32",%"PRIu32"\n",
-                label_buf, 
                 call_id, object_id, producer_id,
                 sample_start_tm + sample[i].epoch_len,
                 source_string[rec->source], mime_string[rec->mime], sample[i].packets_count,
@@ -253,14 +244,12 @@ format_csv(FILE* fd, ms_binlog_config *conf)
                 sample[i].kf_count, sample[i].rtt, sample[i].max_pts, sample[i].bytes_count);
             else if (2 == conf->format)
               fprintf(stdout, 
-                "%s"
                 "%s\t%s\t%s"
                 "\t%"PRIu64
                 "\t%s\t%s\t%"PRIu16
                 "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
                 "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
                 "\t%"PRIu16"\t%"PRIu16"\t%"PRIu32"\t%"PRIu32"\n",
-                label_buf, 
                 call_id, object_id, producer_id,
                 sample_start_tm + sample[i].epoch_len,
                 source_string[rec->source], mime_string[rec->mime], sample[i].packets_count,
