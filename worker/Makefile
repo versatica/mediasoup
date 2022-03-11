@@ -29,7 +29,7 @@ export PYTHONPATH = $(PIP_DIR)
 
 .PHONY:	\
 	default meson-ninja setup clean clean-pip clean-subprojects clean-all mediasoup-worker xcode lint format test tidy \
-	fuzzer fuzzer-run-all docker-build docker-run libmediasoup-worker
+	fuzzer fuzzer-run-all docker-build docker-run libmediasoup-worker bingrep
 
 default: mediasoup-worker
 
@@ -170,3 +170,6 @@ docker-run:
 
 libmediasoup-worker: setup
 	$(MESON) compile -j $(CORES) -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) libmediasoup-worker
+
+bingrep: setup
+	$(MESON) compile -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) livelybingrep

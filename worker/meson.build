@@ -349,6 +349,11 @@ test(
   workdir: meson.source_root(),
 )
 
+executable(
+  'livelybingrep',
+  build_by_default: false,
+  sources: ['src/LivelyBinGrep/LivelyStatsBinGrep.c'],)
+
 if host_machine.system() == 'linux'
   executable(
     'mediasoup-worker-fuzzer',
