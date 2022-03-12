@@ -1,7 +1,7 @@
 const process = require('process');
 const os = require('os');
 const fs = require('fs');
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 const { version } = require('./package.json');
 
 const isFreeBSD = os.platform() === 'freebsd';
@@ -120,6 +120,23 @@ switch (task)
 	{
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
+			if (isWindows)
+			{
+				const { spawnSync } = require('child_process');
+				var res = spawnSync('where', [ 'python3.exe' ]);
+				if (res.status !== 0)
+				{
+					res = spawnSync('where', [ 'python.exe' ]);
+					if (res.status !== 0)
+					{
+						console.log('Cannot find Python executable.');
+						process.exit(1);
+					}
+				}
+				execute(String(res.stdout).trim() + ' worker\\scripts\\getmake.py');
+				process.env['PATH'] = process.cwd() + '\\worker\\out\\msys\\bin;' + process.env['PATH'];
+			}
+
 			execute('node npm-scripts.js worker:build');
 			// Clean build artifacts except `mediasoup-worker`.
 			execute(`${MAKE} clean-build -C worker`);
@@ -127,6 +144,11 @@ switch (task)
 			execute(`${MAKE} clean-subprojects -C worker`);
 			// Clean PIP/Meson/Ninja.
 			execute(`${MAKE} clean-pip -C worker`);
+
+			if (isWindows)
+			{
+				execute('rmdir /s /q worker\\out\\msys');
+			}
 		}
 
 		break;
@@ -156,6 +178,7 @@ switch (task)
 	{
 		throw new TypeError(`unknown task "${task}"`);
 	}
+
 }
 
 function taskReplaceVersion()
