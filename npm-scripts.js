@@ -146,7 +146,7 @@ switch (task)
 
 			if (isWindows)
 			{
-				execute('rmdir /s /q worker\\out\\msys');
+				execute('rd /s /q worker\\out\\msys');
 			}
 		}
 
