@@ -539,7 +539,7 @@ namespace RTC
 		if (!IsActive())
 			return;
 
-		// Packets with only padding are not forwarded
+		// Packets with only padding are not forwarded.
 		if (packet->GetPayloadLength() == 0)
 		{
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
