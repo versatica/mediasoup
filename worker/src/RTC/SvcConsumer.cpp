@@ -539,6 +539,14 @@ namespace RTC
 		if (!IsActive())
 			return;
 
+		// Packets with only padding are not forwarded
+		if (packet->GetPayloadLength() == 0)
+		{
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+
+			return;
+		}
+
 		// clang-format off
 		if (
 			this->encodingContext->GetTargetSpatialLayer() == -1 ||
