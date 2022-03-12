@@ -122,7 +122,6 @@ switch (task)
 		{
 			if (isWindows)
 			{
-				const { spawnSync } = require('child_process');
 				var res = spawnSync('where', [ 'python3.exe' ]);
 				if (res.status !== 0)
 				{
