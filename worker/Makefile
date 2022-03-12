@@ -7,6 +7,11 @@ PYTHON ?= $(shell command -v python3 2> /dev/null || echo python)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh || echo 4)
 MEDIASOUP_OUT_DIR ?= $(shell pwd)/out
+# Controls build types, `Release` and `Debug` are presets optimized for those use cases.
+# Other build types are possible too, but they are not presets and will require `MESON_ARGS` use to customize build
+# configuration.
+# Check the meaning of useful macros in the `worker/include/Logger.hpp` header file if you want to enable tracing or
+# other debug information.
 MEDIASOUP_BUILDTYPE ?= Release
 GULP = ./scripts/node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov
@@ -15,6 +20,11 @@ PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
 INSTALL_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 BUILD_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/build
 MESON ?= $(PIP_DIR)/bin/meson
+# `MESON_ARGS` can be used to provide extra configuration parameters to Meson, such as adding defines or changing
+# optimization options. For instance, use `MESON_ARGS="-DMS_LOG_TRACE -DMS_LOG_FILE_LINE" npm i` to compile worker with
+# tracing and enabled.
+#
+# NOTE: On Windows make sure to add `--vsenv` or have MSVS environment already active if you override this parameter.
 MESON_ARGS ?= ""
 # Workaround for NixOS and Guix that don't work with pre-built binaries, see:
 # https://github.com/NixOS/nixpkgs/issues/142383.
