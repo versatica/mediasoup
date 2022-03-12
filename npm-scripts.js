@@ -178,7 +178,6 @@ switch (task)
 	{
 		throw new TypeError(`unknown task "${task}"`);
 	}
-
 }
 
 function taskReplaceVersion()
