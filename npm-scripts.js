@@ -26,7 +26,7 @@ if (isWindows)
 
 	const msysPath = `${process.cwd()}\\worker\\out\\msys\\bin`;
 
-	if (process.env['PATH'].indexOf(msysPath) < 0)
+	if (!process.env['PATH'].includes(msysPath))
 	{
 		process.env['PATH'] = `${msysPath};${process.env['PATH']}`;
 	}
