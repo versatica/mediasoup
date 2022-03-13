@@ -128,7 +128,7 @@ switch (task)
 			if (isWindows)
 			{
 				installMsysMake();
-				addMsysMakePath();
+				addMsysToPath();
 			}
 
 			execute('node npm-scripts.js worker:build');
