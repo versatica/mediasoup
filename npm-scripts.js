@@ -17,9 +17,19 @@ const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 // eslint-disable-next-line no-console
 console.log(`npm-scripts.js [INFO] running task "${task}"`);
 
-if (isWindows && fs.existsSync('worker/out/msys/bin/make.exe'))
+if (isWindows)
 {
-	addMsysToPath();
+	if (!fs.existsSync('worker/out/msys/bin/make.exe'))
+	{
+		installMsysMake();
+	}
+
+	const msysPath = `${process.cwd()}\\worker\\out\\msys\\bin`;
+
+	if (process.env['PATH'].indexOf(msysPath) < 0)
+	{
+		process.env['PATH'] = `${msysPath};${process.env['PATH']}`;
+	}
 }
 
 switch (task)
@@ -125,12 +135,6 @@ switch (task)
 	{
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
-			if (isWindows)
-			{
-				installMsysMake();
-				addMsysToPath();
-			}
-
 			execute('node npm-scripts.js worker:build');
 			// Clean build artifacts except `mediasoup-worker`.
 			execute(`${MAKE} clean-build -C worker`);
@@ -164,13 +168,6 @@ switch (task)
 	case 'install-clang-tools':
 	{
 		execute('npm ci --prefix worker/scripts');
-
-		break;
-	}
-
-	case 'install-msys-make':
-	{
-		installMsysMake();
 
 		break;
 	}
@@ -216,20 +213,18 @@ function execute(command)
 
 function installMsysMake()
 {
-	var res = spawnSync('where', [ 'python3.exe' ]);
+	let res = spawnSync('where', [ 'python3.exe' ]);
+
 	if (res.status !== 0)
 	{
 		res = spawnSync('where', [ 'python.exe' ]);
 		if (res.status !== 0)
 		{
-			console.log('Cannot find Python executable.');
+			// eslint-disable-next-line no-console
+			console.error('Cannot find Python executable.');
 			process.exit(1);
 		}
 	}
-	execute(String(res.stdout).trim() + ' worker\\scripts\\getmake.py');
-}
 
-function addMsysToPath()
-{
-	process.env['PATH'] = process.cwd() + '\\worker\\out\\msys\\bin;' + process.env['PATH'];
+	execute(`${String(res.stdout).trim()} worker\\scripts\\getmake.py`);
 }
