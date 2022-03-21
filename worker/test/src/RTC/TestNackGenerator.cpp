@@ -115,11 +115,11 @@ uint8_t rtpBuffer[] =
 };
 // clang-format on
 
-// [pt:123, seq:21006, timestamp:1533790901]
-auto packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
-
 void validate(std::vector<TestNackGeneratorInput>& inputs)
 {
+	// [pt:123, seq:21006, timestamp:1533790901]
+	auto packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
+
 	TestNackGeneratorListener listener;
 	NackGenerator nackGenerator = NackGenerator(&listener);
 

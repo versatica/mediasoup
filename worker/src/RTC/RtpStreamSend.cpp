@@ -10,8 +10,6 @@ namespace RTC
 {
 	/* Static. */
 
-	thread_local static Utils::ObjectPool<RtpStreamSend::StorageItem> StorageItemPool;
-
 	// 17: 16 bit mask + the initial sequence number.
 	static constexpr size_t MaxRequestedPackets{ 17 };
 	thread_local static std::vector<RTC::RtpStreamSend::StorageItem*> RetransmissionContainer(
@@ -131,7 +129,7 @@ namespace RTC
 		// Reset (free RTP packet) the old storage item.
 		resetStorageItem(storageItem);
 		// Return into the pool.
-		StorageItemPool.Return(storageItem);
+		StorageItem::Allocator::Pool.deallocate(storageItem, 1);
 
 		this->buffer[0] = nullptr;
 
@@ -154,7 +152,7 @@ namespace RTC
 			// Reset (free RTP packet) the storage item.
 			resetStorageItem(storageItem);
 			// Return into the pool.
-			StorageItemPool.Return(storageItem);
+			StorageItem::Allocator::Pool.deallocate(storageItem, 1);
 		}
 
 		this->buffer.clear();
@@ -462,10 +460,10 @@ namespace RTC
 		else
 		{
 			// Allocate a new storage item.
-			storageItem = StorageItemPool.Allocate();
+			storageItem = StorageItem::Allocator::Pool.allocate(1);
 			// Memory is not initialized in any way, reset it. Create a new StorageItem instance
 			// in this memory.
-			new (storageItem) StorageItem{};
+			StorageItem::AllocatorTraits::construct(StorageItem::Allocator::Pool, storageItem);
 
 			MS_ASSERT(this->storageItemBuffer.Insert(seq, storageItem), "sequence number must be empty");
 		}

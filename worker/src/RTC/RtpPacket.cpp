@@ -9,10 +9,6 @@
 
 namespace RTC
 {
-	thread_local static Utils::ObjectPool<RtpPacket> RtpPacketPool;
-	// Memory to hold the cloned packet (with extra space for RTX encoding).
-	thread_local static Utils::ObjectPool<RtpPacket::RtpPacketBuffer> RtpPacketBufferPool;
-
 	/* Class methods. */
 
 	RtpPacket::SharedPtr RtpPacket::Parse(const uint8_t* data, size_t len)
@@ -121,21 +117,8 @@ namespace RTC
 		           payloadLength + size_t{ payloadPadding },
 		  "packet's computed size does not match received size");
 
-		auto* packet = RtpPacketPool.Allocate();
-		new (packet) RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
-
-		SharedPtr shared(
-		  packet,
-		  /*Deleter*/
-		  [](RtpPacket* packet)
-		  {
-			  // Call destructor manually since memory was pre-allocated upfront.
-			  packet->~RtpPacket();
-			  // Return packet into object pool for future reuse of memory allocation.
-			  RtpPacketPool.Return(packet);
-		  });
-
-		return shared;
+		return std::allocate_shared<RtpPacket, Utils::ObjectPoolAllocator<RtpPacket>>(
+		  RtpPacket::Allocator::Pool, header, headerExtension, payload, payloadLength, payloadPadding, len);
 	}
 
 	/* Instance methods. */
@@ -166,7 +149,7 @@ namespace RTC
 		if (this->buffer)
 		{
 			this->buffer->~array();
-			RtpPacketBufferPool.Return(this->buffer);
+			RtpPacket::BufferAllocator::Pool.deallocate(this->buffer, 1);
 			this->buffer = nullptr;
 		}
 	}
@@ -657,8 +640,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* buffer = RtpPacketBufferPool.Allocate();
-		new (buffer) RtpPacketBuffer();
+		auto* buffer = RtpPacket::BufferAllocator::Pool.allocate(1);
+		RtpPacket::BufferAllocatorTraits::construct(RtpPacket::BufferAllocator::Pool, buffer);
 
 		auto* ptr = const_cast<uint8_t*>(buffer->data());
 		size_t numBytes{ 0 };
@@ -714,35 +697,29 @@ namespace RTC
 		}
 
 		// Create the new RtpPacket instance and return it.
-		auto* packet = RtpPacketPool.Allocate();
-		new (packet) RtpPacket(
-		  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
-
-		SharedPtr shared(
-		  packet,
-		  /*Deleter*/
-		  [](RtpPacket* packet)
-		  {
-			  // Call destructor manually since memory was pre-allocated upfront.
-			  packet->~RtpPacket();
-			  // Return packet into object pool for future reuse of memory allocation.
-			  RtpPacketPool.Return(packet);
-		  });
+		SharedPtr shared = std::allocate_shared<RtpPacket, RtpPacket::Allocator>(
+		  RtpPacket::Allocator::Pool,
+		  newHeader,
+		  newHeaderExtension,
+		  newPayload,
+		  this->payloadLength,
+		  this->payloadPadding,
+		  this->size);
 
 		// Keep already set extension ids.
-		packet->midExtensionId               = this->midExtensionId;
-		packet->ridExtensionId               = this->ridExtensionId;
-		packet->rridExtensionId              = this->rridExtensionId;
-		packet->absSendTimeExtensionId       = this->absSendTimeExtensionId;
-		packet->transportWideCc01ExtensionId = this->transportWideCc01ExtensionId;
-		packet->frameMarking07ExtensionId    = this->frameMarking07ExtensionId; // Remove once RFC.
-		packet->frameMarkingExtensionId      = this->frameMarkingExtensionId;
-		packet->ssrcAudioLevelExtensionId    = this->ssrcAudioLevelExtensionId;
-		packet->videoOrientationExtensionId  = this->videoOrientationExtensionId;
+		shared->midExtensionId               = this->midExtensionId;
+		shared->ridExtensionId               = this->ridExtensionId;
+		shared->rridExtensionId              = this->rridExtensionId;
+		shared->absSendTimeExtensionId       = this->absSendTimeExtensionId;
+		shared->transportWideCc01ExtensionId = this->transportWideCc01ExtensionId;
+		shared->frameMarking07ExtensionId    = this->frameMarking07ExtensionId; // Remove once RFC.
+		shared->frameMarkingExtensionId      = this->frameMarkingExtensionId;
+		shared->ssrcAudioLevelExtensionId    = this->ssrcAudioLevelExtensionId;
+		shared->videoOrientationExtensionId  = this->videoOrientationExtensionId;
 		// Clone payload descriptor handler.
-		packet->payloadDescriptorHandler = this->payloadDescriptorHandler;
+		shared->payloadDescriptorHandler = this->payloadDescriptorHandler;
 		// Store allocated buffer.
-		packet->buffer = buffer;
+		shared->buffer = buffer;
 
 		return shared;
 	}

@@ -24,6 +24,11 @@ namespace RTC
 	public:
 		using RtpPacketBuffer = std::array<uint8_t, MtuSize + 100>;
 		using SharedPtr       = std::shared_ptr<RtpPacket>;
+		using Allocator       = Utils::ObjectPoolAllocator<RtpPacket>;
+		using AllocatorTraits = std::allocator_traits<Allocator>;
+		// Memory to hold the cloned packet (with extra space for RTX encoding).
+		using BufferAllocator       = Utils::ObjectPoolAllocator<RtpPacket::RtpPacketBuffer>;
+		using BufferAllocatorTraits = std::allocator_traits<BufferAllocator>;
 
 		/* Struct for RTP header. */
 		struct Header
@@ -135,7 +140,7 @@ namespace RTC
 
 		static SharedPtr Parse(const uint8_t* data, size_t len);
 
-	private:
+	public:
 		RtpPacket(
 		  Header* header,
 		  HeaderExtension* headerExtension,
@@ -609,7 +614,7 @@ namespace RTC
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
 
 	private:
-		friend SharedPtr;
+		friend AllocatorTraits;
 
 		void ParseExtensions();
 
@@ -643,5 +648,4 @@ namespace RTC
 		RtpPacketBuffer* buffer{ nullptr };
 	};
 } // namespace RTC
-
 #endif

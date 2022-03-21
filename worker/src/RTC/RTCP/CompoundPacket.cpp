@@ -8,24 +8,13 @@ namespace RTC
 {
 	namespace RTCP
 	{
-		thread_local static Utils::ObjectPool<CompoundPacket> CompoundPacketPool;
-
 		/* Instance methods. */
 
 		CompoundPacket::UniquePtr CompoundPacket::Create()
 		{
-			auto* packet = CompoundPacketPool.Allocate();
-
-			return UniquePtr(new (packet) CompoundPacket());
-		}
-
-		void CompoundPacket::ReturnIntoPool(CompoundPacket* packet)
-		{
-			if (packet)
-			{
-				packet->~CompoundPacket();
-				CompoundPacketPool.Return(packet);
-			}
+			auto* packet = CompoundPacket::Allocator::Pool.allocate(1);
+			CompoundPacket::AllocatorTraits::construct(CompoundPacket::Allocator::Pool, packet);
+			return UniquePtr(packet);
 		}
 
 		void CompoundPacket::Serialize(uint8_t* data)
@@ -162,6 +151,15 @@ namespace RTC
 			MS_TRACE();
 
 			this->xrPacket.AddReport(report);
+		}
+
+		void CompoundPacket::CompoundPacketDeleter::operator()(CompoundPacket* packet) const
+		{
+			if (packet)
+			{
+				CompoundPacket::AllocatorTraits::destroy(CompoundPacket::Allocator::Pool, packet);
+				CompoundPacket::Allocator::Pool.deallocate(packet, 1);
+			}
 		}
 	} // namespace RTCP
 } // namespace RTC

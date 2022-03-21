@@ -2,6 +2,7 @@
 #define MS_RTC_RTCP_COMPOUND_PACKET_HPP
 
 #include "common.hpp"
+#include "Utils.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
@@ -15,7 +16,14 @@ namespace RTC
 		class CompoundPacket
 		{
 		public:
-			using UniquePtr = std::unique_ptr<CompoundPacket>;
+			struct CompoundPacketDeleter
+			{
+				void operator()(CompoundPacket* packet) const;
+			};
+
+			using UniquePtr       = std::unique_ptr<CompoundPacket, CompoundPacketDeleter>;
+			using Allocator       = Utils::ObjectPoolAllocator<CompoundPacket>;
+			using AllocatorTraits = std::allocator_traits<Allocator>;
 			static UniquePtr Create();
 
 		public:
@@ -57,11 +65,11 @@ namespace RTC
 		private:
 			// Use `CompoundPacket::Create()` instead
 			CompoundPacket() = default;
-			// Use `CompoundPacket::ReturnIntoPool()` instead
+			// Used by CompoundPacketDeleter
 			~CompoundPacket() = default;
 
-			friend struct std::default_delete<RTC::RTCP::CompoundPacket>;
-			static void ReturnIntoPool(CompoundPacket* packet);
+			friend struct CompoundPacketDeleter;
+			friend AllocatorTraits;
 
 		private:
 			uint8_t* header{ nullptr };
@@ -77,11 +85,18 @@ namespace RTC
 namespace std
 {
 	template<>
-	struct default_delete<RTC::RTCP::CompoundPacket>
+	struct allocator_traits<RTC::RTCP::CompoundPacket::Allocator>
 	{
-		void operator()(RTC::RTCP::CompoundPacket* ptr) const
+		template<typename... Args>
+		static void construct(
+		  RTC::RTCP::CompoundPacket::Allocator& a, RTC::RTCP::CompoundPacket* p, Args&&... args)
 		{
-			RTC::RTCP::CompoundPacket::ReturnIntoPool(ptr);
+			new (p) RTC::RTCP::CompoundPacket(forward<Args>(args)...);
+		}
+
+		static void destroy(RTC::RTCP::CompoundPacket::Allocator& a, RTC::RTCP::CompoundPacket* p)
+		{
+			p->~CompoundPacket();
 		}
 	};
 }; // namespace std

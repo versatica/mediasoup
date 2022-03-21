@@ -61,6 +61,9 @@ namespace RTC
 #else
 		struct OnSendCallbackCtx
 		{
+			using Allocator       = Utils::ObjectPoolAllocator<Transport::OnSendCallbackCtx>;
+			using AllocatorTraits = std::allocator_traits<Allocator>;
+
 			RTC::TransportCongestionControlClient* tccClient;
 			webrtc::RtpPacketSendInfo packetInfo;
 		};

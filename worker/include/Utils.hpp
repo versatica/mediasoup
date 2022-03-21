@@ -351,51 +351,82 @@ namespace Utils
 		}
 	};
 
+	// Simple implementation of object pool only for single objects
+	// Arrays are allocated as usual
 	template<typename T>
-	class ObjectPool
+	class ObjectPoolAllocator
 	{
+		std::shared_ptr<std::vector<T*>> pool_data;
+
 	public:
-		~ObjectPool()
+		typedef T value_type;
+		thread_local static Utils::ObjectPoolAllocator<T> Pool;
+
+		ObjectPoolAllocator()
 		{
-			for (auto ptr : this->pool)
-			{
-				std::free(ptr);
-			}
+			pool_data = std::shared_ptr<std::vector<T*>>(
+			  new std::vector<T*>(),
+			  [](std::vector<T*>* pool)
+			  {
+				  for (auto* ptr : *pool)
+				  {
+					  std::free(ptr);
+				  }
+				  delete pool;
+			  });
 		}
 
-		// Get pointer to allocated memory. This can be newly allocated memory or re-use of previously
-		// returned object. Object is not initialized and shouldn't be considered to be in a valid state.
-		T* Allocate()
+		template<typename U>
+		ObjectPoolAllocator(const ObjectPoolAllocator<U>& other)
+		  : pool_data(ObjectPoolAllocator<T>::Pool.pool_data)
 		{
-			if (this->pool.empty())
+		}
+
+		~ObjectPoolAllocator()
+		{
+		}
+
+		T* allocate(size_t n)
+		{
+			if (n > 1)
+			{
+				return static_cast<T*>(std::malloc(sizeof(T) * n));
+			}
+
+			if (this->pool_data->empty())
 			{
 				return static_cast<T*>(std::malloc(sizeof(T)));
 			}
 
-			T* ptr = this->pool.back();
-			this->pool.pop_back();
+			T* ptr = this->pool_data->back();
+			this->pool_data->pop_back();
 
 			return ptr;
 		}
 
-		// Return allocated memory into internal pool for future use, make sure to run destructor before
-		// returning memory, ObjectPool will only de-allocate memory on exit.
-		void Return(T* ptr)
+		void deallocate(T* ptr, size_t n)
 		{
-			if (ptr)
+			if (!ptr)
 			{
-#ifdef MS_MEM_POOL_FREE_ON_RETURN
-				std::free(ptr);
-#else
-				this->pool.push_back(ptr);
-#endif
+				return;
 			}
-		}
 
-	private:
-		std::vector<T*> pool;
+			if (n > 1)
+			{
+				std::free(ptr);
+				return;
+			}
+
+#ifdef MS_MEM_POOL_FREE_ON_RETURN
+			std::free(ptr);
+#else
+			this->pool_data->push_back(ptr);
+#endif
+		}
 	};
 
+	template<typename T>
+	thread_local Utils::ObjectPoolAllocator<T> Utils::ObjectPoolAllocator<T>::Pool;
 } // namespace Utils
 
 #endif
