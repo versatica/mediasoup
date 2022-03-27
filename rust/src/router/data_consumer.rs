@@ -384,9 +384,10 @@ impl DataConsumer {
                         Notification::DataProducerClose => {
                             if !closed.load(Ordering::SeqCst) {
                                 handlers.data_producer_close.call_simple();
-                                if let Some(inner) =
-                                    inner_weak.lock().as_ref().and_then(Weak::upgrade)
-                                {
+
+                                let maybe_inner =
+                                    inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                                if let Some(inner) = maybe_inner {
                                     inner.close(false);
                                 }
                             }
@@ -437,7 +438,8 @@ impl DataConsumer {
             let inner_weak = Arc::clone(&inner_weak);
 
             Box::new(move || {
-                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
+                let maybe_inner = inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                if let Some(inner) = maybe_inner {
                     inner.handlers.transport_close.call_simple();
                     inner.close(false);
                 }

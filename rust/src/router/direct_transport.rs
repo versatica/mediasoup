@@ -512,7 +512,8 @@ impl DirectTransport {
             let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
+                let maybe_inner = inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                if let Some(inner) = maybe_inner {
                     inner.handlers.router_close.call_simple();
                     inner.close(false);
                 }
