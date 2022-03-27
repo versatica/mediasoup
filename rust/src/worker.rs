@@ -502,20 +502,20 @@ impl Inner {
     fn close(&self) {
         let already_closed = self.closed.swap(true, Ordering::SeqCst);
 
-        let channel = self.channel.clone();
-        let payload_channel = self.payload_channel.clone();
-
-        self.executor
-            .spawn(async move {
-                let _ = channel.request(WorkerCloseRequest {}).await;
-
-                // Drop channels in here after response from worker
-                drop(channel);
-                drop(payload_channel);
-            })
-            .detach();
-
         if !already_closed {
+            let channel = self.channel.clone();
+            let payload_channel = self.payload_channel.clone();
+
+            self.executor
+                .spawn(async move {
+                    let _ = channel.request(WorkerCloseRequest {}).await;
+
+                    // Drop channels in here after response from worker
+                    drop(channel);
+                    drop(payload_channel);
+                })
+                .detach();
+
             self.handlers.close.call_simple();
         }
     }
