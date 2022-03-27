@@ -345,15 +345,23 @@ impl Inner {
             spawn_args.join(" ")
         );
 
+        let closed = Arc::new(AtomicBool::new(false));
+
         let (mut status_sender, status_receiver) = async_oneshot::oneshot();
         let WorkerRunResult {
             channel,
             payload_channel,
             buffer_worker_messages_guard,
-        } = utils::run_worker_with_channels(id, thread_initializer, spawn_args, move |result| {
-            let _ = status_sender.send(result);
-            on_exit();
-        });
+        } = utils::run_worker_with_channels(
+            id,
+            thread_initializer,
+            spawn_args,
+            Arc::clone(&closed),
+            move |result| {
+                let _ = status_sender.send(result);
+                on_exit();
+            },
+        );
 
         let handlers = Handlers::default();
 
@@ -364,7 +372,7 @@ impl Inner {
             executor,
             handlers,
             app_data,
-            closed: Arc::new(AtomicBool::new(false)),
+            closed,
             _worker_manager: worker_manager,
         };
 
@@ -502,20 +510,20 @@ impl Inner {
     fn close(&self) {
         let already_closed = self.closed.swap(true, Ordering::SeqCst);
 
-        let channel = self.channel.clone();
-        let payload_channel = self.payload_channel.clone();
-
-        self.executor
-            .spawn(async move {
-                let _ = channel.request(WorkerCloseRequest {}).await;
-
-                // Drop channels in here after response from worker
-                drop(channel);
-                drop(payload_channel);
-            })
-            .detach();
-
         if !already_closed {
+            let channel = self.channel.clone();
+            let payload_channel = self.payload_channel.clone();
+
+            self.executor
+                .spawn(async move {
+                    let _ = channel.request(WorkerCloseRequest {}).await;
+
+                    // Drop channels in here after response from worker
+                    drop(channel);
+                    drop(payload_channel);
+                })
+                .detach();
+
             self.handlers.close.call_simple();
         }
     }

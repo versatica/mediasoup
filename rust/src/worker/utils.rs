@@ -13,6 +13,7 @@ pub(super) use channel_write_fn::{
 };
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use thiserror::Error;
 
@@ -46,14 +47,16 @@ pub(super) fn run_worker_with_channels<OE>(
     id: WorkerId,
     thread_initializer: Option<Arc<dyn Fn() + Send + Sync>>,
     args: Vec<String>,
+    worker_closed: Arc<AtomicBool>,
     on_exit: OE,
 ) -> WorkerRunResult
 where
     OE: FnOnce(Result<(), ExitError>) + Send + 'static,
 {
-    let (channel, prepared_channel_read, prepared_channel_write) = Channel::new();
+    let (channel, prepared_channel_read, prepared_channel_write) =
+        Channel::new(Arc::clone(&worker_closed));
     let (payload_channel, prepared_payload_channel_read, prepared_payload_channel_write) =
-        PayloadChannel::new();
+        PayloadChannel::new(worker_closed);
     let buffer_worker_messages_guard = channel.buffer_messages_for(std::process::id().into());
 
     std::thread::Builder::new()
