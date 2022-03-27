@@ -345,15 +345,23 @@ impl Inner {
             spawn_args.join(" ")
         );
 
+        let closed = Arc::new(AtomicBool::new(false));
+
         let (mut status_sender, status_receiver) = async_oneshot::oneshot();
         let WorkerRunResult {
             channel,
             payload_channel,
             buffer_worker_messages_guard,
-        } = utils::run_worker_with_channels(id, thread_initializer, spawn_args, move |result| {
-            let _ = status_sender.send(result);
-            on_exit();
-        });
+        } = utils::run_worker_with_channels(
+            id,
+            thread_initializer,
+            spawn_args,
+            Arc::clone(&closed),
+            move |result| {
+                let _ = status_sender.send(result);
+                on_exit();
+            },
+        );
 
         let handlers = Handlers::default();
 
@@ -364,7 +372,7 @@ impl Inner {
             executor,
             handlers,
             app_data,
-            closed: Arc::new(AtomicBool::new(false)),
+            closed,
             _worker_manager: worker_manager,
         };
 

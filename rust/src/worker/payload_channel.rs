@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::VecDeque;
 use std::fmt::Debug;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 use thiserror::Error;
 
@@ -139,6 +140,7 @@ struct Inner {
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
     #[allow(clippy::type_complexity)]
     event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(&[u8], &[u8]) + Send + Sync + 'static>>,
+    worker_closed: Arc<AtomicBool>,
 }
 
 impl Drop for Inner {
@@ -153,7 +155,9 @@ pub(crate) struct PayloadChannel {
 }
 
 impl PayloadChannel {
-    pub(super) fn new() -> (
+    pub(super) fn new(
+        worker_closed: Arc<AtomicBool>,
+    ) -> (
         Self,
         PreparedPayloadChannelRead,
         PreparedPayloadChannelWrite,
@@ -241,6 +245,7 @@ impl PayloadChannel {
             internal_message_receiver,
             requests_container_weak,
             event_handlers_weak,
+            worker_closed,
         });
 
         (
@@ -299,6 +304,9 @@ impl PayloadChannel {
                 .messages
                 .push_back(OutgoingMessage::Request(Arc::clone(&message_with_payload)));
             if let Some(handle) = outgoing_message_buffer.handle {
+                if self.inner.worker_closed.load(Ordering::Acquire) {
+                    return Err(RequestError::ChannelClosed);
+                }
                 unsafe {
                     // Notify worker that there is something to read
                     let ret = mediasoup_sys::uv_async_send(handle);
@@ -363,6 +371,9 @@ impl PayloadChannel {
                 .messages
                 .push_back(OutgoingMessage::Notification { message, payload });
             if let Some(handle) = outgoing_message_buffer.handle {
+                if self.inner.worker_closed.load(Ordering::Acquire) {
+                    return Err(NotificationError::ChannelClosed);
+                }
                 unsafe {
                     // Notify worker that there is something to read
                     let ret = mediasoup_sys::uv_async_send(handle);
