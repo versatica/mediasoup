@@ -338,10 +338,10 @@ impl Channel {
             outgoing_message_buffer
                 .messages
                 .push_back(Arc::clone(&message));
-            if let Some(handle) = &outgoing_message_buffer.handle {
+            if let Some(handle) = outgoing_message_buffer.handle {
                 unsafe {
                     // Notify worker that there is something to read
-                    let ret = mediasoup_sys::uv_async_send(*handle);
+                    let ret = mediasoup_sys::uv_async_send(handle);
                     if ret != 0 {
                         error!("uv_async_send call failed with code {}", ret);
                         return Err(RequestError::ChannelClosed);
