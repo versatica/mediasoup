@@ -461,7 +461,8 @@ impl Router {
             let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
+                let maybe_inner = inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                if let Some(inner) = maybe_inner {
                     inner.handlers.worker_close.call_simple();
                     if !inner.closed.swap(true, Ordering::SeqCst) {
                         inner.handlers.close.call_simple();
