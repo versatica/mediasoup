@@ -646,7 +646,7 @@ namespace RTC
 
 		if (!IsActive())
 			return;
-	
+
 		// Packets with only padding are not forwarded.
 		if (packet->GetPayloadLength() == 0)
 		{
