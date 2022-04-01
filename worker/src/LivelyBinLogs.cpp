@@ -5,7 +5,6 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 
-
 namespace Lively
 {
 
@@ -15,7 +14,7 @@ CallStatsRecordCtx::CallStatsRecordCtx(uint64_t objType, std::string callId, std
   std::strncpy(record.object_id, objId.c_str(), 36);
   std::strncpy(record.producer_id, producerId.c_str(), 36);
   record.source = objType;
-  record.start_tm = DepLibUV::GetTimeMs();
+  record.start_tm = Utils::Time::currentStdEpochMs();
   record.filled = UINT16_UNSET;
 }
 
@@ -40,7 +39,7 @@ void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream
 {
   WriteIfFull(log);
 
-  uint64_t nowMs = DepLibUV::GetTimeMs();
+  uint64_t nowMs = Utils::Time::currentStdEpochMs(); //DepLibUV::GetTimeMs();
   if (UINT16_UNSET == record.filled)
   {
     record.start_tm = nowMs;
@@ -146,7 +145,7 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
   int ret = 0;
   bool signal_set = false;
 
-  uint64_t now = DepLibUV::GetTimeMs();
+  uint64_t now = Utils::Time::currentStdEpochMs(); //DepLibUV::GetTimeMs();
 
   if (now - this->log_start_ts > DAY_IN_MS)
   {
@@ -203,19 +202,19 @@ void StatsBinLog::InitLog(char type, std::string id1, std::string id2)
   switch(type)
   {
     case 'c':
-      sprintf(tmp, "/var/log/sfu/c_%s_%%u.bin.log", id1.c_str());
+      sprintf(tmp, "/var/log/sfu/c_%s_%%llu.bin.log", id1.c_str());
       this->bin_log_name_template.assign(tmp);
       MS_DEBUG_TAG(rtp, "consumers binlog transport id %s", id2.c_str());
       break;
     case 'p':
-      sprintf(tmp, "/var/log/sfu/p_%s_%s_%%u.bin.log", id1.c_str(), id2.c_str());
+      sprintf(tmp, "/var/log/sfu/p_%s_%s_%%llu.bin.log", id1.c_str(), id2.c_str());
       this->bin_log_name_template.assign(tmp);
       break;
     default:
       break;
   }
 
-  uint64_t now = DepLibUV::GetTimeMs();
+  uint64_t now = Utils::Time::currentStdEpochMs(); //DepLibUV::GetTimeMs();
   this->log_start_ts = now;
   UpdateLogName();
   
