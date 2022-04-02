@@ -8,7 +8,7 @@ use crate::data_structures::{AppData, SctpState};
 use crate::messages::{TransportCloseRequest, TransportInternal, TransportSendRtcpNotification};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
-use crate::router::{Router, RouterId};
+use crate::router::Router;
 use crate::sctp_parameters::SctpParameters;
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
@@ -238,16 +238,14 @@ impl fmt::Debug for DirectTransport {
 
 #[async_trait]
 impl Transport for DirectTransport {
-    /// Transport id.
     fn id(&self) -> TransportId {
         self.inner.id
     }
 
-    fn router_id(&self) -> RouterId {
-        self.inner.router.id()
+    fn router(&self) -> &Router {
+        &self.inner.router
     }
 
-    /// Custom application data.
     fn app_data(&self) -> &AppData {
         &self.inner.app_data
     }
@@ -256,9 +254,6 @@ impl Transport for DirectTransport {
         self.inner.closed.load(Ordering::SeqCst)
     }
 
-    /// Create a Producer.
-    ///
-    /// Transport will be kept alive as long as at least one producer instance is alive.
     async fn produce(&self, producer_options: ProducerOptions) -> Result<Producer, ProduceError> {
         debug!("produce()");
 
@@ -271,9 +266,6 @@ impl Transport for DirectTransport {
         Ok(producer)
     }
 
-    /// Create a Consumer.
-    ///
-    /// Transport will be kept alive as long as at least one consumer instance is alive.
     async fn consume(&self, consumer_options: ConsumerOptions) -> Result<Consumer, ConsumeError> {
         debug!("consume()");
 
@@ -286,9 +278,6 @@ impl Transport for DirectTransport {
         Ok(consumer)
     }
 
-    /// Create a DataProducer.
-    ///
-    /// Transport will be kept alive as long as at least one data producer instance is alive.
     async fn produce_data(
         &self,
         data_producer_options: DataProducerOptions,
@@ -311,9 +300,6 @@ impl Transport for DirectTransport {
         Ok(data_producer)
     }
 
-    /// Create a DataConsumer.
-    ///
-    /// Transport will be kept alive as long as at least one data consumer instance is alive.
     async fn consume_data(
         &self,
         data_consumer_options: DataConsumerOptions,
@@ -426,10 +412,6 @@ impl TransportGeneric for DirectTransport {
 }
 
 impl TransportImpl for DirectTransport {
-    fn router(&self) -> &Router {
-        &self.inner.router
-    }
-
     fn channel(&self) -> &Channel {
         &self.inner.channel
     }

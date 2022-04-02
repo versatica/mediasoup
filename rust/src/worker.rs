@@ -564,6 +564,11 @@ impl Worker {
         self.inner.id
     }
 
+    /// Worker manager to which worker belongs.
+    pub fn worker_manager(&self) -> &WorkerManager {
+        &self.inner._worker_manager
+    }
+
     /// Custom application data.
     #[must_use]
     pub fn app_data(&self) -> &AppData {

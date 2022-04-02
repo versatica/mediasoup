@@ -302,7 +302,7 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Box<dyn Transport>,
+    transport: Arc<dyn Transport>,
     closed: AtomicBool,
     // Drop subscription to producer-specific notifications when producer itself is dropped
     subscription_handler: Mutex<Option<SubscriptionHandler>>,
@@ -330,7 +330,7 @@ impl Inner {
                 let channel = self.channel.clone();
                 let request = ProducerCloseRequest {
                     internal: ProducerInternal {
-                        router_id: self.transport.router_id(),
+                        router_id: self.transport.router().id(),
                         transport_id: self.transport.id(),
                         producer_id: self.id,
                     },
@@ -460,7 +460,7 @@ impl Producer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: Box<dyn Transport>,
+        transport: Arc<dyn Transport>,
         direct: bool,
     ) -> Self {
         debug!("new()");
@@ -542,6 +542,11 @@ impl Producer {
     #[must_use]
     pub fn id(&self) -> ProducerId {
         self.inner().id
+    }
+
+    /// Transport to which producer belongs.
+    pub fn transport(&self) -> &Arc<dyn Transport> {
+        &self.inner().transport
     }
 
     /// Media kind.
@@ -767,7 +772,7 @@ impl Producer {
 
     fn get_internal(&self) -> ProducerInternal {
         ProducerInternal {
-            router_id: self.inner().transport.router_id(),
+            router_id: self.inner().transport.router().id(),
             transport_id: self.inner().transport.id(),
             producer_id: self.inner().id,
         }
@@ -780,7 +785,7 @@ impl DirectProducer {
         self.inner.payload_channel.notify(
             ProducerSendNotification {
                 internal: ProducerInternal {
-                    router_id: self.inner.transport.router_id(),
+                    router_id: self.inner.transport.router().id(),
                     transport_id: self.inner.transport.id(),
                     producer_id: self.inner.id,
                 },

@@ -11,7 +11,7 @@ use crate::messages::{
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
-use crate::router::{Router, RouterId};
+use crate::router::Router;
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::srtp_parameters::SrtpParameters;
 use crate::transport::{
@@ -286,8 +286,8 @@ impl Transport for PipeTransport {
         self.inner.id
     }
 
-    fn router_id(&self) -> RouterId {
-        self.inner.router.id()
+    fn router(&self) -> &Router {
+        &self.inner.router
     }
 
     fn app_data(&self) -> &AppData {
@@ -451,10 +451,6 @@ impl TransportGeneric for PipeTransport {
 }
 
 impl TransportImpl for PipeTransport {
-    fn router(&self) -> &Router {
-        &self.inner.router
-    }
-
     fn channel(&self) -> &Channel {
         &self.inner.channel
     }

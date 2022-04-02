@@ -1,5 +1,21 @@
 # Changelog
 
+# 0.9.3
+
+* Fix a segfaults in tests and under multithreaded executor
+* Fix another racy deadlock situation
+* Expose hierarchical dependencies of ownership of Rust data structures, now it is possible to call `consumer.transport().router().worker().worker_manager()`
+* General mediasoup changes:
+  * ICE renomination support (PR #756).
+  * Update `libuv` to 1.43.0.
+  * TCC client optimizations for faster and more stable BWE (PR #712 by @ggarber).
+  * Added support for RTP abs-capture-time header (PR #761 by @oto313).
+  * Fix VP9 kSVC forwarding logic to not forward lower unneded layers (PR #778 by @ggarber).
+  * Fix update bandwidth estimation configuration and available bitrate when updating max outgoing bitrate (PR #779 by @ggarber).
+  * Optimize RTP header extension handling (PR #786).
+  * `RateCalculator`: Reset optimization (PR #785).
+  * Fix frozen video due to double call to `Consumer::UserOnTransportDisconnected()` (PR #788, thanks to @ggarber for exposing this issue in PR #787).
+
 # 0.9.2
 
 * Update `lru` dependency to fix security vulnerability
