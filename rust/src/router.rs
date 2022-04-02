@@ -1361,16 +1361,15 @@ impl Router {
         // `PipeTransport`. To prevent that, we have `HashedMap` with mapping behind `Mutex` and
         // another `Mutex` on the pair of `PipeTransport`.
 
-        let mut mapped_pipe_transports = self.inner.mapped_pipe_transports.lock();
-
-        let pipe_transport_pair_mutex = mapped_pipe_transports
+        let pipe_transport_pair_mutex = self
+            .inner
+            .mapped_pipe_transports
+            .lock()
             .entry(pipe_to_router_options.router.id())
             .or_default()
             .clone();
 
         let mut pipe_transport_pair_guard = pipe_transport_pair_mutex.lock().await;
-
-        drop(mapped_pipe_transports);
 
         let pipe_transport_pair = match pipe_transport_pair_guard
             .as_ref()
