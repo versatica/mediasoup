@@ -163,7 +163,7 @@ impl Inner {
                 let channel = self.channel.clone();
                 let request = DataProducerCloseRequest {
                     internal: DataProducerInternal {
-                        router_id: self.transport.router_id(),
+                        router_id: self.transport.router().id(),
                         transport_id: self.transport.id(),
                         data_producer_id: self.id,
                     },
@@ -324,6 +324,11 @@ impl DataProducer {
         self.inner().id
     }
 
+    /// Transport to which data producer belongs.
+    pub fn transport(&self) -> &Arc<dyn Transport> {
+        &self.inner().transport
+    }
+
     /// The type of the data producer.
     #[must_use]
     pub fn r#type(&self) -> DataProducerType {
@@ -430,7 +435,7 @@ impl DataProducer {
 
     fn get_internal(&self) -> DataProducerInternal {
         DataProducerInternal {
-            router_id: self.inner().transport.router_id(),
+            router_id: self.inner().transport.router().id(),
             transport_id: self.inner().transport.id(),
             data_producer_id: self.inner().id,
         }
@@ -445,7 +450,7 @@ impl DirectDataProducer {
         self.inner.payload_channel.notify(
             DataProducerSendNotification {
                 internal: DataProducerInternal {
-                    router_id: self.inner.transport.router_id(),
+                    router_id: self.inner.transport.router().id(),
                     transport_id: self.inner.transport.id(),
                     data_producer_id: self.inner.id,
                 },

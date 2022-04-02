@@ -136,7 +136,13 @@ pub trait Transport: Debug + Send + Sync {
 
     /// Router id.
     #[must_use]
-    fn router_id(&self) -> RouterId;
+    #[deprecated = "Use `router().id()` instead"]
+    fn router_id(&self) -> RouterId {
+        self.router().id()
+    }
+
+    /// Router to which transport belongs.
+    fn router(&self) -> &Router;
 
     /// Custom application data.
     #[must_use]
@@ -335,8 +341,6 @@ pub enum ConsumeDataError {
 
 #[async_trait]
 pub(super) trait TransportImpl: TransportGeneric {
-    fn router(&self) -> &Router;
-
     fn channel(&self) -> &Channel;
 
     fn payload_channel(&self) -> &PayloadChannel;

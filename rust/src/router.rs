@@ -376,7 +376,7 @@ struct Inner {
     mapped_pipe_transports:
         Arc<Mutex<HashedMap<RouterId, Arc<AsyncMutex<Option<WeakPipeTransportPair>>>>>>,
     // Make sure worker is not dropped until this router is not dropped
-    worker: Option<Worker>,
+    worker: Worker,
     closed: AtomicBool,
     _on_worker_close_handler: Mutex<HandlerId>,
 }
@@ -481,7 +481,7 @@ impl Router {
             data_producers,
             mapped_pipe_transports,
             app_data,
-            worker: Some(worker),
+            worker,
             closed: AtomicBool::new(false),
             _on_worker_close_handler: Mutex::new(on_worker_close_handler),
         });
@@ -495,6 +495,11 @@ impl Router {
     #[must_use]
     pub fn id(&self) -> RouterId {
         self.inner.id
+    }
+
+    /// Worker to which router belongs.
+    pub fn worker(&self) -> &Worker {
+        &self.inner.worker
     }
 
     /// Custom application data.

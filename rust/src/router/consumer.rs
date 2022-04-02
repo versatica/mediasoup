@@ -403,7 +403,7 @@ impl Inner {
                 let channel = self.channel.clone();
                 let request = ConsumerCloseRequest {
                     internal: ConsumerInternal {
-                        router_id: self.transport.router_id(),
+                        router_id: self.transport.router().id(),
                         transport_id: self.transport.id(),
                         consumer_id: self.id,
                         producer_id: self.producer_id,
@@ -630,6 +630,11 @@ impl Consumer {
     #[must_use]
     pub fn producer_id(&self) -> ProducerId {
         self.inner.producer_id
+    }
+
+    /// Transport to which consumer belongs.
+    pub fn transport(&self) -> &Arc<dyn Transport> {
+        &self.inner.transport
     }
 
     /// Media kind.
@@ -973,7 +978,7 @@ impl Consumer {
 
     fn get_internal(&self) -> ConsumerInternal {
         ConsumerInternal {
-            router_id: self.inner.transport.router_id(),
+            router_id: self.inner.transport.router().id(),
             transport_id: self.inner.transport.id(),
             consumer_id: self.inner.id,
             producer_id: self.inner.producer_id,

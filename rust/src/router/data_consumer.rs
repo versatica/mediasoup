@@ -233,7 +233,7 @@ impl Inner {
                 let channel = self.channel.clone();
                 let request = DataConsumerCloseRequest {
                     internal: DataConsumerInternal {
-                        router_id: self.transport.router_id(),
+                        router_id: self.transport.router().id(),
                         transport_id: self.transport.id(),
                         data_consumer_id: self.id,
                         data_producer_id: self.data_producer_id,
@@ -489,6 +489,11 @@ impl DataConsumer {
         self.inner().data_producer_id
     }
 
+    /// Transport to which data consumer belongs.
+    pub fn transport(&self) -> &Arc<dyn Transport> {
+        &self.inner().transport
+    }
+
     /// The type of the data consumer.
     #[must_use]
     pub fn r#type(&self) -> DataConsumerType {
@@ -678,7 +683,7 @@ impl DataConsumer {
 
     fn get_internal(&self) -> DataConsumerInternal {
         DataConsumerInternal {
-            router_id: self.inner().transport.router_id(),
+            router_id: self.inner().transport.router().id(),
             transport_id: self.inner().transport.id(),
             data_consumer_id: self.inner().id,
             data_producer_id: self.inner().data_producer_id,
@@ -696,7 +701,7 @@ impl DirectDataConsumer {
             .request(
                 DataConsumerSendRequest {
                     internal: DataConsumerInternal {
-                        router_id: self.inner.transport.router_id(),
+                        router_id: self.inner.transport.router().id(),
                         transport_id: self.inner.transport.id(),
                         data_consumer_id: self.inner.id,
                         data_producer_id: self.inner.data_producer_id,

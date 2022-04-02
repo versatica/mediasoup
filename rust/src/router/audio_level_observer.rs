@@ -181,6 +181,10 @@ impl RtpObserver for AudioLevelObserver {
         self.inner.id
     }
 
+    fn router(&self) -> &Router {
+        &self.inner.router
+    }
+
     fn paused(&self) -> bool {
         self.inner.paused.load(Ordering::SeqCst)
     }
