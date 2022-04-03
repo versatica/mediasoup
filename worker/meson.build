@@ -315,7 +315,7 @@ mediasoup_worker_test = executable(
 test(
   'mediasoup-worker-test',
   mediasoup_worker_test,
-  workdir: meson.source_root(),
+  workdir: meson.project_source_root(),
 )
 
 if host_machine.system() == 'linux'
