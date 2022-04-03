@@ -2,7 +2,7 @@
 #define MS_UTILS_HPP
 
 #include "common.hpp"
-#include <openssl/hmac.h>
+#include <openssl/evp.h>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <nlohmann/json.hpp>
@@ -255,7 +255,8 @@ namespace Utils
 
 	private:
 		thread_local static uint32_t seed;
-		thread_local static HMAC_CTX* hmacSha1Ctx;
+		thread_local static EVP_MAC* mac;
+		thread_local static EVP_MAC_CTX* hmacSha1Ctx;
 		thread_local static uint8_t hmacSha1Buffer[];
 		static const uint32_t crc32Table[256];
 	};

@@ -6,11 +6,8 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include <openssl/asn1.h>
-#include <openssl/bn.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
-#include <openssl/rsa.h>
 #include <uv.h>
 #include <cstdio>  // std::sprintf(), std::fopen()
 #include <cstring> // std::memcpy(), std::strcmp()
@@ -157,55 +154,19 @@ namespace RTC
 		MS_TRACE();
 
 		int ret{ 0 };
-		EC_KEY* ecKey{ nullptr };
 		X509_NAME* certName{ nullptr };
 		std::string subject =
 		  std::string("mediasoup") + std::to_string(Utils::Crypto::GetRandomUInt(100000, 999999));
 
 		// Create key with curve.
-		ecKey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-
-		if (!ecKey)
-		{
-			LOG_OPENSSL_ERROR("EC_KEY_new_by_curve_name() failed");
-
-			goto error;
-		}
-
-		EC_KEY_set_asn1_flag(ecKey, OPENSSL_EC_NAMED_CURVE);
-
-		// NOTE: This can take some time.
-		ret = EC_KEY_generate_key(ecKey);
-
-		if (ret == 0)
-		{
-			LOG_OPENSSL_ERROR("EC_KEY_generate_key() failed");
-
-			goto error;
-		}
-
-		// Create a private key object.
-		DtlsTransport::privateKey = EVP_PKEY_new();
+		DtlsTransport::privateKey = EVP_EC_gen(SN_X9_62_prime256v1);
 
 		if (!DtlsTransport::privateKey)
 		{
-			LOG_OPENSSL_ERROR("EVP_PKEY_new() failed");
+			LOG_OPENSSL_ERROR("EVP_EC_gen() failed");
 
 			goto error;
 		}
-
-		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
-		ret = EVP_PKEY_assign_EC_KEY(DtlsTransport::privateKey, ecKey);
-
-		if (ret == 0)
-		{
-			LOG_OPENSSL_ERROR("EVP_PKEY_assign_EC_KEY() failed");
-
-			goto error;
-		}
-
-		// The EC key now belongs to the private key, so don't clean it up separately.
-		ecKey = nullptr;
 
 		// Create the X509 certificate.
 		DtlsTransport::certificate = X509_new();
@@ -278,11 +239,8 @@ namespace RTC
 
 	error:
 
-		if (ecKey)
-			EC_KEY_free(ecKey);
-
 		if (DtlsTransport::privateKey)
-			EVP_PKEY_free(DtlsTransport::privateKey); // NOTE: This also frees the EC key.
+			EVP_PKEY_free(DtlsTransport::privateKey);
 
 		if (DtlsTransport::certificate)
 			X509_free(DtlsTransport::certificate);
