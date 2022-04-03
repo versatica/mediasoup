@@ -128,13 +128,6 @@ enum ClientMessage {
     },
 }
 
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct PreferredLayers {
-    spatial_layer: u32,
-    temporal_layer: u32,
-}
-
 /// Internal actor messages for convenience
 #[derive(Message)]
 #[rtype(result = "()")]

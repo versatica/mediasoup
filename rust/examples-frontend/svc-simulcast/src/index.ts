@@ -115,8 +115,8 @@ async function init()
 	temporalLayerNode.innerText = 'none'
 
 	let videoConsumer: Consumer | null = null;
-	let spatialLayers = 0;
-	let temporalLayers = 0;
+	let maxSpatialLayer = 0;
+	let maxTemporalLayer = 0;
 	let preferredSpatialLayer = 0;
 	let preferredTemporalLayer = 0;
 
@@ -129,10 +129,10 @@ async function init()
 			newPreferredTemporalLayer = preferredTemporalLayer - 1;
 		} else if (preferredSpatialLayer > 0) {
 			newPreferredSpatialLayer = preferredSpatialLayer - 1;
-			newPreferredTemporalLayer = temporalLayers - 1;
+			newPreferredTemporalLayer = maxTemporalLayer;
 		} else {
-			newPreferredSpatialLayer = spatialLayers - 1;
-			newPreferredTemporalLayer = temporalLayers - 1;
+			newPreferredSpatialLayer = maxSpatialLayer;
+			newPreferredTemporalLayer = maxTemporalLayer;
 		}
 
 		setPreferredLayers(newPreferredSpatialLayer, newPreferredTemporalLayer)
@@ -364,13 +364,12 @@ async function init()
 									const encodings = videoConsumer.rtpParameters.encodings ?? [];
 
 									if (encodings[0]) {
-										const {spatialLayers: _spatialLayers, temporalLayers: _temporalLayers} =
-											parseScalabilityMode(encodings[0].scalabilityMode)
+										const scalabilityMode = parseScalabilityMode(encodings[0].scalabilityMode)
 
-										spatialLayers = _spatialLayers;
-										temporalLayers = _temporalLayers;
-										preferredSpatialLayer = _spatialLayers - 1;
-										preferredTemporalLayer = _temporalLayers - 1;
+										maxSpatialLayer = scalabilityMode.spatialLayers - 1;
+										maxTemporalLayer = scalabilityMode.temporalLayers -1;
+										preferredSpatialLayer = maxSpatialLayer;
+										preferredTemporalLayer = maxTemporalLayer;
 
 										setPreferredLayers(preferredSpatialLayer, preferredTemporalLayer);
 									}
