@@ -1,4 +1,4 @@
-use crate::messages::Request;
+use crate::messages::{Request, WorkerCloseRequest};
 use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
 use crate::worker::utils;
 use crate::worker::utils::{PreparedChannelRead, PreparedChannelWrite};
@@ -11,8 +11,10 @@ use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::any::TypeId;
 use std::collections::VecDeque;
 use std::fmt::Debug;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
 #[derive(Debug, Deserialize)]
@@ -162,6 +164,8 @@ struct Inner {
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
     buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
     event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(&[u8]) + Send + Sync + 'static>>,
+    worker_closed: Arc<AtomicBool>,
+    closed: AtomicBool,
 }
 
 impl Drop for Inner {
@@ -176,7 +180,9 @@ pub(crate) struct Channel {
 }
 
 impl Channel {
-    pub(super) fn new() -> (Self, PreparedChannelRead, PreparedChannelWrite) {
+    pub(super) fn new(
+        worker_closed: Arc<AtomicBool>,
+    ) -> (Self, PreparedChannelRead, PreparedChannelWrite) {
         let outgoing_message_buffer = Arc::new(Mutex::new(OutgoingMessageBuffer {
             handle: None,
             messages: VecDeque::with_capacity(10),
@@ -270,6 +276,8 @@ impl Channel {
             requests_container_weak,
             buffered_notifications_for,
             event_handlers_weak,
+            worker_closed,
+            closed: AtomicBool::new(false),
         });
 
         (
@@ -301,7 +309,7 @@ impl Channel {
 
     pub(crate) async fn request<R>(&self, request: R) -> Result<R::Response, RequestError>
     where
-        R: Request,
+        R: Request + 'static,
     {
         let method = request.as_method();
 
@@ -338,10 +346,20 @@ impl Channel {
             outgoing_message_buffer
                 .messages
                 .push_back(Arc::clone(&message));
-            if let Some(handle) = &outgoing_message_buffer.handle {
+            if let Some(handle) = outgoing_message_buffer.handle {
+                if self.inner.worker_closed.load(Ordering::Acquire) {
+                    // Forbid all requests after worker closing except one worker closing request
+                    let first_worker_closing = TypeId::of::<R>()
+                        == TypeId::of::<WorkerCloseRequest>()
+                        && !self.inner.closed.swap(true, Ordering::Relaxed);
+
+                    if !first_worker_closing {
+                        return Err(RequestError::ChannelClosed);
+                    }
+                }
                 unsafe {
                     // Notify worker that there is something to read
-                    let ret = mediasoup_sys::uv_async_send(*handle);
+                    let ret = mediasoup_sys::uv_async_send(handle);
                     if ret != 0 {
                         error!("uv_async_send call failed with code {}", ret);
                         return Err(RequestError::ChannelClosed);

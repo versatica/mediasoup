@@ -11,7 +11,7 @@ use crate::messages::{
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
-use crate::router::{Router, RouterId};
+use crate::router::Router;
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{
@@ -316,8 +316,8 @@ impl Transport for PlainTransport {
         self.inner.id
     }
 
-    fn router_id(&self) -> RouterId {
-        self.inner.router.id()
+    fn router(&self) -> &Router {
+        &self.inner.router
     }
 
     fn app_data(&self) -> &AppData {
@@ -481,10 +481,6 @@ impl TransportGeneric for PlainTransport {
 }
 
 impl TransportImpl for PlainTransport {
-    fn router(&self) -> &Router {
-        &self.inner.router
-    }
-
     fn channel(&self) -> &Channel {
         &self.inner.channel
     }
@@ -576,7 +572,8 @@ impl PlainTransport {
             let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
+                let maybe_inner = inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                if let Some(inner) = maybe_inner {
                     inner.handlers.router_close.call_simple();
                     inner.close(false);
                 }

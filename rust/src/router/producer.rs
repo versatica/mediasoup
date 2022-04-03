@@ -302,7 +302,7 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Box<dyn Transport>,
+    transport: Arc<dyn Transport>,
     closed: AtomicBool,
     // Drop subscription to producer-specific notifications when producer itself is dropped
     subscription_handler: Mutex<Option<SubscriptionHandler>>,
@@ -330,7 +330,7 @@ impl Inner {
                 let channel = self.channel.clone();
                 let request = ProducerCloseRequest {
                     internal: ProducerInternal {
-                        router_id: self.transport.router_id(),
+                        router_id: self.transport.router().id(),
                         transport_id: self.transport.id(),
                         producer_id: self.id,
                     },
@@ -460,7 +460,7 @@ impl Producer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: Box<dyn Transport>,
+        transport: Arc<dyn Transport>,
         direct: bool,
     ) -> Self {
         debug!("new()");
@@ -502,7 +502,8 @@ impl Producer {
             let inner_weak = Arc::clone(&inner_weak);
 
             Box::new(move || {
-                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
+                let maybe_inner = inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                if let Some(inner) = maybe_inner {
                     inner.handlers.transport_close.call_simple();
                     inner.close(false);
                 }
@@ -541,6 +542,11 @@ impl Producer {
     #[must_use]
     pub fn id(&self) -> ProducerId {
         self.inner().id
+    }
+
+    /// Transport to which producer belongs.
+    pub fn transport(&self) -> &Arc<dyn Transport> {
+        &self.inner().transport
     }
 
     /// Media kind.
@@ -766,7 +772,7 @@ impl Producer {
 
     fn get_internal(&self) -> ProducerInternal {
         ProducerInternal {
-            router_id: self.inner().transport.router_id(),
+            router_id: self.inner().transport.router().id(),
             transport_id: self.inner().transport.id(),
             producer_id: self.inner().id,
         }
@@ -779,7 +785,7 @@ impl DirectProducer {
         self.inner.payload_channel.notify(
             ProducerSendNotification {
                 internal: ProducerInternal {
-                    router_id: self.inner.transport.router_id(),
+                    router_id: self.inner.transport.router().id(),
                     transport_id: self.inner.transport.id(),
                     producer_id: self.inner.id,
                 },
