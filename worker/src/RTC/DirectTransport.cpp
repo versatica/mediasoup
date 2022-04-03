@@ -104,7 +104,7 @@ namespace RTC
 					return;
 				}
 
-				// If this is the first time to reveive a rtp packet then allocate the receiving buffer now.
+				// If this is the first time to reveive a RTP packet then allocate the receiving buffer now.
 				if (!this->buffer)
 					this->buffer = new uint8_t[RTC::MtuSize + 100];
 
