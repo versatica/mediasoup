@@ -82,25 +82,35 @@ fn main() {
                 .arg("python3.exe")
                 .status()
                 .expect("Failed to start")
-                .success() {
-               "python3"
-            }
-            else {
-               "python"
+                .success()
+            {
+                "python3"
+            } else {
+                "python"
             };
 
             if !Command::new(python)
                 .arg("scripts\\getmake.py")
                 .status()
                 .expect("Failed to start")
-                .success() {
+                .success()
+            {
                 panic!("Failed to install MSYS/make")
             }
         }
 
-        env::set_var("PATH", format!("{}\\worker\\out\\msys\\bin;{}",
-            env::current_dir().unwrap().into_os_string().into_string().unwrap(),
-            env::var("PATH").unwrap()));
+        env::set_var(
+            "PATH",
+            format!(
+                "{}\\worker\\out\\msys\\bin;{}",
+                env::current_dir()
+                    .unwrap()
+                    .into_os_string()
+                    .into_string()
+                    .unwrap(),
+                env::var("PATH").unwrap()
+            ),
+        );
     }
 
     // Build
