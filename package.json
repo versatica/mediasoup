@@ -30,7 +30,6 @@
     "worker/scripts/*.js",
     "worker/scripts/*.json",
     "worker/src",
-    "worker/subprojects/packagefiles",
     "worker/subprojects/*.wrap",
     "worker/test/include",
     "worker/test/src",

@@ -15,7 +15,6 @@ include = [
     "/scripts",
     "!/scripts/node_modules",
     "/src",
-    "/subprojects/packagefiles",
     "/subprojects/*.wrap",
     "/test/include",
     "/test/src",

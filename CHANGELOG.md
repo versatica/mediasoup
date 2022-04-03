@@ -1,6 +1,16 @@
 # Changelog
 
 
+### WIP
+
+* Update worker dependencies:
+    * OpenSSL 3.0.2.
+    * abseil-cpp 20211102.0.
+    * nlohmann_json 3.10.5.
+    * usrsctp snapshot 4e06feb01cadcd127d119486b98a4bd3d64aa1e7.
+    * wingetopt 1.00.
+
+
 ### 3.9.9
 
 * Optimize RTP header extension handling (PR #786).

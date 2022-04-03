@@ -1,5 +1,14 @@
 # Changelog
 
+### WIP
+
+* Update worker dependencies:
+  * OpenSSL 3.0.2.
+  * abseil-cpp 20211102.0.
+  * nlohmann_json 3.10.5.
+  * usrsctp snapshot 4e06feb01cadcd127d119486b98a4bd3d64aa1e7.
+  * wingetopt 1.00.
+
 # 0.9.3
 
 * Fix a segfaults in tests and under multithreaded executor
