@@ -98,6 +98,7 @@ async function init()
 	const isFirefox = navigator.userAgent.toLowerCase().includes('firefox')
 	const sendPreview = document.querySelector('#preview-send') as HTMLVideoElement;
 	const receivePreview = document.querySelector('#preview-receive') as HTMLVideoElement;
+	const videoCodec = document.querySelector('#video-codec') as HTMLSpanElement;
 
 	sendPreview.onloadedmetadata = () =>
 	{
@@ -272,8 +273,19 @@ async function init()
 					// And create producers for all tracks that were previously requested
 					for (const track of mediaStream.getTracks())
 					{
-						const codec = track.kind === 'video' ? device.rtpCapabilities.codecs?.find((codec) => codec.mimeType.toLowerCase() === 'video/vp9' && !isFirefox) ?? device.rtpCapabilities.codecs?.find((codec) => codec.mimeType.toLowerCase() === 'video/vp8') : undefined
-						let encodings
+						const codec = track.kind === 'video'
+							?
+								device.rtpCapabilities.codecs?.find((codec) => {
+									// Firefox supports VP9, but not SVC
+									return codec.mimeType.toLowerCase() === 'video/vp9' && !isFirefox;
+								}) ??
+								device.rtpCapabilities.codecs?.find((codec) => codec.mimeType.toLowerCase() === 'video/vp8')
+							: undefined;
+						if (track.kind === 'video')
+						{
+							videoCodec.innerText = codec?.mimeType?.split('/')[1] ?? '?';
+						}
+						let encodings;
 
 						if (codec?.mimeType.toLowerCase() === 'video/vp8')
 						{
@@ -281,13 +293,13 @@ async function init()
 								{scaleResolutionDownBy: 4, maxBitrate: 500000},
 								{scaleResolutionDownBy: 2, maxBitrate: 1000000},
 								{scaleResolutionDownBy: 1, maxBitrate: 5000000}
-							]
+							];
 						}
 						else if (codec?.mimeType.toLowerCase() === 'video/vp9')
 						{
 							encodings = [
 								{scalabilityMode: 'S3T3'},
-							]
+							];
 						}
 
 						const producer = await producerTransport.produce({

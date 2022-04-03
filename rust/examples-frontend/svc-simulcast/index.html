@@ -6,6 +6,7 @@
 
     #container {
         display: flex;
+        flex-direction: column;
     }
 
     figure {
@@ -15,13 +16,6 @@
 
     video {
         max-width: 100%;
-    }
-
-    #container {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100vh;
     }
 
     .previews {
@@ -40,9 +34,12 @@
         </figure>
     </div>
 
-    <div class="controls">
-        <button id="decreaseLayer" type="button">down</button>
-        [<span id="spatial">none</span>] [<span id="temporal">none</span>]
+    <p>
+        Video codec: <span id="video-codec">?</span>
+    </p>
+    <div>
+        Switch layers: <button id="decreaseLayer" type="button">down</button>
+        S<span id="spatial">?</span>T<span id="temporal">?</span>
         <button id="increaseLayer" type="button">up</button>
     </div>
 </div>
