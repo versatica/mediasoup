@@ -124,11 +124,6 @@ async function init()
 		let newPreferredSpatialLayer: number;
 		let newPreferredTemporalLayer: number;
 
-		if (isFirefox) {
-			setPreferredLayers(preferredSpatialLayer > 0 ? preferredSpatialLayer - 1 : spatialLayers - 1)
-			return
-		}
-
 		if (preferredTemporalLayer > 0) {
 			newPreferredSpatialLayer = preferredSpatialLayer;
 			newPreferredTemporalLayer = preferredTemporalLayer - 1;
@@ -145,11 +140,6 @@ async function init()
 	increaseLayer.addEventListener('click', () => {
 		let newPreferredSpatialLayer: number;
 		let newPreferredTemporalLayer: number;
-
-		if (isFirefox) {
-			setPreferredLayers(preferredSpatialLayer < 2 ? preferredSpatialLayer + 1 : 0)
-			return
-		}
 
 		if (preferredTemporalLayer < 2) {
 			newPreferredSpatialLayer = preferredSpatialLayer;
@@ -175,10 +165,7 @@ async function init()
 		preferredTemporalLayer = temporalLayer
 
 		spatialLayerNode.innerText = String(spatialLayer);
-
-		if (!isFirefox) {
-			temporalLayerNode.innerText = String(temporalLayer);
-		}
+		temporalLayerNode.innerText = String(temporalLayer);
 
 		send({
 			action: 'SetConsumerPreferredLayers',
