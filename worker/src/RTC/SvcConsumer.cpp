@@ -581,7 +581,9 @@ namespace RTC
 		auto previousSpatialLayer  = this->encodingContext->GetCurrentSpatialLayer();
 		auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
 
-		if (!packet->ProcessPayload(this->encodingContext.get()))
+		bool marker{ false };
+		bool origMarker = packet->HasMarker();
+		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 		{
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
@@ -611,6 +613,10 @@ namespace RTC
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
+		if (marker)
+		{
+			packet->SetMarker(true);
+		}
 
 		if (isSyncPacket)
 		{
@@ -649,6 +655,7 @@ namespace RTC
 		// Restore packet fields.
 		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
+		packet->SetMarker(origMarker);
 
 		// Restore the original payload if needed.
 		packet->RestorePayload();

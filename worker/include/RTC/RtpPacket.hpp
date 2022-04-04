@@ -602,7 +602,7 @@ namespace RTC
 			this->payloadDescriptorHandler.reset(payloadDescriptorHandler);
 		}
 
-		bool ProcessPayload(RTC::Codecs::EncodingContext* context);
+		bool ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker);
 
 		void RestorePayload();
 
