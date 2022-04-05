@@ -583,6 +583,7 @@ namespace RTC
 
 		bool marker{ false };
 		bool origMarker = packet->HasMarker();
+
 		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 		{
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
@@ -613,6 +614,7 @@ namespace RTC
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
+
 		if (marker)
 		{
 			packet->SetMarker(true);
