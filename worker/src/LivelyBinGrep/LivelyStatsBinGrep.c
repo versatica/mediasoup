@@ -175,7 +175,8 @@ load_test_cfiles(ms_binlog_config *conf)
   char                filename[256];
 
 	uint64_t            start_ts[LOAD_TEST_MAX_FILES];
-	uint64_t            end_ts[LOAD_TEST_MAX_FILES];
+  uint64_t            last_ts[LOAD_TEST_MAX_FILES];
+  uint64_t            end_ts[LOAD_TEST_MAX_FILES];
 	uint64_t            active[LOAD_TEST_MAX_FILES];
   uint64_t            tmp;
   uint16_t            active_consumers_cnt;
@@ -196,6 +197,7 @@ load_test_cfiles(ms_binlog_config *conf)
 	useconds_t                 sleep;
 
 	memset(start_ts, 0, sizeof(start_ts));
+	memset(last_ts, 0, sizeof(last_ts));
 	memset(end_ts, 0, sizeof(end_ts));
 	memset(active, 0, sizeof(active));
 	memset(&rec, 0, sizeof(rec));
@@ -213,7 +215,6 @@ load_test_cfiles(ms_binlog_config *conf)
   start_tm = tv.tv_sec * 1000 + tv.tv_usec / 1000;
   
   snprintf(filename, sizeof(filename), "c_%s_%lu.bin.log", conf->filename, start_tm);
-  //printf("start_tm=%lu %s\n", start_tm, filename);
 
   srand(tv.tv_usec);
 
@@ -230,7 +231,6 @@ load_test_cfiles(ms_binlog_config *conf)
     active[i] = 1;
     rand_pseudo_uuid(object_id[i]);
     rand_pseudo_uuid(producer_id[i]);
-    //printf("%d: %s / %s dur=%lu\n", i, (char*)object_id[i], (char*)producer_id[i], end_ts[i] - start_ts[i]);
   }
 
   fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, 0666);
@@ -262,7 +262,9 @@ load_test_cfiles(ms_binlog_config *conf)
         continue;
       }
 
-			rec.start_tm  = cur_tm;
+			rec.start_tm  = last_ts[i] ? 
+          last_ts[i] + CALL_STATS_BIN_LOG_SAMPLING + rand() % 100 : 
+          cur_tm;
 
       memset(rec.call_id, 0, UUID_CHAR_LEN); // in case input file name is shorter don't want garbage
       memcpy(rec.call_id, conf->filename, UUID_CHAR_LEN);
@@ -294,6 +296,8 @@ load_test_cfiles(ms_binlog_config *conf)
 
         prev_sample[i] = rec.samples[j];
       }
+
+      last_ts[i] = rec.start_tm + CALL_STATS_BIN_LOG_SAMPLING * CALL_STATS_BIN_LOG_RECORDS_NUM;
 
 			if (write(fd, &rec, sizeof(rec)) < 0)
       {
@@ -328,6 +332,7 @@ load_test_pfiles(ms_binlog_config *conf)
 {
   char                filename[LOAD_TEST_MAX_FILES][256];
   int                 fd[LOAD_TEST_MAX_FILES]; // set into -1 explicitly after file is closed, not to be confused with error state
+  uint64_t            last_ts[LOAD_TEST_MAX_FILES];
 	uint64_t            end_ts[LOAD_TEST_MAX_FILES];
   int                 fopened_count;
   
@@ -344,6 +349,7 @@ load_test_pfiles(ms_binlog_config *conf)
 	useconds_t                 sleep;
 
 	memset(fd, 0, sizeof(fd));
+  memset(last_ts, 0, sizeof(last_ts));
 	memset(end_ts, 0, sizeof(end_ts));
 	memset(&rec, 0, sizeof(rec));
   memset(&sample, 0, sizeof(sample));
@@ -391,7 +397,9 @@ load_test_pfiles(ms_binlog_config *conf)
       if (fd[i] < 0)
         continue;
 
-			rec.start_tm  = cur_tm;
+			rec.start_tm  = last_ts[i] ? 
+          last_ts[i] + CALL_STATS_BIN_LOG_SAMPLING + rand() % 100 : 
+          cur_tm;
 
       memset(rec.call_id, 0, UUID_CHAR_LEN); // in case input file name is shorter don't want garbage
       memcpy(rec.call_id, conf->filename, UUID_CHAR_LEN);
@@ -423,6 +431,8 @@ load_test_pfiles(ms_binlog_config *conf)
 
         prev_sample[i] = rec.samples[j];
       }
+      
+      last_ts[i] = rec.start_tm + CALL_STATS_BIN_LOG_SAMPLING * CALL_STATS_BIN_LOG_RECORDS_NUM;
 
 			if (write(fd[i], &rec, sizeof(rec)) < 0)
       {
@@ -456,20 +466,22 @@ load_test_pfiles(ms_binlog_config *conf)
 int
 time_alignment(
     uint64_t record_tm,
-    uint16_t time_align,
+    uint16_t            sample_dur,
+    uint16_t            time_align,
 		call_stats_sample_t *sample_in,
+    uint64_t            *sample_ts,
 		call_stats_sample_t *sample_out,
 		int out_len)
 {
 	call_stats_sample_t sample;
 	int                 i;
-	uint64_t            start_tm, end_tm, rec_tm;
+	uint64_t            start_tm, end_tm;
 
 #define TIME_ALIGNMENT(metric) \
-		sample.metric = sample_in->metric * time_align / sample_in->epoch_len
+		sample.metric = (sample_in->metric > 1) ? sample_in->metric * time_align / sample_dur : sample_in->metric
 
 #define TIME_ALIGNMENT_ACCURATE(metric) \
-		sample.metric = round((double)sample_in->metric * (double)time_align / (double)sample_in->epoch_len)
+		sample.metric = (sample_in->metric > 1) ? round((double)sample_in->metric * (double)time_align / (double)sample_dur) : sample_in->metric
 
 	TIME_ALIGNMENT(packets_count);
 	TIME_ALIGNMENT(packets_lost);
@@ -482,17 +494,15 @@ time_alignment(
 	TIME_ALIGNMENT(rtt);
 	TIME_ALIGNMENT(bytes_count);
 	sample.max_pts   = sample_in->max_pts;
-	sample.epoch_len = time_align;
-  rec_tm = record_tm + sample_in->epoch_len;
 
-	start_tm = (rec_tm % time_align) ?
-			(rec_tm / time_align + 1) * time_align : rec_tm;
-	end_tm   = rec_tm + sample_in->epoch_len;
+	start_tm = record_tm;
+	end_tm   = record_tm + sample_dur;
 
 	for (i = 0; i < out_len && start_tm < end_tm; i++, start_tm += time_align)
   {
 		sample_out[i]           = sample;
 		sample_out[i].epoch_len = time_align * i;
+    sample_ts[i] = start_tm + sample_out[i].epoch_len;
 	}
 
 	return i;
@@ -510,11 +520,11 @@ format_output(FILE* fd, ms_binlog_config *conf)
     call_stats_record_t         *rec;
     call_stats_sample_t         *sample;
     char                        *samples_pos;
-    call_stats_sample_t         sample_tm_align[MAX_TIME_ALIGN];
 
-    uint64_t                    sample_start_tm;
-    uint64_t                    sample_ts; // sample_start_tm + sample[i].epoch_len
+    call_stats_sample_t         sample_align[MAX_TIME_ALIGN];
+    uint64_t                    sample_ts[MAX_TIME_ALIGN];
     uint16_t                    prev_sample_epoch_len, curr_sample_epoch_len;
+    uint64_t                    sample_start_tm;
     
     char                        call_id[UUID_CHAR_LEN+1];
     char                        object_id[UUID_CHAR_LEN+1]; 
@@ -569,41 +579,50 @@ format_output(FILE* fd, ms_binlog_config *conf)
         memcpy(producer_id, rec->producer_id, UUID_CHAR_LEN);
     
         samples_pos = ((char*)rec) + CALL_STATS_HEADER_LEN;
-        prev_sample_epoch_len = curr_sample_epoch_len = 0; // we need delta between current and previous epoch len to time alignment function
+        prev_sample_epoch_len = curr_sample_epoch_len = 0; // we need delta between current and previous epoch len to pass to time alignment function
 
         for (k = 0; k < rec->filled; k++)
         {
           sample = &((call_stats_sample_t*)samples_pos)[k];
           //printf("call_stats_sample_t epoch_len=%u count=%u lost=%u rtt=%u max_pts=%u bytes=%u\n", sample->epoch_len, sample->packets_count, sample->packets_lost, sample->rtt, sample->max_pts, sample->bytes_count);
           curr_sample_epoch_len = sample->epoch_len;
-
-          sample_start_tm = rec->start_tm + curr_sample_epoch_len; // calculate sample's timestamp for output recording
-          sample->epoch_len = curr_sample_epoch_len - prev_sample_epoch_len; // now it is delta from a previous sample
-
-          prev_sample_epoch_len = curr_sample_epoch_len;
-
           if (conf->time_align)
           {
-            num_tm_align_rec = time_alignment(rec->start_tm, conf->time_align, sample, sample_tm_align, MAX_TIME_ALIGN);
-            sample = sample_tm_align;
+            sample_start_tm = rec->start_tm + sample->epoch_len;
+
+            // just round it up or down to time_align:
+            sample_start_tm = (sample_start_tm % conf->time_align) ?
+                (sample_start_tm / conf->time_align + (sample_start_tm % conf->time_align + conf->time_align / 2) / conf->time_align) * conf->time_align :
+                sample_start_tm;
+
+            num_tm_align_rec = time_alignment(sample_start_tm, curr_sample_epoch_len - prev_sample_epoch_len, conf->time_align, sample, sample_ts, sample_align, MAX_TIME_ALIGN);
+            sample = sample_align;
           }
+          else
+          {
+            sample_ts[0] = rec->start_tm + sample->epoch_len; // a sample's real timestamp
+          }
+          prev_sample_epoch_len = curr_sample_epoch_len;
+
           for (i = 0; i < num_tm_align_rec; i++)
           {
-            sample_ts = sample_start_tm + sample[i].epoch_len; // sample's timestamp
-
             // in case remove duplicates is on and this record's timestamp
             // is older than the most recent record then skip it
-            if (conf->dedup && sample_ts <= conf->dedup_last_ts) {
-              continue;
-            } else {
-              conf->dedup_last_ts = sample_ts;
+            if (conf->dedup)
+            {
+              if (sample_ts[i] <= conf->dedup_last_ts)
+              {
+                continue;
+              } else {
+                conf->dedup_last_ts = sample_ts[i];
+              }
             }
 
             if (!start_ts)
-              start_ts = sample_ts;
+              start_ts = sample_ts[i];
 
             end_ts = conf->dur? (start_ts + conf->dur) : (uint64_t)-1;
-            if (sample_ts < start_ts || sample_ts > end_ts)
+            if (sample_ts[i] < start_ts || sample_ts[i] > end_ts)
               continue;
 
             if (FORMAT_CSV_COMMA == conf->format)
@@ -618,7 +637,7 @@ format_output(FILE* fd, ms_binlog_config *conf)
                   ",%"PRIu16",%"PRIu16",%"PRIu16
                   ",%"PRIu16",%"PRIu16",%"PRIu32",%"PRIu32"\n",
                   object_id, producer_id,
-                  sample_ts,
+                  sample_ts[i],
                   source_string[rec->source], mime_string[rec->mime], sample[i].packets_count,
                   sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
                   sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
@@ -634,7 +653,7 @@ format_output(FILE* fd, ms_binlog_config *conf)
                   ",%"PRIu16",%"PRIu16",%"PRIu16
                   ",%"PRIu16",%"PRIu16",%"PRIu32",%"PRIu32"\n",
                   call_id, object_id, producer_id,
-                  sample_ts,
+                  sample_ts[i],
                   source_string[rec->source], mime_string[rec->mime], sample[i].packets_count,
                   sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
                   sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
@@ -653,7 +672,7 @@ format_output(FILE* fd, ms_binlog_config *conf)
                   "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
                   "\t%"PRIu16"\t%"PRIu16"\t%"PRIu32"\t%"PRIu32"\n",
                   object_id, producer_id,
-                  sample_ts,
+                  sample_ts[i],
                   source_string[rec->source], mime_string[rec->mime], sample[i].packets_count,
                   sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
                   sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
@@ -669,7 +688,7 @@ format_output(FILE* fd, ms_binlog_config *conf)
                   "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
                   "\t%"PRIu16"\t%"PRIu16"\t%"PRIu32"\t%"PRIu32"\n",
                   call_id, object_id, producer_id,
-                  sample_ts,
+                  sample_ts[i],
                   source_string[rec->source], mime_string[rec->mime], sample[i].packets_count,
                   sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
                   sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
@@ -704,7 +723,7 @@ int main(int argc, char* argv[])
       "  -d <duration>             - duration in milliseconds (if only dur is specified it is taken from the start of the stream)\n"
       "  -D                        - optional remove duplicate records\n"
       "  -x                        - optional exclude callid column from output if in format 1 or 2\n"
-      "  --load-test-consumers <n> - load test simulation, create n consumers stats files\n"
+      "  --load-test-consumers <n> - load test simulation, create stats file with n consumers\n"
       "  --load-test-producers <n> - load test simulation, create n producers stats files\n"
       ;
 
