@@ -1,5 +1,5 @@
-#include "common.hpp"
 #include "RTC/Codecs/H264_SVC.hpp"
+#include "common.hpp"
 #include <catch2/catch.hpp>
 #include <cstring> // std::memcmp()
 
@@ -7,31 +7,181 @@ using namespace RTC;
 
 SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 {
-	SECTION("parse payload descriptor")
+	SECTION("parse payload descriptor for NALU 7") 
 	{
 		// clang-format off
 		uint8_t originalBuffer[] =
 		{
-			//0x0e, 0x80, 0x11, 0x00
-			// 0x0e, 0xc0, 0x90, 0x20
-			//0x14, 0xc0, 0x90, 0x20
-			0x78,0x00,0x0A,0x67,0x42,0xC0,0x33,0x8D,0x61,0x10,0x50,0x7E,0x40,0x00,0x06,0x68,0xCE,0x01,0xA8,0x35,0xC8
-			//0x7C,0x85,0xB8,0x00,0x04,0x02,0xD2,0x08,0x60,0x3A,0x83,0x06,0x4C,0xFF,0xF7,0xBC,0x7E,0x03,0x85,0xD8,0x02
+			0x67,0x42,0xc0,0x33
 		};
 		// clang-format on
 
 		// Keep a copy of the original buffer for comparing.
-		uint8_t buffer[21] = { 0 };
+		uint8_t buffer[4] = {0};
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		const auto* payloadDescriptor = Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+		const auto *payloadDescriptor =
+			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
 
-		payloadDescriptor->Dump();
+		REQUIRE(payloadDescriptor->tlIndex == 0);
+		REQUIRE(payloadDescriptor->slIndex == 0);
+
+		REQUIRE(payloadDescriptor->isKeyFrame == true);
+		REQUIRE(payloadDescriptor->hasTlIndex == false);
+		REQUIRE(payloadDescriptor->hasSlIndex == false);
 
 		delete payloadDescriptor;
 	}
 
+	SECTION("parse payload descriptor for NALU 8") 
+	{
+		// clang-format off
+		uint8_t originalBuffer[] =
+		{
+			0x68,0xce,0x01,0xa8
+		};
+		// clang-format on
+
+		// Keep a copy of the original buffer for comparing.
+		uint8_t buffer[4] = {0};
+
+		std::memcpy(buffer, originalBuffer, sizeof(buffer));
+
+		const auto *payloadDescriptor =
+			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(payloadDescriptor);
+
+		REQUIRE(payloadDescriptor->tlIndex == 0);
+		REQUIRE(payloadDescriptor->slIndex == 0);
+
+		REQUIRE(payloadDescriptor->isKeyFrame == false);
+		REQUIRE(payloadDescriptor->hasTlIndex == false);
+		REQUIRE(payloadDescriptor->hasSlIndex == false);
+
+		delete payloadDescriptor;
+	}
+
+	SECTION("parse payload descriptor for NALU 1") 
+	{
+		// clang-format off
+		uint8_t originalBuffer[] =
+		{
+			0x81,0xe0,0x00,0x4e
+		};
+		// clang-format on
+
+		// Keep a copy of the original buffer for comparing.
+		uint8_t buffer[4] = {0};
+
+		std::memcpy(buffer, originalBuffer, sizeof(buffer));
+
+		const auto *payloadDescriptor =
+			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(payloadDescriptor);
+
+		REQUIRE(payloadDescriptor->tlIndex == 0);
+		REQUIRE(payloadDescriptor->slIndex == 0);
+
+		REQUIRE(payloadDescriptor->isKeyFrame == false);
+		REQUIRE(payloadDescriptor->hasTlIndex == false);
+		REQUIRE(payloadDescriptor->hasSlIndex == false);
+
+		delete payloadDescriptor;
+	}
+
+	SECTION("parse payload descriptor for NALU 5") 
+	{
+		// clang-format off
+		uint8_t originalBuffer[] =
+		{
+			0x85,0xb8,0x00,0x04
+		};
+		// clang-format on
+
+		// Keep a copy of the original buffer for comparing.
+		uint8_t buffer[4] = {0};
+
+		std::memcpy(buffer, originalBuffer, sizeof(buffer));
+
+		const auto *payloadDescriptor =
+			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(payloadDescriptor);
+
+		REQUIRE(payloadDescriptor->tlIndex == 0);
+		REQUIRE(payloadDescriptor->slIndex == 0);
+
+		REQUIRE(payloadDescriptor->isKeyFrame == true);
+		REQUIRE(payloadDescriptor->hasTlIndex == false);
+		REQUIRE(payloadDescriptor->hasSlIndex == false);
+
+		delete payloadDescriptor;   
+	}
+
+	SECTION("parse payload descriptor for NALU 14") 
+	{
+		// clang-format off
+		uint8_t originalBuffer[] =
+		{
+			0x6e,0x80,0x90,0x20
+		};
+		// clang-format on
+
+		// Keep a copy of the original buffer for comparing.
+		uint8_t buffer[4] = {0};
+
+		std::memcpy(buffer, originalBuffer, sizeof(buffer));
+
+		const auto *payloadDescriptor =
+			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(payloadDescriptor);
+
+		REQUIRE(payloadDescriptor->idr == 0);
+
+		REQUIRE(payloadDescriptor->tlIndex == 1);
+		REQUIRE(payloadDescriptor->slIndex == 1);
+
+		REQUIRE(payloadDescriptor->isKeyFrame == false);
+		REQUIRE(payloadDescriptor->hasTlIndex == true);
+		REQUIRE(payloadDescriptor->hasSlIndex == true);
+
+		delete payloadDescriptor;
+	}
+
+	SECTION("parse payload descriptor for NALU 20") 
+	{
+		// clang-format off
+		uint8_t originalBuffer[] =
+		{
+			0x74,0x80,0x90,0x20
+		};
+		// clang-format on
+
+		// Keep a copy of the original buffer for comparing.
+		uint8_t buffer[4] = {0};
+
+		std::memcpy(buffer, originalBuffer, sizeof(buffer));
+
+		const auto *payloadDescriptor =
+			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(payloadDescriptor);
+
+		REQUIRE(payloadDescriptor->idr == 0);
+
+		REQUIRE(payloadDescriptor->tlIndex == 1);
+		REQUIRE(payloadDescriptor->slIndex == 1);
+
+		REQUIRE(payloadDescriptor->isKeyFrame == false);
+		REQUIRE(payloadDescriptor->hasTlIndex == true);
+		REQUIRE(payloadDescriptor->hasSlIndex == true);
+
+		delete payloadDescriptor;
+	}
 }

@@ -25,7 +25,6 @@ namespace RTC
 			// Use frame-marking.
 			if (frameMarking)
 			{
-				H264_SVC::printFrameMarking(*frameMarking);
 				// Read fields.
 				payloadDescriptor->s   = frameMarking->start;
 				payloadDescriptor->e   = frameMarking->end;
@@ -76,7 +75,7 @@ namespace RTC
 						payloadDescriptor = H264_SVC::ParseSingleNalu(data, len, std::move(payloadDescriptor), true);
 
 						if (payloadDescriptor == nullptr)
-                            return nullptr;
+							return nullptr;
 
 						break;
 					}
@@ -121,12 +120,12 @@ namespace RTC
 					{
 						uint8_t startBit = *(data + 1) & 0x80;
 
-                        if(startBit == 128)
-                        {
-                            payloadDescriptor = H264_SVC::ParseSingleNalu((data + 1), (len - 1), std::move(payloadDescriptor), (startBit == 128 ? true : false));
-                        }
+						if(startBit == 128)
+						{
+							payloadDescriptor = H264_SVC::ParseSingleNalu((data + 1), (len - 1), std::move(payloadDescriptor), (startBit == 128 ? true : false));
+						}
 						if (payloadDescriptor == nullptr)
-	                        return nullptr;
+							return nullptr;
 
 						break;
 					}
@@ -138,7 +137,6 @@ namespace RTC
 
 		std::unique_ptr<H264_SVC::PayloadDescriptor> H264_SVC::ParseSingleNalu(const uint8_t* data, size_t len, std::unique_ptr<H264_SVC::PayloadDescriptor> payloadDescriptor, bool isStartBit)
 		{
-
 			uint8_t nal = *data & 0x1F;
 
 			switch (nal)
@@ -185,7 +183,6 @@ namespace RTC
 					payloadDescriptor->hasTlIndex = payloadDescriptor->tlIndex ? true : false;
 
 					break;
-
 				}
 				case 7:
 				{
@@ -233,12 +230,10 @@ namespace RTC
 			  this->i,
 			  this->d,
 			  this->b);
-			if (this->hasTlIndex)
-				MS_DUMP("  tlIndex        : %" PRIu8, this->tlIndex);
-			if (this->hasSlIndex)
-				MS_DUMP("  slIndex        : %" PRIu8, this->slIndex);
+			MS_DUMP("  hasSlIndex           : %s", this->hasSlIndex ? "true" : "false");
+			MS_DUMP("  hasTlIndex           : %s", this->hasTlIndex ? "true" : "false");
 			MS_DUMP("  tl0picidx            : %" PRIu8, this->tl0picidx);
-			MS_DUMP("  noIntLayerPredFlag     : %" PRIu8, this->noIntLayerPredFlag);
+			MS_DUMP("  noIntLayerPredFlag   : %" PRIu8, this->noIntLayerPredFlag);
 			MS_DUMP("  isKeyFrame           : %s", this->isKeyFrame ? "true" : "false");
 			MS_DUMP("</PayloadDescriptor>");
 		}
@@ -257,15 +252,15 @@ namespace RTC
 
 			auto* context = static_cast<RTC::Codecs::H264_SVC::EncodingContext*>(encodingContext);
 
-            MS_ASSERT(context->GetTargetSpatialLayer() >= 0, "target spatial layer cannot be -1");
+			MS_ASSERT(context->GetTargetSpatialLayer() >= 0, "target spatial layer cannot be -1");
 			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
 
-            auto packetSpatialLayer  = GetSpatialLayer();
+			auto packetSpatialLayer  = GetSpatialLayer();
 			auto packetTemporalLayer = GetTemporalLayer();
 			auto tmpSpatialLayer     = context->GetCurrentSpatialLayer();
 			auto tmpTemporalLayer    = context->GetCurrentTemporalLayer();
 
-            // If packet spatial or temporal layer is higher than maximum announced
+			// If packet spatial or temporal layer is higher than maximum announced
 			// one, drop the packet.
 			// clang-format off
 			if (
@@ -280,10 +275,10 @@ namespace RTC
 				return false;
 			}
 
-            // clang-format off
+			// clang-format off
 			bool isOldPacket = false;
 
-            // Upgrade current spatial layer if needed.
+			// Upgrade current spatial layer if needed.
 			if (context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
 			{
 				if (this->payloadDescriptor->isKeyFrame)
@@ -411,7 +406,6 @@ namespace RTC
 			// Update current temporal layer if needed.
 			if (tmpTemporalLayer != context->GetCurrentTemporalLayer())
 				context->SetCurrentTemporalLayer(tmpTemporalLayer);
-
 
 			return true;
 		}

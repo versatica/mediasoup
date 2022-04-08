@@ -1,5 +1,5 @@
-#include "common.hpp"
 #include "RTC/Codecs/H264.hpp"
+#include "common.hpp"
 #include <catch2/catch.hpp>
 #include <cstring> // std::memcmp()
 
@@ -25,9 +25,6 @@ SCENARIO("parse H264 payload descriptor", "[codecs][h264]")
 
 		REQUIRE(payloadDescriptor);
 
-		payloadDescriptor->Dump();
-
 		delete payloadDescriptor;
 	}
-
 }

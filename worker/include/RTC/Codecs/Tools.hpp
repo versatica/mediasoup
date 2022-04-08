@@ -72,12 +72,12 @@ namespace RTC
 
 								break;
 							}
-                            case RTC::RtpCodecMimeType::Subtype::H264_SVC:
-                            {
+							case RTC::RtpCodecMimeType::Subtype::H264_SVC:
+							{
 								RTC::Codecs::H264_SVC::ProcessRtpPacket(packet);
 
-                                break;
-                            }
+								break;
+							}
 
 							default:;
 						}
