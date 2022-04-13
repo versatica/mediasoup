@@ -51,7 +51,7 @@ namespace RTC
 			}
 		}
 
-		lively.id = id;
+		lively.id = producerId;
 		this->appData = lively.ToStr();
 
 		auto jsonRtpParametersIt = data.find("rtpParameters");
