@@ -78,7 +78,7 @@ void DepLibUV::PrintVersion()
 {
 	MS_TRACE_STD();
 
-	MS_DEBUG_TAG(info, "libuv version: \"%s\"", uv_version_string());
+	MS_DEBUG_TAG_STD(info, "libuv version: \"%s\"", uv_version_string());
 }
 
 void DepLibUV::RunLoop()

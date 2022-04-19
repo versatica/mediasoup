@@ -79,6 +79,11 @@ export type PlainTransportOptions =
 	 * Custom application data.
 	 */
 	appData?: any;
+
+	/**
+	 * Binary log info.
+	 */
+	binlog?: any;
 }
 
 /**

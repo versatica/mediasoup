@@ -59,6 +59,10 @@ export declare type PlainTransportOptions = {
      * Custom application data.
      */
     appData?: any;
+    /**
+     * Binary log info.
+     */
+    binlog?: any;
 };
 /**
  * DEPRECATED: Use PlainTransportOptions.

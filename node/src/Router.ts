@@ -345,7 +345,8 @@ export class Router extends EnhancedEventEmitter
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 262144,
 			sctpSendBufferSize = 262144,
-			appData = {}
+			appData = {},
+			binlog = {},
 		}: WebRtcTransportOptions
 	): Promise<WebRtcTransport>
 	{
@@ -390,6 +391,7 @@ export class Router extends EnhancedEventEmitter
 			sctpSendBufferSize,
 			isDataChannel : true,
 			appData,
+			binlog,
 		};
 
 		const data =
@@ -444,7 +446,8 @@ export class Router extends EnhancedEventEmitter
 			sctpSendBufferSize = 262144,
 			enableSrtp = false,
 			srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
-			appData = {}
+			appData = {},
+			binlog = {},
 		}: PlainTransportOptions
 	): Promise<PlainTransport>
 	{
@@ -487,6 +490,7 @@ export class Router extends EnhancedEventEmitter
 			enableSrtp,
 			srtpCryptoSuite,
 			appData,
+			binlog,
 		};
 
 		const data =
@@ -552,7 +556,8 @@ export class Router extends EnhancedEventEmitter
 			sctpSendBufferSize = 268435456,
 			enableRtx = false,
 			enableSrtp = false,
-			appData = {}
+			appData = {},
+			binlog = {},
 		}: PipeTransportOptions
 	): Promise<PipeTransport>
 	{
@@ -593,6 +598,7 @@ export class Router extends EnhancedEventEmitter
 			enableRtx,
 			enableSrtp,
 			appData,
+			binlog,
 		};
 
 		const data =
@@ -637,7 +643,8 @@ export class Router extends EnhancedEventEmitter
 	async createDirectTransport(
 		{
 			maxMessageSize = 262144,
-			appData = {}
+			appData = {},
+			binlog = {},
 		}: DirectTransportOptions =
 		{
 			maxMessageSize : 262144
@@ -651,6 +658,7 @@ export class Router extends EnhancedEventEmitter
 			direct: true, 
 			maxMessageSize,
 			appData,
+			binlog,
 		};
 
 		const data =
@@ -705,7 +713,8 @@ export class Router extends EnhancedEventEmitter
 			listenIp,
 			shm,
 			log,
-			appData = {}
+			appData = {},
+			binlog = {},
 		} : ShmTransportOptions
 	): Promise<ShmTransport>
 	{
@@ -739,6 +748,7 @@ export class Router extends EnhancedEventEmitter
 			shm,
 			log,
 			appData,
+			// no binlog until different binlog data collection process is implemented for ShmTransport 
 		};
 
 		/*

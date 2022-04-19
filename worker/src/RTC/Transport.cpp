@@ -76,7 +76,7 @@ namespace RTC
 		// appData (optional)
 		auto jsonAppDataIt = data.find("appData");
 		
-		Lively::AppData lively;
+		//Lively::AppData lively;
 		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
 		{
 			try {
@@ -89,6 +89,7 @@ namespace RTC
 
 		lively.id = id;
 		this->appData = lively.ToStr();
+		this->binLog.InitLog('c', lively.callId, lively.id); // initialize consumers bin log here, it is shared btw all consumers
 
 		auto jsonInitialAvailableOutgoingBitrateIt = data.find("initialAvailableOutgoingBitrate");
 
@@ -198,7 +199,9 @@ namespace RTC
 
 		// Create the RTCP timer.
 		this->rtcpTimer = new Timer(this);
+		this->binLogTimer = new Timer(this);
 	}
+
 
 	Transport::~Transport()
 	{
@@ -254,6 +257,11 @@ namespace RTC
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
 		this->rtcpTimer = nullptr;
+
+		delete this->binLogTimer;
+		this->binLogTimer = nullptr;
+
+		binLog.DeinitLog(nullptr);
 
 		// Delete Transport-CC client.
 		delete this->tccClient;
@@ -684,7 +692,7 @@ namespace RTC
 				SetNewProducerIdFromInternal(request->internal, producerId);
 
 				// This may throw.
-				auto* producer = new RTC::Producer(producerId, this, request->data);
+				auto* producer = new RTC::Producer(producerId, this, request->data, &lively);
 				
 				// Insert the Producer into the RtpListener.
 				// This may throw. If so, delete the Producer and throw.
@@ -873,7 +881,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMPLE:
 					{
 						// This may throw.
-						consumer = new RTC::SimpleConsumer(consumerId, producerId, this, request->data);
+						consumer = new RTC::SimpleConsumer(consumerId, producerId, this, request->data, &lively);
 
 						break;
 					}
@@ -881,7 +889,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMULCAST:
 					{
 						// This may throw.
-						consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, request->data);
+						consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, request->data, &lively);
 
 						break;
 					}
@@ -889,7 +897,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SVC:
 					{
 						// This may throw.
-						consumer = new RTC::SvcConsumer(consumerId, producerId, this, request->data);
+						consumer = new RTC::SvcConsumer(consumerId, producerId, this, request->data, &lively);
 
 						break;
 					}
@@ -897,7 +905,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::PIPE:
 					{
 						// This may throw.
-						consumer = new RTC::PipeConsumer(consumerId, producerId, this, request->data);
+						consumer = new RTC::PipeConsumer(consumerId, producerId, this, request->data, &lively);
 
 						break;
 					}
@@ -1641,6 +1649,9 @@ namespace RTC
 		// Start the RTCP timer.
 		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 
+		// Bin log timer
+		this->binLogTimer->Start(CALL_STATS_BIN_LOG_SAMPLING);
+
 		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
 			this->tccClient->TransportConnected();
@@ -1678,6 +1689,8 @@ namespace RTC
 
 		// Stop the RTCP timer.
 		this->rtcpTimer->Stop();
+
+		this->binLogTimer->Stop();
 
 		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
@@ -2389,7 +2402,7 @@ namespace RTC
 			SendRtcpCompoundPacket(packet.get());
 		}
 	}
-	
+
 	void Transport::DistributeAvailableOutgoingBitrate()
 	{
 		MS_TRACE();
@@ -3183,6 +3196,31 @@ namespace RTC
 			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
 
 			this->rtcpTimer->Start(interval);
+		}
+
+		//Binary log timer
+		else if (timer == this->binLogTimer)
+		{
+			for (auto& kv : this->mapProducers)
+			{
+				auto* producer = kv.second;
+				// Tell producer to dump collected log data into file if ready, then collect a new sample
+				if (producer != nullptr)
+				{
+					producer->FillBinLogStats();
+				}
+			}
+			
+			for (auto& kv : this->mapConsumers)
+			{
+				auto* consumer = kv.second;
+				if (consumer != nullptr)
+				{
+					consumer->FillBinLogStats(&this->binLog);		
+				}
+			}
+			
+			this->binLogTimer->Start(CALL_STATS_BIN_LOG_SAMPLING);
 		}
 	}
 } // namespace RTC

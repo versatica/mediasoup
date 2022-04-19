@@ -116,11 +116,19 @@ switch (task)
 		break;
 	}
 
+	case 'livelystats:bingrep':
+	{
+		execute(`${MAKE} bingrep -C worker`);
+
+		break;
+	}
+
 	case 'postinstall':
 	{
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
 			execute('node npm-scripts.js worker:build');
+			execute(`${MAKE} bingrep -C worker`);
 			execute(`${MAKE} clean-pip -C worker`);
 			execute(`${MAKE} clean-subprojects -C worker`);
 		}

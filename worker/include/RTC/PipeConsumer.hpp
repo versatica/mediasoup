@@ -1,6 +1,7 @@
 #ifndef MS_RTC_PIPE_CONSUMER_HPP
 #define MS_RTC_PIPE_CONSUMER_HPP
 
+#include "Lively.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
@@ -14,7 +15,8 @@ namespace RTC
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
-		  json& data);
+		  json& data,
+			Lively::AppData* appData = nullptr);
 		~PipeConsumer() override;
 
 	public:
@@ -56,6 +58,9 @@ namespace RTC
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
 
+	public:
+		void FillBinLogStats(Lively::StatsBinLog* log) override;
+
 	private:
 		// Allocated by this.
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
@@ -65,6 +70,8 @@ namespace RTC
 		bool keyFrameSupported{ false };
 		std::unordered_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
 		std::unordered_map<RTC::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
+		// bin log
+		std::map<RTC::RtpStreamSend*, Lively::CallStatsRecordCtx*> rtpStreamBinLogRecords;
 	};
 } // namespace RTC
 

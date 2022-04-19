@@ -15,7 +15,7 @@ static std::once_flag globalInitOnce;
 
 void DepOpenSSL::ClassInit()
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	std::call_once(
 	  globalInitOnce,
@@ -31,7 +31,7 @@ void DepOpenSSL::ClassInit()
 
 void DepOpenSSL::DetectAESNI()
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
-	MS_DEBUG_TAG(info, "Intel CPU: %s AES-NI: %s", DepOpenSSL::HasIntelCpu() ? "true" : "false", DepOpenSSL::HasAESNI() ? "true" : "false");
+	MS_DEBUG_TAG_STD(info, "Intel CPU: %s AES-NI: %s", DepOpenSSL::HasIntelCpu() ? "true" : "false", DepOpenSSL::HasAESNI() ? "true" : "false");
 }

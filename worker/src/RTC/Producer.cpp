@@ -15,7 +15,6 @@
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
-#include "Lively.hpp"
 #include "LivelyAppDataToJson.hpp"
 
 
@@ -23,7 +22,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Producer::Producer(const std::string& id, RTC::Producer::Listener* listener, json& data)
+	Producer::Producer(const std::string& id, RTC::Producer::Listener* listener, json& data, Lively::AppData* appData)
 	  : id(id), listener(listener)
 	{
 		MS_TRACE();
@@ -35,22 +34,36 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("missing kind");
 		}
 
-		// appData (optional)
-		auto jsonAppDataIt = data.find("appData");
-		
-		Lively::AppData lively;
-		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
+		// appData: read from Transport, otherwise try reading from "appData" included into request
+		if (appData)
 		{
-			try {
-				lively = jsonAppDataIt->get<Lively::AppData>();
-			}
-			catch (const std::exception& e) {
-				MS_WARN_TAG(rtp, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
+			lively = *appData;
+		}
+		else
+		{
+			auto jsonAppDataIt = data.find("appData");			
+			if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
+			{
+				try {
+					lively = jsonAppDataIt->get<Lively::AppData>();
+				}
+				catch (const std::exception& e) {
+					MS_WARN_TAG(rtp, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
+				}
 			}
 		}
-
 		lively.id = id;
 		this->appData = lively.ToStr();
+
+		// Bin log
+		this->binLog.InitLog('p', lively.callId, lively.id);
+
+		MS_DEBUG_TAG_LIVELYAPP(
+			rtp,
+			this->appData,
+			"Producer %s bin.log %s",
+			lively.id.c_str(),
+			this->binLog.bin_log_file_path.c_str());
 
 		// This may throw.
 		this->kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
@@ -344,6 +357,9 @@ namespace RTC
 		this->mapRtpStreamMappedSsrc.clear();
 		this->mapMappedSsrcSsrc.clear();
 
+		binLog.DeinitLog(nullptr);
+		this->rtpStreamBinLogRecords.clear();
+
 		// Delete the KeyFrameRequestManager.
 		delete this->keyFrameRequestManager;
 	}
@@ -459,6 +475,30 @@ namespace RTC
 		}
 
 		jsonObject["traceEventTypes"] = traceEventTypesStream.str();
+	}
+
+	void Producer::FillBinLogStats()
+	{
+		MS_TRACE();
+
+		if (this->rtpStreamByEncodingIdx.size() != 1)
+		{
+			MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "found %zu streams in %s, skipping bin stats", this->rtpStreamByEncodingIdx.size(), this->id.c_str());
+			return;
+		}
+
+		for (auto* rtpStream : this->rtpStreamByEncodingIdx)
+		{
+			if (!rtpStream)
+				continue;
+
+			Lively::CallStatsRecordCtx* ctx = this->rtpStreamBinLogRecords.at(rtpStream);
+			if (!ctx)
+				continue;
+
+			ctx->record.mime = static_cast<uint8_t>(rtpStream->GetMimeType().type);
+			ctx->AddStatsRecord(&binLog, rtpStream);
+		}
 	}
 
 	void Producer::FillJsonStats(json& jsonArray) const
@@ -1172,6 +1212,9 @@ namespace RTC
 		// Set the mapped SSRC.
 		this->mapRtpStreamMappedSsrc[rtpStream]             = encodingMapping.mappedSsrc;
 		this->mapMappedSsrcSsrc[encodingMapping.mappedSsrc] = ssrc;
+
+		// Binary log samples collection per stream
+		this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(0, lively.callId, this->id, ZERO_UUID);
 
 		// If the Producer is paused tell it to the new RtpStreamRecv.
 		if (this->paused)

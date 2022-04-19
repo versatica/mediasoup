@@ -38,6 +38,7 @@ common_sources = [
   'src/DepOpenSSL.cpp',
   'src/DepUsrSCTP.cpp',
   'src/Lively.cpp',
+  'src/LivelyBinLogs.cpp',
   'src/Logger.cpp',
   'src/MediaSoupErrors.cpp',
   'src/Settings.cpp',
@@ -245,13 +246,13 @@ libmediasoup_worker = library(
   link_whole: link_whole,
 )
 
-#executable(
+# executable(
 #  'mediasoup-worker',
 #  build_by_default: true,
 #  dependencies: dependencies,
-#  sources: common_sources + ['src/main.cpp'],
+# sources: common_sources + ['src/main.cpp'],
 #  include_directories: include_directories('include'),
-#  cpp_args: cpp_args + ['-DMS_EXECUTABLE'],
+#  cpp_args: cpp_args + ['-g', '-fno-omit-frame-pointer', '-O0', '-DMS_EXECUTABLE'],
 #)
 
 transcode_dependencies = dependencies + [
@@ -345,6 +346,11 @@ test(
   mediasoup_worker_test,
   workdir: meson.source_root(),
 )
+
+executable(
+  'livelybingrep',
+  build_by_default: false,
+  sources: ['src/LivelyBinGrep/LivelyStatsBinGrep.c'],)
 
 if host_machine.system() == 'linux'
   executable(
