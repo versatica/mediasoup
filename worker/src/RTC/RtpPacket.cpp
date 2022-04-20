@@ -782,20 +782,15 @@ namespace RTC
 		return true;
 	}
 
-	bool RtpPacket::ProcessPayload(RTC::Codecs::EncodingContext* context)
+	bool RtpPacket::ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker)
 	{
 		MS_TRACE();
 
 		if (!this->payloadDescriptorHandler)
 			return true;
 
-		bool marker{ false };
-
 		if (this->payloadDescriptorHandler->Process(context, this->payload, marker))
 		{
-			if (marker)
-				SetMarker(true);
-
 			return true;
 		}
 		else

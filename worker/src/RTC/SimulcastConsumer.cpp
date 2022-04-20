@@ -822,6 +822,8 @@ namespace RTC
 			this->keyFrameForTsOffsetRequested = false;
 		}
 
+		bool marker{ false };
+
 		if (shouldSwitchCurrentSpatialLayer)
 		{
 			// Update current spatial layer.
@@ -841,14 +843,14 @@ namespace RTC
 			EmitScore();
 
 			// Rewrite payload if needed.
-			packet->ProcessPayload(this->encodingContext.get());
+			packet->ProcessPayload(this->encodingContext.get(), marker);
 		}
 		else
 		{
 			auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
 
 			// Rewrite payload if needed. Drop packet if necessary.
-			if (!packet->ProcessPayload(this->encodingContext.get()))
+			if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 			{
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
