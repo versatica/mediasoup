@@ -9,6 +9,7 @@
     * nlohmann_json 3.10.5.
     * usrsctp snapshot 4e06feb01cadcd127d119486b98a4bd3d64aa1e7.
     * wingetopt 1.00.
+* Update NPM deps and TypeScript version.
 
 
 ### 3.9.9
