@@ -369,7 +369,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return this->bitrates.availableBitrate;
+		return 1000000;
+//		return this->bitrates.availableBitrate;
 	}
 
 	double TransportCongestionControlClient::GetPacketLoss() const

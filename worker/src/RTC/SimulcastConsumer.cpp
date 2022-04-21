@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::SimulcastConsumer"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SimulcastConsumer.hpp"
 #include "DepLibUV.hpp"
@@ -512,13 +512,13 @@ namespace RTC
 						requiredBitrate = 1u; // Don't set 0 since it would be ignored.
 				}
 
-				MS_DEBUG_DEV(
-				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
-				  ", required bitrate:%" PRIu32 "]",
-				  spatialLayer,
-				  temporalLayer,
-				  virtualBitrate,
-				  requiredBitrate);
+				// MS_DEBUG_DEV(
+				//   "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
+				//   ", required bitrate:%" PRIu32 "]",
+				//   spatialLayer,
+				//   temporalLayer,
+				//   virtualBitrate,
+				//   requiredBitrate);
 
 				// If active layer, end iterations here. Otherwise move to next spatial layer.
 				if (requiredBitrate)
@@ -546,13 +546,13 @@ namespace RTC
 		this->provisionalTargetSpatialLayer  = spatialLayer;
 		this->provisionalTargetTemporalLayer = temporalLayer;
 
-		MS_DEBUG_DEV(
-		  "setting provisional layers to %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
-		  ", required bitrate:%" PRIu32 "]",
-		  this->provisionalTargetSpatialLayer,
-		  this->provisionalTargetTemporalLayer,
-		  virtualBitrate,
-		  requiredBitrate);
+		// MS_DEBUG_DEV(
+		//   "setting provisional layers to %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
+		//   ", required bitrate:%" PRIu32 "]",
+		//   this->provisionalTargetSpatialLayer,
+		//   this->provisionalTargetTemporalLayer,
+		//   virtualBitrate,
+		//   requiredBitrate);
 
 		if (requiredBitrate <= bitrate)
 			return requiredBitrate;
@@ -569,12 +569,30 @@ namespace RTC
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 		MS_ASSERT(IsActive(), "should be active");
 
+		// ggb
+		static int counter = 0;
+		if (counter++ % 2 == 0)
+		{
+			this->provisionalTargetSpatialLayer = 0;
+		}
+
+		// if (counter ++ % 5 == 0) {
+		// 	this->provisionalTargetTemporalLayer = 0;
+		// }
+
 		auto provisionalTargetSpatialLayer  = this->provisionalTargetSpatialLayer;
 		auto provisionalTargetTemporalLayer = this->provisionalTargetTemporalLayer;
 
 		// Reset provisional target layers.
 		this->provisionalTargetSpatialLayer  = -1;
 		this->provisionalTargetTemporalLayer = -1;
+
+		MS_DEBUG_DEV(
+		  "from %" PRIi16 " %" PRIi16 " to %" PRIi16 " %" PRIi16 ") due to BWE udpates",
+		  this->targetSpatialLayer,
+		  this->targetTemporalLayer,
+		  provisionalTargetSpatialLayer,
+		  provisionalTargetTemporalLayer);
 
 		// clang-format off
 		if (
@@ -660,7 +678,10 @@ namespace RTC
 
 			return;
 		}
-
+		// MS_DEBUG_DEV(
+		// 	  "packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+		// 	  packet->GetSsrc(),
+		// 	  packet->GetSequenceNumber());
 		auto spatialLayer = this->mapMappedSsrcSpatialLayer.at(packet->GetSsrc());
 		bool shouldSwitchCurrentSpatialLayer{ false };
 
@@ -674,6 +695,11 @@ namespace RTC
 
 			shouldSwitchCurrentSpatialLayer = true;
 
+			MS_DEBUG_DEV(
+			  "ggbggb %" PRIi16 " -> %" PRIi16 " [%" PRIi16 "]",
+			  this->currentSpatialLayer,
+			  this->targetSpatialLayer,
+			  spatialLayer);
 			// Need to resync the stream.
 			this->syncRequired = true;
 		}
@@ -681,12 +707,17 @@ namespace RTC
 		// drop it.
 		else if (spatialLayer != this->currentSpatialLayer)
 		{
+			// MS_DEBUG_DEV("ggb4 %" PRIi16 " [%" PRIi16 "]", this->currentSpatialLayer, spatialLayer);
 			return;
 		}
 
 		// If we need to sync and this is not a key frame, ignore the packet.
 		if (this->syncRequired && !packet->IsKeyFrame())
+		{
+			// MS_DEBUG_DEV("ggb5 [%" PRIi16 "]", spatialLayer);
+			// RequestKeyFrames();
 			return;
+		}
 
 		// Whether this is the first packet after re-sync.
 		bool isSyncPacket = this->syncRequired;
@@ -695,7 +726,7 @@ namespace RTC
 		if (isSyncPacket)
 		{
 			if (packet->IsKeyFrame())
-				MS_DEBUG_TAG(rtp, "sync key frame received");
+				MS_DEBUG_DEV("sync key frame received");
 
 			uint32_t tsOffset{ 0u };
 
@@ -769,8 +800,7 @@ namespace RTC
 					// Give up and use the theoretical offset.
 					if (tsExtraOffset > maxTsExtraOffset)
 					{
-						MS_WARN_TAG(
-						  simulcast,
+						MS_DEBUG_DEV(
 						  "giving up on proper stream switching after got a requested keyframe for which still too high RTP timestamp extra offset is needed (%" PRIu32
 						  ")",
 						  tsExtraOffset);
@@ -780,8 +810,7 @@ namespace RTC
 				}
 				else if (tsExtraOffset > maxTsExtraOffset)
 				{
-					MS_WARN_TAG(
-					  simulcast,
+					MS_DEBUG_DEV(
 					  "cannot switch stream due to too high RTP timestamp extra offset needed (%" PRIu32
 					  "), requesting keyframe",
 					  tsExtraOffset);
@@ -795,10 +824,8 @@ namespace RTC
 
 				if (tsExtraOffset > 0u)
 				{
-					MS_DEBUG_TAG(
-					  simulcast,
-					  "RTP timestamp extra offset generated for stream switching: %" PRIu32,
-					  tsExtraOffset);
+					MS_DEBUG_DEV(
+					  "RTP timestamp extra offset generated for stream switching: %" PRIu32, tsExtraOffset);
 
 					// Increase the timestamp offset for the whole life of this Producer stream
 					// (until switched to a different one).
@@ -814,10 +841,16 @@ namespace RTC
 			// 'packet->GetSequenceNumber() -2' may increase SeqManager::base and increase the
 			// output sequence number.
 			// https://github.com/versatica/mediasoup/issues/408
+			// ggb
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - (this->lastSentPacketHasMarker ? 1 : 2));
 
 			this->encodingContext->SyncRequired();
 
+			MS_DEBUG_DEV(
+			  "ggb6 sync false [%" PRIi16 " ssrc:%" PRIu32 " sn:%" PRIu16 "]",
+			  spatialLayer,
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber());
 			this->syncRequired                 = false;
 			this->keyFrameForTsOffsetRequested = false;
 		}
@@ -875,19 +908,30 @@ namespace RTC
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
 
-		if (isSyncPacket)
-		{
-			MS_DEBUG_TAG(
-			  rtp,
-			  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
-			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			MS_DEBUG_DEV(
+			  "ggb sending packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 ", key:%" PRIi32
+			  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "] sync:%" PRIi32,
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp(),
+			  packet->IsKeyFrame() ? 1 : 0,
 			  origSsrc,
 			  origSeq,
-			  origTimestamp);
-		}
+			  origTimestamp,
+			  isSyncPacket ? 1 : 0);
+
+		// if (isSyncPacket)
+		// {
+		// 	MS_DEBUG_DEV(
+		// 	  "sending sync packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32
+		// 	  "] from original [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+		// 	  packet->GetSsrc(),
+		// 	  packet->GetSequenceNumber(),
+		// 	  packet->GetTimestamp(),
+		// 	  origSsrc,
+		// 	  origSeq,
+		// 	  origTimestamp);
+		// }
 
 		// Process the packet.
 		if (this->rtpStream->ReceivePacket(packet))

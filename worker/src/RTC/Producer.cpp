@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Producer"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Producer.hpp"
 #include "DepLibUV.hpp"
@@ -605,6 +605,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+
+		// MS_DEBUG_DEV(
+		// 			  "packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+		// 			  packet->GetSsrc(),
+		// 			  packet->GetSequenceNumber());
+
 		// Reset current packet.
 		this->currentRtpPacket = nullptr;
 
@@ -657,10 +663,17 @@ namespace RTC
 			MS_ABORT("found stream does not match received packet");
 		}
 
+
+
+				static int counter = 0;
+		if (packet->GetSsrc() != rtpStream->GetRtxSsrc() && counter++ % 8 == 0)
+		{
+			return ReceiveRtpPacketResult::DISCARDED;
+		}
+		
 		if (packet->IsKeyFrame())
 		{
-			MS_DEBUG_TAG(
-			  rtp,
+			MS_DEBUG_DEV(
 			  "key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber());
