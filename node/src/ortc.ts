@@ -1223,6 +1223,7 @@ function matchCodecs(
 		}
 
 		case 'video/h264':
+		case 'video/h264-svc':
 		{
 			if (strict)
 			{
