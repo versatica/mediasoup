@@ -266,7 +266,7 @@ pub enum MimeTypeVideo {
     H264,
     /// H264-SVC
     #[serde(rename = "video/H264-SVC")]
-    H264-SVC,
+    H264Svc,
     /// H265
     #[serde(rename = "video/H265")]
     H265,

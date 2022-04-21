@@ -246,7 +246,7 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 ],
             },
             RtpCodecCapability::Video {
-                mime_type: MimeTypeVideo::H264-SVC,
+                mime_type: MimeTypeVideo::H264Svc,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
                 parameters: RtpCodecParametersParameters::from([(
