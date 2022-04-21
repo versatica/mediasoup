@@ -1,5 +1,5 @@
-#include "RTC/Codecs/H264_SVC.hpp"
 #include "common.hpp"
+#include "RTC/Codecs/H264_SVC.hpp"
 #include <catch2/catch.hpp>
 #include <cstring> // std::memcmp()
 
@@ -7,7 +7,7 @@ using namespace RTC;
 
 SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 {
-	SECTION("parse payload descriptor for NALU 7") 
+	SECTION("parse payload descriptor for NALU 7")
 	{
 		// clang-format off
 		uint8_t originalBuffer[] =
@@ -17,12 +17,11 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format on
 
 		// Keep a copy of the original buffer for comparing.
-		uint8_t buffer[4] = {0};
+		uint8_t buffer[4] = { 0 };
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		const auto *payloadDescriptor =
-			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+		const auto* payloadDescriptor = Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
 
@@ -36,7 +35,7 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		delete payloadDescriptor;
 	}
 
-	SECTION("parse payload descriptor for NALU 8") 
+	SECTION("parse payload descriptor for NALU 8")
 	{
 		// clang-format off
 		uint8_t originalBuffer[] =
@@ -46,12 +45,11 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format on
 
 		// Keep a copy of the original buffer for comparing.
-		uint8_t buffer[4] = {0};
+		uint8_t buffer[4] = { 0 };
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		const auto *payloadDescriptor =
-			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+		const auto* payloadDescriptor = Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
 
@@ -65,7 +63,7 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		delete payloadDescriptor;
 	}
 
-	SECTION("parse payload descriptor for NALU 1") 
+	SECTION("parse payload descriptor for NALU 1")
 	{
 		// clang-format off
 		uint8_t originalBuffer[] =
@@ -75,12 +73,11 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format on
 
 		// Keep a copy of the original buffer for comparing.
-		uint8_t buffer[4] = {0};
+		uint8_t buffer[4] = { 0 };
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		const auto *payloadDescriptor =
-			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+		const auto* payloadDescriptor = Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
 
@@ -94,7 +91,7 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		delete payloadDescriptor;
 	}
 
-	SECTION("parse payload descriptor for NALU 5") 
+	SECTION("parse payload descriptor for NALU 5")
 	{
 		// clang-format off
 		uint8_t originalBuffer[] =
@@ -104,12 +101,11 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format on
 
 		// Keep a copy of the original buffer for comparing.
-		uint8_t buffer[4] = {0};
+		uint8_t buffer[4] = { 0 };
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		const auto *payloadDescriptor =
-			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+		const auto* payloadDescriptor = Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
 
@@ -120,10 +116,10 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		REQUIRE(payloadDescriptor->hasTlIndex == false);
 		REQUIRE(payloadDescriptor->hasSlIndex == false);
 
-		delete payloadDescriptor;   
+		delete payloadDescriptor;
 	}
 
-	SECTION("parse payload descriptor for NALU 14") 
+	SECTION("parse payload descriptor for NALU 14")
 	{
 		// clang-format off
 		uint8_t originalBuffer[] =
@@ -133,12 +129,11 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format on
 
 		// Keep a copy of the original buffer for comparing.
-		uint8_t buffer[4] = {0};
+		uint8_t buffer[4] = { 0 };
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		const auto *payloadDescriptor =
-			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+		const auto* payloadDescriptor = Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
 
@@ -154,7 +149,7 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		delete payloadDescriptor;
 	}
 
-	SECTION("parse payload descriptor for NALU 20") 
+	SECTION("parse payload descriptor for NALU 20")
 	{
 		// clang-format off
 		uint8_t originalBuffer[] =
@@ -164,12 +159,11 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format on
 
 		// Keep a copy of the original buffer for comparing.
-		uint8_t buffer[4] = {0};
+		uint8_t buffer[4] = { 0 };
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		const auto *payloadDescriptor =
-			Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
+		const auto* payloadDescriptor = Codecs::H264_SVC::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
 

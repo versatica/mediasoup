@@ -1,5 +1,5 @@
-#include "RTC/Codecs/H264.hpp"
 #include "common.hpp"
+#include "RTC/Codecs/H264.hpp"
 #include <catch2/catch.hpp>
 #include <cstring> // std::memcmp()
 

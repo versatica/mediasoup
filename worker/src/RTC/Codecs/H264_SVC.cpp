@@ -26,11 +26,11 @@ namespace RTC
 			if (frameMarking)
 			{
 				// Read fields.
-				payloadDescriptor->s   = frameMarking->start;
-				payloadDescriptor->e   = frameMarking->end;
-				payloadDescriptor->i   = frameMarking->independent;
-				payloadDescriptor->d   = frameMarking->discardable;
-				payloadDescriptor->b   = frameMarking->base;
+				payloadDescriptor->s       = frameMarking->start;
+				payloadDescriptor->e       = frameMarking->end;
+				payloadDescriptor->i       = frameMarking->independent;
+				payloadDescriptor->d       = frameMarking->discardable;
+				payloadDescriptor->b       = frameMarking->base;
 				payloadDescriptor->tlIndex = frameMarking->tid;
 
 				payloadDescriptor->hasTlIndex = true;
@@ -72,7 +72,8 @@ namespace RTC
 					case 14:
 					case 20:
 					{
-						payloadDescriptor = H264_SVC::ParseSingleNalu(data, len, std::move(payloadDescriptor), true);
+						payloadDescriptor =
+						  H264_SVC::ParseSingleNalu(data, len, std::move(payloadDescriptor), true);
 
 						if (payloadDescriptor == nullptr)
 							return nullptr;
@@ -91,9 +92,13 @@ namespace RTC
 						// Iterate NAL units.
 						while (len >= 3)
 						{
-							auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
+							auto naluSize = Utils::Byte::Get2Bytes(data, offset);
 
-							payloadDescriptor = H264_SVC::ParseSingleNalu((data + offset + sizeof(naluSize)), (len - sizeof(naluSize)), std::move(payloadDescriptor), true);
+							payloadDescriptor = H264_SVC::ParseSingleNalu(
+							  (data + offset + sizeof(naluSize)),
+							  (len - sizeof(naluSize)),
+							  std::move(payloadDescriptor),
+							  true);
 							if (payloadDescriptor == nullptr)
 								return nullptr;
 
@@ -120,9 +125,10 @@ namespace RTC
 					{
 						uint8_t startBit = *(data + 1) & 0x80;
 
-						if(startBit == 128)
+						if (startBit == 128)
 						{
-							payloadDescriptor = H264_SVC::ParseSingleNalu((data + 1), (len - 1), std::move(payloadDescriptor), (startBit == 128 ? true : false));
+							payloadDescriptor = H264_SVC::ParseSingleNalu(
+							  (data + 1), (len - 1), std::move(payloadDescriptor), (startBit == 128 ? true : false));
 						}
 						if (payloadDescriptor == nullptr)
 							return nullptr;
@@ -135,13 +141,16 @@ namespace RTC
 			return payloadDescriptor.release();
 		}
 
-		std::unique_ptr<H264_SVC::PayloadDescriptor> H264_SVC::ParseSingleNalu(const uint8_t* data, size_t len, std::unique_ptr<H264_SVC::PayloadDescriptor> payloadDescriptor, bool isStartBit)
+		std::unique_ptr<H264_SVC::PayloadDescriptor> H264_SVC::ParseSingleNalu(
+		  const uint8_t* data,
+		  size_t len,
+		  std::unique_ptr<H264_SVC::PayloadDescriptor> payloadDescriptor,
+		  bool isStartBit)
 		{
 			uint8_t nal = *data & 0x1F;
 
 			switch (nal)
 			{
-
 				// Single NAL unit packet.
 				// IDR (instantaneous decoding picture).
 				case 1:
@@ -161,16 +170,16 @@ namespace RTC
 					size_t offset{ 1 };
 					uint8_t byte = data[offset];
 
-					payloadDescriptor->idr = byte >> 6 & 0x01;
+					payloadDescriptor->idr        = byte >> 6 & 0x01;
 					payloadDescriptor->priorityId = byte & 0x06;
 					payloadDescriptor->isKeyFrame = (isStartBit && payloadDescriptor->idr) ? true : false;
 
 					if (len < ++offset + 1)
 						return nullptr;
 
-					byte = data[offset];
+					byte                                  = data[offset];
 					payloadDescriptor->noIntLayerPredFlag = byte >> 7 & 0x01;
-					payloadDescriptor->slIndex = byte >> 4 & 0x03;
+					payloadDescriptor->slIndex            = byte >> 4 & 0x03;
 
 					if (len < ++offset + 1)
 						return nullptr;
@@ -206,7 +215,8 @@ namespace RTC
 			// Read frame-marking.
 			packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-			PayloadDescriptor* payloadDescriptor = H264_SVC::Parse(data, len, frameMarking, frameMarkingLen);
+			PayloadDescriptor* payloadDescriptor =
+			  H264_SVC::Parse(data, len, frameMarking, frameMarkingLen);
 
 			if (!payloadDescriptor)
 				return;
@@ -238,7 +248,8 @@ namespace RTC
 			MS_DUMP("</PayloadDescriptor>");
 		}
 
-		H264_SVC::PayloadDescriptorHandler::PayloadDescriptorHandler(H264_SVC::PayloadDescriptor* payloadDescriptor)
+		H264_SVC::PayloadDescriptorHandler::PayloadDescriptorHandler(
+		  H264_SVC::PayloadDescriptor* payloadDescriptor)
 		{
 			MS_TRACE();
 

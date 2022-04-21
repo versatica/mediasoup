@@ -6,7 +6,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/SeqManager.hpp"
 
-namespace RTC 
+namespace RTC
 {
 	namespace Codecs
 	{
@@ -27,7 +27,7 @@ namespace RTC
 				uint8_t b : 1;          // Base Layer Sync.
 				uint8_t slIndex{ 0 };   // Temporal layer id.
 				uint8_t tlIndex{ 0 };   // Spatial layer id.
-				uint8_t tl0picidx{ 0 }; // TL0PICIDX 
+				uint8_t tl0picidx{ 0 }; // TL0PICIDX
 
 				// Parsed values.
 				bool hasSlIndex{ false };
@@ -39,21 +39,21 @@ namespace RTC
 				uint8_t idr{ 0 };
 				uint8_t priorityId{ 0 };
 				uint8_t noIntLayerPredFlag{ true };
-
-
 			};
+
 		public:
 			static H264_SVC::PayloadDescriptor* Parse(
 			  const uint8_t* data,
 			  size_t len,
 			  RTC::RtpPacket::FrameMarking* frameMarking = nullptr,
-			  uint8_t frameMarkingLen					= 0);
+			  uint8_t frameMarkingLen                    = 0);
 			static std::unique_ptr<H264_SVC::PayloadDescriptor> ParseSingleNalu(
 			  const uint8_t* data,
 			  size_t len,
 			  std::unique_ptr<H264_SVC::PayloadDescriptor> payloadDescriptor,
-			  bool isStartBit); //useful in FU packet to indicate first packet. Set to true for other packets
+			  bool isStartBit); // useful in FU packet to indicate first packet. Set to true for other packets
 			static void ProcessRtpPacket(RTC::RtpPacket* packet);
+
 		public:
 			class EncodingContext : public RTC::Codecs::EncodingContext
 			{
@@ -69,11 +69,12 @@ namespace RTC
 				void SyncRequired() override
 				{
 				}
-				
+
 			public:
 				RTC::SeqManager<uint16_t> pictureIdManager;
 				bool syncRequired{ false };
 			};
+
 		public:
 			class PayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
 			{
@@ -90,12 +91,12 @@ namespace RTC
 				void Restore(uint8_t* data) override;
 				uint8_t GetSpatialLayer() const override
 				{
-					//return 0u;
+					// return 0u;
 					return this->payloadDescriptor->hasSlIndex ? this->payloadDescriptor->slIndex : 0u;
 				}
 				uint8_t GetTemporalLayer() const override
 				{
-					//return this->payloadDescriptor->tid;
+					// return this->payloadDescriptor->tid;
 					return this->payloadDescriptor->hasTlIndex ? this->payloadDescriptor->tlIndex : 0u;
 				}
 				bool IsKeyFrame() const override
@@ -106,9 +107,9 @@ namespace RTC
 			private:
 				std::unique_ptr<PayloadDescriptor> payloadDescriptor;
 			};
-		};   
-	} 
-	
-}
+		};
+	} // namespace Codecs
+
+} // namespace RTC
 
 #endif

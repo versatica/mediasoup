@@ -1,7 +1,7 @@
-#include "RTC/Codecs/H264_SVC.hpp"
-#include "RTC/RtpPacket.hpp"
 #include "common.hpp"
 #include "helpers.hpp"
+#include "RTC/Codecs/H264_SVC.hpp"
+#include "RTC/RtpPacket.hpp"
 #include <bits/stdc++.h>
 #include <catch2/catch.hpp>
 #include <cstring> // std::memset()
@@ -15,16 +15,16 @@ static uint8_t buffer2[65536];
 
 SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 {
-	SECTION("parse I0-7.bin") 
+	SECTION("parse I0-7.bin")
 	{
 		size_t len;
 		uint8_t extenLen;
-		uint8_t *extenValue;
+		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-7.bin", buffer, &len))
 			FAIL("cannot open file");
 
-		RtpPacket *packet = RtpPacket::Parse(buffer, len);
+		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -48,15 +48,15 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0xa0);
 
-		auto *payload = packet->GetPayload();
-		RtpPacket::FrameMarking *frameMarking{nullptr};
-		uint8_t frameMarkingLen{0};
+		auto* payload = packet->GetPayload();
+		RtpPacket::FrameMarking* frameMarking{ nullptr };
+		uint8_t frameMarkingLen{ 0 };
 
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto *payloadDescriptor = Codecs::H264_SVC::Parse(
-			payload, sizeof(payload), frameMarking, frameMarkingLen);
+		const auto* payloadDescriptor =
+		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
 
 		REQUIRE(payloadDescriptor);
 
@@ -75,16 +75,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		delete packet;
 	}
 
-	SECTION("parse I0-8.bin") 
+	SECTION("parse I0-8.bin")
 	{
 		size_t len;
 		uint8_t extenLen;
-		uint8_t *extenValue;
+		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-8.bin", buffer, &len))
 			FAIL("cannot open file");
 
-		RtpPacket *packet = RtpPacket::Parse(buffer, len);
+		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -108,15 +108,15 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0x00);
 
-		auto *payload = packet->GetPayload();
-		RtpPacket::FrameMarking *frameMarking{nullptr};
-		uint8_t frameMarkingLen{0};
+		auto* payload = packet->GetPayload();
+		RtpPacket::FrameMarking* frameMarking{ nullptr };
+		uint8_t frameMarkingLen{ 0 };
 
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto *payloadDescriptor = Codecs::H264_SVC::Parse(
-			payload, sizeof(payload), frameMarking, frameMarkingLen);
+		const auto* payloadDescriptor =
+		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
 
 		REQUIRE(payloadDescriptor);
 
@@ -135,16 +135,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		delete packet;
 	}
 
-	SECTION("parse I0-5.bin") 
+	SECTION("parse I0-5.bin")
 	{
 		size_t len;
 		uint8_t extenLen;
-		uint8_t *extenValue;
+		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-5.bin", buffer, &len))
 			FAIL("cannot open file");
 
-		RtpPacket *packet = RtpPacket::Parse(buffer, len);
+		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -168,15 +168,15 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0x60);
 
-		auto *payload = packet->GetPayload();
-		RtpPacket::FrameMarking *frameMarking{nullptr};
-		uint8_t frameMarkingLen{0};
+		auto* payload = packet->GetPayload();
+		RtpPacket::FrameMarking* frameMarking{ nullptr };
+		uint8_t frameMarkingLen{ 0 };
 
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto *payloadDescriptor = Codecs::H264_SVC::Parse(
-			payload, sizeof(payload), frameMarking, frameMarkingLen);
+		const auto* payloadDescriptor =
+		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
 
 		REQUIRE(payloadDescriptor);
 
@@ -194,16 +194,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		delete packet;
 	}
 
-	SECTION("parse I1-15.bin") 
+	SECTION("parse I1-15.bin")
 	{
 		size_t len;
 		uint8_t extenLen;
-		uint8_t *extenValue;
+		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I1-15.bin", buffer, &len))
 			FAIL("cannot open file");
 
-		RtpPacket *packet = RtpPacket::Parse(buffer, len);
+		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -227,15 +227,15 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0x80);
 
-		auto *payload = packet->GetPayload();
-		RtpPacket::FrameMarking *frameMarking{nullptr};
-		uint8_t frameMarkingLen{0};
+		auto* payload = packet->GetPayload();
+		RtpPacket::FrameMarking* frameMarking{ nullptr };
+		uint8_t frameMarkingLen{ 0 };
 
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto *payloadDescriptor = Codecs::H264_SVC::Parse(
-			payload, sizeof(payload), frameMarking, frameMarkingLen);
+		const auto* payloadDescriptor =
+		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
 
 		REQUIRE(payloadDescriptor);
 
@@ -254,16 +254,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		delete packet;
 	}
 
-	SECTION("parse I0-14.bin") 
+	SECTION("parse I0-14.bin")
 	{
 		size_t len;
 		uint8_t extenLen;
-		uint8_t *extenValue;
+		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-14.bin", buffer, &len))
 			FAIL("cannot open file");
 
-		RtpPacket *packet = RtpPacket::Parse(buffer, len);
+		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -287,15 +287,15 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0xa0);
 
-		auto *payload = packet->GetPayload();
-		RtpPacket::FrameMarking *frameMarking{nullptr};
-		uint8_t frameMarkingLen{0};
+		auto* payload = packet->GetPayload();
+		RtpPacket::FrameMarking* frameMarking{ nullptr };
+		uint8_t frameMarkingLen{ 0 };
 
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto *payloadDescriptor = Codecs::H264_SVC::Parse(
-			payload, sizeof(payload), frameMarking, frameMarkingLen);
+		const auto* payloadDescriptor =
+		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
 
 		REQUIRE(payloadDescriptor);
 
@@ -314,16 +314,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		delete packet;
 	}
 
-	SECTION("parse 2SL-I14.bin") 
+	SECTION("parse 2SL-I14.bin")
 	{
 		size_t len;
 		uint8_t extenLen;
-		uint8_t *extenValue;
+		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/2SL-I14.bin", buffer, &len))
 			FAIL("cannot open file");
 
-		RtpPacket *packet = RtpPacket::Parse(buffer, len);
+		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
 			FAIL("not a RTP packet");
@@ -347,15 +347,15 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(extenValue);
 		REQUIRE(extenValue[0] == 0xa0);
 
-		auto *payload = packet->GetPayload();
-		RtpPacket::FrameMarking *frameMarking{nullptr};
-		uint8_t frameMarkingLen{0};
+		auto* payload = packet->GetPayload();
+		RtpPacket::FrameMarking* frameMarking{ nullptr };
+		uint8_t frameMarkingLen{ 0 };
 
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto *payloadDescriptor = Codecs::H264_SVC::Parse(
-			payload, sizeof(payload), frameMarking, frameMarkingLen);
+		const auto* payloadDescriptor =
+		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
 
 		REQUIRE(payloadDescriptor);
 
@@ -375,72 +375,69 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		delete packet;
 	}
 
-	SECTION("create and test RTP files") 
+	SECTION("create and test RTP files")
 	{
 		int32_t tmparray[7];
 
 		int32_t pos = 0, i = 0, rows = 0;
-		uint8_t type = 0;
+		uint8_t type  = 0;
 		int32_t bytes = 0;
-		int32_t sid = -1;
-		int32_t tid = -1;
+		int32_t sid   = -1;
+		int32_t tid   = -1;
 		int32_t isIdr = -1;
 		int32_t start = -1;
-		int32_t end = -1;
-		size_t len = 0;
+		int32_t end   = -1;
+		size_t len    = 0;
 
 		std::fstream nf;
 		nf.open("data/H264_SVC/naluInfo/naluInfo.csv", std::ios::in);
-		if (nf.is_open()) 
+		if (nf.is_open())
 		{
 			std::string line, word;
 			getline(nf, line); // omit the header in the CSV
-			while (getline(nf, line)) 
+			while (getline(nf, line))
 			{
 				std::stringstream s(line);
 				i = 0;
-				while (getline(s, word, ',')) 
+				while (getline(s, word, ','))
 				{
 					tmparray[i++] = std::stoi(word);
 				}
-				type = tmparray[0];
+				type  = tmparray[0];
 				bytes = tmparray[1];
-				sid = tmparray[2];
-				tid = tmparray[3];
+				sid   = tmparray[2];
+				tid   = tmparray[3];
 				isIdr = tmparray[4];
 				start = tmparray[5];
-				end = tmparray[6];
+				end   = tmparray[6];
 
-				if (!helpers::readPayloadData("data/H264_SVC/naluInfo/naluInfo.264",
-											  pos + 4, bytes - 4, buffer))
+				if (!helpers::readPayloadData(
+				      "data/H264_SVC/naluInfo/naluInfo.264", pos + 4, bytes - 4, buffer))
 					FAIL("Failed to read payload data!\n");
-				
 
 				// TODO: One additional byte is written as last value is omitted in the
 				// test bench
 				std::string strFile1 = "rtp-" + std::to_string(rows) + ".bin";
-				if (!helpers::writeRtpPacket(strFile1.c_str(), type, bytes - 4, sid,
-											 tid, isIdr, start, end, buffer, buffer2,
-											 &len))
+				if (!helpers::writeRtpPacket(
+				      strFile1.c_str(), type, bytes - 4, sid, tid, isIdr, start, end, buffer, buffer2, &len))
 					FAIL("Failed to write RTP packet!\n");
-				
 
-				RtpPacket *packet = RtpPacket::Parse(buffer2, len);
+				RtpPacket* packet = RtpPacket::Parse(buffer2, len);
 
 				if (!packet)
 					FAIL("not a RTP packet");
 
 				packet->SetFrameMarkingExtensionId(1);
 
-				auto *payload = packet->GetPayload();
-				RtpPacket::FrameMarking *frameMarking{nullptr};
-				uint8_t frameMarkingLen{0};
+				auto* payload = packet->GetPayload();
+				RtpPacket::FrameMarking* frameMarking{ nullptr };
+				uint8_t frameMarkingLen{ 0 };
 
 				// Read frame-marking.
 				packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-				const auto *payloadDescriptor = Codecs::H264_SVC::Parse(
-					payload, packet->GetPayloadLength(), frameMarking, frameMarkingLen);
+				const auto* payloadDescriptor = Codecs::H264_SVC::Parse(
+				  payload, packet->GetPayloadLength(), frameMarking, frameMarkingLen);
 
 				REQUIRE(payloadDescriptor);
 
