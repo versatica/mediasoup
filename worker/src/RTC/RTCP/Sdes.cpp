@@ -13,7 +13,7 @@ namespace RTC
 		/* Item Class variables. */
 
 		// clang-format off
-		std::map<SdesItem::Type, std::string> SdesItem::type2String =
+		absl::flat_hash_map<SdesItem::Type, std::string> SdesItem::type2String =
 		{
 			{ SdesItem::Type::END,   "END"   },
 			{ SdesItem::Type::CNAME, "CNAME" },

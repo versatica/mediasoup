@@ -1,6 +1,39 @@
 # Changelog
 
 
+### 3.9.10
+
+* Update worker dependencies:
+    * OpenSSL 3.0.2.
+    * abseil-cpp 20211102.0.
+    * nlohmann_json 3.10.5.
+    * usrsctp snapshot 4e06feb01cadcd127d119486b98a4bd3d64aa1e7.
+    * wingetopt 1.00.
+* Update NPM deps and TypeScript version.
+* Fix RTP marker bit not being reseted after mangling in each `Consumer` (PR #811 by @ggarber).
+
+
+### 3.9.9
+
+* Optimize RTP header extension handling (PR #786).
+* `RateCalculator`: Reset optimization (PR #785).
+* Fix frozen video due to double call to `Consumer::UserOnTransportDisconnected()` (PR #788, thanks to @ggarber for exposing this issue in PR #787).
+
+
+### 3.9.8
+
+* Fix VP9 kSVC forwarding logic to not forward lower unneded layers (PR #778 by @ggarber).
+* Fix update bandwidth estimation configuration and available bitrate when updating max outgoing bitrate (PR #779 by @ggarber).
+* Replace outdated `random-numbers` package by native `crypto.randomInt()` (PR #776 by @piranna).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.7
+
+* Typing event emitters in mediasoup Node (PR #764 by @unao).
+* Update NPM deps.
+
+
 ### 3.9.6
 
 * TCC client optimizations for faster and more stable BWE (PR #712 by @ggarber).

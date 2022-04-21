@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "module": "es6",
+    "target": "es2018",
+    "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": false,
+    "sourceRoot": "src",
+    "baseUrl": "src",
+    "outDir": "dist",
+    "strict": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "lib": [
+      "es5",
+      "es2015",
+      "es2019",
+      "dom"
+    ]
+  },
+  "include": [
+    "src",
+    ".eslintrc.js",
+    "webpack.config.js"
+  ]
+}

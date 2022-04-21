@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "LogLevel.hpp"
 #include "Channel/ChannelRequest.hpp"
-#include <map>
+#include <absl/container/flat_hash_map.h>
 #include <string>
 #include <vector>
 
@@ -54,8 +54,8 @@ public:
 	thread_local static struct Configuration configuration;
 
 private:
-	static std::map<std::string, LogLevel> string2LogLevel;
-	static std::map<LogLevel, std::string> logLevel2String;
+	static absl::flat_hash_map<std::string, LogLevel> string2LogLevel;
+	static absl::flat_hash_map<LogLevel, std::string> logLevel2String;
 };
 
 #endif

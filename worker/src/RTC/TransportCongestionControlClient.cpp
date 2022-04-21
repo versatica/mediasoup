@@ -269,6 +269,14 @@ namespace RTC
 			MS_THROW_ERROR("maxOutgoingBitrate must be >= 30000bps");
 
 		this->maxOutgoingBitrate = maxBitrate;
+
+		ApplyBitrateUpdates();
+
+		if (this->maxOutgoingBitrate > 0u)
+		{
+			this->bitrates.availableBitrate =
+			  std::min<uint32_t>(this->maxOutgoingBitrate, this->bitrates.availableBitrate);
+		}
 	}
 
 	void TransportCongestionControlClient::SetDesiredBitrate(uint32_t desiredBitrate, bool force)
@@ -290,6 +298,11 @@ namespace RTC
 		// more stable values.
 		this->bitrates.startBitrate = std::max<uint32_t>(MinBitrate, this->bitrates.availableBitrate);
 
+		ApplyBitrateUpdates();
+	}
+
+	void TransportCongestionControlClient::ApplyBitrateUpdates()
+	{
 		auto currentMaxBitrate = this->bitrates.maxBitrate;
 		uint32_t newMaxBitrate = 0;
 

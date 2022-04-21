@@ -1,0 +1,47 @@
+<!doctype html>
+<style>
+    body {
+        margin: 0;
+    }
+
+    #container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    figure {
+        margin: 0;
+        width: 50vw;
+    }
+
+    video {
+        max-width: 100%;
+    }
+
+    .previews {
+        display: flex;
+    }
+</style>
+<div id="container">
+    <div class="previews">
+        <figure>
+            <video id="preview-send" muted controls></video>
+            <figcaption>Send preview</figcaption>
+        </figure>
+        <figure>
+            <video id="preview-receive" muted controls></video>
+            <figcaption>Receive preview</figcaption>
+        </figure>
+    </div>
+
+    <p>
+        Video codec: <span id="video-codec">?</span>
+    </p>
+    <div>
+        Switch layers: <button id="decreaseLayer" type="button">down</button>
+        S<span id="spatial">?</span>T<span id="temporal">?</span>
+        <button id="increaseLayer" type="button">up</button>
+    </div>
+</div>
+<script src="dist/bundle.js">
+</script>

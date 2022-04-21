@@ -140,9 +140,27 @@ export type ProducerStat =
  */
 export type ProducerType = 'simple' | 'simulcast' | 'svc';
 
+export type ProducerEvents =
+{
+	transportclose: [];
+	score: [ProducerScore[]];
+	videoorientationchange: [ProducerVideoOrientation];
+	trace: [ProducerTraceEventData];
+}
+
+export type ProducerObserverEvents =
+{
+	close: [];
+	pause: [];
+	resume: [];
+	score: [ProducerScore[]];
+	videoorientationchange: [ProducerVideoOrientation];
+	trace: [ProducerTraceEventData];
+}
+
 const logger = new Logger('Producer');
 
-export class Producer extends EnhancedEventEmitter
+export class Producer extends EnhancedEventEmitter<ProducerEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -180,7 +198,7 @@ export class Producer extends EnhancedEventEmitter
 	#score: ProducerScore[] = [];
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<ProducerObserverEvents>();
 
 	/**
 	 * @private
@@ -315,7 +333,7 @@ export class Producer extends EnhancedEventEmitter
 	 * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
 	 * @emits trace - (trace: ProducerTraceEventData)
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<ProducerObserverEvents>
 	{
 		return this.#observer;
 	}

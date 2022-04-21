@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "3.9.6",
+  "version": "3.9.10",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -30,7 +30,6 @@
     "worker/scripts/*.js",
     "worker/scripts/*.json",
     "worker/src",
-    "worker/subprojects/packagefiles",
     "worker/subprojects/*.wrap",
     "worker/test/include",
     "worker/test/src",
@@ -70,26 +69,24 @@
   },
   "dependencies": {
     "@types/node": "^16.11.10",
-    "debug": "^4.3.3",
+    "debug": "^4.3.4",
     "h264-profile-level-id": "^1.0.1",
-    "random-number": "^0.0.9",
-    "supports-color": "^9.2.1",
+    "supports-color": "^9.2.2",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
-    "@types/random-number": "^0.0.1",
     "@types/uuid": "^8.3.4",
-    "@typescript-eslint/eslint-plugin": "^5.10.1",
-    "@typescript-eslint/parser": "^5.10.1",
-    "eslint": "^8.7.0",
-    "eslint-plugin-jest": "^26.0.0",
-    "jest": "^27.4.7",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
+    "eslint": "^8.13.0",
+    "eslint-plugin-jest": "^26.1.4",
+    "jest": "^27.5.1",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^7.0.1",
     "pick-port": "^1.0.0",
     "sctp": "^1.0.0",
-    "tsc-watch": "^4.6.0",
-    "typescript": "^4.5.5"
+    "tsc-watch": "^5.0.3",
+    "typescript": "^4.6.3"
   }
 }

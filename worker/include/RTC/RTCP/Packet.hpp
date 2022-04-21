@@ -2,7 +2,7 @@
 #define MS_RTC_RTCP_PACKET_HPP
 
 #include "common.hpp"
-#include <map>
+#include <absl/container/flat_hash_map.h>
 #include <string>
 
 namespace RTC
@@ -72,7 +72,7 @@ namespace RTC
 			static const std::string& Type2String(Type type);
 
 		private:
-			static std::map<Type, std::string> type2String;
+			static absl::flat_hash_map<Type, std::string> type2String;
 
 		public:
 			explicit Packet(Type type) : type(type)

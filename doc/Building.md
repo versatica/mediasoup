@@ -68,7 +68,11 @@ Builds the `mediasoup-worker` binary at `worker/out/Release/`.
 
 If the "MEDIASOUP_MAX_CORES" environment variable is set, the build process will use that number of CPU cores. Otherwise it will auto-detect the number of cores in the machine.
 
-If the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug", the binary is built at `worker/out/Debug/` with some C/C++ flags enabled (such as `-O0`) and some macros defined (such as `DEBUG`, `MS_LOG_TRACE` and `MS_LOG_FILE_LINE`). Check the meaning of these macros in the `worker/include/Logger.hpp` header file.
+"MEDIASOUP_BUILDTYPE" environment variable controls build types, `Release` and `Debug` are presets optimized for those use cases.
+Other build types are possible too, but they are not presets and will require "MESON_ARGS" use to customize build configuration.
+Check the meaning of useful macros in the `worker/include/Logger.hpp` header file if you want to enable tracing or other debug information.
+
+Binary is built at `worker/out/MEDIASOUP_BUILDTYPE/build`. 
 
 In order to instruct the mediasoup Node.js module to use the `Debug` mediasoup-worker binary, an environment variable must be set before running the Node.js application:
 
