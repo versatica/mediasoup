@@ -371,7 +371,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
         // Search for the associated media codec.
         let associated_media_codec = rtp_parameters.codecs.iter().find(|media_codec| {
             let media_codec_payload_type = media_codec.payload_type();
-            let codec_parameters_apt = codec.parameters().get(&"apt".to_string());
+            let codec_parameters_apt = codec.parameters().get("apt");
 
             match codec_parameters_apt {
                 Some(RtpCodecParametersParametersValue::Number(apt)) => {
@@ -391,7 +391,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
                         return false;
                     }
 
-                    let cap_codec_parameters_apt = cap_codec.parameters().get(&"apt".to_string());
+                    let cap_codec_parameters_apt = cap_codec.parameters().get("apt");
                     match cap_codec_parameters_apt {
                         Some(RtpCodecParametersParametersValue::Number(apt)) => {
                             u32::from(cap_media_codec.preferred_payload_type()) == *apt
@@ -513,7 +513,7 @@ pub(crate) fn get_consumable_rtp_parameters(
                 return false;
             }
 
-            let cap_rtx_codec_parameters_apt = cap_rtx_codec.parameters().get(&"apt".to_string());
+            let cap_rtx_codec_parameters_apt = cap_rtx_codec.parameters().get("apt");
 
             match cap_rtx_codec_parameters_apt {
                 Some(RtpCodecParametersParametersValue::Number(apt)) => {

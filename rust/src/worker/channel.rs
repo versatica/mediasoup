@@ -1,4 +1,4 @@
-use crate::messages::Request;
+use crate::messages::{Request, WorkerCloseRequest};
 use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
 use crate::worker::utils;
 use crate::worker::utils::{PreparedChannelRead, PreparedChannelWrite};
@@ -11,8 +11,10 @@ use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::any::TypeId;
 use std::collections::VecDeque;
 use std::fmt::Debug;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
 #[derive(Debug, Deserialize)]
@@ -162,6 +164,8 @@ struct Inner {
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
     buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
     event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(&[u8]) + Send + Sync + 'static>>,
+    worker_closed: Arc<AtomicBool>,
+    closed: AtomicBool,
 }
 
 impl Drop for Inner {
@@ -176,7 +180,9 @@ pub(crate) struct Channel {
 }
 
 impl Channel {
-    pub(super) fn new() -> (Self, PreparedChannelRead, PreparedChannelWrite) {
+    pub(super) fn new(
+        worker_closed: Arc<AtomicBool>,
+    ) -> (Self, PreparedChannelRead, PreparedChannelWrite) {
         let outgoing_message_buffer = Arc::new(Mutex::new(OutgoingMessageBuffer {
             handle: None,
             messages: VecDeque::with_capacity(10),
@@ -270,6 +276,8 @@ impl Channel {
             requests_container_weak,
             buffered_notifications_for,
             event_handlers_weak,
+            worker_closed,
+            closed: AtomicBool::new(false),
         });
 
         (
@@ -301,7 +309,7 @@ impl Channel {
 
     pub(crate) async fn request<R>(&self, request: R) -> Result<R::Response, RequestError>
     where
-        R: Request,
+        R: Request + 'static,
     {
         let method = request.as_method();
 
@@ -309,17 +317,22 @@ impl Channel {
         let (result_sender, result_receiver) = async_oneshot::oneshot();
 
         {
-            let requests_container_lock = self
-                .inner
-                .requests_container_weak
-                .upgrade()
-                .ok_or(RequestError::ChannelClosed)?;
-            let mut requests_container = requests_container_lock.lock();
+            let requests_container = match self.inner.requests_container_weak.upgrade() {
+                Some(requests_container_lock) => requests_container_lock,
+                None => {
+                    if let Some(default_response) = R::default_for_soft_error() {
+                        return Ok(default_response);
+                    }
 
-            id = requests_container.next_id;
+                    return Err(RequestError::ChannelClosed);
+                }
+            };
+            let mut requests_container_lock = requests_container.lock();
 
-            requests_container.next_id = requests_container.next_id.wrapping_add(1);
-            requests_container.handlers.insert(id, result_sender);
+            id = requests_container_lock.next_id;
+
+            requests_container_lock.next_id = requests_container_lock.next_id.wrapping_add(1);
+            requests_container_lock.handlers.insert(id, result_sender);
         }
 
         debug!("request() [method:{}, id:{}]: {:?}", method, id, request);
@@ -338,12 +351,30 @@ impl Channel {
             outgoing_message_buffer
                 .messages
                 .push_back(Arc::clone(&message));
-            if let Some(handle) = &outgoing_message_buffer.handle {
+            if let Some(handle) = outgoing_message_buffer.handle {
+                if self.inner.worker_closed.load(Ordering::Acquire) {
+                    // Forbid all requests after worker closing except one worker closing request
+                    let first_worker_closing = TypeId::of::<R>()
+                        == TypeId::of::<WorkerCloseRequest>()
+                        && !self.inner.closed.swap(true, Ordering::Relaxed);
+
+                    if !first_worker_closing {
+                        if let Some(default_response) = R::default_for_soft_error() {
+                            return Ok(default_response);
+                        }
+
+                        return Err(RequestError::ChannelClosed);
+                    }
+                }
                 unsafe {
                     // Notify worker that there is something to read
-                    let ret = mediasoup_sys::uv_async_send(*handle);
+                    let ret = mediasoup_sys::uv_async_send(handle);
                     if ret != 0 {
                         error!("uv_async_send call failed with code {}", ret);
+                        if let Some(default_response) = R::default_for_soft_error() {
+                            return Ok(default_response);
+                        }
+
                         return Err(RequestError::ChannelClosed);
                     }
                 }
@@ -362,7 +393,18 @@ impl Channel {
 
         request_drop_guard.remove();
 
-        match response_result_fut.map_err(|_| RequestError::ChannelClosed {})? {
+        let response_result = match response_result_fut {
+            Ok(response_result) => response_result,
+            Err(_closed) => {
+                return if let Some(default_response) = R::default_for_soft_error() {
+                    Ok(default_response)
+                } else {
+                    Err(RequestError::ChannelClosed)
+                };
+            }
+        };
+
+        match response_result {
             Ok(data) => {
                 debug!("request succeeded [method:{}, id:{}]", method, id);
 
@@ -375,8 +417,15 @@ impl Channel {
             }
             Err(ResponseError { reason }) => {
                 debug!("request failed [method:{}, id:{}]: {}", method, id, reason);
-
-                Err(RequestError::Response { reason })
+                if reason.contains("not found") {
+                    if let Some(default_response) = R::default_for_soft_error() {
+                        Ok(default_response)
+                    } else {
+                        Err(RequestError::ChannelClosed)
+                    }
+                } else {
+                    Err(RequestError::Response { reason })
+                }
             }
         }
     }

@@ -44,5 +44,3 @@
 # Meson.
 /worker/subprojects/*
 !/worker/subprojects/*.wrap
-# Temporarily included meson.build files
-!/worker/subprojects/packagefiles

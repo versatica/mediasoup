@@ -15,7 +15,9 @@ class ActiveSpeakerObserver extends RtpObserver_1.RtpObserver {
     /**
      * Observer.
      */
-    // get observer(): EnhancedEventEmitter
+    get observer() {
+        return super.observer;
+    }
     handleWorkerNotifications() {
         this.channel.on(this.internal.rtpObserverId, (event, data) => {
             switch (event) {

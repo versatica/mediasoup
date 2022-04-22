@@ -19,10 +19,10 @@
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
 #include <uv.h>
+#include <absl/container/flat_hash_map.h>
 #include <cerrno>
 #include <csignal>  // sigaction()
 #include <iostream> // std::cerr, std::endl
-#include <map>
 #include <string>
 
 void IgnoreSignals();
@@ -210,7 +210,7 @@ void IgnoreSignals()
 	struct sigaction act; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 	// clang-format off
-	std::map<std::string, int> ignoredSignals =
+	absl::flat_hash_map<std::string, int> ignoredSignals =
 	{
 		{ "PIPE", SIGPIPE },
 		{ "HUP",  SIGHUP  },

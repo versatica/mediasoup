@@ -11,9 +11,9 @@ type ConsumerId = Brand<string, 'ConsumerId'>;
 type ProducerId = Brand<string, 'ProducerId'>;
 
 interface ServerInit {
-    action: 'Init';
-    consumerTransportOptions: TransportOptions;
-    routerRtpCapabilities: RtpCapabilities;
+	action: 'Init';
+	consumerTransportOptions: TransportOptions;
+	routerRtpCapabilities: RtpCapabilities;
 	rtpProducerId: ProducerId;
 }
 
@@ -34,18 +34,18 @@ type ServerMessage =
 	ServerConsumed;
 
 interface ClientInit {
-    action: 'Init';
-    rtpCapabilities: RtpCapabilities;
+	action: 'Init';
+	rtpCapabilities: RtpCapabilities;
 }
 
 interface ClientConnectConsumerTransport {
-    action: 'ConnectConsumerTransport';
-    dtlsParameters: DtlsParameters;
+	action: 'ConnectConsumerTransport';
+	dtlsParameters: DtlsParameters;
 }
 
 interface ClientConsume {
-    action: 'Consume';
-    producerId: ProducerId;
+	action: 'Consume';
+	producerId: ProducerId;
 }
 
 type ClientMessage =

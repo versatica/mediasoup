@@ -26,8 +26,8 @@ namespace RTC
 {
 	/* Class variables. */
 
-	thread_local std::unordered_map<std::string, std::vector<bool>> PortManager::mapUdpIpPorts;
-	thread_local std::unordered_map<std::string, std::vector<bool>> PortManager::mapTcpIpPorts;
+	thread_local absl::flat_hash_map<std::string, std::vector<bool>> PortManager::mapUdpIpPorts;
+	thread_local absl::flat_hash_map<std::string, std::vector<bool>> PortManager::mapTcpIpPorts;
 
 	/* Class methods. */
 

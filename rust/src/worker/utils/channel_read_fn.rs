@@ -6,6 +6,7 @@ use std::mem;
 use std::os::raw::c_void;
 
 unsafe extern "C" fn free_vec(message: *mut u8, message_len: u32, message_capacity: usize) {
+    // Create and drop vector to free its memory
     Vec::from_raw_parts(message, message_len as usize, message_capacity);
 }
 
@@ -18,8 +19,6 @@ pub(crate) struct PreparedChannelRead {
     channel_read_ctx: ChannelReadCtx,
     write_callback: ChannelReadCallback,
 }
-
-unsafe impl Send for PreparedChannelRead {}
 
 impl PreparedChannelRead {
     /// SAFETY:
@@ -88,8 +87,6 @@ pub(crate) struct PreparedPayloadChannelRead {
     payload_channel_read_ctx: PayloadChannelReadCtx,
     write_callback: PayloadChannelReadCallback,
 }
-
-unsafe impl Send for PreparedPayloadChannelRead {}
 
 impl PreparedPayloadChannelRead {
     /// SAFETY:

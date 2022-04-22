@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
@@ -123,7 +124,29 @@ export declare type ConsumerStat = {
  * Consumer type.
  */
 export declare type ConsumerType = 'simple' | 'simulcast' | 'svc' | 'pipe' | 'shm';
-export declare class Consumer extends EnhancedEventEmitter {
+export declare type ConsumerEvents = {
+    transportclose: [];
+    producerclose: [];
+    producerpause: [];
+    producerresume: [];
+    score: [ConsumerScore];
+    layerschange: [ConsumerLayers?];
+    trace: [ConsumerTraceEventData];
+    rtp: [Buffer];
+    idleshmconsumer: [];
+    failedlog: [];
+};
+export declare type ConsumerObserverEvents = {
+    close: [];
+    pause: [];
+    resume: [];
+    score: [ConsumerScore];
+    layerschange: [ConsumerLayers?];
+    trace: [ConsumerTraceEventData];
+    idleshmconsumer: [];
+    failedlog: [];
+};
+export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
     #private;
     /**
      * @private
@@ -215,7 +238,7 @@ export declare class Consumer extends EnhancedEventEmitter {
      * @emits layerschange - (layers: ConsumerLayers | undefined)
      * @emits trace - (trace: ConsumerTraceEventData)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<ConsumerObserverEvents>;
     /**
      * @private
      * Just for testing purposes.

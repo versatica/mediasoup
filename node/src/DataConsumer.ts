@@ -57,9 +57,23 @@ export type DataConsumerStat =
  */
 export type DataConsumerType = 'sctp' | 'direct';
 
+export type DataConsumerEvents =
+{
+	transportclose: [];
+	dataproducerclose: [];
+	message: [Buffer, number];
+	sctpsendbufferfull: [];
+	bufferedamountlow: [number];
+}
+
+export type DataConsumerObserverEvents =
+{
+	close: [];
+}
+
 const logger = new Logger('DataConsumer');
 
-export class DataConsumer extends EnhancedEventEmitter
+export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -92,7 +106,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	readonly #appData?: any;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter();
+	readonly #observer = new EnhancedEventEmitter<DataConsumerObserverEvents>();
 
 	/**
 	 * @private
@@ -211,7 +225,7 @@ export class DataConsumer extends EnhancedEventEmitter
 	 *
 	 * @emits close
 	 */
-	get observer(): EnhancedEventEmitter
+	get observer(): EnhancedEventEmitter<DataConsumerObserverEvents>
 	{
 		return this.#observer;
 	}

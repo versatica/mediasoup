@@ -204,7 +204,7 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Box<dyn Transport>,
+    transport: Arc<dyn Transport>,
     weak_data_producer: WeakDataProducer,
     closed: Arc<AtomicBool>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
@@ -227,18 +227,18 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
+            let subscription_handlers: Vec<_> = mem::take(&mut self.subscription_handlers.lock());
+
             if close_request {
                 let channel = self.channel.clone();
                 let request = DataConsumerCloseRequest {
                     internal: DataConsumerInternal {
-                        router_id: self.transport.router_id(),
+                        router_id: self.transport.router().id(),
                         transport_id: self.transport.id(),
                         data_consumer_id: self.id,
                         data_producer_id: self.data_producer_id,
                     },
                 };
-                let subscription_handlers: Vec<_> =
-                    mem::take(&mut self.subscription_handlers.lock());
                 let weak_data_producer = self.weak_data_producer.clone();
 
                 self.executor
@@ -249,6 +249,14 @@ impl Inner {
                             }
                         }
 
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handlers);
+                    })
+                    .detach();
+            } else {
+                self.executor
+                    .spawn(async move {
                         // Drop from a different thread to avoid deadlock with recursive dropping
                         // from within another subscription drop.
                         drop(subscription_handlers);
@@ -356,7 +364,7 @@ impl DataConsumer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: Box<dyn Transport>,
+        transport: Arc<dyn Transport>,
         direct: bool,
     ) -> Self {
         debug!("new()");
@@ -376,9 +384,10 @@ impl DataConsumer {
                         Notification::DataProducerClose => {
                             if !closed.load(Ordering::SeqCst) {
                                 handlers.data_producer_close.call_simple();
-                                if let Some(inner) =
-                                    inner_weak.lock().as_ref().and_then(Weak::upgrade)
-                                {
+
+                                let maybe_inner =
+                                    inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                                if let Some(inner) = maybe_inner {
                                     inner.close(false);
                                 }
                             }
@@ -429,7 +438,8 @@ impl DataConsumer {
             let inner_weak = Arc::clone(&inner_weak);
 
             Box::new(move || {
-                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
+                let maybe_inner = inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                if let Some(inner) = maybe_inner {
                     inner.handlers.transport_close.call_simple();
                     inner.close(false);
                 }
@@ -477,6 +487,11 @@ impl DataConsumer {
     #[must_use]
     pub fn data_producer_id(&self) -> DataProducerId {
         self.inner().data_producer_id
+    }
+
+    /// Transport to which data consumer belongs.
+    pub fn transport(&self) -> &Arc<dyn Transport> {
+        &self.inner().transport
     }
 
     /// The type of the data consumer.
@@ -668,7 +683,7 @@ impl DataConsumer {
 
     fn get_internal(&self) -> DataConsumerInternal {
         DataConsumerInternal {
-            router_id: self.inner().transport.router_id(),
+            router_id: self.inner().transport.router().id(),
             transport_id: self.inner().transport.id(),
             data_consumer_id: self.inner().id,
             data_producer_id: self.inner().data_producer_id,
@@ -686,7 +701,7 @@ impl DirectDataConsumer {
             .request(
                 DataConsumerSendRequest {
                     internal: DataConsumerInternal {
-                        router_id: self.inner.transport.router_id(),
+                        router_id: self.inner.transport.router().id(),
                         transport_id: self.inner.transport.id(),
                         data_consumer_id: self.inner.id,
                         data_producer_id: self.inner.data_producer_id,

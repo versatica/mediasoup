@@ -374,7 +374,7 @@ struct Inner {
     current_layers: Arc<Mutex<Option<ConsumerLayers>>>,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Box<dyn Transport>,
+    transport: Arc<dyn Transport>,
     weak_producer: WeakProducer,
     closed: Arc<AtomicBool>,
     // Drop subscription to consumer-specific notifications when consumer itself is dropped
@@ -397,18 +397,18 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
+            let subscription_handlers: Vec<_> = mem::take(&mut self.subscription_handlers.lock());
+
             if close_request {
                 let channel = self.channel.clone();
                 let request = ConsumerCloseRequest {
                     internal: ConsumerInternal {
-                        router_id: self.transport.router_id(),
+                        router_id: self.transport.router().id(),
                         transport_id: self.transport.id(),
                         consumer_id: self.id,
                         producer_id: self.producer_id,
                     },
                 };
-                let subscription_handlers: Vec<_> =
-                    mem::take(&mut self.subscription_handlers.lock());
                 let weak_producer = self.weak_producer.clone();
 
                 self.executor
@@ -417,11 +417,19 @@ impl Inner {
                             if let Err(error) = channel.request(request).await {
                                 error!("consumer closing failed on drop: {}", error);
                             }
-
-                            // Drop from a different thread to avoid deadlock with recursive dropping
-                            // from within another subscription drop.
-                            drop(subscription_handlers);
                         }
+
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handlers);
+                    })
+                    .detach();
+            } else {
+                self.executor
+                    .spawn(async move {
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handlers);
                     })
                     .detach();
             }
@@ -472,7 +480,7 @@ impl Consumer {
         score: ConsumerScore,
         preferred_layers: Option<ConsumerLayers>,
         app_data: AppData,
-        transport: Box<dyn Transport>,
+        transport: Arc<dyn Transport>,
     ) -> Self {
         debug!("new()");
 
@@ -501,9 +509,10 @@ impl Consumer {
                         Notification::ProducerClose => {
                             if !closed.load(Ordering::SeqCst) {
                                 handlers.producer_close.call_simple();
-                                if let Some(inner) =
-                                    inner_weak.lock().as_ref().and_then(Weak::upgrade)
-                                {
+
+                                let maybe_inner =
+                                    inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                                if let Some(inner) = maybe_inner {
                                     inner.close(false);
                                 }
                             }
@@ -573,7 +582,8 @@ impl Consumer {
             let inner_weak = Arc::clone(&inner_weak);
 
             Box::new(move || {
-                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
+                let maybe_inner = inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                if let Some(inner) = maybe_inner {
                     inner.handlers.transport_close.call_simple();
                     inner.close(false);
                 }
@@ -620,6 +630,11 @@ impl Consumer {
     #[must_use]
     pub fn producer_id(&self) -> ProducerId {
         self.inner.producer_id
+    }
+
+    /// Transport to which consumer belongs.
+    pub fn transport(&self) -> &Arc<dyn Transport> {
+        &self.inner.transport
     }
 
     /// Media kind.
@@ -963,7 +978,7 @@ impl Consumer {
 
     fn get_internal(&self) -> ConsumerInternal {
         ConsumerInternal {
-            router_id: self.inner.transport.router_id(),
+            router_id: self.inner.transport.router().id(),
             transport_id: self.inner.transport.id(),
             consumer_id: self.inner.id,
             producer_id: self.inner.producer_id,

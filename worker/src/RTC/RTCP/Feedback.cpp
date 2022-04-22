@@ -98,7 +98,7 @@ namespace RTC
 
 		// clang-format off
 		template<>
-		std::map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String =
+		absl::flat_hash_map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String =
 		{
 			{ FeedbackPs::MessageType::PLI,   "PLI"   },
 			{ FeedbackPs::MessageType::SLI,   "SLI"   },
@@ -188,7 +188,7 @@ namespace RTC
 
 		// clang-format off
 		template<>
-		std::map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String =
+		absl::flat_hash_map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String =
 		{
 			{ FeedbackRtp::MessageType::NACK,   "NACK"   },
 			{ FeedbackRtp::MessageType::TMMBR,  "TMMBR"  },

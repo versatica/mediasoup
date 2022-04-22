@@ -277,7 +277,7 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
 			}
 
 			auto* router = new RTC::Router(routerId);
@@ -301,7 +301,7 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
 			}
 
 			// Remove it from the map and delete it.
@@ -326,11 +326,11 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 			}
 			catch (const MediaSoupTypeError& error)
 			{
-				MS_THROW_TYPE_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->method.c_str());
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
 			}
 
 			break;
@@ -367,11 +367,11 @@ inline void Worker::OnPayloadChannelNotification(
 	}
 	catch (const MediaSoupTypeError& error)
 	{
-		MS_THROW_TYPE_ERROR("%s [event:%s]", error.buffer, notification->event.c_str());
+		MS_THROW_TYPE_ERROR("%s [event:%s]", error.what(), notification->event.c_str());
 	}
 	catch (const MediaSoupError& error)
 	{
-		MS_THROW_ERROR("%s [method:%s]", error.buffer, notification->event.c_str());
+		MS_THROW_ERROR("%s [method:%s]", error.what(), notification->event.c_str());
 	}
 }
 
@@ -394,11 +394,11 @@ inline void Worker::OnPayloadChannelRequest(
 	}
 	catch (const MediaSoupTypeError& error)
 	{
-		MS_THROW_TYPE_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+		MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->method.c_str());
 	}
 	catch (const MediaSoupError& error)
 	{
-		MS_THROW_ERROR("%s [method:%s]", error.buffer, request->method.c_str());
+		MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
 	}
 }
 

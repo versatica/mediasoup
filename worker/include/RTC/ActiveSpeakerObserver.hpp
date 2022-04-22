@@ -3,8 +3,8 @@
 
 #include "RTC/RtpObserver.hpp"
 #include "handles/Timer.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -89,7 +89,7 @@ namespace RTC
 		std::string dominantId{ "" };
 		Timer* periodicTimer{ nullptr };
 		uint16_t interval{ 300u };
-		std::unordered_map<std::string, struct ProducerSpeaker> mapProducerSpeaker;
+		absl::flat_hash_map<std::string, struct ProducerSpeaker> mapProducerSpeaker;
 		uint64_t lastLevelIdleTime{ 0 };
 	};
 } // namespace RTC

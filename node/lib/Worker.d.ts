@@ -136,7 +136,16 @@ export declare type WorkerLoggerError = {
      */
     data: string;
 };
-export declare class Worker extends EnhancedEventEmitter {
+export declare type WorkerEvents = {
+    died: [Error];
+    failedlog: [WorkerLoggerError];
+};
+export declare type WorkerObserverEvents = {
+    close: [];
+    newrouter: [Router];
+    failedlog: [WorkerLoggerError];
+};
+export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
     #private;
     /**
      * @private
@@ -171,7 +180,7 @@ export declare class Worker extends EnhancedEventEmitter {
      * @emits close
      * @emits newrouter - (router: Router)
      */
-    get observer(): EnhancedEventEmitter;
+    get observer(): EnhancedEventEmitter<WorkerObserverEvents>;
     /**
      * @private
      * Just for testing purposes.
