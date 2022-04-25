@@ -21,8 +21,8 @@ namespace RTC
 	/* Instance methods. */
 
 	SimulcastConsumer::SimulcastConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SIMULCAST)
+	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data, Lively::AppData* appData)
+	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SIMULCAST, appData)
 	{
 		MS_TRACE();
 
@@ -138,6 +138,7 @@ namespace RTC
 		MS_TRACE();
 
 		delete this->rtpStream;
+		delete this->rtpStreamBinLogRecord;
 	}
 
 	void SimulcastConsumer::FillJson(json& jsonObject) const
@@ -203,6 +204,18 @@ namespace RTC
 			jsonObject["producerScore"] = 0;
 
 		jsonObject["producerScores"] = *this->producerRtpStreamScores;
+	}
+
+	void SimulcastConsumer::FillBinLogStats(Lively::StatsBinLog* log)
+	{
+		MS_TRACE();
+
+		Lively::CallStatsRecordCtx* ctx = this->rtpStreamBinLogRecord;
+		if (!ctx)
+			return;
+
+		ctx->record.mime = static_cast<uint8_t>(rtpStream->GetMimeType().type);
+		ctx->AddStatsRecord(log, rtpStream);
 	}
 
 	void SimulcastConsumer::HandleRequest(Channel::ChannelRequest* request)
@@ -1182,6 +1195,9 @@ namespace RTC
 
 		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
 		this->rtpStreams.push_back(this->rtpStream);
+
+		// Binary log samples collection
+		this->rtpStreamBinLogRecord = new Lively::CallStatsRecordCtx(1, lively.callId, this->id, this->producerId);			
 
 		// If the Consumer is paused, tell the RtpStreamSend.
 		if (IsPaused() || IsProducerPaused())

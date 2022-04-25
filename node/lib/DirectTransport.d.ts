@@ -10,6 +10,10 @@ export declare type DirectTransportOptions = {
      * Custom application data.
      */
     appData?: any;
+    /**
+     * Binary log info.
+     */
+    binlog?: any;
 };
 export declare type DirectTransportStat = {
     type: string;

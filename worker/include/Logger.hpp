@@ -167,6 +167,7 @@ public:
 	
 	#define _MS_LOG_STR_LIVELYAPP "%s level=\"%s\" pid=\"%ld\" %s function=\"%s::%s()\" "
     #define _MS_LOG_STR_DESC_LIVELYAPP _MS_LOG_STR_LIVELYAPP "description=\""
+
 	#define _MS_LOG_ARG_LIVELYAPP Utils::Time::currentStdTimestamp().c_str(), Logger::levelPrefix.c_str(), Logger::pid, Logger::appdataBuffer.c_str(), MS_CLASS, __FUNCTION__
 //#endif
 

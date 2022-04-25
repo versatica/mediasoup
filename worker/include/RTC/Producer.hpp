@@ -2,6 +2,8 @@
 #define MS_RTC_PRODUCER_HPP
 
 #include "common.hpp"
+#include "Lively.hpp"
+#include "LivelyBinLogs.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -86,7 +88,7 @@ namespace RTC
 		};
 
 	public:
-		Producer(const std::string& id, RTC::Producer::Listener* listener, json& data);
+		Producer(const std::string& id, RTC::Producer::Listener* listener, json& data, Lively::AppData* appData = nullptr);
 		virtual ~Producer();
 
 	public:
@@ -159,7 +161,14 @@ namespace RTC
 
 	public:
 		std::string appData;
+
+	private:
+		Lively::AppData lively;
+		Lively::StatsBinLog binLog;
 		
+	public:
+		void FillBinLogStats();
+
 	private:
 		// Passed by argument.
 		RTC::Producer::Listener* listener{ nullptr };
@@ -186,6 +195,8 @@ namespace RTC
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
+
+		std::map<RTC::RtpStreamRecv*, Lively::CallStatsRecordCtx*> rtpStreamBinLogRecords;
 	};
 } // namespace RTC
 

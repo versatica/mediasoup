@@ -2,6 +2,8 @@
 #define MS_RTC_CONSUMER_HPP
 
 #include "common.hpp"
+#include "Lively.hpp"
+#include "LivelyBinLogs.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -63,7 +65,8 @@ namespace RTC
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
 		  json& data,
-		  RTC::RtpParameters::Type type);
+		  RTC::RtpParameters::Type type,
+			Lively::AppData* appData = nullptr);
 		virtual ~Consumer();
 
 	public:
@@ -174,6 +177,12 @@ namespace RTC
 	
 	public:
 		std::string appData;
+	
+	protected:
+		Lively::AppData lively;
+
+	public:
+		virtual void FillBinLogStats(Lively::StatsBinLog* log) = 0;
 
 	protected:
 		// Passed by argument.

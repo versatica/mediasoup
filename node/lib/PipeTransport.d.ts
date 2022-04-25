@@ -51,6 +51,10 @@ export declare type PipeTransportOptions = {
      * Custom application data.
      */
     appData?: any;
+    /**
+     * Binary log info.
+     */
+    binlog?: any;
 };
 export declare type PipeTransportStat = {
     type: string;

@@ -360,6 +360,12 @@ namespace Utils
 
 			return tstream.str();
 		}
+
+		static uint64_t currentStdEpochMs()
+		{
+			const std::chrono::time_point<std::chrono::system_clock> tnow = std::chrono::system_clock::now();
+		  return std::chrono::duration_cast<std::chrono::milliseconds>(tnow.time_since_epoch()).count();
+		}
 	};
 
 	class Json

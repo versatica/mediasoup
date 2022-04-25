@@ -1,6 +1,6 @@
 {
   "name": "@livelyvideo/mediasoup",
-  "version": "3.9.2-lv1-notranscode-mythilik.24",
+  "version": "3.9.2-lv2",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -53,6 +53,7 @@
     "typescript:build": "node npm-scripts.js typescript:build",
     "typescript:watch": "node npm-scripts.js typescript:watch",
     "worker:build": "node npm-scripts.js worker:build",
+    "livelystats:bingrep": "node npm-scripts.js livelystats:bingrep",
     "lint": "npm run lint:node && npm run lint:worker",
     "lint:node": "node npm-scripts.js lint:node",
     "lint:worker": "node npm-scripts.js lint:worker",

@@ -14,6 +14,11 @@ export type DirectTransportOptions =
 	 * Custom application data.
 	 */
 	appData?: any;
+
+	/**
+	 * Binary log info.
+	 */
+	binlog?: any;
 }
 
 export type DirectTransportStat =

@@ -4,6 +4,7 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "LivelyBinLogs.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "PayloadChannel/Notification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
@@ -270,6 +271,15 @@ namespace RTC
 	public:
 	  // Optionally comes in the input json
 		std::string appData;
+	
+	// binary log stuff
+	private:
+		Lively::AppData lively;
+		
+		Timer* binLogTimer{ nullptr };
+		Lively::StatsBinLog binLog;
+
+		bool AddCallStatsSample(); // adds a new record, tells the caller if it's ready to write data out
 
 	protected:
 		size_t maxMessageSize{ 262144u };

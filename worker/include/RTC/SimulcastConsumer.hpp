@@ -1,6 +1,7 @@
 #ifndef MS_RTC_SIMULCAST_CONSUMER_HPP
 #define MS_RTC_SIMULCAST_CONSUMER_HPP
 
+#include "Lively.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
@@ -15,7 +16,8 @@ namespace RTC
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
-		  json& data);
+		  json& data,
+			Lively::AppData* appData = nullptr);
 		~SimulcastConsumer() override;
 
 	public:
@@ -93,6 +95,9 @@ namespace RTC
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
 
+	public:
+		void FillBinLogStats(Lively::StatsBinLog* log) override;
+
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
@@ -115,6 +120,8 @@ namespace RTC
 		uint32_t tsOffset{ 0u }; // RTP Timestamp offset.
 		bool keyFrameForTsOffsetRequested{ false };
 		uint64_t lastBweDowngradeAtMs{ 0u }; // Last time we moved to lower spatial layer due to BWE.
+		// bin log
+		Lively::CallStatsRecordCtx* rtpStreamBinLogRecord;
 	};
 } // namespace RTC
 
