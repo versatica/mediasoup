@@ -2,7 +2,6 @@
 #include "helpers.hpp"
 #include "RTC/Codecs/H264_SVC.hpp"
 #include "RTC/RtpPacket.hpp"
-#include <bits/stdc++.h>
 #include <catch2/catch.hpp>
 #include <cstring> // std::memset()
 #include <string>
