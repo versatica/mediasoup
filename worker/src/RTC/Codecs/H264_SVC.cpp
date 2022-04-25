@@ -153,8 +153,9 @@ namespace RTC
 			{
 				// Single NAL unit packet.
 				// IDR (instantaneous decoding picture).
-				case 1:
 				case 5:
+					payloadDescriptor->isKeyFrame = true;
+				case 1:
 				{
 					payloadDescriptor->slIndex = 0;
 					payloadDescriptor->tlIndex = 0;
