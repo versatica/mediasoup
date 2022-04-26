@@ -13,7 +13,6 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint8_t StreamGoodScore{ 5u };
 	static constexpr uint64_t StreamMinActiveMs{ 2000u };           // In ms.
 	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u }; // In ms.
 	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };     // In ms.
@@ -444,7 +443,7 @@ namespace RTC
 			auto* producerRtpStream = this->producerRtpStreams.at(spatialLayer);
 
 			// Producer stream does not exist or it's not good. Ignore.
-			if (!producerRtpStream || producerRtpStream->GetScore() < StreamGoodScore)
+			if (!producerRtpStream)
 				continue;
 
 			// If the stream has not been active time enough and we have an active one
@@ -1297,17 +1296,11 @@ namespace RTC
 			if (!CanSwitchToSpatialLayer(spatialLayer))
 				continue;
 
-			// If the stream score is worse than the best seen and not good enough, ignore
-			// this stream.
-			if (producerScore < maxProducerScore && producerScore < StreamGoodScore)
-				continue;
-
 			newTargetSpatialLayer = spatialLayer;
 			maxProducerScore      = producerScore;
 
-			// If this is the preferred or higher spatial layer and has good score,
-			// take it and exit.
-			if (spatialLayer >= this->preferredSpatialLayer && producerScore >= StreamGoodScore)
+			// If this is the preferred or higher spatial layer take it and exit.
+			if (spatialLayer >= this->preferredSpatialLayer)
 				break;
 		}
 
