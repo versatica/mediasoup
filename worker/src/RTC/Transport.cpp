@@ -1729,12 +1729,10 @@ namespace RTC
 
 		if (!producer)
 		{
-			/*MS_WARN_TAG_LIVELYAPP(
-			  rtp,
-				this->appData,
+			MS_DEBUG_DEV(
 			  "no suitable Producer for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
 			  packet->GetSsrc(),
-			  packet->GetPayloadType());*/
+			  packet->GetPayloadType());
 
 			// Tell the child class to remove this SSRC.
 			RecvStreamClosed(packet->GetSsrc());
@@ -1760,8 +1758,7 @@ namespace RTC
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
 				this->recvRtxTransmission.Update(packet);
-			 // MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData,
-			 //		"recvRtxTransmission.GetPacketCount()=%zu", this->recvRtxTransmission.GetPacketCount());
+			    MS_DEBUG_DEV("recvRtxTransmission.GetPacketCount()=%zu", this->recvRtxTransmission.GetPacketCount());
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::DISCARDED:
 				// Tell the child class to remove this SSRC.

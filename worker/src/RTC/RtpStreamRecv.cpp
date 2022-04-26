@@ -333,12 +333,10 @@ namespace RTC
 			return false;
 		}
 
-		/*MS_DEBUG_TAG(
-			rtx,
-			"Received RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]", 
+		MS_DEBUG_DEV("Received RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 "]", 
 			packet->GetSsrc(),
 			packet->GetSequenceNumber()
-		);*/
+		);
 
 		if (HasRtx())
 		{
@@ -355,11 +353,10 @@ namespace RTC
 		// Get the original RTP packet.
 		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))
 		{
-			/*MS_DEBUG_TAG(rtx, 
-			  "Ignoring empty RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", pt:%" PRIu8 "]",
+			MS_DEBUG_DEV("Ignoring empty RTX packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", pt:%" PRIu8 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
-			  packet->GetPayloadType());*/
+			  packet->GetPayloadType());
 
 			return false;
 		}
