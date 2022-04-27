@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.9.11
+
+* Modify `SimulcastConsumer` to keep using layers without good scores (PR #804 by @ggarber).
+* Update NPM deps.
+
+
 ### 3.9.10
 
 * Update worker dependencies:

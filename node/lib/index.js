@@ -11,7 +11,7 @@ exports.types = types;
 /**
  * Expose mediasoup version.
  */
-exports.version = '3.9.10';
+exports.version = '3.9.11';
 /**
  * Expose parseScalabilityMode() function.
  */
