@@ -59,8 +59,6 @@ namespace RTC
 
 		lively.id = id;
 		this->appData = lively.ToStr();
-		// Bin log
-		//this->binLog.InitLog('c', lively.callId, lively.id);
 
 		auto jsonRtpParametersIt = data.find("rtpParameters");
 

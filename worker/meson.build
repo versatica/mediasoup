@@ -360,6 +360,8 @@ test(
 executable(
   'livelybingrep',
   build_by_default: false,
+  install: true,
+  install_tag: 'livelybingrep',
   sources: ['src/LivelyBinGrep/LivelyStatsBinGrep.c'],)
 
 if host_machine.system() == 'linux'

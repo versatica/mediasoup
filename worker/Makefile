@@ -227,4 +227,5 @@ libmediasoup-worker: setup
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags libmediasoup-worker
 
 bingrep: setup
-	$(MESON) compile -C $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE) livelybingrep
+	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) livelybingrep
+	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags livelybingrep
