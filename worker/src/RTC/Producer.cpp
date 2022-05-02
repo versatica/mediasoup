@@ -711,7 +711,7 @@ namespace RTC
 			result = ReceiveRtpPacketResult::RETRANSMISSION;
 			isRtx  = true;
 			
-			MS_DEBUG_TAG(rtp, "Retransmitted packet received [ssrc:%" PRIu32 " seq:%" PRIu16 " ts:%" PRIu32 "]",
+			MS_DEBUG_DEV("Retransmitted packet received [ssrc:%" PRIu32 " seq:%" PRIu16 " ts:%" PRIu32 "]",
 				packet->GetSsrc(),packet->GetSequenceNumber(), packet->GetTimestamp());
 			
 			// Process the packet.

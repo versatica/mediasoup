@@ -1352,7 +1352,7 @@ namespace RTC
 
 		if ((where & SSL_CB_LOOP) != 0)
 		{
-			MS_DEBUG_TAG(dtls, "[role:%s, action:'%s']", role, SSL_state_string_long(this->ssl));
+			MS_DEBUG_DEV("[role:%s, action:'%s']", role, SSL_state_string_long(this->ssl));
 		}
 		else if ((where & SSL_CB_ALERT) != 0)
 		{

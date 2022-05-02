@@ -1729,9 +1729,7 @@ namespace RTC
 
 		if (!producer)
 		{
-			MS_WARN_TAG_LIVELYAPP(
-			  rtp,
-				this->appData,
+			MS_DEBUG_DEV(
 			  "no suitable Producer for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
 			  packet->GetSsrc(),
 			  packet->GetPayloadType());
@@ -1760,8 +1758,7 @@ namespace RTC
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
 				this->recvRtxTransmission.Update(packet);
-			  MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData,
-					"recvRtxTransmission.GetPacketCount()=%zu", this->recvRtxTransmission.GetPacketCount());
+			    MS_DEBUG_DEV("recvRtxTransmission.GetPacketCount()=%zu", this->recvRtxTransmission.GetPacketCount());
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::DISCARDED:
 				// Tell the child class to remove this SSRC.
@@ -3029,7 +3026,7 @@ namespace RTC
 		if (dynamic_cast<RTC::ShmTransport*>(this) == nullptr)
 #endif
 			MS_DEBUG_TAG_LIVELYAPP(bwe, this->appData, 
-				"outgoing available bitrate:%" PRIu32, bitrates.availableBitrate);
+				" outgoing available bitrate=\"%" PRIu32, bitrates.availableBitrate);
 
 		DistributeAvailableOutgoingBitrate();
 		ComputeOutgoingDesiredBitrate();
