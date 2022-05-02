@@ -105,6 +105,8 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
+            let subscription_handler = self.subscription_handler.lock().take();
+
             if close_request {
                 let channel = self.channel.clone();
                 let request = RtpObserverCloseRequest {
@@ -113,7 +115,6 @@ impl Inner {
                         rtp_observer_id: self.id,
                     },
                 };
-                let subscription_handler = self.subscription_handler.lock().take();
 
                 self.executor
                     .spawn(async move {
@@ -121,6 +122,14 @@ impl Inner {
                             error!("active speaker observer closing failed on drop: {}", error);
                         }
 
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handler);
+                    })
+                    .detach();
+            } else {
+                self.executor
+                    .spawn(async move {
                         // Drop from a different thread to avoid deadlock with recursive dropping
                         // from within another subscription drop.
                         drop(subscription_handler);
@@ -155,10 +164,14 @@ impl fmt::Debug for ActiveSpeakerObserver {
     }
 }
 
-#[async_trait(?Send)]
+#[async_trait]
 impl RtpObserver for ActiveSpeakerObserver {
     fn id(&self) -> RtpObserverId {
         self.inner.id
+    }
+
+    fn router(&self) -> &Router {
+        &self.inner.router
     }
 
     fn paused(&self) -> bool {
@@ -339,7 +352,8 @@ impl ActiveSpeakerObserver {
             let inner_weak = Arc::clone(&inner_weak);
 
             move || {
-                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
+                let maybe_inner = inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                if let Some(inner) = maybe_inner {
                     inner.handlers.router_close.call_simple();
                     inner.close(false);
                 }

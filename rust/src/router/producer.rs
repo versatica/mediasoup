@@ -302,7 +302,7 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Box<dyn Transport>,
+    transport: Arc<dyn Transport>,
     closed: AtomicBool,
     // Drop subscription to producer-specific notifications when producer itself is dropped
     subscription_handler: Mutex<Option<SubscriptionHandler>>,
@@ -324,26 +324,35 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
+            let subscription_handler = self.subscription_handler.lock().take();
+
             if close_request {
                 let channel = self.channel.clone();
                 let request = ProducerCloseRequest {
                     internal: ProducerInternal {
-                        router_id: self.transport.router_id(),
+                        router_id: self.transport.router().id(),
                         transport_id: self.transport.id(),
                         producer_id: self.id,
                     },
                 };
-                let subscription_handler = self.subscription_handler.lock().take();
 
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("producer closing failed on drop: {}", error);
-
-                            // Drop from a different thread to avoid deadlock with recursive dropping
-                            // from within another subscription drop.
-                            drop(subscription_handler);
                         }
+
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handler);
+                    })
+                    .detach();
+            } else {
+                self.executor
+                    .spawn(async move {
+                        // Drop from a different thread to avoid deadlock with recursive dropping
+                        // from within another subscription drop.
+                        drop(subscription_handler);
                     })
                     .detach();
             }
@@ -451,7 +460,7 @@ impl Producer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: Box<dyn Transport>,
+        transport: Arc<dyn Transport>,
         direct: bool,
     ) -> Self {
         debug!("new()");
@@ -493,7 +502,8 @@ impl Producer {
             let inner_weak = Arc::clone(&inner_weak);
 
             Box::new(move || {
-                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
+                let maybe_inner = inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                if let Some(inner) = maybe_inner {
                     inner.handlers.transport_close.call_simple();
                     inner.close(false);
                 }
@@ -532,6 +542,11 @@ impl Producer {
     #[must_use]
     pub fn id(&self) -> ProducerId {
         self.inner().id
+    }
+
+    /// Transport to which producer belongs.
+    pub fn transport(&self) -> &Arc<dyn Transport> {
+        &self.inner().transport
     }
 
     /// Media kind.
@@ -757,7 +772,7 @@ impl Producer {
 
     fn get_internal(&self) -> ProducerInternal {
         ProducerInternal {
-            router_id: self.inner().transport.router_id(),
+            router_id: self.inner().transport.router().id(),
             transport_id: self.inner().transport.id(),
             producer_id: self.inner().id,
         }
@@ -770,7 +785,7 @@ impl DirectProducer {
         self.inner.payload_channel.notify(
             ProducerSendNotification {
                 internal: ProducerInternal {
-                    router_id: self.inner.transport.router_id(),
+                    router_id: self.inner.transport.router().id(),
                     transport_id: self.inner.transport.id(),
                     producer_id: self.inner.id,
                 },

@@ -202,6 +202,7 @@ libwebrtc_include_directories = include_directories('include')
 subdir('deps/libwebrtc')
 
 dependencies = [
+  abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
   nlohmann_json_proj.get_variable('nlohmann_json_dep'),
   libuv_proj.get_variable('libuv_dep'),
@@ -211,6 +212,7 @@ dependencies = [
 ]
 
 link_whole = [
+  abseil_cpp_proj.get_variable('absl_container_lib'),
   openssl_proj.get_variable('libcrypto_lib'),
   openssl_proj.get_variable('libssl_lib'),
   libuv_proj.get_variable('libuv'),
@@ -239,6 +241,8 @@ libmediasoup_worker = library(
   'libmediasoup-worker',
   name_prefix: '',
   build_by_default: false,
+  install: true,
+  install_tag: 'libmediasoup-worker',
   dependencies: dependencies,
   sources: common_sources,
   include_directories: include_directories('include'),
@@ -249,8 +253,10 @@ libmediasoup_worker = library(
 # executable(
 #  'mediasoup-worker',
 #  build_by_default: true,
+#  install: true,
+#  install_tag: 'mediasoup-worker',
 #  dependencies: dependencies,
-# sources: common_sources + ['src/main.cpp'],
+#  sources: common_sources + ['src/main.cpp'],
 #  include_directories: include_directories('include'),
 #  cpp_args: cpp_args + ['-g', '-fno-omit-frame-pointer', '-O0', '-DMS_EXECUTABLE'],
 #)
@@ -280,8 +286,10 @@ transcode_args = cpp_args + [
 executable(
   'mediasoup-worker',
   build_by_default: true,
-  dependencies: dependencies,
-  sources: common_sources + ['src/main.cpp'],
+  dependencies: transcode_dependencies,
+  sources: transcode_sources,
+  install: true,
+  install_tag: 'mediasoup-worker',
   include_directories: include_directories('include'),
   cpp_args: cpp_args + ['-DMS_EXECUTABLE'],
 )
@@ -320,6 +328,8 @@ executable(
 mediasoup_worker_test = executable(
   'mediasoup-worker-test',
   build_by_default: false,
+  install: true,
+  install_tag: 'mediasoup-worker-test',
   dependencies: dependencies + [
     catch2_proj.get_variable('catch2_dep'),
   ],
@@ -375,18 +385,22 @@ mediasoup_worker_test = executable(
 test(
   'mediasoup-worker-test',
   mediasoup_worker_test,
-  workdir: meson.source_root(),
+  workdir: meson.project_source_root(),
 )
 
 executable(
   'livelybingrep',
   build_by_default: false,
+  install: true,
+  install_tag: 'livelybingrep',
   sources: ['src/LivelyBinGrep/LivelyStatsBinGrep.c'],)
 
 if host_machine.system() == 'linux'
   executable(
     'mediasoup-worker-fuzzer',
     build_by_default: false,
+    install: true,
+    install_tag: 'mediasoup-worker-fuzzer',
     dependencies: dependencies,
     sources: common_sources + [
       'fuzzer/src/fuzzer.cpp',

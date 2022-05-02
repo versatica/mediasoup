@@ -21,7 +21,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		std::map<Type, std::string> Packet::type2String =
+		absl::flat_hash_map<Type, std::string> Packet::type2String =
 		{
 			{ Type::SR,    "SR"    },
 			{ Type::RR,    "RR"    },

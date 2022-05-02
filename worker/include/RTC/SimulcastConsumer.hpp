@@ -102,7 +102,7 @@ namespace RTC
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
-		std::unordered_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
+		absl::flat_hash_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
 		std::vector<RTC::RtpStream*> producerRtpStreams; // Indexed by spatial layer.
 		bool syncRequired{ false };

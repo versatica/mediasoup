@@ -5,8 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include <cctype> // isprint()
-#include <cerrno>
+#include <cctype>   // isprint()
 #include <iterator> // std::ostream_iterator
 #include <mutex>
 #include <nlohmann/json.hpp>
@@ -24,14 +23,14 @@ static std::mutex globalSyncMutex;
 
 thread_local struct Settings::Configuration Settings::configuration;
 // clang-format off
-std::map<std::string, LogLevel> Settings::string2LogLevel =
+absl::flat_hash_map<std::string, LogLevel> Settings::string2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
 	{ "warn",  LogLevel::LOG_WARN  },
 	{ "error", LogLevel::LOG_ERROR },
 	{ "none",  LogLevel::LOG_NONE  }
 };
-std::map<LogLevel, std::string> Settings::logLevel2String =
+absl::flat_hash_map<LogLevel, std::string> Settings::logLevel2String =
 {
 	{ LogLevel::LOG_DEBUG, "debug" },
 	{ LogLevel::LOG_WARN,  "warn"  },

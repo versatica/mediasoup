@@ -59,8 +59,6 @@ namespace RTC
 
 		lively.id = producerId;
 		this->appData = lively.ToStr();
-		// Bin log
-		//this->binLog.InitLog('c', lively.callId, lively.id);
 
 		auto jsonRtpParametersIt = data.find("rtpParameters");
 
@@ -401,6 +399,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->transportConnected)
+			return;
+
 		this->transportConnected = true;
 
 		MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "Transport connected");
@@ -411,6 +412,9 @@ namespace RTC
 	void Consumer::TransportDisconnected()
 	{
 		MS_TRACE();
+
+		if (!this->transportConnected)
+			return;
 
 		this->transportConnected = false;
 

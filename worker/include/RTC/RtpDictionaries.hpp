@@ -3,10 +3,9 @@
 
 #include "common.hpp"
 #include "RTC/Parameters.hpp"
-#include <map>
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 using json = nlohmann::json;
@@ -29,8 +28,8 @@ namespace RTC
 		static const std::string& GetString(Kind kind);
 
 	private:
-		static std::unordered_map<std::string, Kind> string2Kind;
-		static std::map<Kind, std::string> kind2String;
+		static absl::flat_hash_map<std::string, Kind> string2Kind;
+		static absl::flat_hash_map<Kind, std::string> kind2String;
 	};
 
 	class RtpCodecMimeType
@@ -75,10 +74,10 @@ namespace RTC
 		};
 
 	public:
-		static std::unordered_map<std::string, Type> string2Type;
-		static std::map<Type, std::string> type2String;
-		static std::unordered_map<std::string, Subtype> string2Subtype;
-		static std::map<Subtype, std::string> subtype2String;
+		static absl::flat_hash_map<std::string, Type> string2Type;
+		static absl::flat_hash_map<Type, std::string> type2String;
+		static absl::flat_hash_map<std::string, Subtype> string2Subtype;
+		static absl::flat_hash_map<Subtype, std::string> subtype2String;
 
 	public:
 		RtpCodecMimeType() = default;
@@ -140,11 +139,12 @@ namespace RTC
 			FRAME_MARKING          = 7,
 			SSRC_AUDIO_LEVEL       = 10,
 			VIDEO_ORIENTATION      = 11,
-			TOFFSET                = 12
+			TOFFSET                = 12,
+			ABS_CAPTURE_TIME       = 13,
 		};
 
 	private:
-		static std::unordered_map<std::string, Type> string2Type;
+		static absl::flat_hash_map<std::string, Type> string2Type;
 
 	public:
 		static Type GetType(std::string& uri);
@@ -269,8 +269,8 @@ namespace RTC
 		static std::string& GetTypeString(Type type);
 
 	private:
-		static std::unordered_map<std::string, Type> string2Type;
-		static std::map<Type, std::string> type2String;
+		static absl::flat_hash_map<std::string, Type> string2Type;
+		static absl::flat_hash_map<Type, std::string> type2String;
 
 	public:
 		RtpParameters() = default;

@@ -1,11 +1,4 @@
-import * as randomNumber from 'random-number';
-
-const randomNumberGenerator = randomNumber.generator(
-	{
-		min     : 100000000,
-		max     : 999999999,
-		integer : true
-	});
+import { randomInt } from 'crypto';
 
 /**
  * Clones the given object/array.
@@ -21,4 +14,7 @@ export function clone(data: any): any
 /**
  * Generates a random positive integer.
  */
-export { randomNumberGenerator as generateRandomNumber };
+export function generateRandomNumber()
+{
+	return randomInt(100_000_000, 999_999_999);
+}
