@@ -8,7 +8,7 @@
 
 #define CALL_STATS_BIN_LOG_RECORDS_NUM 30
 #define CALL_STATS_BIN_LOG_SAMPLING    2000
-#define UINT16_UNSET                   ((uint16_t)-1)
+#define UINT8_UNSET                    ((uint8_t)-1)
 #define UINT64_UNSET                   ((uint64_t)-1)
 #define ZERO_UUID "00000000-0000-0000-0000-000000000000"
 
@@ -32,17 +32,47 @@ namespace Lively
     uint32_t bytes_count;
   };
 
+
+  //sizeof timestamp, mime, filled
+  //       8          1     1
+  #define PRODUCER_REC_HEADER_SIZE 10
+  //sizeof timestamp, consumer_uuid, producer_uuid, mime, filled
+  //       8          16             16             1     1
+  #define CONSUMER_REC_HEADER_SIZE 42
+  
   // Data record: a header followed array of data samples
-  struct CallStatsRecord
+  class CallStatsRecord
   {
-    uint64_t          start_tm;                                // the record start timestamp in milliseconds
-    char              call_id[36];                             // call id: uuid4() without \0
-    char              object_id[36];                           // uuid4() no \0, producer or consumer id, depending on source
-    char              producer_id[36];                         // uuid4() no \0, ZERO_UUID if source is producer, or consumer's corresponding producer id
+  public:
+    std::string       call_id;                                 // call id: uuid4()
+    std::string       object_id;                               // uuid4(), producer or consumer id, depending on source
+    std::string       producer_id;                             // uuid4(), undef if source is producer, or consumer's corresponding producer id
+    uint64_t          start_tm {UINT64_UNSET};                 // the record start timestamp in milliseconds
     uint8_t           source {0};                              // 0 for producer or 1 for consumer
-    uint8_t           mime {0};                                // mime type: unset, audio, video
-    uint16_t          filled {UINT16_UNSET};                   // number of filled records in the array below
+    uint8_t           mime {0};                                // mime type: unset, audio, video, matches RtpCodecMimeType enum values
+    uint8_t           filled {UINT8_UNSET};                   // number of filled records in the array below
     CallStatsSample   samples[CALL_STATS_BIN_LOG_RECORDS_NUM]; // collection of data samples
+  
+  public:
+    CallStatsRecord(uint64_t objType, RTC::RtpCodecMimeType mime, std::string callId, std::string objId, std::string producerId);
+
+    bool fwriteRecord(std::FILE* fd);
+
+    void resetSamples()
+    {
+      // Wipe off samples data
+      std::memset(samples, 0, sizeof(samples));
+      filled = UINT8_UNSET;
+      start_tm = UINT64_UNSET;
+      memcpy(write_buf, &start_tm, sizeof(uint64_t));
+    }
+    
+  private:
+    uint8_t  write_buf[CONSUMER_REC_HEADER_SIZE];      // temp buffer to form record header data for bin log output
+
+    void fillHeader();
+    bool uuidToBytes(std::string uuid, uint8_t *out);
+    uint8_t* hexStrToBytes(const char* from, int num, uint8_t *to);
   };
 
 
@@ -56,7 +86,7 @@ namespace Lively
   class CallStatsRecordCtx
   {
   public:
-    CallStatsRecord record {};
+    CallStatsRecord record;
   
   private:
     class InputStats
@@ -79,7 +109,7 @@ namespace Lively
     InputStats curr {};
 
   public:
-    CallStatsRecordCtx(uint64_t objType, std::string callId, std::string objId, std::string producerId);
+    CallStatsRecordCtx(uint64_t objType, RTC::RtpCodecMimeType mime, std::string callId, std::string objId, std::string producerId) : record(objType, mime, callId, objId, producerId) {}
 
     void AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream); // either recv or send stream
 
@@ -108,7 +138,7 @@ namespace Lively
     int OnLogWrite(CallStatsRecordCtx* ctx);
     int LogClose(CallStatsRecordCtx* recordCtx);
 
-    void InitLog(char type, std::string id1, std::string id2); // if type is producer, then 
+    void InitLog(char type, std::string id1, std::string id2); // if type is producer, then log name is a combo of callid, producerid and timestamp
     void DeinitLog(CallStatsRecordCtx* recordCtx);  // Closes log file and deinitializes state variables
 
   private:

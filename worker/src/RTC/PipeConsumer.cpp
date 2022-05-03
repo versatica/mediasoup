@@ -612,7 +612,7 @@ namespace RTC
 				this->id.c_str());
 
 			// Binary log samples collection per stream
-			this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(1, lively.callId, this->id, this->producerId);
+			this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(1, mediaCodec->mimeType, lively.callId, this->id, this->producerId);
 		}
 	}
 
