@@ -988,17 +988,22 @@ namespace RTC
 		uv_timeval_t dtlsTimeout{ 0, 0 };
 		uint64_t timeoutMs;
 
-		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.
 		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
 		ret = DTLSv1_get_timeout(this->ssl, static_cast<void*>(&dtlsTimeout)); // NOLINT
 
 		if (ret == 0)
+		{
+			OnTimer(this->timer);
+
 			return true;
+		}
 
 		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
 
 		if (timeoutMs == 0)
 		{
+			OnTimer(this->timer);
+
 			return true;
 		}
 		else if (timeoutMs < 30000)
@@ -1419,12 +1424,27 @@ namespace RTC
 			return;
 		}
 
-		DTLSv1_handle_timeout(this->ssl);
+		auto ret = DTLSv1_handle_timeout(this->ssl);
 
-		// If required, send DTLS data.
-		SendPendingOutgoingDtlsData();
+		// -1 means that too many timeouts had expired without progress or an
+		// error occurs.
+		if (ret == -1)
+		{
+			MS_WARN_TAG(dtls, "DTLSv1_handle_timeout() failed");
 
-		// Set the DTLS timer again.
-		SetTimeout();
+			Reset();
+
+			// Set state and notify the listener.
+			this->state = DtlsState::FAILED;
+			this->listener->OnDtlsTransportFailed(this);
+		}
+		else
+		{
+			// If required, send DTLS data.
+			SendPendingOutgoingDtlsData();
+
+			// Set the DTLS timer again.
+			SetTimeout();
+		}
 	}
 } // namespace RTC
