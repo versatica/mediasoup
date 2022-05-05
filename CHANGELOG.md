@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.9.12
+
+* `DtlsTransport`: Make DTLS negotiation run immediately (PR #815).
+* Update NPM deps and TypeScript version.
+
+
 ### 3.9.11
 
 * Modify `SimulcastConsumer` to keep using layers without good scores (PR #804 by @ggarber).
