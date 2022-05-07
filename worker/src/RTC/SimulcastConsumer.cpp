@@ -1256,7 +1256,6 @@ namespace RTC
 		newTargetSpatialLayer  = -1;
 		newTargetTemporalLayer = -1;
 
-		uint8_t maxProducerScore{ 0u };
 		auto nowMs = DepLibUV::GetTimeMs();
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
@@ -1297,7 +1296,6 @@ namespace RTC
 				continue;
 
 			newTargetSpatialLayer = spatialLayer;
-			maxProducerScore      = producerScore;
 
 			// If this is the preferred or higher spatial layer take it and exit.
 			if (spatialLayer >= this->preferredSpatialLayer)
