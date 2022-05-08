@@ -32,7 +32,6 @@ async function createWorker({ logLevel = 'error', logTags, rtcMinPort = 10000, r
         logTags,
         rtcMinPort,
         rtcMaxPort,
-        sendNackDelayMs,
         dtlsCertificateFile,
         dtlsPrivateKeyFile,
         appData
