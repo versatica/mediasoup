@@ -47,7 +47,7 @@ namespace RTC
 		};
 
 	public:
-		explicit NackGenerator(Listener* listener, uint64_t sendNackDelayMs = 0u);
+		explicit NackGenerator(Listener* listener);
 		~NackGenerator() override;
 
 		bool ReceivePacket(RTC::RtpPacket* packet, bool isRecovered);
@@ -83,7 +83,6 @@ namespace RTC
 		bool started{ false };
 		uint16_t lastSeq{ 0u }; // Seq number of last valid packet.
 		uint32_t rtt{ 0u };     // Round trip time (ms).
-		uint64_t sendNackDelayMs{ 0u };
 	};
 } // namespace RTC
 

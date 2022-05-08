@@ -191,7 +191,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->params.useNack)
-			this->nackGenerator.reset(new RTC::NackGenerator(this, Settings::configuration.sendNackDelayMs));
+			this->nackGenerator.reset(new RTC::NackGenerator(this));
 
 		// Run the RTP inactivity periodic timer (use a different timeout if DTX is
 		// enabled).

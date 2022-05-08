@@ -17,11 +17,12 @@ namespace RTC
 	constexpr uint32_t DefaultRtt{ 100u };
 	constexpr uint8_t MaxNackRetries{ 10u };
 	constexpr uint64_t TimerInterval{ 40u };
+	constexpr uint8_t SendNackDelayMs{ 10u };
 
 	/* Instance methods. */
 
-	NackGenerator::NackGenerator(Listener* listener, uint64_t sendNackDelayMs)
-	  : listener(listener), rtt(DefaultRtt), sendNackDelayMs(sendNackDelayMs)
+	NackGenerator::NackGenerator(Listener* listener)
+	  : listener(listener), rtt(DefaultRtt)
 	{
 		MS_TRACE();
 
@@ -75,9 +76,11 @@ namespace RTC
 				  packet->GetSequenceNumber(),
 				  isRecovered ? "true" : "false");
 
+				uint8_t retries = it->second.retries;
+
 				this->nackList.erase(it);
 
-				if (it->second.retries != 0)
+				if(retries != 0)
 					return true;
 				else
 					return false;
@@ -230,7 +233,7 @@ namespace RTC
 			NackInfo& nackInfo = it->second;
 			uint16_t seq       = nackInfo.seq;
 
-			if (nowMs - nackInfo.createAtMs < this->sendNackDelayMs)
+			if (nowMs - nackInfo.createAtMs < SendNackDelayMs)
 			{
 				++it;
 				continue;
