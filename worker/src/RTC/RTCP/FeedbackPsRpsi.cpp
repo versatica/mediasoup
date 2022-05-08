@@ -46,7 +46,7 @@ namespace RTC
 			  length <= FeedbackPsRpsiItem::maxBitStringSize,
 			  "rpsi bit string length exceeds the maximum value");
 
-			this->raw    = new uint8_t[sizeof(Header)];
+			this->raw    = new uint8_t[HeaderSize];
 			this->header = reinterpret_cast<Header*>(this->raw);
 
 			// 32 bits padding.
@@ -59,7 +59,7 @@ namespace RTC
 			// Fill padding.
 			for (size_t i{ 0 }; i < padding; ++i)
 			{
-				this->raw[sizeof(Header) + i - 1] = 0;
+				this->raw[HeaderSize + i - 1] = 0;
 			}
 		}
 
@@ -67,9 +67,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::memcpy(buffer, this->header, sizeof(Header));
+			std::memcpy(buffer, this->header, HeaderSize);
 
-			return sizeof(Header);
+			return HeaderSize;
 		}
 
 		void FeedbackPsRpsiItem::Dump() const

@@ -209,7 +209,7 @@ namespace RTC
 
 		// Update info about last Sender Report.
 		this->lastSenderReportNtpMs = nowMs;
-		this->lastSenderReporTs     = this->maxPacketTs + diffTs;
+		this->lastSenderReportTs    = this->maxPacketTs + diffTs;
 
 		return report;
 	}

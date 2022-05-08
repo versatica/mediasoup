@@ -1,6 +1,71 @@
 # Changelog
 
-# Unreleased
+### WIP
+
+* Update worker dependencies:
+  * OpenSSL 3.0.2.
+  * abseil-cpp 20211102.0.
+  * nlohmann_json 3.10.5.
+  * usrsctp snapshot 4e06feb01cadcd127d119486b98a4bd3d64aa1e7.
+  * wingetopt 1.00.
+
+# 0.9.3
+
+* Fix a segfaults in tests and under multithreaded executor
+* Fix another racy deadlock situation
+* Expose hierarchical dependencies of ownership of Rust data structures, now it is possible to call `consumer.transport().router().worker().worker_manager()`
+* General mediasoup changes:
+  * ICE renomination support (PR #756).
+  * Update `libuv` to 1.43.0.
+  * TCC client optimizations for faster and more stable BWE (PR #712 by @ggarber).
+  * Added support for RTP abs-capture-time header (PR #761 by @oto313).
+  * Fix VP9 kSVC forwarding logic to not forward lower unneded layers (PR #778 by @ggarber).
+  * Fix update bandwidth estimation configuration and available bitrate when updating max outgoing bitrate (PR #779 by @ggarber).
+  * Optimize RTP header extension handling (PR #786).
+  * `RateCalculator`: Reset optimization (PR #785).
+  * Fix frozen video due to double call to `Consumer::UserOnTransportDisconnected()` (PR #788, thanks to @ggarber for exposing this issue in PR #787).
+
+# 0.9.2
+
+* Update `lru` dependency to fix security vulnerability
+
+# 0.9.1
+
+* Fix cleanup of build artifacts
+* Make `Transport` implement `Send`
+* Another fix to rare deadlock
+* Improved Windows support (doesn't require MSVS activation)
+
+# 0.9.0
+
+* Fix for receiving data over payload channel
+* Support thread initializer function for worker threads, can be used for pinning worker threads to CPU cores
+* Significant worker communication optimizations (especially latency)
+* Switch from file descriptors to function calls when communicating with worker
+* Various optimizations that caused minor breaking changes to public API
+* Requests no longer have internal timeout, but they can now be cancelled, add your own timeouts on top if needed
+* Windows support
+* General mediasoup changes:
+  * Replaces GYP build system with fully-functional Meson build system (PR #622).
+  * `Consumer`: Modification of bitrate allocation algorithm (PR #708).
+  * Single H264/H265 codec configuration in `supportedRtpCapabilities` (PR #718).
+
+# 0.8.5
+
+* Fix types for `round_trip_time` and `bitrate_by_layer` fields `ProducerStat` and `ConsumerStat`
+* Accumulation of worker fixes
+
+# 0.8.4
+
+* Add Active Speaker Observer to prelude
+* Fix consumers preventing producers from being closed (regression introduced in 0.8.3)
+
+# 0.8.3
+
+* prelude module containing traits and structs that should be sufficient for most basic mediasoup-based apps
+* Dominant Speaker Event (PR #603 by @SteveMcFarlin).
+
+### 0.8.2
 
 * Support for optional fixed port on transports
 

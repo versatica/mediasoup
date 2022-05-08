@@ -21,7 +21,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		std::map<Type, std::string> Packet::type2String =
+		absl::flat_hash_map<Type, std::string> Packet::type2String =
 		{
 			{ Type::SR,    "SR"    },
 			{ Type::RR,    "RR"    },
@@ -213,7 +213,7 @@ namespace RTC
 			this->header->packetType = static_cast<uint8_t>(GetType());
 			this->header->length     = uint16_t{ htons(length) };
 
-			return sizeof(CommonHeader);
+			return CommonHeaderSize;
 		}
 	} // namespace RTCP
 } // namespace RTC

@@ -58,7 +58,7 @@ namespace RTC
 			}
 			size_t GetSize() const override
 			{
-				size_t size = sizeof(Packet::CommonHeader);
+				size_t size = Packet::CommonHeaderSize;
 
 				size += ssrcs.size() * 4u;
 

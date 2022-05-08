@@ -1,0 +1,23 @@
+[wrap-file]
+directory = abseil-cpp-20211102.0
+source_url = https://github.com/abseil/abseil-cpp/archive/20211102.0.tar.gz
+source_filename = abseil-cpp-20211102.0.tar.gz
+source_hash = dcf71b9cba8dc0ca9940c4b316a0c796be8fab42b070bb6b7cab62b48f0e66c4
+patch_filename = abseil-cpp_20211102.0-2_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/abseil-cpp_20211102.0-2/get_patch
+patch_hash = 9463930367b0db984435350c7d7614e400faa8811a7e9a2def5a63ff39fdb325
+
+[provide]
+absl_base = absl_base_dep
+absl_container = absl_container_dep
+absl_debugging = absl_debugging_dep
+absl_flags = absl_flags_dep
+absl_hash = absl_hash_dep
+absl_numeric = absl_numeric_dep
+absl_random = absl_random_dep
+absl_status = absl_status_dep
+absl_strings = absl_strings_dep
+absl_synchronization = absl_synchronization_dep
+absl_time = absl_time_dep
+absl_types = absl_types_dep
+

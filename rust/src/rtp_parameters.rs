@@ -17,13 +17,15 @@ use std::num::{NonZeroU32, NonZeroU8};
 /// Codec specific parameters. Some parameters (such as `packetization-mode` and `profile-level-id`
 /// in H264 or `profile-id` in VP9) are critical for codec matching.
 #[derive(Debug, Default, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
-pub struct RtpCodecParametersParameters(BTreeMap<String, RtpCodecParametersParametersValue>);
+pub struct RtpCodecParametersParameters(
+    BTreeMap<Cow<'static, str>, RtpCodecParametersParametersValue>,
+);
 
 impl RtpCodecParametersParameters {
     /// Insert another parameter into collection.
     pub fn insert<K, V>(&mut self, key: K, value: V) -> &mut Self
     where
-        K: Into<String>,
+        K: Into<Cow<'static, str>>,
         V: Into<RtpCodecParametersParametersValue>,
     {
         self.0.insert(key.into(), value.into());
@@ -31,10 +33,10 @@ impl RtpCodecParametersParameters {
     }
 
     /// Iterate over parameters in collection.
-    #[must_use]
     pub fn iter(
         &self,
-    ) -> std::collections::btree_map::Iter<'_, String, RtpCodecParametersParametersValue> {
+    ) -> std::collections::btree_map::Iter<'_, Cow<'static, str>, RtpCodecParametersParametersValue>
+    {
         self.0.iter()
     }
 
@@ -48,28 +50,29 @@ impl RtpCodecParametersParameters {
 impl<K, const N: usize> From<[(K, RtpCodecParametersParametersValue); N]>
     for RtpCodecParametersParameters
 where
-    K: Into<String>,
+    K: Into<Cow<'static, str>>,
 {
     fn from(array: [(K, RtpCodecParametersParametersValue); N]) -> Self {
-        std::array::IntoIter::new(array).collect()
+        IntoIterator::into_iter(array).collect()
     }
 }
 
 impl IntoIterator for RtpCodecParametersParameters {
-    type Item = (String, RtpCodecParametersParametersValue);
+    type Item = (Cow<'static, str>, RtpCodecParametersParametersValue);
     type IntoIter =
-        std::collections::btree_map::IntoIter<String, RtpCodecParametersParametersValue>;
+        std::collections::btree_map::IntoIter<Cow<'static, str>, RtpCodecParametersParametersValue>;
 
     fn into_iter(
         self,
-    ) -> std::collections::btree_map::IntoIter<String, RtpCodecParametersParametersValue> {
+    ) -> std::collections::btree_map::IntoIter<Cow<'static, str>, RtpCodecParametersParametersValue>
+    {
         self.0.into_iter()
     }
 }
 
 impl<K> Extend<(K, RtpCodecParametersParametersValue)> for RtpCodecParametersParameters
 where
-    K: Into<String>,
+    K: Into<Cow<'static, str>>,
 {
     fn extend<T: IntoIterator<Item = (K, RtpCodecParametersParametersValue)>>(&mut self, iter: T) {
         iter.into_iter().for_each(|(k, v)| {
@@ -80,7 +83,7 @@ where
 
 impl<K> FromIterator<(K, RtpCodecParametersParametersValue)> for RtpCodecParametersParameters
 where
-    K: Into<String>,
+    K: Into<Cow<'static, str>>,
 {
     fn from_iter<T: IntoIterator<Item = (K, RtpCodecParametersParametersValue)>>(iter: T) -> Self {
         Self(iter.into_iter().map(|(k, v)| (k.into(), v)).collect())
@@ -214,6 +217,9 @@ pub enum MimeTypeAudio {
     /// Opus
     #[serde(rename = "audio/opus")]
     Opus,
+    /// Multi-channel Opus (Surround sound in Chromium)
+    #[serde(rename = "audio/multiopus")]
+    MultiChannelOpus,
     /// PCMU
     #[serde(rename = "audio/PCMU")]
     Pcmu,
@@ -426,6 +432,9 @@ pub enum RtpHeaderExtensionUri {
     /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")]
     AbsSendTime,
+    /// http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time
+    #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time")]
+    AbsCaptureTime,
     #[doc(hidden)]
     #[serde(other, rename = "unsupported")]
     Unsupported,
@@ -453,6 +462,9 @@ impl RtpHeaderExtensionUri {
             }
             RtpHeaderExtensionUri::AbsSendTime => {
                 "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time"
+            }
+            RtpHeaderExtensionUri::AbsCaptureTime => {
+                "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time"
             }
             RtpHeaderExtensionUri::Unsupported => "unsupported",
         }
@@ -535,20 +547,26 @@ pub struct RtpParameters {
 #[serde(untagged)]
 pub enum RtpCodecParametersParametersValue {
     /// String value
-    String(String),
+    String(Cow<'static, str>),
     /// Numerical value
     Number(u32),
 }
 
-impl From<String> for RtpCodecParametersParametersValue {
-    fn from(s: String) -> Self {
+impl From<Cow<'static, str>> for RtpCodecParametersParametersValue {
+    fn from(s: Cow<'static, str>) -> Self {
         Self::String(s)
     }
 }
 
-impl From<&str> for RtpCodecParametersParametersValue {
-    fn from(s: &str) -> Self {
-        Self::String(s.to_string())
+impl From<String> for RtpCodecParametersParametersValue {
+    fn from(s: String) -> Self {
+        Self::String(s.into())
+    }
+}
+
+impl From<&'static str> for RtpCodecParametersParametersValue {
+    fn from(s: &'static str) -> Self {
+        Self::String(s.into())
     }
 }
 

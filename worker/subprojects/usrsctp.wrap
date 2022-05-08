@@ -1,0 +1,8 @@
+[wrap-file]
+directory = usrsctp-4e06feb01cadcd127d119486b98a4bd3d64aa1e7
+source_url = https://github.com/sctplab/usrsctp/archive/4e06feb01cadcd127d119486b98a4bd3d64aa1e7.zip
+source_filename = 4e06feb01cadcd127d119486b98a4bd3d64aa1e7.zip
+source_hash = 15f7844c4c4ca93228ae0fe844182c72edd1d809b461cb97b1bb687a804dd4fc
+
+[provide]
+usrsctp = usrsctp_dep

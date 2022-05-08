@@ -1,5 +1,6 @@
 use crate::data_structures::AppData;
 use crate::producer::{Producer, ProducerId};
+use crate::router::Router;
 use crate::uuid_based_wrapper_type;
 use crate::worker::RequestError;
 use async_trait::async_trait;
@@ -30,11 +31,15 @@ impl RtpObserverAddProducerOptions {
 ///
 /// mediasoup implements the following RTP observers:
 /// * [`AudioLevelObserver`](crate::audio_level_observer::AudioLevelObserver)
-#[async_trait(?Send)]
+/// * [`ActiveSpeakerObserver`](crate::active_speaker_observer::ActiveSpeakerObserver)
+#[async_trait]
 pub trait RtpObserver {
     /// RtpObserver id.
     #[must_use]
     fn id(&self) -> RtpObserverId;
+
+    /// Router to which RTP observer belongs.
+    fn router(&self) -> &Router;
 
     /// Whether the RtpObserver is paused.
     #[must_use]

@@ -1,9 +1,12 @@
+use async_executor::Executor;
 use async_io::Timer;
 use futures_lite::future;
+use hash_hasher::{HashedMap, HashedSet};
 use mediasoup::consumer::{
     ConsumableRtpEncoding, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType,
 };
 use mediasoup::data_structures::{AppData, TransportListenIp};
+use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{Router, RouterOptions};
 use mediasoup::rtp_parameters::{
@@ -14,17 +17,16 @@ use mediasoup::rtp_parameters::{
     RtpParameters,
 };
 use mediasoup::scalability_modes::ScalabilityMode;
-use mediasoup::transport::{ConsumeError, Transport, TransportGeneric};
+use mediasoup::transport::ConsumeError;
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use parking_lot::Mutex;
-use std::collections::{HashMap, HashSet};
-use std::env;
 use std::num::{NonZeroU32, NonZeroU8};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+use std::{env, thread};
 
 struct ProducerAppData {
     _foo: i32,
@@ -283,7 +285,44 @@ fn consumer_device_capabilities() -> RtpCapabilities {
     }
 }
 
-async fn init() -> (Worker, Router, WebRtcTransport, WebRtcTransport) {
+// Keeps executor threads running until dropped
+struct ExecutorGuard(Vec<async_oneshot::Sender<()>>);
+
+fn create_executor() -> (ExecutorGuard, Arc<Executor<'static>>) {
+    let executor = Arc::new(Executor::new());
+    let thread_count = 4;
+
+    let senders = (0..thread_count)
+        .map(|_| {
+            let (tx, rx) = async_oneshot::oneshot::<()>();
+
+            thread::Builder::new()
+                .name("ex-mediasoup-worker".into())
+                .spawn({
+                    let executor = Arc::clone(&executor);
+
+                    move || {
+                        future::block_on(executor.run(async move {
+                            let _ = rx.await;
+                        }));
+                    }
+                })
+                .unwrap();
+
+            tx
+        })
+        .collect();
+
+    (ExecutorGuard(senders), executor)
+}
+
+async fn init() -> (
+    ExecutorGuard,
+    Worker,
+    Router,
+    WebRtcTransport,
+    WebRtcTransport,
+) {
     {
         let mut builder = env_logger::builder();
         if env::var(env_logger::DEFAULT_FILTER_ENV).is_err() {
@@ -292,7 +331,9 @@ async fn init() -> (Worker, Router, WebRtcTransport, WebRtcTransport) {
         let _ = builder.is_test(true).try_init();
     }
 
-    let worker_manager = WorkerManager::new();
+    let (executor_guard, executor) = create_executor();
+    // Use multi-threaded executor in this module as a regression test for the crashes we had before
+    let worker_manager = WorkerManager::with_executor(executor);
 
     let worker = worker_manager
         .create_worker(WorkerSettings::default())
@@ -320,13 +361,13 @@ async fn init() -> (Worker, Router, WebRtcTransport, WebRtcTransport) {
         .await
         .expect("Failed to create transport2");
 
-    (worker, router, transport_1, transport_2)
+    (executor_guard, worker, router, transport_1, transport_2)
 }
 
 #[test]
 fn consume_succeeds() {
     future::block_on(async move {
-        let (_worker, router, transport_1, transport_2) = init().await;
+        let (_executor_guard, _worker, router, transport_1, transport_2) = init().await;
 
         let audio_producer = transport_1
             .produce(audio_producer_options())
@@ -349,7 +390,7 @@ fn consume_succeeds() {
             .on_new_consumer({
                 let new_consumer_count = Arc::clone(&new_consumer_count);
 
-                Box::new(move |_consumer| {
+                Arc::new(move |_consumer| {
                     new_consumer_count.fetch_add(1, Ordering::SeqCst);
                 })
             })
@@ -420,13 +461,13 @@ fn consume_succeeds() {
             let router_dump = router.dump().await.expect("Failed to get router dump");
 
             assert_eq!(router_dump.map_producer_id_consumer_ids, {
-                let mut map = HashMap::new();
+                let mut map = HashedMap::default();
                 map.insert(audio_producer.id(), {
-                    let mut set = HashSet::new();
+                    let mut set = HashedSet::default();
                     set.insert(audio_consumer.id());
                     set
                 });
-                map.insert(video_producer.id(), HashSet::new());
+                map.insert(video_producer.id(), HashedSet::default());
                 map
             });
 
@@ -524,14 +565,14 @@ fn consume_succeeds() {
             let router_dump = router.dump().await.expect("Failed to get router dump");
 
             assert_eq!(router_dump.map_producer_id_consumer_ids, {
-                let mut map = HashMap::new();
+                let mut map = HashedMap::default();
                 map.insert(audio_producer.id(), {
-                    let mut set = HashSet::new();
+                    let mut set = HashedSet::default();
                     set.insert(audio_consumer.id());
                     set
                 });
                 map.insert(video_producer.id(), {
-                    let mut set = HashSet::new();
+                    let mut set = HashedSet::default();
                     set.insert(video_consumer.id());
                     set
                 });
@@ -619,14 +660,14 @@ fn consume_succeeds() {
             let router_dump = router.dump().await.expect("Failed to get router dump");
 
             assert_eq!(router_dump.map_producer_id_consumer_ids, {
-                let mut map = HashMap::new();
+                let mut map = HashedMap::default();
                 map.insert(audio_producer.id(), {
-                    let mut set = HashSet::new();
+                    let mut set = HashedSet::default();
                     set.insert(audio_consumer.id());
                     set
                 });
                 map.insert(video_producer.id(), {
-                    let mut set = HashSet::new();
+                    let mut set = HashedSet::default();
                     set.insert(video_consumer.id());
                     set.insert(video_pipe_consumer.id());
                     set
@@ -656,7 +697,7 @@ fn consume_succeeds() {
 #[test]
 fn consumer_with_user_defined_mid() {
     future::block_on(async move {
-        let (_worker, _router, transport_1, transport_2) = init().await;
+        let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
 
         let producer_1 = transport_1
             .produce(audio_producer_options())
@@ -709,7 +750,7 @@ fn consumer_with_user_defined_mid() {
 #[test]
 fn weak() {
     future::block_on(async move {
-        let (_worker, _router, transport_1, transport_2) = init().await;
+        let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
 
         let producer = transport_1
             .produce(audio_producer_options())
@@ -739,7 +780,7 @@ fn weak() {
 #[test]
 fn consume_incompatible_rtp_capabilities() {
     future::block_on(async move {
-        let (_worker, router, transport_1, transport_2) = init().await;
+        let (_executor_guard, _worker, router, transport_1, transport_2) = init().await;
 
         let audio_producer = transport_1
             .produce(audio_producer_options())
@@ -802,7 +843,7 @@ fn consume_incompatible_rtp_capabilities() {
 #[test]
 fn dump_succeeds() {
     future::block_on(async move {
-        let (_worker, _router, transport_1, transport_2) = init().await;
+        let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
 
         let audio_producer = transport_1
             .produce(audio_producer_options())
@@ -1047,7 +1088,7 @@ fn dump_succeeds() {
 #[test]
 fn get_stats_succeeds() {
     future::block_on(async move {
-        let (_worker, _router, transport_1, transport_2) = init().await;
+        let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
 
         let consumer_device_capabilities = consumer_device_capabilities();
 
@@ -1143,7 +1184,7 @@ fn get_stats_succeeds() {
 #[test]
 fn pause_resume_succeeds() {
     future::block_on(async move {
-        let (_worker, _router, transport_1, transport_2) = init().await;
+        let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
 
         let audio_producer = transport_1
             .produce(audio_producer_options())
@@ -1185,7 +1226,7 @@ fn pause_resume_succeeds() {
 #[test]
 fn set_preferred_layers_succeeds() {
     future::block_on(async move {
-        let (_worker, _router, transport_1, transport_2) = init().await;
+        let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
 
         let consumer_device_capabilities = consumer_device_capabilities();
 
@@ -1256,7 +1297,7 @@ fn set_preferred_layers_succeeds() {
 #[test]
 fn set_unset_priority_succeeds() {
     future::block_on(async move {
-        let (_worker, _router, transport_1, transport_2) = init().await;
+        let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
 
         let video_producer = transport_1
             .produce(video_producer_options())
@@ -1296,7 +1337,7 @@ fn set_unset_priority_succeeds() {
 #[test]
 fn producer_pause_resume_events() {
     future::block_on(async move {
-        let (_worker, _router, transport_1, transport_2) = init().await;
+        let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
 
         let audio_producer = transport_1
             .produce(audio_producer_options())
@@ -1354,7 +1395,7 @@ fn producer_pause_resume_events() {
 #[test]
 fn close_event() {
     future::block_on(async move {
-        let (_worker, router, transport_1, transport_2) = init().await;
+        let (_executor_guard, _worker, router, transport_1, transport_2) = init().await;
 
         let audio_producer = transport_1
             .produce(audio_producer_options())
@@ -1386,11 +1427,11 @@ fn close_event() {
             let dump = router.dump().await.expect("Failed to dump router");
 
             assert_eq!(dump.map_producer_id_consumer_ids, {
-                let mut map = HashMap::new();
-                map.insert(audio_producer.id(), HashSet::new());
+                let mut map = HashedMap::default();
+                map.insert(audio_producer.id(), HashedSet::default());
                 map
             });
-            assert_eq!(dump.map_consumer_id_producer_id, HashMap::new());
+            assert_eq!(dump.map_consumer_id_producer_id, HashedMap::default());
         }
 
         {
@@ -1399,44 +1440,5 @@ fn close_event() {
             assert_eq!(dump.producer_ids, vec![]);
             assert_eq!(dump.consumer_ids, vec![]);
         }
-    });
-}
-
-#[test]
-fn producer_close_event() {
-    future::block_on(async move {
-        let (_worker, _router, transport_1, transport_2) = init().await;
-
-        let audio_producer = transport_1
-            .produce(audio_producer_options())
-            .await
-            .expect("Failed to produce audio");
-
-        let audio_consumer = transport_2
-            .consume(ConsumerOptions::new(
-                audio_producer.id(),
-                consumer_device_capabilities(),
-            ))
-            .await
-            .expect("Failed to consume audio");
-
-        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_consumer.on_close(move || {
-            let _ = close_tx.send(());
-        });
-
-        let (mut producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = audio_consumer.on_producer_close(move || {
-            let _ = producer_close_tx.send(());
-        });
-        drop(audio_producer);
-
-        producer_close_rx
-            .await
-            .expect("Failed to receive producer_close event");
-
-        close_rx.await.expect("Failed to receive close event");
-
-        assert_eq!(audio_consumer.closed(), true);
     });
 }

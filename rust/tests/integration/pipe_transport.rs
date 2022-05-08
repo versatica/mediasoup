@@ -4,6 +4,7 @@ use mediasoup::data_consumer::{DataConsumerOptions, DataConsumerType};
 use mediasoup::data_producer::{DataProducerOptions, DataProducerType};
 use mediasoup::data_structures::{AppData, TransportListenIp};
 use mediasoup::pipe_transport::{PipeTransportOptions, PipeTransportRemoteParameters};
+use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{
     PipeDataProducerToRouterPair, PipeProducerToRouterPair, PipeToRouterOptions, Router,
@@ -17,7 +18,6 @@ use mediasoup::rtp_parameters::{
 };
 use mediasoup::sctp_parameters::SctpStreamParameters;
 use mediasoup::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
-use mediasoup::transport::Transport;
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
@@ -317,11 +317,18 @@ fn pipe_to_router_succeeds_with_audio() {
         );
         assert_eq!(
             pipe_consumer.rtp_parameters().header_extensions,
-            vec![RtpHeaderExtensionParameters {
-                uri: RtpHeaderExtensionUri::AudioLevel,
-                id: 10,
-                encrypt: false,
-            }],
+            vec![
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::AudioLevel,
+                    id: 10,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
+                    id: 13,
+                    encrypt: false,
+                }
+            ],
         );
         assert_eq!(pipe_consumer.r#type(), ConsumerType::Pipe);
         assert_eq!(pipe_consumer.paused(), false);
@@ -355,11 +362,18 @@ fn pipe_to_router_succeeds_with_audio() {
         );
         assert_eq!(
             pipe_producer.rtp_parameters().header_extensions,
-            vec![RtpHeaderExtensionParameters {
-                uri: RtpHeaderExtensionUri::AudioLevel,
-                id: 10,
-                encrypt: false,
-            }],
+            vec![
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::AudioLevel,
+                    id: 10,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
+                    id: 13,
+                    encrypt: false,
+                }
+            ],
         );
         assert_eq!(pipe_producer.paused(), false);
     });
@@ -457,6 +471,11 @@ fn pipe_to_router_succeeds_with_video() {
                     id: 12,
                     encrypt: false,
                 },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
+                    id: 13,
+                    encrypt: false,
+                },
             ],
         );
         assert_eq!(pipe_consumer.r#type(), ConsumerType::Pipe);
@@ -507,6 +526,11 @@ fn pipe_to_router_succeeds_with_video() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::TimeOffset,
                     id: 12,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
+                    id: 13,
                     encrypt: false,
                 },
             ],
@@ -649,6 +673,11 @@ fn create_with_enable_rtx_succeeds() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::TimeOffset,
                     id: 12,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::AbsCaptureTime,
+                    id: 13,
                     encrypt: false,
                 },
             ],
@@ -920,45 +949,6 @@ fn producer_pause_resume_are_transmitted_to_pipe_consumer() {
 }
 
 #[test]
-fn producer_close_is_transmitted_to_pipe_consumer() {
-    future::block_on(async move {
-        let (_worker, router1, router2, transport1, transport2) = init().await;
-
-        let video_producer = transport1
-            .produce(video_producer_options())
-            .await
-            .expect("Failed to produce video");
-
-        router1
-            .pipe_producer_to_router(
-                video_producer.id(),
-                PipeToRouterOptions::new(router2.clone()),
-            )
-            .await
-            .expect("Failed to pipe video producer to router");
-
-        let video_consumer = transport2
-            .consume(ConsumerOptions::new(
-                video_producer.id(),
-                consumer_device_capabilities(),
-            ))
-            .await
-            .expect("Failed to consume video");
-
-        let (mut producer_close_tx, producer_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = video_consumer.on_producer_close(move || {
-            let _ = producer_close_tx.send(());
-        });
-
-        drop(video_producer);
-
-        producer_close_rx
-            .await
-            .expect("Failed to receive producer close event");
-    });
-}
-
-#[test]
 fn pipe_to_router_succeeds_with_data() {
     future::block_on(async move {
         let (_worker, router1, router2, transport1, _transport2) = init().await;
@@ -1066,42 +1056,6 @@ fn data_consume_for_pipe_data_producer_succeeds() {
         }
         assert_eq!(data_consumer.label().as_str(), "foo");
         assert_eq!(data_consumer.protocol().as_str(), "bar");
-    });
-}
-
-#[test]
-fn data_producer_close_is_transmitted_to_pipe_data_consumer() {
-    future::block_on(async move {
-        let (_worker, router1, router2, transport1, transport2) = init().await;
-
-        let data_producer = transport1
-            .produce_data(data_producer_options())
-            .await
-            .expect("Failed to produce data");
-
-        router1
-            .pipe_data_producer_to_router(
-                data_producer.id(),
-                PipeToRouterOptions::new(router2.clone()),
-            )
-            .await
-            .expect("Failed to pipe data producer to router");
-
-        let data_consumer = transport2
-            .consume_data(DataConsumerOptions::new_sctp(data_producer.id()))
-            .await
-            .expect("Failed to create data consumer");
-
-        let (mut data_producer_close_tx, data_producer_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = data_consumer.on_data_producer_close(move || {
-            let _ = data_producer_close_tx.send(());
-        });
-
-        drop(data_producer);
-
-        data_producer_close_rx
-            .await
-            .expect("Failed to receive data producer close event");
     });
 }
 

@@ -1,0 +1,5 @@
+[wrap-file]
+directory = wingetopt-1.00
+source_url = https://github.com/alex85k/wingetopt/archive/v1.00.zip
+source_filename = wingetopt-1.00.zip
+source_hash = 4454ca03a59702a4ca4d1488ca8fa6168b0c8d77dc739a6fe2825c3dd8609d87

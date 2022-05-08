@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RtpPacket.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 

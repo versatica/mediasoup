@@ -1,0 +1,14 @@
+[wrap-file]
+directory = openssl-3.0.2
+source_url = https://www.openssl.org/source/openssl-3.0.2.tar.gz
+source_filename = openssl-3.0.2.tar.gz
+source_hash = 98e91ccead4d4756ae3c9cde5e09191a8e586d9f4d50838e7ec09d6411dfdb63
+patch_filename = openssl_3.0.2-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/openssl_3.0.2-1/get_patch
+patch_hash = 762ab4ea94d02178d6a1d3eb63409c2c4d61315d358391cdac62df15211174d4
+
+[provide]
+libcrypto = libcrypto_dep
+libssl = libssl_dep
+openssl = openssl_dep
+

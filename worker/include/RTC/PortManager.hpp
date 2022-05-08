@@ -3,10 +3,10 @@
 
 #include "common.hpp"
 #include "Settings.hpp"
-#include <json.hpp>
 #include <uv.h>
+#include <absl/container/flat_hash_map.h>
+#include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace RTC
@@ -54,8 +54,8 @@ namespace RTC
 		static std::vector<bool>& GetPorts(Transport transport, const std::string& ip);
 
 	private:
-		thread_local static std::unordered_map<std::string, std::vector<bool>> mapUdpIpPorts;
-		thread_local static std::unordered_map<std::string, std::vector<bool>> mapTcpIpPorts;
+		thread_local static absl::flat_hash_map<std::string, std::vector<bool>> mapUdpIpPorts;
+		thread_local static absl::flat_hash_map<std::string, std::vector<bool>> mapTcpIpPorts;
 	};
 } // namespace RTC
 

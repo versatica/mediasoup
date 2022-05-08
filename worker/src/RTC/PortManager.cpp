@@ -26,8 +26,8 @@ namespace RTC
 {
 	/* Class variables. */
 
-	thread_local std::unordered_map<std::string, std::vector<bool>> PortManager::mapUdpIpPorts;
-	thread_local std::unordered_map<std::string, std::vector<bool>> PortManager::mapTcpIpPorts;
+	thread_local absl::flat_hash_map<std::string, std::vector<bool>> PortManager::mapUdpIpPorts;
+	thread_local absl::flat_hash_map<std::string, std::vector<bool>> PortManager::mapTcpIpPorts;
 
 	/* Class methods. */
 
@@ -429,7 +429,7 @@ namespace RTC
 					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
 
 					MS_THROW_ERROR(
-					  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ": %s",
+					  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
 					  transportStr.c_str(),
 					  ip.c_str(),
 					  port,

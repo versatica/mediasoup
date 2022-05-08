@@ -60,7 +60,7 @@ namespace RTC
 		int16_t FeedbackRtpTransportPacket::maxPacketDelta{ 0x7FFF };
 
 		// clang-format off
-		std::map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::status2String =
+		absl::flat_hash_map<FeedbackRtpTransportPacket::Status, std::string> FeedbackRtpTransportPacket::status2String =
 		{
 			{ FeedbackRtpTransportPacket::Status::NotReceived, "NR" },
 			{ FeedbackRtpTransportPacket::Status::SmallDelta,  "SD" },
@@ -74,7 +74,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (len < sizeof(CommonHeader) + sizeof(FeedbackPacket::Header) + FeedbackRtpTransportPacket::fixedHeaderSize)
+			if (len < Packet::CommonHeaderSize + FeedbackPacket::HeaderSize + FeedbackRtpTransportPacket::fixedHeaderSize)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 
@@ -112,8 +112,8 @@ namespace RTC
 			}
 
 			// Make data point to the packet specific info.
-			auto* data = reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader) +
-			             sizeof(FeedbackPacket::Header);
+			auto* data = reinterpret_cast<uint8_t*>(commonHeader) + Packet::CommonHeaderSize +
+			             FeedbackPacket::HeaderSize;
 
 			this->baseSequenceNumber  = Utils::Byte::Get2Bytes(data, 0);
 			this->packetStatusCount   = Utils::Byte::Get2Bytes(data, 2);
@@ -124,7 +124,7 @@ namespace RTC
 			// Make contentData point to the beginning of the chunks.
 			uint8_t* contentData = data + FeedbackRtpTransportPacket::fixedHeaderSize;
 			// Make contentLen be the available length for chunks.
-			size_t contentLen = len - sizeof(CommonHeader) - sizeof(FeedbackPacket::Header) -
+			size_t contentLen = len - Packet::CommonHeaderSize - FeedbackPacket::HeaderSize -
 			                    FeedbackRtpTransportPacket::fixedHeaderSize;
 			size_t offset{ 0u };
 			uint16_t count{ 0u };

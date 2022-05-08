@@ -1,1 +1,0 @@
-{"version":3,"file":"EnhancedEventEmitter.d.ts","sourceRoot":"","sources":["../src/EnhancedEventEmitter.ts"],"names":[],"mappings":";AAAA,OAAO,EAAE,YAAY,EAAE,MAAM,QAAQ,CAAC;AAKtC,qBAAa,oBAAqB,SAAQ,YAAY;;IAQrD,QAAQ,CAAC,KAAK,EAAE,MAAM,EAAE,GAAG,IAAI,EAAE,GAAG,EAAE,GAAG,OAAO;IAkB1C,iBAAiB,CAAC,KAAK,EAAE,MAAM,EAAE,GAAG,IAAI,EAAE,GAAG,EAAE,GAAG,OAAO,CAAC,GAAG,CAAC;CAkBpE"}

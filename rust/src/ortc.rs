@@ -1,9 +1,9 @@
 use crate::rtp_parameters::{
-    MediaKind, MimeType, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCapabilities,
-    RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized, RtpCodecParameters,
-    RtpCodecParametersParameters, RtpCodecParametersParametersValue, RtpEncodingParameters,
-    RtpEncodingParametersRtx, RtpHeaderExtensionDirection, RtpHeaderExtensionParameters,
-    RtpHeaderExtensionUri, RtpParameters,
+    MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
+    RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized,
+    RtpCodecParameters, RtpCodecParametersParameters, RtpCodecParametersParametersValue,
+    RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtensionDirection,
+    RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
 };
 use crate::scalability_modes::ScalabilityMode;
 use crate::supported_rtp_capabilities;
@@ -57,7 +57,7 @@ pub struct RtpMapping {
 pub enum RtpParametersError {
     /// Invalid codec apt parameter.
     #[error("Invalid codec apt parameter {0}")]
-    InvalidAptParameter(String),
+    InvalidAptParameter(Cow<'static, str>),
 }
 
 /// Error caused by invalid RTP capabilities.
@@ -74,7 +74,7 @@ pub enum RtpCapabilitiesError {
     CannotAllocate,
     /// Invalid codec apt parameter.
     #[error("Invalid codec apt parameter {0}")]
-    InvalidAptParameter(String),
+    InvalidAptParameter(Cow<'static, str>),
     /// Duplicated preferred payload type
     #[error("Duplicated preferred payload type {0}")]
     DuplicatedPreferredPayloadType(u8),
@@ -135,7 +135,7 @@ pub(crate) fn validate_rtp_parameters(
 fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpParametersError> {
     for (key, value) in codec.parameters().iter() {
         // Specific parameters validation.
-        if key.as_str() == "apt" {
+        if key.as_ref() == "apt" {
             match value {
                 RtpCodecParametersParametersValue::Number(_) => {
                     // Good
@@ -154,7 +154,7 @@ fn validate_rtp_codec_parameters(codec: &RtpCodecParameters) -> Result<(), RtpPa
 fn validate_rtp_codec_capability(codec: &RtpCodecCapability) -> Result<(), RtpCapabilitiesError> {
     for (key, value) in codec.parameters().iter() {
         // Specific parameters validation.
-        if key.as_str() == "apt" {
+        if key.as_ref() == "apt" {
             match value {
                 RtpCodecParametersParametersValue::Number(_) => {
                     // Good
@@ -371,7 +371,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
         // Search for the associated media codec.
         let associated_media_codec = rtp_parameters.codecs.iter().find(|media_codec| {
             let media_codec_payload_type = media_codec.payload_type();
-            let codec_parameters_apt = codec.parameters().get(&"apt".to_string());
+            let codec_parameters_apt = codec.parameters().get("apt");
 
             match codec_parameters_apt {
                 Some(RtpCodecParametersParametersValue::Number(apt)) => {
@@ -391,7 +391,7 @@ pub(crate) fn get_producer_rtp_parameters_mapping(
                         return false;
                     }
 
-                    let cap_codec_parameters_apt = cap_codec.parameters().get(&"apt".to_string());
+                    let cap_codec_parameters_apt = cap_codec.parameters().get("apt");
                     match cap_codec_parameters_apt {
                         Some(RtpCodecParametersParametersValue::Number(apt)) => {
                             u32::from(cap_media_codec.preferred_payload_type()) == *apt
@@ -513,7 +513,7 @@ pub(crate) fn get_consumable_rtp_parameters(
                 return false;
             }
 
-            let cap_rtx_codec_parameters_apt = cap_rtx_codec.parameters().get(&"apt".to_string());
+            let cap_rtx_codec_parameters_apt = cap_rtx_codec.parameters().get("apt");
 
             match cap_rtx_codec_parameters_apt {
                 Some(RtpCodecParametersParametersValue::Number(apt)) => {
@@ -614,7 +614,7 @@ pub(crate) fn can_consume(
     consumable_params: &RtpParameters,
     caps: &RtpCapabilities,
 ) -> Result<bool, RtpCapabilitiesError> {
-    validate_rtp_capabilities(&caps)?;
+    validate_rtp_capabilities(caps)?;
 
     let mut matching_codecs = Vec::<&RtpCodecParameters>::new();
 
@@ -984,28 +984,42 @@ fn match_codecs(
     }
     // Per codec special checks.
     match codec_a.mime_type {
-        MimeType::Video(MimeTypeVideo::H264) => {
-            let packetization_mode_a = codec_a
-                .parameters
-                .get("packetization-mode")
-                .unwrap_or(&RtpCodecParametersParametersValue::Number(0));
-            let packetization_mode_b = codec_b
-                .parameters
-                .get("packetization-mode")
-                .unwrap_or(&RtpCodecParametersParametersValue::Number(0));
+        MimeType::Audio(MimeTypeAudio::MultiChannelOpus) => {
+            let num_streams_a = codec_a.parameters.get("num_streams");
+            let num_streams_b = codec_b.parameters.get("num_streams");
 
-            if packetization_mode_a != packetization_mode_b {
+            if num_streams_a != num_streams_b {
                 return Err(());
             }
 
-            // If strict matching check profile-level-id.
+            let coupled_streams_a = codec_a.parameters.get("coupled_streams");
+            let coupled_streams_b = codec_b.parameters.get("coupled_streams");
+
+            if coupled_streams_a != coupled_streams_b {
+                return Err(());
+            }
+        }
+        MimeType::Video(MimeTypeVideo::H264) => {
             if strict {
+                let packetization_mode_a = codec_a
+                    .parameters
+                    .get("packetization-mode")
+                    .unwrap_or(&RtpCodecParametersParametersValue::Number(0));
+                let packetization_mode_b = codec_b
+                    .parameters
+                    .get("packetization-mode")
+                    .unwrap_or(&RtpCodecParametersParametersValue::Number(0));
+
+                if packetization_mode_a != packetization_mode_b {
+                    return Err(());
+                }
+
                 let profile_level_id_a =
                     codec_a
                         .parameters
                         .get("profile-level-id")
                         .and_then(|p| match p {
-                            RtpCodecParametersParametersValue::String(s) => Some(s.as_str()),
+                            RtpCodecParametersParametersValue::String(s) => Some(s.as_ref()),
                             RtpCodecParametersParametersValue::Number(_) => None,
                         });
                 let profile_level_id_b =
@@ -1013,7 +1027,7 @@ fn match_codecs(
                         .parameters
                         .get("profile-level-id")
                         .and_then(|p| match p {
-                            RtpCodecParametersParametersValue::String(s) => Some(s.as_str()),
+                            RtpCodecParametersParametersValue::String(s) => Some(s.as_ref()),
                             RtpCodecParametersParametersValue::Number(_) => None,
                         });
 
@@ -1054,7 +1068,6 @@ fn match_codecs(
                 };
             }
         }
-
         MimeType::Video(MimeTypeVideo::Vp9) => {
             // If strict matching check profile-id.
             if strict {

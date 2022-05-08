@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackItem.hpp"
 #include "RTC/RTCP/Packet.hpp"
+#include <absl/container/flat_hash_map.h>
 
 namespace RTC
 {
@@ -21,12 +22,13 @@ namespace RTC
 			};
 
 		public:
+			static const size_t HeaderSize{ 8 };
 			static RTCP::Type rtcpType;
 			static FeedbackPacket<T>* Parse(const uint8_t* data, size_t len);
 			static const std::string& MessageType2String(typename T::MessageType type);
 
 		private:
-			static std::map<typename T::MessageType, std::string> type2String;
+			static absl::flat_hash_map<typename T::MessageType, std::string> type2String;
 
 		public:
 			typename T::MessageType GetMessageType() const
@@ -60,7 +62,7 @@ namespace RTC
 			}
 			size_t GetSize() const override
 			{
-				return sizeof(CommonHeader) + sizeof(Header);
+				return Packet::CommonHeaderSize + HeaderSize;
 			}
 
 		protected:

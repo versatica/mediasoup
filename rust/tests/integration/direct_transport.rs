@@ -1,15 +1,15 @@
-use bytes::Bytes;
 use futures_lite::future;
+use hash_hasher::HashedSet;
 use mediasoup::data_consumer::DataConsumerOptions;
 use mediasoup::data_producer::{DataProducer, DataProducerOptions};
 use mediasoup::data_structures::{AppData, WebRtcMessage};
 use mediasoup::direct_transport::{DirectTransport, DirectTransportOptions};
+use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
-use mediasoup::transport::{Transport, TransportGeneric};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use parking_lot::Mutex;
-use std::collections::HashSet;
+use std::borrow::Cow;
 use std::env;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -56,7 +56,7 @@ fn create_succeeds() {
             let dump = router.dump().await.expect("Failed to dump router");
 
             assert_eq!(dump.transport_ids, {
-                let mut set = HashSet::new();
+                let mut set = HashedSet::default();
                 set.insert(transport.id());
                 set
             });
@@ -150,6 +150,8 @@ fn get_stats_succeeds() {
         assert_eq!(stats[0].rtx_send_bitrate, 0);
         assert_eq!(stats[0].probation_bytes_sent, 0);
         assert_eq!(stats[0].probation_send_bitrate, 0);
+        assert_eq!(stats[0].rtp_packet_loss_received, None);
+        assert_eq!(stats[0].rtp_packet_loss_sent, None);
     });
 }
 
@@ -238,14 +240,13 @@ fn send_succeeds() {
                 sent_message_bytes += content.len();
                 WebRtcMessage::String(content)
             } else {
-                let content = Bytes::from(id.to_string().into_bytes());
+                let content = id.to_string().into_bytes();
                 sent_message_bytes += content.len();
-                WebRtcMessage::Binary(content)
+                WebRtcMessage::Binary(Cow::from(content))
             };
 
             direct_data_producer
                 .send(message)
-                .await
                 .expect("Failed to send message");
 
             if id == num_messages {

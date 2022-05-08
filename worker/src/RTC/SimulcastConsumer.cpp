@@ -13,7 +13,6 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint8_t StreamGoodScore{ 5u };
 	static constexpr uint64_t StreamMinActiveMs{ 2000u };           // In ms.
 	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u }; // In ms.
 	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };     // In ms.
@@ -444,7 +443,7 @@ namespace RTC
 			auto* producerRtpStream = this->producerRtpStreams.at(spatialLayer);
 
 			// Producer stream does not exist or it's not good. Ignore.
-			if (!producerRtpStream || producerRtpStream->GetScore() < StreamGoodScore)
+			if (!producerRtpStream)
 				continue;
 
 			// If the stream has not been active time enough and we have an active one
@@ -754,9 +753,14 @@ namespace RTC
 				// https://en.wikipedia.org/wiki/Audio-to-video_synchronization#Recommendations
 				static const uint32_t MaxExtraOffsetMs{ 75u };
 
+				// Outgoing packet matches the highest timestamp seen in the previous stream.
+				// Apply an expected offset for a new frame in a 30fps stream.
+				static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
+
 				int64_t maxTsExtraOffset = MaxExtraOffsetMs * this->rtpStream->GetClockRate() / 1000;
-				uint32_t tsExtraOffset =
-				  this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() + tsOffset;
+
+				uint32_t tsExtraOffset = this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() +
+				                         tsOffset + MsOffset * this->rtpStream->GetClockRate() / 1000;
 
 				// NOTE: Don't ask for a key frame if already done.
 				if (this->keyFrameForTsOffsetRequested)
@@ -787,15 +791,6 @@ namespace RTC
 
 					return;
 				}
-				// It's common that, when switching spatial layer, the resulting TS for the
-				// outgoing packet matches the highest seen in the previous stream. Fix it.
-				else if (tsExtraOffset == 0u)
-				{
-					// Apply an expected offset for a new frame in a 30fps stream.
-					static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
-
-					tsExtraOffset = MsOffset * this->rtpStream->GetClockRate() / 1000;
-				}
 
 				if (tsExtraOffset > 0u)
 				{
@@ -813,13 +808,20 @@ namespace RTC
 			this->tsOffset = tsOffset;
 
 			// Sync our RTP stream's sequence number.
-			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
+			// If previous frame has not been sent completely when we switch layer, we can tell
+			// libwebrtc that previous frame is incomplete by skipping one RTP sequence number.
+			// 'packet->GetSequenceNumber() -2' may increase SeqManager::base and increase the
+			// output sequence number.
+			// https://github.com/versatica/mediasoup/issues/408
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - (this->lastSentPacketHasMarker ? 1 : 2));
 
 			this->encodingContext->SyncRequired();
 
 			this->syncRequired                 = false;
 			this->keyFrameForTsOffsetRequested = false;
 		}
+
+		bool marker{ false };
 
 		if (shouldSwitchCurrentSpatialLayer)
 		{
@@ -840,14 +842,14 @@ namespace RTC
 			EmitScore();
 
 			// Rewrite payload if needed.
-			packet->ProcessPayload(this->encodingContext.get());
+			packet->ProcessPayload(this->encodingContext.get(), marker);
 		}
 		else
 		{
 			auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
 
 			// Rewrite payload if needed. Drop packet if necessary.
-			if (!packet->ProcessPayload(this->encodingContext.get()))
+			if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 			{
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
@@ -891,6 +893,9 @@ namespace RTC
 		// Process the packet.
 		if (this->rtpStream->ReceivePacket(packet))
 		{
+			if (this->rtpSeqManager.GetMaxOutput() == packet->GetSequenceNumber())
+				this->lastSentPacketHasMarker = packet->HasMarker();
+
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
 
@@ -1251,7 +1256,6 @@ namespace RTC
 		newTargetSpatialLayer  = -1;
 		newTargetTemporalLayer = -1;
 
-		uint8_t maxProducerScore{ 0u };
 		auto nowMs = DepLibUV::GetTimeMs();
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
@@ -1291,17 +1295,10 @@ namespace RTC
 			if (!CanSwitchToSpatialLayer(spatialLayer))
 				continue;
 
-			// If the stream score is worse than the best seen and not good enough, ignore
-			// this stream.
-			if (producerScore < maxProducerScore && producerScore < StreamGoodScore)
-				continue;
-
 			newTargetSpatialLayer = spatialLayer;
-			maxProducerScore      = producerScore;
 
-			// If this is the preferred or higher spatial layer and has good score,
-			// take it and exit.
-			if (spatialLayer >= this->preferredSpatialLayer && producerScore >= StreamGoodScore)
+			// If this is the preferred or higher spatial layer take it and exit.
+			if (spatialLayer >= this->preferredSpatialLayer)
 				break;
 		}
 

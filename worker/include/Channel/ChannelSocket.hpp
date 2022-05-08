@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 namespace Channel
 {
@@ -31,8 +31,6 @@ namespace Channel
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		// Others.
-		size_t msgStart{ 0u }; // Where the latest message starts.
 	};
 
 	class ProducerSocket : public ::UnixStreamSocket
@@ -66,16 +64,22 @@ namespace Channel
 
 	public:
 		explicit ChannelSocket(int consumerFd, int producerFd);
+		explicit ChannelSocket(
+		  ChannelReadFn channelReadFn,
+		  ChannelReadCtx channelReadCtx,
+		  ChannelWriteFn channelWriteFn,
+		  ChannelWriteCtx channelWriteCtx);
 		virtual ~ChannelSocket();
 
 	public:
 		void Close();
 		void SetListener(Listener* listener);
+		bool CallbackRead();
 		void Send(json& jsonMessage);
-		void SendLog(char* message, size_t messageLen);
+		void SendLog(const char* message, uint32_t messageLen);
 
 	private:
-		void SendImpl(const void* nsPayload, size_t nsPayloadLen);
+		void SendImpl(const uint8_t* payload, uint32_t payloadLen);
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
@@ -87,9 +91,14 @@ namespace Channel
 		Listener* listener{ nullptr };
 		// Others.
 		bool closed{ false };
-		ConsumerSocket consumerSocket;
-		ProducerSocket producerSocket;
-		uint8_t* writeBuffer;
+		ConsumerSocket* consumerSocket{ nullptr };
+		ProducerSocket* producerSocket{ nullptr };
+		ChannelReadFn channelReadFn{ nullptr };
+		ChannelReadCtx channelReadCtx{ nullptr };
+		ChannelWriteFn channelWriteFn{ nullptr };
+		ChannelWriteCtx channelWriteCtx{ nullptr };
+		uv_async_t* uvReadHandle{ nullptr };
+		uint8_t* writeBuffer{ nullptr };
 	};
 } // namespace Channel
 

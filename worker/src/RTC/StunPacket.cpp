@@ -209,6 +209,23 @@ namespace RTC
 					break;
 				}
 
+				case Attribute::NOMINATION:
+				{
+					// Ensure attribute length is 4 bytes.
+					if (attrLength != 4)
+					{
+						MS_WARN_TAG(ice, "attribute NOMINATION must be 4 bytes length, packet discarded");
+
+						delete packet;
+						return nullptr;
+					}
+
+					packet->SetHasNomination();
+					packet->SetNomination(Utils::Byte::Get4Bytes(attrValuePos, 0));
+
+					break;
+				}
+
 				case Attribute::MESSAGE_INTEGRITY:
 				{
 					// Ensure attribute length is 20 bytes.
@@ -444,7 +461,7 @@ namespace RTC
 			Utils::Byte::Set2Bytes(this->data, 2, static_cast<uint16_t>(this->size - 20 - 8));
 
 		// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
-		const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHmacShA1(
+		const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHmacSha1(
 		  localPassword, this->data, (this->messageIntegrity - 4) - this->data);
 
 		Authentication result;
@@ -747,7 +764,7 @@ namespace RTC
 
 			// Calculate the HMAC-SHA1 of the packet according to MESSAGE-INTEGRITY rules.
 			const uint8_t* computedMessageIntegrity =
-			  Utils::Crypto::GetHmacShA1(this->password, buffer, pos);
+			  Utils::Crypto::GetHmacSha1(this->password, buffer, pos);
 
 			Utils::Byte::Set2Bytes(buffer, pos, static_cast<uint16_t>(Attribute::MESSAGE_INTEGRITY));
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 20);

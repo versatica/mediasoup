@@ -45,8 +45,8 @@ namespace RTC
 		FeedbackPacket<T>::FeedbackPacket(CommonHeader* commonHeader)
 		  : Packet(commonHeader), messageType(typename T::MessageType(commonHeader->count))
 		{
-			this->header =
-			  reinterpret_cast<Header*>(reinterpret_cast<uint8_t*>(commonHeader) + sizeof(CommonHeader));
+			this->header = reinterpret_cast<Header*>(
+			  reinterpret_cast<uint8_t*>(commonHeader) + Packet::CommonHeaderSize);
 		}
 
 		template<typename T>
@@ -54,7 +54,7 @@ namespace RTC
 		  typename T::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc)
 		  : Packet(rtcpType), messageType(messageType)
 		{
-			this->raw                = new uint8_t[sizeof(Header)];
+			this->raw                = new uint8_t[HeaderSize];
 			this->header             = reinterpret_cast<Header*>(this->raw);
 			this->header->senderSsrc = uint32_t{ htonl(senderSsrc) };
 			this->header->mediaSsrc  = uint32_t{ htonl(mediaSsrc) };
@@ -76,9 +76,9 @@ namespace RTC
 			size_t offset = Packet::Serialize(buffer);
 
 			// Copy the header.
-			std::memcpy(buffer + offset, this->header, sizeof(Header));
+			std::memcpy(buffer + offset, this->header, HeaderSize);
 
-			return offset + sizeof(Header);
+			return offset + HeaderSize;
 		}
 
 		template<typename T>
@@ -98,7 +98,7 @@ namespace RTC
 
 		// clang-format off
 		template<>
-		std::map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String =
+		absl::flat_hash_map<FeedbackPs::MessageType, std::string> FeedbackPacket<FeedbackPs>::type2String =
 		{
 			{ FeedbackPs::MessageType::PLI,   "PLI"   },
 			{ FeedbackPs::MessageType::SLI,   "SLI"   },
@@ -119,7 +119,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (len < sizeof(CommonHeader) + sizeof(FeedbackPacket::Header))
+			if (len < Packet::CommonHeaderSize + FeedbackPacket::HeaderSize)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 
@@ -188,7 +188,7 @@ namespace RTC
 
 		// clang-format off
 		template<>
-		std::map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String =
+		absl::flat_hash_map<FeedbackRtp::MessageType, std::string> FeedbackPacket<FeedbackRtp>::type2String =
 		{
 			{ FeedbackRtp::MessageType::NACK,   "NACK"   },
 			{ FeedbackRtp::MessageType::TMMBR,  "TMMBR"  },
@@ -210,7 +210,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (len < sizeof(CommonHeader) + sizeof(FeedbackPacket::Header))
+			if (len < Packet::CommonHeaderSize + FeedbackPacket::HeaderSize)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for Feedback packet, discarded");
 

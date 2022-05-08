@@ -8,7 +8,7 @@
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <cstdlib> // std::getenv()
 
 int main(int argc, char* argv[])

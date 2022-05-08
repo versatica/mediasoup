@@ -2,32 +2,78 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "PayloadChannel/PayloadChannelSocket.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include <cmath>   // std::ceil()
 #include <cstdio>  // sprintf()
 #include <cstring> // std::memcpy(), std::memmove()
-extern "C"
-{
-#include <netstring.h>
-}
 
 namespace PayloadChannel
 {
 	/* Static. */
+	inline static void onAsync(uv_handle_t* handle)
+	{
+		while (static_cast<PayloadChannelSocket*>(handle->data)->CallbackRead())
+		{
+			// Read while there are new messages.
+		}
+	}
 
-	// netstring length for a 4194304 bytes payload.
-	static constexpr size_t NsMessageMaxLen{ 4194313 };
-	static constexpr size_t NsPayloadMaxLen{ 4194304 };
+	inline static void onClose(uv_handle_t* handle)
+	{
+		delete handle;
+	}
+
+	// Binary length for a 4194304 bytes payload.
+	static constexpr size_t MessageMaxLen{ 4194308 };
+	static constexpr size_t PayloadMaxLen{ 4194304 };
 
 	/* Instance methods. */
 	PayloadChannelSocket::PayloadChannelSocket(int consumerFd, int producerFd)
-	  : consumerSocket(consumerFd, NsMessageMaxLen, this), producerSocket(producerFd, NsMessageMaxLen)
+	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
+	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen)),
+	    writeBuffer(static_cast<uint8_t*>(std::malloc(MessageMaxLen)))
+	{
+		MS_TRACE();
+	}
+
+	PayloadChannelSocket::PayloadChannelSocket(
+	  PayloadChannelReadFn payloadChannelReadFn,
+	  PayloadChannelReadCtx payloadChannelReadCtx,
+	  PayloadChannelWriteFn payloadChannelWriteFn,
+	  PayloadChannelWriteCtx payloadChannelWriteCtx)
+	  : payloadChannelReadFn(payloadChannelReadFn), payloadChannelReadCtx(payloadChannelReadCtx),
+	    payloadChannelWriteFn(payloadChannelWriteFn), payloadChannelWriteCtx(payloadChannelWriteCtx)
 	{
 		MS_TRACE();
 
-		this->writeBuffer = (uint8_t*)std::malloc(NsMessageMaxLen);
+		int err;
+
+		this->uvReadHandle       = new uv_async_t;
+		this->uvReadHandle->data = static_cast<void*>(this);
+
+		err =
+		  uv_async_init(DepLibUV::GetLoop(), this->uvReadHandle, reinterpret_cast<uv_async_cb>(onAsync));
+
+		if (err != 0)
+		{
+			delete this->uvReadHandle;
+			this->uvReadHandle = nullptr;
+
+			MS_THROW_ERROR("uv_async_init() failed: %s", uv_strerror(err));
+		}
+
+		err = uv_async_send(this->uvReadHandle);
+
+		if (err != 0)
+		{
+			delete this->uvReadHandle;
+			this->uvReadHandle = nullptr;
+
+			MS_THROW_ERROR("uv_async_send() failed: %s", uv_strerror(err));
+		}
 	}
 
 	PayloadChannelSocket::~PayloadChannelSocket()
@@ -39,6 +85,9 @@ namespace PayloadChannel
 
 		if (!this->closed)
 			Close();
+
+		delete this->consumerSocket;
+		delete this->producerSocket;
 	}
 
 	void PayloadChannelSocket::Close()
@@ -50,8 +99,20 @@ namespace PayloadChannel
 
 		this->closed = true;
 
-		this->consumerSocket.Close();
-		this->producerSocket.Close();
+		if (this->uvReadHandle)
+		{
+			uv_close(reinterpret_cast<uv_handle_t*>(this->uvReadHandle), static_cast<uv_close_cb>(onClose));
+		}
+
+		if (this->consumerSocket)
+		{
+			this->consumerSocket->Close();
+		}
+
+		if (this->producerSocket)
+		{
+			this->producerSocket->Close();
+		}
 	}
 
 	void PayloadChannelSocket::SetListener(Listener* listener)
@@ -70,21 +131,24 @@ namespace PayloadChannel
 
 		std::string message = jsonMessage.dump();
 
-		if (message.length() > NsPayloadMaxLen)
+		if (message.length() > PayloadMaxLen)
 		{
-			MS_ERROR("mesage too big");
+			MS_ERROR("message too big");
 
 			return;
 		}
-		else if (payloadLen > NsPayloadMaxLen)
+		else if (payloadLen > PayloadMaxLen)
 		{
 			MS_ERROR("payload too big");
 
 			return;
 		}
 
-		SendImpl(message.c_str(), message.length());
-		SendImpl(payload, payloadLen);
+		SendImpl(
+		  reinterpret_cast<const uint8_t*>(message.c_str()),
+		  static_cast<uint32_t>(message.length()),
+		  payload,
+		  static_cast<uint32_t>(payloadLen));
 	}
 
 	void PayloadChannelSocket::Send(json& jsonMessage)
@@ -96,40 +160,173 @@ namespace PayloadChannel
 
 		std::string message = jsonMessage.dump();
 
-		if (message.length() > NsPayloadMaxLen)
+		if (message.length() > PayloadMaxLen)
 		{
-			MS_ERROR_STD("mesage too big");
+			MS_ERROR_STD("message too big");
 
 			return;
 		}
 
-		SendImpl(message.c_str(), message.length());
+		SendImpl(
+		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
 	}
 
-	inline void PayloadChannelSocket::SendImpl(const void* nsPayload, size_t nsPayloadLen)
+	bool PayloadChannelSocket::CallbackRead()
 	{
 		MS_TRACE();
 
-		size_t nsNumLen;
+		if (this->closed)
+			return false;
 
-		if (nsPayloadLen == 0)
+		uint8_t* message{ nullptr };
+		uint32_t messageLen;
+		size_t messageCtx;
+
+		uint8_t* payload{ nullptr };
+		uint32_t payloadLen;
+		size_t payloadCapacity;
+
+		auto free = this->payloadChannelReadFn(
+		  &message,
+		  &messageLen,
+		  &messageCtx,
+		  &payload,
+		  &payloadLen,
+		  &payloadCapacity,
+		  this->uvReadHandle,
+		  this->payloadChannelReadCtx);
+
+		if (free)
 		{
-			nsNumLen             = 1;
-			this->writeBuffer[0] = '0';
-			this->writeBuffer[1] = ':';
-			this->writeBuffer[2] = ',';
+			try
+			{
+				json jsonData = json::parse(message, message + static_cast<size_t>(messageLen));
+
+				if (PayloadChannelRequest::IsRequest(jsonData))
+				{
+					try
+					{
+						auto* request = new PayloadChannel::PayloadChannelRequest(this, jsonData);
+						request->SetPayload(payload, payloadLen);
+
+						// Notify the listener.
+						try
+						{
+							this->listener->OnPayloadChannelRequest(this, request);
+						}
+						catch (const MediaSoupTypeError& error)
+						{
+							request->TypeError(error.what());
+						}
+						catch (const MediaSoupError& error)
+						{
+							request->Error(error.what());
+						}
+
+						// Delete the Request.
+						delete request;
+					}
+					catch (const json::parse_error& error)
+					{
+						MS_ERROR_STD("JSON parsing error: %s", error.what());
+					}
+					catch (const MediaSoupError& error)
+					{
+						MS_ERROR("discarding wrong Payload Channel notification");
+					}
+				}
+
+				else if (Notification::IsNotification(jsonData))
+				{
+					try
+					{
+						auto* notification = new PayloadChannel::Notification(jsonData);
+						notification->SetPayload(payload, payloadLen);
+
+						// Notify the listener.
+						try
+						{
+							this->listener->OnPayloadChannelNotification(this, notification);
+						}
+						catch (const MediaSoupError& error)
+						{
+							MS_ERROR("notification failed: %s", error.what());
+						}
+
+						// Delete the Notification.
+						delete notification;
+					}
+					catch (const json::parse_error& error)
+					{
+						MS_ERROR_STD("JSON parsing error: %s", error.what());
+					}
+					catch (const MediaSoupError& error)
+					{
+						MS_ERROR("discarding wrong Payload Channel notification");
+					}
+				}
+
+				else
+				{
+					MS_ERROR("discarding wrong Payload Channel data");
+				}
+			}
+			catch (const json::parse_error& error)
+			{
+				MS_ERROR("JSON parsing error: %s", error.what());
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR("discarding wrong Channel request");
+			}
+
+			free(message, messageLen, messageCtx);
+			free(payload, payloadLen, payloadCapacity);
+		}
+
+		return free != nullptr;
+	}
+
+	inline void PayloadChannelSocket::SendImpl(const uint8_t* message, uint32_t messageLen)
+	{
+		MS_TRACE();
+
+		// Write using function call if provided.
+		if (this->payloadChannelWriteFn)
+		{
+			this->payloadChannelWriteFn(message, messageLen, nullptr, 0, this->payloadChannelWriteCtx);
 		}
 		else
 		{
-			nsNumLen = static_cast<size_t>(std::ceil(std::log10(static_cast<double>(nsPayloadLen) + 1)));
-			std::sprintf(reinterpret_cast<char*>(this->writeBuffer), "%zu:", nsPayloadLen);
-			std::memcpy(this->writeBuffer + nsNumLen + 1, nsPayload, nsPayloadLen);
-			this->writeBuffer[nsNumLen + nsPayloadLen + 1] = ',';
+			std::memcpy(this->writeBuffer, &messageLen, sizeof(uint32_t));
+
+			if (messageLen != 0)
+			{
+				std::memcpy(this->writeBuffer + sizeof(uint32_t), message, messageLen);
+			}
+
+			size_t len = sizeof(uint32_t) + messageLen;
+
+			this->producerSocket->Write(this->writeBuffer, len);
 		}
+	}
 
-		size_t nsLen = nsNumLen + nsPayloadLen + 2;
+	inline void PayloadChannelSocket::SendImpl(
+	  const uint8_t* message, uint32_t messageLen, const uint8_t* payload, uint32_t payloadLen)
+	{
+		MS_TRACE();
 
-		this->producerSocket.Write(this->writeBuffer, nsLen);
+		// Write using function call if provided.
+		if (this->payloadChannelWriteFn)
+		{
+			this->payloadChannelWriteFn(
+			  message, messageLen, payload, payloadLen, this->payloadChannelWriteCtx);
+		}
+		else
+		{
+			SendImpl(message, messageLen);
+			SendImpl(payload, payloadLen);
+		}
 	}
 
 	void PayloadChannelSocket::OnConsumerSocketMessage(
@@ -144,8 +341,7 @@ namespace PayloadChannel
 			{
 				try
 				{
-					json jsonMessage     = json::parse(msg, msg + msgLen);
-					this->ongoingRequest = new PayloadChannel::PayloadChannelRequest(this, jsonMessage);
+					this->ongoingRequest = new PayloadChannel::PayloadChannelRequest(this, jsonData);
 				}
 				catch (const json::parse_error& error)
 				{
@@ -161,8 +357,7 @@ namespace PayloadChannel
 			{
 				try
 				{
-					json jsonMessage          = json::parse(msg, msg + msgLen);
-					this->ongoingNotification = new PayloadChannel::Notification(jsonMessage);
+					this->ongoingNotification = new PayloadChannel::Notification(jsonData);
 				}
 				catch (const json::parse_error& error)
 				{
@@ -232,20 +427,18 @@ namespace PayloadChannel
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
 	{
 		MS_TRACE();
-
-		this->readBuffer = static_cast<uint8_t*>(std::malloc(NsMessageMaxLen));
 	}
 
 	ConsumerSocket::~ConsumerSocket()
 	{
 		MS_TRACE();
-
-		std::free(this->readBuffer);
 	}
 
 	void ConsumerSocket::UserOnUnixStreamRead()
 	{
 		MS_TRACE();
+
+		size_t msgStart{ 0 };
 
 		// Be ready to parse more than a single message in a single chunk.
 		while (true)
@@ -253,119 +446,40 @@ namespace PayloadChannel
 			if (IsClosed())
 				return;
 
-			size_t readLen = this->bufferDataLen - this->msgStart;
-			char* msgStart = nullptr;
-			size_t msgLen;
-			int nsRet = netstring_read(
-			  reinterpret_cast<char*>(this->buffer + this->msgStart), readLen, &msgStart, &msgLen);
+			size_t readLen = this->bufferDataLen - msgStart;
 
-			if (nsRet != 0)
+			if (readLen < sizeof(uint32_t))
 			{
-				switch (nsRet)
-				{
-					case NETSTRING_ERROR_TOO_SHORT:
-					{
-						// Check if the buffer is full.
-						if (this->bufferDataLen == this->bufferSize)
-						{
-							// First case: the incomplete message does not begin at position 0 of
-							// the buffer, so move the incomplete message to the position 0.
-							if (this->msgStart != 0)
-							{
-								std::memmove(this->buffer, this->buffer + this->msgStart, readLen);
-								this->msgStart      = 0;
-								this->bufferDataLen = readLen;
-							}
-							// Second case: the incomplete message begins at position 0 of the buffer.
-							// The message is too big, so discard it.
-							else
-							{
-								MS_ERROR(
-								  "no more space in the buffer for the unfinished message being parsed, "
-								  "discarding it");
-
-								this->msgStart      = 0;
-								this->bufferDataLen = 0;
-							}
-						}
-
-						// Otherwise the buffer is not full, just wait.
-						return;
-					}
-
-					case NETSTRING_ERROR_TOO_LONG:
-					{
-						MS_ERROR("NETSTRING_ERROR_TOO_LONG");
-
-						break;
-					}
-
-					case NETSTRING_ERROR_NO_COLON:
-					{
-						MS_ERROR("NETSTRING_ERROR_NO_COLON");
-
-						break;
-					}
-
-					case NETSTRING_ERROR_NO_COMMA:
-					{
-						MS_ERROR("NETSTRING_ERROR_NO_COMMA");
-
-						break;
-					}
-
-					case NETSTRING_ERROR_LEADING_ZERO:
-					{
-						MS_ERROR("NETSTRING_ERROR_LEADING_ZERO");
-
-						break;
-					}
-
-					case NETSTRING_ERROR_NO_LENGTH:
-					{
-						MS_ERROR("NETSTRING_ERROR_NO_LENGTH");
-
-						break;
-					}
-				}
-
-				// Error, so reset and exit the parsing loop.
-				this->msgStart      = 0;
-				this->bufferDataLen = 0;
-
-				return;
+				// Incomplete data.
+				break;
 			}
 
-			// If here it means that msgStart points to the beginning of a message
-			// with msgLen bytes length, so recalculate readLen.
-			readLen =
-			  reinterpret_cast<const uint8_t*>(msgStart) - (this->buffer + this->msgStart) + msgLen + 1;
+			uint32_t msgLen;
+			// Read message length.
+			std::memcpy(&msgLen, this->buffer + msgStart, sizeof(uint32_t));
 
-			std::memcpy(this->readBuffer, msgStart, msgLen);
-			this->listener->OnConsumerSocketMessage(this, reinterpret_cast<char*>(this->readBuffer), msgLen);
-
-			// If there is no more space available in the buffer and that is because
-			// the latest parsed message filled it, then empty the full buffer.
-			if ((this->msgStart + readLen) == this->bufferSize)
+			if (readLen < sizeof(uint32_t) + static_cast<size_t>(msgLen))
 			{
-				this->msgStart      = 0;
-				this->bufferDataLen = 0;
-			}
-			// If there is still space in the buffer, set the beginning of the next
-			// parsing to the next position after the parsed message.
-			else
-			{
-				this->msgStart += readLen;
+				// Incomplete data.
+				break;
 			}
 
-			// If there is more data in the buffer after the parsed message
-			// then parse again. Otherwise break here and wait for more data.
-			if (this->bufferDataLen > this->msgStart)
-			{
-				continue;
-			}
+			this->listener->OnConsumerSocketMessage(
+			  this,
+			  reinterpret_cast<char*>(this->buffer + msgStart + sizeof(uint32_t)),
+			  static_cast<size_t>(msgLen));
 
-			break;
+			msgStart += sizeof(uint32_t) + static_cast<size_t>(msgLen);
+		}
+
+		if (msgStart != 0)
+		{
+			this->bufferDataLen = this->bufferDataLen - msgStart;
+
+			if (this->bufferDataLen != 0)
+			{
+				std::memmove(this->buffer, this->buffer + msgStart, this->bufferDataLen);
+			}
 		}
 	}
 

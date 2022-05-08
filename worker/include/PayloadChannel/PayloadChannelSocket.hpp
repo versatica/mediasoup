@@ -5,7 +5,7 @@
 #include "PayloadChannel/Notification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 namespace PayloadChannel
 {
@@ -34,10 +34,6 @@ namespace PayloadChannel
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
-		// Allocated by this.
-		uint8_t* readBuffer{ nullptr };
-		// Others.
-		size_t msgStart{ 0u }; // Where the latest message starts.
 	};
 
 	class ProducerSocket : public ::UnixStreamSocket
@@ -75,16 +71,24 @@ namespace PayloadChannel
 
 	public:
 		explicit PayloadChannelSocket(int consumerFd, int producerFd);
+		explicit PayloadChannelSocket(
+		  PayloadChannelReadFn payloadChannelReadFn,
+		  PayloadChannelReadCtx payloadChannelReadCtx,
+		  PayloadChannelWriteFn payloadChannelWriteFn,
+		  PayloadChannelWriteCtx payloadChannelWriteCtx);
 		virtual ~PayloadChannelSocket();
 
 	public:
 		void Close();
 		void SetListener(Listener* listener);
+		bool CallbackRead();
 		void Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen);
 		void Send(json& jsonMessage);
 
 	private:
-		void SendImpl(const void* nsPayload, size_t nsPayloadLen);
+		void SendImpl(const uint8_t* message, uint32_t messageLen);
+		void SendImpl(
+		  const uint8_t* message, uint32_t messageLen, const uint8_t* payload, uint32_t payloadLen);
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
 	public:
@@ -96,11 +100,16 @@ namespace PayloadChannel
 		Listener* listener{ nullptr };
 		// Others.
 		bool closed{ false };
-		ConsumerSocket consumerSocket;
-		ProducerSocket producerSocket;
+		ConsumerSocket* consumerSocket{ nullptr };
+		ProducerSocket* producerSocket{ nullptr };
+		PayloadChannelReadFn payloadChannelReadFn{ nullptr };
+		PayloadChannelReadCtx payloadChannelReadCtx{ nullptr };
+		PayloadChannelWriteFn payloadChannelWriteFn{ nullptr };
+		PayloadChannelWriteCtx payloadChannelWriteCtx{ nullptr };
 		PayloadChannel::Notification* ongoingNotification{ nullptr };
 		PayloadChannel::PayloadChannelRequest* ongoingRequest{ nullptr };
-		uint8_t* writeBuffer;
+		uv_async_t* uvReadHandle{ nullptr };
+		uint8_t* writeBuffer{ nullptr };
 	};
 } // namespace PayloadChannel
 

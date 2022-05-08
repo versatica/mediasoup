@@ -1,17 +1,17 @@
 use async_io::Timer;
 use futures_lite::future;
+use hash_hasher::{HashedMap, HashedSet};
 use mediasoup::data_consumer::{DataConsumerOptions, DataConsumerType};
 use mediasoup::data_producer::{DataProducer, DataProducerOptions};
 use mediasoup::data_structures::{AppData, TransportListenIp};
 use mediasoup::direct_transport::DirectTransportOptions;
 use mediasoup::plain_transport::PlainTransportOptions;
+use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
 use mediasoup::sctp_parameters::SctpStreamParameters;
-use mediasoup::transport::{Transport, TransportGeneric};
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
-use std::collections::{HashMap, HashSet};
 use std::env;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -105,7 +105,7 @@ fn consume_data_succeeds() {
             .on_new_data_consumer({
                 let new_data_consumer_count = Arc::clone(&new_data_consumer_count);
 
-                Box::new(move |_data_consumer| {
+                Arc::new(move |_data_consumer| {
                     new_data_consumer_count.fetch_add(1, Ordering::SeqCst);
                 })
             })
@@ -154,16 +154,16 @@ fn consume_data_succeeds() {
             let dump = router.dump().await.expect("Failed to dump router");
 
             assert_eq!(dump.map_data_producer_id_data_consumer_ids, {
-                let mut map = HashMap::new();
+                let mut map = HashedMap::default();
                 map.insert(data_producer.id(), {
-                    let mut set = HashSet::new();
+                    let mut set = HashedSet::default();
                     set.insert(data_consumer.id());
                     set
                 });
                 map
             });
             assert_eq!(dump.map_data_consumer_id_data_producer_id, {
-                let mut map = HashMap::new();
+                let mut map = HashedMap::default();
                 map.insert(data_consumer.id(), data_producer.id());
                 map
             });
@@ -316,7 +316,7 @@ fn consume_data_on_direct_transport_succeeds() {
             .on_new_data_consumer({
                 let new_data_consumer_count = Arc::clone(&new_data_consumer_count);
 
-                Box::new(move |_data_consumer| {
+                Arc::new(move |_data_consumer| {
                     new_data_consumer_count.fetch_add(1, Ordering::SeqCst);
                 })
             })
@@ -478,11 +478,14 @@ fn close_event() {
             let dump = router.dump().await.expect("Failed to dump router");
 
             assert_eq!(dump.map_data_producer_id_data_consumer_ids, {
-                let mut map = HashMap::new();
-                map.insert(data_producer.id(), HashSet::new());
+                let mut map = HashedMap::default();
+                map.insert(data_producer.id(), HashedSet::default());
                 map
             });
-            assert_eq!(dump.map_data_consumer_id_data_producer_id, HashMap::new());
+            assert_eq!(
+                dump.map_data_consumer_id_data_producer_id,
+                HashedMap::default()
+            );
         }
 
         {
@@ -491,59 +494,5 @@ fn close_event() {
             assert_eq!(dump.data_producer_ids, vec![]);
             assert_eq!(dump.data_consumer_ids, vec![]);
         }
-    });
-}
-
-#[test]
-fn data_producer_close_event() {
-    future::block_on(async move {
-        let (_worker, router, _transport1, data_producer) = init().await;
-
-        let transport2 = router
-            .create_plain_transport({
-                let mut transport_options = PlainTransportOptions::new(TransportListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
-                    announced_ip: None,
-                });
-
-                transport_options.enable_sctp = true;
-
-                transport_options
-            })
-            .await
-            .expect("Failed to create transport1");
-
-        let data_consumer = transport2
-            .consume_data({
-                let mut options = DataConsumerOptions::new_sctp_unordered_with_life_time(
-                    data_producer.id(),
-                    4000,
-                );
-
-                options.app_data = AppData::new(CustomAppData { baz: "LOL" });
-
-                options
-            })
-            .await
-            .expect("Failed to consume data");
-
-        let (mut close_tx, close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = data_consumer.on_close(move || {
-            let _ = close_tx.send(());
-        });
-
-        let (mut data_producer_close_tx, data_producer_close_rx) = async_oneshot::oneshot::<()>();
-        let _handler = data_consumer.on_data_producer_close(move || {
-            let _ = data_producer_close_tx.send(());
-        });
-        drop(data_producer);
-
-        data_producer_close_rx
-            .await
-            .expect("Failed to receive data_producer_close event");
-
-        close_rx.await.expect("Failed to receive close event");
-
-        assert_eq!(data_consumer.closed(), true);
     });
 }

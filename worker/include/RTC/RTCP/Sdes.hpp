@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "RTC/RTCP/Packet.hpp"
-#include <map>
 #include <string>
 #include <vector>
 
@@ -37,6 +36,7 @@ namespace RTC
 			};
 
 		public:
+			static const size_t HeaderSize = 2;
 			static SdesItem* Parse(const uint8_t* data, size_t len);
 			static const std::string& Type2String(SdesItem::Type type);
 
@@ -76,7 +76,7 @@ namespace RTC
 			std::unique_ptr<uint8_t[]> raw;
 
 		private:
-			static std::map<SdesItem::Type, std::string> type2String;
+			static absl::flat_hash_map<SdesItem::Type, std::string> type2String;
 		};
 
 		class SdesChunk
@@ -197,7 +197,7 @@ namespace RTC
 			}
 			size_t GetSize() const override
 			{
-				size_t size = sizeof(Packet::CommonHeader);
+				size_t size = Packet::CommonHeaderSize;
 
 				for (auto* chunk : this->chunks)
 				{

@@ -7,12 +7,17 @@ fn main() {
         return;
     }
 
-    let current_dir = std::env::current_dir()
-        .unwrap()
-        .into_os_string()
-        .into_string()
-        .unwrap();
+    // On Windows Rust always links against release version of MSVC runtime, thus requires Release
+    // build here.
+    let build_type = if cfg!(all(debug_assertions, not(windows))) {
+        "Debug"
+    } else {
+        "Release"
+    };
+
     let out_dir = env::var("OUT_DIR").unwrap();
+    // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`
+    let mediasoup_out_dir = format!("{}/out", out_dir.replace('\\', "/"));
 
     // Add C++ std lib
     #[cfg(target_os = "linux")]
@@ -54,128 +59,89 @@ fn main() {
     }
     #[cfg(target_os = "macos")]
     {
-        let clang_llvm_version = "clang+llvm-12.0.0-x86_64-apple-darwin";
-        let status = Command::new("curl")
-            .args(&[
-                "-L",
-                "-s",
-                "-O",
-                &format!("https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/{}.tar.xz", clang_llvm_version),
-            ])
-            .current_dir(&out_dir)
-            .status()
-            .expect("Failed to start");
+        let path = Command::new("xcrun")
+            .args(&["--show-sdk-path"])
+            .output()
+            .expect("Failed to start")
+            .stdout;
 
-        if !status.success() {
-            panic!("Failed to download libc++");
-        }
+        let libpath = format!(
+            "{}/usr/lib",
+            String::from_utf8(path)
+                .expect("Failed to decode path")
+                .trim()
+        );
+        println!("cargo:rustc-link-search={}", libpath);
+        println!("cargo:rustc-link-lib=dylib=c++");
+        println!("cargo:rustc-link-lib=dylib=c++abi");
+    }
+    #[cfg(target_os = "windows")]
+    {
+        // Nothing special is needed so far
+    }
 
-        let status = Command::new("tar")
-            .args(&[
-                "-xf",
-                &format!("{}.tar.xz", clang_llvm_version),
-                &format!("{}/lib/libc++.a", clang_llvm_version),
-                &format!("{}/lib/libc++abi.a", clang_llvm_version),
-            ])
-            .current_dir(&out_dir)
-            .status()
-            .expect("Failed to start");
-        if !status.success() {
-            panic!("Failed to download libc++");
-        }
+    // Build
+    if !Command::new("make")
+        .arg("libmediasoup-worker")
+        .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
+        .env("MEDIASOUP_BUILDTYPE", &build_type)
+        // Force forward slashes on Windows too, otherwise Meson thinks path is not absolute 🤷
+        .env("INSTALL_DIR", &out_dir.replace('\\', "/"))
+        .spawn()
+        .expect("Failed to start")
+        .wait()
+        .expect("Wasn't running")
+        .success()
+    {
+        panic!("Failed to build libmediasoup-worker")
+    }
 
-        for file in &["libc++.a", "libc++abi.a"] {
-            std::fs::copy(
-                format!("{}/{}/lib/{}", out_dir, clang_llvm_version, file),
-                format!("{}/{}", out_dir, file),
-            )
-            .unwrap_or_else(|_| {
+    #[cfg(target_os = "windows")]
+    {
+        let dot_a = format!("{}/libmediasoup-worker.a", out_dir);
+        let dot_lib = format!("{}/mediasoup-worker.lib", out_dir);
+
+        // Meson builds `libmediasoup-worker.a` on Windows instead of `*.lib` file under MinGW
+        if std::path::Path::new(&dot_a).exists() {
+            std::fs::copy(&dot_a, &dot_lib).unwrap_or_else(|error| {
                 panic!(
-                    "Failed to copy static library from {}/{}/lib/{} to {}/{}",
-                    out_dir, clang_llvm_version, file, out_dir, file
+                    "Failed to copy static library from {} to {}: {}",
+                    dot_a, dot_lib, error
                 )
             });
         }
 
-        std::fs::remove_file(format!("{}/{}.tar.xz", out_dir, clang_llvm_version))
-            .expect("Failed to remove downloaded clang+llvm archive");
-        std::fs::remove_dir_all(format!("{}/{}", out_dir, clang_llvm_version))
-            .expect("Failed to remove extracted clang+llvm files");
+        // These are required by libuv on Windows
+        println!("cargo:rustc-link-lib=psapi");
+        println!("cargo:rustc-link-lib=user32");
+        println!("cargo:rustc-link-lib=advapi32");
+        println!("cargo:rustc-link-lib=iphlpapi");
+        println!("cargo:rustc-link-lib=userenv");
+        println!("cargo:rustc-link-lib=ws2_32");
 
-        println!("cargo:rustc-link-lib=static=c++");
-        println!("cargo:rustc-link-lib=static=c++abi");
-    }
-    #[cfg(target_os = "windows")]
-    {
-        panic!("Building on Windows is not currently supported");
-        // TODO: Didn't bother, feel free to PR
+        // These are required by OpenSSL on Windows
+        println!("cargo:rustc-link-lib=ws2_32");
+        println!("cargo:rustc-link-lib=gdi32");
+        println!("cargo:rustc-link-lib=advapi32");
+        println!("cargo:rustc-link-lib=crypt32");
+        println!("cargo:rustc-link-lib=user32");
     }
 
-    // The build here is a bit awkward since we can't just specify custom target directory as
-    // openssl will fail to build with `make[1]: /bin/sh: Argument list too long` due to large
-    // number of files. So instead we build in place, copy files to out directory and then clean
-    // after ourselves
-    {
-        // Build
+    if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
+        // Clean
         if !Command::new("make")
-            .arg("libmediasoup-worker")
+            .arg("clean-all")
+            .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
             .spawn()
             .expect("Failed to start")
             .wait()
             .expect("Wasn't running")
             .success()
         {
-            panic!("Failed to build libmediasoup-worker")
-        }
-
-        for file in &[
-            "libnetstring.a",
-            "libuv.a",
-            "libopenssl.a",
-            "libsrtp.a",
-            "libusrsctp.a",
-            "libwebrtc.a",
-            "libmediasoup-worker.a",
-            "libabseil.a",
-            #[cfg(windows)]
-            "libgetopt.a",
-        ] {
-            std::fs::copy(
-                format!("{}/out/Release/{}", current_dir, file),
-                format!("{}/{}", out_dir, file),
-            )
-            .unwrap_or_else(|_| {
-                panic!(
-                    "Failed to copy static library from {}/out/Release/{} to {}/{}",
-                    current_dir, file, out_dir, file
-                )
-            });
-        }
-
-        if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
-            // Clean
-            if !Command::new("make")
-                .arg("clean-all")
-                .spawn()
-                .expect("Failed to start")
-                .wait()
-                .expect("Wasn't running")
-                .success()
-            {
-                panic!("Failed to clean libmediasoup-worker")
-            }
+            panic!("Failed to clean libmediasoup-worker")
         }
     }
 
-    println!("cargo:rustc-link-lib=static=netstring");
-    println!("cargo:rustc-link-lib=static=uv");
-    println!("cargo:rustc-link-lib=static=openssl");
-    println!("cargo:rustc-link-lib=static=srtp");
-    println!("cargo:rustc-link-lib=static=usrsctp");
-    println!("cargo:rustc-link-lib=static=webrtc");
     println!("cargo:rustc-link-lib=static=mediasoup-worker");
-    println!("cargo:rustc-link-lib=static=abseil");
-    #[cfg(windows)]
-    println!("cargo:rustc-link-lib=static=getopt");
     println!("cargo:rustc-link-search=native={}", out_dir);
 }

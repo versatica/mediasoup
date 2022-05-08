@@ -19,23 +19,31 @@
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
 #include <uv.h>
+#include <absl/container/flat_hash_map.h>
 #include <cerrno>
 #include <csignal>  // sigaction()
 #include <cstdlib>  // std::_Exit(), std::genenv()
 #include <iostream> // std::cerr, std::endl
-#include <map>
 #include <string>
 
 void IgnoreSignals();
 
-extern "C" int run_worker(
+extern "C" int mediasoup_worker_run(
   int argc,
   char* argv[],
   const char* version,
   int consumerChannelFd,
   int producerChannelFd,
   int payloadConsumeChannelFd,
-  int payloadProduceChannelFd)
+  int payloadProduceChannelFd,
+  ChannelReadFn channelReadFn,
+  ChannelReadCtx channelReadCtx,
+  ChannelWriteFn channelWriteFn,
+  ChannelWriteCtx channelWriteCtx,
+  PayloadChannelReadFn payloadChannelReadFn,
+  PayloadChannelReadCtx payloadChannelReadCtx,
+  PayloadChannelWriteFn payloadChannelWriteFn,
+  PayloadChannelWriteCtx payloadChannelWriteCtx)
 {
 	// Initialize libuv stuff (we need it for the Channel).
 	DepLibUV::ClassInit();
@@ -52,7 +60,15 @@ extern "C" int run_worker(
 
 	try
 	{
-		channel.reset(new Channel::ChannelSocket(consumerChannelFd, producerChannelFd));
+		if (channelReadFn)
+		{
+			channel.reset(
+			  new Channel::ChannelSocket(channelReadFn, channelReadCtx, channelWriteFn, channelWriteCtx));
+		}
+		else
+		{
+			channel.reset(new Channel::ChannelSocket(consumerChannelFd, producerChannelFd));
+		}
 	}
 	catch (const MediaSoupError& error)
 	{
@@ -66,8 +82,16 @@ extern "C" int run_worker(
 
 	try
 	{
-		payloadChannel.reset(
-		  new PayloadChannel::PayloadChannelSocket(payloadConsumeChannelFd, payloadProduceChannelFd));
+		if (payloadChannelReadFn)
+		{
+			payloadChannel.reset(new PayloadChannel::PayloadChannelSocket(
+			  payloadChannelReadFn, payloadChannelReadCtx, payloadChannelWriteFn, payloadChannelWriteCtx));
+		}
+		else
+		{
+			payloadChannel.reset(
+			  new PayloadChannel::PayloadChannelSocket(payloadConsumeChannelFd, payloadProduceChannelFd));
+		}
 	}
 	catch (const MediaSoupError& error)
 	{
@@ -186,7 +210,7 @@ void IgnoreSignals()
 	struct sigaction act; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 	// clang-format off
-	std::map<std::string, int> ignoredSignals =
+	absl::flat_hash_map<std::string, int> ignoredSignals =
 	{
 		{ "PIPE", SIGPIPE },
 		{ "HUP",  SIGHUP  },

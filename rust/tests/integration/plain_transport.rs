@@ -1,18 +1,18 @@
 use futures_lite::future;
+use hash_hasher::HashedSet;
 use mediasoup::data_structures::{
     AppData, SctpState, TransportListenIp, TransportProtocol, TransportTuple,
 };
 use mediasoup::plain_transport::{PlainTransportOptions, PlainTransportRemoteParameters};
+use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
 use mediasoup::rtp_parameters::{
     MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
 };
 use mediasoup::sctp_parameters::SctpParameters;
 use mediasoup::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
-use mediasoup::transport::{Transport, TransportGeneric};
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
-use std::collections::HashSet;
 use std::env;
 use std::net::IpAddr;
 use std::num::{NonZeroU32, NonZeroU8};
@@ -104,7 +104,7 @@ fn create_succeeds() {
 
             let router_dump = router.dump().await.expect("Failed to dump router");
             assert_eq!(router_dump.transport_ids, {
-                let mut set = HashSet::new();
+                let mut set = HashedSet::default();
                 set.insert(transport.id());
                 set
             });
@@ -411,6 +411,8 @@ fn get_stats_succeeds() {
         assert_eq!(stats[0].rtx_send_bitrate, 0);
         assert_eq!(stats[0].probation_bytes_sent, 0);
         assert_eq!(stats[0].probation_send_bitrate, 0);
+        assert_eq!(stats[0].rtp_packet_loss_received, None);
+        assert_eq!(stats[0].rtp_packet_loss_sent, None);
         assert!(matches!(
             stats[0].tuple,
             Some(TransportTuple::LocalOnly { .. }),

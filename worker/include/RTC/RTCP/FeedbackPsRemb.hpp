@@ -33,7 +33,8 @@ namespace RTC
 		{
 		public:
 			// 'R' 'E' 'M' 'B'.
-			static uint32_t uniqueIdentifier;
+			static const uint32_t UniqueIdentifier{ 0x52454D42 };
+			static const size_t UniqueIdentifierSize{ 4 };
 
 		public:
 			static FeedbackPsRembPacket* Parse(const uint8_t* data, size_t len);

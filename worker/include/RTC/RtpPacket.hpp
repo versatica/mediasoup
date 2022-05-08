@@ -4,8 +4,9 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-#include <json.hpp>
-#include <map>
+#include <absl/container/flat_hash_map.h>
+#include <array>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
@@ -74,8 +75,8 @@ namespace RTC
 		/* Struct for Two-Bytes extension. */
 		struct TwoBytesExtension
 		{
-			uint8_t id : 8;
-			uint8_t len : 8;
+			uint8_t id;
+			uint8_t len;
 			uint8_t value[1];
 		};
 
@@ -85,8 +86,8 @@ namespace RTC
 		{
 			GenericExtension(uint8_t id, uint8_t len, uint8_t* value) : id(id), len(len), value(value){};
 
-			uint8_t id : 8;
-			uint8_t len : 8;
+			uint8_t id;
+			uint8_t len;
 			uint8_t* value;
 		};
 
@@ -114,6 +115,7 @@ namespace RTC
 		};
 
 	public:
+		static const size_t HeaderSize{ 12 };
 		static bool IsRtp(const uint8_t* data, size_t len)
 		{
 			// NOTE: RtcpPacket::IsRtcp() must always be called before this method.
@@ -122,7 +124,7 @@ namespace RTC
 
 			// clang-format off
 			return (
-				(len >= sizeof(Header)) &&
+				(len >= HeaderSize) &&
 				// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
 				(data[0] > 127 && data[0] < 192) &&
 				// RTP Version must be 2.
@@ -472,9 +474,11 @@ namespace RTC
 			}
 			else if (HasOneByteExtensions())
 			{
-				auto it = this->mapOneByteExtensions.find(id);
+				if (id > 14)
+					return false;
 
-				return it != this->mapOneByteExtensions.end();
+				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
+				return this->oneByteExtensions[id - 1] != nullptr;
 			}
 			else if (HasTwoBytesExtensions())
 			{
@@ -507,12 +511,14 @@ namespace RTC
 			}
 			else if (HasOneByteExtensions())
 			{
-				auto it = this->mapOneByteExtensions.find(id);
-
-				if (it == this->mapOneByteExtensions.end())
+				if (id > 14)
 					return nullptr;
 
-				auto* extension = it->second;
+				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
+				auto* extension = this->oneByteExtensions[id - 1];
+
+				if (!extension)
+					return nullptr;
 
 				// In One-Byte extensions value length 0 means 1.
 				len = extension->len + 1;
@@ -596,7 +602,7 @@ namespace RTC
 			this->payloadDescriptorHandler.reset(payloadDescriptorHandler);
 		}
 
-		bool ProcessPayload(RTC::Codecs::EncodingContext* context);
+		bool ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker);
 
 		void RestorePayload();
 
@@ -610,8 +616,10 @@ namespace RTC
 		Header* header{ nullptr };
 		uint8_t* csrcList{ nullptr };
 		HeaderExtension* headerExtension{ nullptr };
-		std::map<uint8_t, OneByteExtension*> mapOneByteExtensions;
-		std::map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
+		// There might be up to 14 one-byte header extensions
+		// (https://datatracker.ietf.org/doc/html/rfc5285#section-4.2), use std::array.
+		std::array<OneByteExtension*, 14> oneByteExtensions;
+		absl::flat_hash_map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
 		uint8_t midExtensionId{ 0u };
 		uint8_t ridExtensionId{ 0u };
 		uint8_t rridExtensionId{ 0u };

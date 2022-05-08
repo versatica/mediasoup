@@ -139,7 +139,7 @@ struct Inner {
     payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
-    transport: Box<dyn Transport>,
+    transport: Arc<dyn Transport>,
     closed: AtomicBool,
     _on_transport_close_handler: Mutex<HandlerId>,
 }
@@ -163,19 +163,16 @@ impl Inner {
                 let channel = self.channel.clone();
                 let request = DataProducerCloseRequest {
                     internal: DataProducerInternal {
-                        router_id: self.transport.router_id(),
+                        router_id: self.transport.router().id(),
                         transport_id: self.transport.id(),
                         data_producer_id: self.id,
                     },
                 };
-                let transport = self.transport.clone();
                 self.executor
                     .spawn(async move {
                         if let Err(error) = channel.request(request).await {
                             error!("data producer closing failed on drop: {}", error);
                         }
-
-                        drop(transport);
                     })
                     .detach();
             }
@@ -276,7 +273,7 @@ impl DataProducer {
         channel: Channel,
         payload_channel: PayloadChannel,
         app_data: AppData,
-        transport: Box<dyn Transport>,
+        transport: Arc<dyn Transport>,
         direct: bool,
     ) -> Self {
         debug!("new()");
@@ -288,7 +285,8 @@ impl DataProducer {
             let inner_weak = Arc::clone(&inner_weak);
 
             Box::new(move || {
-                if let Some(inner) = inner_weak.lock().as_ref().and_then(Weak::upgrade) {
+                let maybe_inner = inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                if let Some(inner) = maybe_inner {
                     inner.handlers.transport_close.call_simple();
                     inner.close(false);
                 }
@@ -324,6 +322,11 @@ impl DataProducer {
     #[must_use]
     pub fn id(&self) -> DataProducerId {
         self.inner().id
+    }
+
+    /// Transport to which data producer belongs.
+    pub fn transport(&self) -> &Arc<dyn Transport> {
+        &self.inner().transport
     }
 
     /// The type of the data producer.
@@ -419,7 +422,7 @@ impl DataProducer {
     #[must_use]
     pub fn downgrade(&self) -> WeakDataProducer {
         WeakDataProducer {
-            inner: Arc::downgrade(&self.inner()),
+            inner: Arc::downgrade(self.inner()),
         }
     }
 
@@ -432,7 +435,7 @@ impl DataProducer {
 
     fn get_internal(&self) -> DataProducerInternal {
         DataProducerInternal {
-            router_id: self.inner().transport.router_id(),
+            router_id: self.inner().transport.router().id(),
             transport_id: self.inner().transport.id(),
             data_producer_id: self.inner().id,
         }
@@ -440,24 +443,21 @@ impl DataProducer {
 }
 
 impl DirectDataProducer {
-    /// Sends direct messages from the Rust process.
-    pub async fn send(&self, message: WebRtcMessage) -> Result<(), NotificationError> {
+    /// Sends direct messages from the Rust to the worker.
+    pub fn send(&self, message: WebRtcMessage<'_>) -> Result<(), NotificationError> {
         let (ppid, payload) = message.into_ppid_and_payload();
 
-        self.inner
-            .payload_channel
-            .notify(
-                DataProducerSendNotification {
-                    internal: DataProducerInternal {
-                        router_id: self.inner.transport.router_id(),
-                        transport_id: self.inner.transport.id(),
-                        data_producer_id: self.inner.id,
-                    },
-                    data: DataProducerSendData { ppid },
+        self.inner.payload_channel.notify(
+            DataProducerSendNotification {
+                internal: DataProducerInternal {
+                    router_id: self.inner.transport.router().id(),
+                    transport_id: self.inner.transport.id(),
+                    data_producer_id: self.inner.id,
                 },
-                payload,
-            )
-            .await
+                data: DataProducerSendData { ppid },
+            },
+            payload.into_owned(),
+        )
     }
 }
 

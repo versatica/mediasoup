@@ -585,8 +585,7 @@ namespace RTC
 				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
 				std::string password         = Utils::Crypto::GetRandomString(32);
 
-				this->iceServer->SetUsernameFragment(usernameFragment);
-				this->iceServer->SetPassword(password);
+				this->iceServer->RestartIce(usernameFragment, password);
 
 				MS_DEBUG_DEV(
 				  "WebRtcTransport ICE usernameFragment and password changed [id:%s]", this->id.c_str());
@@ -751,9 +750,9 @@ namespace RTC
 		}
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		auto intLen         = static_cast<int>(packet->GetSize());
 
-		if (!this->srtpSendSession->EncryptRtp(&data, &len))
+		if (!this->srtpSendSession->EncryptRtp(&data, &intLen))
 		{
 			if (cb)
 			{
@@ -763,6 +762,8 @@ namespace RTC
 
 			return;
 		}
+
+		auto len = static_cast<size_t>(intLen);
 
 		this->iceServer->GetSelectedTuple()->Send(data, len, cb);
 
@@ -778,7 +779,7 @@ namespace RTC
 			return;
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		auto intLen         = static_cast<int>(packet->GetSize());
 
 		// Ensure there is sending SRTP session.
 		if (!this->srtpSendSession)
@@ -788,8 +789,10 @@ namespace RTC
 			return;
 		}
 
-		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
+		if (!this->srtpSendSession->EncryptRtcp(&data, &intLen))
 			return;
+
+		auto len = static_cast<size_t>(intLen);
 
 		this->iceServer->GetSelectedTuple()->Send(data, len);
 
@@ -805,7 +808,7 @@ namespace RTC
 			return;
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		auto intLen         = static_cast<int>(packet->GetSize());
 
 		// Ensure there is sending SRTP session.
 		if (!this->srtpSendSession)
@@ -815,8 +818,10 @@ namespace RTC
 			return;
 		}
 
-		if (!this->srtpSendSession->EncryptRtcp(&data, &len))
+		if (!this->srtpSendSession->EncryptRtcp(&data, &intLen))
 			return;
+
+		auto len = static_cast<size_t>(intLen);
 
 		this->iceServer->GetSelectedTuple()->Send(data, len);
 
@@ -984,9 +989,11 @@ namespace RTC
 		}
 
 		// Decrypt the SRTP packet.
-		if (!this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &len))
+		auto intLen = static_cast<int>(len);
+
+		if (!this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &intLen))
 		{
-			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, static_cast<size_t>(intLen));
 
 			if (!packet)
 			{
@@ -1007,7 +1014,7 @@ namespace RTC
 			return;
 		}
 
-		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, static_cast<size_t>(intLen));
 
 		if (!packet)
 		{
@@ -1053,10 +1060,12 @@ namespace RTC
 		}
 
 		// Decrypt the SRTCP packet.
-		if (!this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &len))
+		auto intLen = static_cast<int>(len);
+
+		if (!this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &intLen))
 			return;
 
-		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
+		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, static_cast<size_t>(intLen));
 
 		if (!packet)
 		{

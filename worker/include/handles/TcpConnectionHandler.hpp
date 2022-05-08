@@ -66,7 +66,6 @@ public:
 		return this->uvHandle;
 	}
 	void Start();
-	void Write(const uint8_t* data, size_t len, TcpConnectionHandler::onSendCallback* cb);
 	void Write(
 	  const uint8_t* data1,
 	  size_t len1,
