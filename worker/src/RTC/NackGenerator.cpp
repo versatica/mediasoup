@@ -21,8 +21,7 @@ namespace RTC
 
 	/* Instance methods. */
 
-	NackGenerator::NackGenerator(Listener* listener)
-	  : listener(listener), rtt(DefaultRtt)
+	NackGenerator::NackGenerator(Listener* listener) : listener(listener), rtt(DefaultRtt)
 	{
 		MS_TRACE();
 
@@ -80,7 +79,7 @@ namespace RTC
 
 				this->nackList.erase(it);
 
-				if(retries != 0)
+				if (retries != 0)
 					return true;
 				else
 					return false;
