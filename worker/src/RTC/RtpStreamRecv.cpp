@@ -3,7 +3,6 @@
 
 #include "RTC/RtpStreamRecv.hpp"
 #include "Logger.hpp"
-#include "Settings.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
 

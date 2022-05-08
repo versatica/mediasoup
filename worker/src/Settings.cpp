@@ -134,6 +134,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 			{
 				stringValue                                = std::string(optarg);
 				Settings::configuration.dtlsPrivateKeyFile = stringValue;
+
 				break;
 			}
 
