@@ -212,18 +212,16 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 }
 
 Codecs::VP8::PayloadDescriptor* CreatePacket(
-	uint8_t* buffer,
-	size_t bufferLen,
-	uint16_t pictureId,
-	uint8_t tl0PictureIndex,
-	uint8_t tlIndex,
-	bool layerSync = true
-)
+  uint8_t* buffer,
+  size_t bufferLen,
+  uint16_t pictureId,
+  uint8_t tl0PictureIndex,
+  uint8_t tlIndex,
+  bool layerSync = true)
 {
 	uint16_t netPictureId = htons(pictureId);
 	std::memcpy(buffer + 2, &netPictureId, 2);
 	buffer[2] |= 0x80;
-
 	buffer[4] = tl0PictureIndex;
 	buffer[5] = tlIndex << 6;
 	if (layerSync)
@@ -232,16 +230,16 @@ Codecs::VP8::PayloadDescriptor* CreatePacket(
 	auto* payloadDescriptor = Codecs::VP8::Parse(buffer, bufferLen);
 
 	REQUIRE(payloadDescriptor);
+
 	return payloadDescriptor;
 }
 
 std::unique_ptr<Codecs::VP8::PayloadDescriptor> ProcessPacket(
-	Codecs::VP8::EncodingContext& context,
-	uint16_t pictureId,
-	uint8_t tl0PictureIndex,
-	uint8_t tlIndex,
-	bool layerSync = true
-)
+  Codecs::VP8::EncodingContext& context,
+  uint16_t pictureId,
+  uint8_t tl0PictureIndex,
+  uint8_t tlIndex,
+  bool layerSync = true)
 {
 	// clang-format off
 	uint8_t buffer[] =
@@ -250,14 +248,16 @@ std::unique_ptr<Codecs::VP8::PayloadDescriptor> ProcessPacket(
 	};
 	// clang-format on
 	bool marker;
-	auto* payloadDescriptor = CreatePacket(buffer, sizeof(buffer), pictureId, tl0PictureIndex, tlIndex, layerSync);
+	auto* payloadDescriptor =
+	  CreatePacket(buffer, sizeof(buffer), pictureId, tl0PictureIndex, tlIndex, layerSync);
 	std::unique_ptr<Codecs::VP8::PayloadDescriptorHandler> payloadDescriptorHandler(
-		new Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor));
+	  new Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor));
 
 	if (payloadDescriptorHandler->Process(&context, buffer, marker))
 	{
 		return std::unique_ptr<Codecs::VP8::PayloadDescriptor>(Codecs::VP8::Parse(buffer, sizeof(buffer)));
 	}
+
 	return nullptr;
 }
 
@@ -269,7 +269,7 @@ SCENARIO("process VP8 payload descriptor", "[codecs][vp8]")
 		params.spatialLayers  = 0;
 		params.temporalLayers = 2;
 		Codecs::VP8::EncodingContext context(params);
-		
+
 		context.SetCurrentTemporalLayer(0);
 		context.SetTargetTemporalLayer(0);
 
