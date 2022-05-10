@@ -273,14 +273,19 @@ SCENARIO("process VP8 payload descriptor", "[codecs][vp8]")
 		context.SetCurrentTemporalLayer(0);
 		context.SetTargetTemporalLayer(0);
 
+		// Frame 1
 		auto forwarded = ProcessPacket(context, 0, 0, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 0);
 		REQUIRE(forwarded->tl0PictureIndex == 0);
 
+		// Frame 2 gets lost
+
+		// Frame 3
 		forwarded = ProcessPacket(context, 2, 1, 1);
 		REQUIRE_FALSE(forwarded);
 
+		// Frame 2 retransmitted
 		forwarded = ProcessPacket(context, 1, 1, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 1);
