@@ -224,6 +224,7 @@ Codecs::VP8::PayloadDescriptor* CreatePacket(
 	buffer[2] |= 0x80;
 	buffer[4] = tl0PictureIndex;
 	buffer[5] = tlIndex << 6;
+
 	if (layerSync)
 		buffer[5] |= 0x20; // y bit
 
