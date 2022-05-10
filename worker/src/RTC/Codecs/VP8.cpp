@@ -267,6 +267,7 @@ namespace RTC
 				if (this->payloadDescriptor->tlIndex > context->GetTargetTemporalLayer())
 				{
 					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
+
 					if (this->payloadDescriptor->tlIndex == 0)
 					{
 						context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
@@ -283,6 +284,7 @@ namespace RTC
 				// clang-format on
 				{
 					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
+
 					if (this->payloadDescriptor->tlIndex == 0)
 					{
 						context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
