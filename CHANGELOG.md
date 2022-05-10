@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.9.13
+
+* `VP8`: Do not discard `TL0PICIDX` from Temporal Layers higher than 0 (PR @817 by @jcague).
+* Update NPM deps and TypeScript version.
+
+
 ### 3.9.12
 
 * `DtlsTransport`: Make DTLS negotiation run immediately (PR #815).
