@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Codecs::VP8"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Codecs/VP8.hpp"
 #include "Logger.hpp"
@@ -267,7 +267,9 @@ namespace RTC
 				if (this->payloadDescriptor->tlIndex > context->GetTargetTemporalLayer())
 				{
 					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
-					context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+					if (this->payloadDescriptor->tlIndex == 0) {
+						context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+					}
 
 					return false;
 				}
@@ -280,7 +282,9 @@ namespace RTC
 				// clang-format on
 				{
 					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
-					context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+					if (this->payloadDescriptor->tlIndex == 0) {
+						context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+					}
 
 					return false;
 				}
@@ -340,7 +344,6 @@ namespace RTC
 			{
 				this->payloadDescriptor->Encode(data, pictureId, tl0PictureIndex);
 			}
-
 			return true;
 		};
 
