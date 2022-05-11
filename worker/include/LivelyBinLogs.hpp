@@ -5,10 +5,14 @@
 #include <cstring>
 #include "RTC/RtpStream.hpp"
 
-
-#define CALL_STATS_BIN_LOG_RECORDS_NUM 30
-#define CALL_STATS_BIN_LOG_SAMPLING    2000
-#define UINT8_UNSET                    ((uint8_t)-1)
+/*
+  BUGBUG: until epoch_len is a "relative timestamp", not a time diff btw samples,
+  see that CALL_STATS_BIN_LOG_RECORDS_NUM * CALL_STATS_BIN_LOG_SAMPLING
+  fits into uint16_t
+*/
+#define CALL_STATS_BIN_LOG_RECORDS_NUM 5
+#define CALL_STATS_BIN_LOG_SAMPLING    10000
+#define UINT32_UNSET                   ((uint32_t)-1)
 #define UINT64_UNSET                   ((uint64_t)-1)
 #define ZERO_UUID "00000000-0000-0000-0000-000000000000"
 
@@ -33,14 +37,33 @@ namespace Lively
   };
 
 
-  //sizeof timestamp, mime, filled
-  //       8          1     1
-  #define PRODUCER_REC_HEADER_SIZE 10
-  //sizeof timestamp, consumer_uuid, producer_uuid, mime, filled
-  //       8          16             16             1     1
-  #define CONSUMER_REC_HEADER_SIZE 42
+  //Header sizes of data written into bin log
+  // BUGBUG: currently header size is aligned to 16 bytes so filled and payload are uint32_t.
+  // They can be uint8_t if a go parser is careful about reading data from files
+  //sizeof timestamp filled payload
+  //       8         4      4
+  #define PRODUCER_REC_HEADER_SIZE 16
+  //sizeof timestamp filled payload consumer_uuid producer_uuid
+  //       8          4     4       16            16           
+  #define CONSUMER_REC_HEADER_SIZE 48
   
-  // Data record: a header followed array of data samples
+  /* Data record: a header followed array of data samples. This structure is NOT how data is written out
+  Headers different for producer and consumer, followed by CallsStatsSample array of CALL_STATS_BIN_LOG_RECORDS_NUM
+
+  typedef struct {
+  uint64_t       start_tm;                   // the record start timestamp in milliseconds
+  uint32_t       filled;                      // number of filled records in the array below
+  uint32_t       payload;                     // payload as in original RTP stream
+  char           consumer_id [UUID_BYTE_LEN]; // 
+  char           producer_id [UUID_BYTE_LEN]; // 
+} stats_consumer_record_header_t;
+
+typedef struct {
+  uint64_t       start_tm;                   // the record start timestamp in milliseconds
+  uint32_t       filled;                      // number of filled records in the array below
+  uint32_t       payload;                     // payload as in original RTP stream
+} stats_producer_record_header_t;
+  */
   class CallStatsRecord
   {
   public:
@@ -49,12 +72,12 @@ namespace Lively
     std::string       producer_id;                             // uuid4(), undef if source is producer, or consumer's corresponding producer id
     uint64_t          start_tm {UINT64_UNSET};                 // the record start timestamp in milliseconds
     uint8_t           source {0};                              // 0 for producer or 1 for consumer
-    uint8_t           mime {0};                                // mime type: unset, audio, video, matches RtpCodecMimeType enum values
-    uint8_t           filled {UINT8_UNSET};                   // number of filled records in the array below
+    uint32_t          payload {0};                             // payload, matches value set in RTP stream
+    uint32_t          filled {UINT32_UNSET};                    // number of filled records in the array below
     CallStatsSample   samples[CALL_STATS_BIN_LOG_RECORDS_NUM]; // collection of data samples
   
   public:
-    CallStatsRecord(uint64_t objType, RTC::RtpCodecMimeType mime, std::string callId, std::string objId, std::string producerId);
+    CallStatsRecord(uint64_t objType, uint8_t payload, std::string callId, std::string objId, std::string producerId);
 
     bool fwriteRecord(std::FILE* fd);
 
@@ -62,7 +85,7 @@ namespace Lively
     {
       // Wipe off samples data
       std::memset(samples, 0, sizeof(samples));
-      filled = UINT8_UNSET;
+      filled = UINT32_UNSET;
       start_tm = UINT64_UNSET;
       memcpy(write_buf, &start_tm, sizeof(uint64_t));
     }
@@ -109,7 +132,7 @@ namespace Lively
     InputStats curr {};
 
   public:
-    CallStatsRecordCtx(uint64_t objType, RTC::RtpCodecMimeType mime, std::string callId, std::string objId, std::string producerId) : record(objType, mime, callId, objId, producerId) {}
+    CallStatsRecordCtx(uint64_t objType, uint8_t payload, std::string callId, std::string objId, std::string producerId) : record(objType, payload, callId, objId, producerId) {}
 
     void AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream); // either recv or send stream
 

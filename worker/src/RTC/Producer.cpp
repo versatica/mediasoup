@@ -502,7 +502,7 @@ namespace RTC
 			if (!ctx)
 				continue;
 
-			ctx->record.mime = static_cast<uint8_t>(rtpStream->GetMimeType().type);
+			ctx->record.payload = rtpStream->GetPayloadType();
 			ctx->AddStatsRecord(&binLog, rtpStream);
 		}
 	}
@@ -1220,7 +1220,7 @@ namespace RTC
 		this->mapMappedSsrcSsrc[encodingMapping.mappedSsrc] = ssrc;
 
 		// Binary log samples collection per stream
-		this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(0, mediaCodec.mimeType, lively.callId, this->id, ZERO_UUID);
+		this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(0, rtpStream->GetPayloadType(), lively.callId, this->id, ZERO_UUID);
 
 		// If the Producer is paused tell it to the new RtpStreamRecv.
 		if (this->paused)

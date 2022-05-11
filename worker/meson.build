@@ -250,49 +250,49 @@ libmediasoup_worker = library(
   link_whole: link_whole,
 )
 
-# executable(
-#  'mediasoup-worker',
-#  build_by_default: true,
-#  install: true,
-#  install_tag: 'mediasoup-worker',
-#  dependencies: dependencies,
-#  sources: common_sources + ['src/main.cpp'],
-#  include_directories: include_directories('include'),
-#  cpp_args: cpp_args + ['-g', '-fno-omit-frame-pointer', '-O0', '-DMS_EXECUTABLE'],
-#)
-
-transcode_dependencies = dependencies + [
-  cpp.find_library('ffngxshm', required: true),
-  cpp.find_library('ngxshm', required: true),
-  cpp.find_library('pcre', required: true),
-  cpp.find_library('z', required: true),
-]
-
-transcode_sources = common_sources + [
-  'src/main.cpp',
-  'src/DepLibSfuShm.cpp',
-  'src/RTC/ShmConsumer.cpp',
-  'src/RTC/ShmTransport.cpp',  
-]
-
-transcode_args = cpp_args + [
-  '-DMS_EXECUTABLE',
-  '-DTRANSCODE',
-  '-DFFNGXSHM_MAX_NUM_CHANNELS=10',
-  '-DSFUSHM_AV_MAX_NUM_CHANNELS=10',
-  '-DSTREAM_SHM_MAX_CHANNELS=10',
-]
-
-executable(
+ executable(
   'mediasoup-worker',
   build_by_default: true,
-  dependencies: transcode_dependencies,
-  sources: transcode_sources,
   install: true,
   install_tag: 'mediasoup-worker',
+  dependencies: dependencies,
+  sources: common_sources + ['src/main.cpp'],
   include_directories: include_directories('include'),
-  cpp_args: transcode_args,
+  cpp_args: cpp_args + ['-g', '-fno-omit-frame-pointer', '-O0', '-DMS_EXECUTABLE'],
 )
+
+#transcode_dependencies = dependencies + [
+#  cpp.find_library('ffngxshm', required: true),
+#  cpp.find_library('ngxshm', required: true),
+#  cpp.find_library('pcre', required: true),
+#  cpp.find_library('z', required: true),
+#]
+
+#transcode_sources = common_sources + [
+#  'src/main.cpp',
+#  'src/DepLibSfuShm.cpp',
+#  'src/RTC/ShmConsumer.cpp',
+#  'src/RTC/ShmTransport.cpp',  
+#]
+
+#transcode_args = cpp_args + [
+#  '-DMS_EXECUTABLE',
+#  '-DTRANSCODE',
+#  '-DFFNGXSHM_MAX_NUM_CHANNELS=10',
+#  '-DSFUSHM_AV_MAX_NUM_CHANNELS=10',
+#  '-DSTREAM_SHM_MAX_CHANNELS=10',
+#]
+
+#executable(
+#  'mediasoup-worker',
+#  build_by_default: true,
+#  dependencies: transcode_dependencies,
+#  sources: transcode_sources,
+#  install: true,
+#  install_tag: 'mediasoup-worker',
+#  include_directories: include_directories('include'),
+#  cpp_args: transcode_args,
+#)
 
 mediasoup_worker_test = executable(
   'mediasoup-worker-test',

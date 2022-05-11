@@ -29,11 +29,10 @@ constexpr uint8_t hexVal[256] = {
 };
 
 
-CallStatsRecord::CallStatsRecord(uint64_t type, RTC::RtpCodecMimeType m, std::string call, std::string obj, std::string producer)
-  : source(type), filled(UINT8_UNSET), call_id(call), object_id(obj), producer_id(producer) 
+CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t p, std::string call, std::string obj, std::string producer)
+  : source(type), payload(p), filled(UINT32_UNSET), call_id(call), object_id(obj), producer_id(producer) 
 {
   start_tm = Utils::Time::currentStdEpochMs();
-  mime = (RTC::RtpCodecMimeType::Type::AUDIO == m.type) ? 1 : 2;
   fillHeader();
 }
 
@@ -78,30 +77,28 @@ void CallStatsRecord::fillHeader()
   p = &(write_buf[0]);
   std::memcpy(p, &start_tm, sizeof(uint64_t)); 
   p += sizeof(uint64_t);
+  std::memcpy(p, &filled, sizeof(uint32_t));
+  p += sizeof(uint32_t);
+  std::memcpy(p, &payload, sizeof(uint32_t));
   if(source == 1) // consumer
   {
+    p += sizeof(uint32_t);
     std::memset(uuidBytes, 0, 16);
     uuidToBytes(object_id, uuidBytes);
     std::memcpy(p, uuidBytes, 16);
     p += 16;
-
     std::memset(uuidBytes, 0, 16);
     uuidToBytes(producer_id, uuidBytes);
     std::memcpy(p, uuidBytes, 16);
-    p += 16;
   }
-  std::memcpy(p, &mime, 1);
-  p++;
-  std::memcpy(p, &filled, 1);
 }
 
 // fd is opened file handle; if returned false, a caller should close the file, etc.
 bool CallStatsRecord::fwriteRecord(std::FILE* fd)
 {
   size_t rec_sz = (source == 1) ? CONSUMER_REC_HEADER_SIZE : PRODUCER_REC_HEADER_SIZE;
-  std::memcpy(write_buf, &start_tm, sizeof(uint64_t));  //update timestamp, the only variable field in a header
-  
-  //fillHeader();
+  std::memcpy(write_buf, &start_tm, sizeof(uint64_t));  //update timestamp and # of samples
+  std::memcpy(write_buf + sizeof(uint64_t), &filled, sizeof(uint32_t));
 
   std::size_t rc = std::fwrite(write_buf, 1, rec_sz, fd);
   if (rc <= 0 || rc != rec_sz)
@@ -118,7 +115,7 @@ bool CallStatsRecord::fwriteRecord(std::FILE* fd)
 //
 void CallStatsRecordCtx::WriteIfFull(StatsBinLog* log)
 {
-  if (record.filled == UINT8_UNSET || record.filled < CALL_STATS_BIN_LOG_RECORDS_NUM)
+  if (record.filled == UINT32_UNSET || record.filled < CALL_STATS_BIN_LOG_RECORDS_NUM)
     return;
 
   if (nullptr != log)
@@ -136,7 +133,7 @@ void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream
   WriteIfFull(log);
 
   uint64_t nowMs = Utils::Time::currentStdEpochMs();
-  if (UINT8_UNSET == record.filled)
+  if (UINT32_UNSET == record.filled)
   {
     record.start_tm = nowMs;
     stream->FillStats(last.packetsCount, last.bytesCount, last.packetsLost, last.packetsDiscarded,
@@ -154,7 +151,7 @@ void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream
     record.samples[record.filled].epoch_len = static_cast<uint16_t>(nowMs - record.start_tm);
     record.samples[record.filled].packets_count = static_cast<uint16_t>(curr.packetsCount - last.packetsCount);
     record.samples[record.filled].bytes_count = static_cast<uint32_t>(curr.bytesCount - last.bytesCount);
-    record.samples[record.filled].packets_lost = static_cast<uint16_t>(curr.packetsLost - last.packetsLost);
+    record.samples[record.filled].packets_lost = (curr.packetsLost > last.packetsLost) ? static_cast<uint16_t>(curr.packetsLost - last.packetsLost) : 0;
     record.samples[record.filled].packets_discarded = static_cast<uint16_t>(curr.packetsDiscarded - last.packetsDiscarded);
     record.samples[record.filled].packets_repaired = static_cast<uint16_t>(curr.packetsRepaired - last.packetsRepaired);
     record.samples[record.filled].packets_retransmitted = static_cast<uint16_t>(curr.packetsRetransmitted - last.packetsRetransmitted);
@@ -286,8 +283,9 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
 
 void StatsBinLog::InitLog(char type, std::string id1, std::string id2)
 {
-  char tmp[100];
-  memset(tmp, '\0', 100);
+  #define FILENAME_LEN_MAX sizeof("/var/log/sfu/p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.bin.log") * 2
+  char tmp[FILENAME_LEN_MAX];
+  memset(tmp, '\0', FILENAME_LEN_MAX);
   switch(type)
   {
     case 'c':
