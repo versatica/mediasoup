@@ -29,22 +29,9 @@ namespace RTC
 			if (this->newestItemIndex >= this->windowItems)
 				this->newestItemIndex = 0;
 
-			// Newest index overlaps with the oldest one, remove it.
-			if (this->newestItemIndex == this->oldestItemIndex && this->oldestItemIndex != -1)
-			{
-				MS_WARN_TAG(
-				  info,
-				  "calculation buffer full, windowSizeMs:%zu ms windowItems:%" PRIu16,
-				  this->windowSizeMs,
-				  this->windowItems);
-
-				BufferItem& oldestItem = this->buffer[this->oldestItemIndex];
-				this->totalCount -= oldestItem.count;
-				oldestItem.count = 0u;
-				oldestItem.time  = 0u;
-				if (++this->oldestItemIndex >= this->windowItems)
-					this->oldestItemIndex = 0;
-			}
+			MS_ASSERT(
+			  this->newestItemIndex != this->oldestItemIndex || this->oldestItemIndex == -1,
+			  "newest index overlaps with the oldest one");
 
 			// Set the newest item.
 			BufferItem& item = this->buffer[this->newestItemIndex];
