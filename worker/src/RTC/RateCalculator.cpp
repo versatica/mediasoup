@@ -88,7 +88,7 @@ namespace RTC
 		uint64_t newOldestTime = nowMs - this->windowSizeMs;
 
 		// Oldest item already removed.
-		if (newOldestTime <= this->oldestItemStartTime)
+		if (newOldestTime < this->oldestItemStartTime)
 			return;
 
 		// A whole window size time has elapsed since last entry. Reset the buffer.
@@ -99,7 +99,7 @@ namespace RTC
 			return;
 		}
 
-		while (this->oldestItemStartTime < newOldestTime)
+		while (newOldestTime >= this->oldestItemStartTime)
 		{
 			BufferItem& oldestItem = this->buffer[this->oldestItemIndex];
 			this->totalCount -= oldestItem.count;
