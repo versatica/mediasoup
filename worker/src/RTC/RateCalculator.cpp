@@ -31,7 +31,7 @@ namespace RTC
 
 			MS_ASSERT(
 			  this->newestItemIndex != this->oldestItemIndex || this->oldestItemIndex == -1,
-			  "Newest index overlaps with the oldest one");
+			  "newest index overlaps with the oldest one");
 
 			// Set the newest item.
 			BufferItem& item = this->buffer[this->newestItemIndex];
