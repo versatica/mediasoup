@@ -29,8 +29,9 @@ namespace RTC
 			if (this->newestItemIndex >= this->windowItems)
 				this->newestItemIndex = 0;
 
-			MS_ASSERT(this->newestItemIndex != this->oldestItemIndex || this->oldestItemIndex == -1,
-					  "Newest index overlaps with the oldest one");
+			MS_ASSERT(
+			  this->newestItemIndex != this->oldestItemIndex || this->oldestItemIndex == -1,
+			  "Newest index overlaps with the oldest one");
 
 			// Set the newest item.
 			BufferItem& item = this->buffer[this->newestItemIndex];
