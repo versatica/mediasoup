@@ -5,11 +5,7 @@
 #include <cstring>
 #include "RTC/RtpStream.hpp"
 
-/*
-  BUGBUG: until epoch_len is a "relative timestamp", not a time diff btw samples,
-  see that CALL_STATS_BIN_LOG_RECORDS_NUM * CALL_STATS_BIN_LOG_SAMPLING
-  fits into uint16_t
-*/
+
 // CALL_STATS_BIN_LOG_RECORDS_NUM * sizeof(CallStatsSample) should be
 // dividible by 16 b/c of alignment concerns;
 // otherwise, there will be random sized padding added
