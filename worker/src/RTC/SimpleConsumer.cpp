@@ -89,8 +89,7 @@ namespace RTC
 		Lively::CallStatsRecordCtx* ctx = this->rtpStreamBinLogRecord;
 		if (!ctx)
 			return;
-		
-		ctx->record.payload = rtpStream->GetPayloadType();
+			
 		ctx->AddStatsRecord(log, rtpStream);
 	}
 

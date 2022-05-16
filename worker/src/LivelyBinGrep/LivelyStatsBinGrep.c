@@ -15,14 +15,17 @@
 #include <sys/time.h>
 #include <math.h>
 #include <getopt.h>
+//#include <regex.h>
 
+// These defines should match LivelyBinLogs.hpp values
+#define BINLOG_FORMAT_VERSION "e58c1d"
+#define CALL_STATS_BIN_LOG_RECORDS_NUM 8 
+#define CALL_STATS_BIN_LOG_SAMPLING    10000
 
 #define MAX_TIME_ALIGN        10
 #define MAX_RECORDS_IN_BUFFER 1000
 
-//#define FORMAT_CSV_COMMA   1
 #define FORMAT_CSV_HEADERS 2
-//#define FORMAT_RAW         3
 
 #define LOAD_TEST_MAX_FILES    200
 #define LOAD_TEST_FILE_MAX_DUR 1800000
@@ -32,10 +35,6 @@
 #define UUID_CHAR_LEN 36
 #define ZEROS_UUID    "00000000-0000-0000-0000-000000000000\0"
 #define UUID_BYTE_LEN 16
-
-
-//////// Defines and structs copied from LivelyBinLogs.hpp in mediasoup and must stay in sync with source
-//////// TBD: if this tool stays within mediasoup project (inside sfu docker) then remove duplication and include LivelyBinLogs.hpp
 
 
 typedef struct {
@@ -54,10 +53,6 @@ typedef struct {
 } stats_sample_t;
 
 #define SAMPLE_SIZE 28
-
-// Maximum number of samples in a record
-#define CALL_STATS_BIN_LOG_RECORDS_NUM 5 
-#define CALL_STATS_BIN_LOG_SAMPLING    10000
 
 typedef struct {
   uint64_t       start_tm;                   // the record start timestamp in milliseconds
@@ -543,36 +538,114 @@ time_alignment(
 	for (i = 0; i < out_len && start_tm < end_tm; i++, start_tm += time_align)
   {
 		sample_out[i]           = sample;
-		sample_out[i].epoch_len = time_align * i;
-    sample_ts[i] = start_tm + sample_out[i].epoch_len;
+		sample_out[i].epoch_len = time_align; //time_align * i;
+    sample_ts[i] = start_tm + time_align * i; //sample_out[i].epoch_len;
 	}
 
 	return i;
 }
 
 // should run consumer's or producer's parsing code
+//ms_p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin.log
+//ms_c_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin.log
 int parse_file_name(ms_binlog_config *conf)
 {
+  #define FILENAME_LEN_MAX sizeof("/var/log/sfu/ms_p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin") * 2
+  char tmp[FILENAME_LEN_MAX];
+  char* ch;
+  char* ver;
+
+  memset(tmp, '\0', FILENAME_LEN_MAX);
+  memcpy(tmp, conf->filename, strlen(conf->filename));
+
   memset(conf->call_id, 0, UUID_CHAR_LEN + 1);
   memset(conf->producer_id, 0, UUID_CHAR_LEN + 1);
+/*
+  regex_t regex;
+  int reti;
+  regmatch_t regmatch;
   
-  // c or p? get callid and optionally producer's id
-  if (conf->filename[0] == 'c')
+  reti = regcomp(&regex, "^ms(.)+", 0);//"^ms_(c|p)_([a-fA-F0-9-]+)(_[a-fA-F0-9-]+)?_([0-9]{13})\\.([0-9a-fA-F]{6})\\.bin\\.log$", 0);
+  if (reti)
   {
-    conf->type = 'c';
-    memcpy(conf->call_id, &(conf->filename[2]), UUID_CHAR_LEN);
+    printf("Can't compile regex, exit...");
+    return 1;
   }
-  else if (conf->filename[0] == 'p')
+
+  reti = regexec(&regex, tmp, 0, NULL,0);
+  if (!reti)
   {
-    conf->type = 'p';
-    memcpy(conf->call_id, &(conf->filename[2]), UUID_CHAR_LEN);
-    memcpy(conf->producer_id, &(conf->filename[3 + UUID_CHAR_LEN]), UUID_CHAR_LEN);
+    printf("Match, yay! exit...");
+    return 1;
   }
   else
   {
-    printf("wrong file name %s, exit...", conf->filename);
+    printf("Regex did not match %s, exit", tmp);
+    regfree(&regex);
     return 1;
   }
+*/
+  ch = strtok(tmp, "_");
+
+  if(ch == 0 || strcmp(ch, "ms") != 0)
+  {
+    printf("wrong file name %s, should start with 'ms_', exit...", conf->filename);
+    return 1;
+  }
+
+  ch = strtok(NULL,"_");
+
+  // c or p? get callid and optionally producer's id
+  if (ch && strlen(ch) == 1 && ch[0] == 'c')
+  {
+    conf->type = 'c';
+  }
+  else if (ch && strlen(ch) == 1 && ch[0] == 'p')
+  {
+    conf->type = 'p';
+  }
+  else
+  {
+    printf("wrong file name %s, can't tell type 'c' or 'p', exit...", conf->filename);
+    return 1;
+  }
+
+  ch = strtok(NULL,"_");
+  if (ch == 0 || strlen(ch) < UUID_CHAR_LEN)
+  {
+    printf("wrong file name %s, should contain uuid, exit...", conf->filename);
+    return 1;
+  }
+  memcpy(conf->call_id, ch, UUID_CHAR_LEN);
+
+  if (conf->type == 'p')
+  {
+    ch = strtok(NULL, "_");
+    if (ch == 0 || strlen(ch) < UUID_CHAR_LEN)
+    {
+      printf("wrong file name %s, should contain two uuids, exit...", conf->filename);
+      return 1;
+    }
+
+    memcpy(conf->producer_id, ch, UUID_CHAR_LEN);
+  }
+  // now left with timestamp.version.bin let's match versions
+  memset(tmp, '\0', FILENAME_LEN_MAX);
+  memcpy(tmp, conf->filename,strlen(conf->filename));
+  ver = strtok(tmp, "."); // skip over timestamp
+  if (!ver)
+  {
+    printf("wrong file name %s, should end with timestamp.version.bin, exit...", conf->filename);
+    return 1;
+  }
+
+  ver = strtok(NULL, ".");
+  if (!ver || strcmp(ver, BINLOG_FORMAT_VERSION) != 0)
+  {
+    printf("wrong file name %s, should end with timestamp.%s.bin, exit...", conf->filename,  BINLOG_FORMAT_VERSION);
+    return 1;
+  }
+
   return 0;
 }
 
@@ -598,7 +671,8 @@ format_output(FILE* fd, ms_binlog_config *conf)
 
   stats_sample_t              sample_align[MAX_TIME_ALIGN];
   uint64_t                    sample_ts[MAX_TIME_ALIGN];
-  uint16_t                    prev_sample_epoch_len, curr_sample_epoch_len;
+  uint64_t                    total_epoch_len_in_samples;
+  //uint16_t                    prev_sample_epoch_len, curr_sample_epoch_len;
   uint64_t                    sample_start_tm;
   
   char                        call_id[UUID_CHAR_LEN+1];
@@ -634,10 +708,7 @@ format_output(FILE* fd, ms_binlog_config *conf)
   while( (num_bytes = (conf->type == 'c') 
                       ? fread(buf_c, sizeof(uint8_t), len, fd)
                       : fread(buf_p, sizeof(uint8_t), len, fd)) > 0 )
-                      //fread(first_c, sizeof(stats_consumer_record_t), len, fd)
-                      //: fread(first_p, sizeof(stats_producer_record_t), len, fd)) > 0)
   {
-    //printf("num_bytes=%d num_rec=%d\n", num_bytes, (conf->type == 'c') ? num_bytes/CONSUMER_RECORD_LEN : num_bytes/PRODUCER_RECORD_LEN);
     num_rec = (conf->type == 'c') ? num_bytes/CONSUMER_RECORD_LEN : num_bytes/PRODUCER_RECORD_LEN;
     for (m = 0; m < num_rec; m++)
     {
@@ -646,14 +717,14 @@ format_output(FILE* fd, ms_binlog_config *conf)
         rec_c = (stats_consumer_record_header_t*)first_c;//&((stats_consumer_record_t*)buf_c)[m];
         filled = rec_c->filled;
         rec_start_tm = rec_c->start_tm;
-        //printf("\nRecord mime=%d filled=%d\n", rec_c->payload, filled);
+        printf("\nRecord mime=%d filled=%d\n", rec_c->payload, filled);
       }
       else
       {
         rec_p = (stats_producer_record_header_t*)first_p;
         filled = rec_p->filled;
         rec_start_tm = rec_p->start_tm;
-        //printf("\nRecord mime=%d filled=%d\n", rec_p->payload, filled);
+        printf("\nRecord mime=%d filled=%d\n", rec_p->payload, filled);
       }
       if (filled > CALL_STATS_BIN_LOG_RECORDS_NUM)
         continue;
@@ -667,29 +738,30 @@ format_output(FILE* fd, ms_binlog_config *conf)
       samples_pos = (conf->type == 'c') ? ((char*)rec_c) + CONSUMER_HEADER_LEN : ((char*)rec_p) + PRODUCER_HEADER_LEN;
       payload = (conf->type == 'c') ? rec_c->payload : rec_p->payload;
 
-      prev_sample_epoch_len = curr_sample_epoch_len = 0; // we need delta between current and previous epoch len to pass to time alignment function
+      total_epoch_len_in_samples = 0;
 
       for (k = 0; k < filled; k++)
       {
         sample = (stats_sample_t*)(samples_pos + k * SAMPLE_SIZE);
-        curr_sample_epoch_len = sample->epoch_len;
+
+        total_epoch_len_in_samples += sample->epoch_len;
+
         if (conf->time_align)
         {
-          sample_start_tm = rec_start_tm + sample->epoch_len;
+          sample_start_tm = rec_start_tm + total_epoch_len_in_samples;
 
           // just round it up or down to time_align:
           sample_start_tm = (sample_start_tm % conf->time_align) ?
               (sample_start_tm / conf->time_align + (sample_start_tm % conf->time_align + conf->time_align / 2) / conf->time_align) * conf->time_align :
               sample_start_tm;
 
-          num_tm_align_rec = time_alignment(sample_start_tm, curr_sample_epoch_len - prev_sample_epoch_len, conf->time_align, sample, sample_ts, sample_align, MAX_TIME_ALIGN);
+          num_tm_align_rec = time_alignment(sample_start_tm, sample->epoch_len,  conf->time_align, sample, sample_ts, sample_align, MAX_TIME_ALIGN);
           sample = sample_align;
         }
         else
         {
-          sample_ts[0] = rec_start_tm + sample->epoch_len; // a sample's real timestamp
+          sample_ts[0] = rec_start_tm + total_epoch_len_in_samples;
         }
-        prev_sample_epoch_len = curr_sample_epoch_len;
 
         for (i = 0; i < num_tm_align_rec; i++)
         {
@@ -697,10 +769,13 @@ format_output(FILE* fd, ms_binlog_config *conf)
           // is older than the most recent record then skip it
           if (conf->dedup)
           {
+            // TODO: this does not work for consumer bin logs b/c a single log contains records from multiple sources.
+            // Need to keep track of the last ts for each payload#
             if (sample_ts[i] <= conf->dedup_last_ts)
             {
               continue;
-            } else {
+            }
+            else {
               conf->dedup_last_ts = sample_ts[i];
             }
           }
@@ -751,10 +826,6 @@ int main(int argc, char* argv[])
   static char* usage =
       "usage: %s [ -f <format> ] [ -t <interval ms> ] log_name\n"
       "  log_name                 - full path to the log file to parse or call id to be used if load test options are present\n"
-      "  -f <format>              - format:\n"
-      "                              1 = CSV with no headers, comma separated (default)\n"
-      "                              2 = CSV with column headers, tab separated \n"
-      "                              3 = raw format, binary copy of original data \n"
       "  -t <interval>             - optional align timestamps to fixed intervals in milliseconds\n"
       "  -s <timestamp>            - optional start timestamp\n"
       "  -d <duration>             - duration in milliseconds (if only dur is specified it is taken from the start of the stream)\n"
@@ -765,7 +836,6 @@ int main(int argc, char* argv[])
       ;
 
   static struct option long_options[] = {
-			{ "format",                  1, 0, 'f'    },
 			{ "align-time-interval",     1, 0, 't'    },
 			{ "start-time",              1, 0, 's'    },
 			{ "duration",                1, 0, 'd'    },
@@ -792,9 +862,6 @@ int main(int argc, char* argv[])
     	case 0xFF02:
     		conf.load_test_num_pfiles = atoi(optarg);
     		break;
-      case 'f':
-        conf.format = atoi(optarg);
-        break;
       case 't':
         conf.time_align = atoi(optarg);
         break;
@@ -822,7 +889,7 @@ int main(int argc, char* argv[])
     exit(1);
   }
 
-  conf.filename = argv[optind]; //c_callid_ts.bin.log -or- p_callid_producerid_ts.bin.log
+  conf.filename = argv[optind];
 
   if (conf.load_test_num_cfiles)
   {

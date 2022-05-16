@@ -99,7 +99,6 @@ namespace RTC
 			if (!ctx)
 				continue;
 
-			ctx->record.payload = rtpStream->GetPayloadType();
 			ctx->AddStatsRecord(log, rtpStream);
 		}
 	}
