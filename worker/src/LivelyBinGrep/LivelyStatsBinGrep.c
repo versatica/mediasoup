@@ -672,7 +672,6 @@ format_output(FILE* fd, ms_binlog_config *conf)
   stats_sample_t              sample_align[MAX_TIME_ALIGN];
   uint64_t                    sample_ts[MAX_TIME_ALIGN];
   uint64_t                    total_epoch_len_in_samples;
-  //uint16_t                    prev_sample_epoch_len, curr_sample_epoch_len;
   uint64_t                    sample_start_tm;
   
   char                        call_id[UUID_CHAR_LEN+1];
@@ -714,17 +713,17 @@ format_output(FILE* fd, ms_binlog_config *conf)
     {
       if (conf->type == 'c')
       {
-        rec_c = (stats_consumer_record_header_t*)first_c;//&((stats_consumer_record_t*)buf_c)[m];
+        rec_c = (stats_consumer_record_header_t*)first_c;
         filled = rec_c->filled;
         rec_start_tm = rec_c->start_tm;
-        printf("\nRecord mime=%d filled=%d\n", rec_c->payload, filled);
+        //printf("\nRecord mime=%d filled=%d\n", rec_c->payload, filled);
       }
       else
       {
         rec_p = (stats_producer_record_header_t*)first_p;
         filled = rec_p->filled;
         rec_start_tm = rec_p->start_tm;
-        printf("\nRecord mime=%d filled=%d\n", rec_p->payload, filled);
+        //printf("\nRecord mime=%d filled=%d\n", rec_p->payload, filled);
       }
       if (filled > CALL_STATS_BIN_LOG_RECORDS_NUM)
         continue;
