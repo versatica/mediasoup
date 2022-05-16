@@ -111,6 +111,8 @@ namespace RTC
 		int16_t targetTemporalLayer{ -1 };
 		int16_t currentSpatialLayer{ -1 };
 		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
+		uint16_t snReferenceSpatialLayer{ 0 };
+		bool checkingForOldPacketsInSpatialLayer{ false };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		uint32_t tsOffset{ 0u }; // RTP Timestamp offset.
 		bool keyFrameForTsOffsetRequested{ false };

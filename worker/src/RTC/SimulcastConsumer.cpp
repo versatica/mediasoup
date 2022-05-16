@@ -16,6 +16,7 @@ namespace RTC
 	static constexpr uint64_t StreamMinActiveMs{ 2000u };           // In ms.
 	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u }; // In ms.
 	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };     // In ms.
+	static constexpr uint16_t MaxSequenceNumberGap{ 100u };
 
 	/* Instance methods. */
 
@@ -674,7 +675,9 @@ namespace RTC
 			shouldSwitchCurrentSpatialLayer = true;
 
 			// Need to resync the stream.
-			this->syncRequired = true;
+			this->syncRequired                        = true;
+			this->snReferenceSpatialLayer             = packet->GetSequenceNumber();
+			this->checkingForOldPacketsInSpatialLayer = true;
 		}
 		// If the packet belongs to different spatial layer than the one being sent,
 		// drop it.
@@ -686,6 +689,20 @@ namespace RTC
 		// If we need to sync and this is not a key frame, ignore the packet.
 		if (this->syncRequired && !packet->IsKeyFrame())
 			return;
+
+		if (SeqManager<uint16_t>::IsSeqHigherThan(
+		      packet->GetSequenceNumber(), this->snReferenceSpatialLayer + MaxSequenceNumberGap))
+		{
+			this->checkingForOldPacketsInSpatialLayer = false;
+		}
+
+		// If this is a packet previous to the spatial layer switch, ignore the packet
+		if (
+		  this->checkingForOldPacketsInSpatialLayer &&
+		  SeqManager<uint16_t>::IsSeqLowerThan(packet->GetSequenceNumber(), this->snReferenceSpatialLayer))
+		{
+			return;
+		}
 
 		// Whether this is the first packet after re-sync.
 		bool isSyncPacket = this->syncRequired;
@@ -889,7 +906,6 @@ namespace RTC
 			  origSeq,
 			  origTimestamp);
 		}
-
 		// Process the packet.
 		if (this->rtpStream->ReceivePacket(packet))
 		{
