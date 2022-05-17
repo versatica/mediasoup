@@ -908,6 +908,7 @@ namespace RTC
 			  origSeq,
 			  origTimestamp);
 		}
+
 		// Process the packet.
 		if (this->rtpStream->ReceivePacket(packet))
 		{
