@@ -42,7 +42,7 @@ export async function createWorker(
 		rtcMaxPort = 59999,
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
-		appData = {}
+		appData
 	}: WorkerSettings = {}
 ): Promise<Worker>
 {

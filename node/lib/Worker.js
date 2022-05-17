@@ -111,7 +111,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             // @ts-ignore
             consumerSocket: this.#child.stdio[6]
         });
-        this.#appData = appData;
+        this.#appData = appData || {};
         let spawnDone = false;
         // Listen for 'running' notification.
         this.#channel.once(String(this.#pid), (event) => {
@@ -270,7 +270,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a Router.
      */
-    async createRouter({ mediaCodecs, appData = {} } = {}) {
+    async createRouter({ mediaCodecs, appData } = {}) {
         logger.debug('createRouter()');
         if (appData && typeof appData !== 'object')
             throw new TypeError('if given, appData must be an object');

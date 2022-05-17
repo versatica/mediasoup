@@ -58,7 +58,7 @@ export type ConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 /**
@@ -207,7 +207,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Paused flag.
 	#paused = false;
@@ -260,7 +260,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: any;
+			appData?: Record<string, unknown>;
 			paused: boolean;
 			producerPaused: boolean;
 			score?: ConsumerScore;
@@ -275,7 +275,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 		this.#paused = paused;
 		this.#producerPaused = producerPaused;
 		this.#score = score;
@@ -383,7 +383,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -391,7 +391,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}

@@ -23,7 +23,7 @@ exports.observer = observer;
 /**
  * Create a Worker.
  */
-async function createWorker({ logLevel = 'error', logTags, rtcMinPort = 10000, rtcMaxPort = 59999, dtlsCertificateFile, dtlsPrivateKeyFile, appData = {} } = {}) {
+async function createWorker({ logLevel = 'error', logTags, rtcMinPort = 10000, rtcMaxPort = 59999, dtlsCertificateFile, dtlsPrivateKeyFile, appData } = {}) {
     logger.debug('createWorker()');
     if (appData && typeof appData !== 'object')
         throw new TypeError('if given, appData must be an object');

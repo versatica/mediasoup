@@ -32,7 +32,7 @@ export declare type DataConsumerOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type DataConsumerStat = {
     type: string;
@@ -74,7 +74,7 @@ export declare class DataConsumer extends EnhancedEventEmitter<DataConsumerEvent
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData: any;
+        appData?: Record<string, unknown>;
     });
     /**
      * DataConsumer id.
@@ -107,11 +107,11 @@ export declare class DataConsumer extends EnhancedEventEmitter<DataConsumerEvent
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *

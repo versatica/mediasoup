@@ -53,7 +53,7 @@ export declare type PlainTransportOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 /**
  * DEPRECATED: Use PlainTransportOptions.

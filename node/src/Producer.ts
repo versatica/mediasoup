@@ -35,7 +35,7 @@ export type ProducerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 /**
@@ -189,7 +189,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Paused flag.
 	#paused = false;
@@ -222,7 +222,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: any;
+			appData?: Record<string, unknown>;
 			paused: boolean;
 		}
 	)
@@ -235,7 +235,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 		this.#paused = paused;
 
 		this.handleWorkerNotifications();
@@ -310,7 +310,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -318,7 +318,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
