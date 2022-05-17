@@ -1,6 +1,12 @@
 # Changelog
 
 
+### WIP
+
+* Node: Improve `appData` TypeScript syntax and initialization.
+* Update NPM deps.
+
+
 ### 3.9.13
 
 * `VP8`: Do not discard `TL0PICIDX` from Temporal Layers higher than 0 (PR @817 by @jcague).
