@@ -86,7 +86,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to audio speaker observer-specific notifications when observer itself is
     // dropped
-    subscription_handler: Mutex<Option<SubscriptionHandler>>,
+    _subscription_handler: Mutex<Option<SubscriptionHandler>>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 
@@ -105,8 +105,6 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
-            let subscription_handler = self.subscription_handler.lock().take();
-
             if close_request {
                 let channel = self.channel.clone();
                 let request = RtpObserverCloseRequest {
@@ -121,18 +119,6 @@ impl Inner {
                         if let Err(error) = channel.request(request).await {
                             error!("active speaker observer closing failed on drop: {}", error);
                         }
-
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handler);
-                    })
-                    .detach();
-            } else {
-                self.executor
-                    .spawn(async move {
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handler);
                     })
                     .detach();
             }
@@ -368,7 +354,7 @@ impl ActiveSpeakerObserver {
             app_data,
             router,
             closed: AtomicBool::new(false),
-            subscription_handler: Mutex::new(subscription_handler),
+            _subscription_handler: Mutex::new(subscription_handler),
             _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 
