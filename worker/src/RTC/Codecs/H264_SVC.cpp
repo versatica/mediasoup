@@ -20,8 +20,6 @@ namespace RTC
 
 			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
-			// TODO: Pratima
-			// Frame Marking RTP header extension
 			// Use frame-marking.
 			if (frameMarking)
 			{
