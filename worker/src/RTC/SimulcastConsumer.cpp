@@ -947,6 +947,16 @@ namespace RTC
 
 		packet->AddSdesChunk(sdesChunk);
 
+		auto* dlrr = this->rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
+
+		if (dlrr)
+		{
+			auto* report = new RTC::RTCP::DelaySinceLastRr();
+
+			report->AddSsrcInfo(dlrr);
+			packet->AddDelaySinceLastRr(report);
+		}
+
 		this->lastRtcpSentTime = nowMs;
 	}
 
@@ -1013,6 +1023,13 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
+	}
+
+	void SimulcastConsumer::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+	{
+		MS_TRACE();
+
+		this->rtpStream->ReceiveRtcpXrReceiverReferenceTime(report);
 	}
 
 	uint32_t SimulcastConsumer::GetTransmissionRate(uint64_t nowMs)
