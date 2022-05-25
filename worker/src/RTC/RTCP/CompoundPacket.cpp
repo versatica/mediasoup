@@ -145,6 +145,7 @@ namespace RTC
 
 			this->xrPacket.AddReport(report);
 		}
+
 		void CompoundPacket::AddDelaySinceLastRr(DelaySinceLastRr* report)
 		{
 			MS_TRACE();
