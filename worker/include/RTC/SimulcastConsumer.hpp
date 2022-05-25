@@ -102,6 +102,7 @@ namespace RTC
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
 		std::vector<RTC::RtpStream*> producerRtpStreams; // Indexed by spatial layer.
 		bool syncRequired{ false };
+		int16_t spatialLayerToSync{ -1 };
 		bool lastSentPacketHasMarker{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		int16_t preferredSpatialLayer{ -1 };
