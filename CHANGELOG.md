@@ -3,6 +3,7 @@
 
 ### WIP
 
+* `SimulcastConsumer`: Fix a race condition in SimulcastConsumer (PR #825 by @dsdolzhenko).
 * Add support for H264 SVC (#798 by @prtmD).
 * `RtpStreamSend`: Support receive RTCP-XR RRT and send RTCP-XR DLRR (PR #781 by @aggresss).
 * `RateCalculator`: Fix old buffer items cleanup (PR #819 by @dsdolzhenko).
