@@ -3,8 +3,12 @@
 
 ### WIP
 
+* Add support for H264 SVC (#798 by @prtmD).
+* `RtpStreamSend`: Support receive RTCP-XR RRT and send RTCP-XR DLRR (PR #781 by @aggresss).
+* `RateCalculator`: Fix old buffer items cleanup (PR #819 by @dsdolzhenko).
+* `DirectTransport`: Create a buffer to process RTP packets (PR #730 by @rtctt).
 * Node: Improve `appData` TypeScript syntax and initialization.
-* Update NPM deps.
+* Update NPM deps and TypeScript version.
 
 
 ### 3.9.13
