@@ -30,8 +30,8 @@ namespace RTC
 		struct NackInfo
 		{
 			NackInfo() = default;
-			explicit NackInfo(uint16_t seq, uint16_t sendAtSeq, uint64_t createAtMs)
-			  : seq(seq), sendAtSeq(sendAtSeq), createAtMs(createAtMs)
+			explicit NackInfo(uint16_t seq, uint16_t sendAtSeq, uint64_t createdAtMs)
+			  : seq(seq), sendAtSeq(sendAtSeq), createdAtMs(createdAtMs)
 			{
 			}
 
@@ -39,7 +39,7 @@ namespace RTC
 			uint16_t sendAtSeq{ 0u };
 			uint64_t sentAtMs{ 0u };
 			uint8_t retries{ 0u };
-			uint64_t createAtMs{ 0u };
+			uint64_t createdAtMs{ 0u };
 		};
 
 		enum class NackFilter

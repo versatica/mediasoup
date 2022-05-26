@@ -232,7 +232,7 @@ namespace RTC
 			NackInfo& nackInfo = it->second;
 			uint16_t seq       = nackInfo.seq;
 
-			if (nowMs - nackInfo.createAtMs < SendNackDelayMs)
+			if (nowMs - nackInfo.createdAtMs < SendNackDelayMs)
 			{
 				++it;
 				continue;
