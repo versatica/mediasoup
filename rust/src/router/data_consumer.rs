@@ -19,10 +19,10 @@ use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
-use std::{fmt, mem};
 
 uuid_based_wrapper_type!(
     /// [`DataConsumer`] identifier.
@@ -207,8 +207,9 @@ struct Inner {
     transport: Arc<dyn Transport>,
     weak_data_producer: WeakDataProducer,
     closed: Arc<AtomicBool>,
-    // Drop subscription to consumer-specific notifications when consumer itself is dropped
-    subscription_handlers: Mutex<Vec<Option<SubscriptionHandler>>>,
+    // Drop subscription to data consumer-specific notifications when data consumer itself is
+    // dropped
+    _subscription_handlers: Mutex<Vec<Option<SubscriptionHandler>>>,
     _on_transport_close_handler: Mutex<HandlerId>,
 }
 
@@ -226,8 +227,6 @@ impl Inner {
             debug!("close()");
 
             self.handlers.close.call_simple();
-
-            let subscription_handlers: Vec<_> = mem::take(&mut self.subscription_handlers.lock());
 
             if close_request {
                 let channel = self.channel.clone();
@@ -248,18 +247,6 @@ impl Inner {
                                 error!("consumer closing failed on drop: {}", error);
                             }
                         }
-
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handlers);
-                    })
-                    .detach();
-            } else {
-                self.executor
-                    .spawn(async move {
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handlers);
                     })
                     .detach();
             }
@@ -388,7 +375,15 @@ impl DataConsumer {
                                 let maybe_inner =
                                     inner_weak.lock().as_ref().and_then(Weak::upgrade);
                                 if let Some(inner) = maybe_inner {
-                                    inner.close(false);
+                                    inner
+                                        .executor
+                                        .clone()
+                                        .spawn(async move {
+                                            // Potential drop needs to happen from a different
+                                            // thread to prevent potential deadlock
+                                            inner.close(false);
+                                        })
+                                        .detach();
                                 }
                             }
                         }
@@ -461,7 +456,7 @@ impl DataConsumer {
             transport,
             weak_data_producer: data_producer.downgrade(),
             closed,
-            subscription_handlers: Mutex::new(vec![
+            _subscription_handlers: Mutex::new(vec![
                 subscription_handler,
                 payload_subscription_handler,
             ]),

@@ -198,7 +198,7 @@ struct Inner {
     router: Router,
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
-    subscription_handler: Mutex<Option<SubscriptionHandler>>,
+    _subscription_handler: Mutex<Option<SubscriptionHandler>>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 
@@ -217,8 +217,6 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
-            let subscription_handler = self.subscription_handler.lock().take();
-
             if close_request {
                 let channel = self.channel.clone();
                 let request = TransportCloseRequest {
@@ -233,18 +231,6 @@ impl Inner {
                         if let Err(error) = channel.request(request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
-
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handler);
-                    })
-                    .detach();
-            } else {
-                self.executor
-                    .spawn(async move {
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handler);
                     })
                     .detach();
             }
@@ -552,7 +538,7 @@ impl PipeTransport {
             app_data,
             router,
             closed: AtomicBool::new(false),
-            subscription_handler: Mutex::new(subscription_handler),
+            _subscription_handler: Mutex::new(subscription_handler),
             _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 

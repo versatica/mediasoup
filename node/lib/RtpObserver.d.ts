@@ -37,7 +37,7 @@ export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents
         internal: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData: any;
+        appData?: Record<string, unknown>;
         getProducerById: (producerId: string) => Producer;
     });
     /**
@@ -55,11 +55,11 @@ export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *

@@ -66,7 +66,7 @@ export type PipeTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type PipeTransportStat =
@@ -107,7 +107,7 @@ export type PipeConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type PipeTransportEvents = TransportEvents &
@@ -285,7 +285,7 @@ export class PipeTransport
 	 *
 	 * @override
 	 */
-	async consume({ producerId, appData = {} }: PipeConsumerOptions): Promise<Consumer>
+	async consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>
 	{
 		logger.debug('consume()');
 

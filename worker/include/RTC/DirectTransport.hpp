@@ -34,6 +34,10 @@ namespace RTC
 		void SendSctpData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;
+
+	private:
+		// Allocated by this.
+		uint8_t* buffer{ nullptr };
 	};
 } // namespace RTC
 

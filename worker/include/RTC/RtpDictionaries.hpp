@@ -60,6 +60,7 @@ namespace RTC
 			VP8 = 200,
 			VP9,
 			H264,
+			H264_SVC,
 			X_H264UC,
 			H265,
 			// Complementary codecs:

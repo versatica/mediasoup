@@ -117,7 +117,7 @@ class PipeTransport extends Transport_1.Transport {
      *
      * @override
      */
-    async consume({ producerId, appData = {} }) {
+    async consume({ producerId, appData }) {
         logger.debug('consume()');
         if (!producerId || typeof producerId !== 'string')
             throw new TypeError('missing producerId');

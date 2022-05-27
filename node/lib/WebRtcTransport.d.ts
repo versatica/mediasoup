@@ -52,7 +52,7 @@ export declare type WebRtcTransportOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type IceParameters = {
     usernameFragment: string;

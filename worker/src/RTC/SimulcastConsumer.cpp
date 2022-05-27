@@ -674,7 +674,8 @@ namespace RTC
 			shouldSwitchCurrentSpatialLayer = true;
 
 			// Need to resync the stream.
-			this->syncRequired = true;
+			this->syncRequired       = true;
+			this->spatialLayerToSync = spatialLayer;
 		}
 		// If the packet belongs to different spatial layer than the one being sent,
 		// drop it.
@@ -691,7 +692,7 @@ namespace RTC
 		bool isSyncPacket = this->syncRequired;
 
 		// Sync sequence number and timestamp if required.
-		if (isSyncPacket)
+		if (isSyncPacket && (this->spatialLayerToSync == -1 || this->spatialLayerToSync == spatialLayer))
 		{
 			if (packet->IsKeyFrame())
 				MS_DEBUG_TAG(rtp, "sync key frame received");
@@ -818,6 +819,7 @@ namespace RTC
 			this->encodingContext->SyncRequired();
 
 			this->syncRequired                 = false;
+			this->spatialLayerToSync           = -1;
 			this->keyFrameForTsOffsetRequested = false;
 		}
 
@@ -947,6 +949,16 @@ namespace RTC
 
 		packet->AddSdesChunk(sdesChunk);
 
+		auto* dlrr = this->rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
+
+		if (dlrr)
+		{
+			auto* report = new RTC::RTCP::DelaySinceLastRr();
+
+			report->AddSsrcInfo(dlrr);
+			packet->AddDelaySinceLastRr(report);
+		}
+
 		this->lastRtcpSentTime = nowMs;
 	}
 
@@ -1015,6 +1027,13 @@ namespace RTC
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
+	void SimulcastConsumer::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+	{
+		MS_TRACE();
+
+		this->rtpStream->ReceiveRtcpXrReceiverReferenceTime(report);
+	}
+
 	uint32_t SimulcastConsumer::GetTransmissionRate(uint64_t nowMs)
 	{
 		MS_TRACE();
@@ -1037,6 +1056,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->syncRequired                 = true;
+		this->spatialLayerToSync           = -1;
 		this->keyFrameForTsOffsetRequested = false;
 
 		if (IsActive())
@@ -1073,6 +1093,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->syncRequired                 = true;
+		this->spatialLayerToSync           = -1;
 		this->keyFrameForTsOffsetRequested = false;
 
 		if (IsActive())

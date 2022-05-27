@@ -66,6 +66,7 @@ namespace RTC
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
+		void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report) override;
 		uint32_t GetTransmissionRate(uint64_t nowMs) override;
 		float GetRtt() const override;
 
@@ -101,6 +102,7 @@ namespace RTC
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
 		std::vector<RTC::RtpStream*> producerRtpStreams; // Indexed by spatial layer.
 		bool syncRequired{ false };
+		int16_t spatialLayerToSync{ -1 };
 		bool lastSentPacketHasMarker{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		int16_t preferredSpatialLayer{ -1 };

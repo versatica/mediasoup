@@ -33,7 +33,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.internal = internal;
         this.channel = channel;
         this.payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.getProducerById = getProducerById;
     }
     /**

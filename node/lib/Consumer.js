@@ -51,7 +51,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.#paused = paused;
         this.#producerPaused = producerPaused;
         this.#score = score;

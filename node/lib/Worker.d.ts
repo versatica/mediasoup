@@ -35,7 +35,7 @@ export declare type WorkerSettings = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags'>;
 /**
@@ -141,11 +141,11 @@ export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *

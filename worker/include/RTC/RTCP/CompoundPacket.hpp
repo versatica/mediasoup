@@ -5,6 +5,7 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include <vector>
 
@@ -39,6 +40,7 @@ namespace RTC
 			void AddReceiverReport(ReceiverReport* report);
 			void AddSdesChunk(SdesChunk* chunk);
 			void AddReceiverReferenceTime(ReceiverReferenceTime* report);
+			void AddDelaySinceLastRr(DelaySinceLastRr* report);
 			bool HasSenderReport()
 			{
 				return this->senderReportPacket.Begin() != this->senderReportPacket.End();

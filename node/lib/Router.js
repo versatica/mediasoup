@@ -51,7 +51,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
     }
     /**
      * Router id.
@@ -159,7 +159,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a WebRtcTransport.
      */
-    async createWebRtcTransport({ listenIps, port, enableUdp = true, enableTcp = false, preferUdp = false, preferTcp = false, initialAvailableOutgoingBitrate = 600000, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 262144, sctpSendBufferSize = 262144, appData = {} }) {
+    async createWebRtcTransport({ listenIps, port, enableUdp = true, enableTcp = false, preferUdp = false, preferTcp = false, initialAvailableOutgoingBitrate = 600000, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 262144, sctpSendBufferSize = 262144, appData }) {
         logger.debug('createWebRtcTransport()');
         if (!Array.isArray(listenIps))
             throw new TypeError('missing listenIps');
@@ -218,7 +218,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a PlainTransport.
      */
-    async createPlainTransport({ listenIp, port, rtcpMux = true, comedia = false, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 262144, sctpSendBufferSize = 262144, enableSrtp = false, srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80', appData = {} }) {
+    async createPlainTransport({ listenIp, port, rtcpMux = true, comedia = false, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 262144, sctpSendBufferSize = 262144, enableSrtp = false, srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80', appData }) {
         logger.debug('createPlainTransport()');
         if (!listenIp)
             throw new TypeError('missing listenIp');
@@ -282,7 +282,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a PipeTransport.
      */
-    async createPipeTransport({ listenIp, port, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 268435456, sctpSendBufferSize = 268435456, enableRtx = false, enableSrtp = false, appData = {} }) {
+    async createPipeTransport({ listenIp, port, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 268435456, sctpSendBufferSize = 268435456, enableRtx = false, enableSrtp = false, appData }) {
         logger.debug('createPipeTransport()');
         if (!listenIp)
             throw new TypeError('missing listenIp');
@@ -337,7 +337,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a DirectTransport.
      */
-    async createDirectTransport({ maxMessageSize = 262144, appData = {} } = {
+    async createDirectTransport({ maxMessageSize = 262144, appData } = {
         maxMessageSize: 262144
     }) {
         logger.debug('createDirectTransport()');
@@ -552,7 +552,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create an ActiveSpeakerObserver
      */
-    async createActiveSpeakerObserver({ interval = 300, appData = {} } = {}) {
+    async createActiveSpeakerObserver({ interval = 300, appData } = {}) {
         logger.debug('createActiveSpeakerObserver()');
         if (appData && typeof appData !== 'object')
             throw new TypeError('if given, appData must be an object');
@@ -577,7 +577,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create an AudioLevelObserver.
      */
-    async createAudioLevelObserver({ maxEntries = 1, threshold = -80, interval = 1000, appData = {} } = {}) {
+    async createAudioLevelObserver({ maxEntries = 1, threshold = -80, interval = 1000, appData } = {}) {
         logger.debug('createAudioLevelObserver()');
         if (appData && typeof appData !== 'object')
             throw new TypeError('if given, appData must be an object');

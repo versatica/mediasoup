@@ -81,7 +81,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // options
         {
             env: {
-                MEDIASOUP_VERSION: '3.9.12',
+                MEDIASOUP_VERSION: '3.9.13',
                 // Let the worker process inherit all environment variables, useful
                 // if a custom and not in the path GCC is used so the user can set
                 // LD_LIBRARY_PATH environment variable for runtime.
@@ -111,7 +111,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             // @ts-ignore
             consumerSocket: this.#child.stdio[6]
         });
-        this.#appData = appData;
+        this.#appData = appData || {};
         let spawnDone = false;
         // Listen for 'running' notification.
         this.#channel.once(String(this.#pid), (event) => {
@@ -270,7 +270,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a Router.
      */
-    async createRouter({ mediaCodecs, appData = {} } = {}) {
+    async createRouter({ mediaCodecs, appData } = {}) {
         logger.debug('createRouter()');
         if (appData && typeof appData !== 'object')
             throw new TypeError('if given, appData must be an object');

@@ -94,7 +94,7 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData: any;
+        appData?: Record<string, unknown>;
         getRouterRtpCapabilities: () => RtpCapabilities;
         getProducerById: (producerId: string) => Producer;
         getDataProducerById: (dataProducerId: string) => DataProducer;
@@ -110,11 +110,11 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *

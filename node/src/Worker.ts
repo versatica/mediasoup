@@ -66,7 +66,7 @@ export type WorkerSettings =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags'>;
@@ -208,7 +208,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	#died = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Routers set.
 	readonly #routers: Set<Router> = new Set();
@@ -323,7 +323,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 				consumerSocket : this.#child.stdio[6]
 			});
 
-		this.#appData = appData;
+		this.#appData = appData || {};
 
 		let spawnDone = false;
 
@@ -450,7 +450,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -458,7 +458,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
@@ -567,7 +567,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	async createRouter(
 		{
 			mediaCodecs,
-			appData = {}
+			appData
 		}: RouterOptions = {}): Promise<Router>
 	{
 		logger.debug('createRouter()');

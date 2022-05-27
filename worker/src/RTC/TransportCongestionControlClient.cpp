@@ -262,9 +262,6 @@ namespace RTC
 
 	void TransportCongestionControlClient::SetMaxOutgoingBitrate(uint32_t maxBitrate)
 	{
-		if (maxBitrate < this->initialAvailableBitrate)
-			MS_THROW_ERROR("maxOutgoingBitrate must be >= initialAvailableOutgoingBitrate");
-
 		if (maxBitrate < MinBitrate)
 			MS_THROW_ERROR("maxOutgoingBitrate must be >= 30000bps");
 

@@ -127,7 +127,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Method to retrieve Router RTP capabilities.
 	readonly #getRouterRtpCapabilities: () => RtpCapabilities;
@@ -191,7 +191,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData: any;
+			appData?: Record<string, unknown>;
 			getRouterRtpCapabilities: () => RtpCapabilities;
 			getProducerById: (producerId: string) => Producer;
 			getDataProducerById: (dataProducerId: string) => DataProducer;
@@ -206,7 +206,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		this.#data = data;
 		this.channel = channel;
 		this.payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
@@ -231,7 +231,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -239,7 +239,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
@@ -454,7 +454,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			rtpParameters,
 			paused = false,
 			keyFrameRequestDelay,
-			appData = {}
+			appData
 		}: ProducerOptions
 	): Promise<Producer>
 	{
@@ -564,7 +564,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			mid,
 			preferredLayers,
 			pipe = false,
-			appData = {}
+			appData
 		}: ConsumerOptions
 	): Promise<Consumer>
 	{
@@ -664,7 +664,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			sctpStreamParameters,
 			label = '',
 			protocol = '',
-			appData = {}
+			appData
 		}: DataProducerOptions = {}
 	): Promise<DataProducer>
 	{
@@ -742,7 +742,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			ordered,
 			maxPacketLifeTime,
 			maxRetransmits,
-			appData = {}
+			appData
 		}: DataConsumerOptions
 	): Promise<DataConsumer>
 	{
