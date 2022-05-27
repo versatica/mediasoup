@@ -9,6 +9,7 @@
 * `RateCalculator`: Fix old buffer items cleanup (PR #819 by @dsdolzhenko).
 * `DirectTransport`: Create a buffer to process RTP packets (PR #730 by @rtctt).
 * Node: Improve `appData` TypeScript syntax and initialization.
+* Allow setting max outgoing bitrate below the initial value (PR #826 by @ggarber).
 * Update NPM deps and TypeScript version.
 
 
