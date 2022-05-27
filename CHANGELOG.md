@@ -1,7 +1,7 @@
 # Changelog
 
 
-### WIP
+### 3.9.14
 
 * `NackGenerator`: Add a configurable delay before sending NACK (PR #827, credits to @penguinol).
 * `SimulcastConsumer`: Fix a race condition in SimulcastConsumer (PR #825 by @dsdolzhenko).
