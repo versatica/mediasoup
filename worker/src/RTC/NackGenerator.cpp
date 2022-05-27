@@ -75,7 +75,7 @@ namespace RTC
 				  packet->GetSequenceNumber(),
 				  isRecovered ? "true" : "false");
 
-				uint8_t retries = it->second.retries;
+				auto retries = it->second.retries;
 
 				this->nackList.erase(it);
 
