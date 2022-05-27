@@ -182,15 +182,16 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpStreamRecv::RtpStreamRecv(RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params)
-	  : RTC::RtpStream::RtpStream(listener, params, 10),
+	RtpStreamRecv::RtpStreamRecv(
+	  RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params, unsigned int sendNackDelayMs)
+	  : RTC::RtpStream::RtpStream(listener, params, 10), sendNackDelayMs(sendNackDelayMs),
 	    transmissionCounter(
 	      params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500)
 	{
 		MS_TRACE();
 
 		if (this->params.useNack)
-			this->nackGenerator.reset(new RTC::NackGenerator(this));
+			this->nackGenerator.reset(new RTC::NackGenerator(this, this->sendNackDelayMs));
 
 		// Run the RTP inactivity periodic timer (use a different timeout if DTX is
 		// enabled).

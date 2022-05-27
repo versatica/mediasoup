@@ -8,6 +8,8 @@
 
 using namespace RTC;
 
+static constexpr unsigned int SendNackDelay{ 0u }; // In ms.
+
 struct TestNackGeneratorInput
 {
 	TestNackGeneratorInput() = default;
@@ -121,7 +123,7 @@ RtpPacket* packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
 void validate(std::vector<TestNackGeneratorInput>& inputs)
 {
 	TestNackGeneratorListener listener;
-	NackGenerator nackGenerator = NackGenerator(&listener);
+	NackGenerator nackGenerator = NackGenerator(&listener, SendNackDelay);
 
 	for (auto input : inputs)
 	{

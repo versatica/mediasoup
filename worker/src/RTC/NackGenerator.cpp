@@ -12,16 +12,16 @@ namespace RTC
 {
 	/* Static. */
 
-	constexpr size_t MaxPacketAge{ 10000u };
-	constexpr size_t MaxNackPackets{ 1000u };
-	constexpr uint32_t DefaultRtt{ 100u };
-	constexpr uint8_t MaxNackRetries{ 10u };
-	constexpr uint64_t TimerInterval{ 40u };
-	constexpr uint8_t SendNackDelayMs{ 10u };
+	static constexpr size_t MaxPacketAge{ 10000u };
+	static constexpr size_t MaxNackPackets{ 1000u };
+	static constexpr uint32_t DefaultRtt{ 100u };
+	static constexpr uint8_t MaxNackRetries{ 10u };
+	static constexpr uint64_t TimerInterval{ 40u };
 
 	/* Instance methods. */
 
-	NackGenerator::NackGenerator(Listener* listener) : listener(listener), rtt(DefaultRtt)
+	NackGenerator::NackGenerator(Listener* listener, unsigned int sendNackDelayMs)
+	  : listener(listener), sendNackDelayMs(sendNackDelayMs), rtt(DefaultRtt)
 	{
 		MS_TRACE();
 
@@ -189,7 +189,13 @@ namespace RTC
 			if (this->recoveredList.find(seq) != this->recoveredList.end())
 				continue;
 
-			this->nackList.emplace(std::make_pair(seq, NackInfo{ seq, seq, DepLibUV::GetTimeMs() }));
+			this->nackList.emplace(std::make_pair(
+			  seq,
+			  NackInfo{
+			    DepLibUV::GetTimeMs(),
+			    seq,
+			    seq,
+			  }));
 		}
 	}
 
@@ -232,11 +238,12 @@ namespace RTC
 			NackInfo& nackInfo = it->second;
 			uint16_t seq       = nackInfo.seq;
 
-			if (nowMs - nackInfo.createdAtMs < SendNackDelayMs)
+			if (this->sendNackDelayMs > 0 && nowMs - nackInfo.createdAtMs < this->sendNackDelayMs)
 			{
 				++it;
 				continue;
 			}
+
 			// clang-format off
 			if (
 				filter == NackFilter::SEQ &&
