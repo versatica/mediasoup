@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.9.15
+
+* `RateCalculator`: Revert Fix old buffer items cleanup (PR #819 by @dsdolzhenko).
+
+
 ### 3.9.14
 
 * `NackGenerator`: Add a configurable delay before sending NACK (PR #827, credits to @penguinol).
