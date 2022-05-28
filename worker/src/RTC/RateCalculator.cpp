@@ -29,9 +29,22 @@ namespace RTC
 			if (this->newestItemIndex >= this->windowItems)
 				this->newestItemIndex = 0;
 
-			MS_ASSERT(
-			  this->newestItemIndex != this->oldestItemIndex || this->oldestItemIndex == -1,
-			  "newest index overlaps with the oldest one");
+			// Newest index overlaps with the oldest one, remove it.
+			if (this->newestItemIndex == this->oldestItemIndex && this->oldestItemIndex != -1)
+			{
+				MS_WARN_TAG(
+				  info,
+				  "calculation buffer full, windowSizeMs:%zu ms windowItems:%" PRIu16,
+				  this->windowSizeMs,
+				  this->windowItems);
+
+				BufferItem& oldestItem = this->buffer[this->oldestItemIndex];
+				this->totalCount -= oldestItem.count;
+				oldestItem.count = 0u;
+				oldestItem.time  = 0u;
+				if (++this->oldestItemIndex >= this->windowItems)
+					this->oldestItemIndex = 0;
+			}
 
 			// Set the newest item.
 			BufferItem& item = this->buffer[this->newestItemIndex];
@@ -85,21 +98,21 @@ namespace RTC
 		if (this->newestItemIndex < 0 || this->oldestItemIndex < 0)
 			return;
 
-		uint64_t newOldestTime = nowMs - this->windowSizeMs;
+		uint64_t newoldestTime = nowMs - this->windowSizeMs;
 
 		// Oldest item already removed.
-		if (newOldestTime < this->oldestItemStartTime)
+		if (newoldestTime <= this->oldestItemStartTime)
 			return;
 
 		// A whole window size time has elapsed since last entry. Reset the buffer.
-		if (newOldestTime > this->newestItemStartTime)
+		if (newoldestTime > this->newestItemStartTime)
 		{
 			Reset();
 
 			return;
 		}
 
-		while (this->oldestItemStartTime <= newOldestTime)
+		while (this->oldestItemStartTime < newoldestTime)
 		{
 			BufferItem& oldestItem = this->buffer[this->oldestItemIndex];
 			this->totalCount -= oldestItem.count;
