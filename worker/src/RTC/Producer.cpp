@@ -18,6 +18,10 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr unsigned int SendNackDelay{ 10u }; // In ms.
+
 	/* Instance methods. */
 
 	Producer::Producer(const std::string& id, RTC::Producer::Listener* listener, json& data)
@@ -1139,7 +1143,7 @@ namespace RTC
 		}
 
 		// Create a RtpStreamRecv for receiving a media stream.
-		auto* rtpStream = new RTC::RtpStreamRecv(this, params);
+		auto* rtpStream = new RTC::RtpStreamRecv(this, params, SendNackDelay);
 
 		// Insert into the maps.
 		this->mapSsrcRtpStream[ssrc]              = rtpStream;

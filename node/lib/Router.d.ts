@@ -23,7 +23,7 @@ export declare type RouterOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type PipeToRouterOptions = {
     /**
@@ -100,7 +100,7 @@ export declare class Router extends EnhancedEventEmitter<RouterEvents> {
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData?: any;
+        appData?: Record<string, unknown>;
     });
     /**
      * Router id.
@@ -117,11 +117,11 @@ export declare class Router extends EnhancedEventEmitter<RouterEvents> {
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *

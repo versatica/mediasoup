@@ -65,7 +65,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.channel = channel;
         this.payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
         this.getProducerById = getProducerById;
         this.getDataProducerById = getDataProducerById;
@@ -241,7 +241,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a Producer.
      */
-    async produce({ id = undefined, kind, rtpParameters, paused = false, keyFrameRequestDelay, appData = {} }) {
+    async produce({ id = undefined, kind, rtpParameters, paused = false, keyFrameRequestDelay, appData }) {
         logger.debug('produce()');
         if (id && this.#producers.has(id))
             throw new TypeError(`a Producer with same id "${id}" already exists`);
@@ -311,7 +311,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      *
      * @virtual
      */
-    async consume({ producerId, rtpCapabilities, paused = false, mid, preferredLayers, pipe = false, appData = {} }) {
+    async consume({ producerId, rtpCapabilities, paused = false, mid, preferredLayers, pipe = false, appData }) {
         logger.debug('consume()');
         if (!producerId || typeof producerId !== 'string')
             throw new TypeError('missing producerId');
@@ -376,7 +376,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a DataProducer.
      */
-    async produceData({ id = undefined, sctpStreamParameters, label = '', protocol = '', appData = {} } = {}) {
+    async produceData({ id = undefined, sctpStreamParameters, label = '', protocol = '', appData } = {}) {
         logger.debug('produceData()');
         if (id && this.dataProducers.has(id))
             throw new TypeError(`a DataProducer with same id "${id}" already exists`);
@@ -424,7 +424,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a DataConsumer.
      */
-    async consumeData({ dataProducerId, ordered, maxPacketLifeTime, maxRetransmits, appData = {} }) {
+    async consumeData({ dataProducerId, ordered, maxPacketLifeTime, maxRetransmits, appData }) {
         logger.debug('consumeData()');
         if (!dataProducerId || typeof dataProducerId !== 'string')
             throw new TypeError('missing dataProducerId');

@@ -13,7 +13,7 @@ export type DirectTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type DirectTransportStat =

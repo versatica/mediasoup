@@ -45,7 +45,7 @@ export declare type PipeTransportOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type PipeTransportStat = {
     type: string;
@@ -79,7 +79,7 @@ export declare type PipeConsumerOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type PipeTransportEvents = TransportEvents & {
     sctpstatechange: [SctpState];

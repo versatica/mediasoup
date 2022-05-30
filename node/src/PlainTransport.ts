@@ -74,7 +74,7 @@ export type PlainTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 /**

@@ -30,7 +30,7 @@ export type RouterOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type PipeToRouterOptions =
@@ -142,7 +142,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Transports map.
 	readonly #transports: Map<string, Transport> = new Map();
@@ -182,7 +182,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: any;
+			appData?: Record<string, unknown>;
 		}
 	)
 	{
@@ -194,7 +194,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 	}
 
 	/**
@@ -224,7 +224,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -232,7 +232,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
@@ -356,7 +356,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 262144,
 			sctpSendBufferSize = 262144,
-			appData = {}
+			appData
 		}: WebRtcTransportOptions
 	): Promise<WebRtcTransport>
 	{
@@ -453,7 +453,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			sctpSendBufferSize = 262144,
 			enableSrtp = false,
 			srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
-			appData = {}
+			appData
 		}: PlainTransportOptions
 	): Promise<PlainTransport>
 	{
@@ -558,7 +558,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			sctpSendBufferSize = 268435456,
 			enableRtx = false,
 			enableSrtp = false,
-			appData = {}
+			appData
 		}: PipeTransportOptions
 	): Promise<PipeTransport>
 	{
@@ -641,7 +641,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	async createDirectTransport(
 		{
 			maxMessageSize = 262144,
-			appData = {}
+			appData
 		}: DirectTransportOptions =
 		{
 			maxMessageSize : 262144
@@ -984,7 +984,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	async createActiveSpeakerObserver(
 		{
 			interval = 300,
-			appData = {}
+			appData
 		}: ActiveSpeakerObserverOptions = {}
 	): Promise<ActiveSpeakerObserver>
 	{
@@ -1029,7 +1029,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			maxEntries = 1,
 			threshold = -80,
 			interval = 1000,
-			appData = {}
+			appData
 		}: AudioLevelObserverOptions = {}
 	): Promise<AudioLevelObserver>
 	{

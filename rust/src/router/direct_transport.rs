@@ -25,9 +25,9 @@ use log::{debug, error};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
-use std::{fmt, mem};
 
 /// [`DirectTransport`] options.
 #[derive(Debug, Clone)]
@@ -147,7 +147,7 @@ struct Inner {
     router: Router,
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
-    subscription_handlers: Mutex<Vec<Option<SubscriptionHandler>>>,
+    _subscription_handlers: Mutex<Vec<Option<SubscriptionHandler>>>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 
@@ -166,8 +166,6 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
-            let subscription_handlers: Vec<_> = mem::take(&mut self.subscription_handlers.lock());
-
             if close_request {
                 let channel = self.channel.clone();
                 let request = TransportCloseRequest {
@@ -182,20 +180,8 @@ impl Inner {
                         if let Err(error) = channel.request(request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
-
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handlers);
                     })
                     .detach();
-            } else {
-                self.executor
-                    .spawn(async move {
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handlers);
-                    })
-                    .detach()
             }
         }
     }
@@ -513,7 +499,7 @@ impl DirectTransport {
             app_data,
             router,
             closed: AtomicBool::new(false),
-            subscription_handlers: Mutex::new(vec![
+            _subscription_handlers: Mutex::new(vec![
                 subscription_handler,
                 payload_subscription_handler,
             ]),

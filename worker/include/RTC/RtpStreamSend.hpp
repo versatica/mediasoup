@@ -43,7 +43,9 @@ namespace RTC
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
+		void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report);
 		RTC::RTCP::SenderReport* GetRtcpSenderReport(uint64_t nowMs);
+		RTC::RTCP::DelaySinceLastRr::SsrcInfo* GetRtcpXrDelaySinceLastRr(uint64_t nowMs);
 		RTC::RTCP::SdesChunk* GetRtcpSdesChunk();
 		void Pause() override;
 		void Resume() override;
@@ -71,6 +73,11 @@ namespace RTC
 		std::vector<StorageItem> storage;
 		uint16_t rtxSeq{ 0u };
 		RTC::RtpDataCounter transmissionCounter;
+		uint32_t lastRrTimestamp{ 0u };  // The middle 32 bits out of 64 in the NTP
+		                                 // timestamp received in the most recent
+		                                 // receiver reference timestamp.
+		uint64_t lastRrReceivedMs{ 0u }; // Wallclock time representing the most recent
+		                                 // receiver reference timestamp arrival.
 	};
 } // namespace RTC
 

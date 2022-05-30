@@ -312,6 +312,16 @@ namespace RTC
 
 		packet->AddSdesChunk(sdesChunk);
 
+		auto* dlrr = rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
+
+		if (dlrr)
+		{
+			auto* report = new RTC::RTCP::DelaySinceLastRr();
+
+			report->AddSsrcInfo(dlrr);
+			packet->AddDelaySinceLastRr(report);
+		}
+
 		this->lastRtcpSentTime = nowMs;
 	}
 
@@ -386,6 +396,16 @@ namespace RTC
 		auto* rtpStream = this->mapSsrcRtpStream.at(report->GetSsrc());
 
 		rtpStream->ReceiveRtcpReceiverReport(report);
+	}
+
+	void PipeConsumer::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+	{
+		MS_TRACE();
+
+		for (auto* rtpStream : this->rtpStreams)
+		{
+			rtpStream->ReceiveRtcpXrReceiverReferenceTime(report);
+		}
 	}
 
 	uint32_t PipeConsumer::GetTransmissionRate(uint64_t nowMs)

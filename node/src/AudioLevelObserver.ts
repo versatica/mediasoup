@@ -24,7 +24,7 @@ export interface AudioLevelObserverOptions
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export interface AudioLevelObserverVolume

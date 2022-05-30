@@ -30,7 +30,7 @@ export type DataProducerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type DataProducerStat =
@@ -89,7 +89,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Observer instance.
 	readonly #observer = new EnhancedEventEmitter<DataProducerObserverEvents>();
@@ -112,7 +112,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData: any;
+			appData?: Record<string, unknown>;
 		}
 	)
 	{
@@ -124,7 +124,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 
 		this.handleWorkerNotifications();
 	}
@@ -180,7 +180,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -188,7 +188,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}

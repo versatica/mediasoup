@@ -24,7 +24,7 @@ export declare type DataProducerOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type DataProducerStat = {
     type: string;
@@ -56,7 +56,7 @@ export declare class DataProducer extends EnhancedEventEmitter<DataProducerEvent
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData: any;
+        appData?: Record<string, unknown>;
     });
     /**
      * DataProducer id.
@@ -85,11 +85,11 @@ export declare class DataProducer extends EnhancedEventEmitter<DataProducerEvent
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
      *
