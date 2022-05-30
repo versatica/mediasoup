@@ -1093,6 +1093,7 @@ namespace RTC
 
 		this->syncRequired                 = true;
 		this->keyFrameForTsOffsetRequested = false;
+		this->checkingForOldPacketsInSpatialLayer = false;
 
 		if (IsActive())
 			MayChangeLayers();
