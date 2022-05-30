@@ -1091,8 +1091,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->syncRequired                 = true;
-		this->keyFrameForTsOffsetRequested = false;
+		this->syncRequired                        = true;
+		this->keyFrameForTsOffsetRequested        = false;
 		this->checkingForOldPacketsInSpatialLayer = false;
 
 		if (IsActive())
