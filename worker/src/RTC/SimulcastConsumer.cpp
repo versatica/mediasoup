@@ -826,7 +826,7 @@ namespace RTC
 
 		if (!shouldSwitchCurrentSpatialLayer && this->checkingForOldPacketsInSpatialLayer)
 		{
-			// If this is a packet previous to the spatial layer switch, ignore the packet
+			// If this is a packet previous to the spatial layer switch, ignore the packet.
 			if (SeqManager<uint16_t>::IsSeqLowerThan(
 			      packet->GetSequenceNumber(), this->snReferenceSpatialLayer))
 			{
