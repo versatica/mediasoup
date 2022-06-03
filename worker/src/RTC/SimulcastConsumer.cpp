@@ -16,6 +16,7 @@ namespace RTC
 	static constexpr uint64_t StreamMinActiveMs{ 2000u };           // In ms.
 	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u }; // In ms.
 	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };     // In ms.
+	static constexpr uint16_t MaxSequenceNumberGap{ 100u };
 
 	/* Instance methods. */
 
@@ -823,12 +824,30 @@ namespace RTC
 			this->keyFrameForTsOffsetRequested = false;
 		}
 
+		if (!shouldSwitchCurrentSpatialLayer && this->checkingForOldPacketsInSpatialLayer)
+		{
+			// If this is a packet previous to the spatial layer switch, ignore the packet.
+			if (SeqManager<uint16_t>::IsSeqLowerThan(
+			      packet->GetSequenceNumber(), this->snReferenceSpatialLayer))
+			{
+				return;
+			}
+			else if (SeqManager<uint16_t>::IsSeqHigherThan(
+			           packet->GetSequenceNumber(), this->snReferenceSpatialLayer + MaxSequenceNumberGap))
+			{
+				this->checkingForOldPacketsInSpatialLayer = false;
+			}
+		}
+
 		bool marker{ false };
 
 		if (shouldSwitchCurrentSpatialLayer)
 		{
 			// Update current spatial layer.
 			this->currentSpatialLayer = this->targetSpatialLayer;
+
+			this->snReferenceSpatialLayer             = packet->GetSequenceNumber();
+			this->checkingForOldPacketsInSpatialLayer = true;
 
 			// Update target and current temporal layer.
 			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
@@ -1092,9 +1111,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->syncRequired                 = true;
-		this->spatialLayerToSync           = -1;
-		this->keyFrameForTsOffsetRequested = false;
+		this->syncRequired                        = true;
+		this->spatialLayerToSync                  = -1;
+		this->keyFrameForTsOffsetRequested        = false;
+		this->checkingForOldPacketsInSpatialLayer = false;
 
 		if (IsActive())
 			MayChangeLayers();
