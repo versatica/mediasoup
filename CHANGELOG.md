@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 3.9.16
+
+* `SimulcastConsumer`: Fix spatial layer switch with unordered packets (PR #823 by @jcague).
+* Revert PR #819 which produced an infinite loop in `RateCalculator`.
+* Update NPM deps and TypeScript version.
+
+
 ### 3.9.15
 
 * `RateCalculator`: Revert Fix old buffer items cleanup (PR #819 by @dsdolzhenko).
