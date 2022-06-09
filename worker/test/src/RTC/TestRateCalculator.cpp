@@ -59,6 +59,22 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 		validate(rate, nowMs, input);
 	}
 
+	SECTION("receive item every 1000 ms")
+	{
+		RateCalculator rate(1000, 8000, 100);
+
+		// clang-format off
+		std::vector<data> input =
+		{
+			{ 0,    5, 40 },
+			{ 1000, 5, 40 },
+			{ 2000, 5, 40 }
+		};
+		// clang-format on
+
+		validate(rate, nowMs, input);
+	}
+
 	SECTION("slide")
 	{
 		RateCalculator rate(1000, 8000, 1000);
