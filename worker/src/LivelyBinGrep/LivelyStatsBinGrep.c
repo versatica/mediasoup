@@ -18,9 +18,9 @@
 //#include <regex.h>
 
 // These defines should match LivelyBinLogs.hpp values
-#define BINLOG_FORMAT_VERSION "e58c1d"
+#define BINLOG_FORMAT_VERSION "e58c1e"
 #define CALL_STATS_BIN_LOG_RECORDS_NUM 8 
-#define CALL_STATS_BIN_LOG_SAMPLING    10000
+#define CALL_STATS_BIN_LOG_SAMPLING    2000
 
 #define MAX_TIME_ALIGN        10
 #define MAX_RECORDS_IN_BUFFER 1000
@@ -560,31 +560,7 @@ int parse_file_name(ms_binlog_config *conf)
 
   memset(conf->call_id, 0, UUID_CHAR_LEN + 1);
   memset(conf->producer_id, 0, UUID_CHAR_LEN + 1);
-/*
-  regex_t regex;
-  int reti;
-  regmatch_t regmatch;
-  
-  reti = regcomp(&regex, "^ms(.)+", 0);//"^ms_(c|p)_([a-fA-F0-9-]+)(_[a-fA-F0-9-]+)?_([0-9]{13})\\.([0-9a-fA-F]{6})\\.bin\\.log$", 0);
-  if (reti)
-  {
-    printf("Can't compile regex, exit...");
-    return 1;
-  }
 
-  reti = regexec(&regex, tmp, 0, NULL,0);
-  if (!reti)
-  {
-    printf("Match, yay! exit...");
-    return 1;
-  }
-  else
-  {
-    printf("Regex did not match %s, exit", tmp);
-    regfree(&regex);
-    return 1;
-  }
-*/
   ch = strtok(tmp, "_");
 
   if(ch == 0 || strcmp(ch, "ms") != 0)

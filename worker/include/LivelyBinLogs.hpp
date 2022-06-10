@@ -14,9 +14,9 @@
 // sizeof(CallStatsSample)== 28 bytes, CALL_STATS_BIN_LOG_RECORDS_NUM should be divisible by 4.
 // Alternative is to increase it to 32 at a cost of wasting 4 bytes per data record.
 
-#define BINLOG_FORMAT_VERSION "e58c1d"
+#define BINLOG_FORMAT_VERSION "e58c1e"
 #define CALL_STATS_BIN_LOG_RECORDS_NUM 8
-#define CALL_STATS_BIN_LOG_SAMPLING    10000
+#define CALL_STATS_BIN_LOG_SAMPLING    2000
 
 #define UINT32_UNSET                   ((uint32_t)-1)
 #define UINT64_UNSET                   ((uint64_t)-1)
