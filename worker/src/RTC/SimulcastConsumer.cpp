@@ -637,9 +637,11 @@ namespace RTC
 				//MS_DEBUG_DEV(
 				MS_DEBUG_TAG_LIVELYAPP(simulcast, this->appData,
 				  "possible target spatial layer downgrade (from %" PRIi16 " to %" PRIi16
-				  ") due to BWE limitation",
-				  this->currentSpatialLayer,
-				  this->targetSpatialLayer);
+				  ") due to BWE limitation | P1=\"%" PRIi16 "\" P2=\"%" PRIi16 "\" ",
+					this->currentSpatialLayer,
+                    this->targetSpatialLayer,
+                    this->currentSpatialLayer,
+                    this->targetSpatialLayer);
 
 				this->lastBweDowngradeAtMs = DepLibUV::GetTimeMs();
 			}
@@ -1419,7 +1421,7 @@ namespace RTC
 		  "target layers changed [spatial:%" PRIi16 ", temporal:%" PRIi16 ", consumerId:%s]",
 		  this->targetSpatialLayer,
 		  this->targetTemporalLayer,
-		  this->id.c_str());
+		  this->id.c_str());	
 
 		// If the target spatial layer is different than the current one, request
 		// a key frame.

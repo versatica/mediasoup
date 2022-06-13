@@ -7,9 +7,14 @@ using json = nlohmann::json;
 namespace Lively {
   std::string AppData::ToStr() const 
   {
-    // TODO: see which format would be better for logging
-    json j; 
-    to_json(j, *this); 
-    return j.dump();
+    std::string appData;
+    if(this != nullptr)
+    {
+      appData.append("callId=").append("\"").append(this->callId).append("\"").append(" peerId=").append("\"").append(this->peerId)
+      .append("\"").append(" mirrorId=").append( "\"").append(this->mirrorId).append( "\"").append(" streamName=")
+      .append("\"").append(this->streamName).append("\"").append(" objectId=").append("\"").append(this->id).append("\"") ;
+    }
+
+    return appData;
   }
 }
