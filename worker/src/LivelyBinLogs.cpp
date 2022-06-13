@@ -4,34 +4,181 @@
 #include "LivelyBinLogs.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include <cstring>
 
 namespace Lively
 {
 
-CallStatsRecordCtx::CallStatsRecordCtx(uint64_t objType, std::string callId, std::string objId, std::string producerId)
+constexpr uint8_t hexVal[256] = {
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,  1,  2,  3,  4,  5,  6, 7, 8, 9, 0, 0, 0, 0, 0, 0,  // '0'=0x30 .. '9'
+    0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 'A'=0x41 .. 'F'
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 'a'=0x61 .. 'f'
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+};
+
+
+CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string callId, std::string obj, std::string producer)
+  : type(type), call_id(callId), object_id(obj), producer_id(producer) 
 {
-  std::strncpy(record.call_id, callId.c_str(), 36);
-  std::strncpy(record.object_id, objId.c_str(), 36);
-  std::strncpy(record.producer_id, producerId.c_str(), 36);
-  record.source = objType;
-  record.start_tm = Utils::Time::currentStdEpochMs();
-  record.filled = UINT16_UNSET;
+  uint64_t ts = Utils::Time::currentStdEpochMs();
+
+  if (type) // consumer
+  {
+    record.c.start_tm = ts;
+    record.c.payload = payload;
+    record.c.filled=UINT32_UNSET;
+    
+    std::memset(record.c.consumer_id, 0, UUID_BYTE_LEN);
+    uuidToBytes(obj, record.c.consumer_id);
+    
+    std::memset(record.c.producer_id, 0, UUID_BYTE_LEN);
+    uuidToBytes(producer, record.c.producer_id);
+
+    std::memset(record.c.samples, 0, sizeof(record.c.samples));
+  }
+  else // producer
+  {
+    record.p.start_tm = ts;
+    record.p.filled=UINT32_UNSET;
+    record.p.payload = payload;
+    
+    std::memset(record.p.samples, 0, sizeof(record.p.samples));
+  }
 }
 
 
+uint8_t* CallStatsRecord::hexStrToBytes(const char* from, int num, uint8_t* to)
+{
+  for (int i = 0; i < num; i++)
+  {
+    *to++ = (hexVal[from[i * 2] & 0xFF] << 4) + (hexVal[from[i * 2 + 1] & 0xFF]);
+  }
+  return to;
+}
+
+
+bool CallStatsRecord::uuidToBytes(std::string uuid, uint8_t *out)
+{
+  //00000000-0000-0000-0000-000000000000 : remove '-' and convert digit chars into hex
+  char cstr[37];
+  //out should be 16 bytes long
+  uint8_t *p = out;
+  std::memset(cstr, 0, sizeof(cstr));
+  std::strcpy(cstr, uuid.c_str());
+  if (std::strlen(cstr) != UUID_CHAR_LEN)
+    return false;
+
+  char *ch = std::strtok(cstr, "-");
+  while (ch)
+  {
+    p = hexStrToBytes(ch, std::strlen(ch)/2, p);
+    ch = std::strtok(NULL,"-");
+  }
+  return true;
+}
+
+// fd is opened file handle; if returned false, a caller should close the file, etc.
+bool CallStatsRecord::fwriteRecord(std::FILE* fd)
+{
+  int rc;
+  if (type) // consumer
+  {
+    rc = std::fwrite(&record.c, sizeof(ConsumerRecord), 1, fd);
+  }
+  else
+  {
+    rc = std::fwrite(&record.p, sizeof(ProducerRecord), 1, fd);
+  }
+  return  (rc > 0);
+}
+
+void CallStatsRecord::resetSamples()
+{
+  // Wipe off samples data
+  if (type) // consumer
+  {
+    std::memset(&record.c.samples, 0, sizeof(record.c.samples));
+    record.c.filled = UINT32_UNSET;
+    record.c.start_tm = UINT64_UNSET;
+  }
+  else
+  {
+    std::memset(record.p.samples, 0, sizeof(record.p.samples));
+    record.p.filled = UINT32_UNSET;
+    record.p.start_tm = UINT64_UNSET;
+  }
+}
+
+
+void CallStatsRecord::zeroSamples(uint64_t nowMs)
+{
+  if (type)
+  {
+    record.c.start_tm = nowMs;
+    record.c.filled = 0;
+  }
+  else
+  {
+    record.p.start_tm = nowMs;
+    record.p.filled = 0;
+  }
+}
+
+
+bool CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
+{
+  if (filled() == UINT32_UNSET || filled() >= CALL_STATS_BIN_LOG_RECORDS_NUM)
+    return false;
+  
+  uint32_t idx = filled();
+  CallStatsSample* s = type ? &(record.c.samples[0]) : &(record.p.samples[0]);
+
+  s[idx].epoch_len = static_cast<uint16_t>(curr.ts - last.ts);
+  s[idx].packets_count = static_cast<uint16_t>(curr.packetsCount - last.packetsCount);
+  s[idx].bytes_count = static_cast<uint32_t>(curr.bytesCount - last.bytesCount);
+  s[idx].packets_lost = (curr.packetsLost > last.packetsLost) ? static_cast<uint16_t>(curr.packetsLost - last.packetsLost) : 0;
+  s[idx].packets_discarded = static_cast<uint16_t>(curr.packetsDiscarded - last.packetsDiscarded);
+  s[idx].packets_repaired = static_cast<uint16_t>(curr.packetsRepaired - last.packetsRepaired);
+  s[idx].packets_retransmitted = static_cast<uint16_t>(curr.packetsRetransmitted - last.packetsRetransmitted);
+  s[idx].nack_count = static_cast<uint16_t>(curr.nackCount - last.nackCount);
+  s[idx].nack_pkt_count = static_cast<uint16_t>(curr.nackPacketCount - last.nackPacketCount);
+  s[idx].kf_count = static_cast<uint16_t>(curr.kfCount - last.kfCount);
+  s[idx].rtt = static_cast<uint16_t>(std::round(curr.rtt));
+  s[idx].max_pts = curr.maxPacketTs;
+  
+  if (type)
+    record.c.filled++;
+  else
+    record.p.filled++;
+  return true;
+}
+
+/////////////////////////
+//
 void CallStatsRecordCtx::WriteIfFull(StatsBinLog* log)
 {
-  if (record.filled == UINT16_UNSET || record.filled < CALL_STATS_BIN_LOG_RECORDS_NUM)
+  if (record.filled() == UINT32_UNSET || record.filled() < CALL_STATS_BIN_LOG_RECORDS_NUM)
     return;
 
   if (nullptr != log)
   {
-    log->OnLogWrite(this); // TODO: add const
+    log->OnLogWrite(this);
   }
 
   // Wipe the data off
-  std::memset(record.samples, 0, sizeof(record.samples));
-  record.filled = UINT16_UNSET;
+  record.resetSamples();
 }
 
 
@@ -39,41 +186,29 @@ void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream
 {
   WriteIfFull(log);
 
-  uint64_t nowMs = Utils::Time::currentStdEpochMs(); //DepLibUV::GetTimeMs();
-  if (UINT16_UNSET == record.filled)
+  uint64_t nowMs = Utils::Time::currentStdEpochMs();
+  if (UINT32_UNSET == record.filled())
   {
-    record.start_tm = nowMs;
     stream->FillStats(last.packetsCount, last.bytesCount, last.packetsLost, last.packetsDiscarded,
                       last.packetsRetransmitted, last.packetsRepaired, last.nackCount,
                       last.nackPacketCount, last.kfCount, last.rtt, last.maxPacketTs);
-    record.filled = 0; // now start reading data
+    last.ts = nowMs;
+    record.zeroSamples(nowMs);
   }
   else
   {
-    MS_ASSERT(record.filled >= 0 && record.filled < CALL_STATS_BIN_LOG_RECORDS_NUM, "Invalid record.filled=%" PRIu16, record.filled);
+    MS_ASSERT(record.filled() >= 0 && record.filled() < CALL_STATS_BIN_LOG_RECORDS_NUM, "Invalid record.filled=%" PRIu16, record.filled());
     stream->FillStats(curr.packetsCount, curr.bytesCount, curr.packetsLost, curr.packetsDiscarded,
                       curr.packetsRetransmitted, curr.packetsRepaired, curr.nackCount,
                       curr.nackPacketCount, curr.kfCount, curr.rtt, curr.maxPacketTs);
-
-    record.samples[record.filled].epoch_len = static_cast<uint16_t>(nowMs - record.start_tm);
-    record.samples[record.filled].packets_count = static_cast<uint16_t>(curr.packetsCount - last.packetsCount);
-    record.samples[record.filled].bytes_count = static_cast<uint32_t>(curr.bytesCount - last.bytesCount);
-    record.samples[record.filled].packets_lost = static_cast<uint16_t>(curr.packetsLost - last.packetsLost);
-    record.samples[record.filled].packets_discarded = static_cast<uint16_t>(curr.packetsDiscarded - last.packetsDiscarded);
-    record.samples[record.filled].packets_repaired = static_cast<uint16_t>(curr.packetsRepaired - last.packetsRepaired);
-    record.samples[record.filled].packets_retransmitted = static_cast<uint16_t>(curr.packetsRetransmitted - last.packetsRetransmitted);
-    record.samples[record.filled].nack_count = static_cast<uint16_t>(curr.nackCount - last.nackCount);
-    record.samples[record.filled].nack_pkt_count = static_cast<uint16_t>(curr.nackPacketCount - last.nackPacketCount);
-    record.samples[record.filled].kf_count = static_cast<uint16_t>(curr.kfCount - last.kfCount);
-    record.samples[record.filled].rtt = static_cast<uint16_t>(std::round(curr.rtt));
-    record.samples[record.filled].max_pts = curr.maxPacketTs;
-    
+    curr.ts = nowMs;
+    record.addSample(last, curr);    
     this->last = this->curr;
-    record.filled++;
   }
 }
 
-
+/////////////////////////
+//
 int StatsBinLog::LogOpen()
 {
   int ret = 0;
@@ -83,7 +218,7 @@ int StatsBinLog::LogOpen()
   {
     MS_WARN_TAG(
       rtp,
-      "bin log failed to open '%s'", this->bin_log_file_path.c_str()
+      "binlog failed to open '%s'", this->bin_log_file_path.c_str()
     );
     ret = errno;
     initialized = false;
@@ -92,7 +227,7 @@ int StatsBinLog::LogOpen()
   {
     MS_DEBUG_TAG(
       rtp,
-      "bin log opened '%s'", this->bin_log_file_path.c_str()
+      "binlog opened '%s'", this->bin_log_file_path.c_str()
     );
   }
 
@@ -108,14 +243,8 @@ int StatsBinLog::LogClose(CallStatsRecordCtx* ctx)
   {
     if (ctx)
     {
-      std::size_t rc = std::fwrite(&(ctx->record), sizeof(CallStatsRecord), 1, this->fd);
-      if (rc <= 0 || rc != sizeof(CallStatsRecord))
-      {
+      if (!ctx->record.fwriteRecord(this->fd))
         ret = errno;
-      }
-      //rc = std::fputc('\n', this->fd);
-      //if (rc <= 0) // TODO: different way of checking for errors, see std::ferror
-      //  ret = errno;
     }
     std::fflush(this->fd);
     std::fclose(this->fd);
@@ -123,15 +252,14 @@ int StatsBinLog::LogClose(CallStatsRecordCtx* ctx)
     
     MS_DEBUG_TAG(
       rtp,
-      "bin log closed '%s'", this->bin_log_file_path.c_str()
+      "binlog closed '%s'", this->bin_log_file_path.c_str()
     );
   }
 
   // Save the last sample just in case and clean up recorded data
   if (ctx)
   {
-    std::memset(ctx->record.samples, 0, sizeof(ctx->record.samples));
-    ctx->record.filled = UINT16_UNSET;
+    ctx->record.resetSamples();
   }
 
   return ret;
@@ -141,11 +269,10 @@ int StatsBinLog::LogClose(CallStatsRecordCtx* ctx)
 int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
 {
   #define DAY_IN_MS (uint64_t)86400000
-
   int ret = 0;
   bool signal_set = false;
 
-  uint64_t now = Utils::Time::currentStdEpochMs(); //DepLibUV::GetTimeMs();
+  uint64_t now = Utils::Time::currentStdEpochMs();
 
   if (now - this->log_start_ts > DAY_IN_MS)
   {
@@ -169,21 +296,20 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
   {
     MS_WARN_TAG(
       rtp,
-      "bin log can't write, fd=0"
+      "binlog can't write, fd=0"
     );
   }
   if (!ctx)
   {
     MS_WARN_TAG(
       rtp,
-      "bin log can't write, ctx=0"
+      "binlog can't write, ctx=0"
     );
   }
 
-  if(this->fd && ctx && ctx->record.filled)
+  if(this->fd && ctx && ctx->record.filled())
   {
-    std::size_t rc = std::fwrite(&(ctx->record), sizeof(CallStatsRecord), 1, this->fd);
-    if(rc <= 0)
+    if (!ctx->record.fwriteRecord(this->fd))
     {
       ret = errno;
       std::fclose(this->fd);
@@ -197,30 +323,32 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
 
 void StatsBinLog::InitLog(char type, std::string id1, std::string id2)
 {
-  char tmp[100];
-  memset(tmp, '\0', 100);
+  #define FILENAME_LEN_MAX sizeof("/var/log/sfu/ms_p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin") * 2
+  char tmp[FILENAME_LEN_MAX];
+  std::memset(tmp, '\0', FILENAME_LEN_MAX);
   switch(type)
   {
     case 'c':
-      sprintf(tmp, "/var/log/sfu/c_%s_%%llu.bin.log", id1.c_str());
+      sprintf(tmp, "/var/log/sfu/ms_c_%s_%%llu.%s.bin", id1.c_str(), version);
       this->bin_log_name_template.assign(tmp);
       MS_DEBUG_TAG(rtp, "consumers binlog transport id %s", id2.c_str());
       break;
     case 'p':
-      sprintf(tmp, "/var/log/sfu/p_%s_%s_%%llu.bin.log", id1.c_str(), id2.c_str());
+      sprintf(tmp, "/var/log/sfu/ms_p_%s_%s_%%llu.%s.bin", id1.c_str(), id2.c_str(), version);
       this->bin_log_name_template.assign(tmp);
       break;
     default:
       break;
   }
 
-  uint64_t now = Utils::Time::currentStdEpochMs(); //DepLibUV::GetTimeMs();
+  uint64_t now = Utils::Time::currentStdEpochMs();
   this->log_start_ts = now;
   UpdateLogName();
   
   this->sampling_interval = CALL_STATS_BIN_LOG_SAMPLING;
   this->initialized = true;
 }
+
 
 void StatsBinLog::UpdateLogName()
 {
@@ -230,12 +358,14 @@ void StatsBinLog::UpdateLogName()
   this->bin_log_file_path.assign(buff);
 }
 
+
 void StatsBinLog::DeinitLog(CallStatsRecordCtx* recordCtx)
 {
   if (this->fd)
   {
     LogClose(recordCtx);
   }
+
   this->initialized = false;
   this->log_start_ts = UINT64_UNSET;
   this->bin_log_name_template.clear();

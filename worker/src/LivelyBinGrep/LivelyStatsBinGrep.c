@@ -15,25 +15,26 @@
 #include <sys/time.h>
 #include <math.h>
 #include <getopt.h>
+//#include <regex.h>
 
+// These defines should match LivelyBinLogs.hpp values
+#define BINLOG_FORMAT_VERSION "e58c1e"
+#define CALL_STATS_BIN_LOG_RECORDS_NUM 8 
+#define CALL_STATS_BIN_LOG_SAMPLING    2000
 
 #define MAX_TIME_ALIGN        10
 #define MAX_RECORDS_IN_BUFFER 1000
 
-#define FORMAT_CSV_COMMA   1
 #define FORMAT_CSV_HEADERS 2
-#define FORMAT_RAW         3
 
 #define LOAD_TEST_MAX_FILES    200
 #define LOAD_TEST_FILE_MAX_DUR 1800000
 #define LOAD_TEST_FILE_MIN_DUR 2000
 #define LOAD_TEST_MIN_SLEEP    1950
 
-#define UUID_CHAR_LEN 36 
-#define ZEROS_UUID    "00000000-0000-0000-0000-000000000000"
-
-//////// Defines and structs copied from LivelyBinLogs.hpp in mediasoup and must stay in sync with source
-//////// TBD: if this tool stays within mediasoup project (inside sfu docker) then remove duplication and include LivelyBinLogs.hpp
+#define UUID_CHAR_LEN 36
+#define ZEROS_UUID    "00000000-0000-0000-0000-000000000000\0"
+#define UUID_BYTE_LEN 16
 
 
 typedef struct {
@@ -49,35 +50,37 @@ typedef struct {
   uint16_t            rtt;
   uint32_t            max_pts;
   uint32_t            bytes_count;
-} call_stats_sample_t;
+} stats_sample_t;
 
-// Maximum number of samples in call_stats_record_t
-#define CALL_STATS_BIN_LOG_RECORDS_NUM 30
-#define CALL_STATS_BIN_LOG_SAMPLING    2000
-
-// Bytes to skip over and start reading call_stats_sample_t
-#define CALL_STATS_HEADER_LEN 120
+#define SAMPLE_SIZE 28
 
 typedef struct {
-  uint64_t            start_tm;                   // the record start timestamp in milliseconds
-  char                call_id    [UUID_CHAR_LEN]; // call id: uuid4() without \0
-  char                object_id  [UUID_CHAR_LEN]; // uuid4() no \0, producer or consumer id
-  char                producer_id[UUID_CHAR_LEN]; // uuid4() no \0, ZEROS_UUID if source is producer, or consumer's corresponding producer id
-  uint8_t             source;                     // producer=0, consumer=1
-  uint8_t             mime;                       // mime type: unset=0, audio=1, video=2
-  uint16_t            filled;                     // number of filled records in the array below
-  call_stats_sample_t samples[CALL_STATS_BIN_LOG_RECORDS_NUM];
-} call_stats_record_t;
+  uint64_t       start_tm;                   // the record start timestamp in milliseconds
+  uint32_t       filled;                      // number of filled records in the array below
+  uint32_t       payload;                     // payload as in original RTP stream
+  char           consumer_id [UUID_BYTE_LEN]; // 
+  char           producer_id [UUID_BYTE_LEN]; // 
+} stats_consumer_record_header_t;
 
-static const char *mime_string[3] = {
-  "u",
-  "a",
-  "v"
-};
+typedef struct {
+  uint64_t       start_tm;                   // the record start timestamp in milliseconds
+  uint32_t       filled;                      // number of filled records in the array below
+  uint32_t       payload;                     // payload as in original RTP stream
+} stats_producer_record_header_t;
 
-static const char *source_string[2] = {
-  "p",
-  "c"
+// Bytes to skip over and start reading stats_sample_t
+#define CONSUMER_HEADER_LEN 48
+// Total size of a record: header and samples
+#define CONSUMER_RECORD_LEN (CONSUMER_HEADER_LEN + SAMPLE_SIZE * CALL_STATS_BIN_LOG_RECORDS_NUM)
+
+#define PRODUCER_HEADER_LEN 16
+// 156
+#define PRODUCER_RECORD_LEN (PRODUCER_HEADER_LEN + SAMPLE_SIZE * CALL_STATS_BIN_LOG_RECORDS_NUM)
+
+
+static const char source_string[2] = {
+  'p',
+  'c'
 };
 
 static const char *header[][3] = {
@@ -85,19 +88,19 @@ static const char *header[][3] = {
   {"object_id                           ", "Object ID",   "ID of a producer or consumer object"},
   {"producer_id                         ", "Producer ID", "ID of a consumer's producer or empty field"}, 
   {"start_ts",  "Start Time",            "The statime of the epoch (HH:MM:SS,sss)"},
-  {"type ",     "Stream Type",           "0 - producer, 1 - consumer"},
-  {"mime ",     "Audio/Video",           "0 - undefined, 1 - audio, 2 - video"},
-  {"pkt_cnt ",  "Packets Count",         "Packets received or sent during epoch"},
-  {"pkt_lost ", "Packets Lost",          "Packets lost during epoch"},
-  {"pkt_disc ", "Packets Discarded",     "Packets discarded during epoch"},
-  {"pkt_rtx ",  "Packets Retransmitted", "Packets Retransmitted during epoch"},
-  {"pkt_rep ",  "Packets Repaired",      "Packets repaired during epoch"},
-  {"nack_cnt ",  "NACK Count",            "NACKs during epoch"},
-  {"nack_pkt ",  "NACK Packets",          "Number of NACK packets requested"},
-  {"kf ",        "Keyframe Requests",     "Keyframe requests during epoch"},
-  {"rtt ",       "RTT",                   "RTT in milliseconds"},
-  {"max_pts ",   "Maximum PTS",           "The most recent PTS in a stream"},
-  {"bytes_cnt ", "Bytes Count",           "Bytes received or sent during epoch"},
+  {"type",     "Stream Type",           "0 - producer, 1 - consumer"},
+  {"payload",  "Payload",               "Payload ID as in original RTP stream"},
+  {"pkt ",  "Packets Count",         "Packets received or sent during epoch"},
+  {"lost ", "Packets Lost",          "Packets lost during epoch"},
+  {"disc ", "Packets Discarded",     "Packets discarded during epoch"},
+  {"rtx ",  "Packets Retransmitted", "Packets Retransmitted during epoch"},
+  {"repair",  "Packets Repaired",      "Packets repaired during epoch"},
+  {"nacks",  "NACK Count",            "NACKs during epoch"},
+  {"nackpkt",  "NACK Packets",          "Number of NACK packets requested"},
+  {"kf",        "Keyframe Requests",     "Keyframe requests during epoch"},
+  {"rtt",       "RTT",                   "RTT in milliseconds"},
+  {"max_pts  ",   "Maximum PTS",           "The most recent PTS in a stream"},
+  {"bytes", "Bytes Count",           "Bytes received or sent during epoch"},
   NULL
 };
 
@@ -112,13 +115,17 @@ typedef struct {
   uint64_t    dedup_last_ts;        // in case dedup is on, stores the last seen timestamp
   uint16_t    load_test_num_cfiles; // number of consumers stats produced for load testing, in a single file
   uint16_t    load_test_num_pfiles; // number of concurrent test files with producer stats produced by this tool for load testing
+  char        call_id[UUID_CHAR_LEN + 1]; // call id as parsed from file
+  char        producer_id[UUID_CHAR_LEN + 1]; // producer id
+  char        type; // 'c' or 'p'
+
 } ms_binlog_config;
 
+static char hx[] = "0123456789abcdef";
 
 uint8_t* 
 fill_with_rand_hex(uint8_t *p, int cnt)
 {
-  static char hx[] = "0123456789abcdef";
   int i, r;
 
   for (i = 0; i < cnt; i++)
@@ -128,6 +135,24 @@ fill_with_rand_hex(uint8_t *p, int cnt)
   }
   return p;
 }
+
+// from is 16 bytes, to is 37 bytes
+void uuidBytesToHexStr(const uint8_t* from, char* to)
+{
+  strcpy(to, ZEROS_UUID); 
+  char* p = to;
+  int i = 0;
+  while(p && i < 16)
+  {
+    if(*p == '-')
+      p++;
+    // convert a byte into 2 chars
+    *p++ = hx[(from[i] & 0xF0) >> 4];
+    *p++ = hx[from[i] & 0x0F];
+    i++;
+  }
+}
+
 
 //Result is "00000000-0000-0000-0000-000000000000\0" i.e. 37 symbols string
 void 
@@ -147,6 +172,19 @@ rand_pseudo_uuid(uint8_t *dst)
   ptr = fill_with_rand_hex(ptr, 8);
 }
 
+// Result is random 16 bytes not starting with zeros
+void
+rand_pseudo_uuid_bytes(uint8_t *dst)
+{
+  uint8_t *ptr = dst;
+  int i;
+  memset(dst, 0, UUID_BYTE_LEN);
+  *ptr++ = 1 + rand() % 254;
+  for (i = 1; i < UUID_BYTE_LEN; i++)
+  {
+    *ptr++ = rand() % 255;
+  }
+}
 
 void
 print_headers(ms_binlog_config *conf)
@@ -164,13 +202,16 @@ print_headers(ms_binlog_config *conf)
 }
 
 
+// even - audio, odd - video
+#define SET_RAND_VIDEO_RECORD(f, s, r) rec.samples[j].f = (i % 2) ? s + rand() % r : 0;
 #define SET_RAND_RECORD(f, s, r) rec.samples[j].f = s + rand() % r;
-#define SET_RAND_VIDEO_RECORD(f, s, r) rec.samples[j].f = (rec.mime == 2) ? s + rand() % r : 0;
 
 // Creates a single test file with data for several consumers
 int
 load_test_cfiles(ms_binlog_config *conf)
 {
+  /*
+  BUGBUG: rewrite this function to accomodate for changes in data sizes, etc.
   int                 fd;
   char                filename[256];
 
@@ -178,19 +219,20 @@ load_test_cfiles(ms_binlog_config *conf)
   uint64_t            last_ts[LOAD_TEST_MAX_FILES];
   uint64_t            end_ts[LOAD_TEST_MAX_FILES];
 	uint64_t            active[LOAD_TEST_MAX_FILES];
+  uint8_t             payload[LOAD_TEST_MAX_FILES];
   uint64_t            tmp;
   uint16_t            active_consumers_cnt;
 
-  uint8_t             object_id[LOAD_TEST_MAX_FILES][UUID_CHAR_LEN + 1]; 
-  uint8_t             producer_id[LOAD_TEST_MAX_FILES][UUID_CHAR_LEN + 1];
+  uint8_t             object_id[LOAD_TEST_MAX_FILES][UUID_BYTE_LEN];
+  uint8_t             producer_id[LOAD_TEST_MAX_FILES][UUID_BYTE_LEN];
   
   int                 i, j;
   int                 count;
-  int                 source, mime;
+  int                 source;
 
-  call_stats_record_t rec;
-  call_stats_sample_t sample;
-  call_stats_sample_t prev_sample[LOAD_TEST_MAX_FILES];
+  stats_consumer_record_t rec;
+  stats_sample_t sample;
+  stats_sample_t prev_sample[LOAD_TEST_MAX_FILES];
 
 	struct timeval             tv;
 	uint64_t                   start_tm, cur_tm;
@@ -227,10 +269,11 @@ load_test_cfiles(ms_binlog_config *conf)
     {
       tmp = end_ts[i]; end_ts[i] = start_ts[i]; start_ts[i] = tmp;
     }
-    
+    // TODO: payload is rand uint8_t unless there are some restrictions
+    payload[i] = rand() % 255;
     active[i] = 1;
-    rand_pseudo_uuid(object_id[i]);
-    rand_pseudo_uuid(producer_id[i]);
+    rand_pseudo_uuid_bytes(object_id[i]);
+    rand_pseudo_uuid_bytes(producer_id[i]);
   }
 
   fd = open(filename, O_WRONLY|O_CREAT|O_TRUNC, 0666);
@@ -266,12 +309,9 @@ load_test_cfiles(ms_binlog_config *conf)
           last_ts[i] + CALL_STATS_BIN_LOG_SAMPLING + rand() % 100 : 
           cur_tm;
 
-      memset(rec.call_id, 0, UUID_CHAR_LEN); // in case input file name is shorter don't want garbage
-      memcpy(rec.call_id, conf->filename, UUID_CHAR_LEN);
-      memcpy(rec.object_id, object_id[i], UUID_CHAR_LEN);
-      memcpy(rec.producer_id, producer_id[i], UUID_CHAR_LEN);
-      rec.source = 1;
-      rec.mime = 1 + i % 2; // odd i for audio, even for video
+      memcpy(rec.consumer_id, object_id[i], UUID_BYTE_LEN);
+      memcpy(rec.producer_id, producer_id[i], UUID_BYTE_LEN);
+      rec.payload = payload[i];
       rec.filled = CALL_STATS_BIN_LOG_RECORDS_NUM;
 
       prev_sample[i].max_pts = cur_tm + 500;
@@ -279,7 +319,7 @@ load_test_cfiles(ms_binlog_config *conf)
 
       for (j = 0; j < CALL_STATS_BIN_LOG_RECORDS_NUM; j++)
       {
-        memset(&(rec.samples[j]), 0, sizeof(call_stats_sample_t));
+        memset(&(rec.samples[j]), 0, sizeof(stats_sample_t));
         
         rec.samples[j].epoch_len = CALL_STATS_BIN_LOG_SAMPLING * (j + 1);
         SET_RAND_RECORD(packets_count, 0, 2000)
@@ -322,7 +362,7 @@ load_test_cfiles(ms_binlog_config *conf)
 		usleep(sleep);
 	}
 
-  close(fd);
+  close(fd);*/
   return 0;
 }
 
@@ -330,19 +370,21 @@ load_test_cfiles(ms_binlog_config *conf)
 int
 load_test_pfiles(ms_binlog_config *conf)
 {
+  /*
   char                filename[LOAD_TEST_MAX_FILES][256];
   int                 fd[LOAD_TEST_MAX_FILES]; // set into -1 explicitly after file is closed, not to be confused with error state
   uint64_t            last_ts[LOAD_TEST_MAX_FILES];
 	uint64_t            end_ts[LOAD_TEST_MAX_FILES];
+  uint8_t             payload[LOAD_TEST_MAX_FILES];
   int                 fopened_count;
   
-  char                object_id[LOAD_TEST_MAX_FILES][UUID_CHAR_LEN + 1]; 
+  char                object_id[LOAD_TEST_MAX_FILES][UUID_CHAR_LEN + 1];
   int                 source, mime;
   int                 i, j, count;
 
-  call_stats_record_t rec;
-  call_stats_sample_t sample;
-  call_stats_sample_t prev_sample[LOAD_TEST_MAX_FILES];
+  stats_producer_record_t rec;
+  stats_sample_t sample;
+  stats_sample_t prev_sample[LOAD_TEST_MAX_FILES];
 
 	struct timeval             tv;
 	uint64_t                   cur_tm;
@@ -373,7 +415,7 @@ load_test_pfiles(ms_binlog_config *conf)
 				LOAD_TEST_FILE_MIN_DUR;
 
     rand_pseudo_uuid(object_id[i]);
-
+    payload[i] = rand() % 255;
     snprintf(filename[i], sizeof(filename) / LOAD_TEST_MAX_FILES, "p_%s_%s_%lu.bin.log", conf->filename, object_id[i], cur_tm + i);
 		fd[i] = open(filename[i], O_WRONLY|O_CREAT|O_TRUNC, 0666);
 		if (fd[i] < 0) {
@@ -401,12 +443,7 @@ load_test_pfiles(ms_binlog_config *conf)
           last_ts[i] + CALL_STATS_BIN_LOG_SAMPLING + rand() % 100 : 
           cur_tm;
 
-      memset(rec.call_id, 0, UUID_CHAR_LEN); // in case input file name is shorter don't want garbage
-      memcpy(rec.call_id, conf->filename, UUID_CHAR_LEN);
-      memcpy(rec.object_id, object_id[i], UUID_CHAR_LEN);
-      memcpy(rec.producer_id, ZEROS_UUID, UUID_CHAR_LEN);
-      rec.source = 0;
-      rec.mime = 1 + i % 2; // odd i for audio, even for video
+      rec.payload = payload[i];
       rec.filled = CALL_STATS_BIN_LOG_RECORDS_NUM;
 
       prev_sample[i].max_pts = cur_tm + 1000;
@@ -414,7 +451,7 @@ load_test_pfiles(ms_binlog_config *conf)
 
       for (j = 0; j < CALL_STATS_BIN_LOG_RECORDS_NUM; j++)
       {
-        memset(&(rec.samples[j]), 0, sizeof(call_stats_sample_t));
+        memset(&(rec.samples[j]), 0, sizeof(stats_sample_t));
 
         rec.samples[j].epoch_len = CALL_STATS_BIN_LOG_SAMPLING * (j + 1);
         SET_RAND_RECORD(packets_count, 0, 2000)
@@ -458,7 +495,7 @@ load_test_pfiles(ms_binlog_config *conf)
     if (0 == fopened_count)
       return 0;
 	}
-
+*/
   return 0;
 }
 
@@ -468,12 +505,12 @@ time_alignment(
     uint64_t record_tm,
     uint16_t            sample_dur,
     uint16_t            time_align,
-		call_stats_sample_t *sample_in,
+		stats_sample_t *sample_in,
     uint64_t            *sample_ts,
-		call_stats_sample_t *sample_out,
+		stats_sample_t *sample_out,
 		int out_len)
 {
-	call_stats_sample_t sample;
+	stats_sample_t sample;
 	int                 i;
 	uint64_t            start_tm, end_tm;
 
@@ -501,206 +538,256 @@ time_alignment(
 	for (i = 0; i < out_len && start_tm < end_tm; i++, start_tm += time_align)
   {
 		sample_out[i]           = sample;
-		sample_out[i].epoch_len = time_align * i;
-    sample_ts[i] = start_tm + sample_out[i].epoch_len;
+		sample_out[i].epoch_len = time_align; //time_align * i;
+    sample_ts[i] = start_tm + time_align * i; //sample_out[i].epoch_len;
 	}
 
 	return i;
 }
 
+// should run consumer's or producer's parsing code
+//ms_p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin.log
+//ms_c_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin.log
+int parse_file_name(ms_binlog_config *conf)
+{
+  #define FILENAME_LEN_MAX sizeof("/var/log/sfu/ms_p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin") * 2
+  char tmp[FILENAME_LEN_MAX];
+  char* ch;
+  char* ver;
+
+  memset(tmp, '\0', FILENAME_LEN_MAX);
+  memcpy(tmp, conf->filename, strlen(conf->filename));
+
+  memset(conf->call_id, 0, UUID_CHAR_LEN + 1);
+  memset(conf->producer_id, 0, UUID_CHAR_LEN + 1);
+
+  ch = strtok(tmp, "_");
+
+  if(ch == 0 || strcmp(ch, "ms") != 0)
+  {
+    printf("wrong file name %s, should start with 'ms_', exit...", conf->filename);
+    return 1;
+  }
+
+  ch = strtok(NULL,"_");
+
+  // c or p? get callid and optionally producer's id
+  if (ch && strlen(ch) == 1 && ch[0] == 'c')
+  {
+    conf->type = 'c';
+  }
+  else if (ch && strlen(ch) == 1 && ch[0] == 'p')
+  {
+    conf->type = 'p';
+  }
+  else
+  {
+    printf("wrong file name %s, can't tell type 'c' or 'p', exit...", conf->filename);
+    return 1;
+  }
+
+  ch = strtok(NULL,"_");
+  if (ch == 0 || strlen(ch) < UUID_CHAR_LEN)
+  {
+    printf("wrong file name %s, should contain uuid, exit...", conf->filename);
+    return 1;
+  }
+  memcpy(conf->call_id, ch, UUID_CHAR_LEN);
+
+  if (conf->type == 'p')
+  {
+    ch = strtok(NULL, "_");
+    if (ch == 0 || strlen(ch) < UUID_CHAR_LEN)
+    {
+      printf("wrong file name %s, should contain two uuids, exit...", conf->filename);
+      return 1;
+    }
+
+    memcpy(conf->producer_id, ch, UUID_CHAR_LEN);
+  }
+  // now left with timestamp.version.bin let's match versions
+  memset(tmp, '\0', FILENAME_LEN_MAX);
+  memcpy(tmp, conf->filename,strlen(conf->filename));
+  ver = strtok(tmp, "."); // skip over timestamp
+  if (!ver)
+  {
+    printf("wrong file name %s, should end with timestamp.version.bin, exit...", conf->filename);
+    return 1;
+  }
+
+  ver = strtok(NULL, ".");
+  if (!ver || strcmp(ver, BINLOG_FORMAT_VERSION) != 0)
+  {
+    printf("wrong file name %s, should end with timestamp.%s.bin, exit...", conf->filename,  BINLOG_FORMAT_VERSION);
+    return 1;
+  }
+
+  return 0;
+}
+
+// parametrized: header_length, structure header size
 
 int
 format_output(FILE* fd, ms_binlog_config *conf)
 {
-    char                        buf[sizeof(call_stats_record_t) * MAX_RECORDS_IN_BUFFER];
-    size_t                      len;    // in number of records, not bytes
-    call_stats_record_t         *first;
+  char                        buf_c[CONSUMER_RECORD_LEN * MAX_RECORDS_IN_BUFFER];
+  char                        buf_p[PRODUCER_RECORD_LEN * MAX_RECORDS_IN_BUFFER];
+  size_t                      len;  // in bytes
+  char                        *first_c;
+  char                        *first_p;
 
-    int                         m, k, i, num_rec, num_tm_align_rec;
-    call_stats_record_t         *rec;
-    call_stats_sample_t         *sample;
-    char                        *samples_pos;
+  int                            m, k, i, num_bytes, num_rec, num_tm_align_rec;
+  stats_consumer_record_header_t *rec_c;
+  stats_producer_record_header_t *rec_p;
+  uint8_t                        filled;
+  uint64_t                       rec_start_tm;
+  stats_sample_t                 *sample;
+  char                           *samples_pos;
+  uint8_t                        payload;
 
-    call_stats_sample_t         sample_align[MAX_TIME_ALIGN];
-    uint64_t                    sample_ts[MAX_TIME_ALIGN];
-    uint16_t                    prev_sample_epoch_len, curr_sample_epoch_len;
-    uint64_t                    sample_start_tm;
-    
-    char                        call_id[UUID_CHAR_LEN+1];
-    char                        object_id[UUID_CHAR_LEN+1]; 
-    char                        producer_id[UUID_CHAR_LEN+1]; 
+  stats_sample_t              sample_align[MAX_TIME_ALIGN];
+  uint64_t                    sample_ts[MAX_TIME_ALIGN];
+  uint64_t                    total_epoch_len_in_samples;
+  uint64_t                    sample_start_tm;
+  
+  char                        call_id[UUID_CHAR_LEN+1];
+  char                        object_id[UUID_CHAR_LEN+1]; 
+  char                        producer_id[UUID_CHAR_LEN+1]; 
 
-    uint64_t                    start_ts, end_ts;
+  uint64_t                    start_ts, end_ts;
 
-    start_ts = conf->start_ts;
-    num_tm_align_rec = 1;
-    
-    memset(call_id, sizeof(call_id), 0); 
-    memset(object_id, sizeof(object_id), 0); 
-    memset(producer_id, sizeof(producer_id), 0); 
+  first_c = &buf_c[0];
+  first_p = &buf_p[0];
 
-    first = (call_stats_record_t*)buf;
-    len = MAX_RECORDS_IN_BUFFER;
+  start_ts = conf->start_ts;
+  num_tm_align_rec = 1;
+  
+  memset(call_id, sizeof(call_id), 0);
+  memcpy(call_id, conf->call_id, UUID_CHAR_LEN);
 
-    if (FORMAT_CSV_HEADERS == conf->format)
-      print_headers(conf);
+  memset(object_id, sizeof(object_id), 0); 
+  memset(producer_id, sizeof(producer_id), 0);
 
-    while( (num_rec = fread(first, sizeof(call_stats_record_t), len, fd)) > 0)
+  if (conf->type == 'p')
+  {
+    memcpy(object_id, conf->producer_id, UUID_CHAR_LEN);
+    memcpy(producer_id, conf->producer_id, UUID_CHAR_LEN);
+  }
+
+  len = (conf->type == 'c') ? CONSUMER_RECORD_LEN * MAX_RECORDS_IN_BUFFER : PRODUCER_RECORD_LEN * MAX_RECORDS_IN_BUFFER;
+
+  if (FORMAT_CSV_HEADERS == conf->format)
+    print_headers(conf);
+
+ 
+  while( (num_bytes = (conf->type == 'c') 
+                      ? fread(buf_c, sizeof(uint8_t), len, fd)
+                      : fread(buf_p, sizeof(uint8_t), len, fd)) > 0 )
+  {
+    num_rec = (conf->type == 'c') ? num_bytes/CONSUMER_RECORD_LEN : num_bytes/PRODUCER_RECORD_LEN;
+    for (m = 0; m < num_rec; m++)
     {
-      //printf("recsize=%u num_rec=%d\n", sizeof(call_stats_record_t), num_rec);
-      // go over all the records currently in the buffer (read from file)
-      for (m = 0; m < num_rec; m++)
+      if (conf->type == 'c')
       {
-        rec = &((call_stats_record_t*)buf)[m];
-        //printf("\nRecord source=%d mime=%d filled=%d start_tm=%u\n", rec->source, rec->mime, rec->filled, rec->start_tm);
-        if (rec->filled > CALL_STATS_BIN_LOG_RECORDS_NUM)
-          continue;
-               
-        if (FORMAT_RAW == conf->format)
-        {
-          if (!start_ts)
-            start_ts = rec->start_tm;
+        rec_c = (stats_consumer_record_header_t*)first_c;
+        filled = rec_c->filled;
+        rec_start_tm = rec_c->start_tm;
+        //printf("\nRecord mime=%d filled=%d\n", rec_c->payload, filled);
+      }
+      else
+      {
+        rec_p = (stats_producer_record_header_t*)first_p;
+        filled = rec_p->filled;
+        rec_start_tm = rec_p->start_tm;
+        //printf("\nRecord mime=%d filled=%d\n", rec_p->payload, filled);
+      }
+      if (filled > CALL_STATS_BIN_LOG_RECORDS_NUM)
+        continue;
 
-          end_ts = conf->dur ? (start_ts + conf->dur) : (uint64_t)-1;
-         
-          if (rec->start_tm < start_ts || rec->start_tm > end_ts)
+      if (conf->type == 'c')
+      {
+        uuidBytesToHexStr(rec_c->consumer_id, object_id);
+        uuidBytesToHexStr(rec_c->producer_id, producer_id);
+      }
+
+      samples_pos = (conf->type == 'c') ? ((char*)rec_c) + CONSUMER_HEADER_LEN : ((char*)rec_p) + PRODUCER_HEADER_LEN;
+      payload = (conf->type == 'c') ? rec_c->payload : rec_p->payload;
+
+      total_epoch_len_in_samples = 0;
+
+      for (k = 0; k < filled; k++)
+      {
+        sample = (stats_sample_t*)(samples_pos + k * SAMPLE_SIZE);
+
+        total_epoch_len_in_samples += sample->epoch_len;
+
+        if (conf->time_align)
+        {
+          sample_start_tm = rec_start_tm + total_epoch_len_in_samples;
+
+          // just round it up or down to time_align:
+          sample_start_tm = (sample_start_tm % conf->time_align) ?
+              (sample_start_tm / conf->time_align + (sample_start_tm % conf->time_align + conf->time_align / 2) / conf->time_align) * conf->time_align :
+              sample_start_tm;
+
+          num_tm_align_rec = time_alignment(sample_start_tm, sample->epoch_len,  conf->time_align, sample, sample_ts, sample_align, MAX_TIME_ALIGN);
+          sample = sample_align;
+        }
+        else
+        {
+          sample_ts[0] = rec_start_tm + total_epoch_len_in_samples;
+        }
+
+        for (i = 0; i < num_tm_align_rec; i++)
+        {
+          // in case remove duplicates is on and this record's timestamp
+          // is older than the most recent record then skip it
+          if (conf->dedup)
+          {
+            // TODO: this does not work for consumer bin logs b/c a single log contains records from multiple sources.
+            // Need to keep track of the last ts for each payload#
+            if (sample_ts[i] <= conf->dedup_last_ts)
+            {
+              continue;
+            }
+            else {
+              conf->dedup_last_ts = sample_ts[i];
+            }
+          }
+
+          if (!start_ts)
+            start_ts = sample_ts[i];
+
+          end_ts = conf->dur? (start_ts + conf->dur) : (uint64_t)-1;
+          if (sample_ts[i] < start_ts || sample_ts[i] > end_ts)
             continue;
 
-          if (write(fileno(stdout), rec, sizeof(call_stats_record_t)) < 0) {
-          	fprintf(stderr, "failed to write record to stdout. err=%s\n", strerror(errno));
-          	exit(1);
-          }
-          continue;
+          fprintf(stdout, 
+            "%s\t%s\t%s"
+            "\t%"PRIu64
+            "\t%c\t%"PRIu8"\t%"PRIu16
+            "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
+            "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
+            "\t%"PRIu16"\t%"PRIu16"\t%"PRIu32"\t%"PRIu32"\n",
+            call_id, object_id, producer_id,
+            sample_ts[i],
+            conf->type, payload, sample[i].packets_count,
+            sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
+            sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
+            sample[i].kf_count, sample[i].rtt, sample[i].max_pts, sample[i].bytes_count);
         }
-
-        // CSV formats
-        memcpy(call_id, rec->call_id, UUID_CHAR_LEN);
-        memcpy(object_id, rec->object_id, UUID_CHAR_LEN);
-        memcpy(producer_id, rec->producer_id, UUID_CHAR_LEN);
-    
-        samples_pos = ((char*)rec) + CALL_STATS_HEADER_LEN;
-        prev_sample_epoch_len = curr_sample_epoch_len = 0; // we need delta between current and previous epoch len to pass to time alignment function
-
-        for (k = 0; k < rec->filled; k++)
-        {
-          sample = &((call_stats_sample_t*)samples_pos)[k];
-          //printf("call_stats_sample_t epoch_len=%u count=%u lost=%u rtt=%u max_pts=%u bytes=%u\n", sample->epoch_len, sample->packets_count, sample->packets_lost, sample->rtt, sample->max_pts, sample->bytes_count);
-          curr_sample_epoch_len = sample->epoch_len;
-          if (conf->time_align)
-          {
-            sample_start_tm = rec->start_tm + sample->epoch_len;
-
-            // just round it up or down to time_align:
-            sample_start_tm = (sample_start_tm % conf->time_align) ?
-                (sample_start_tm / conf->time_align + (sample_start_tm % conf->time_align + conf->time_align / 2) / conf->time_align) * conf->time_align :
-                sample_start_tm;
-
-            num_tm_align_rec = time_alignment(sample_start_tm, curr_sample_epoch_len - prev_sample_epoch_len, conf->time_align, sample, sample_ts, sample_align, MAX_TIME_ALIGN);
-            sample = sample_align;
-          }
-          else
-          {
-            sample_ts[0] = rec->start_tm + sample->epoch_len; // a sample's real timestamp
-          }
-          prev_sample_epoch_len = curr_sample_epoch_len;
-
-          for (i = 0; i < num_tm_align_rec; i++)
-          {
-            // in case remove duplicates is on and this record's timestamp
-            // is older than the most recent record then skip it
-            if (conf->dedup)
-            {
-              if (sample_ts[i] <= conf->dedup_last_ts)
-              {
-                continue;
-              } else {
-                conf->dedup_last_ts = sample_ts[i];
-              }
-            }
-
-            if (!start_ts)
-              start_ts = sample_ts[i];
-
-            end_ts = conf->dur? (start_ts + conf->dur) : (uint64_t)-1;
-            if (sample_ts[i] < start_ts || sample_ts[i] > end_ts)
-              continue;
-
-            if (FORMAT_CSV_COMMA == conf->format)
-            {
-              if (conf->no_callid)
-              {
-                fprintf(stdout, 
-                  "%s,%s"
-                  ",%"PRIu64
-                  ",%s,%s,%"PRIu16
-                  ",%"PRIu16",%"PRIu16",%"PRIu16
-                  ",%"PRIu16",%"PRIu16",%"PRIu16
-                  ",%"PRIu16",%"PRIu16",%"PRIu32",%"PRIu32"\n",
-                  object_id, producer_id,
-                  sample_ts[i],
-                  source_string[rec->source], mime_string[rec->mime], sample[i].packets_count,
-                  sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
-                  sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
-                  sample[i].kf_count, sample[i].rtt, sample[i].max_pts, sample[i].bytes_count);
-              }
-              else
-              {
-                fprintf(stdout, 
-                  "%s,%s,%s"
-                  ",%"PRIu64
-                  ",%s,%s,%"PRIu16
-                  ",%"PRIu16",%"PRIu16",%"PRIu16
-                  ",%"PRIu16",%"PRIu16",%"PRIu16
-                  ",%"PRIu16",%"PRIu16",%"PRIu32",%"PRIu32"\n",
-                  call_id, object_id, producer_id,
-                  sample_ts[i],
-                  source_string[rec->source], mime_string[rec->mime], sample[i].packets_count,
-                  sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
-                  sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
-                  sample[i].kf_count, sample[i].rtt, sample[i].max_pts, sample[i].bytes_count);
-              }
-            }
-            else if (FORMAT_CSV_HEADERS == conf->format)
-            {
-              if (conf->no_callid)
-              {
-                fprintf(stdout, 
-                  "%s\t%s"
-                  "\t%"PRIu64
-                  "\t%s\t%s\t%"PRIu16
-                  "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
-                  "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
-                  "\t%"PRIu16"\t%"PRIu16"\t%"PRIu32"\t%"PRIu32"\n",
-                  object_id, producer_id,
-                  sample_ts[i],
-                  source_string[rec->source], mime_string[rec->mime], sample[i].packets_count,
-                  sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
-                  sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
-                  sample[i].kf_count, sample[i].rtt, sample[i].max_pts, sample[i].bytes_count);
-              }
-              else
-              {
-                fprintf(stdout, 
-                  "%s\t%s\t%s"
-                  "\t%"PRIu64
-                  "\t%s\t%s\t%"PRIu16
-                  "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
-                  "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
-                  "\t%"PRIu16"\t%"PRIu16"\t%"PRIu32"\t%"PRIu32"\n",
-                  call_id, object_id, producer_id,
-                  sample_ts[i],
-                  source_string[rec->source], mime_string[rec->mime], sample[i].packets_count,
-                  sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
-                  sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
-                  sample[i].kf_count, sample[i].rtt, sample[i].max_pts, sample[i].bytes_count);
-              }
-            }
-          }
-        }
-      } // for m ... num_rec
-    } // while fread()
-
-    return 0;  
+      }
+      if(conf->type == 'c') // TODO: see that ptr does not go over a read buffer
+      {
+        first_c += CONSUMER_RECORD_LEN;
+      }
+      else
+      {
+        first_p += PRODUCER_RECORD_LEN;
+      }
+    } // for m ... num_rec
+  } // while fread()
+  return 0;  
 }
 
 
@@ -714,10 +801,6 @@ int main(int argc, char* argv[])
   static char* usage =
       "usage: %s [ -f <format> ] [ -t <interval ms> ] log_name\n"
       "  log_name                 - full path to the log file to parse or call id to be used if load test options are present\n"
-      "  -f <format>              - format:\n"
-      "                              1 = CSV with no headers, comma separated (default)\n"
-      "                              2 = CSV with column headers, tab separated \n"
-      "                              3 = raw format, binary copy of original data \n"
       "  -t <interval>             - optional align timestamps to fixed intervals in milliseconds\n"
       "  -s <timestamp>            - optional start timestamp\n"
       "  -d <duration>             - duration in milliseconds (if only dur is specified it is taken from the start of the stream)\n"
@@ -728,7 +811,6 @@ int main(int argc, char* argv[])
       ;
 
   static struct option long_options[] = {
-			{ "format",                  1, 0, 'f'    },
 			{ "align-time-interval",     1, 0, 't'    },
 			{ "start-time",              1, 0, 's'    },
 			{ "duration",                1, 0, 'd'    },
@@ -740,7 +822,7 @@ int main(int argc, char* argv[])
     };
 
   conf.time_align = 0; 
-  conf.format     = FORMAT_CSV_COMMA; // CSV without headers, comma separated
+  conf.format     = FORMAT_CSV_HEADERS; // CSV without headers, comma separated
   conf.dedup      = 0;
   conf.time_align = 0;
   conf.start_ts   = 0;
@@ -755,9 +837,6 @@ int main(int argc, char* argv[])
     	case 0xFF02:
     		conf.load_test_num_pfiles = atoi(optarg);
     		break;
-      case 'f':
-        conf.format = atoi(optarg);
-        break;
       case 't':
         conf.time_align = atoi(optarg);
         break;
@@ -805,6 +884,8 @@ int main(int argc, char* argv[])
       fprintf(stderr, "failed to open %s. err=%s\n", conf.filename, strerror(errno));
       exit(1);
   }
+  if ((rc = parse_file_name(&conf)) != 0)
+    return rc;
 
   rc = format_output(fd, &conf);
   fclose(fd);
