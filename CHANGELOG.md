@@ -1,6 +1,11 @@
 # Changelog
 
 
+### WIP
+
+* `TransportCongestionControlClient`: Allow setting max outgoing bitrate before created (PR #833).
+
+
 ### 3.9.17
 
 * `RateCalculator`: Fix old buffer items cleanup (PR #830 by @dsdolzhenko).
