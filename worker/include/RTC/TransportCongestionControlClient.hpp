@@ -17,6 +17,8 @@
 
 namespace RTC
 {
+	constexpr uint32_t TransportCongestionControlMinOutgoingBitrate{ 30000u };
+
 	class TransportCongestionControlClient : public webrtc::PacketRouter,
 	                                         public webrtc::TargetTransferRateObserver,
 	                                         public Timer::Listener

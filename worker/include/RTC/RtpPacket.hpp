@@ -14,8 +14,6 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	// Max RTP length.
-	constexpr size_t RtpBufferSize{ 65536u };
 	// Max MTU size.
 	constexpr size_t MtuSize{ 1500u };
 	// MID header extension max length (just used when setting/updating MID
