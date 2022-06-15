@@ -97,6 +97,7 @@ common_sources = [
   'src/RTC/TransportTuple.cpp',
   'src/RTC/TrendCalculator.cpp',
   'src/RTC/UdpSocket.cpp',
+  'src/RTC/WebRtcServer.cpp',
   'src/RTC/WebRtcTransport.cpp',
   'src/RTC/Codecs/H264.cpp',
   'src/RTC/Codecs/H264_SVC.cpp',

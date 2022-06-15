@@ -38,6 +38,8 @@ namespace Channel
 		{ "transport.produceData",                       ChannelRequest::MethodId::TRANSPORT_PRODUCE_DATA                           },
 		{ "transport.consumeData",                       ChannelRequest::MethodId::TRANSPORT_CONSUME_DATA                           },
 		{ "transport.enableTraceEvent",                  ChannelRequest::MethodId::TRANSPORT_ENABLE_TRACE_EVENT                     },
+		{ "webRtcServer.close",                          ChannelRequest::MethodId::WEBRTC_SERVER_CLOSE                              },
+		{ "webRtcServer.dump",                           ChannelRequest::MethodId::WEBRTC_SERVER_DUMP                               },
 		{ "producer.close",                              ChannelRequest::MethodId::PRODUCER_CLOSE                                   },
 		{ "producer.dump",                               ChannelRequest::MethodId::PRODUCER_DUMP                                    },
 		{ "producer.getStats",                           ChannelRequest::MethodId::PRODUCER_GET_STATS                               },
