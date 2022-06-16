@@ -154,6 +154,43 @@ namespace RTC
 			item.tcpServer = nullptr;
 		}
 		this->udpSocketOrTcpServers.clear();
+
+		// Close all WebRtcTransports.
+
+		for (auto it = this->mapIceUsernameFragmentPasswordWebRtcTransports.begin();
+		     it != this->mapIceUsernameFragmentPasswordWebRtcTransports.end();
+		     ++it)
+		{
+			auto* webRtcTransport = it->second;
+
+			this->mapIceUsernameFragmentPasswordWebRtcTransports.erase(it);
+
+			// Let the Router be notified about closed Producers/Consumers in the
+			// WebRtcTransport that will be closed.
+			webRtcTransport->CloseProducersAndConsumers();
+
+			// NOTE: The WebRtcTransport destructor will invoke N events in its
+			// webRtcTransportListener (this is, WebRtcServer) that will affect these
+			// maps so caution.
+			delete webRtcTransport;
+		}
+
+		for (auto it = this->mapTupleWebRtcTransports.begin(); it != this->mapTupleWebRtcTransports.end();
+		     ++it)
+		{
+			auto* webRtcTransport = it->second;
+
+			this->mapTupleWebRtcTransports.erase(it);
+
+			// Let the Router be notified about closed Producers/Consumers in the
+			// WebRtcTransport that will be closed.
+			webRtcTransport->CloseProducersAndConsumers();
+
+			// NOTE: The WebRtcTransport destructor will invoke N events in its
+			// webRtcTransportListener (this is, WebRtcServer) that will affect these
+			// maps so caution.
+			delete webRtcTransport;
+		}
 	}
 
 	void WebRtcServer::FillJson(json& jsonObject) const
