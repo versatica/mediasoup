@@ -67,6 +67,8 @@ Also increase `backlog(int)` in `uv_listen`(POSIX argument):
 
 No matter the value is super high, in Linux it's limited by `/proc/sys/net/core/somaxconn`.
 
+Done by just hardcoding it to 256 since it's irrelevant after investigating it.
+
 
 ### Handle limit of UDP/TCP tuples in WebRtcTransport
 
