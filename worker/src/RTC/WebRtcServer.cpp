@@ -262,6 +262,24 @@ namespace RTC
 		return iceCandidates;
 	}
 
+	inline std::string WebRtcServer::GetIceUsernameFragmentPasswordKey(RTC::StunPacket* packet) const
+	{
+		MS_TRACE();
+
+		// TODO: If this ok? is this gonna return `usernameFragment:password` and those values
+		// will match those in the IceServer? Must check.
+
+		return packet->GetUsername();
+	}
+
+	inline std::string WebRtcServer::GetIceUsernameFragmentPasswordKey(
+	  const std::string& usernameFragment, const std::string& password) const
+	{
+		MS_TRACE();
+
+		return usernameFragment + ":" + password;
+	}
+
 	inline void WebRtcServer::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -289,8 +307,22 @@ namespace RTC
 			return;
 		}
 
-		// TODO: Match entry in this->mapIceUsernameFragmentPasswordWebRtcTransports
-		// and call webRtcTransport.processStunPacketFromWebRtcServer(tuple, packet).
+		auto key = GetIceUsernameFragmentPasswordKey(packet);
+		auto it  = this->mapIceUsernameFragmentPasswordWebRtcTransports.find(key);
+
+		if (it == this->mapIceUsernameFragmentPasswordWebRtcTransports.end())
+		{
+			MS_WARN_DEV("ignoring received STUN packet with unknown associated WebRtcTransport");
+
+			delete packet;
+
+			return;
+		}
+
+		auto* webRtcTransport = it->second;
+
+		// TODO: Implement.
+		// webRtcTransport->ProcessStunPacketFromWebRtcServer(packet);
 
 		delete packet;
 	}
@@ -300,8 +332,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Match entry in this->mapTupleWebRtcTransports and call
-		// webRtcTransport.processNonStunDataFromWebRtcServer(tuple, data, len).
+		auto it = this->mapTupleWebRtcTransports.find(tuple->id);
+
+		if (it == this->mapTupleWebRtcTransports.end())
+		{
+			MS_WARN_DEV("ignoring received non STUN data from unknown source");
+
+			return;
+		}
+
+		auto* webRtcTransport = it->second;
+
+		// TODO: Implement.
+		// webRtcTransport->ProcessNonStunDataFromWebRtcServer(tuple, data, len);
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportIceUsernameFragmentPasswordAdded(
@@ -311,7 +354,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const std::string key = usernameFragment + ":" + password;
+		auto key = GetIceUsernameFragmentPasswordKey(usernameFragment, password);
 
 		this->mapIceUsernameFragmentPasswordWebRtcTransports[key] = webRtcTransport;
 	}
@@ -323,7 +366,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const std::string key = usernameFragment + ":" + password;
+		auto key = GetIceUsernameFragmentPasswordKey(usernameFragment, password);
 
 		this->mapIceUsernameFragmentPasswordWebRtcTransports.erase(key);
 	}
@@ -361,8 +404,16 @@ namespace RTC
 
 		RTC::TransportTuple tuple(connection);
 
-		// TODO: Look for the tuple in this->mapTupleWebRtcTransports and call
-		// webRtcTransport.removeTuple(tuple). Just it.
+		auto it = this->mapTupleWebRtcTransports.find(tuple.id);
+
+		MS_ASSERT(
+		  it != this->mapTupleWebRtcTransports.end(),
+		  "closed TCP connection not managed by this WebRtcServer");
+
+		auto* webRtcTransport = it->second;
+
+		// TODO: Implement.
+		// webRtcTransport->RemoveTuple(tuple);
 	}
 
 	inline void WebRtcServer::OnTcpConnectionPacketReceived(

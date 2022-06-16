@@ -55,6 +55,9 @@ namespace RTC
 		  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp);
 
 	private:
+		std::string GetIceUsernameFragmentPasswordKey(RTC::StunPacket* packet) const;
+		std::string GetIceUsernameFragmentPasswordKey(
+		  const std::string& usernameFragment, const std::string& password) const;
 		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnNonStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
