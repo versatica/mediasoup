@@ -269,6 +269,7 @@ namespace RTC
 		// TODO: If this ok? is this gonna return `usernameFragment:password` and those values
 		// will match those in the IceServer? Must check.
 		// See https://datatracker.ietf.org/doc/html/rfc5389
+		// No, it's not ok. See TODO_WEBRTC_SERVER.md file.
 
 		return packet->GetUsername();
 	}

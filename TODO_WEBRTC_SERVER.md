@@ -1,6 +1,37 @@
 # TODO WebRtcServer
 
 
+### Issue obtainining `usernameFragment:password` from received STUN packets
+
+When we create a ICE server we decide the mediasoup side `usernameFragment` and `password` and pass them to the `IceServer` constructor.
+
+However, when a STUN packet is received from a client, if we check `packet->GetUsername()` (which returns `usernameFragment:password` values don't match. AFAIR this is because the STUN USERNAME field contains the remote `usernameFragment` concatenated with ":" and the **local** password.
+
+I've added some logs to show the problem:
+
+```
+mediasoup:ERROR:Channel [pid:35897 RTC::IceServer::IceServer() | ----------- IceServer constructor | usernameFragment:5k23pn9092feeudr, password:qlvg20mhaf43r7ysju41fxjafw9c0ovd +0ms
+
+mediasoup:ERROR:Channel [pid:35897 RTC::IceServer::IceServer() | ----------- IceServer constructor | usernameFragment:bxuwysb0l2hltk2h, password:0275z9opi3uiql3apboece5qrgvffm03 +6ms
+
+mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): bxuwysb0l2hltk2h:1dRN +36ms
+
+mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): bxuwysb0l2hltk2h:1dRN +50ms
+
+mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): 5k23pn9092feeudr:pJjB +22ms
+
+mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): bxuwysb0l2hltk2h:1dRN +40ms
+
+mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): 5k23pn9092feeudr:pJjB +16ms
+
+mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): 5k23pn9092feeudr:pJjB +64ms
+````
+
+So how to match received STUN packets against the credentials of our `IceServer`? We may just compare the "usernameFragment" component but unclear if this is good. Obviously the `usernameFragmet` is chosen by mediasoup `WebRtcTransport` constructor by doing `Utils::Crypto::GetRandomString(16)` so it could be good enough but still...
+
+STUN RFC: See https://datatracker.ietf.org/doc/html/rfc5389
+
+
 ### What happens with its WebRtcTransports when closing a WebRtcServer?
 
 This is hard. And there must be a parallelism between TS/Rust and C++.
@@ -48,4 +79,4 @@ In `IceServer` we use `tuple.compare()` but now we have `tuple->id` to match thi
 
 ### New events in `IceServer`
 
-As far as a tuple is added or removed it must call a new callback.
+As far as a tuple is added or removed it must call a new callback. Also new events when ICE username&passwd are initially set or changed later.
