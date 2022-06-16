@@ -55,23 +55,17 @@ namespace RTC
 		  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp);
 
 	private:
-		std::string GetIceUsernameFragmentPasswordKey(RTC::StunPacket* packet) const;
-		std::string GetIceUsernameFragmentPasswordKey(
-		  const std::string& usernameFragment, const std::string& password) const;
+		std::string GetLocalIceUsernameFragmentFromReceivedStunPacket(RTC::StunPacket* packet) const;
 		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnNonStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
 		/* Pure virtual methods inherited from RTC::WebRtcTransport::WebRtcTransportListener. */
 	public:
-		void OnWebRtcTransportIceUsernameFragmentPasswordAdded(
-		  RTC::WebRtcTransport* webRtcTransport,
-		  const std::string& usernameFragment,
-		  const std::string& password) override;
-		void OnWebRtcTransportIceUsernameFragmentPasswordRemoved(
-		  RTC::WebRtcTransport* webRtcTransport,
-		  const std::string& usernameFragment,
-		  const std::string& password) override;
+		void OnWebRtcTransportLocalIceUsernameFragmentAdded(
+		  RTC::WebRtcTransport* webRtcTransport, const std::string& usernameFragment) override;
+		void OnWebRtcTransportLocalIceUsernameFragmentRemoved(
+		  RTC::WebRtcTransport* webRtcTransport, const std::string& usernameFragment) override;
 		void OnWebRtcTransportTransportTupleAdded(
 		  RTC::WebRtcTransport* webRtcTransport, RTC::TransportTuple* tuple) override;
 		void OnWebRtcTransportTransportTupleRemoved(
@@ -98,8 +92,8 @@ namespace RTC
 	private:
 		// Vector of UdpSockets and TcpServers in the user given order.
 		std::vector<UdpSocketOrTcpServer> udpSocketOrTcpServers;
-		// Map of WebRtcTransports indexed by ICE usernameFragment:password.
-		absl::flat_hash_map<std::string, RTC::WebRtcTransport*> mapIceUsernameFragmentPasswordWebRtcTransports;
+		// Map of WebRtcTransports indexed by local ICE usernameFragment.
+		absl::flat_hash_map<std::string, RTC::WebRtcTransport*> mapLocalIceUsernameFragmentWebRtcTransports;
 		// Map of WebRtcTransports indexed by TransportTuple.id.
 		absl::flat_hash_map<std::string, RTC::WebRtcTransport*> mapTupleWebRtcTransports;
 	};

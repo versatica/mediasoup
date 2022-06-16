@@ -25,6 +25,12 @@ So how to match received STUN packets against the credentials of our `IceServer`
 
 STUN RFC: See https://datatracker.ietf.org/doc/html/rfc5389
 
+Suggested solution: use a 32 bytes mediasoup side `usernameFragment`.
+
+However, there is no rule in RFC 5389 telling that `USERNAME` attribute should contain `remoteUsernameFragment:localUsernameFragment`. Anyway, in `StunPacket::CheckAuthentication()` we already rely on `USERNAME` starting by our local username fragment followed by ":".
+
+Done.
+
 
 ### What happens with its WebRtcTransports when closing a WebRtcServer?
 
@@ -73,4 +79,4 @@ In `IceServer` we use `tuple.compare()` but now we have `tuple->id` to match thi
 
 ### New events in `IceServer`
 
-As far as a tuple is added or removed it must call a new callback. Also new events when ICE username&passwd are initially set or changed later.
+As far as a tuple is added or removed it must call a new callback. Also new events when local ICE usernameFrag is initially set or changed later.

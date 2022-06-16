@@ -160,13 +160,13 @@ namespace RTC
 		// webRtcTransportListener (this is, WebRtcServer) that will affect these
 		// maps so caution.
 
-		for (auto it = this->mapIceUsernameFragmentPasswordWebRtcTransports.begin();
-		     it != this->mapIceUsernameFragmentPasswordWebRtcTransports.end();
+		for (auto it = this->mapLocalIceUsernameFragmentWebRtcTransports.begin();
+		     it != this->mapLocalIceUsernameFragmentWebRtcTransports.end();
 		     ++it)
 		{
 			auto* webRtcTransport = it->second;
 
-			this->mapIceUsernameFragmentPasswordWebRtcTransports.erase(it);
+			this->mapLocalIceUsernameFragmentWebRtcTransports.erase(it);
 
 			webRtcTransport->WebRtcServerClosed();
 		}
@@ -262,24 +262,23 @@ namespace RTC
 		return iceCandidates;
 	}
 
-	inline std::string WebRtcServer::GetIceUsernameFragmentPasswordKey(RTC::StunPacket* packet) const
+	inline std::string WebRtcServer::GetLocalIceUsernameFragmentFromReceivedStunPacket(
+	  RTC::StunPacket* packet) const
 	{
 		MS_TRACE();
 
-		// TODO: If this ok? is this gonna return `usernameFragment:password` and those values
-		// will match those in the IceServer? Must check.
-		// See https://datatracker.ietf.org/doc/html/rfc5389
-		// No, it's not ok. See TODO_WEBRTC_SERVER.md file.
+		// Here we inspect the USERNAME attribute of a received STUN request and
+		// extract its remote usernameFragment (the one given to our IceServwer)
+		// which is the first value in the attribute value before the ":" symbol.
 
-		return packet->GetUsername();
-	}
+		auto& username  = packet->GetUsername();
+		size_t colonPos = username.find(":");
 
-	inline std::string WebRtcServer::GetIceUsernameFragmentPasswordKey(
-	  const std::string& usernameFragment, const std::string& password) const
-	{
-		MS_TRACE();
+		// If no colon is found just return the whole USERNAME attribute anyway.
+		if (colonPos == std::string::npos)
+			return username;
 
-		return usernameFragment + ":" + password;
+		return username.substr(0, colonPos);
 	}
 
 	inline void WebRtcServer::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
@@ -309,12 +308,12 @@ namespace RTC
 			return;
 		}
 
-		auto key = GetIceUsernameFragmentPasswordKey(packet);
-		auto it  = this->mapIceUsernameFragmentPasswordWebRtcTransports.find(key);
+		auto key = GetLocalIceUsernameFragmentFromReceivedStunPacket(packet);
+		auto it  = this->mapLocalIceUsernameFragmentWebRtcTransports.find(key);
 
-		if (it == this->mapIceUsernameFragmentPasswordWebRtcTransports.end())
+		if (it == this->mapLocalIceUsernameFragmentWebRtcTransports.end())
 		{
-			MS_WARN_DEV("ignoring received STUN packet with unknown associated WebRtcTransport");
+			MS_WARN_DEV("ignoring received STUN packet with unknown remote ICE usernameFragment");
 
 			delete packet;
 
@@ -337,7 +336,7 @@ namespace RTC
 
 		if (it == this->mapTupleWebRtcTransports.end())
 		{
-			MS_WARN_DEV("ignoring received non STUN data from unknown source");
+			MS_WARN_DEV("ignoring received non STUN data from unknown tuple");
 
 			return;
 		}
@@ -347,28 +346,20 @@ namespace RTC
 		webRtcTransport->ProcessNonStunPacketFromWebRtcServer(tuple, data, len);
 	}
 
-	inline void WebRtcServer::OnWebRtcTransportIceUsernameFragmentPasswordAdded(
-	  RTC::WebRtcTransport* webRtcTransport,
-	  const std::string& usernameFragment,
-	  const std::string& password)
+	inline void WebRtcServer::OnWebRtcTransportLocalIceUsernameFragmentAdded(
+	  RTC::WebRtcTransport* webRtcTransport, const std::string& usernameFragment)
 	{
 		MS_TRACE();
 
-		auto key = GetIceUsernameFragmentPasswordKey(usernameFragment, password);
-
-		this->mapIceUsernameFragmentPasswordWebRtcTransports[key] = webRtcTransport;
+		this->mapLocalIceUsernameFragmentWebRtcTransports[usernameFragment] = webRtcTransport;
 	}
 
-	inline void WebRtcServer::OnWebRtcTransportIceUsernameFragmentPasswordRemoved(
-	  RTC::WebRtcTransport* webRtcTransport,
-	  const std::string& usernameFragment,
-	  const std::string& password)
+	inline void WebRtcServer::OnWebRtcTransportLocalIceUsernameFragmentRemoved(
+	  RTC::WebRtcTransport* webRtcTransport, const std::string& usernameFragment)
 	{
 		MS_TRACE();
 
-		auto key = GetIceUsernameFragmentPasswordKey(usernameFragment, password);
-
-		this->mapIceUsernameFragmentPasswordWebRtcTransports.erase(key);
+		this->mapLocalIceUsernameFragmentWebRtcTransports.erase(usernameFragment);
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportTransportTupleAdded(

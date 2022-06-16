@@ -199,7 +199,7 @@ namespace RTC
 
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(
-			  this, Utils::Crypto::GetRandomString(16), Utils::Crypto::GetRandomString(32));
+			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
