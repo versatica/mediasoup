@@ -142,8 +142,8 @@ namespace RTC
 			Utils::IP::GetAddressInfo(GetLocalAddress(), family, localIp, localPort);
 			Utils::IP::GetAddressInfo(GetRemoteAddress(), family, remoteIp, remotePort);
 
-			this->id = protocol + "_" + std::to_string(family) + "_" + protocol + "_" + remoteIp + "_" +
-			           std::to_string(remotePort) + "_" + localIp + "_" + std::to_string(localPort);
+			this->id = remoteIp + "_" + std::to_string(remotePort) + "_" + localIp + "_" +
+			           std::to_string(localPort) + "_" + std::to_string(family) + "_" + protocol;
 		}
 
 	public:
