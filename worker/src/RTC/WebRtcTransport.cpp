@@ -622,7 +622,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::ProcessStunPacketFromWebRtcServer(
-	  RTC::TransportTuple* tuple, const RTC::StunPacket* packet)
+	  RTC::TransportTuple* tuple, RTC::StunPacket* packet)
 	{
 		MS_TRACE();
 
