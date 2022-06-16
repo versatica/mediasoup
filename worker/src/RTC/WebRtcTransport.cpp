@@ -621,6 +621,30 @@ namespace RTC
 		RTC::Transport::HandleNotification(notification);
 	}
 
+	void WebRtcTransport::ProcessStunPacketFromWebRtcServer(const RTC::StunPacket* packet)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void WebRtcTransport::ProcessNonStunDataFromWebRtcServer(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	void WebRtcTransport::RemoveTuple(RTC::TransportTuple* tuple)
+	{
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+	}
+
 	void WebRtcTransport::WebRtcServerClosed()
 	{
 		MS_TRACE();
