@@ -28,11 +28,13 @@ namespace RTC
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
 		  : udpSocket(udpSocket), udpRemoteAddr((struct sockaddr*)udpRemoteAddr), protocol(Protocol::UDP)
 		{
+			GenerateId();
 		}
 
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection)
 		  : tcpConnection(tcpConnection), protocol(Protocol::TCP)
 		{
+			GenerateId();
 		}
 
 		explicit TransportTuple(const TransportTuple* tuple)
@@ -40,6 +42,8 @@ namespace RTC
 		    tcpConnection(tuple->tcpConnection), localAnnouncedIp(tuple->localAnnouncedIp),
 		    protocol(tuple->protocol)
 		{
+			this->id = tuple->id;
+
 			if (protocol == TransportTuple::Protocol::UDP)
 				StoreUdpRemoteAddress();
 		}
@@ -124,6 +128,26 @@ namespace RTC
 			else
 				return this->tcpConnection->GetSentBytes();
 		}
+
+	private:
+		void GenerateId()
+		{
+			const std::string protocol = this->protocol == Protocol::UDP ? "udp" : "tcp";
+			int family;
+			std::string localIp;
+			uint16_t localPort;
+			std::string remoteIp;
+			uint16_t remotePort;
+
+			Utils::IP::GetAddressInfo(GetLocalAddress(), family, localIp, localPort);
+			Utils::IP::GetAddressInfo(GetRemoteAddress(), family, remoteIp, remotePort);
+
+			this->id = protocol + "_" + std::to_string(family) + "_" + protocol + "_" + remoteIp + "_" +
+			           std::to_string(remotePort) + "_" + localIp + "_" + std::to_string(localPort);
+		}
+
+	public:
+		std::string id;
 
 	private:
 		// Passed by argument.

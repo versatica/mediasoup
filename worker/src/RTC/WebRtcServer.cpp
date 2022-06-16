@@ -322,7 +322,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Add corresponding entry in this->mapIceUsernameFragmentPasswordWebRtcTransports.
+		const std::string key = usernameFragment + ":" + password;
+
+		this->mapIceUsernameFragmentPasswordWebRtcTransports[key] = webRtcTransport;
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportIceUsernameFragmentPasswordRemoved(
@@ -332,7 +334,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Remove corresponding entry in this->mapIceUsernameFragmentPasswordWebRtcTransports.
+		const std::string key = usernameFragment + ":" + password;
+
+		this->mapIceUsernameFragmentPasswordWebRtcTransports.erase(key);
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportTransportTupleAdded(
@@ -340,7 +344,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Add corresponding entry in this->mapTupleWebRtcTransports.
+		this->mapTupleWebRtcTransports[tuple->id] = webRtcTransport;
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportTransportTupleRemoved(
@@ -348,7 +352,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Remove corresponding entry in this->mapTupleWebRtcTransports.
+		this->mapTupleWebRtcTransports.erase(tuple->id);
 	}
 
 	inline void WebRtcServer::OnUdpSocketPacketReceived(

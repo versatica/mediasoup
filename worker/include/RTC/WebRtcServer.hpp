@@ -97,8 +97,8 @@ namespace RTC
 		std::vector<UdpSocketOrTcpServer> udpSocketOrTcpServers;
 		// Map of WebRtcTransports indexed by ICE usernameFragment:password.
 		absl::flat_hash_map<std::string, RTC::WebRtcTransport*> mapIceUsernameFragmentPasswordWebRtcTransports;
-		// Map of WebRtcTransports indexed by TransportTuple.
-		absl::flat_hash_map<RTC::TransportTuple*, RTC::WebRtcTransport*> mapTupleWebRtcTransports;
+		// Map of WebRtcTransports indexed by TransportTuple.id.
+		absl::flat_hash_map<std::string, RTC::WebRtcTransport*> mapTupleWebRtcTransports;
 	};
 } // namespace RTC
 
