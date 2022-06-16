@@ -621,28 +621,49 @@ namespace RTC
 		RTC::Transport::HandleNotification(notification);
 	}
 
-	void WebRtcTransport::ProcessStunPacketFromWebRtcServer(const RTC::StunPacket* packet)
+	void WebRtcTransport::ProcessStunPacketFromWebRtcServer(
+	  RTC::TransportTuple* tuple, const RTC::StunPacket* packet)
 	{
 		MS_TRACE();
 
-		// TODO
+		// Pass it to the IceServer.
+		this->iceServer->ProcessStunPacket(packet, tuple);
 	}
 
-	void WebRtcTransport::ProcessNonStunDataFromWebRtcServer(
+	void WebRtcTransport::ProcessNonStunPacketFromWebRtcServer(
 	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
-		// TODO
+		// Increase receive transmission.
+		RTC::Transport::DataReceived(len);
+
+		// Check if it's RTCP.
+		if (RTC::RTCP::Packet::IsRtcp(data, len))
+		{
+			OnRtcpDataReceived(tuple, data, len);
+		}
+		// Check if it's RTP.
+		else if (RTC::RtpPacket::IsRtp(data, len))
+		{
+			OnRtpDataReceived(tuple, data, len);
+		}
+		// Check if it's DTLS.
+		else if (RTC::DtlsTransport::IsDtls(data, len))
+		{
+			OnDtlsDataReceived(tuple, data, len);
+		}
+		else
+		{
+			MS_WARN_DEV("ignoring received packet of unknown type");
+		}
 	}
 
 	void WebRtcTransport::RemoveTuple(RTC::TransportTuple* tuple)
 	{
-		{
-			MS_TRACE();
+		MS_TRACE();
 
-			// TODO
-		}
+		this->iceServer->RemoveTuple(tuple);
 	}
 
 	void WebRtcTransport::WebRtcServerClosed()

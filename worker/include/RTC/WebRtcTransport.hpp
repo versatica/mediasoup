@@ -59,8 +59,9 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) override;
 		void HandleRequest(Channel::ChannelRequest* request) override;
 		void HandleNotification(PayloadChannel::Notification* notification) override;
-		void ProcessStunPacketFromWebRtcServer(const RTC::StunPacket* packet);
-		void ProcessNonStunDataFromWebRtcServer(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void ProcessStunPacketFromWebRtcServer(RTC::TransportTuple* tuple, const RTC::StunPacket* packet);
+		void ProcessNonStunPacketFromWebRtcServer(
+		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void RemoveTuple(RTC::TransportTuple* tuple);
 		void WebRtcServerClosed();
 

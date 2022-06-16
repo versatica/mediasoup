@@ -322,7 +322,7 @@ namespace RTC
 
 		auto* webRtcTransport = it->second;
 
-		webRtcTransport->ProcessStunPacketFromWebRtcServer(packet);
+		webRtcTransport->ProcessStunPacketFromWebRtcServer(tuple, packet);
 
 		delete packet;
 	}
@@ -343,7 +343,7 @@ namespace RTC
 
 		auto* webRtcTransport = it->second;
 
-		webRtcTransport->ProcessNonStunDataFromWebRtcServer(tuple, data, len);
+		webRtcTransport->ProcessNonStunPacketFromWebRtcServer(tuple, data, len);
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportIceUsernameFragmentPasswordAdded(
@@ -411,7 +411,7 @@ namespace RTC
 
 		auto* webRtcTransport = it->second;
 
-		webRtcTransport->RemoveTuple(std::addressof(tuple));
+		webRtcTransport->RemoveTuple(&tuple);
 	}
 
 	inline void WebRtcServer::OnTcpConnectionPacketReceived(
