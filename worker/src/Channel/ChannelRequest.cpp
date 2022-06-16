@@ -21,6 +21,7 @@ namespace Channel
 		{ "router.close",                                ChannelRequest::MethodId::ROUTER_CLOSE                                     },
 		{ "router.dump",                                 ChannelRequest::MethodId::ROUTER_DUMP                                      },
 		{ "router.createWebRtcTransport",                ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT                   },
+		{ "router.createWebRtcTransportWithServer",      ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER       },
 		{ "router.createPlainTransport",                 ChannelRequest::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT                    },
 		{ "router.createPipeTransport",                  ChannelRequest::MethodId::ROUTER_CREATE_PIPE_TRANSPORT                     },
 		{ "router.createDirectTransport",                ChannelRequest::MethodId::ROUTER_CREATE_DIRECT_TRANSPORT                   },

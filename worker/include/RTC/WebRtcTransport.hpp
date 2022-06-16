@@ -30,6 +30,27 @@ namespace RTC
 		};
 
 	public:
+		class WebRtcTransportListener
+		{
+		public:
+			virtual ~WebRtcTransportListener() = default;
+
+		public:
+			virtual void OnWebRtcTransportIceUsernameFragmentPasswordAdded(
+			  RTC::WebRtcTransport* webRtcTransport,
+			  const std::string& usernameFragment,
+			  const std::string& password) = 0;
+			virtual void OnWebRtcTransportIceUsernameFragmentPasswordRemoved(
+			  RTC::WebRtcTransport* webRtcTransport,
+			  const std::string& usernameFragment,
+			  const std::string& password) = 0;
+			virtual void OnWebRtcTransportTransportTupleAdded(
+			  RTC::WebRtcTransport* webRtcTransport, RTC::TransportTuple* tuple) = 0;
+			virtual void OnWebRtcTransportTransportTupleRemoved(
+			  RTC::WebRtcTransport* webRtcTransport, RTC::TransportTuple* tuple) = 0;
+		};
+
+	public:
 		WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~WebRtcTransport() override;
 
