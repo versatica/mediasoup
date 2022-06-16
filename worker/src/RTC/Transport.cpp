@@ -246,6 +246,14 @@ namespace RTC
 #endif
 	}
 
+	void Transport::MustClose()
+	{
+		MS_TRACE();
+
+		// Ask our parent Router to close/delete us.
+		this->listener->OnTransportMustClose(this);
+	}
+
 	void Transport::CloseProducersAndConsumers()
 	{
 		MS_TRACE();

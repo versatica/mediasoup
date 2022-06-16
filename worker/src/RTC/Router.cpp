@@ -318,7 +318,7 @@ namespace RTC
 				// notify us about their closures.
 				transport->CloseProducersAndConsumers();
 
-				// Remove it from the map and delete it.
+				// Remove it from the map.
 				this->mapTransports.erase(transport->id);
 
 				MS_DEBUG_DEV("Transport closed [transportId:%s]", transport->id.c_str());
@@ -531,6 +531,25 @@ namespace RTC
 		RTC::Producer* producer = it->second;
 
 		return producer;
+	}
+
+	inline void Router::OnTransportMustClose(RTC::Transport* transport)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		  this->mapTransports.find(transport->id) != this->mapTransports.end(),
+		  "Transport not present in mapTransports");
+
+		// Tell the Transport to close all its Producers and Consumers so it will
+		// notify us about their closures.
+		transport->CloseProducersAndConsumers();
+
+		// Remove it from the map.
+		this->mapTransports.erase(transport->id);
+
+		// Delete it.
+		delete transport;
 	}
 
 	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)

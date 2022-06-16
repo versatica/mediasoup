@@ -155,7 +155,10 @@ namespace RTC
 		}
 		this->udpSocketOrTcpServers.clear();
 
-		// Close all WebRtcTransports.
+		// Tell all WebRtcTransports that the WebRtcServer must has been closed.
+		// NOTE: The WebRtcTransport destructor will invoke N events in its
+		// webRtcTransportListener (this is, WebRtcServer) that will affect these
+		// maps so caution.
 
 		for (auto it = this->mapIceUsernameFragmentPasswordWebRtcTransports.begin();
 		     it != this->mapIceUsernameFragmentPasswordWebRtcTransports.end();
@@ -165,14 +168,7 @@ namespace RTC
 
 			this->mapIceUsernameFragmentPasswordWebRtcTransports.erase(it);
 
-			// Let the Router be notified about closed Producers/Consumers in the
-			// WebRtcTransport that will be closed.
-			webRtcTransport->CloseProducersAndConsumers();
-
-			// NOTE: The WebRtcTransport destructor will invoke N events in its
-			// webRtcTransportListener (this is, WebRtcServer) that will affect these
-			// maps so caution.
-			delete webRtcTransport;
+			webRtcTransport->WebRtcServerClosed();
 		}
 
 		for (auto it = this->mapTupleWebRtcTransports.begin(); it != this->mapTupleWebRtcTransports.end();
@@ -182,14 +178,7 @@ namespace RTC
 
 			this->mapTupleWebRtcTransports.erase(it);
 
-			// Let the Router be notified about closed Producers/Consumers in the
-			// WebRtcTransport that will be closed.
-			webRtcTransport->CloseProducersAndConsumers();
-
-			// NOTE: The WebRtcTransport destructor will invoke N events in its
-			// webRtcTransportListener (this is, WebRtcServer) that will affect these
-			// maps so caution.
-			delete webRtcTransport;
+			webRtcTransport->WebRtcServerClosed();
 		}
 	}
 

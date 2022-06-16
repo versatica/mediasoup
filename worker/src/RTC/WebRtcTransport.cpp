@@ -621,6 +621,13 @@ namespace RTC
 		RTC::Transport::HandleNotification(notification);
 	}
 
+	void WebRtcTransport::WebRtcServerClosed()
+	{
+		MS_TRACE();
+
+		RTC::Transport::MustClose();
+	}
+
 	inline bool WebRtcTransport::IsConnected() const
 	{
 		MS_TRACE();

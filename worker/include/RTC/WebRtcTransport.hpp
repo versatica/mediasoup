@@ -59,6 +59,7 @@ namespace RTC
 		void FillJsonStats(json& jsonArray) override;
 		void HandleRequest(Channel::ChannelRequest* request) override;
 		void HandleNotification(PayloadChannel::Notification* notification) override;
+		void WebRtcServerClosed();
 
 	private:
 		bool IsConnected() const override;
