@@ -5,29 +5,23 @@
 
 When we create a ICE server we decide the mediasoup side `usernameFragment` and `password` and pass them to the `IceServer` constructor.
 
-However, when a STUN packet is received from a client, if we check `packet->GetUsername()` (which returns `usernameFragment:password` values don't match. AFAIR this is because the STUN USERNAME field contains the remote `usernameFragment` concatenated with ":" and the **local** password.
+However, when a STUN packet is received from a client, if we check `packet->GetUsername()` it doesn't return the mediasoup side `usernameFragment:password` values but instead `mediasoupUsernameFragment:clientUsernameFragment`.
 
 I've added some logs to show the problem:
 
 ```
-mediasoup:ERROR:Channel [pid:35897 RTC::IceServer::IceServer() | ----------- IceServer constructor | usernameFragment:5k23pn9092feeudr, password:qlvg20mhaf43r7ysju41fxjafw9c0ovd +0ms
-
 mediasoup:ERROR:Channel [pid:35897 RTC::IceServer::IceServer() | ----------- IceServer constructor | usernameFragment:bxuwysb0l2hltk2h, password:0275z9opi3uiql3apboece5qrgvffm03 +6ms
 
 mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): bxuwysb0l2hltk2h:1dRN +36ms
-
-mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): bxuwysb0l2hltk2h:1dRN +50ms
-
-mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): 5k23pn9092feeudr:pJjB +22ms
-
-mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): bxuwysb0l2hltk2h:1dRN +40ms
-
-mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): 5k23pn9092feeudr:pJjB +16ms
-
-mediasoup:ERROR:Channel [pid:35897 RTC::WebRtcTransport::OnStunDataReceived() | ----------- stunPacket->GetUsername(): 5k23pn9092feeudr:pJjB +64ms
 ````
 
-So how to match received STUN packets against the credentials of our `IceServer`? We may just compare the "usernameFragment" component but unclear if this is good. Obviously the `usernameFragmet` is chosen by mediasoup `WebRtcTransport` constructor by doing `Utils::Crypto::GetRandomString(16)` so it could be good enough but still...
+In fact, if we show the local SDP of the client it clearly shows:
+
+```
+a=ice-ufrag:1dRN
+```
+
+So how to match received STUN packets against the credentials of our `IceServer`? We may just compare the "usernameFragment" component but unclear if this is good. Obviously the `usernameFragmet` is chosen by mediasoup `WebRtcTransport` constructor by doing `Utils::Crypto::GetRandomString(16)` so it could be good enough but still... The thing is that mediasoup-client does NOT signal the client `a=ice-ufrag` to mediasoup because being mediasoup ICE-Lite it doesn't need it.
 
 STUN RFC: See https://datatracker.ietf.org/doc/html/rfc5389
 
