@@ -36,6 +36,8 @@ namespace RTC
 			virtual ~WebRtcTransportListener() = default;
 
 		public:
+			virtual void OnWebRtcTransportCreated(RTC::WebRtcTransport* webRtcTransport) = 0;
+			virtual void OnWebRtcTransportClosed(RTC::WebRtcTransport* webRtcTransport)  = 0;
 			virtual void OnWebRtcTransportLocalIceUsernameFragmentAdded(
 			  RTC::WebRtcTransport* webRtcTransport, const std::string& usernameFragment) = 0;
 			virtual void OnWebRtcTransportLocalIceUsernameFragmentRemoved(
@@ -65,7 +67,6 @@ namespace RTC
 		void ProcessNonStunPacketFromWebRtcServer(
 		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void RemoveTuple(RTC::TransportTuple* tuple);
-		void WebRtcServerClosed();
 
 	private:
 		bool IsConnected() const override;

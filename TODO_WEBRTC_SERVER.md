@@ -38,8 +38,7 @@ This is hard. And there must be a parallelism between TS/Rust and C++.
 
 Proposal:
 
-* `webRtcServer.close()` carefully iterates its maps and calls `webRtcTransport.webRtcServerClosed()`.
-* `webRtcTransport.webRtcServerClosed()` calls a new parent `Transport::MustClose()` method.
+* `webRtcServer.close()` iterates its `Set` of `WebRtcTransports` and calls `webRtcTransport.mustClose()`.
 * `Transport::MustClose()` calls a new `this->listener->OnTransportMustClose(this)`.
 * `Router.OnTransportMustClose(transport)` does:
 	- Call `transport->CloseProducersAndConsumers()` so `Router` is notified about closed `Producers` and `Consumers` and can remove them from its maps.

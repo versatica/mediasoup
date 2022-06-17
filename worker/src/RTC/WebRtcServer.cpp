@@ -155,31 +155,11 @@ namespace RTC
 		}
 		this->udpSocketOrTcpServers.clear();
 
-		// Tell all WebRtcTransports that the WebRtcServer must has been closed.
-		// NOTE: The WebRtcTransport destructor will invoke N events in its
-		// webRtcTransportListener (this is, WebRtcServer) that will affect these
-		// maps so caution.
-
-		for (auto it = this->mapLocalIceUsernameFragmentWebRtcTransport.begin();
-		     it != this->mapLocalIceUsernameFragmentWebRtcTransport.end();
-		     ++it)
+		for (auto* webRtcTransport : this->webRtcTransports)
 		{
-			auto* webRtcTransport = it->second;
-
-			this->mapLocalIceUsernameFragmentWebRtcTransport.erase(it);
-
-			webRtcTransport->WebRtcServerClosed();
+			webRtcTransport->MustClose();
 		}
-
-		for (auto it = this->mapTupleWebRtcTransport.begin(); it != this->mapTupleWebRtcTransport.end();
-		     ++it)
-		{
-			auto* webRtcTransport = it->second;
-
-			this->mapTupleWebRtcTransport.erase(it);
-
-			webRtcTransport->WebRtcServerClosed();
-		}
+		this->webRtcTransports.clear();
 	}
 
 	void WebRtcServer::FillJson(json& jsonObject) const
@@ -189,7 +169,91 @@ namespace RTC
 		// Add id.
 		jsonObject["id"] = this->id;
 
-		// TODO: Dump udpSockets and tcpServers? and webRtcTransports?.
+		// Add udpSockets and tcpServers.
+		jsonObject["udpSockets"] = json::array();
+		auto jsonUdpSocketsIt    = jsonObject.find("udpSockets");
+		jsonObject["tcpServers"] = json::array();
+		auto jsonTcpServersIt    = jsonObject.find("tcpServers");
+
+		size_t udpSocketIdx{ 0 };
+		size_t tcpServerIdx{ 0 };
+
+		for (auto& item : this->udpSocketOrTcpServers)
+		{
+			if (item.udpSocket)
+			{
+				jsonUdpSocketsIt->emplace_back(json::value_t::object);
+
+				auto& jsonEntry = (*jsonUdpSocketsIt)[udpSocketIdx];
+
+				jsonEntry["ip"]   = item.udpSocket->GetLocalIp();
+				jsonEntry["port"] = item.udpSocket->GetLocalPort();
+
+				++udpSocketIdx;
+			}
+			else if (item.tcpServer)
+			{
+				jsonTcpServersIt->emplace_back(json::value_t::object);
+
+				auto& jsonEntry = (*jsonTcpServersIt)[tcpServerIdx];
+
+				jsonEntry["ip"]   = item.tcpServer->GetLocalIp();
+				jsonEntry["port"] = item.tcpServer->GetLocalPort();
+
+				++tcpServerIdx;
+			}
+		}
+
+		// Add webRtcTransportIds.
+		jsonObject["webRtcTransportIds"] = json::array();
+		auto jsonWebRtcTransportIdsIt    = jsonObject.find("webRtcTransportIds");
+
+		for (auto* webRtcTransport : this->webRtcTransports)
+		{
+			jsonWebRtcTransportIdsIt->emplace_back(webRtcTransport->id);
+		}
+
+		size_t idx;
+
+		// Add localIceUsernameFragments.
+		jsonObject["localIceUsernameFragments"] = json::array();
+		auto jsonLocalIceUsernamesIt            = jsonObject.find("localIceUsernameFragments");
+
+		idx = 0;
+		for (auto& kv : this->mapLocalIceUsernameFragmentWebRtcTransport)
+		{
+			const auto& localIceUsernameFragment = kv.first;
+			const auto* webRtcTransport          = kv.second;
+
+			jsonLocalIceUsernamesIt->emplace_back(json::value_t::object);
+
+			auto& jsonEntry = (*jsonLocalIceUsernamesIt)[idx];
+
+			jsonEntry["localIceUsernameFragment"] = localIceUsernameFragment;
+			jsonEntry["webRtcTransportId"]        = webRtcTransport->id;
+
+			++idx;
+		}
+
+		// Add tuples.
+		jsonObject["tuples"] = json::array();
+		auto jsonTuplesIt    = jsonObject.find("tuples");
+
+		idx = 0;
+		for (auto& kv : this->mapTupleWebRtcTransport)
+		{
+			const auto& tuple           = kv.first;
+			const auto* webRtcTransport = kv.second;
+
+			jsonTuplesIt->emplace_back(json::value_t::object);
+
+			auto& jsonEntry = (*jsonTuplesIt)[idx];
+
+			jsonEntry["tuple"]             = tuple;
+			jsonEntry["webRtcTransportId"] = webRtcTransport->id;
+
+			++idx;
+		}
 	}
 
 	void WebRtcServer::HandleRequest(Channel::ChannelRequest* request)
@@ -345,6 +409,28 @@ namespace RTC
 		auto* webRtcTransport = it->second;
 
 		webRtcTransport->ProcessNonStunPacketFromWebRtcServer(tuple, data, len);
+	}
+
+	inline void WebRtcServer::OnWebRtcTransportCreated(RTC::WebRtcTransport* webRtcTransport)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		  this->webRtcTransports.find(webRtcTransport) == this->webRtcTransports.end(),
+		  "WebRtcTransport already handled");
+
+		this->webRtcTransports.insert(webRtcTransport);
+	}
+
+	inline void WebRtcServer::OnWebRtcTransportClosed(RTC::WebRtcTransport* webRtcTransport)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		  this->webRtcTransports.find(webRtcTransport) != this->webRtcTransports.end(),
+		  "WebRtcTransport not handled");
+
+		this->webRtcTransports.erase(webRtcTransport);
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportLocalIceUsernameFragmentAdded(

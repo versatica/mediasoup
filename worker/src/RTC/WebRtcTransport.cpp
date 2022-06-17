@@ -236,6 +236,9 @@ namespace RTC
 		}
 	}
 
+	/**
+	 * This constructor is used when the WebRtcTransport uses a WebRtcServer.
+	 */
 	WebRtcTransport::WebRtcTransport(
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
@@ -255,6 +258,9 @@ namespace RTC
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
+
+			// Notify the webRtcTransportListener.
+			this->webRtcTransportListener->OnWebRtcTransportCreated(this);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -307,6 +313,10 @@ namespace RTC
 
 		delete this->srtpRecvSession;
 		this->srtpRecvSession = nullptr;
+
+		// Notify the webRtcTransportListener.
+		if (this->webRtcTransportListener)
+			this->webRtcTransportListener->OnWebRtcTransportClosed(this);
 	}
 
 	void WebRtcTransport::FillJson(json& jsonObject) const
@@ -700,13 +710,6 @@ namespace RTC
 		MS_TRACE();
 
 		this->iceServer->RemoveTuple(tuple);
-	}
-
-	void WebRtcTransport::WebRtcServerClosed()
-	{
-		MS_TRACE();
-
-		RTC::Transport::MustClose();
 	}
 
 	inline bool WebRtcTransport::IsConnected() const

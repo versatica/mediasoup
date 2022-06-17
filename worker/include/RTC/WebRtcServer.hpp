@@ -10,6 +10,7 @@
 #include "RTC/UdpSocket.hpp"
 #include "RTC/WebRtcTransport.hpp"
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -62,6 +63,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::WebRtcTransport::WebRtcTransportListener. */
 	public:
+		void OnWebRtcTransportCreated(RTC::WebRtcTransport* webRtcTransport) override;
+		void OnWebRtcTransportClosed(RTC::WebRtcTransport* webRtcTransport) override;
 		void OnWebRtcTransportLocalIceUsernameFragmentAdded(
 		  RTC::WebRtcTransport* webRtcTransport, const std::string& usernameFragment) override;
 		void OnWebRtcTransportLocalIceUsernameFragmentRemoved(
@@ -92,6 +95,8 @@ namespace RTC
 	private:
 		// Vector of UdpSockets and TcpServers in the user given order.
 		std::vector<UdpSocketOrTcpServer> udpSocketOrTcpServers;
+		// Set of WebRtcTransports.
+		absl::flat_hash_set<RTC::WebRtcTransport*> webRtcTransports;
 		// Map of WebRtcTransports indexed by local ICE usernameFragment.
 		absl::flat_hash_map<std::string, RTC::WebRtcTransport*> mapLocalIceUsernameFragmentWebRtcTransport;
 		// Map of WebRtcTransports indexed by TransportTuple.id.
