@@ -24,6 +24,28 @@ namespace RTC
 		this->listener->OnIceServerLocalUsernameFragmentAdded(this, usernameFragment);
 	}
 
+	IceServer::~IceServer()
+	{
+		MS_TRACE();
+
+		// Here we must notify to the listener about the removal of all handled
+		// tuples and usernameFragment (including the old one if any).
+
+		this->listener->OnIceServerLocalUsernameFragmentRemoved(this, usernameFragment);
+
+		if (!this->oldUsernameFragment.empty())
+		{
+			this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->oldUsernameFragment);
+		}
+
+		for (const auto& it : this->tuples)
+		{
+			auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
+
+			this->listener->OnIceServerTupleRemoved(this, storedTuple);
+		}
+	}
+
 	void IceServer::ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
@@ -105,7 +127,7 @@ namespace RTC
 				{
 					case RTC::StunPacket::Authentication::OK:
 					{
-						if (!this->oldPassword.empty())
+						if (!this->oldUsernameFragment.empty() && !this->oldPassword.empty())
 						{
 							MS_DEBUG_TAG(ice, "new ICE credentials applied");
 
