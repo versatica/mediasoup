@@ -43,7 +43,11 @@ namespace RTC
 		{
 			auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
 
+			// Notify the listener.
 			this->listener->OnIceServerTupleRemoved(this, storedTuple);
+
+			// And close it (which makes special sense for TCP tuples).
+			storedTuple->Close();
 		}
 	}
 
@@ -293,7 +297,7 @@ namespace RTC
 		if (!removedTuple)
 			return;
 
-		// Remove from the list of tuples.
+		// Remove it from the list of tuples.
 		this->tuples.erase(it);
 
 		// If this is the selected tuple, do things.
@@ -318,6 +322,9 @@ namespace RTC
 
 		// Notify the listener.
 		this->listener->OnIceServerTupleRemoved(this, removedTuple);
+
+		// And close it (which makes special sense for TCP tuples).
+		removedTuple->Close();
 	}
 
 	void IceServer::ForceSelectedTuple(const RTC::TransportTuple* tuple)
@@ -590,7 +597,7 @@ namespace RTC
 			// This should not happen by design.
 			MS_ASSERT(removedTuple, "couldn't find any tuple to be removed");
 
-			// Remove from the list of tuples.
+			// Remove it from the list of tuples.
 			// NOTE: This trick is needed since it is a reverse_iterator and
 			// erase() requires a iterator, const_iterator or bidirectional_iterator.
 			this->tuples.erase(std::next(it).base());
