@@ -30,13 +30,13 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#appData = appData || {};
     }
     /**
-     * Router id.
+     * WebRtcServer id.
      */
     get id() {
         return this.#internal.webRtcServerId;
     }
     /**
-     * Whether the Router is closed.
+     * Whether the WebRtcServer is closed.
      */
     get closed() {
         return this.#closed;

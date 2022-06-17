@@ -51,11 +51,11 @@ export declare class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvent
         appData?: Record<string, unknown>;
     });
     /**
-     * Router id.
+     * WebRtcServer id.
      */
     get id(): string;
     /**
-     * Whether the Router is closed.
+     * Whether the WebRtcServer is closed.
      */
     get closed(): boolean;
     /**

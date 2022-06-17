@@ -105,7 +105,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	}
 
 	/**
-	 * Router id.
+	 * WebRtcServer id.
 	 */
 	get id(): string
 	{
@@ -113,7 +113,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	}
 
 	/**
-	 * Whether the Router is closed.
+	 * Whether the WebRtcServer is closed.
 	 */
 	get closed(): boolean
 	{
