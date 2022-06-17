@@ -64,15 +64,6 @@ void Worker::Close()
 	// Delete the SignalsHandler.
 	delete this->signalsHandler;
 
-	// Delete all WebRtcServers.
-	for (auto& kv : this->mapWebRtcServers)
-	{
-		auto* webRtcServer = kv.second;
-
-		delete webRtcServer;
-	}
-	this->mapWebRtcServers.clear();
-
 	// Delete all Routers.
 	for (auto& kv : this->mapRouters)
 	{
@@ -81,6 +72,15 @@ void Worker::Close()
 		delete router;
 	}
 	this->mapRouters.clear();
+
+	// Delete all WebRtcServers.
+	for (auto& kv : this->mapWebRtcServers)
+	{
+		auto* webRtcServer = kv.second;
+
+		delete webRtcServer;
+	}
+	this->mapWebRtcServers.clear();
 
 	// Close the Checker instance in DepUsrSCTP.
 	DepUsrSCTP::CloseChecker();
