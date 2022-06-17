@@ -397,7 +397,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapTupleWebRtcTransport.find(tuple->id);
+		auto it = this->mapTupleWebRtcTransport.find(tuple->hash);
 
 		if (it == this->mapTupleWebRtcTransport.end())
 		{
@@ -454,7 +454,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->mapTupleWebRtcTransport[tuple->id] = webRtcTransport;
+		this->mapTupleWebRtcTransport[tuple->hash] = webRtcTransport;
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportTransportTupleRemoved(
@@ -462,7 +462,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->mapTupleWebRtcTransport.erase(tuple->id);
+		this->mapTupleWebRtcTransport.erase(tuple->hash);
 	}
 
 	inline void WebRtcServer::OnUdpSocketPacketReceived(
@@ -482,7 +482,7 @@ namespace RTC
 
 		RTC::TransportTuple tuple(connection);
 
-		auto it = this->mapTupleWebRtcTransport.find(tuple.id);
+		auto it = this->mapTupleWebRtcTransport.find(tuple.hash);
 
 		MS_ASSERT(
 		  it != this->mapTupleWebRtcTransport.end(),

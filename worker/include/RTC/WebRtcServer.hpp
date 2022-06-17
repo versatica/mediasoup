@@ -99,8 +99,8 @@ namespace RTC
 		absl::flat_hash_set<RTC::WebRtcTransport*> webRtcTransports;
 		// Map of WebRtcTransports indexed by local ICE usernameFragment.
 		absl::flat_hash_map<std::string, RTC::WebRtcTransport*> mapLocalIceUsernameFragmentWebRtcTransport;
-		// Map of WebRtcTransports indexed by TransportTuple.id.
-		absl::flat_hash_map<std::string, RTC::WebRtcTransport*> mapTupleWebRtcTransport;
+		// Map of WebRtcTransports indexed by TransportTuple.hash.
+		absl::flat_hash_map<size_t, RTC::WebRtcTransport*> mapTupleWebRtcTransport;
 	};
 } // namespace RTC
 
