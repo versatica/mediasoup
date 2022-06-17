@@ -8,6 +8,7 @@
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/Router.hpp"
+#include "RTC/WebRtcServer.hpp"
 #include "handles/SignalsHandler.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
@@ -27,6 +28,8 @@ private:
 	void Close();
 	void FillJson(json& jsonObject) const;
 	void FillJsonResourceUsage(json& jsonObject) const;
+	void SetNewWebRtcServerIdFromInternal(json& internal, std::string& webRtcServerId) const;
+	RTC::WebRtcServer* GetWebRtcServerFromInternal(json& internal) const;
 	void SetNewRouterIdFromInternal(json& internal, std::string& routerId) const;
 	RTC::Router* GetRouterFromInternal(json& internal) const;
 
@@ -55,6 +58,7 @@ private:
 	PayloadChannel::PayloadChannelSocket* payloadChannel{ nullptr };
 	// Allocated by this.
 	SignalsHandler* signalsHandler{ nullptr };
+	absl::flat_hash_map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
 	absl::flat_hash_map<std::string, RTC::Router*> mapRouters;
 	// Others.
 	bool closed{ false };
