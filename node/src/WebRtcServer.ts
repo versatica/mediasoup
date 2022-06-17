@@ -148,6 +148,15 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	}
 
 	/**
+	 * @private
+	 * Just for testing purposes.
+	 */
+	get webRtcTransportsForTesting(): Map<string, WebRtcTransport>
+	{
+		return this.#webRtcTransports;
+	}
+
+	/**
 	 * Close the WebRtcServer.
 	 */
 	close(): void

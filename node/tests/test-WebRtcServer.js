@@ -165,7 +165,6 @@ test('router.createWebRtcTransport() with webRtcServer succeeds', async () =>
 {
 	worker = await createWorker();
 
-	const router = await worker.createRouter();
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const port2 = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
 	const webRtcServer = await worker.createWebRtcServer(
@@ -176,10 +175,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds', async () =>
 				{ protocol: 'tcp', ip: '127.0.0.1', port: port2 }
 			]
 		});
-
-	await expect(router.dump())
-		.resolves
-		.toMatchObject({ transportIds: [ transport.id ] });
+	const router = await worker.createRouter();
 
 	const onObserverNewTransport = jest.fn();
 
@@ -190,9 +186,12 @@ test('router.createWebRtcTransport() with webRtcServer succeeds', async () =>
 		{
 			webRtcServer,
 			enableTcp : false,
-			preferUdp : true,
 			appData   : { foo: 'bar' }
 		});
+
+	await expect(router.dump())
+		.resolves
+		.toMatchObject({ transportIds: [ transport.id ] });
 
 	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
 	expect(onObserverNewTransport).toHaveBeenCalledWith(transport);
@@ -211,6 +210,8 @@ test('router.createWebRtcTransport() with webRtcServer succeeds', async () =>
 
 	expect(transport.iceState).toBe('new');
 	expect(transport.iceSelectedTuple).toBeUndefined();
+
+	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(1);
 
 	await expect(webRtcServer.dump())
 		.resolves
@@ -235,6 +236,8 @@ test('router.createWebRtcTransport() with webRtcServer succeeds', async () =>
 
 	transport.close();
 	expect(transport.closed).toBe(true);
+
+	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(0);
 
 	await expect(webRtcServer.dump())
 		.resolves

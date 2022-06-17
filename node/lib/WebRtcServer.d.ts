@@ -74,6 +74,11 @@ export declare class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvent
      */
     get observer(): EnhancedEventEmitter<WebRtcServerObserverEvents>;
     /**
+     * @private
+     * Just for testing purposes.
+     */
+    get webRtcTransportsForTesting(): Map<string, WebRtcTransport>;
+    /**
      * Close the WebRtcServer.
      */
     close(): void;

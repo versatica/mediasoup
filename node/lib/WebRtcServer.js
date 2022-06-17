@@ -63,6 +63,13 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         return this.#observer;
     }
     /**
+     * @private
+     * Just for testing purposes.
+     */
+    get webRtcTransportsForTesting() {
+        return this.#webRtcTransports;
+    }
+    /**
      * Close the WebRtcServer.
      */
     close() {
