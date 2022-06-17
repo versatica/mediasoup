@@ -209,16 +209,19 @@ namespace RTC
 				// This may throw.
 				SetNewTransportIdFromInternal(request->internal, transportId);
 
-				auto jsonWebRtcServerIdIt = request->data.find("webRtcServerId");
+				auto jsonWebRtcServerIdIt = request->internal.find("webRtcServerId");
 
-				if (jsonWebRtcServerIdIt == request->data.end() || !jsonWebRtcServerIdIt->is_string())
+				if (jsonWebRtcServerIdIt == request->internal.end() || !jsonWebRtcServerIdIt->is_string())
 				{
-					MS_THROW_TYPE_ERROR("wrong webRtcServerId (not a string)");
+					MS_THROW_ERROR("missing internal.webRtcServerId");
 				}
 
 				std::string webRtcServerId = jsonWebRtcServerIdIt->get<std::string>();
 
 				auto* webRtcServer = this->listener->OnRouterNeedWebRtcServer(this, webRtcServerId);
+
+				if (!webRtcServer)
+					MS_THROW_ERROR("wrong internal.webRtcServerId (no associated WebRtcServer found)");
 
 				bool enableUdp{ true };
 				auto jsonEnableUdpIt = request->data.find("enableUdp");

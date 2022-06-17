@@ -183,9 +183,12 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 }
             });
         }
-        const internal = { ...this.#internal, transportId: (0, uuid_1.v4)() };
+        const internal = {
+            ...this.#internal,
+            transportId: (0, uuid_1.v4)(),
+            webRtcServerId: webRtcServer ? webRtcServer.id : undefined
+        };
         const reqData = {
-            webRtcServerId: webRtcServer ? webRtcServer.id : undefined,
             listenIps,
             port,
             enableUdp,
