@@ -162,7 +162,7 @@ export type WebRtcTransportEvents = TransportEvents &
 	iceselectedtuplechange: [TransportTuple];
 	dtlsstatechange: [DtlsState];
 	sctpstatechange: [SctpState];
-	webrtcserverclosed: [];
+	webrtcserverclose: [];
 }
 
 export type WebRtcTransportObserverEvents = TransportObserverEvents &
@@ -384,7 +384,7 @@ export class WebRtcTransport extends
 
 		super.mustClose();
 
-		this.safeEmit('webrtcserverclosed');
+		this.safeEmit('webrtcserverclose');
 	}
 
 	/**

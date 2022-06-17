@@ -156,7 +156,7 @@ class WebRtcTransport extends Transport_1.Transport {
         if (this.#data.sctpState)
             this.#data.sctpState = 'closed';
         super.mustClose();
-        this.safeEmit('webrtcserverclosed');
+        this.safeEmit('webrtcserverclose');
     }
     /**
      * Get WebRtcTransport stats.

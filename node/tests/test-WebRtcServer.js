@@ -161,7 +161,7 @@ test('WebRtcServer emits "workerclose" if Worker is closed', async () =>
 	expect(webRtcServer.closed).toBe(true);
 }, 2000);
 
-test('router.createWebRtcTransport() with webRtcServer succeeds', async () =>
+test('router.createWebRtcTransport() with webRtcServer succeeds and transport is closed', async () =>
 {
 	worker = await createWorker();
 
@@ -181,7 +181,6 @@ test('router.createWebRtcTransport() with webRtcServer succeeds', async () =>
 
 	router.observer.once('newtransport', onObserverNewTransport);
 
-	// Create a separate transport here.
 	const transport = await router.createWebRtcTransport(
 		{
 			webRtcServer,
@@ -255,5 +254,126 @@ test('router.createWebRtcTransport() with webRtcServer succeeds', async () =>
 				webRtcTransportIds        : [],
 				localIceUsernameFragments : [],
 				tuples                    : []
+			});
+}, 2000);
+
+test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer is closed', async () =>
+{
+	worker = await createWorker();
+
+	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
+	const port2 = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
+	const webRtcServer = await worker.createWebRtcServer(
+		{
+			listenInfos :
+			[
+				{ protocol: 'udp', ip: '127.0.0.1', port: port1 },
+				{ protocol: 'tcp', ip: '127.0.0.1', port: port2 }
+			]
+		});
+	const router = await worker.createRouter();
+	const transport = await router.createWebRtcTransport(
+		{
+			webRtcServer,
+			enableUdp : false,
+			enableTcp : true,
+			appData   : { foo: 'bar' }
+		});
+
+	await expect(router.dump())
+		.resolves
+		.toMatchObject({ transportIds: [ transport.id ] });
+
+	expect(transport.id).toBeType('string');
+	expect(transport.closed).toBe(false);
+	expect(transport.appData).toEqual({ foo: 'bar' });
+
+	const iceCandidates = transport.iceCandidates;
+
+	expect(iceCandidates.length).toBe(1);
+	expect(iceCandidates[0].ip).toBe('127.0.0.1');
+	expect(iceCandidates[0].port).toBe(port2);
+	expect(iceCandidates[0].protocol).toBe('tcp');
+	expect(iceCandidates[0].type).toBe('host');
+	expect(iceCandidates[0].tcpType).toBe('passive');
+
+	expect(transport.iceState).toBe('new');
+	expect(transport.iceSelectedTuple).toBeUndefined();
+
+	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(1);
+
+	await expect(webRtcServer.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id         : webRtcServer.id,
+				udpSockets :
+				[
+					{ ip: '127.0.0.1', port: port1 }
+				],
+				tcpServers :
+				[
+					{ ip: '127.0.0.1', port: port2 }
+				],
+				webRtcTransportIds        : [ transport.id ],
+				localIceUsernameFragments :
+				[
+					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id }
+				],
+				tuples : []
+			});
+
+	// Let's restart ICE in the transport so it should add a new entry in
+	// localIceUsernameFragments in the WebRtcServer.
+	await transport.restartIce();
+
+	await expect(webRtcServer.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id         : webRtcServer.id,
+				udpSockets :
+				[
+					{ ip: '127.0.0.1', port: port1 }
+				],
+				tcpServers :
+				[
+					{ ip: '127.0.0.1', port: port2 }
+				],
+				webRtcTransportIds        : [ transport.id ],
+				localIceUsernameFragments :
+				[
+					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id },
+					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id }
+				],
+				tuples : []
+			});
+
+	const onObserverClose = jest.fn();
+
+	webRtcServer.observer.once('close', onObserverClose);
+
+	const onWebRtcServerClose = jest.fn();
+
+	transport.once('webrtcserverclose', onWebRtcServerClose);
+
+	webRtcServer.close();
+
+	expect(webRtcServer.closed).toBe(true);
+	expect(onObserverClose).toHaveBeenCalledTimes(1);
+	expect(onWebRtcServerClose).toHaveBeenCalledTimes(1);
+	expect(transport.closed).toBe(true);
+	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(0);
+
+	await expect(worker.dump())
+		.resolves
+		.toEqual({ pid: worker.pid, webRtcServerIds: [], routerIds: [ router.id ] });
+
+	await expect(router.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id           : router.id,
+				transportIds : []
 			});
 }, 2000);

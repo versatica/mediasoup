@@ -122,7 +122,7 @@ export declare type WebRtcTransportEvents = TransportEvents & {
     iceselectedtuplechange: [TransportTuple];
     dtlsstatechange: [DtlsState];
     sctpstatechange: [SctpState];
-    webrtcserverclosed: [];
+    webrtcserverclose: [];
 };
 export declare type WebRtcTransportObserverEvents = TransportObserverEvents & {
     icestatechange: [IceState];
