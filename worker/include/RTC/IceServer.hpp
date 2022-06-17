@@ -71,6 +71,11 @@ namespace RTC
 		}
 		void RestartIce(const std::string& usernameFragment, const std::string& password)
 		{
+			if (!this->oldUsernameFragment.empty())
+			{
+				this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->oldUsernameFragment);
+			}
+
 			this->oldUsernameFragment = this->usernameFragment;
 			this->usernameFragment    = usernameFragment;
 

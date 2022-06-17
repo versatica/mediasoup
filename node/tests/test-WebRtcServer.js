@@ -66,7 +66,7 @@ test('worker.createWebRtcServer() succeeds', async () =>
 				],
 				webRtcTransportIds        : [],
 				localIceUsernameFragments : [],
-				tuples                    : []
+				tupleHahes                : []
 			});
 
 	// Private API.
@@ -230,7 +230,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 				[
 					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id }
 				],
-				tuples : []
+				tupleHahes : []
 			});
 
 	transport.close();
@@ -253,7 +253,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 				],
 				webRtcTransportIds        : [],
 				localIceUsernameFragments : [],
-				tuples                    : []
+				tupleHahes                : []
 			});
 }, 2000);
 
@@ -320,7 +320,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 				[
 					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id }
 				],
-				tuples : []
+				tupleHahes : []
 			});
 
 	// Let's restart ICE in the transport so it should add a new entry in
@@ -346,7 +346,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id },
 					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id }
 				],
-				tuples : []
+				tupleHahes : []
 			});
 
 	const onObserverClose = jest.fn();

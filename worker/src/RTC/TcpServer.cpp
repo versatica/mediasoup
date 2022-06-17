@@ -8,10 +8,6 @@
 
 namespace RTC
 {
-	/* Static. */
-
-	static constexpr size_t MaxTcpConnectionsPerServer{ 10 };
-
 	/* Instance methods. */
 
 	TcpServer::TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip)
@@ -44,14 +40,6 @@ namespace RTC
 	void TcpServer::UserOnTcpConnectionAlloc()
 	{
 		MS_TRACE();
-
-		// Allow just MaxTcpConnectionsPerServer.
-		if (GetNumConnections() >= MaxTcpConnectionsPerServer)
-		{
-			MS_ERROR("cannot handle more than %zu connections", MaxTcpConnectionsPerServer);
-
-			return;
-		}
 
 		// Allocate a new RTC::TcpConnection for the TcpServer to handle it.
 		auto* connection = new RTC::TcpConnection(this->connListener, 65536);

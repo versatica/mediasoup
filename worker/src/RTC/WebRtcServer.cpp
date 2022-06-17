@@ -235,21 +235,21 @@ namespace RTC
 			++idx;
 		}
 
-		// Add tuples.
-		jsonObject["tuples"] = json::array();
-		auto jsonTuplesIt    = jsonObject.find("tuples");
+		// Add tupleHashes.
+		jsonObject["tupleHashes"] = json::array();
+		auto jsonTupleHashesIt    = jsonObject.find("tupleHashes");
 
 		idx = 0;
 		for (auto& kv : this->mapTupleWebRtcTransport)
 		{
-			const auto& tuple           = kv.first;
+			const auto& tupleHash       = kv.first;
 			const auto* webRtcTransport = kv.second;
 
-			jsonTuplesIt->emplace_back(json::value_t::object);
+			jsonTupleHashesIt->emplace_back(json::value_t::object);
 
-			auto& jsonEntry = (*jsonTuplesIt)[idx];
+			auto& jsonEntry = (*jsonTupleHashesIt)[idx];
 
-			jsonEntry["tuple"]             = tuple;
+			jsonEntry["tupleHash"]         = tupleHash;
 			jsonEntry["webRtcTransportId"] = webRtcTransport->id;
 
 			++idx;
@@ -491,11 +491,14 @@ namespace RTC
 
 		RTC::TransportTuple tuple(connection);
 
+		// NOTE: We cannot assert whether this tuple is still in our
+		// mapTupleWebRtcTransport because this event may be called after the tuple
+		// was removed from it.
+
 		auto it = this->mapTupleWebRtcTransport.find(tuple.hash);
 
-		MS_ASSERT(
-		  it != this->mapTupleWebRtcTransport.end(),
-		  "closed TCP connection not managed by this WebRtcServer");
+		if (it == this->mapTupleWebRtcTransport.end())
+			return;
 
 		auto* webRtcTransport = it->second;
 

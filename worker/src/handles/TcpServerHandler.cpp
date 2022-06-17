@@ -8,7 +8,7 @@
 
 /* Static. */
 
-static constexpr int ListenBacklog{ 256 };
+static constexpr int ListenBacklog{ 512 };
 
 /* Static methods for UV callbacks. */
 

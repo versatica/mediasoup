@@ -12,6 +12,7 @@ namespace RTC
 
 	static constexpr size_t StunSerializeBufferSize{ 65536 };
 	thread_local static uint8_t StunSerializeBuffer[StunSerializeBufferSize];
+	static constexpr size_t MaxTuples{ 8 };
 
 	/* Instance methods. */
 
@@ -563,6 +564,43 @@ namespace RTC
 
 		// Notify the listener.
 		this->listener->OnIceServerTupleAdded(this, storedTuple);
+
+		// Don't allow more than MaxTuples.
+		if (this->tuples.size() > MaxTuples)
+		{
+			MS_WARN_TAG(ice, "too many tuples, removing the oldest one that is not the selected one");
+
+			// Find the older tuple which is neither the added one nor the selected
+			// one (if any), and remove it.
+			RTC::TransportTuple* removedTuple{ nullptr };
+			auto it = this->tuples.rbegin();
+
+			for (; it != this->tuples.rend(); ++it)
+			{
+				RTC::TransportTuple* otherStoredTuple = std::addressof(*it);
+
+				if (otherStoredTuple != storedTuple && otherStoredTuple != this->selectedTuple)
+				{
+					removedTuple = otherStoredTuple;
+
+					break;
+				}
+			}
+
+			// This should not happen by design.
+			MS_ASSERT(removedTuple, "couldn't find any tuple to be removed");
+
+			// Remove from the list of tuples.
+			// NOTE: This trick is needed since it is a reverse_iterator and
+			// erase() requires a iterator, const_iterator or bidirectional_iterator.
+			this->tuples.erase(std::next(it).base());
+
+			// Notify the listener.
+			this->listener->OnIceServerTupleRemoved(this, removedTuple);
+
+			// And close it (which makes special sense for TCP tuples).
+			removedTuple->Close();
+		}
 
 		// Return the address of the inserted tuple.
 		return storedTuple;

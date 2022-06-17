@@ -49,6 +49,14 @@ namespace RTC
 		}
 
 	public:
+		void Close()
+		{
+			if (this->protocol == Protocol::UDP)
+				this->udpSocket->Close();
+			else
+				this->tcpConnection->Close();
+		}
+
 		void FillJson(json& jsonObject) const;
 
 		void Dump() const;
