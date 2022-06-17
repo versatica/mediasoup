@@ -142,6 +142,13 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      */
     routerClosed(): void;
     /**
+     * Router was closed.
+     *
+     * @private
+     * @virtual
+     */
+    mustClose(): void;
+    /**
      * Dump Transport.
      */
     dump(): Promise<any>;

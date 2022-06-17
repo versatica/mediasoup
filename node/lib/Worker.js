@@ -11,6 +11,7 @@ const ortc = require("./ortc");
 const Channel_1 = require("./Channel");
 const PayloadChannel_1 = require("./PayloadChannel");
 const Router_1 = require("./Router");
+const WebRtcServer_1 = require("./WebRtcServer");
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
@@ -36,6 +37,8 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #died = false;
     // Custom app data.
     #appData;
+    // WebRtcServers set.
+    #webRtcServers = new Set();
     // Routers set.
     #routers = new Set();
     // Observer instance.
@@ -203,10 +206,18 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Observer.
      *
      * @emits close
+     * @emits newwebrtcserver: - (webRtcServer: WebRtcServer)
      * @emits newrouter - (router: Router)
      */
     get observer() {
         return this.#observer;
+    }
+    /**
+     * @private
+     * Just for testing purposes.
+     */
+    get webRtcServersForTesting() {
+        return this.#webRtcServers;
     }
     /**
      * @private
@@ -242,6 +253,11 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             router.workerClosed();
         }
         this.#routers.clear();
+        // Close every WebRtcServer.
+        for (const webRtcServer of this.#webRtcServers) {
+            webRtcServer.workerClosed();
+        }
+        this.#webRtcServers.clear();
         // Emit observer event.
         this.#observer.safeEmit('close');
     }
@@ -266,6 +282,27 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('updateSettings()');
         const reqData = { logLevel, logTags };
         await this.#channel.request('worker.updateSettings', undefined, reqData);
+    }
+    /**
+     * Create a WebRtcServer.
+     */
+    async createWebRtcServer({ listenInfos, appData }) {
+        logger.debug('createWebRtcServer()');
+        if (appData && typeof appData !== 'object')
+            throw new TypeError('if given, appData must be an object');
+        const internal = { webRtcServerId: (0, uuid_1.v4)() };
+        const reqData = { listenInfos };
+        await this.#channel.request('worker.createWebRtcServer', internal, reqData);
+        const webRtcServer = new WebRtcServer_1.WebRtcServer({
+            internal,
+            channel: this.#channel,
+            appData
+        });
+        this.#webRtcServers.add(webRtcServer);
+        webRtcServer.on('@close', () => this.#webRtcServers.delete(webRtcServer));
+        // Emit observer event.
+        this.#observer.safeEmit('newwebrtcserver', webRtcServer);
+        return webRtcServer;
     }
     /**
      * Create a Router.
@@ -307,6 +344,11 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             router.workerClosed();
         }
         this.#routers.clear();
+        // Close every WebRtcServer.
+        for (const webRtcServer of this.#webRtcServers) {
+            webRtcServer.workerClosed();
+        }
+        this.#webRtcServers.clear();
         this.safeEmit('died', error);
         // Emit observer event.
         this.#observer.safeEmit('close');

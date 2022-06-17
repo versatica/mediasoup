@@ -159,28 +159,33 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a WebRtcTransport.
      */
-    async createWebRtcTransport({ listenIps, port, enableUdp = true, enableTcp = false, preferUdp = false, preferTcp = false, initialAvailableOutgoingBitrate = 600000, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 262144, sctpSendBufferSize = 262144, appData }) {
+    async createWebRtcTransport({ webRtcServer, listenIps, port, enableUdp = true, enableTcp = false, preferUdp = false, preferTcp = false, initialAvailableOutgoingBitrate = 600000, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 262144, sctpSendBufferSize = 262144, appData }) {
         logger.debug('createWebRtcTransport()');
-        if (!Array.isArray(listenIps))
-            throw new TypeError('missing listenIps');
+        if (!webRtcServer && !Array.isArray(listenIps))
+            throw new TypeError('missing webRtcServer and listenIps (one of them is mandatory)');
         else if (appData && typeof appData !== 'object')
             throw new TypeError('if given, appData must be an object');
-        listenIps = listenIps.map((listenIp) => {
-            if (typeof listenIp === 'string' && listenIp) {
-                return { ip: listenIp };
-            }
-            else if (typeof listenIp === 'object') {
-                return {
-                    ip: listenIp.ip,
-                    announcedIp: listenIp.announcedIp || undefined
-                };
-            }
-            else {
-                throw new TypeError('wrong listenIp');
-            }
-        });
+        if (webRtcServer)
+            listenIps = undefined;
+        if (listenIps) {
+            listenIps = listenIps.map((listenIp) => {
+                if (typeof listenIp === 'string' && listenIp) {
+                    return { ip: listenIp };
+                }
+                else if (typeof listenIp === 'object') {
+                    return {
+                        ip: listenIp.ip,
+                        announcedIp: listenIp.announcedIp || undefined
+                    };
+                }
+                else {
+                    throw new TypeError('wrong listenIp');
+                }
+            });
+        }
         const internal = { ...this.#internal, transportId: (0, uuid_1.v4)() };
         const reqData = {
+            webRtcServerId: webRtcServer?.id,
             listenIps,
             port,
             enableUdp,
@@ -194,7 +199,9 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             sctpSendBufferSize,
             isDataChannel: true
         };
-        const data = await this.#channel.request('router.createWebRtcTransport', internal, reqData);
+        const data = webRtcServer
+            ? await this.#channel.request('router.createWebRtcTransportWithServer', internal, reqData)
+            : await this.#channel.request('router.createWebRtcTransport', internal, reqData);
         const transport = new WebRtcTransport_1.WebRtcTransport({
             internal,
             data,
@@ -211,6 +218,8 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         transport.on('@producerclose', (producer) => this.#producers.delete(producer.id));
         transport.on('@newdataproducer', (dataProducer) => (this.#dataProducers.set(dataProducer.id, dataProducer)));
         transport.on('@dataproducerclose', (dataProducer) => (this.#dataProducers.delete(dataProducer.id)));
+        if (webRtcServer)
+            webRtcServer.handleWebRtcTransport(transport);
         // Emit observer event.
         this.#observer.safeEmit('newtransport', transport);
         return transport;

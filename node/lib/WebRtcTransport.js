@@ -142,6 +142,23 @@ class WebRtcTransport extends Transport_1.Transport {
         super.routerClosed();
     }
     /**
+     * Called when closing the associated WebRtcServer.
+     *
+     * @private
+     * @override
+     */
+    mustClose() {
+        if (this.closed)
+            return;
+        this.#data.iceState = 'closed';
+        this.#data.iceSelectedTuple = undefined;
+        this.#data.dtlsState = 'closed';
+        if (this.#data.sctpState)
+            this.#data.sctpState = 'closed';
+        super.mustClose();
+        this.safeEmit('webrtcserverclosed');
+    }
+    /**
      * Get WebRtcTransport stats.
      *
      * @override

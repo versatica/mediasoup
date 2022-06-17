@@ -345,6 +345,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	 */
 	async createWebRtcTransport(
 		{
+			webRtcServer,
 			listenIps,
 			port,
 			enableUdp = true,
@@ -362,32 +363,39 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	{
 		logger.debug('createWebRtcTransport()');
 
-		if (!Array.isArray(listenIps))
-			throw new TypeError('missing listenIps');
+		if (!webRtcServer && !Array.isArray(listenIps))
+			throw new TypeError('missing webRtcServer and listenIps (one of them is mandatory)');
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		listenIps = listenIps.map((listenIp) =>
+		if (webRtcServer)
+			listenIps = undefined;
+
+		if (listenIps)
 		{
-			if (typeof listenIp === 'string' && listenIp)
+			listenIps = listenIps.map((listenIp) =>
 			{
-				return { ip: listenIp };
-			}
-			else if (typeof listenIp === 'object')
-			{
-				return {
-					ip          : listenIp.ip,
-					announcedIp : listenIp.announcedIp || undefined
-				};
-			}
-			else
-			{
-				throw new TypeError('wrong listenIp');
-			}
-		});
+				if (typeof listenIp === 'string' && listenIp)
+				{
+					return { ip: listenIp };
+				}
+				else if (typeof listenIp === 'object')
+				{
+					return {
+						ip          : listenIp.ip,
+						announcedIp : listenIp.announcedIp || undefined
+					};
+				}
+				else
+				{
+					throw new TypeError('wrong listenIp');
+				}
+			});
+		}
 
 		const internal = { ...this.#internal, transportId: uuidv4() };
 		const reqData = {
+			webRtcServerId : webRtcServer?.id,
 			listenIps,
 			port,
 			enableUdp,
@@ -399,11 +407,12 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			numSctpStreams,
 			maxSctpMessageSize,
 			sctpSendBufferSize,
-			isDataChannel : true
+			isDataChannel  : true
 		};
 
-		const data =
-			await this.#channel.request('router.createWebRtcTransport', internal, reqData);
+		const data = webRtcServer
+			? await this.#channel.request('router.createWebRtcTransportWithServer', internal, reqData)
+			: await this.#channel.request('router.createWebRtcTransport', internal, reqData);
 
 		const transport = new WebRtcTransport(
 			{
@@ -431,6 +440,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		transport.on('@dataproducerclose', (dataProducer: DataProducer) => (
 			this.#dataProducers.delete(dataProducer.id)
 		));
+
+		if (webRtcServer)
+			webRtcServer.handleWebRtcTransport(transport);
 
 		// Emit observer event.
 		this.#observer.safeEmit('newtransport', transport);

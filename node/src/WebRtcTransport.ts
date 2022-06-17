@@ -9,15 +9,20 @@ import {
 	TransportObserverEvents,
 	SctpState
 } from './Transport';
+import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 
 export type WebRtcTransportOptions =
 {
 	/**
-	 * Listening IP address or addresses in order of preference (first one is the
-	 * preferred one).
+	 * Instance of WebRtcServer. Mandatory unless lisntenIps is given.
 	 */
-	listenIps: (TransportListenIp | string)[];
+	webRtcServer?: WebRtcServer;
+	/**
+	 * Listening IP address or addresses in order of preference (first one is the
+	 * preferred one). Mandatory unless webRtcServer is given.
+	 */
+	listenIps?: (TransportListenIp | string)[];
 
 	/**
 	 * Fixed port to listen on instead of selecting automatically from Worker's port
@@ -157,6 +162,7 @@ export type WebRtcTransportEvents = TransportEvents &
 	iceselectedtuplechange: [TransportTuple];
 	dtlsstatechange: [DtlsState];
 	sctpstatechange: [SctpState];
+	webrtcserverclosed: [];
 }
 
 export type WebRtcTransportObserverEvents = TransportObserverEvents &
@@ -356,6 +362,29 @@ export class WebRtcTransport extends
 			this.#data.sctpState = 'closed';
 
 		super.routerClosed();
+	}
+
+	/**
+	 * Called when closing the associated WebRtcServer.
+	 *
+	 * @private
+	 * @override
+	 */
+	mustClose(): void
+	{
+		if (this.closed)
+			return;
+
+		this.#data.iceState = 'closed';
+		this.#data.iceSelectedTuple = undefined;
+		this.#data.dtlsState = 'closed';
+
+		if (this.#data.sctpState)
+			this.#data.sctpState = 'closed';
+
+		super.mustClose();
+
+		this.safeEmit('webrtcserverclosed');
 	}
 
 	/**

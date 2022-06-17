@@ -197,6 +197,47 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#observer.safeEmit('close');
     }
     /**
+     * Router was closed.
+     *
+     * @private
+     * @virtual
+     */
+    mustClose() {
+        if (this.#closed)
+            return;
+        logger.debug('mustClose()');
+        this.#closed = true;
+        // Remove notification subscriptions.
+        this.channel.removeAllListeners(this.internal.transportId);
+        this.payloadChannel.removeAllListeners(this.internal.transportId);
+        // Close every Producer.
+        for (const producer of this.#producers.values()) {
+            producer.transportClosed();
+            // NOTE: No need to tell the Router since it already knows (it has
+            // been closed in fact).
+        }
+        this.#producers.clear();
+        // Close every Consumer.
+        for (const consumer of this.consumers.values()) {
+            consumer.transportClosed();
+        }
+        this.consumers.clear();
+        // Close every DataProducer.
+        for (const dataProducer of this.dataProducers.values()) {
+            dataProducer.transportClosed();
+            // NOTE: No need to tell the Router since it already knows (it has
+            // been closed in fact).
+        }
+        this.dataProducers.clear();
+        // Close every DataConsumer.
+        for (const dataConsumer of this.dataConsumers.values()) {
+            dataConsumer.transportClosed();
+        }
+        this.dataConsumers.clear();
+        // Emit observer event.
+        this.#observer.safeEmit('close');
+    }
+    /**
      * Dump Transport.
      */
     async dump() {

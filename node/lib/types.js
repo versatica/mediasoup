@@ -15,6 +15,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./Worker"), exports);
+__exportStar(require("./WebRtcServer"), exports);
 __exportStar(require("./Router"), exports);
 __exportStar(require("./Transport"), exports);
 __exportStar(require("./WebRtcTransport"), exports);
