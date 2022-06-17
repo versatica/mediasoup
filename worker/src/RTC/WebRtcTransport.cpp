@@ -1258,6 +1258,10 @@ namespace RTC
 		{
 			this->webRtcTransportListener->OnWebRtcTransportTransportTupleRemoved(this, tuple);
 		}
+
+		// If this is a TCP tuple, close its underlaying TCP connection.
+		if (tuple->GetProtocol() == RTC::TransportTuple::Protocol::TCP && !tuple->IsClosed())
+			tuple->Close();
 	}
 
 	inline void WebRtcTransport::OnIceServerSelectedTuple(

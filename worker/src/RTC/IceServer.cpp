@@ -45,9 +45,6 @@ namespace RTC
 
 			// Notify the listener.
 			this->listener->OnIceServerTupleRemoved(this, storedTuple);
-
-			// And close it (which makes special sense for TCP tuples).
-			storedTuple->Close();
 		}
 	}
 
@@ -322,9 +319,6 @@ namespace RTC
 
 		// Notify the listener.
 		this->listener->OnIceServerTupleRemoved(this, removedTuple);
-
-		// And close it (which makes special sense for TCP tuples).
-		removedTuple->Close();
 	}
 
 	void IceServer::ForceSelectedTuple(const RTC::TransportTuple* tuple)
@@ -604,9 +598,6 @@ namespace RTC
 
 			// Notify the listener.
 			this->listener->OnIceServerTupleRemoved(this, removedTuple);
-
-			// And close it (which makes special sense for TCP tuples).
-			removedTuple->Close();
 		}
 
 		// Return the address of the inserted tuple.
