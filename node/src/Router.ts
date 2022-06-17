@@ -395,7 +395,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const internal = { ...this.#internal, transportId: uuidv4() };
 		const reqData = {
-			webRtcServerId : webRtcServer?.id,
+			webRtcServerId : webRtcServer ? webRtcServer.id : undefined,
 			listenIps,
 			port,
 			enableUdp,
