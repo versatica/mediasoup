@@ -82,9 +82,9 @@ namespace RTC
 			// Notify the listener.
 			this->listener->OnIceServerLocalUsernameFragmentAdded(this, usernameFragment);
 
-			// NOTE: Do not yet call listener->OnIceServerLocalUsernameFragmentRemoved()
-			// with old usernameFragment. Wait until we receive a STUN packet with the
-			// new one.
+			// NOTE: Do not call listener->OnIceServerLocalUsernameFragmentRemoved()
+			// yet with old usernameFragment. Wait until we receive a STUN packet
+			// with the new one.
 		}
 		bool IsValidTuple(const RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);

@@ -706,10 +706,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// It's important to unset the WebRtcTransportListener here so it won't be
-		// used again.
-		this->webRtcTransportListener = nullptr;
-
 		RTC::Transport::MustClose();
 	}
 
