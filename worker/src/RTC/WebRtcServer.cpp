@@ -368,7 +368,7 @@ namespace RTC
 
 		if (!packet)
 		{
-			MS_WARN_DEV("ignoring wrong STUN packet received");
+			MS_WARN_TAG(ice, "ignoring wrong STUN packet received");
 
 			return;
 		}
@@ -378,7 +378,7 @@ namespace RTC
 
 		if (it == this->mapLocalIceUsernameFragmentWebRtcTransport.end())
 		{
-			MS_WARN_DEV("ignoring received STUN packet with unknown remote ICE usernameFragment");
+			MS_WARN_TAG(ice, "ignoring received STUN packet with unknown remote ICE usernameFragment");
 
 			delete packet;
 
@@ -401,7 +401,7 @@ namespace RTC
 
 		if (it == this->mapTupleWebRtcTransport.end())
 		{
-			MS_WARN_DEV("ignoring received non STUN data from unknown tuple");
+			MS_WARN_TAG(ice, "ignoring received non STUN data from unknown tuple");
 
 			return;
 		}
@@ -446,6 +446,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(
+		  this->mapLocalIceUsernameFragmentWebRtcTransport.find(usernameFragment) !=
+		    this->mapLocalIceUsernameFragmentWebRtcTransport.end(),
+		  "tuple not handled");
+
 		this->mapLocalIceUsernameFragmentWebRtcTransport.erase(usernameFragment);
 	}
 
@@ -461,6 +466,10 @@ namespace RTC
 	  RTC::WebRtcTransport* webRtcTransport, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(
+		  this->mapTupleWebRtcTransport.find(tuple->hash) != this->mapTupleWebRtcTransport.end(),
+		  "tuple not handled");
 
 		this->mapTupleWebRtcTransport.erase(tuple->hash);
 	}
