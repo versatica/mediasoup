@@ -268,8 +268,9 @@ namespace RTC
 		MS_TRACE();
 
 		// Here we inspect the USERNAME attribute of a received STUN request and
-		// extract its remote usernameFragment (the one given to our IceServwer)
-		// which is the first value in the attribute value before the ":" symbol.
+		// extract its remote usernameFragment (the one given to our IceServer as
+		// local usernameFragment) which is the first value in the attribute value
+		// before the ":" symbol.
 
 		auto& username  = packet->GetUsername();
 		size_t colonPos = username.find(":");
