@@ -382,7 +382,7 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
 			}
 
-			auto* router = new RTC::Router(routerId);
+			auto* router = new RTC::Router(routerId, this);
 
 			this->mapRouters[routerId] = router;
 
@@ -556,4 +556,21 @@ inline void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 			MS_WARN_DEV("received a non handled signal [signum:%d]", signum);
 		}
 	}
+}
+
+inline RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(
+  RTC::Router* /*router*/, std::string& webRtcServerId)
+{
+	MS_TRACE();
+
+	RTC::WebRtcServer* webRtcServer{ nullptr };
+
+	auto it = this->mapWebRtcServers.find(webRtcServerId);
+
+	if (it != this->mapWebRtcServers.end())
+	{
+		webRtcServer = it->second;
+	}
+
+	return webRtcServer;
 }

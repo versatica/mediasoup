@@ -16,7 +16,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Router::Router(const std::string& id) : id(id)
+	Router::Router(const std::string& id, Listener* listener) : id(id), listener(listener)
 	{
 		MS_TRACE();
 	}
@@ -201,6 +201,28 @@ namespace RTC
 
 				break;
 			}
+
+			// case Channel::ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
+			// {
+			// 	RTC::Router* router{ nullptr };
+			// 	RTC::WebRtcServer* webRtcServer{ nullptr };
+
+			// 	try
+			// 	{
+			// 		router = GetRouterFromInternal(request->internal);
+			// 		webRtcServer = GetWebRtcServerFromInternal(request->internal);
+			// 	}
+			// 	catch (const MediaSoupError& error)
+			// 	{
+			// 		MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+			// 	}
+
+			// 	router->createWebRtcTransportWithServer(webRtcServer)
+
+			// 	request->Accept();
+
+			// 	break;
+			// }
 
 			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT:
 			{

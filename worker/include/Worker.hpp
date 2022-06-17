@@ -18,7 +18,8 @@ using json = nlohmann::json;
 
 class Worker : public Channel::ChannelSocket::Listener,
                public PayloadChannel::PayloadChannelSocket::Listener,
-               public SignalsHandler::Listener
+               public SignalsHandler::Listener,
+               public RTC::Router::Listener
 {
 public:
 	explicit Worker(Channel::ChannelSocket* channel, PayloadChannel::PayloadChannelSocket* payloadChannel);
@@ -51,6 +52,10 @@ public:
 	/* Methods inherited from SignalsHandler::Listener. */
 public:
 	void OnSignal(SignalsHandler* signalsHandler, int signum) override;
+
+	/* Pure virtual methods inherited from RTC::Router::Listener. */
+public:
+	RTC::WebRtcServer* OnRouterNeedWebRtcServer(RTC::Router* router, std::string& webRtcServerId) override;
 
 private:
 	// Passed by argument.

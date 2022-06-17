@@ -13,6 +13,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/Transport.hpp"
+#include "RTC/WebRtcServer.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -25,7 +26,18 @@ namespace RTC
 	class Router : public RTC::Transport::Listener
 	{
 	public:
-		explicit Router(const std::string& id);
+		class Listener
+		{
+		public:
+			virtual ~Listener() = default;
+
+		public:
+			virtual RTC::WebRtcServer* OnRouterNeedWebRtcServer(
+			  RTC::Router* router, std::string& webRtcServerId) = 0;
+		};
+
+	public:
+		explicit Router(const std::string& id, Listener* listener);
 		virtual ~Router();
 
 	public:
@@ -91,6 +103,7 @@ namespace RTC
 	public:
 		// Passed by argument.
 		const std::string id;
+		Listener* listener{ nullptr };
 
 	private:
 		// Allocated by this.
