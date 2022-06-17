@@ -386,7 +386,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	}
 
 	/**
-	 * Router was closed.
+	 * Just called in WebRtcTransports when closing the associated WebRtcServer.
 	 *
 	 * @private
 	 * @virtual

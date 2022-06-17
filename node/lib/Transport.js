@@ -197,7 +197,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#observer.safeEmit('close');
     }
     /**
-     * Router was closed.
+     * Just called in WebRtcTransports when closing the associated WebRtcServer.
      *
      * @private
      * @virtual
