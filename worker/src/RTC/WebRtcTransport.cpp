@@ -236,6 +236,42 @@ namespace RTC
 		}
 	}
 
+	WebRtcTransport::WebRtcTransport(
+	  const std::string& id,
+	  RTC::Transport::Listener* listener,
+	  WebRtcTransportListener* webRtcTransportListener,
+	  std::vector<RTC::IceCandidate>& iceCandidates,
+	  json& data)
+	  : RTC::Transport::Transport(id, listener, data),
+	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
+	{
+		MS_TRACE();
+
+		try
+		{
+			// Create a ICE server.
+			this->iceServer = new RTC::IceServer(
+			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
+
+			// Create a DTLS transport.
+			this->dtlsTransport = new RTC::DtlsTransport(this);
+		}
+		catch (const MediaSoupError& error)
+		{
+			// Must delete everything since the destructor won't be called.
+
+			delete this->dtlsTransport;
+			this->dtlsTransport = nullptr;
+
+			delete this->iceServer;
+			this->iceServer = nullptr;
+
+			this->iceCandidates.clear();
+
+			throw;
+		}
+	}
+
 	WebRtcTransport::~WebRtcTransport()
 	{
 		MS_TRACE();
@@ -582,7 +618,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::MethodId::TRANSPORT_RESTART_ICE:
 			{
-				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
+				std::string usernameFragment = Utils::Crypto::GetRandomString(32);
 				std::string password         = Utils::Crypto::GetRandomString(32);
 
 				this->iceServer->RestartIce(usernameFragment, password);
@@ -1170,6 +1206,52 @@ namespace RTC
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(packet->GetSize());
+	}
+
+	inline void WebRtcTransport::OnIceServerLocalUsernameFragmentAdded(
+	  const RTC::IceServer* /*iceServer*/, const std::string& usernameFragment)
+	{
+		MS_TRACE();
+
+		if (this->webRtcTransportListener)
+		{
+			this->webRtcTransportListener->OnWebRtcTransportLocalIceUsernameFragmentAdded(
+			  this, usernameFragment);
+		}
+	}
+
+	inline void WebRtcTransport::OnIceServerLocalUsernameFragmentRemoved(
+	  const RTC::IceServer* /*iceServer*/, const std::string& usernameFragment)
+	{
+		MS_TRACE();
+
+		if (this->webRtcTransportListener)
+		{
+			this->webRtcTransportListener->OnWebRtcTransportLocalIceUsernameFragmentRemoved(
+			  this, usernameFragment);
+		}
+	}
+
+	inline void WebRtcTransport::OnIceServerTupleAdded(
+	  const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
+	{
+		MS_TRACE();
+
+		if (this->webRtcTransportListener)
+		{
+			this->webRtcTransportListener->OnWebRtcTransportTransportTupleAdded(this, tuple);
+		}
+	}
+
+	inline void WebRtcTransport::OnIceServerTupleRemoved(
+	  const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
+	{
+		MS_TRACE();
+
+		if (this->webRtcTransportListener)
+		{
+			this->webRtcTransportListener->OnWebRtcTransportTransportTupleRemoved(this, tuple);
+		}
 	}
 
 	inline void WebRtcTransport::OnIceServerSelectedTuple(

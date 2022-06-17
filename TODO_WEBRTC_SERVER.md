@@ -77,8 +77,4 @@ This is needed no matter `WebRtcServer` is used or not. Each `WebRtcTransport` s
 
 ### Use the new TransportTuple.id
 
-In `IceServer` we use `tuple.compare()` but now we have `tuple->id` to match things. See `GenerateId()` in `TransportTuple.hpp`.
-
-### New events in `IceServer`
-
-As far as a tuple is added or removed it must call a new callback. Also new events when local ICE usernameFrag is initially set or changed later.
+In `IceServer` we use `tuple.compare()` but now we have `tuple->id` to match things. We should use it and usage in `WebRtcServer.cpp`. See `GenerateId()` in `TransportTuple.hpp`.

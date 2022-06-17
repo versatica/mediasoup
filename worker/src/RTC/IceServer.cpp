@@ -19,6 +19,9 @@ namespace RTC
 	  : listener(listener), usernameFragment(usernameFragment), password(password)
 	{
 		MS_TRACE();
+
+		// Notify the listener.
+		this->listener->OnIceServerLocalUsernameFragmentAdded(this, usernameFragment);
 	}
 
 	void IceServer::ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple)
@@ -105,6 +108,9 @@ namespace RTC
 						if (!this->oldPassword.empty())
 						{
 							MS_DEBUG_TAG(ice, "new ICE credentials applied");
+
+							// Notify the listener.
+							this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->oldUsernameFragment);
 
 							this->oldUsernameFragment.clear();
 							this->oldPassword.clear();
@@ -267,26 +273,28 @@ namespace RTC
 		// Remove from the list of tuples.
 		this->tuples.erase(it);
 
-		// If this is not the selected tuple, stop here.
-		if (removedTuple != this->selectedTuple)
-			return;
-
-		// Otherwise this was the selected tuple.
-		this->selectedTuple = nullptr;
-
-		// Mark the first tuple as selected tuple (if any).
-		if (this->tuples.begin() != this->tuples.end())
+		// If this is the selected tuple, do things.
+		if (removedTuple == this->selectedTuple)
 		{
-			SetSelectedTuple(std::addressof(*this->tuples.begin()));
+			this->selectedTuple = nullptr;
+
+			// Mark the first tuple as selected tuple (if any).
+			if (this->tuples.begin() != this->tuples.end())
+			{
+				SetSelectedTuple(std::addressof(*this->tuples.begin()));
+			}
+			// Or just emit 'disconnected'.
+			else
+			{
+				// Update state.
+				this->state = IceState::DISCONNECTED;
+				// Notify the listener.
+				this->listener->OnIceServerDisconnected(this);
+			}
 		}
-		// Or just emit 'disconnected'.
-		else
-		{
-			// Update state.
-			this->state = IceState::DISCONNECTED;
-			// Notify the listener.
-			this->listener->OnIceServerDisconnected(this);
-		}
+
+		// Notify the listener.
+		this->listener->OnIceServerTupleRemoved(this, removedTuple);
 	}
 
 	void IceServer::ForceSelectedTuple(const RTC::TransportTuple* tuple)
@@ -530,6 +538,9 @@ namespace RTC
 		// just a pointer that will be freed soon).
 		if (storedTuple->GetProtocol() == TransportTuple::Protocol::UDP)
 			storedTuple->StoreUdpRemoteAddress();
+
+		// Notify the listener.
+		this->listener->OnIceServerTupleAdded(this, storedTuple);
 
 		// Return the address of the inserted tuple.
 		return storedTuple;

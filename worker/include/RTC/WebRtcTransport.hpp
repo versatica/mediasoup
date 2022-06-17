@@ -48,6 +48,12 @@ namespace RTC
 
 	public:
 		WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
+		WebRtcTransport(
+		  const std::string& id,
+		  RTC::Transport::Listener* listener,
+		  WebRtcTransportListener* webRtcTransportListener,
+		  std::vector<RTC::IceCandidate>& iceCandidates,
+		  json& data);
 		~WebRtcTransport() override;
 
 	public:
@@ -105,6 +111,12 @@ namespace RTC
 		  const RTC::IceServer* iceServer,
 		  const RTC::StunPacket* packet,
 		  RTC::TransportTuple* tuple) override;
+		void OnIceServerLocalUsernameFragmentAdded(
+		  const RTC::IceServer* iceServer, const std::string& usernameFragment) override;
+		void OnIceServerLocalUsernameFragmentRemoved(
+		  const RTC::IceServer* iceServer, const std::string& usernameFragment) override;
+		void OnIceServerTupleAdded(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
+		void OnIceServerTupleRemoved(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
 		void OnIceServerSelectedTuple(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) override;
 		void OnIceServerConnected(const RTC::IceServer* iceServer) override;
 		void OnIceServerCompleted(const RTC::IceServer* iceServer) override;
@@ -129,6 +141,8 @@ namespace RTC
 		  const RTC::DtlsTransport* dtlsTransport, const uint8_t* data, size_t len) override;
 
 	private:
+		// Passed by argument.
+		WebRtcTransportListener* webRtcTransportListener{ nullptr };
 		// Allocated by this.
 		RTC::IceServer* iceServer{ nullptr };
 		// Map of UdpSocket/TcpServer and local announced IP (if any).

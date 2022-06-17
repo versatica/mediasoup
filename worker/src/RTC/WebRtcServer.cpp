@@ -160,23 +160,23 @@ namespace RTC
 		// webRtcTransportListener (this is, WebRtcServer) that will affect these
 		// maps so caution.
 
-		for (auto it = this->mapLocalIceUsernameFragmentWebRtcTransports.begin();
-		     it != this->mapLocalIceUsernameFragmentWebRtcTransports.end();
+		for (auto it = this->mapLocalIceUsernameFragmentWebRtcTransport.begin();
+		     it != this->mapLocalIceUsernameFragmentWebRtcTransport.end();
 		     ++it)
 		{
 			auto* webRtcTransport = it->second;
 
-			this->mapLocalIceUsernameFragmentWebRtcTransports.erase(it);
+			this->mapLocalIceUsernameFragmentWebRtcTransport.erase(it);
 
 			webRtcTransport->WebRtcServerClosed();
 		}
 
-		for (auto it = this->mapTupleWebRtcTransports.begin(); it != this->mapTupleWebRtcTransports.end();
+		for (auto it = this->mapTupleWebRtcTransport.begin(); it != this->mapTupleWebRtcTransport.end();
 		     ++it)
 		{
 			auto* webRtcTransport = it->second;
 
-			this->mapTupleWebRtcTransports.erase(it);
+			this->mapTupleWebRtcTransport.erase(it);
 
 			webRtcTransport->WebRtcServerClosed();
 		}
@@ -309,9 +309,9 @@ namespace RTC
 		}
 
 		auto key = GetLocalIceUsernameFragmentFromReceivedStunPacket(packet);
-		auto it  = this->mapLocalIceUsernameFragmentWebRtcTransports.find(key);
+		auto it  = this->mapLocalIceUsernameFragmentWebRtcTransport.find(key);
 
-		if (it == this->mapLocalIceUsernameFragmentWebRtcTransports.end())
+		if (it == this->mapLocalIceUsernameFragmentWebRtcTransport.end())
 		{
 			MS_WARN_DEV("ignoring received STUN packet with unknown remote ICE usernameFragment");
 
@@ -332,9 +332,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapTupleWebRtcTransports.find(tuple->id);
+		auto it = this->mapTupleWebRtcTransport.find(tuple->id);
 
-		if (it == this->mapTupleWebRtcTransports.end())
+		if (it == this->mapTupleWebRtcTransport.end())
 		{
 			MS_WARN_DEV("ignoring received non STUN data from unknown tuple");
 
@@ -351,7 +351,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->mapLocalIceUsernameFragmentWebRtcTransports[usernameFragment] = webRtcTransport;
+		this->mapLocalIceUsernameFragmentWebRtcTransport[usernameFragment] = webRtcTransport;
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportLocalIceUsernameFragmentRemoved(
@@ -359,7 +359,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->mapLocalIceUsernameFragmentWebRtcTransports.erase(usernameFragment);
+		this->mapLocalIceUsernameFragmentWebRtcTransport.erase(usernameFragment);
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportTransportTupleAdded(
@@ -367,7 +367,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->mapTupleWebRtcTransports[tuple->id] = webRtcTransport;
+		this->mapTupleWebRtcTransport[tuple->id] = webRtcTransport;
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportTransportTupleRemoved(
@@ -375,7 +375,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->mapTupleWebRtcTransports.erase(tuple->id);
+		this->mapTupleWebRtcTransport.erase(tuple->id);
 	}
 
 	inline void WebRtcServer::OnUdpSocketPacketReceived(
@@ -395,10 +395,10 @@ namespace RTC
 
 		RTC::TransportTuple tuple(connection);
 
-		auto it = this->mapTupleWebRtcTransports.find(tuple.id);
+		auto it = this->mapTupleWebRtcTransport.find(tuple.id);
 
 		MS_ASSERT(
-		  it != this->mapTupleWebRtcTransports.end(),
+		  it != this->mapTupleWebRtcTransport.end(),
 		  "closed TCP connection not managed by this WebRtcServer");
 
 		auto* webRtcTransport = it->second;
