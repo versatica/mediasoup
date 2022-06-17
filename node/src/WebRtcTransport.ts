@@ -15,7 +15,7 @@ import { SctpParameters, NumSctpStreams } from './SctpParameters';
 export type WebRtcTransportOptions =
 {
 	/**
-	 * Instance of WebRtcServer. Mandatory unless lisntenIps is given.
+	 * Instance of WebRtcServer. Mandatory unless listenIps is given.
 	 */
 	webRtcServer?: WebRtcServer;
 	/**
