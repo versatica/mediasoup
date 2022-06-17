@@ -319,6 +319,10 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 
 				request->Accept();
 			}
+			catch (const MediaSoupTypeError& error)
+			{
+				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+			}
 			catch (const MediaSoupError& error)
 			{
 				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
