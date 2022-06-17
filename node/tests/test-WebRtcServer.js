@@ -173,7 +173,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds', async () =>
 			listenInfos :
 			[
 				{ protocol: 'udp', ip: '127.0.0.1', port: port1 },
-				{ protocol: 'tcp', ip: '127.0.0.1', port: port2 },
+				{ protocol: 'tcp', ip: '127.0.0.1', port: port2 }
 			]
 		});
 
@@ -228,7 +228,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds', async () =>
 				webRtcTransportIds        : [ transport.id ],
 				localIceUsernameFragments :
 				[
-					{ /*localIceUsernameFragment*/ webRtcTransportId: transport.id }
+					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id }
 				],
 				tuples : []
 			});
