@@ -133,7 +133,6 @@ namespace RTC
 		void GenerateHash()
 		{
 			const std::string protocol = this->protocol == Protocol::UDP ? "udp" : "tcp";
-			std::string id;
 			int family;
 			std::string localIp;
 			uint16_t localPort;
@@ -143,8 +142,8 @@ namespace RTC
 			Utils::IP::GetAddressInfo(GetLocalAddress(), family, localIp, localPort);
 			Utils::IP::GetAddressInfo(GetRemoteAddress(), family, remoteIp, remotePort);
 
-			id = remoteIp + std::to_string(remotePort) + localIp + std::to_string(localPort) +
-			     std::to_string(family) + protocol;
+			std::string id = remoteIp + std::to_string(remotePort) + localIp + std::to_string(localPort) +
+			                 std::to_string(family) + protocol;
 
 			this->hash = std::hash<std::string>{}(id);
 		}

@@ -252,6 +252,9 @@ namespace RTC
 
 		try
 		{
+			if (iceCandidates.empty())
+				MS_THROW_TYPE_ERROR("empty iceCandidates");
+
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(
 			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));

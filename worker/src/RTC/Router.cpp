@@ -202,27 +202,89 @@ namespace RTC
 				break;
 			}
 
-			// case Channel::ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
-			// {
-			// 	RTC::Router* router{ nullptr };
-			// 	RTC::WebRtcServer* webRtcServer{ nullptr };
+			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
+			{
+				std::string transportId;
 
-			// 	try
-			// 	{
-			// 		router = GetRouterFromInternal(request->internal);
-			// 		webRtcServer = GetWebRtcServerFromInternal(request->internal);
-			// 	}
-			// 	catch (const MediaSoupError& error)
-			// 	{
-			// 		MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
-			// 	}
+				// This may throw.
+				SetNewTransportIdFromInternal(request->internal, transportId);
 
-			// 	router->createWebRtcTransportWithServer(webRtcServer)
+				auto jsonWebRtcServerIdIt = request->data.find("webRtcServerId");
 
-			// 	request->Accept();
+				if (jsonWebRtcServerIdIt == request->data.end() || !jsonWebRtcServerIdIt->is_string())
+				{
+					MS_THROW_TYPE_ERROR("wrong webRtcServerId (not a string)");
+				}
 
-			// 	break;
-			// }
+				std::string webRtcServerId = jsonWebRtcServerIdIt->get<std::string>();
+
+				auto* webRtcServer = this->listener->OnRouterNeedWebRtcServer(this, webRtcServerId);
+
+				bool enableUdp{ true };
+				auto jsonEnableUdpIt = request->data.find("enableUdp");
+
+				if (jsonEnableUdpIt != request->data.end())
+				{
+					if (!jsonEnableUdpIt->is_boolean())
+						MS_THROW_TYPE_ERROR("wrong enableUdp (not a boolean)");
+
+					enableUdp = jsonEnableUdpIt->get<bool>();
+				}
+
+				bool enableTcp{ false };
+				auto jsonEnableTcpIt = request->data.find("enableTcp");
+
+				if (jsonEnableTcpIt != request->data.end())
+				{
+					if (!jsonEnableTcpIt->is_boolean())
+						MS_THROW_TYPE_ERROR("wrong enableTcp (not a boolean)");
+
+					enableTcp = jsonEnableTcpIt->get<bool>();
+				}
+
+				bool preferUdp{ false };
+				auto jsonPreferUdpIt = request->data.find("preferUdp");
+
+				if (jsonPreferUdpIt != request->data.end())
+				{
+					if (!jsonPreferUdpIt->is_boolean())
+						MS_THROW_TYPE_ERROR("wrong preferUdp (not a boolean)");
+
+					preferUdp = jsonPreferUdpIt->get<bool>();
+				}
+
+				bool preferTcp{ false };
+				auto jsonPreferTcpIt = request->data.find("preferTcp");
+
+				if (jsonPreferTcpIt != request->data.end())
+				{
+					if (!jsonPreferTcpIt->is_boolean())
+						MS_THROW_TYPE_ERROR("wrong preferTcp (not a boolean)");
+
+					preferTcp = jsonPreferTcpIt->get<bool>();
+				}
+
+				auto iceCandidates =
+				  webRtcServer->GetIceCandidates(enableUdp, enableTcp, preferUdp, preferTcp);
+
+				// This may throw.
+				auto* webRtcTransport =
+				  new RTC::WebRtcTransport(transportId, this, webRtcServer, iceCandidates, request->data);
+
+				// Insert into the map.
+				this->mapTransports[transportId] = webRtcTransport;
+
+				MS_DEBUG_DEV(
+				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
+
+				json data = json::object();
+
+				webRtcTransport->FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
 
 			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT:
 			{
