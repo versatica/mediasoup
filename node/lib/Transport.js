@@ -51,12 +51,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * @private
      * @interface
-     * @emits routerclose
-     * @emits @close
-     * @emits @newproducer - (producer: Producer)
-     * @emits @producerclose - (producer: Producer)
-     * @emits @newdataproducer - (dataProducer: DataProducer)
-     * @emits @dataproducerclose - (dataProducer: DataProducer)
      */
     constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }) {
         super();
@@ -96,12 +90,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (producer: Producer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataProducer: DataProducer)
      */
     get observer() {
         return this.#observer;

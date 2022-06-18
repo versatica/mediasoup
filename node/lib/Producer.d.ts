@@ -118,6 +118,7 @@ export declare type ProducerEvents = {
     score: [ProducerScore[]];
     videoorientationchange: [ProducerVideoOrientation];
     trace: [ProducerTraceEventData];
+    '@close': [];
 };
 export declare type ProducerObserverEvents = {
     close: [];
@@ -131,11 +132,6 @@ export declare class Producer extends EnhancedEventEmitter<ProducerEvents> {
     #private;
     /**
      * @private
-     * @emits transportclose
-     * @emits score - (score: ProducerScore[])
-     * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
-     * @emits trace - (trace: ProducerTraceEventData)
-     * @emits @close
      */
     constructor({ internal, data, channel, payloadChannel, appData, paused }: {
         internal: any;
@@ -189,13 +185,6 @@ export declare class Producer extends EnhancedEventEmitter<ProducerEvents> {
     set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits pause
-     * @emits resume
-     * @emits score - (score: ProducerScore[])
-     * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
-     * @emits trace - (trace: ProducerTraceEventData)
      */
     get observer(): EnhancedEventEmitter<ProducerObserverEvents>;
     /**

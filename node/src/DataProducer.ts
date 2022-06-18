@@ -51,6 +51,8 @@ export type DataProducerType = 'sctp' | 'direct';
 export type DataProducerEvents =
 {
 	transportclose: [];
+	// Private events.
+	'@close': [];
 }
 
 export type DataProducerObserverEvents =
@@ -96,8 +98,6 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 
 	/**
 	 * @private
-	 * @emits transportclose
-	 * @emits @close
 	 */
 	constructor(
 		{
@@ -195,8 +195,6 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
 	 */
 	get observer(): EnhancedEventEmitter<DataProducerObserverEvents>
 	{

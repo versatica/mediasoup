@@ -137,8 +137,6 @@ export class PipeTransport
 
 	/**
 	 * @private
-	 * @emits sctpstatechange - (sctpState: SctpState)
-	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	constructor(params: any)
 	{
@@ -191,20 +189,6 @@ export class PipeTransport
 	{
 		return this.#data.srtpParameters;
 	}
-
-	/**
-	 * Observer.
-	 *
-	 * @override
-	 * @emits close
-	 * @emits newproducer - (producer: Producer)
-	 * @emits newconsumer - (consumer: Consumer)
-	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataConsumer: DataConsumer)
-	 * @emits sctpstatechange - (sctpState: SctpState)
-	 * @emits trace - (trace: TransportTraceEventData)
-	 */
-	// get observer(): EnhancedEventEmitter
 
 	/**
 	 * Close the PipeTransport.

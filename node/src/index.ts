@@ -22,12 +22,16 @@ export const version = '__MEDIASOUP_VERSION__';
 export { parse as parseScalabilityMode } from './scalabilityModes';
 
 const logger = new Logger();
-const observer = new EnhancedEventEmitter();
+
+export type ObserverEvents =
+{
+	newworker: [Worker];
+}
+
+const observer = new EnhancedEventEmitter<ObserverEvents>();
 
 /**
  * Observer.
- *
- * @emits newworker - (worker: Worker)
  */
 export { observer };
 

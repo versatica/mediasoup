@@ -24,8 +24,6 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * @private
      * @interface
-     * @emits routerclose
-     * @emits @close
      */
     constructor({ internal, channel, payloadChannel, appData, getProducerById }) {
         super();
@@ -68,12 +66,6 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits pause
-     * @emits resume
-     * @emits addproducer - (producer: Producer)
-     * @emits removeproducer - (producer: Producer)
      */
     get observer() {
         return this.#observer;

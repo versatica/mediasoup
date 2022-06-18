@@ -21,13 +21,6 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
-     * @emits transportclose
-     * @emits dataproducerclose
-     * @emits message - (message: Buffer, ppid: number)
-     * @emits sctpsendbufferfull
-     * @emits bufferedamountlow - (bufferedAmount: number)
-     * @emits @close
-     * @emits @dataproducerclose
      */
     constructor({ internal, data, channel, payloadChannel, appData }) {
         super();
@@ -95,8 +88,6 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
      */
     get observer() {
         return this.#observer;

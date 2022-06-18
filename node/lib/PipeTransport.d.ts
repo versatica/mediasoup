@@ -91,8 +91,6 @@ export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTr
     #private;
     /**
      * @private
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params: any);
     /**
@@ -111,18 +109,6 @@ export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTr
      * SRTP parameters.
      */
     get srtpParameters(): SrtpParameters | undefined;
-    /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (consumer: Consumer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataConsumer: DataConsumer)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
     /**
      * Close the PipeTransport.
      *

@@ -42,9 +42,6 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
-     * @emits died - (error: Error)
-     * @emits @success
-     * @emits @failure - (error: Error)
      */
     constructor({ logLevel, logTags, rtcMinPort, rtcMaxPort, dtlsCertificateFile, dtlsPrivateKeyFile, appData }) {
         super();
@@ -201,9 +198,6 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newrouter - (router: Router)
      */
     get observer() {
         return this.#observer;

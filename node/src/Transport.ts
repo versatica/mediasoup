@@ -85,6 +85,12 @@ export type TransportEvents =
 { 
 	routerclose: []; 
 	trace: [TransportTraceEventData];
+	// Private events.
+	'@close': [];
+	'@newproducer': [Producer];
+	'@producerclose': [Producer];
+	'@newdataproducer': [DataProducer];
+	'@dataproducerclose': [DataProducer];
 }
 
 export type TransportObserverEvents =
@@ -168,12 +174,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	/**
 	 * @private
 	 * @interface
-	 * @emits routerclose
-	 * @emits @close
-	 * @emits @newproducer - (producer: Producer)
-	 * @emits @producerclose - (producer: Producer)
-	 * @emits @newdataproducer - (dataProducer: DataProducer)
-	 * @emits @dataproducerclose - (dataProducer: DataProducer)
 	 */
 	constructor(
 		{
@@ -246,12 +246,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits newproducer - (producer: Producer)
-	 * @emits newconsumer - (producer: Producer)
-	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataProducer: DataProducer)
 	 */
 	get observer(): EnhancedEventEmitter<ObserverEvents>
 	{

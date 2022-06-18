@@ -14,17 +14,12 @@ export declare const version = "3.9.17";
  * Expose parseScalabilityMode() function.
  */
 export { parse as parseScalabilityMode } from './scalabilityModes';
-declare const observer: EnhancedEventEmitter<{
-    [x: string]: any[];
-}, {
-    [x: string]: any[];
-} & {
-    [x: `@${string}`]: any[];
-}>;
+export declare type ObserverEvents = {
+    newworker: [Worker];
+};
+declare const observer: EnhancedEventEmitter<ObserverEvents>;
 /**
  * Observer.
- *
- * @emits newworker - (worker: Worker)
  */
 export { observer };
 /**
