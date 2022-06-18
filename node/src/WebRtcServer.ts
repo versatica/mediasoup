@@ -198,12 +198,8 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 
 		this.#closed = true;
 
-		// Close every WebRtcTransport.
-		for (const webRtcTransport of this.#webRtcTransports.values())
-		{
-			webRtcTransport.listenServerClosed();
-		}
-		this.#webRtcTransports.clear();
+		// NOTE: No need to close WebRtcTransports since they are closed by their
+		// respective Router parents.
 
 		this.safeEmit('workerclose');
 
