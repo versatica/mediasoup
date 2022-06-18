@@ -7,8 +7,6 @@ const logger = new Logger_1.Logger('AudioLevelObserver');
 class AudioLevelObserver extends RtpObserver_1.RtpObserver {
     /**
      * @private
-     * @emits volumes - (volumes: AudioLevelObserverVolume[])
-     * @emits silence
      */
     constructor(params) {
         super(params);
@@ -16,14 +14,6 @@ class AudioLevelObserver extends RtpObserver_1.RtpObserver {
     }
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits pause
-     * @emits resume
-     * @emits addproducer - (producer: Producer)
-     * @emits removeproducer - (producer: Producer)
-     * @emits volumes - (volumes: AudioLevelObserverVolume[])
-     * @emits silence
      */
     get observer() {
         return super.observer;

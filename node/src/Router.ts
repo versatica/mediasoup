@@ -107,6 +107,8 @@ type PipeTransportPair =
 export type RouterEvents =
 { 
 	workerclose: [];
+	// Private events.
+	'@close': [];
 }
 
 export type RouterObserverEvents =
@@ -166,8 +168,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 	/**
 	 * @private
-	 * @emits workerclose
-	 * @emits @close
 	 */
 	constructor(
 		{
@@ -239,10 +239,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits newtransport - (transport: Transport)
-	 * @emits newrtpobserver - (rtpObserver: RtpObserver)
 	 */
 	get observer(): EnhancedEventEmitter<RouterObserverEvents>
 	{

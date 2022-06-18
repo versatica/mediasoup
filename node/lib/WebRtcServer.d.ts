@@ -33,17 +33,15 @@ export declare type WebRtcServerOptions = {
 };
 export declare type WebRtcServerEvents = {
     workerclose: [];
+    '@close': [];
 };
 export declare type WebRtcServerObserverEvents = {
     close: [];
-    newwebrtctransport: [WebRtcTransport];
 };
 export declare class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents> {
     #private;
     /**
      * @private
-     * @emits workerclose
-     * @emits @close
      */
     constructor({ internal, channel, appData }: {
         internal: any;
@@ -68,9 +66,6 @@ export declare class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvent
     set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newwebrtctransport - (webRtcTransport: WebRtcTransport)
      */
     get observer(): EnhancedEventEmitter<WebRtcServerObserverEvents>;
     /**

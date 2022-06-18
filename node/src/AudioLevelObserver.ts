@@ -59,8 +59,6 @@ export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
 {
 	/**
 	 * @private
-	 * @emits volumes - (volumes: AudioLevelObserverVolume[])
-	 * @emits silence
 	 */
 	constructor(params: any)
 	{
@@ -71,14 +69,6 @@ export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits pause
-	 * @emits resume
-	 * @emits addproducer - (producer: Producer)
-	 * @emits removeproducer - (producer: Producer)
-	 * @emits volumes - (volumes: AudioLevelObserverVolume[])
-	 * @emits silence
 	 */
 	get observer(): EnhancedEventEmitter<AudioLevelObserverObserverEvents>
 	{

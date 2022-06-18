@@ -53,6 +53,8 @@ export declare type DataConsumerEvents = {
     message: [Buffer, number];
     sctpsendbufferfull: [];
     bufferedamountlow: [number];
+    '@close': [];
+    '@dataproducerclose': [];
 };
 export declare type DataConsumerObserverEvents = {
     close: [];
@@ -61,13 +63,6 @@ export declare class DataConsumer extends EnhancedEventEmitter<DataConsumerEvent
     #private;
     /**
      * @private
-     * @emits transportclose
-     * @emits dataproducerclose
-     * @emits message - (message: Buffer, ppid: number)
-     * @emits sctpsendbufferfull
-     * @emits bufferedamountlow - (bufferedAmount: number)
-     * @emits @close
-     * @emits @dataproducerclose
      */
     constructor({ internal, data, channel, payloadChannel, appData }: {
         internal: any;
@@ -114,8 +109,6 @@ export declare class DataConsumer extends EnhancedEventEmitter<DataConsumerEvent
     set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
      */
     get observer(): EnhancedEventEmitter<DataConsumerObserverEvents>;
     /**

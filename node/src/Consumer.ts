@@ -164,6 +164,9 @@ export type ConsumerEvents =
 	layerschange: [ConsumerLayers?];
 	trace: [ConsumerTraceEventData];
 	rtp: [Buffer];
+	// Private events.
+	'@close': [];
+	'@producerclose': [];
 }
 
 export type ConsumerObserverEvents =
@@ -232,16 +235,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 	/**
 	 * @private
-	 * @emits transportclose
-	 * @emits producerclose
-	 * @emits producerpause
-	 * @emits producerresume
-	 * @emits score - (score: ConsumerScore)
-	 * @emits layerschange - (layers: ConsumerLayers | undefined)
-	 * @emits rtp - (packet: Buffer)
-	 * @emits trace - (trace: ConsumerTraceEventData)
-	 * @emits @close
-	 * @emits @producerclose
 	 */
 	constructor(
 		{
@@ -398,13 +391,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits pause
-	 * @emits resume
-	 * @emits score - (score: ConsumerScore)
-	 * @emits layerschange - (layers: ConsumerLayers | undefined)
-	 * @emits trace - (trace: ConsumerTraceEventData)
 	 */
 	get observer(): EnhancedEventEmitter<ConsumerObserverEvents>
 	{

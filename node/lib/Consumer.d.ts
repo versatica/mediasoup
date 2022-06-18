@@ -133,6 +133,8 @@ export declare type ConsumerEvents = {
     layerschange: [ConsumerLayers?];
     trace: [ConsumerTraceEventData];
     rtp: [Buffer];
+    '@close': [];
+    '@producerclose': [];
 };
 export declare type ConsumerObserverEvents = {
     close: [];
@@ -146,16 +148,6 @@ export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
     #private;
     /**
      * @private
-     * @emits transportclose
-     * @emits producerclose
-     * @emits producerpause
-     * @emits producerresume
-     * @emits score - (score: ConsumerScore)
-     * @emits layerschange - (layers: ConsumerLayers | undefined)
-     * @emits rtp - (packet: Buffer)
-     * @emits trace - (trace: ConsumerTraceEventData)
-     * @emits @close
-     * @emits @producerclose
      */
     constructor({ internal, data, channel, payloadChannel, appData, paused, producerPaused, score, preferredLayers }: {
         internal: any;
@@ -226,13 +218,6 @@ export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
     set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits pause
-     * @emits resume
-     * @emits score - (score: ConsumerScore)
-     * @emits layerschange - (layers: ConsumerLayers | undefined)
-     * @emits trace - (trace: ConsumerTraceEventData)
      */
     get observer(): EnhancedEventEmitter<ConsumerObserverEvents>;
     /**

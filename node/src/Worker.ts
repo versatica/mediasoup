@@ -168,6 +168,9 @@ export type WorkerResourceUsage =
 export type WorkerEvents = 
 { 
 	died: [Error];
+	// Private events.
+	'@success': [];
+	'@failure': [Error];
 }
 
 export type WorkerObserverEvents = 
@@ -223,9 +226,6 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 	/**
 	 * @private
-	 * @emits died - (error: Error)
-	 * @emits @success
-	 * @emits @failure - (error: Error)
 	 */
 	constructor(
 		{
@@ -470,10 +470,6 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits newwebrtcserver: - (webRtcServer: WebRtcServer)
-	 * @emits newrouter - (router: Router)
 	 */
 	get observer(): EnhancedEventEmitter<WorkerObserverEvents>
 	{

@@ -133,11 +133,6 @@ export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, We
     #private;
     /**
      * @private
-     * @emits icestatechange - (iceState: IceState)
-     * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
-     * @emits dtlsstatechange - (dtlsState: DtlsState)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params: any);
     /**
@@ -180,21 +175,6 @@ export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, We
      * SCTP state.
      */
     get sctpState(): SctpState | undefined;
-    /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (consumer: Consumer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataConsumer: DataConsumer)
-     * @emits icestatechange - (iceState: IceState)
-     * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
-     * @emits dtlsstatechange - (dtlsState: DtlsState)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
     /**
      * Close the WebRtcTransport.
      *

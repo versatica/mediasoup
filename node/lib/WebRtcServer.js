@@ -19,8 +19,6 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
-     * @emits workerclose
-     * @emits @close
      */
     constructor({ internal, channel, appData }) {
         super();
@@ -55,9 +53,6 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newwebrtctransport - (webRtcTransport: WebRtcTransport)
      */
     get observer() {
         return this.#observer;
@@ -118,8 +113,6 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     handleWebRtcTransport(webRtcTransport) {
         this.#webRtcTransports.set(webRtcTransport.id, webRtcTransport);
         webRtcTransport.on('@close', () => this.#webRtcTransports.delete(webRtcTransport.id));
-        // Emit observer event.
-        this.#observer.safeEmit('newwebrtctransport', webRtcTransport);
     }
 }
 exports.WebRtcServer = WebRtcServer;

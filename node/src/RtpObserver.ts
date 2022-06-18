@@ -7,6 +7,8 @@ import { Producer } from './Producer';
 export type RtpObserverEvents =
 {
 	routerclose: [];
+	// Private events.
+	'@close': [];
 }
 
 export type RtpObserverObserverEvents =
@@ -62,8 +64,6 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	/**
 	 * @private
 	 * @interface
-	 * @emits routerclose
-	 * @emits @close
 	 */
 	constructor(
 		{
@@ -135,12 +135,6 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits pause
-	 * @emits resume
-	 * @emits addproducer - (producer: Producer)
-	 * @emits removeproducer - (producer: Producer)
 	 */
 	get observer(): EnhancedEventEmitter<RtpObserverObserverEvents>
 	{

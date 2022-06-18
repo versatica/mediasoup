@@ -82,6 +82,7 @@ declare type PipeTransportPair = {
 };
 export declare type RouterEvents = {
     workerclose: [];
+    '@close': [];
 };
 export declare type RouterObserverEvents = {
     close: [];
@@ -92,8 +93,6 @@ export declare class Router extends EnhancedEventEmitter<RouterEvents> {
     #private;
     /**
      * @private
-     * @emits workerclose
-     * @emits @close
      */
     constructor({ internal, data, channel, payloadChannel, appData }: {
         internal: any;
@@ -124,10 +123,6 @@ export declare class Router extends EnhancedEventEmitter<RouterEvents> {
     set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newtransport - (transport: Transport)
-     * @emits newrtpobserver - (rtpObserver: RtpObserver)
      */
     get observer(): EnhancedEventEmitter<RouterObserverEvents>;
     /**

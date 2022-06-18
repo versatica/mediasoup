@@ -58,6 +58,12 @@ export declare type TransportEvents = {
     routerclose: [];
     listenserverclose: [];
     trace: [TransportTraceEventData];
+    '@close': [];
+    '@newproducer': [Producer];
+    '@producerclose': [Producer];
+    '@newdataproducer': [DataProducer];
+    '@dataproducerclose': [DataProducer];
+    '@listenserverclose': [];
 };
 export declare type TransportObserverEvents = {
     close: [];
@@ -83,14 +89,6 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
     /**
      * @private
      * @interface
-     * @emits routerclose
-     * @emits listenserverclose
-     * @emits @close
-     * @emits @newproducer - (producer: Producer)
-     * @emits @producerclose - (producer: Producer)
-     * @emits @newdataproducer - (dataProducer: DataProducer)
-     * @emits @dataproducerclose - (dataProducer: DataProducer)
-     * @emits @listenserverclose
      */
     constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
         internal: any;
@@ -120,12 +118,6 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
     set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (producer: Producer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataProducer: DataProducer)
      */
     get observer(): EnhancedEventEmitter<ObserverEvents>;
     /**
