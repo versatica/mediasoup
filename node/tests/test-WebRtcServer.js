@@ -228,7 +228,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 				webRtcTransportIds        : [ transport.id ],
 				localIceUsernameFragments :
 				[
-					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id }
+					{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id }
 				],
 				tupleHashes : []
 			});
@@ -318,7 +318,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 				webRtcTransportIds        : [ transport.id ],
 				localIceUsernameFragments :
 				[
-					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id }
+					{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id }
 				],
 				tupleHashes : []
 			});
@@ -343,8 +343,8 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 				webRtcTransportIds        : [ transport.id ],
 				localIceUsernameFragments :
 				[
-					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id },
-					{ /* localIceUsernameFragment, */ webRtcTransportId: transport.id }
+					{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id },
+					{ /* localIceUsernameFragment: yyy, */ webRtcTransportId: transport.id }
 				],
 				tupleHashes : []
 			});
