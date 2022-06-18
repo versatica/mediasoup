@@ -28,13 +28,13 @@ namespace RTC
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
 		  : udpSocket(udpSocket), udpRemoteAddr((struct sockaddr*)udpRemoteAddr), protocol(Protocol::UDP)
 		{
-			GenerateHash();
+			SetHash();
 		}
 
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection)
 		  : tcpConnection(tcpConnection), protocol(Protocol::TCP)
 		{
-			GenerateHash();
+			SetHash();
 		}
 
 		explicit TransportTuple(const TransportTuple* tuple)
@@ -131,7 +131,7 @@ namespace RTC
 		}
 
 	private:
-		void GenerateHash()
+		void SetHash()
 		{
 			const std::string protocol = this->protocol == Protocol::UDP ? "udp" : "tcp";
 			int family;
