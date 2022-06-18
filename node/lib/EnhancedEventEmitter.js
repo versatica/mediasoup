@@ -12,6 +12,9 @@ class EnhancedEventEmitter extends events_1.EventEmitter {
     emit(eventName, ...args) {
         return super.emit(eventName, ...args);
     }
+    /**
+     * Special addition to the EventEmitter API.
+     */
     safeEmit(eventName, ...args) {
         const numListeners = super.listenerCount(eventName);
         try {

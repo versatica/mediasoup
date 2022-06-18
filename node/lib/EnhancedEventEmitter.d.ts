@@ -4,6 +4,9 @@ declare type Events = Record<string, any[]>;
 export declare class EnhancedEventEmitter<E extends Events = Events> extends EventEmitter {
     constructor();
     emit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean;
+    /**
+     * Special addition to the EventEmitter API.
+     */
     safeEmit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean;
     on<K extends keyof E & string>(eventName: K, listener: (...args: E[K]) => void): this;
     off<K extends keyof E & string>(eventName: K, listener: (...args: E[K]) => void): this;

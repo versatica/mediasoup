@@ -18,6 +18,9 @@ export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitte
 		return super.emit(eventName, ...args);
 	}
 
+	/**
+	 * Special addition to the EventEmitter API.
+	 */
 	safeEmit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean
 	{
 		const numListeners = super.listenerCount(eventName);
