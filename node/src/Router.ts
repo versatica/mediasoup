@@ -374,7 +374,10 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			throw new TypeError('if given, appData must be an object');
 
 		if (webRtcServer)
+		{
 			listenIps = undefined;
+			port = undefined;
+		}
 
 		if (listenIps)
 		{
