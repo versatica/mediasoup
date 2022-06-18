@@ -106,13 +106,13 @@ test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', 
 
 test('worker.createWebRtcServer() with unavailable listenInfos rejects with Error', async () =>
 {
-	worker = await createWorker();
-
+	const worker1 = await createWorker();
+	const worker2 = await createWorker();
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const port2 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 
 	// Using an unavailable listen IP.
-	await expect(worker.createWebRtcServer(
+	await expect(worker1.createWebRtcServer(
 		{
 			listenInfos :
 			[
@@ -132,7 +132,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 		.toThrow(Error);
 
 	// Using the same UDP port in two listenInfos.
-	await expect(worker.createWebRtcServer(
+	await expect(worker1.createWebRtcServer(
 		{
 			listenInfos :
 			[
@@ -152,7 +152,35 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 		.rejects
 		.toThrow(Error);
 
-	worker.close();
+	await worker1.createWebRtcServer(
+		{
+			listenInfos :
+			[
+				{
+					protocol : 'udp',
+					ip       : '127.0.0.1',
+					port     : port1
+				}
+			]
+		});
+
+	// Using the same UDP port in a second Worker.
+	await expect(worker1.createWebRtcServer(
+		{
+			listenInfos :
+			[
+				{
+					protocol : 'udp',
+					ip       : '127.0.0.1',
+					port     : port1
+				}
+			]
+		}))
+		.rejects
+		.toThrow(Error);
+
+	worker1.close();
+	worker2.close();
 }, 2000);
 
 test('worker.createWebRtcServer() rejects with InvalidStateError if Worker is closed', async () =>
