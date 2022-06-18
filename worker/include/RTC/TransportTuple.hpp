@@ -38,12 +38,10 @@ namespace RTC
 		}
 
 		explicit TransportTuple(const TransportTuple* tuple)
-		  : udpSocket(tuple->udpSocket), udpRemoteAddr(tuple->udpRemoteAddr),
+		  : hash(tuple->hash), udpSocket(tuple->udpSocket), udpRemoteAddr(tuple->udpRemoteAddr),
 		    tcpConnection(tuple->tcpConnection), localAnnouncedIp(tuple->localAnnouncedIp),
 		    protocol(tuple->protocol)
 		{
-			this->hash = tuple->hash;
-
 			if (protocol == TransportTuple::Protocol::UDP)
 				StoreUdpRemoteAddress();
 		}

@@ -29,8 +29,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Here we must notify to the listener about the removal of all handled
-		// tuples and usernameFragment (including the old one if any).
+		// Here we must notify the listener about the removal of current
+		// usernameFragments (and also the old one if any) and all tuples.
 
 		this->listener->OnIceServerLocalUsernameFragmentRemoved(this, usernameFragment);
 
@@ -569,9 +569,9 @@ namespace RTC
 		// Don't allow more than MaxTuples.
 		if (this->tuples.size() > MaxTuples)
 		{
-			MS_WARN_TAG(ice, "too many tuples, removing the oldest one that is not the selected one");
+			MS_WARN_TAG(ice, "too too many tuples, removing the oldest non selected one");
 
-			// Find the older tuple which is neither the added one nor the selected
+			// Find the oldest tuple which is neither the added one nor the selected
 			// one (if any), and remove it.
 			RTC::TransportTuple* removedTuple{ nullptr };
 			auto it = this->tuples.rbegin();
