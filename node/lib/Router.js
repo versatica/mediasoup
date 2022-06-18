@@ -41,8 +41,6 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
-     * @emits workerclose
-     * @emits @close
      */
     constructor({ internal, data, channel, payloadChannel, appData }) {
         super();
@@ -85,10 +83,6 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newtransport - (transport: Transport)
-     * @emits newrtpobserver - (rtpObserver: RtpObserver)
      */
     get observer() {
         return this.#observer;

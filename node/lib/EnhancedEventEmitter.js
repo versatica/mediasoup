@@ -9,54 +9,62 @@ class EnhancedEventEmitter extends events_1.EventEmitter {
         super();
         this.setMaxListeners(Infinity);
     }
-    safeEmit(event, ...args) {
-        const numListeners = this.listenerCount(event);
+    emit(eventName, ...args) {
+        return super.emit(eventName, ...args);
+    }
+    /**
+     * Special addition to the EventEmitter API.
+     */
+    safeEmit(eventName, ...args) {
+        const numListeners = super.listenerCount(eventName);
         try {
-            return this.emit(event, ...args);
+            return super.emit(eventName, ...args);
         }
         catch (error) {
-            logger.error('safeEmit() | event listener threw an error [event:%s]:%o', event, error);
+            logger.error('safeEmit() | event listener threw an error [eventName:%s]:%o', eventName, error);
             return Boolean(numListeners);
         }
     }
-    async safeEmitAsPromise(event, ...args) {
-        return new Promise((resolve, reject) => {
-            try {
-                this.emit(event, ...args, resolve, reject);
-            }
-            catch (error) {
-                logger.error('safeEmitAsPromise() | event listener threw an error [event:%s]:%o', event, error);
-                reject(error);
-            }
-        });
-    }
-    on(event, listener) {
-        super.on(event, listener);
+    on(eventName, listener) {
+        super.on(eventName, listener);
         return this;
     }
-    off(event, listener) {
-        super.off(event, listener);
+    off(eventName, listener) {
+        super.off(eventName, listener);
         return this;
     }
-    addListener(event, listener) {
-        super.on(event, listener);
+    addListener(eventName, listener) {
+        super.on(eventName, listener);
         return this;
     }
-    prependListener(event, listener) {
-        super.prependListener(event, listener);
+    prependListener(eventName, listener) {
+        super.prependListener(eventName, listener);
         return this;
     }
-    once(event, listener) {
-        super.once(event, listener);
+    once(eventName, listener) {
+        super.once(eventName, listener);
         return this;
     }
-    prependOnceListener(event, listener) {
-        super.prependOnceListener(event, listener);
+    prependOnceListener(eventName, listener) {
+        super.prependOnceListener(eventName, listener);
         return this;
     }
-    removeListener(event, listener) {
-        super.off(event, listener);
+    removeListener(eventName, listener) {
+        super.off(eventName, listener);
         return this;
+    }
+    removeAllListeners(eventName) {
+        super.removeAllListeners(eventName);
+        return this;
+    }
+    listenerCount(eventName) {
+        return super.listenerCount(eventName);
+    }
+    listeners(eventName) {
+        return super.listeners(eventName);
+    }
+    rawListeners(eventName) {
+        return super.rawListeners(eventName);
     }
 }
 exports.EnhancedEventEmitter = EnhancedEventEmitter;

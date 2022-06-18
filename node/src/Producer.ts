@@ -146,6 +146,8 @@ export type ProducerEvents =
 	score: [ProducerScore[]];
 	videoorientationchange: [ProducerVideoOrientation];
 	trace: [ProducerTraceEventData];
+	// Private events.
+	'@close': [];
 }
 
 export type ProducerObserverEvents =
@@ -202,11 +204,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 	/**
 	 * @private
-	 * @emits transportclose
-	 * @emits score - (score: ProducerScore[])
-	 * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
-	 * @emits trace - (trace: ProducerTraceEventData)
-	 * @emits @close
 	 */
 	constructor(
 		{
@@ -325,13 +322,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits pause
-	 * @emits resume
-	 * @emits score - (score: ProducerScore[])
-	 * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
-	 * @emits trace - (trace: ProducerTraceEventData)
 	 */
 	get observer(): EnhancedEventEmitter<ProducerObserverEvents>
 	{

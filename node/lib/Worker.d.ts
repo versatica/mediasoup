@@ -112,6 +112,8 @@ export declare type WorkerResourceUsage = {
 };
 export declare type WorkerEvents = {
     died: [Error];
+    '@success': [];
+    '@failure': [Error];
 };
 export declare type WorkerObserverEvents = {
     close: [];
@@ -121,9 +123,6 @@ export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
     #private;
     /**
      * @private
-     * @emits died - (error: Error)
-     * @emits @success
-     * @emits @failure - (error: Error)
      */
     constructor({ logLevel, logTags, rtcMinPort, rtcMaxPort, dtlsCertificateFile, dtlsPrivateKeyFile, appData }: WorkerSettings);
     /**
@@ -148,9 +147,6 @@ export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
     set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newrouter - (router: Router)
      */
     get observer(): EnhancedEventEmitter<WorkerObserverEvents>;
     /**
