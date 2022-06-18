@@ -55,7 +55,6 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
-		void OnTransportMustClose(RTC::Transport* transport) override;
 		void OnTransportNewProducer(RTC::Transport* transport, RTC::Producer* producer) override;
 		void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) override;
 		void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) override;
@@ -99,6 +98,7 @@ namespace RTC
 		void OnTransportDataConsumerClosed(RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
 		void OnTransportDataConsumerDataProducerClosed(
 		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
+		void OnTransportListenServerClosed(RTC::Transport* transport) override;
 
 	public:
 		// Passed by argument.

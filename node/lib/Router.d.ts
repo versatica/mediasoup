@@ -131,6 +131,11 @@ export declare class Router extends EnhancedEventEmitter<RouterEvents> {
      */
     get observer(): EnhancedEventEmitter<RouterObserverEvents>;
     /**
+     * @private
+     * Just for testing purposes.
+     */
+    get transportsForTesting(): Map<string, Transport>;
+    /**
      * Close the Router.
      */
     close(): void;

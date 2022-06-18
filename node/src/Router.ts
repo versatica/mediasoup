@@ -250,6 +250,15 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	}
 
 	/**
+	 * @private
+	 * Just for testing purposes.
+	 */
+	get transportsForTesting(): Map<string, Transport>
+	{
+		return this.#transports;
+	}
+
+	/**
 	 * Close the Router.
 	 */
 	close(): void
@@ -437,6 +446,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
@@ -534,6 +544,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
@@ -637,6 +648,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
@@ -691,6 +703,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (

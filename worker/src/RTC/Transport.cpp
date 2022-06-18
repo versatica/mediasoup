@@ -246,14 +246,6 @@ namespace RTC
 #endif
 	}
 
-	void Transport::MustClose()
-	{
-		MS_TRACE();
-
-		// Ask our parent Router to close/delete us.
-		this->listener->OnTransportMustClose(this);
-	}
-
 	void Transport::CloseProducersAndConsumers()
 	{
 		MS_TRACE();
@@ -313,6 +305,14 @@ namespace RTC
 			delete dataConsumer;
 		}
 		this->mapDataConsumers.clear();
+	}
+
+	void Transport::ListenServerClosed()
+	{
+		MS_TRACE();
+
+		// Ask our parent Router to close/delete us.
+		this->listener->OnTransportListenServerClosed(this);
 	}
 
 	void Transport::FillJson(json& jsonObject) const

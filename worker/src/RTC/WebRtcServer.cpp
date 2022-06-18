@@ -157,7 +157,7 @@ namespace RTC
 
 		for (auto* webRtcTransport : this->webRtcTransports)
 		{
-			webRtcTransport->MustClose();
+			webRtcTransport->ListenServerClosed();
 		}
 		this->webRtcTransports.clear();
 	}

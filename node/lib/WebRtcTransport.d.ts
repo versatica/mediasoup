@@ -122,7 +122,6 @@ export declare type WebRtcTransportEvents = TransportEvents & {
     iceselectedtuplechange: [TransportTuple];
     dtlsstatechange: [DtlsState];
     sctpstatechange: [SctpState];
-    webrtcserverclose: [];
 };
 export declare type WebRtcTransportObserverEvents = TransportObserverEvents & {
     icestatechange: [IceState];
@@ -213,9 +212,8 @@ export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, We
      * Called when closing the associated WebRtcServer.
      *
      * @private
-     * @override
      */
-    mustClose(): void;
+    webRtcServerClosed(): void;
     /**
      * Get WebRtcTransport stats.
      *

@@ -57,7 +57,6 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnTransportMustClose(RTC::Transport* transport)                            = 0;
 			virtual void OnTransportNewProducer(RTC::Transport* transport, RTC::Producer* producer) = 0;
 			virtual void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) = 0;
 			virtual void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) = 0;
@@ -104,7 +103,8 @@ namespace RTC
 			virtual void OnTransportDataConsumerClosed(
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
 			virtual void OnTransportDataConsumerDataProducerClosed(
-			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
+			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer)         = 0;
+			virtual void OnTransportListenServerClosed(RTC::Transport* transport) = 0;
 		};
 
 	private:
@@ -119,8 +119,8 @@ namespace RTC
 		virtual ~Transport();
 
 	public:
-		void MustClose();
 		void CloseProducersAndConsumers();
+		void ListenServerClosed();
 		// Subclasses must also invoke the parent Close().
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray);

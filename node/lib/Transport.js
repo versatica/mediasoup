@@ -52,11 +52,13 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @private
      * @interface
      * @emits routerclose
+     * @emits listenserverclose
      * @emits @close
      * @emits @newproducer - (producer: Producer)
      * @emits @producerclose - (producer: Producer)
      * @emits @newdataproducer - (dataProducer: DataProducer)
      * @emits @dataproducerclose - (dataProducer: DataProducer)
+     * @emits @listenserverclose
      */
     constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }) {
         super();
@@ -197,15 +199,15 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#observer.safeEmit('close');
     }
     /**
-     * Just called in WebRtcTransports when closing the associated WebRtcServer.
+     * Listen server was closed (this just happens in WebRtcTransports when their
+     * associated WebRtcServer is closed).
      *
      * @private
-     * @virtual
      */
-    mustClose() {
+    listenServerClosed() {
         if (this.#closed)
             return;
-        logger.debug('mustClose()');
+        logger.debug('listenServerClosed()');
         this.#closed = true;
         // Remove notification subscriptions.
         this.channel.removeAllListeners(this.internal.transportId);
@@ -234,6 +236,11 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             dataConsumer.transportClosed();
         }
         this.dataConsumers.clear();
+        // Need to emit this event to let the parent Router know since
+        // transport.listenServerClosed() is called by the listen server.
+        // NOTE: Currently there is just WebRtcServer for WebRtcTransports.
+        this.emit('@listenserverclose');
+        this.safeEmit('listenserverclose');
         // Emit observer event.
         this.#observer.safeEmit('close');
     }

@@ -174,7 +174,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 		// Close every WebRtcTransport.
 		for (const webRtcTransport of this.#webRtcTransports.values())
 		{
-			webRtcTransport.mustClose();
+			webRtcTransport.listenServerClosed();
 		}
 		this.#webRtcTransports.clear();
 
@@ -201,7 +201,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 		// Close every WebRtcTransport.
 		for (const webRtcTransport of this.#webRtcTransports.values())
 		{
-			webRtcTransport.mustClose();
+			webRtcTransport.listenServerClosed();
 		}
 		this.#webRtcTransports.clear();
 

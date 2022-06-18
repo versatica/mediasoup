@@ -81,7 +81,7 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             .catch(() => { });
         // Close every WebRtcTransport.
         for (const webRtcTransport of this.#webRtcTransports.values()) {
-            webRtcTransport.mustClose();
+            webRtcTransport.listenServerClosed();
         }
         this.#webRtcTransports.clear();
         this.emit('@close');
@@ -100,7 +100,7 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#closed = true;
         // Close every WebRtcTransport.
         for (const webRtcTransport of this.#webRtcTransports.values()) {
-            webRtcTransport.mustClose();
+            webRtcTransport.listenServerClosed();
         }
         this.#webRtcTransports.clear();
         this.safeEmit('workerclose');

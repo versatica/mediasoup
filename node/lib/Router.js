@@ -94,6 +94,13 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         return this.#observer;
     }
     /**
+     * @private
+     * Just for testing purposes.
+     */
+    get transportsForTesting() {
+        return this.#transports;
+    }
+    /**
      * Close the Router.
      */
     close() {
@@ -217,6 +224,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         });
         this.#transports.set(transport.id, transport);
         transport.on('@close', () => this.#transports.delete(transport.id));
+        transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
         transport.on('@newproducer', (producer) => this.#producers.set(producer.id, producer));
         transport.on('@producerclose', (producer) => this.#producers.delete(producer.id));
         transport.on('@newdataproducer', (dataProducer) => (this.#dataProducers.set(dataProducer.id, dataProducer)));
@@ -276,6 +284,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         });
         this.#transports.set(transport.id, transport);
         transport.on('@close', () => this.#transports.delete(transport.id));
+        transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
         transport.on('@newproducer', (producer) => this.#producers.set(producer.id, producer));
         transport.on('@producerclose', (producer) => this.#producers.delete(producer.id));
         transport.on('@newdataproducer', (dataProducer) => (this.#dataProducers.set(dataProducer.id, dataProducer)));
@@ -338,6 +347,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         });
         this.#transports.set(transport.id, transport);
         transport.on('@close', () => this.#transports.delete(transport.id));
+        transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
         transport.on('@newproducer', (producer) => this.#producers.set(producer.id, producer));
         transport.on('@producerclose', (producer) => this.#producers.delete(producer.id));
         transport.on('@newdataproducer', (dataProducer) => (this.#dataProducers.set(dataProducer.id, dataProducer)));
@@ -368,6 +378,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         });
         this.#transports.set(transport.id, transport);
         transport.on('@close', () => this.#transports.delete(transport.id));
+        transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
         transport.on('@newproducer', (producer) => this.#producers.set(producer.id, producer));
         transport.on('@producerclose', (producer) => this.#producers.delete(producer.id));
         transport.on('@newdataproducer', (dataProducer) => (this.#dataProducers.set(dataProducer.id, dataProducer)));

@@ -211,6 +211,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 	expect(transport.iceSelectedTuple).toBeUndefined();
 
 	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(1);
+	expect(router.transportsForTesting.size).toBe(1);
 
 	await expect(webRtcServer.dump())
 		.resolves
@@ -237,6 +238,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 	expect(transport.closed).toBe(true);
 
 	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(0);
+	expect(router.transportsForTesting.size).toBe(0);
 
 	await expect(webRtcServer.dump())
 		.resolves
@@ -301,6 +303,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 	expect(transport.iceSelectedTuple).toBeUndefined();
 
 	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(1);
+	expect(router.transportsForTesting.size).toBe(1);
 
 	await expect(webRtcServer.dump())
 		.resolves
@@ -353,17 +356,18 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 
 	webRtcServer.observer.once('close', onObserverClose);
 
-	const onWebRtcServerClose = jest.fn();
+	const onListenServerClose = jest.fn();
 
-	transport.once('webrtcserverclose', onWebRtcServerClose);
+	transport.once('listenserverclose', onListenServerClose);
 
 	webRtcServer.close();
 
 	expect(webRtcServer.closed).toBe(true);
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
-	expect(onWebRtcServerClose).toHaveBeenCalledTimes(1);
+	expect(onListenServerClose).toHaveBeenCalledTimes(1);
 	expect(transport.closed).toBe(true);
 	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(0);
+	expect(router.transportsForTesting.size).toBe(0);
 
 	await expect(worker.dump())
 		.resolves

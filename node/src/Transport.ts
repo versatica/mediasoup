@@ -83,7 +83,8 @@ export type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed'
 
 export type TransportEvents = 
 { 
-	routerclose: []; 
+	routerclose: [];
+	listenserverclose: [];
 	trace: [TransportTraceEventData];
 }
 
@@ -169,11 +170,13 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	 * @private
 	 * @interface
 	 * @emits routerclose
+	 * @emits listenserverclose
 	 * @emits @close
 	 * @emits @newproducer - (producer: Producer)
 	 * @emits @producerclose - (producer: Producer)
 	 * @emits @newdataproducer - (dataProducer: DataProducer)
 	 * @emits @dataproducerclose - (dataProducer: DataProducer)
+	 * @emits @listenserverclose
 	 */
 	constructor(
 		{
@@ -386,17 +389,17 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	}
 
 	/**
-	 * Just called in WebRtcTransports when closing the associated WebRtcServer.
+	 * Listen server was closed (this just happens in WebRtcTransports when their
+	 * associated WebRtcServer is closed).
 	 *
 	 * @private
-	 * @virtual
 	 */
-	mustClose(): void
+	listenServerClosed(): void
 	{
 		if (this.#closed)
 			return;
 
-		logger.debug('mustClose()');
+		logger.debug('listenServerClosed()');
 
 		this.#closed = true;
 
@@ -437,6 +440,13 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			dataConsumer.transportClosed();
 		}
 		this.dataConsumers.clear();
+
+		// Need to emit this event to let the parent Router know since
+		// transport.listenServerClosed() is called by the listen server.
+		// NOTE: Currently there is just WebRtcServer for WebRtcTransports.
+		this.emit('@listenserverclose');
+
+		this.safeEmit('listenserverclose');
 
 		// Emit observer event.
 		this.#observer.safeEmit('close');
