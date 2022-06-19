@@ -77,6 +77,8 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Close every WebRtcTransport.
         for (const webRtcTransport of this.#webRtcTransports.values()) {
             webRtcTransport.listenServerClosed();
+            // Emit observer event.
+            this.#observer.safeEmit('webrtctransportunhandled', webRtcTransport);
         }
         this.#webRtcTransports.clear();
         this.emit('@close');
@@ -112,7 +114,13 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     handleWebRtcTransport(webRtcTransport) {
         this.#webRtcTransports.set(webRtcTransport.id, webRtcTransport);
-        webRtcTransport.on('@close', () => this.#webRtcTransports.delete(webRtcTransport.id));
+        // Emit observer event.
+        this.#observer.safeEmit('webrtctransporthandled', webRtcTransport);
+        webRtcTransport.on('@close', () => {
+            this.#webRtcTransports.delete(webRtcTransport.id);
+            // Emit observer event.
+            this.#observer.safeEmit('webrtctransportunhandled', webRtcTransport);
+        });
     }
 }
 exports.WebRtcServer = WebRtcServer;

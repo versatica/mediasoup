@@ -254,6 +254,13 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 				{ protocol: 'tcp', ip: '127.0.0.1', port: port2 }
 			]
 		});
+
+	const onObserverWebRtcTransportHandled = jest.fn();
+	const onObserverWebRtcTransportUnhandled = jest.fn();
+
+	webRtcServer.observer.once('webrtctransporthandled', onObserverWebRtcTransportHandled);
+	webRtcServer.observer.once('webrtctransportunhandled', onObserverWebRtcTransportUnhandled);
+
 	const router = await worker.createRouter();
 
 	const onObserverNewTransport = jest.fn();
@@ -271,6 +278,8 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 		.resolves
 		.toMatchObject({ transportIds: [ transport.id ] });
 
+	expect(onObserverWebRtcTransportHandled).toHaveBeenCalledTimes(1);
+	expect(onObserverWebRtcTransportHandled).toHaveBeenCalledWith(transport);
 	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
 	expect(onObserverNewTransport).toHaveBeenCalledWith(transport);
 	expect(transport.id).toBeType('string');
@@ -314,8 +323,10 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 			});
 
 	transport.close();
-	expect(transport.closed).toBe(true);
 
+	expect(transport.closed).toBe(true);
+	expect(onObserverWebRtcTransportUnhandled).toHaveBeenCalledTimes(1);
+	expect(onObserverWebRtcTransportUnhandled).toHaveBeenCalledWith(transport);
 	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(0);
 	expect(router.transportsForTesting.size).toBe(0);
 
@@ -352,6 +363,13 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 				{ protocol: 'tcp', ip: '127.0.0.1', port: port2 }
 			]
 		});
+
+	const onObserverWebRtcTransportHandled = jest.fn();
+	const onObserverWebRtcTransportUnhandled = jest.fn();
+
+	webRtcServer.observer.once('webrtctransporthandled', onObserverWebRtcTransportHandled);
+	webRtcServer.observer.once('webrtctransportunhandled', onObserverWebRtcTransportUnhandled);
+
 	const router = await worker.createRouter();
 	const transport = await router.createWebRtcTransport(
 		{
@@ -360,6 +378,9 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 			enableTcp : true,
 			appData   : { foo: 'bar' }
 		});
+
+	expect(onObserverWebRtcTransportHandled).toHaveBeenCalledTimes(1);
+	expect(onObserverWebRtcTransportHandled).toHaveBeenCalledWith(transport);
 
 	await expect(router.dump())
 		.resolves
@@ -444,6 +465,8 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 	expect(webRtcServer.closed).toBe(true);
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(onListenServerClose).toHaveBeenCalledTimes(1);
+	expect(onObserverWebRtcTransportUnhandled).toHaveBeenCalledTimes(1);
+	expect(onObserverWebRtcTransportUnhandled).toHaveBeenCalledWith(transport);
 	expect(transport.closed).toBe(true);
 	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(0);
 	expect(router.transportsForTesting.size).toBe(0);

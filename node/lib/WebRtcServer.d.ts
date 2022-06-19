@@ -37,6 +37,8 @@ export declare type WebRtcServerEvents = {
 };
 export declare type WebRtcServerObserverEvents = {
     close: [];
+    webrtctransporthandled: [WebRtcTransport];
+    webrtctransportunhandled: [WebRtcTransport];
 };
 export declare class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents> {
     #private;
