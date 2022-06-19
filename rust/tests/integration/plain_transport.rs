@@ -343,7 +343,8 @@ fn create_enable_srtp_succeeds() {
                 rtcp_port: None,
                 srtp_parameters: Some(SrtpParameters {
                     crypto_suite: SrtpCryptoSuite::AeadAes256Gcm,
-                    key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=".to_string(),
+                    key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo="
+                        .to_string(),
                 }),
             })
             .await

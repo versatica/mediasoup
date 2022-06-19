@@ -740,7 +740,8 @@ fn create_with_enable_srtp_succeeds() {
                 port: 9999,
                 srtp_parameters: Some(SrtpParameters {
                     crypto_suite: SrtpCryptoSuite::AeadAes256Gcm,
-                    key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=".to_string(),
+                    key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo="
+                        .to_string(),
                 }),
             })
             .await
@@ -769,7 +770,8 @@ fn create_with_invalid_srtp_parameters_fails() {
                     port: 9999,
                     srtp_parameters: Some(SrtpParameters {
                         crypto_suite: SrtpCryptoSuite::AeadAes256Gcm,
-                        key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=".to_string(),
+                        key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo="
+                            .to_string(),
                     }),
                 })
                 .await,
