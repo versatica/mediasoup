@@ -290,13 +290,6 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         return transport;
     }
     /**
-     * DEPRECATED: Use createPlainTransport().
-     */
-    async createPlainRtpTransport(options) {
-        logger.warn('createPlainRtpTransport() is DEPRECATED, use createPlainTransport()');
-        return this.createPlainTransport(options);
-    }
-    /**
      * Create a PipeTransport.
      */
     async createPipeTransport({ listenIp, port, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 268435456, sctpSendBufferSize = 268435456, enableRtx = false, enableSrtp = false, appData }) {

@@ -560,19 +560,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	}
 
 	/**
-	 * DEPRECATED: Use createPlainTransport().
-	 */
-	async createPlainRtpTransport(
-		options: PlainTransportOptions
-	): Promise<PlainTransport>
-	{
-		logger.warn(
-			'createPlainRtpTransport() is DEPRECATED, use createPlainTransport()');
-
-		return this.createPlainTransport(options);
-	}
-
-	/**
 	 * Create a PipeTransport.
 	 */
 	async createPipeTransport(
