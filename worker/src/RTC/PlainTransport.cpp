@@ -11,21 +11,37 @@ namespace RTC
 {
 	/* Static. */
 
-	// NOTE: PlainTransport allows AES_CM_128_HMAC_SHA1_80 and
-	// AES_CM_128_HMAC_SHA1_32 SRTP crypto suites.
+	// clang-format off
+	// AES-HMAC: http://tools.ietf.org/html/rfc3711
+	static constexpr size_t SrtpMasterKeyLength{ 16 };
+	static constexpr size_t SrtpMasterSaltLength{ 14 };
+	static constexpr size_t SrtpMasterLength{ SrtpMasterKeyLength + SrtpMasterSaltLength };
+	// AES-GCM: http://tools.ietf.org/html/rfc7714
+	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32 };
+	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12 };
+	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength + SrtpAesGcm256MasterSaltLength };
+	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16 };
+	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12 };
+	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength + SrtpAesGcm128MasterSaltLength };
+	// clang-format on
+
+	/* Class variables. */
+
 	// clang-format off
 	absl::flat_hash_map<std::string, RTC::SrtpSession::CryptoSuite> PlainTransport::string2SrtpCryptoSuite =
 	{
+		{ "AEAD_AES_256_GCM",        RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM        },
+		{ "AEAD_AES_128_GCM",        RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM        },
 		{ "AES_CM_128_HMAC_SHA1_80", RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80 },
 		{ "AES_CM_128_HMAC_SHA1_32", RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32 }
 	};
 	absl::flat_hash_map<RTC::SrtpSession::CryptoSuite, std::string> PlainTransport::srtpCryptoSuite2String =
 	{
+		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM,        "AEAD_AES_256_GCM"        },
+		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM,        "AEAD_AES_128_GCM"        },
 		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80, "AES_CM_128_HMAC_SHA1_80" },
 		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32, "AES_CM_128_HMAC_SHA1_32" }
 	};
-	// clang-format on
-	size_t PlainTransport::srtpMasterLength{ 30 };
 
 	/* Instance methods. */
 
@@ -119,8 +135,39 @@ namespace RTC
 
 			// NOTE: The SRTP crypto suite may change later on connect().
 			this->srtpCryptoSuite = it->second;
-			this->srtpKey         = Utils::Crypto::GetRandomString(PlainTransport::srtpMasterLength);
-			this->srtpKeyBase64   = Utils::String::Base64Encode(this->srtpKey);
+
+			switch (this->srtpCryptoSuite)
+			{
+				case RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
+				{
+					this->srtpMasterLength = SrtpAesGcm256MasterLength;
+
+					break;
+				}
+
+				case RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM:
+				{
+					this->srtpMasterLength = SrtpAesGcm128MasterLength;
+
+					break;
+				}
+
+				case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
+				case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
+				{
+					this->srtpMasterLength = SrtpMasterLength;
+
+					break;
+				}
+
+				default:
+				{
+					MS_ABORT("unknown SRTP crypto suite");
+				}
+			}
+
+			this->srtpKey       = Utils::Crypto::GetRandomString(this->srtpMasterLength);
+			this->srtpKeyBase64 = Utils::String::Base64Encode(this->srtpKey);
 		}
 
 		try
@@ -338,8 +385,46 @@ namespace RTC
 						if (it == PlainTransport::string2SrtpCryptoSuite.end())
 							MS_THROW_TYPE_ERROR("invalid/unsupported srtpParameters.cryptoSuite");
 
-						// Update out SRTP crypto suite wuth the one used by the remote.
-						this->srtpCryptoSuite = it->second;
+						// Update out SRTP crypto suite with the one used by the remote.
+						auto previousSrtpCryptoSuite = this->srtpCryptoSuite;
+						this->srtpCryptoSuite        = it->second;
+
+						switch (this->srtpCryptoSuite)
+						{
+							case RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
+							{
+								this->srtpMasterLength = SrtpAesGcm256MasterLength;
+
+								break;
+							}
+
+							case RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM:
+							{
+								this->srtpMasterLength = SrtpAesGcm128MasterLength;
+
+								break;
+							}
+
+							case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
+							case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
+							{
+								this->srtpMasterLength = SrtpMasterLength;
+
+								break;
+							}
+
+							default:
+							{
+								MS_ABORT("unknown SRTP crypto suite");
+							}
+						}
+
+						// If the SRTP crypto suite changed we must regenerate our SRTP key.
+						if (this->srtpCryptoSuite != previousSrtpCryptoSuite)
+						{
+							this->srtpKey       = Utils::Crypto::GetRandomString(this->srtpMasterLength);
+							this->srtpKeyBase64 = Utils::String::Base64Encode(this->srtpKey);
+						}
 
 						auto jsonKeyBase64It = jsonSrtpParametersIt->find("keyBase64");
 
@@ -359,14 +444,14 @@ namespace RTC
 						// This may throw.
 						auto* srtpKey = Utils::String::Base64Decode(srtpKeyBase64, outLen);
 
-						if (outLen != PlainTransport::srtpMasterLength)
+						if (outLen != this->srtpMasterLength)
 							MS_THROW_TYPE_ERROR("invalid decoded SRTP key length");
 
-						auto* srtpLocalKey  = new uint8_t[PlainTransport::srtpMasterLength];
-						auto* srtpRemoteKey = new uint8_t[PlainTransport::srtpMasterLength];
+						auto* srtpLocalKey  = new uint8_t[this->srtpMasterLength];
+						auto* srtpRemoteKey = new uint8_t[this->srtpMasterLength];
 
-						std::memcpy(srtpLocalKey, this->srtpKey.c_str(), PlainTransport::srtpMasterLength);
-						std::memcpy(srtpRemoteKey, srtpKey, PlainTransport::srtpMasterLength);
+						std::memcpy(srtpLocalKey, this->srtpKey.c_str(), this->srtpMasterLength);
+						std::memcpy(srtpRemoteKey, srtpKey, this->srtpMasterLength);
 
 						try
 						{
@@ -374,7 +459,7 @@ namespace RTC
 							  RTC::SrtpSession::Type::OUTBOUND,
 							  this->srtpCryptoSuite,
 							  srtpLocalKey,
-							  PlainTransport::srtpMasterLength);
+							  this->srtpMasterLength);
 						}
 						catch (const MediaSoupError& error)
 						{
@@ -390,7 +475,7 @@ namespace RTC
 							  RTC::SrtpSession::Type::INBOUND,
 							  this->srtpCryptoSuite,
 							  srtpRemoteKey,
-							  PlainTransport::srtpMasterLength);
+							  this->srtpMasterLength);
 						}
 						catch (const MediaSoupError& error)
 						{

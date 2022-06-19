@@ -555,8 +555,8 @@ test('router.createPipeTransport() with invalid srtpParameters must fail', async
 			port           : 9999,
 			srtpParameters :
 				{
-					cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
-					keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+					cryptoSuite : 'AEAD_AES_256_GCM',
+					keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 				}
 		}))
 		.rejects
@@ -585,7 +585,8 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 
 	expect(pipeTransport.id).toBeType('string');
 	expect(pipeTransport.srtpParameters).toBeType('object');
-	expect(pipeTransport.srtpParameters.keyBase64.length).toBe(40);
+	// The master length of AEAD_AES_256_GCM.
+	expect(pipeTransport.srtpParameters.keyBase64.length).toBe(60);
 
 	// Missing srtpParameters.
 	await expect(pipeTransport.connect(
@@ -626,7 +627,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			port           : 9999,
 			srtpParameters :
 			{
-				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80'
+				cryptoSuite : 'AEAD_AES_256_GCM'
 			}
 		}))
 		.rejects
@@ -667,7 +668,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			port           : 9999,
 			srtpParameters :
 			{
-				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
+				cryptoSuite : 'AEAD_AES_256_GCM',
 				keyBase64   : []
 			}
 		}))
@@ -681,8 +682,8 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			port           : 9999,
 			srtpParameters :
 			{
-				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
-				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+				cryptoSuite : 'AEAD_AES_256_GCM',
+				keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 			}
 		}))
 		.resolves
