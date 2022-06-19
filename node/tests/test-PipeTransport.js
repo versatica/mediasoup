@@ -614,7 +614,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			port           : 9999,
 			srtpParameters :
 			{
-				keyBase64 : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+				keyBase64 : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 			}
 		}))
 		.rejects
@@ -641,7 +641,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			srtpParameters :
 			{
 				cryptoSuite : 'FOO',
-				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+				keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 			}
 		}))
 		.rejects
@@ -655,7 +655,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			srtpParameters :
 			{
 				cryptoSuite : 123,
-				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+				keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 			}
 		}))
 		.rejects
