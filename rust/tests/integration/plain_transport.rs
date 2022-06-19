@@ -301,6 +301,7 @@ fn create_enable_srtp_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
 
+        // Use default cryptoSuite: 'AES_CM_128_HMAC_SHA1_80'.
         let transport1 = router
             .create_plain_transport({
                 let mut plain_transport_options = PlainTransportOptions::new(TransportListenIp {
@@ -341,8 +342,9 @@ fn create_enable_srtp_succeeds() {
                 port: Some(9999),
                 rtcp_port: None,
                 srtp_parameters: Some(SrtpParameters {
-                    crypto_suite: SrtpCryptoSuite::AesCm128HmacSha132,
-                    key_base64: "ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv".to_string(),
+                    crypto_suite: SrtpCryptoSuite::AeadAes256Gcm,
+                    key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo="
+                        .to_string(),
                 }),
             })
             .await
@@ -350,8 +352,9 @@ fn create_enable_srtp_succeeds() {
 
         assert_eq!(
             transport1.srtp_parameters().unwrap().crypto_suite,
-            SrtpCryptoSuite::AesCm128HmacSha132,
+            SrtpCryptoSuite::AeadAes256Gcm,
         );
+        assert_eq!(transport1.srtp_parameters().unwrap().key_base64.len(), 60);
     });
 }
 

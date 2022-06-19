@@ -105,8 +105,8 @@ namespace RTC
 	thread_local std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
 	std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::srtpCryptoSuites =
 	{
-		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM, "SRTP_AEAD_AES_256_GCM" },
-		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM, "SRTP_AEAD_AES_128_GCM" },
+		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM,        "SRTP_AEAD_AES_256_GCM"  },
+		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM,        "SRTP_AEAD_AES_128_GCM"  },
 		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
 		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
 	};
@@ -1209,16 +1209,6 @@ namespace RTC
 
 		switch (srtpCryptoSuite)
 		{
-			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
-			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
-			{
-				srtpKeyLength    = SrtpMasterKeyLength;
-				srtpSaltLength   = SrtpMasterSaltLength;
-				srtpMasterLength = SrtpMasterLength;
-
-				break;
-			}
-
 			case RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
 			{
 				srtpKeyLength    = SrtpAesGcm256MasterKeyLength;
@@ -1233,6 +1223,16 @@ namespace RTC
 				srtpKeyLength    = SrtpAesGcm128MasterKeyLength;
 				srtpSaltLength   = SrtpAesGcm128MasterSaltLength;
 				srtpMasterLength = SrtpAesGcm128MasterLength;
+
+				break;
+			}
+
+			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
+			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
+			{
+				srtpKeyLength    = SrtpMasterKeyLength;
+				srtpSaltLength   = SrtpMasterSaltLength;
+				srtpMasterLength = SrtpMasterLength;
 
 				break;
 			}
