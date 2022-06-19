@@ -718,7 +718,7 @@ fn create_with_enable_srtp_succeeds() {
         assert!(pipe_transport.srtp_parameters().is_some());
         assert_eq!(
             pipe_transport.srtp_parameters().unwrap().key_base64.len(),
-            40
+            60
         );
 
         // Missing srtp_parameters.
@@ -739,8 +739,9 @@ fn create_with_enable_srtp_succeeds() {
                 ip: "127.0.0.2".parse().unwrap(),
                 port: 9999,
                 srtp_parameters: Some(SrtpParameters {
-                    crypto_suite: SrtpCryptoSuite::AesCm128HmacSha180,
-                    key_base64: "ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv".to_string(),
+                    crypto_suite: SrtpCryptoSuite::AeadAes256Gcm,
+                    key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo="
+                        .to_string(),
                 }),
             })
             .await
@@ -768,8 +769,9 @@ fn create_with_invalid_srtp_parameters_fails() {
                     ip: "127.0.0.2".parse().unwrap(),
                     port: 9999,
                     srtp_parameters: Some(SrtpParameters {
-                        crypto_suite: SrtpCryptoSuite::AesCm128HmacSha180,
-                        key_base64: "ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv".to_string(),
+                        crypto_suite: SrtpCryptoSuite::AeadAes256Gcm,
+                        key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo="
+                            .to_string(),
                     }),
                 })
                 .await,
