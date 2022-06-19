@@ -3,6 +3,7 @@
 
 ### WIP
 
+* More SRTP crypto suites (PR #837).
 * `TransportCongestionControlClient`: Allow setting max outgoing bitrate before created (PR #833).
 
 
