@@ -12,9 +12,9 @@ jobs:
           # - macos-11.0
           # - windows-2019
         node:
-          - 12
           - 14
           - 16
+          - 18
     runs-on: ${{ matrix.os }}
 
     steps:
