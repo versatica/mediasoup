@@ -134,7 +134,7 @@ namespace RTC
 		void SetHash();
 
 	public:
-		uint32_t hash{ 0u };
+		uint64_t hash{ 0u };
 
 	private:
 		// Passed by argument.

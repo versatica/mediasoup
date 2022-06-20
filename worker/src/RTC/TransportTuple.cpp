@@ -96,7 +96,9 @@ namespace RTC
 				auto* localSockAddrIn  = reinterpret_cast<const struct sockaddr_in*>(localSockAddr);
 				auto* remoteSockAddrIn = reinterpret_cast<const struct sockaddr_in*>(remoteSockAddr);
 
-				this->hash += (ntohl(remoteSockAddrIn->sin_addr.s_addr) << 16);
+				this->hash += ntohl(remoteSockAddrIn->sin_addr.s_addr);
+				// TODO: I'd like that port (8 bits) is most significant bits from 1..8
+				// (bit 0 is for protocol, see below).
 				this->hash += ntohs(remoteSockAddrIn->sin_port);
 
 				break;
@@ -106,14 +108,31 @@ namespace RTC
 			{
 				auto* localSockAddrIn6  = reinterpret_cast<const struct sockaddr_in6*>(localSockAddr);
 				auto* remoteSockAddrIn6 = reinterpret_cast<const struct sockaddr_in6*>(remoteSockAddr);
-
 				auto* a = reinterpret_cast<const uint32_t*>(std::addressof(remoteSockAddrIn6->sin6_addr));
 
 				this->hash += a[0] ^ a[1] ^ a[2] ^ a[3];
+				// TODO: I'd like that port (8 bits) is most significant bits from 1..8
+				// (bit 0 is for protocol, see below).
 				this->hash += ntohs(remoteSockAddrIn6->sin6_port);
 
 				break;
 			}
 		}
+
+		MS_ERROR("--- temp hash  : %" PRIu64, this->hash);
+
+		// Override most significant bit with protocol information:
+		// - If UDP, start with 0.
+		// - If TCP, start with 1.
+		if (this->protocol == Protocol::UDP)
+		{
+			this->hash &= 0b0111111111111111111111111111111101111111111111111111111111111111;
+		}
+		else
+		{
+			this->hash |= 0b1000000000000000000000000000000000000000000000000000000000000000;
+		}
+
+		MS_ERROR("--- final hash : %" PRIu64, this->hash);
 	}
 } // namespace RTC

@@ -459,9 +459,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: REMOVE
-		MS_ERROR("--- hash: %" PRIu32, tuple->hash);
-
 		this->mapTupleWebRtcTransport[tuple->hash] = webRtcTransport;
 	}
 
