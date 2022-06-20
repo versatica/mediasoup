@@ -373,10 +373,25 @@ namespace RTC
 			return;
 		}
 
-		auto key = GetLocalIceUsernameFragmentFromReceivedStunPacket(packet);
-		auto it  = this->mapLocalIceUsernameFragmentWebRtcTransport.find(key);
+		// First try doing lookup in the tuples table.
+		auto it1 = this->mapTupleWebRtcTransport.find(tuple->hash);
 
-		if (it == this->mapLocalIceUsernameFragmentWebRtcTransport.end())
+		if (it1 != this->mapTupleWebRtcTransport.end())
+		{
+			auto* webRtcTransport = it1->second;
+
+			webRtcTransport->ProcessStunPacketFromWebRtcServer(tuple, packet);
+
+			delete packet;
+
+			return;
+		}
+
+		// Otherwise try to match the local ICE username fragment.
+		auto key = GetLocalIceUsernameFragmentFromReceivedStunPacket(packet);
+		auto it2 = this->mapLocalIceUsernameFragmentWebRtcTransport.find(key);
+
+		if (it2 == this->mapLocalIceUsernameFragmentWebRtcTransport.end())
 		{
 			MS_WARN_TAG(ice, "ignoring received STUN packet with unknown remote ICE usernameFragment");
 
@@ -385,7 +400,7 @@ namespace RTC
 			return;
 		}
 
-		auto* webRtcTransport = it->second;
+		auto* webRtcTransport = it2->second;
 
 		webRtcTransport->ProcessStunPacketFromWebRtcServer(tuple, packet);
 
@@ -438,6 +453,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(
+		  this->mapLocalIceUsernameFragmentWebRtcTransport.find(usernameFragment) ==
+		    this->mapLocalIceUsernameFragmentWebRtcTransport.end(),
+		  "local ICE username fragment already exists in the table");
+
 		this->mapLocalIceUsernameFragmentWebRtcTransport[usernameFragment] = webRtcTransport;
 	}
 
@@ -449,7 +469,7 @@ namespace RTC
 		MS_ASSERT(
 		  this->mapLocalIceUsernameFragmentWebRtcTransport.find(usernameFragment) !=
 		    this->mapLocalIceUsernameFragmentWebRtcTransport.end(),
-		  "tuple not handled");
+		  "local ICE username fragment not found in the table");
 
 		this->mapLocalIceUsernameFragmentWebRtcTransport.erase(usernameFragment);
 	}
@@ -459,6 +479,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->mapTupleWebRtcTransport.find(tuple->hash) != this->mapTupleWebRtcTransport.end())
+		{
+			MS_WARN_TAG(ice, "tuple hash already exists in the table, this should not happen");
+
+			return;
+		}
+
 		this->mapTupleWebRtcTransport[tuple->hash] = webRtcTransport;
 	}
 
@@ -467,9 +494,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->mapTupleWebRtcTransport.find(tuple->hash) != this->mapTupleWebRtcTransport.end(),
-		  "tuple not handled");
+		if (this->mapTupleWebRtcTransport.find(tuple->hash) == this->mapTupleWebRtcTransport.end())
+		{
+			MS_WARN_TAG(ice, "tuple hash not found in the table, this should not happen");
+
+			return;
+		}
 
 		this->mapTupleWebRtcTransport.erase(tuple->hash);
 	}
