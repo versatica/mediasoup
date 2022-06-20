@@ -131,26 +131,10 @@ namespace RTC
 		}
 
 	private:
-		void SetHash()
-		{
-			const std::string protocol = this->protocol == Protocol::UDP ? "udp" : "tcp";
-			int family;
-			std::string localIp;
-			uint16_t localPort;
-			std::string remoteIp;
-			uint16_t remotePort;
-
-			Utils::IP::GetAddressInfo(GetLocalAddress(), family, localIp, localPort);
-			Utils::IP::GetAddressInfo(GetRemoteAddress(), family, remoteIp, remotePort);
-
-			std::string id = remoteIp + std::to_string(remotePort) + localIp + std::to_string(localPort) +
-			                 std::to_string(family) + protocol;
-
-			this->hash = std::hash<std::string>{}(id);
-		}
+		void SetHash();
 
 	public:
-		size_t hash;
+		uint32_t hash{ 0u };
 
 	private:
 		// Passed by argument.

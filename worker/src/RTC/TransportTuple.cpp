@@ -82,4 +82,38 @@ namespace RTC
 
 		MS_DUMP("</TransportTuple>");
 	}
+
+	// TODO: Move to .hpp once done.
+	void TransportTuple::SetHash()
+	{
+		const struct sockaddr* localSockAddr  = GetLocalAddress();
+		const struct sockaddr* remoteSockAddr = GetRemoteAddress();
+
+		switch (localSockAddr->sa_family)
+		{
+			case AF_INET:
+			{
+				auto* localSockAddrIn  = reinterpret_cast<const struct sockaddr_in*>(localSockAddr);
+				auto* remoteSockAddrIn = reinterpret_cast<const struct sockaddr_in*>(remoteSockAddr);
+
+				this->hash += (ntohl(remoteSockAddrIn->sin_addr.s_addr) << 16);
+				this->hash += ntohs(remoteSockAddrIn->sin_port);
+
+				break;
+			}
+
+			case AF_INET6:
+			{
+				auto* localSockAddrIn6  = reinterpret_cast<const struct sockaddr_in6*>(localSockAddr);
+				auto* remoteSockAddrIn6 = reinterpret_cast<const struct sockaddr_in6*>(remoteSockAddr);
+
+				auto* a = reinterpret_cast<const uint32_t*>(std::addressof(remoteSockAddrIn6->sin6_addr));
+
+				this->hash += a[0] ^ a[1] ^ a[2] ^ a[3];
+				this->hash += ntohs(remoteSockAddrIn6->sin6_port);
+
+				break;
+			}
+		}
+	}
 } // namespace RTC
