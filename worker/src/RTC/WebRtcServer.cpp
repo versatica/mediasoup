@@ -481,7 +481,7 @@ namespace RTC
 
 		if (this->mapTupleWebRtcTransport.find(tuple->hash) != this->mapTupleWebRtcTransport.end())
 		{
-			MS_WARN_TAG(ice, "tuple hash already exists in the table, this should not happen");
+			MS_WARN_TAG(ice, "tuple hash already exists in the table");
 
 			return;
 		}
@@ -496,7 +496,7 @@ namespace RTC
 
 		if (this->mapTupleWebRtcTransport.find(tuple->hash) == this->mapTupleWebRtcTransport.end())
 		{
-			MS_WARN_TAG(ice, "tuple hash not found in the table, this should not happen");
+			MS_WARN_TAG(ice, "tuple hash not found in the table");
 
 			return;
 		}
