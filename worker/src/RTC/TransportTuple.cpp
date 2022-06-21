@@ -95,11 +95,11 @@ namespace RTC
 			{
 				auto* remoteSockAddrIn = reinterpret_cast<const struct sockaddr_in*>(remoteSockAddr);
 
-				const auto address = ntohl(remoteSockAddrIn->sin_addr.s_addr);
+				const auto address  = ntohl(remoteSockAddrIn->sin_addr.s_addr);
 				const uint64_t port = (ntohs(remoteSockAddrIn->sin_port));
 
-				std::cout << "address  " << std::bitset<64>{address} << std::endl;
-				std::cout << "port     " << std::bitset<64>{port} << std::endl;
+				std::cout << "address  " << std::bitset<64>{ address } << std::endl;
+				std::cout << "port     " << std::bitset<64>{ port } << std::endl;
 
 				this->hash = address;
 				this->hash |= port << 32;
@@ -112,11 +112,11 @@ namespace RTC
 				auto* remoteSockAddrIn6 = reinterpret_cast<const struct sockaddr_in6*>(remoteSockAddr);
 				auto* a = reinterpret_cast<const uint32_t*>(std::addressof(remoteSockAddrIn6->sin6_addr));
 
-				const auto address = a[0] ^ a[1] ^ a[2] ^ a[3];
+				const auto address  = a[0] ^ a[1] ^ a[2] ^ a[3];
 				const uint64_t port = ntohs(remoteSockAddrIn6->sin6_port);
 
-				std::cout << "address  " << std::bitset<64>{address} << std::endl;
-				std::cout << "port     " << std::bitset<64>{port} << std::endl;
+				std::cout << "address  " << std::bitset<64>{ address } << std::endl;
+				std::cout << "port     " << std::bitset<64>{ port } << std::endl;
 
 				this->hash = address;
 				this->hash |= port << 32;
@@ -125,7 +125,7 @@ namespace RTC
 			}
 		}
 
-		std::cout << "tmp hash " << std::bitset<64>{this->hash} << std::endl;
+		std::cout << "tmp hash " << std::bitset<64>{ this->hash } << std::endl;
 
 		// Override most significant bit with protocol information:
 		// - If UDP, start with 0.
@@ -139,6 +139,6 @@ namespace RTC
 			this->hash |= 0LL << 63;
 		}
 
-		std::cout << "fin hash " << std::bitset<64>{this->hash} << std::endl;
+		std::cout << "fin hash " << std::bitset<64>{ this->hash } << std::endl;
 	}
 } // namespace RTC
