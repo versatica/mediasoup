@@ -3,7 +3,6 @@
 
 #include "RTC/TransportTuple.hpp"
 #include "Logger.hpp"
-#include <bitset> // TMP: for logging purposes in SetHash.
 #include <string>
 
 namespace RTC
@@ -117,9 +116,6 @@ namespace RTC
 				const uint64_t address = ntohl(remoteSockAddrIn->sin_addr.s_addr);
 				const uint64_t port    = (ntohs(remoteSockAddrIn->sin_port));
 
-				std::cout << "port     " << std::bitset<64>{ port } << std::endl;
-				std::cout << "address  " << std::bitset<64>{ address } << std::endl;
-
 				this->hash = port << 48;
 				this->hash |= address << 16;
 				this->hash |= 0x0000; // AF_INET.
@@ -136,14 +132,6 @@ namespace RTC
 				const auto address2 = a[0];
 				const uint64_t port = ntohs(remoteSockAddrIn6->sin6_port);
 
-				std::cout << "a0       " << std::bitset<64>{ a[0] } << std::endl;
-				std::cout << "a1       " << std::bitset<64>{ a[1] } << std::endl;
-				std::cout << "a2       " << std::bitset<64>{ a[2] } << std::endl;
-				std::cout << "a3       " << std::bitset<64>{ a[3] } << std::endl;
-				std::cout << "port     " << std::bitset<64>{ port } << std::endl;
-				std::cout << "address1 " << std::bitset<64>{ address1 } << std::endl;
-				std::cout << "address2 " << std::bitset<64>{ address2 } << std::endl;
-
 				this->hash = port << 48;
 				this->hash |= static_cast<uint64_t>(address1) << 16;
 				this->hash |= address2 >> 16 & 0xFFFC;
@@ -152,8 +140,6 @@ namespace RTC
 				break;
 			}
 		}
-
-		std::cout << "tmp hash " << std::bitset<64>{ this->hash } << std::endl;
 
 		// Override most significant bit with protocol information:
 		// - If UDP, start with 0.
@@ -166,7 +152,5 @@ namespace RTC
 		{
 			this->hash |= 0x0001;
 		}
-
-		std::cout << "fin hash " << std::bitset<64>{ this->hash } << std::endl;
 	}
 } // namespace RTC
