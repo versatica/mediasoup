@@ -189,7 +189,7 @@ namespace RTC
 			}
 		}
 
-		// Override most significant bit with protocol information:
+		// Override least significant bit with protocol information:
 		// - If UDP, start with 0.
 		// - If TCP, start with 1.
 		if (this->protocol == Protocol::UDP)
