@@ -4,6 +4,7 @@
 #include "RTC/TransportTuple.hpp"
 #include "Logger.hpp"
 #include <string>
+#include <bitset> // TMP: for logging purposes in SetHash.
 
 namespace RTC
 {
