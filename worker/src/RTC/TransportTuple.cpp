@@ -87,10 +87,9 @@ namespace RTC
 	// TODO: Move to .hpp once done.
 	void TransportTuple::SetHash()
 	{
-		const struct sockaddr* localSockAddr  = GetLocalAddress();
 		const struct sockaddr* remoteSockAddr = GetRemoteAddress();
 
-		switch (localSockAddr->sa_family)
+		switch (remoteSockAddr->sa_family)
 		{
 			case AF_INET:
 			{
@@ -133,11 +132,11 @@ namespace RTC
 		// - If TCP, start with 1.
 		if (this->protocol == Protocol::UDP)
 		{
-			this->hash |= 1LL << 63;
+			this->hash |= 0LL << 63;
 		}
 		else
 		{
-			this->hash |= 0LL << 63;
+			this->hash |= 1LL << 63;
 		}
 
 		std::cout << "fin hash " << std::bitset<64>{ this->hash } << std::endl;
