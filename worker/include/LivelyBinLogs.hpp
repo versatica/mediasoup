@@ -6,6 +6,9 @@
 #include "RTC/RtpStream.hpp"
 
 
+#define BINLOG_MIN_TIMESPAN   20000
+#define BINLOG_FORMAT_VERSION "e58c1e"
+
 // CALL_STATS_BIN_LOG_RECORDS_NUM * sizeof(CallStatsSample) should be
 // dividible by 16 b/c of alignment concerns;
 // otherwise, there will be random sized padding added
@@ -13,8 +16,6 @@
 // ConsumerRecord and ProducerRecord structs to 16 bytes.
 // sizeof(CallStatsSample)== 28 bytes, CALL_STATS_BIN_LOG_RECORDS_NUM should be divisible by 4.
 // Alternative is to increase it to 32 at a cost of wasting 4 bytes per data record.
-
-#define BINLOG_FORMAT_VERSION "e58c1e"
 #define CALL_STATS_BIN_LOG_RECORDS_NUM 8
 #define CALL_STATS_BIN_LOG_SAMPLING    2000
 
@@ -122,12 +123,13 @@ class CallStatsRecord
   
   private:
     StreamStats last {};
-    StreamStats curr {};
+    StreamStats curr {};  
 
   public:
     CallStatsRecordCtx(uint64_t objType, uint8_t payload, std::string callId, std::string objId, std::string producerId) : record(objType, payload, callId, objId, producerId) {}
 
     void AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream); // either recv or send stream
+    uint64_t lastTs() { return last.ts; } // can be UINT64_UNSET
 
   private:
     void WriteIfFull(StatsBinLog* log);
@@ -140,6 +142,8 @@ class CallStatsRecord
     std::string   bin_log_file_path;                               // binary log's full file name: combo of call id, timestamp and "version"
     std::FILE*    fd {0};                                          
     uint64_t      sampling_interval {CALL_STATS_BIN_LOG_SAMPLING}; // frequency of collecting samples, non-configurable
+
+    std::string bin_log_done_dir;                                  // TODO: configurable, for now it defaults into "/var/log/sfu/done"
   
   private:
     bool          initialized {false};

@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include <cstring>
+#include <sys/stat.h>
 
 namespace Lively
 {
@@ -47,6 +48,9 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
     uuidToBytes(producer, record.c.producer_id);
 
     std::memset(record.c.samples, 0, sizeof(record.c.samples));
+
+    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): consumer start_tm=%" PRIu64 " payload=%" PRIu8 " callId=%s consumerId=%s producerId=%s", 
+      ts, payload, call_id.c_str(), object_id.c_str(), producer_id.c_str());
   }
   else // producer
   {
@@ -55,6 +59,9 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
     record.p.payload = payload;
     
     std::memset(record.p.samples, 0, sizeof(record.p.samples));
+
+    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): producer start_tm=%" PRIu64 " payload=%" PRIu8 " callId=%s producerId=%s", 
+      ts, payload, call_id.c_str(), object_id.c_str());
   }
 }
 
@@ -254,6 +261,74 @@ int StatsBinLog::LogClose(CallStatsRecordCtx* ctx)
       rtp,
       "binlog closed '%s'", this->bin_log_file_path.c_str()
     );
+
+    if (ctx->lastTs() == UINT64_UNSET || log_start_ts == UINT64_UNSET || BINLOG_MIN_TIMESPAN < log_start_ts - ctx->lastTs())
+    {
+      std::remove(bin_log_file_path.c_str());
+      MS_DEBUG_TAG(rtp, "binlog %s removed, short timespan (%" PRIu64 "-%" PRIu64 ")", 
+                    this->bin_log_file_path, this->log_start_ts, ctx->lastTs());
+    }
+
+    // directory creation: need c++ boost lib or c++17 or this...
+    if (this->bin_log_done_dir.size())
+    {
+      // check if destination directory already exists
+      struct stat info;
+      if( stat( this->bin_log_done_dir.c_str(), &info ) != 0 )
+      {
+        if (errno == ENOENT)
+        {
+          ret = mkdir(this->bin_log_done_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+          if (ret != 0)
+          {
+            MS_WARN_TAG(rtp, "failed to create folder %s for moving files", this->bin_log_done_dir.c_str());
+            this->bin_log_done_dir.clear(); // so that we don't try again
+          }
+        }
+      }
+      std::string logname; // get filename only out of full path
+      std::size_t found = this->bin_log_file_path.find_last_of("/");
+      if (std::string::npos == found)
+      {
+        MS_DEBUG_TAG(rtp, "Failed to extract filename from %s", this->bin_log_file_path.c_str());
+      }
+      else
+      {
+        auto logname = this->bin_log_file_path.substr(found + 1);
+        auto dst = this->bin_log_done_dir;
+        dst.append(logname);
+        if (std::rename(this->bin_log_file_path.c_str(), dst.c_str()))
+        {
+          MS_WARN_TAG(rtp, "failed to move %s to %s", this->bin_log_file_path.c_str(), this->bin_log_done_dir.c_str());
+        }
+        else
+        {
+          MS_DEBUG_TAG(rtp, "moved binlog %s to %s", this->bin_log_file_path.c_str(), this->bin_log_done_dir.c_str());
+        }
+      }
+    }
+
+/* C++17
+    namespace fs = std::filesystem;
+    if (this->bin_log_done_dir.size()) // it is set
+    {
+      fs::path done_path = this->bin_log_done_dir.c_str(); 
+      fs::directory_entry done_dir { done_path };
+      if (!done_dir.exists()) {
+        if (!fs::create_directory(done_dir)) {
+          MS_WARN_TAG(rtp, "failed to create directory %s", this->bin_log_done_dir.c_str());
+          this->bin_log_done_dir.clear();
+        }
+      }
+
+      //move the file over there
+      std::error_code ec;
+      fs::rename(this->bin_log_file_path, done_path/fs::path(this->bin_log_file_path).filename(), ec);
+      if (!ec)
+      {
+        MS_WARN_TAG(rtp, "failed to move %s to %s", this->bin_log_file_path.c_str(), this->bin_log_done_dir.c_str());
+      }
+    } */
   }
 
   // Save the last sample just in case and clean up recorded data
@@ -345,6 +420,8 @@ void StatsBinLog::InitLog(char type, std::string id1, std::string id2)
   this->log_start_ts = now;
   UpdateLogName();
   
+  this->bin_log_done_dir = "/var/log/sfu/done/";
+
   this->sampling_interval = CALL_STATS_BIN_LOG_SAMPLING;
   this->initialized = true;
 }
