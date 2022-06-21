@@ -93,46 +93,52 @@ namespace RTC
 		{
 			case AF_INET:
 			{
-				auto* localSockAddrIn  = reinterpret_cast<const struct sockaddr_in*>(localSockAddr);
 				auto* remoteSockAddrIn = reinterpret_cast<const struct sockaddr_in*>(remoteSockAddr);
 
-				this->hash += ntohl(remoteSockAddrIn->sin_addr.s_addr);
-				// TODO: I'd like that port (8 bits) is most significant bits from 1..8
-				// (bit 0 is for protocol, see below).
-				this->hash += ntohs(remoteSockAddrIn->sin_port);
+				const auto address = ntohl(remoteSockAddrIn->sin_addr.s_addr);
+				const uint64_t port = (ntohs(remoteSockAddrIn->sin_port));
+
+				std::cout << "address  " << std::bitset<64>{address} << std::endl;
+				std::cout << "port     " << std::bitset<64>{port} << std::endl;
+
+				this->hash = address;
+				this->hash |= port << 32;
 
 				break;
 			}
 
 			case AF_INET6:
 			{
-				auto* localSockAddrIn6  = reinterpret_cast<const struct sockaddr_in6*>(localSockAddr);
 				auto* remoteSockAddrIn6 = reinterpret_cast<const struct sockaddr_in6*>(remoteSockAddr);
 				auto* a = reinterpret_cast<const uint32_t*>(std::addressof(remoteSockAddrIn6->sin6_addr));
 
-				this->hash += a[0] ^ a[1] ^ a[2] ^ a[3];
-				// TODO: I'd like that port (8 bits) is most significant bits from 1..8
-				// (bit 0 is for protocol, see below).
-				this->hash += ntohs(remoteSockAddrIn6->sin6_port);
+				const auto address = a[0] ^ a[1] ^ a[2] ^ a[3];
+				const uint64_t port = ntohs(remoteSockAddrIn6->sin6_port);
+
+				std::cout << "address  " << std::bitset<64>{address} << std::endl;
+				std::cout << "port     " << std::bitset<64>{port} << std::endl;
+
+				this->hash = address;
+				this->hash |= port << 32;
 
 				break;
 			}
 		}
 
-		MS_ERROR("--- temp hash  : %" PRIu64, this->hash);
+		std::cout << "tmp hash " << std::bitset<64>{this->hash} << std::endl;
 
 		// Override most significant bit with protocol information:
 		// - If UDP, start with 0.
 		// - If TCP, start with 1.
 		if (this->protocol == Protocol::UDP)
 		{
-			this->hash &= 0b0111111111111111111111111111111101111111111111111111111111111111;
+			this->hash |= 1LL << 63;
 		}
 		else
 		{
-			this->hash |= 0b1000000000000000000000000000000000000000000000000000000000000000;
+			this->hash |= 0LL << 63;
 		}
 
-		MS_ERROR("--- final hash : %" PRIu64, this->hash);
+		std::cout << "fin hash " << std::bitset<64>{this->hash} << std::endl;
 	}
 } // namespace RTC
