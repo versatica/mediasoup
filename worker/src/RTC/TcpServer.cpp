@@ -8,15 +8,11 @@
 
 namespace RTC
 {
-	/* Static. */
-
-	static constexpr size_t MaxTcpConnectionsPerServer{ 10 };
-
 	/* Instance methods. */
 
 	TcpServer::TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip)
 	  : // This may throw.
-	    ::TcpServerHandler::TcpServerHandler(RTC::PortManager::BindTcp(ip), 256), listener(listener),
+	    ::TcpServerHandler::TcpServerHandler(RTC::PortManager::BindTcp(ip)), listener(listener),
 	    connListener(connListener), fixedPort(false)
 	{
 		MS_TRACE();
@@ -25,8 +21,8 @@ namespace RTC
 	TcpServer::TcpServer(
 	  Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip, uint16_t port)
 	  : // This may throw.
-	    ::TcpServerHandler::TcpServerHandler(RTC::PortManager::BindTcp(ip, port), 256),
-	    listener(listener), connListener(connListener), fixedPort(true)
+	    ::TcpServerHandler::TcpServerHandler(RTC::PortManager::BindTcp(ip, port)), listener(listener),
+	    connListener(connListener), fixedPort(true)
 	{
 		MS_TRACE();
 	}
@@ -44,14 +40,6 @@ namespace RTC
 	void TcpServer::UserOnTcpConnectionAlloc()
 	{
 		MS_TRACE();
-
-		// Allow just MaxTcpConnectionsPerServer.
-		if (GetNumConnections() >= MaxTcpConnectionsPerServer)
-		{
-			MS_ERROR("cannot handle more than %zu connections", MaxTcpConnectionsPerServer);
-
-			return;
-		}
 
 		// Allocate a new RTC::TcpConnection for the TcpServer to handle it.
 		auto* connection = new RTC::TcpConnection(this->connListener, 65536);

@@ -1,11 +1,16 @@
 import { Transport, TransportListenIp, TransportProtocol, TransportTuple, TransportEvents, TransportObserverEvents, SctpState } from './Transport';
+import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 export declare type WebRtcTransportOptions = {
     /**
-     * Listening IP address or addresses in order of preference (first one is the
-     * preferred one).
+     * Instance of WebRtcServer. Mandatory unless listenIps is given.
      */
-    listenIps: (TransportListenIp | string)[];
+    webRtcServer?: WebRtcServer;
+    /**
+     * Listening IP address or addresses in order of preference (first one is the
+     * preferred one). Mandatory unless webRtcServer is given.
+     */
+    listenIps?: (TransportListenIp | string)[];
     /**
      * Fixed port to listen on instead of selecting automatically from Worker's port
      * range.
@@ -183,6 +188,12 @@ export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, We
      * @override
      */
     routerClosed(): void;
+    /**
+     * Called when closing the associated WebRtcServer.
+     *
+     * @private
+     */
+    webRtcServerClosed(): void;
     /**
      * Get WebRtcTransport stats.
      *

@@ -185,6 +185,52 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#observer.safeEmit('close');
     }
     /**
+     * Listen server was closed (this just happens in WebRtcTransports when their
+     * associated WebRtcServer is closed).
+     *
+     * @private
+     */
+    listenServerClosed() {
+        if (this.#closed)
+            return;
+        logger.debug('listenServerClosed()');
+        this.#closed = true;
+        // Remove notification subscriptions.
+        this.channel.removeAllListeners(this.internal.transportId);
+        this.payloadChannel.removeAllListeners(this.internal.transportId);
+        // Close every Producer.
+        for (const producer of this.#producers.values()) {
+            producer.transportClosed();
+            // NOTE: No need to tell the Router since it already knows (it has
+            // been closed in fact).
+        }
+        this.#producers.clear();
+        // Close every Consumer.
+        for (const consumer of this.consumers.values()) {
+            consumer.transportClosed();
+        }
+        this.consumers.clear();
+        // Close every DataProducer.
+        for (const dataProducer of this.dataProducers.values()) {
+            dataProducer.transportClosed();
+            // NOTE: No need to tell the Router since it already knows (it has
+            // been closed in fact).
+        }
+        this.dataProducers.clear();
+        // Close every DataConsumer.
+        for (const dataConsumer of this.dataConsumers.values()) {
+            dataConsumer.transportClosed();
+        }
+        this.dataConsumers.clear();
+        // Need to emit this event to let the parent Router know since
+        // transport.listenServerClosed() is called by the listen server.
+        // NOTE: Currently there is just WebRtcServer for WebRtcTransports.
+        this.emit('@listenserverclose');
+        this.safeEmit('listenserverclose');
+        // Emit observer event.
+        this.#observer.safeEmit('close');
+    }
+    /**
      * Dump Transport.
      */
     async dump() {

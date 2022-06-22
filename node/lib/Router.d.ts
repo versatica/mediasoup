@@ -126,6 +126,11 @@ export declare class Router extends EnhancedEventEmitter<RouterEvents> {
      */
     get observer(): EnhancedEventEmitter<RouterObserverEvents>;
     /**
+     * @private
+     * Just for testing purposes.
+     */
+    get transportsForTesting(): Map<string, Transport>;
+    /**
      * Close the Router.
      */
     close(): void;
@@ -142,15 +147,11 @@ export declare class Router extends EnhancedEventEmitter<RouterEvents> {
     /**
      * Create a WebRtcTransport.
      */
-    createWebRtcTransport({ listenIps, port, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
+    createWebRtcTransport({ webRtcServer, listenIps, port, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, appData }: WebRtcTransportOptions): Promise<WebRtcTransport>;
     /**
      * Create a PlainTransport.
      */
     createPlainTransport({ listenIp, port, rtcpMux, comedia, enableSctp, numSctpStreams, maxSctpMessageSize, sctpSendBufferSize, enableSrtp, srtpCryptoSuite, appData }: PlainTransportOptions): Promise<PlainTransport>;
-    /**
-     * DEPRECATED: Use createPlainTransport().
-     */
-    createPlainRtpTransport(options: PlainTransportOptions): Promise<PlainTransport>;
     /**
      * Create a PipeTransport.
      */

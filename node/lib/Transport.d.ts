@@ -56,12 +56,14 @@ export interface TransportTraceEventData {
 export declare type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 export declare type TransportEvents = {
     routerclose: [];
+    listenserverclose: [];
     trace: [TransportTraceEventData];
     '@close': [];
     '@newproducer': [Producer];
     '@producerclose': [Producer];
     '@newdataproducer': [DataProducer];
     '@dataproducerclose': [DataProducer];
+    '@listenserverclose': [];
 };
 export declare type TransportObserverEvents = {
     close: [];
@@ -134,6 +136,13 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      * @virtual
      */
     routerClosed(): void;
+    /**
+     * Listen server was closed (this just happens in WebRtcTransports when their
+     * associated WebRtcServer is closed).
+     *
+     * @private
+     */
+    listenServerClosed(): void;
     /**
      * Dump Transport.
      */

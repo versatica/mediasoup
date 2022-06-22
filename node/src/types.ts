@@ -1,4 +1,5 @@
 export * from './Worker';
+export * from './WebRtcServer';
 export * from './Router';
 export * from './Transport';
 export * from './WebRtcTransport';

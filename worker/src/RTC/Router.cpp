@@ -16,7 +16,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Router::Router(const std::string& id) : id(id)
+	Router::Router(const std::string& id, Listener* listener) : id(id), listener(listener)
 	{
 		MS_TRACE();
 	}
@@ -202,6 +202,93 @@ namespace RTC
 				break;
 			}
 
+			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
+			{
+				std::string transportId;
+
+				// This may throw.
+				SetNewTransportIdFromInternal(request->internal, transportId);
+
+				auto jsonWebRtcServerIdIt = request->internal.find("webRtcServerId");
+
+				if (jsonWebRtcServerIdIt == request->internal.end() || !jsonWebRtcServerIdIt->is_string())
+				{
+					MS_THROW_ERROR("missing internal.webRtcServerId");
+				}
+
+				std::string webRtcServerId = jsonWebRtcServerIdIt->get<std::string>();
+
+				auto* webRtcServer = this->listener->OnRouterNeedWebRtcServer(this, webRtcServerId);
+
+				if (!webRtcServer)
+					MS_THROW_ERROR("wrong internal.webRtcServerId (no associated WebRtcServer found)");
+
+				bool enableUdp{ true };
+				auto jsonEnableUdpIt = request->data.find("enableUdp");
+
+				if (jsonEnableUdpIt != request->data.end())
+				{
+					if (!jsonEnableUdpIt->is_boolean())
+						MS_THROW_TYPE_ERROR("wrong enableUdp (not a boolean)");
+
+					enableUdp = jsonEnableUdpIt->get<bool>();
+				}
+
+				bool enableTcp{ false };
+				auto jsonEnableTcpIt = request->data.find("enableTcp");
+
+				if (jsonEnableTcpIt != request->data.end())
+				{
+					if (!jsonEnableTcpIt->is_boolean())
+						MS_THROW_TYPE_ERROR("wrong enableTcp (not a boolean)");
+
+					enableTcp = jsonEnableTcpIt->get<bool>();
+				}
+
+				bool preferUdp{ false };
+				auto jsonPreferUdpIt = request->data.find("preferUdp");
+
+				if (jsonPreferUdpIt != request->data.end())
+				{
+					if (!jsonPreferUdpIt->is_boolean())
+						MS_THROW_TYPE_ERROR("wrong preferUdp (not a boolean)");
+
+					preferUdp = jsonPreferUdpIt->get<bool>();
+				}
+
+				bool preferTcp{ false };
+				auto jsonPreferTcpIt = request->data.find("preferTcp");
+
+				if (jsonPreferTcpIt != request->data.end())
+				{
+					if (!jsonPreferTcpIt->is_boolean())
+						MS_THROW_TYPE_ERROR("wrong preferTcp (not a boolean)");
+
+					preferTcp = jsonPreferTcpIt->get<bool>();
+				}
+
+				auto iceCandidates =
+				  webRtcServer->GetIceCandidates(enableUdp, enableTcp, preferUdp, preferTcp);
+
+				// This may throw.
+				auto* webRtcTransport =
+				  new RTC::WebRtcTransport(transportId, this, webRtcServer, iceCandidates, request->data);
+
+				// Insert into the map.
+				this->mapTransports[transportId] = webRtcTransport;
+
+				MS_DEBUG_DEV(
+				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
+
+				json data = json::object();
+
+				webRtcTransport->FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
 			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT:
 			{
 				std::string transportId;
@@ -318,7 +405,7 @@ namespace RTC
 				// notify us about their closures.
 				transport->CloseProducersAndConsumers();
 
-				// Remove it from the map and delete it.
+				// Remove it from the map.
 				this->mapTransports.erase(transport->id);
 
 				MS_DEBUG_DEV("Transport closed [transportId:%s]", transport->id.c_str());
@@ -992,5 +1079,24 @@ namespace RTC
 
 		// Remove the DataConsumer from the map.
 		this->mapDataConsumerDataProducer.erase(mapDataConsumerDataProducerIt);
+	}
+
+	inline void Router::OnTransportListenServerClosed(RTC::Transport* transport)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(
+		  this->mapTransports.find(transport->id) != this->mapTransports.end(),
+		  "Transport not present in mapTransports");
+
+		// Tell the Transport to close all its Producers and Consumers so it will
+		// notify us about their closures.
+		transport->CloseProducersAndConsumers();
+
+		// Remove it from the map.
+		this->mapTransports.erase(transport->id);
+
+		// Delete it.
+		delete transport;
 	}
 } // namespace RTC

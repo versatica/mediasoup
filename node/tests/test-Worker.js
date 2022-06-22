@@ -124,7 +124,7 @@ test('worker.dump() succeeds', async () =>
 
 	await expect(worker.dump())
 		.resolves
-		.toEqual({ pid: worker.pid, routerIds: [] });
+		.toEqual({ pid: worker.pid, webRtcServerIds: [], routerIds: [] });
 
 	worker.close();
 }, 2000);

@@ -1,5 +1,6 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Router, RouterOptions } from './Router';
+import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 export declare type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 export declare type WorkerLogTag = 'info' | 'ice' | 'dtls' | 'rtp' | 'srtp' | 'rtcp' | 'rtx' | 'bwe' | 'score' | 'simulcast' | 'svc' | 'sctp' | 'message';
 export declare type WorkerSettings = {
@@ -117,6 +118,7 @@ export declare type WorkerEvents = {
 };
 export declare type WorkerObserverEvents = {
     close: [];
+    newwebrtcserver: [WebRtcServer];
     newrouter: [Router];
 };
 export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
@@ -153,6 +155,11 @@ export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
      * @private
      * Just for testing purposes.
      */
+    get webRtcServersForTesting(): Set<WebRtcServer>;
+    /**
+     * @private
+     * Just for testing purposes.
+     */
     get routersForTesting(): Set<Router>;
     /**
      * Close the Worker.
@@ -170,6 +177,10 @@ export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
      * Update settings.
      */
     updateSettings({ logLevel, logTags }?: WorkerUpdateableSettings): Promise<void>;
+    /**
+     * Create a WebRtcServer.
+     */
+    createWebRtcServer({ listenInfos, appData }: WebRtcServerOptions): Promise<WebRtcServer>;
     /**
      * Create a Router.
      */

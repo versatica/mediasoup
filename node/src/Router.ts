@@ -246,6 +246,15 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	}
 
 	/**
+	 * @private
+	 * Just for testing purposes.
+	 */
+	get transportsForTesting(): Map<string, Transport>
+	{
+		return this.#transports;
+	}
+
+	/**
 	 * Close the Router.
 	 */
 	close(): void
@@ -341,6 +350,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	 */
 	async createWebRtcTransport(
 		{
+			webRtcServer,
 			listenIps,
 			port,
 			enableUdp = true,
@@ -358,31 +368,46 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	{
 		logger.debug('createWebRtcTransport()');
 
-		if (!Array.isArray(listenIps))
-			throw new TypeError('missing listenIps');
+		if (!webRtcServer && !Array.isArray(listenIps))
+			throw new TypeError('missing webRtcServer and listenIps (one of them is mandatory)');
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		listenIps = listenIps.map((listenIp) =>
+		if (webRtcServer)
 		{
-			if (typeof listenIp === 'string' && listenIp)
-			{
-				return { ip: listenIp };
-			}
-			else if (typeof listenIp === 'object')
-			{
-				return {
-					ip          : listenIp.ip,
-					announcedIp : listenIp.announcedIp || undefined
-				};
-			}
-			else
-			{
-				throw new TypeError('wrong listenIp');
-			}
-		});
+			listenIps = undefined;
+			port = undefined;
+		}
 
-		const internal = { ...this.#internal, transportId: uuidv4() };
+		if (listenIps)
+		{
+			listenIps = listenIps.map((listenIp) =>
+			{
+				if (typeof listenIp === 'string' && listenIp)
+				{
+					return { ip: listenIp };
+				}
+				else if (typeof listenIp === 'object')
+				{
+					return {
+						ip          : listenIp.ip,
+						announcedIp : listenIp.announcedIp || undefined
+					};
+				}
+				else
+				{
+					throw new TypeError('wrong listenIp');
+				}
+			});
+		}
+
+		const internal =
+		{
+			...this.#internal,
+			transportId    : uuidv4(),
+			webRtcServerId : webRtcServer ? webRtcServer.id : undefined
+		};
+
 		const reqData = {
 			listenIps,
 			port,
@@ -398,8 +423,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			isDataChannel : true
 		};
 
-		const data =
-			await this.#channel.request('router.createWebRtcTransport', internal, reqData);
+		const data = webRtcServer
+			? await this.#channel.request('router.createWebRtcTransportWithServer', internal, reqData)
+			: await this.#channel.request('router.createWebRtcTransport', internal, reqData);
 
 		const transport = new WebRtcTransport(
 			{
@@ -419,6 +445,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
@@ -427,6 +454,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		transport.on('@dataproducerclose', (dataProducer: DataProducer) => (
 			this.#dataProducers.delete(dataProducer.id)
 		));
+
+		if (webRtcServer)
+			webRtcServer.handleWebRtcTransport(transport);
 
 		// Emit observer event.
 		this.#observer.safeEmit('newtransport', transport);
@@ -513,6 +543,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
@@ -526,19 +557,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		this.#observer.safeEmit('newtransport', transport);
 
 		return transport;
-	}
-
-	/**
-	 * DEPRECATED: Use createPlainTransport().
-	 */
-	async createPlainRtpTransport(
-		options: PlainTransportOptions
-	): Promise<PlainTransport>
-	{
-		logger.warn(
-			'createPlainRtpTransport() is DEPRECATED, use createPlainTransport()');
-
-		return this.createPlainTransport(options);
 	}
 
 	/**
@@ -616,6 +634,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
@@ -670,6 +689,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (

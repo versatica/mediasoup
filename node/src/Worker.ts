@@ -8,6 +8,7 @@ import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
+import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
@@ -175,6 +176,7 @@ export type WorkerEvents =
 export type WorkerObserverEvents = 
 {
 	close: [];
+	newwebrtcserver: [WebRtcServer];
 	newrouter: [Router];
 }
 
@@ -212,6 +214,9 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 	// Custom app data.
 	readonly #appData: Record<string, unknown>;
+
+	// WebRtcServers set.
+	readonly #webRtcServers: Set<WebRtcServer> = new Set();
 
 	// Routers set.
 	readonly #routers: Set<Router> = new Set();
@@ -475,6 +480,15 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	 * @private
 	 * Just for testing purposes.
 	 */
+	get webRtcServersForTesting(): Set<WebRtcServer>
+	{
+		return this.#webRtcServers;
+	}
+
+	/**
+	 * @private
+	 * Just for testing purposes.
+	 */
 	get routersForTesting(): Set<Router>
 	{
 		return this.#routers;
@@ -517,6 +531,13 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		}
 		this.#routers.clear();
 
+		// Close every WebRtcServer.
+		for (const webRtcServer of this.#webRtcServers)
+		{
+			webRtcServer.workerClosed();
+		}
+		this.#webRtcServers.clear();
+
 		// Emit observer event.
 		this.#observer.safeEmit('close');
 	}
@@ -556,6 +577,41 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		const reqData = { logLevel, logTags };
 
 		await this.#channel.request('worker.updateSettings', undefined, reqData);
+	}
+
+	/**
+	 * Create a WebRtcServer.
+	 */
+	async createWebRtcServer(
+		{
+			listenInfos,
+			appData
+		}: WebRtcServerOptions): Promise<WebRtcServer>
+	{
+		logger.debug('createWebRtcServer()');
+
+		if (appData && typeof appData !== 'object')
+			throw new TypeError('if given, appData must be an object');
+
+		const internal = { webRtcServerId: uuidv4() };
+		const reqData = { listenInfos };
+
+		await this.#channel.request('worker.createWebRtcServer', internal, reqData);
+
+		const webRtcServer = new WebRtcServer(
+			{
+				internal,
+				channel : this.#channel,
+				appData
+			});
+
+		this.#webRtcServers.add(webRtcServer);
+		webRtcServer.on('@close', () => this.#webRtcServers.delete(webRtcServer));
+
+		// Emit observer event.
+		this.#observer.safeEmit('newwebrtcserver', webRtcServer);
+
+		return webRtcServer;
 	}
 
 	/**
@@ -620,6 +676,13 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			router.workerClosed();
 		}
 		this.#routers.clear();
+
+		// Close every WebRtcServer.
+		for (const webRtcServer of this.#webRtcServers)
+		{
+			webRtcServer.workerClosed();
+		}
+		this.#webRtcServers.clear();
 
 		this.safeEmit('died', error);
 

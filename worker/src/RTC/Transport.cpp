@@ -307,6 +307,14 @@ namespace RTC
 		this->mapDataConsumers.clear();
 	}
 
+	void Transport::ListenServerClosed()
+	{
+		MS_TRACE();
+
+		// Ask our parent Router to close/delete us.
+		this->listener->OnTransportListenServerClosed(this);
+	}
+
 	void Transport::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();
