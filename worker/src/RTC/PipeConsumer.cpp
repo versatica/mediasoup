@@ -184,7 +184,7 @@ namespace RTC
 		return 0u;
 	}
 
-	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void PipeConsumer::SendRtpPacket(std::shared_ptr<RTC::RtpPacket> packet)
 	{
 		MS_TRACE();
 
@@ -256,10 +256,10 @@ namespace RTC
 		if (rtpStream->ReceivePacket(packet))
 		{
 			// Send the packet.
-			this->listener->OnConsumerSendRtpPacket(this, packet);
+			this->listener->OnConsumerSendRtpPacket(this, packet.get());
 
 			// May emit 'trace' event.
-			EmitTraceEventRtpAndKeyFrameTypes(packet);
+			EmitTraceEventRtpAndKeyFrameTypes(packet.get());
 		}
 		else
 		{
@@ -573,9 +573,7 @@ namespace RTC
 				}
 			}
 
-			// Create a RtpStreamSend for sending a single media stream.
-			size_t bufferSize = params.useNack ? 600u : 0u;
-			auto* rtpStream   = new RTC::RtpStreamSend(this, params, bufferSize);
+			auto* rtpStream = new RTC::RtpStreamSend(this, params, this->rtpParameters.mid);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())

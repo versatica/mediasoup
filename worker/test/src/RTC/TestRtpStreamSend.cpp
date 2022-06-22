@@ -44,15 +44,19 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		uint8_t rtpBuffer4[65536];
 		uint8_t rtpBuffer5[65536];
 
+		RtpPacket* packet{ nullptr };
+
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
-		RtpPacket* packet1 = RtpPacket::Parse(rtpBuffer1, sizeof(rtpBuffer1));
+		packet = RtpPacket::Parse(rtpBuffer1, sizeof(rtpBuffer1));
+		std::shared_ptr<RtpPacket> packet1(packet);
 
 		REQUIRE(packet1);
 		REQUIRE(packet1->GetSequenceNumber() == 21006);
 		REQUIRE(packet1->GetTimestamp() == 1533790901);
 
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
-		RtpPacket* packet2 = packet1->Clone(rtpBuffer2);
+		packet = packet1->Clone(rtpBuffer2);
+		std::shared_ptr<RtpPacket> packet2(packet);
 
 		packet2->SetSequenceNumber(21007);
 		packet2->SetTimestamp(1533790901);
@@ -61,7 +65,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet2->GetTimestamp() == 1533790901);
 
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
-		RtpPacket* packet3 = packet1->Clone(rtpBuffer3);
+		packet = packet1->Clone(rtpBuffer3);
+		std::shared_ptr<RtpPacket> packet3(packet);
 
 		packet3->SetSequenceNumber(21008);
 		packet3->SetTimestamp(1533793871);
@@ -70,7 +75,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet3->GetTimestamp() == 1533793871);
 
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
-		RtpPacket* packet4 = packet1->Clone(rtpBuffer4);
+		packet = packet1->Clone(rtpBuffer4);
+		std::shared_ptr<RtpPacket> packet4(packet);
 
 		packet4->SetSequenceNumber(21009);
 		packet4->SetTimestamp(1533793871);
@@ -79,7 +85,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		REQUIRE(packet4->GetTimestamp() == 1533793871);
 
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
-		RtpPacket* packet5 = packet1->Clone(rtpBuffer5);
+		packet = packet1->Clone(rtpBuffer5);
+		std::shared_ptr<RtpPacket> packet5(packet);
 
 		packet5->SetSequenceNumber(21010);
 		packet5->SetTimestamp(1533796931);
@@ -94,7 +101,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		params.useNack   = true;
 
 		// Create a RtpStreamSend.
-		RtpStreamSend* stream = new RtpStreamSend(&testRtpStreamListener, params, 4);
+		std::string mid{ "" };
+		RtpStreamSend* stream = new RtpStreamSend(&testRtpStreamListener, params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
 		stream->ReceivePacket(packet1);
@@ -117,37 +125,36 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 
 		stream->ReceiveNack(&nackPacket);
 
-		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 4);
+		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 5);
 
 		auto rtxPacket1 = testRtpStreamListener.retransmittedPackets[0];
 		auto rtxPacket2 = testRtpStreamListener.retransmittedPackets[1];
 		auto rtxPacket3 = testRtpStreamListener.retransmittedPackets[2];
 		auto rtxPacket4 = testRtpStreamListener.retransmittedPackets[3];
+		auto rtxPacket5 = testRtpStreamListener.retransmittedPackets[4];
 
 		testRtpStreamListener.retransmittedPackets.clear();
 
 		REQUIRE(rtxPacket1);
-		REQUIRE(rtxPacket1->GetSequenceNumber() == packet2->GetSequenceNumber());
-		REQUIRE(rtxPacket1->GetTimestamp() == packet2->GetTimestamp());
+		REQUIRE(rtxPacket1->GetSequenceNumber() == packet1->GetSequenceNumber());
+		REQUIRE(rtxPacket1->GetTimestamp() == packet1->GetTimestamp());
 
 		REQUIRE(rtxPacket2);
-		REQUIRE(rtxPacket2->GetSequenceNumber() == packet3->GetSequenceNumber());
-		REQUIRE(rtxPacket2->GetTimestamp() == packet3->GetTimestamp());
+		REQUIRE(rtxPacket2->GetSequenceNumber() == packet2->GetSequenceNumber());
+		REQUIRE(rtxPacket2->GetTimestamp() == packet2->GetTimestamp());
 
 		REQUIRE(rtxPacket3);
-		REQUIRE(rtxPacket3->GetSequenceNumber() == packet4->GetSequenceNumber());
-		REQUIRE(rtxPacket3->GetTimestamp() == packet4->GetTimestamp());
+		REQUIRE(rtxPacket3->GetSequenceNumber() == packet3->GetSequenceNumber());
+		REQUIRE(rtxPacket3->GetTimestamp() == packet3->GetTimestamp());
 
 		REQUIRE(rtxPacket4);
-		REQUIRE(rtxPacket4->GetSequenceNumber() == packet5->GetSequenceNumber());
-		REQUIRE(rtxPacket4->GetTimestamp() == packet5->GetTimestamp());
+		REQUIRE(rtxPacket4->GetSequenceNumber() == packet4->GetSequenceNumber());
+		REQUIRE(rtxPacket4->GetTimestamp() == packet4->GetTimestamp());
 
-		// Clean stuff.
-		delete packet1;
-		delete packet2;
-		delete packet3;
-		delete packet4;
-		delete packet5;
+		REQUIRE(rtxPacket5);
+		REQUIRE(rtxPacket5->GetSequenceNumber() == packet5->GetSequenceNumber());
+		REQUIRE(rtxPacket5->GetTimestamp() == packet5->GetTimestamp());
+
 		delete stream;
 	}
 }

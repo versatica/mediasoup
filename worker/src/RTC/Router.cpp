@@ -782,6 +782,8 @@ namespace RTC
 
 		auto& consumers = this->mapProducerConsumers.at(producer);
 
+		std::shared_ptr<RTC::RtpPacket> shared(packet);
+
 		for (auto* consumer : consumers)
 		{
 			// Update MID RTP extension value.
@@ -790,7 +792,7 @@ namespace RTC
 			if (!mid.empty())
 				packet->UpdateMid(mid);
 
-			consumer->SendRtpPacket(packet);
+			consumer->SendRtpPacket(shared);
 		}
 
 		auto it = this->mapProducerRtpObservers.find(producer);

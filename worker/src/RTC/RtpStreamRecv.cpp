@@ -247,7 +247,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Call the parent method.
-		if (!RTC::RtpStream::ReceivePacket(packet))
+		if (!RTC::RtpStream::ReceiveStreamPacket(packet))
 		{
 			MS_WARN_TAG(rtp, "packet discarded");
 
