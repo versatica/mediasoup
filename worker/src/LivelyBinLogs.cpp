@@ -277,7 +277,7 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
   if (now - this->log_start_ts > DAY_IN_MS)
   {
     this->log_start_ts = now;
-    UpdateLogName();    
+    UpdateLogName();
     signal_set = true;
   }
 
@@ -285,6 +285,7 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
   {
     if (this->fd)
       std::fclose(this->fd);
+      this->fd = 0;
 
     if (this->initialized)
     {
