@@ -1,12 +1,12 @@
 # Changelog
 
 
-### WIP
+### 3.10.0
 
+* `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port (PR #834).
 * More SRTP crypto suites (PR #837).
 * Improve `EnhancedEventEmitter` (PR #836).
-* `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port (PR #834).
-* `TransportCongestionControlClient`: Allow setting max outgoing bitrate before created (PR #833).
+* `TransportCongestionControlClient`: Allow setting max outgoing bitrate before `tccClient` is created (PR #833).
 * Update NPM deps and TypeScript version.
 
 
