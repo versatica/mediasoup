@@ -474,10 +474,10 @@ namespace RTC
 			return;
 		}
 
+		this->ClearOldPackets(packet.get());
+
 		auto seq          = packet->GetSequenceNumber();
 		auto* storageItem = this->storageItemBuffer.Get(seq);
-
-		this->ClearOldPackets(packet.get());
 
 		// The buffer item is already used. Check whether we should replace its
 		// storage with the new packet or just ignore it (if duplicated packet).
