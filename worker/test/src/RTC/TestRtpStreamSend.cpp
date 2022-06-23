@@ -20,6 +20,19 @@ static std::shared_ptr<RtpPacket> CreateRtpPacket(uint8_t* buffer, uint16_t seq,
 	return shared;
 }
 
+static void SendRtpPacket(RtpStreamSend* stream, std::shared_ptr<RtpPacket> packet, uint32_t ssrc)
+{
+	packet->SetSsrc(ssrc);
+	stream->ReceivePacket(packet);
+}
+
+static void CheckRtxPacket(RtpPacket* packet, uint16_t seq, uint32_t timestamp)
+{
+	REQUIRE(packet);
+	REQUIRE(packet->GetSequenceNumber() == seq);
+	REQUIRE(packet->GetTimestamp() == timestamp);
+}
+
 SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 {
 	class TestRtpStreamListener : public RtpStreamSend::Listener
@@ -37,8 +50,6 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 	public:
 		std::vector<RtpPacket*> retransmittedPackets;
 	};
-
-	TestRtpStreamListener testRtpStreamListener;
 
 	SECTION("receive NACK and get retransmitted packets")
 	{
@@ -72,25 +83,26 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
 		auto packet5 = CreateRtpPacket(rtpBuffer5, 21010, 1533796931);
 
+		// Create two RtpStreamSend instances.
+		TestRtpStreamListener testRtpStreamListener;
+
 		RtpStream::Params params;
 
-		params.ssrc      = packet1->GetSsrc();
+		params.ssrc      = 1111;
 		params.clockRate = 90000;
 		params.useNack   = true;
 
-		// Create a RtpStreamSend.
 		std::string mid{ "" };
 		RtpStreamSend* stream = new RtpStreamSend(&testRtpStreamListener, params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
-		stream->ReceivePacket(packet1);
-		stream->ReceivePacket(packet3);
-		stream->ReceivePacket(packet2);
-		stream->ReceivePacket(packet3);
-		stream->ReceivePacket(packet4);
-		stream->ReceivePacket(packet4);
-		stream->ReceivePacket(packet5);
-		stream->ReceivePacket(packet5);
+		SendRtpPacket(stream, packet1, params.ssrc);
+		SendRtpPacket(stream, packet3, params.ssrc);
+		SendRtpPacket(stream, packet2, params.ssrc);
+		SendRtpPacket(stream, packet3, params.ssrc);
+		SendRtpPacket(stream, packet4, params.ssrc);
+		SendRtpPacket(stream, packet5, params.ssrc);
+		SendRtpPacket(stream, packet5, params.ssrc);
 
 		// Create a NACK item that request for all the packets.
 		RTCP::FeedbackRtpNackPacket nackPacket(0, params.ssrc);
@@ -113,25 +125,11 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 
 		testRtpStreamListener.retransmittedPackets.clear();
 
-		REQUIRE(rtxPacket1);
-		REQUIRE(rtxPacket1->GetSequenceNumber() == packet1->GetSequenceNumber());
-		REQUIRE(rtxPacket1->GetTimestamp() == packet1->GetTimestamp());
-
-		REQUIRE(rtxPacket2);
-		REQUIRE(rtxPacket2->GetSequenceNumber() == packet2->GetSequenceNumber());
-		REQUIRE(rtxPacket2->GetTimestamp() == packet2->GetTimestamp());
-
-		REQUIRE(rtxPacket3);
-		REQUIRE(rtxPacket3->GetSequenceNumber() == packet3->GetSequenceNumber());
-		REQUIRE(rtxPacket3->GetTimestamp() == packet3->GetTimestamp());
-
-		REQUIRE(rtxPacket4);
-		REQUIRE(rtxPacket4->GetSequenceNumber() == packet4->GetSequenceNumber());
-		REQUIRE(rtxPacket4->GetTimestamp() == packet4->GetTimestamp());
-
-		REQUIRE(rtxPacket5);
-		REQUIRE(rtxPacket5->GetSequenceNumber() == packet5->GetSequenceNumber());
-		REQUIRE(rtxPacket5->GetTimestamp() == packet5->GetTimestamp());
+		CheckRtxPacket(rtxPacket1, packet1->GetSequenceNumber(), packet1->GetTimestamp());
+		CheckRtxPacket(rtxPacket2, packet2->GetSequenceNumber(), packet2->GetTimestamp());
+		CheckRtxPacket(rtxPacket3, packet3->GetSequenceNumber(), packet3->GetTimestamp());
+		CheckRtxPacket(rtxPacket4, packet4->GetSequenceNumber(), packet4->GetTimestamp());
+		CheckRtxPacket(rtxPacket5, packet5->GetSequenceNumber(), packet5->GetTimestamp());
 
 		delete stream;
 	}
