@@ -10,7 +10,9 @@ namespace RTC
 	class RtpStreamSend : public RTC::RtpStream
 	{
 	public:
-		// Don't retransmit packets older than this (ms).
+		// Minimum retransmission buffer size (ms).
+		static constexpr uint32_t MinRetransmissionDelay{ 200 };
+		// Maximum retransmission buffer size (ms).
 		static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 
 	public:
