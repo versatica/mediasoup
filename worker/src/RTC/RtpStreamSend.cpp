@@ -20,19 +20,6 @@ namespace RTC
 	static constexpr uint32_t DefaultRtt{ 100 };
 	static constexpr uint16_t MaxSeq = std::numeric_limits<uint16_t>::max();
 
-	static void resetStorageItem(RTC::RtpStreamSend::StorageItem* storageItem)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
-
-		storageItem->packet.reset();
-		storageItem->ssrc           = 0;
-		storageItem->sequenceNumber = 0;
-		storageItem->timestamp      = 0;
-		storageItem->resentAtMs     = 0;
-		storageItem->sentTimes      = 0;
-	}
 
 	void RtpStreamSend::StorageItem::Dump() const
 	{
@@ -41,6 +28,18 @@ namespace RTC
 		  this->ssrc,
 		  this->sequenceNumber,
 		  this->timestamp);
+	}
+
+	void RtpStreamSend::StorageItem::Reset()
+	{
+		MS_TRACE();
+
+		this->packet.reset();
+		this->ssrc           = 0;
+		this->sequenceNumber = 0;
+		this->timestamp      = 0;
+		this->resentAtMs     = 0;
+		this->sentTimes      = 0;
 	}
 
 	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::GetFirst() const
@@ -144,8 +143,8 @@ namespace RTC
 			if (!storageItem)
 				continue;
 
-			// Reset (free RTP packet) the storage item.
-			resetStorageItem(storageItem);
+			// Reset the storage item (decrease RTP packet shared pointer counter).
+			storageItem->Reset();
 
 			delete storageItem;
 		}
@@ -487,7 +486,7 @@ namespace RTC
 				return;
 
 			// Reset the storage item.
-			resetStorageItem(storageItem);
+			storageItem->Reset();
 		}
 		// Allocate new buffer item.
 		else

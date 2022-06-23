@@ -21,6 +21,7 @@ namespace RTC
 		struct StorageItem
 		{
 			void Dump() const;
+			void Reset();
 
 			// Original packet.
 			std::shared_ptr<RTC::RtpPacket> packet{ nullptr };
