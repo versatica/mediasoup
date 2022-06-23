@@ -495,7 +495,7 @@ namespace RTC
 			this->storageItemBuffer.Insert(seq, storageItem);
 		}
 
-		// Store original packet and some extra info into the retrieved storage item.
+		// Store original packet and some extra info into the storage item.
 		storageItem->packet         = packet;
 		storageItem->ssrc           = packet->GetSsrc();
 		storageItem->sequenceNumber = packet->GetSequenceNumber();
