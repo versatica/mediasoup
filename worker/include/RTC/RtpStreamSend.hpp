@@ -47,7 +47,6 @@ namespace RTC
 		// their `uint16_t` sequence number, while only taking as little memory as
 		// necessary to store the range covering a maximum of
 		// `MaxRetransmissionDelay` milliseconds.
-		// NOTE: See `MaxRetransmissionDelay` in implementation file.
 		class StorageItemBuffer
 		{
 		public:
