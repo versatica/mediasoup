@@ -47,6 +47,9 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
     uuidToBytes(producer, record.c.producer_id);
 
     std::memset(record.c.samples, 0, sizeof(record.c.samples));
+
+    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): consumer start_tm=%" PRIu64 " payload=%" PRIu8 " callId=%s consumerId=%s producerId=%s", 
+      ts, payload, call_id.c_str(), object_id.c_str(), producer_id.c_str());
   }
   else // producer
   {
@@ -55,6 +58,9 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
     record.p.payload = payload;
     
     std::memset(record.p.samples, 0, sizeof(record.p.samples));
+
+    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): producer start_tm=%" PRIu64 " payload=%" PRIu8 " callId=%s producerId=%s", 
+      ts, payload, call_id.c_str(), object_id.c_str());
   }
 }
 
@@ -284,9 +290,11 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
   if(signal_set || !this->fd)
   {
     if (this->fd)
+    {
       std::fclose(this->fd);
       this->fd = 0;
-
+    }
+    
     if (this->initialized)
     {
       LogOpen();

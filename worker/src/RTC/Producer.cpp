@@ -489,8 +489,7 @@ namespace RTC
 
 		if (this->rtpStreamByEncodingIdx.size() != 1)
 		{
-			MS_WARN_TAG_LIVELYAPP(rtp, this->appData, "found %zu streams in %s, skipping bin stats", this->rtpStreamByEncodingIdx.size(), this->id.c_str());
-			return;
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "producer %s has %zu streams", this->id.c_str(), this->rtpStreamByEncodingIdx.size());
 		}
 
 		for (auto* rtpStream : this->rtpStreamByEncodingIdx)
