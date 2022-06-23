@@ -85,7 +85,7 @@ namespace RTC
 			{
 				// Calculate how many elements would it be necessary to add when pushing new item
 				// to the back of the deque.
-				auto addToBack{ static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1)) };
+				auto addToBack = static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1));
 
 				// Packets can arrive out of order, add blank slots.
 				for (uint16_t i{ 1 }; i < addToBack; ++i)
@@ -99,7 +99,7 @@ namespace RTC
 		{
 			// Calculate how many elements would it be necessary to add when pushing new item
 			// to the front of the deque.
-			auto addToFront{ static_cast<uint16_t>(this->startSeq - seq) };
+			auto addToFront = static_cast<uint16_t>(this->startSeq - seq);
 
 			// Packets can arrive out of order, add blank slots.
 			for (uint16_t i{ 1 }; i < addToFront; ++i)
