@@ -8,6 +8,18 @@
 
 using namespace RTC;
 
+static std::shared_ptr<RtpPacket> CreateRtpPacket(uint8_t* buffer, uint16_t seq, uint32_t timestamp)
+{
+	auto* packet = RtpPacket::Parse(buffer, 1500);
+
+	packet->SetSequenceNumber(seq);
+	packet->SetTimestamp(timestamp);
+
+	std::shared_ptr<RtpPacket> shared(packet);
+
+	return shared;
+}
+
 SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 {
 	class TestRtpStreamListener : public RtpStreamSend::Listener
@@ -39,47 +51,26 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		};
 		// clang-format on
 
-		uint8_t rtpBuffer2[65536];
-		uint8_t rtpBuffer3[65536];
-		uint8_t rtpBuffer4[65536];
-		uint8_t rtpBuffer5[65536];
+		uint8_t rtpBuffer2[1500];
+		uint8_t rtpBuffer3[1500];
+		uint8_t rtpBuffer4[1500];
+		uint8_t rtpBuffer5[1500];
 
-		RtpPacket* packet{ nullptr };
+		std::memcpy(rtpBuffer2, rtpBuffer1, sizeof(rtpBuffer1));
+		std::memcpy(rtpBuffer3, rtpBuffer1, sizeof(rtpBuffer1));
+		std::memcpy(rtpBuffer4, rtpBuffer1, sizeof(rtpBuffer1));
+		std::memcpy(rtpBuffer5, rtpBuffer1, sizeof(rtpBuffer1));
 
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
-		packet = RtpPacket::Parse(rtpBuffer1, sizeof(rtpBuffer1));
-		std::shared_ptr<RtpPacket> packet1(packet);
-
-		packet1->SetSequenceNumber(21006);
-		packet1->SetTimestamp(1533790901);
-
+		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, 1533790901);
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
-		packet = packet1->Clone(rtpBuffer2);
-		std::shared_ptr<RtpPacket> packet2(packet);
-
-		packet2->SetSequenceNumber(21007);
-		packet2->SetTimestamp(1533790901);
-
+		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, 1533790901);
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
-		packet = packet1->Clone(rtpBuffer3);
-		std::shared_ptr<RtpPacket> packet3(packet);
-
-		packet3->SetSequenceNumber(21008);
-		packet3->SetTimestamp(1533793871);
-
+		auto packet3 = CreateRtpPacket(rtpBuffer3, 21008, 1533793871);
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
-		packet = packet1->Clone(rtpBuffer4);
-		std::shared_ptr<RtpPacket> packet4(packet);
-
-		packet4->SetSequenceNumber(21009);
-		packet4->SetTimestamp(1533793871);
-
+		auto packet4 = CreateRtpPacket(rtpBuffer4, 21009, 1533793871);
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
-		packet = packet1->Clone(rtpBuffer5);
-		std::shared_ptr<RtpPacket> packet5(packet);
-
-		packet5->SetSequenceNumber(21010);
-		packet5->SetTimestamp(1533796931);
+		auto packet5 = CreateRtpPacket(rtpBuffer5, 21010, 1533796931);
 
 		RtpStream::Params params;
 

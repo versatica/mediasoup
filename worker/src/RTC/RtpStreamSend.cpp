@@ -20,7 +20,6 @@ namespace RTC
 	static constexpr uint32_t DefaultRtt{ 100 };
 	static constexpr uint16_t MaxSeq = std::numeric_limits<uint16_t>::max();
 
-
 	void RtpStreamSend::StorageItem::Dump() const
 	{
 		MS_DUMP(
