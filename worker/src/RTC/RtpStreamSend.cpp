@@ -17,15 +17,6 @@ namespace RTC
 	static constexpr uint32_t DefaultRtt{ 100 };
 	static constexpr uint16_t MaxSeq = std::numeric_limits<uint16_t>::max();
 
-	void RtpStreamSend::StorageItem::Dump() const
-	{
-		MS_DUMP(
-		  "ssrc:%" PRIu32 ", seq:%" PRIu16 ", timestamp:%" PRIu32,
-		  this->ssrc,
-		  this->sequenceNumber,
-		  this->timestamp);
-	}
-
 	void RtpStreamSend::StorageItem::Reset()
 	{
 		MS_TRACE();
@@ -145,23 +136,6 @@ namespace RTC
 
 		this->buffer.clear();
 		this->startSeq = 0;
-	}
-
-	void RtpStreamSend::StorageItemBuffer::Dump()
-	{
-		for (size_t i{ 0 }; i < this->buffer.size(); i++)
-		{
-			const auto* item = this->buffer.at(i);
-
-			if (item == nullptr)
-			{
-				MS_DUMP("nullptr item at possition: %zu", i);
-
-				continue;
-			}
-
-			item->Dump();
-		}
 	}
 
 	RtpStreamSend::StorageItemBuffer::~StorageItemBuffer()
