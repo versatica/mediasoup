@@ -10,6 +10,10 @@ namespace RTC
 	class RtpStreamSend : public RTC::RtpStream
 	{
 	public:
+		// Don't retransmit packets older than this (ms).
+		static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
+
+	public:
 		class Listener : public RTC::RtpStream::Listener
 		{
 		public:

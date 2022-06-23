@@ -15,8 +15,6 @@ namespace RTC
 	thread_local static std::vector<RTC::RtpStreamSend::StorageItem*> RetransmissionContainer(
 	  MaxRequestedPackets + 1);
 	static constexpr uint32_t MinRetransmissionDelay{ 200 };
-	// Don't retransmit packets older than this (ms).
-	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
 	static constexpr uint32_t DefaultRtt{ 100 };
 	static constexpr uint16_t MaxSeq = std::numeric_limits<uint16_t>::max();
 
