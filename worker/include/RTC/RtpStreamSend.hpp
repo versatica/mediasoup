@@ -49,7 +49,7 @@ namespace RTC
 			StorageItem* GetFirst() const;
 			StorageItem* Get(uint16_t seq) const;
 			size_t GetBufferSize() const;
-			bool Insert(uint16_t seq, StorageItem* storageItem);
+			void Insert(uint16_t seq, StorageItem* storageItem);
 			void RemoveFirst();
 			void Clear();
 			void Dump();

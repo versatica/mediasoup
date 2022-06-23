@@ -62,17 +62,15 @@ namespace RTC
 		return this->buffer.size();
 	}
 
-	bool RtpStreamSend::StorageItemBuffer::Insert(uint16_t seq, StorageItem* storageItem)
+	void RtpStreamSend::StorageItemBuffer::Insert(uint16_t seq, StorageItem* storageItem)
 	{
 		if (this->buffer.empty())
 		{
 			this->startSeq = seq;
 			this->buffer.push_back(storageItem);
-
-			return true;
 		}
-
-		if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(seq, this->startSeq))
+		// Packet sequence number is higher than startSeq.
+		else if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(seq, this->startSeq))
 		{
 			auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
@@ -80,21 +78,23 @@ namespace RTC
 			if (idx <= static_cast<uint16_t>(this->buffer.size() - 1))
 			{
 				MS_ASSERT(this->buffer[idx] == nullptr, "Must insert into empty slot");
+
 				this->buffer[idx] = storageItem;
-
-				return true;
 			}
+			else
+			{
+				// Calculate how many elements would it be necessary to add when pushing new item
+				// to the back of the deque.
+				auto addToBack{ static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1)) };
 
-			// Calculate how many elements would it be necessary to add when pushing new item
-			// to the back of the deque.
-			auto addToBack{ static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1)) };
+				// Packets can arrive out of order, add blank slots.
+				for (uint16_t i{ 1 }; i < addToBack; ++i)
+					this->buffer.push_back(nullptr);
 
-			// Packets can arrive out of order, add blank slots.
-			for (uint16_t i{ 1 }; i < addToBack; ++i)
-				this->buffer.push_back(nullptr);
-
-			this->buffer.push_back(storageItem);
+				this->buffer.push_back(storageItem);
+			}
 		}
+		// Packet sequence number is the same or lower than startSeq.
 		else
 		{
 			// Calculate how many elements would it be necessary to add when pushing new item
@@ -113,8 +113,6 @@ namespace RTC
 		  this->buffer.size() <= MaxSeq,
 		  "StorageItemBuffer contains more than %" PRIu16 " entries",
 		  MaxSeq);
-
-		return true;
 	}
 
 	void RtpStreamSend::StorageItemBuffer::RemoveFirst()
@@ -494,7 +492,7 @@ namespace RTC
 			// Allocate a new storage item.
 			storageItem = new StorageItem();
 
-			MS_ASSERT(this->storageItemBuffer.Insert(seq, storageItem), "sequence number must be empty");
+			this->storageItemBuffer.Insert(seq, storageItem);
 		}
 
 		// Store original packet and some extra info into the retrieved storage item.
