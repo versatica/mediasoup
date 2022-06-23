@@ -564,7 +564,7 @@ namespace RTC
 				if (storageItem)
 				{
 					packet = storageItem->packet;
-					// Put correct SSRC and sequence number into the packet.
+					// Put correct info into the packet.
 					packet->SetSsrc(storageItem->ssrc);
 					packet->SetSequenceNumber(storageItem->sequenceNumber);
 					packet->SetTimestamp(storageItem->timestamp);
