@@ -20,6 +20,7 @@ namespace RTC
 	public:
 		struct StorageItem
 		{
+			// TODO: Remove after testing.
 			void Dump() const;
 			void Reset();
 
@@ -54,6 +55,7 @@ namespace RTC
 			void Insert(uint16_t seq, StorageItem* storageItem);
 			void RemoveFirst();
 			void Clear();
+			// TODO: Remove after testing.
 			void Dump();
 
 		private:
