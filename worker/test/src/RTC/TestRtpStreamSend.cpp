@@ -51,27 +51,27 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		std::vector<RtpPacket*> retransmittedPackets;
 	};
 
+	// clang-format off
+	uint8_t rtpBuffer1[] =
+	{
+		0b10000000, 0b01111011, 0b01010010, 0b00001110,
+		0b01011011, 0b01101011, 0b11001010, 0b10110101,
+		0, 0, 0, 2
+	};
+	// clang-format on
+
+	uint8_t rtpBuffer2[1500];
+	uint8_t rtpBuffer3[1500];
+	uint8_t rtpBuffer4[1500];
+	uint8_t rtpBuffer5[1500];
+
+	std::memcpy(rtpBuffer2, rtpBuffer1, sizeof(rtpBuffer1));
+	std::memcpy(rtpBuffer3, rtpBuffer1, sizeof(rtpBuffer1));
+	std::memcpy(rtpBuffer4, rtpBuffer1, sizeof(rtpBuffer1));
+	std::memcpy(rtpBuffer5, rtpBuffer1, sizeof(rtpBuffer1));
+
 	SECTION("receive NACK and get retransmitted packets")
 	{
-		// clang-format off
-		uint8_t rtpBuffer1[] =
-		{
-			0b10000000, 0b01111011, 0b01010010, 0b00001110,
-			0b01011011, 0b01101011, 0b11001010, 0b10110101,
-			0, 0, 0, 2
-		};
-		// clang-format on
-
-		uint8_t rtpBuffer2[1500];
-		uint8_t rtpBuffer3[1500];
-		uint8_t rtpBuffer4[1500];
-		uint8_t rtpBuffer5[1500];
-
-		std::memcpy(rtpBuffer2, rtpBuffer1, sizeof(rtpBuffer1));
-		std::memcpy(rtpBuffer3, rtpBuffer1, sizeof(rtpBuffer1));
-		std::memcpy(rtpBuffer4, rtpBuffer1, sizeof(rtpBuffer1));
-		std::memcpy(rtpBuffer5, rtpBuffer1, sizeof(rtpBuffer1));
-
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
 		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, 1533790901);
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
@@ -83,7 +83,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
 		auto packet5 = CreateRtpPacket(rtpBuffer5, 21010, 1533796931);
 
-		// Create two RtpStreamSend instances.
+		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
 
 		RtpStream::Params params;
@@ -132,5 +132,79 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		CheckRtxPacket(rtxPacket5, packet5->GetSequenceNumber(), packet5->GetTimestamp());
 
 		delete stream;
+	}
+
+	SECTION("receive NACK in different RtpStreamSend instances and get retransmitted packets")
+	{
+		// packet1 [pt:123, seq:21006, timestamp:1533790901]
+		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, 1533790901);
+		// packet2 [pt:123, seq:21007, timestamp:1533790901]
+		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, 1533790901);
+
+		// Create two RtpStreamSend instances.
+		TestRtpStreamListener testRtpStreamListener1;
+		TestRtpStreamListener testRtpStreamListener2;
+
+		RtpStream::Params params1;
+
+		params1.ssrc      = 1111;
+		params1.clockRate = 90000;
+		params1.useNack   = true;
+
+		std::string mid{ "" };
+		RtpStreamSend* stream1 = new RtpStreamSend(&testRtpStreamListener1, params1, mid);
+
+		RtpStream::Params params2;
+
+		params2.ssrc      = 2222;
+		params2.clockRate = 90000;
+		params2.useNack   = true;
+
+		RtpStreamSend* stream2 = new RtpStreamSend(&testRtpStreamListener2, params2, mid);
+
+		// Receive all the packets in both streams.
+		SendRtpPacket(stream1, packet1, params1.ssrc);
+		SendRtpPacket(stream2, packet1, params2.ssrc);
+
+		SendRtpPacket(stream1, packet2, params1.ssrc);
+		SendRtpPacket(stream2, packet2, params2.ssrc);
+
+		// Create a NACK item that request for all the packets.
+		RTCP::FeedbackRtpNackPacket nackPacket(0, params1.ssrc);
+		auto* nackItem = new RTCP::FeedbackRtpNackItem(21006, 0b0000000000000001);
+
+		nackPacket.AddItem(nackItem);
+
+		REQUIRE(nackItem->GetPacketId() == 21006);
+		REQUIRE(nackItem->GetLostPacketBitmask() == 0b0000000000000001);
+
+		// Process the NACK packet on stream1.
+		stream1->ReceiveNack(&nackPacket);
+
+		REQUIRE(testRtpStreamListener1.retransmittedPackets.size() == 2);
+
+		auto rtxPacket1 = testRtpStreamListener1.retransmittedPackets[0];
+		auto rtxPacket2 = testRtpStreamListener1.retransmittedPackets[1];
+
+		testRtpStreamListener1.retransmittedPackets.clear();
+
+		CheckRtxPacket(rtxPacket1, packet1->GetSequenceNumber(), packet1->GetTimestamp());
+		CheckRtxPacket(rtxPacket2, packet2->GetSequenceNumber(), packet2->GetTimestamp());
+
+		// Process the NACK packet on stream2.
+		stream2->ReceiveNack(&nackPacket);
+
+		REQUIRE(testRtpStreamListener2.retransmittedPackets.size() == 2);
+
+		rtxPacket1 = testRtpStreamListener2.retransmittedPackets[0];
+		rtxPacket2 = testRtpStreamListener2.retransmittedPackets[1];
+
+		testRtpStreamListener2.retransmittedPackets.clear();
+
+		CheckRtxPacket(rtxPacket1, packet1->GetSequenceNumber(), packet1->GetTimestamp());
+		CheckRtxPacket(rtxPacket2, packet2->GetSequenceNumber(), packet2->GetTimestamp());
+
+		delete stream1;
+		delete stream2;
 	}
 }
