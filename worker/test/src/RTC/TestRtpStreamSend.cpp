@@ -50,9 +50,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		packet = RtpPacket::Parse(rtpBuffer1, sizeof(rtpBuffer1));
 		std::shared_ptr<RtpPacket> packet1(packet);
 
-		REQUIRE(packet1);
-		REQUIRE(packet1->GetSequenceNumber() == 21006);
-		REQUIRE(packet1->GetTimestamp() == 1533790901);
+		packet1->SetSequenceNumber(21006);
+		packet1->SetTimestamp(1533790901);
 
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
 		packet = packet1->Clone(rtpBuffer2);
@@ -61,18 +60,12 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		packet2->SetSequenceNumber(21007);
 		packet2->SetTimestamp(1533790901);
 
-		REQUIRE(packet2->GetSequenceNumber() == 21007);
-		REQUIRE(packet2->GetTimestamp() == 1533790901);
-
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
 		packet = packet1->Clone(rtpBuffer3);
 		std::shared_ptr<RtpPacket> packet3(packet);
 
 		packet3->SetSequenceNumber(21008);
 		packet3->SetTimestamp(1533793871);
-
-		REQUIRE(packet3->GetSequenceNumber() == 21008);
-		REQUIRE(packet3->GetTimestamp() == 1533793871);
 
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
 		packet = packet1->Clone(rtpBuffer4);
@@ -81,18 +74,12 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp]")
 		packet4->SetSequenceNumber(21009);
 		packet4->SetTimestamp(1533793871);
 
-		REQUIRE(packet4->GetSequenceNumber() == 21009);
-		REQUIRE(packet4->GetTimestamp() == 1533793871);
-
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
 		packet = packet1->Clone(rtpBuffer5);
 		std::shared_ptr<RtpPacket> packet5(packet);
 
 		packet5->SetSequenceNumber(21010);
 		packet5->SetTimestamp(1533796931);
-
-		REQUIRE(packet5->GetSequenceNumber() == 21010);
-		REQUIRE(packet5->GetTimestamp() == 1533796931);
 
 		RtpStream::Params params;
 
