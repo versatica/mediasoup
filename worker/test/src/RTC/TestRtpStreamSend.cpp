@@ -92,7 +92,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params.clockRate = 90000;
 		params.useNack   = true;
 
-		std::string mid{ "" };
+		std::string mid;
 		RtpStreamSend* stream = new RtpStreamSend(&testRtpStreamListener, params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
@@ -151,7 +151,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params1.clockRate = 90000;
 		params1.useNack   = true;
 
-		std::string mid{ "" };
+		std::string mid;
 		RtpStreamSend* stream1 = new RtpStreamSend(&testRtpStreamListener1, params1, mid);
 
 		RtpStream::Params params2;
@@ -227,7 +227,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params1.clockRate = clockRate;
 		params1.useNack   = true;
 
-		std::string mid{ "" };
+		std::string mid;
 		RtpStreamSend* stream1 = new RtpStreamSend(&testRtpStreamListener1, params1, mid);
 
 		// Receive all the packets.
@@ -278,7 +278,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params1.clockRate = clockRate;
 		params1.useNack   = true;
 
-		std::string mid{ "" };
+		std::string mid;
 		RtpStreamSend* stream1 = new RtpStreamSend(&testRtpStreamListener1, params1, mid);
 
 		// Receive all the packets.
