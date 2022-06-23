@@ -211,9 +211,9 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	SECTION("packets get retransmitted as long as they don't exceed MaxRetransmissionDelay")
 	{
 		uint32_t clockRate = 90000;
-		uint32_t firstTs = 1533790901;
-		uint32_t diffTs = RtpStreamSend::MaxRetransmissionDelay * clockRate / 1000;
-		uint32_t secondTs = firstTs + diffTs;
+		uint32_t firstTs   = 1533790901;
+		uint32_t diffTs    = RtpStreamSend::MaxRetransmissionDelay * clockRate / 1000;
+		uint32_t secondTs  = firstTs + diffTs;
 
 		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, firstTs);
 		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, secondTs - 1);
@@ -262,9 +262,9 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	SECTION("packets don't get retransmitted if MaxRetransmissionDelay is exceeded")
 	{
 		uint32_t clockRate = 90000;
-		uint32_t firstTs = 1533790901;
-		uint32_t diffTs = RtpStreamSend::MaxRetransmissionDelay * clockRate / 1000;
-		uint32_t secondTs = firstTs + diffTs;
+		uint32_t firstTs   = 1533790901;
+		uint32_t diffTs    = RtpStreamSend::MaxRetransmissionDelay * clockRate / 1000;
+		uint32_t secondTs  = firstTs + diffTs;
 
 		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, firstTs);
 		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, secondTs);
