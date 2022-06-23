@@ -130,7 +130,7 @@ namespace RTC
 
 		// Remove all `nullptr` elements from the beginning of the buffer.
 		// NOTE: Calling front on an empty container is undefined.
-		while (!this->buffer.empty() && !this->buffer.front())
+		while (!this->buffer.empty() && this->buffer.front() == nullptr)
 		{
 			this->buffer.pop_front();
 			this->startSeq++;
