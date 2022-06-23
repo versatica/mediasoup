@@ -218,7 +218,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, firstTs);
 		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, secondTs - 1);
 
-		// Create two RtpStreamSend instances.
+		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener1;
 
 		RtpStream::Params params1;
@@ -269,7 +269,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, firstTs);
 		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, secondTs);
 
-		// Create two RtpStreamSend instances.
+		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener1;
 
 		RtpStream::Params params1;
