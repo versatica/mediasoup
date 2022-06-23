@@ -782,7 +782,7 @@ namespace RTC
 
 		auto& consumers = this->mapProducerConsumers.at(producer);
 
-		std::shared_ptr<RTC::RtpPacket> shared(packet);
+		std::shared_ptr<RTC::RtpPacket> sharedPacket(packet);
 
 		for (auto* consumer : consumers)
 		{
@@ -792,7 +792,7 @@ namespace RTC
 			if (!mid.empty())
 				packet->UpdateMid(mid);
 
-			consumer->SendRtpPacket(shared);
+			consumer->SendRtpPacket(sharedPacket);
 		}
 
 		auto it = this->mapProducerRtpObservers.find(producer);
