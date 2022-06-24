@@ -151,7 +151,7 @@ namespace RTC
 	RtpStreamSend::RtpStreamSend(
 	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, std::string& mid)
 	  : RTC::RtpStream::RtpStream(listener, params, 10), mid(mid),
-	    retransmissionBufferSize(MaxRetransmissionDelay)
+	    retransmissionBufferSize(RtpStreamSend::MaxRetransmissionDelay)
 	{
 		MS_TRACE();
 	}
@@ -307,7 +307,8 @@ namespace RTC
 		auto avgRetransmissionBufferSize =
 		  (this->retransmissionBufferSize * 7 + newRetransmissionBufferSize) / 8;
 		this->retransmissionBufferSize = std::max(
-		  std::min(avgRetransmissionBufferSize, MaxRetransmissionDelay), MinRetransmissionDelay);
+		  std::min(avgRetransmissionBufferSize, RtpStreamSend::MaxRetransmissionDelay),
+		  RtpStreamSend::MinRetransmissionDelay);
 
 		this->packetsLost  = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
