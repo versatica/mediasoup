@@ -36,6 +36,9 @@ namespace RTC
 
 	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::Get(uint16_t seq) const
 	{
+		if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, this->startSeq))
+			return nullptr;
+
 		auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
 		if (this->buffer.empty() || idx > static_cast<uint16_t>(this->buffer.size() - 1))
