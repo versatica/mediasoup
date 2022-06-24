@@ -11,11 +11,18 @@ namespace RTC
 	/* Static. */
 
 	// 17: 16 bit mask + the initial sequence number.
-	static constexpr size_t MaxRequestedPackets{ 17 };
+	static constexpr size_t MaxRequestedPackets{ 17u };
 	thread_local static std::vector<RTC::RtpStreamSend::StorageItem*> RetransmissionContainer(
 	  MaxRequestedPackets + 1);
-	static constexpr uint32_t DefaultRtt{ 100 };
+	static constexpr uint32_t DefaultRtt{ 100u };
 	static constexpr uint16_t MaxSeq = std::numeric_limits<uint16_t>::max();
+
+	/* Class Static. */
+
+	// Minimum retransmission buffer size (ms).
+	const uint32_t RtpStreamSend::MinRetransmissionDelay{ 200u };
+	// Maximum retransmission buffer size (ms).
+	const uint32_t RtpStreamSend::MaxRetransmissionDelay{ 2000u };
 
 	void RtpStreamSend::StorageItem::Reset()
 	{

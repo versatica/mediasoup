@@ -11,9 +11,9 @@ namespace RTC
 	{
 	public:
 		// Minimum retransmission buffer size (ms).
-		constexpr static uint32_t MinRetransmissionDelay{ 200 };
+		const static uint32_t MinRetransmissionDelay;
 		// Maximum retransmission buffer size (ms).
-		constexpr static uint32_t MaxRetransmissionDelay{ 2000 };
+		const static uint32_t MaxRetransmissionDelay;
 
 	public:
 		class Listener : public RTC::RtpStream::Listener
