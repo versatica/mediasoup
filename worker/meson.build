@@ -26,6 +26,18 @@ if host_machine.system() == 'windows'
   ]
 endif
 
+if get_option('ms_log_trace')
+  cpp_args += [
+    '-DMS_LOG_TRACE',
+  ]
+endif
+
+if get_option('ms_log_file_line')
+  cpp_args += [
+    '-DMS_LOG_FILE_LINE',
+  ]
+endif
+
 common_sources = [
   'src/lib.cpp',
   'src/DepLibSRTP.cpp',
