@@ -277,7 +277,7 @@ namespace RTC
 		Lively::AppData lively;
 		
 		Timer* binLogTimer{ nullptr };
-		Lively::StatsBinLog binLog;
+		Lively::StatsBinLog consumersBinLog;
 
 		bool AddCallStatsSample(); // adds a new record, tells the caller if it's ready to write data out
 

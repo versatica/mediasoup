@@ -363,7 +363,7 @@ namespace RTC
 		this->mapRtpStreamMappedSsrc.clear();
 		this->mapMappedSsrcSsrc.clear();
 
-		binLog.DeinitLog(nullptr);
+		binLog.DeinitLog();
 		this->rtpStreamBinLogRecords.clear();
 
 		// Delete the KeyFrameRequestManager.

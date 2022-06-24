@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include <cstring>
+#include <sys/stat.h>
 
 namespace Lively
 {
@@ -151,7 +152,7 @@ bool CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
   uint32_t idx = filled();
   CallStatsSample* s = type ? &(record.c.samples[0]) : &(record.p.samples[0]);
 
-  s[idx].epoch_len = static_cast<uint16_t>(curr.ts - last.ts);
+  s[idx].epoch_len = (filled() != 0) ? static_cast<uint16_t>(curr.ts - last.ts) : 0; // the first sample in a set always has epoch_len set into 0
   s[idx].packets_count = static_cast<uint16_t>(curr.packetsCount - last.packetsCount);
   s[idx].bytes_count = static_cast<uint32_t>(curr.bytesCount - last.bytesCount);
   s[idx].packets_lost = (curr.packetsLost > last.packetsLost) ? static_cast<uint16_t>(curr.packetsLost - last.packetsLost) : 0;
@@ -190,28 +191,40 @@ void CallStatsRecordCtx::WriteIfFull(StatsBinLog* log)
 
 void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream)
 {
+  // Write data if record is full, then continue collecting samples
   WriteIfFull(log);
 
-  uint64_t nowMs = Utils::Time::currentStdEpochMs();
+  uint64_t nowMs = Utils::Time::currentStdEpochMs(); // Timestamp of a current measurement
+
   if (UINT32_UNSET == record.filled())
   {
-    stream->FillStats(last.packetsCount, last.bytesCount, last.packetsLost, last.packetsDiscarded,
-                      last.packetsRetransmitted, last.packetsRepaired, last.nackCount,
-                      last.nackPacketCount, last.kfCount, last.rtt, last.maxPacketTs);
-    last.ts = nowMs;
-    record.zeroSamples(nowMs);
+    if (UINT64_UNSET == last.ts) // the first measurement ever during this session
+    {
+      stream->FillStats(last.packetsCount, last.bytesCount, last.packetsLost, last.packetsDiscarded,
+                        last.packetsRetransmitted, last.packetsRepaired, last.nackCount,
+                        last.nackPacketCount, last.kfCount, last.rtt, last.maxPacketTs);
+      last.ts = nowMs;
+      record.zeroSamples(nowMs); // begin a new collection of samples
+      return; // done, wait till the next measurement
+    }
+    else // proceed, use data from the last sample of the previous record to calculate delta
+    {
+      record.zeroSamples(nowMs);
+    }
   }
-  else
-  {
-    MS_ASSERT(record.filled() >= 0 && record.filled() < CALL_STATS_BIN_LOG_RECORDS_NUM, "Invalid record.filled=%" PRIu16, record.filled());
-    stream->FillStats(curr.packetsCount, curr.bytesCount, curr.packetsLost, curr.packetsDiscarded,
-                      curr.packetsRetransmitted, curr.packetsRepaired, curr.nackCount,
-                      curr.nackPacketCount, curr.kfCount, curr.rtt, curr.maxPacketTs);
-    curr.ts = nowMs;
-    record.addSample(last, curr);    
-    this->last = this->curr;
-  }
+
+  MS_ASSERT(record.filled() >= 0 && record.filled() < CALL_STATS_BIN_LOG_RECORDS_NUM,
+    "Invalid record.filled=%" PRIu16, record.filled());
+
+  curr.ts = nowMs;
+  stream->FillStats(curr.packetsCount, curr.bytesCount, curr.packetsLost, curr.packetsDiscarded,
+                    curr.packetsRetransmitted, curr.packetsRepaired, curr.nackCount,
+                    curr.nackPacketCount, curr.kfCount, curr.rtt, curr.maxPacketTs);
+
+  record.addSample(last, curr);    
+  this->last = this->curr;
 }
+
 
 /////////////////////////
 //
@@ -241,31 +254,54 @@ int StatsBinLog::LogOpen()
 }
 
 
-int StatsBinLog::LogClose(CallStatsRecordCtx* ctx)
+int StatsBinLog::LogClose()
 {
   int ret = 0;
 
   if (this->fd)
   {
-    if (ctx)
-    {
-      if (!ctx->record.fwriteRecord(this->fd))
-        ret = errno;
-    }
     std::fflush(this->fd);
     std::fclose(this->fd);
     this->fd = 0;
-    
+
     MS_DEBUG_TAG(
       rtp,
       "binlog closed '%s'", this->bin_log_file_path.c_str()
     );
   }
 
-  // Save the last sample just in case and clean up recorded data
-  if (ctx)
+  // Do not preserve binlogs with too little data
+  if (log_start_ts == UINT64_UNSET 
+      || log_last_ts == UINT64_UNSET 
+      || BINLOG_MIN_TIMESPAN < log_last_ts - log_start_ts)
   {
-    ctx->record.resetSamples();
+    std::remove(bin_log_file_path.c_str());
+    MS_DEBUG_TAG(rtp, "binlog %s removed, short timespan (%" PRIu64 "-%" PRIu64 ")", 
+                  this->bin_log_file_path, this->log_start_ts, log_last_ts);
+  }
+
+  // Move a closed file into "done" directory
+  std::string bin_log_done_dir = "/var/log/sfu/bin/done/";
+
+  std::string logname; // get filename only out of full path
+  std::size_t found = this->bin_log_file_path.find_last_of("/");
+  if (std::string::npos == found)
+  {
+    MS_WARN_TAG(rtp, "Failed to extract binlog filename from %s, cannot move it", this->bin_log_file_path.c_str());
+  }
+  else
+  {
+    auto logname = this->bin_log_file_path.substr(found + 1);
+    auto dst = bin_log_done_dir;
+    dst.append(logname);
+    if (std::rename(this->bin_log_file_path.c_str(), dst.c_str()))
+    {
+      MS_WARN_TAG(rtp, "failed to move %s to %s", this->bin_log_file_path.c_str(), bin_log_done_dir.c_str());
+    }
+    else
+    {
+      MS_DEBUG_TAG(rtp, "moved binlog %s to %s", this->bin_log_file_path.c_str(), bin_log_done_dir.c_str());
+    }
   }
 
   return ret;
@@ -294,7 +330,7 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
       std::fclose(this->fd);
       this->fd = 0;
     }
-    
+
     if (this->initialized)
     {
       LogOpen();
@@ -324,26 +360,81 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
       std::fclose(this->fd);
       this->fd = 0;
     }
+    else
+    {
+      this->log_last_ts = ctx->LastTs(); // to tell later if the binlog is too short to be valuable
+    }
     std::fflush(this->fd);
   }
   return ret;
 }
 
 
+bool StatsBinLog::CreateBinlogDirsIfMissing()
+{
+  std::string bin_log_dir = "/var/log/sfu/bin/";
+  std::string bin_log_curr_dir = "/var/log/sfu/bin/current/";
+  std::string bin_log_done_dir = "/var/log/sfu/bin/done/";
+  
+  struct stat info;
+  int ret = 0;
+  if( stat( bin_log_dir.c_str(), &info ) != 0 )
+  {
+    if (errno == ENOENT)
+    {
+      ret = mkdir(bin_log_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH);  // TODO: check these params
+      if (ret != 0)
+      {
+        MS_WARN_TAG(rtp, "failed to create folder %s for binlog files management", bin_log_dir.c_str());
+        return false;
+      }
+    }
+  }
+
+  // Now that /var/log/sfu/bin/ exists, take care of "current" and "done" directories
+  if( stat( bin_log_curr_dir.c_str(), &info ) != 0 )
+  {
+    if (errno == ENOENT)
+    {
+      ret = mkdir(bin_log_done_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH);
+      if (ret != 0)
+      {
+        MS_WARN_TAG(rtp, "failed to create folder %s for writing binlogs", bin_log_done_dir.c_str());
+        return false;
+      }
+    }
+  }
+  if( stat( bin_log_done_dir.c_str(), &info ) != 0 )
+  {
+    if (errno == ENOENT)
+    {
+      ret = mkdir(bin_log_done_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH); // | S_IXOTH?
+      if (ret != 0)
+      {
+        MS_WARN_TAG(rtp, "failed to create folder %s for moving complete binlogs", bin_log_done_dir.c_str());
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+
 void StatsBinLog::InitLog(char type, std::string id1, std::string id2)
 {
-  #define FILENAME_LEN_MAX sizeof("/var/log/sfu/ms_p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin") * 2
+  #define FILENAME_LEN_MAX sizeof("/var/log/sfu/current/ms_p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin") * 2
   char tmp[FILENAME_LEN_MAX];
   std::memset(tmp, '\0', FILENAME_LEN_MAX);
   switch(type)
   {
     case 'c':
-      sprintf(tmp, "/var/log/sfu/ms_c_%s_%%llu.%s.bin", id1.c_str(), version);
+      sprintf(tmp, "/var/log/sfu/current/ms_c_%s_%%llu.%s.bin", id1.c_str(), version);
       this->bin_log_name_template.assign(tmp);
       MS_DEBUG_TAG(rtp, "consumers binlog transport id %s", id2.c_str());
       break;
     case 'p':
-      sprintf(tmp, "/var/log/sfu/ms_p_%s_%s_%%llu.%s.bin", id1.c_str(), id2.c_str(), version);
+      sprintf(tmp, "/var/log/sfu/current/ms_p_%s_%s_%%llu.%s.bin", id1.c_str(), id2.c_str(), version);
       this->bin_log_name_template.assign(tmp);
       break;
     default:
@@ -353,6 +444,8 @@ void StatsBinLog::InitLog(char type, std::string id1, std::string id2)
   uint64_t now = Utils::Time::currentStdEpochMs();
   this->log_start_ts = now;
   UpdateLogName();
+
+   MS_ASSERT(CreateBinlogDirsIfMissing(), "Cannot create binlog directories!");
   
   this->sampling_interval = CALL_STATS_BIN_LOG_SAMPLING;
   this->initialized = true;
@@ -368,12 +461,9 @@ void StatsBinLog::UpdateLogName()
 }
 
 
-void StatsBinLog::DeinitLog(CallStatsRecordCtx* recordCtx)
+void StatsBinLog::DeinitLog()
 {
-  if (this->fd)
-  {
-    LogClose(recordCtx);
-  }
+  LogClose();
 
   this->initialized = false;
   this->log_start_ts = UINT64_UNSET;
