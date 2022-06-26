@@ -244,7 +244,7 @@ fn create_succeeds() {
                     .expect("Failed to dump WebRTC transport");
 
                 assert_eq!(transport_dump.id, transport1.id());
-                assert_eq!(transport_dump.direct, false);
+                assert!(!transport_dump.direct);
                 assert_eq!(transport_dump.producer_ids, vec![]);
                 assert_eq!(transport_dump.consumer_ids, vec![]);
                 assert_eq!(transport_dump.ice_role, transport1.ice_role());

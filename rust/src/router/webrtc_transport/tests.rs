@@ -120,7 +120,7 @@ fn create_with_webrtc_server_succeeds() {
         assert_eq!(new_server_transport_rx.await.unwrap().id(), transport.id());
         assert_eq!(new_router_transport_rx.await.unwrap().id(), transport.id());
 
-        assert_eq!(transport.closed(), false);
+        assert!(!transport.closed());
 
         {
             let ice_candidates = transport.ice_candidates();

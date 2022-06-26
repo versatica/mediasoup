@@ -78,6 +78,6 @@ fn transport_close_event() {
 
         close_rx.await.expect("Failed to receive close event");
 
-        assert_eq!(data_producer.closed(), true);
+        assert!(data_producer.closed());
     });
 }

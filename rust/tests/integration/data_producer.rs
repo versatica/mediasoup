@@ -107,13 +107,13 @@ fn transport_1_produce_data_succeeds() {
             .expect("Failed to produce data");
 
         assert_eq!(new_data_producer_count.load(Ordering::SeqCst), 1);
-        assert_eq!(data_producer1.closed(), false);
+        assert!(!data_producer1.closed());
         assert_eq!(data_producer1.r#type(), DataProducerType::Sctp);
         {
             let sctp_stream_parameters = data_producer1.sctp_stream_parameters();
             assert!(sctp_stream_parameters.is_some());
             assert_eq!(sctp_stream_parameters.unwrap().stream_id(), 666);
-            assert_eq!(sctp_stream_parameters.unwrap().ordered(), true);
+            assert!(sctp_stream_parameters.unwrap().ordered());
             assert_eq!(sctp_stream_parameters.unwrap().max_packet_life_time(), None);
             assert_eq!(sctp_stream_parameters.unwrap().max_retransmits(), None);
         }
@@ -184,13 +184,13 @@ fn transport_2_produce_data_succeeds() {
             .expect("Failed to produce data");
 
         assert_eq!(new_data_producer_count.load(Ordering::SeqCst), 1);
-        assert_eq!(data_producer2.closed(), false);
+        assert!(!data_producer2.closed());
         assert_eq!(data_producer2.r#type(), DataProducerType::Sctp);
         {
             let sctp_stream_parameters = data_producer2.sctp_stream_parameters();
             assert!(sctp_stream_parameters.is_some());
             assert_eq!(sctp_stream_parameters.unwrap().stream_id(), 777);
-            assert_eq!(sctp_stream_parameters.unwrap().ordered(), false);
+            assert!(!sctp_stream_parameters.unwrap().ordered());
             assert_eq!(sctp_stream_parameters.unwrap().max_packet_life_time(), None);
             assert_eq!(sctp_stream_parameters.unwrap().max_retransmits(), Some(3));
         }
@@ -311,7 +311,7 @@ fn dump_succeeds() {
                 let sctp_stream_parameters = dump.sctp_stream_parameters;
                 assert!(sctp_stream_parameters.is_some());
                 assert_eq!(sctp_stream_parameters.unwrap().stream_id(), 666);
-                assert_eq!(sctp_stream_parameters.unwrap().ordered(), true);
+                assert!(sctp_stream_parameters.unwrap().ordered());
                 assert_eq!(sctp_stream_parameters.unwrap().max_packet_life_time(), None);
                 assert_eq!(sctp_stream_parameters.unwrap().max_retransmits(), None);
             }
@@ -346,7 +346,7 @@ fn dump_succeeds() {
                 let sctp_stream_parameters = dump.sctp_stream_parameters;
                 assert!(sctp_stream_parameters.is_some());
                 assert_eq!(sctp_stream_parameters.unwrap().stream_id(), 777);
-                assert_eq!(sctp_stream_parameters.unwrap().ordered(), false);
+                assert!(!sctp_stream_parameters.unwrap().ordered());
                 assert_eq!(sctp_stream_parameters.unwrap().max_packet_life_time(), None);
                 assert_eq!(sctp_stream_parameters.unwrap().max_retransmits(), Some(3));
             }

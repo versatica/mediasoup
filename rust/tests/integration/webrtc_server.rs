@@ -87,7 +87,7 @@ fn create_webrtc_server_succeeds() {
             .expect("Failed to create router");
 
         assert_eq!(new_webrtc_server_count.load(Ordering::SeqCst), 1);
-        assert_eq!(webrtc_server.closed(), false);
+        assert!(!webrtc_server.closed());
         assert_eq!(
             webrtc_server.app_data().downcast_ref::<CustomAppData>(),
             Some(&CustomAppData { foo: 123 }),

@@ -36,6 +36,7 @@ mod room {
     }
 
     #[derive(Default)]
+    #[allow(clippy::type_complexity)]
     struct Handlers {
         producer_add:
             Bag<Arc<dyn Fn(&ParticipantId, &Producer) + Send + Sync>, ParticipantId, Producer>,
@@ -174,13 +175,12 @@ mod room {
                 .clients
                 .lock()
                 .iter()
-                .map(|(participant_id, producers)| {
+                .flat_map(|(participant_id, producers)| {
                     let participant_id = *participant_id;
                     producers
                         .iter()
                         .map(move |producer| (participant_id, producer.id()))
                 })
-                .flatten()
                 .collect()
         }
 

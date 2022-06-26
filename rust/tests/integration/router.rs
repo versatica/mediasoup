@@ -97,7 +97,7 @@ fn create_router_succeeds() {
             .expect("Failed to create router");
 
         assert_eq!(new_router_count.load(Ordering::SeqCst), 1);
-        assert_eq!(router.closed(), false);
+        assert!(!router.closed());
         assert_eq!(
             router.app_data().downcast_ref::<CustomAppData>(),
             Some(&CustomAppData { foo: 123 }),

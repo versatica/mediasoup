@@ -53,7 +53,7 @@ fn create_worker_succeeds() {
             .await
             .expect("Failed to create worker with custom settings");
 
-        assert_eq!(worker.closed(), false);
+        assert!(!worker.closed());
         assert_eq!(
             worker.app_data().downcast_ref::<CustomAppData>(),
             Some(&CustomAppData { bar: 456 }),
@@ -73,7 +73,11 @@ fn create_worker_wrong_settings() {
                 .create_worker({
                     let mut settings = WorkerSettings::default();
 
-                    settings.rtc_ports_range = 1000..=999;
+                    // Intentionally incorrect range
+                    #[allow(clippy::reversed_empty_ranges)]
+                    {
+                        settings.rtc_ports_range = 1000..=999;
+                    }
 
                     settings
                 })

@@ -132,7 +132,7 @@ fn producer_close_event() {
 
         close_rx.await.expect("Failed to receive close event");
 
-        assert_eq!(audio_consumer.closed(), true);
+        assert!(audio_consumer.closed());
     });
 }
 
@@ -171,6 +171,6 @@ fn transport_close_event() {
             .expect("Failed to receive transport_close event");
         close_rx.await.expect("Failed to receive close event");
 
-        assert_eq!(audio_consumer.closed(), true);
+        assert!(audio_consumer.closed());
     });
 }

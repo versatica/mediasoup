@@ -137,7 +137,7 @@ fn create_succeeds() {
                 .expect("Failed to create Plain transport");
 
             assert_eq!(new_transports_count.load(Ordering::SeqCst), 1);
-            assert_eq!(transport1.closed(), false);
+            assert!(!transport1.closed());
             assert_eq!(
                 transport1
                     .app_data()
@@ -178,7 +178,7 @@ fn create_succeeds() {
                     .expect("Failed to dump Plain transport");
 
                 assert_eq!(transport_dump.id, transport1.id());
-                assert_eq!(transport_dump.direct, false);
+                assert!(!transport_dump.direct);
                 assert_eq!(transport_dump.producer_ids, vec![]);
                 assert_eq!(transport_dump.consumer_ids, vec![]);
                 assert_eq!(transport_dump.tuple, transport1.tuple());
@@ -202,7 +202,7 @@ fn create_succeeds() {
                 .await
                 .expect("Failed to create Plain transport");
 
-            assert_eq!(transport2.closed(), false);
+            assert!(!transport2.closed());
             assert_eq!(transport2.app_data().downcast_ref::<()>().unwrap(), &(),);
             assert!(matches!(
                 transport2.tuple(),
@@ -233,7 +233,7 @@ fn create_succeeds() {
                     .expect("Failed to dump Plain transport");
 
                 assert_eq!(transport_dump.id, transport2.id());
-                assert_eq!(transport_dump.direct, false);
+                assert!(!transport_dump.direct);
                 assert_eq!(transport_dump.tuple, transport2.tuple());
                 assert_eq!(transport_dump.rtcp_tuple, transport2.rtcp_tuple());
                 assert_eq!(transport_dump.sctp_state, transport2.sctp_state());
