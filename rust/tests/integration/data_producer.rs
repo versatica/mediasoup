@@ -2,7 +2,7 @@ use async_io::Timer;
 use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
 use mediasoup::data_producer::{DataProducerOptions, DataProducerType};
-use mediasoup::data_structures::{AppData, TransportListenIp};
+use mediasoup::data_structures::{AppData, ListenIp};
 use mediasoup::plain_transport::{PlainTransport, PlainTransportOptions};
 use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
@@ -46,7 +46,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, PlainTransport) {
     let transport1 = router
         .create_webrtc_transport({
             let mut transport_options =
-                WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
+                WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 }));
@@ -60,7 +60,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, PlainTransport) {
 
     let transport2 = router
         .create_plain_transport({
-            let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+            let mut transport_options = PlainTransportOptions::new(ListenIp {
                 ip: "127.0.0.1".parse().unwrap(),
                 announced_ip: None,
             });

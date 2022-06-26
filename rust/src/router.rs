@@ -28,7 +28,7 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
 use crate::data_producer::{
     DataProducer, DataProducerId, DataProducerOptions, NonClosingDataProducer, WeakDataProducer,
 };
-use crate::data_structures::{AppData, TransportListenIp};
+use crate::data_structures::{AppData, ListenIp};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
     RouterCloseRequest, RouterCreateActiveSpeakerObserverData,
@@ -52,7 +52,7 @@ use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, Transport, TransportGeneric,
     TransportId,
 };
-use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
+use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportListen, WebRtcTransportOptions};
 use crate::worker::{Channel, PayloadChannel, RequestError, Worker};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
@@ -118,7 +118,7 @@ pub struct PipeToRouterOptions {
     /// IP used in the PipeTransport pair.
     ///
     /// Default `127.0.0.1`.
-    listen_ip: TransportListenIp,
+    listen_ip: ListenIp,
     /// Create a SCTP association.
     ///
     /// Default `true`.
@@ -141,7 +141,7 @@ impl PipeToRouterOptions {
     pub fn new(router: Router) -> Self {
         Self {
             router,
-            listen_ip: TransportListenIp {
+            listen_ip: ListenIp {
                 ip: "127.0.0.1".parse().unwrap(),
                 announced_ip: None,
             },
@@ -571,6 +571,7 @@ impl Router {
                 internal: TransportInternal {
                     router_id: self.inner.id,
                     transport_id,
+                    webrtc_server_id: None,
                 },
                 data: RouterCreateDirectTransportData::from_options(&direct_transport_options),
             })
@@ -605,7 +606,7 @@ impl Router {
     /// # async fn f(router: Router) -> Result<(), Box<dyn std::error::Error>> {
     /// let transport = router
     ///     .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-    ///         TransportListenIp {
+    ///         ListenIp {
     ///             ip: "127.0.0.1".parse().unwrap(),
     ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///         },
@@ -631,6 +632,10 @@ impl Router {
                 internal: TransportInternal {
                     router_id: self.inner.id,
                     transport_id,
+                    webrtc_server_id: match &webrtc_transport_options.listen {
+                        WebRtcTransportListen::Individual { .. } => None,
+                        WebRtcTransportListen::Server { webrtc_server } => Some(webrtc_server.id()),
+                    },
                 },
                 data: RouterCreateWebrtcTransportData::from_options(&webrtc_transport_options),
             })
@@ -644,6 +649,10 @@ impl Router {
             data,
             webrtc_transport_options.app_data,
             self.clone(),
+            match webrtc_transport_options.listen {
+                WebRtcTransportListen::Individual { .. } => None,
+                WebRtcTransportListen::Server { webrtc_server } => Some(webrtc_server),
+            },
         );
 
         self.inner.handlers.new_transport.call(|callback| {
@@ -665,7 +674,7 @@ impl Router {
     ///
     /// # async fn f(router: Router) -> Result<(), Box<dyn std::error::Error>> {
     /// let transport = router
-    ///     .create_pipe_transport(PipeTransportOptions::new(TransportListenIp {
+    ///     .create_pipe_transport(PipeTransportOptions::new(ListenIp {
     ///         ip: "127.0.0.1".parse().unwrap(),
     ///         announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///     }))
@@ -690,6 +699,7 @@ impl Router {
                 internal: TransportInternal {
                     router_id: self.inner.id,
                     transport_id,
+                    webrtc_server_id: None,
                 },
                 data: RouterCreatePipeTransportData::from_options(&pipe_transport_options),
             })
@@ -724,7 +734,7 @@ impl Router {
     ///
     /// # async fn f(router: Router) -> Result<(), Box<dyn std::error::Error>> {
     /// let transport = router
-    ///     .create_plain_transport(PlainTransportOptions::new(TransportListenIp {
+    ///     .create_plain_transport(PlainTransportOptions::new(ListenIp {
     ///         ip: "127.0.0.1".parse().unwrap(),
     ///         announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///     }))
@@ -749,6 +759,7 @@ impl Router {
                 internal: TransportInternal {
                     router_id: self.inner.id,
                     transport_id,
+                    webrtc_server_id: None,
                 },
                 data: RouterCreatePlainTransportData::from_options(&plain_transport_options),
             })
@@ -930,7 +941,7 @@ impl Router {
     /// // Produce in router1.
     /// let transport1 = router1
     ///     .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-    ///         TransportListenIp {
+    ///         ListenIp {
     ///             ip: "127.0.0.1".parse().unwrap(),
     ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///         },
@@ -968,7 +979,7 @@ impl Router {
     /// // Consume producer1 from router2.
     /// let transport2 = router2
     ///     .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-    ///         TransportListenIp {
+    ///         ListenIp {
     ///             ip: "127.0.0.1".parse().unwrap(),
     ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///         },
@@ -1150,7 +1161,7 @@ impl Router {
     /// let transport1 = router1
     ///     .create_webrtc_transport({
     ///         let mut options = WebRtcTransportOptions::new(TransportListenIps::new(
-    ///             TransportListenIp {
+    ///             ListenIp {
     ///                 ip: "127.0.0.1".parse().unwrap(),
     ///                 announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///             },
@@ -1177,7 +1188,7 @@ impl Router {
     /// let transport2 = router2
     ///     .create_webrtc_transport({
     ///         let mut options = WebRtcTransportOptions::new(TransportListenIps::new(
-    ///             TransportListenIp {
+    ///             ListenIp {
     ///                 ip: "127.0.0.1".parse().unwrap(),
     ///                 announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///             },

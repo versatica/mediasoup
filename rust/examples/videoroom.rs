@@ -494,7 +494,7 @@ mod participant {
             // right away. This may not be the case for real-world applications or you may create
             // this at a different time and/or in different order.
             let transport_options =
-                WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
+                WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 }));

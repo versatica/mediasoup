@@ -165,7 +165,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 		});
 
 	// Using the same UDP port in a second Worker.
-	await expect(worker1.createWebRtcServer(
+	await expect(worker2.createWebRtcServer(
 		{
 			listenInfos :
 			[

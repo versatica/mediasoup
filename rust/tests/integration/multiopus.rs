@@ -1,5 +1,5 @@
 use futures_lite::future;
-use mediasoup::data_structures::TransportListenIp;
+use mediasoup::data_structures::ListenIp;
 use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{Router, RouterOptions};
@@ -126,11 +126,10 @@ async fn init() -> (Router, WebRtcTransport) {
         .await
         .expect("Failed to create router");
 
-    let transport_options =
-        WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-            ip: "127.0.0.1".parse().unwrap(),
-            announced_ip: None,
-        }));
+    let transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
+        ip: "127.0.0.1".parse().unwrap(),
+        announced_ip: None,
+    }));
 
     let transport = router
         .create_webrtc_transport(transport_options.clone())
