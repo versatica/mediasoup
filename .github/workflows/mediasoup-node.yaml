@@ -14,7 +14,7 @@ jobs:
             node: 16
           - os: ubuntu-22.04
             node: 18
-          - os: macos-12.0
+          - os: macos-12
             node: 18
           - os: windows-2022
             node: 18

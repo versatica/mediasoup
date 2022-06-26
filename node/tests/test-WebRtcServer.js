@@ -143,7 +143,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 				},
 				{
 					protocol    : 'udp',
-					ip          : '0.0.0.0',
+					ip          : '127.0.0.1',
 					announcedIp : '1.2.3.4',
 					port        : port1
 				}

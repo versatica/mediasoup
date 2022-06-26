@@ -194,7 +194,7 @@ fn unavailable_infos_fails() {
                     let listen_infos = listen_infos.insert(WebRtcServerListenInfo {
                         protocol: Protocol::Udp,
                         listen_ip: ListenIp {
-                            ip: IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
+                            ip: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
                             announced_ip: Some(IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4))),
                         },
                         port: port1,
