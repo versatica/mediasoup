@@ -34,13 +34,13 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
   : type(type), call_id(callId), object_id(obj), producer_id(producer) 
 {
   uint64_t ts = Utils::Time::currentStdEpochMs();
+  set_start_tm(ts);
+
+  set_filled(UINT32_UNSET);
 
   if (type) // consumer
   {
-    record.c.start_tm = ts;
     record.c.payload = payload;
-    record.c.filled=UINT32_UNSET;
-    
     std::memset(record.c.consumer_id, 0, UUID_BYTE_LEN);
     uuidToBytes(obj, record.c.consumer_id);
     
@@ -54,10 +54,7 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
   }
   else // producer
   {
-    record.p.start_tm = ts;
-    record.p.filled=UINT32_UNSET;
     record.p.payload = payload;
-    
     std::memset(record.p.samples, 0, sizeof(record.p.samples));
 
     MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): producer start_tm=%" PRIu64 " payload=%" PRIu8 " callId=%s producerId=%s", 
@@ -117,30 +114,20 @@ void CallStatsRecord::resetSamples()
   if (type) // consumer
   {
     std::memset(&record.c.samples, 0, sizeof(record.c.samples));
-    record.c.filled = UINT32_UNSET;
-    record.c.start_tm = UINT64_UNSET;
   }
   else
   {
     std::memset(record.p.samples, 0, sizeof(record.p.samples));
-    record.p.filled = UINT32_UNSET;
-    record.p.start_tm = UINT64_UNSET;
   }
+  set_filled(UINT32_UNSET);
+  set_start_tm(UINT64_UNSET);
 }
 
 
 void CallStatsRecord::zeroSamples(uint64_t nowMs)
 {
-  if (type)
-  {
-    record.c.start_tm = nowMs;
-    record.c.filled = 0;
-  }
-  else
-  {
-    record.p.start_tm = nowMs;
-    record.p.filled = 0;
-  }
+  set_start_tm(nowMs);
+  set_filled(0);
 }
 
 
@@ -151,6 +138,10 @@ bool CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
   
   uint32_t idx = filled();
   CallStatsSample* s = type ? &(record.c.samples[0]) : &(record.p.samples[0]);
+
+  // Special case for the very first record in the session
+  if (UINT64_UNSET == start_tm())
+    set_start_tm(curr.ts);
 
   s[idx].epoch_len = (filled() != 0) ? static_cast<uint16_t>(curr.ts - last.ts) : 0; // the first sample in a set always has epoch_len set into 0
   s[idx].packets_count = static_cast<uint16_t>(curr.packetsCount - last.packetsCount);
@@ -164,11 +155,9 @@ bool CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
   s[idx].kf_count = static_cast<uint16_t>(curr.kfCount - last.kfCount);
   s[idx].rtt = static_cast<uint16_t>(std::round(curr.rtt));
   s[idx].max_pts = curr.maxPacketTs;
-  
-  if (type)
-    record.c.filled++;
-  else
-    record.p.filled++;
+
+  set_filled(filled()+1);  
+
   return true;
 }
 
@@ -204,7 +193,7 @@ void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream
                         last.packetsRetransmitted, last.packetsRepaired, last.nackCount,
                         last.nackPacketCount, last.kfCount, last.rtt, last.maxPacketTs);
       last.ts = nowMs;
-      record.zeroSamples(nowMs); // begin a new collection of samples
+      record.zeroSamples(UINT64_UNSET); // UINT64_UNSET because nowMs is not the timestamp of the first sample in a record yet
       return; // done, wait till the next measurement
     }
     else // proceed, use data from the last sample of the previous record to calculate delta
@@ -221,7 +210,7 @@ void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream
                     curr.packetsRetransmitted, curr.packetsRepaired, curr.nackCount,
                     curr.nackPacketCount, curr.kfCount, curr.rtt, curr.maxPacketTs);
 
-  record.addSample(last, curr);    
+  record.addSample(last, curr);
   this->last = this->curr;
 }
 
@@ -254,10 +243,8 @@ int StatsBinLog::LogOpen()
 }
 
 
-int StatsBinLog::LogClose()
+void StatsBinLog::LogClose()
 {
-  int ret = 0;
-
   if (this->fd)
   {
     std::fflush(this->fd);
@@ -273,11 +260,12 @@ int StatsBinLog::LogClose()
   // Do not preserve binlogs with too little data
   if (log_start_ts == UINT64_UNSET 
       || log_last_ts == UINT64_UNSET 
-      || BINLOG_MIN_TIMESPAN < log_last_ts - log_start_ts)
+      || BINLOG_MIN_TIMESPAN > log_last_ts - log_start_ts)
   {
     std::remove(bin_log_file_path.c_str());
     MS_DEBUG_TAG(rtp, "binlog %s removed, short timespan (%" PRIu64 "-%" PRIu64 ")", 
                   this->bin_log_file_path, this->log_start_ts, log_last_ts);
+    return;
   }
 
   // Move a closed file into "done" directory
@@ -303,8 +291,6 @@ int StatsBinLog::LogClose()
       MS_DEBUG_TAG(rtp, "moved binlog %s to %s", this->bin_log_file_path.c_str(), bin_log_done_dir.c_str());
     }
   }
-
-  return ret;
 }
 
 
@@ -372,7 +358,7 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
 
 bool StatsBinLog::CreateBinlogDirsIfMissing()
 {
-  std::string bin_log_dir = "/var/log/sfu/bin/";
+  std::string bin_log_dir      = "/var/log/sfu/bin/";
   std::string bin_log_curr_dir = "/var/log/sfu/bin/current/";
   std::string bin_log_done_dir = "/var/log/sfu/bin/done/";
   
@@ -382,12 +368,20 @@ bool StatsBinLog::CreateBinlogDirsIfMissing()
   {
     if (errno == ENOENT)
     {
-      ret = mkdir(bin_log_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH);  // TODO: check these params
-      if (ret != 0)
+      ret = mkdir(bin_log_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      if (ret != 0 && errno != EEXIST)
       {
-        MS_WARN_TAG(rtp, "failed to create folder %s for binlog files management", bin_log_dir.c_str());
+        MS_WARN_TAG(rtp, "failed to create folder %s for binlog files management: %s", bin_log_dir.c_str(), std::strerror(errno));
         return false;
       }
+    }
+  }
+  else
+  {
+    if (!S_ISDIR(info.st_mode))
+    {
+      MS_WARN_TAG(rtp, "found %s but it is not a directory", bin_log_dir.c_str());
+      return false;
     }
   }
 
@@ -396,24 +390,41 @@ bool StatsBinLog::CreateBinlogDirsIfMissing()
   {
     if (errno == ENOENT)
     {
-      ret = mkdir(bin_log_done_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH);
-      if (ret != 0)
+      ret = mkdir(bin_log_curr_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      if (ret != 0 && errno != EEXIST)
       {
-        MS_WARN_TAG(rtp, "failed to create folder %s for writing binlogs", bin_log_done_dir.c_str());
+        MS_WARN_TAG(rtp, "failed to create folder %s for writing binlogs: %s", bin_log_curr_dir.c_str(), std::strerror(errno));
         return false;
       }
     }
   }
+  else
+  {
+    if (!S_ISDIR(info.st_mode))
+    {
+      MS_WARN_TAG(rtp, "found %s but it is not a directory", bin_log_curr_dir.c_str());
+      return false;
+    }
+  }
+
   if( stat( bin_log_done_dir.c_str(), &info ) != 0 )
   {
     if (errno == ENOENT)
     {
-      ret = mkdir(bin_log_done_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH); // | S_IXOTH?
-      if (ret != 0)
+      ret = mkdir(bin_log_done_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // | S_IXOTH?
+      if (ret != 0 && errno != EEXIST)
       {
-        MS_WARN_TAG(rtp, "failed to create folder %s for moving complete binlogs", bin_log_done_dir.c_str());
+        MS_WARN_TAG(rtp, "failed to create folder %s for moving complete binlogs: %s", bin_log_done_dir.c_str(), std::strerror(errno));
         return false;
       }
+    }
+  }
+  else
+  {
+    if (!S_ISDIR(info.st_mode))
+    {
+      MS_WARN_TAG(rtp, "found %s but it is not a directory", bin_log_done_dir.c_str());
+      return false;
     }
   }
 
@@ -423,18 +434,18 @@ bool StatsBinLog::CreateBinlogDirsIfMissing()
 
 void StatsBinLog::InitLog(char type, std::string id1, std::string id2)
 {
-  #define FILENAME_LEN_MAX sizeof("/var/log/sfu/current/ms_p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin") * 2
+  #define FILENAME_LEN_MAX sizeof("/var/log/sfu/bin/current/ms_p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin") * 2
   char tmp[FILENAME_LEN_MAX];
   std::memset(tmp, '\0', FILENAME_LEN_MAX);
   switch(type)
   {
     case 'c':
-      sprintf(tmp, "/var/log/sfu/current/ms_c_%s_%%llu.%s.bin", id1.c_str(), version);
+      sprintf(tmp, "/var/log/sfu/bin/current/ms_c_%s_%%llu.%s.bin", id1.c_str(), version);
       this->bin_log_name_template.assign(tmp);
       MS_DEBUG_TAG(rtp, "consumers binlog transport id %s", id2.c_str());
       break;
     case 'p':
-      sprintf(tmp, "/var/log/sfu/current/ms_p_%s_%s_%%llu.%s.bin", id1.c_str(), id2.c_str(), version);
+      sprintf(tmp, "/var/log/sfu/bin/current/ms_p_%s_%s_%%llu.%s.bin", id1.c_str(), id2.c_str(), version);
       this->bin_log_name_template.assign(tmp);
       break;
     default:

@@ -82,7 +82,23 @@ class CallStatsRecord
     CallStatsRecord(uint64_t objType, uint8_t payload, std::string callId, std::string objId, std::string producerId);
 
     bool fwriteRecord(std::FILE* fd);
-    uint32_t filled() const {return type ? record.c.filled : record.p.filled; }
+    uint32_t filled() const {return type ? record.c.filled : record.p.filled;}
+    void set_filled(uint32_t n)
+    {
+      if (type) 
+        record.c.filled = n; 
+      else
+        record.p.filled = n; 
+    }
+    uint64_t start_tm() const {return type ? record.c.start_tm : record.p.start_tm;}
+    void set_start_tm(uint64_t t)
+    {
+      if (type) 
+        record.c.start_tm = t; 
+      else
+        record.p.start_tm = t;
+    }
+    
     void resetSamples();
     void zeroSamples(uint64_t nowMs);
     bool addSample(StreamStats& last, StreamStats& curr);    
@@ -158,7 +174,7 @@ class CallStatsRecord
 
   private:
     int LogOpen();
-    int LogClose();
+    void LogClose();
     void UpdateLogName();
     bool CreateBinlogDirsIfMissing();
   };
