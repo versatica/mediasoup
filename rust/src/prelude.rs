@@ -19,6 +19,11 @@ pub use crate::router::{
     PipeProducerToRouterPair, PipeToRouterOptions, Router, RouterOptions,
 };
 
+pub use crate::webrtc_server::{
+    WebRtcServer, WebRtcServerId, WebRtcServerListenInfo, WebRtcServerListenInfos,
+    WebRtcServerOptions,
+};
+
 pub use crate::direct_transport::{DirectTransport, DirectTransportOptions, WeakDirectTransport};
 pub use crate::pipe_transport::{
     PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,
