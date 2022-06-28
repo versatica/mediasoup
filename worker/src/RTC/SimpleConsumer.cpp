@@ -29,6 +29,26 @@ namespace RTC
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
+
+		RTC::Codecs::EncodingContext::Params params;
+
+		// Create the encoding context if needed.
+		this->encodingContext.reset(RTC::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
+
+		if (
+		  mediaCodec->mimeType.type == RTC::RtpCodecMimeType::Type::AUDIO &&
+		  (mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::OPUS ||
+		   mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::MULTIOPUS))
+		{
+			auto jsonIgnoreDtx = data.find("ignoreDtx");
+
+			if (jsonIgnoreDtx != data.end() && jsonIgnoreDtx->is_boolean())
+			{
+				auto ignoreDtx = jsonIgnoreDtx->get<bool>();
+
+				this->encodingContext->SetIgnoreDtx(ignoreDtx);
+			}
+		}
 	}
 
 	SimpleConsumer::~SimpleConsumer()
@@ -242,6 +262,23 @@ namespace RTC
 		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
 		{
 			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+
+			return;
+		}
+
+		bool marker;
+
+		// Process the payload if needed. Drop packet if necessary.
+		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
+		{
+			MS_DEBUG_TAG(
+			  rtp,
+			  "discarding packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp());
+
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 			return;
 		}

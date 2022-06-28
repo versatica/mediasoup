@@ -623,6 +623,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			paused = false,
 			mid,
 			preferredLayers,
+			ignoreDtx = false,
 			pipe = false,
 			appData
 		}: ConsumerOptions
@@ -665,7 +666,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 				{
 					logger.error(
 						`consume() | reaching max MID value "${this.#nextMidForConsumers}"`);
-	
+
 					this.#nextMidForConsumers = 0;
 				}
 			}
@@ -679,7 +680,8 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			type                   : pipe ? 'pipe' : producer.type,
 			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
 			paused,
-			preferredLayers
+			preferredLayers,
+			ignoreDtx
 		};
 
 		const status =
