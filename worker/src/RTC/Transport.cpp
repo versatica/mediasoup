@@ -1725,6 +1725,8 @@ namespace RTC
 				break;
 			default:;
 		}
+
+		delete packet;
 	}
 
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
