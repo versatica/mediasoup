@@ -11,33 +11,154 @@ namespace RTC
 	/* Static. */
 
 	// 17: 16 bit mask + the initial sequence number.
-	static constexpr size_t MaxRequestedPackets{ 17 };
+	static constexpr size_t MaxRequestedPackets{ 17u };
 	thread_local static std::vector<RTC::RtpStreamSend::StorageItem*> RetransmissionContainer(
 	  MaxRequestedPackets + 1);
-	// Don't retransmit packets older than this (ms).
-	static constexpr uint32_t MaxRetransmissionDelay{ 2000 };
-	static constexpr uint32_t DefaultRtt{ 100 };
+	static constexpr uint32_t DefaultRtt{ 100u };
+	static constexpr uint16_t MaxSeq = std::numeric_limits<uint16_t>::max();
 
-	static void resetStorageItem(RTC::RtpStreamSend::StorageItem* storageItem)
+	/* Class Static. */
+
+	// Minimum retransmission buffer size (ms).
+	const uint32_t RtpStreamSend::MinRetransmissionDelay{ 200u };
+	// Maximum retransmission buffer size (ms).
+	const uint32_t RtpStreamSend::MaxRetransmissionDelay{ 2000u };
+
+	void RtpStreamSend::StorageItem::Reset()
 	{
 		MS_TRACE();
 
-		MS_ASSERT(storageItem, "storageItem cannot be nullptr");
+		this->packet.reset();
+		this->ssrc           = 0;
+		this->sequenceNumber = 0;
+		this->timestamp      = 0;
+		this->resentAtMs     = 0;
+		this->sentTimes      = 0;
+	}
 
-		delete storageItem->packet;
+	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::GetFirst() const
+	{
+		return this->Get(this->startSeq);
+	}
 
-		storageItem->packet     = nullptr;
-		storageItem->resentAtMs = 0;
-		storageItem->sentTimes  = 0;
-		storageItem->rtxEncoded = false;
+	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::Get(uint16_t seq) const
+	{
+		if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, this->startSeq))
+			return nullptr;
+
+		auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
+
+		if (this->buffer.empty() || idx > static_cast<uint16_t>(this->buffer.size() - 1))
+			return nullptr;
+
+		return this->buffer.at(idx);
+	}
+
+	size_t RtpStreamSend::StorageItemBuffer::GetBufferSize() const
+	{
+		return this->buffer.size();
+	}
+
+	void RtpStreamSend::StorageItemBuffer::Insert(uint16_t seq, StorageItem* storageItem)
+	{
+		if (this->buffer.empty())
+		{
+			this->startSeq = seq;
+			this->buffer.push_back(storageItem);
+		}
+		// Packet sequence number is higher than startSeq.
+		else if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(seq, this->startSeq))
+		{
+			auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
+
+			// Packet arrived out of order, so we already have a slot allocated for it.
+			if (idx <= static_cast<uint16_t>(this->buffer.size() - 1))
+			{
+				MS_ASSERT(this->buffer[idx] == nullptr, "Must insert into empty slot");
+
+				this->buffer[idx] = storageItem;
+			}
+			else
+			{
+				// Calculate how many elements would it be necessary to add when pushing new item
+				// to the back of the deque.
+				auto addToBack = static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1));
+
+				// Packets can arrive out of order, add blank slots.
+				for (uint16_t i{ 1 }; i < addToBack; ++i)
+					this->buffer.push_back(nullptr);
+
+				this->buffer.push_back(storageItem);
+			}
+		}
+		// Packet sequence number is the same or lower than startSeq.
+		else
+		{
+			// Calculate how many elements would it be necessary to add when pushing new item
+			// to the front of the deque.
+			auto addToFront = static_cast<uint16_t>(this->startSeq - seq);
+
+			// Packets can arrive out of order, add blank slots.
+			for (uint16_t i{ 1 }; i < addToFront; ++i)
+				this->buffer.push_front(nullptr);
+
+			this->buffer.push_front(storageItem);
+			this->startSeq = seq;
+		}
+
+		MS_ASSERT(
+		  this->buffer.size() <= MaxSeq,
+		  "StorageItemBuffer contains more than %" PRIu16 " entries",
+		  MaxSeq);
+	}
+
+	void RtpStreamSend::StorageItemBuffer::RemoveFirst()
+	{
+		MS_ASSERT(!this->buffer.empty(), "buffer is empty");
+
+		auto* storageItem = this->buffer[0];
+
+		delete storageItem;
+
+		this->buffer[0] = nullptr;
+
+		// Remove all `nullptr` elements from the beginning of the buffer.
+		// NOTE: Calling front on an empty container is undefined.
+		while (!this->buffer.empty() && this->buffer.front() == nullptr)
+		{
+			this->buffer.pop_front();
+			this->startSeq++;
+		}
+	}
+
+	void RtpStreamSend::StorageItemBuffer::Clear()
+	{
+		for (auto* storageItem : this->buffer)
+		{
+			if (!storageItem)
+				continue;
+
+			// Reset the storage item (decrease RTP packet shared pointer counter).
+			storageItem->Reset();
+
+			delete storageItem;
+		}
+
+		this->buffer.clear();
+		this->startSeq = 0;
+	}
+
+	RtpStreamSend::StorageItemBuffer::~StorageItemBuffer()
+	{
+		Clear();
 	}
 
 	/* Instance methods. */
 
 	RtpStreamSend::RtpStreamSend(
-	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, size_t bufferSize)
-	  : RTC::RtpStream::RtpStream(listener, params, 10), buffer(bufferSize > 0 ? 65536 : 0, nullptr),
-	    storage(bufferSize)
+	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, std::string& mid)
+	  : RTC::RtpStream::RtpStream(listener, params, 10), mid(mid),
+	    retransmissionBufferSize(RtpStreamSend::MaxRetransmissionDelay)
 	{
 		MS_TRACE();
 	}
@@ -73,20 +194,20 @@ namespace RTC
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
-	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet)
+	bool RtpStreamSend::ReceivePacket(std::shared_ptr<RTC::RtpPacket> packet)
 	{
 		MS_TRACE();
 
 		// Call the parent method.
-		if (!RtpStream::ReceivePacket(packet))
+		if (!RtpStream::ReceiveStreamPacket(packet.get()))
 			return false;
 
-		// If bufferSize was given, store the packet into the buffer.
-		if (!this->storage.empty())
+		// If NACK is enabled, store the packet into the buffer.
+		if (this->params.useNack)
 			StorePacket(packet);
 
 		// Increase transmission counter.
-		this->transmissionCounter.Update(packet);
+		this->transmissionCounter.Update(packet.get());
 
 		return true;
 	}
@@ -112,18 +233,24 @@ namespace RTC
 
 				// Note that this is an already RTX encoded packet if RTX is used
 				// (FillRetransmissionContainer() did it).
-				auto* packet = storageItem->packet;
+				auto packet = storageItem->packet;
 
 				// Retransmit the packet.
 				static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
-				  ->OnRtpStreamRetransmitRtpPacket(this, packet);
+				  ->OnRtpStreamRetransmitRtpPacket(this, packet.get());
 
 				// Mark the packet as retransmitted.
-				RTC::RtpStream::PacketRetransmitted(packet);
+				RTC::RtpStream::PacketRetransmitted(packet.get());
 
 				// Mark the packet as repaired (only if this is the first retransmission).
 				if (storageItem->sentTimes == 1)
-					RTC::RtpStream::PacketRepaired(packet);
+					RTC::RtpStream::PacketRepaired(packet.get());
+
+				if (HasRtx())
+				{
+					// Restore the packet.
+					packet->RtxDecode(RtpStream::GetPayloadType(), storageItem->ssrc);
+				}
 			}
 		}
 	}
@@ -177,7 +304,18 @@ namespace RTC
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
 		if (this->rtt > 0.0f)
+		{
 			this->hasRtt = true;
+		}
+
+		// Smoothly change retransmission buffer size towards RTT + 100ms, but not more than
+		// `MaxRetransmissionDelay`.
+		auto newRetransmissionBufferSize = static_cast<uint32_t>(this->rtt + 100.0);
+		auto avgRetransmissionBufferSize =
+		  (this->retransmissionBufferSize * 7 + newRetransmissionBufferSize) / 8;
+		this->retransmissionBufferSize = std::max(
+		  std::min(avgRetransmissionBufferSize, RtpStreamSend::MaxRetransmissionDelay),
+		  RtpStreamSend::MinRetransmissionDelay);
 
 		this->packetsLost  = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
@@ -295,9 +433,12 @@ namespace RTC
 		MS_ABORT("invalid method call");
 	}
 
-	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet)
+	void RtpStreamSend::StorePacket(std::shared_ptr<RTC::RtpPacket> packet)
 	{
 		MS_TRACE();
+
+		MS_ASSERT(
+		  packet->GetSsrc() == this->params.ssrc, "RTP packet SSRC does not match the encodings SSRC");
 
 		if (packet->GetSize() > RTC::MtuSize)
 		{
@@ -311,119 +452,77 @@ namespace RTC
 			return;
 		}
 
+		this->ClearOldPackets(packet.get());
+
 		auto seq          = packet->GetSequenceNumber();
-		auto* storageItem = this->buffer[seq];
+		auto* storageItem = this->storageItemBuffer.Get(seq);
 
-		// Buffer is empty.
-		if (this->bufferSize == 0)
-		{
-			// Take the first storage position.
-			storageItem       = std::addressof(this->storage[0]);
-			this->buffer[seq] = storageItem;
-
-			// Increase buffer size and set start index.
-			this->bufferSize++;
-			this->bufferStartIdx = seq;
-		}
 		// The buffer item is already used. Check whether we should replace its
 		// storage with the new packet or just ignore it (if duplicated packet).
-		else if (storageItem)
+		if (storageItem)
 		{
-			auto* storedPacket = storageItem->packet;
-
-			if (packet->GetTimestamp() == storedPacket->GetTimestamp())
+			if (packet->GetTimestamp() == storageItem->timestamp)
 				return;
 
 			// Reset the storage item.
-			resetStorageItem(storageItem);
-
-			// If this was the item referenced by the buffer start index, move it to
-			// the next one.
-			if (this->bufferStartIdx == seq)
-				UpdateBufferStartIdx();
+			storageItem->Reset();
 		}
-		// Buffer not yet full, add an entry.
-		else if (this->bufferSize < this->storage.size())
-		{
-			// Take the next storage position.
-			storageItem       = std::addressof(this->storage[this->bufferSize]);
-			this->buffer[seq] = storageItem;
-
-			// Increase buffer size.
-			this->bufferSize++;
-		}
-		// Buffer full, remove oldest entry and add new one.
+		// Allocate new buffer item.
 		else
 		{
-			auto* firstStorageItem = this->buffer[this->bufferStartIdx];
+			// Allocate a new storage item.
+			storageItem = new StorageItem();
 
-			// Reset the first storage item.
-			resetStorageItem(firstStorageItem);
-
-			// Unfill the buffer start item.
-			this->buffer[this->bufferStartIdx] = nullptr;
-
-			// Move the buffer start index.
-			UpdateBufferStartIdx();
-
-			// Take the freed storage item.
-			storageItem       = firstStorageItem;
-			this->buffer[seq] = storageItem;
+			this->storageItemBuffer.Insert(seq, storageItem);
 		}
 
-		// Clone the packet into the retrieved storage item.
-		storageItem->packet = packet->Clone(storageItem->store);
+		// Store original packet and some extra info into the storage item.
+		storageItem->packet         = packet;
+		storageItem->ssrc           = packet->GetSsrc();
+		storageItem->sequenceNumber = packet->GetSequenceNumber();
+		storageItem->timestamp      = packet->GetTimestamp();
+	}
+
+	void RtpStreamSend::ClearOldPackets(const RtpPacket* packet)
+	{
+		MS_TRACE();
+
+		auto packetTs{ packet->GetTimestamp() };
+		auto clockRate{ this->params.clockRate };
+
+		const auto bufferSize = this->storageItemBuffer.GetBufferSize();
+
+		// Go through all buffer items starting with the first and free all storage
+		// items that contain packets older than `MaxRetransmissionDelay`.
+		for (size_t i{ 0 }; i < bufferSize && this->storageItemBuffer.GetBufferSize() != 0; ++i)
+		{
+			auto* firstStorageItem = this->storageItemBuffer.GetFirst();
+
+			MS_ASSERT(firstStorageItem, "first storage item is missing");
+			MS_ASSERT(firstStorageItem->packet, "storage item does not contain original packet");
+
+			auto firstPacketTs{ firstStorageItem->timestamp };
+			uint32_t diffTs{ packetTs - firstPacketTs };
+
+			// RTP packet is older than first RTP packet.
+			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(packetTs, firstPacketTs))
+				break;
+
+			// First RTP packet is recent enough.
+			if (static_cast<uint32_t>(diffTs * 1000 / clockRate) < this->retransmissionBufferSize)
+				break;
+
+			// Unfill the buffer start item.
+			this->storageItemBuffer.RemoveFirst();
+		}
 	}
 
 	void RtpStreamSend::ClearBuffer()
 	{
 		MS_TRACE();
 
-		if (this->storage.empty())
-			return;
-
-		for (uint32_t idx{ 0 }; idx < this->buffer.size(); ++idx)
-		{
-			auto* storageItem = this->buffer[idx];
-
-			if (!storageItem)
-			{
-				MS_ASSERT(!this->buffer[idx], "key should be NULL");
-
-				continue;
-			}
-
-			// Reset (free RTP packet) the storage item.
-			resetStorageItem(storageItem);
-
-			// Unfill the buffer item.
-			this->buffer[idx] = nullptr;
-		}
-
 		// Reset buffer.
-		this->bufferStartIdx = 0;
-		this->bufferSize     = 0;
-	}
-
-	/**
-	 * Iterates the buffer starting from the current start idx + 1 until next
-	 * used one. It takes into account that the buffer is circular.
-	 */
-	inline void RtpStreamSend::UpdateBufferStartIdx()
-	{
-		uint16_t seq = this->bufferStartIdx + 1;
-
-		for (uint32_t idx{ 0 }; idx < this->buffer.size(); ++idx, ++seq)
-		{
-			auto* storageItem = this->buffer[seq];
-
-			if (storageItem)
-			{
-				this->bufferStartIdx = seq;
-
-				break;
-			}
-		}
+		this->storageItemBuffer.Clear();
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -467,15 +566,23 @@ namespace RTC
 
 			if (requested)
 			{
-				auto* storageItem = this->buffer[currentSeq];
-				RTC::RtpPacket* packet{ nullptr };
+				auto* storageItem = this->storageItemBuffer.Get(currentSeq);
+				std::shared_ptr<RTC::RtpPacket> packet{ nullptr };
 				uint32_t diffMs;
 
-				// Calculate the elapsed time between the max timestampt seen and the
-				// requested packet's timestampt (in ms).
+				// Calculate the elapsed time between the max timestamp seen and the
+				// requested packet's timestamp (in ms).
 				if (storageItem)
 				{
 					packet = storageItem->packet;
+					// Put correct info into the packet.
+					packet->SetSsrc(storageItem->ssrc);
+					packet->SetSequenceNumber(storageItem->sequenceNumber);
+					packet->SetTimestamp(storageItem->timestamp);
+
+					// Update MID RTP extension value.
+					if (!this->mid.empty())
+						packet->UpdateMid(mid);
 
 					uint32_t diffTs = this->maxPacketTs - packet->GetTimestamp();
 
@@ -527,16 +634,7 @@ namespace RTC
 						// Increment RTX seq.
 						++this->rtxSeq;
 
-						if (!storageItem->rtxEncoded)
-						{
-							packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
-
-							storageItem->rtxEncoded = true;
-						}
-						else
-						{
-							packet->SetSequenceNumber(this->rtxSeq);
-						}
+						packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
 					}
 
 					// Save when this packet was resent.

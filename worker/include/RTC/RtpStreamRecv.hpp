@@ -49,7 +49,7 @@ namespace RTC
 		~RtpStreamRecv();
 
 		void FillJsonStats(json& jsonObject) override;
-		bool ReceivePacket(RTC::RtpPacket* packet) override;
+		bool ReceivePacket(RTC::RtpPacket* packet);
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		RTC::RTCP::ReceiverReport* GetRtxRtcpReceiverReport();

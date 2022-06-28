@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* `RtpStreamSend`: Memory optimizations. Extracted from #675.
+
+
 ### 3.10.0
 
 * `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port (PR #834).
