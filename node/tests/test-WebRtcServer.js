@@ -143,7 +143,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 				},
 				{
 					protocol    : 'udp',
-					ip          : '0.0.0.0',
+					ip          : '127.0.0.1',
 					announcedIp : '1.2.3.4',
 					port        : port1
 				}
@@ -165,7 +165,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 		});
 
 	// Using the same UDP port in a second Worker.
-	await expect(worker1.createWebRtcServer(
+	await expect(worker2.createWebRtcServer(
 		{
 			listenInfos :
 			[

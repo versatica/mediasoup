@@ -1,6 +1,6 @@
 use crate::data_consumer::DataConsumerOptions;
 use crate::data_producer::{DataProducer, DataProducerOptions};
-use crate::data_structures::TransportListenIp;
+use crate::data_structures::ListenIp;
 use crate::plain_transport::PlainTransportOptions;
 use crate::router::{Router, RouterOptions};
 use crate::sctp_parameters::SctpStreamParameters;
@@ -35,7 +35,7 @@ async fn init() -> (Router, DataProducer) {
     let transport = router
         .create_webrtc_transport({
             let mut transport_options =
-                WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
+                WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 }));
@@ -64,7 +64,7 @@ fn data_producer_close_event() {
 
         let transport2 = router
             .create_plain_transport({
-                let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+                let mut transport_options = PlainTransportOptions::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 });
@@ -113,7 +113,7 @@ fn transport_close_event() {
 
         let transport2 = router
             .create_plain_transport({
-                let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+                let mut transport_options = PlainTransportOptions::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 });

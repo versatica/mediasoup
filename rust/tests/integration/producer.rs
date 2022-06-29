@@ -1,7 +1,7 @@
 use async_io::Timer;
 use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
-use mediasoup::data_structures::{AppData, TransportListenIp};
+use mediasoup::data_structures::{AppData, ListenIp};
 use mediasoup::prelude::*;
 use mediasoup::producer::{ProducerOptions, ProducerTraceEventType, ProducerType};
 use mediasoup::router::{Router, RouterOptions};
@@ -198,11 +198,10 @@ async fn init() -> (Worker, Router, WebRtcTransport, WebRtcTransport) {
         .await
         .expect("Failed to create router");
 
-    let transport_options =
-        WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-            ip: "127.0.0.1".parse().unwrap(),
-            announced_ip: None,
-        }));
+    let transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
+        ip: "127.0.0.1".parse().unwrap(),
+        announced_ip: None,
+    }));
 
     let transport_1 = router
         .create_webrtc_transport(transport_options.clone())

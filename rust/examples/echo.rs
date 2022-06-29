@@ -179,11 +179,10 @@ impl EchoConnection {
         // We know that for echo example we'll need 2 transports, so we can create both right away.
         // This may not be the case for real-world applications or you may create this at a
         // different time and/or in different order.
-        let transport_options =
-            WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-                ip: "127.0.0.1".parse().unwrap(),
-                announced_ip: None,
-            }));
+        let transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
+            ip: "127.0.0.1".parse().unwrap(),
+            announced_ip: None,
+        }));
         let producer_transport = router
             .create_webrtc_transport(transport_options.clone())
             .await

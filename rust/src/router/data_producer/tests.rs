@@ -1,5 +1,5 @@
 use crate::data_producer::DataProducerOptions;
-use crate::data_structures::TransportListenIp;
+use crate::data_structures::ListenIp;
 use crate::router::{Router, RouterOptions};
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
@@ -33,7 +33,7 @@ async fn init() -> (Router, WebRtcTransport) {
     let transport1 = router
         .create_webrtc_transport({
             let mut transport_options =
-                WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
+                WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 }));

@@ -1,7 +1,7 @@
 use crate::consumer::ConsumerOptions;
 use crate::data_consumer::DataConsumerOptions;
 use crate::data_producer::DataProducerOptions;
-use crate::data_structures::TransportListenIp;
+use crate::data_structures::ListenIp;
 use crate::producer::ProducerOptions;
 use crate::router::{PipeToRouterOptions, Router, RouterOptions};
 use crate::rtp_parameters::{
@@ -89,11 +89,10 @@ async fn init() -> (Router, Router, WebRtcTransport, WebRtcTransport) {
         .await
         .expect("Failed to create router");
 
-    let mut transport_options =
-        WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-            ip: "127.0.0.1".parse().unwrap(),
-            announced_ip: None,
-        }));
+    let mut transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
+        ip: "127.0.0.1".parse().unwrap(),
+        announced_ip: None,
+    }));
     transport_options.enable_sctp = true;
 
     let transport_1 = router1

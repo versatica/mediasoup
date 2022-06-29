@@ -3,7 +3,7 @@ use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
 use mediasoup::data_consumer::{DataConsumerOptions, DataConsumerType};
 use mediasoup::data_producer::{DataProducer, DataProducerOptions};
-use mediasoup::data_structures::{AppData, TransportListenIp};
+use mediasoup::data_structures::{AppData, ListenIp};
 use mediasoup::direct_transport::DirectTransportOptions;
 use mediasoup::plain_transport::PlainTransportOptions;
 use mediasoup::prelude::*;
@@ -60,7 +60,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, DataProducer) {
     let transport = router
         .create_webrtc_transport({
             let mut transport_options =
-                WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
+                WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 }));
@@ -87,7 +87,7 @@ fn consume_data_succeeds() {
 
         let transport2 = router
             .create_plain_transport({
-                let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+                let mut transport_options = PlainTransportOptions::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 });
@@ -186,7 +186,7 @@ fn weak() {
 
         let transport2 = router
             .create_plain_transport({
-                let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+                let mut transport_options = PlainTransportOptions::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 });
@@ -435,7 +435,7 @@ fn close_event() {
 
         let transport2 = router
             .create_plain_transport({
-                let mut transport_options = PlainTransportOptions::new(TransportListenIp {
+                let mut transport_options = PlainTransportOptions::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 });

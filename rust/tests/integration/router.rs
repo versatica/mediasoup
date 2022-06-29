@@ -103,6 +103,11 @@ fn create_router_succeeds() {
             Some(&CustomAppData { foo: 123 }),
         );
 
+        let worker_dump = worker.dump().await.expect("Failed to dump worker");
+
+        assert_eq!(worker_dump.router_ids, vec![router.id()]);
+        assert_eq!(worker_dump.webrtc_server_ids, vec![]);
+
         let dump = router.dump().await.expect("Failed to dump router");
 
         assert_eq!(dump.id, router.id());

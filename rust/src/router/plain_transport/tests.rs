@@ -1,4 +1,4 @@
-use crate::data_structures::TransportListenIp;
+use crate::data_structures::ListenIp;
 use crate::plain_transport::PlainTransportOptions;
 use crate::router::{Router, RouterOptions};
 use crate::transport::Transport;
@@ -38,7 +38,7 @@ fn router_close_event() {
 
         let transport = router
             .create_plain_transport({
-                let mut plain_transport_options = PlainTransportOptions::new(TransportListenIp {
+                let mut plain_transport_options = PlainTransportOptions::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
                 });

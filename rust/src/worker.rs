@@ -8,11 +8,13 @@ mod utils;
 
 use crate::data_structures::AppData;
 use crate::messages::{
-    RouterInternal, WorkerCloseRequest, WorkerCreateRouterRequest, WorkerDumpRequest,
+    RouterInternal, WebRtcServerInternal, WorkerCloseRequest, WorkerCreateRouterRequest,
+    WorkerCreateWebRtcServerData, WorkerCreateWebRtcServerRequest, WorkerDumpRequest,
     WorkerUpdateSettingsRequest,
 };
 pub use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
+use crate::webrtc_server::{WebRtcServer, WebRtcServerId, WebRtcServerOptions};
 use crate::worker::channel::BufferMessagesGuard;
 pub use crate::worker::utils::ExitError;
 use crate::worker_manager::WorkerManager;
@@ -248,6 +250,16 @@ pub struct WorkerUpdateSettings {
 pub struct WorkerDump {
     // Dump has `pid` field too, but it is useless here because of thead-based worker usage
     pub router_ids: Vec<RouterId>,
+    #[serde(rename = "webRtcServerIds")]
+    pub webrtc_server_ids: Vec<WebRtcServerId>,
+}
+
+/// Error that caused [`Worker::create_webrtc_server`] to fail.
+#[derive(Debug, Error, Eq, PartialEq)]
+pub enum CreateWebRtcServerError {
+    /// Request to worker failed
+    #[error("Request to worker failed: {0}")]
+    Request(RequestError),
 }
 
 /// Error that caused [`Worker::create_router`] to fail.
@@ -264,6 +276,7 @@ pub enum CreateRouterError {
 #[derive(Default)]
 struct Handlers {
     new_router: Bag<Arc<dyn Fn(&Router) + Send + Sync>, Router>,
+    new_webrtc_server: Bag<Arc<dyn Fn(&WebRtcServer) + Send + Sync>, WebRtcServer>,
     #[allow(clippy::type_complexity)]
     dead: BagOnce<Box<dyn FnOnce(Result<(), ExitError>) + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
@@ -599,6 +612,53 @@ impl Worker {
             .await
     }
 
+    /// Create a WebRtcServer.
+    ///
+    /// Worker will be kept alive as long as at least one WebRTC server instance is alive.
+    pub async fn create_webrtc_server(
+        &self,
+        webrtc_server_options: WebRtcServerOptions,
+    ) -> Result<WebRtcServer, CreateWebRtcServerError> {
+        debug!("create_router()");
+
+        let WebRtcServerOptions {
+            listen_infos,
+            app_data,
+        } = webrtc_server_options;
+
+        let webrtc_server_id = WebRtcServerId::new();
+        let internal = WebRtcServerInternal { webrtc_server_id };
+
+        let _buffer_guard = self
+            .inner
+            .channel
+            .buffer_messages_for(webrtc_server_id.into());
+
+        self.inner
+            .channel
+            .request(WorkerCreateWebRtcServerRequest {
+                internal,
+                data: WorkerCreateWebRtcServerData { listen_infos },
+            })
+            .await
+            .map_err(CreateWebRtcServerError::Request)?;
+
+        let webrtc_server = WebRtcServer::new(
+            webrtc_server_id,
+            Arc::clone(&self.inner.executor),
+            self.inner.channel.clone(),
+            app_data,
+            self.clone(),
+        );
+
+        self.inner
+            .handlers
+            .new_webrtc_server
+            .call_simple(&webrtc_server);
+
+        Ok(webrtc_server)
+    }
+
     /// Create a Router.
     ///
     /// Worker will be kept alive as long as at least one router instance is alive.
@@ -640,6 +700,17 @@ impl Worker {
         self.inner.handlers.new_router.call_simple(&router);
 
         Ok(router)
+    }
+
+    /// Callback is called when a new WebRTC server is created.
+    pub fn on_new_webrtc_server<F: Fn(&WebRtcServer) + Send + Sync + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
+        self.inner
+            .handlers
+            .new_webrtc_server
+            .add(Arc::new(callback))
     }
 
     /// Callback is called when a new router is created.

@@ -435,7 +435,7 @@ pub enum RtpHeaderExtensionUri {
     /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")]
     AbsSendTime,
-    /// http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time
+    /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time")]
     AbsCaptureTime,
     #[doc(hidden)]

@@ -6,16 +6,19 @@ jobs:
   ci:
     strategy:
       matrix:
-        # Just 1 OS should be fine for TypeScript.
-        os:
-          - ubuntu-22.04
-          # - macos-11.0
-          # - windows-2019
-        node:
-          - 14
-          - 16
-          - 18
-    runs-on: ${{ matrix.os }}
+        # Different Node versions on Ubuntu, the latest Node on other platforms
+        ci:
+          - os: ubuntu-22.04
+            node: 14
+          - os: ubuntu-22.04
+            node: 16
+          - os: ubuntu-22.04
+            node: 18
+          - os: macos-12
+            node: 18
+          - os: windows-2022
+            node: 18
+    runs-on: ${{ matrix.ci.os }}
 
     steps:
       - name: Checkout
@@ -24,18 +27,19 @@ jobs:
       - name: Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.ci.node }}
 
       - name: Configure cache
         uses: actions/cache@v2
         with:
           path: |
             ~/.npm
-          key: ${{ matrix.os }}-node-${{ hashFiles('**/package.json') }}
+          key: ${{ matrix.ci.os }}-node-${{ hashFiles('**/package.json') }}
           restore-keys: |
-            ${{ matrix.os }}-node-
+            ${{ matrix.ci.os }}-node-
 
       - run: npm install
       - run: npm run lint:node
+        if: runner.os == 'Linux'
       - run: npm run typescript:build
       - run: npm run test:node
