@@ -78,6 +78,7 @@ namespace RTC
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		bool managingBitrate{ false };
+		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 	};
 } // namespace RTC
 

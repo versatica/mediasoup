@@ -690,6 +690,7 @@ pub(crate) struct TransportConsumeData {
     pub(crate) consumable_rtp_encodings: Vec<RtpEncodingParameters>,
     pub(crate) paused: bool,
     pub(crate) preferred_layers: Option<ConsumerLayers>,
+    pub(crate) ignore_dtx: bool,
 }
 
 request_response!(
