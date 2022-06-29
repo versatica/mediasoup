@@ -96,6 +96,7 @@ impl ConsumerOptions {
             rtp_capabilities,
             paused: false,
             preferred_layers: None,
+            ignore_dtx: false,
             pipe: false,
             mid: None,
             app_data: AppData::default(),
