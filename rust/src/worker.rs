@@ -627,6 +627,7 @@ impl Worker {
         } = webrtc_server_options;
 
         let webrtc_server_id = WebRtcServerId::new();
+        let internal = WebRtcServerInternal { webrtc_server_id };
 
         let _buffer_guard = self
             .inner
@@ -636,10 +637,8 @@ impl Worker {
         self.inner
             .channel
             .request(WorkerCreateWebRtcServerRequest {
-                data: WorkerCreateWebRtcServerData {
-                    webrtc_server_id,
-                    listen_infos,
-                },
+                internal,
+                data: WorkerCreateWebRtcServerData { listen_infos },
             })
             .await
             .map_err(CreateWebRtcServerError::Request)?;
