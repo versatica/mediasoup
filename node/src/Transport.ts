@@ -672,9 +672,10 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			}
 		}
 
-		const internal = { ...this.internal, consumerId: uuidv4(), producerId };
+		const internal = { ...this.internal, consumerId: uuidv4() };
 		const reqData =
 		{
+			producerId,
 			kind                   : producer.kind,
 			rtpParameters,
 			type                   : pipe ? 'pipe' : producer.type,
@@ -689,6 +690,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		const data =
 		{
+			producerId,
 			kind : producer.kind,
 			rtpParameters,
 			type : pipe ? 'pipe' : producer.type
@@ -866,9 +868,10 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		const { label, protocol } = dataProducer;
 
-		const internal = { ...this.internal, dataConsumerId: uuidv4(), dataProducerId };
+		const internal = { ...this.internal, dataConsumerId: uuidv4() };
 		const reqData =
 		{
+			dataProducerId,
 			type,
 			sctpStreamParameters,
 			label,

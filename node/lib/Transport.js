@@ -374,8 +374,9 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 }
             }
         }
-        const internal = { ...this.internal, consumerId: (0, uuid_1.v4)(), producerId };
+        const internal = { ...this.internal, consumerId: (0, uuid_1.v4)() };
         const reqData = {
+            producerId,
             kind: producer.kind,
             rtpParameters,
             type: pipe ? 'pipe' : producer.type,
@@ -386,6 +387,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         };
         const status = await this.channel.request('transport.consume', internal, reqData);
         const data = {
+            producerId,
             kind: producer.kind,
             rtpParameters,
             type: pipe ? 'pipe' : producer.type
@@ -499,8 +501,9 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             }
         }
         const { label, protocol } = dataProducer;
-        const internal = { ...this.internal, dataConsumerId: (0, uuid_1.v4)(), dataProducerId };
+        const internal = { ...this.internal, dataConsumerId: (0, uuid_1.v4)() };
         const reqData = {
+            dataProducerId,
             type,
             sctpStreamParameters,
             label,

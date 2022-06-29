@@ -408,7 +408,6 @@ impl Inner {
                         router_id: self.transport.router().id(),
                         transport_id: self.transport.id(),
                         consumer_id: self.id,
-                        producer_id: self.producer_id,
                     },
                 };
                 let weak_producer = self.weak_producer.clone();
@@ -979,7 +978,6 @@ impl Consumer {
             router_id: self.inner.transport.router().id(),
             transport_id: self.inner.transport.id(),
             consumer_id: self.inner.id,
-            producer_id: self.inner.producer_id,
         }
     }
 }

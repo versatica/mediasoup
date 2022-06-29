@@ -79,7 +79,6 @@ pub(crate) struct ConsumerInternal {
     pub(crate) router_id: RouterId,
     pub(crate) transport_id: TransportId,
     pub(crate) consumer_id: ConsumerId,
-    pub(crate) producer_id: ProducerId,
 }
 
 #[derive(Debug, Serialize)]
@@ -95,7 +94,6 @@ pub(crate) struct DataProducerInternal {
 pub(crate) struct DataConsumerInternal {
     pub(crate) router_id: RouterId,
     pub(crate) transport_id: TransportId,
-    pub(crate) data_producer_id: DataProducerId,
     pub(crate) data_consumer_id: DataConsumerId,
 }
 
@@ -684,6 +682,7 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct TransportConsumeData {
+    pub(crate) producer_id: ProducerId,
     pub(crate) kind: MediaKind,
     pub(crate) rtp_parameters: RtpParameters,
     pub(crate) r#type: ConsumerType,
@@ -734,6 +733,7 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct TransportConsumeDataData {
+    pub(crate) data_producer_id: DataProducerId,
     pub(crate) r#type: DataConsumerType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) sctp_stream_parameters: Option<SctpStreamParameters>,
@@ -921,7 +921,7 @@ pub(crate) struct ConsumerEnableTraceEventData {
 }
 
 request_response!(
-    "producer.enableTraceEvent",
+    "consumer.enableTraceEvent",
     ConsumerEnableTraceEventRequest {
         internal: ConsumerInternal,
         data: ConsumerEnableTraceEventData,

@@ -42,7 +42,7 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Associated DataProducer id.
      */
     get dataProducerId() {
-        return this.#internal.dataProducerId;
+        return this.#data.dataProducerId;
     }
     /**
      * Whether the DataConsumer is closed.

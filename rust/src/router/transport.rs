@@ -610,9 +610,9 @@ pub(super) trait TransportImpl: TransportGeneric {
                     router_id: self.router().id(),
                     transport_id: self.id(),
                     consumer_id,
-                    producer_id: producer.id(),
                 },
                 data: TransportConsumeData {
+                    producer_id: producer.id(),
                     kind: producer.kind(),
                     rtp_parameters: rtp_parameters.clone(),
                     r#type,
@@ -778,10 +778,10 @@ pub(super) trait TransportImpl: TransportGeneric {
                 internal: DataConsumerInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
-                    data_producer_id: data_producer.id(),
                     data_consumer_id,
                 },
                 data: TransportConsumeDataData {
+                    data_producer_id: data_producer.id(),
                     r#type,
                     sctp_stream_parameters,
                     label: data_producer.label().clone(),
