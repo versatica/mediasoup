@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* `RtpStreamSend`: Memory optimizations. Extracted from #675.
+* `RtpStreamSend`: Memory optimizations (PR #840). Extracted from #675, by @nazar-pc.
 
 
 ### 3.10.0
