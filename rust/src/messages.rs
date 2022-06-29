@@ -204,13 +204,13 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct WorkerCreateWebRtcServerData {
+    pub(crate) webrtc_server_id: WebRtcServerId,
     pub(crate) listen_infos: WebRtcServerListenInfos,
 }
 
 request_response!(
     "worker.createWebRtcServer",
     WorkerCreateWebRtcServerRequest {
-        internal: WebRtcServerInternal,
         data: WorkerCreateWebRtcServerData,
     },
 );

@@ -637,8 +637,10 @@ impl Worker {
         self.inner
             .channel
             .request(WorkerCreateWebRtcServerRequest {
-                internal,
-                data: WorkerCreateWebRtcServerData { listen_infos },
+                data: WorkerCreateWebRtcServerData {
+                    webrtc_server_id,
+                    listen_infos,
+                },
             })
             .await
             .map_err(CreateWebRtcServerError::Request)?;
