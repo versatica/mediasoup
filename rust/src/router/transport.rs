@@ -549,6 +549,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             paused,
             mid,
             preferred_layers,
+            ignore_dtx,
             pipe,
             app_data,
         } = consumer_options;
@@ -616,6 +617,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                         .clone(),
                     paused,
                     preferred_layers,
+                    ignore_dtx,
                 },
             })
             .await
