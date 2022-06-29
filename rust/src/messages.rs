@@ -921,7 +921,7 @@ pub(crate) struct ConsumerEnableTraceEventData {
 }
 
 request_response!(
-    "producer.enableTraceEvent",
+    "consumer.enableTraceEvent",
     ConsumerEnableTraceEventRequest {
         internal: ConsumerInternal,
         data: ConsumerEnableTraceEventData,
