@@ -603,7 +603,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                 internal: ConsumerInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
-                    consumer_id
+                    consumer_id,
                 },
                 data: TransportConsumeData {
                     producer_id: producer.id(),
