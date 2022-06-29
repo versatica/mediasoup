@@ -3,7 +3,6 @@
 
 #include "RTC/Codecs/Opus.hpp"
 #include "Logger.hpp"
-#include <cstring> // std::memcpy()
 
 namespace RTC
 {
