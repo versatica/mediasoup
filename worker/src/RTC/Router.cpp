@@ -213,7 +213,7 @@ namespace RTC
 
 				if (jsonWebRtcServerIdIt == request->data.end() || !jsonWebRtcServerIdIt->is_string())
 				{
-					MS_THROW_ERROR("missing data.webRtcServerId");
+					MS_THROW_TYPE_ERROR("missing webRtcServerId");
 				}
 
 				std::string webRtcServerId = jsonWebRtcServerIdIt->get<std::string>();
@@ -221,7 +221,7 @@ namespace RTC
 				auto* webRtcServer = this->listener->OnRouterNeedWebRtcServer(this, webRtcServerId);
 
 				if (!webRtcServer)
-					MS_THROW_ERROR("wrong data.webRtcServerId (no associated WebRtcServer found)");
+					MS_THROW_ERROR("wrong webRtcServerId (no associated WebRtcServer found)");
 
 				bool enableUdp{ true };
 				auto jsonEnableUdpIt = request->data.find("enableUdp");
@@ -540,12 +540,16 @@ namespace RTC
 		auto jsonTransportIdIt = internal.find("transportId");
 
 		if (jsonTransportIdIt == internal.end() || !jsonTransportIdIt->is_string())
-			MS_THROW_ERROR("missing internal.transportId");
+		{
+			MS_THROW_TYPE_ERROR("missing transportId");
+		}
 
 		transportId.assign(jsonTransportIdIt->get<std::string>());
 
 		if (this->mapTransports.find(transportId) != this->mapTransports.end())
+		{
 			MS_THROW_ERROR("a Transport with same transportId already exists");
+		}
 	}
 
 	RTC::Transport* Router::GetTransportFromInternal(json& internal) const
@@ -555,7 +559,9 @@ namespace RTC
 		auto jsonTransportIdIt = internal.find("transportId");
 
 		if (jsonTransportIdIt == internal.end() || !jsonTransportIdIt->is_string())
-			MS_THROW_ERROR("missing internal.transportId");
+		{
+			MS_THROW_TYPE_ERROR("missing transportId");
+		}
 
 		auto it = this->mapTransports.find(jsonTransportIdIt->get<std::string>());
 
@@ -574,12 +580,16 @@ namespace RTC
 		auto jsonRtpObserverIdIt = internal.find("rtpObserverId");
 
 		if (jsonRtpObserverIdIt == internal.end() || !jsonRtpObserverIdIt->is_string())
-			MS_THROW_ERROR("missing internal.rtpObserverId");
+		{
+			MS_THROW_TYPE_ERROR("missing rtpObserverId");
+		}
 
 		rtpObserverId.assign(jsonRtpObserverIdIt->get<std::string>());
 
 		if (this->mapRtpObservers.find(rtpObserverId) != this->mapRtpObservers.end())
+		{
 			MS_THROW_ERROR("an RtpObserver with same rtpObserverId already exists");
+		}
 	}
 
 	RTC::RtpObserver* Router::GetRtpObserverFromInternal(json& internal) const
@@ -589,7 +599,9 @@ namespace RTC
 		auto jsonRtpObserverIdIt = internal.find("rtpObserverId");
 
 		if (jsonRtpObserverIdIt == internal.end() || !jsonRtpObserverIdIt->is_string())
-			MS_THROW_ERROR("missing internal.rtpObserverId");
+		{
+			MS_THROW_TYPE_ERROR("missing rtpObserverId");
+		}
 
 		auto it = this->mapRtpObservers.find(jsonRtpObserverIdIt->get<std::string>());
 
@@ -608,7 +620,9 @@ namespace RTC
 		auto jsonProducerIdIt = data.find("producerId");
 
 		if (jsonProducerIdIt == data.end() || !jsonProducerIdIt->is_string())
-			MS_THROW_ERROR("missing data.producerId");
+		{
+			MS_THROW_TYPE_ERROR("missing producerId");
+		}
 
 		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
 

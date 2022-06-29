@@ -830,7 +830,7 @@ namespace RTC
 
 				if (jsonProducerIdIt == request->data.end() || !jsonProducerIdIt->is_string())
 				{
-					MS_THROW_ERROR("missing data.producerId");
+					MS_THROW_TYPE_ERROR("missing producerId");
 				}
 
 				std::string producerId = jsonProducerIdIt->get<std::string>();
@@ -1186,7 +1186,7 @@ namespace RTC
 
 				if (jsonDataProducerIdIt == request->data.end() || !jsonDataProducerIdIt->is_string())
 				{
-					MS_THROW_ERROR("missing data.dataProducerId");
+					MS_THROW_ERROR("missing dataProducerId");
 				}
 
 				std::string dataProducerId = jsonDataProducerIdIt->get<std::string>();
@@ -1502,7 +1502,7 @@ namespace RTC
 
 				if (dataConsumer->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
-					MS_THROW_ERROR("invalid DataConsumer type");
+					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
 				if (!this->sctpAssociation)
@@ -1527,7 +1527,7 @@ namespace RTC
 
 				if (dataConsumer->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
-					MS_THROW_ERROR("invalid DataConsumer type");
+					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
 				dataConsumer->HandleRequest(request);
@@ -1555,7 +1555,7 @@ namespace RTC
 
 				if (dataConsumer->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
-					MS_THROW_ERROR("invalid DataConsumer type");
+					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
 				if (!this->sctpAssociation)
@@ -1770,12 +1770,16 @@ namespace RTC
 		auto jsonProducerIdIt = internal.find("producerId");
 
 		if (jsonProducerIdIt == internal.end() || !jsonProducerIdIt->is_string())
-			MS_THROW_ERROR("missing internal.producerId");
+		{
+			MS_THROW_TYPE_ERROR("missing producerId");
+		}
 
 		producerId.assign(jsonProducerIdIt->get<std::string>());
 
 		if (this->mapProducers.find(producerId) != this->mapProducers.end())
+		{
 			MS_THROW_ERROR("a Producer with same producerId already exists");
+		}
 	}
 
 	RTC::Producer* Transport::GetProducerFromInternal(json& internal) const
@@ -1785,7 +1789,9 @@ namespace RTC
 		auto jsonProducerIdIt = internal.find("producerId");
 
 		if (jsonProducerIdIt == internal.end() || !jsonProducerIdIt->is_string())
-			MS_THROW_ERROR("missing internal.producerId");
+		{
+			MS_THROW_TYPE_ERROR("missing producerId");
+		}
 
 		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
 
@@ -1804,12 +1810,16 @@ namespace RTC
 		auto jsonConsumerIdIt = internal.find("consumerId");
 
 		if (jsonConsumerIdIt == internal.end() || !jsonConsumerIdIt->is_string())
-			MS_THROW_ERROR("missing internal.consumerId");
+		{
+			MS_THROW_TYPE_ERROR("missing consumerId");
+		}
 
 		consumerId.assign(jsonConsumerIdIt->get<std::string>());
 
 		if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
+		{
 			MS_THROW_ERROR("a Consumer with same consumerId already exists");
+		}
 	}
 
 	RTC::Consumer* Transport::GetConsumerFromInternal(json& internal) const
@@ -1819,7 +1829,9 @@ namespace RTC
 		auto jsonConsumerIdIt = internal.find("consumerId");
 
 		if (jsonConsumerIdIt == internal.end() || !jsonConsumerIdIt->is_string())
-			MS_THROW_ERROR("missing internal.consumerId");
+		{
+			MS_THROW_TYPE_ERROR("missing consumerId");
+		}
 
 		auto it = this->mapConsumers.find(jsonConsumerIdIt->get<std::string>());
 
@@ -1866,12 +1878,16 @@ namespace RTC
 		auto jsonDataProducerIdIt = internal.find("dataProducerId");
 
 		if (jsonDataProducerIdIt == internal.end() || !jsonDataProducerIdIt->is_string())
-			MS_THROW_ERROR("missing internal.dataProducerId");
+		{
+			MS_THROW_TYPE_ERROR("missing dataProducerId");
+		}
 
 		dataProducerId.assign(jsonDataProducerIdIt->get<std::string>());
 
 		if (this->mapDataProducers.find(dataProducerId) != this->mapDataProducers.end())
+		{
 			MS_THROW_ERROR("a DataProducer with same dataProducerId already exists");
+		}
 	}
 
 	RTC::DataProducer* Transport::GetDataProducerFromInternal(json& internal) const
@@ -1881,7 +1897,9 @@ namespace RTC
 		auto jsonDataProducerIdIt = internal.find("dataProducerId");
 
 		if (jsonDataProducerIdIt == internal.end() || !jsonDataProducerIdIt->is_string())
-			MS_THROW_ERROR("missing internal.dataProducerId");
+		{
+			MS_THROW_TYPE_ERROR("missing dataProducerId");
+		}
 
 		auto it = this->mapDataProducers.find(jsonDataProducerIdIt->get<std::string>());
 
@@ -1900,12 +1918,16 @@ namespace RTC
 		auto jsonDataConsumerIdIt = internal.find("dataConsumerId");
 
 		if (jsonDataConsumerIdIt == internal.end() || !jsonDataConsumerIdIt->is_string())
-			MS_THROW_ERROR("missing internal.dataConsumerId");
+		{
+			MS_THROW_TYPE_ERROR("missing dataConsumerId");
+		}
 
 		dataConsumerId.assign(jsonDataConsumerIdIt->get<std::string>());
 
 		if (this->mapDataConsumers.find(dataConsumerId) != this->mapDataConsumers.end())
+		{
 			MS_THROW_ERROR("a DataConsumer with same dataConsumerId already exists");
+		}
 	}
 
 	RTC::DataConsumer* Transport::GetDataConsumerFromInternal(json& internal) const
@@ -1915,7 +1937,9 @@ namespace RTC
 		auto jsonDataConsumerIdIt = internal.find("dataConsumerId");
 
 		if (jsonDataConsumerIdIt == internal.end() || !jsonDataConsumerIdIt->is_string())
-			MS_THROW_ERROR("missing internal.dataConsumerId");
+		{
+			MS_THROW_TYPE_ERROR("missing dataConsumerId");
+		}
 
 		auto it = this->mapDataConsumers.find(jsonDataConsumerIdIt->get<std::string>());
 
