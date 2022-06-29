@@ -4,7 +4,7 @@ use mediasoup::audio_level_observer::AudioLevelObserverOptions;
 use mediasoup::consumer::{ConsumerLayers, ConsumerOptions, ConsumerTraceEventType};
 use mediasoup::data_consumer::DataConsumerOptions;
 use mediasoup::data_producer::DataProducerOptions;
-use mediasoup::data_structures::TransportListenIp;
+use mediasoup::data_structures::ListenIp;
 use mediasoup::direct_transport::DirectTransportOptions;
 use mediasoup::plain_transport::PlainTransportOptions;
 use mediasoup::prelude::*;
@@ -81,11 +81,10 @@ fn smoke() {
 
         let webrtc_transport = router
             .create_webrtc_transport({
-                let mut options =
-                    WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-                        ip: "127.0.0.1".parse().unwrap(),
-                        announced_ip: None,
-                    }));
+                let mut options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
+                    ip: "127.0.0.1".parse().unwrap(),
+                    announced_ip: None,
+                }));
 
                 options.enable_sctp = true;
 
@@ -264,7 +263,7 @@ fn smoke() {
 
         let plain_transport = router
             .create_plain_transport({
-                let mut options = PlainTransportOptions::new(TransportListenIp {
+                let mut options = PlainTransportOptions::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 });

@@ -4,7 +4,7 @@ mod tests;
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{AppData, SctpState, TransportListenIp, TransportTuple};
+use crate::data_structures::{AppData, ListenIp, SctpState, TransportTuple};
 use crate::messages::{
     PlainTransportData, TransportCloseRequest, TransportConnectPlainRequest,
     TransportConnectRequestPlainData, TransportInternal,
@@ -46,7 +46,7 @@ use std::sync::{Arc, Weak};
 #[non_exhaustive]
 pub struct PlainTransportOptions {
     /// Listening IP address.
-    pub listen_ip: TransportListenIp,
+    pub listen_ip: ListenIp,
     /// Fixed port to listen on instead of selecting automatically from Worker's port range.
     pub port: Option<u16>,
     /// Use RTCP-mux (RTP and RTCP in the same port).
@@ -81,7 +81,7 @@ pub struct PlainTransportOptions {
 impl PlainTransportOptions {
     /// Create Plain transport options with given listen IP.
     #[must_use]
-    pub fn new(listen_ip: TransportListenIp) -> Self {
+    pub fn new(listen_ip: ListenIp) -> Self {
         Self {
             listen_ip,
             port: None,
@@ -260,6 +260,7 @@ impl Inner {
                     internal: TransportInternal {
                         router_id: self.router.id(),
                         transport_id: self.id,
+                        webrtc_server_id: None,
                     },
                 };
 
@@ -820,6 +821,7 @@ impl PlainTransport {
         TransportInternal {
             router_id: self.router().id(),
             transport_id: self.id(),
+            webrtc_server_id: None,
         }
     }
 }

@@ -128,7 +128,7 @@ impl Inner {
 
 /// An active speaker observer monitors the volume of the selected audio producers.
 ///
-/// It just handles audio producers (if [`AudioLevelObserver::add_producer()`] is called with a
+/// It just handles audio producers (if [`ActiveSpeakerObserver::add_producer()`] is called with a
 /// video producer it will fail).
 ///
 /// Audio levels are read from an RTP header extension. No decoding of audio data is done. See

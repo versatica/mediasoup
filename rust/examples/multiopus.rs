@@ -144,7 +144,7 @@ impl EchoConnection {
         // For simplicity we will create plain transport for audio producer right away
         let plain_transport = router
             .create_plain_transport({
-                let mut options = PlainTransportOptions::new(TransportListenIp {
+                let mut options = PlainTransportOptions::new(ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 });
@@ -225,7 +225,7 @@ impl EchoConnection {
         // this at a different time and/or in different order.
         let consumer_transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                TransportListenIp {
+                ListenIp {
                     ip: "127.0.0.1".parse().unwrap(),
                     announced_ip: None,
                 },

@@ -1,5 +1,5 @@
 use crate::consumer::ConsumerOptions;
-use crate::data_structures::TransportListenIp;
+use crate::data_structures::ListenIp;
 use crate::producer::ProducerOptions;
 use crate::router::{Router, RouterOptions};
 use crate::rtp_parameters::{
@@ -78,11 +78,10 @@ async fn init() -> (Router, WebRtcTransport, WebRtcTransport) {
         .await
         .expect("Failed to create router");
 
-    let transport_options =
-        WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-            ip: "127.0.0.1".parse().unwrap(),
-            announced_ip: None,
-        }));
+    let transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
+        ip: "127.0.0.1".parse().unwrap(),
+        announced_ip: None,
+    }));
 
     let transport_1 = router
         .create_webrtc_transport(transport_options.clone())

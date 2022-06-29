@@ -138,6 +138,7 @@ fn dump_succeeds() {
         let dump = worker.dump().await.expect("Failed to dump worker");
 
         assert_eq!(dump.router_ids, vec![]);
+        assert_eq!(dump.webrtc_server_ids, vec![]);
     });
 }
 

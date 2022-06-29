@@ -8,6 +8,7 @@
   * nlohmann_json 3.10.5.
   * usrsctp snapshot 4e06feb01cadcd127d119486b98a4bd3d64aa1e7.
   * wingetopt 1.00.
+* `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port (PR #834, PR #845).
 
 # 0.9.3
 

@@ -55,7 +55,7 @@ pub use crate::data_producer::{
 pub use crate::producer::{Producer, ProducerId, ProducerOptions, WeakProducer};
 
 pub use crate::data_structures::{
-    AppData, DtlsParameters, IceCandidate, IceParameters, TransportListenIp, WebRtcMessage,
+    AppData, DtlsParameters, IceCandidate, IceParameters, ListenIp, WebRtcMessage,
 };
 pub use crate::rtp_parameters::{
     MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtpCapabilities,
