@@ -4,6 +4,7 @@
 ### NEXT
 
 * `RtpStreamSend`: Memory optimizations (PR #840). Extracted from #675, by @nazar-pc.
+* `SimpleConsumer`: Opus DTX ignore capabilities (PR #846).
 
 
 ### 3.10.0
