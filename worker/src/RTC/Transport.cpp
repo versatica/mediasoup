@@ -826,10 +826,12 @@ namespace RTC
 
 			case Channel::ChannelRequest::MethodId::TRANSPORT_CONSUME:
 			{
-				auto jsonProducerIdIt = request->internal.find("producerId");
+				auto jsonProducerIdIt = request->data.find("producerId");
 
-				if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
-					MS_THROW_ERROR("missing internal.producerId");
+				if (jsonProducerIdIt == request->data.end() || !jsonProducerIdIt->is_string())
+				{
+					MS_THROW_ERROR("missing data.producerId");
+				}
 
 				std::string producerId = jsonProducerIdIt->get<std::string>();
 				std::string consumerId;
@@ -1180,11 +1182,11 @@ namespace RTC
 					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
 				}
 
-				auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
+				auto jsonDataProducerIdIt = request->data.find("dataProducerId");
 
-				if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
+				if (jsonDataProducerIdIt == request->data.end() || !jsonDataProducerIdIt->is_string())
 				{
-					MS_THROW_ERROR("missing internal.dataProducerId");
+					MS_THROW_ERROR("missing data.dataProducerId");
 				}
 
 				std::string dataProducerId = jsonDataProducerIdIt->get<std::string>();

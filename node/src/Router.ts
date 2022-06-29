@@ -404,11 +404,12 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const internal =
 		{
 			...this.#internal,
-			transportId    : uuidv4(),
-			webRtcServerId : webRtcServer ? webRtcServer.id : undefined
+			transportId : uuidv4()
 		};
 
-		const reqData = {
+		const reqData =
+		{
+			webRtcServerId : webRtcServer ? webRtcServer.id : undefined,
 			listenIps,
 			port,
 			enableUdp,
@@ -420,7 +421,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			numSctpStreams,
 			maxSctpMessageSize,
 			sctpSendBufferSize,
-			isDataChannel : true
+			isDataChannel  : true
 		};
 
 		const data = webRtcServer

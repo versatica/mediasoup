@@ -58,7 +58,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Associated Producer id.
      */
     get producerId() {
-        return this.#internal.producerId;
+        return this.#data.producerId;
     }
     /**
      * Whether the Consumer is closed.

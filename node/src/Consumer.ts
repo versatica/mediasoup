@@ -189,12 +189,12 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		routerId: string;
 		transportId: string;
 		consumerId: string;
-		producerId: string;
 	};
 
 	// Consumer data.
 	readonly #data:
 	{
+		producerId: string;
 		kind: MediaKind;
 		rtpParameters: RtpParameters;
 		type: ConsumerType;
@@ -290,7 +290,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	 */
 	get producerId(): string
 	{
-		return this.#internal.producerId;
+		return this.#data.producerId;
 	}
 
 	/**

@@ -234,8 +234,7 @@ impl Inner {
                     internal: DataConsumerInternal {
                         router_id: self.transport.router().id(),
                         transport_id: self.transport.id(),
-                        data_consumer_id: self.id,
-                        data_producer_id: self.data_producer_id,
+                        data_consumer_id: self.id
                     },
                 };
                 let weak_data_producer = self.weak_data_producer.clone();
@@ -680,8 +679,7 @@ impl DataConsumer {
         DataConsumerInternal {
             router_id: self.inner().transport.router().id(),
             transport_id: self.inner().transport.id(),
-            data_consumer_id: self.inner().id,
-            data_producer_id: self.inner().data_producer_id,
+            data_consumer_id: self.inner().id
         }
     }
 }
@@ -698,8 +696,7 @@ impl DirectDataConsumer {
                     internal: DataConsumerInternal {
                         router_id: self.inner.transport.router().id(),
                         transport_id: self.inner.transport.id(),
-                        data_consumer_id: self.inner.id,
-                        data_producer_id: self.inner.data_producer_id,
+                        data_consumer_id: self.inner.id
                     },
                     data: DataConsumerSendRequestData { ppid },
                 },

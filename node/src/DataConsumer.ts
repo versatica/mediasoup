@@ -83,13 +83,13 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		routerId: string;
 		transportId: string;
-		dataProducerId: string;
 		dataConsumerId: string;
 	};
 
 	// DataConsumer data.
 	readonly #data:
 	{
+		dataProducerId: string;
 		type: DataConsumerType;
 		sctpStreamParameters?: SctpStreamParameters;
 		label: string;
@@ -157,7 +157,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	 */
 	get dataProducerId(): string
 	{
-		return this.#internal.dataProducerId;
+		return this.#data.dataProducerId;
 	}
 
 	/**
