@@ -627,7 +627,6 @@ impl Worker {
         } = webrtc_server_options;
 
         let webrtc_server_id = WebRtcServerId::new();
-        let internal = WebRtcServerInternal { webrtc_server_id };
 
         let _buffer_guard = self
             .inner
