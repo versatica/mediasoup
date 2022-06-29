@@ -345,7 +345,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      *
      * @virtual
      */
-    async consume({ producerId, rtpCapabilities, paused = false, mid, preferredLayers, pipe = false, appData }) {
+    async consume({ producerId, rtpCapabilities, paused = false, mid, preferredLayers, ignoreDtx = false, pipe = false, appData }) {
         logger.debug('consume()');
         if (!producerId || typeof producerId !== 'string')
             throw new TypeError('missing producerId');
@@ -382,7 +382,8 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             type: pipe ? 'pipe' : producer.type,
             consumableRtpEncodings: producer.consumableRtpParameters.encodings,
             paused,
-            preferredLayers
+            preferredLayers,
+            ignoreDtx
         };
         const status = await this.channel.request('transport.consume', internal, reqData);
         const data = {
