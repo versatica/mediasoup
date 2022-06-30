@@ -625,7 +625,6 @@ namespace RTC
 			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
 			result = ReceiveRtpPacketResult::DISCARDED;
-
 			goto done;
 		}
 
