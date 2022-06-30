@@ -4,27 +4,15 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 const { version } = require('./package.json');
 
+const isFreeBSD = os.platform() === 'freebsd';
 const isWindows = os.platform() === 'win32';
 const task = process.argv.slice(2).join(' ');
 
-const GULP = process.env.GULP || 'gulp';
-
 // mediasoup mayor version.
-const MAYOR_VERSION = 3;
+const MAYOR_VERSION = version.split('.')[0];
 
-// Just for Windows.
-let PYTHON;
-let MSBUILD;
-let MEDIASOUP_BUILDTYPE;
-let MEDIASOUP_TEST_TAGS;
-
-if (isWindows)
-{
-	PYTHON = process.env.PYTHON || 'python';
-	MSBUILD = process.env.MSBUILD || 'MSBuild';
-	MEDIASOUP_BUILDTYPE = process.env.MEDIASOUP_BUILDTYPE || 'Release';
-	MEDIASOUP_TEST_TAGS = process.env.MEDIASOUP_TEST_TAGS || '';
-}
+// make command to use.
+const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 
 // eslint-disable-next-line no-console
 console.log(`npm-scripts.js [INFO] running task "${task}"`);
@@ -35,14 +23,14 @@ switch (task)
 	{
 		if (!isWindows)
 		{
-			execute('rm -rf lib');
+			execute('rm -rf node/lib');
 		}
 		else
 		{
-			execute('rmdir /s /q lib');
+			execute('rmdir /s /q "node/lib"');
 		}
 
-		execute('tsc');
+		execute('tsc --project node');
 		taskReplaceVersion();
 
 		break;
@@ -54,39 +42,45 @@ switch (task)
 
 		if (!isWindows)
 		{
-			execute('rm -rf lib');
+			execute('rm -rf node/lib');
 		}
 		else
 		{
-			execute('rmdir /s /q lib');
+			execute('rmdir /s /q "node/lib"');
 		}
 
 		const watch = new TscWatchClient();
 
 		watch.on('success', taskReplaceVersion);
-		watch.start('--pretty');
+		watch.start('--project', 'node', '--pretty');
+
+		break;
+	}
+
+	case 'worker:build':
+	{
+		execute(`${MAKE} -C worker`);
 
 		break;
 	}
 
 	case 'lint:node':
 	{
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=typescript eslint -c .eslintrc.js --max-warnings 0 --ext=ts src/');
-		execute('cross-env MEDIASOUP_NODE_LANGUAGE=javascript eslint -c .eslintrc.js --max-warnings 0 --ext=js --ignore-pattern \'!.eslintrc.js\' .eslintrc.js gulpfile.js npm-scripts.js test/');
+		execute('eslint -c node/.eslintrc.js --max-warnings 0 node/src/ node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
 
 		break;
 	}
 
 	case 'lint:worker':
 	{
-		execute(`${GULP} lint:worker`);
+		execute(`${MAKE} lint -C worker`);
 
 		break;
 	}
 
 	case 'format:worker':
 	{
-		execute(`${GULP} format:worker`);
+		execute(`${MAKE} format -C worker`);
 
 		break;
 	}
@@ -109,17 +103,7 @@ switch (task)
 
 	case 'test:worker':
 	{
-		if (!isWindows)
-		{
-			execute('make test -C worker');
-		}
-		else if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			execute(`${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker-test`);
-			execute(`${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`);
-			execute(`cd worker && .\\out\\${MEDIASOUP_BUILDTYPE}\\mediasoup-worker-test.exe --invisibles --use-colour=yes ${MEDIASOUP_TEST_TAGS}`);
-		}
-
+		execute(`${MAKE} test -C worker`);
 		break;
 	}
 
@@ -136,15 +120,13 @@ switch (task)
 	{
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
-			if (!isWindows)
-			{
-				execute('make -C worker');
-			}
-			else
-			{
-				execute(`${PYTHON} ./worker/scripts/configure.py --format=msvs -R mediasoup-worker`);
-				execute(`${MSBUILD} ./worker/mediasoup-worker.sln /p:Configuration=${MEDIASOUP_BUILDTYPE}`);
-			}
+			execute('node npm-scripts.js worker:build');
+			// Clean build artifacts except `mediasoup-worker`.
+			execute(`${MAKE} clean-build -C worker`);
+			// Clean downloaded dependencies.
+			execute(`${MAKE} clean-subprojects -C worker`);
+			// Clean PIP/Meson/Ninja.
+			execute(`${MAKE} clean-pip -C worker`);
 		}
 
 		break;
@@ -163,6 +145,13 @@ switch (task)
 		break;
 	}
 
+	case 'install-clang-tools':
+	{
+		execute('npm ci --prefix worker/scripts');
+
+		break;
+	}
+
 	default:
 	{
 		throw new TypeError(`unknown task "${task}"`);
@@ -171,7 +160,12 @@ switch (task)
 
 function taskReplaceVersion()
 {
-	const files = [ 'lib/index.js', 'lib/index.d.ts', 'lib/Worker.js' ];
+	const files =
+	[
+		'node/lib/index.js',
+		'node/lib/index.d.ts',
+		'node/lib/Worker.js'
+	];
 
 	for (const file of files)
 	{
@@ -189,7 +183,7 @@ function execute(command)
 
 	try
 	{
-		execSync(command,	{ stdio: [ 'ignore', process.stdout, process.stderr ] });
+		execSync(command, { stdio: [ 'ignore', process.stdout, process.stderr ] });
 	}
 	catch (error)
 	{

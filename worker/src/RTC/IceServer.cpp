@@ -11,7 +11,8 @@ namespace RTC
 	/* Static. */
 
 	static constexpr size_t StunSerializeBufferSize{ 65536 };
-	static uint8_t StunSerializeBuffer[StunSerializeBufferSize];
+	thread_local static uint8_t StunSerializeBuffer[StunSerializeBufferSize];
+	static constexpr size_t MaxTuples{ 8 };
 
 	/* Instance methods. */
 
@@ -19,6 +20,32 @@ namespace RTC
 	  : listener(listener), usernameFragment(usernameFragment), password(password)
 	{
 		MS_TRACE();
+
+		// Notify the listener.
+		this->listener->OnIceServerLocalUsernameFragmentAdded(this, usernameFragment);
+	}
+
+	IceServer::~IceServer()
+	{
+		MS_TRACE();
+
+		// Here we must notify the listener about the removal of current
+		// usernameFragments (and also the old one if any) and all tuples.
+
+		this->listener->OnIceServerLocalUsernameFragmentRemoved(this, usernameFragment);
+
+		if (!this->oldUsernameFragment.empty())
+		{
+			this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->oldUsernameFragment);
+		}
+
+		for (const auto& it : this->tuples)
+		{
+			auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
+
+			// Notify the listener.
+			this->listener->OnIceServerTupleRemoved(this, storedTuple);
+		}
 	}
 
 	void IceServer::ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple)
@@ -102,9 +129,12 @@ namespace RTC
 				{
 					case RTC::StunPacket::Authentication::OK:
 					{
-						if (!this->oldPassword.empty())
+						if (!this->oldUsernameFragment.empty() && !this->oldPassword.empty())
 						{
 							MS_DEBUG_TAG(ice, "new ICE credentials applied");
+
+							// Notify the listener.
+							this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->oldUsernameFragment);
 
 							this->oldUsernameFragment.clear();
 							this->oldPassword.clear();
@@ -198,8 +228,13 @@ namespace RTC
 
 				delete response;
 
+				uint32_t nomination{ 0u };
+
+				if (packet->HasNomination())
+					nomination = packet->GetNomination();
+
 				// Handle the tuple.
-				HandleTuple(tuple, packet->HasUseCandidate());
+				HandleTuple(tuple, packet->HasUseCandidate(), packet->HasNomination(), nomination);
 
 				break;
 			}
@@ -259,29 +294,31 @@ namespace RTC
 		if (!removedTuple)
 			return;
 
-		// Remove from the list of tuples.
+		// Remove it from the list of tuples.
 		this->tuples.erase(it);
 
-		// If this is not the selected tuple, stop here.
-		if (removedTuple != this->selectedTuple)
-			return;
-
-		// Otherwise this was the selected tuple.
-		this->selectedTuple = nullptr;
-
-		// Mark the first tuple as selected tuple (if any).
-		if (this->tuples.begin() != this->tuples.end())
+		// If this is the selected tuple, do things.
+		if (removedTuple == this->selectedTuple)
 		{
-			SetSelectedTuple(std::addressof(*this->tuples.begin()));
+			this->selectedTuple = nullptr;
+
+			// Mark the first tuple as selected tuple (if any).
+			if (this->tuples.begin() != this->tuples.end())
+			{
+				SetSelectedTuple(std::addressof(*this->tuples.begin()));
+			}
+			// Or just emit 'disconnected'.
+			else
+			{
+				// Update state.
+				this->state = IceState::DISCONNECTED;
+				// Notify the listener.
+				this->listener->OnIceServerDisconnected(this);
+			}
 		}
-		// Or just emit 'disconnected'.
-		else
-		{
-			// Update state.
-			this->state = IceState::DISCONNECTED;
-			// Notify the listener.
-			this->listener->OnIceServerDisconnected(this);
-		}
+
+		// Notify the listener.
+		this->listener->OnIceServerTupleRemoved(this, removedTuple);
 	}
 
 	void IceServer::ForceSelectedTuple(const RTC::TransportTuple* tuple)
@@ -301,7 +338,8 @@ namespace RTC
 		SetSelectedTuple(storedTuple);
 	}
 
-	void IceServer::HandleTuple(RTC::TransportTuple* tuple, bool hasUseCandidate)
+	void IceServer::HandleTuple(
+	  RTC::TransportTuple* tuple, bool hasUseCandidate, bool hasNomination, uint32_t nomination)
 	{
 		MS_TRACE();
 
@@ -316,9 +354,15 @@ namespace RTC
 				// There shouldn't be a selected tuple.
 				MS_ASSERT(!this->selectedTuple, "state is 'new' but there is selected tuple");
 
-				if (!hasUseCandidate)
+				if (!hasUseCandidate && !hasNomination)
 				{
-					MS_DEBUG_TAG(ice, "transition from state 'new' to 'connected'");
+					MS_DEBUG_TAG(
+					  ice,
+					  "transition from state 'new' to 'connected' [hasUseCandidate:%s, hasNomination:%s, nomination:%" PRIu32
+					  "]",
+					  hasUseCandidate ? "true" : "false",
+					  hasNomination ? "true" : "false",
+					  nomination);
 
 					// Store the tuple.
 					auto* storedTuple = AddTuple(tuple);
@@ -332,17 +376,29 @@ namespace RTC
 				}
 				else
 				{
-					MS_DEBUG_TAG(ice, "transition from state 'new' to 'completed'");
-
 					// Store the tuple.
 					auto* storedTuple = AddTuple(tuple);
 
-					// Mark it as selected tuple.
-					SetSelectedTuple(storedTuple);
-					// Update state.
-					this->state = IceState::COMPLETED;
-					// Notify the listener.
-					this->listener->OnIceServerCompleted(this);
+					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
+					{
+						MS_DEBUG_TAG(
+						  ice,
+						  "transition from state 'new' to 'completed' [hasUseCandidate:%s, hasNomination:%s, nomination:%" PRIu32
+						  "]",
+						  hasUseCandidate ? "true" : "false",
+						  hasNomination ? "true" : "false",
+						  nomination);
+
+						// Mark it as selected tuple.
+						SetSelectedTuple(storedTuple);
+						// Update state.
+						this->state = IceState::COMPLETED;
+						// Update nomination.
+						if (hasNomination && nomination > this->remoteNomination)
+							this->remoteNomination = nomination;
+						// Notify the listener.
+						this->listener->OnIceServerCompleted(this);
+					}
 				}
 
 				break;
@@ -359,9 +415,15 @@ namespace RTC
 				// There shouldn't be a selected tuple.
 				MS_ASSERT(!this->selectedTuple, "state is 'disconnected' but there is selected tuple");
 
-				if (!hasUseCandidate)
+				if (!hasUseCandidate && !hasNomination)
 				{
-					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'connected'");
+					MS_DEBUG_TAG(
+					  ice,
+					  "transition from state 'disconnected' to 'connected' [hasUseCandidate:%s, hasNomination:%s, nomination:%" PRIu32
+					  "]",
+					  hasUseCandidate ? "true" : "false",
+					  hasNomination ? "true" : "false",
+					  nomination);
 
 					// Store the tuple.
 					auto* storedTuple = AddTuple(tuple);
@@ -375,17 +437,29 @@ namespace RTC
 				}
 				else
 				{
-					MS_DEBUG_TAG(ice, "transition from state 'disconnected' to 'completed'");
-
 					// Store the tuple.
 					auto* storedTuple = AddTuple(tuple);
 
-					// Mark it as selected tuple.
-					SetSelectedTuple(storedTuple);
-					// Update state.
-					this->state = IceState::COMPLETED;
-					// Notify the listener.
-					this->listener->OnIceServerCompleted(this);
+					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
+					{
+						MS_DEBUG_TAG(
+						  ice,
+						  "transition from state 'disconnected' to 'completed' [hasUseCandidate:%s, hasNomination:%s, nomination:%" PRIu32
+						  "]",
+						  hasUseCandidate ? "true" : "false",
+						  hasNomination ? "true" : "false",
+						  nomination);
+
+						// Mark it as selected tuple.
+						SetSelectedTuple(storedTuple);
+						// Update state.
+						this->state = IceState::COMPLETED;
+						// Update nomination.
+						if (hasNomination && nomination > this->remoteNomination)
+							this->remoteNomination = nomination;
+						// Notify the listener.
+						this->listener->OnIceServerCompleted(this);
+					}
 				}
 
 				break;
@@ -399,7 +473,7 @@ namespace RTC
 				// There should be a selected tuple.
 				MS_ASSERT(this->selectedTuple, "state is 'connected' but there is not selected tuple");
 
-				if (!hasUseCandidate)
+				if (!hasUseCandidate && !hasNomination)
 				{
 					// If a new tuple store it.
 					if (!HasTuple(tuple))
@@ -407,7 +481,13 @@ namespace RTC
 				}
 				else
 				{
-					MS_DEBUG_TAG(ice, "transition from state 'connected' to 'completed'");
+					MS_DEBUG_TAG(
+					  ice,
+					  "transition from state 'connected' to 'completed' [hasUseCandidate:%s, hasNomination:%s, nomination:%" PRIu32
+					  "]",
+					  hasUseCandidate ? "true" : "false",
+					  hasNomination ? "true" : "false",
+					  nomination);
 
 					auto* storedTuple = HasTuple(tuple);
 
@@ -415,12 +495,18 @@ namespace RTC
 					if (!storedTuple)
 						storedTuple = AddTuple(tuple);
 
-					// Mark it as selected tuple.
-					SetSelectedTuple(storedTuple);
-					// Update state.
-					this->state = IceState::COMPLETED;
-					// Notify the listener.
-					this->listener->OnIceServerCompleted(this);
+					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
+					{
+						// Mark it as selected tuple.
+						SetSelectedTuple(storedTuple);
+						// Update state.
+						this->state = IceState::COMPLETED;
+						// Update nomination.
+						if (hasNomination && nomination > this->remoteNomination)
+							this->remoteNomination = nomination;
+						// Notify the listener.
+						this->listener->OnIceServerCompleted(this);
+					}
 				}
 
 				break;
@@ -434,7 +520,7 @@ namespace RTC
 				// There should be a selected tuple.
 				MS_ASSERT(this->selectedTuple, "state is 'completed' but there is not selected tuple");
 
-				if (!hasUseCandidate)
+				if (!hasUseCandidate && !hasNomination)
 				{
 					// If a new tuple store it.
 					if (!HasTuple(tuple))
@@ -448,8 +534,14 @@ namespace RTC
 					if (!storedTuple)
 						storedTuple = AddTuple(tuple);
 
-					// Mark it as selected tuple.
-					SetSelectedTuple(storedTuple);
+					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
+					{
+						// Mark it as selected tuple.
+						SetSelectedTuple(storedTuple);
+						// Update nomination.
+						if (hasNomination && nomination > this->remoteNomination)
+							this->remoteNomination = nomination;
+					}
 				}
 
 				break;
@@ -470,6 +562,43 @@ namespace RTC
 		// just a pointer that will be freed soon).
 		if (storedTuple->GetProtocol() == TransportTuple::Protocol::UDP)
 			storedTuple->StoreUdpRemoteAddress();
+
+		// Notify the listener.
+		this->listener->OnIceServerTupleAdded(this, storedTuple);
+
+		// Don't allow more than MaxTuples.
+		if (this->tuples.size() > MaxTuples)
+		{
+			MS_WARN_TAG(ice, "too too many tuples, removing the oldest non selected one");
+
+			// Find the oldest tuple which is neither the added one nor the selected
+			// one (if any), and remove it.
+			RTC::TransportTuple* removedTuple{ nullptr };
+			auto it = this->tuples.rbegin();
+
+			for (; it != this->tuples.rend(); ++it)
+			{
+				RTC::TransportTuple* otherStoredTuple = std::addressof(*it);
+
+				if (otherStoredTuple != storedTuple && otherStoredTuple != this->selectedTuple)
+				{
+					removedTuple = otherStoredTuple;
+
+					break;
+				}
+			}
+
+			// This should not happen by design.
+			MS_ASSERT(removedTuple, "couldn't find any tuple to be removed");
+
+			// Remove it from the list of tuples.
+			// NOTE: This trick is needed since it is a reverse_iterator and
+			// erase() requires a iterator, const_iterator or bidirectional_iterator.
+			this->tuples.erase(std::next(it).base());
+
+			// Notify the listener.
+			this->listener->OnIceServerTupleRemoved(this, removedTuple);
+		}
 
 		// Return the address of the inserted tuple.
 		return storedTuple;

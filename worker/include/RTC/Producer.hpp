@@ -2,7 +2,7 @@
 #define MS_RTC_PRODUCER_HPP
 
 #include "common.hpp"
-#include "Channel/Request.hpp"
+#include "Channel/ChannelRequest.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
@@ -12,8 +12,7 @@
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
-#include <json.hpp>
-#include <map>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
@@ -26,6 +25,9 @@ namespace RTC
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
 			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
@@ -52,7 +54,7 @@ namespace RTC
 	private:
 		struct RtpMapping
 		{
-			std::map<uint8_t, uint8_t> codecs;
+			absl::flat_hash_map<uint8_t, uint8_t> codecs;
 			std::vector<RtpEncodingMapping> encodings;
 		};
 
@@ -89,7 +91,7 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
-		void HandleRequest(Channel::Request* request);
+		void HandleRequest(Channel::ChannelRequest* request);
 		RTC::Media::Kind GetKind() const
 		{
 			return this->kind;
@@ -110,7 +112,7 @@ namespace RTC
 		{
 			return this->paused;
 		}
-		const std::map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams()
+		const absl::flat_hash_map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams()
 		{
 			return this->mapRtpStreamMappedSsrc;
 		}
@@ -158,7 +160,7 @@ namespace RTC
 		// Passed by argument.
 		RTC::Producer::Listener* listener{ nullptr };
 		// Allocated by this.
-		std::map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
+		absl::flat_hash_map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
 		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
 		// Others.
 		RTC::Media::Kind kind;
@@ -167,9 +169,9 @@ namespace RTC
 		struct RtpMapping rtpMapping;
 		std::vector<RTC::RtpStreamRecv*> rtpStreamByEncodingIdx;
 		std::vector<uint8_t> rtpStreamScores;
-		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
-		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
-		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
+		absl::flat_hash_map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
+		absl::flat_hash_map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
+		absl::flat_hash_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		bool paused{ false };
 		RTC::RtpPacket* currentRtpPacket{ nullptr };

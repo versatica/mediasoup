@@ -42,11 +42,14 @@ namespace RTC
 		};
 
 	public:
-		RtpStreamRecv(RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params);
+		RtpStreamRecv(
+		  RTC::RtpStreamRecv::Listener* listener,
+		  RTC::RtpStream::Params& params,
+		  unsigned int sendNackDelayMs);
 		~RtpStreamRecv();
 
 		void FillJsonStats(json& jsonObject) override;
-		bool ReceivePacket(RTC::RtpPacket* packet) override;
+		bool ReceivePacket(RTC::RtpPacket* packet);
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		RTC::RTCP::ReceiverReport* GetRtxRtcpReceiverReport();
@@ -87,6 +90,9 @@ namespace RTC
 		void OnNackGeneratorKeyFrameRequired() override;
 
 	private:
+		// Passed by argument.
+		unsigned int sendNackDelayMs{ 0u };
+		// Others.
 		uint32_t expectedPrior{ 0u };      // Packets expected at last interval.
 		uint32_t expectedPriorScore{ 0u }; // Packets expected at last interval for score calculation.
 		uint32_t receivedPrior{ 0u };      // Packets received at last interval.
@@ -96,7 +102,7 @@ namespace RTC
 		                                   // sender report.
 		uint64_t lastSrReceived{ 0u };     // Wallclock time representing the most recent
 		                                   // sender report arrival.
-		uint32_t transit{ 0u };            // Relative transit time for prev packet.
+		int32_t transit{ 0u };             // Relative transit time for prev packet.
 		uint32_t jitter{ 0u };
 		uint8_t firSeqNumber{ 0u };
 		uint32_t reportedPacketLost{ 0u };

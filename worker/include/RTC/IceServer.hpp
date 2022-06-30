@@ -33,6 +33,13 @@ namespace RTC
 			 */
 			virtual void OnIceServerSendStunPacket(
 			  const RTC::IceServer* iceServer, const RTC::StunPacket* packet, RTC::TransportTuple* tuple) = 0;
+			virtual void OnIceServerLocalUsernameFragmentAdded(
+			  const RTC::IceServer* iceServer, const std::string& usernameFragment) = 0;
+			virtual void OnIceServerLocalUsernameFragmentRemoved(
+			  const RTC::IceServer* iceServer, const std::string& usernameFragment) = 0;
+			virtual void OnIceServerTupleAdded(const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
+			virtual void OnIceServerTupleRemoved(
+			  const RTC::IceServer* iceServer, RTC::TransportTuple* tuple) = 0;
 			virtual void OnIceServerSelectedTuple(
 			  const RTC::IceServer* iceServer, RTC::TransportTuple* tuple)        = 0;
 			virtual void OnIceServerConnected(const RTC::IceServer* iceServer)    = 0;
@@ -42,6 +49,7 @@ namespace RTC
 
 	public:
 		IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password);
+		~IceServer();
 
 	public:
 		void ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple);
@@ -61,15 +69,27 @@ namespace RTC
 		{
 			return this->selectedTuple;
 		}
-		void SetUsernameFragment(const std::string& usernameFragment)
+		void RestartIce(const std::string& usernameFragment, const std::string& password)
 		{
+			if (!this->oldUsernameFragment.empty())
+			{
+				this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->oldUsernameFragment);
+			}
+
 			this->oldUsernameFragment = this->usernameFragment;
 			this->usernameFragment    = usernameFragment;
-		}
-		void SetPassword(const std::string& password)
-		{
+
 			this->oldPassword = this->password;
 			this->password    = password;
+
+			this->remoteNomination = 0u;
+
+			// Notify the listener.
+			this->listener->OnIceServerLocalUsernameFragmentAdded(this, usernameFragment);
+
+			// NOTE: Do not call listener->OnIceServerLocalUsernameFragmentRemoved()
+			// yet with old usernameFragment. Wait until we receive a STUN packet
+			// with the new one.
 		}
 		bool IsValidTuple(const RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);
@@ -78,7 +98,8 @@ namespace RTC
 		void ForceSelectedTuple(const RTC::TransportTuple* tuple);
 
 	private:
-		void HandleTuple(RTC::TransportTuple* tuple, bool hasUseCandidate);
+		void HandleTuple(
+		  RTC::TransportTuple* tuple, bool hasUseCandidate, bool hasNomination, uint32_t nomination);
 		/**
 		 * Store the given tuple and return its stored address.
 		 */
@@ -101,6 +122,7 @@ namespace RTC
 		std::string password;
 		std::string oldUsernameFragment;
 		std::string oldPassword;
+		uint32_t remoteNomination{ 0u };
 		IceState state{ IceState::NEW };
 		std::list<RTC::TransportTuple> tuples;
 		RTC::TransportTuple* selectedTuple{ nullptr };

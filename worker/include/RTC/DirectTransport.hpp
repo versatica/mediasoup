@@ -14,7 +14,7 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;
-		void HandleRequest(Channel::Request* request) override;
+		void HandleRequest(Channel::ChannelRequest* request) override;
 		void HandleNotification(PayloadChannel::Notification* notification) override;
 
 	private:
@@ -34,6 +34,10 @@ namespace RTC
 		void SendSctpData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;
+
+	private:
+		// Allocated by this.
+		uint8_t* buffer{ nullptr };
 	};
 } // namespace RTC
 

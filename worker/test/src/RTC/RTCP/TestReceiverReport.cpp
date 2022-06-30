@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp" // sizeof(SenderReport::Header)
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 using namespace RTC::RTCP;
 
@@ -25,7 +25,7 @@ namespace TestReceiverReport
 	// clang-format on
 
 	// Receiver Report buffer start point.
-	uint8_t* rrBuffer = buffer + sizeof(Packet::CommonHeader) + sizeof(uint32_t) /*Sender SSRC*/;
+	uint8_t* rrBuffer = buffer + Packet::CommonHeaderSize + sizeof(uint32_t) /*Sender SSRC*/;
 
 	uint32_t ssrc{ 0x01932db4 };
 	uint8_t fractionLost{ 0 };
@@ -76,7 +76,7 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 
 	SECTION("parse RR")
 	{
-		ReceiverReport* report = ReceiverReport::Parse(rrBuffer, sizeof(ReceiverReport::Header));
+		ReceiverReport* report = ReceiverReport::Parse(rrBuffer, ReceiverReport::HeaderSize);
 
 		REQUIRE(report);
 

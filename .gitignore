@@ -2,16 +2,8 @@
 /coverage/
 /NO_GIT/
 
-# clang-tidy stuff.
-/worker/compile_commands.json
-
-# gyp generated stuff.
+# Generated stuff.
 /worker/out/
-/worker/**/*.xcodeproj/
-/worker/**/*.sln
-/worker/**/*.vcxproj
-/worker/**/*.vcxproj.filters
-/worker/**/*.vcxproj.user
 
 # clang-fuzzer stuff is too big.
 /worker/deps/clang-fuzzer
@@ -27,8 +19,8 @@
 # Mac Stuff.
 .DS_Store
 
-# Python generated stuff in Windows.
-/worker/scripts/configure.pyc
+# worker scripts node-modules.
+/worker/scripts/node_modules/
 
 # Vistual Studio generated Stuff.
 /worker/**/Debug/
@@ -37,3 +29,18 @@
 
 # Vistual Studio Code stuff.
 /.vscode/
+
+# JetBrains IDE stuff.
+/.idea/
+
+# Rust.
+/target
+/Cargo.lock
+
+# Rust examples.
+/rust/examples-frontend/*/node_modules
+/rust/examples-frontend/*/package-lock.json
+
+# Meson.
+/worker/subprojects/*
+!/worker/subprojects/*.wrap

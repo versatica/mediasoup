@@ -12,7 +12,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr size_t EncryptBufferSize{ 65536 };
-	static uint8_t EncryptBuffer[EncryptBufferSize];
+	thread_local static uint8_t EncryptBuffer[EncryptBufferSize];
 
 	/* Class methods. */
 
@@ -65,6 +65,22 @@ namespace RTC
 
 		switch (cryptoSuite)
 		{
+			case CryptoSuite::AEAD_AES_256_GCM:
+			{
+				srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtp);
+				srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtcp);
+
+				break;
+			}
+
+			case CryptoSuite::AEAD_AES_128_GCM:
+			{
+				srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtp);
+				srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtcp);
+
+				break;
+			}
+
 			case CryptoSuite::AES_CM_128_HMAC_SHA1_80:
 			{
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
@@ -78,22 +94,6 @@ namespace RTC
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
 				// NOTE: Must be 80 for RTCP.
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
-
-				break;
-			}
-
-			case CryptoSuite::AEAD_AES_256_GCM:
-			{
-				srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtp);
-				srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtcp);
-
-				break;
-			}
-
-			case CryptoSuite::AEAD_AES_128_GCM:
-			{
-				srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtp);
-				srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtcp);
 
 				break;
 			}
@@ -146,22 +146,21 @@ namespace RTC
 		}
 	}
 
-	bool SrtpSession::EncryptRtp(const uint8_t** data, size_t* len)
+	bool SrtpSession::EncryptRtp(const uint8_t** data, int* len)
 	{
 		MS_TRACE();
 
 		// Ensure that the resulting SRTP packet fits into the encrypt buffer.
-		if (*len + SRTP_MAX_TRAILER_LEN > EncryptBufferSize)
+		if (static_cast<size_t>(*len) + SRTP_MAX_TRAILER_LEN > EncryptBufferSize)
 		{
-			MS_WARN_TAG(srtp, "cannot encrypt RTP packet, size too big (%zu bytes)", *len);
+			MS_WARN_TAG(srtp, "cannot encrypt RTP packet, size too big (%i bytes)", *len);
 
 			return false;
 		}
 
 		std::memcpy(EncryptBuffer, *data, *len);
 
-		srtp_err_status_t err =
-		  srtp_protect(this->session, static_cast<void*>(EncryptBuffer), reinterpret_cast<int*>(len));
+		srtp_err_status_t err = srtp_protect(this->session, static_cast<void*>(EncryptBuffer), len);
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -176,12 +175,11 @@ namespace RTC
 		return true;
 	}
 
-	bool SrtpSession::DecryptSrtp(uint8_t* data, size_t* len)
+	bool SrtpSession::DecryptSrtp(uint8_t* data, int* len)
 	{
 		MS_TRACE();
 
-		srtp_err_status_t err =
-		  srtp_unprotect(this->session, static_cast<void*>(data), reinterpret_cast<int*>(len));
+		srtp_err_status_t err = srtp_unprotect(this->session, static_cast<void*>(data), len);
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -193,22 +191,21 @@ namespace RTC
 		return true;
 	}
 
-	bool SrtpSession::EncryptRtcp(const uint8_t** data, size_t* len)
+	bool SrtpSession::EncryptRtcp(const uint8_t** data, int* len)
 	{
 		MS_TRACE();
 
 		// Ensure that the resulting SRTCP packet fits into the encrypt buffer.
-		if (*len + SRTP_MAX_TRAILER_LEN > EncryptBufferSize)
+		if (static_cast<size_t>(*len) + SRTP_MAX_TRAILER_LEN > EncryptBufferSize)
 		{
-			MS_WARN_TAG(srtp, "cannot encrypt RTCP packet, size too big (%zu bytes)", *len);
+			MS_WARN_TAG(srtp, "cannot encrypt RTCP packet, size too big (%i bytes)", *len);
 
 			return false;
 		}
 
 		std::memcpy(EncryptBuffer, *data, *len);
 
-		srtp_err_status_t err = srtp_protect_rtcp(
-		  this->session, static_cast<void*>(EncryptBuffer), reinterpret_cast<int*>(len));
+		srtp_err_status_t err = srtp_protect_rtcp(this->session, static_cast<void*>(EncryptBuffer), len);
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -223,12 +220,11 @@ namespace RTC
 		return true;
 	}
 
-	bool SrtpSession::DecryptSrtcp(uint8_t* data, size_t* len)
+	bool SrtpSession::DecryptSrtcp(uint8_t* data, int* len)
 	{
 		MS_TRACE();
 
-		srtp_err_status_t err =
-		  srtp_unprotect_rtcp(this->session, static_cast<void*>(data), reinterpret_cast<int*>(len));
+		srtp_err_status_t err = srtp_unprotect_rtcp(this->session, static_cast<void*>(data), len);
 
 		if (DepLibSRTP::IsError(err))
 		{

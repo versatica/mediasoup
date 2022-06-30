@@ -11,6 +11,10 @@ public:
 	explicit MediaSoupError(const char* description) : std::runtime_error(description)
 	{
 	}
+
+public:
+	static const size_t bufferSize{ 2000 };
+	thread_local static char buffer[];
 };
 
 class MediaSoupTypeError : public MediaSoupError
@@ -26,44 +30,32 @@ public:
 	do \
 	{ \
 		MS_ERROR("throwing MediaSoupError: " desc, ##__VA_ARGS__); \
-		\
-		static char buffer[2000]; \
-		\
-		std::snprintf(buffer, 2000, desc, ##__VA_ARGS__); \
-		throw MediaSoupError(buffer); \
+		std::snprintf(MediaSoupError::buffer, MediaSoupError::bufferSize, desc, ##__VA_ARGS__); \
+		throw MediaSoupError(MediaSoupError::buffer); \
 	} while (false)
 
 #define MS_THROW_ERROR_STD(desc, ...) \
 	do \
 	{ \
 		MS_ERROR_STD("throwing MediaSoupError: " desc, ##__VA_ARGS__); \
-		\
-		static char buffer[2000]; \
-		\
-		std::snprintf(buffer, 2000, desc, ##__VA_ARGS__); \
-		throw MediaSoupError(buffer); \
+		std::snprintf(MediaSoupError::buffer, MediaSoupError::bufferSize, desc, ##__VA_ARGS__); \
+		throw MediaSoupError(MediaSoupError::buffer); \
 	} while (false)
 
 #define MS_THROW_TYPE_ERROR(desc, ...) \
 	do \
 	{ \
 		MS_ERROR("throwing MediaSoupTypeError: " desc, ##__VA_ARGS__); \
-		\
-		static char buffer[2000]; \
-		\
-		std::snprintf(buffer, 2000, desc, ##__VA_ARGS__); \
-		throw MediaSoupTypeError(buffer); \
+		std::snprintf(MediaSoupError::buffer, MediaSoupError::bufferSize, desc, ##__VA_ARGS__); \
+		throw MediaSoupTypeError(MediaSoupError::buffer); \
 	} while (false)
 
 #define MS_THROW_TYPE_ERROR_STD(desc, ...) \
 	do \
 	{ \
 		MS_ERROR_STD("throwing MediaSoupTypeError: " desc, ##__VA_ARGS__); \
-		\
-		static char buffer[2000]; \
-		\
-		std::snprintf(buffer, 2000, desc, ##__VA_ARGS__); \
-		throw MediaSoupTypeError(buffer); \
+		std::snprintf(MediaSoupError::buffer, MediaSoupError::bufferSize, desc, ##__VA_ARGS__); \
+		throw MediaSoupTypeError(MediaSoupError::buffer); \
 	} while (false)
 // clang-format on
 

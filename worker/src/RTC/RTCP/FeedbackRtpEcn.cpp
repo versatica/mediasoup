@@ -14,9 +14,9 @@ namespace RTC
 			MS_TRACE();
 
 			// Add minimum header.
-			std::memcpy(buffer, this->header, sizeof(Header));
+			std::memcpy(buffer, this->header, HeaderSize);
 
-			return sizeof(Header);
+			return HeaderSize;
 		}
 
 		void FeedbackRtpEcnItem::Dump() const

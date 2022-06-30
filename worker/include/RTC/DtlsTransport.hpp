@@ -7,7 +7,7 @@
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
-#include <map>
+#include <absl/container/flat_hash_map.h>
 #include <string>
 #include <vector>
 
@@ -62,6 +62,9 @@ namespace RTC
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			// DTLS is in the process of negotiating a secure connection. Incoming
 			// media can flow through.
@@ -137,14 +140,14 @@ namespace RTC
 		static void GenerateFingerprints();
 
 	private:
-		static X509* certificate;
-		static EVP_PKEY* privateKey;
-		static SSL_CTX* sslCtx;
-		static uint8_t sslReadBuffer[];
-		static std::map<std::string, Role> string2Role;
-		static std::map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
-		static std::map<FingerprintAlgorithm, std::string> fingerprintAlgorithm2String;
-		static std::vector<Fingerprint> localFingerprints;
+		thread_local static X509* certificate;
+		thread_local static EVP_PKEY* privateKey;
+		thread_local static SSL_CTX* sslCtx;
+		thread_local static uint8_t sslReadBuffer[];
+		static absl::flat_hash_map<std::string, Role> string2Role;
+		static absl::flat_hash_map<std::string, FingerprintAlgorithm> string2FingerprintAlgorithm;
+		static absl::flat_hash_map<FingerprintAlgorithm, std::string> fingerprintAlgorithm2String;
+		thread_local static std::vector<Fingerprint> localFingerprints;
 		static std::vector<SrtpCryptoSuiteMapEntry> srtpCryptoSuites;
 
 	public:

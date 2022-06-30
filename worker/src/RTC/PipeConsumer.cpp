@@ -91,13 +91,13 @@ namespace RTC
 		jsonObject["producerScores"] = *this->producerRtpStreamScores;
 	}
 
-	void PipeConsumer::HandleRequest(Channel::Request* request)
+	void PipeConsumer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::CONSUMER_REQUEST_KEY_FRAME:
+			case Channel::ChannelRequest::MethodId::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())
 					RequestKeyFrame();
@@ -107,7 +107,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
+			case Channel::ChannelRequest::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
 			{
 				// Do nothing.
 
@@ -184,7 +184,7 @@ namespace RTC
 		return 0u;
 	}
 
-	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void PipeConsumer::SendRtpPacket(std::shared_ptr<RTC::RtpPacket> packet)
 	{
 		MS_TRACE();
 
@@ -256,10 +256,10 @@ namespace RTC
 		if (rtpStream->ReceivePacket(packet))
 		{
 			// Send the packet.
-			this->listener->OnConsumerSendRtpPacket(this, packet);
+			this->listener->OnConsumerSendRtpPacket(this, packet.get());
 
 			// May emit 'trace' event.
-			EmitTraceEventRtpAndKeyFrameTypes(packet);
+			EmitTraceEventRtpAndKeyFrameTypes(packet.get());
 		}
 		else
 		{
@@ -311,6 +311,16 @@ namespace RTC
 		auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
 
 		packet->AddSdesChunk(sdesChunk);
+
+		auto* dlrr = rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
+
+		if (dlrr)
+		{
+			auto* report = new RTC::RTCP::DelaySinceLastRr();
+
+			report->AddSsrcInfo(dlrr);
+			packet->AddDelaySinceLastRr(report);
+		}
 
 		this->lastRtcpSentTime = nowMs;
 	}
@@ -386,6 +396,16 @@ namespace RTC
 		auto* rtpStream = this->mapSsrcRtpStream.at(report->GetSsrc());
 
 		rtpStream->ReceiveRtcpReceiverReport(report);
+	}
+
+	void PipeConsumer::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+	{
+		MS_TRACE();
+
+		for (auto* rtpStream : this->rtpStreams)
+		{
+			rtpStream->ReceiveRtcpXrReceiverReferenceTime(report);
+		}
 	}
 
 	uint32_t PipeConsumer::GetTransmissionRate(uint64_t nowMs)
@@ -553,9 +573,7 @@ namespace RTC
 				}
 			}
 
-			// Create a RtpStreamSend for sending a single media stream.
-			size_t bufferSize = params.useNack ? 600u : 0u;
-			auto* rtpStream   = new RTC::RtpStreamSend(this, params, bufferSize);
+			auto* rtpStream = new RTC::RtpStreamSend(this, params, this->rtpParameters.mid);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())

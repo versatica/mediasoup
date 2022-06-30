@@ -1,0 +1,15 @@
+{
+	"compileOnSave": true,
+	"compilerOptions":
+	{
+		"lib": [ "es2021" ],
+		"target": "esnext",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"strict": true,
+		"outDir": "lib",
+		"declaration": true,
+		"declarationMap": true
+	},
+	"include": [ "src" ]
+}

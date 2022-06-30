@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPsVbcm.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <cstring> // std::memcmp()
 
 using namespace RTC::RTCP;
@@ -29,7 +29,7 @@ namespace TestFeedbackPsVbcm
 	uint32_t mediaSsrc{ 0 };
 	uint32_t ssrc{ 0x02d03702 };
 	uint8_t seq{ 8 };
-	uint8_t payloadType{ 1 };
+	uint8_t payloadType{ 2 };
 	uint16_t length{ 1 };
 	uint8_t valueMask{ 1 };
 

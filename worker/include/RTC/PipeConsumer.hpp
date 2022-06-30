@@ -21,7 +21,7 @@ namespace RTC
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
-		void HandleRequest(Channel::Request* request) override;
+		void HandleRequest(Channel::ChannelRequest* request) override;
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
@@ -30,7 +30,7 @@ namespace RTC
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet) override;
+		void SendRtpPacket(std::shared_ptr<RTC::RtpPacket> packet) override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs) override;
 		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override
 		{
@@ -40,6 +40,7 @@ namespace RTC
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
+		void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report) override;
 		uint32_t GetTransmissionRate(uint64_t nowMs) override;
 		float GetRtt() const override;
 
@@ -60,11 +61,11 @@ namespace RTC
 		// Allocated by this.
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
 		// Others.
-		std::unordered_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
-		std::unordered_map<uint32_t, RTC::RtpStreamSend*> mapSsrcRtpStream;
+		absl::flat_hash_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
+		absl::flat_hash_map<uint32_t, RTC::RtpStreamSend*> mapSsrcRtpStream;
 		bool keyFrameSupported{ false };
-		std::unordered_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
-		std::unordered_map<RTC::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
+		absl::flat_hash_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
+		absl::flat_hash_map<RTC::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
 	};
 } // namespace RTC
 

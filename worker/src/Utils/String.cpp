@@ -19,7 +19,7 @@
 /* Static. */
 
 static constexpr size_t BufferOutSize{ 65536 };
-static uint8_t BufferOut[BufferOutSize];
+thread_local static uint8_t BufferOut[BufferOutSize];
 static const uint8_t Base64Table[65] =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

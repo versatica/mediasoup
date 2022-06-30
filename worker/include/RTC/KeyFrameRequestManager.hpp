@@ -2,7 +2,7 @@
 #define MS_KEY_FRAME_REQUEST_MANAGER_HPP
 
 #include "handles/Timer.hpp"
-#include <map>
+#include <absl/container/flat_hash_map.h>
 
 namespace RTC
 {
@@ -11,6 +11,9 @@ namespace RTC
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnKeyFrameRequestTimeout(PendingKeyFrameInfo* keyFrameRequestInfo) = 0;
 		};
@@ -53,6 +56,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnKeyFrameDelayTimeout(KeyFrameRequestDelayer* keyFrameRequestDelayer) = 0;
 		};
 
@@ -91,6 +97,9 @@ namespace RTC
 		class Listener
 		{
 		public:
+			virtual ~Listener() = default;
+
+		public:
 			virtual void OnKeyFrameNeeded(KeyFrameRequestManager* keyFrameRequestManager, uint32_t ssrc) = 0;
 		};
 
@@ -113,8 +122,8 @@ namespace RTC
 	private:
 		Listener* listener{ nullptr };
 		uint32_t keyFrameRequestDelay{ 0u }; // 0 means disabled.
-		std::map<uint32_t, PendingKeyFrameInfo*> mapSsrcPendingKeyFrameInfo;
-		std::map<uint32_t, KeyFrameRequestDelayer*> mapSsrcKeyFrameRequestDelayer;
+		absl::flat_hash_map<uint32_t, PendingKeyFrameInfo*> mapSsrcPendingKeyFrameInfo;
+		absl::flat_hash_map<uint32_t, KeyFrameRequestDelayer*> mapSsrcKeyFrameRequestDelayer;
 	};
 } // namespace RTC
 

@@ -72,6 +72,9 @@ namespace RTC
 		if (this->params.rtxSsrc)
 			jsonObject["rtxSsrc"] = this->params.rtxSsrc;
 
+		if (this->rtxStream)
+			jsonObject["rtxPacketsDiscarded"] = this->rtxStream->GetPacketsDiscarded();
+
 		if (this->hasRtt)
 			jsonObject["roundTripTime"] = this->rtt;
 	}
@@ -106,7 +109,7 @@ namespace RTC
 		this->rtxStream = new RTC::RtxStream(params);
 	}
 
-	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
+	bool RtpStream::ReceiveStreamPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 

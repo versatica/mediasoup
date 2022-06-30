@@ -26,6 +26,7 @@ namespace RTC
 			};
 
 		public:
+			static const size_t HeaderSize{ 24 };
 			static ReceiverReport* Parse(const uint8_t* data, size_t len);
 
 		public:
@@ -46,7 +47,7 @@ namespace RTC
 			size_t Serialize(uint8_t* buffer);
 			size_t GetSize() const
 			{
-				return sizeof(Header);
+				return HeaderSize;
 			}
 			uint32_t GetSsrc() const
 			{
@@ -81,8 +82,9 @@ namespace RTC
 			void SetTotalLost(int32_t totalLost)
 			{
 				// Get the limit value for possitive and negative totalLost.
-				int32_t clamp = (totalLost >= 0) ? totalLost > 0x07FFFFF ? 0x07FFFFF : totalLost
-				                                 : -totalLost > 0x0800000 ? 0x0800000 : -totalLost;
+				int32_t clamp = (totalLost >= 0)         ? totalLost > 0x07FFFFF ? 0x07FFFFF : totalLost
+				                : -totalLost > 0x0800000 ? 0x0800000
+				                                         : -totalLost;
 
 				uint32_t value = (totalLost >= 0) ? (clamp & 0x07FFFFF) : (clamp | 0x0800000);
 
@@ -123,7 +125,7 @@ namespace RTC
 
 		private:
 			Header* header{ nullptr };
-			uint8_t raw[sizeof(Header)]{ 0u };
+			uint8_t raw[HeaderSize]{ 0u };
 		};
 
 		class ReceiverReportPacket : public Packet
@@ -188,7 +190,7 @@ namespace RTC
 			}
 			size_t GetSize() const override
 			{
-				size_t size = sizeof(Packet::CommonHeader) + 4u /* this->ssrc */;
+				size_t size = Packet::CommonHeaderSize + 4u /* this->ssrc */;
 
 				for (auto* report : reports)
 				{

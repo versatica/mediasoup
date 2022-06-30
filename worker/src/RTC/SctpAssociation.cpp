@@ -5,7 +5,7 @@
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Channel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
 #include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memset(), std::memcpy()
 #include <string>
@@ -438,31 +438,45 @@ namespace RTC
 
 		if (ret < 0)
 		{
-			MS_WARN_TAG(
-			  sctp,
-			  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
-			  parameters.streamId,
-			  ppid,
-			  len,
-			  std::strerror(errno));
+			bool sctpSendBufferFull = errno == EWOULDBLOCK || errno == EAGAIN;
+
+			// SCTP send buffer being full is legit, not an error.
+			if (sctpSendBufferFull)
+			{
+				MS_DEBUG_DEV(
+				  sctp,
+				  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
+				  parameters.streamId,
+				  ppid,
+				  len,
+				  std::strerror(errno));
+			}
+			else
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
+				  parameters.streamId,
+				  ppid,
+				  len,
+				  std::strerror(errno));
+			}
 
 			if (cb)
 			{
-				(*cb)(false);
-
+				(*cb)(false, sctpSendBufferFull);
 				delete cb;
+			}
+
+			if (sctpSendBufferFull)
+			{
+				Channel::ChannelNotifier::Emit(dataConsumer->id, "sctpsendbufferfull");
 			}
 		}
 		else if (cb)
 		{
-			(*cb)(true);
-
+			(*cb)(true, false);
 			delete cb;
-		}
-
-		if (errno == EWOULDBLOCK || errno == EAGAIN)
-		{
-			Channel::Notifier::Emit(dataConsumer->id, "sctpsendbufferfull");
 		}
 	}
 
@@ -756,7 +770,7 @@ namespace RTC
 						if (notification->sn_header.sn_length > 0)
 						{
 							static const size_t BufferSize{ 1024 };
-							static char buffer[BufferSize];
+							thread_local static char buffer[BufferSize];
 
 							uint32_t len = notification->sn_header.sn_length;
 
@@ -824,7 +838,7 @@ namespace RTC
 						if (notification->sn_header.sn_length > 0)
 						{
 							static const size_t BufferSize{ 1024 };
-							static char buffer[BufferSize];
+							thread_local static char buffer[BufferSize];
 
 							uint32_t len = notification->sn_header.sn_length;
 
@@ -865,7 +879,7 @@ namespace RTC
 			case SCTP_REMOTE_ERROR:
 			{
 				static const size_t BufferSize{ 1024 };
-				static char buffer[BufferSize];
+				thread_local static char buffer[BufferSize];
 
 				uint32_t len = notification->sn_remote_error.sre_length - sizeof(struct sctp_remote_error);
 
@@ -901,7 +915,7 @@ namespace RTC
 			case SCTP_SEND_FAILED_EVENT:
 			{
 				static const size_t BufferSize{ 1024 };
-				static char buffer[BufferSize];
+				thread_local static char buffer[BufferSize];
 
 				uint32_t len =
 				  notification->sn_send_failed_event.ssfe_length - sizeof(struct sctp_send_failed_event);

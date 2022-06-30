@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "helpers.hpp"
 #include "RTC/RtpPacket.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <cstring> // std::memset()
 #include <string>
 #include <vector>
@@ -9,7 +9,6 @@
 using namespace RTC;
 
 static uint8_t buffer[65536];
-static uint8_t buffer2[65536];
 
 SCENARIO("parse RTP packets", "[parser][rtp]")
 {
@@ -128,9 +127,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
-		auto* clonedPacket = packet->Clone(buffer2);
-
-		delete packet;
+		auto* clonedPacket = packet->Clone();
 
 		std::memset(buffer, '0', sizeof(buffer));
 
@@ -166,6 +163,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(clonedPacket->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
+		delete packet;
 		delete clonedPacket;
 	}
 
@@ -340,9 +338,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions() == false);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
-		static uint8_t RtxBuffer[MtuSize];
-
-		auto rtxPacket = packet->Clone(RtxBuffer);
+		auto rtxPacket = packet->Clone();
 
 		delete packet;
 
@@ -501,6 +497,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0x99, 0xAA, 0xBB, 0xCC,
 			0x00, 0x00, 0x00, 0x04, // 4 padding bytes
 			// Extra buffer
+			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,

@@ -22,7 +22,7 @@ namespace RTC
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
-		void HandleRequest(Channel::Request* request) override;
+		void HandleRequest(Channel::ChannelRequest* request) override;
 		RTC::Consumer::Layers GetPreferredLayers() const override
 		{
 			RTC::Consumer::Layers layers;
@@ -42,7 +42,7 @@ namespace RTC
 					this->producerRtpStreams.end(),
 					[](const RTC::RtpStream* rtpStream)
 					{
-						return (rtpStream != nullptr && rtpStream->GetScore() > 0u);
+						return (rtpStream != nullptr && (rtpStream->GetScore() > 0u || rtpStream->HasDtx()));
 					}
 				)
 			);
@@ -56,7 +56,7 @@ namespace RTC
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet) override;
+		void SendRtpPacket(std::shared_ptr<RTC::RtpPacket> packet) override;
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs) override;
 		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override
 		{
@@ -66,6 +66,7 @@ namespace RTC
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
+		void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report) override;
 		uint32_t GetTransmissionRate(uint64_t nowMs) override;
 		float GetRtt() const override;
 
@@ -97,10 +98,12 @@ namespace RTC
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
-		std::unordered_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
+		absl::flat_hash_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
 		std::vector<RTC::RtpStream*> producerRtpStreams; // Indexed by spatial layer.
 		bool syncRequired{ false };
+		int16_t spatialLayerToSync{ -1 };
+		bool lastSentPacketHasMarker{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		int16_t preferredSpatialLayer{ -1 };
 		int16_t preferredTemporalLayer{ -1 };
@@ -110,6 +113,8 @@ namespace RTC
 		int16_t targetTemporalLayer{ -1 };
 		int16_t currentSpatialLayer{ -1 };
 		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
+		uint16_t snReferenceSpatialLayer{ 0 };
+		bool checkingForOldPacketsInSpatialLayer{ false };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		uint32_t tsOffset{ 0u }; // RTP Timestamp offset.
 		bool keyFrameForTsOffsetRequested{ false };

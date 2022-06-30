@@ -8,7 +8,7 @@
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <cstdlib> // std::getenv()
 
 int main(int argc, char* argv[])
@@ -39,11 +39,11 @@ int main(int argc, char* argv[])
 	int status = Catch::Session().run(argc, argv);
 
 	// Free static stuff.
-	DepLibUV::ClassDestroy();
 	DepLibSRTP::ClassDestroy();
 	Utils::Crypto::ClassDestroy();
 	DepLibWebRTC::ClassDestroy();
 	DepUsrSCTP::ClassDestroy();
+	DepLibUV::ClassDestroy();
 
 	return status;
 }

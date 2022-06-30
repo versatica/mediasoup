@@ -2,10 +2,10 @@
 #define MS_RTC_DATA_CONSUMER_HPP
 
 #include "common.hpp"
-#include "Channel/Request.hpp"
-#include "PayloadChannel/Request.hpp"
+#include "Channel/ChannelRequest.hpp"
+#include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/SctpDictionaries.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 
 namespace RTC
@@ -13,11 +13,14 @@ namespace RTC
 	class DataConsumer
 	{
 	protected:
-		using onQueuedCallback = const std::function<void(bool queued)>;
+		using onQueuedCallback = const std::function<void(bool queued, bool sctpSendBufferFull)>;
 
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnDataConsumerSendMessage(
 			  RTC::DataConsumer* dataConsumer,
@@ -47,8 +50,8 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
-		void HandleRequest(Channel::Request* request);
-		void HandleRequest(PayloadChannel::Request* request);
+		void HandleRequest(Channel::ChannelRequest* request);
+		void HandleRequest(PayloadChannel::PayloadChannelRequest* request);
 		Type GetType() const
 		{
 			return this->type;

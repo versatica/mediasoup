@@ -24,7 +24,7 @@ namespace RTC
 		auto* header = reinterpret_cast<Header*>(ptr);
 
 		// Inspect data after the minimum header size.
-		ptr += sizeof(Header);
+		ptr += HeaderSize;
 
 		// Check CSRC list.
 		size_t csrcListSize{ 0u };
@@ -113,7 +113,7 @@ namespace RTC
 		}
 
 		MS_ASSERT(
-		  len == sizeof(Header) + csrcListSize + (headerExtension ? 4 + extensionValueSize : 0) +
+		  len == HeaderSize + csrcListSize + (headerExtension ? 4 + extensionValueSize : 0) +
 		           payloadLength + size_t{ payloadPadding },
 		  "packet's computed size does not match received size");
 
@@ -138,7 +138,7 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->header->csrcCount != 0u)
-			this->csrcList = reinterpret_cast<uint8_t*>(header) + sizeof(Header);
+			this->csrcList = reinterpret_cast<uint8_t*>(header) + HeaderSize;
 
 		// Parse RFC 5285 header extension.
 		ParseExtensions();
@@ -147,6 +147,11 @@ namespace RTC
 	RtpPacket::~RtpPacket()
 	{
 		MS_TRACE();
+
+		if (this->buffer)
+		{
+			delete[] this->buffer;
+		}
 	}
 
 	void RtpPacket::Dump() const
@@ -177,11 +182,9 @@ namespace RTC
 
 			if (HasOneByteExtensions())
 			{
-				extIds.reserve(this->mapOneByteExtensions.size());
-
-				for (const auto& kv : this->mapOneByteExtensions)
+				for (const auto& extension : this->oneByteExtensions)
 				{
-					extIds.push_back(std::to_string(kv.first));
+					extIds.push_back(std::to_string(extension->id));
 				}
 			}
 			else
@@ -319,7 +322,7 @@ namespace RTC
 		jsonObject["timestamp"] = GetTimestamp();
 
 		// Add marker.
-		jsonObject["marker"] = HasMarker() ? "true" : "false";
+		jsonObject["marker"] = HasMarker();
 
 		// Add ssrc.
 		jsonObject["ssrc"] = GetSsrc();
@@ -380,7 +383,7 @@ namespace RTC
 		this->videoOrientationExtensionId  = 0u;
 
 		// Clear the One-Byte and Two-Bytes extension elements maps.
-		this->mapOneByteExtensions.clear();
+		std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), nullptr);
 		this->mapTwoBytesExtensions.clear();
 
 		// If One-Byte is requested and the packet already has One-Byte extensions,
@@ -491,8 +494,9 @@ namespace RTC
 				if (extension.id == 0 || extension.id > 14 || extension.len == 0 || extension.len > 16)
 					continue;
 
-				// Store the One-Byte extension element in the map.
-				this->mapOneByteExtensions[extension.id] = reinterpret_cast<OneByteExtension*>(ptr);
+				// Store the One-Byte extension element in an array.
+				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
+				this->oneByteExtensions[extension.id - 1] = reinterpret_cast<OneByteExtension*>(ptr);
 
 				*ptr = (extension.id << 4) | ((extension.len - 1) & 0x0F);
 				++ptr;
@@ -575,12 +579,12 @@ namespace RTC
 		}
 		else if (HasOneByteExtensions())
 		{
-			auto it = this->mapOneByteExtensions.find(id);
+			// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
+			auto* extension = this->oneByteExtensions[id - 1];
 
-			if (it == this->mapOneByteExtensions.end())
+			if (!extension)
 				return false;
 
-			auto* extension = it->second;
 			auto currentLen = extension->len + 1;
 
 			// Fill with 0's if new length is minor.
@@ -632,15 +636,17 @@ namespace RTC
 		SetPayloadPaddingFlag(false);
 	}
 
-	RtpPacket* RtpPacket::Clone(const uint8_t* buffer) const
+	RtpPacket* RtpPacket::Clone() const
 	{
 		MS_TRACE();
 
-		auto* ptr = const_cast<uint8_t*>(buffer);
+		auto* buffer = new uint8_t[MtuSize + 100];
+		auto* ptr    = const_cast<uint8_t*>(buffer);
+
 		size_t numBytes{ 0 };
 
 		// Copy the minimum header.
-		numBytes = sizeof(Header);
+		numBytes = HeaderSize;
 		std::memcpy(ptr, GetData(), numBytes);
 
 		// Set header pointer.
@@ -705,6 +711,10 @@ namespace RTC
 		packet->frameMarkingExtensionId      = this->frameMarkingExtensionId;
 		packet->ssrcAudioLevelExtensionId    = this->ssrcAudioLevelExtensionId;
 		packet->videoOrientationExtensionId  = this->videoOrientationExtensionId;
+		// Assign the payload descriptor handler.
+		packet->payloadDescriptorHandler = this->payloadDescriptorHandler;
+		// Store allocated buffer.
+		packet->buffer = buffer;
 
 		return packet;
 	}
@@ -783,20 +793,15 @@ namespace RTC
 		return true;
 	}
 
-	bool RtpPacket::ProcessPayload(RTC::Codecs::EncodingContext* context)
+	bool RtpPacket::ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker)
 	{
 		MS_TRACE();
 
 		if (!this->payloadDescriptorHandler)
 			return true;
 
-		bool marker{ false };
-
 		if (this->payloadDescriptorHandler->Process(context, this->payload, marker))
 		{
-			if (marker)
-				SetMarker(true);
-
 			return true;
 		}
 		else
@@ -858,7 +863,7 @@ namespace RTC
 		if (HasOneByteExtensions())
 		{
 			// Clear the One-Byte extension elements map.
-			this->mapOneByteExtensions.clear();
+			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), nullptr);
 
 			uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->headerExtension) + 4;
 			uint8_t* extensionEnd   = extensionStart + GetHeaderExtensionLength();
@@ -885,8 +890,9 @@ namespace RTC
 						break;
 					}
 
-					// Store the One-Byte extension element in the map.
-					this->mapOneByteExtensions[id] = reinterpret_cast<OneByteExtension*>(ptr);
+					// Store the One-Byte extension element in an array.
+					// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
+					this->oneByteExtensions[id - 1] = reinterpret_cast<OneByteExtension*>(ptr);
 
 					ptr += (1 + len);
 				}

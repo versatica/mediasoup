@@ -11,11 +11,11 @@ namespace RTC
 	public:
 		enum class CryptoSuite
 		{
-			NONE                    = 0,
-			AES_CM_128_HMAC_SHA1_80 = 1,
+			NONE             = 0,
+			AEAD_AES_256_GCM = 1,
+			AEAD_AES_128_GCM,
+			AES_CM_128_HMAC_SHA1_80,
 			AES_CM_128_HMAC_SHA1_32,
-			AEAD_AES_256_GCM,
-			AEAD_AES_128_GCM
 		};
 
 	public:
@@ -36,10 +36,10 @@ namespace RTC
 		~SrtpSession();
 
 	public:
-		bool EncryptRtp(const uint8_t** data, size_t* len);
-		bool DecryptSrtp(uint8_t* data, size_t* len);
-		bool EncryptRtcp(const uint8_t** data, size_t* len);
-		bool DecryptSrtcp(uint8_t* data, size_t* len);
+		bool EncryptRtp(const uint8_t** data, int* len);
+		bool DecryptSrtp(uint8_t* data, int* len);
+		bool EncryptRtcp(const uint8_t** data, int* len);
+		bool DecryptSrtcp(uint8_t* data, int* len);
 		void RemoveStream(uint32_t ssrc)
 		{
 			srtp_remove_stream(this->session, uint32_t{ htonl(ssrc) });

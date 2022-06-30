@@ -2,9 +2,9 @@
 #define MS_RTC_DATA_PRODUCER_HPP
 
 #include "common.hpp"
-#include "Channel/Request.hpp"
+#include "Channel/ChannelRequest.hpp"
 #include "RTC/SctpDictionaries.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 
 namespace RTC
@@ -14,6 +14,9 @@ namespace RTC
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnDataProducerMessageReceived(
 			  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
@@ -33,7 +36,7 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
-		void HandleRequest(Channel::Request* request) const;
+		void HandleRequest(Channel::ChannelRequest* request) const;
 		Type GetType() const
 		{
 			return this->type;

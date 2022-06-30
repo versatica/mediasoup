@@ -4,7 +4,7 @@
 #include "RTC/DirectTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "PayloadChannel/Notifier.hpp"
+#include "PayloadChannel/PayloadChannelNotifier.hpp"
 
 namespace RTC
 {
@@ -20,6 +20,8 @@ namespace RTC
 	DirectTransport::~DirectTransport()
 	{
 		MS_TRACE();
+
+		delete[] this->buffer;
 	}
 
 	void DirectTransport::FillJson(json& jsonObject) const
@@ -43,7 +45,7 @@ namespace RTC
 		jsonObject["type"] = "direct-transport";
 	}
 
-	void DirectTransport::HandleRequest(Channel::Request* request)
+	void DirectTransport::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
@@ -102,7 +104,14 @@ namespace RTC
 					return;
 				}
 
-				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+				// If this is the first time to reveive a RTP packet then allocate the receiving buffer now.
+				if (!this->buffer)
+					this->buffer = new uint8_t[RTC::MtuSize + 100];
+
+				// Copy the received packet into this buffer so it can be expanded later.
+				std::memcpy(this->buffer, data, static_cast<size_t>(len));
+
+				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(this->buffer, len);
 
 				if (!packet)
 				{
@@ -181,12 +190,11 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::Notifier::Emit(consumer->id, "rtp", data, len);
+		PayloadChannel::PayloadChannelNotifier::Emit(consumer->id, "rtp", data, len);
 
 		if (cb)
 		{
 			(*cb)(true);
-
 			delete cb;
 		}
 
@@ -202,7 +210,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::Notifier::Emit(this->id, "rtcp", data, len);
+		PayloadChannel::PayloadChannelNotifier::Emit(this->id, "rtcp", data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -216,7 +224,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::Notifier::Emit(this->id, "rtcp", data, len);
+		PayloadChannel::PayloadChannelNotifier::Emit(this->id, "rtcp", data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -232,7 +240,7 @@ namespace RTC
 
 		data["ppid"] = ppid;
 
-		PayloadChannel::Notifier::Emit(dataConsumer->id, "message", data, msg, len);
+		PayloadChannel::PayloadChannelNotifier::Emit(dataConsumer->id, "message", data, msg, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);

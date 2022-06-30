@@ -14,7 +14,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->raw          = new uint8_t[sizeof(Header)];
+			this->raw          = new uint8_t[HeaderSize];
 			this->header       = reinterpret_cast<Header*>(this->raw);
 			this->header->ssrc = uint32_t{ htonl(ssrc) };
 		}
@@ -24,9 +24,9 @@ namespace RTC
 			MS_TRACE();
 
 			// Add minimum header.
-			std::memcpy(buffer, this->header, sizeof(Header));
+			std::memcpy(buffer, this->header, HeaderSize);
 
-			return sizeof(Header);
+			return HeaderSize;
 		}
 
 		void FeedbackPsLeiItem::Dump() const

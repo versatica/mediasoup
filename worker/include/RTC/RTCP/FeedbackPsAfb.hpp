@@ -27,9 +27,9 @@ namespace RTC
 			  : FeedbackPsPacket(commonHeader)
 			{
 				this->size = ((static_cast<size_t>(ntohs(commonHeader->length)) + 1) * 4) -
-				             (sizeof(CommonHeader) + sizeof(FeedbackPacket::Header));
+				             (Packet::CommonHeaderSize + FeedbackPacket::HeaderSize);
 
-				this->data = (uint8_t*)commonHeader + sizeof(CommonHeader) + sizeof(FeedbackPacket::Header);
+				this->data = (uint8_t*)commonHeader + Packet::CommonHeaderSize + FeedbackPacket::HeaderSize;
 
 				this->application = application;
 			}

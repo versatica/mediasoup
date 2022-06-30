@@ -11,20 +11,21 @@ namespace RTC
 	/* Class variables. */
 
 	// clang-format off
-	std::unordered_map<std::string, RtpCodecMimeType::Type> RtpCodecMimeType::string2Type =
+	absl::flat_hash_map<std::string, RtpCodecMimeType::Type> RtpCodecMimeType::string2Type =
 	{
 		{ "audio", RtpCodecMimeType::Type::AUDIO },
 		{ "video", RtpCodecMimeType::Type::VIDEO }
 	};
-	std::map<RtpCodecMimeType::Type, std::string> RtpCodecMimeType::type2String =
+	absl::flat_hash_map<RtpCodecMimeType::Type, std::string> RtpCodecMimeType::type2String =
 	{
 		{ RtpCodecMimeType::Type::AUDIO, "audio" },
 		{ RtpCodecMimeType::Type::VIDEO, "video" }
 	};
-	std::unordered_map<std::string, RtpCodecMimeType::Subtype> RtpCodecMimeType::string2Subtype =
+	absl::flat_hash_map<std::string, RtpCodecMimeType::Subtype> RtpCodecMimeType::string2Subtype =
 	{
 		// Audio codecs:
 		{ "opus",            RtpCodecMimeType::Subtype::OPUS            },
+		{ "multiopus",       RtpCodecMimeType::Subtype::MULTIOPUS       },
 		{ "pcma",            RtpCodecMimeType::Subtype::PCMA            },
 		{ "pcmu",            RtpCodecMimeType::Subtype::PCMU            },
 		{ "isac",            RtpCodecMimeType::Subtype::ISAC            },
@@ -35,6 +36,7 @@ namespace RTC
 		{ "vp8",             RtpCodecMimeType::Subtype::VP8             },
 		{ "vp9",             RtpCodecMimeType::Subtype::VP9             },
 		{ "h264",            RtpCodecMimeType::Subtype::H264            },
+		{ "h264-svc",        RtpCodecMimeType::Subtype::H264_SVC        },
 		{ "x-h264uc",        RtpCodecMimeType::Subtype::X_H264UC        },
 		{ "h265",            RtpCodecMimeType::Subtype::H265            },
 		// Complementary codecs:
@@ -47,10 +49,11 @@ namespace RTC
 		{ "x-ulpfecuc",      RtpCodecMimeType::Subtype::X_ULPFECUC      },
 		{ "red",             RtpCodecMimeType::Subtype::RED             }
 	};
-	std::map<RtpCodecMimeType::Subtype, std::string> RtpCodecMimeType::subtype2String =
+	absl::flat_hash_map<RtpCodecMimeType::Subtype, std::string> RtpCodecMimeType::subtype2String =
 	{
 		// Audio codecs:
 		{ RtpCodecMimeType::Subtype::OPUS,            "opus"            },
+		{ RtpCodecMimeType::Subtype::MULTIOPUS,       "multiopus"       },
 		{ RtpCodecMimeType::Subtype::PCMA,            "PCMA"            },
 		{ RtpCodecMimeType::Subtype::PCMU,            "PCMU"            },
 		{ RtpCodecMimeType::Subtype::ISAC,            "ISAC"            },
@@ -61,6 +64,7 @@ namespace RTC
 		{ RtpCodecMimeType::Subtype::VP8,             "VP8"             },
 		{ RtpCodecMimeType::Subtype::VP9,             "VP9"             },
 		{ RtpCodecMimeType::Subtype::H264,            "H264"            },
+		{ RtpCodecMimeType::Subtype::H264_SVC,        "H264-SVC"        },
 		{ RtpCodecMimeType::Subtype::X_H264UC,        "X-H264UC"        },
 		{ RtpCodecMimeType::Subtype::H265,            "H265"            },
 		// Complementary codecs:

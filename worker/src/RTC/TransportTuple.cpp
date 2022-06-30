@@ -3,7 +3,6 @@
 
 #include "RTC/TransportTuple.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 #include <string>
 
 namespace RTC

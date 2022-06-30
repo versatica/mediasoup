@@ -5,7 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/Notifier.hpp"
+#include "Channel/ChannelNotifier.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <cmath> // std::lround()
 #include <map>
@@ -131,7 +131,7 @@ namespace RTC
 		{
 			this->silence = true;
 
-			Channel::Notifier::Emit(this->id, "silence");
+			Channel::ChannelNotifier::Emit(this->id, "silence");
 		}
 	}
 
@@ -146,7 +146,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::map<int8_t, RTC::Producer*> mapDBovsProducer;
+		absl::btree_map<int8_t, RTC::Producer*> mapDBovsProducer;
 
 		for (auto& kv : this->mapProducerDBovs)
 		{
@@ -183,13 +183,13 @@ namespace RTC
 				jsonEntry["volume"]     = rit->first;
 			}
 
-			Channel::Notifier::Emit(this->id, "volumes", data);
+			Channel::ChannelNotifier::Emit(this->id, "volumes", data);
 		}
 		else if (!this->silence)
 		{
 			this->silence = true;
 
-			Channel::Notifier::Emit(this->id, "silence");
+			Channel::ChannelNotifier::Emit(this->id, "silence");
 		}
 	}
 

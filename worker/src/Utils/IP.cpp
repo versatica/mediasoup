@@ -83,7 +83,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		static sockaddr_storage addrStorage;
+		sockaddr_storage addrStorage;
 		char ipBuffer[INET6_ADDRSTRLEN] = { 0 };
 		int err;
 

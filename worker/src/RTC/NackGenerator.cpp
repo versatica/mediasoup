@@ -12,15 +12,16 @@ namespace RTC
 {
 	/* Static. */
 
-	constexpr size_t MaxPacketAge{ 10000u };
-	constexpr size_t MaxNackPackets{ 1000u };
-	constexpr uint32_t DefaultRtt{ 100u };
-	constexpr uint8_t MaxNackRetries{ 10u };
-	constexpr uint64_t TimerInterval{ 40u };
+	static constexpr size_t MaxPacketAge{ 10000u };
+	static constexpr size_t MaxNackPackets{ 1000u };
+	static constexpr uint32_t DefaultRtt{ 100u };
+	static constexpr uint8_t MaxNackRetries{ 10u };
+	static constexpr uint64_t TimerInterval{ 40u };
 
 	/* Instance methods. */
 
-	NackGenerator::NackGenerator(Listener* listener) : listener(listener), rtt(DefaultRtt)
+	NackGenerator::NackGenerator(Listener* listener, unsigned int sendNackDelayMs)
+	  : listener(listener), sendNackDelayMs(sendNackDelayMs), rtt(DefaultRtt)
 	{
 		MS_TRACE();
 
@@ -74,9 +75,14 @@ namespace RTC
 				  packet->GetSequenceNumber(),
 				  isRecovered ? "true" : "false");
 
+				auto retries = it->second.retries;
+
 				this->nackList.erase(it);
 
-				return true;
+				if (retries != 0)
+					return true;
+				else
+					return false;
 			}
 
 			// Out of order packet or already handled NACKed packet.
@@ -152,18 +158,18 @@ namespace RTC
 		// clear it and request a keyframe.
 		uint16_t numNewNacks = seqEnd - seqStart;
 
-		if (this->nackList.size() + numNewNacks > MaxNackPackets)
+		if (static_cast<uint16_t>(this->nackList.size()) + numNewNacks > MaxNackPackets)
 		{
 			// clang-format off
 			while (
 				RemoveNackItemsUntilKeyFrame() &&
-				this->nackList.size() + numNewNacks > MaxNackPackets
+				static_cast<uint16_t>(this->nackList.size()) + numNewNacks > MaxNackPackets
 			)
 			// clang-format on
 			{
 			}
 
-			if (this->nackList.size() + numNewNacks > MaxNackPackets)
+			if (static_cast<uint16_t>(this->nackList.size()) + numNewNacks > MaxNackPackets)
 			{
 				MS_WARN_TAG(
 				  rtx, "NACK list full, clearing it and requesting a key frame [seqEnd:%" PRIu16 "]", seqEnd);
@@ -183,7 +189,13 @@ namespace RTC
 			if (this->recoveredList.find(seq) != this->recoveredList.end())
 				continue;
 
-			this->nackList.emplace(std::make_pair(seq, NackInfo{ seq, seq }));
+			this->nackList.emplace(std::make_pair(
+			  seq,
+			  NackInfo{
+			    DepLibUV::GetTimeMs(),
+			    seq,
+			    seq,
+			  }));
 		}
 	}
 
@@ -226,6 +238,12 @@ namespace RTC
 			NackInfo& nackInfo = it->second;
 			uint16_t seq       = nackInfo.seq;
 
+			if (this->sendNackDelayMs > 0 && nowMs - nackInfo.createdAtMs < this->sendNackDelayMs)
+			{
+				++it;
+				continue;
+			}
+
 			// clang-format off
 			if (
 				filter == NackFilter::SEQ &&
@@ -259,7 +277,7 @@ namespace RTC
 				continue;
 			}
 
-			if (filter == NackFilter::TIME && nowMs - nackInfo.sentAtMs >= this->rtt)
+			if (filter == NackFilter::TIME && (nackInfo.sentAtMs == 0 || nowMs - nackInfo.sentAtMs >= this->rtt))
 			{
 				nackBatch.emplace_back(seq);
 				nackInfo.retries++;

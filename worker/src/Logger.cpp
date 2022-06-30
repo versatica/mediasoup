@@ -6,13 +6,13 @@
 
 /* Class variables. */
 
-const int64_t Logger::pid{ static_cast<int64_t>(uv_os_getpid()) };
-Channel::UnixStreamSocket* Logger::channel{ nullptr };
-char Logger::buffer[Logger::bufferSize];
+const uint64_t Logger::pid{ static_cast<uint64_t>(uv_os_getpid()) };
+thread_local Channel::ChannelSocket* Logger::channel{ nullptr };
+thread_local char Logger::buffer[Logger::bufferSize];
 
 /* Class methods. */
 
-void Logger::ClassInit(Channel::UnixStreamSocket* channel)
+void Logger::ClassInit(Channel::ChannelSocket* channel)
 {
 	Logger::channel = channel;
 

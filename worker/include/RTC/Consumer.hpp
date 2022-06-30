@@ -2,7 +2,7 @@
 #define MS_RTC_CONSUMER_HPP
 
 #include "common.hpp"
-#include "Channel/Request.hpp"
+#include "Channel/ChannelRequest.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
@@ -14,9 +14,9 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamSend.hpp"
-#include <json.hpp>
+#include <absl/container/flat_hash_set.h>
+#include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 using json = nlohmann::json;
@@ -28,6 +28,9 @@ namespace RTC
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
 			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
@@ -67,7 +70,7 @@ namespace RTC
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray) const  = 0;
 		virtual void FillJsonScore(json& jsonObject) const = 0;
-		virtual void HandleRequest(Channel::Request* request);
+		virtual void HandleRequest(Channel::ChannelRequest* request);
 		RTC::Media::Kind GetKind() const
 		{
 			return this->kind;
@@ -139,17 +142,18 @@ namespace RTC
 		virtual uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) = 0;
 		virtual void ApplyLayers()                                          = 0;
 		virtual uint32_t GetDesiredBitrate() const                          = 0;
-		virtual void SendRtpPacket(RTC::RtpPacket* packet)                  = 0;
+		virtual void SendRtpPacket(std::shared_ptr<RTC::RtpPacket> packet)  = 0;
 		virtual std::vector<RTC::RtpStreamSend*> GetRtpStreams()            = 0;
 		virtual void GetRtcp(
 		  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs) = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
 		virtual void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) = 0;
 		virtual void ReceiveKeyFrameRequest(
-		  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)          = 0;
-		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) = 0;
-		virtual uint32_t GetTransmissionRate(uint64_t nowMs)                      = 0;
-		virtual float GetRtt() const                                              = 0;
+		  RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc)                          = 0;
+		virtual void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)                 = 0;
+		virtual void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report) = 0;
+		virtual uint32_t GetTransmissionRate(uint64_t nowMs)                                      = 0;
+		virtual float GetRtt() const                                                              = 0;
 
 	protected:
 		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx = false) const;
@@ -179,7 +183,7 @@ namespace RTC
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
-		std::unordered_set<uint8_t> supportedCodecPayloadTypes;
+		absl::flat_hash_set<uint8_t> supportedCodecPayloadTypes;
 		uint64_t lastRtcpSentTime{ 0u };
 		uint16_t maxRtcpInterval{ 0u };
 		bool externallyManagedBitrate{ false };

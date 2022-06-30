@@ -2,9 +2,9 @@
 #define MS_RTC_ROUTER_HPP
 
 #include "common.hpp"
-#include "Channel/Request.hpp"
+#include "Channel/ChannelRequest.hpp"
 #include "PayloadChannel/Notification.hpp"
-#include "PayloadChannel/Request.hpp"
+#include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -13,9 +13,10 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/Transport.hpp"
-#include <json.hpp>
+#include "RTC/WebRtcServer.hpp"
+#include <absl/container/flat_hash_map.h>
+#include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 
 using json = nlohmann::json;
@@ -25,13 +26,24 @@ namespace RTC
 	class Router : public RTC::Transport::Listener
 	{
 	public:
-		explicit Router(const std::string& id);
+		class Listener
+		{
+		public:
+			virtual ~Listener() = default;
+
+		public:
+			virtual RTC::WebRtcServer* OnRouterNeedWebRtcServer(
+			  RTC::Router* router, std::string& webRtcServerId) = 0;
+		};
+
+	public:
+		explicit Router(const std::string& id, Listener* listener);
 		virtual ~Router();
 
 	public:
 		void FillJson(json& jsonObject) const;
-		void HandleRequest(Channel::Request* request);
-		void HandleRequest(PayloadChannel::Request* request);
+		void HandleRequest(Channel::ChannelRequest* request);
+		void HandleRequest(PayloadChannel::PayloadChannelRequest* request);
 		void HandleNotification(PayloadChannel::Notification* notification);
 
 	private:
@@ -39,7 +51,7 @@ namespace RTC
 		RTC::Transport* GetTransportFromInternal(json& internal) const;
 		void SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const;
 		RTC::RtpObserver* GetRtpObserverFromInternal(json& internal) const;
-		RTC::Producer* GetProducerFromInternal(json& internal) const;
+		RTC::Producer* GetProducerFromData(json& data) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
@@ -86,23 +98,26 @@ namespace RTC
 		void OnTransportDataConsumerClosed(RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
 		void OnTransportDataConsumerDataProducerClosed(
 		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
+		void OnTransportListenServerClosed(RTC::Transport* transport) override;
 
 	public:
 		// Passed by argument.
 		const std::string id;
+		Listener* listener{ nullptr };
 
 	private:
 		// Allocated by this.
-		std::unordered_map<std::string, RTC::Transport*> mapTransports;
-		std::unordered_map<std::string, RTC::RtpObserver*> mapRtpObservers;
+		absl::flat_hash_map<std::string, RTC::Transport*> mapTransports;
+		absl::flat_hash_map<std::string, RTC::RtpObserver*> mapRtpObservers;
 		// Others.
-		std::unordered_map<RTC::Producer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
-		std::unordered_map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
-		std::unordered_map<RTC::Producer*, std::unordered_set<RTC::RtpObserver*>> mapProducerRtpObservers;
-		std::unordered_map<std::string, RTC::Producer*> mapProducers;
-		std::unordered_map<RTC::DataProducer*, std::unordered_set<RTC::DataConsumer*>> mapDataProducerDataConsumers;
-		std::unordered_map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
-		std::unordered_map<std::string, RTC::DataProducer*> mapDataProducers;
+		absl::flat_hash_map<RTC::Producer*, absl::flat_hash_set<RTC::Consumer*>> mapProducerConsumers;
+		absl::flat_hash_map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
+		absl::flat_hash_map<RTC::Producer*, absl::flat_hash_set<RTC::RtpObserver*>> mapProducerRtpObservers;
+		absl::flat_hash_map<std::string, RTC::Producer*> mapProducers;
+		absl::flat_hash_map<RTC::DataProducer*, absl::flat_hash_set<RTC::DataConsumer*>>
+		  mapDataProducerDataConsumers;
+		absl::flat_hash_map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
+		absl::flat_hash_map<std::string, RTC::DataProducer*> mapDataProducers;
 	};
 } // namespace RTC
 

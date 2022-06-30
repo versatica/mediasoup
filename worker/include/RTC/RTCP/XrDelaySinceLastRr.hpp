@@ -36,6 +36,7 @@ namespace RTC
 			class SsrcInfo
 			{
 			public:
+				static const size_t BodySize{ 12 };
 				static SsrcInfo* Parse(const uint8_t* data, size_t len);
 
 			public:
@@ -61,7 +62,7 @@ namespace RTC
 				size_t Serialize(uint8_t* buffer);
 				size_t GetSize() const
 				{
-					return sizeof(Body);
+					return BodySize;
 				}
 				uint32_t GetSsrc() const
 				{
@@ -90,7 +91,7 @@ namespace RTC
 
 			private:
 				Body* body{ nullptr };
-				uint8_t raw[sizeof(Body)] = { 0 };
+				uint8_t raw[BodySize] = { 0 };
 			};
 
 		public:

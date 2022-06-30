@@ -1,0 +1,29 @@
+[package]
+name = "mediasoup-sys"
+version = "0.3.3"
+description = "FFI bindings to C++ libmediasoup-worker"
+authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
+edition = "2021"
+license = "ISC"
+documentation = "https://docs.rs/mediasoup-sys"
+repository = "https://github.com/versatica/mediasoup/tree/v3/worker"
+include = [
+    "/deps/libwebrtc",
+    "/fuzzer/include",
+    "/fuzzer/src",
+    "/include",
+    "/scripts",
+    "!/scripts/node_modules",
+    "/src",
+    "/subprojects/*.wrap",
+    "/test/include",
+    "/test/src",
+    "/build.rs",
+    "/Cargo.toml",
+    "/Makefile",
+    "/meson.build",
+]
+
+[package.metadata.docs.rs]
+default-target = "x86_64-unknown-linux-gnu"
+targets = []

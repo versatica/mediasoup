@@ -3,8 +3,8 @@
 
 #include "common.hpp"
 #include "LogLevel.hpp"
-#include "Channel/Request.hpp"
-#include <map>
+#include "Channel/ChannelRequest.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <string>
 #include <vector>
 
@@ -43,7 +43,7 @@ public:
 public:
 	static void SetConfiguration(int argc, char* argv[]);
 	static void PrintConfiguration();
-	static void HandleRequest(Channel::Request* request);
+	static void HandleRequest(Channel::ChannelRequest* request);
 
 private:
 	static void SetLogLevel(std::string& level);
@@ -51,11 +51,11 @@ private:
 	static void SetDtlsCertificateAndPrivateKeyFiles();
 
 public:
-	static struct Configuration configuration;
+	thread_local static struct Configuration configuration;
 
 private:
-	static std::map<std::string, LogLevel> string2LogLevel;
-	static std::map<LogLevel, std::string> logLevel2String;
+	static absl::flat_hash_map<std::string, LogLevel> string2LogLevel;
+	static absl::flat_hash_map<LogLevel, std::string> logLevel2String;
 };
 
 #endif

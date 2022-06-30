@@ -1,11 +1,351 @@
 # Changelog
 
 
-### 3.6.33 (WIP)
+### NEXT
 
+* `RtpStreamSend`: Memory optimizations (PR #840). Extracted from #675, by @nazar-pc.
+* `SimpleConsumer`: Opus DTX ignore capabilities (PR #846).
+
+
+### 3.10.0
+
+* `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port (PR #834).
+* More SRTP crypto suites (PR #837).
+* Improve `EnhancedEventEmitter` (PR #836).
+* `TransportCongestionControlClient`: Allow setting max outgoing bitrate before `tccClient` is created (PR #833).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.17
+
+* `RateCalculator`: Fix old buffer items cleanup (PR #830 by @dsdolzhenko).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.16
+
+* `SimulcastConsumer`: Fix spatial layer switch with unordered packets (PR #823 by @jcague).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.15
+
+* `RateCalculator`: Revert Fix old buffer items cleanup (PR #819 by @dsdolzhenko).
+
+
+### 3.9.14
+
+* `NackGenerator`: Add a configurable delay before sending NACK (PR #827, credits to @penguinol).
+* `SimulcastConsumer`: Fix a race condition in SimulcastConsumer (PR #825 by @dsdolzhenko).
+* Add support for H264 SVC (#798 by @prtmD).
+* `RtpStreamSend`: Support receive RTCP-XR RRT and send RTCP-XR DLRR (PR #781 by @aggresss).
+* `RateCalculator`: Fix old buffer items cleanup (PR #819 by @dsdolzhenko).
+* `DirectTransport`: Create a buffer to process RTP packets (PR #730 by @rtctt).
+* Node: Improve `appData` TypeScript syntax and initialization.
+* Allow setting max outgoing bitrate below the initial value (PR #826 by @ggarber).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.13
+
+* `VP8`: Do not discard `TL0PICIDX` from Temporal Layers higher than 0 (PR @817 by @jcague).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.12
+
+* `DtlsTransport`: Make DTLS negotiation run immediately (PR #815).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.11
+
+* Modify `SimulcastConsumer` to keep using layers without good scores (PR #804 by @ggarber).
+* Update NPM deps.
+
+
+### 3.9.10
+
+* Update worker dependencies:
+    * OpenSSL 3.0.2.
+    * abseil-cpp 20211102.0.
+    * nlohmann_json 3.10.5.
+    * usrsctp snapshot 4e06feb01cadcd127d119486b98a4bd3d64aa1e7.
+    * wingetopt 1.00.
+* Update NPM deps and TypeScript version.
+* Fix RTP marker bit not being reseted after mangling in each `Consumer` (PR #811 by @ggarber).
+
+
+### 3.9.9
+
+* Optimize RTP header extension handling (PR #786).
+* `RateCalculator`: Reset optimization (PR #785).
+* Fix frozen video due to double call to `Consumer::UserOnTransportDisconnected()` (PR #788, thanks to @ggarber for exposing this issue in PR #787).
+
+
+### 3.9.8
+
+* Fix VP9 kSVC forwarding logic to not forward lower unneded layers (PR #778 by @ggarber).
+* Fix update bandwidth estimation configuration and available bitrate when updating max outgoing bitrate (PR #779 by @ggarber).
+* Replace outdated `random-numbers` package by native `crypto.randomInt()` (PR #776 by @piranna).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.7
+
+* Typing event emitters in mediasoup Node (PR #764 by @unao).
+* Update NPM deps.
+
+
+### 3.9.6
+
+* TCC client optimizations for faster and more stable BWE (PR #712 by @ggarber).
+* Added support for RTP abs-capture-time header (PR #761 by @oto313).
+* Update NPM deps.
+
+
+### 3.9.5
+
+* ICE renomination support (PR #756).
+* Update `libuv` to 1.43.0.
+* Update NPM deps.
+
+
+### 3.9.4
+
+* `Worker`: Fix bad printing of error messages from Worker (PR #750 by @j1elo).
+* Update NPM deps.
+
+
+### 3.9.3
+
+* Single H264/H265 codec configuration in `supportedRtpCapabilities` (PR #718).
+* Improve Windows support by not requiring MSVC configuration (PR #741).
+* Update NPM deps.
+
+
+### 3.9.2
+
+* `pipeToRouter()`: Reuse same `PipeTransport` when possible (PR #697).
+* Add `worker.died` boolean getter.
+* Update TypeScript version to 4.X.X and use `target: "esnext"` so transpilation of ECMAScript private fields (`#xxxxx`) don't use `WeakMaps` tricks but use standard syntax instead.
+* Use more than one core for compilation on Windows (PR #709).
+* `Consumer`: Modification of bitrate allocation algorithm (PR #708).
+* Update NPM deps.
+
+
+### 3.9.1
+
+* NixOS friendly build process (PR #683).
+* `Worker`: Emit "died" event before observer "close" (PR #684).
+* Transport: Hide debug message for RTX RTCP-RR packets (PR #688).
+* Update `libuv` to 1.42.0.
+* Improve Windows support (PR #692).
+* Avoid build commands when MEDIASOUP_WORKER_BIN is set (PR #695).
+* Update NPM deps.
+
+
+### 3.9.0
+
+* Replaces GYP build system with fully-functional Meson build system (PR #622).
+* Worker communication optimization (aka removing netstring dependency) (PR #644).
+* Move TypeScript and compiled JavaScript code to a new `node` folder.
+* Use ES6 private fields.
+* Require Node.js version >= 12.
+
+
+### 3.8.4
+
+* OPUS multi-channel (Surround sound) support (PR #647).
+* Add `packetLoss` stats to transport (PR #648 by @ggarber).
+* Fixes for active speaker observer (PR #655 by @ggarber).
+* Fix big endian issues (PR #639).
+* Update NPM deps.
+
+
+### 3.8.3
+
+* Fix wrong `size_t*` to `int*` conversion in 64bit Big-Endian hosts (PR #637).
+
+
+### 3.8.2
+
+* `ActiveSpeakerObserver`: Fix crash due to a `nullptr` (PR #634).
+* Update NPM deps.
+
+
+### 3.8.1
+
+* `SimulcastConsumer`: Fix RTP timestamp when switching layers (PR #626 by @penguinol).
+* Update NPM deps.
+
+
+### 3.8.0
+
+* Update `libuv` to 1.42.0.
+* Use non-ASM OpenSSL on Windows (PR #614).
+* Fix minor memory leak caused by non-virtual destructor (PR #625).
+* Dominant Speaker Event (PR #603 by @SteveMcFarlin).
+* Update NPM deps.
+
+
+### 3.7.19
+
+* Update `libuv` to 1.41.0.
+* Update NPM deps.
+* C++:
+  - Move header includes (PR #608).
+  - Enhance debugging on channel request/notification error (PR #607).
+
+
+### 3.7.18
+
+* Support for optional fixed port on transports (PR #593 by @nazar-pc).
+* Upgrade and optimize OpenSSL dependency (PR #598 by @vpalmisano):
+  - OpenSSL upgraded to version 1.1.1k.
+  - Enable the compilation of assembly extensions for OpenSSL.
+  - Optimize the worker build (`-O3`) and disable the debug flag (`-g`).
+* Update NPM deps.
+
+
+### 3.7.17
+
+* Introduce `PipeConsumerOptions` to avoid incorrect type information on `PipeTransport.consume()` arguments.
+* Make `ConsumerOptions.rtpCapabilities` field required as it should have always been.
+
+
+### 3.7.16
+
+* Add `mid` option in `ConsumerOptions` to provide way to override MID (PR #586 by @mstyura).
+* Update NPM deps.
+
+
+### 3.7.15
+
+* `kind` field of `RtpHeaderExtension` is no longer optional. It must be 'audio' or 'video'.
+* Refactor API inconsistency in internal RTP Observer communication with worker.
+
+
+### 3.7.14
+
+* Update `usrsctp` to include a "possible use after free bug" fix (commit [here](https://github.com/sctplab/usrsctp/commit/0f8d58300b1fdcd943b4a9dd3fbd830825390d4d)).
+* Update NPM deps.
+
+
+### 3.7.13
+
+* Fix build on FreeBSD (PR #585 by @smortex).
+
+
+### 3.7.12
+
+* `mediasoup-worker`: Fix memory leaks on error exit (PR #581).
+* Update NPM deps.
+
+
+### 3.7.11
+
+* Fix `DepUsrSCTP::Checker::timer` not being freed on `Worker` close (PR #576). Thanks @nazar-pc for discovering this.
+* Update NPM deps.
+
+
+### 3.7.10
+
+* Remove clang tools binaries from regular installation.
+
+
+### 3.7.9
+
+* Code clean up.
+
+
+### 3.7.8
+
+* `PayloadChannel`: Copy received messages into a separate buffer to avoid memory corruption if the message is later modified (PR #570 by @aggresss).
+
+
+### 3.7.7
+
+* Thread and memory safety fixes needed for mediasoup-rust (PR #562 by @nazar-pc).
+* mediasoup-rust support on macOS (PR #567 by @nazar-pc).
+* mediasoup-rust release 0.7.2.
+* Update NPM deps.
+
+
+### 3.7.6
+
+* `Transport`: Implement new `setMaxOutgoingBitrate()` method (PR #555 by @t-mullen). 
+* `SctpAssociation`: Don't warn if SCTP send buffer is full.
+* Rust: Update modules structure and other minor improvements for Rust version (PR #558).
+* `mediasoup-worker`: Avoid duplicated basenames so that libmediasoup-worker is compilable on macOS (PR #557).
+* Update NPM deps.
+
+
+### 3.7.5
+
+* SctpAssociation: provide 'sctpsendbufferfull' reason on send error (#552).
+
+
+### 3.7.4
+
+* Improve `RateCalculator` (PR #547 by @vpalmisano).
+* Update NPM deps.
+
+
+### 3.7.3
+
+* Make worker M1 compilable.
+
+
+### 3.7.2
+
+* `RateCalculator` optimization (PR #538 by @vpalmisano).
+* Update `Catch` to 2.13.5.
+* Update NPM deps.
+
+
+### 3.7.1
+
+* `SimulcastConsumer`: Fix miscalculation when increasing layer (PR #541 by @penguinol).
+* Rust version with thread-based worker (PR #540).
+* Update NPM deps.
+
+
+### 3.7.0
+
+* Welcome to `mediasoup-rust`! Authored by @nazar-pc (PRs #518 and #533).
+* Update NPM deps.
+* Update `usrsctp`.
+
+
+### 3.6.37
+
+* Fix crash if empty `fingerprints` array is given in `webrtcTransport.connect()` (issue #537).
+
+### 3.6.36
+
+* `Producer`: Add new stats field 'rtxPacketsDiscarded' (PR #536).
+
+
+### 3.6.35
+
+* `XxxxConsumer.hpp`: make `IsActive()` return `true` (even if `Producer`'s score is 0) when DTX is enabled (PR #534 due to issue #532).
+* Update NPM deps.
+
+
+### 3.6.34
+
+* Fix crash (regression, issue #529).
+
+
+### 3.6.33
+
+* Add missing `delete cb` that otherwise would leak (PR #527 based on PR #526 by @vpalmisano).
+* `router.pipeToRouter()`: Fix possible inconsistency in `pipeProducer.paused` status (as discussed in this [thread](https://mediasoup.discourse.group/t/concurrency-architecture/2515/) in the mediasoup forum).
 * Update `nlohmann/json` to 3.9.1.
 * Update `usrsctp`.
 * Update NPM deps.
+* Enhance Jitter calculation.
 
 
 ### 3.6.32
@@ -251,7 +591,7 @@
 ### 3.5.13
 
 * Simplify `GetDesiredBitrate()` in `SimulcastConsumer` and `SvcConsumer`.
-* Update libuv to 1.38.0.
+* Update `libuv` to 1.38.0.
 
 
 ### 3.5.12
@@ -277,16 +617,16 @@
 ### 3.5.9
 
 * `libwebrtc`: Apply patch by @sspanak and @Ivaka to avoid crash. Related issue: #357.
-* `PortManager.cpp`: Do not use `UV_UDP_RECVMMSG` in Windows due to a bug in libuv 1.37.0.
+* `PortManager.cpp`: Do not use `UV_UDP_RECVMMSG` in Windows due to a bug in `libuv` 1.37.0.
 * Update Node deps.
 
 
 ### 3.5.8
 
 * Enable `UV_UDP_RECVMMSG`:
-  - Upgrade libuv to 1.37.0.
+  - Upgrade `libuv` to 1.37.0.
   - Use `uv_udp_init_ex()` with `UV_UDP_RECVMMSG` flag.
-  - Add our own `uv.gyp` now that libuv has removed support for GYP (fixes #384).
+  - Add our own `uv.gyp` now that `libuv` has removed support for GYP (fixes #384).
 
 
 ### 3.5.7
@@ -310,7 +650,7 @@
 ### 3.5.4
 
 * `Transport.cpp`: Enable transport congestion client for the first video Consumer, no matter it's uses simulcast, SVC or a single stream.
-* Update libuv to 1.35.0.
+* Update `libuv` to 1.35.0.
 * `UdpSocket.cpp`: Ensure the new libuv's `uv__udp_recvmmsg()` is used, which is more efficient.
 
 
@@ -432,7 +772,7 @@
 
 * Add `worker.getResourceUsage()` API.
 * Update OpenSSL to 1.1.1d.
-* Update libuv to 1.34.0.
+* Update `libuv` to 1.34.0.
 * Update TypeScript and ESLint NPM dependencies.
 
 
@@ -586,7 +926,7 @@
 ### 3.0.9
 
 * `RtpStreamSend::ReceiveRtcpReceiverReport()`: improve `rtt` calculation if no Sender Report info is reported in received Received Report.
-* Update libuv to version 1.29.1.
+* Update `libuv` to version 1.29.1.
 
 
 ### 3.0.8

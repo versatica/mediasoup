@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPsRpsi.hpp"
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <cstring> // std::memcmp()
 
 using namespace RTC::RTCP;
@@ -25,7 +25,7 @@ namespace TestFeedbackPsRpsi
 	// RPSI values.
 	uint32_t senderSsrc{ 0xfa17fa17 };
 	uint32_t mediaSsrc{ 0 };
-	uint8_t payloadType{ 1 };
+	uint8_t payloadType{ 2 };
 	uint8_t payloadMask{ 1 };
 	size_t length{ 5 };
 

@@ -68,7 +68,11 @@ Builds the `mediasoup-worker` binary at `worker/out/Release/`.
 
 If the "MEDIASOUP_MAX_CORES" environment variable is set, the build process will use that number of CPU cores. Otherwise it will auto-detect the number of cores in the machine.
 
-If the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug", the binary is built at `worker/out/Debug/` with some C/C++ flags enabled (such as `-O0`) and some macros defined (such as `DEBUG`, `MS_LOG_TRACE` and `MS_LOG_FILE_LINE`). Check the meaning of these macros in the `worker/include/Logger.hpp` header file.
+"MEDIASOUP_BUILDTYPE" environment variable controls build types, `Release` and `Debug` are presets optimized for those use cases.
+Other build types are possible too, but they are not presets and will require "MESON_ARGS" use to customize build configuration.
+Check the meaning of useful macros in the `worker/include/Logger.hpp` header file if you want to enable tracing or other debug information.
+
+Binary is built at `worker/out/MEDIASOUP_BUILDTYPE/build`. 
 
 In order to instruct the mediasoup Node.js module to use the `Debug` mediasoup-worker binary, an environment variable must be set before running the Node.js application:
 
@@ -76,21 +80,42 @@ In order to instruct the mediasoup Node.js module to use the `Debug` mediasoup-w
 $ MEDIASOUP_BUILDTYPE=Debug node myapp.js
 ```
 
-If the "MEDIASOUP_WORKER_BIN" environment variable is set, mediasoup will use the it as mediasoup-worker binary:
+If the "MEDIASOUP_WORKER_BIN" environment variable is set, mediasoup will use the it as mediasoup-worker binary and **won't** compile the binary:
 
 ```bash
 $ MEDIASOUP_WORKER_BIN="/home/xxx/src/foo/mediasoup-worker" node myapp.js
 ```
 
 
+### `make libmediasoup-worker`
+
+Builds the `libmediasoup-worker` static library at `worker/out/Release/`.
+
+`MEDIASOUP_MAX_CORES` and `MEDIASOUP_BUILDTYPE` environment variables from above still apply for static library build.
+
 ### `make clean`
 
 Cleans built objects and binaries.
 
 
+### `make clean-build`
+
+Cleans built objects and other artifacts, but keeps `mediasoup-worker` binary in place.
+
+
+### `make clean-pip`
+
+Cleans `meson` and `ninja` installed in local prefix with pip.
+
+
+### `make clean-subprojects`
+
+Cleans subprojects downloaded with Meson.
+
+
 ### `make clean-all`
 
-Cleans all objects and binaries, including those generated for library dependencies (such as libuv, openssl, libsrtp, etc).
+Cleans built objects and binaries, `meson` and `ninja` installed in local prefix with pip and all subprojects downloaded with Meson.
 
 
 ### `make xcode`
@@ -113,25 +138,13 @@ Rewrites mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/
 Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test/` folder.
 
 
-### `make bear`
-
-Generates the `worker/compile_commands_template.json` file which is a ["Clang compilation database"](https://clang.llvm.org/docs/JSONCompilationDatabase.html).
-
-**Requirements:**
-
-* [Bear](https://github.com/rizsotto/Bear) is required.
-  - Install it in Debian/Ubuntu via `apt install bear` and in OSX via `brew install bear`.
-  - For now, Bear version must be 2.1.X.
-* Before running `make bear` you must have mediasoup C/C++ dependencies already compiled. To be sure, run `make clean-all && make` before running `make bear`.
-
-
 ### `make tidy`
 
 Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code checks following `worker/.clang-tidy` rules.
 
 **Requirements:**
 
-* `make clean-all`, then `make` and then `make bear` must have been called first.
+* `make clean` and `make` must have been called first.
 * [PyYAML](https://pyyaml.org/) is required.
   - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
 

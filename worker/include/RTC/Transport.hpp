@@ -4,9 +4,9 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "Channel/Request.hpp"
+#include "Channel/ChannelRequest.hpp"
 #include "PayloadChannel/Notification.hpp"
-#include "PayloadChannel/Request.hpp"
+#include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -26,9 +26,9 @@
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
 #include "handles/Timer.hpp"
-#include <json.hpp>
+#include <absl/container/flat_hash_map.h>
+#include <nlohmann/json.hpp>
 #include <string>
-#include <unordered_map>
 
 using json = nlohmann::json;
 
@@ -48,11 +48,14 @@ namespace RTC
 	{
 	protected:
 		using onSendCallback   = const std::function<void(bool sent)>;
-		using onQueuedCallback = const std::function<void(bool queued)>;
+		using onQueuedCallback = const std::function<void(bool queued, bool sctpSendBufferFull)>;
 
 	public:
 		class Listener
 		{
+		public:
+			virtual ~Listener() = default;
+
 		public:
 			virtual void OnTransportNewProducer(RTC::Transport* transport, RTC::Producer* producer) = 0;
 			virtual void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) = 0;
@@ -100,7 +103,8 @@ namespace RTC
 			virtual void OnTransportDataConsumerClosed(
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
 			virtual void OnTransportDataConsumerDataProducerClosed(
-			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
+			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer)         = 0;
+			virtual void OnTransportListenServerClosed(RTC::Transport* transport) = 0;
 		};
 
 	private:
@@ -116,13 +120,14 @@ namespace RTC
 
 	public:
 		void CloseProducersAndConsumers();
+		void ListenServerClosed();
 		// Subclasses must also invoke the parent Close().
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray);
 		// Subclasses must implement these methods and call the parent's ones to
 		// handle common requests.
-		virtual void HandleRequest(Channel::Request* request);
-		virtual void HandleRequest(PayloadChannel::Request* request);
+		virtual void HandleRequest(Channel::ChannelRequest* request);
+		virtual void HandleRequest(PayloadChannel::PayloadChannelRequest* request);
 		virtual void HandleNotification(PayloadChannel::Notification* notification);
 
 	protected:
@@ -270,12 +275,12 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
-		std::unordered_map<std::string, RTC::Producer*> mapProducers;
-		std::unordered_map<std::string, RTC::Consumer*> mapConsumers;
-		std::unordered_map<std::string, RTC::DataProducer*> mapDataProducers;
-		std::unordered_map<std::string, RTC::DataConsumer*> mapDataConsumers;
-		std::unordered_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
-		std::unordered_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
+		absl::flat_hash_map<std::string, RTC::Producer*> mapProducers;
+		absl::flat_hash_map<std::string, RTC::Consumer*> mapConsumers;
+		absl::flat_hash_map<std::string, RTC::DataProducer*> mapDataProducers;
+		absl::flat_hash_map<std::string, RTC::DataConsumer*> mapDataConsumers;
+		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
+		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
 		Timer* rtcpTimer{ nullptr };
 		RTC::TransportCongestionControlClient* tccClient{ nullptr };
 		RTC::TransportCongestionControlServer* tccServer{ nullptr };
@@ -298,6 +303,7 @@ namespace RTC
 		uint16_t transportWideCcSeq{ 0u };
 		uint32_t initialAvailableOutgoingBitrate{ 600000u };
 		uint32_t maxIncomingBitrate{ 0u };
+		uint32_t maxOutgoingBitrate{ 0u };
 		struct TraceEventTypes traceEventTypes;
 	};
 } // namespace RTC

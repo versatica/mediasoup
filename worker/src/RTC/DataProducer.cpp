@@ -110,13 +110,13 @@ namespace RTC
 		jsonObject["bytesReceived"] = this->bytesReceived;
 	}
 
-	void DataProducer::HandleRequest(Channel::Request* request) const
+	void DataProducer::HandleRequest(Channel::ChannelRequest* request) const
 	{
 		MS_TRACE();
 
 		switch (request->methodId)
 		{
-			case Channel::Request::MethodId::DATA_PRODUCER_DUMP:
+			case Channel::ChannelRequest::MethodId::DATA_PRODUCER_DUMP:
 			{
 				json data = json::object();
 
@@ -127,7 +127,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::Request::MethodId::DATA_PRODUCER_GET_STATS:
+			case Channel::ChannelRequest::MethodId::DATA_PRODUCER_GET_STATS:
 			{
 				json data = json::array();
 
