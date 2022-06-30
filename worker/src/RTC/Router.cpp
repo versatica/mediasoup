@@ -785,13 +785,13 @@ namespace RTC
 		// The packet does not need to be accessible in the future, do not clone it.
 		if (producer->GetKind() == RTC::Media::Kind::AUDIO)
 		{
-			std::shared_ptr<RTC::RtpPacket> sharedPacket(packet);
+			sharedPacket.reset(packet);
 		}
 		else
 		{
 			// Clone the packet so it holds its own buffer, usable for future
 			// retransmissions.
-			std::shared_ptr<RTC::RtpPacket> sharedPacket(packet->Clone());
+			sharedPacket.reset(packet->Clone());
 		}
 
 		auto& consumers = this->mapProducerConsumers.at(producer);

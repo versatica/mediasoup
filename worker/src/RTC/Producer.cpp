@@ -609,6 +609,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		bool isRtx{ false };
+		ReceiveRtpPacketResult result;
+
 		// Reset current packet.
 		this->currentRtpPacket = nullptr;
 
@@ -621,14 +624,13 @@ namespace RTC
 		{
 			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
-			return ReceiveRtpPacketResult::DISCARDED;
+			result = ReceiveRtpPacketResult::DISCARDED;
+
+			goto done;
 		}
 
 		// Pre-process the packet.
 		PreProcessRtpPacket(packet);
-
-		ReceiveRtpPacketResult result;
-		bool isRtx{ false };
 
 		// Media packet.
 		if (packet->GetSsrc() == rtpStream->GetSsrc())
@@ -642,7 +644,7 @@ namespace RTC
 				if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
 					NotifyNewRtpStream(rtpStream);
 
-				return result;
+				goto done;
 			}
 		}
 		// RTX packet.
@@ -653,7 +655,7 @@ namespace RTC
 
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
-				return result;
+				goto done;
 		}
 		// Should not happen.
 		else
@@ -693,21 +695,30 @@ namespace RTC
 
 		// If paused stop here.
 		if (this->paused)
-			return result;
+			goto done;
 
 		// May emit 'trace' event.
 		EmitTraceEventRtpAndKeyFrameTypes(packet, isRtx);
 
 		// Mangle the packet before providing the listener with it.
 		if (!MangleRtpPacket(packet, rtpStream))
-			return ReceiveRtpPacketResult::DISCARDED;
+		{
+			result = ReceiveRtpPacketResult::DISCARDED;
+			goto done;
+		}
 
 		// Post-process the packet.
 		PostProcessRtpPacket(packet);
 
 		this->listener->OnProducerRtpPacketReceived(this, packet);
 
-		return ReceiveRtpPacketResult::MEDIA_FORWARDED;
+		// Do not delete the packet, its lifetime is handled by Router.
+		return result;
+
+	done:
+		delete packet;
+
+		return result;
 	}
 
 	void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)

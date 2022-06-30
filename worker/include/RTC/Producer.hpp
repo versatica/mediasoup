@@ -69,9 +69,8 @@ namespace RTC
 	public:
 		enum class ReceiveRtpPacketResult
 		{
-			DISCARDED       = 0,
-			MEDIA           = 1,
-			MEDIA_FORWARDED = 2,
+			DISCARDED = 0,
+			MEDIA     = 1,
 			RETRANSMISSION
 		};
 
