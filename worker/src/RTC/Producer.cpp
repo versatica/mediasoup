@@ -707,7 +707,7 @@ namespace RTC
 
 		this->listener->OnProducerRtpPacketReceived(this, packet);
 
-		return result;
+		return ReceiveRtpPacketResult::MEDIA_FORWARDED;
 	}
 
 	void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)

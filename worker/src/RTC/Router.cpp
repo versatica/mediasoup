@@ -780,24 +780,27 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto& consumers = this->mapProducerConsumers.at(producer);
+		std::shared_ptr<RTC::RtpPacket> sharedPacket{ nullptr };
 
-		if (!consumers.empty())
-		{
+		// The packet does not need to be accessible in the future, do not clone it.
+		if (producer->GetKind() == RTC::Media::Kind::AUDIO)
+			std::shared_ptr<RTC::RtpPacket> sharedPacket(packet);
+		else
 			// Clone the packet so it holds its own buffer, usable for future
 			// retransmissions.
 			std::shared_ptr<RTC::RtpPacket> sharedPacket(packet->Clone());
 
-			for (auto* consumer : consumers)
-			{
-				// Update MID RTP extension value.
-				const auto& mid = consumer->GetRtpParameters().mid;
+		auto& consumers = this->mapProducerConsumers.at(producer);
 
-				if (!mid.empty())
-					packet->UpdateMid(mid);
+		for (auto* consumer : consumers)
+		{
+			// Update MID RTP extension value.
+			const auto& mid = consumer->GetRtpParameters().mid;
 
-				consumer->SendRtpPacket(sharedPacket);
-			}
+			if (!mid.empty())
+				packet->UpdateMid(mid);
+
+			consumer->SendRtpPacket(sharedPacket);
 		}
 
 		auto it = this->mapProducerRtpObservers.find(producer);

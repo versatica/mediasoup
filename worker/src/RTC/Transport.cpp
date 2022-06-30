@@ -1714,6 +1714,7 @@ namespace RTC
 		switch (result)
 		{
 			case RTC::Producer::ReceiveRtpPacketResult::MEDIA:
+			case RTC::Producer::ReceiveRtpPacketResult::MEDIA_FORWARDED:
 				this->recvRtpTransmission.Update(packet);
 				break;
 			case RTC::Producer::ReceiveRtpPacketResult::RETRANSMISSION:
@@ -1726,7 +1727,9 @@ namespace RTC
 			default:;
 		}
 
-		delete packet;
+		// Media forwarded, the packet lifetime is already handled.
+		if (result != RTC::Producer::ReceiveRtpPacketResult::MEDIA_FORWARDED)
+			delete packet;
 	}
 
 	void Transport::ReceiveRtcpPacket(RTC::RTCP::Packet* packet)
