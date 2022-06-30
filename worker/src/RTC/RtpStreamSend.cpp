@@ -194,20 +194,26 @@ namespace RTC
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
-	bool RtpStreamSend::ReceivePacket(std::shared_ptr<RTC::RtpPacket> packet)
+	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket> sharedPacket)
 	{
 		MS_TRACE();
 
+		if (this->params.mimeType.type == RTC::RtpCodecMimeType::Type::VIDEO)
+			MS_ASSERT(sharedPacket != nullptr, "RTP packet is not given in a shared pointer for video");
+
+		if (packet == nullptr)
+			packet = sharedPacket.get();
+
 		// Call the parent method.
-		if (!RtpStream::ReceiveStreamPacket(packet.get()))
+		if (!RtpStream::ReceiveStreamPacket(packet))
 			return false;
 
 		// If NACK is enabled, store the packet into the buffer.
-		if (this->params.useNack)
-			StorePacket(packet);
+		if (this->params.mimeType.type == RTC::RtpCodecMimeType::Type::VIDEO && this->params.useNack)
+			StorePacket(sharedPacket);
 
 		// Increase transmission counter.
-		this->transmissionCounter.Update(packet.get());
+		this->transmissionCounter.Update(packet);
 
 		return true;
 	}
