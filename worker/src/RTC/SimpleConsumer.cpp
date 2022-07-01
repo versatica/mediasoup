@@ -252,6 +252,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(
+		  (packet != nullptr || sharedPacket != nullptr), "both packet and sharedPacket are nullptr");
+
 		if (packet == nullptr)
 			packet = sharedPacket.get();
 

@@ -198,6 +198,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(
+		  (packet != nullptr || sharedPacket != nullptr), "both packet and sharedPacket are nullptr");
+
 		if (this->params.mimeType.type == RTC::RtpCodecMimeType::Type::VIDEO)
 			MS_ASSERT(sharedPacket != nullptr, "RTP packet is not given in a shared pointer for video");
 
