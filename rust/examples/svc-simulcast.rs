@@ -6,6 +6,7 @@ use mediasoup::prelude::*;
 use mediasoup::worker::{WorkerLogLevel, WorkerLogTag};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 
 /// List of codecs that SFU will accept from clients
@@ -200,7 +201,7 @@ impl SvcSimulcastConnection {
         // This may not be the case for real-world applications or you may create this at a
         // different time and/or in different order.
         let transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-            ip: "127.0.0.1".parse().unwrap(),
+            ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
             announced_ip: None,
         }));
         let producer_transport = router

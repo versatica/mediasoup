@@ -37,12 +37,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             create_data_producer_consumer_pair().await.unwrap()
         });
 
-        let direct_data_producer =
-            if let DataProducer::Direct(direct_data_producer) = data_producer.clone() {
-                direct_data_producer
-            } else {
-                unreachable!()
-            };
+        let direct_data_producer = if let DataProducer::Direct(direct_data_producer) = data_producer
+        {
+            direct_data_producer
+        } else {
+            unreachable!()
+        };
 
         group.bench_with_input("recv", &data, |b, data| {
             b.iter(|| {

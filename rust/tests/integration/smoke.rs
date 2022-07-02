@@ -20,6 +20,7 @@ use mediasoup::transport::TransportTraceEventType;
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
 use mediasoup::worker::{WorkerLogLevel, WorkerSettings, WorkerUpdateSettings};
 use mediasoup::worker_manager::WorkerManager;
+use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 use std::{env, thread};
 
@@ -82,7 +83,7 @@ fn smoke() {
         let webrtc_transport = router
             .create_webrtc_transport({
                 let mut options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 }));
 
@@ -264,7 +265,7 @@ fn smoke() {
         let plain_transport = router
             .create_plain_transport({
                 let mut options = PlainTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
 

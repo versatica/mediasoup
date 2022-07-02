@@ -22,6 +22,7 @@ use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTra
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use parking_lot::Mutex;
+use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -346,7 +347,7 @@ async fn init() -> (
         .expect("Failed to create router");
 
     let transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-        ip: "127.0.0.1".parse().unwrap(),
+        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
         announced_ip: None,
     }));
 
@@ -415,7 +416,7 @@ fn consume_succeeds() {
 
             assert_eq!(new_consumer_count.load(Ordering::SeqCst), 1);
             assert_eq!(audio_consumer.producer_id(), audio_producer.id());
-            assert_eq!(audio_consumer.closed(), false);
+            assert!(!audio_consumer.closed());
             assert_eq!(audio_consumer.kind(), MediaKind::Audio);
             assert_eq!(audio_consumer.rtp_parameters().mid, Some("0".to_string()));
             assert_eq!(
@@ -435,8 +436,8 @@ fn consume_succeeds() {
                 }]
             );
             assert_eq!(audio_consumer.r#type(), ConsumerType::Simple);
-            assert_eq!(audio_consumer.paused(), false);
-            assert_eq!(audio_consumer.producer_paused(), false);
+            assert!(!audio_consumer.paused());
+            assert!(!audio_consumer.producer_paused());
             assert_eq!(audio_consumer.priority(), 1);
             assert_eq!(
                 audio_consumer.score(),
@@ -502,7 +503,7 @@ fn consume_succeeds() {
 
             assert_eq!(new_consumer_count.load(Ordering::SeqCst), 2);
             assert_eq!(video_consumer.producer_id(), video_producer.id());
-            assert_eq!(video_consumer.closed(), false);
+            assert!(!video_consumer.closed());
             assert_eq!(video_consumer.kind(), MediaKind::Video);
             assert_eq!(video_consumer.rtp_parameters().mid, Some("1".to_string()));
             assert_eq!(
@@ -533,8 +534,8 @@ fn consume_succeeds() {
                 ]
             );
             assert_eq!(video_consumer.r#type(), ConsumerType::Simulcast);
-            assert_eq!(video_consumer.paused(), true);
-            assert_eq!(video_consumer.producer_paused(), true);
+            assert!(video_consumer.paused());
+            assert!(video_consumer.producer_paused());
             assert_eq!(video_consumer.priority(), 1);
             assert_eq!(
                 video_consumer.score(),
@@ -578,16 +579,18 @@ fn consume_succeeds() {
                 map
             });
 
-            let transport_2_dump = transport_2
+            let mut transport_2_dump = transport_2
                 .dump()
                 .await
                 .expect("Failed to get transport 2 dump");
 
             assert_eq!(transport_2_dump.producer_ids, vec![]);
-            assert_eq!(
-                transport_2_dump.consumer_ids.clone().sort(),
-                vec![audio_consumer.id(), video_consumer.id()].sort()
-            );
+            {
+                transport_2_dump.consumer_ids.sort();
+                let mut expected_consumer_ids = vec![audio_consumer.id(), video_consumer.id()];
+                expected_consumer_ids.sort();
+                assert_eq!(transport_2_dump.consumer_ids, expected_consumer_ids);
+            }
         }
 
         {
@@ -607,7 +610,7 @@ fn consume_succeeds() {
 
             assert_eq!(new_consumer_count.load(Ordering::SeqCst), 3);
             assert_eq!(video_pipe_consumer.producer_id(), video_producer.id());
-            assert_eq!(video_pipe_consumer.closed(), false);
+            assert!(!video_pipe_consumer.closed());
             assert_eq!(video_pipe_consumer.kind(), MediaKind::Video);
             assert_eq!(video_pipe_consumer.rtp_parameters().mid, None);
             assert_eq!(
@@ -638,8 +641,8 @@ fn consume_succeeds() {
                 ]
             );
             assert_eq!(video_pipe_consumer.r#type(), ConsumerType::Pipe);
-            assert_eq!(video_pipe_consumer.paused(), false);
-            assert_eq!(video_pipe_consumer.producer_paused(), true);
+            assert!(!video_pipe_consumer.paused());
+            assert!(video_pipe_consumer.producer_paused());
             assert_eq!(video_pipe_consumer.priority(), 1);
             assert_eq!(
                 video_pipe_consumer.score(),
@@ -674,21 +677,22 @@ fn consume_succeeds() {
                 map
             });
 
-            let transport_2_dump = transport_2
+            let mut transport_2_dump = transport_2
                 .dump()
                 .await
                 .expect("Failed to get transport 2 dump");
 
             assert_eq!(transport_2_dump.producer_ids, vec![]);
-            assert_eq!(
-                transport_2_dump.consumer_ids.clone().sort(),
-                vec![
+            {
+                transport_2_dump.consumer_ids.sort();
+                let mut expected_consumer_ids = vec![
                     audio_consumer.id(),
                     video_consumer.id(),
-                    video_pipe_consumer.id()
-                ]
-                .sort(),
-            );
+                    video_pipe_consumer.id(),
+                ];
+                expected_consumer_ids.sort();
+                assert_eq!(transport_2_dump.consumer_ids, expected_consumer_ids);
+            }
         }
     });
 }
@@ -799,10 +803,7 @@ fn consume_incompatible_rtp_capabilities() {
                 header_extensions: vec![],
             };
 
-            assert_eq!(
-                router.can_consume(&audio_producer.id(), &incompatible_device_capabilities),
-                false
-            );
+            assert!(!router.can_consume(&audio_producer.id(), &incompatible_device_capabilities));
 
             assert!(matches!(
                 transport_2
@@ -821,10 +822,7 @@ fn consume_incompatible_rtp_capabilities() {
                 header_extensions: vec![],
             };
 
-            assert_eq!(
-                router.can_consume(&audio_producer.id(), &invalid_device_capabilities),
-                false
-            );
+            assert!(!router.can_consume(&audio_producer.id(), &invalid_device_capabilities));
 
             assert!(matches!(
                 transport_2
@@ -1077,8 +1075,8 @@ fn dump_succeeds() {
                     .collect::<Vec<_>>()
             );
             assert_eq!(dump.supported_codec_payload_types, vec![103]);
-            assert_eq!(dump.paused, true);
-            assert_eq!(dump.producer_paused, true);
+            assert!(dump.paused);
+            assert!(dump.producer_paused);
             assert_eq!(dump.priority, 1);
         }
     });
@@ -1206,7 +1204,7 @@ fn pause_resume_succeeds() {
 
             let dump = audio_consumer.dump().await.expect("Consumer dump failed");
 
-            assert_eq!(dump.paused, true);
+            assert!(dump.paused);
         }
 
         {
@@ -1217,7 +1215,7 @@ fn pause_resume_succeeds() {
 
             let dump = audio_consumer.dump().await.expect("Consumer dump failed");
 
-            assert_eq!(dump.paused, false);
+            assert!(!dump.paused);
         }
     });
 }
@@ -1366,8 +1364,8 @@ fn producer_pause_resume_events() {
                 .expect("Failed to pause producer");
             rx.await.expect("Failed to receive producer paused event");
 
-            assert_eq!(audio_consumer.paused(), false);
-            assert_eq!(audio_consumer.producer_paused(), true);
+            assert!(!audio_consumer.paused());
+            assert!(audio_consumer.producer_paused());
         }
 
         {
@@ -1385,8 +1383,8 @@ fn producer_pause_resume_events() {
                 .expect("Failed to pause producer");
             rx.await.expect("Failed to receive producer paused event");
 
-            assert_eq!(audio_consumer.paused(), false);
-            assert_eq!(audio_consumer.producer_paused(), false);
+            assert!(!audio_consumer.paused());
+            assert!(!audio_consumer.producer_paused());
         }
     });
 }

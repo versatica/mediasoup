@@ -13,6 +13,7 @@ use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTra
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use std::env;
+use std::net::{IpAddr, Ipv4Addr};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -61,7 +62,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, DataProducer) {
         .create_webrtc_transport({
             let mut transport_options =
                 WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 }));
 
@@ -88,7 +89,7 @@ fn consume_data_succeeds() {
         let transport2 = router
             .create_plain_transport({
                 let mut transport_options = PlainTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
 
@@ -127,12 +128,12 @@ fn consume_data_succeeds() {
 
         assert_eq!(new_data_consumer_count.load(Ordering::SeqCst), 1);
         assert_eq!(data_consumer.data_producer_id(), data_producer.id());
-        assert_eq!(data_consumer.closed(), false);
+        assert!(!data_consumer.closed());
         assert_eq!(data_consumer.r#type(), DataConsumerType::Sctp);
         {
             let sctp_stream_parameters = data_consumer.sctp_stream_parameters();
             assert!(sctp_stream_parameters.is_some());
-            assert_eq!(sctp_stream_parameters.unwrap().ordered(), false);
+            assert!(!sctp_stream_parameters.unwrap().ordered());
             assert_eq!(
                 sctp_stream_parameters.unwrap().max_packet_life_time(),
                 Some(4000),
@@ -187,7 +188,7 @@ fn weak() {
         let transport2 = router
             .create_plain_transport({
                 let mut transport_options = PlainTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
 
@@ -256,7 +257,7 @@ fn dump_succeeds() {
                 sctp_stream_parameters.unwrap().stream_id(),
                 data_consumer.sctp_stream_parameters().unwrap().stream_id(),
             );
-            assert_eq!(sctp_stream_parameters.unwrap().ordered(), false);
+            assert!(!sctp_stream_parameters.unwrap().ordered());
             assert_eq!(
                 sctp_stream_parameters.unwrap().max_packet_life_time(),
                 Some(4000),
@@ -335,7 +336,7 @@ fn consume_data_on_direct_transport_succeeds() {
 
         assert_eq!(new_data_consumer_count.load(Ordering::SeqCst), 1);
         assert_eq!(data_consumer.data_producer_id(), data_producer.id());
-        assert_eq!(data_consumer.closed(), false);
+        assert!(!data_consumer.closed());
         assert_eq!(data_consumer.r#type(), DataConsumerType::Direct);
         assert_eq!(data_consumer.sctp_stream_parameters(), None);
         assert_eq!(data_consumer.label().as_str(), "foo");
@@ -436,7 +437,7 @@ fn close_event() {
         let transport2 = router
             .create_plain_transport({
                 let mut transport_options = PlainTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
 

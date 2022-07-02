@@ -38,7 +38,7 @@ macro_rules! uuid_based_wrapper_type {
             }
         }
 
-        impl From<$struct_name> for crate::worker::SubscriptionTarget {
+        impl From<$struct_name> for $crate::worker::SubscriptionTarget {
             fn from(id: $struct_name) -> Self {
                 Self::Uuid(id.0)
             }
