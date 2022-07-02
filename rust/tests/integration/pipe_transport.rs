@@ -24,6 +24,7 @@ use mediasoup::worker_manager::WorkerManager;
 use parking_lot::Mutex;
 use portpicker::pick_unused_port;
 use std::env;
+use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 
 struct CustomAppData {
@@ -240,7 +241,7 @@ async fn init() -> (Worker, Router, Router, WebRtcTransport, WebRtcTransport) {
         .expect("Failed to create router");
 
     let mut transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-        ip: "127.0.0.1".parse().unwrap(),
+        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
         announced_ip: None,
     }));
     transport_options.enable_sctp = true;
@@ -547,7 +548,7 @@ fn weak() {
         let pipe_transport = router1
             .create_pipe_transport({
                 let mut options = PipeTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
                 options.enable_rtx = true;
@@ -577,7 +578,7 @@ fn create_with_fixed_port_succeeds() {
         let pipe_transport = router1
             .create_pipe_transport({
                 let mut options = PipeTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
                 options.port = Some(port);
@@ -599,7 +600,7 @@ fn create_with_enable_rtx_succeeds() {
         let pipe_transport = router1
             .create_pipe_transport({
                 let mut options = PipeTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
                 options.enable_rtx = true;
@@ -707,7 +708,7 @@ fn create_with_enable_srtp_succeeds() {
         let pipe_transport = router1
             .create_pipe_transport({
                 let mut options = PipeTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
                 options.enable_srtp = true;
@@ -758,7 +759,7 @@ fn create_with_invalid_srtp_parameters_fails() {
 
         let pipe_transport = router1
             .create_pipe_transport(PipeTransportOptions::new(ListenIp {
-                ip: "127.0.0.1".parse().unwrap(),
+                ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_ip: None,
             }))
             .await
@@ -1080,7 +1081,7 @@ fn pipe_to_router_called_twice_generates_single_pair() {
 
         let mut transport_options =
             WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-                ip: "127.0.0.1".parse().unwrap(),
+                ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_ip: None,
             }));
         transport_options.enable_sctp = true;

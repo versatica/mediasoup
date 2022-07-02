@@ -12,6 +12,7 @@ use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTra
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use std::env;
+use std::net::{IpAddr, Ipv4Addr};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -47,7 +48,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, PlainTransport) {
         .create_webrtc_transport({
             let mut transport_options =
                 WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 }));
 
@@ -61,7 +62,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, PlainTransport) {
     let transport2 = router
         .create_plain_transport({
             let mut transport_options = PlainTransportOptions::new(ListenIp {
-                ip: "127.0.0.1".parse().unwrap(),
+                ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_ip: None,
             });
 

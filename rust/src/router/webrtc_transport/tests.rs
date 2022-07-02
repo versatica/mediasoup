@@ -221,7 +221,7 @@ fn router_close_event() {
         let transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                 ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                 },
             )))

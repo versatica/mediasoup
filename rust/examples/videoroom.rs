@@ -329,6 +329,7 @@ mod participant {
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::fmt;
+    use std::net::{IpAddr, Ipv4Addr};
     use uuid::Uuid;
 
     mod messages {
@@ -495,7 +496,7 @@ mod participant {
             // this at a different time and/or in different order.
             let transport_options =
                 WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 }));
             let producer_transport = room

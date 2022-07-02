@@ -13,6 +13,7 @@ use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTra
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use std::env;
+use std::net::{IpAddr, Ipv4Addr};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -61,7 +62,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, DataProducer) {
         .create_webrtc_transport({
             let mut transport_options =
                 WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 }));
 
@@ -88,7 +89,7 @@ fn consume_data_succeeds() {
         let transport2 = router
             .create_plain_transport({
                 let mut transport_options = PlainTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
 
@@ -187,7 +188,7 @@ fn weak() {
         let transport2 = router
             .create_plain_transport({
                 let mut transport_options = PlainTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
 
@@ -436,7 +437,7 @@ fn close_event() {
         let transport2 = router
             .create_plain_transport({
                 let mut transport_options = PlainTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
 

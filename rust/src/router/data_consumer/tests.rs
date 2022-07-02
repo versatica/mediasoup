@@ -10,6 +10,7 @@ use crate::worker::WorkerSettings;
 use crate::worker_manager::WorkerManager;
 use futures_lite::future;
 use std::env;
+use std::net::{IpAddr, Ipv4Addr};
 
 async fn init() -> (Router, DataProducer) {
     {
@@ -36,7 +37,7 @@ async fn init() -> (Router, DataProducer) {
         .create_webrtc_transport({
             let mut transport_options =
                 WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 }));
 
@@ -65,7 +66,7 @@ fn data_producer_close_event() {
         let transport2 = router
             .create_plain_transport({
                 let mut transport_options = PlainTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
 
@@ -114,7 +115,7 @@ fn transport_close_event() {
         let transport2 = router
             .create_plain_transport({
                 let mut transport_options = PlainTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
 

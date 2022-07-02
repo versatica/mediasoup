@@ -11,6 +11,7 @@ use crate::worker::WorkerSettings;
 use crate::worker_manager::WorkerManager;
 use futures_lite::future;
 use std::env;
+use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 
 fn media_codecs() -> Vec<RtpCodecCapability> {
@@ -64,7 +65,7 @@ async fn init() -> (Router, WebRtcTransport) {
         .expect("Failed to create router");
 
     let transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-        ip: "127.0.0.1".parse().unwrap(),
+        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
         announced_ip: None,
     }));
 
