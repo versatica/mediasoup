@@ -96,17 +96,6 @@ pub enum WebRtcTransportListen {
         listen_ips: TransportListenIps,
         /// Fixed port to listen on instead of selecting automatically from Worker's port range.
         port: Option<u16>,
-        /// Listen in UDP. Default true.
-        enable_udp: bool,
-        /// Listen in TCP.
-        /// Default false.
-        enable_tcp: bool,
-        /// Prefer UDP.
-        /// Default false.
-        prefer_udp: bool,
-        /// Prefer TCP.
-        /// Default false.
-        prefer_tcp: bool,
     },
     /// Share [`WebRtcServer`] with other transports withing the same worker.
     Server {
@@ -125,6 +114,17 @@ pub enum WebRtcTransportListen {
 pub struct WebRtcTransportOptions {
     /// How [`WebRtcTransport`] should listen on interfaces.
     pub listen: WebRtcTransportListen,
+    /// Listen in UDP. Default true.
+    pub enable_udp: bool,
+    /// Listen in TCP.
+    /// Default false.
+    pub enable_tcp: bool,
+    /// Prefer UDP.
+    /// Default false.
+    pub prefer_udp: bool,
+    /// Prefer TCP.
+    /// Default false.
+    pub prefer_tcp: bool,
     /// Initial available outgoing bitrate (in bps).
     /// Default 600000.
     pub initial_available_outgoing_bitrate: u32,
@@ -151,11 +151,11 @@ impl WebRtcTransportOptions {
             listen: WebRtcTransportListen::Individual {
                 listen_ips,
                 port: None,
-                enable_udp: true,
-                enable_tcp: false,
-                prefer_udp: false,
-                prefer_tcp: false,
             },
+            enable_udp: true,
+            enable_tcp: false,
+            prefer_udp: false,
+            prefer_tcp: false,
             initial_available_outgoing_bitrate: 600_000,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),
@@ -169,6 +169,10 @@ impl WebRtcTransportOptions {
     pub fn new_with_server(webrtc_server: WebRtcServer) -> Self {
         Self {
             listen: WebRtcTransportListen::Server { webrtc_server },
+            enable_udp: true,
+            enable_tcp: false,
+            prefer_udp: false,
+            prefer_tcp: false,
             initial_available_outgoing_bitrate: 600_000,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),

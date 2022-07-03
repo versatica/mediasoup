@@ -145,19 +145,8 @@ fn create_succeeds() {
                         .try_into()
                         .unwrap(),
                     );
-                    match &mut webrtc_transport_options.listen {
-                        WebRtcTransportListen::Individual {
-                            enable_tcp,
-                            prefer_udp,
-                            ..
-                        } => {
-                            *enable_tcp = true;
-                            *prefer_udp = true;
-                        }
-                        WebRtcTransportListen::Server { .. } => {
-                            unreachable!();
-                        }
-                    }
+                    webrtc_transport_options.enable_tcp = true;
+                    webrtc_transport_options.prefer_udp = true;
                     webrtc_transport_options.enable_sctp = true;
                     webrtc_transport_options.num_sctp_streams = NumSctpStreams {
                         os: 2048,
