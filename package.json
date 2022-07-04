@@ -77,9 +77,9 @@
   "devDependencies": {
     "@types/debug": "^4.1.7",
     "@types/uuid": "^8.3.4",
-    "@typescript-eslint/eslint-plugin": "^5.29.0",
-    "@typescript-eslint/parser": "^5.29.0",
-    "eslint": "^8.18.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "@typescript-eslint/parser": "^5.30.5",
+    "eslint": "^8.19.0",
     "eslint-plugin-jest": "^26.5.3",
     "jest": "^27.5.1",
     "jest-tobetype": "^1.2.3",
