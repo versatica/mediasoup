@@ -163,7 +163,6 @@ libuv_proj = subproject(
     'warning_level=0',
     'build_tests=false',
     'build_benchmarks=false',
-    'c_std=c99',
   ],
 )
 libsrtp2_proj = subproject(
