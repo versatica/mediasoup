@@ -35,6 +35,7 @@
     "worker/test/src",
     "worker/Makefile",
     "worker/meson.build",
+    "worker/meson_options.txt",
     "npm-scripts.js"
   ],
   "keywords": [
