@@ -99,9 +99,8 @@ class CallStatsRecord
         record.p.start_tm = t;
     }
     
-    void resetSamples();
-    void zeroSamples(uint64_t nowMs);
-    bool addSample(StreamStats& last, StreamStats& curr);    
+    void resetSamples(uint64_t nowMs);
+    void addSample(StreamStats& last, StreamStats& curr);    
 
   private:
     // Binary data record
@@ -145,8 +144,6 @@ class CallStatsRecord
     CallStatsRecordCtx(uint64_t objType, uint8_t payload, std::string callId, std::string objId, std::string producerId) : record(objType, payload, callId, objId, producerId) {}
     void AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream); // either recv or send stream
     uint64_t LastTs() const { return last.ts; }
-  private:
-    void WriteIfFull(StatsBinLog* log);
   };
 
   // Binary log presentation

@@ -36,7 +36,7 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
   uint64_t ts = Utils::Time::currentStdEpochMs();
   set_start_tm(ts);
 
-  set_filled(UINT32_UNSET);
+  set_filled(0);
 
   if (type) // consumer
   {
@@ -108,7 +108,7 @@ bool CallStatsRecord::fwriteRecord(std::FILE* fd)
   return  (rc > 0);
 }
 
-void CallStatsRecord::resetSamples()
+void CallStatsRecord::resetSamples(uint64_t ts)
 {
   // Wipe off samples data
   if (type) // consumer
@@ -119,31 +119,25 @@ void CallStatsRecord::resetSamples()
   {
     std::memset(record.p.samples, 0, sizeof(record.p.samples));
   }
-  set_filled(UINT32_UNSET);
-  set_start_tm(UINT64_UNSET);
-}
-
-
-void CallStatsRecord::zeroSamples(uint64_t nowMs)
-{
-  set_start_tm(nowMs);
   set_filled(0);
+  set_start_tm(ts);
 }
 
-
-bool CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
+void CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
 {
-  if (filled() == UINT32_UNSET || filled() >= CALL_STATS_BIN_LOG_RECORDS_NUM)
-    return false;
-  
+  MS_ASSERT(filled() >= 0 && filled() < CALL_STATS_BIN_LOG_RECORDS_NUM, 
+            "Cannot have %" PRIu32 " samples in record, quitting...", filled());
+
+  MS_ASSERT(last.ts != UINT64_UNSET,
+            "Timestamp of a previous sample is unset, quitting...");
+            
+  MS_ASSERT(curr.ts != UINT64_UNSET,
+            "Timestamp of a current sample is unset, quitting...");
+
   uint32_t idx = filled();
   CallStatsSample* s = type ? &(record.c.samples[0]) : &(record.p.samples[0]);
 
-  // Special case for the very first record in the session
-  if (UINT64_UNSET == start_tm())
-    set_start_tm(curr.ts);
-
-  s[idx].epoch_len = (filled() != 0) ? static_cast<uint16_t>(curr.ts - last.ts) : 0; // the first sample in a set always has epoch_len set into 0
+  s[idx].epoch_len = static_cast<uint16_t>(curr.ts - last.ts);
   s[idx].packets_count = static_cast<uint16_t>(curr.packetsCount - last.packetsCount);
   s[idx].bytes_count = static_cast<uint32_t>(curr.bytesCount - last.bytesCount);
   s[idx].packets_lost = (curr.packetsLost > last.packetsLost) ? static_cast<uint16_t>(curr.packetsLost - last.packetsLost) : 0;
@@ -156,54 +150,40 @@ bool CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
   s[idx].rtt = static_cast<uint16_t>(std::round(curr.rtt));
   s[idx].max_pts = curr.maxPacketTs;
 
-  set_filled(filled()+1);  
-
-  return true;
+  set_filled(idx + 1);
 }
 
 /////////////////////////
 //
-void CallStatsRecordCtx::WriteIfFull(StatsBinLog* log)
-{
-  if (record.filled() == UINT32_UNSET || record.filled() < CALL_STATS_BIN_LOG_RECORDS_NUM)
-    return;
-
-  if (nullptr != log)
-  {
-    log->OnLogWrite(this);
-  }
-
-  // Wipe the data off
-  record.resetSamples();
-}
-
-
 void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream)
 {
   // Write data if record is full, then continue collecting samples
-  WriteIfFull(log);
+  if (record.filled() == CALL_STATS_BIN_LOG_RECORDS_NUM)
+  {
+    if (nullptr != log)
+    {
+      log->OnLogWrite(this);
+    }
+
+    // Wipe the data off and set record's start timestamp into the last sample's
+    record.resetSamples(last.ts);
+  }
 
   uint64_t nowMs = Utils::Time::currentStdEpochMs(); // Timestamp of a current measurement
 
-  if (UINT32_UNSET == record.filled())
+  if (UINT64_UNSET == last.ts) // the first measurement ever during this session
   {
-    if (UINT64_UNSET == last.ts) // the first measurement ever during this session
-    {
-      stream->FillStats(last.packetsCount, last.bytesCount, last.packetsLost, last.packetsDiscarded,
-                        last.packetsRetransmitted, last.packetsRepaired, last.nackCount,
-                        last.nackPacketCount, last.kfCount, last.rtt, last.maxPacketTs);
-      last.ts = nowMs;
-      record.zeroSamples(UINT64_UNSET); // UINT64_UNSET because nowMs is not the timestamp of the first sample in a record yet
-      return; // done, wait till the next measurement
-    }
-    else // proceed, use data from the last sample of the previous record to calculate delta
-    {
-      record.zeroSamples(nowMs);
-    }
+    stream->FillStats(last.packetsCount, last.bytesCount, last.packetsLost, last.packetsDiscarded,
+                      last.packetsRetransmitted, last.packetsRepaired, last.nackCount,
+                      last.nackPacketCount, last.kfCount, last.rtt, last.maxPacketTs);
+    last.ts = nowMs;
+    record.resetSamples(nowMs);
+    return; // done, wait till the next measurement
   }
 
+  // Should have a room to add a sample
   MS_ASSERT(record.filled() >= 0 && record.filled() < CALL_STATS_BIN_LOG_RECORDS_NUM,
-    "Invalid record.filled=%" PRIu16, record.filled());
+    "Invalid record.filled=%" PRIu32, record.filled());
 
   curr.ts = nowMs;
   stream->FillStats(curr.packetsCount, curr.bytesCount, curr.packetsLost, curr.packetsDiscarded,
@@ -264,7 +244,7 @@ void StatsBinLog::LogClose()
   {
     std::remove(bin_log_file_path.c_str());
     MS_DEBUG_TAG(rtp, "binlog %s removed, short timespan (%" PRIu64 "-%" PRIu64 ")", 
-                  this->bin_log_file_path, this->log_start_ts, log_last_ts);
+                  this->bin_log_file_path.c_str(), this->log_start_ts, log_last_ts);
     return;
   }
 
