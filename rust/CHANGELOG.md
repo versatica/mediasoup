@@ -1,15 +1,10 @@
 # Changelog
 
-### WIP
+### 0.10.0
 
-* Update worker dependencies:
-  * OpenSSL 3.0.2.
-  * abseil-cpp 20211102.0.
-  * nlohmann_json 3.10.5.
-  * usrsctp snapshot 4e06feb01cadcd127d119486b98a4bd3d64aa1e7.
-  * wingetopt 1.00.
+* Updates from mediasoup TypeScript `3.9.10..=3.10.1`.
 * `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port (PR #834, PR #845).
-* Minor API breaking changes
+* Minor API breaking changes.
 
 # 0.9.3
 
