@@ -20,7 +20,7 @@ use mediasoup::worker_manager::WorkerManager;
 use portpicker::pick_unused_port;
 use std::convert::TryInto;
 use std::env;
-use std::net::IpAddr;
+use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -97,7 +97,7 @@ fn create_succeeds() {
             let transport = router
                 .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                     ListenIp {
-                        ip: "127.0.0.1".parse().unwrap(),
+                        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: Some("9.9.9.1".parse().unwrap()),
                     },
                 )))
@@ -130,34 +130,23 @@ fn create_succeeds() {
                     let mut webrtc_transport_options = WebRtcTransportOptions::new(
                         vec![
                             ListenIp {
-                                ip: "127.0.0.1".parse().unwrap(),
+                                ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                                 announced_ip: Some("9.9.9.1".parse().unwrap()),
                             },
                             ListenIp {
-                                ip: "0.0.0.0".parse().unwrap(),
+                                ip: IpAddr::V4(Ipv4Addr::UNSPECIFIED),
                                 announced_ip: Some("9.9.9.2".parse().unwrap()),
                             },
                             ListenIp {
-                                ip: "127.0.0.1".parse().unwrap(),
+                                ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                                 announced_ip: None,
                             },
                         ]
                         .try_into()
                         .unwrap(),
                     );
-                    match &mut webrtc_transport_options.listen {
-                        WebRtcTransportListen::Individual {
-                            enable_tcp,
-                            prefer_udp,
-                            ..
-                        } => {
-                            *enable_tcp = true;
-                            *prefer_udp = true;
-                        }
-                        WebRtcTransportListen::Server { .. } => {
-                            unreachable!();
-                        }
-                    }
+                    webrtc_transport_options.enable_tcp = true;
+                    webrtc_transport_options.prefer_udp = true;
                     webrtc_transport_options.enable_sctp = true;
                     webrtc_transport_options.num_sctp_streams = NumSctpStreams {
                         os: 2048,
@@ -244,7 +233,7 @@ fn create_succeeds() {
                     .expect("Failed to dump WebRTC transport");
 
                 assert_eq!(transport_dump.id, transport1.id());
-                assert_eq!(transport_dump.direct, false);
+                assert!(!transport_dump.direct);
                 assert_eq!(transport_dump.producer_ids, vec![]);
                 assert_eq!(transport_dump.consumer_ids, vec![]);
                 assert_eq!(transport_dump.ice_role, transport1.ice_role());
@@ -274,7 +263,7 @@ fn create_with_fixed_port_succeeds() {
         let transport = router
             .create_webrtc_transport({
                 let mut options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                 }));
                 match &mut options.listen {
@@ -303,7 +292,7 @@ fn weak() {
         let transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                 ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                 },
             )))
@@ -347,7 +336,7 @@ fn get_stats_succeeds() {
         let transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                 ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                 },
             )))
@@ -394,7 +383,7 @@ fn connect_succeeds() {
         let transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                 ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                 },
             )))
@@ -439,7 +428,7 @@ fn set_max_incoming_bitrate_succeeds() {
         let transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                 ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                 },
             )))
@@ -461,7 +450,7 @@ fn set_max_outgoing_bitrate_succeeds() {
         let transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                 ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                 },
             )))
@@ -483,7 +472,7 @@ fn restart_ice_succeeds() {
         let transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                 ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                 },
             )))
@@ -514,7 +503,7 @@ fn enable_trace_event_succeeds() {
         let transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                 ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                 },
             )))
@@ -576,7 +565,7 @@ fn close_event() {
         let transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                 ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                 },
             )))

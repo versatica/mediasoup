@@ -7,6 +7,7 @@ use mediasoup::rtp_parameters::{RtpCodecParameters, RtpEncodingParameters};
 use mediasoup::worker::{WorkerLogLevel, WorkerLogTag};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 
 /// List of codecs that SFU will accept from clients
@@ -145,7 +146,7 @@ impl EchoConnection {
         let plain_transport = router
             .create_plain_transport({
                 let mut options = PlainTransportOptions::new(ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
 
@@ -226,7 +227,7 @@ impl EchoConnection {
         let consumer_transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                 ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 },
             )))

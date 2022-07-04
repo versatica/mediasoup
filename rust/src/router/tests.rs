@@ -48,6 +48,6 @@ fn worker_close_event() {
             .expect("Failed to receive worker_close event");
         close_rx.await.expect("Failed to receive close event");
 
-        assert_eq!(router.closed(), true);
+        assert!(router.closed());
     });
 }

@@ -16,6 +16,7 @@ use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTra
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use std::env;
+use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -199,7 +200,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, WebRtcTransport) {
         .expect("Failed to create router");
 
     let transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-        ip: "127.0.0.1".parse().unwrap(),
+        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
         announced_ip: None,
     }));
 
@@ -240,10 +241,10 @@ fn produce_succeeds() {
                 .expect("Failed to produce audio");
 
             assert_eq!(new_producers_count.load(Ordering::SeqCst), 1);
-            assert_eq!(audio_producer.closed(), false);
+            assert!(!audio_producer.closed());
             assert_eq!(audio_producer.kind(), MediaKind::Audio);
             assert_eq!(audio_producer.r#type(), ProducerType::Simple);
-            assert_eq!(audio_producer.paused(), false);
+            assert!(!audio_producer.paused());
             assert_eq!(audio_producer.score(), vec![]);
             assert_eq!(
                 audio_producer
@@ -315,10 +316,10 @@ fn produce_succeeds() {
                 .expect("Failed to produce video");
 
             assert_eq!(new_producers_count.load(Ordering::SeqCst), 1);
-            assert_eq!(video_producer.closed(), false);
+            assert!(!video_producer.closed());
             assert_eq!(video_producer.kind(), MediaKind::Video);
             assert_eq!(video_producer.r#type(), ProducerType::Simulcast);
-            assert_eq!(video_producer.paused(), false);
+            assert!(!video_producer.paused());
             assert_eq!(video_producer.score(), vec![]);
             assert_eq!(
                 video_producer
@@ -824,14 +825,14 @@ fn pause_resume_succeeds() {
                 .await
                 .expect("Failed to pause audio producer");
 
-            assert_eq!(audio_producer.paused(), true);
+            assert!(audio_producer.paused());
 
             let dump = audio_producer
                 .dump()
                 .await
                 .expect("Failed to dump audio producer");
 
-            assert_eq!(dump.paused, true);
+            assert!(dump.paused);
         }
 
         {
@@ -840,14 +841,14 @@ fn pause_resume_succeeds() {
                 .await
                 .expect("Failed to resume audio producer");
 
-            assert_eq!(audio_producer.paused(), false);
+            assert!(!audio_producer.paused());
 
             let dump = audio_producer
                 .dump()
                 .await
                 .expect("Failed to dump audio producer");
 
-            assert_eq!(dump.paused, false);
+            assert!(!dump.paused);
         }
     });
 }

@@ -5,6 +5,7 @@
 
 * `RtpStreamSend`: Memory optimizations (PR #840). Extracted from #675, by @nazar-pc.
 * `SimpleConsumer`: Opus DTX ignore capabilities (PR #846).
+* Update `libuv` to 1.44.1: Fixes `libuv` build (PR #857).
 
 
 ### 3.10.0

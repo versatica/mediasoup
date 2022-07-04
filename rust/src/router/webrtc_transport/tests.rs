@@ -120,7 +120,7 @@ fn create_with_webrtc_server_succeeds() {
         assert_eq!(new_server_transport_rx.await.unwrap().id(), transport.id());
         assert_eq!(new_router_transport_rx.await.unwrap().id(), transport.id());
 
-        assert_eq!(transport.closed(), false);
+        assert!(!transport.closed());
 
         {
             let ice_candidates = transport.ice_candidates();
@@ -221,7 +221,7 @@ fn router_close_event() {
         let transport = router
             .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
                 ListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                 },
             )))

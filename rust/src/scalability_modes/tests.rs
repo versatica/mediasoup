@@ -11,7 +11,7 @@ fn parse_scalability_modes() {
         scalability_mode.temporal_layers(),
         NonZeroU8::new(3).unwrap()
     );
-    assert_eq!(scalability_mode.ksvc(), false);
+    assert!(!scalability_mode.ksvc());
 
     let scalability_mode: ScalabilityMode = "L3T2_KEY".parse().unwrap();
     assert_eq!(
@@ -22,7 +22,7 @@ fn parse_scalability_modes() {
         scalability_mode.temporal_layers(),
         NonZeroU8::new(2).unwrap()
     );
-    assert_eq!(scalability_mode.ksvc(), true);
+    assert!(scalability_mode.ksvc());
 
     let scalability_mode: ScalabilityMode = "S2T3".parse().unwrap();
     assert_eq!(
@@ -33,7 +33,7 @@ fn parse_scalability_modes() {
         scalability_mode.temporal_layers(),
         NonZeroU8::new(3).unwrap()
     );
-    assert_eq!(scalability_mode.ksvc(), false);
+    assert!(!scalability_mode.ksvc());
 
     assert_eq!(
         "foo".parse::<ScalabilityMode>(),
@@ -65,7 +65,7 @@ fn parse_scalability_modes() {
         scalability_mode.temporal_layers(),
         NonZeroU8::new(3).unwrap()
     );
-    assert_eq!(scalability_mode.ksvc(), false);
+    assert!(!scalability_mode.ksvc());
 
     assert_eq!(
         "S200T3".parse::<ScalabilityMode>(),
@@ -82,7 +82,7 @@ fn parse_scalability_modes() {
         scalability_mode.temporal_layers(),
         NonZeroU8::new(7).unwrap()
     );
-    assert_eq!(scalability_mode.ksvc(), true);
+    assert!(scalability_mode.ksvc());
 }
 
 #[test]
@@ -96,7 +96,7 @@ fn parse_json_scalability_modes() {
         scalability_mode.temporal_layers(),
         NonZeroU8::new(3).unwrap()
     );
-    assert_eq!(scalability_mode.ksvc(), false);
+    assert!(!scalability_mode.ksvc());
 
     let scalability_mode: ScalabilityMode = serde_json::from_str("\"L3T2_KEY\"").unwrap();
     assert_eq!(
@@ -107,7 +107,7 @@ fn parse_json_scalability_modes() {
         scalability_mode.temporal_layers(),
         NonZeroU8::new(2).unwrap()
     );
-    assert_eq!(scalability_mode.ksvc(), true);
+    assert!(scalability_mode.ksvc());
 
     let scalability_mode: ScalabilityMode = serde_json::from_str("\"S2T3\"").unwrap();
     assert_eq!(
@@ -118,7 +118,7 @@ fn parse_json_scalability_modes() {
         scalability_mode.temporal_layers(),
         NonZeroU8::new(3).unwrap()
     );
-    assert_eq!(scalability_mode.ksvc(), false);
+    assert!(!scalability_mode.ksvc());
 
     assert!(serde_json::from_str::<ScalabilityMode>("\"foo\"").is_err());
 
@@ -138,7 +138,7 @@ fn parse_json_scalability_modes() {
         scalability_mode.temporal_layers(),
         NonZeroU8::new(3).unwrap()
     );
-    assert_eq!(scalability_mode.ksvc(), false);
+    assert!(!scalability_mode.ksvc());
 
     assert!(serde_json::from_str::<ScalabilityMode>("\"S200T3\"").is_err());
 
@@ -152,5 +152,5 @@ fn parse_json_scalability_modes() {
         scalability_mode.temporal_layers(),
         NonZeroU8::new(7).unwrap()
     );
-    assert_eq!(scalability_mode.ksvc(), true);
+    assert!(scalability_mode.ksvc());
 }

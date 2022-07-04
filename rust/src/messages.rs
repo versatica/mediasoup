@@ -289,10 +289,6 @@ enum RouterCreateWebrtcTransportListen {
         listen_ips: TransportListenIps,
         #[serde(skip_serializing_if = "Option::is_none")]
         port: Option<u16>,
-        enable_udp: bool,
-        enable_tcp: bool,
-        prefer_udp: bool,
-        prefer_tcp: bool,
     },
     Server {
         #[serde(rename = "webRtcServerId")]
@@ -305,6 +301,10 @@ enum RouterCreateWebrtcTransportListen {
 pub(crate) struct RouterCreateWebrtcTransportData {
     #[serde(flatten)]
     listen: RouterCreateWebrtcTransportListen,
+    enable_udp: bool,
+    enable_tcp: bool,
+    prefer_udp: bool,
+    prefer_tcp: bool,
     initial_available_outgoing_bitrate: u32,
     enable_sctp: bool,
     num_sctp_streams: NumSctpStreams,
@@ -317,27 +317,22 @@ impl RouterCreateWebrtcTransportData {
     pub(crate) fn from_options(webrtc_transport_options: &WebRtcTransportOptions) -> Self {
         Self {
             listen: match &webrtc_transport_options.listen {
-                WebRtcTransportListen::Individual {
-                    listen_ips,
-                    port,
-                    enable_udp,
-                    enable_tcp,
-                    prefer_udp,
-                    prefer_tcp,
-                } => RouterCreateWebrtcTransportListen::Individual {
-                    listen_ips: listen_ips.clone(),
-                    port: *port,
-                    enable_udp: *enable_udp,
-                    enable_tcp: *enable_tcp,
-                    prefer_udp: *prefer_udp,
-                    prefer_tcp: *prefer_tcp,
-                },
+                WebRtcTransportListen::Individual { listen_ips, port } => {
+                    RouterCreateWebrtcTransportListen::Individual {
+                        listen_ips: listen_ips.clone(),
+                        port: *port,
+                    }
+                }
                 WebRtcTransportListen::Server { webrtc_server } => {
                     RouterCreateWebrtcTransportListen::Server {
                         webrtc_server_id: webrtc_server.id(),
                     }
                 }
             },
+            enable_udp: webrtc_transport_options.enable_udp,
+            enable_tcp: webrtc_transport_options.enable_tcp,
+            prefer_udp: webrtc_transport_options.prefer_udp,
+            prefer_tcp: webrtc_transport_options.prefer_tcp,
             initial_available_outgoing_bitrate: webrtc_transport_options
                 .initial_available_outgoing_bitrate,
             enable_sctp: webrtc_transport_options.enable_sctp,
