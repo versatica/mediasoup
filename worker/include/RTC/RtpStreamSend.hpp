@@ -90,7 +90,7 @@ namespace RTC
 		uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 	private:
-		void StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket> sharedPacket);
+		void StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
 		void ClearOldPackets(const RtpPacket* packet);
 		void ClearBuffer();
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);

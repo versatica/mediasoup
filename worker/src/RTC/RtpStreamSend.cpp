@@ -433,7 +433,7 @@ namespace RTC
 		MS_ABORT("invalid method call");
 	}
 
-	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket> sharedPacket)
+	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
 
