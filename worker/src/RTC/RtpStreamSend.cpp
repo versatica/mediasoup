@@ -194,26 +194,17 @@ namespace RTC
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
-	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket> sharedPacket)
+	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(
-		  (packet != nullptr || sharedPacket != nullptr), "both packet and sharedPacket are nullptr");
-
-		if (this->params.mimeType.type == RTC::RtpCodecMimeType::Type::VIDEO)
-			MS_ASSERT(sharedPacket != nullptr, "RTP packet is not given in a shared pointer for video");
-
-		if (packet == nullptr)
-			packet = sharedPacket.get();
 
 		// Call the parent method.
 		if (!RtpStream::ReceiveStreamPacket(packet))
 			return false;
 
 		// If NACK is enabled, store the packet into the buffer.
-		if (this->params.mimeType.type == RTC::RtpCodecMimeType::Type::VIDEO && this->params.useNack)
-			StorePacket(sharedPacket);
+		if (this->params.useNack)
+			StorePacket(packet, sharedPacket);
 
 		// Increase transmission counter.
 		this->transmissionCounter.Update(packet);
@@ -442,7 +433,7 @@ namespace RTC
 		MS_ABORT("invalid method call");
 	}
 
-	void RtpStreamSend::StorePacket(std::shared_ptr<RTC::RtpPacket> packet)
+	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket> sharedPacket)
 	{
 		MS_TRACE();
 
@@ -461,7 +452,7 @@ namespace RTC
 			return;
 		}
 
-		this->ClearOldPackets(packet.get());
+		this->ClearOldPackets(packet);
 
 		auto seq          = packet->GetSequenceNumber();
 		auto* storageItem = this->storageItemBuffer.Get(seq);
@@ -485,8 +476,14 @@ namespace RTC
 			this->storageItemBuffer.Insert(seq, storageItem);
 		}
 
+		// Only clone once and only if necessary.
+		if (!sharedPacket.get())
+		{
+			sharedPacket.reset(packet->Clone());
+		}
+
 		// Store original packet and some extra info into the storage item.
-		storageItem->packet         = packet;
+		storageItem->packet         = sharedPacket;
 		storageItem->ssrc           = packet->GetSsrc();
 		storageItem->sequenceNumber = packet->GetSequenceNumber();
 		storageItem->timestamp      = packet->GetTimestamp();

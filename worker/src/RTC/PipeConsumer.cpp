@@ -184,15 +184,9 @@ namespace RTC
 		return 0u;
 	}
 
-	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket> sharedPacket)
+	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(
-		  (packet != nullptr || sharedPacket != nullptr), "both packet and sharedPacket are nullptr");
-
-		if (packet == nullptr)
-			packet = sharedPacket.get();
 
 		if (!IsActive())
 			return;
@@ -259,7 +253,7 @@ namespace RTC
 		}
 
 		// Process the packet.
-		if (rtpStream->ReceivePacket(sharedPacket ? nullptr : packet, sharedPacket))
+		if (rtpStream->ReceivePacket(packet, sharedPacket))
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);

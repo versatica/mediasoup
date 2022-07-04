@@ -248,15 +248,9 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket> sharedPacket)
+	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(
-		  (packet != nullptr || sharedPacket != nullptr), "both packet and sharedPacket are nullptr");
-
-		if (packet == nullptr)
-			packet = sharedPacket.get();
 
 		if (!IsActive())
 			return;
@@ -334,7 +328,7 @@ namespace RTC
 		}
 
 		// Process the packet.
-		if (this->rtpStream->ReceivePacket(sharedPacket ? nullptr : packet, sharedPacket))
+		if (this->rtpStream->ReceivePacket(packet, sharedPacket))
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);

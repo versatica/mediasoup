@@ -796,26 +796,13 @@ namespace RTC
 
 		auto& consumers = this->mapProducerConsumers.at(producer);
 
-		// Clone the packet for video so it holds its own buffer, usable for future
-		// retransmissions.
-		if (producer->GetKind() == RTC::Media::Kind::VIDEO)
+		if (!consumers.empty())
 		{
-			std::shared_ptr<RTC::RtpPacket> sharedPacket{ packet->Clone() };
+			// Cloned ref-counted packet that RtpStreamSend will store for as long as
+			// needed avoiding multiple allocations unless absolutely necessary.
+			// Clone only happens if needed.
+			std::shared_ptr<RTC::RtpPacket> sharedPacket;
 
-			for (auto* consumer : consumers)
-			{
-				// Update MID RTP extension value.
-				const auto& mid = consumer->GetRtpParameters().mid;
-
-				if (!mid.empty())
-					sharedPacket->UpdateMid(mid);
-
-				consumer->SendRtpPacket(nullptr, sharedPacket);
-			}
-		}
-		// Otherwise use the original packet, it won't be used in the future.
-		else
-		{
 			for (auto* consumer : consumers)
 			{
 				// Update MID RTP extension value.
@@ -824,7 +811,7 @@ namespace RTC
 				if (!mid.empty())
 					packet->UpdateMid(mid);
 
-				consumer->SendRtpPacket(packet, nullptr);
+				consumer->SendRtpPacket(packet, sharedPacket);
 			}
 		}
 
