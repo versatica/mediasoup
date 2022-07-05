@@ -166,10 +166,6 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             throw new TypeError('missing webRtcServer and listenIps (one of them is mandatory)');
         else if (appData && typeof appData !== 'object')
             throw new TypeError('if given, appData must be an object');
-        if (webRtcServer) {
-            listenIps = undefined;
-            port = undefined;
-        }
         if (listenIps) {
             listenIps = listenIps.map((listenIp) => {
                 if (typeof listenIp === 'string' && listenIp) {
