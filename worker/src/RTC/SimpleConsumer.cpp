@@ -30,16 +30,17 @@ namespace RTC
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
 
-		RTC::Codecs::EncodingContext::Params params;
-
-		// Create the encoding context if needed.
-		this->encodingContext.reset(RTC::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
-
+		// Create the encoding context for Opus.
 		if (
 		  mediaCodec->mimeType.type == RTC::RtpCodecMimeType::Type::AUDIO &&
 		  (mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::OPUS ||
 		   mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::MULTIOPUS))
 		{
+			RTC::Codecs::EncodingContext::Params params;
+
+			this->encodingContext.reset(
+			  RTC::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
+
 			auto jsonIgnoreDtx = data.find("ignoreDtx");
 
 			if (jsonIgnoreDtx != data.end() && jsonIgnoreDtx->is_boolean())
@@ -269,10 +270,9 @@ namespace RTC
 		bool marker;
 
 		// Process the payload if needed. Drop packet if necessary.
-		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
+		if (this->encodingContext && !packet->ProcessPayload(this->encodingContext.get(), marker))
 		{
-			MS_DEBUG_TAG(
-			  rtp,
+			MS_DEBUG_DEV(
 			  "discarding packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
