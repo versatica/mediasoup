@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* Do not clone RTP packets if not needed (PR #850).
+
+
 ### 3.10.3
 
 * `SimpleConsumer`: Fix. Only process Opus codec (PR #865).
