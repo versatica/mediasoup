@@ -363,7 +363,7 @@ namespace RTC
 		this->mapRtpStreamMappedSsrc.clear();
 		this->mapMappedSsrcSsrc.clear();
 
-		binLog.DeinitLog(nullptr);
+		binLog.DeinitLog();
 		this->rtpStreamBinLogRecords.clear();
 
 		// Delete the KeyFrameRequestManager.
@@ -486,6 +486,11 @@ namespace RTC
 	void Producer::FillBinLogStats()
 	{
 		MS_TRACE();
+
+		if (this->rtpStreamByEncodingIdx.size() != 1)
+		{
+			MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "producer %s has %zu streams", this->id.c_str(), this->rtpStreamByEncodingIdx.size());
+		}
 
 		for (auto* rtpStream : this->rtpStreamByEncodingIdx)
 		{

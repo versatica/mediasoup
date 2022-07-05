@@ -34,13 +34,13 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
   : type(type), call_id(callId), object_id(obj), producer_id(producer) 
 {
   uint64_t ts = Utils::Time::currentStdEpochMs();
+  set_start_tm(ts);
+
+  set_filled(0);
 
   if (type) // consumer
   {
-    record.c.start_tm = ts;
     record.c.payload = payload;
-    record.c.filled=UINT32_UNSET;
-    
     std::memset(record.c.consumer_id, 0, UUID_BYTE_LEN);
     uuidToBytes(obj, record.c.consumer_id);
     
@@ -54,10 +54,7 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
   }
   else // producer
   {
-    record.p.start_tm = ts;
-    record.p.filled=UINT32_UNSET;
     record.p.payload = payload;
-    
     std::memset(record.p.samples, 0, sizeof(record.p.samples));
 
     MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): producer start_tm=%" PRIu64 " payload=%" PRIu8 " callId=%s producerId=%s", 
@@ -111,44 +108,32 @@ bool CallStatsRecord::fwriteRecord(std::FILE* fd)
   return  (rc > 0);
 }
 
-void CallStatsRecord::resetSamples()
+void CallStatsRecord::resetSamples(uint64_t ts)
 {
   // Wipe off samples data
   if (type) // consumer
   {
     std::memset(&record.c.samples, 0, sizeof(record.c.samples));
-    record.c.filled = UINT32_UNSET;
-    record.c.start_tm = UINT64_UNSET;
   }
   else
   {
     std::memset(record.p.samples, 0, sizeof(record.p.samples));
-    record.p.filled = UINT32_UNSET;
-    record.p.start_tm = UINT64_UNSET;
   }
+  set_filled(0);
+  set_start_tm(ts);
 }
 
-
-void CallStatsRecord::zeroSamples(uint64_t nowMs)
+void CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
 {
-  if (type)
-  {
-    record.c.start_tm = nowMs;
-    record.c.filled = 0;
-  }
-  else
-  {
-    record.p.start_tm = nowMs;
-    record.p.filled = 0;
-  }
-}
+  MS_ASSERT(filled() >= 0 && filled() < CALL_STATS_BIN_LOG_RECORDS_NUM, 
+            "Cannot have %" PRIu32 " samples in record, quitting...", filled());
 
+  MS_ASSERT(last.ts != UINT64_UNSET,
+            "Timestamp of a previous sample is unset, quitting...");
+            
+  MS_ASSERT(curr.ts != UINT64_UNSET,
+            "Timestamp of a current sample is unset, quitting...");
 
-bool CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
-{
-  if (filled() == UINT32_UNSET || filled() >= CALL_STATS_BIN_LOG_RECORDS_NUM)
-    return false;
-  
   uint32_t idx = filled();
   CallStatsSample* s = type ? &(record.c.samples[0]) : &(record.p.samples[0]);
 
@@ -164,55 +149,51 @@ bool CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
   s[idx].kf_count = static_cast<uint16_t>(curr.kfCount - last.kfCount);
   s[idx].rtt = static_cast<uint16_t>(std::round(curr.rtt));
   s[idx].max_pts = curr.maxPacketTs;
-  
-  if (type)
-    record.c.filled++;
-  else
-    record.p.filled++;
-  return true;
+
+  set_filled(idx + 1);
 }
 
 /////////////////////////
 //
-void CallStatsRecordCtx::WriteIfFull(StatsBinLog* log)
-{
-  if (record.filled() == UINT32_UNSET || record.filled() < CALL_STATS_BIN_LOG_RECORDS_NUM)
-    return;
-
-  if (nullptr != log)
-  {
-    log->OnLogWrite(this);
-  }
-
-  // Wipe the data off
-  record.resetSamples();
-}
-
-
 void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream)
 {
-  WriteIfFull(log);
+  // Write data if record is full, then continue collecting samples
+  if (record.filled() == CALL_STATS_BIN_LOG_RECORDS_NUM)
+  {
+    if (nullptr != log)
+    {
+      log->OnLogWrite(this);
+    }
 
-  uint64_t nowMs = Utils::Time::currentStdEpochMs();
-  if (UINT32_UNSET == record.filled())
+    // Wipe the data off and set record's start timestamp into the last sample's
+    record.resetSamples(last.ts);
+  }
+
+  uint64_t nowMs = Utils::Time::currentStdEpochMs(); // Timestamp of a current measurement
+
+  if (UINT64_UNSET == last.ts) // the first measurement ever during this session
   {
     stream->FillStats(last.packetsCount, last.bytesCount, last.packetsLost, last.packetsDiscarded,
                       last.packetsRetransmitted, last.packetsRepaired, last.nackCount,
                       last.nackPacketCount, last.kfCount, last.rtt, last.maxPacketTs);
     last.ts = nowMs;
-    record.zeroSamples(nowMs);
+    record.resetSamples(nowMs);
+    return; // done, wait till the next measurement
   }
-  else
-  {
-    MS_ASSERT(record.filled() >= 0 && record.filled() < CALL_STATS_BIN_LOG_RECORDS_NUM, "Invalid record.filled=%" PRIu16, record.filled());
-    stream->FillStats(curr.packetsCount, curr.bytesCount, curr.packetsLost, curr.packetsDiscarded,
-                      curr.packetsRetransmitted, curr.packetsRepaired, curr.nackCount,
-                      curr.nackPacketCount, curr.kfCount, curr.rtt, curr.maxPacketTs);
-    curr.ts = nowMs;
-    record.addSample(last, curr);    
-    this->last = this->curr;
-  }
+
+  // Should have a room to add a sample
+  MS_ASSERT(record.filled() >= 0 && record.filled() < CALL_STATS_BIN_LOG_RECORDS_NUM,
+    "Invalid record.filled=%" PRIu32, record.filled());
+
+  curr.ts = nowMs;
+  stream->FillStats(curr.packetsCount, curr.bytesCount, curr.packetsLost, curr.packetsDiscarded,
+                    curr.packetsRetransmitted, curr.packetsRepaired, curr.nackCount,
+                    curr.nackPacketCount, curr.kfCount, curr.rtt, curr.maxPacketTs);
+
+  record.addSample(last, curr);
+  this->last = this->curr;
 }
+
 
 /////////////////////////
 //
@@ -242,21 +223,14 @@ int StatsBinLog::LogOpen()
 }
 
 
-int StatsBinLog::LogClose(CallStatsRecordCtx* ctx)
+void StatsBinLog::LogClose()
 {
-  int ret = 0;
-
   if (this->fd)
   {
-    if (ctx)
-    {
-      if (!ctx->record.fwriteRecord(this->fd))
-        ret = errno;
-    }
     std::fflush(this->fd);
     std::fclose(this->fd);
     this->fd = 0;
-    
+
     MS_DEBUG_TAG(
       rtp,
       "binlog closed '%s'", this->bin_log_file_path.c_str()
@@ -331,13 +305,40 @@ int StatsBinLog::LogClose(CallStatsRecordCtx* ctx)
     } */
   }
 
-  // Save the last sample just in case and clean up recorded data
-  if (ctx)
+  // Do not preserve binlogs with too little data
+  if (log_start_ts == UINT64_UNSET 
+      || log_last_ts == UINT64_UNSET 
+      || BINLOG_MIN_TIMESPAN > log_last_ts - log_start_ts)
   {
-    ctx->record.resetSamples();
+    std::remove(bin_log_file_path.c_str());
+    MS_DEBUG_TAG(rtp, "binlog %s removed, short timespan (%" PRIu64 "-%" PRIu64 ")", 
+                  this->bin_log_file_path.c_str(), this->log_start_ts, log_last_ts);
+    return;
   }
 
-  return ret;
+  // Move a closed file into "done" directory
+  std::string bin_log_done_dir = "/var/log/sfu/bin/done/";
+
+  std::string logname; // get filename only out of full path
+  std::size_t found = this->bin_log_file_path.find_last_of("/");
+  if (std::string::npos == found)
+  {
+    MS_WARN_TAG(rtp, "Failed to extract binlog filename from %s, cannot move it", this->bin_log_file_path.c_str());
+  }
+  else
+  {
+    auto logname = this->bin_log_file_path.substr(found + 1);
+    auto dst = bin_log_done_dir;
+    dst.append(logname);
+    if (std::rename(this->bin_log_file_path.c_str(), dst.c_str()))
+    {
+      MS_WARN_TAG(rtp, "failed to move %s to %s", this->bin_log_file_path.c_str(), bin_log_done_dir.c_str());
+    }
+    else
+    {
+      MS_DEBUG_TAG(rtp, "moved binlog %s to %s", this->bin_log_file_path.c_str(), bin_log_done_dir.c_str());
+    }
+  }
 }
 
 
@@ -352,14 +353,17 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
   if (now - this->log_start_ts > DAY_IN_MS)
   {
     this->log_start_ts = now;
-    UpdateLogName();    
+    UpdateLogName();
     signal_set = true;
   }
 
   if(signal_set || !this->fd)
   {
     if (this->fd)
+    {
       std::fclose(this->fd);
+      this->fd = 0;
+    }
 
     if (this->initialized)
     {
@@ -390,26 +394,106 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
       std::fclose(this->fd);
       this->fd = 0;
     }
+    else
+    {
+      this->log_last_ts = ctx->LastTs(); // to tell later if the binlog is too short to be valuable
+    }
     std::fflush(this->fd);
   }
   return ret;
 }
 
 
+bool StatsBinLog::CreateBinlogDirsIfMissing()
+{
+  std::string bin_log_dir      = "/var/log/sfu/bin/";
+  std::string bin_log_curr_dir = "/var/log/sfu/bin/current/";
+  std::string bin_log_done_dir = "/var/log/sfu/bin/done/";
+  
+  struct stat info;
+  int ret = 0;
+  if( stat( bin_log_dir.c_str(), &info ) != 0 )
+  {
+    if (errno == ENOENT)
+    {
+      ret = mkdir(bin_log_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      if (ret != 0 && errno != EEXIST)
+      {
+        MS_WARN_TAG(rtp, "failed to create folder %s for binlog files management: %s", bin_log_dir.c_str(), std::strerror(errno));
+        return false;
+      }
+    }
+  }
+  else
+  {
+    if (!S_ISDIR(info.st_mode))
+    {
+      MS_WARN_TAG(rtp, "found %s but it is not a directory", bin_log_dir.c_str());
+      return false;
+    }
+  }
+
+  // Now that /var/log/sfu/bin/ exists, take care of "current" and "done" directories
+  if( stat( bin_log_curr_dir.c_str(), &info ) != 0 )
+  {
+    if (errno == ENOENT)
+    {
+      ret = mkdir(bin_log_curr_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      if (ret != 0 && errno != EEXIST)
+      {
+        MS_WARN_TAG(rtp, "failed to create folder %s for writing binlogs: %s", bin_log_curr_dir.c_str(), std::strerror(errno));
+        return false;
+      }
+    }
+  }
+  else
+  {
+    if (!S_ISDIR(info.st_mode))
+    {
+      MS_WARN_TAG(rtp, "found %s but it is not a directory", bin_log_curr_dir.c_str());
+      return false;
+    }
+  }
+
+  if( stat( bin_log_done_dir.c_str(), &info ) != 0 )
+  {
+    if (errno == ENOENT)
+    {
+      ret = mkdir(bin_log_done_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); // | S_IXOTH?
+      if (ret != 0 && errno != EEXIST)
+      {
+        MS_WARN_TAG(rtp, "failed to create folder %s for moving complete binlogs: %s", bin_log_done_dir.c_str(), std::strerror(errno));
+        return false;
+      }
+    }
+  }
+  else
+  {
+    if (!S_ISDIR(info.st_mode))
+    {
+      MS_WARN_TAG(rtp, "found %s but it is not a directory", bin_log_done_dir.c_str());
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
 void StatsBinLog::InitLog(char type, std::string id1, std::string id2)
 {
-  #define FILENAME_LEN_MAX sizeof("/var/log/sfu/ms_p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin") * 2
+  #define FILENAME_LEN_MAX sizeof("/var/log/sfu/bin/current/ms_p_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000_1652210519459.123abc.bin") * 2
   char tmp[FILENAME_LEN_MAX];
   std::memset(tmp, '\0', FILENAME_LEN_MAX);
   switch(type)
   {
     case 'c':
-      sprintf(tmp, "/var/log/sfu/ms_c_%s_%%llu.%s.bin", id1.c_str(), version);
+      sprintf(tmp, "/var/log/sfu/bin/current/ms_c_%s_%%llu.%s.bin", id1.c_str(), version);
       this->bin_log_name_template.assign(tmp);
       MS_DEBUG_TAG(rtp, "consumers binlog transport id %s", id2.c_str());
       break;
     case 'p':
-      sprintf(tmp, "/var/log/sfu/ms_p_%s_%s_%%llu.%s.bin", id1.c_str(), id2.c_str(), version);
+      sprintf(tmp, "/var/log/sfu/bin/current/ms_p_%s_%s_%%llu.%s.bin", id1.c_str(), id2.c_str(), version);
       this->bin_log_name_template.assign(tmp);
       break;
     default:
@@ -419,6 +503,8 @@ void StatsBinLog::InitLog(char type, std::string id1, std::string id2)
   uint64_t now = Utils::Time::currentStdEpochMs();
   this->log_start_ts = now;
   UpdateLogName();
+
+   MS_ASSERT(CreateBinlogDirsIfMissing(), "Cannot create binlog directories!");
   
   this->bin_log_done_dir = "/var/log/sfu/done/";
 
@@ -436,12 +522,9 @@ void StatsBinLog::UpdateLogName()
 }
 
 
-void StatsBinLog::DeinitLog(CallStatsRecordCtx* recordCtx)
+void StatsBinLog::DeinitLog()
 {
-  if (this->fd)
-  {
-    LogClose(recordCtx);
-  }
+  LogClose();
 
   this->initialized = false;
   this->log_start_ts = UINT64_UNSET;

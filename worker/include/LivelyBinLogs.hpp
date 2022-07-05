@@ -5,6 +5,8 @@
 #include <cstring>
 #include "RTC/RtpStream.hpp"
 
+#define BINLOG_MIN_TIMESPAN   20000
+#define BINLOG_FORMAT_VERSION "e58c1e"
 
 #define BINLOG_MIN_TIMESPAN   20000
 #define BINLOG_FORMAT_VERSION "e58c1e"
@@ -82,10 +84,25 @@ class CallStatsRecord
     CallStatsRecord(uint64_t objType, uint8_t payload, std::string callId, std::string objId, std::string producerId);
 
     bool fwriteRecord(std::FILE* fd);
-    uint32_t filled() const {return type ? record.c.filled : record.p.filled; }
-    void resetSamples();
-    void zeroSamples(uint64_t nowMs);
-    bool addSample(StreamStats& last, StreamStats& curr);    
+    uint32_t filled() const {return type ? record.c.filled : record.p.filled;}
+    void set_filled(uint32_t n)
+    {
+      if (type) 
+        record.c.filled = n; 
+      else
+        record.p.filled = n; 
+    }
+    uint64_t start_tm() const {return type ? record.c.start_tm : record.p.start_tm;}
+    void set_start_tm(uint64_t t)
+    {
+      if (type) 
+        record.c.start_tm = t; 
+      else
+        record.p.start_tm = t;
+    }
+    
+    void resetSamples(uint64_t nowMs);
+    void addSample(StreamStats& last, StreamStats& curr);    
 
   private:
     // Binary data record
@@ -102,18 +119,18 @@ class CallStatsRecord
 
   struct StreamStats
   {
-    uint64_t ts; // ts when data was received from a stream        
-    size_t packetsCount;
-    size_t bytesCount;
-    uint32_t packetsLost;
-    size_t packetsDiscarded;
-    size_t packetsRetransmitted;
-    size_t packetsRepaired;
-    size_t nackCount;
-    size_t nackPacketCount;
-    size_t kfCount;
-    float rtt;
-    uint32_t maxPacketTs;
+    uint64_t ts {UINT64_UNSET}; // ts when data was received from a stream        
+    size_t packetsCount {0};
+    size_t bytesCount {0};
+    uint32_t packetsLost {0};
+    size_t packetsDiscarded {0};
+    size_t packetsRetransmitted {0};
+    size_t packetsRepaired {0};
+    size_t nackCount {0};
+    size_t nackPacketCount {0};
+    size_t kfCount {0};
+    float rtt {0};
+    uint32_t maxPacketTs {0};
   };
 
   class CallStatsRecordCtx
@@ -122,17 +139,13 @@ class CallStatsRecord
     CallStatsRecord record;
   
   private:
-    StreamStats last {};
-    StreamStats curr {};  
+    StreamStats last {}; // before very first sample is recorded, ts is unset, then it will always be set into some valid time
+    StreamStats curr {};
 
   public:
     CallStatsRecordCtx(uint64_t objType, uint8_t payload, std::string callId, std::string objId, std::string producerId) : record(objType, payload, callId, objId, producerId) {}
-
     void AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream); // either recv or send stream
-    uint64_t lastTs() { return last.ts; } // can be UINT64_UNSET
-
-  private:
-    void WriteIfFull(StatsBinLog* log);
+    uint64_t LastTs() const { return last.ts; }
   };
 
   // Binary log presentation
@@ -147,22 +160,24 @@ class CallStatsRecord
   
   private:
     bool          initialized {false};
-    std::string   bin_log_name_template;       // Log name template, use to rotate log, keep same name except for timestamp
-    uint64_t      log_start_ts {UINT64_UNSET}; // Timestamp included into log's name; used to rotate logs daily
+    std::string   bin_log_name_template;          // Log name template, use to rotate log, keep same name except for timestamp
     const char    version[7] = BINLOG_FORMAT_VERSION;
+
+    uint64_t      log_start_ts {UINT64_UNSET};    // Timestamp included into log's name; used to rotate logs daily
+    uint64_t      log_last_ts {UINT64_UNSET};     // Timestamp of the last record in the log; various sources may share same logfile   
 
   public:
     StatsBinLog() = default;
 
-    int LogOpen();
-    int OnLogWrite(CallStatsRecordCtx* ctx);
-    int LogClose(CallStatsRecordCtx* recordCtx);
-
     void InitLog(char type, std::string id1, std::string id2); // if type is producer, then log name is a combo of callid, producerid and timestamp
-    void DeinitLog(CallStatsRecordCtx* recordCtx);  // Closes log file and deinitializes state variables
+    int OnLogWrite(CallStatsRecordCtx* ctx);
+    void DeinitLog();   // Closes log file and deinitializes state variables
 
   private:
+    int LogOpen();
+    void LogClose();
     void UpdateLogName();
+    bool CreateBinlogDirsIfMissing();
   };
 } //Lively
 
