@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.10.3
+
+* `SimpleConsumer`: Fix. Only process Opus codec (PR #865).
+
+
 ### 3.10.2
 
 * Fix release contents by including meson_options.txt (PR #863).
