@@ -4,6 +4,7 @@
 ### 3.10.3
 
 * `SimpleConsumer`: Fix. Only process Opus codec (PR #865).
+* TypeScript: Improve `WebRtcTransportOptions` type to not allow `webRtcServer` and `listenIps`options at the same time (PR #852).
 
 
 ### 3.10.2
