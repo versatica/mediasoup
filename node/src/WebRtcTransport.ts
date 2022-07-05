@@ -11,25 +11,36 @@ import {
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import { Either } from './utils';
 
-export type WebRtcTransportOptions =
+export type WebRtcTransportListenIndividual =
 {
-	/**
-	 * Instance of WebRtcServer. Mandatory unless listenIps is given.
-	 */
-	webRtcServer?: WebRtcServer;
 	/**
 	 * Listening IP address or addresses in order of preference (first one is the
 	 * preferred one). Mandatory unless webRtcServer is given.
 	 */
-	listenIps?: (TransportListenIp | string)[];
+	listenIps: (TransportListenIp | string)[];
 
 	/**
 	 * Fixed port to listen on instead of selecting automatically from Worker's port
 	 * range.
 	 */
 	port?: number;
+}
 
+export type WebRtcTransportListenServer =
+{
+	/**
+	 * Instance of WebRtcServer. Mandatory unless listenIps is given.
+	 */
+	webRtcServer: WebRtcServer;
+}
+
+export type WebRtcTransportListen =
+	Either<WebRtcTransportListenIndividual, WebRtcTransportListenServer>;
+
+export type WebRtcTransportOptionsBase =
+{
 	/**
 	 * Listen in UDP. Default true.
 	 */
@@ -82,6 +93,8 @@ export type WebRtcTransportOptions =
 	 */
 	appData?: Record<string, unknown>;
 }
+
+export type WebRtcTransportOptions = WebRtcTransportOptionsBase & WebRtcTransportListen;
 
 export type IceParameters =
 {

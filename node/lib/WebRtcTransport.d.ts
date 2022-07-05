@@ -1,21 +1,27 @@
 import { Transport, TransportListenIp, TransportProtocol, TransportTuple, TransportEvents, TransportObserverEvents, SctpState } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-export declare type WebRtcTransportOptions = {
-    /**
-     * Instance of WebRtcServer. Mandatory unless listenIps is given.
-     */
-    webRtcServer?: WebRtcServer;
+import { Either } from './utils';
+export declare type WebRtcTransportListenIndividual = {
     /**
      * Listening IP address or addresses in order of preference (first one is the
      * preferred one). Mandatory unless webRtcServer is given.
      */
-    listenIps?: (TransportListenIp | string)[];
+    listenIps: (TransportListenIp | string)[];
     /**
      * Fixed port to listen on instead of selecting automatically from Worker's port
      * range.
      */
     port?: number;
+};
+export declare type WebRtcTransportListenServer = {
+    /**
+     * Instance of WebRtcServer. Mandatory unless listenIps is given.
+     */
+    webRtcServer: WebRtcServer;
+};
+export declare type WebRtcTransportListen = Either<WebRtcTransportListenIndividual, WebRtcTransportListenServer>;
+export declare type WebRtcTransportOptionsBase = {
     /**
      * Listen in UDP. Default true.
      */
@@ -59,6 +65,7 @@ export declare type WebRtcTransportOptions = {
      */
     appData?: Record<string, unknown>;
 };
+export declare type WebRtcTransportOptions = WebRtcTransportOptionsBase & WebRtcTransportListen;
 export declare type IceParameters = {
     usernameFragment: string;
     password: string;

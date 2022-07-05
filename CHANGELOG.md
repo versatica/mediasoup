@@ -1,11 +1,23 @@
 # Changelog
 
 
-### NEXT
+### 3.10.3
+
+* `SimpleConsumer`: Fix. Only process Opus codec (PR #865).
+* TypeScript: Improve `WebRtcTransportOptions` type to not allow `webRtcServer` and `listenIps`options at the same time (PR #852).
+
+
+### 3.10.2
+
+* Fix release contents by including meson_options.txt (PR #863).
+
+
+### 3.10.1
 
 * `RtpStreamSend`: Memory optimizations (PR #840). Extracted from #675, by @nazar-pc.
 * `SimpleConsumer`: Opus DTX ignore capabilities (PR #846).
 * Update `libuv` to 1.44.1: Fixes `libuv` build (PR #857).
+* Update NPM deps.
 
 
 ### 3.10.0
