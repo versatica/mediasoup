@@ -1,6 +1,6 @@
 # Changelog
 
-### 0.10.0
+# 0.10.0
 
 * Updates from mediasoup TypeScript `3.9.10..=3.10.1`.
 * `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port (PR #834, PR #845).

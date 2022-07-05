@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.10.2
+
+* Fix release contents by including meson_options.txt (PR #863).
+
+
 ### 3.10.1
 
 * `RtpStreamSend`: Memory optimizations (PR #840). Extracted from #675, by @nazar-pc.
