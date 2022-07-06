@@ -1444,8 +1444,6 @@ namespace RTC
 			// Set state and notify the listener.
 			this->state = DtlsState::FAILED;
 			this->listener->OnDtlsTransportFailed(this);
-
-			return;
 		}
 	}
 } // namespace RTC
