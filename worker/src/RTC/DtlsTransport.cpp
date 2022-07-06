@@ -980,28 +980,28 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->ssl, "this->ssl is not set");
 		MS_ASSERT(
 		  this->state == DtlsState::CONNECTING || this->state == DtlsState::CONNECTED,
 		  "invalid DTLS state");
 
-		int64_t ret;
 		uv_timeval_t dtlsTimeout{ 0, 0 };
 		uint64_t timeoutMs;
 
 		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
-		ret = DTLSv1_get_timeout(this->ssl, static_cast<void*>(&dtlsTimeout)); // NOLINT
+		DTLSv1_get_timeout(this->ssl, static_cast<void*>(&dtlsTimeout)); // NOLINT
 
-		// ret 0 means "now".
-		if (ret == 0)
+		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
+
+		if (timeoutMs == 0)
 		{
+			MS_DEBUG_DEV("timeout is 0, calling OnTimer() callback directly");
+
 			OnTimer(this->timer);
 
 			return true;
 		}
-
-		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
-
-		if (timeoutMs < 30000)
+		else if (timeoutMs < 30000)
 		{
 			MS_DEBUG_DEV("DTLS timer set in %" PRIu64 "ms", timeoutMs);
 
@@ -1431,8 +1431,11 @@ namespace RTC
 		{
 			MS_WARN_TAG(dtls, "DTLSv1_handle_timeout() failed");
 
-			// NOTE: Don't do anything here (such as calling Reset() because the error
-			// will be raised and handled in CheckStatus().
+			Reset();
+
+			// Set state and notify the listener.
+			this->state = DtlsState::FAILED;
+			this->listener->OnDtlsTransportFailed(this);
 
 			return;
 		}
