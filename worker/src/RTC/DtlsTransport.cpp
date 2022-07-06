@@ -1411,28 +1411,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ERROR("---- OnTimer() 1");
-
 		// Workaround for https://github.com/openssl/openssl/issues/7998.
 		if (this->handshakeDone)
 		{
 			MS_DEBUG_DEV("handshake is done so return");
 
-
-			MS_ERROR("---- handshake is done so return");
-
 			return;
 		}
-
-		MS_ERROR("---- OnTimer() 2");
 
 		// DTLSv1_handle_timeout is called when a DTLS handshake timeout expires.
 		// If no timeout had expired, it returns 0. Otherwise, it retransmits the
 		// previous flight of handshake messages and returns 1. If too many timeouts
 		// had expired without progress or an error occurs, it returns -1.
 		auto ret = DTLSv1_handle_timeout(this->ssl);
-
-		MS_ERROR("---- DTLSv1_handle_timeout() | ret:%ld", ret);
 
 		if (ret == 1)
 		{

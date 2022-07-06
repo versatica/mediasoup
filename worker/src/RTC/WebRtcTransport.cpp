@@ -700,17 +700,7 @@ namespace RTC
 		// Check if it's DTLS.
 		else if (RTC::DtlsTransport::IsDtls(data, len))
 		{
-			// OnDtlsDataReceived(tuple, data, len);
-
-			if (this->ignoreNextReceivedDtlsPacket < 3)
-			{
-				this->ignoreNextReceivedDtlsPacket++;
-			}
-			else
-			{
-				OnDtlsDataReceived(tuple, data, len);
-				this->ignoreNextReceivedDtlsPacket = 0;
-			}
+			OnDtlsDataReceived(tuple, data, len);
 		}
 		else
 		{
@@ -1466,17 +1456,6 @@ namespace RTC
 	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
-
-		if (this->ignoreNextSentDtlsPacket < 3)
-		{
-			this->ignoreNextSentDtlsPacket++;
-
-			return;
-		}
-		else
-		{
-			this->ignoreNextSentDtlsPacket = 0;
-		}
 
 		if (!this->iceServer->GetSelectedTuple())
 		{

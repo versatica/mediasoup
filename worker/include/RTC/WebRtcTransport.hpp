@@ -156,9 +156,6 @@ namespace RTC
 		bool connectCalled{ false }; // Whether connect() was succesfully called.
 		std::vector<RTC::IceCandidate> iceCandidates;
 		RTC::DtlsTransport::Role dtlsRole{ RTC::DtlsTransport::Role::AUTO };
-
-		int ignoreNextReceivedDtlsPacket{ 0 };
-		int ignoreNextSentDtlsPacket{ 0 };
 	};
 } // namespace RTC
 
