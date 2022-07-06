@@ -1434,9 +1434,15 @@ namespace RTC
 
 		MS_ERROR("---- DTLSv1_handle_timeout() | ret:%ld", ret);
 
-		// -1 means that too many timeouts had expired without progress or an
-		// error occurs.
-		if (ret == -1)
+		if (ret == 1)
+		{
+			// If required, send DTLS data.
+			SendPendingOutgoingDtlsData();
+
+			// Set the DTLS timer again.
+			SetTimeout();
+		}
+		else if (ret == -1)
 		{
 			MS_WARN_TAG(dtls, "DTLSv1_handle_timeout() failed");
 
@@ -1448,13 +1454,5 @@ namespace RTC
 
 			return;
 		}
-
-		// No matter ret is 0 or 1, run same code.
-
-		// If required, send DTLS data.
-		SendPendingOutgoingDtlsData();
-
-		// Set the DTLS timer again.
-		SetTimeout();
 	}
 } // namespace RTC

@@ -157,7 +157,8 @@ namespace RTC
 		std::vector<RTC::IceCandidate> iceCandidates;
 		RTC::DtlsTransport::Role dtlsRole{ RTC::DtlsTransport::Role::AUTO };
 
-		bool ignoreNextReceivedDtlsPacket{ true };
+		int ignoreNextReceivedDtlsPacket{ 0 };
+		int ignoreNextSentDtlsPacket{ 0 };
 	};
 } // namespace RTC
 
