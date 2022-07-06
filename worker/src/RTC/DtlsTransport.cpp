@@ -988,7 +988,9 @@ namespace RTC
 		uv_timeval_t dtlsTimeout{ 0, 0 };
 		uint64_t timeoutMs;
 
-		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
+		// DTLSv1_get_timeout queries the next DTLS handshake timeout. If there is
+		// a timeout in progress, it sets *out to the time remaining and returns
+		// one. Otherwise, it returns zero.
 		DTLSv1_get_timeout(this->ssl, static_cast<void*>(&dtlsTimeout)); // NOLINT
 
 		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
