@@ -701,6 +701,16 @@ namespace RTC
 		else if (RTC::DtlsTransport::IsDtls(data, len))
 		{
 			OnDtlsDataReceived(tuple, data, len);
+
+			// if (this->ignoreNextReceivedDtlsPacket)
+			// {
+			// 	this->ignoreNextReceivedDtlsPacket = false;
+			// }
+			// else
+			// {
+			// 	OnDtlsDataReceived(tuple, data, len);
+			// 	this->ignoreNextReceivedDtlsPacket = true;
+			// }
 		}
 		else
 		{
