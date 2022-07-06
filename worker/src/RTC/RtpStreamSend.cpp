@@ -194,20 +194,20 @@ namespace RTC
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
-	bool RtpStreamSend::ReceivePacket(std::shared_ptr<RTC::RtpPacket> packet)
+	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
 
 		// Call the parent method.
-		if (!RtpStream::ReceiveStreamPacket(packet.get()))
+		if (!RtpStream::ReceiveStreamPacket(packet))
 			return false;
 
 		// If NACK is enabled, store the packet into the buffer.
 		if (this->params.useNack)
-			StorePacket(packet);
+			StorePacket(packet, sharedPacket);
 
 		// Increase transmission counter.
-		this->transmissionCounter.Update(packet.get());
+		this->transmissionCounter.Update(packet);
 
 		return true;
 	}
@@ -433,7 +433,7 @@ namespace RTC
 		MS_ABORT("invalid method call");
 	}
 
-	void RtpStreamSend::StorePacket(std::shared_ptr<RTC::RtpPacket> packet)
+	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -452,7 +452,7 @@ namespace RTC
 			return;
 		}
 
-		this->ClearOldPackets(packet.get());
+		this->ClearOldPackets(packet);
 
 		auto seq          = packet->GetSequenceNumber();
 		auto* storageItem = this->storageItemBuffer.Get(seq);
@@ -476,8 +476,14 @@ namespace RTC
 			this->storageItemBuffer.Insert(seq, storageItem);
 		}
 
+		// Only clone once and only if necessary.
+		if (!sharedPacket.get())
+		{
+			sharedPacket.reset(packet->Clone());
+		}
+
 		// Store original packet and some extra info into the storage item.
-		storageItem->packet         = packet;
+		storageItem->packet         = sharedPacket;
 		storageItem->ssrc           = packet->GetSsrc();
 		storageItem->sequenceNumber = packet->GetSequenceNumber();
 		storageItem->timestamp      = packet->GetTimestamp();
