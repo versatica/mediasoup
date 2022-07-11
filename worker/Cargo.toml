@@ -23,6 +23,7 @@ include = [
     "/Cargo.toml",
     "/Makefile",
     "/meson.build",
+    "/meson_options.txt",
 ]
 
 [package.metadata.docs.rs]

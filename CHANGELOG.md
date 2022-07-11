@@ -1,6 +1,13 @@
 # Changelog
 
 
+### 3.9.5-1
+
+* Fix release contents by including `meson_options.txt` (PR #863).
+* Pin the version of meson PR #859).
+* Fix libuv build (PR #857).
+
+
 ### 3.9.5
 
 * ICE renomination support (PR #756).
