@@ -15,7 +15,7 @@ export declare class EnhancedEventEmitter<E extends Events = Events> extends Eve
     once<K extends keyof E & string>(eventName: K, listener: (...args: E[K]) => void): this;
     prependOnceListener<K extends keyof E & string>(eventName: K, listener: (...args: E[K]) => void): this;
     removeListener<K extends keyof E & string>(eventName: K, listener: (...args: E[K]) => void): this;
-    removeAllListeners<K extends keyof E & string>(eventName: K): this;
+    removeAllListeners<K extends keyof E & string>(eventName?: K): this;
     listenerCount<K extends keyof E & string>(eventName: K): number;
     listeners<K extends keyof E & string>(eventName: K): Function[];
     rawListeners<K extends keyof E & string>(eventName: K): Function[];
