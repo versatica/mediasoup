@@ -20,7 +20,7 @@ import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObser
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 
-export type RouterOptions<T> =
+export type RouterOptions =
 {
 	/**
 	 * Router media codecs.
@@ -30,7 +30,7 @@ export type RouterOptions<T> =
 	/**
 	 * Custom application data.
 	 */
-	appData?: T;
+	appData?: Record<string, unknown>;
 }
 
 export type PipeToRouterOptions =
@@ -120,12 +120,7 @@ export type RouterObserverEvents =
 
 const logger = new Logger('Router');
 
-export type AppData = {
-	[key: string]: unknown;
-}
-
-export class Router<AppDataType extends AppData = AppData>
-	extends EnhancedEventEmitter<RouterEvents>
+export class Router extends EnhancedEventEmitter<RouterEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -149,7 +144,7 @@ export class Router<AppDataType extends AppData = AppData>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData: AppDataType;
+	readonly #appData: Record<string, unknown>;
 
 	// Transports map.
 	readonly #transports: Map<string, Transport> = new Map();
@@ -187,7 +182,7 @@ export class Router<AppDataType extends AppData = AppData>
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: AppDataType;
+			appData?: Record<string, unknown>;
 		}
 	)
 	{
@@ -199,7 +194,7 @@ export class Router<AppDataType extends AppData = AppData>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData || {} as AppDataType;
+		this.#appData = appData || {};
 	}
 
 	/**
@@ -229,7 +224,7 @@ export class Router<AppDataType extends AppData = AppData>
 	/**
 	 * App custom data.
 	 */
-	get appData(): AppDataType
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -237,7 +232,7 @@ export class Router<AppDataType extends AppData = AppData>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: AppDataType) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}

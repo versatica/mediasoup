@@ -7,7 +7,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
-import { AppData, Router, RouterOptions } from './Router';
+import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
@@ -617,11 +617,11 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	/**
 	 * Create a Router.
 	 */
-	async createRouter<AppDataType extends AppData = AppData>(
+	async createRouter(
 		{
 			mediaCodecs,
 			appData
-		}: RouterOptions<AppDataType> = {}): Promise<Router<AppDataType>>
+		}: RouterOptions = {}): Promise<Router>
 	{
 		logger.debug('createRouter()');
 
@@ -636,7 +636,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		await this.#channel.request('worker.createRouter', internal);
 
 		const data = { rtpCapabilities };
-		const router = new Router<AppDataType>(
+		const router = new Router(
 			{
 				internal,
 				data,
