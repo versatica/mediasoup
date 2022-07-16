@@ -3,10 +3,7 @@
 
 #include "common.hpp"
 #include <absl/container/flat_hash_map.h>
-#include <nlohmann/json.hpp>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace PayloadChannel
 {
@@ -21,26 +18,31 @@ namespace PayloadChannel
 		};
 
 	public:
-		static bool IsNotification(json& jsonNotification);
+		static bool IsNotification(const char* jsonNotification);
 
 	private:
 		static absl::flat_hash_map<std::string, EventId> string2EventId;
 
 	public:
-		explicit Notification(json& jsonNotification);
+		Notification(const char* msg, size_t msgLen);
+
 		virtual ~Notification();
 
 	public:
 		void SetPayload(const uint8_t* payload, size_t payloadLen);
+		const std::string& GetNextInternalRoutingId();
 
 	public:
 		// Passed by argument.
 		std::string event;
 		EventId eventId;
-		json internal;
-		json data;
+		std::vector<std::string> internal;
+		std::string data;
 		const uint8_t* payload{ nullptr };
 		size_t payloadLen{ 0u };
+
+	private:
+		uint8_t nextRoutingLevel{ 0 };
 	};
 } // namespace PayloadChannel
 

@@ -177,8 +177,8 @@ export class PayloadChannel extends EnhancedEventEmitter
 	 */
 	notify(
 		event: string,
-		internal: object,
-		data: any | undefined,
+		internal: string,
+		data: string | undefined,
 		payload: string | Buffer
 	): void
 	{
@@ -187,7 +187,7 @@ export class PayloadChannel extends EnhancedEventEmitter
 		if (this.#closed)
 			throw new InvalidStateError('PayloadChannel closed');
 
-		const notification = JSON.stringify({ event, internal, data });
+		const notification = `n:${event}:${internal}:${data}`;
 
 		if (Buffer.byteLength(notification) > MESSAGE_MAX_LEN)
 			throw new Error('PayloadChannel notification too big');
@@ -228,8 +228,8 @@ export class PayloadChannel extends EnhancedEventEmitter
 	 */
 	async request(
 		method: string,
-		internal: object,
-		data: any,
+		internal: string,
+		data: string,
 		payload: string | Buffer): Promise<any>
 	{
 		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
@@ -241,7 +241,7 @@ export class PayloadChannel extends EnhancedEventEmitter
 		if (this.#closed)
 			throw new InvalidStateError('Channel closed');
 
-		const request = JSON.stringify({ id, method, internal, data });
+		const request = `r:${id}:${method}:${internal}:${data}`;
 
 		if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');

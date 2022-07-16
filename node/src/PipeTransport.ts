@@ -232,7 +232,7 @@ export class PipeTransport
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal);
+		return this.channel.request('transport.getStats', this.internal.string);
 	}
 
 	/**
@@ -258,7 +258,7 @@ export class PipeTransport
 		const reqData = { ip, port, srtpParameters };
 
 		const data =
-			await this.channel.request('transport.connect', this.internal, reqData);
+			await this.channel.request('transport.connect', this.internal.string, reqData);
 
 		// Update data.
 		this.#data.tuple = data.tuple;
@@ -298,7 +298,7 @@ export class PipeTransport
 		};
 
 		const status =
-			await this.channel.request('transport.consume', internal, reqData);
+			await this.channel.request('transport.consume', `${this.internal.string},${internal.consumerId}`, reqData);
 
 		const data =
 		{

@@ -276,6 +276,8 @@ namespace Utils
 		static uint8_t* Base64Decode(const uint8_t* data, size_t len, size_t& outLen);
 
 		static uint8_t* Base64Decode(const std::string& str, size_t& outLen);
+
+		static std::vector<std::string> Split(const std::string& str, char separator, size_t limit = 0);
 	};
 
 	class Time

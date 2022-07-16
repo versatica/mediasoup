@@ -16,7 +16,7 @@ export declare class Channel extends EnhancedEventEmitter {
     /**
      * @private
      */
-    request(method: string, internal?: object, data?: any): Promise<any>;
+    request(method: string, internal?: string, data?: any): Promise<any>;
     private processMessage;
 }
 //# sourceMappingURL=Channel.d.ts.map

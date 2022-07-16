@@ -24,6 +24,7 @@ export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents
     protected readonly internal: {
         routerId: string;
         rtpObserverId: string;
+        string: string;
     };
     protected readonly channel: Channel;
     protected readonly payloadChannel: PayloadChannel;

@@ -185,31 +185,11 @@ void Worker::FillJsonResourceUsage(json& jsonObject) const
 	jsonObject["ru_nivcsw"] = uvRusage.ru_nivcsw;
 }
 
-void Worker::SetNewWebRtcServerIdFromInternal(json& internal, std::string& webRtcServerId) const
+RTC::WebRtcServer* Worker::GetWebRtcServerById(const std::string& id) const
 {
 	MS_TRACE();
 
-	auto jsonWebRtcServerIdIt = internal.find("webRtcServerId");
-
-	if (jsonWebRtcServerIdIt == internal.end() || !jsonWebRtcServerIdIt->is_string())
-		MS_THROW_ERROR("missing internal.webRtcServerId");
-
-	webRtcServerId.assign(jsonWebRtcServerIdIt->get<std::string>());
-
-	if (this->mapWebRtcServers.find(webRtcServerId) != this->mapWebRtcServers.end())
-		MS_THROW_ERROR("a WebRtcServer with same webRtcServerId already exists");
-}
-
-RTC::WebRtcServer* Worker::GetWebRtcServerFromInternal(json& internal) const
-{
-	MS_TRACE();
-
-	auto jsonWebRtcServerIdIt = internal.find("webRtcServerId");
-
-	if (jsonWebRtcServerIdIt == internal.end() || !jsonWebRtcServerIdIt->is_string())
-		MS_THROW_ERROR("missing internal.webRtcServerId");
-
-	auto it = this->mapWebRtcServers.find(jsonWebRtcServerIdIt->get<std::string>());
+	auto it = this->mapWebRtcServers.find(id);
 
 	if (it == this->mapWebRtcServers.end())
 		MS_THROW_ERROR("WebRtcServer not found");
@@ -219,31 +199,11 @@ RTC::WebRtcServer* Worker::GetWebRtcServerFromInternal(json& internal) const
 	return webRtcServer;
 }
 
-void Worker::SetNewRouterIdFromInternal(json& internal, std::string& routerId) const
+RTC::Router* Worker::GetRouterById(std::string& id) const
 {
 	MS_TRACE();
 
-	auto jsonRouterIdIt = internal.find("routerId");
-
-	if (jsonRouterIdIt == internal.end() || !jsonRouterIdIt->is_string())
-		MS_THROW_ERROR("missing internal.routerId");
-
-	routerId.assign(jsonRouterIdIt->get<std::string>());
-
-	if (this->mapRouters.find(routerId) != this->mapRouters.end())
-		MS_THROW_ERROR("a Router with same routerId already exists");
-}
-
-RTC::Router* Worker::GetRouterFromInternal(json& internal) const
-{
-	MS_TRACE();
-
-	auto jsonRouterIdIt = internal.find("routerId");
-
-	if (jsonRouterIdIt == internal.end() || !jsonRouterIdIt->is_string())
-		MS_THROW_ERROR("missing internal.routerId");
-
-	auto it = this->mapRouters.find(jsonRouterIdIt->get<std::string>());
+	auto it = this->mapRouters.find(id);
 
 	if (it == this->mapRouters.end())
 		MS_THROW_ERROR("Router not found");
@@ -307,9 +267,10 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 		{
 			try
 			{
-				std::string webRtcServerId;
+				std::string webRtcServerId = request->GetNextInternalRoutingId();
 
-				SetNewWebRtcServerIdFromInternal(request->internal, webRtcServerId);
+				if (this->mapWebRtcServers.find(webRtcServerId) != this->mapWebRtcServers.end())
+					MS_THROW_ERROR("a WebRtcServer with same webRtcServerId already exists");
 
 				auto* webRtcServer = new RTC::WebRtcServer(webRtcServerId, request->data);
 
@@ -335,9 +296,11 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 		{
 			RTC::WebRtcServer* webRtcServer{ nullptr };
 
+			auto webRtcServerId = request->GetNextInternalRoutingId();
+
 			try
 			{
-				webRtcServer = GetWebRtcServerFromInternal(request->internal);
+				webRtcServer = GetWebRtcServerById(webRtcServerId);
 			}
 			catch (const MediaSoupError& error)
 			{
@@ -359,9 +322,11 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 		{
 			RTC::WebRtcServer* webRtcServer{ nullptr };
 
+			auto webRtcServerId = request->GetNextInternalRoutingId();
+
 			try
 			{
-				webRtcServer = GetWebRtcServerFromInternal(request->internal);
+				webRtcServer = GetWebRtcServerById(webRtcServerId);
 
 				webRtcServer->HandleRequest(request);
 			}
@@ -375,16 +340,10 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 
 		case Channel::ChannelRequest::MethodId::WORKER_CREATE_ROUTER:
 		{
-			std::string routerId;
+			std::string routerId = request->GetNextInternalRoutingId();
 
-			try
-			{
-				SetNewRouterIdFromInternal(request->internal, routerId);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
-			}
+			if (this->mapRouters.find(routerId) != this->mapRouters.end())
+				MS_THROW_ERROR("a Router with same routerId already exists");
 
 			auto* router = new RTC::Router(routerId, this);
 
@@ -401,9 +360,11 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 		{
 			RTC::Router* router{ nullptr };
 
+			std::string routerId = request->GetNextInternalRoutingId();
+
 			try
 			{
-				router = GetRouterFromInternal(request->internal);
+				router = GetRouterById(routerId);
 			}
 			catch (const MediaSoupError& error)
 			{
@@ -426,7 +387,9 @@ inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channe
 		{
 			try
 			{
-				RTC::Router* router = GetRouterFromInternal(request->internal);
+				std::string routerId = request->GetNextInternalRoutingId();
+
+				RTC::Router* router = GetRouterById(routerId);
 
 				router->HandleRequest(request);
 			}
@@ -467,7 +430,15 @@ inline void Worker::OnPayloadChannelNotification(
 
 	try
 	{
-		RTC::Router* router = GetRouterFromInternal(notification->internal);
+		auto routerId = notification->GetNextInternalRoutingId();
+
+		if (routerId.empty())
+		{
+			MS_THROW_ERROR("missing internal routerId");
+		}
+
+		// This may throw.
+		RTC::Router* router = GetRouterById(routerId);
 
 		router->HandleNotification(notification);
 	}
@@ -494,7 +465,15 @@ inline void Worker::OnPayloadChannelRequest(
 
 	try
 	{
-		RTC::Router* router = GetRouterFromInternal(request->internal);
+		auto routerId = request->GetNextInternalRoutingId();
+
+		if (routerId.empty())
+		{
+			MS_THROW_ERROR("missing internal routerId");
+		}
+
+		// This may throw.
+		RTC::Router* router = GetRouterById(routerId);
 
 		router->HandleRequest(request);
 	}

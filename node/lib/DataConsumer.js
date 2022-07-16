@@ -30,6 +30,7 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
         this.#appData = appData || {};
+        this.#internal.string = `${this.#internal.routerId},${this.#internal.transportId},${this.#internal.dataConsumerId}`;
         this.handleWorkerNotifications();
     }
     /**
@@ -103,7 +104,7 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.#channel.removeAllListeners(this.#internal.dataConsumerId);
         this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
-        this.#channel.request('dataConsumer.close', this.#internal)
+        this.#channel.request('dataConsumer.close', this.#internal.string)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
@@ -131,14 +132,14 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('dataConsumer.dump', this.#internal);
+        return this.#channel.request('dataConsumer.dump', this.#internal.string);
     }
     /**
      * Get DataConsumer stats.
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.#channel.request('dataConsumer.getStats', this.#internal);
+        return this.#channel.request('dataConsumer.getStats', this.#internal.string);
     }
     /**
      * Set buffered amount low threshold.
@@ -146,7 +147,7 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setBufferedAmountLowThreshold(threshold) {
         logger.debug('setBufferedAmountLowThreshold() [threshold:%s]', threshold);
         const reqData = { threshold };
-        await this.#channel.request('dataConsumer.setBufferedAmountLowThreshold', this.#internal, reqData);
+        await this.#channel.request('dataConsumer.setBufferedAmountLowThreshold', this.#internal.string, reqData);
     }
     /**
      * Send data.
@@ -180,15 +181,15 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             message = ' ';
         else if (ppid === 57)
             message = Buffer.alloc(1);
-        const requestData = { ppid };
-        await this.#payloadChannel.request('dataConsumer.send', this.#internal, requestData, message);
+        const requestData = String(ppid);
+        await this.#payloadChannel.request('dataConsumer.send', this.#internal.string, requestData, message);
     }
     /**
      * Get buffered amount size.
      */
     async getBufferedAmount() {
         logger.debug('getBufferedAmount()');
-        const { bufferedAmount } = await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal);
+        const { bufferedAmount } = await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal.string);
         return bufferedAmount;
     }
     handleWorkerNotifications() {

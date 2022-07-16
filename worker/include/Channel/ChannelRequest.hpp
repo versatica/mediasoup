@@ -82,13 +82,14 @@ namespace Channel
 		static absl::flat_hash_map<std::string, MethodId> string2MethodId;
 
 	public:
-		ChannelRequest(Channel::ChannelSocket* channel, json& jsonRequest);
+		ChannelRequest(Channel::ChannelSocket* channel, const char* msg, size_t msgLen);
 		virtual ~ChannelRequest();
 
 		void Accept();
 		void Accept(json& data);
 		void Error(const char* reason = nullptr);
 		void TypeError(const char* reason = nullptr);
+		const std::string& GetNextInternalRoutingId();
 
 	public:
 		// Passed by argument.
@@ -96,10 +97,13 @@ namespace Channel
 		uint32_t id{ 0u };
 		std::string method;
 		MethodId methodId;
-		json internal;
+		std::vector<std::string> internal;
 		json data;
 		// Others.
 		bool replied{ false };
+
+	private:
+		uint8_t nextRoutingLevel{ 0 };
 	};
 } // namespace Channel
 

@@ -109,7 +109,7 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('notify() [event:%s]', event);
         if (this.#closed)
             throw new errors_1.InvalidStateError('PayloadChannel closed');
-        const notification = JSON.stringify({ event, internal, data });
+        const notification = `n:${event}:${internal}:${data}`;
         if (Buffer.byteLength(notification) > MESSAGE_MAX_LEN)
             throw new Error('PayloadChannel notification too big');
         else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
@@ -142,7 +142,7 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('request() [method:%s, id:%s]', method, id);
         if (this.#closed)
             throw new errors_1.InvalidStateError('Channel closed');
-        const request = JSON.stringify({ id, method, internal, data });
+        const request = `r:${id}:${method}:${internal}:${data}`;
         if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
             throw new Error('Channel request too big');
         else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)

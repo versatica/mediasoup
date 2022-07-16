@@ -83,7 +83,9 @@ namespace PayloadChannel
 		void SetListener(Listener* listener);
 		bool CallbackRead();
 		void Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen);
+		void Send(const std::string& message, const uint8_t* payload, size_t payloadLen);
 		void Send(json& jsonMessage);
+		void Send(const std::string& message);
 
 	private:
 		void SendImpl(const uint8_t* message, uint32_t messageLen);

@@ -5,6 +5,9 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 namespace PayloadChannel
 {
@@ -21,37 +24,28 @@ namespace PayloadChannel
 
 	/* Class methods. */
 
-	bool Notification::IsNotification(json& jsonNotification)
+	/*
+	 * msg notification starts with "n:"
+	 */
+	bool Notification::IsNotification(const char* msg)
 	{
 		MS_TRACE();
 
-		auto jsonEventIdIt = jsonNotification.find("event");
-
-		if (jsonEventIdIt == jsonNotification.end() || !jsonEventIdIt->is_string())
-			return false;
-
-		auto event = jsonEventIdIt->get<std::string>();
-
-		auto eventIdIt = Notification::string2EventId.find(event);
-
-		if (eventIdIt == Notification::string2EventId.end())
-			return false;
-
-		return true;
+		return (msg[0] == 'n' && msg[1] == ':');
 	}
 
 	/* Instance methods. */
 
-	Notification::Notification(json& jsonNotification)
+	Notification::Notification(const char* msg, size_t msgLen)
 	{
 		MS_TRACE();
 
-		auto jsonEventIdIt = jsonNotification.find("event");
+		auto info = Utils::String::Split(std::string(msg, msgLen), ':');
 
-		if (jsonEventIdIt == jsonNotification.end() || !jsonEventIdIt->is_string())
-			MS_THROW_ERROR("missing event");
+		if (info.size() < 1)
+			MS_THROW_ERROR("too few arguments");
 
-		this->event = jsonEventIdIt->get<std::string>();
+		this->event = info[0];
 
 		auto eventIdIt = Notification::string2EventId.find(this->event);
 
@@ -60,19 +54,21 @@ namespace PayloadChannel
 
 		this->eventId = eventIdIt->second;
 
-		auto jsonInternalIt = jsonNotification.find("internal");
+		if (info.size() > 1)
+		{
+			auto internal = info[1];
 
-		if (jsonInternalIt != jsonNotification.end() && jsonInternalIt->is_object())
-			this->internal = *jsonInternalIt;
-		else
-			this->internal = json::object();
+			if (internal != "undefined")
+				this->internal = Utils::String::Split(internal, ',');
+		}
 
-		auto jsonDataIt = jsonNotification.find("data");
+		if (info.size() > 2)
+		{
+			auto data = info[2];
 
-		if (jsonDataIt != jsonNotification.end() && jsonDataIt->is_object())
-			this->data = *jsonDataIt;
-		else
-			this->data = json::object();
+			if (data != "undefined")
+				this->data = data;
+		}
 	}
 
 	Notification::~Notification()
@@ -86,5 +82,17 @@ namespace PayloadChannel
 
 		this->payload    = payload;
 		this->payloadLen = payloadLen;
+	}
+
+	const std::string& Notification::GetNextInternalRoutingId()
+	{
+		MS_TRACE();
+
+		if (this->internal.size() < this->nextRoutingLevel + 1)
+		{
+			MS_THROW_ERROR("routing id not found for level %" PRIu8, this->nextRoutingLevel);
+		}
+
+		return this->internal[this->nextRoutingLevel++];
 	}
 } // namespace PayloadChannel

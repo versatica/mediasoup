@@ -19,44 +19,39 @@ namespace PayloadChannel
 	// clang-format on
 
 	/* Class methods. */
-	bool PayloadChannelRequest::IsRequest(json& jsonRequest)
+
+	/*
+	 * msg request starts with "r:"
+	 */
+	bool PayloadChannelRequest::IsRequest(const char* msg)
 	{
 		MS_TRACE();
 
-		auto jsonIdIt = jsonRequest.find("id");
-
-		if (jsonIdIt == jsonRequest.end() || !Utils::Json::IsPositiveInteger(*jsonIdIt))
-			return false;
-
-		auto jsonMethodIt = jsonRequest.find("method");
-
-		if (jsonMethodIt == jsonRequest.end() || !jsonMethodIt->is_string())
-			return false;
-
-		return true;
+		return (msg[0] == 'r' && msg[1] == ':');
 	}
 
 	/* Instance methods. */
 
+	/**
+	 * msg represents:
+	 *   * id:method:internal:data
+	 * internal represents the internal routing, ie:
+	 *   * routerId,transportId,producerId
+	 * data representation depends on the target
+	 */
 	PayloadChannelRequest::PayloadChannelRequest(
-	  PayloadChannel::PayloadChannelSocket* channel, json& jsonRequest)
+	  PayloadChannel::PayloadChannelSocket* channel, char* msg, size_t msgLen)
 	  : channel(channel)
 	{
 		MS_TRACE();
 
-		auto jsonIdIt = jsonRequest.find("id");
+		auto info = Utils::String::Split(std::string(msg, msgLen), ':');
 
-		if (jsonIdIt == jsonRequest.end() || !Utils::Json::IsPositiveInteger(*jsonIdIt))
-			MS_THROW_ERROR("missing id");
+		if (info.size() < 2)
+			MS_THROW_ERROR("too few arguments");
 
-		this->id = jsonIdIt->get<uint32_t>();
-
-		auto jsonMethodIt = jsonRequest.find("method");
-
-		if (jsonMethodIt == jsonRequest.end() || !jsonMethodIt->is_string())
-			MS_THROW_ERROR("missing method");
-
-		this->method = jsonMethodIt->get<std::string>();
+		this->id     = std::stoul(info[0]);
+		this->method = info[1];
 
 		auto methodIdIt = PayloadChannelRequest::string2MethodId.find(this->method);
 
@@ -69,19 +64,21 @@ namespace PayloadChannel
 
 		this->methodId = methodIdIt->second;
 
-		auto jsonInternalIt = jsonRequest.find("internal");
+		if (info.size() > 2)
+		{
+			auto internal = info[2];
 
-		if (jsonInternalIt != jsonRequest.end() && jsonInternalIt->is_object())
-			this->internal = *jsonInternalIt;
-		else
-			this->internal = json::object();
+			if (internal != "undefined")
+				this->internal = Utils::String::Split(internal, ',');
+		}
 
-		auto jsonDataIt = jsonRequest.find("data");
+		if (info.size() > 3)
+		{
+			auto data = info[3];
 
-		if (jsonDataIt != jsonRequest.end() && jsonDataIt->is_object())
-			this->data = *jsonDataIt;
-		else
-			this->data = json::object();
+			if (data != "undefined")
+				this->data = data;
+		}
 	}
 
 	PayloadChannelRequest::~PayloadChannelRequest()
@@ -97,12 +94,12 @@ namespace PayloadChannel
 
 		this->replied = true;
 
-		json jsonResponse = json::object();
+		std::string response("{\"id\":");
 
-		jsonResponse["id"]       = this->id;
-		jsonResponse["accepted"] = true;
+		response.append(std::to_string(this->id));
+		response.append(",\"accepted\":true}");
 
-		this->channel->Send(jsonResponse);
+		this->channel->Send(response);
 	}
 
 	void PayloadChannelRequest::Accept(json& data)
@@ -168,5 +165,17 @@ namespace PayloadChannel
 
 		this->payload    = payload;
 		this->payloadLen = payloadLen;
+	}
+
+	const std::string& PayloadChannelRequest::GetNextInternalRoutingId()
+	{
+		MS_TRACE();
+
+		if (this->internal.size() < this->nextRoutingLevel + 1)
+		{
+			MS_THROW_ERROR("routing id not found for level %" PRIu8, this->nextRoutingLevel);
+		}
+
+		return this->internal[this->nextRoutingLevel++];
 	}
 } // namespace PayloadChannel

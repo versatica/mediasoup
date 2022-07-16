@@ -116,6 +116,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	{
 		routerId: string;
 		transportId: string;
+		string: string;
 	};
 
 	// Transport data. This is set by the subclass.
@@ -212,6 +213,8 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
+
+		this.internal.string = `${this.internal.routerId},${this.internal.transportId}`;
 	}
 
 	/**
@@ -279,7 +282,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		this.channel.removeAllListeners(this.internal.transportId);
 		this.payloadChannel.removeAllListeners(this.internal.transportId);
 
-		this.channel.request('transport.close', this.internal)
+		this.channel.request('transport.close', this.internal.string)
 			.catch(() => {});
 
 		// Close every Producer.
@@ -452,7 +455,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	{
 		logger.debug('dump()');
 
-		return this.channel.request('transport.dump', this.internal);
+		return this.channel.request('transport.dump', this.internal.string);
 	}
 
 	/**
@@ -488,7 +491,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const reqData = { bitrate };
 
 		await this.channel.request(
-			'transport.setMaxIncomingBitrate', this.internal, reqData);
+			'transport.setMaxIncomingBitrate', this.internal.string, reqData);
 	}
 
 	/**
@@ -501,7 +504,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const reqData = { bitrate };
 
 		await this.channel.request(
-			'transport.setMaxOutgoingBitrate', this.internal, reqData);
+			'transport.setMaxOutgoingBitrate', this.internal.string, reqData);
 	}
 
 	/**
@@ -576,7 +579,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const reqData = { kind, rtpParameters, rtpMapping, keyFrameRequestDelay, paused };
 
 		const status =
-			await this.channel.request('transport.produce', internal, reqData);
+			await this.channel.request('transport.produce', `${this.internal.string},${internal.producerId}`, reqData);
 
 		const data =
 		{
@@ -686,7 +689,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		};
 
 		const status =
-			await this.channel.request('transport.consume', internal, reqData);
+			await this.channel.request('transport.consume', `${this.internal.string},${internal.consumerId}`, reqData);
 
 		const data =
 		{
@@ -771,7 +774,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		};
 
 		const data =
-			await this.channel.request('transport.produceData', internal, reqData);
+			await this.channel.request('transport.produceData', `${this.internal.string},${internal.dataProducerId}`, reqData);
 
 		const dataProducer = new DataProducer(
 			{
@@ -879,7 +882,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		};
 
 		const data =
-			await this.channel.request('transport.consumeData', internal, reqData);
+			await this.channel.request('transport.consumeData', `${this.internal.string},${internal.dataConsumerId}`, reqData);
 
 		const dataConsumer = new DataConsumer(
 			{
@@ -922,7 +925,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const reqData = { types };
 
 		await this.channel.request(
-			'transport.enableTraceEvent', this.internal, reqData);
+			'transport.enableTraceEvent', this.internal.string, reqData);
 	}
 
 	private getNextSctpStreamId(): number

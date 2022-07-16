@@ -29,10 +29,8 @@ private:
 	void Close();
 	void FillJson(json& jsonObject) const;
 	void FillJsonResourceUsage(json& jsonObject) const;
-	void SetNewWebRtcServerIdFromInternal(json& internal, std::string& webRtcServerId) const;
-	RTC::WebRtcServer* GetWebRtcServerFromInternal(json& internal) const;
-	void SetNewRouterIdFromInternal(json& internal, std::string& routerId) const;
-	RTC::Router* GetRouterFromInternal(json& internal) const;
+	RTC::WebRtcServer* GetWebRtcServerById(const std::string& id) const;
+	RTC::Router* GetRouterById(std::string& id) const;
 
 	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
 public:

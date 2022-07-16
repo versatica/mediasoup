@@ -145,16 +145,12 @@ namespace RTC
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
-		void SetNewProducerIdFromInternal(json& internal, std::string& producerId) const;
-		RTC::Producer* GetProducerFromInternal(json& internal) const;
-		void SetNewConsumerIdFromInternal(json& internal, std::string& consumerId) const;
-		RTC::Consumer* GetConsumerFromInternal(json& internal) const;
+		RTC::Producer* GetProducerById(const std::string& id) const;
+		RTC::Consumer* GetConsumerById(const std::string& id) const;
 		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
 		RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const;
-		void SetNewDataProducerIdFromInternal(json& internal, std::string& dataProducerId) const;
-		RTC::DataProducer* GetDataProducerFromInternal(json& internal) const;
-		void SetNewDataConsumerIdFromInternal(json& internal, std::string& dataConsumerId) const;
-		RTC::DataConsumer* GetDataConsumerFromInternal(json& internal) const;
+		RTC::DataProducer* GetDataProducerById(const std::string& id) const;
+		RTC::DataConsumer* GetDataConsumerById(std::string& id) const;
 
 	private:
 		virtual bool IsConnected() const = 0;

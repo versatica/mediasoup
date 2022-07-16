@@ -15,6 +15,7 @@ namespace Channel
 		static void Emit(uint64_t targetId, const char* event);
 		static void Emit(const std::string& targetId, const char* event);
 		static void Emit(const std::string& targetId, const char* event, json& data);
+		static void Emit(const std::string& targetId, const char* event, const std::string& data);
 
 	public:
 		// Passed by argument.

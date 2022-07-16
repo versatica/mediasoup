@@ -30,6 +30,7 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
         this.#appData = appData || {};
+        this.#internal.string = `${this.#internal.routerId},${this.#internal.transportId},${this.#internal.dataProducerId}`;
         this.handleWorkerNotifications();
     }
     /**
@@ -97,7 +98,7 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.#channel.removeAllListeners(this.#internal.dataProducerId);
         this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
-        this.#channel.request('dataProducer.close', this.#internal)
+        this.#channel.request('dataProducer.close', this.#internal.string)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
@@ -125,14 +126,14 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('dataProducer.dump', this.#internal);
+        return this.#channel.request('dataProducer.dump', this.#internal.string);
     }
     /**
      * Get DataProducer stats.
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.#channel.request('dataProducer.getStats', this.#internal);
+        return this.#channel.request('dataProducer.getStats', this.#internal.string);
     }
     /**
      * Send data (just valid for DataProducers created on a DirectTransport).
@@ -166,8 +167,8 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             message = ' ';
         else if (ppid === 57)
             message = Buffer.alloc(1);
-        const notifData = { ppid };
-        this.#payloadChannel.notify('dataProducer.send', this.#internal, notifData, message);
+        const notifData = String(ppid);
+        this.#payloadChannel.notify('dataProducer.send', this.#internal.string, notifData, message);
     }
     handleWorkerNotifications() {
         // No need to subscribe to any event.

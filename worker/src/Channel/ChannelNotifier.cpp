@@ -61,4 +61,22 @@ namespace Channel
 
 		ChannelNotifier::channel->Send(jsonNotification);
 	}
+
+	void ChannelNotifier::Emit(const std::string& targetId, const char* event, const std::string& data)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(ChannelNotifier::channel, "channel unset");
+
+		std::string notification("{\"targetId\":\"");
+
+		notification.append(targetId);
+		notification.append("\",\"event\":\"");
+		notification.append(event);
+		notification.append("\",\"data\":");
+		notification.append(data);
+		notification.append("}");
+
+		ChannelNotifier::channel->Send(notification);
+	}
 } // namespace Channel

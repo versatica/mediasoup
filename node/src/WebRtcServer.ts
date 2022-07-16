@@ -63,6 +63,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	readonly #internal:
 	{
 		webRtcServerId: string;
+		string: string;
 	};
 
 	// Channel instance.
@@ -103,6 +104,8 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 		this.#internal = internal;
 		this.#channel = channel;
 		this.#appData = appData || {};
+
+		this.#internal.string = `${this.#internal.webRtcServerId}`;
 	}
 
 	/**
@@ -166,7 +169,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 
 		this.#closed = true;
 
-		this.#channel.request('webRtcServer.close', this.#internal)
+		this.#channel.request('webRtcServer.close', this.#internal.string)
 			.catch(() => {});
 
 		// Close every WebRtcTransport.
@@ -216,7 +219,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('webRtcServer.dump', this.#internal);
+		return this.#channel.request('webRtcServer.dump', this.#internal.string);
 	}
 
 	/**

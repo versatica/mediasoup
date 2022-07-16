@@ -47,10 +47,8 @@ namespace RTC
 		void HandleNotification(PayloadChannel::Notification* notification);
 
 	private:
-		void SetNewTransportIdFromInternal(json& internal, std::string& transportId) const;
-		RTC::Transport* GetTransportFromInternal(json& internal) const;
-		void SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const;
-		RTC::RtpObserver* GetRtpObserverFromInternal(json& internal) const;
+		RTC::Transport* GetTransportById(std::string& id) const;
+		RTC::RtpObserver* GetRtpObserverById(const std::string& id) const;
 		RTC::Producer* GetProducerFromData(json& data) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */

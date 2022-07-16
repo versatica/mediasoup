@@ -596,7 +596,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		const internal = { webRtcServerId: uuidv4() };
 		const reqData = { listenInfos };
 
-		await this.#channel.request('worker.createWebRtcServer', internal, reqData);
+		await this.#channel.request('worker.createWebRtcServer', internal.webRtcServerId, reqData);
 
 		const webRtcServer = new WebRtcServer(
 			{
@@ -633,7 +633,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		const internal = { routerId: uuidv4() };
 
-		await this.#channel.request('worker.createRouter', internal);
+		await this.#channel.request('worker.createRouter', internal.routerId);
 
 		const data = { rtpCapabilities };
 		const router = new Router(

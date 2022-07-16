@@ -75,24 +75,25 @@ namespace Channel
 
 	/* Instance methods. */
 
-	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, json& jsonRequest)
+	/**
+	 * msg represents:
+	 *   * id:method:internal:data
+	 * internal represents the internal routing, ie:
+	 *   * routerId,transportId,producerId
+	 * data representats a JSON object.
+	 */
+	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, const char* msg, size_t msgLen)
 	  : channel(channel)
 	{
 		MS_TRACE();
 
-		auto jsonIdIt = jsonRequest.find("id");
+		auto info = Utils::String::Split(std::string(msg, msgLen), ':', 3);
 
-		if (jsonIdIt == jsonRequest.end() || !Utils::Json::IsPositiveInteger(*jsonIdIt))
-			MS_THROW_ERROR("missing id");
+		if (info.size() < 2)
+			MS_THROW_ERROR("too few arguments");
 
-		this->id = jsonIdIt->get<uint32_t>();
-
-		auto jsonMethodIt = jsonRequest.find("method");
-
-		if (jsonMethodIt == jsonRequest.end() || !jsonMethodIt->is_string())
-			MS_THROW_ERROR("missing method");
-
-		this->method = jsonMethodIt->get<std::string>();
+		this->id     = std::stoul(info[0]);
+		this->method = info[1];
 
 		auto methodIdIt = ChannelRequest::string2MethodId.find(this->method);
 
@@ -105,19 +106,21 @@ namespace Channel
 
 		this->methodId = methodIdIt->second;
 
-		auto jsonInternalIt = jsonRequest.find("internal");
+		if (info.size() > 2)
+		{
+			auto internal = info[2];
 
-		if (jsonInternalIt != jsonRequest.end() && jsonInternalIt->is_object())
-			this->internal = *jsonInternalIt;
-		else
-			this->internal = json::object();
+			if (internal != "undefined")
+				this->internal = Utils::String::Split(internal, ',');
+		}
 
-		auto jsonDataIt = jsonRequest.find("data");
+		if (info.size() > 3)
+		{
+			auto data = info[3];
 
-		if (jsonDataIt != jsonRequest.end() && jsonDataIt->is_object())
-			this->data = *jsonDataIt;
-		else
-			this->data = json::object();
+			if (data != "undefined")
+				this->data = json::parse(data);
+		}
 	}
 
 	ChannelRequest::~ChannelRequest()
@@ -133,12 +136,12 @@ namespace Channel
 
 		this->replied = true;
 
-		json jsonResponse = json::object();
+		std::string response("{\"id\":");
 
-		jsonResponse["id"]       = this->id;
-		jsonResponse["accepted"] = true;
+		response.append(std::to_string(this->id));
+		response.append(",\"accepted\":true}");
 
-		this->channel->Send(jsonResponse);
+		this->channel->Send(response);
 	}
 
 	void ChannelRequest::Accept(json& data)
@@ -196,5 +199,17 @@ namespace Channel
 			jsonResponse["reason"] = reason;
 
 		this->channel->Send(jsonResponse);
+	}
+
+	const std::string& ChannelRequest::GetNextInternalRoutingId()
+	{
+		MS_TRACE();
+
+		if (this->internal.size() < this->nextRoutingLevel + 1)
+		{
+			MS_THROW_ERROR("routing id not found for level %" PRIu8, this->nextRoutingLevel);
+		}
+
+		return this->internal[this->nextRoutingLevel++];
 	}
 } // namespace Channel

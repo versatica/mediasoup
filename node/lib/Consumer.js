@@ -46,6 +46,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#producerPaused = producerPaused;
         this.#score = score;
         this.#preferredLayers = preferredLayers;
+        this.#internal.string = `${this.#internal.routerId},${this.#internal.transportId},${this.#internal.consumerId}`;
         this.handleWorkerNotifications();
     }
     /**
@@ -156,7 +157,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.#channel.removeAllListeners(this.#internal.consumerId);
         this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
-        this.#channel.request('consumer.close', this.#internal)
+        this.#channel.request('consumer.close', this.#internal.string)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
@@ -184,14 +185,14 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('consumer.dump', this.#internal);
+        return this.#channel.request('consumer.dump', this.#internal.string);
     }
     /**
      * Get Consumer stats.
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.#channel.request('consumer.getStats', this.#internal);
+        return this.#channel.request('consumer.getStats', this.#internal.string);
     }
     /**
      * Pause the Consumer.
@@ -199,7 +200,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async pause() {
         logger.debug('pause()');
         const wasPaused = this.#paused || this.#producerPaused;
-        await this.#channel.request('consumer.pause', this.#internal);
+        await this.#channel.request('consumer.pause', this.#internal.string);
         this.#paused = true;
         // Emit observer event.
         if (!wasPaused)
@@ -211,7 +212,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async resume() {
         logger.debug('resume()');
         const wasPaused = this.#paused || this.#producerPaused;
-        await this.#channel.request('consumer.resume', this.#internal);
+        await this.#channel.request('consumer.resume', this.#internal.string);
         this.#paused = false;
         // Emit observer event.
         if (wasPaused && !this.#producerPaused)
@@ -223,7 +224,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setPreferredLayers({ spatialLayer, temporalLayer }) {
         logger.debug('setPreferredLayers()');
         const reqData = { spatialLayer, temporalLayer };
-        const data = await this.#channel.request('consumer.setPreferredLayers', this.#internal, reqData);
+        const data = await this.#channel.request('consumer.setPreferredLayers', this.#internal.string, reqData);
         this.#preferredLayers = data || undefined;
     }
     /**
@@ -232,7 +233,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setPriority(priority) {
         logger.debug('setPriority()');
         const reqData = { priority };
-        const data = await this.#channel.request('consumer.setPriority', this.#internal, reqData);
+        const data = await this.#channel.request('consumer.setPriority', this.#internal.string, reqData);
         this.#priority = data.priority;
     }
     /**
@@ -241,7 +242,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async unsetPriority() {
         logger.debug('unsetPriority()');
         const reqData = { priority: 1 };
-        const data = await this.#channel.request('consumer.setPriority', this.#internal, reqData);
+        const data = await this.#channel.request('consumer.setPriority', this.#internal.string, reqData);
         this.#priority = data.priority;
     }
     /**
@@ -249,7 +250,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async requestKeyFrame() {
         logger.debug('requestKeyFrame()');
-        await this.#channel.request('consumer.requestKeyFrame', this.#internal);
+        await this.#channel.request('consumer.requestKeyFrame', this.#internal.string);
     }
     /**
      * Enable 'trace' event.
@@ -257,7 +258,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async enableTraceEvent(types = []) {
         logger.debug('enableTraceEvent()');
         const reqData = { types };
-        await this.#channel.request('consumer.enableTraceEvent', this.#internal, reqData);
+        await this.#channel.request('consumer.enableTraceEvent', this.#internal.string, reqData);
     }
     handleWorkerNotifications() {
         this.#channel.on(this.#internal.consumerId, (event, data) => {

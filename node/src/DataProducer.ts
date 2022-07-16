@@ -70,6 +70,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		routerId: string;
 		transportId: string;
 		dataProducerId: string;
+		string: string;
 	};
 
 	// DataProducer data.
@@ -125,6 +126,8 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {};
+
+		this.#internal.string = `${this.#internal.routerId},${this.#internal.transportId},${this.#internal.dataProducerId}`;
 
 		this.handleWorkerNotifications();
 	}
@@ -217,7 +220,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#channel.removeAllListeners(this.#internal.dataProducerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
 
-		this.#channel.request('dataProducer.close', this.#internal)
+		this.#channel.request('dataProducer.close', this.#internal.string)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -257,7 +260,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('dataProducer.dump', this.#internal);
+		return this.#channel.request('dataProducer.dump', this.#internal.string);
 	}
 
 	/**
@@ -267,7 +270,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('dataProducer.getStats', this.#internal);
+		return this.#channel.request('dataProducer.getStats', this.#internal.string);
 	}
 
 	/**
@@ -309,10 +312,10 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		else if (ppid === 57)
 			message = Buffer.alloc(1);
 
-		const notifData = { ppid };
+		const notifData = String(ppid);
 
 		this.#payloadChannel.notify(
-			'dataProducer.send', this.#internal, notifData, message);
+			'dataProducer.send', this.#internal.string, notifData, message);
 	}
 
 	private handleWorkerNotifications(): void

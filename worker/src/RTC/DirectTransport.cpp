@@ -128,17 +128,13 @@ namespace RTC
 
 			case PayloadChannel::Notification::EventId::DATA_PRODUCER_SEND:
 			{
+				auto dataProducerId = notification->GetNextInternalRoutingId();
+
 				// This may throw.
-				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(notification->internal);
+				RTC::DataProducer* dataProducer = GetDataProducerById(dataProducerId);
 
-				auto jsonPpidIt = notification->data.find("ppid");
-
-				if (jsonPpidIt == notification->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
-				{
-					MS_THROW_TYPE_ERROR("invalid ppid");
-				}
-
-				auto ppid       = jsonPpidIt->get<uint32_t>();
+				// This may throw.
+				auto ppid       = std::stoi(notification->data);
 				const auto* msg = notification->payload;
 				auto len        = notification->payloadLen;
 

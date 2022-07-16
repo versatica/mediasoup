@@ -84,6 +84,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		routerId: string;
 		transportId: string;
 		dataConsumerId: string;
+		string: string;
 	};
 
 	// DataConsumer data.
@@ -140,6 +141,8 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {};
+
+		this.#internal.string = `${this.#internal.routerId},${this.#internal.transportId},${this.#internal.dataConsumerId}`;
 
 		this.handleWorkerNotifications();
 	}
@@ -240,7 +243,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#channel.removeAllListeners(this.#internal.dataConsumerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
 
-		this.#channel.request('dataConsumer.close', this.#internal)
+		this.#channel.request('dataConsumer.close', this.#internal.string)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -280,7 +283,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('dataConsumer.dump', this.#internal);
+		return this.#channel.request('dataConsumer.dump', this.#internal.string);
 	}
 
 	/**
@@ -290,7 +293,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('dataConsumer.getStats', this.#internal);
+		return this.#channel.request('dataConsumer.getStats', this.#internal.string);
 	}
 
 	/**
@@ -303,7 +306,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		const reqData = { threshold };
 
 		await this.#channel.request(
-			'dataConsumer.setBufferedAmountLowThreshold', this.#internal, reqData);
+			'dataConsumer.setBufferedAmountLowThreshold', this.#internal.string, reqData);
 	}
 
 	/**
@@ -345,10 +348,10 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		else if (ppid === 57)
 			message = Buffer.alloc(1);
 
-		const requestData = { ppid };
+		const requestData = String(ppid);
 
 		await this.#payloadChannel.request(
-			'dataConsumer.send', this.#internal, requestData, message);
+			'dataConsumer.send', this.#internal.string, requestData, message);
 	}
 
 	/**
@@ -359,7 +362,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		logger.debug('getBufferedAmount()');
 
 		const { bufferedAmount } =
-			await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal);
+			await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal.string);
 
 		return bufferedAmount;
 	}

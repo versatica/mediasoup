@@ -140,6 +140,24 @@ namespace Channel
 		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
 	}
 
+	void ChannelSocket::Send(const std::string& message)
+	{
+		MS_TRACE_STD();
+
+		if (this->closed)
+			return;
+
+		if (message.length() > PayloadMaxLen)
+		{
+			MS_ERROR_STD("message too big");
+
+			return;
+		}
+
+		SendImpl(
+		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
+	}
+
 	void ChannelSocket::SendLog(const char* message, uint32_t messageLen)
 	{
 		MS_TRACE_STD();
@@ -171,41 +189,43 @@ namespace Channel
 		auto free = this->channelReadFn(
 		  &message, &messageLen, &messageCtx, this->uvReadHandle, this->channelReadCtx);
 
+		/*
 		if (free)
 		{
-			try
-			{
-				json jsonMessage = json::parse(message, message + static_cast<size_t>(messageLen));
-				auto* request    = new Channel::ChannelRequest(this, jsonMessage);
+		  try
+		  {
+		    json jsonMessage = json::parse(message, message + static_cast<size_t>(messageLen));
+		    auto* request    = new Channel::ChannelRequest(this, jsonMessage);
 
-				// Notify the listener.
-				try
-				{
-					this->listener->OnChannelRequest(this, request);
-				}
-				catch (const MediaSoupTypeError& error)
-				{
-					request->TypeError(error.what());
-				}
-				catch (const MediaSoupError& error)
-				{
-					request->Error(error.what());
-				}
+		    // Notify the listener.
+		    try
+		    {
+		      this->listener->OnChannelRequest(this, request);
+		    }
+		    catch (const MediaSoupTypeError& error)
+		    {
+		      request->TypeError(error.what());
+		    }
+		    catch (const MediaSoupError& error)
+		    {
+		      request->Error(error.what());
+		    }
 
-				// Delete the Request.
-				delete request;
-			}
-			catch (const json::parse_error& error)
-			{
-				MS_ERROR_STD("JSON parsing error: %s", error.what());
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_ERROR_STD("discarding wrong Channel request");
-			}
+		    // Delete the Request.
+		    delete request;
+		  }
+		  catch (const json::parse_error& error)
+		  {
+		    MS_ERROR_STD("JSON parsing error: %s", error.what());
+		  }
+		  catch (const MediaSoupError& error)
+		  {
+		    MS_ERROR_STD("discarding wrong Channel request");
+		  }
 
-			free(message, messageLen, messageCtx);
+		  free(message, messageLen, messageCtx);
 		}
+		*/
 
 		return free != nullptr;
 	}
@@ -240,8 +260,7 @@ namespace Channel
 
 		try
 		{
-			json jsonMessage = json::parse(msg, msg + msgLen);
-			auto* request    = new Channel::ChannelRequest(this, jsonMessage);
+			auto* request = new Channel::ChannelRequest(this, msg, msgLen);
 
 			// Notify the listener.
 			try

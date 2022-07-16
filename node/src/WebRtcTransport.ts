@@ -383,7 +383,7 @@ export class WebRtcTransport extends
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal);
+		return this.channel.request('transport.getStats', this.internal.string);
 	}
 
 	/**
@@ -398,7 +398,7 @@ export class WebRtcTransport extends
 		const reqData = { dtlsParameters };
 
 		const data =
-			await this.channel.request('transport.connect', this.internal, reqData);
+			await this.channel.request('transport.connect', this.internal.string, reqData);
 
 		// Update data.
 		this.#data.dtlsParameters.role = data.dtlsLocalRole;
@@ -412,7 +412,7 @@ export class WebRtcTransport extends
 		logger.debug('restartIce()');
 
 		const data =
-			await this.channel.request('transport.restartIce', this.internal);
+			await this.channel.request('transport.restartIce', this.internal.string);
 
 		const { iceParameters } = data;
 

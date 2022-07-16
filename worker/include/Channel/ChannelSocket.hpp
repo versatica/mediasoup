@@ -76,6 +76,7 @@ namespace Channel
 		void SetListener(Listener* listener);
 		bool CallbackRead();
 		void Send(json& jsonMessage);
+		void Send(const std::string& message);
 		void SendLog(const char* message, uint32_t messageLen);
 
 	private:

@@ -78,6 +78,7 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
     protected readonly internal: {
         routerId: string;
         transportId: string;
+        string: string;
     };
     protected readonly channel: Channel;
     protected readonly payloadChannel: PayloadChannel;

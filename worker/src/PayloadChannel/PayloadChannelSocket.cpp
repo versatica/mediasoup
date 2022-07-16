@@ -131,6 +131,16 @@ namespace PayloadChannel
 
 		std::string message = jsonMessage.dump();
 
+		this->Send(message, payload, payloadLen);
+	}
+
+	void PayloadChannelSocket::Send(const std::string& message, const uint8_t* payload, size_t payloadLen)
+	{
+		MS_TRACE();
+
+		if (this->closed)
+			return;
+
 		if (message.length() > PayloadMaxLen)
 		{
 			MS_ERROR("message too big");
@@ -171,6 +181,24 @@ namespace PayloadChannel
 		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
 	}
 
+	void PayloadChannelSocket::Send(const std::string& message)
+	{
+		MS_TRACE();
+
+		if (this->closed)
+			return;
+
+		if (message.length() > PayloadMaxLen)
+		{
+			MS_ERROR("message too big");
+
+			return;
+		}
+
+		SendImpl(
+		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
+	}
+
 	bool PayloadChannelSocket::CallbackRead()
 	{
 		MS_TRACE();
@@ -196,93 +224,95 @@ namespace PayloadChannel
 		  this->uvReadHandle,
 		  this->payloadChannelReadCtx);
 
+		/*
 		if (free)
 		{
-			try
-			{
-				json jsonData = json::parse(message, message + static_cast<size_t>(messageLen));
+		  try
+		  {
+		    json jsonData = json::parse(message, message + static_cast<size_t>(messageLen));
 
-				if (PayloadChannelRequest::IsRequest(jsonData))
-				{
-					try
-					{
-						auto* request = new PayloadChannel::PayloadChannelRequest(this, jsonData);
-						request->SetPayload(payload, payloadLen);
+		    if (PayloadChannelRequest::IsRequest(jsonData))
+		    {
+		      try
+		      {
+		        auto* request = new PayloadChannel::PayloadChannelRequest(this, jsonData);
+		        request->SetPayload(payload, payloadLen);
 
-						// Notify the listener.
-						try
-						{
-							this->listener->OnPayloadChannelRequest(this, request);
-						}
-						catch (const MediaSoupTypeError& error)
-						{
-							request->TypeError(error.what());
-						}
-						catch (const MediaSoupError& error)
-						{
-							request->Error(error.what());
-						}
+		        // Notify the listener.
+		        try
+		        {
+		          this->listener->OnPayloadChannelRequest(this, request);
+		        }
+		        catch (const MediaSoupTypeError& error)
+		        {
+		          request->TypeError(error.what());
+		        }
+		        catch (const MediaSoupError& error)
+		        {
+		          request->Error(error.what());
+		        }
 
-						// Delete the Request.
-						delete request;
-					}
-					catch (const json::parse_error& error)
-					{
-						MS_ERROR_STD("JSON parsing error: %s", error.what());
-					}
-					catch (const MediaSoupError& error)
-					{
-						MS_ERROR("discarding wrong Payload Channel notification");
-					}
-				}
+		        // Delete the Request.
+		        delete request;
+		      }
+		      catch (const json::parse_error& error)
+		      {
+		        MS_ERROR_STD("JSON parsing error: %s", error.what());
+		      }
+		      catch (const MediaSoupError& error)
+		      {
+		        MS_ERROR("discarding wrong Payload Channel notification");
+		      }
+		    }
 
-				else if (Notification::IsNotification(jsonData))
-				{
-					try
-					{
-						auto* notification = new PayloadChannel::Notification(jsonData);
-						notification->SetPayload(payload, payloadLen);
+		    else if (Notification::IsNotification(jsonData))
+		    {
+		      try
+		      {
+		        auto* notification = new PayloadChannel::Notification(jsonData);
+		        notification->SetPayload(payload, payloadLen);
 
-						// Notify the listener.
-						try
-						{
-							this->listener->OnPayloadChannelNotification(this, notification);
-						}
-						catch (const MediaSoupError& error)
-						{
-							MS_ERROR("notification failed: %s", error.what());
-						}
+		        // Notify the listener.
+		        try
+		        {
+		          this->listener->OnPayloadChannelNotification(this, notification);
+		        }
+		        catch (const MediaSoupError& error)
+		        {
+		          MS_ERROR("notification failed: %s", error.what());
+		        }
 
-						// Delete the Notification.
-						delete notification;
-					}
-					catch (const json::parse_error& error)
-					{
-						MS_ERROR_STD("JSON parsing error: %s", error.what());
-					}
-					catch (const MediaSoupError& error)
-					{
-						MS_ERROR("discarding wrong Payload Channel notification");
-					}
-				}
+		        // Delete the Notification.
+		        delete notification;
+		      }
+		      catch (const json::parse_error& error)
+		      {
+		        MS_ERROR_STD("JSON parsing error: %s", error.what());
+		      }
+		      catch (const MediaSoupError& error)
+		      {
+		        MS_ERROR("discarding wrong Payload Channel notification");
+		      }
+		    }
 
-				else
-				{
-					MS_ERROR("discarding wrong Payload Channel data");
-				}
-			}
-			catch (const json::parse_error& error)
-			{
-				MS_ERROR("JSON parsing error: %s", error.what());
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_ERROR("discarding wrong Channel request");
-			}
+		    else
+		    {
+		      MS_ERROR("discarding wrong Payload Channel data");
+		    }
+		  }
+		  catch (const json::parse_error& error)
+		  {
+		    MS_ERROR("JSON parsing error: %s", error.what());
+		  }
+		  catch (const MediaSoupError& error)
+		  {
+		    MS_ERROR("discarding wrong Channel request");
+		  }
 
-			free(message, messageLen, messageCtx);
-			free(payload, payloadLen, payloadCapacity);
+		  free(message, messageLen, messageCtx);
+		  free(payload, payloadLen, payloadCapacity);
 		}
+	*/
 
 		return free != nullptr;
 	}
@@ -336,32 +366,30 @@ namespace PayloadChannel
 
 		if (!this->ongoingNotification && !this->ongoingRequest)
 		{
-			json jsonData = json::parse(msg, msg + msgLen);
-			if (PayloadChannelRequest::IsRequest(jsonData))
+			if (PayloadChannelRequest::IsRequest(msg))
 			{
 				try
 				{
-					this->ongoingRequest = new PayloadChannel::PayloadChannelRequest(this, jsonData);
+					this->ongoingRequest = new PayloadChannel::PayloadChannelRequest(this, msg + 2, msgLen - 2);
 				}
 				catch (const json::parse_error& error)
 				{
-					MS_ERROR_STD("JSON parsing error: %s", error.what());
+					MS_ERROR_STD("msg parsing error: %s", error.what());
 				}
 				catch (const MediaSoupError& error)
 				{
-					MS_ERROR("discarding wrong Payload Channel notification");
+					MS_ERROR("discarding wrong Payload Channel request: %s", error.what());
 				}
 			}
-
-			else if (Notification::IsNotification(jsonData))
+			else if (Notification::IsNotification(msg))
 			{
 				try
 				{
-					this->ongoingNotification = new PayloadChannel::Notification(jsonData);
+					this->ongoingNotification = new PayloadChannel::Notification(msg + 2, msgLen - 2);
 				}
 				catch (const json::parse_error& error)
 				{
-					MS_ERROR_STD("JSON parsing error: %s", error.what());
+					MS_ERROR_STD("msg parsing error: %s", error.what());
 				}
 				catch (const MediaSoupError& error)
 				{

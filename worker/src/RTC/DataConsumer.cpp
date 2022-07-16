@@ -200,14 +200,8 @@ namespace RTC
 		{
 			case PayloadChannel::PayloadChannelRequest::MethodId::DATA_CONSUMER_SEND:
 			{
-				auto jsonPpidIt = request->data.find("ppid");
-
-				if (jsonPpidIt == request->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
-				{
-					MS_THROW_TYPE_ERROR("invalid ppid");
-				}
-
-				auto ppid       = jsonPpidIt->get<uint32_t>();
+				// This may throw.
+				auto ppid       = std::stoi(request->data);
 				const auto* msg = request->payload;
 				auto len        = request->payloadLen;
 
@@ -298,9 +292,10 @@ namespace RTC
 			this->forceTriggerBufferedAmountLow = false;
 
 			// Notify the Node DataConsumer.
-			json data = json::object();
+			std::string data("{\"bufferedAmount\":\"");
 
-			data["bufferedAmount"] = this->bufferedAmount;
+			data.append(std::to_string(this->bufferedAmount));
+			data.append("\"}");
 
 			Channel::ChannelNotifier::Emit(this->id, "bufferedamountlow", data);
 		}
