@@ -19,6 +19,7 @@ import {
 } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, SctpStreamParameters } from './SctpParameters';
+import { AppData } from '.';
 
 export interface TransportListenIp
 {
@@ -108,7 +109,8 @@ export type TransportObserverEvents =
 const logger = new Logger('Transport');
 
 export class Transport<Events extends TransportEvents = TransportEvents,
-	ObserverEvents extends TransportObserverEvents = TransportObserverEvents>
+	ObserverEvents extends TransportObserverEvents = TransportObserverEvents,
+	TransportAppData extends AppData = AppData>
 	extends EnhancedEventEmitter<Events>
 {
 	// Internal data.
@@ -135,7 +137,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData: Record<string, unknown>;
+	readonly #appData: TransportAppData;
 
 	// Method to retrieve Router RTP capabilities.
 	readonly #getRouterRtpCapabilities: () => RtpCapabilities;
@@ -193,7 +195,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
+			appData?: TransportAppData;
 			getRouterRtpCapabilities: () => RtpCapabilities;
 			getProducerById: (producerId: string) => Producer;
 			getDataProducerById: (dataProducerId: string) => DataProducer;
@@ -208,7 +210,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		this.#data = data;
 		this.channel = channel;
 		this.payloadChannel = payloadChannel;
-		this.#appData = appData || {};
+		this.#appData = appData || {} as TransportAppData;
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
@@ -233,7 +235,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	/**
 	 * App custom data.
 	 */
-	get appData(): Record<string, unknown>
+	get appData(): TransportAppData
 	{
 		return this.#appData;
 	}
@@ -241,7 +243,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
+	set appData(appData: TransportAppData) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
@@ -507,7 +509,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	/**
 	 * Create a Producer.
 	 */
-	async produce(
+	async produce<ProducerAppData extends AppData = AppData>(
 		{
 			id = undefined,
 			kind,
@@ -515,8 +517,8 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			paused = false,
 			keyFrameRequestDelay,
 			appData
-		}: ProducerOptions
-	): Promise<Producer>
+		}: ProducerOptions<ProducerAppData>
+	): Promise<Producer<ProducerAppData>>
 	{
 		logger.debug('produce()');
 
@@ -616,7 +618,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	 *
 	 * @virtual
 	 */
-	async consume(
+	async consume<ConsumerAppData extends AppData = AppData>(
 		{
 			producerId,
 			rtpCapabilities,
@@ -626,8 +628,8 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			ignoreDtx = false,
 			pipe = false,
 			appData
-		}: ConsumerOptions
-	): Promise<Consumer>
+		}: ConsumerOptions<ConsumerAppData>
+	): Promise<Consumer<ConsumerAppData>>
 	{
 		logger.debug('consume()');
 
@@ -722,15 +724,15 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	/**
 	 * Create a DataProducer.
 	 */
-	async produceData(
+	async produceData<DataProducerAppData extends AppData = AppData>(
 		{
 			id = undefined,
 			sctpStreamParameters,
 			label = '',
 			protocol = '',
 			appData
-		}: DataProducerOptions = {}
-	): Promise<DataProducer>
+		}: DataProducerOptions<DataProducerAppData> = {}
+	): Promise<DataProducer<DataProducerAppData>>
 	{
 		logger.debug('produceData()');
 
@@ -800,15 +802,15 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	/**
 	 * Create a DataConsumer.
 	 */
-	async consumeData(
+	async consumeData<DataConsumerAppData extends AppData = AppData>(
 		{
 			dataProducerId,
 			ordered,
 			maxPacketLifeTime,
 			maxRetransmits,
 			appData
-		}: DataConsumerOptions
-	): Promise<DataConsumer>
+		}: DataConsumerOptions<DataConsumerAppData>
+	): Promise<DataConsumer<DataConsumerAppData>>
 	{
 		logger.debug('consumeData()');
 

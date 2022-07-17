@@ -1,8 +1,9 @@
 import { Logger } from './Logger';
 import { UnsupportedError } from './errors';
 import { Transport, TransportTraceEventData, TransportEvents, TransportObserverEvents } from './Transport';
+import { AppData } from '.';
 
-export type DirectTransportOptions =
+export type DirectTransportOptions<DirectTransportAppData> =
 {
 	/**
 	 * Maximum allowed size for direct messages sent from DataProducers.
@@ -13,7 +14,7 @@ export type DirectTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: DirectTransportAppData;
 }
 
 export type DirectTransportStat =
@@ -53,8 +54,8 @@ export type DirectTransportObserverEvents = TransportObserverEvents &
 
 const logger = new Logger('DirectTransport');
 
-export class DirectTransport extends
-	Transport<DirectTransportEvents, DirectTransportObserverEvents>
+export class DirectTransport <DirectTransportAppData extends AppData = AppData> extends
+	Transport<DirectTransportEvents, DirectTransportObserverEvents, DirectTransportAppData>
 {
 	// DirectTransport data.
 	readonly #data:

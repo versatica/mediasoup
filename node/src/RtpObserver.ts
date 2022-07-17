@@ -3,6 +3,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Producer } from './Producer';
+import { AppData } from '.';
 
 export type RtpObserverEvents =
 {
@@ -30,7 +31,8 @@ export type RtpObserverAddRemoveProducerOptions =
 	producerId: string;
 }
 
-export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
+export class RtpObserver
+	<E extends RtpObserverEvents = RtpObserverEvents, AppDataType extends AppData = AppData>
 	extends EnhancedEventEmitter<E>
 {
 	// Internal data.
@@ -53,7 +55,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	#paused = false;
 
 	// Custom app data.
-	readonly #appData: Record<string, unknown>;
+	readonly #appData: AppDataType;
 
 	// Method to retrieve a Producer.
 	protected readonly getProducerById: (producerId: string) => Producer;
@@ -77,7 +79,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 			internal: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
+			appData?: AppDataType;
 			getProducerById: (producerId: string) => Producer;
 		}
 	)
@@ -89,7 +91,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		this.internal = internal;
 		this.channel = channel;
 		this.payloadChannel = payloadChannel;
-		this.#appData = appData || {};
+		this.#appData = appData || {} as AppDataType;
 		this.getProducerById = getProducerById;
 	}
 
@@ -120,7 +122,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): Record<string, unknown>
+	get appData(): AppDataType
 	{
 		return this.#appData;
 	}
@@ -128,7 +130,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
+	set appData(appData: AppDataType) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}

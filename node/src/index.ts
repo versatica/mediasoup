@@ -38,7 +38,7 @@ export { observer };
 /**
  * Create a Worker.
  */
-export async function createWorker(
+export async function createWorker<WorkerAppData extends AppData = AppData>(
 	{
 		logLevel = 'error',
 		logTags,
@@ -47,8 +47,8 @@ export async function createWorker(
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
 		appData
-	}: WorkerSettings = {}
-): Promise<Worker>
+	}: WorkerSettings<WorkerAppData> = {}
+): Promise<Worker<WorkerAppData>>
 {
 	logger.debug('createWorker()');
 
@@ -86,4 +86,10 @@ export async function createWorker(
 export function getSupportedRtpCapabilities(): RtpCapabilities
 {
 	return utils.clone(supportedRtpCapabilities) as RtpCapabilities;
+}
+
+/* Helper type */
+
+export type AppData = {
+	[key: string]: unknown;
 }

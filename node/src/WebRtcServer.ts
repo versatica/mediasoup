@@ -3,6 +3,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { TransportProtocol } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';
+import { AppData } from '.';
 
 export interface WebRtcServerListenInfo
 {
@@ -28,7 +29,7 @@ export interface WebRtcServerListenInfo
 	port: number;
 }
 
-export type WebRtcServerOptions =
+export type WebRtcServerOptions<WebRtcServerAppData> =
 {
 	/**
 	 * Listen infos.
@@ -38,7 +39,7 @@ export type WebRtcServerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: WebRtcServerAppData;
 }
 
 export type WebRtcServerEvents =
@@ -57,7 +58,8 @@ export type WebRtcServerObserverEvents =
 
 const logger = new Logger('WebRtcServer');
 
-export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
+export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
+	extends EnhancedEventEmitter<WebRtcServerEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -72,7 +74,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData: Record<string, unknown>;
+	readonly #appData: WebRtcServerAppData;
 
 	// Transports map.
 	readonly #webRtcTransports: Map<string, WebRtcTransport> = new Map();
@@ -92,7 +94,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 		{
 			internal: any;
 			channel: Channel;
-			appData?: Record<string, unknown>;
+			appData?: WebRtcServerAppData;
 		}
 	)
 	{
@@ -102,7 +104,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 
 		this.#internal = internal;
 		this.#channel = channel;
-		this.#appData = appData || {};
+		this.#appData = appData || {} as WebRtcServerAppData;
 	}
 
 	/**
@@ -124,7 +126,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): Record<string, unknown>
+	get appData(): WebRtcServerAppData
 	{
 		return this.#appData;
 	}
@@ -132,7 +134,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
+	set appData(appData: WebRtcServerAppData) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}

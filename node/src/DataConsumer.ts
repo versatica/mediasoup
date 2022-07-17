@@ -3,8 +3,9 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { SctpStreamParameters } from './SctpParameters';
+import { AppData } from '.';
 
-export type DataConsumerOptions =
+export type DataConsumerOptions<DataConsumerAppData> =
 {
 	/**
 	 * The id of the DataProducer to consume.
@@ -38,7 +39,7 @@ export type DataConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: DataConsumerAppData;
 }
 
 export type DataConsumerStat =
@@ -76,7 +77,8 @@ export type DataConsumerObserverEvents =
 
 const logger = new Logger('DataConsumer');
 
-export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
+export class DataConsumer <DataConsumerAppData extends AppData = AppData>
+	extends EnhancedEventEmitter<DataConsumerEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -106,7 +108,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData: Record<string, unknown>;
+	readonly #appData: DataConsumerAppData;
 
 	// Observer instance.
 	readonly #observer = new EnhancedEventEmitter<DataConsumerObserverEvents>();
@@ -127,7 +129,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
+			appData?: DataConsumerAppData;
 		}
 	)
 	{
@@ -139,7 +141,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData || {};
+		this.#appData = appData || {} as DataConsumerAppData;
 
 		this.handleWorkerNotifications();
 	}
@@ -203,7 +205,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): Record<string, unknown>
+	get appData(): DataConsumerAppData
 	{
 		return this.#appData;
 	}
@@ -211,7 +213,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
+	set appData(appData: DataConsumerAppData) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}

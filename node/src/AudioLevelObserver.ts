@@ -2,8 +2,9 @@ import { Logger } from './Logger';
 import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
 import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { AppData } from '.';
 
-export interface AudioLevelObserverOptions
+export interface AudioLevelObserverOptions<AudioLevelObserverAppData>
 {
 	/**
 	 * Maximum number of entries in the 'volumes”' event. Default 1.
@@ -24,7 +25,7 @@ export interface AudioLevelObserverOptions
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: AudioLevelObserverAppData;
 }
 
 export interface AudioLevelObserverVolume
@@ -55,7 +56,8 @@ export type AudioLevelObserverObserverEvents = RtpObserverObserverEvents &
 
 const logger = new Logger('AudioLevelObserver');
 
-export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
+export class AudioLevelObserver<AudioLevelObserverAppData extends AppData = AppData>
+	extends RtpObserver<AudioLevelObserverEvents, AudioLevelObserverAppData>
 {
 	/**
 	 * @private

@@ -13,8 +13,9 @@ import {
 import { Consumer } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
+import { AppData } from '.';
 
-export type PipeTransportOptions =
+export type PipeTransportOptions<PipeTransportAppData> =
 {
 	/**
 	 * Listening IP address.
@@ -66,7 +67,7 @@ export type PipeTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: PipeTransportAppData;
 }
 
 export type PipeTransportStat =
@@ -97,7 +98,7 @@ export type PipeTransportStat =
 	tuple: TransportTuple;
 }
 
-export type PipeConsumerOptions =
+export type PipeConsumerOptions<PipeConsumerAppData> =
 {
 	/**
 	 * The id of the Producer to consume.
@@ -107,7 +108,7 @@ export type PipeConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: PipeConsumerAppData;
 }
 
 export type PipeTransportEvents = TransportEvents &
@@ -122,8 +123,9 @@ export type PipeTransportObserverEvents = TransportObserverEvents &
 
 const logger = new Logger('PipeTransport');
 
-export class PipeTransport
-	extends Transport<PipeTransportEvents, PipeTransportObserverEvents>
+export class PipeTransport<PipeTransportAppData extends AppData = AppData>
+	extends Transport
+	<PipeTransportEvents, PipeTransportObserverEvents, PipeTransportAppData>
 {
 	// PipeTransport data.
 	readonly #data:
@@ -269,7 +271,8 @@ export class PipeTransport
 	 *
 	 * @override
 	 */
-	async consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>
+	async consume<PipeConsumerAppData extends AppData = AppData>({ producerId, appData }:
+		PipeConsumerOptions<PipeConsumerAppData>): Promise<Consumer<PipeConsumerAppData>>
 	{
 		logger.debug('consume()');
 
@@ -308,7 +311,7 @@ export class PipeTransport
 			type : 'pipe'
 		};
 
-		const consumer = new Consumer(
+		const consumer = new Consumer<PipeConsumerAppData>(
 			{
 				internal,
 				data,

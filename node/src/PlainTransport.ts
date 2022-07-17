@@ -10,8 +10,9 @@ import {
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
+import { AppData } from '.';
 
-export type PlainTransportOptions =
+export type PlainTransportOptions<PlainTransportAppData> =
 {
 	/**
 	 * Listening IP address.
@@ -74,13 +75,13 @@ export type PlainTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: PlainTransportAppData;
 }
 
 /**
  * DEPRECATED: Use PlainTransportOptions.
  */
-export type PlainRtpTransportOptions = PlainTransportOptions;
+export type PlainRtpTransportOptions<T> = PlainTransportOptions<T>;
 
 export type PlainTransportStat =
 {
@@ -134,8 +135,8 @@ export type PlainTransportObserverEvents = TransportObserverEvents &
 
 const logger = new Logger('PlainTransport');
 
-export class PlainTransport extends
-	Transport<PlainTransportEvents, PlainTransportObserverEvents>
+export class PlainTransport<PlainTransportAppData extends AppData = AppData> extends
+	Transport<PlainTransportEvents, PlainTransportObserverEvents, PlainTransportAppData>
 {
 	// PlainTransport data.
 	readonly #data:

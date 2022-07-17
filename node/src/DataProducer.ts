@@ -3,8 +3,9 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { SctpStreamParameters } from './SctpParameters';
+import { AppData } from '.';
 
-export type DataProducerOptions =
+export type DataProducerOptions<DataProducerAppData> =
 {
 	/**
 	 * DataProducer id (just for Router.pipeToRouter() method).
@@ -30,7 +31,7 @@ export type DataProducerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: DataProducerAppData;
 }
 
 export type DataProducerStat =
@@ -62,7 +63,8 @@ export type DataProducerObserverEvents =
 
 const logger = new Logger('DataProducer');
 
-export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
+export class DataProducer <DataProducerAppData extends AppData = AppData>
+	extends EnhancedEventEmitter<DataProducerEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -91,7 +93,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData: Record<string, unknown>;
+	readonly #appData: DataProducerAppData;
 
 	// Observer instance.
 	readonly #observer = new EnhancedEventEmitter<DataProducerObserverEvents>();
@@ -112,7 +114,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
+			appData?: DataProducerAppData;
 		}
 	)
 	{
@@ -124,7 +126,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData || {};
+		this.#appData = appData || {} as DataProducerAppData;
 
 		this.handleWorkerNotifications();
 	}
@@ -180,7 +182,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): Record<string, unknown>
+	get appData(): DataProducerAppData
 	{
 		return this.#appData;
 	}
@@ -188,7 +190,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
+	set appData(appData: DataProducerAppData) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}

@@ -2,15 +2,16 @@ import { Logger } from './Logger';
 import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
 import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { AppData } from '.';
 
-export interface ActiveSpeakerObserverOptions 
+export interface ActiveSpeakerObserverOptions<ActiveSpeakerObserverAppData>
 {
 	interval?: number;
 
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: ActiveSpeakerObserverAppData;
 }
 
 export interface ActiveSpeakerObserverActivity 
@@ -33,7 +34,8 @@ export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents &
 
 const logger = new Logger('ActiveSpeakerObserver');
 
-export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEvents>
+export class ActiveSpeakerObserver<ActiveSpeakerObserverAppData extends AppData = AppData>
+	extends RtpObserver<ActiveSpeakerObserverEvents, ActiveSpeakerObserverAppData>
 {
 	/**
 	 * @private

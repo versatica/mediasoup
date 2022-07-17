@@ -3,8 +3,9 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { MediaKind, RtpParameters } from './RtpParameters';
+import { AppData } from '.';
 
-export type ProducerOptions =
+export type ProducerOptions<ProducerAppData> =
 {
 	/**
 	 * Producer id (just for Router.pipeToRouter() method).
@@ -35,7 +36,7 @@ export type ProducerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: ProducerAppData;
 }
 
 /**
@@ -162,7 +163,8 @@ export type ProducerObserverEvents =
 
 const logger = new Logger('Producer');
 
-export class Producer extends EnhancedEventEmitter<ProducerEvents>
+export class Producer<ProducerAppData extends AppData = AppData>
+	extends EnhancedEventEmitter<ProducerEvents>
 {
 	// Internal data.
 	readonly #internal:
@@ -191,7 +193,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData: Record<string, unknown>;
+	readonly #appData: ProducerAppData;
 
 	// Paused flag.
 	#paused = false;
@@ -219,7 +221,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
+			appData?: ProducerAppData;
 			paused: boolean;
 		}
 	)
@@ -232,7 +234,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData || {};
+		this.#appData = appData || {} as ProducerAppData;
 		this.#paused = paused;
 
 		this.handleWorkerNotifications();
@@ -307,7 +309,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): Record<string, unknown>
+	get appData(): ProducerAppData
 	{
 		return this.#appData;
 	}
@@ -315,7 +317,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
+	set appData(appData: ProducerAppData) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}

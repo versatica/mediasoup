@@ -12,6 +12,7 @@ import {
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { Either } from './utils';
+import { AppData } from '.';
 
 export type WebRtcTransportListenIndividual =
 {
@@ -39,7 +40,7 @@ export type WebRtcTransportListenServer =
 export type WebRtcTransportListen =
 	Either<WebRtcTransportListenIndividual, WebRtcTransportListenServer>;
 
-export type WebRtcTransportOptionsBase =
+export type WebRtcTransportOptionsBase<WebRtcTransportAppData> =
 {
 	/**
 	 * Listen in UDP. Default true.
@@ -91,10 +92,11 @@ export type WebRtcTransportOptionsBase =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: WebRtcTransportAppData;
 }
 
-export type WebRtcTransportOptions = WebRtcTransportOptionsBase & WebRtcTransportListen;
+export type WebRtcTransportOptions<WebRtcTransportAppData> =
+	WebRtcTransportOptionsBase<WebRtcTransportAppData> & WebRtcTransportListen;
 
 export type IceParameters =
 {
@@ -187,8 +189,8 @@ export type WebRtcTransportObserverEvents = TransportObserverEvents &
 
 const logger = new Logger('WebRtcTransport');
 
-export class WebRtcTransport extends
-	Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents>
+export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData> extends
+	Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents, WebRtcTransportAppData>
 {
 	// WebRtcTransport data.
 	readonly #data:
