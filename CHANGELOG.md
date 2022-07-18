@@ -1,9 +1,11 @@
 # Changelog
 
 
-### NEXT
+### 3.10.4
 
 * Do not clone RTP packets if not needed (PR #850).
+* Fix DTLS related crash (PR #867).
+* Update NPM deps. 
 
 
 ### 3.10.3
