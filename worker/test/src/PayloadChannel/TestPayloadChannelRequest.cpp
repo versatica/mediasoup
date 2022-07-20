@@ -6,21 +6,21 @@ SCENARIO("ChannelRequest", "[channel][request]")
 {
 	SECTION("notification")
 	{
-		char foo[]{"n:abcd"};
+		char foo[]{ "n:abcd" };
 
 		REQUIRE(PayloadChannel::PayloadChannelRequest::IsRequest(foo, sizeof(foo)) == false);
 	}
 
 	SECTION("request")
 	{
-		char foo[]{"r:abcd"};
+		char foo[]{ "r:abcd" };
 
 		REQUIRE(PayloadChannel::PayloadChannelRequest::IsRequest(foo, sizeof(foo)) == true);
 	}
 
 	SECTION("non request")
 	{
-		char foo[]{"abcd"};
+		char foo[]{ "abcd" };
 
 		REQUIRE(PayloadChannel::PayloadChannelRequest::IsRequest(foo, sizeof(foo)) == false);
 	}
