@@ -65,7 +65,10 @@ export declare class DataConsumer extends EnhancedEventEmitter<DataConsumerEvent
      * @private
      */
     constructor({ internal, data, channel, payloadChannel, appData }: {
-        internal: any;
+        internal: {
+            parentInternal: string;
+            dataConsumerId: string;
+        };
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;

@@ -253,7 +253,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			preferredLayers
 		}:
 		{
-			internal: any;
+			internal: { parentInternal: string; consumerId: string };
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;

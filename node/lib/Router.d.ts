@@ -95,7 +95,9 @@ export declare class Router extends EnhancedEventEmitter<RouterEvents> {
      * @private
      */
     constructor({ internal, data, channel, payloadChannel, appData }: {
-        internal: any;
+        internal: {
+            routerId: string;
+        };
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;

@@ -31,7 +31,10 @@ export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents
      * @interface
      */
     constructor({ internal, channel, payloadChannel, appData, getProducerById }: {
-        internal: any;
+        internal: {
+            parentInternal: string;
+            rtpObserverId: string;
+        };
         channel: Channel;
         payloadChannel: PayloadChannel;
         appData?: Record<string, unknown>;

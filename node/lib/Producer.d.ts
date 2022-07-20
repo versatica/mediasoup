@@ -134,7 +134,10 @@ export declare class Producer extends EnhancedEventEmitter<ProducerEvents> {
      * @private
      */
     constructor({ internal, data, channel, payloadChannel, appData, paused }: {
-        internal: any;
+        internal: {
+            parentInternal: string;
+            producerId: string;
+        };
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;

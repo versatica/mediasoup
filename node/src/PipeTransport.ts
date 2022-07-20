@@ -287,7 +287,7 @@ export class PipeTransport
 		const rtpParameters = ortc.getPipeConsumerRtpParameters(
 			producer.consumableRtpParameters, this.#data.rtx);
 
-		const internal = { transportId: this.transportId, consumerId: uuidv4() };
+		const internal = { parentInternal: this.internal, consumerId: uuidv4() };
 		const reqData =
 		{
 			producerId,

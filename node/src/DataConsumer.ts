@@ -121,7 +121,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			appData
 		}:
 		{
-			internal: any;
+			internal: { parentInternal: string; dataConsumerId: string };
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;

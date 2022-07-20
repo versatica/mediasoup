@@ -106,7 +106,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 			appData
 		}:
 		{
-			internal: any;
+			internal: { parentInternal: string; dataProducerId: string };
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;

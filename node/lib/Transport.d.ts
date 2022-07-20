@@ -89,7 +89,10 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      * @interface
      */
     constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
-        internal: any;
+        internal: {
+            parentInternal: string;
+            transportId: string;
+        };
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;

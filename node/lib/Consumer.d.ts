@@ -155,7 +155,10 @@ export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
      * @private
      */
     constructor({ internal, data, channel, payloadChannel, appData, paused, producerPaused, score, preferredLayers }: {
-        internal: any;
+        internal: {
+            parentInternal: string;
+            consumerId: string;
+        };
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;

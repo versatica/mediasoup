@@ -51,7 +51,10 @@ export declare class DataProducer extends EnhancedEventEmitter<DataProducerEvent
      * @private
      */
     constructor({ internal, data, channel, payloadChannel, appData }: {
-        internal: any;
+        internal: {
+            parentInternal: string;
+            dataProducerId: string;
+        };
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;

@@ -113,7 +113,7 @@ class PipeTransport extends Transport_1.Transport {
             throw Error(`Producer with id "${producerId}" not found`);
         // This may throw.
         const rtpParameters = ortc.getPipeConsumerRtpParameters(producer.consumableRtpParameters, this.#data.rtx);
-        const internal = { transportId: this.transportId, consumerId: (0, uuid_1.v4)() };
+        const internal = { parentInternal: this.internal, consumerId: (0, uuid_1.v4)() };
         const reqData = {
             producerId,
             kind: producer.kind,

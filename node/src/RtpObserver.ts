@@ -73,7 +73,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 			getProducerById
 		}:
 		{
-			internal: any;
+			internal: { parentInternal: string; rtpObserverId: string };
 			channel: Channel;
 			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;

@@ -213,7 +213,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			paused
 		}:
 		{
-			internal: any;
+			internal: { parentInternal: string; producerId: string };
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;

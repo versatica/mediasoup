@@ -187,7 +187,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			getDataProducerById
 		}:
 		{
-			internal: any;
+			internal: { parentInternal: string; transportId: string };
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
