@@ -366,7 +366,7 @@ namespace PayloadChannel
 
 		if (!this->ongoingNotification && !this->ongoingRequest)
 		{
-			if (PayloadChannelRequest::IsRequest(msg))
+			if (PayloadChannelRequest::IsRequest(msg, msgLen))
 			{
 				try
 				{
@@ -381,7 +381,7 @@ namespace PayloadChannel
 					MS_ERROR("discarding wrong Payload Channel request: %s", error.what());
 				}
 			}
-			else if (Notification::IsNotification(msg))
+			else if (Notification::IsNotification(msg, msgLen))
 			{
 				try
 				{

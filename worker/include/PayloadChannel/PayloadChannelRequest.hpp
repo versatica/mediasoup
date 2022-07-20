@@ -23,7 +23,7 @@ namespace PayloadChannel
 		};
 
 	public:
-		static bool IsRequest(const char* msg);
+		static bool IsRequest(const char* msg, size_t msgLen);
 
 	private:
 		static absl::flat_hash_map<std::string, MethodId> string2MethodId;

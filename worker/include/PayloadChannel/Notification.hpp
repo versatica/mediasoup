@@ -18,7 +18,7 @@ namespace PayloadChannel
 		};
 
 	public:
-		static bool IsNotification(const char* jsonNotification);
+		static bool IsNotification(const char* msg, size_t msgLen);
 
 	private:
 		static absl::flat_hash_map<std::string, EventId> string2EventId;

@@ -27,11 +27,11 @@ namespace PayloadChannel
 	/*
 	 * msg notification starts with "n:"
 	 */
-	bool Notification::IsNotification(const char* msg)
+	bool Notification::IsNotification(const char* msg, size_t msgLen)
 	{
 		MS_TRACE();
 
-		return (msg[0] == 'n' && msg[1] == ':');
+		return (msgLen > 2 && msg[0] == 'n' && msg[1] == ':');
 	}
 
 	/* Instance methods. */

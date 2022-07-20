@@ -280,6 +280,8 @@ mediasoup_worker_test = executable(
   ],
   sources: common_sources + [
     'test/src/tests.cpp',
+    'test/src/PayloadChannel/TestPayloadChannelRequest.cpp',
+    'test/src/PayloadChannel/TestNotification.cpp',
     'test/src/RTC/TestKeyFrameRequestManager.cpp',
     'test/src/RTC/TestNackGenerator.cpp',
     'test/src/RTC/TestRateCalculator.cpp',

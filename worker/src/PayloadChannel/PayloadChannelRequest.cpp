@@ -23,11 +23,11 @@ namespace PayloadChannel
 	/*
 	 * msg request starts with "r:"
 	 */
-	bool PayloadChannelRequest::IsRequest(const char* msg)
+	bool PayloadChannelRequest::IsRequest(const char* msg, size_t msgLen)
 	{
 		MS_TRACE();
 
-		return (msg[0] == 'r' && msg[1] == ':');
+		return (msgLen > 2 && msg[0] == 'r' && msg[1] == ':');
 	}
 
 	/* Instance methods. */
