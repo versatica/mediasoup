@@ -122,12 +122,11 @@ const logger = new Logger('Router');
 
 export class Router extends EnhancedEventEmitter<RouterEvents>
 {
+	// Router id.
+	readonly #routerId: string;
+
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		string: string;
-	};
+	readonly #internal: string;
 
 	// Router data.
 	readonly #data:
@@ -191,13 +190,12 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		logger.debug('constructor()');
 
-		this.#internal = internal;
+		this.#routerId = internal.routerId;
+		this.#internal = internal.routerId;
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {};
-
-		this.#internal.string = this.#internal.routerId;
 	}
 
 	/**
@@ -205,7 +203,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	 */
 	get id(): string
 	{
-		return this.#internal.routerId;
+		return this.#routerId;
 	}
 
 	/**
@@ -269,7 +267,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#closed = true;
 
-		this.#channel.request('router.close', this.#internal.string)
+		this.#channel.request('router.close', this.#internal)
 			.catch(() => {});
 
 		// Close every Transport.
@@ -345,7 +343,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('router.dump', this.#internal.string);
+		return this.#channel.request('router.dump', this.#internal);
 	}
 
 	/**
@@ -400,8 +398,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const internal =
 		{
-			...this.#internal,
-			transportId : uuidv4()
+			parentInternal : this.#internal,
+			transportId    : uuidv4()
 		};
 
 		const reqData =
@@ -422,8 +420,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		};
 
 		const data = webRtcServer
-			? await this.#channel.request('router.createWebRtcTransportWithServer', `${this.#internal.string},${internal.transportId}`, reqData)
-			: await this.#channel.request('router.createWebRtcTransport', `${this.#internal.string},${internal.transportId}`, reqData);
+			? await this.#channel.request('router.createWebRtcTransportWithServer', `${this.#internal},${internal.transportId}`, reqData)
+			: await this.#channel.request('router.createWebRtcTransport', `${this.#internal},${internal.transportId}`, reqData);
 
 		const transport = new WebRtcTransport(
 			{
@@ -505,7 +503,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			throw new TypeError('wrong listenIp');
 		}
 
-		const internal = { ...this.#internal, transportId: uuidv4() };
+		const internal = { parentInternal: this.#internal, transportId: uuidv4() };
 		const reqData = {
 			listenIp,
 			port,
@@ -521,7 +519,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		};
 
 		const data =
-			await this.#channel.request('router.createPlainTransport', `${this.#internal.string},${internal.transportId}`, reqData);
+			await this.#channel.request('router.createPlainTransport', `${this.#internal},${internal.transportId}`, reqData);
 
 		const transport = new PlainTransport(
 			{
@@ -598,7 +596,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			throw new TypeError('wrong listenIp');
 		}
 
-		const internal = { ...this.#internal, transportId: uuidv4() };
+		const internal = { parentInternal: this.#internal, transportId: uuidv4() };
 		const reqData = {
 			listenIp,
 			port,
@@ -612,7 +610,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		};
 
 		const data =
-			await this.#channel.request('router.createPipeTransport', `${this.#internal.string},${internal.transportId}`, reqData);
+			await this.#channel.request('router.createPipeTransport', `${this.#internal},${internal.transportId}`, reqData);
 
 		const transport = new PipeTransport(
 			{
@@ -663,11 +661,11 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	{
 		logger.debug('createDirectTransport()');
 
-		const internal = { ...this.#internal, transportId: uuidv4() };
+		const internal = { parentInternal: this.#internal, transportId: uuidv4() };
 		const reqData = { direct: true, maxMessageSize };
 
 		const data =
-			await this.#channel.request('router.createDirectTransport', `${this.#internal.string},${internal.transportId}`, reqData);
+			await this.#channel.request('router.createDirectTransport', `${this.#internal},${internal.transportId}`, reqData);
 
 		const transport = new DirectTransport(
 			{
@@ -1006,11 +1004,11 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
-		
-		const internal = { ...this.#internal, rtpObserverId: uuidv4() };
+
+		const internal = { parentInternal: this.#internal, rtpObserverId: uuidv4() };
 		const reqData = { interval };
 
-		await this.#channel.request('router.createActiveSpeakerObserver', `${this.#internal.string},${internal.rtpObserverId}`, reqData);
+		await this.#channel.request('router.createActiveSpeakerObserver', `${this.#internal},${internal.rtpObserverId}`, reqData);
 
 		const activeSpeakerObserver = new ActiveSpeakerObserver(
 			{
@@ -1022,7 +1020,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 					this.#producers.get(producerId)
 				)
 			});
-		
+
 		this.#rtpObservers.set(activeSpeakerObserver.id, activeSpeakerObserver);
 		activeSpeakerObserver.on('@close', () =>
 		{
@@ -1052,10 +1050,10 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		const internal = { ...this.#internal, rtpObserverId: uuidv4() };
+		const internal = { parentInternal: this.#internal, rtpObserverId: uuidv4() };
 		const reqData = { maxEntries, threshold, interval };
 
-		await this.#channel.request('router.createAudioLevelObserver', `${this.#internal.string},${internal.rtpObserverId}`, reqData);
+		await this.#channel.request('router.createAudioLevelObserver', `${this.#internal},${internal.rtpObserverId}`, reqData);
 
 		const audioLevelObserver = new AudioLevelObserver(
 			{

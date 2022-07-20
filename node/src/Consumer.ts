@@ -189,14 +189,11 @@ const logger = new Logger('Consumer');
 
 export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 {
+	// Consumer id.
+	#consumerId: string;
+
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		consumerId: string;
-		string: string;
-	};
+	readonly #internal: string;
 
 	// Consumer data.
 	readonly #data:
@@ -271,7 +268,8 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		logger.debug('constructor()');
 
-		this.#internal = internal;
+		this.#consumerId = internal.consumerId;
+		this.#internal = `${internal.parentInternal},${internal.consumerId}`;
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
@@ -281,8 +279,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		this.#score = score;
 		this.#preferredLayers = preferredLayers;
 
-		this.#internal.string = `${this.#internal.routerId},${this.#internal.transportId},${this.#internal.consumerId}`;
-
 		this.handleWorkerNotifications();
 	}
 
@@ -291,7 +287,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	 */
 	get id(): string
 	{
-		return this.#internal.consumerId;
+		return this.#consumerId;
 	}
 
 	/**
@@ -428,10 +424,10 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this.#channel.removeAllListeners(this.#internal.consumerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
+		this.#channel.removeAllListeners(this.#consumerId);
+		this.#payloadChannel.removeAllListeners(this.#consumerId);
 
-		this.#channel.request('consumer.close', this.#internal.string)
+		this.#channel.request('consumer.close', this.#internal)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -455,8 +451,8 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this.#channel.removeAllListeners(this.#internal.consumerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
+		this.#channel.removeAllListeners(this.#consumerId);
+		this.#payloadChannel.removeAllListeners(this.#consumerId);
 
 		this.safeEmit('transportclose');
 
@@ -471,7 +467,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('consumer.dump', this.#internal.string);
+		return this.#channel.request('consumer.dump', this.#internal);
 	}
 
 	/**
@@ -481,7 +477,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('consumer.getStats', this.#internal.string);
+		return this.#channel.request('consumer.getStats', this.#internal);
 	}
 
 	/**
@@ -493,7 +489,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		const wasPaused = this.#paused || this.#producerPaused;
 
-		await this.#channel.request('consumer.pause', this.#internal.string);
+		await this.#channel.request('consumer.pause', this.#internal);
 
 		this.#paused = true;
 
@@ -511,7 +507,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		const wasPaused = this.#paused || this.#producerPaused;
 
-		await this.#channel.request('consumer.resume', this.#internal.string);
+		await this.#channel.request('consumer.resume', this.#internal);
 
 		this.#paused = false;
 
@@ -535,7 +531,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		const reqData = { spatialLayer, temporalLayer };
 
 		const data = await this.#channel.request(
-			'consumer.setPreferredLayers', this.#internal.string, reqData);
+			'consumer.setPreferredLayers', this.#internal, reqData);
 
 		this.#preferredLayers = data || undefined;
 	}
@@ -550,7 +546,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		const reqData = { priority };
 
 		const data = await this.#channel.request(
-			'consumer.setPriority', this.#internal.string, reqData);
+			'consumer.setPriority', this.#internal, reqData);
 
 		this.#priority = data.priority;
 	}
@@ -565,7 +561,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		const reqData = { priority: 1 };
 
 		const data = await this.#channel.request(
-			'consumer.setPriority', this.#internal.string, reqData);
+			'consumer.setPriority', this.#internal, reqData);
 
 		this.#priority = data.priority;
 	}
@@ -577,7 +573,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('requestKeyFrame()');
 
-		await this.#channel.request('consumer.requestKeyFrame', this.#internal.string);
+		await this.#channel.request('consumer.requestKeyFrame', this.#internal);
 	}
 
 	/**
@@ -590,12 +586,12 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		const reqData = { types };
 
 		await this.#channel.request(
-			'consumer.enableTraceEvent', this.#internal.string, reqData);
+			'consumer.enableTraceEvent', this.#internal, reqData);
 	}
 
 	private handleWorkerNotifications(): void
 	{
-		this.#channel.on(this.#internal.consumerId, (event: string, data?: any) =>
+		this.#channel.on(this.#consumerId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{
@@ -607,8 +603,8 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 					this.#closed = true;
 
 					// Remove notification subscriptions.
-					this.#channel.removeAllListeners(this.#internal.consumerId);
-					this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
+					this.#channel.removeAllListeners(this.#consumerId);
+					this.#payloadChannel.removeAllListeners(this.#consumerId);
 
 					this.emit('@producerclose');
 					this.safeEmit('producerclose');
@@ -703,7 +699,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		});
 
 		this.#payloadChannel.on(
-			this.#internal.consumerId,
+			this.#consumerId,
 			(event: string, data: any | undefined, payload: Buffer) =>
 			{
 				switch (event)

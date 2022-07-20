@@ -59,12 +59,11 @@ const logger = new Logger('WebRtcServer');
 
 export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 {
+	// WebRtcServer id.
+	readonly #webRtcServerId: string;
+
 	// Internal data.
-	readonly #internal:
-	{
-		webRtcServerId: string;
-		string: string;
-	};
+	readonly #internal: string;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -101,11 +100,10 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 
 		logger.debug('constructor()');
 
-		this.#internal = internal;
+		this.#webRtcServerId = internal.webRtcServerId;
+		this.#internal = internal.webRtcServerId;
 		this.#channel = channel;
 		this.#appData = appData || {};
-
-		this.#internal.string = `${this.#internal.webRtcServerId}`;
 	}
 
 	/**
@@ -113,7 +111,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	 */
 	get id(): string
 	{
-		return this.#internal.webRtcServerId;
+		return this.#webRtcServerId;
 	}
 
 	/**
@@ -169,7 +167,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 
 		this.#closed = true;
 
-		this.#channel.request('webRtcServer.close', this.#internal.string)
+		this.#channel.request('webRtcServer.close', this.#internal)
 			.catch(() => {});
 
 		// Close every WebRtcTransport.
@@ -219,7 +217,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('webRtcServer.dump', this.#internal.string);
+		return this.#channel.request('webRtcServer.dump', this.#internal);
 	}
 
 	/**

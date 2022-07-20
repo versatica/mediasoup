@@ -77,7 +77,7 @@ export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.rtpObserverId, (event: string, data?: any) =>
+		this.channel.on(this.rtpObserverId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{

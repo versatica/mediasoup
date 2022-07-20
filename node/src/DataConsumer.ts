@@ -78,14 +78,11 @@ const logger = new Logger('DataConsumer');
 
 export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 {
+	// DataConsumer id.
+	readonly #dataConsumerId: string;
+
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		dataConsumerId: string;
-		string: string;
-	};
+	readonly #internal: string;
 
 	// DataConsumer data.
 	readonly #data:
@@ -136,13 +133,12 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 
 		logger.debug('constructor()');
 
-		this.#internal = internal;
+		this.#dataConsumerId = internal.dataConsumerId;
+		this.#internal = `${internal.parentInternal},${internal.dataConsumerId}`;
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {};
-
-		this.#internal.string = `${this.#internal.routerId},${this.#internal.transportId},${this.#internal.dataConsumerId}`;
 
 		this.handleWorkerNotifications();
 	}
@@ -152,7 +148,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	 */
 	get id(): string
 	{
-		return this.#internal.dataConsumerId;
+		return this.#dataConsumerId;
 	}
 
 	/**
@@ -240,10 +236,10 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this.#channel.removeAllListeners(this.#internal.dataConsumerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
+		this.#channel.removeAllListeners(this.#dataConsumerId);
+		this.#payloadChannel.removeAllListeners(this.#dataConsumerId);
 
-		this.#channel.request('dataConsumer.close', this.#internal.string)
+		this.#channel.request('dataConsumer.close', this.#internal)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -267,8 +263,8 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this.#channel.removeAllListeners(this.#internal.dataConsumerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
+		this.#channel.removeAllListeners(this.#dataConsumerId);
+		this.#payloadChannel.removeAllListeners(this.#dataConsumerId);
 
 		this.safeEmit('transportclose');
 
@@ -283,7 +279,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('dataConsumer.dump', this.#internal.string);
+		return this.#channel.request('dataConsumer.dump', this.#internal);
 	}
 
 	/**
@@ -293,7 +289,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('dataConsumer.getStats', this.#internal.string);
+		return this.#channel.request('dataConsumer.getStats', this.#internal);
 	}
 
 	/**
@@ -306,7 +302,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		const reqData = { threshold };
 
 		await this.#channel.request(
-			'dataConsumer.setBufferedAmountLowThreshold', this.#internal.string, reqData);
+			'dataConsumer.setBufferedAmountLowThreshold', this.#internal, reqData);
 	}
 
 	/**
@@ -351,7 +347,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		const requestData = String(ppid);
 
 		await this.#payloadChannel.request(
-			'dataConsumer.send', this.#internal.string, requestData, message);
+			'dataConsumer.send', this.#internal, requestData, message);
 	}
 
 	/**
@@ -362,14 +358,14 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		logger.debug('getBufferedAmount()');
 
 		const { bufferedAmount } =
-			await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal.string);
+			await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal);
 
 		return bufferedAmount;
 	}
 
 	private handleWorkerNotifications(): void
 	{
-		this.#channel.on(this.#internal.dataConsumerId, (event: string, data: any) =>
+		this.#channel.on(this.#dataConsumerId, (event: string, data: any) =>
 		{
 			switch (event)
 			{
@@ -381,8 +377,8 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 					this.#closed = true;
 
 					// Remove notification subscriptions.
-					this.#channel.removeAllListeners(this.#internal.dataConsumerId);
-					this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
+					this.#channel.removeAllListeners(this.#dataConsumerId);
+					this.#payloadChannel.removeAllListeners(this.#dataConsumerId);
 
 					this.emit('@dataproducerclose');
 					this.safeEmit('dataproducerclose');
@@ -417,7 +413,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		});
 
 		this.#payloadChannel.on(
-			this.#internal.dataConsumerId,
+			this.#dataConsumerId,
 			(event: string, data: any | undefined, payload: Buffer) =>
 			{
 				switch (event)

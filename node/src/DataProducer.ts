@@ -64,14 +64,11 @@ const logger = new Logger('DataProducer');
 
 export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 {
+	// DataProducer id.
+	readonly #dataProducerId: string;
+
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		dataProducerId: string;
-		string: string;
-	};
+	readonly #internal: string;
 
 	// DataProducer data.
 	readonly #data:
@@ -121,13 +118,12 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 
 		logger.debug('constructor()');
 
-		this.#internal = internal;
+		this.#dataProducerId = internal.dataProducerId;
+		this.#internal = `${internal.parentInternal},${internal.dataProducerId}`;
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {};
-
-		this.#internal.string = `${this.#internal.routerId},${this.#internal.transportId},${this.#internal.dataProducerId}`;
 
 		this.handleWorkerNotifications();
 	}
@@ -137,7 +133,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	 */
 	get id(): string
 	{
-		return this.#internal.dataProducerId;
+		return this.#dataProducerId;
 	}
 
 	/**
@@ -217,10 +213,10 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this.#channel.removeAllListeners(this.#internal.dataProducerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
+		this.#channel.removeAllListeners(this.#dataProducerId);
+		this.#payloadChannel.removeAllListeners(this.#dataProducerId);
 
-		this.#channel.request('dataProducer.close', this.#internal.string)
+		this.#channel.request('dataProducer.close', this.#internal)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -244,8 +240,8 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this.#channel.removeAllListeners(this.#internal.dataProducerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
+		this.#channel.removeAllListeners(this.#dataProducerId);
+		this.#payloadChannel.removeAllListeners(this.#dataProducerId);
 
 		this.safeEmit('transportclose');
 
@@ -260,7 +256,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('dataProducer.dump', this.#internal.string);
+		return this.#channel.request('dataProducer.dump', this.#internal);
 	}
 
 	/**
@@ -270,7 +266,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('dataProducer.getStats', this.#internal.string);
+		return this.#channel.request('dataProducer.getStats', this.#internal);
 	}
 
 	/**
@@ -315,7 +311,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		const notifData = String(ppid);
 
 		this.#payloadChannel.notify(
-			'dataProducer.send', this.#internal.string, notifData, message);
+			'dataProducer.send', this.#internal, notifData, message);
 	}
 
 	private handleWorkerNotifications(): void

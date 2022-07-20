@@ -21,11 +21,8 @@ export declare type RtpObserverAddRemoveProducerOptions = {
 };
 export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents> extends EnhancedEventEmitter<E> {
     #private;
-    protected readonly internal: {
-        routerId: string;
-        rtpObserverId: string;
-        string: string;
-    };
+    protected rtpObserverId: string;
+    protected readonly internal: string;
     protected readonly channel: Channel;
     protected readonly payloadChannel: PayloadChannel;
     protected readonly getProducerById: (producerId: string) => Producer;

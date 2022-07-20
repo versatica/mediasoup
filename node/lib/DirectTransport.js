@@ -48,7 +48,7 @@ class DirectTransport extends Transport_1.Transport {
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.channel.request('transport.getStats', this.internal.string);
+        return this.channel.request('transport.getStats', this.internal);
     }
     /**
      * NO-OP method in DirectTransport.
@@ -79,10 +79,10 @@ class DirectTransport extends Transport_1.Transport {
         if (!Buffer.isBuffer(rtcpPacket)) {
             throw new TypeError('rtcpPacket must be a Buffer');
         }
-        this.payloadChannel.notify('transport.sendRtcp', this.internal.string, undefined, rtcpPacket);
+        this.payloadChannel.notify('transport.sendRtcp', this.internal, undefined, rtcpPacket);
     }
     handleWorkerNotifications() {
-        this.channel.on(this.internal.transportId, (event, data) => {
+        this.channel.on(this.transportId, (event, data) => {
             switch (event) {
                 case 'trace':
                     {
@@ -98,7 +98,7 @@ class DirectTransport extends Transport_1.Transport {
                     }
             }
         });
-        this.payloadChannel.on(this.internal.transportId, (event, data, payload) => {
+        this.payloadChannel.on(this.transportId, (event, data, payload) => {
             switch (event) {
                 case 'rtcp':
                     {

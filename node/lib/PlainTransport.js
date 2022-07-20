@@ -88,7 +88,7 @@ class PlainTransport extends Transport_1.Transport {
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.channel.request('transport.getStats', this.internal.string);
+        return this.channel.request('transport.getStats', this.internal);
     }
     /**
      * Provide the PlainTransport remote parameters.
@@ -98,7 +98,7 @@ class PlainTransport extends Transport_1.Transport {
     async connect({ ip, port, rtcpPort, srtpParameters }) {
         logger.debug('connect()');
         const reqData = { ip, port, rtcpPort, srtpParameters };
-        const data = await this.channel.request('transport.connect', this.internal.string, reqData);
+        const data = await this.channel.request('transport.connect', this.internal, reqData);
         // Update data.
         if (data.tuple)
             this.#data.tuple = data.tuple;
@@ -107,7 +107,7 @@ class PlainTransport extends Transport_1.Transport {
         this.#data.srtpParameters = data.srtpParameters;
     }
     handleWorkerNotifications() {
-        this.channel.on(this.internal.transportId, (event, data) => {
+        this.channel.on(this.transportId, (event, data) => {
             switch (event) {
                 case 'tuple':
                     {

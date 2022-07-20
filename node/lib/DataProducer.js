@@ -5,6 +5,8 @@ const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const logger = new Logger_1.Logger('DataProducer');
 class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
+    // DataProducer id.
+    #dataProducerId;
     // Internal data.
     #internal;
     // DataProducer data.
@@ -25,19 +27,19 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     constructor({ internal, data, channel, payloadChannel, appData }) {
         super();
         logger.debug('constructor()');
-        this.#internal = internal;
+        this.#dataProducerId = internal.dataProducerId;
+        this.#internal = `${internal.parentInternal},${internal.dataProducerId}`;
         this.#data = data;
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
         this.#appData = appData || {};
-        this.#internal.string = `${this.#internal.routerId},${this.#internal.transportId},${this.#internal.dataProducerId}`;
         this.handleWorkerNotifications();
     }
     /**
      * DataProducer id.
      */
     get id() {
-        return this.#internal.dataProducerId;
+        return this.#dataProducerId;
     }
     /**
      * Whether the DataProducer is closed.
@@ -96,9 +98,9 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('close()');
         this.#closed = true;
         // Remove notification subscriptions.
-        this.#channel.removeAllListeners(this.#internal.dataProducerId);
-        this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
-        this.#channel.request('dataProducer.close', this.#internal.string)
+        this.#channel.removeAllListeners(this.#dataProducerId);
+        this.#payloadChannel.removeAllListeners(this.#dataProducerId);
+        this.#channel.request('dataProducer.close', this.#internal)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
@@ -115,8 +117,8 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('transportClosed()');
         this.#closed = true;
         // Remove notification subscriptions.
-        this.#channel.removeAllListeners(this.#internal.dataProducerId);
-        this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
+        this.#channel.removeAllListeners(this.#dataProducerId);
+        this.#payloadChannel.removeAllListeners(this.#dataProducerId);
         this.safeEmit('transportclose');
         // Emit observer event.
         this.#observer.safeEmit('close');
@@ -126,14 +128,14 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('dataProducer.dump', this.#internal.string);
+        return this.#channel.request('dataProducer.dump', this.#internal);
     }
     /**
      * Get DataProducer stats.
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.#channel.request('dataProducer.getStats', this.#internal.string);
+        return this.#channel.request('dataProducer.getStats', this.#internal);
     }
     /**
      * Send data (just valid for DataProducers created on a DirectTransport).
@@ -168,7 +170,7 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         else if (ppid === 57)
             message = Buffer.alloc(1);
         const notifData = String(ppid);
-        this.#payloadChannel.notify('dataProducer.send', this.#internal.string, notifData, message);
+        this.#payloadChannel.notify('dataProducer.send', this.#internal, notifData, message);
     }
     handleWorkerNotifications() {
         // No need to subscribe to any event.

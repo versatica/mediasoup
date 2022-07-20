@@ -256,7 +256,7 @@ export class PlainTransport extends
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal.string);
+		return this.channel.request('transport.getStats', this.internal);
 	}
 
 	/**
@@ -284,7 +284,7 @@ export class PlainTransport extends
 		const reqData = { ip, port, rtcpPort, srtpParameters };
 
 		const data =
-			await this.channel.request('transport.connect', this.internal.string, reqData);
+			await this.channel.request('transport.connect', this.internal, reqData);
 
 		// Update data.
 		if (data.tuple)
@@ -298,7 +298,7 @@ export class PlainTransport extends
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.transportId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{

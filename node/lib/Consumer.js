@@ -5,6 +5,8 @@ const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const logger = new Logger_1.Logger('Consumer');
 class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
+    // Consumer id.
+    #consumerId;
     // Internal data.
     #internal;
     // Consumer data.
@@ -37,7 +39,8 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     constructor({ internal, data, channel, payloadChannel, appData, paused, producerPaused, score = { score: 10, producerScore: 10, producerScores: [] }, preferredLayers }) {
         super();
         logger.debug('constructor()');
-        this.#internal = internal;
+        this.#consumerId = internal.consumerId;
+        this.#internal = `${internal.parentInternal},${internal.consumerId}`;
         this.#data = data;
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
@@ -46,14 +49,13 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#producerPaused = producerPaused;
         this.#score = score;
         this.#preferredLayers = preferredLayers;
-        this.#internal.string = `${this.#internal.routerId},${this.#internal.transportId},${this.#internal.consumerId}`;
         this.handleWorkerNotifications();
     }
     /**
      * Consumer id.
      */
     get id() {
-        return this.#internal.consumerId;
+        return this.#consumerId;
     }
     /**
      * Associated Producer id.
@@ -155,9 +157,9 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('close()');
         this.#closed = true;
         // Remove notification subscriptions.
-        this.#channel.removeAllListeners(this.#internal.consumerId);
-        this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
-        this.#channel.request('consumer.close', this.#internal.string)
+        this.#channel.removeAllListeners(this.#consumerId);
+        this.#payloadChannel.removeAllListeners(this.#consumerId);
+        this.#channel.request('consumer.close', this.#internal)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
@@ -174,8 +176,8 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('transportClosed()');
         this.#closed = true;
         // Remove notification subscriptions.
-        this.#channel.removeAllListeners(this.#internal.consumerId);
-        this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
+        this.#channel.removeAllListeners(this.#consumerId);
+        this.#payloadChannel.removeAllListeners(this.#consumerId);
         this.safeEmit('transportclose');
         // Emit observer event.
         this.#observer.safeEmit('close');
@@ -185,14 +187,14 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('consumer.dump', this.#internal.string);
+        return this.#channel.request('consumer.dump', this.#internal);
     }
     /**
      * Get Consumer stats.
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.#channel.request('consumer.getStats', this.#internal.string);
+        return this.#channel.request('consumer.getStats', this.#internal);
     }
     /**
      * Pause the Consumer.
@@ -200,7 +202,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async pause() {
         logger.debug('pause()');
         const wasPaused = this.#paused || this.#producerPaused;
-        await this.#channel.request('consumer.pause', this.#internal.string);
+        await this.#channel.request('consumer.pause', this.#internal);
         this.#paused = true;
         // Emit observer event.
         if (!wasPaused)
@@ -212,7 +214,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async resume() {
         logger.debug('resume()');
         const wasPaused = this.#paused || this.#producerPaused;
-        await this.#channel.request('consumer.resume', this.#internal.string);
+        await this.#channel.request('consumer.resume', this.#internal);
         this.#paused = false;
         // Emit observer event.
         if (wasPaused && !this.#producerPaused)
@@ -224,7 +226,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setPreferredLayers({ spatialLayer, temporalLayer }) {
         logger.debug('setPreferredLayers()');
         const reqData = { spatialLayer, temporalLayer };
-        const data = await this.#channel.request('consumer.setPreferredLayers', this.#internal.string, reqData);
+        const data = await this.#channel.request('consumer.setPreferredLayers', this.#internal, reqData);
         this.#preferredLayers = data || undefined;
     }
     /**
@@ -233,7 +235,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setPriority(priority) {
         logger.debug('setPriority()');
         const reqData = { priority };
-        const data = await this.#channel.request('consumer.setPriority', this.#internal.string, reqData);
+        const data = await this.#channel.request('consumer.setPriority', this.#internal, reqData);
         this.#priority = data.priority;
     }
     /**
@@ -242,7 +244,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async unsetPriority() {
         logger.debug('unsetPriority()');
         const reqData = { priority: 1 };
-        const data = await this.#channel.request('consumer.setPriority', this.#internal.string, reqData);
+        const data = await this.#channel.request('consumer.setPriority', this.#internal, reqData);
         this.#priority = data.priority;
     }
     /**
@@ -250,7 +252,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async requestKeyFrame() {
         logger.debug('requestKeyFrame()');
-        await this.#channel.request('consumer.requestKeyFrame', this.#internal.string);
+        await this.#channel.request('consumer.requestKeyFrame', this.#internal);
     }
     /**
      * Enable 'trace' event.
@@ -258,10 +260,10 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async enableTraceEvent(types = []) {
         logger.debug('enableTraceEvent()');
         const reqData = { types };
-        await this.#channel.request('consumer.enableTraceEvent', this.#internal.string, reqData);
+        await this.#channel.request('consumer.enableTraceEvent', this.#internal, reqData);
     }
     handleWorkerNotifications() {
-        this.#channel.on(this.#internal.consumerId, (event, data) => {
+        this.#channel.on(this.#consumerId, (event, data) => {
             switch (event) {
                 case 'producerclose':
                     {
@@ -269,8 +271,8 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                             break;
                         this.#closed = true;
                         // Remove notification subscriptions.
-                        this.#channel.removeAllListeners(this.#internal.consumerId);
-                        this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
+                        this.#channel.removeAllListeners(this.#consumerId);
+                        this.#payloadChannel.removeAllListeners(this.#consumerId);
                         this.emit('@producerclose');
                         this.safeEmit('producerclose');
                         // Emit observer event.
@@ -333,7 +335,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                     }
             }
         });
-        this.#payloadChannel.on(this.#internal.consumerId, (event, data, payload) => {
+        this.#payloadChannel.on(this.#consumerId, (event, data, payload) => {
             switch (event) {
                 case 'rtp':
                     {

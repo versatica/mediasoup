@@ -232,7 +232,7 @@ export class PipeTransport
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal.string);
+		return this.channel.request('transport.getStats', this.internal);
 	}
 
 	/**
@@ -258,7 +258,7 @@ export class PipeTransport
 		const reqData = { ip, port, srtpParameters };
 
 		const data =
-			await this.channel.request('transport.connect', this.internal.string, reqData);
+			await this.channel.request('transport.connect', this.internal, reqData);
 
 		// Update data.
 		this.#data.tuple = data.tuple;
@@ -287,7 +287,7 @@ export class PipeTransport
 		const rtpParameters = ortc.getPipeConsumerRtpParameters(
 			producer.consumableRtpParameters, this.#data.rtx);
 
-		const internal = { ...this.internal, consumerId: uuidv4() };
+		const internal = { transportId: this.transportId, consumerId: uuidv4() };
 		const reqData =
 		{
 			producerId,
@@ -298,7 +298,7 @@ export class PipeTransport
 		};
 
 		const status =
-			await this.channel.request('transport.consume', `${this.internal.string},${internal.consumerId}`, reqData);
+			await this.channel.request('transport.consume', `${this.internal},${internal.consumerId}`, reqData);
 
 		const data =
 		{
@@ -331,7 +331,7 @@ export class PipeTransport
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.transportId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{

@@ -142,7 +142,7 @@ class WebRtcTransport extends Transport_1.Transport {
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.channel.request('transport.getStats', this.internal.string);
+        return this.channel.request('transport.getStats', this.internal);
     }
     /**
      * Provide the WebRtcTransport remote parameters.
@@ -152,7 +152,7 @@ class WebRtcTransport extends Transport_1.Transport {
     async connect({ dtlsParameters }) {
         logger.debug('connect()');
         const reqData = { dtlsParameters };
-        const data = await this.channel.request('transport.connect', this.internal.string, reqData);
+        const data = await this.channel.request('transport.connect', this.internal, reqData);
         // Update data.
         this.#data.dtlsParameters.role = data.dtlsLocalRole;
     }
@@ -161,13 +161,13 @@ class WebRtcTransport extends Transport_1.Transport {
      */
     async restartIce() {
         logger.debug('restartIce()');
-        const data = await this.channel.request('transport.restartIce', this.internal.string);
+        const data = await this.channel.request('transport.restartIce', this.internal);
         const { iceParameters } = data;
         this.#data.iceParameters = iceParameters;
         return iceParameters;
     }
     handleWorkerNotifications() {
-        this.channel.on(this.internal.transportId, (event, data) => {
+        this.channel.on(this.transportId, (event, data) => {
             switch (event) {
                 case 'icestatechange':
                     {

@@ -383,7 +383,7 @@ export class WebRtcTransport extends
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal.string);
+		return this.channel.request('transport.getStats', this.internal);
 	}
 
 	/**
@@ -398,7 +398,7 @@ export class WebRtcTransport extends
 		const reqData = { dtlsParameters };
 
 		const data =
-			await this.channel.request('transport.connect', this.internal.string, reqData);
+			await this.channel.request('transport.connect', this.internal, reqData);
 
 		// Update data.
 		this.#data.dtlsParameters.role = data.dtlsLocalRole;
@@ -412,7 +412,7 @@ export class WebRtcTransport extends
 		logger.debug('restartIce()');
 
 		const data =
-			await this.channel.request('transport.restartIce', this.internal.string);
+			await this.channel.request('transport.restartIce', this.internal);
 
 		const { iceParameters } = data;
 
@@ -423,7 +423,7 @@ export class WebRtcTransport extends
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.transportId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{

@@ -5,6 +5,8 @@ const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const logger = new Logger_1.Logger('RtpObserver');
 class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
+    // RtpOberver Id.
+    rtpObserverId;
     // Internal data.
     internal;
     // Channel instance.
@@ -28,18 +30,18 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     constructor({ internal, channel, payloadChannel, appData, getProducerById }) {
         super();
         logger.debug('constructor()');
-        this.internal = internal;
+        this.rtpObserverId = internal.rtpObserverId;
+        this.internal = `${internal.parentInternal},${internal.rtpObserverId}`;
         this.channel = channel;
         this.payloadChannel = payloadChannel;
         this.#appData = appData || {};
         this.getProducerById = getProducerById;
-        this.internal.string = `${this.internal.routerId},${this.internal.rtpObserverId}`;
     }
     /**
      * RtpObserver id.
      */
     get id() {
-        return this.internal.rtpObserverId;
+        return this.rtpObserverId;
     }
     /**
      * Whether the RtpObserver is closed.
@@ -80,9 +82,9 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('close()');
         this.#closed = true;
         // Remove notification subscriptions.
-        this.channel.removeAllListeners(this.internal.rtpObserverId);
-        this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
-        this.channel.request('rtpObserver.close', this.internal.string)
+        this.channel.removeAllListeners(this.rtpObserverId);
+        this.payloadChannel.removeAllListeners(this.rtpObserverId);
+        this.channel.request('rtpObserver.close', this.internal)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
@@ -99,8 +101,8 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('routerClosed()');
         this.#closed = true;
         // Remove notification subscriptions.
-        this.channel.removeAllListeners(this.internal.rtpObserverId);
-        this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
+        this.channel.removeAllListeners(this.rtpObserverId);
+        this.payloadChannel.removeAllListeners(this.rtpObserverId);
         this.safeEmit('routerclose');
         // Emit observer event.
         this.#observer.safeEmit('close');
@@ -111,7 +113,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async pause() {
         logger.debug('pause()');
         const wasPaused = this.#paused;
-        await this.channel.request('rtpObserver.pause', this.internal.string);
+        await this.channel.request('rtpObserver.pause', this.internal);
         this.#paused = true;
         // Emit observer event.
         if (!wasPaused)
@@ -123,7 +125,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async resume() {
         logger.debug('resume()');
         const wasPaused = this.#paused;
-        await this.channel.request('rtpObserver.resume', this.internal.string);
+        await this.channel.request('rtpObserver.resume', this.internal);
         this.#paused = false;
         // Emit observer event.
         if (wasPaused)
@@ -136,7 +138,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('addProducer()');
         const producer = this.getProducerById(producerId);
         const reqData = { producerId };
-        await this.channel.request('rtpObserver.addProducer', this.internal.string, reqData);
+        await this.channel.request('rtpObserver.addProducer', this.internal, reqData);
         // Emit observer event.
         this.#observer.safeEmit('addproducer', producer);
     }
@@ -147,7 +149,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('removeProducer()');
         const producer = this.getProducerById(producerId);
         const reqData = { producerId };
-        await this.channel.request('rtpObserver.removeProducer', this.internal.string, reqData);
+        await this.channel.request('rtpObserver.removeProducer', this.internal, reqData);
         // Emit observer event.
         this.#observer.safeEmit('removeproducer', producer);
     }

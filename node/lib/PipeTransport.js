@@ -83,7 +83,7 @@ class PipeTransport extends Transport_1.Transport {
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.channel.request('transport.getStats', this.internal.string);
+        return this.channel.request('transport.getStats', this.internal);
     }
     /**
      * Provide the PipeTransport remote parameters.
@@ -93,7 +93,7 @@ class PipeTransport extends Transport_1.Transport {
     async connect({ ip, port, srtpParameters }) {
         logger.debug('connect()');
         const reqData = { ip, port, srtpParameters };
-        const data = await this.channel.request('transport.connect', this.internal.string, reqData);
+        const data = await this.channel.request('transport.connect', this.internal, reqData);
         // Update data.
         this.#data.tuple = data.tuple;
     }
@@ -113,7 +113,7 @@ class PipeTransport extends Transport_1.Transport {
             throw Error(`Producer with id "${producerId}" not found`);
         // This may throw.
         const rtpParameters = ortc.getPipeConsumerRtpParameters(producer.consumableRtpParameters, this.#data.rtx);
-        const internal = { ...this.internal, consumerId: (0, uuid_1.v4)() };
+        const internal = { transportId: this.transportId, consumerId: (0, uuid_1.v4)() };
         const reqData = {
             producerId,
             kind: producer.kind,
@@ -121,7 +121,7 @@ class PipeTransport extends Transport_1.Transport {
             type: 'pipe',
             consumableRtpEncodings: producer.consumableRtpParameters.encodings
         };
-        const status = await this.channel.request('transport.consume', `${this.internal.string},${internal.consumerId}`, reqData);
+        const status = await this.channel.request('transport.consume', `${this.internal},${internal.consumerId}`, reqData);
         const data = {
             producerId,
             kind: producer.kind,
@@ -145,7 +145,7 @@ class PipeTransport extends Transport_1.Transport {
         return consumer;
     }
     handleWorkerNotifications() {
-        this.channel.on(this.internal.transportId, (event, data) => {
+        this.channel.on(this.transportId, (event, data) => {
             switch (event) {
                 case 'sctpstatechange':
                     {

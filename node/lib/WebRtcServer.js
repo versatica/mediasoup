@@ -5,6 +5,8 @@ const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const logger = new Logger_1.Logger('WebRtcServer');
 class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
+    // WebRtcServer id.
+    #webRtcServerId;
     // Internal data.
     #internal;
     // Channel instance.
@@ -23,16 +25,16 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     constructor({ internal, channel, appData }) {
         super();
         logger.debug('constructor()');
-        this.#internal = internal;
+        this.#webRtcServerId = internal.webRtcServerId;
+        this.#internal = internal.webRtcServerId;
         this.#channel = channel;
         this.#appData = appData || {};
-        this.#internal.string = `${this.#internal.webRtcServerId}`;
     }
     /**
      * WebRtcServer id.
      */
     get id() {
-        return this.#internal.webRtcServerId;
+        return this.#webRtcServerId;
     }
     /**
      * Whether the WebRtcServer is closed.
@@ -73,7 +75,7 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             return;
         logger.debug('close()');
         this.#closed = true;
-        this.#channel.request('webRtcServer.close', this.#internal.string)
+        this.#channel.request('webRtcServer.close', this.#internal)
             .catch(() => { });
         // Close every WebRtcTransport.
         for (const webRtcTransport of this.#webRtcTransports.values()) {
@@ -108,7 +110,7 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('webRtcServer.dump', this.#internal.string);
+        return this.#channel.request('webRtcServer.dump', this.#internal);
     }
     /**
      * @private

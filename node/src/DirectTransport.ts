@@ -115,7 +115,7 @@ export class DirectTransport extends
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal.string);
+		return this.channel.request('transport.getStats', this.internal);
 	}
 
 	/**
@@ -159,12 +159,12 @@ export class DirectTransport extends
 		}
 
 		this.payloadChannel.notify(
-			'transport.sendRtcp', this.internal.string, undefined, rtcpPacket);
+			'transport.sendRtcp', this.internal, undefined, rtcpPacket);
 	}
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.transportId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{
@@ -188,7 +188,7 @@ export class DirectTransport extends
 		});
 
 		this.payloadChannel.on(
-			this.internal.transportId,
+			this.transportId,
 			(event: string, data: any | undefined, payload: Buffer) =>
 			{
 				switch (event)

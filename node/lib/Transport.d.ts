@@ -75,11 +75,8 @@ export declare type TransportObserverEvents = {
 };
 export declare class Transport<Events extends TransportEvents = TransportEvents, ObserverEvents extends TransportObserverEvents = TransportObserverEvents> extends EnhancedEventEmitter<Events> {
     #private;
-    protected readonly internal: {
-        routerId: string;
-        transportId: string;
-        string: string;
-    };
+    protected readonly transportId: string;
+    protected readonly internal: string;
     protected readonly channel: Channel;
     protected readonly payloadChannel: PayloadChannel;
     protected readonly getProducerById: (producerId: string) => Producer;

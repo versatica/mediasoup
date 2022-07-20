@@ -164,14 +164,11 @@ const logger = new Logger('Producer');
 
 export class Producer extends EnhancedEventEmitter<ProducerEvents>
 {
+	// Producer id.
+	readonly #producerId: string;
+
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		producerId: string;
-		string: string;
-	};
+	readonly #internal: string;
 
 	// Producer data.
 	readonly #data:
@@ -229,14 +226,13 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		logger.debug('constructor()');
 
-		this.#internal = internal;
+		this.#producerId = internal.producerId;
+		this.#internal = `${internal.parentInternal},${internal.producerId}`;
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {};
 		this.#paused = paused;
-
-		this.#internal.string = `${this.#internal.routerId},${this.#internal.transportId},${this.#internal.producerId}`;
 
 		this.handleWorkerNotifications();
 	}
@@ -246,7 +242,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	 */
 	get id(): string
 	{
-		return this.#internal.producerId;
+		return this.#producerId;
 	}
 
 	/**
@@ -353,10 +349,10 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this.#channel.removeAllListeners(this.#internal.producerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
+		this.#channel.removeAllListeners(this.#producerId);
+		this.#payloadChannel.removeAllListeners(this.#producerId);
 
-		this.#channel.request('producer.close', this.#internal.string)
+		this.#channel.request('producer.close', this.#internal)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -380,8 +376,8 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		this.#closed = true;
 
 		// Remove notification subscriptions.
-		this.#channel.removeAllListeners(this.#internal.producerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
+		this.#channel.removeAllListeners(this.#producerId);
+		this.#payloadChannel.removeAllListeners(this.#producerId);
 
 		this.safeEmit('transportclose');
 
@@ -396,7 +392,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('producer.dump', this.#internal.string);
+		return this.#channel.request('producer.dump', this.#internal);
 	}
 
 	/**
@@ -406,7 +402,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('producer.getStats', this.#internal.string);
+		return this.#channel.request('producer.getStats', this.#internal);
 	}
 
 	/**
@@ -418,7 +414,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.request('producer.pause', this.#internal.string);
+		await this.#channel.request('producer.pause', this.#internal);
 
 		this.#paused = true;
 
@@ -436,7 +432,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.request('producer.resume', this.#internal.string);
+		await this.#channel.request('producer.resume', this.#internal);
 
 		this.#paused = false;
 
@@ -455,7 +451,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		const reqData = { types };
 
 		await this.#channel.request(
-			'producer.enableTraceEvent', this.#internal.string, reqData);
+			'producer.enableTraceEvent', this.#internal, reqData);
 	}
 
 	/**
@@ -469,12 +465,12 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		}
 
 		this.#payloadChannel.notify(
-			'producer.send', this.#internal.string, undefined, rtpPacket);
+			'producer.send', this.#internal, undefined, rtpPacket);
 	}
 
 	private handleWorkerNotifications(): void
 	{
-		this.#channel.on(this.#internal.producerId, (event: string, data?: any) =>
+		this.#channel.on(this.#producerId, (event: string, data?: any) =>
 		{
 			switch (event)
 			{
