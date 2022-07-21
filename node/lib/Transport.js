@@ -31,7 +31,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Method to retrieve a DataProducer.
     getDataProducerById;
     // Producers map.
-    #producers = new Map();
+    producers = new Map();
     // Consumers map.
     consumers = new Map();
     // DataProducers map.
@@ -115,12 +115,12 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.channel.request('transport.close', this.internal)
             .catch(() => { });
         // Close every Producer.
-        for (const producer of this.#producers.values()) {
+        for (const producer of this.producers.values()) {
             producer.transportClosed();
             // Must tell the Router.
             this.emit('@producerclose', producer);
         }
-        this.#producers.clear();
+        this.producers.clear();
         // Close every Consumer.
         for (const consumer of this.consumers.values()) {
             consumer.transportClosed();
@@ -157,12 +157,12 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.channel.removeAllListeners(this.internal.transportId);
         this.payloadChannel.removeAllListeners(this.internal.transportId);
         // Close every Producer.
-        for (const producer of this.#producers.values()) {
+        for (const producer of this.producers.values()) {
             producer.transportClosed();
             // NOTE: No need to tell the Router since it already knows (it has
             // been closed in fact).
         }
-        this.#producers.clear();
+        this.producers.clear();
         // Close every Consumer.
         for (const consumer of this.consumers.values()) {
             consumer.transportClosed();
@@ -199,12 +199,12 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.channel.removeAllListeners(this.internal.transportId);
         this.payloadChannel.removeAllListeners(this.internal.transportId);
         // Close every Producer.
-        for (const producer of this.#producers.values()) {
+        for (const producer of this.producers.values()) {
             producer.transportClosed();
             // NOTE: No need to tell the Router since it already knows (it has
             // been closed in fact).
         }
-        this.#producers.clear();
+        this.producers.clear();
         // Close every Consumer.
         for (const consumer of this.consumers.values()) {
             consumer.transportClosed();
@@ -277,7 +277,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async produce({ id = undefined, kind, rtpParameters, paused = false, keyFrameRequestDelay, appData }) {
         logger.debug('produce()');
-        if (id && this.#producers.has(id))
+        if (id && this.producers.has(id))
             throw new TypeError(`a Producer with same id "${id}" already exists`);
         else if (!['audio', 'video'].includes(kind))
             throw new TypeError(`invalid kind "${kind}"`);
@@ -330,9 +330,9 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             appData,
             paused
         });
-        this.#producers.set(producer.id, producer);
+        this.producers.set(producer.id, producer);
         producer.on('@close', () => {
-            this.#producers.delete(producer.id);
+            this.producers.delete(producer.id);
             this.emit('@producerclose', producer);
         });
         this.emit('@newproducer', producer);
