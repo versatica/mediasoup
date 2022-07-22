@@ -201,7 +201,7 @@ namespace Channel
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_ERROR_STD("discarding wrong Channel request");
+				MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
 			}
 
 			free(message, messageLen, messageCtx);
@@ -266,7 +266,7 @@ namespace Channel
 		}
 		catch (const MediaSoupError& error)
 		{
-			MS_ERROR_STD("discarding wrong Channel request");
+			MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
 		}
 	}
 
