@@ -31,13 +31,13 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Method to retrieve a DataProducer.
     getDataProducerById;
     // Producers map.
-    producers = new Map();
+    #producers = new Map();
     // Consumers map.
-    consumers = new Map();
+    #consumers = new Map();
     // DataProducers map.
-    dataProducers = new Map();
+    #dataProducers = new Map();
     // DataConsumers map.
-    dataConsumers = new Map();
+    #dataConsumers = new Map();
     // RTCP CNAME for Producers.
     #cnameForProducers;
     // Next MID for Consumers. It's converted into string when used.
@@ -115,29 +115,29 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.channel.request('transport.close', this.internal)
             .catch(() => { });
         // Close every Producer.
-        for (const producer of this.producers.values()) {
+        for (const producer of this.#producers.values()) {
             producer.transportClosed();
             // Must tell the Router.
             this.emit('@producerclose', producer);
         }
-        this.producers.clear();
+        this.#producers.clear();
         // Close every Consumer.
-        for (const consumer of this.consumers.values()) {
+        for (const consumer of this.#consumers.values()) {
             consumer.transportClosed();
         }
-        this.consumers.clear();
+        this.#consumers.clear();
         // Close every DataProducer.
-        for (const dataProducer of this.dataProducers.values()) {
+        for (const dataProducer of this.#dataProducers.values()) {
             dataProducer.transportClosed();
             // Must tell the Router.
             this.emit('@dataproducerclose', dataProducer);
         }
-        this.dataProducers.clear();
+        this.#dataProducers.clear();
         // Close every DataConsumer.
-        for (const dataConsumer of this.dataConsumers.values()) {
+        for (const dataConsumer of this.#dataConsumers.values()) {
             dataConsumer.transportClosed();
         }
-        this.dataConsumers.clear();
+        this.#dataConsumers.clear();
         this.emit('@close');
         // Emit observer event.
         this.#observer.safeEmit('close');
@@ -157,29 +157,29 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.channel.removeAllListeners(this.internal.transportId);
         this.payloadChannel.removeAllListeners(this.internal.transportId);
         // Close every Producer.
-        for (const producer of this.producers.values()) {
+        for (const producer of this.#producers.values()) {
             producer.transportClosed();
             // NOTE: No need to tell the Router since it already knows (it has
             // been closed in fact).
         }
-        this.producers.clear();
+        this.#producers.clear();
         // Close every Consumer.
-        for (const consumer of this.consumers.values()) {
+        for (const consumer of this.#consumers.values()) {
             consumer.transportClosed();
         }
-        this.consumers.clear();
+        this.#consumers.clear();
         // Close every DataProducer.
-        for (const dataProducer of this.dataProducers.values()) {
+        for (const dataProducer of this.#dataProducers.values()) {
             dataProducer.transportClosed();
             // NOTE: No need to tell the Router since it already knows (it has
             // been closed in fact).
         }
-        this.dataProducers.clear();
+        this.#dataProducers.clear();
         // Close every DataConsumer.
-        for (const dataConsumer of this.dataConsumers.values()) {
+        for (const dataConsumer of this.#dataConsumers.values()) {
             dataConsumer.transportClosed();
         }
-        this.dataConsumers.clear();
+        this.#dataConsumers.clear();
         this.safeEmit('routerclose');
         // Emit observer event.
         this.#observer.safeEmit('close');
@@ -199,29 +199,29 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.channel.removeAllListeners(this.internal.transportId);
         this.payloadChannel.removeAllListeners(this.internal.transportId);
         // Close every Producer.
-        for (const producer of this.producers.values()) {
+        for (const producer of this.#producers.values()) {
             producer.transportClosed();
             // NOTE: No need to tell the Router since it already knows (it has
             // been closed in fact).
         }
-        this.producers.clear();
+        this.#producers.clear();
         // Close every Consumer.
-        for (const consumer of this.consumers.values()) {
+        for (const consumer of this.#consumers.values()) {
             consumer.transportClosed();
         }
-        this.consumers.clear();
+        this.#consumers.clear();
         // Close every DataProducer.
-        for (const dataProducer of this.dataProducers.values()) {
+        for (const dataProducer of this.#dataProducers.values()) {
             dataProducer.transportClosed();
             // NOTE: No need to tell the Router since it already knows (it has
             // been closed in fact).
         }
-        this.dataProducers.clear();
+        this.#dataProducers.clear();
         // Close every DataConsumer.
-        for (const dataConsumer of this.dataConsumers.values()) {
+        for (const dataConsumer of this.#dataConsumers.values()) {
             dataConsumer.transportClosed();
         }
-        this.dataConsumers.clear();
+        this.#dataConsumers.clear();
         // Need to emit this event to let the parent Router know since
         // transport.listenServerClosed() is called by the listen server.
         // NOTE: Currently there is just WebRtcServer for WebRtcTransports.
@@ -277,7 +277,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async produce({ id = undefined, kind, rtpParameters, paused = false, keyFrameRequestDelay, appData }) {
         logger.debug('produce()');
-        if (id && this.producers.has(id))
+        if (id && this.#producers.has(id))
             throw new TypeError(`a Producer with same id "${id}" already exists`);
         else if (!['audio', 'video'].includes(kind))
             throw new TypeError(`invalid kind "${kind}"`);
@@ -330,9 +330,9 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             appData,
             paused
         });
-        this.producers.set(producer.id, producer);
+        this.#producers.set(producer.id, producer);
         producer.on('@close', () => {
-            this.producers.delete(producer.id);
+            this.#producers.delete(producer.id);
             this.emit('@producerclose', producer);
         });
         this.emit('@newproducer', producer);
@@ -403,9 +403,9 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             score: status.score,
             preferredLayers: status.preferredLayers
         });
-        this.consumers.set(consumer.id, consumer);
-        consumer.on('@close', () => this.consumers.delete(consumer.id));
-        consumer.on('@producerclose', () => this.consumers.delete(consumer.id));
+        this.#consumers.set(consumer.id, consumer);
+        consumer.on('@close', () => this.#consumers.delete(consumer.id));
+        consumer.on('@producerclose', () => this.#consumers.delete(consumer.id));
         // Emit observer event.
         this.#observer.safeEmit('newconsumer', consumer);
         return consumer;
@@ -415,7 +415,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async produceData({ id = undefined, sctpStreamParameters, label = '', protocol = '', appData } = {}) {
         logger.debug('produceData()');
-        if (id && this.dataProducers.has(id))
+        if (id && this.#dataProducers.has(id))
             throw new TypeError(`a DataProducer with same id "${id}" already exists`);
         else if (appData && typeof appData !== 'object')
             throw new TypeError('if given, appData must be an object');
@@ -448,9 +448,9 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             payloadChannel: this.payloadChannel,
             appData
         });
-        this.dataProducers.set(dataProducer.id, dataProducer);
+        this.#dataProducers.set(dataProducer.id, dataProducer);
         dataProducer.on('@close', () => {
-            this.dataProducers.delete(dataProducer.id);
+            this.#dataProducers.delete(dataProducer.id);
             this.emit('@dataproducerclose', dataProducer);
         });
         this.emit('@newdataproducer', dataProducer);
@@ -517,14 +517,14 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             payloadChannel: this.payloadChannel,
             appData
         });
-        this.dataConsumers.set(dataConsumer.id, dataConsumer);
+        this.#dataConsumers.set(dataConsumer.id, dataConsumer);
         dataConsumer.on('@close', () => {
-            this.dataConsumers.delete(dataConsumer.id);
+            this.#dataConsumers.delete(dataConsumer.id);
             if (this.#sctpStreamIds)
                 this.#sctpStreamIds[sctpStreamId] = 0;
         });
         dataConsumer.on('@dataproducerclose', () => {
-            this.dataConsumers.delete(dataConsumer.id);
+            this.#dataConsumers.delete(dataConsumer.id);
             if (this.#sctpStreamIds)
                 this.#sctpStreamIds[sctpStreamId] = 0;
         });
