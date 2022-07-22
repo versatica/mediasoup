@@ -232,7 +232,7 @@ namespace PayloadChannel
 					}
 					catch (const MediaSoupError& error)
 					{
-						MS_ERROR("discarding wrong Payload Channel notification");
+						MS_ERROR("discarding wrong Payload Channel notification: %s", error.what());
 					}
 				}
 
@@ -262,7 +262,7 @@ namespace PayloadChannel
 					}
 					catch (const MediaSoupError& error)
 					{
-						MS_ERROR("discarding wrong Payload Channel notification");
+						MS_ERROR("discarding wrong Payload Channel notification: %s", error.what());
 					}
 				}
 
@@ -277,7 +277,7 @@ namespace PayloadChannel
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_ERROR("discarding wrong Channel request");
+				MS_ERROR("discarding wrong Channel request: %s", error.what());
 			}
 
 			free(message, messageLen, messageCtx);
@@ -349,7 +349,7 @@ namespace PayloadChannel
 				}
 				catch (const MediaSoupError& error)
 				{
-					MS_ERROR("discarding wrong Payload Channel notification");
+					MS_ERROR("discarding wrong Payload Channel notification: %s", error.what());
 				}
 			}
 
@@ -365,7 +365,7 @@ namespace PayloadChannel
 				}
 				catch (const MediaSoupError& error)
 				{
-					MS_ERROR("discarding wrong Payload Channel notification");
+					MS_ERROR("discarding wrong Payload Channel notification: %s", error.what());
 				}
 			}
 
