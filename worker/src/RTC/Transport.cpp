@@ -1307,7 +1307,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::PRODUCER_CLOSE:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE_PRODUCER:
 			{
 				// This may throw.
 				RTC::Producer* producer = GetProducerFromInternal(request->internal);
@@ -1342,7 +1342,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::CONSUMER_CLOSE:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE_CONSUMER:
 			{
 				// This may throw.
 				RTC::Consumer* consumer = GetConsumerFromInternal(request->internal);
@@ -1414,7 +1414,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::DATA_PRODUCER_CLOSE:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE_DATA_PRODUCER:
 			{
 				// This may throw.
 				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(request->internal);
@@ -1447,7 +1447,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_CLOSE:
+			case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE_DATA_CONSUMER:
 			{
 				// This may throw.
 				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);

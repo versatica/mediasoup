@@ -421,7 +421,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE:
+			case Channel::ChannelRequest::MethodId::ROUTER_CLOSE_TRANSPORT:
 			{
 				// This may throw.
 				RTC::Transport* transport = GetTransportFromInternal(request->internal);
@@ -447,7 +447,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_CLOSE:
+			case Channel::ChannelRequest::MethodId::ROUTER_CLOSE_RTP_OBSERVER:
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);

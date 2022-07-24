@@ -102,7 +102,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             return;
         logger.debug('close()');
         this.#closed = true;
-        this.#channel.request('router.close', this.#internal)
+        this.#channel.request('worker.closeRouter', this.#internal)
             .catch(() => { });
         // Close every Transport.
         for (const transport of this.#transports.values()) {

@@ -166,7 +166,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 
 		this.#closed = true;
 
-		this.#channel.request('webRtcServer.close', this.#internal)
+		this.#channel.request('worker.closeWebRtcServer', this.#internal)
 			.catch(() => {});
 
 		// Close every WebRtcTransport.

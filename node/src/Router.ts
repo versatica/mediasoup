@@ -266,7 +266,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#closed = true;
 
-		this.#channel.request('router.close', this.#internal)
+		this.#channel.request('worker.closeRouter', this.#internal)
 			.catch(() => {});
 
 		// Close every Transport.

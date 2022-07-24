@@ -103,7 +103,7 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.#channel.removeAllListeners(this.#internal.dataConsumerId);
         this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
-        this.#channel.request('dataConsumer.close', this.#internal)
+        this.#channel.request('transport.closeDataConsumer', this.#internal)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.

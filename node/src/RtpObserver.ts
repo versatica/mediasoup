@@ -157,7 +157,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		this.channel.removeAllListeners(this.internal.rtpObserverId);
 		this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
 
-		this.channel.request('rtpObserver.close', this.internal)
+		this.channel.request('router.closeRtpObserver', this.internal)
 			.catch(() => {});
 
 		this.emit('@close');

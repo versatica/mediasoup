@@ -112,7 +112,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.channel.removeAllListeners(this.internal.transportId);
         this.payloadChannel.removeAllListeners(this.internal.transportId);
-        this.channel.request('transport.close', this.internal)
+        this.channel.request('router.closeTransport', this.internal)
             .catch(() => { });
         // Close every Producer.
         for (const producer of this.#producers.values()) {

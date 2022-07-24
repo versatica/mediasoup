@@ -279,7 +279,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		this.channel.removeAllListeners(this.internal.transportId);
 		this.payloadChannel.removeAllListeners(this.internal.transportId);
 
-		this.channel.request('transport.close', this.internal)
+		this.channel.request('router.closeTransport', this.internal)
 			.catch(() => {});
 
 		// Close every Producer.

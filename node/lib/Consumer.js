@@ -156,7 +156,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.#channel.removeAllListeners(this.#internal.consumerId);
         this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
-        this.#channel.request('consumer.close', this.#internal)
+        this.#channel.request('transport.closeConsumer', this.#internal)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.

@@ -337,7 +337,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			break;
 		}
 
-		case Channel::ChannelRequest::MethodId::WEBRTC_SERVER_CLOSE:
+		case Channel::ChannelRequest::MethodId::WORKER_WEBRTC_SERVER_CLOSE:
 		{
 			RTC::WebRtcServer* webRtcServer{ nullptr };
 
@@ -407,7 +407,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			break;
 		}
 
-		case Channel::ChannelRequest::MethodId::ROUTER_CLOSE:
+		case Channel::ChannelRequest::MethodId::WORKER_CLOSE_ROUTER:
 		{
 			RTC::Router* router{ nullptr };
 

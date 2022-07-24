@@ -30,7 +30,7 @@ Some considerations:
 ## JS router.close()
 
 * Public API.
-* Sends channel request `ROUTER_CLOSE`:
+* Sends channel request `WORKER_CLOSE_ROUTER`:
   - Processed by the C++ Worker.
   - It removes the C++ Router from its map.
   - It calls C++ `delete router`.
@@ -51,7 +51,7 @@ Some considerations:
 ## JS transport.close()
 
 * Public API.
-* Sends channel request `TRANSPORT_CLOSE`.
+* Sends channel request `ROUTER_CLOSE_TRANSPORT`.
   - Processed by the C++ Router.
   - It calls C++ `transport->Close()` (so the C++ Transport will notify the C++ Router about closed Producers and Consumers in that Transport).
   - It removes the C++ Transport from its map.
@@ -106,7 +106,7 @@ Some considerations:
 ## JS producer.close()
 
 * Public API.
-* Sends channel request `PRODUCER_CLOSE`.
+* Sends channel request `TRANSPORT_CLOSE_PRODUCER`.
   - Processed by the C++ Transport.
   - Removes it from its map of Producers.
   - Calls its `listener->OnTransportProducerClosed(this, producer)` (so the C++ Router cleans its maps and calls `consumer->ProducerClose()` on its associated Consumers).
@@ -125,7 +125,7 @@ Some considerations:
 ## JS consumer.close()
 
 * Public API.
-* Sends channel request `CONSUMER_CLOSE`.
+* Sends channel request `TRANSPORT_CLOSE_CONSUMER`.
   - Processed by the C++ Transport.
   - Removes it from its map of Consumers.
   - Calls its `listener->OnTransportConsumerClosed(this, consumer)` (so the C++ Router cleans its maps).

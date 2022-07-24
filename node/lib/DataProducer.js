@@ -97,7 +97,7 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.#channel.removeAllListeners(this.#internal.dataProducerId);
         this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
-        this.#channel.request('dataProducer.close', this.#internal)
+        this.#channel.request('transport.closeDataProducer', this.#internal)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.

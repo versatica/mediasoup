@@ -212,7 +212,7 @@ request_response!(
 );
 
 request_response!(
-    "webRtcServer.close",
+    "worker.closeWebRtcServer",
     WebRtcServerCloseRequest {
         internal: WebRtcServerInternal,
     },
@@ -236,7 +236,7 @@ request_response!(
 );
 
 request_response!(
-    "router.close",
+    "worker.closeRouter",
     RouterCloseRequest {
         internal: RouterInternal,
     },
@@ -524,7 +524,7 @@ request_response!(
 );
 
 request_response!(
-    "transport.close",
+    "router.closeTransport",
     TransportCloseRequest {
         internal: TransportInternal,
     },
@@ -772,7 +772,7 @@ impl Notification for TransportSendRtcpNotification {
 }
 
 request_response!(
-    "producer.close",
+    "transport.closeProducer",
     ProducerCloseRequest {
         internal: ProducerInternal,
     },
@@ -836,7 +836,7 @@ impl Notification for ProducerSendNotification {
 }
 
 request_response!(
-    "consumer.close",
+    "transport.closeConsumer",
     ConsumerCloseRequest {
         internal: ConsumerInternal,
     },
@@ -920,7 +920,7 @@ request_response!(
 );
 
 request_response!(
-    "dataProducer.close",
+    "transport.closeDataProducer",
     DataProducerCloseRequest {
         internal: DataProducerInternal,
     },
@@ -963,7 +963,7 @@ impl Notification for DataProducerSendNotification {
 }
 
 request_response!(
-    "dataConsumer.close",
+    "transport.closeDataConsumer",
     DataConsumerCloseRequest {
         internal: DataConsumerInternal
     },
@@ -1026,7 +1026,7 @@ request_response!(
 );
 
 request_response!(
-    "rtpObserver.close",
+    "router.closeRtpObserver",
     RtpObserverCloseRequest {
         internal: RtpObserverInternal,
     },
