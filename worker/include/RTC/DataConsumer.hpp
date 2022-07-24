@@ -12,8 +12,8 @@
 
 namespace RTC
 {
-	class DataConsumer : Channel::ChannelSocket::RequestHandler,
-	                     PayloadChannel::PayloadChannelSocket::RequestHandler
+	class DataConsumer : public Channel::ChannelSocket::RequestHandler,
+	                     public PayloadChannel::PayloadChannelSocket::RequestHandler
 	{
 	protected:
 		using onQueuedCallback = const std::function<void(bool queued, bool sctpSendBufferFull)>;

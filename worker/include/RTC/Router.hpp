@@ -24,9 +24,9 @@ using json = nlohmann::json;
 namespace RTC
 {
 	class Router : public RTC::Transport::Listener,
-	               Channel::ChannelSocket::RequestHandler,
-	               PayloadChannel::PayloadChannelSocket::RequestHandler,
-	               PayloadChannel::PayloadChannelSocket::NotificationHandler
+	               public Channel::ChannelSocket::RequestHandler,
+	               public PayloadChannel::PayloadChannelSocket::RequestHandler,
+	               public PayloadChannel::PayloadChannelSocket::NotificationHandler
 	{
 	public:
 		class Listener

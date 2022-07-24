@@ -24,7 +24,7 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class Consumer : Channel::ChannelSocket::RequestHandler
+	class Consumer : public Channel::ChannelSocket::RequestHandler
 	{
 	public:
 		class Listener
