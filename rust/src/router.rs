@@ -37,8 +37,7 @@ use crate::messages::{
     RouterCreateDirectTransportRequest, RouterCreatePipeTransportData,
     RouterCreatePipeTransportRequest, RouterCreatePlainTransportData,
     RouterCreatePlainTransportRequest, RouterCreateWebrtcTransportData,
-    RouterCreateWebrtcTransportRequest, RouterDumpRequest, RouterInternal, RtpObserverInternal,
-    TransportInternal,
+    RouterCreateWebrtcTransportRequest, RouterDumpRequest, RouterInternal,
 };
 use crate::pipe_transport::{
     PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,
@@ -570,11 +569,13 @@ impl Router {
         self.inner
             .channel
             .request(RouterCreateDirectTransportRequest {
-                internal: TransportInternal {
+                internal: RouterInternal {
                     router_id: self.inner.id,
-                    transport_id,
                 },
-                data: RouterCreateDirectTransportData::from_options(&direct_transport_options),
+                data: RouterCreateDirectTransportData::from_options(
+                    transport_id,
+                    &direct_transport_options,
+                ),
             })
             .await?;
 
@@ -631,11 +632,13 @@ impl Router {
             .inner
             .channel
             .request(RouterCreateWebrtcTransportRequest {
-                internal: TransportInternal {
+                internal: RouterInternal {
                     router_id: self.inner.id,
-                    transport_id,
                 },
-                data: RouterCreateWebrtcTransportData::from_options(&webrtc_transport_options),
+                data: RouterCreateWebrtcTransportData::from_options(
+                    transport_id,
+                    &webrtc_transport_options,
+                ),
             })
             .await?;
 
@@ -695,11 +698,13 @@ impl Router {
             .inner
             .channel
             .request(RouterCreatePipeTransportRequest {
-                internal: TransportInternal {
+                internal: RouterInternal {
                     router_id: self.inner.id,
-                    transport_id,
                 },
-                data: RouterCreatePipeTransportData::from_options(&pipe_transport_options),
+                data: RouterCreatePipeTransportData::from_options(
+                    transport_id,
+                    &pipe_transport_options,
+                ),
             })
             .await?;
 
@@ -755,11 +760,13 @@ impl Router {
             .inner
             .channel
             .request(RouterCreatePlainTransportRequest {
-                internal: TransportInternal {
+                internal: RouterInternal {
                     router_id: self.inner.id,
-                    transport_id,
                 },
-                data: RouterCreatePlainTransportData::from_options(&plain_transport_options),
+                data: RouterCreatePlainTransportData::from_options(
+                    transport_id,
+                    &plain_transport_options,
+                ),
             })
             .await?;
 
@@ -820,11 +827,11 @@ impl Router {
         self.inner
             .channel
             .request(RouterCreateAudioLevelObserverRequest {
-                internal: RtpObserverInternal {
+                internal: RouterInternal {
                     router_id: self.inner.id,
-                    rtp_observer_id,
                 },
                 data: RouterCreateAudioLevelObserverData::from_options(
+                    rtp_observer_id,
                     &audio_level_observer_options,
                 ),
             })
@@ -880,11 +887,11 @@ impl Router {
         self.inner
             .channel
             .request(RouterCreateActiveSpeakerObserverRequest {
-                internal: RtpObserverInternal {
+                internal: RouterInternal {
                     router_id: self.inner.id,
-                    rtp_observer_id,
                 },
                 data: RouterCreateActiveSpeakerObserverData::from_options(
+                    rtp_observer_id,
                     &active_speaker_observer_options,
                 ),
             })

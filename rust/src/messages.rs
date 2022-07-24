@@ -200,13 +200,14 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct WorkerCreateWebRtcServerData {
+    #[serde(rename = "webRtcServerId")]
+    pub(crate) webrtc_server_id: WebRtcServerId,
     pub(crate) listen_infos: WebRtcServerListenInfos,
 }
 
 request_response!(
     "worker.createWebRtcServer",
     WorkerCreateWebRtcServerRequest {
-        internal: WebRtcServerInternal,
         data: WorkerCreateWebRtcServerData,
     },
 );
@@ -228,10 +229,16 @@ request_response!(
     WebRtcServerDump,
 );
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct WorkerCreateRouterRequestData {
+    pub(crate) router_id: RouterId,
+}
+
 request_response!(
     "worker.createRouter",
     WorkerCreateRouterRequest {
-        internal: RouterInternal,
+        data: WorkerCreateRouterRequestData,
     },
 );
 
@@ -255,13 +262,18 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateDirectTransportData {
+    pub(crate) transport_id: TransportId,
     pub(crate) direct: bool,
     pub(crate) max_message_size: usize,
 }
 
 impl RouterCreateDirectTransportData {
-    pub(crate) fn from_options(direct_transport_options: &DirectTransportOptions) -> Self {
+    pub(crate) fn from_options(
+        transport_id: TransportId,
+        direct_transport_options: &DirectTransportOptions,
+    ) -> Self {
         Self {
+            transport_id,
             direct: true,
             max_message_size: direct_transport_options.max_message_size,
         }
@@ -271,7 +283,7 @@ impl RouterCreateDirectTransportData {
 request_response!(
     "router.createDirectTransport",
     RouterCreateDirectTransportRequest {
-        internal: TransportInternal,
+        internal: RouterInternal,
         data: RouterCreateDirectTransportData,
     },
     RouterCreateDirectTransportResponse {},
@@ -295,6 +307,7 @@ enum RouterCreateWebrtcTransportListen {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateWebrtcTransportData {
+    transport_id: TransportId,
     #[serde(flatten)]
     listen: RouterCreateWebrtcTransportListen,
     enable_udp: bool,
@@ -310,8 +323,12 @@ pub(crate) struct RouterCreateWebrtcTransportData {
 }
 
 impl RouterCreateWebrtcTransportData {
-    pub(crate) fn from_options(webrtc_transport_options: &WebRtcTransportOptions) -> Self {
+    pub(crate) fn from_options(
+        transport_id: TransportId,
+        webrtc_transport_options: &WebRtcTransportOptions,
+    ) -> Self {
         Self {
+            transport_id,
             listen: match &webrtc_transport_options.listen {
                 WebRtcTransportListen::Individual { listen_ips, port } => {
                     RouterCreateWebrtcTransportListen::Individual {
@@ -342,7 +359,7 @@ impl RouterCreateWebrtcTransportData {
 
 #[derive(Debug, Serialize)]
 pub(crate) struct RouterCreateWebrtcTransportRequest {
-    pub(crate) internal: TransportInternal,
+    pub(crate) internal: RouterInternal,
     pub(crate) data: RouterCreateWebrtcTransportData,
 }
 
@@ -377,6 +394,7 @@ impl Request for RouterCreateWebrtcTransportRequest {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreatePlainTransportData {
+    transport_id: TransportId,
     listen_ip: ListenIp,
     #[serde(skip_serializing_if = "Option::is_none")]
     port: Option<u16>,
@@ -392,8 +410,12 @@ pub(crate) struct RouterCreatePlainTransportData {
 }
 
 impl RouterCreatePlainTransportData {
-    pub(crate) fn from_options(plain_transport_options: &PlainTransportOptions) -> Self {
+    pub(crate) fn from_options(
+        transport_id: TransportId,
+        plain_transport_options: &PlainTransportOptions,
+    ) -> Self {
         Self {
+            transport_id,
             listen_ip: plain_transport_options.listen_ip,
             port: plain_transport_options.port,
             rtcp_mux: plain_transport_options.rtcp_mux,
@@ -412,7 +434,7 @@ impl RouterCreatePlainTransportData {
 request_response!(
     "router.createPlainTransport",
     RouterCreatePlainTransportRequest {
-        internal: TransportInternal,
+        internal: RouterInternal,
         data: RouterCreatePlainTransportData,
     },
     PlainTransportData {
@@ -430,6 +452,7 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreatePipeTransportData {
+    transport_id: TransportId,
     listen_ip: ListenIp,
     #[serde(skip_serializing_if = "Option::is_none")]
     port: Option<u16>,
@@ -443,8 +466,12 @@ pub(crate) struct RouterCreatePipeTransportData {
 }
 
 impl RouterCreatePipeTransportData {
-    pub(crate) fn from_options(pipe_transport_options: &PipeTransportOptions) -> Self {
+    pub(crate) fn from_options(
+        transport_id: TransportId,
+        pipe_transport_options: &PipeTransportOptions,
+    ) -> Self {
         Self {
+            transport_id,
             listen_ip: pipe_transport_options.listen_ip,
             port: pipe_transport_options.port,
             enable_sctp: pipe_transport_options.enable_sctp,
@@ -461,7 +488,7 @@ impl RouterCreatePipeTransportData {
 request_response!(
     "router.createPipeTransport",
     RouterCreatePipeTransportRequest {
-        internal: TransportInternal,
+        internal: RouterInternal,
         data: RouterCreatePipeTransportData,
     },
     PipeTransportData {
@@ -476,14 +503,19 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateAudioLevelObserverData {
+    pub(crate) rtp_observer_id: RtpObserverId,
     pub(crate) max_entries: NonZeroU16,
     pub(crate) threshold: i8,
     pub(crate) interval: u16,
 }
 
 impl RouterCreateAudioLevelObserverData {
-    pub(crate) fn from_options(audio_level_observer_options: &AudioLevelObserverOptions) -> Self {
+    pub(crate) fn from_options(
+        rtp_observer_id: RtpObserverId,
+        audio_level_observer_options: &AudioLevelObserverOptions,
+    ) -> Self {
         Self {
+            rtp_observer_id,
             max_entries: audio_level_observer_options.max_entries,
             threshold: audio_level_observer_options.threshold,
             interval: audio_level_observer_options.interval,
@@ -494,7 +526,7 @@ impl RouterCreateAudioLevelObserverData {
 request_response!(
     "router.createAudioLevelObserver",
     RouterCreateAudioLevelObserverRequest {
-        internal: RtpObserverInternal,
+        internal: RouterInternal,
         data: RouterCreateAudioLevelObserverData,
     },
 );
@@ -502,14 +534,17 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateActiveSpeakerObserverData {
+    pub(crate) rtp_observer_id: RtpObserverId,
     pub(crate) interval: u16,
 }
 
 impl RouterCreateActiveSpeakerObserverData {
     pub(crate) fn from_options(
+        rtp_observer_id: RtpObserverId,
         active_speaker_observer_options: &ActiveSpeakerObserverOptions,
     ) -> Self {
         Self {
+            rtp_observer_id,
             interval: active_speaker_observer_options.interval,
         }
     }
@@ -518,7 +553,7 @@ impl RouterCreateActiveSpeakerObserverData {
 request_response!(
     "router.createActiveSpeakerObserver",
     RouterCreateActiveSpeakerObserverRequest {
-        internal: RtpObserverInternal,
+        internal: RouterInternal,
         data: RouterCreateActiveSpeakerObserverData,
     },
 );

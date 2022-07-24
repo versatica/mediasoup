@@ -190,14 +190,14 @@ void Worker::FillJsonResourceUsage(json& jsonObject) const
 	jsonObject["ru_nivcsw"] = uvRusage.ru_nivcsw;
 }
 
-void Worker::SetNewWebRtcServerIdFromInternal(json& internal, std::string& webRtcServerId) const
+void Worker::SetNewWebRtcServerIdFromData(json& data, std::string& webRtcServerId) const
 {
 	MS_TRACE();
 
-	auto jsonWebRtcServerIdIt = internal.find("webRtcServerId");
+	auto jsonWebRtcServerIdIt = data.find("webRtcServerId");
 
-	if (jsonWebRtcServerIdIt == internal.end() || !jsonWebRtcServerIdIt->is_string())
-		MS_THROW_ERROR("missing internal.webRtcServerId");
+	if (jsonWebRtcServerIdIt == data.end() || !jsonWebRtcServerIdIt->is_string())
+		MS_THROW_ERROR("missing data.webRtcServerId");
 
 	webRtcServerId.assign(jsonWebRtcServerIdIt->get<std::string>());
 
@@ -224,14 +224,14 @@ RTC::WebRtcServer* Worker::GetWebRtcServerFromInternal(json& internal) const
 	return webRtcServer;
 }
 
-void Worker::SetNewRouterIdFromInternal(json& internal, std::string& routerId) const
+void Worker::SetNewRouterIdFromData(json& data, std::string& routerId) const
 {
 	MS_TRACE();
 
-	auto jsonRouterIdIt = internal.find("routerId");
+	auto jsonRouterIdIt = data.find("routerId");
 
-	if (jsonRouterIdIt == internal.end() || !jsonRouterIdIt->is_string())
-		MS_THROW_ERROR("missing internal.routerId");
+	if (jsonRouterIdIt == data.end() || !jsonRouterIdIt->is_string())
+		MS_THROW_ERROR("missing data.routerId");
 
 	routerId.assign(jsonRouterIdIt->get<std::string>());
 
@@ -314,7 +314,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			{
 				std::string webRtcServerId;
 
-				SetNewWebRtcServerIdFromInternal(request->internal, webRtcServerId);
+				SetNewWebRtcServerIdFromData(request->data, webRtcServerId);
 
 				auto* webRtcServer = new RTC::WebRtcServer(webRtcServerId, request->data);
 
@@ -386,7 +386,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			try
 			{
-				SetNewRouterIdFromInternal(request->internal, routerId);
+				SetNewRouterIdFromData(request->data, routerId);
 			}
 			catch (const MediaSoupError& error)
 			{

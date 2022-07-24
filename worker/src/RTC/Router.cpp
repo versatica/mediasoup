@@ -183,7 +183,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw.
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				// This may throw.
 				auto* webRtcTransport = new RTC::WebRtcTransport(transportId, this, request->data);
@@ -211,7 +211,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw.
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto jsonWebRtcServerIdIt = request->data.find("webRtcServerId");
 
@@ -302,7 +302,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto* plainTransport = new RTC::PlainTransport(transportId, this, request->data);
 
@@ -329,7 +329,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto* pipeTransport = new RTC::PipeTransport(transportId, this, request->data);
 
@@ -356,7 +356,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto* directTransport = new RTC::DirectTransport(transportId, this, request->data);
 
@@ -383,7 +383,7 @@ namespace RTC
 				std::string rtpObserverId;
 
 				// This may throw.
-				SetNewRtpObserverIdFromInternal(request->internal, rtpObserverId);
+				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
 
 				auto* activeSpeakerObserver =
 				  new RTC::ActiveSpeakerObserver(rtpObserverId, this, request->data);
@@ -405,7 +405,7 @@ namespace RTC
 				std::string rtpObserverId;
 
 				// This may throw
-				SetNewRtpObserverIdFromInternal(request->internal, rtpObserverId);
+				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
 
 				auto* audioLevelObserver = new RTC::AudioLevelObserver(rtpObserverId, this, request->data);
 
@@ -521,13 +521,13 @@ namespace RTC
 		transport->HandleNotification(notification);
 	}
 
-	void Router::SetNewTransportIdFromInternal(json& internal, std::string& transportId) const
+	void Router::SetNewTransportIdFromData(json& data, std::string& transportId) const
 	{
 		MS_TRACE();
 
-		auto jsonTransportIdIt = internal.find("transportId");
+		auto jsonTransportIdIt = data.find("transportId");
 
-		if (jsonTransportIdIt == internal.end() || !jsonTransportIdIt->is_string())
+		if (jsonTransportIdIt == data.end() || !jsonTransportIdIt->is_string())
 		{
 			MS_THROW_TYPE_ERROR("missing transportId");
 		}
@@ -561,13 +561,13 @@ namespace RTC
 		return transport;
 	}
 
-	void Router::SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const
+	void Router::SetNewRtpObserverIdFromData(json& data, std::string& rtpObserverId) const
 	{
 		MS_TRACE();
 
-		auto jsonRtpObserverIdIt = internal.find("rtpObserverId");
+		auto jsonRtpObserverIdIt = data.find("rtpObserverId");
 
-		if (jsonRtpObserverIdIt == internal.end() || !jsonRtpObserverIdIt->is_string())
+		if (jsonRtpObserverIdIt == data.end() || !jsonRtpObserverIdIt->is_string())
 		{
 			MS_THROW_TYPE_ERROR("missing rtpObserverId");
 		}

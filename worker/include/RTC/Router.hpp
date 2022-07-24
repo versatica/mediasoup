@@ -69,9 +69,9 @@ namespace RTC
 		void HandleNotification(PayloadChannel::Notification* notification) override;
 
 	private:
-		void SetNewTransportIdFromInternal(json& internal, std::string& transportId) const;
+		void SetNewTransportIdFromData(json& data, std::string& transportId) const;
 		RTC::Transport* GetTransportFromInternal(json& internal) const;
-		void SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const;
+		void SetNewRtpObserverIdFromData(json& data, std::string& rtpObserverId) const;
 		RTC::RtpObserver* GetRtpObserverFromInternal(json& internal) const;
 		RTC::Producer* GetProducerFromData(json& data) const;
 
