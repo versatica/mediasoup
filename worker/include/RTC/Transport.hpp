@@ -191,6 +191,14 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
+		void OnProducerReceiveData(RTC::Producer* /*producer*/, size_t len) override
+		{
+			this->DataReceived(len);
+		}
+		void OnProducerReceiveRtpPacket(RTC::Producer* /*producer*/, RTC::RtpPacket* packet) override
+		{
+			this->ReceiveRtpPacket(packet);
+		}
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
 		void OnProducerNewRtpStream(
