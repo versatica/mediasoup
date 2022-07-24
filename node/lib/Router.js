@@ -102,7 +102,8 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             return;
         logger.debug('close()');
         this.#closed = true;
-        this.#channel.request('worker.closeRouter', this.#internal)
+        const reqData = { routerId: this.#internal.routerId };
+        this.#channel.request('worker.closeRouter', undefined, reqData)
             .catch(() => { });
         // Close every Transport.
         for (const transport of this.#transports.values()) {
@@ -155,7 +156,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('router.dump', this.#internal);
+        return this.#channel.request('router.dump', this.#internal.routerId);
     }
     /**
      * Create a WebRtcTransport.
@@ -199,8 +200,8 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             isDataChannel: true
         };
         const data = webRtcServer
-            ? await this.#channel.request('router.createWebRtcTransportWithServer', this.#internal, reqData)
-            : await this.#channel.request('router.createWebRtcTransport', this.#internal, reqData);
+            ? await this.#channel.request('router.createWebRtcTransportWithServer', this.#internal.routerId, reqData)
+            : await this.#channel.request('router.createWebRtcTransport', this.#internal.routerId, reqData);
         const transport = new WebRtcTransport_1.WebRtcTransport({
             internal: {
                 ...this.#internal,
@@ -263,7 +264,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             enableSrtp,
             srtpCryptoSuite
         };
-        const data = await this.#channel.request('router.createPlainTransport', this.#internal, reqData);
+        const data = await this.#channel.request('router.createPlainTransport', this.#internal.routerId, reqData);
         const transport = new PlainTransport_1.PlainTransport({
             internal: {
                 ...this.#internal,
@@ -322,7 +323,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             enableRtx,
             enableSrtp
         };
-        const data = await this.#channel.request('router.createPipeTransport', this.#internal, reqData);
+        const data = await this.#channel.request('router.createPipeTransport', this.#internal.routerId, reqData);
         const transport = new PipeTransport_1.PipeTransport({
             internal: {
                 ...this.#internal,
@@ -359,7 +360,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             direct: true,
             maxMessageSize
         };
-        const data = await this.#channel.request('router.createDirectTransport', this.#internal, reqData);
+        const data = await this.#channel.request('router.createDirectTransport', this.#internal.routerId, reqData);
         const transport = new DirectTransport_1.DirectTransport({
             internal: {
                 ...this.#internal,
@@ -580,7 +581,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             rtpObserverId: (0, uuid_1.v4)(),
             interval
         };
-        await this.#channel.request('router.createActiveSpeakerObserver', this.#internal, reqData);
+        await this.#channel.request('router.createActiveSpeakerObserver', this.#internal.routerId, reqData);
         const activeSpeakerObserver = new ActiveSpeakerObserver_1.ActiveSpeakerObserver({
             internal: {
                 ...this.#internal,
@@ -612,7 +613,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             threshold,
             interval
         };
-        await this.#channel.request('router.createAudioLevelObserver', this.#internal, reqData);
+        await this.#channel.request('router.createAudioLevelObserver', this.#internal.routerId, reqData);
         const audioLevelObserver = new AudioLevelObserver_1.AudioLevelObserver({
             internal: {
                 ...this.#internal,

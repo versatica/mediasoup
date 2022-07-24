@@ -138,13 +138,13 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * @private
      */
-    async request(method, internal, data) {
+    async request(method, handlerId, data) {
         this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
         const id = this.#nextId;
         logger.debug('request() [method:%s, id:%s]', method, id);
         if (this.#closed)
             throw new errors_1.InvalidStateError('Channel closed');
-        const request = { id, method, internal, data };
+        const request = { id, method, handlerId, data };
         const payload = JSON.stringify(request);
         if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
             throw new Error('Channel request too big');

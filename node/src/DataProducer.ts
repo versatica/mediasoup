@@ -217,7 +217,9 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#channel.removeAllListeners(this.#internal.dataProducerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
 
-		this.#channel.request('transport.closeDataProducer', this.#internal)
+		const reqData = { dataProducerId: this.#internal.dataProducerId };
+
+		this.#channel.request('transport.closeDataProducer', this.#internal.transportId, reqData)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -257,7 +259,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('dataProducer.dump', this.#internal);
+		return this.#channel.request('dataProducer.dump', this.#internal.dataProducerId);
 	}
 
 	/**
@@ -267,7 +269,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('dataProducer.getStats', this.#internal);
+		return this.#channel.request('dataProducer.getStats', this.#internal.dataProducerId);
 	}
 
 	/**
@@ -312,7 +314,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		const notifData = { ppid };
 
 		this.#payloadChannel.notify(
-			'dataProducer.send', this.#internal, notifData, message);
+			'dataProducer.send', this.#internal.dataProducerId, notifData, message);
 	}
 
 	private handleWorkerNotifications(): void

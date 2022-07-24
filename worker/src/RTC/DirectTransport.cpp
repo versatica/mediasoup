@@ -87,26 +87,6 @@ namespace RTC
 				break;
 			}
 
-			case PayloadChannel::Notification::EventId::PRODUCER_SEND:
-			{
-				// This may throw.
-				RTC::Producer* producer = GetProducerFromInternal(notification->internal);
-
-				producer->HandleNotification(notification);
-
-				break;
-			}
-
-			case PayloadChannel::Notification::EventId::DATA_PRODUCER_SEND:
-			{
-				// This may throw.
-				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(notification->internal);
-
-				dataProducer->HandleNotification(notification);
-
-				break;
-			}
-
 			default:
 			{
 				// Pass it to the parent class.

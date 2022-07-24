@@ -83,7 +83,7 @@ class PipeTransport extends Transport_1.Transport {
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.channel.request('transport.getStats', this.internal);
+        return this.channel.request('transport.getStats', this.internal.transportId);
     }
     /**
      * Provide the PipeTransport remote parameters.
@@ -93,7 +93,7 @@ class PipeTransport extends Transport_1.Transport {
     async connect({ ip, port, srtpParameters }) {
         logger.debug('connect()');
         const reqData = { ip, port, srtpParameters };
-        const data = await this.channel.request('transport.connect', this.internal, reqData);
+        const data = await this.channel.request('transport.connect', this.internal.transportId, reqData);
         // Update data.
         this.#data.tuple = data.tuple;
     }
@@ -113,15 +113,15 @@ class PipeTransport extends Transport_1.Transport {
             throw Error(`Producer with id "${producerId}" not found`);
         // This may throw.
         const rtpParameters = ortc.getPipeConsumerRtpParameters(producer.consumableRtpParameters, this.#data.rtx);
-        const internal = { ...this.internal, consumerId: (0, uuid_1.v4)() };
         const reqData = {
+            consumerId: (0, uuid_1.v4)(),
             producerId,
             kind: producer.kind,
             rtpParameters,
             type: 'pipe',
             consumableRtpEncodings: producer.consumableRtpParameters.encodings
         };
-        const status = await this.channel.request('transport.consume', internal, reqData);
+        const status = await this.channel.request('transport.consume', this.internal.transportId, reqData);
         const data = {
             producerId,
             kind: producer.kind,
@@ -129,7 +129,10 @@ class PipeTransport extends Transport_1.Transport {
             type: 'pipe'
         };
         const consumer = new Consumer_1.Consumer({
-            internal,
+            internal: {
+                ...this.internal,
+                consumerId: reqData.consumerId
+            },
             data,
             channel: this.channel,
             payloadChannel: this.payloadChannel,

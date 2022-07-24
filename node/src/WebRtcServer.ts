@@ -166,7 +166,9 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 
 		this.#closed = true;
 
-		this.#channel.request('worker.closeWebRtcServer', this.#internal)
+		const reqData = { webRtcServerId: this.#internal.webRtcServerId };
+
+		this.#channel.request('worker.closeWebRtcServer', undefined, reqData)
 			.catch(() => {});
 
 		// Close every WebRtcTransport.
@@ -216,7 +218,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('webRtcServer.dump', this.#internal);
+		return this.#channel.request('webRtcServer.dump', this.#internal.webRtcServerId);
 	}
 
 	/**

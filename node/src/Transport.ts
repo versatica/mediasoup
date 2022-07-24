@@ -279,7 +279,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		this.channel.removeAllListeners(this.internal.transportId);
 		this.payloadChannel.removeAllListeners(this.internal.transportId);
 
-		this.channel.request('router.closeTransport', this.internal)
+		const reqData = { transportId: this.internal.transportId };
+
+		this.channel.request('router.closeTransport', this.internal.routerId, reqData)
 			.catch(() => {});
 
 		// Close every Producer.
@@ -452,7 +454,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	{
 		logger.debug('dump()');
 
-		return this.channel.request('transport.dump', this.internal);
+		return this.channel.request('transport.dump', this.internal.transportId);
 	}
 
 	/**
@@ -488,7 +490,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const reqData = { bitrate };
 
 		await this.channel.request(
-			'transport.setMaxIncomingBitrate', this.internal, reqData);
+			'transport.setMaxIncomingBitrate', this.internal.transportId, reqData);
 	}
 
 	/**
@@ -501,7 +503,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const reqData = { bitrate };
 
 		await this.channel.request(
-			'transport.setMaxOutgoingBitrate', this.internal, reqData);
+			'transport.setMaxOutgoingBitrate', this.internal.transportId, reqData);
 	}
 
 	/**
@@ -572,11 +574,17 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const consumableRtpParameters = ortc.getConsumableRtpParameters(
 			kind, rtpParameters, routerRtpCapabilities, rtpMapping);
 
-		const internal = { ...this.internal, producerId: id || uuidv4() };
-		const reqData = { kind, rtpParameters, rtpMapping, keyFrameRequestDelay, paused };
+		const reqData = {
+			producerId : id || uuidv4(),
+			kind,
+			rtpParameters,
+			rtpMapping,
+			keyFrameRequestDelay,
+			paused
+		};
 
 		const status =
-			await this.channel.request('transport.produce', internal, reqData);
+			await this.channel.request('transport.produce', this.internal.transportId, reqData);
 
 		const data =
 		{
@@ -588,7 +596,11 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		const producer = new Producer(
 			{
-				internal,
+				internal :
+					{
+						...this.internal,
+						producerId : reqData.producerId
+					},
 				data,
 				channel        : this.channel,
 				payloadChannel : this.payloadChannel,
@@ -672,9 +684,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			}
 		}
 
-		const internal = { ...this.internal, consumerId: uuidv4() };
 		const reqData =
 		{
+			consumerId             : uuidv4(),
 			producerId,
 			kind                   : producer.kind,
 			rtpParameters,
@@ -686,7 +698,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		};
 
 		const status =
-			await this.channel.request('transport.consume', internal, reqData);
+			await this.channel.request('transport.consume', this.internal.transportId, reqData);
 
 		const data =
 		{
@@ -698,7 +710,11 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		const consumer = new Consumer(
 			{
-				internal,
+				internal :
+					{
+						...this.internal,
+						consumerId : reqData.consumerId
+					},
 				data,
 				channel         : this.channel,
 				payloadChannel  : this.payloadChannel,
@@ -761,9 +777,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			}
 		}
 
-		const internal = { ...this.internal, dataProducerId: id || uuidv4() };
 		const reqData =
 		{
+			dataProducerId : id || uuidv4(),
 			type,
 			sctpStreamParameters,
 			label,
@@ -771,11 +787,15 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		};
 
 		const data =
-			await this.channel.request('transport.produceData', internal, reqData);
+			await this.channel.request('transport.produceData', this.internal.transportId, reqData);
 
 		const dataProducer = new DataProducer(
 			{
-				internal,
+				internal :
+					{
+						...this.internal,
+						dataProducerId : reqData.dataProducerId
+					},
 				data,
 				channel        : this.channel,
 				payloadChannel : this.payloadChannel,
@@ -868,9 +888,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		const { label, protocol } = dataProducer;
 
-		const internal = { ...this.internal, dataConsumerId: uuidv4() };
 		const reqData =
 		{
+			dataConsumerId : uuidv4(),
 			dataProducerId,
 			type,
 			sctpStreamParameters,
@@ -879,11 +899,15 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		};
 
 		const data =
-			await this.channel.request('transport.consumeData', internal, reqData);
+			await this.channel.request('transport.consumeData', this.internal.transportId, reqData);
 
 		const dataConsumer = new DataConsumer(
 			{
-				internal,
+				internal :
+					{
+						...this.internal,
+						dataConsumerId : reqData.dataConsumerId
+					},
 				data,
 				channel        : this.channel,
 				payloadChannel : this.payloadChannel,
@@ -922,7 +946,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const reqData = { types };
 
 		await this.channel.request(
-			'transport.enableTraceEvent', this.internal, reqData);
+			'transport.enableTraceEvent', this.internal.transportId, reqData);
 	}
 
 	private getNextSctpStreamId(): number
@@ -932,7 +956,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			typeof this.#data.sctpParameters.MIS !== 'number'
 		)
 		{
-			throw new TypeError('missing data.sctpParameters.MIS');
+			throw new TypeError('missing sctpParameters.MIS');
 		}
 
 		const numStreams = this.#data.sctpParameters.MIS;

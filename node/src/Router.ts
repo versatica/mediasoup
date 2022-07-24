@@ -266,7 +266,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#closed = true;
 
-		this.#channel.request('worker.closeRouter', this.#internal)
+		const reqData = { routerId: this.#internal.routerId };
+
+		this.#channel.request('worker.closeRouter', undefined, reqData)
 			.catch(() => {});
 
 		// Close every Transport.
@@ -342,7 +344,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('router.dump', this.#internal);
+		return this.#channel.request('router.dump', this.#internal.routerId);
 	}
 
 	/**
@@ -414,15 +416,16 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		};
 
 		const data = webRtcServer
-			? await this.#channel.request('router.createWebRtcTransportWithServer', this.#internal, reqData)
-			: await this.#channel.request('router.createWebRtcTransport', this.#internal, reqData);
+			? await this.#channel.request('router.createWebRtcTransportWithServer', this.#internal.routerId, reqData)
+			: await this.#channel.request('router.createWebRtcTransport', this.#internal.routerId, reqData);
 
 		const transport = new WebRtcTransport(
 			{
-				internal : {
-					...this.#internal,
-					transportId : reqData.transportId
-				},
+				internal :
+					{
+						...this.#internal,
+						transportId : reqData.transportId
+					},
 				data,
 				channel                  : this.#channel,
 				payloadChannel           : this.#payloadChannel,
@@ -516,14 +519,15 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		};
 
 		const data =
-			await this.#channel.request('router.createPlainTransport', this.#internal, reqData);
+			await this.#channel.request('router.createPlainTransport', this.#internal.routerId, reqData);
 
 		const transport = new PlainTransport(
 			{
-				internal : {
-					...this.#internal,
-					transportId : reqData.transportId
-				},
+				internal :
+					{
+						...this.#internal,
+						transportId : reqData.transportId
+					},
 				data,
 				channel                  : this.#channel,
 				payloadChannel           : this.#payloadChannel,
@@ -610,14 +614,15 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		};
 
 		const data =
-			await this.#channel.request('router.createPipeTransport', this.#internal, reqData);
+			await this.#channel.request('router.createPipeTransport', this.#internal.routerId, reqData);
 
 		const transport = new PipeTransport(
 			{
-				internal : {
-					...this.#internal,
-					transportId : reqData.transportId
-				},
+				internal :
+					{
+						...this.#internal,
+						transportId : reqData.transportId
+					},
 				data,
 				channel                  : this.#channel,
 				payloadChannel           : this.#payloadChannel,
@@ -671,14 +676,15 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		};
 
 		const data =
-			await this.#channel.request('router.createDirectTransport', this.#internal, reqData);
+			await this.#channel.request('router.createDirectTransport', this.#internal.routerId, reqData);
 
 		const transport = new DirectTransport(
 			{
-				internal : {
-					...this.#internal,
-					transportId : reqData.transportId
-				},
+				internal :
+					{
+						...this.#internal,
+						transportId : reqData.transportId
+					},
 				data,
 				channel                  : this.#channel,
 				payloadChannel           : this.#payloadChannel,
@@ -1019,14 +1025,15 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			interval
 		};
 
-		await this.#channel.request('router.createActiveSpeakerObserver', this.#internal, reqData);
+		await this.#channel.request('router.createActiveSpeakerObserver', this.#internal.routerId, reqData);
 
 		const activeSpeakerObserver = new ActiveSpeakerObserver(
 			{
-				internal : {
-					...this.#internal,
-					rtpObserverId : reqData.rtpObserverId
-				},
+				internal :
+					{
+						...this.#internal,
+						rtpObserverId : reqData.rtpObserverId
+					},
 				channel         : this.#channel,
 				payloadChannel  : this.#payloadChannel,
 				appData,
@@ -1071,14 +1078,15 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			interval
 		};
 
-		await this.#channel.request('router.createAudioLevelObserver', this.#internal, reqData);
+		await this.#channel.request('router.createAudioLevelObserver', this.#internal.routerId, reqData);
 
 		const audioLevelObserver = new AudioLevelObserver(
 			{
-				internal : {
-					...this.#internal,
-					rtpObserverId : reqData.rtpObserverId
-				},
+				internal :
+					{
+						...this.#internal,
+						rtpObserverId : reqData.rtpObserverId
+					},
 				channel         : this.#channel,
 				payloadChannel  : this.#payloadChannel,
 				appData,

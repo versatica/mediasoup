@@ -123,7 +123,8 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.#channel.removeAllListeners(this.#internal.producerId);
         this.#payloadChannel.removeAllListeners(this.#internal.producerId);
-        this.#channel.request('transport.closeProducer', this.#internal)
+        const reqData = { producerId: this.#internal.producerId };
+        this.#channel.request('transport.closeProducer', this.#internal.transportId, reqData)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
@@ -151,14 +152,14 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('producer.dump', this.#internal);
+        return this.#channel.request('producer.dump', this.#internal.producerId);
     }
     /**
      * Get Producer stats.
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.#channel.request('producer.getStats', this.#internal);
+        return this.#channel.request('producer.getStats', this.#internal.producerId);
     }
     /**
      * Pause the Producer.
@@ -166,7 +167,7 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async pause() {
         logger.debug('pause()');
         const wasPaused = this.#paused;
-        await this.#channel.request('producer.pause', this.#internal);
+        await this.#channel.request('producer.pause', this.#internal.producerId);
         this.#paused = true;
         // Emit observer event.
         if (!wasPaused)
@@ -178,7 +179,7 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async resume() {
         logger.debug('resume()');
         const wasPaused = this.#paused;
-        await this.#channel.request('producer.resume', this.#internal);
+        await this.#channel.request('producer.resume', this.#internal.producerId);
         this.#paused = false;
         // Emit observer event.
         if (wasPaused)
@@ -190,7 +191,7 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async enableTraceEvent(types = []) {
         logger.debug('enableTraceEvent()');
         const reqData = { types };
-        await this.#channel.request('producer.enableTraceEvent', this.#internal, reqData);
+        await this.#channel.request('producer.enableTraceEvent', this.#internal.producerId, reqData);
     }
     /**
      * Send RTP packet (just valid for Producers created on a DirectTransport).
@@ -199,7 +200,7 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         if (!Buffer.isBuffer(rtpPacket)) {
             throw new TypeError('rtpPacket must be a Buffer');
         }
-        this.#payloadChannel.notify('producer.send', this.#internal, undefined, rtpPacket);
+        this.#payloadChannel.notify('producer.send', this.#internal.producerId, undefined, rtpPacket);
     }
     handleWorkerNotifications() {
         this.#channel.on(this.#internal.producerId, (event, data) => {

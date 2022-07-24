@@ -96,7 +96,7 @@ namespace Channel
 		uint32_t id{ 0u };
 		std::string method;
 		MethodId methodId;
-		json internal;
+		std::string handlerId;
 		json data;
 		// Others.
 		bool replied{ false };

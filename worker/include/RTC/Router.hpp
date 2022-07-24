@@ -25,9 +25,7 @@ namespace RTC
 {
 	class Router : public RTC::Transport::Listener,
 	               public RTC::RtpObserver::Listener,
-	               public Channel::ChannelSocket::RequestHandler,
-	               public PayloadChannel::PayloadChannelSocket::RequestHandler,
-	               public PayloadChannel::PayloadChannelSocket::NotificationHandler
+	               public Channel::ChannelSocket::RequestHandler
 	{
 	public:
 		class Listener
@@ -60,20 +58,11 @@ namespace RTC
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
-		/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
-	public:
-		void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
-
-		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
-	public:
-		void HandleNotification(PayloadChannel::Notification* notification) override;
-
 	private:
 		void SetNewTransportIdFromData(json& data, std::string& transportId) const;
-		RTC::Transport* GetTransportFromInternal(json& internal) const;
+		RTC::Transport* GetTransportFromData(json& data) const;
 		void SetNewRtpObserverIdFromData(json& data, std::string& rtpObserverId) const;
-		RTC::RtpObserver* GetRtpObserverFromInternal(json& internal) const;
-		RTC::Producer* GetProducerFromData(json& data) const;
+		RTC::RtpObserver* GetRtpObserverFromData(json& data) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:

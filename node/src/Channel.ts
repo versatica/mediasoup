@@ -223,7 +223,7 @@ export class Channel extends EnhancedEventEmitter
 	/**
 	 * @private
 	 */
-	async request(method: string, internal?: object, data?: any): Promise<any>
+	async request(method: string, handlerId?: string, data?: any): Promise<any>
 	{
 		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
 
@@ -234,7 +234,7 @@ export class Channel extends EnhancedEventEmitter
 		if (this.#closed)
 			throw new InvalidStateError('Channel closed');
 
-		const request = { id, method, internal, data };
+		const request = { id, method, handlerId, data };
 		const payload = JSON.stringify(request);
 
 		if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)

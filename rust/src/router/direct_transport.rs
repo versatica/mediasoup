@@ -5,7 +5,9 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, SctpState};
-use crate::messages::{TransportCloseRequest, TransportInternal, TransportSendRtcpNotification};
+use crate::messages::{
+    TransportCloseRequest, TransportCloseRequestData, TransportSendRtcpNotification,
+};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::Router;
@@ -170,8 +172,8 @@ impl Inner {
             if close_request {
                 let channel = self.channel.clone();
                 let request = TransportCloseRequest {
-                    internal: TransportInternal {
-                        router_id: self.router.id(),
+                    handler_id: self.router.id(),
+                    data: TransportCloseRequestData {
                         transport_id: self.id,
                     },
                 };
@@ -518,7 +520,7 @@ impl DirectTransport {
     pub fn send_rtcp(&self, rtcp_packet: Vec<u8>) -> Result<(), NotificationError> {
         self.inner.payload_channel.notify(
             TransportSendRtcpNotification {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             },
             rtcp_packet,
         )
@@ -534,13 +536,6 @@ impl DirectTransport {
     pub fn downgrade(&self) -> WeakDirectTransport {
         WeakDirectTransport {
             inner: Arc::downgrade(&self.inner),
-        }
-    }
-
-    fn get_internal(&self) -> TransportInternal {
-        TransportInternal {
-            router_id: self.router().id(),
-            transport_id: self.id(),
         }
     }
 }

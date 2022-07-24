@@ -105,12 +105,10 @@ namespace Channel
 
 		this->methodId = methodIdIt->second;
 
-		auto jsonInternalIt = jsonRequest.find("internal");
+		auto jsonHandlerIdIt = jsonRequest.find("handlerId");
 
-		if (jsonInternalIt != jsonRequest.end() && jsonInternalIt->is_object())
-			this->internal = *jsonInternalIt;
-		else
-			this->internal = json::object();
+		if (jsonHandlerIdIt != jsonRequest.end() && jsonHandlerIdIt->is_string())
+			this->handlerId = *jsonHandlerIdIt;
 
 		auto jsonDataIt = jsonRequest.find("data");
 
