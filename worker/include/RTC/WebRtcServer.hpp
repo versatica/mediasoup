@@ -20,7 +20,8 @@ namespace RTC
 	class WebRtcServer : public RTC::UdpSocket::Listener,
 	                     public RTC::TcpServer::Listener,
 	                     public RTC::TcpConnection::Listener,
-	                     public RTC::WebRtcTransport::WebRtcTransportListener
+	                     public RTC::WebRtcTransport::WebRtcTransportListener,
+	                     Channel::ChannelSocket::RequestHandler
 	{
 	private:
 		struct ListenInfo
@@ -51,9 +52,12 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const;
-		void HandleRequest(Channel::ChannelRequest* request);
 		std::vector<RTC::IceCandidate> GetIceCandidates(
 		  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp);
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	private:
 		std::string GetLocalIceUsernameFragmentFromReceivedStunPacket(RTC::StunPacket* packet) const;

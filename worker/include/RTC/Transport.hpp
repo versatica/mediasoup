@@ -5,6 +5,7 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "Channel/ChannelRequest.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/Notification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/Consumer.hpp"

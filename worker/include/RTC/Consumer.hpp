@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
@@ -23,7 +24,7 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class Consumer
+	class Consumer : Channel::ChannelSocket::RequestHandler
 	{
 	public:
 		class Listener
@@ -70,7 +71,6 @@ namespace RTC
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray) const  = 0;
 		virtual void FillJsonScore(json& jsonObject) const = 0;
-		virtual void HandleRequest(Channel::ChannelRequest* request);
 		RTC::Media::Kind GetKind() const
 		{
 			return this->kind;
@@ -154,6 +154,10 @@ namespace RTC
 		virtual void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report) = 0;
 		virtual uint32_t GetTransmissionRate(uint64_t nowMs)                                      = 0;
 		virtual float GetRtt() const                                                              = 0;
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	protected:
 		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx = false) const;

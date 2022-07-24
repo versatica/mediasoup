@@ -54,18 +54,30 @@ namespace PayloadChannel
 	class PayloadChannelSocket : public ConsumerSocket::Listener
 	{
 	public:
-		class Listener
+		class RequestHandler
+		{
+		public:
+			virtual ~RequestHandler() = default;
+
+		public:
+			virtual void HandleRequest(PayloadChannel::PayloadChannelRequest* request) = 0;
+		};
+
+		class NotificationHandler
+		{
+		public:
+			virtual ~NotificationHandler() = default;
+
+		public:
+			virtual void HandleNotification(PayloadChannel::Notification* notification) = 0;
+		};
+
+		class Listener : public RequestHandler, public NotificationHandler
 		{
 		public:
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnPayloadChannelNotification(
-			  PayloadChannel::PayloadChannelSocket* payloadChannel,
-			  PayloadChannel::Notification* notification) = 0;
-			virtual void OnPayloadChannelRequest(
-			  PayloadChannel::PayloadChannelSocket* payloadChannel,
-			  PayloadChannel::PayloadChannelRequest* request)                                         = 0;
 			virtual void OnPayloadChannelClosed(PayloadChannel::PayloadChannelSocket* payloadChannel) = 0;
 		};
 

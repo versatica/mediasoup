@@ -21,7 +21,6 @@ namespace RTC
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
-		void HandleRequest(Channel::ChannelRequest* request) override;
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
@@ -43,6 +42,10 @@ namespace RTC
 		void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report) override;
 		uint32_t GetTransmissionRate(uint64_t nowMs) override;
 		float GetRtt() const override;
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	private:
 		void UserOnTransportConnected() override;
