@@ -191,6 +191,10 @@ namespace RTC
 				// Insert into the map.
 				this->mapTransports[transportId] = webRtcTransport;
 
+				this->listener->OnChannelRequestHandlerAdded(transportId, webRtcTransport);
+				this->listener->OnPayloadChannelRequestHandlerAdded(transportId, webRtcTransport);
+				this->listener->OnPayloadChannelNotificationHandlerAdded(transportId, webRtcTransport);
+
 				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
 
 				json data = json::object();
@@ -277,6 +281,10 @@ namespace RTC
 				// Insert into the map.
 				this->mapTransports[transportId] = webRtcTransport;
 
+				this->listener->OnChannelRequestHandlerAdded(transportId, webRtcTransport);
+				this->listener->OnPayloadChannelRequestHandlerAdded(transportId, webRtcTransport);
+				this->listener->OnPayloadChannelNotificationHandlerAdded(transportId, webRtcTransport);
+
 				MS_DEBUG_DEV(
 				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
 
@@ -301,6 +309,10 @@ namespace RTC
 				// Insert into the map.
 				this->mapTransports[transportId] = plainTransport;
 
+				this->listener->OnChannelRequestHandlerAdded(transportId, plainTransport);
+				this->listener->OnPayloadChannelRequestHandlerAdded(transportId, plainTransport);
+				this->listener->OnPayloadChannelNotificationHandlerAdded(transportId, plainTransport);
+
 				MS_DEBUG_DEV("PlainTransport created [transportId:%s]", transportId.c_str());
 
 				json data = json::object();
@@ -324,6 +336,10 @@ namespace RTC
 				// Insert into the map.
 				this->mapTransports[transportId] = pipeTransport;
 
+				this->listener->OnChannelRequestHandlerAdded(transportId, pipeTransport);
+				this->listener->OnPayloadChannelRequestHandlerAdded(transportId, pipeTransport);
+				this->listener->OnPayloadChannelNotificationHandlerAdded(transportId, pipeTransport);
+
 				MS_DEBUG_DEV("PipeTransport created [transportId:%s]", transportId.c_str());
 
 				json data = json::object();
@@ -346,6 +362,10 @@ namespace RTC
 
 				// Insert into the map.
 				this->mapTransports[transportId] = directTransport;
+
+				this->listener->OnChannelRequestHandlerAdded(transportId, directTransport);
+				this->listener->OnPayloadChannelRequestHandlerAdded(transportId, directTransport);
+				this->listener->OnPayloadChannelNotificationHandlerAdded(transportId, directTransport);
 
 				MS_DEBUG_DEV("DirectTransport created [transportId:%s]", transportId.c_str());
 
@@ -371,6 +391,8 @@ namespace RTC
 				// Insert into the map.
 				this->mapRtpObservers[rtpObserverId] = activeSpeakerObserver;
 
+				this->listener->OnChannelRequestHandlerAdded(rtpObserverId, activeSpeakerObserver);
+
 				MS_DEBUG_DEV("ActiveSpeakerObserver created [rtpObserverId:%s]", rtpObserverId.c_str());
 
 				request->Accept();
@@ -390,6 +412,8 @@ namespace RTC
 				// Insert into the map.
 				this->mapRtpObservers[rtpObserverId] = audioLevelObserver;
 
+				this->listener->OnChannelRequestHandlerAdded(rtpObserverId, audioLevelObserver);
+
 				MS_DEBUG_DEV("AudioLevelObserver created [rtpObserverId:%s]", rtpObserverId.c_str());
 
 				request->Accept();
@@ -408,6 +432,10 @@ namespace RTC
 
 				// Remove it from the map.
 				this->mapTransports.erase(transport->id);
+
+				this->listener->OnChannelRequestHandlerRemoved(transport->id);
+				this->listener->OnPayloadChannelRequestHandlerRemoved(transport->id);
+				this->listener->OnPayloadChannelNotificationHandlerRemoved(transport->id);
 
 				MS_DEBUG_DEV("Transport closed [transportId:%s]", transport->id.c_str());
 
@@ -434,6 +462,8 @@ namespace RTC
 
 					rtpObservers.erase(rtpObserver);
 				}
+
+				this->listener->OnChannelRequestHandlerRemoved(rtpObserver->id);
 
 				MS_DEBUG_DEV("RtpObserver closed [rtpObserverId:%s]", rtpObserver->id.c_str());
 
@@ -609,6 +639,9 @@ namespace RTC
 		this->mapProducers[producer->id] = producer;
 		this->mapProducerConsumers[producer];
 		this->mapProducerRtpObservers[producer];
+
+		this->listener->OnChannelRequestHandlerAdded(producer->id, producer);
+		this->listener->OnPayloadChannelNotificationHandlerAdded(producer->id, producer);
 	}
 
 	inline void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::Producer* producer)
@@ -654,6 +687,9 @@ namespace RTC
 		this->mapProducers.erase(mapProducersIt);
 		this->mapProducerConsumers.erase(mapProducerConsumersIt);
 		this->mapProducerRtpObservers.erase(mapProducerRtpObserversIt);
+
+		this->listener->OnChannelRequestHandlerRemoved(producer->id);
+		this->listener->OnPayloadChannelNotificationHandlerRemoved(producer->id);
 	}
 
 	inline void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::Producer* producer)
@@ -843,6 +879,8 @@ namespace RTC
 
 		// Provide the Consumer with the scores of all streams in the Producer.
 		consumer->ProducerRtpStreamScores(producer->GetRtpStreamScores());
+
+		this->listener->OnChannelRequestHandlerAdded(consumer->id, consumer);
 	}
 
 	inline void Router::OnTransportConsumerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
@@ -874,6 +912,8 @@ namespace RTC
 
 		// Remove the Consumer from the map.
 		this->mapConsumerProducer.erase(mapConsumerProducerIt);
+
+		this->listener->OnChannelRequestHandlerRemoved(consumer->id);
 	}
 
 	inline void Router::OnTransportConsumerProducerClosed(
@@ -926,6 +966,9 @@ namespace RTC
 		// Insert the DataProducer in the maps.
 		this->mapDataProducers[dataProducer->id] = dataProducer;
 		this->mapDataProducerDataConsumers[dataProducer];
+
+		this->listener->OnChannelRequestHandlerAdded(dataProducer->id, dataProducer);
+		this->listener->OnPayloadChannelNotificationHandlerAdded(dataProducer->id, dataProducer);
 	}
 
 	inline void Router::OnTransportDataProducerClosed(
@@ -962,6 +1005,9 @@ namespace RTC
 		// Remove the DataProducer from the maps.
 		this->mapDataProducers.erase(mapDataProducersIt);
 		this->mapDataProducerDataConsumers.erase(mapDataProducerDataConsumersIt);
+
+		this->listener->OnChannelRequestHandlerRemoved(dataProducer->id);
+		this->listener->OnPayloadChannelNotificationHandlerRemoved(dataProducer->id);
 	}
 
 	inline void Router::OnTransportDataProducerMessageReceived(
@@ -1006,6 +1052,8 @@ namespace RTC
 
 		dataConsumers.insert(dataConsumer);
 		this->mapDataConsumerDataProducer[dataConsumer] = dataProducer;
+
+		this->listener->OnChannelRequestHandlerAdded(dataConsumer->id, dataConsumer);
 	}
 
 	inline void Router::OnTransportDataConsumerClosed(
@@ -1039,6 +1087,8 @@ namespace RTC
 
 		// Remove the DataConsumer from the map.
 		this->mapDataConsumerDataProducer.erase(mapDataConsumerDataProducerIt);
+
+		this->listener->OnChannelRequestHandlerRemoved(dataConsumer->id);
 	}
 
 	inline void Router::OnTransportDataConsumerDataProducerClosed(

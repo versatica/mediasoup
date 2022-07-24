@@ -75,17 +75,22 @@ async fn init() -> (Router, Router, WebRtcTransport, WebRtcTransport) {
 
     let worker_manager = WorkerManager::new();
 
-    let worker = worker_manager
+    let worker1 = worker_manager
         .create_worker(WorkerSettings::default())
         .await
         .expect("Failed to create worker");
 
-    let router1 = worker
+    let worker2 = worker_manager
+        .create_worker(WorkerSettings::default())
+        .await
+        .expect("Failed to create worker");
+
+    let router1 = worker1
         .create_router(RouterOptions::new(media_codecs()))
         .await
         .expect("Failed to create router");
 
-    let router2 = worker
+    let router2 = worker2
         .create_router(RouterOptions::new(media_codecs()))
         .await
         .expect("Failed to create router");

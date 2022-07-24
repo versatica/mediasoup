@@ -60,6 +60,16 @@ public:
 
 	/* Pure virtual methods inherited from RTC::Router::Listener. */
 public:
+	void OnChannelRequestHandlerAdded(
+	  const std::string& id, Channel::ChannelSocket::RequestHandler* handler) override;
+	void OnChannelRequestHandlerRemoved(const std::string& id) override;
+	void OnPayloadChannelRequestHandlerAdded(
+	  const std::string& id, PayloadChannel::PayloadChannelSocket::RequestHandler* handler) override;
+	void OnPayloadChannelRequestHandlerRemoved(const std::string& id) override;
+	void OnPayloadChannelNotificationHandlerAdded(
+	  const std::string& id,
+	  PayloadChannel::PayloadChannelSocket::NotificationHandler* handler) override;
+	void OnPayloadChannelNotificationHandlerRemoved(const std::string& id) override;
 	RTC::WebRtcServer* OnRouterNeedWebRtcServer(RTC::Router* router, std::string& webRtcServerId) override;
 
 private:
@@ -70,6 +80,11 @@ private:
 	SignalsHandler* signalsHandler{ nullptr };
 	absl::flat_hash_map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
 	absl::flat_hash_map<std::string, RTC::Router*> mapRouters;
+	absl::flat_hash_map<std::string, Channel::ChannelSocket::RequestHandler*> mapChannelRequestHandlers;
+	absl::flat_hash_map<std::string, PayloadChannel::PayloadChannelSocket::RequestHandler*>
+	  mapPayloadChannelRequestHandlers;
+	absl::flat_hash_map<std::string, PayloadChannel::PayloadChannelSocket::NotificationHandler*>
+	  mapPayloadChannelNotificationHandlers;
 	// Others.
 	bool closed{ false };
 };

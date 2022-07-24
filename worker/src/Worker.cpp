@@ -90,6 +90,11 @@ void Worker::Close()
 
 	// Close the PayloadChannel.
 	this->payloadChannel->Close();
+
+	// Clear all request and notification handlers.
+	this->mapChannelRequestHandlers.clear();
+	this->mapPayloadChannelRequestHandlers.clear();
+	this->mapPayloadChannelNotificationHandlers.clear();
 }
 
 void Worker::FillJson(json& jsonObject) const
@@ -314,6 +319,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 				auto* webRtcServer = new RTC::WebRtcServer(webRtcServerId, request->data);
 
 				this->mapWebRtcServers[webRtcServerId] = webRtcServer;
+				this->OnChannelRequestHandlerAdded(webRtcServerId, webRtcServer);
 
 				MS_DEBUG_DEV("WebRtcServer created [webRtcServerId:%s]", webRtcServerId.c_str());
 
@@ -346,6 +352,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			// Remove it from the map and delete it.
 			this->mapWebRtcServers.erase(webRtcServer->id);
+			this->OnChannelRequestHandlerRemoved(webRtcServer->id);
 			delete webRtcServer;
 
 			MS_DEBUG_DEV("WebRtcServer closed [id:%s]", webRtcServer->id.c_str());
@@ -389,6 +396,9 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			auto* router = new RTC::Router(routerId, this);
 
 			this->mapRouters[routerId] = router;
+			this->OnChannelRequestHandlerAdded(routerId, router);
+			this->OnPayloadChannelRequestHandlerAdded(routerId, router);
+			this->OnPayloadChannelNotificationHandlerAdded(routerId, router);
 
 			MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
 
@@ -412,6 +422,9 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			// Remove it from the map and delete it.
 			this->mapRouters.erase(router->id);
+			this->OnChannelRequestHandlerRemoved(router->id);
+			this->OnPayloadChannelRequestHandlerRemoved(router->id);
+			this->OnPayloadChannelNotificationHandlerRemoved(router->id);
 			delete router;
 
 			MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
@@ -557,6 +570,45 @@ inline void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 			MS_WARN_DEV("received a non handled signal [signum:%d]", signum);
 		}
 	}
+}
+
+inline void Worker::OnChannelRequestHandlerAdded(
+  const std::string& id, Channel::ChannelSocket::RequestHandler* handler)
+{
+	if (this->mapChannelRequestHandlers.find(id) != this->mapChannelRequestHandlers.end())
+		MS_THROW_ERROR("Channel request handler with ID %s already exists", id.c_str());
+
+	this->mapChannelRequestHandlers[id] = handler;
+}
+inline void Worker::OnChannelRequestHandlerRemoved(const std::string& id)
+{
+	this->mapChannelRequestHandlers.erase(id);
+}
+inline void Worker::OnPayloadChannelRequestHandlerAdded(
+  const std::string& id, PayloadChannel::PayloadChannelSocket::RequestHandler* handler)
+{
+	if (this->mapPayloadChannelRequestHandlers.find(id) != this->mapPayloadChannelRequestHandlers.end())
+		MS_THROW_ERROR("Payload channel request handler with ID %s already exists", id.c_str());
+
+	this->mapPayloadChannelRequestHandlers[id] = handler;
+}
+inline void Worker::OnPayloadChannelRequestHandlerRemoved(const std::string& id)
+{
+	this->mapPayloadChannelRequestHandlers.erase(id);
+}
+inline void Worker::OnPayloadChannelNotificationHandlerAdded(
+  const std::string& id, PayloadChannel::PayloadChannelSocket::NotificationHandler* handler)
+{
+	if (
+	  this->mapPayloadChannelNotificationHandlers.find(id) !=
+	  this->mapPayloadChannelNotificationHandlers.end())
+		MS_THROW_ERROR("Payload channel notification handler with ID %s already exists", id.c_str());
+
+	this->mapPayloadChannelNotificationHandlers[id] = handler;
+}
+inline void Worker::OnPayloadChannelNotificationHandlerRemoved(const std::string& id)
+{
+	this->mapPayloadChannelNotificationHandlers.erase(id);
 }
 
 inline RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(
