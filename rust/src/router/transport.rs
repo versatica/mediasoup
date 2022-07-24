@@ -372,7 +372,6 @@ pub(super) trait TransportImpl: TransportGeneric {
                 internal: TransportInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
-                    webrtc_server_id: None,
                 },
             })
             .await
@@ -384,7 +383,6 @@ pub(super) trait TransportImpl: TransportGeneric {
                 internal: TransportInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
-                    webrtc_server_id: None,
                 },
             })
             .await
@@ -396,7 +394,6 @@ pub(super) trait TransportImpl: TransportGeneric {
                 internal: TransportInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
-                    webrtc_server_id: None,
                 },
                 data: TransportSetMaxIncomingBitrateData { bitrate },
             })
@@ -409,7 +406,6 @@ pub(super) trait TransportImpl: TransportGeneric {
                 internal: TransportInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
-                    webrtc_server_id: None,
                 },
                 data: TransportSetMaxOutgoingBitrateData { bitrate },
             })
@@ -425,7 +421,6 @@ pub(super) trait TransportImpl: TransportGeneric {
                 internal: TransportInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
-                    webrtc_server_id: None,
                 },
                 data: TransportEnableTraceEventData { types },
             })

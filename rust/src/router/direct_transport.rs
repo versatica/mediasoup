@@ -172,7 +172,6 @@ impl Inner {
                     internal: TransportInternal {
                         router_id: self.router.id(),
                         transport_id: self.id,
-                        webrtc_server_id: None,
                     },
                 };
 
@@ -541,7 +540,6 @@ impl DirectTransport {
         TransportInternal {
             router_id: self.router().id(),
             transport_id: self.id(),
-            webrtc_server_id: None,
         }
     }
 }
