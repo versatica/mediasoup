@@ -445,25 +445,12 @@ namespace RTC
 			}
 
 			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_PAUSE:
-			{
-				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-
-				rtpObserver->Pause();
-
-				request->Accept();
-
-				break;
-			}
-
 			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_RESUME:
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
 
-				rtpObserver->Resume();
-
-				request->Accept();
+				rtpObserver->HandleRequest(request);
 
 				break;
 			}

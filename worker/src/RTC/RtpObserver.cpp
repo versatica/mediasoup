@@ -3,6 +3,7 @@
 
 #include "RTC/RtpObserver.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 
 namespace RTC
 {
@@ -16,6 +17,37 @@ namespace RTC
 	RtpObserver::~RtpObserver()
 	{
 		MS_TRACE();
+	}
+
+	void RtpObserver::HandleRequest(Channel::ChannelRequest* request)
+	{
+		MS_TRACE();
+
+		switch (request->methodId)
+		{
+			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_PAUSE:
+			{
+				this->Pause();
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_RESUME:
+			{
+				this->Resume();
+
+				request->Accept();
+
+				break;
+			}
+
+			default:
+			{
+				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			}
+		}
 	}
 
 	void RtpObserver::Pause()
