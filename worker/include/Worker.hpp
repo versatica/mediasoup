@@ -34,19 +34,24 @@ private:
 	void SetNewRouterIdFromInternal(json& internal, std::string& routerId) const;
 	RTC::Router* GetRouterFromInternal(json& internal) const;
 
-	/* Methods inherited from Channel::lUnixStreamSocket::Listener. */
+	/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 public:
-	void OnChannelRequest(Channel::ChannelSocket* channel, Channel::ChannelRequest* request) override;
+	void HandleRequest(Channel::ChannelRequest* request) override;
+
+	/* Methods inherited from Channel::ChannelSocket::Listener. */
+public:
 	void OnChannelClosed(Channel::ChannelSocket* channel) override;
 
-	/* Methods inherited from PayloadChannel::lUnixStreamSocket::Listener. */
+	/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
 public:
-	void OnPayloadChannelNotification(
-	  PayloadChannel::PayloadChannelSocket* payloadChannel,
-	  PayloadChannel::Notification* notification) override;
-	void OnPayloadChannelRequest(
-	  PayloadChannel::PayloadChannelSocket* payloadChannel,
-	  PayloadChannel::PayloadChannelRequest* request) override;
+	void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
+
+	/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
+public:
+	void HandleNotification(PayloadChannel::Notification* notification) override;
+
+	/* Methods inherited from PayloadChannel::PayloadChannelSocket::Listener. */
+public:
 	void OnPayloadChannelClosed(PayloadChannel::PayloadChannelSocket* payloadChannel) override;
 
 	/* Methods inherited from SignalsHandler::Listener. */

@@ -61,12 +61,15 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;
-		void HandleRequest(Channel::ChannelRequest* request) override;
 		void HandleNotification(PayloadChannel::Notification* notification) override;
 		void ProcessStunPacketFromWebRtcServer(RTC::TransportTuple* tuple, RTC::StunPacket* packet);
 		void ProcessNonStunPacketFromWebRtcServer(
 		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void RemoveTuple(RTC::TransportTuple* tuple);
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	private:
 		bool IsConnected() const override;

@@ -23,7 +23,10 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class Router : public RTC::Transport::Listener
+	class Router : public RTC::Transport::Listener,
+	               Channel::ChannelSocket::RequestHandler,
+	               PayloadChannel::PayloadChannelSocket::RequestHandler,
+	               PayloadChannel::PayloadChannelSocket::NotificationHandler
 	{
 	public:
 		class Listener
@@ -42,9 +45,18 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const;
-		void HandleRequest(Channel::ChannelRequest* request);
-		void HandleRequest(PayloadChannel::PayloadChannelRequest* request);
-		void HandleNotification(PayloadChannel::Notification* notification);
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
+	public:
+		void HandleNotification(PayloadChannel::Notification* notification) override;
 
 	private:
 		void SetNewTransportIdFromInternal(json& internal, std::string& transportId) const;

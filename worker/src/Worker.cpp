@@ -253,7 +253,7 @@ RTC::Router* Worker::GetRouterFromInternal(json& internal) const
 	return router;
 }
 
-inline void Worker::OnChannelRequest(Channel::ChannelSocket* /*channel*/, Channel::ChannelRequest* request)
+inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
@@ -458,8 +458,7 @@ inline void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
 	Close();
 }
 
-inline void Worker::OnPayloadChannelNotification(
-  PayloadChannel::PayloadChannelSocket* /*payloadChannel*/, PayloadChannel::Notification* notification)
+inline void Worker::HandleNotification(PayloadChannel::Notification* notification)
 {
 	MS_TRACE();
 
@@ -481,9 +480,7 @@ inline void Worker::OnPayloadChannelNotification(
 	}
 }
 
-inline void Worker::OnPayloadChannelRequest(
-  PayloadChannel::PayloadChannelSocket* /*payloadChannel*/,
-  PayloadChannel::PayloadChannelRequest* request)
+inline void Worker::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
 {
 	MS_TRACE();
 

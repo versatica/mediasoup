@@ -181,7 +181,7 @@ namespace Channel
 				// Notify the listener.
 				try
 				{
-					this->listener->OnChannelRequest(this, request);
+					this->listener->HandleRequest(request);
 				}
 				catch (const MediaSoupTypeError& error)
 				{
@@ -246,7 +246,7 @@ namespace Channel
 			// Notify the listener.
 			try
 			{
-				this->listener->OnChannelRequest(this, request);
+				this->listener->HandleRequest(request);
 			}
 			catch (const MediaSoupTypeError& error)
 			{
