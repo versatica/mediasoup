@@ -572,7 +572,6 @@ impl Router {
                 internal: TransportInternal {
                     router_id: self.inner.id,
                     transport_id,
-                    webrtc_server_id: None,
                 },
                 data: RouterCreateDirectTransportData::from_options(&direct_transport_options),
             })
@@ -634,10 +633,6 @@ impl Router {
                 internal: TransportInternal {
                     router_id: self.inner.id,
                     transport_id,
-                    webrtc_server_id: match &webrtc_transport_options.listen {
-                        WebRtcTransportListen::Individual { .. } => None,
-                        WebRtcTransportListen::Server { webrtc_server } => Some(webrtc_server.id()),
-                    },
                 },
                 data: RouterCreateWebrtcTransportData::from_options(&webrtc_transport_options),
             })
@@ -702,7 +697,6 @@ impl Router {
                 internal: TransportInternal {
                     router_id: self.inner.id,
                     transport_id,
-                    webrtc_server_id: None,
                 },
                 data: RouterCreatePipeTransportData::from_options(&pipe_transport_options),
             })
@@ -763,7 +757,6 @@ impl Router {
                 internal: TransportInternal {
                     router_id: self.inner.id,
                     transport_id,
-                    webrtc_server_id: None,
                 },
                 data: RouterCreatePlainTransportData::from_options(&plain_transport_options),
             })

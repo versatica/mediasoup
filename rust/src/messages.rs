@@ -52,10 +52,6 @@ pub(crate) struct WebRtcServerInternal {
 pub(crate) struct TransportInternal {
     pub(crate) router_id: RouterId,
     pub(crate) transport_id: TransportId,
-    // TODO: This field should have really been in the `data`, not in `internal` data structure
-    #[serde(rename = "webRtcServerId")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) webrtc_server_id: Option<WebRtcServerId>,
 }
 
 #[derive(Debug, Serialize)]
