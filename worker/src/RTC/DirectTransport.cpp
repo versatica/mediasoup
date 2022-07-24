@@ -102,32 +102,7 @@ namespace RTC
 				// This may throw.
 				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(notification->internal);
 
-				auto jsonPpidIt = notification->data.find("ppid");
-
-				if (jsonPpidIt == notification->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
-				{
-					MS_THROW_TYPE_ERROR("invalid ppid");
-				}
-
-				auto ppid       = jsonPpidIt->get<uint32_t>();
-				const auto* msg = notification->payload;
-				auto len        = notification->payloadLen;
-
-				if (len > this->maxMessageSize)
-				{
-					MS_WARN_TAG(
-					  message,
-					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
-					  len,
-					  this->maxMessageSize);
-
-					return;
-				}
-
-				dataProducer->ReceiveMessage(ppid, msg, len);
-
-				// Increase receive transmission.
-				RTC::Transport::DataReceived(len);
+				dataProducer->HandleNotification(notification);
 
 				break;
 			}

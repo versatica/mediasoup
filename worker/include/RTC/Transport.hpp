@@ -223,6 +223,10 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::DataProducer::Listener. */
 	public:
+		void OnDataProducerReceiveData(RTC::DataProducer* /*dataProducer*/, size_t len) override
+		{
+			this->DataReceived(len);
+		}
 		void OnDataProducerMessageReceived(
 		  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) override;
 

@@ -1092,7 +1092,8 @@ namespace RTC
 				SetNewDataProducerIdFromInternal(request->internal, dataProducerId);
 
 				// This may throw.
-				auto* dataProducer = new RTC::DataProducer(dataProducerId, this, request->data);
+				auto* dataProducer =
+				  new RTC::DataProducer(dataProducerId, this->maxMessageSize, this, request->data);
 
 				// Verify the type of the DataProducer.
 				switch (dataProducer->GetType())
