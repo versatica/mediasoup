@@ -1197,7 +1197,7 @@ namespace RTC
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  dataConsumerId, dataProducerId, this, request->data, this->maxMessageSize);
+				  dataConsumerId, dataProducerId, this->sctpAssociation, this, request->data, this->maxMessageSize);
 
 				// Verify the type of the DataConsumer.
 				switch (dataConsumer->GetType())
@@ -1486,49 +1486,11 @@ namespace RTC
 
 			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_DUMP:
 			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_GET_STATS:
-			{
-				// This may throw.
-				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
-
-				dataConsumer->HandleRequest(request);
-
-				break;
-			}
-
 			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
-			{
-				// This may throw.
-				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
-
-				if (dataConsumer->GetType() != RTC::DataConsumer::Type::SCTP)
-				{
-					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
-				}
-
-				if (!this->sctpAssociation)
-				{
-					MS_THROW_ERROR("no SCTP association present");
-				}
-
-				// Create status response.
-				json data = json::object();
-
-				data["bufferedAmount"] = this->sctpAssociation->GetSctpBufferedAmount();
-
-				request->Accept(data);
-
-				break;
-			}
-
 			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
 			{
 				// This may throw.
 				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
-
-				if (dataConsumer->GetType() != RTC::DataConsumer::Type::SCTP)
-				{
-					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
-				}
 
 				dataConsumer->HandleRequest(request);
 
@@ -1552,16 +1514,6 @@ namespace RTC
 			{
 				// This may throw.
 				RTC::DataConsumer* dataConsumer = GetDataConsumerFromInternal(request->internal);
-
-				if (dataConsumer->GetType() != RTC::DataConsumer::Type::SCTP)
-				{
-					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
-				}
-
-				if (!this->sctpAssociation)
-				{
-					MS_THROW_ERROR("no SCTP association present");
-				}
 
 				dataConsumer->HandleRequest(request);
 

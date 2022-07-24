@@ -7,6 +7,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "Channel/ChannelNotifier.hpp"
+#include "RTC/SctpAssociation.hpp"
 
 namespace RTC
 {
@@ -15,10 +16,12 @@ namespace RTC
 	DataConsumer::DataConsumer(
 	  const std::string& id,
 	  const std::string& dataProducerId,
+	  RTC::SctpAssociation* sctpAssociation,
 	  RTC::DataConsumer::Listener* listener,
 	  json& data,
 	  size_t maxMessageSize)
-	  : id(id), dataProducerId(dataProducerId), listener(listener), maxMessageSize(maxMessageSize)
+	  : id(id), dataProducerId(dataProducerId), sctpAssociation(sctpAssociation), listener(listener),
+	    maxMessageSize(maxMessageSize)
 	{
 		MS_TRACE();
 
@@ -153,8 +156,35 @@ namespace RTC
 				break;
 			}
 
+			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
+			{
+				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
+				{
+					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
+				}
+
+				if (!this->sctpAssociation)
+				{
+					MS_THROW_ERROR("no SCTP association present");
+				}
+
+				// Create status response.
+				json data = json::object();
+
+				data["bufferedAmount"] = this->sctpAssociation->GetSctpBufferedAmount();
+
+				request->Accept(data);
+
+				break;
+			}
+
 			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
 			{
+				if (this->GetType() != DataConsumer::Type::SCTP)
+				{
+					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
+				}
+
 				auto jsonThresholdIt = request->data.find("threshold");
 
 				if (jsonThresholdIt == request->data.end() || !jsonThresholdIt->is_number_unsigned())
@@ -200,6 +230,16 @@ namespace RTC
 		{
 			case PayloadChannel::PayloadChannelRequest::MethodId::DATA_CONSUMER_SEND:
 			{
+				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
+				{
+					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
+				}
+
+				if (!this->sctpAssociation)
+				{
+					MS_THROW_ERROR("no SCTP association present");
+				}
+
 				auto jsonPpidIt = request->data.find("ppid");
 
 				if (jsonPpidIt == request->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
