@@ -365,7 +365,8 @@ namespace RTC
 				// This may throw.
 				SetNewRtpObserverIdFromInternal(request->internal, rtpObserverId);
 
-				auto* activeSpeakerObserver = new RTC::ActiveSpeakerObserver(rtpObserverId, request->data);
+				auto* activeSpeakerObserver =
+				  new RTC::ActiveSpeakerObserver(rtpObserverId, this, request->data);
 
 				// Insert into the map.
 				this->mapRtpObservers[rtpObserverId] = activeSpeakerObserver;
@@ -384,7 +385,7 @@ namespace RTC
 				// This may throw
 				SetNewRtpObserverIdFromInternal(request->internal, rtpObserverId);
 
-				auto* audioLevelObserver = new RTC::AudioLevelObserver(rtpObserverId, request->data);
+				auto* audioLevelObserver = new RTC::AudioLevelObserver(rtpObserverId, this, request->data);
 
 				// Insert into the map.
 				this->mapRtpObservers[rtpObserverId] = audioLevelObserver;
@@ -446,43 +447,13 @@ namespace RTC
 
 			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_PAUSE:
 			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_RESUME:
+			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_ADD_PRODUCER:
+			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_REMOVE_PRODUCER:
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
 
 				rtpObserver->HandleRequest(request);
-
-				break;
-			}
-
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_ADD_PRODUCER:
-			{
-				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-				RTC::Producer* producer       = GetProducerFromData(request->data);
-
-				rtpObserver->AddProducer(producer);
-
-				// Add to the map.
-				this->mapProducerRtpObservers[producer].insert(rtpObserver);
-
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_REMOVE_PRODUCER:
-			{
-				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-				RTC::Producer* producer       = GetProducerFromData(request->data);
-
-				rtpObserver->RemoveProducer(producer);
-
-				// Remove from the map.
-				this->mapProducerRtpObservers[producer].erase(rtpObserver);
-
-				request->Accept();
 
 				break;
 			}
@@ -1107,5 +1078,29 @@ namespace RTC
 
 		// Delete it.
 		delete transport;
+	}
+
+	void Router::OnRtpObserverAddProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer)
+	{
+		// Add to the map.
+		this->mapProducerRtpObservers[producer].insert(rtpObserver);
+	}
+	void Router::OnRtpObserverRemoveProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer)
+	{
+		// Remove from the map.
+		this->mapProducerRtpObservers[producer].erase(rtpObserver);
+	}
+
+	RTC::Producer* Router::RtpObserverGetProducer(
+	  RTC::RtpObserver* /* rtpObserver */, const std::string& id)
+	{
+		auto it = this->mapProducers.find(id);
+
+		if (it == this->mapProducers.end())
+			MS_THROW_ERROR("Producer not found");
+
+		RTC::Producer* producer = it->second;
+
+		return producer;
 	}
 } // namespace RTC

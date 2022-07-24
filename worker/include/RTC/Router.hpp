@@ -24,6 +24,7 @@ using json = nlohmann::json;
 namespace RTC
 {
 	class Router : public RTC::Transport::Listener,
+	               public RTC::RtpObserver::Listener,
 	               public Channel::ChannelSocket::RequestHandler,
 	               public PayloadChannel::PayloadChannelSocket::RequestHandler,
 	               public PayloadChannel::PayloadChannelSocket::NotificationHandler
@@ -111,6 +112,12 @@ namespace RTC
 		void OnTransportDataConsumerDataProducerClosed(
 		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
 		void OnTransportListenServerClosed(RTC::Transport* transport) override;
+
+		/* Pure virtual methods inherited from RTC::RtpObserver::Listener. */
+	public:
+		RTC::Producer* RtpObserverGetProducer(RTC::RtpObserver*, const std::string& id) override;
+		void OnRtpObserverAddProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer) override;
+		void OnRtpObserverRemoveProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer) override;
 
 	public:
 		// Passed by argument.

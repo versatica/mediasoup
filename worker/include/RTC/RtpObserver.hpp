@@ -11,7 +11,21 @@ namespace RTC
 	class RtpObserver : public Channel::ChannelSocket::RequestHandler
 	{
 	public:
-		RtpObserver(const std::string& id);
+		class Listener
+		{
+		public:
+			virtual ~Listener() = default;
+
+		public:
+			virtual RTC::Producer* RtpObserverGetProducer(
+			  RTC::RtpObserver* rtpObserver, const std::string& id) = 0;
+			virtual void OnRtpObserverAddProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer) = 0;
+			virtual void OnRtpObserverRemoveProducer(
+			  RTC::RtpObserver* rtpObserver, RTC::Producer* producer) = 0;
+		};
+
+	public:
+		RtpObserver(const std::string& id, RTC::RtpObserver::Listener* listener);
 		virtual ~RtpObserver();
 
 	public:
@@ -35,9 +49,13 @@ namespace RTC
 		virtual void Paused()  = 0;
 		virtual void Resumed() = 0;
 
+	private:
+		std::string GetProducerIdFromData(json& data) const;
+
 	public:
 		// Passed by argument.
 		const std::string id;
+		RTC::RtpObserver::Listener* listener{ nullptr };
 
 	private:
 		// Others.
