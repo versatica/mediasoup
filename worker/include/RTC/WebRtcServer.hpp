@@ -21,7 +21,7 @@ namespace RTC
 	                     public RTC::TcpServer::Listener,
 	                     public RTC::TcpConnection::Listener,
 	                     public RTC::WebRtcTransport::WebRtcTransportListener,
-	                     Channel::ChannelSocket::RequestHandler
+	                     public Channel::ChannelSocket::RequestHandler
 	{
 	private:
 		struct ListenInfo

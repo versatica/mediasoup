@@ -23,7 +23,7 @@ namespace RTC
 {
 	class Producer : public RTC::RtpStreamRecv::Listener,
 	                 public RTC::KeyFrameRequestManager::Listener,
-	                 Channel::ChannelSocket::RequestHandler
+	                 public Channel::ChannelSocket::RequestHandler
 	{
 	public:
 		class Listener

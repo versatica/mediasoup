@@ -10,7 +10,7 @@
 
 namespace RTC
 {
-	class DataProducer : Channel::ChannelSocket::RequestHandler
+	class DataProducer : public Channel::ChannelSocket::RequestHandler
 	{
 	public:
 		class Listener

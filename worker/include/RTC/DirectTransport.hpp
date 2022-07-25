@@ -14,7 +14,6 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;
-		void HandleNotification(PayloadChannel::Notification* notification) override;
 
 	private:
 		bool IsConnected() const override;
@@ -37,6 +36,10 @@ namespace RTC
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
+	public:
+		void HandleNotification(PayloadChannel::Notification* notification) override;
 
 	private:
 		// Allocated by this.
