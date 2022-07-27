@@ -1,5 +1,4 @@
-# Get latest Ubuntu LTS.
-FROM ubuntu:latest
+FROM ubuntu:22.04
 
 # Install dependencies.
 RUN \
