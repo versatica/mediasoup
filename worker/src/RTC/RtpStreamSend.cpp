@@ -469,7 +469,6 @@ namespace RTC
 
 				// RTP packet is older than the retransmission buffer size.
 				if (static_cast<uint32_t>(diffTs * 1000 / this->params.clockRate) >= this->retransmissionBufferSize)
-
 					return;
 			}
 		}
