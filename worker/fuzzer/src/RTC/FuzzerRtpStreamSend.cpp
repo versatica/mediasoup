@@ -40,6 +40,8 @@ void Fuzzer::RTC::RtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	params.useNack       = true;
 	params.mimeType.type = ::RTC::RtpCodecMimeType::Type::VIDEO;
 
+	packet->SetSsrc(params.ssrc);
+
 	std::string mid;
 	::RTC::RtpStreamSend* stream = new ::RTC::RtpStreamSend(&testRtpStreamListener, params, mid);
 
@@ -51,7 +53,6 @@ void Fuzzer::RTC::RtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 		packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));
 		packet->SetTimestamp(Utils::Byte::Get4Bytes(data, offset));
 
-		packet->SetSsrc(params.ssrc);
 		stream->ReceivePacket(packet, sharedPacket);
 
 		len -= 4u;
