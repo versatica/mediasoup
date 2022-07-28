@@ -38,7 +38,12 @@ namespace RTC
 
 	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::GetFirst() const
 	{
-		return this->Get(this->startSeq);
+		auto* storageItem = this->Get(this->startSeq);
+
+		MS_ASSERT(storageItem, "first storage item is missing");
+		MS_ASSERT(storageItem->packet, "storage item does not contain original packet");
+
+		return storageItem;
 	}
 
 	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::Get(uint16_t seq) const
@@ -452,6 +457,23 @@ namespace RTC
 			return;
 		}
 
+		// Check if RTP packet is too old to be stored.
+		if (this->storageItemBuffer.GetBufferSize() > 0)
+		{
+			auto* storageItem = this->storageItemBuffer.GetFirst();
+
+			// Processing RTP packet is older than first one.
+			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(packet->GetTimestamp(), storageItem->timestamp))
+			{
+				uint32_t diffTs{ storageItem->timestamp - packet->GetTimestamp() };
+
+				// RTP packet is older than the retransmission buffer size.
+				if (static_cast<uint32_t>(diffTs * 1000 / this->params.clockRate) >= this->retransmissionBufferSize)
+
+					return;
+			}
+		}
+
 		this->ClearOldPackets(packet);
 
 		auto seq          = packet->GetSequenceNumber();
@@ -493,7 +515,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto packetTs{ packet->GetTimestamp() };
 		auto clockRate{ this->params.clockRate };
 
 		const auto bufferSize = this->storageItemBuffer.GetBufferSize();
@@ -502,16 +523,11 @@ namespace RTC
 		// items that contain packets older than `MaxRetransmissionDelay`.
 		for (size_t i{ 0 }; i < bufferSize && this->storageItemBuffer.GetBufferSize() != 0; ++i)
 		{
-			auto* firstStorageItem = this->storageItemBuffer.GetFirst();
+			auto* storageItem = this->storageItemBuffer.GetFirst();
+			uint32_t diffTs{ packet->GetTimestamp() - storageItem->timestamp };
 
-			MS_ASSERT(firstStorageItem, "first storage item is missing");
-			MS_ASSERT(firstStorageItem->packet, "storage item does not contain original packet");
-
-			auto firstPacketTs{ firstStorageItem->timestamp };
-			uint32_t diffTs{ packetTs - firstPacketTs };
-
-			// RTP packet is older than first RTP packet.
-			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(packetTs, firstPacketTs))
+			// Processing RTP packet is older than first one.
+			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(packet->GetTimestamp(), storageItem->timestamp))
 				break;
 
 			// First RTP packet is recent enough.
