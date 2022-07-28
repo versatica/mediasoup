@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.10.5
+
+* Do not clone RTP packets if not needed (PR #850).
+* Log error details in channel socket. (PR #875 by @mstyura)
+
 ### 3.10.4
 
 * Do not clone RTP packets if not needed (PR #850).
