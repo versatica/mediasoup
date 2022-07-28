@@ -117,10 +117,7 @@ namespace RTC
 		           payloadLength + size_t{ payloadPadding },
 		  "packet's computed size does not match received size");
 
-		auto* packet =
-		  new RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
-
-		return packet;
+		return new RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
 	}
 
 	/* Instance methods. */

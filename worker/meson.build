@@ -348,6 +348,7 @@ if host_machine.system() == 'linux'
       'fuzzer/src/FuzzerUtils.cpp',
       'fuzzer/src/RTC/FuzzerStunPacket.cpp',
       'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
+      'fuzzer/src/RTC/FuzzerRtpStreamSend.cpp',
       'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
       'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
       'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
