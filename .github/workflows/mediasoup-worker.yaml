@@ -20,21 +20,18 @@ jobs:
           - os: ubuntu-20.04
             cc: clang
             cxx: clang++
-          - os: macos-10.15
+          - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-          - os: macos-10.15
+          - os: ubuntu-22.04
             cc: clang
             cxx: clang++
-          - os: macos-11
+          - os: macos-12
             cc: gcc
             cxx: g++
-          - os: macos-11
+          - os: macos-12
             cc: clang
             cxx: clang++
-          - os: windows-2019
-            cc: cl
-            cxx: cl
           - os: windows-2022
             cc: cl
             cxx: cl
