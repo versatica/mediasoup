@@ -3,8 +3,9 @@
 
 ### 3.10.5
 
+* `RtpStreamSend`: Do not store too old RTP packets (PR #885).
 * Do not clone RTP packets if not needed (PR #850).
-* Log error details in channel socket. (PR #875 by @mstyura)
+* Log error details in channel socket. (PR #875 by @mstyura).
 
 ### 3.10.4
 
