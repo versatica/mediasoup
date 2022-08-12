@@ -194,7 +194,8 @@ namespace RTC
 				// Insert into the map.
 				this->mapTransports[transportId] = webRtcTransport;
 
-				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
+				//MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
+				MS_DEBUG_TAG(rtp, "WebRtcTransport created [transportId:%s] [data:%s]", transportId.c_str(), request->data.dump().c_str());
 
 				json data = json::object();
 
@@ -217,7 +218,8 @@ namespace RTC
 				// Insert into the map.
 				this->mapTransports[transportId] = plainTransport;
 
-				MS_DEBUG_DEV("PlainTransport created [transportId:%s]", transportId.c_str());
+				// MS_DEBUG_DEV("PlainTransport created [transportId:%s]", transportId.c_str());
+				MS_DEBUG_TAG(rtp, "PlainTransport created [transportId:%s] [data:%s]", transportId.c_str(), request->data.dump().c_str());
 
 				json data = json::object();
 
@@ -240,7 +242,8 @@ namespace RTC
 				// Insert into the map.
 				this->mapTransports[transportId] = pipeTransport;
 
-				MS_DEBUG_DEV("PipeTransport created [transportId:%s]", transportId.c_str());
+				//MS_DEBUG_DEV("PipeTransport created [transportId:%s]", transportId.c_str());
+				MS_DEBUG_TAG(rtp, "PipeTransport created [transportId:%s] [data:%s]", transportId.c_str(), request->data.dump().c_str());
 
 				json data = json::object();
 
@@ -286,7 +289,8 @@ namespace RTC
 				// Insert into the map.
 				this->mapTransports[transportId] = directTransport;
 
-				MS_DEBUG_DEV("DirectTransport created [transportId:%s]", transportId.c_str());
+				//MS_DEBUG_DEV("DirectTransport created [transportId:%s]", transportId.c_str());
+				MS_DEBUG_TAG(rtp, "DirectTransport created [transportId:%s] [data:%s]", transportId.c_str(), request->data.dump().c_str());
 
 				json data = json::object();
 

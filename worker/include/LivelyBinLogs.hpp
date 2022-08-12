@@ -8,9 +8,6 @@
 #define BINLOG_MIN_TIMESPAN   20000
 #define BINLOG_FORMAT_VERSION "e58c1e"
 
-#define BINLOG_MIN_TIMESPAN   20000
-#define BINLOG_FORMAT_VERSION "e58c1e"
-
 // CALL_STATS_BIN_LOG_RECORDS_NUM * sizeof(CallStatsSample) should be
 // dividible by 16 b/c of alignment concerns;
 // otherwise, there will be random sized padding added
@@ -18,6 +15,7 @@
 // ConsumerRecord and ProducerRecord structs to 16 bytes.
 // sizeof(CallStatsSample)== 28 bytes, CALL_STATS_BIN_LOG_RECORDS_NUM should be divisible by 4.
 // Alternative is to increase it to 32 at a cost of wasting 4 bytes per data record.
+
 #define CALL_STATS_BIN_LOG_RECORDS_NUM 8
 #define CALL_STATS_BIN_LOG_SAMPLING    2000
 
@@ -50,25 +48,25 @@ struct CallStatsSample
 };
 
 // Record headers are aligned to 16 bytes.
-// timestamp filled payload
+// timestamp filled ssrc
 // 8         4      4
-// timestamp filled payload consumer_uuid producer_uuid
-// 8          4     4       16            16           
+// timestamp filled ssrc consumer_uuid producer_uuid
+// 8          4     4    16            16           
 struct ConsumerRecord
 {
-  uint64_t        start_tm {UINT64_UNSET};                   // the record start timestamp in milliseconds
-  uint32_t        filled {UINT32_UNSET};                      // number of filled records in the array below
-  uint32_t        payload {0};                     // payload as in original RTP stream
-  uint8_t         consumer_id [UUID_BYTE_LEN]; // 
-  uint8_t         producer_id [UUID_BYTE_LEN]; //
+  uint64_t        start_tm {UINT64_UNSET};                 // the record start timestamp in milliseconds
+  uint32_t        filled {UINT32_UNSET};                   // number of filled records in the array below
+  uint32_t        ssrc {0};                                // ssrc as in producer's or consumer's RTP stream
+  uint8_t         consumer_id [UUID_BYTE_LEN];
+  uint8_t         producer_id [UUID_BYTE_LEN];
   CallStatsSample samples[CALL_STATS_BIN_LOG_RECORDS_NUM]; // collection of data samples
 };
 
 struct ProducerRecord
 {
-  uint64_t        start_tm {UINT64_UNSET};                   // the record start timestamp in milliseconds
-  uint32_t        filled {UINT32_UNSET};                      // number of filled records in the array below
-  uint32_t        payload {0};                     // payload as in original RTP stream
+  uint64_t        start_tm {UINT64_UNSET};                 // the record start timestamp in milliseconds
+  uint32_t        filled {UINT32_UNSET};                   // number of filled records in the array below
+  uint32_t        ssrc {0};                                // ssrc as in producer's or consumer's RTP stream
   CallStatsSample samples[CALL_STATS_BIN_LOG_RECORDS_NUM]; // collection of data samples
 };
 
@@ -81,7 +79,7 @@ class CallStatsRecord
     std::string producer_id;  // uuid4(), undef if source is producer, or consumer's corresponding producer id
 
   public:
-    CallStatsRecord(uint64_t objType, uint8_t payload, std::string callId, std::string objId, std::string producerId);
+    CallStatsRecord(uint64_t objType, uint32_t ssrc, std::string callId, std::string objId, std::string producerId);
 
     bool fwriteRecord(std::FILE* fd);
     uint32_t filled() const {return type ? record.c.filled : record.p.filled;}
@@ -143,7 +141,7 @@ class CallStatsRecord
     StreamStats curr {};
 
   public:
-    CallStatsRecordCtx(uint64_t objType, uint8_t payload, std::string callId, std::string objId, std::string producerId) : record(objType, payload, callId, objId, producerId) {}
+    CallStatsRecordCtx(uint64_t objType, uint32_t ssrc, std::string callId, std::string objId, std::string producerId) : record(objType, ssrc, callId, objId, producerId) {}
     void AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream); // either recv or send stream
     uint64_t LastTs() const { return last.ts; }
   };
@@ -155,8 +153,6 @@ class CallStatsRecord
     std::string   bin_log_file_path;                               // binary log's full file name: combo of call id, timestamp and "version"
     std::FILE*    fd {0};                                          
     uint64_t      sampling_interval {CALL_STATS_BIN_LOG_SAMPLING}; // frequency of collecting samples, non-configurable
-
-    std::string bin_log_done_dir;                                  // TODO: configurable, for now it defaults into "/var/log/sfu/done"
   
   private:
     bool          initialized {false};

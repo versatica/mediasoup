@@ -56,16 +56,13 @@ namespace RTC
 		lively.id = id;
 		this->appData = lively.ToStr();
 
-		// Bin log
-		this->binLog.InitLog('p', lively.callId, lively.id);
-
-		MS_DEBUG_TAG_LIVELYAPP(
-			rtp,
-			this->appData,
-			"Producer %s bin.log %s",
-			lively.id.c_str(),
-			this->binLog.bin_log_file_path.c_str());
-
+		if (lively.callId.empty())
+			MS_WARN_TAG(rtp, "Missing callId, cannot init producer binlog [id: %s] [data: %s]", lively.id.c_str(), data.dump().c_str());
+		else
+		{
+			this->binLog.InitLog('p', lively.callId, lively.id);
+		}
+		
 		// This may throw.
 		this->kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
 
@@ -1218,7 +1215,7 @@ namespace RTC
 		this->mapMappedSsrcSsrc[encodingMapping.mappedSsrc] = ssrc;
 
 		// Binary log samples collection per stream
-		this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(0, rtpStream->GetPayloadType(), lively.callId, this->id, ZERO_UUID);
+		this->rtpStreamBinLogRecords[rtpStream] = new Lively::CallStatsRecordCtx(0, rtpStream->GetSsrc(), lively.callId, this->id, ZERO_UUID);
 
 		// If the Producer is paused tell it to the new RtpStreamRecv.
 		if (this->paused)

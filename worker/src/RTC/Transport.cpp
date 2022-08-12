@@ -73,23 +73,41 @@ namespace RTC
 			this->maxMessageSize = jsonMaxMessageSizeIt->get<size_t>();
 		}
 		
-		// appData (optional)
 		auto jsonAppDataIt = data.find("appData");
-		
-		//Lively::AppData lively;
+		bool hasCallId = false;
 		if (jsonAppDataIt != data.end() && jsonAppDataIt->is_object())
 		{
-			try {
-				lively = jsonAppDataIt->get<Lively::AppData>();
+			auto jsonCallIdIt = jsonAppDataIt->find("callId");
+			if (jsonCallIdIt != jsonAppDataIt->end() && jsonCallIdIt->is_string())
+			{
+				lively.callId.assign(jsonCallIdIt->get<std::string>());
+				hasCallId = true;
 			}
-			catch (const std::exception& e) {
-				MS_WARN_TAG(rtp, "%s\t%s", e.what(), (*jsonAppDataIt).dump().c_str());
+			auto jsonPeerIdIt = jsonAppDataIt->find("peerId");
+			if (jsonPeerIdIt != jsonAppDataIt->end() && jsonPeerIdIt->is_string())
+			{
+				lively.peerId.assign(jsonPeerIdIt->get<std::string>());
+			}
+			auto jsonMirrorIdIt = jsonAppDataIt->find("mirrorId");
+			if (jsonMirrorIdIt != jsonAppDataIt->end() && jsonMirrorIdIt->is_string())
+			{
+				lively.mirrorId.assign(jsonMirrorIdIt->get<std::string>());
+			}
+			auto jsonStreamNameIt = jsonAppDataIt->find("streamName");
+			if (jsonStreamNameIt != jsonAppDataIt->end() && jsonStreamNameIt->is_string())
+			{
+				lively.streamName.assign(jsonStreamNameIt->get<std::string>());
 			}
 		}
 
 		lively.id = id;
 		this->appData = lively.ToStr();
-		this->consumersBinLog.InitLog('c', lively.callId, lively.id); // initialize consumers bin log here, it is shared btw all consumers
+		MS_DEBUG_TAG(rtp, "Transport ctor [transportId: %s] [data: %s]", lively.id.c_str(), data.dump().c_str());
+
+		if (hasCallId)
+			this->consumersBinLog.InitLog('c', lively.callId, lively.id); // initialize consumers bin log here, it is shared btw all consumers
+		else
+			MS_WARN_TAG(rtp, "Missing callId, cannot init consumers binlog [transportId: %s] [data: %s]", lively.id.c_str(), data.dump().c_str());
 
 		auto jsonInitialAvailableOutgoingBitrateIt = data.find("initialAvailableOutgoingBitrate");
 
@@ -729,7 +747,7 @@ namespace RTC
 				// Insert into the map.
 				this->mapProducers[producerId] = producer;
 
-				MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
+				MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "Producer created [producerId:%s, transportId:%s]", producerId.c_str(), lively.id.c_str());
 
 				// Take the transport related RTP header extensions of the Producer and
 				// add them to the Transport.
@@ -949,8 +967,8 @@ namespace RTC
 					this->mapRtxSsrcConsumer[ssrc] = consumer;
 				}
 
-				MS_DEBUG_DEV(
-				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
+				MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData,
+				  "Consumer created [consumerId:%s, producerId:%s, transportId: %s]", consumerId.c_str(), producerId.c_str(), lively.id.c_str());
 
 				// Create status response.
 				json data = json::object();
