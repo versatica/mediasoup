@@ -196,7 +196,8 @@ namespace RTC
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
-		uint8_t* buffer{ nullptr };
+		// Static buffer.
+		thread_local static uint8_t* buffer;
 	};
 } // namespace RTC
 

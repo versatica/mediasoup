@@ -18,6 +18,10 @@
 
 namespace RTC
 {
+	/* Static variables. */
+
+	thread_local uint8_t* Producer::buffer{ nullptr };
+
 	/* Static. */
 
 	static constexpr unsigned int SendNackDelay{ 10u }; // In ms.
@@ -332,8 +336,6 @@ namespace RTC
 
 		// Delete the KeyFrameRequestManager.
 		delete this->keyFrameRequestManager;
-
-		delete[] this->buffer;
 	}
 
 	void Producer::FillJson(json& jsonObject) const
@@ -629,13 +631,13 @@ namespace RTC
 				}
 
 				// If this is the first time to receive a RTP packet then allocate the receiving buffer now.
-				if (!this->buffer)
-					this->buffer = new uint8_t[RTC::MtuSize + 100];
+				if (!Producer::buffer)
+					Producer::buffer = new uint8_t[RTC::MtuSize + 100];
 
 				// Copy the received packet into this buffer so it can be expanded later.
-				std::memcpy(this->buffer, data, static_cast<size_t>(len));
+				std::memcpy(Producer::buffer, data, static_cast<size_t>(len));
 
-				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(this->buffer, len);
+				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(Producer::buffer, len);
 
 				if (!packet)
 				{
