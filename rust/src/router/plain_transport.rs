@@ -98,7 +98,7 @@ impl PlainTransportOptions {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 #[non_exhaustive]
@@ -190,6 +190,7 @@ pub struct PlainTransportRemoteParameters {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     new_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
     new_consumer: Bag<Arc<dyn Fn(&Consumer) + Send + Sync>, Consumer>,

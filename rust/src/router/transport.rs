@@ -78,7 +78,7 @@ pub enum TransportTraceEventType {
     Bwe,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpListener {
@@ -101,7 +101,7 @@ pub struct RecvRtpHeaderExtensions {
     transport_wide_cc01: Option<u8>,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct SctpListener {

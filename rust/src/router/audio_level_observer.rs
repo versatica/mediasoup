@@ -60,6 +60,7 @@ pub struct AudioLevelObserverVolume {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     volumes: Bag<Arc<dyn Fn(&[AudioLevelObserverVolume]) + Send + Sync>>,
     silence: Bag<Arc<dyn Fn() + Send + Sync>>,

@@ -356,6 +356,7 @@ impl WeakPipeTransportPair {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     new_transport: Bag<Arc<dyn Fn(NewTransport<'_>) + Send + Sync>>,
     new_rtp_observer: Bag<Arc<dyn Fn(NewRtpObserver<'_>) + Send + Sync>>,

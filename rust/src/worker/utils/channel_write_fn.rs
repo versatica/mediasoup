@@ -4,6 +4,7 @@ pub(super) use mediasoup_sys::{
 use std::os::raw::c_void;
 use std::slice;
 
+#[allow(clippy::type_complexity)]
 pub(super) struct ChannelReadCallback(Box<dyn FnMut(&[u8]) + Send + 'static>);
 
 pub(crate) struct PreparedChannelWrite {
@@ -59,6 +60,7 @@ where
     }
 }
 
+#[allow(clippy::type_complexity)]
 pub(super) struct PayloadChannelReadCallback(Box<dyn FnMut(&[u8], &[u8]) + Send + 'static>);
 
 pub(crate) struct PreparedPayloadChannelWrite {
