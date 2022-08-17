@@ -36,6 +36,7 @@ mod room {
     }
 
     #[derive(Default)]
+    #[allow(clippy::type_complexity)]
     struct Handlers {
         producer_add:
             Bag<Arc<dyn Fn(&ParticipantId, &Producer) + Send + Sync>, ParticipantId, Producer>,
@@ -174,13 +175,12 @@ mod room {
                 .clients
                 .lock()
                 .iter()
-                .map(|(participant_id, producers)| {
+                .flat_map(|(participant_id, producers)| {
                     let participant_id = *participant_id;
                     producers
                         .iter()
                         .map(move |producer| (participant_id, producer.id()))
                 })
-                .flatten()
                 .collect()
         }
 
@@ -329,6 +329,7 @@ mod participant {
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::fmt;
+    use std::net::{IpAddr, Ipv4Addr};
     use uuid::Uuid;
 
     mod messages {
@@ -494,8 +495,8 @@ mod participant {
             // right away. This may not be the case for real-world applications or you may create
             // this at a different time and/or in different order.
             let transport_options =
-                WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 }));
             let producer_transport = room

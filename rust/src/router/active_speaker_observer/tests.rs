@@ -55,6 +55,6 @@ fn router_close_event() {
             .expect("Failed to receive router_close event");
         close_rx.await.expect("Failed to receive close event");
 
-        assert_eq!(active_speaker_observer.closed(), true);
+        assert!(active_speaker_observer.closed());
     });
 }

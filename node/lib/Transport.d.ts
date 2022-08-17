@@ -56,7 +56,14 @@ export interface TransportTraceEventData {
 export declare type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 export declare type TransportEvents = {
     routerclose: [];
+    listenserverclose: [];
     trace: [TransportTraceEventData];
+    '@close': [];
+    '@newproducer': [Producer];
+    '@producerclose': [Producer];
+    '@newdataproducer': [DataProducer];
+    '@dataproducerclose': [DataProducer];
+    '@listenserverclose': [];
 };
 export declare type TransportObserverEvents = {
     close: [];
@@ -82,19 +89,13 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
     /**
      * @private
      * @interface
-     * @emits routerclose
-     * @emits @close
-     * @emits @newproducer - (producer: Producer)
-     * @emits @producerclose - (producer: Producer)
-     * @emits @newdataproducer - (dataProducer: DataProducer)
-     * @emits @dataproducerclose - (dataProducer: DataProducer)
      */
     constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
         internal: any;
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData: any;
+        appData?: Record<string, unknown>;
         getRouterRtpCapabilities: () => RtpCapabilities;
         getProducerById: (producerId: string) => Producer;
         getDataProducerById: (dataProducerId: string) => DataProducer;
@@ -110,19 +111,13 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (producer: Producer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataProducer: DataProducer)
      */
     get observer(): EnhancedEventEmitter<ObserverEvents>;
     /**
@@ -141,6 +136,13 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      * @virtual
      */
     routerClosed(): void;
+    /**
+     * Listen server was closed (this just happens in WebRtcTransports when their
+     * associated WebRtcServer is closed).
+     *
+     * @private
+     */
+    listenServerClosed(): void;
     /**
      * Dump Transport.
      */
@@ -174,7 +176,7 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      *
      * @virtual
      */
-    consume({ producerId, rtpCapabilities, paused, mid, preferredLayers, pipe, appData }: ConsumerOptions): Promise<Consumer>;
+    consume({ producerId, rtpCapabilities, paused, mid, preferredLayers, ignoreDtx, pipe, appData }: ConsumerOptions): Promise<Consumer>;
     /**
      * Create a DataProducer.
      */

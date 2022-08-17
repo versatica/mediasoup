@@ -20,6 +20,8 @@ namespace RTC
 	DirectTransport::~DirectTransport()
 	{
 		MS_TRACE();
+
+		delete[] this->buffer;
 	}
 
 	void DirectTransport::FillJson(json& jsonObject) const
@@ -102,7 +104,14 @@ namespace RTC
 					return;
 				}
 
-				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+				// If this is the first time to reveive a RTP packet then allocate the receiving buffer now.
+				if (!this->buffer)
+					this->buffer = new uint8_t[RTC::MtuSize + 100];
+
+				// Copy the received packet into this buffer so it can be expanded later.
+				std::memcpy(this->buffer, data, static_cast<size_t>(len));
+
+				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(this->buffer, len);
 
 				if (!packet)
 				{

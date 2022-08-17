@@ -3,13 +3,14 @@
 
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include <nlohmann/json.hpp>
 #include <string>
 
 namespace RTC
 {
-	class DataProducer
+	class DataProducer : public Channel::ChannelSocket::RequestHandler
 	{
 	public:
 		class Listener
@@ -36,7 +37,6 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
-		void HandleRequest(Channel::ChannelRequest* request) const;
 		Type GetType() const
 		{
 			return this->type;
@@ -46,6 +46,10 @@ namespace RTC
 			return this->sctpStreamParameters;
 		}
 		void ReceiveMessage(uint32_t ppid, const uint8_t* msg, size_t len);
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	public:
 		// Passed by argument.

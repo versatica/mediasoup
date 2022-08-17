@@ -8,6 +8,7 @@ import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
+import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
@@ -78,7 +79,7 @@ export type WorkerSettings =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags' | 'logDevLevel' | 'logTraceEnabled'>;
@@ -205,11 +206,15 @@ export type WorkerEvents =
 { 
 	died: [Error];
 	failedlog: [WorkerLoggerError];
+	// Private events.
+	'@success': [];
+	'@failure': [Error];
 }
 
 export type WorkerObserverEvents = 
 {
 	close: [];
+	newwebrtcserver: [WebRtcServer];
 	newrouter: [Router];
 	failedlog: [WorkerLoggerError];
 }
@@ -250,7 +255,10 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	#died = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
+
+	// WebRtcServers set.
+	readonly #webRtcServers: Set<WebRtcServer> = new Set();
 
 	// Routers set.
 	readonly #routers: Set<Router> = new Set();
@@ -260,9 +268,6 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 	/**
 	 * @private
-	 * @emits died - (error: Error)
-	 * @emits @success
-	 * @emits @failure - (error: Error)
 	 */
 	constructor(
 		{
@@ -380,7 +385,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 				consumerSocket : this.#child.stdio[6]
 			});
 
-		this.#appData = appData;
+		this.#appData = appData || {};
 
 		let spawnDone = false;
 
@@ -524,7 +529,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -532,20 +537,26 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits newrouter - (router: Router)
 	 */
 	get observer(): EnhancedEventEmitter<WorkerObserverEvents>
 	{
 		return this.#observer;
+	}
+
+	/**
+	 * @private
+	 * Just for testing purposes.
+	 */
+	get webRtcServersForTesting(): Set<WebRtcServer>
+	{
+		return this.#webRtcServers;
 	}
 
 	/**
@@ -593,6 +604,13 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			router.workerClosed();
 		}
 		this.#routers.clear();
+
+		// Close every WebRtcServer.
+		for (const webRtcServer of this.#webRtcServers)
+		{
+			webRtcServer.workerClosed();
+		}
+		this.#webRtcServers.clear();
 
 		// Emit observer event.
 		this.#observer.safeEmit('close');
@@ -660,12 +678,47 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	}
 
 	/**
+	 * Create a WebRtcServer.
+	 */
+	async createWebRtcServer(
+		{
+			listenInfos,
+			appData
+		}: WebRtcServerOptions): Promise<WebRtcServer>
+	{
+		logger.debug('createWebRtcServer()');
+
+		if (appData && typeof appData !== 'object')
+			throw new TypeError('if given, appData must be an object');
+
+		const internal = { webRtcServerId: uuidv4() };
+		const reqData = { listenInfos };
+
+		await this.#channel.request('worker.createWebRtcServer', internal, reqData);
+
+		const webRtcServer = new WebRtcServer(
+			{
+				internal,
+				channel : this.#channel,
+				appData
+			});
+
+		this.#webRtcServers.add(webRtcServer);
+		webRtcServer.on('@close', () => this.#webRtcServers.delete(webRtcServer));
+
+		// Emit observer event.
+		this.#observer.safeEmit('newwebrtcserver', webRtcServer);
+
+		return webRtcServer;
+	}
+
+	/**
 	 * Create a Router.
 	 */
 	async createRouter(
 		{
 			mediaCodecs,
-			appData = {}
+			appData
 		}: RouterOptions = {}): Promise<Router>
 	{
 		logger.debug('createRouter()');
@@ -721,6 +774,13 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			router.workerClosed();
 		}
 		this.#routers.clear();
+
+		// Close every WebRtcServer.
+		for (const webRtcServer of this.#webRtcServers)
+		{
+			webRtcServer.workerClosed();
+		}
+		this.#webRtcServers.clear();
 
 		this.safeEmit('died', error);
 

@@ -25,11 +25,6 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
-     * @emits transportclose
-     * @emits score - (score: ProducerScore[])
-     * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
-     * @emits trace - (trace: ProducerTraceEventData)
-     * @emits @close
      */
     constructor({ internal, data, channel, payloadChannel, appData, paused }) {
         super();
@@ -38,7 +33,7 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.#paused = paused;
         this.handleWorkerNotifications();
     }
@@ -106,13 +101,6 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits pause
-     * @emits resume
-     * @emits score - (score: ProducerScore[])
-     * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
-     * @emits trace - (trace: ProducerTraceEventData)
      */
     get observer() {
         return this.#observer;

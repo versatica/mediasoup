@@ -181,7 +181,7 @@ namespace Channel
 				// Notify the listener.
 				try
 				{
-					this->listener->OnChannelRequest(this, request);
+					this->listener->HandleRequest(request);
 				}
 				catch (const MediaSoupTypeError& error)
 				{
@@ -201,7 +201,7 @@ namespace Channel
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_ERROR_STD("discarding wrong Channel request");
+				MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
 			}
 
 			free(message, messageLen, messageCtx);
@@ -246,7 +246,7 @@ namespace Channel
 			// Notify the listener.
 			try
 			{
-				this->listener->OnChannelRequest(this, request);
+				this->listener->HandleRequest(request);
 			}
 			catch (const MediaSoupTypeError& error)
 			{
@@ -266,7 +266,7 @@ namespace Channel
 		}
 		catch (const MediaSoupError& error)
 		{
-			MS_ERROR_STD("discarding wrong Channel request");
+			MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
 		}
 	}
 

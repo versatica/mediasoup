@@ -4,6 +4,7 @@ import { PayloadChannel } from './PayloadChannel';
 import { Producer } from './Producer';
 export declare type RtpObserverEvents = {
     routerclose: [];
+    '@close': [];
 };
 export declare type RtpObserverObserverEvents = {
     close: [];
@@ -30,14 +31,12 @@ export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents
     /**
      * @private
      * @interface
-     * @emits routerclose
-     * @emits @close
      */
     constructor({ internal, channel, payloadChannel, appData, getProducerById }: {
         internal: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData: any;
+        appData?: Record<string, unknown>;
         getProducerById: (producerId: string) => Producer;
     });
     /**
@@ -55,19 +54,13 @@ export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits pause
-     * @emits resume
-     * @emits addproducer - (producer: Producer)
-     * @emits removeproducer - (producer: Producer)
      */
     get observer(): EnhancedEventEmitter<RtpObserverObserverEvents>;
     /**

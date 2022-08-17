@@ -33,16 +33,6 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
-     * @emits transportclose
-     * @emits producerclose
-     * @emits producerpause
-     * @emits producerresume
-     * @emits score - (score: ConsumerScore)
-     * @emits layerschange - (layers: ConsumerLayers | undefined)
-     * @emits rtp - (packet: Buffer)
-     * @emits trace - (trace: ConsumerTraceEventData)
-     * @emits @close
-     * @emits @producerclose
      */
     constructor({ internal, data, channel, payloadChannel, appData, paused, producerPaused, score = { score: 10, producerScore: 10, producerScores: [] }, preferredLayers }) {
         super();
@@ -51,7 +41,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.#paused = paused;
         this.#producerPaused = producerPaused;
         this.#score = score;
@@ -68,7 +58,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Associated Producer id.
      */
     get producerId() {
-        return this.#internal.producerId;
+        return this.#data.producerId;
     }
     /**
      * Whether the Consumer is closed.
@@ -144,13 +134,6 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits pause
-     * @emits resume
-     * @emits score - (score: ConsumerScore)
-     * @emits layerschange - (layers: ConsumerLayers | undefined)
-     * @emits trace - (trace: ConsumerTraceEventData)
      */
     get observer() {
         return this.#observer;

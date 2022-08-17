@@ -6,6 +6,7 @@
 #include "DepLibUV.hpp"
 #include "LivelyBinLogs.hpp"
 #include "Channel/ChannelRequest.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/Notification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
@@ -42,6 +43,9 @@ namespace RTC
 	                  public RTC::SctpAssociation::Listener,
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
+	                  public Channel::ChannelSocket::RequestHandler,
+	                  public PayloadChannel::PayloadChannelSocket::RequestHandler,
+	                  public PayloadChannel::PayloadChannelSocket::NotificationHandler,
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 	                  public RTC::SenderBandwidthEstimator::Listener,
 #endif
@@ -104,7 +108,8 @@ namespace RTC
 			virtual void OnTransportDataConsumerClosed(
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
 			virtual void OnTransportDataConsumerDataProducerClosed(
-			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
+			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer)         = 0;
+			virtual void OnTransportListenServerClosed(RTC::Transport* transport) = 0;
 		};
 
 	private:
@@ -120,14 +125,22 @@ namespace RTC
 
 	public:
 		void CloseProducersAndConsumers();
+		void ListenServerClosed();
 		// Subclasses must also invoke the parent Close().
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray);
-		// Subclasses must implement these methods and call the parent's ones to
-		// handle common requests.
-		virtual void HandleRequest(Channel::ChannelRequest* request);
-		virtual void HandleRequest(PayloadChannel::PayloadChannelRequest* request);
-		virtual void HandleNotification(PayloadChannel::Notification* notification);
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
+	public:
+		void HandleNotification(PayloadChannel::Notification* notification) override;
 
 		// Only makes sense for ShmTransport, needed on a Router level for debug logging
 		virtual std::string ShmName() const { return "not applicable"; }

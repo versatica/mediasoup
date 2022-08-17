@@ -9,28 +9,23 @@ export { types };
 /**
  * Expose mediasoup version.
  */
-export declare const version = "3.9.10-lv11-notranscode";
+export declare const version = "3.10.5-lv1-notranscode";
 /**
  * Expose parseScalabilityMode() function.
  */
 export { parse as parseScalabilityMode } from './scalabilityModes';
-declare const observer: EnhancedEventEmitter<{
-    [x: string]: any[];
-}, {
-    [x: string]: any[];
-} & {
-    [x: `@${string}`]: any[];
-}>;
+export declare type ObserverEvents = {
+    newworker: [Worker];
+};
+declare const observer: EnhancedEventEmitter<ObserverEvents>;
 /**
  * Observer.
- *
- * @emits newworker - (worker: Worker)
  */
 export { observer };
 /**
  * Create a Worker.
  */
-export declare function createWorker({ logLevel, logTags, logDevLevel, logTraceEnabled, logFile, rtcMinPort, rtcMaxPort, dtlsCertificateFile, dtlsPrivateKeyFile, appData }: WorkerSettings): Promise<Worker>;
+export declare function createWorker({ logLevel, logDevLevel, logTraceEnabled, logTags, logFile, rtcMinPort, rtcMaxPort, dtlsCertificateFile, dtlsPrivateKeyFile, appData, }: WorkerSettings): Promise<Worker>;
 /**
  * Get a cloned copy of the mediasoup supported RTP capabilities.
  */

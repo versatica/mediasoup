@@ -546,7 +546,7 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	void SvcConsumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void SvcConsumer::SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -647,7 +647,7 @@ namespace RTC
 		}
 
 		// Process the packet.
-		if (this->rtpStream->ReceivePacket(packet))
+		if (this->rtpStream->ReceivePacket(packet, sharedPacket))
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
@@ -698,6 +698,16 @@ namespace RTC
 		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
 
 		packet->AddSdesChunk(sdesChunk);
+
+		auto* dlrr = this->rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
+
+		if (dlrr)
+		{
+			auto* report = new RTC::RTCP::DelaySinceLastRr();
+
+			report->AddSsrcInfo(dlrr);
+			packet->AddDelaySinceLastRr(report);
+		}
 
 		this->lastRtcpSentTime = nowMs;
 	}
@@ -763,6 +773,13 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
+	}
+
+	void SvcConsumer::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+	{
+		MS_TRACE();
+
+		this->rtpStream->ReceiveRtcpXrReceiverReferenceTime(report);
 	}
 
 	uint32_t SvcConsumer::GetTransmissionRate(uint64_t nowMs)
@@ -894,10 +911,7 @@ namespace RTC
 			}
 		}
 
-		// Create a RtpStreamSend for sending a single media stream.
-		size_t bufferSize = params.useNack ? 600u : 0u;
-
-		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
+		this->rtpStream = new RTC::RtpStreamSend(this, params, this->rtpParameters.mid);
 		this->rtpStreams.push_back(this->rtpStream);
 
 		// Binary log samples collection

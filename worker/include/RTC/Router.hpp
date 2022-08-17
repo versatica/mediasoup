@@ -13,6 +13,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/Transport.hpp"
+#include "RTC/WebRtcServer.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -22,17 +23,40 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class Router : public RTC::Transport::Listener
+	class Router : public RTC::Transport::Listener,
+	               public Channel::ChannelSocket::RequestHandler,
+	               public PayloadChannel::PayloadChannelSocket::RequestHandler,
+	               public PayloadChannel::PayloadChannelSocket::NotificationHandler
 	{
 	public:
-		explicit Router(const std::string& id);
+		class Listener
+		{
+		public:
+			virtual ~Listener() = default;
+
+		public:
+			virtual RTC::WebRtcServer* OnRouterNeedWebRtcServer(
+			  RTC::Router* router, std::string& webRtcServerId) = 0;
+		};
+
+	public:
+		explicit Router(const std::string& id, Listener* listener);
 		virtual ~Router();
 
 	public:
 		void FillJson(json& jsonObject) const;
-		void HandleRequest(Channel::ChannelRequest* request);
-		void HandleRequest(PayloadChannel::PayloadChannelRequest* request);
-		void HandleNotification(PayloadChannel::Notification* notification);
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
+	public:
+		void HandleNotification(PayloadChannel::Notification* notification) override;
 
 	private:
 		void SetNewTransportIdFromInternal(json& internal, std::string& transportId) const;
@@ -86,10 +110,12 @@ namespace RTC
 		void OnTransportDataConsumerClosed(RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
 		void OnTransportDataConsumerDataProducerClosed(
 		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
+		void OnTransportListenServerClosed(RTC::Transport* transport) override;
 
 	public:
 		// Passed by argument.
 		const std::string id;
+		Listener* listener{ nullptr };
 
 	private:
 		// Allocated by this.

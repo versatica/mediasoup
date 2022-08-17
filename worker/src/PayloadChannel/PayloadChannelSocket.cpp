@@ -212,7 +212,7 @@ namespace PayloadChannel
 						// Notify the listener.
 						try
 						{
-							this->listener->OnPayloadChannelRequest(this, request);
+							this->listener->HandleRequest(request);
 						}
 						catch (const MediaSoupTypeError& error)
 						{
@@ -232,7 +232,7 @@ namespace PayloadChannel
 					}
 					catch (const MediaSoupError& error)
 					{
-						MS_ERROR("discarding wrong Payload Channel notification");
+						MS_ERROR("discarding wrong Payload Channel notification: %s", error.what());
 					}
 				}
 
@@ -246,7 +246,7 @@ namespace PayloadChannel
 						// Notify the listener.
 						try
 						{
-							this->listener->OnPayloadChannelNotification(this, notification);
+							this->listener->HandleNotification(notification);
 						}
 						catch (const MediaSoupError& error)
 						{
@@ -262,7 +262,7 @@ namespace PayloadChannel
 					}
 					catch (const MediaSoupError& error)
 					{
-						MS_ERROR("discarding wrong Payload Channel notification");
+						MS_ERROR("discarding wrong Payload Channel notification: %s", error.what());
 					}
 				}
 
@@ -277,7 +277,7 @@ namespace PayloadChannel
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_ERROR("discarding wrong Channel request");
+				MS_ERROR("discarding wrong Channel request: %s", error.what());
 			}
 
 			free(message, messageLen, messageCtx);
@@ -349,7 +349,7 @@ namespace PayloadChannel
 				}
 				catch (const MediaSoupError& error)
 				{
-					MS_ERROR("discarding wrong Payload Channel notification");
+					MS_ERROR("discarding wrong Payload Channel notification: %s", error.what());
 				}
 			}
 
@@ -365,7 +365,7 @@ namespace PayloadChannel
 				}
 				catch (const MediaSoupError& error)
 				{
-					MS_ERROR("discarding wrong Payload Channel notification");
+					MS_ERROR("discarding wrong Payload Channel notification: %s", error.what());
 				}
 			}
 
@@ -381,7 +381,7 @@ namespace PayloadChannel
 			// Notify the listener.
 			try
 			{
-				this->listener->OnPayloadChannelNotification(this, this->ongoingNotification);
+				this->listener->HandleNotification(this->ongoingNotification);
 			}
 			catch (const MediaSoupError& error)
 			{
@@ -399,7 +399,7 @@ namespace PayloadChannel
 			// Notify the listener.
 			try
 			{
-				this->listener->OnPayloadChannelRequest(this, this->ongoingRequest);
+				this->listener->HandleRequest(this->ongoingRequest);
 			}
 			catch (const MediaSoupTypeError& error)
 			{

@@ -22,12 +22,7 @@ export interface ShmTransportOptions {
   /**
    * Custom application data.
    */
-  appData?: any;
-
-	/**
-	 * Binary log info.
-	 */
-	binlog?: any;
+  appData?: Record<string, unknown>;
 }
 
 const logger = new Logger('ShmTransport');

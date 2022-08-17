@@ -3,14 +3,17 @@
 
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
+#include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
+#include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include <nlohmann/json.hpp>
 #include <string>
 
 namespace RTC
 {
-	class DataConsumer
+	class DataConsumer : public Channel::ChannelSocket::RequestHandler,
+	                     public PayloadChannel::PayloadChannelSocket::RequestHandler
 	{
 	protected:
 		using onQueuedCallback = const std::function<void(bool queued, bool sctpSendBufferFull)>;
@@ -50,8 +53,6 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
-		void HandleRequest(Channel::ChannelRequest* request);
-		void HandleRequest(PayloadChannel::PayloadChannelRequest* request);
 		Type GetType() const
 		{
 			return this->type;
@@ -77,6 +78,14 @@ namespace RTC
 		void SctpAssociationBufferedAmount(uint32_t bufferedAmount);
 		void DataProducerClosed();
 		void SendMessage(uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* = nullptr);
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
 
 	public:
 		// Passed by argument.

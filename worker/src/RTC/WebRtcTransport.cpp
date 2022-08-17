@@ -199,7 +199,7 @@ namespace RTC
 
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(
-			  this, Utils::Crypto::GetRandomString(16), Utils::Crypto::GetRandomString(32));
+			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
@@ -229,6 +229,51 @@ namespace RTC
 				delete tcpServer;
 			}
 			this->tcpServers.clear();
+
+			this->iceCandidates.clear();
+
+			throw;
+		}
+	}
+
+	/**
+	 * This constructor is used when the WebRtcTransport uses a WebRtcServer.
+	 */
+	WebRtcTransport::WebRtcTransport(
+	  const std::string& id,
+	  RTC::Transport::Listener* listener,
+	  WebRtcTransportListener* webRtcTransportListener,
+	  std::vector<RTC::IceCandidate>& iceCandidates,
+	  json& data)
+	  : RTC::Transport::Transport(id, listener, data),
+	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
+	{
+		MS_TRACE();
+
+		try
+		{
+			if (iceCandidates.empty())
+				MS_THROW_TYPE_ERROR("empty iceCandidates");
+
+			// Create a ICE server.
+			this->iceServer = new RTC::IceServer(
+			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
+
+			// Create a DTLS transport.
+			this->dtlsTransport = new RTC::DtlsTransport(this);
+
+			// Notify the webRtcTransportListener.
+			this->webRtcTransportListener->OnWebRtcTransportCreated(this);
+		}
+		catch (const MediaSoupError& error)
+		{
+			// Must delete everything since the destructor won't be called.
+
+			delete this->dtlsTransport;
+			this->dtlsTransport = nullptr;
+
+			delete this->iceServer;
+			this->iceServer = nullptr;
 
 			this->iceCandidates.clear();
 
@@ -271,6 +316,10 @@ namespace RTC
 
 		delete this->srtpRecvSession;
 		this->srtpRecvSession = nullptr;
+
+		// Notify the webRtcTransportListener.
+		if (this->webRtcTransportListener)
+			this->webRtcTransportListener->OnWebRtcTransportClosed(this);
 	}
 
 	void WebRtcTransport::FillJson(json& jsonObject) const
@@ -582,7 +631,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::MethodId::TRANSPORT_RESTART_ICE:
 			{
-				std::string usernameFragment = Utils::Crypto::GetRandomString(16);
+				std::string usernameFragment = Utils::Crypto::GetRandomString(32);
 				std::string password         = Utils::Crypto::GetRandomString(32);
 
 				this->iceServer->RestartIce(usernameFragment, password);
@@ -619,6 +668,51 @@ namespace RTC
 
 		// Pass it to the parent class.
 		RTC::Transport::HandleNotification(notification);
+	}
+
+	void WebRtcTransport::ProcessStunPacketFromWebRtcServer(
+	  RTC::TransportTuple* tuple, RTC::StunPacket* packet)
+	{
+		MS_TRACE();
+
+		// Pass it to the IceServer.
+		this->iceServer->ProcessStunPacket(packet, tuple);
+	}
+
+	void WebRtcTransport::ProcessNonStunPacketFromWebRtcServer(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		// Increase receive transmission.
+		RTC::Transport::DataReceived(len);
+
+		// Check if it's RTCP.
+		if (RTC::RTCP::Packet::IsRtcp(data, len))
+		{
+			OnRtcpDataReceived(tuple, data, len);
+		}
+		// Check if it's RTP.
+		else if (RTC::RtpPacket::IsRtp(data, len))
+		{
+			OnRtpDataReceived(tuple, data, len);
+		}
+		// Check if it's DTLS.
+		else if (RTC::DtlsTransport::IsDtls(data, len))
+		{
+			OnDtlsDataReceived(tuple, data, len);
+		}
+		else
+		{
+			MS_WARN_DEV("ignoring received packet of unknown type");
+		}
+	}
+
+	void WebRtcTransport::RemoveTuple(RTC::TransportTuple* tuple)
+	{
+		MS_TRACE();
+
+		this->iceServer->RemoveTuple(tuple);
 	}
 
 	inline bool WebRtcTransport::IsConnected() const
@@ -1118,6 +1212,56 @@ namespace RTC
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(packet->GetSize());
+	}
+
+	inline void WebRtcTransport::OnIceServerLocalUsernameFragmentAdded(
+	  const RTC::IceServer* /*iceServer*/, const std::string& usernameFragment)
+	{
+		MS_TRACE();
+
+		if (this->webRtcTransportListener)
+		{
+			this->webRtcTransportListener->OnWebRtcTransportLocalIceUsernameFragmentAdded(
+			  this, usernameFragment);
+		}
+	}
+
+	inline void WebRtcTransport::OnIceServerLocalUsernameFragmentRemoved(
+	  const RTC::IceServer* /*iceServer*/, const std::string& usernameFragment)
+	{
+		MS_TRACE();
+
+		if (this->webRtcTransportListener)
+		{
+			this->webRtcTransportListener->OnWebRtcTransportLocalIceUsernameFragmentRemoved(
+			  this, usernameFragment);
+		}
+	}
+
+	inline void WebRtcTransport::OnIceServerTupleAdded(
+	  const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
+	{
+		MS_TRACE();
+
+		if (this->webRtcTransportListener)
+		{
+			this->webRtcTransportListener->OnWebRtcTransportTransportTupleAdded(this, tuple);
+		}
+	}
+
+	inline void WebRtcTransport::OnIceServerTupleRemoved(
+	  const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
+	{
+		MS_TRACE();
+
+		if (this->webRtcTransportListener)
+		{
+			this->webRtcTransportListener->OnWebRtcTransportTransportTupleRemoved(this, tuple);
+		}
+
+		// If this is a TCP tuple, close its underlaying TCP connection.
+		if (tuple->GetProtocol() == RTC::TransportTuple::Protocol::TCP && !tuple->IsClosed())
+			tuple->Close();
 	}
 
 	inline void WebRtcTransport::OnIceServerSelectedTuple(

@@ -73,12 +73,7 @@ export type PipeTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
-
-	/**
-	 * Binary log info.
-	 */
-	binlog?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type PipeTransportStat =
@@ -120,7 +115,7 @@ export type PipeConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type PipeTransportEvents = TransportEvents &
@@ -151,8 +146,6 @@ export class PipeTransport
 
 	/**
 	 * @private
-	 * @emits sctpstatechange - (sctpState: SctpState)
-	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	constructor(params: any)
 	{
@@ -206,20 +199,6 @@ export class PipeTransport
 	{
 		return this.#data.srtpParameters;
 	}
-
-	/**
-	 * Observer.
-	 *
-	 * @override
-	 * @emits close
-	 * @emits newproducer - (producer: Producer)
-	 * @emits newconsumer - (consumer: Consumer)
-	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataConsumer: DataConsumer)
-	 * @emits sctpstatechange - (sctpState: SctpState)
-	 * @emits trace - (trace: TransportTraceEventData)
-	 */
-	// get observer(): EnhancedEventEmitter
 
 	/**
 	 * Close the PipeTransport.
@@ -300,7 +279,7 @@ export class PipeTransport
 	 *
 	 * @override
 	 */
-	async consume({ producerId, appData = {} }: PipeConsumerOptions): Promise<Consumer>
+	async consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>
 	{
 		logger.debug('consume()');
 
@@ -318,9 +297,10 @@ export class PipeTransport
 		const rtpParameters = ortc.getPipeConsumerRtpParameters(
 			producer.consumableRtpParameters, this.#data.rtx);
 
-		const internal = { ...this.internal, consumerId: uuidv4(), producerId };
+		const internal = { ...this.internal, consumerId: uuidv4() };
 		const reqData =
 		{
+			producerId,
 			kind                   : producer.kind,
 			rtpParameters,
 			type                   : 'pipe',
@@ -330,7 +310,13 @@ export class PipeTransport
 		const status =
 			await this.channel.request('transport.consume', internal, reqData);
 
-		const data = { kind: producer.kind, rtpParameters, type: 'pipe' };
+		const data =
+		{
+			producerId,
+			kind : producer.kind,
+			rtpParameters,
+			type : 'pipe'
+		};
 
 		const consumer = new Consumer(
 			{

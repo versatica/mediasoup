@@ -30,6 +30,18 @@ else
   ]
 endif
 
+if get_option('ms_log_trace')
+  cpp_args += [
+    '-DMS_LOG_TRACE',
+  ]
+endif
+
+if get_option('ms_log_file_line')
+  cpp_args += [
+    '-DMS_LOG_FILE_LINE',
+  ]
+endif
+
 common_sources = [
   'src/lib.cpp',
   'src/DepLibSRTP.cpp',
@@ -103,10 +115,13 @@ common_sources = [
   'src/RTC/TransportTuple.cpp',
   'src/RTC/TrendCalculator.cpp',
   'src/RTC/UdpSocket.cpp',
+  'src/RTC/WebRtcServer.cpp',
   'src/RTC/WebRtcTransport.cpp',
   'src/RTC/Codecs/H264.cpp',
+  'src/RTC/Codecs/H264_SVC.cpp',
   'src/RTC/Codecs/VP8.cpp',
   'src/RTC/Codecs/VP9.cpp',
+  'src/RTC/Codecs/Opus.cpp',
   'src/RTC/RtpDictionaries/Media.cpp',
   'src/RTC/RtpDictionaries/Parameters.cpp',
   'src/RTC/RtpDictionaries/RtcpFeedback.cpp',
@@ -308,12 +323,15 @@ mediasoup_worker_test = executable(
     'test/src/RTC/TestNackGenerator.cpp',
     'test/src/RTC/TestRateCalculator.cpp',
     'test/src/RTC/TestRtpPacket.cpp',
+    'test/src/RTC/TestRtpPacketH264Svc.cpp',
     'test/src/RTC/TestRtpStreamSend.cpp',
     'test/src/RTC/TestRtpStreamRecv.cpp',
     'test/src/RTC/TestSeqManager.cpp',
     'test/src/RTC/TestTrendCalculator.cpp',
     'test/src/RTC/TestRtpEncodingParameters.cpp',
     'test/src/RTC/Codecs/TestVP8.cpp',
+    'test/src/RTC/Codecs/TestH264.cpp',
+    'test/src/RTC/Codecs/TestH264_SVC.cpp',
     'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
     'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',
     'test/src/RTC/RTCP/TestFeedbackPsLei.cpp',
@@ -376,6 +394,7 @@ if host_machine.system() == 'linux'
       'fuzzer/src/FuzzerUtils.cpp',
       'fuzzer/src/RTC/FuzzerStunPacket.cpp',
       'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
+      'fuzzer/src/RTC/FuzzerRtpStreamSend.cpp',
       'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
       'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
       'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',

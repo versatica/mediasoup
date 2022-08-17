@@ -9,11 +9,7 @@ export declare type DirectTransportOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
-    /**
-     * Binary log info.
-     */
-    binlog?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type DirectTransportStat = {
     type: string;
@@ -47,19 +43,8 @@ export declare class DirectTransport extends Transport<DirectTransportEvents, Di
     #private;
     /**
      * @private
-     * @emits rtcp - (packet: Buffer)
-     * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params: any);
-    /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataProducer: DataProducer)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
     /**
      * Close the DirectTransport.
      *

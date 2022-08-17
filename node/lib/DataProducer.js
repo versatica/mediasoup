@@ -21,8 +21,6 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
-     * @emits transportclose
-     * @emits @close
      */
     constructor({ internal, data, channel, payloadChannel, appData }) {
         super();
@@ -31,7 +29,7 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.handleWorkerNotifications();
     }
     /**
@@ -84,8 +82,6 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
      */
     get observer() {
         return this.#observer;

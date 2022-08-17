@@ -58,11 +58,7 @@ export declare type PlainTransportOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
-    /**
-     * Binary log info.
-     */
-    binlog?: any;
+    appData?: Record<string, unknown>;
 };
 /**
  * DEPRECATED: Use PlainTransportOptions.
@@ -114,10 +110,6 @@ export declare class PlainTransport extends Transport<PlainTransportEvents, Plai
     #private;
     /**
      * @private
-     * @emits tuple - (tuple: TransportTuple)
-     * @emits rtcptuple - (rtcpTuple: TransportTuple)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params: any);
     /**
@@ -140,20 +132,6 @@ export declare class PlainTransport extends Transport<PlainTransportEvents, Plai
      * SRTP parameters.
      */
     get srtpParameters(): SrtpParameters | undefined;
-    /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (consumer: Consumer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataConsumer: DataConsumer)
-     * @emits tuple - (tuple: TransportTuple)
-     * @emits rtcptuple - (rtcpTuple: TransportTuple)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
     /**
      * Close the PlainTransport.
      *

@@ -9,4 +9,3 @@ patch_hash = 8a105158cdabca2a54f1c7cc4c2f814c159271e10dc5e37ed1a08f13cfd67ff7
 
 [provide]
 libuv = libuv_dep
-

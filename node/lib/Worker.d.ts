@@ -1,5 +1,6 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Router, RouterOptions } from './Router';
+import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 export declare type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 export declare type WorkerDevLogLevel = 'debug' | 'warn' | 'none';
 export declare type WorkerLogTag = 'info' | 'ice' | 'dtls' | 'rtp' | 'srtp' | 'rtcp' | 'rtx' | 'bwe' | 'score' | 'simulcast' | 'svc' | 'sctp' | 'xcode' | 'message';
@@ -42,7 +43,7 @@ export declare type WorkerSettings = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags' | 'logDevLevel' | 'logTraceEnabled'>;
 /**
@@ -139,9 +140,12 @@ export declare type WorkerLoggerError = {
 export declare type WorkerEvents = {
     died: [Error];
     failedlog: [WorkerLoggerError];
+    '@success': [];
+    '@failure': [Error];
 };
 export declare type WorkerObserverEvents = {
     close: [];
+    newwebrtcserver: [WebRtcServer];
     newrouter: [Router];
     failedlog: [WorkerLoggerError];
 };
@@ -149,9 +153,6 @@ export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
     #private;
     /**
      * @private
-     * @emits died - (error: Error)
-     * @emits @success
-     * @emits @failure - (error: Error)
      */
     constructor({ logLevel, logTags, logDevLevel, logTraceEnabled, logFile, rtcMinPort, rtcMaxPort, dtlsCertificateFile, dtlsPrivateKeyFile, appData }: WorkerSettings);
     /**
@@ -169,18 +170,20 @@ export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newrouter - (router: Router)
      */
     get observer(): EnhancedEventEmitter<WorkerObserverEvents>;
+    /**
+     * @private
+     * Just for testing purposes.
+     */
+    get webRtcServersForTesting(): Set<WebRtcServer>;
     /**
      * @private
      * Just for testing purposes.
@@ -210,6 +213,10 @@ export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
      * Update settings.
      */
     updateSettings({ logLevel, logTags, logDevLevel, logTraceEnabled, }?: WorkerUpdateableSettings): Promise<void>;
+    /**
+     * Create a WebRtcServer.
+     */
+    createWebRtcServer({ listenInfos, appData }: WebRtcServerOptions): Promise<WebRtcServer>;
     /**
      * Create a Router.
      */

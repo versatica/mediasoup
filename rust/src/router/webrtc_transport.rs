@@ -5,8 +5,8 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{
-    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
-    TransportListenIp, TransportTuple,
+    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenIp,
+    SctpState, TransportTuple,
 };
 use crate::messages::{
     TransportCloseRequest, TransportConnectRequestWebRtcData, TransportConnectWebRtcRequest,
@@ -21,6 +21,7 @@ use crate::transport::{
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
     TransportTraceEventType,
 };
+use crate::webrtc_server::WebRtcServer;
 use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
@@ -38,25 +39,25 @@ use thiserror::Error;
 
 /// Struct that protects an invariant of having non-empty list of listen IPs
 #[derive(Debug, Clone, Eq, PartialEq, Serialize)]
-pub struct TransportListenIps(Vec<TransportListenIp>);
+pub struct TransportListenIps(Vec<ListenIp>);
 
 impl TransportListenIps {
     /// Create transport listen IPs with given IP populated initially.
     #[must_use]
-    pub fn new(listen_ip: TransportListenIp) -> Self {
+    pub fn new(listen_ip: ListenIp) -> Self {
         Self(vec![listen_ip])
     }
 
     /// Insert another listen IP.
     #[must_use]
-    pub fn insert(mut self, listen_ip: TransportListenIp) -> Self {
+    pub fn insert(mut self, listen_ip: ListenIp) -> Self {
         self.0.push(listen_ip);
         self
     }
 }
 
 impl Deref for TransportListenIps {
-    type Target = Vec<TransportListenIp>;
+    type Target = Vec<ListenIp>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -68,10 +69,10 @@ impl Deref for TransportListenIps {
 #[error("Empty list of listen IPs provided, should have at least one element")]
 pub struct EmptyListError;
 
-impl TryFrom<Vec<TransportListenIp>> for TransportListenIps {
+impl TryFrom<Vec<ListenIp>> for TransportListenIps {
     type Error = EmptyListError;
 
-    fn try_from(listen_ips: Vec<TransportListenIp>) -> Result<Self, Self::Error> {
+    fn try_from(listen_ips: Vec<ListenIp>) -> Result<Self, Self::Error> {
         if listen_ips.is_empty() {
             Err(EmptyListError)
         } else {
@@ -80,22 +81,39 @@ impl TryFrom<Vec<TransportListenIp>> for TransportListenIps {
     }
 }
 
-/// [`WebRtcTransport`] options.
+/// How [`WebRtcTransport`] should listen on interfaces.
 ///
 /// # Notes on usage
 /// * Do not use "0.0.0.0" into `listen_ips`. Values in `listen_ips` must be specific bindable IPs
 ///   on the host.
 /// * If you use "0.0.0.0" or "::" into `listen_ips`, then you need to also provide `announced_ip`
 ///   in the corresponding entry in `listen_ips`.
+#[derive(Debug, Clone)]
+pub enum WebRtcTransportListen {
+    /// Listen on individual IP/port combinations specific to this transport.
+    Individual {
+        /// Listening IP address or addresses in order of preference (first one is the preferred one).
+        listen_ips: TransportListenIps,
+        /// Fixed port to listen on instead of selecting automatically from Worker's port range.
+        port: Option<u16>,
+    },
+    /// Share [`WebRtcServer`] with other transports withing the same worker.
+    Server {
+        /// [`WebRtcServer`] to use.
+        webrtc_server: WebRtcServer,
+    },
+}
+
+/// [`WebRtcTransport`] options.
+///
+/// # Notes on usage
 /// * `initial_available_outgoing_bitrate` is just applied when the consumer endpoint supports REMB
 ///   or Transport-CC.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct WebRtcTransportOptions {
-    /// Listening IP address or addresses in order of preference (first one is the preferred one).
-    pub listen_ips: TransportListenIps,
-    /// Fixed port to listen on instead of selecting automatically from Worker's port range.
-    pub port: Option<u16>,
+    /// How [`WebRtcTransport`] should listen on interfaces.
+    pub listen: WebRtcTransportListen,
     /// Listen in UDP. Default true.
     pub enable_udp: bool,
     /// Listen in TCP.
@@ -130,8 +148,27 @@ impl WebRtcTransportOptions {
     #[must_use]
     pub fn new(listen_ips: TransportListenIps) -> Self {
         Self {
-            listen_ips,
-            port: None,
+            listen: WebRtcTransportListen::Individual {
+                listen_ips,
+                port: None,
+            },
+            enable_udp: true,
+            enable_tcp: false,
+            prefer_udp: false,
+            prefer_tcp: false,
+            initial_available_outgoing_bitrate: 600_000,
+            enable_sctp: false,
+            num_sctp_streams: NumSctpStreams::default(),
+            max_sctp_message_size: 262_144,
+            sctp_send_buffer_size: 262_144,
+            app_data: AppData::default(),
+        }
+    }
+    /// Create [`WebRtcTransport`] options with given [`WebRtcServer`].
+    #[must_use]
+    pub fn new_with_server(webrtc_server: WebRtcServer) -> Self {
+        Self {
+            listen: WebRtcTransportListen::Server { webrtc_server },
             enable_udp: true,
             enable_tcp: false,
             prefer_udp: false,
@@ -240,6 +277,7 @@ struct Handlers {
     sctp_state_change: Bag<Arc<dyn Fn(SctpState) + Send + Sync>>,
     trace: Bag<Arc<dyn Fn(&TransportTraceEventData) + Send + Sync>, TransportTraceEventData>,
     router_close: BagOnce<Box<dyn FnOnce() + Send>>,
+    webrtc_server_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
 
@@ -277,11 +315,14 @@ struct Inner {
     handlers: Arc<Handlers>,
     data: Arc<WebRtcTransportData>,
     app_data: AppData,
+    // Make sure WebRTC server is not dropped until this transport is not dropped
+    webrtc_server: Option<WebRtcServer>,
     // Make sure router is not dropped until this transport is not dropped
     router: Router,
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
-    subscription_handler: Mutex<Option<SubscriptionHandler>>,
+    _subscription_handler: Mutex<Option<SubscriptionHandler>>,
+    _on_webrtc_server_close_handler: Mutex<Option<HandlerId>>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 
@@ -300,8 +341,6 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
-            let subscription_handler = self.subscription_handler.lock().take();
-
             if close_request {
                 let channel = self.channel.clone();
                 let request = TransportCloseRequest {
@@ -316,18 +355,6 @@ impl Inner {
                         if let Err(error) = channel.request(request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
-
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handler);
-                    })
-                    .detach();
-            } else {
-                self.executor
-                    .spawn(async move {
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handler);
                     })
                     .detach();
             }
@@ -561,6 +588,7 @@ impl TransportImpl for WebRtcTransport {
 }
 
 impl WebRtcTransport {
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn new(
         id: TransportId,
         executor: Arc<Executor<'static>>,
@@ -569,6 +597,7 @@ impl WebRtcTransport {
         data: WebRtcTransportData,
         app_data: AppData,
         router: Router,
+        webrtc_server: Option<WebRtcServer>,
     ) -> Self {
         debug!("new()");
 
@@ -638,6 +667,19 @@ impl WebRtcTransport {
         });
         let cname_for_producers = Mutex::new(None);
         let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
+        let on_webrtc_server_close_handler = webrtc_server.as_ref().map(|webrtc_server| {
+            webrtc_server.on_close({
+                let inner_weak = Arc::clone(&inner_weak);
+
+                move || {
+                    let maybe_inner = inner_weak.lock().as_ref().and_then(Weak::upgrade);
+                    if let Some(inner) = maybe_inner {
+                        inner.handlers.webrtc_server_close.call_simple();
+                        inner.close(true);
+                    }
+                }
+            })
+        });
         let on_router_close_handler = router.on_close({
             let inner_weak = Arc::clone(&inner_weak);
 
@@ -660,15 +702,24 @@ impl WebRtcTransport {
             handlers,
             data,
             app_data,
+            webrtc_server,
             router,
             closed: AtomicBool::new(false),
-            subscription_handler: Mutex::new(subscription_handler),
+            _subscription_handler: Mutex::new(subscription_handler),
+            _on_webrtc_server_close_handler: Mutex::new(on_webrtc_server_close_handler),
             _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 
         inner_weak.lock().replace(Arc::downgrade(&inner));
 
-        Self { inner }
+        let webrtc_transport = Self { inner };
+
+        // Notify WebRTC server that new transport was created.
+        if let Some(webrtc_server) = &webrtc_transport.inner.webrtc_server {
+            webrtc_server.notify_new_webrtc_transport(&webrtc_transport);
+        }
+
+        webrtc_transport
     }
 
     /// Provide the [`WebRtcTransport`] with remote parameters.
@@ -721,6 +772,11 @@ impl WebRtcTransport {
         self.inner.data.dtls_parameters.lock().role = response.dtls_local_role;
 
         Ok(())
+    }
+
+    /// WebRTC server used during creation of this transport.
+    pub fn webrtc_server(&self) -> &Option<WebRtcServer> {
+        &self.inner.webrtc_server
     }
 
     /// Set maximum incoming bitrate for media streams sent by the remote endpoint over this
@@ -818,6 +874,17 @@ impl WebRtcTransport {
             .await?;
 
         Ok(response.ice_parameters)
+    }
+
+    /// Callback is called when the WebRTC server used during creation of this transport is closed
+    /// for whatever reason.
+    /// The transport itself is also closed. `on_transport_close` callbacks are also called on all
+    /// its producers and consumers.
+    pub fn on_webrtc_server_close(
+        &self,
+        callback: Box<dyn FnOnce() + Send + 'static>,
+    ) -> HandlerId {
+        self.inner.handlers.webrtc_server_close.add(callback)
     }
 
     /// Callback is called when the transport ICE state changes.

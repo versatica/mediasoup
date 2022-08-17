@@ -11,9 +11,8 @@ jobs:
       matrix:
         os:
           - ubuntu-20.04
-          - macos-10.15
-          - macos-11
-          - windows-2019
+          - ubuntu-22.04
+          - macos-12
           - windows-2022
         rust:
           - stable
@@ -50,7 +49,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: --all-targets -- -D warnings
 
       - name: cargo test
         uses: actions-rs/cargo@v1

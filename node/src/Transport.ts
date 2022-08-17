@@ -83,8 +83,16 @@ export type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed'
 
 export type TransportEvents = 
 { 
-	routerclose: []; 
+	routerclose: [];
+	listenserverclose: [];
 	trace: [TransportTraceEventData];
+	// Private events.
+	'@close': [];
+	'@newproducer': [Producer];
+	'@producerclose': [Producer];
+	'@newdataproducer': [DataProducer];
+	'@dataproducerclose': [DataProducer];
+	'@listenserverclose': [];
 }
 
 export type TransportObserverEvents =
@@ -127,7 +135,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Method to retrieve Router RTP capabilities.
 	readonly #getRouterRtpCapabilities: () => RtpCapabilities;
@@ -168,12 +176,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	/**
 	 * @private
 	 * @interface
-	 * @emits routerclose
-	 * @emits @close
-	 * @emits @newproducer - (producer: Producer)
-	 * @emits @producerclose - (producer: Producer)
-	 * @emits @newdataproducer - (dataProducer: DataProducer)
-	 * @emits @dataproducerclose - (dataProducer: DataProducer)
 	 */
 	constructor(
 		{
@@ -191,7 +193,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData: any;
+			appData?: Record<string, unknown>;
 			getRouterRtpCapabilities: () => RtpCapabilities;
 			getProducerById: (producerId: string) => Producer;
 			getDataProducerById: (dataProducerId: string) => DataProducer;
@@ -206,7 +208,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		this.#data = data;
 		this.channel = channel;
 		this.payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
@@ -231,7 +233,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -239,19 +241,13 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits newproducer - (producer: Producer)
-	 * @emits newconsumer - (producer: Producer)
-	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataProducer: DataProducer)
 	 */
 	get observer(): EnhancedEventEmitter<ObserverEvents>
 	{
@@ -386,6 +382,70 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	}
 
 	/**
+	 * Listen server was closed (this just happens in WebRtcTransports when their
+	 * associated WebRtcServer is closed).
+	 *
+	 * @private
+	 */
+	listenServerClosed(): void
+	{
+		if (this.#closed)
+			return;
+
+		logger.debug('listenServerClosed()');
+
+		this.#closed = true;
+
+		// Remove notification subscriptions.
+		this.channel.removeAllListeners(this.internal.transportId);
+		this.payloadChannel.removeAllListeners(this.internal.transportId);
+
+		// Close every Producer.
+		for (const producer of this.#producers.values())
+		{
+			producer.transportClosed();
+
+			// NOTE: No need to tell the Router since it already knows (it has
+			// been closed in fact).
+		}
+		this.#producers.clear();
+
+		// Close every Consumer.
+		for (const consumer of this.consumers.values())
+		{
+			consumer.transportClosed();
+		}
+		this.consumers.clear();
+
+		// Close every DataProducer.
+		for (const dataProducer of this.dataProducers.values())
+		{
+			dataProducer.transportClosed();
+
+			// NOTE: No need to tell the Router since it already knows (it has
+			// been closed in fact).
+		}
+		this.dataProducers.clear();
+
+		// Close every DataConsumer.
+		for (const dataConsumer of this.dataConsumers.values())
+		{
+			dataConsumer.transportClosed();
+		}
+		this.dataConsumers.clear();
+
+		// Need to emit this event to let the parent Router know since
+		// transport.listenServerClosed() is called by the listen server.
+		// NOTE: Currently there is just WebRtcServer for WebRtcTransports.
+		this.emit('@listenserverclose');
+
+		this.safeEmit('listenserverclose');
+
+		// Emit observer event.
+		this.#observer.safeEmit('close');
+	}
+
+	/**
 	 * Dump Transport.
 	 */
 	async dump(): Promise<any>
@@ -454,7 +514,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			rtpParameters,
 			paused = false,
 			keyFrameRequestDelay,
-			appData = {}
+			appData
 		}: ProducerOptions
 	): Promise<Producer>
 	{
@@ -568,8 +628,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			paused = false,
 			mid,
 			preferredLayers,
+			ignoreDtx = false,
 			pipe = false,
-			appData = {}
+			appData
 		}: ConsumerOptions
 	): Promise<Consumer>
 	{
@@ -610,15 +671,16 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 				{
 					logger.error(
 						`consume() | reaching max MID value "${this.#nextMidForConsumers}"`);
-	
+
 					this.#nextMidForConsumers = 0;
 				}
 			}
 		}
 
-		const internal = { ...this.internal, consumerId: uuidv4(), producerId };
+		const internal = { ...this.internal, consumerId: uuidv4() };
 		const reqData =
 		{
+			producerId,
 			kind                   : producer.kind,
 			rtpParameters,
 			type                   : pipe ? 'pipe' : producer.type,
@@ -626,6 +688,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			paused,
 			preferredLayers,
 			appData,
+			ignoreDtx,
 		};
 
 		const status =
@@ -633,6 +696,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		const data =
 		{
+			producerId,
 			kind : producer.kind,
 			rtpParameters,
 			type : pipe ? 'pipe' : producer.type
@@ -670,7 +734,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			sctpStreamParameters,
 			label = '',
 			protocol = '',
-			appData = {}
+			appData
 		}: DataProducerOptions = {}
 	): Promise<DataProducer>
 	{
@@ -748,7 +812,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			ordered,
 			maxPacketLifeTime,
 			maxRetransmits,
-			appData = {}
+			appData
 		}: DataConsumerOptions
 	): Promise<DataConsumer>
 	{
@@ -810,9 +874,10 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		const { label, protocol } = dataProducer;
 
-		const internal = { ...this.internal, dataConsumerId: uuidv4(), dataProducerId };
+		const internal = { ...this.internal, dataConsumerId: uuidv4() };
 		const reqData =
 		{
+			dataProducerId,
 			type,
 			sctpStreamParameters,
 			label,

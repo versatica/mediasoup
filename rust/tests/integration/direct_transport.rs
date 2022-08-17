@@ -86,7 +86,7 @@ fn create_succeeds() {
             .expect("Failed to create Direct transport");
 
         assert_eq!(new_transports_count.load(Ordering::SeqCst), 1);
-        assert_eq!(transport1.closed(), false);
+        assert!(!transport1.closed());
         assert_eq!(
             transport1
                 .app_data()
@@ -100,7 +100,7 @@ fn create_succeeds() {
             let dump = transport1.dump().await.expect("Failed to dump transport");
 
             assert_eq!(dump.id, transport1.id());
-            assert_eq!(dump.direct, true);
+            assert!(dump.direct);
             assert_eq!(dump.producer_ids, vec![]);
             assert_eq!(dump.consumer_ids, vec![]);
             assert_eq!(dump.data_producer_ids, vec![]);
@@ -191,15 +191,14 @@ fn send_succeeds() {
             let last_recv_message_id = Arc::clone(&last_recv_message_id);
 
             move |message| {
-                let id: usize;
-                match message {
+                let id: usize = match message {
                     WebRtcMessage::String(string) => {
                         recv_message_bytes.fetch_add(string.as_bytes().len(), Ordering::SeqCst);
-                        id = string.parse().unwrap();
+                        string.parse().unwrap()
                     }
                     WebRtcMessage::Binary(binary) => {
                         recv_message_bytes.fetch_add(binary.len(), Ordering::SeqCst);
-                        id = String::from_utf8(binary.to_vec()).unwrap().parse().unwrap();
+                        String::from_utf8(binary.to_vec()).unwrap().parse().unwrap()
                     }
                     WebRtcMessage::EmptyString => {
                         panic!("Unexpected empty messages!");

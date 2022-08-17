@@ -23,7 +23,6 @@ namespace RTC
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
-		void HandleRequest(Channel::ChannelRequest* request) override;
 		bool IsActive() const override
 		{
 			// clang-format off
@@ -42,7 +41,7 @@ namespace RTC
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet) override;
+		void SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket) override;
 		std::vector<RTC::RtpStreamSend*> GetRtpStreams() override
 		{
 			return this->rtpStreams;
@@ -52,8 +51,13 @@ namespace RTC
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report) override;
+		void ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report) override;
 		uint32_t GetTransmissionRate(uint64_t nowMs) override;
 		float GetRtt() const override;
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	private:
 		void UserOnTransportConnected() override;
@@ -82,6 +86,7 @@ namespace RTC
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		bool managingBitrate{ false };
+		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		//bin log
 		Lively::CallStatsRecordCtx* rtpStreamBinLogRecord;
 	};

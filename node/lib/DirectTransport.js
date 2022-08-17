@@ -10,8 +10,6 @@ class DirectTransport extends Transport_1.Transport {
     #data;
     /**
      * @private
-     * @emits rtcp - (packet: Buffer)
-     * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params) {
         super(params);
@@ -22,16 +20,6 @@ class DirectTransport extends Transport_1.Transport {
             };
         this.handleWorkerNotifications();
     }
-    /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataProducer: DataProducer)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
-    // get observer(): EnhancedEventEmitter
     /**
      * Close the DirectTransport.
      *

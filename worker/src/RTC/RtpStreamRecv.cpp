@@ -182,8 +182,9 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpStreamRecv::RtpStreamRecv(RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params)
-	  : RTC::RtpStream::RtpStream(listener, params, 10),
+	RtpStreamRecv::RtpStreamRecv(
+	  RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params, unsigned int sendNackDelayMs)
+	  : RTC::RtpStream::RtpStream(listener, params, 10), sendNackDelayMs(sendNackDelayMs),
 	    transmissionCounter(
 	      params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500)
 	{
@@ -191,7 +192,7 @@ namespace RTC
 
 		if (this->params.useNack)
 		{
-			this->nackGenerator.reset(new RTC::NackGenerator(this));
+			this->nackGenerator.reset(new RTC::NackGenerator(this, this->sendNackDelayMs));
 			MS_DEBUG_TAG(rtp,"RtpStreamRecv::params.useNack is true, NACK feature enabled");
 		}
 		else {
@@ -254,7 +255,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Call the parent method.
-		if (!RTC::RtpStream::ReceivePacket(packet))
+		if (!RTC::RtpStream::ReceiveStreamPacket(packet))
 		{
 			MS_WARN_TAG(rtp, "packet discarded");
 

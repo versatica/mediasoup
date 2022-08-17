@@ -16,7 +16,7 @@ pub use crate::ortc::{
     ConsumerRtpParametersError, RtpCapabilitiesError, RtpParametersError, RtpParametersMappingError,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
-use crate::router::{Router, RouterId};
+use crate::router::Router;
 use crate::rtp_parameters::RtpEncodingParameters;
 use crate::worker::{Channel, PayloadChannel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
@@ -133,13 +133,6 @@ pub trait Transport: Debug + Send + Sync {
     /// Transport id.
     #[must_use]
     fn id(&self) -> TransportId;
-
-    /// Router id.
-    #[must_use]
-    #[deprecated = "Use `router().id()` instead"]
-    fn router_id(&self) -> RouterId {
-        self.router().id()
-    }
 
     /// Router to which transport belongs.
     fn router(&self) -> &Router;
@@ -549,6 +542,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             paused,
             mid,
             preferred_layers,
+            ignore_dtx,
             pipe,
             app_data,
         } = consumer_options;
@@ -604,9 +598,9 @@ pub(super) trait TransportImpl: TransportGeneric {
                     router_id: self.router().id(),
                     transport_id: self.id(),
                     consumer_id,
-                    producer_id: producer.id(),
                 },
                 data: TransportConsumeData {
+                    producer_id: producer.id(),
                     kind: producer.kind(),
                     rtp_parameters: rtp_parameters.clone(),
                     r#type,
@@ -616,6 +610,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                         .clone(),
                     paused,
                     preferred_layers,
+                    ignore_dtx,
                 },
             })
             .await
@@ -771,10 +766,10 @@ pub(super) trait TransportImpl: TransportGeneric {
                 internal: DataConsumerInternal {
                     router_id: self.router().id(),
                     transport_id: self.id(),
-                    data_producer_id: data_producer.id(),
                     data_consumer_id,
                 },
                 data: TransportConsumeDataData {
+                    data_producer_id: data_producer.id(),
                     r#type,
                     sctp_stream_parameters,
                     label: data_producer.label().clone(),

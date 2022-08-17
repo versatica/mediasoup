@@ -6,7 +6,7 @@ export interface ActiveSpeakerObserverOptions {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 }
 export interface ActiveSpeakerObserverActivity {
     /**

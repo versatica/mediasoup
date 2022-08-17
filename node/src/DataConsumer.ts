@@ -38,7 +38,7 @@ export type DataConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type DataConsumerStat =
@@ -64,6 +64,9 @@ export type DataConsumerEvents =
 	message: [Buffer, number];
 	sctpsendbufferfull: [];
 	bufferedamountlow: [number];
+	// Private events.
+	'@close': [];
+	'@dataproducerclose': [];
 }
 
 export type DataConsumerObserverEvents =
@@ -80,13 +83,13 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		routerId: string;
 		transportId: string;
-		dataProducerId: string;
 		dataConsumerId: string;
 	};
 
 	// DataConsumer data.
 	readonly #data:
 	{
+		dataProducerId: string;
 		type: DataConsumerType;
 		sctpStreamParameters?: SctpStreamParameters;
 		label: string;
@@ -103,20 +106,13 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Observer instance.
 	readonly #observer = new EnhancedEventEmitter<DataConsumerObserverEvents>();
 
 	/**
 	 * @private
-	 * @emits transportclose
-	 * @emits dataproducerclose
-	 * @emits message - (message: Buffer, ppid: number)
-	 * @emits sctpsendbufferfull
-	 * @emits bufferedamountlow - (bufferedAmount: number)
-	 * @emits @close
-	 * @emits @dataproducerclose
 	 */
 	constructor(
 		{
@@ -131,7 +127,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData: any;
+			appData?: Record<string, unknown>;
 		}
 	)
 	{
@@ -143,7 +139,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 
 		this.handleWorkerNotifications();
 	}
@@ -161,7 +157,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	 */
 	get dataProducerId(): string
 	{
-		return this.#internal.dataProducerId;
+		return this.#data.dataProducerId;
 	}
 
 	/**
@@ -207,7 +203,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -215,15 +211,13 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
 	 */
 	get observer(): EnhancedEventEmitter<DataConsumerObserverEvents>
 	{

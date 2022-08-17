@@ -51,12 +51,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * @private
      * @interface
-     * @emits routerclose
-     * @emits @close
-     * @emits @newproducer - (producer: Producer)
-     * @emits @producerclose - (producer: Producer)
-     * @emits @newdataproducer - (dataProducer: DataProducer)
-     * @emits @dataproducerclose - (dataProducer: DataProducer)
      */
     constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }) {
         super();
@@ -65,7 +59,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.channel = channel;
         this.payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
         this.getProducerById = getProducerById;
         this.getDataProducerById = getDataProducerById;
@@ -96,12 +90,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (producer: Producer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataProducer: DataProducer)
      */
     get observer() {
         return this.#observer;
@@ -197,6 +185,52 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#observer.safeEmit('close');
     }
     /**
+     * Listen server was closed (this just happens in WebRtcTransports when their
+     * associated WebRtcServer is closed).
+     *
+     * @private
+     */
+    listenServerClosed() {
+        if (this.#closed)
+            return;
+        logger.debug('listenServerClosed()');
+        this.#closed = true;
+        // Remove notification subscriptions.
+        this.channel.removeAllListeners(this.internal.transportId);
+        this.payloadChannel.removeAllListeners(this.internal.transportId);
+        // Close every Producer.
+        for (const producer of this.#producers.values()) {
+            producer.transportClosed();
+            // NOTE: No need to tell the Router since it already knows (it has
+            // been closed in fact).
+        }
+        this.#producers.clear();
+        // Close every Consumer.
+        for (const consumer of this.consumers.values()) {
+            consumer.transportClosed();
+        }
+        this.consumers.clear();
+        // Close every DataProducer.
+        for (const dataProducer of this.dataProducers.values()) {
+            dataProducer.transportClosed();
+            // NOTE: No need to tell the Router since it already knows (it has
+            // been closed in fact).
+        }
+        this.dataProducers.clear();
+        // Close every DataConsumer.
+        for (const dataConsumer of this.dataConsumers.values()) {
+            dataConsumer.transportClosed();
+        }
+        this.dataConsumers.clear();
+        // Need to emit this event to let the parent Router know since
+        // transport.listenServerClosed() is called by the listen server.
+        // NOTE: Currently there is just WebRtcServer for WebRtcTransports.
+        this.emit('@listenserverclose');
+        this.safeEmit('listenserverclose');
+        // Emit observer event.
+        this.#observer.safeEmit('close');
+    }
+    /**
      * Dump Transport.
      */
     async dump() {
@@ -241,7 +275,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a Producer.
      */
-    async produce({ id = undefined, kind, rtpParameters, paused = false, keyFrameRequestDelay, appData = {} }) {
+    async produce({ id = undefined, kind, rtpParameters, paused = false, keyFrameRequestDelay, appData }) {
         logger.debug('produce() rtpParameters=%o', rtpParameters);
         if (id && this.#producers.has(id))
             throw new TypeError(`a Producer with same id "${id}" already exists`);
@@ -314,7 +348,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      *
      * @virtual
      */
-    async consume({ producerId, rtpCapabilities, paused = false, mid, preferredLayers, pipe = false, appData = {} }) {
+    async consume({ producerId, rtpCapabilities, paused = false, mid, preferredLayers, ignoreDtx = false, pipe = false, appData }) {
         logger.debug('consume()');
         if (!producerId || typeof producerId !== 'string')
             throw new TypeError('missing producerId');
@@ -343,8 +377,9 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 }
             }
         }
-        const internal = { ...this.internal, consumerId: (0, uuid_1.v4)(), producerId };
+        const internal = { ...this.internal, consumerId: (0, uuid_1.v4)() };
         const reqData = {
+            producerId,
             kind: producer.kind,
             rtpParameters,
             type: pipe ? 'pipe' : producer.type,
@@ -352,9 +387,11 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             paused,
             preferredLayers,
             appData,
+            ignoreDtx,
         };
         const status = await this.channel.request('transport.consume', internal, reqData);
         const data = {
+            producerId,
             kind: producer.kind,
             rtpParameters,
             type: pipe ? 'pipe' : producer.type
@@ -380,7 +417,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a DataProducer.
      */
-    async produceData({ id = undefined, sctpStreamParameters, label = '', protocol = '', appData = {} } = {}) {
+    async produceData({ id = undefined, sctpStreamParameters, label = '', protocol = '', appData } = {}) {
         logger.debug('produceData()');
         if (id && this.dataProducers.has(id))
             throw new TypeError(`a DataProducer with same id "${id}" already exists`);
@@ -428,7 +465,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a DataConsumer.
      */
-    async consumeData({ dataProducerId, ordered, maxPacketLifeTime, maxRetransmits, appData = {} }) {
+    async consumeData({ dataProducerId, ordered, maxPacketLifeTime, maxRetransmits, appData }) {
         logger.debug('consumeData()');
         if (!dataProducerId || typeof dataProducerId !== 'string')
             throw new TypeError('missing dataProducerId');
@@ -468,8 +505,9 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             }
         }
         const { label, protocol } = dataProducer;
-        const internal = { ...this.internal, dataConsumerId: (0, uuid_1.v4)(), dataProducerId };
+        const internal = { ...this.internal, dataConsumerId: (0, uuid_1.v4)() };
         const reqData = {
+            dataProducerId,
             type,
             sctpStreamParameters,
             label,

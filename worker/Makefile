@@ -22,7 +22,7 @@ BUILD_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/build
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_VERSION ?= 0.61.5
 # `MESON_ARGS` can be used to provide extra configuration parameters to Meson, such as adding defines or changing
-# optimization options. For instance, use `MESON_ARGS="-DMS_LOG_TRACE -DMS_LOG_FILE_LINE" npm i` to compile worker with
+# optimization options. For instance, use `MESON_ARGS="-Dms_log_trace=true -Dms_log_file_line=true" npm i` to compile worker with
 # tracing and enabled.
 #
 # NOTE: On Windows make sure to add `--vsenv` or have MSVS environment already active if you override this parameter.
@@ -206,7 +206,7 @@ fuzzer: setup
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-fuzzer
 
 fuzzer-run-all:
-	LSAN_OPTIONS=verbosity=1:log_threads=1 ./$(BUILD_DIR)/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
+	LSAN_OPTIONS=verbosity=1:log_threads=1 $(BUILD_DIR)/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
 
 docker-build:
 ifeq ($(DOCKER_NO_CACHE),true)

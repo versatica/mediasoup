@@ -32,7 +32,7 @@ export declare type DataConsumerOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type DataConsumerStat = {
     type: string;
@@ -53,6 +53,8 @@ export declare type DataConsumerEvents = {
     message: [Buffer, number];
     sctpsendbufferfull: [];
     bufferedamountlow: [number];
+    '@close': [];
+    '@dataproducerclose': [];
 };
 export declare type DataConsumerObserverEvents = {
     close: [];
@@ -61,20 +63,13 @@ export declare class DataConsumer extends EnhancedEventEmitter<DataConsumerEvent
     #private;
     /**
      * @private
-     * @emits transportclose
-     * @emits dataproducerclose
-     * @emits message - (message: Buffer, ppid: number)
-     * @emits sctpsendbufferfull
-     * @emits bufferedamountlow - (bufferedAmount: number)
-     * @emits @close
-     * @emits @dataproducerclose
      */
     constructor({ internal, data, channel, payloadChannel, appData }: {
         internal: any;
         data: any;
         channel: Channel;
         payloadChannel: PayloadChannel;
-        appData: any;
+        appData?: Record<string, unknown>;
     });
     /**
      * DataConsumer id.
@@ -107,15 +102,13 @@ export declare class DataConsumer extends EnhancedEventEmitter<DataConsumerEvent
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
      */
     get observer(): EnhancedEventEmitter<DataConsumerObserverEvents>;
     /**

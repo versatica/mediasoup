@@ -7,6 +7,8 @@ import { Producer } from './Producer';
 export type RtpObserverEvents =
 {
 	routerclose: [];
+	// Private events.
+	'@close': [];
 }
 
 export type RtpObserverObserverEvents =
@@ -51,7 +53,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	#paused = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Method to retrieve a Producer.
 	protected readonly getProducerById: (producerId: string) => Producer;
@@ -62,8 +64,6 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	/**
 	 * @private
 	 * @interface
-	 * @emits routerclose
-	 * @emits @close
 	 */
 	constructor(
 		{
@@ -77,7 +77,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 			internal: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData: any;
+			appData?: Record<string, unknown>;
 			getProducerById: (producerId: string) => Producer;
 		}
 	)
@@ -89,7 +89,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		this.internal = internal;
 		this.channel = channel;
 		this.payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 		this.getProducerById = getProducerById;
 	}
 
@@ -120,7 +120,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -128,19 +128,13 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits pause
-	 * @emits resume
-	 * @emits addproducer - (producer: Producer)
-	 * @emits removeproducer - (producer: Producer)
 	 */
 	get observer(): EnhancedEventEmitter<RtpObserverObserverEvents>
 	{

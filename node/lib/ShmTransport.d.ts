@@ -10,11 +10,7 @@ export interface ShmTransportOptions {
     /**
      * Custom application data.
      */
-    appData?: any;
-    /**
-     * Binary log info.
-     */
-    binlog?: any;
+    appData?: Record<string, unknown>;
 }
 export interface ShmTransportStat {
     type: string;

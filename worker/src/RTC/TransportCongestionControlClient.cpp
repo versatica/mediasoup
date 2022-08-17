@@ -12,7 +12,8 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint32_t MinBitrate{ 30000u };
+	// NOTE: TransportCongestionControlMinOutgoingBitrate is defined in
+	// TransportCongestionControlClient.hpp and exposed publicly.
 	static constexpr float MaxBitrateMarginFactor{ 0.1f };
 	static constexpr float MaxBitrateIncrementFactor{ 1.35f };
 	static constexpr float MaxPaddingBitrateFactor{ 0.85f };
@@ -27,7 +28,8 @@ namespace RTC
 	  uint32_t initialAvailableBitrate,
 	  uint32_t maxOutgoingBitrate)
 	  : listener(listener), bweType(bweType),
-	    initialAvailableBitrate(std::max<uint32_t>(initialAvailableBitrate, MinBitrate)),
+	    initialAvailableBitrate(std::max<uint32_t>(
+	      initialAvailableBitrate, RTC::TransportCongestionControlMinOutgoingBitrate)),
 	    maxOutgoingBitrate(maxOutgoingBitrate)
 	{
 		MS_TRACE();
@@ -262,12 +264,6 @@ namespace RTC
 
 	void TransportCongestionControlClient::SetMaxOutgoingBitrate(uint32_t maxBitrate)
 	{
-		if (maxBitrate < this->initialAvailableBitrate)
-			MS_THROW_ERROR("maxOutgoingBitrate must be >= initialAvailableOutgoingBitrate");
-
-		if (maxBitrate < MinBitrate)
-			MS_THROW_ERROR("maxOutgoingBitrate must be >= 30000bps");
-
 		this->maxOutgoingBitrate = maxBitrate;
 
 		ApplyBitrateUpdates();
@@ -293,10 +289,11 @@ namespace RTC
 
 		this->bitrates.desiredBitrate          = desiredBitrate;
 		this->bitrates.effectiveDesiredBitrate = this->desiredBitrateTrend.GetValue();
-		this->bitrates.minBitrate              = MinBitrate;
+		this->bitrates.minBitrate              = RTC::TransportCongestionControlMinOutgoingBitrate;
 		// NOTE: Setting 'startBitrate' to 'availableBitrate' has proven to generate
 		// more stable values.
-		this->bitrates.startBitrate = std::max<uint32_t>(MinBitrate, this->bitrates.availableBitrate);
+		this->bitrates.startBitrate = std::max<uint32_t>(
+		  RTC::TransportCongestionControlMinOutgoingBitrate, this->bitrates.availableBitrate);
 
 		ApplyBitrateUpdates();
 	}

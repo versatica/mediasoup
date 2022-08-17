@@ -174,6 +174,7 @@ test('router.createPlainTransport() with wrong arguments rejects with TypeError'
 
 test('router.createPlainTransport() with enableSrtp succeeds', async () =>
 {
+	// Use default cryptoSuite: 'AES_CM_128_HMAC_SHA1_80'.
 	const transport1 = await router.createPlainTransport(
 		{
 			listenIp   : '127.0.0.1',
@@ -279,14 +280,15 @@ test('router.createPlainTransport() with enableSrtp succeeds', async () =>
 			port           : 9999,
 			srtpParameters :
 			{
-				cryptoSuite : 'AES_CM_128_HMAC_SHA1_32',
-				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+				cryptoSuite : 'AEAD_AES_256_GCM',
+				keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 			}
 		}))
 		.resolves
 		.toBeUndefined();
 
-	expect(transport1.srtpParameters.cryptoSuite).toBe('AES_CM_128_HMAC_SHA1_32');
+	expect(transport1.srtpParameters.cryptoSuite).toBe('AEAD_AES_256_GCM');
+	expect(transport1.srtpParameters.keyBase64.length).toBe(60);
 
 	transport1.close();
 }, 2000);

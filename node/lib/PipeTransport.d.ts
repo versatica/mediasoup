@@ -50,11 +50,7 @@ export declare type PipeTransportOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
-    /**
-     * Binary log info.
-     */
-    binlog?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type PipeTransportStat = {
     type: string;
@@ -89,7 +85,7 @@ export declare type PipeConsumerOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type PipeTransportEvents = TransportEvents & {
     sctpstatechange: [SctpState];
@@ -101,8 +97,6 @@ export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTr
     #private;
     /**
      * @private
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params: any);
     /**
@@ -121,18 +115,6 @@ export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTr
      * SRTP parameters.
      */
     get srtpParameters(): SrtpParameters | undefined;
-    /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (consumer: Consumer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataConsumer: DataConsumer)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
     /**
      * Close the PipeTransport.
      *

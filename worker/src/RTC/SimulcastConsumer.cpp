@@ -13,10 +13,10 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint8_t StreamGoodScore{ 5u };
 	static constexpr uint64_t StreamMinActiveMs{ 2000u };           // In ms.
 	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u }; // In ms.
 	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };     // In ms.
+	static constexpr uint16_t MaxSequenceNumberGap{ 100u };
 
 	/* Instance methods. */
 
@@ -474,7 +474,7 @@ namespace RTC
 			auto* producerRtpStream = this->producerRtpStreams.at(spatialLayer);
 
 			// Producer stream does not exist or it's not good. Ignore.
-			if (!producerRtpStream || producerRtpStream->GetScore() < StreamGoodScore)
+			if (!producerRtpStream)
 				continue;
 
 			// If the stream has not been active time enough and we have an active one
@@ -683,7 +683,8 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	void SimulcastConsumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void SimulcastConsumer::SendRtpPacket(
+	  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -719,7 +720,8 @@ namespace RTC
 			shouldSwitchCurrentSpatialLayer = true;
 
 			// Need to resync the stream.
-			this->syncRequired = true;
+			this->syncRequired       = true;
+			this->spatialLayerToSync = spatialLayer;
 		}
 		// If the packet belongs to different spatial layer than the one being sent,
 		// drop it.
@@ -736,7 +738,7 @@ namespace RTC
 		bool isSyncPacket = this->syncRequired;
 
 		// Sync sequence number and timestamp if required.
-		if (isSyncPacket)
+		if (isSyncPacket && (this->spatialLayerToSync == -1 || this->spatialLayerToSync == spatialLayer))
 		{
 			if (packet->IsKeyFrame())
 				MS_DEBUG_TAG_LIVELYAPP(rtp, this->appData, "sync key frame received");
@@ -863,7 +865,23 @@ namespace RTC
 			this->encodingContext->SyncRequired();
 
 			this->syncRequired                 = false;
+			this->spatialLayerToSync           = -1;
 			this->keyFrameForTsOffsetRequested = false;
+		}
+
+		if (!shouldSwitchCurrentSpatialLayer && this->checkingForOldPacketsInSpatialLayer)
+		{
+			// If this is a packet previous to the spatial layer switch, ignore the packet.
+			if (SeqManager<uint16_t>::IsSeqLowerThan(
+			      packet->GetSequenceNumber(), this->snReferenceSpatialLayer))
+			{
+				return;
+			}
+			else if (SeqManager<uint16_t>::IsSeqHigherThan(
+			           packet->GetSequenceNumber(), this->snReferenceSpatialLayer + MaxSequenceNumberGap))
+			{
+				this->checkingForOldPacketsInSpatialLayer = false;
+			}
 		}
 
 		bool marker{ false };
@@ -872,6 +890,9 @@ namespace RTC
 		{
 			// Update current spatial layer.
 			this->currentSpatialLayer = this->targetSpatialLayer;
+
+			this->snReferenceSpatialLayer             = packet->GetSequenceNumber();
+			this->checkingForOldPacketsInSpatialLayer = true;
 
 			// Update target and current temporal layer.
 			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
@@ -936,7 +957,7 @@ namespace RTC
 		}
 
 		// Process the packet.
-		if (this->rtpStream->ReceivePacket(packet))
+		if (this->rtpStream->ReceivePacket(packet, sharedPacket))
 		{
 			if (this->rtpSeqManager.GetMaxOutput() == packet->GetSequenceNumber())
 				this->lastSentPacketHasMarker = packet->HasMarker();
@@ -991,6 +1012,16 @@ namespace RTC
 		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
 
 		packet->AddSdesChunk(sdesChunk);
+
+		auto* dlrr = this->rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
+
+		if (dlrr)
+		{
+			auto* report = new RTC::RTCP::DelaySinceLastRr();
+
+			report->AddSsrcInfo(dlrr);
+			packet->AddDelaySinceLastRr(report);
+		}
 
 		this->lastRtcpSentTime = nowMs;
 	}
@@ -1060,6 +1091,13 @@ namespace RTC
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
 	}
 
+	void SimulcastConsumer::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+	{
+		MS_TRACE();
+
+		this->rtpStream->ReceiveRtcpXrReceiverReferenceTime(report);
+	}
+
 	uint32_t SimulcastConsumer::GetTransmissionRate(uint64_t nowMs)
 	{
 		MS_TRACE();
@@ -1082,6 +1120,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->syncRequired                 = true;
+		this->spatialLayerToSync           = -1;
 		this->keyFrameForTsOffsetRequested = false;
 
 		if (IsActive())
@@ -1117,8 +1156,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->syncRequired                 = true;
-		this->keyFrameForTsOffsetRequested = false;
+		this->syncRequired                        = true;
+		this->spatialLayerToSync                  = -1;
+		this->keyFrameForTsOffsetRequested        = false;
+		this->checkingForOldPacketsInSpatialLayer = false;
 
 		if (IsActive())
 			MayChangeLayers();
@@ -1191,10 +1232,7 @@ namespace RTC
 			}
 		}
 
-		// Create a RtpStreamSend for sending a single media stream.
-		size_t bufferSize = params.useNack ? 600u : 0u;
-
-		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
+		this->rtpStream = new RTC::RtpStreamSend(this, params, this->rtpParameters.mid);
 		this->rtpStreams.push_back(this->rtpStream);
 
 		// Binary log samples collection
@@ -1304,7 +1342,6 @@ namespace RTC
 		newTargetSpatialLayer  = -1;
 		newTargetTemporalLayer = -1;
 
-		uint8_t maxProducerScore{ 0u };
 		auto nowMs = DepLibUV::GetTimeMs();
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
@@ -1344,17 +1381,10 @@ namespace RTC
 			if (!CanSwitchToSpatialLayer(spatialLayer))
 				continue;
 
-			// If the stream score is worse than the best seen and not good enough, ignore
-			// this stream.
-			if (producerScore < maxProducerScore && producerScore < StreamGoodScore)
-				continue;
-
 			newTargetSpatialLayer = spatialLayer;
-			maxProducerScore      = producerScore;
 
-			// If this is the preferred or higher spatial layer and has good score,
-			// take it and exit.
-			if (spatialLayer >= this->preferredSpatialLayer && producerScore >= StreamGoodScore)
+			// If this is the preferred or higher spatial layer take it and exit.
+			if (spatialLayer >= this->preferredSpatialLayer)
 				break;
 		}
 

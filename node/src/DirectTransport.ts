@@ -13,12 +13,7 @@ export type DirectTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
-
-	/**
-	 * Binary log info.
-	 */
-	binlog?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type DirectTransportStat =
@@ -69,8 +64,6 @@ export class DirectTransport extends
 
 	/**
 	 * @private
-	 * @emits rtcp - (packet: Buffer)
-	 * @emits trace - (trace: TransportTraceEventData)
 	 */
 	constructor(params: any)
 	{
@@ -85,17 +78,6 @@ export class DirectTransport extends
 
 		this.handleWorkerNotifications();
 	}
-
-	/**
-	 * Observer.
-	 *
-	 * @override
-	 * @emits close
-	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataProducer: DataProducer)
-	 * @emits trace - (trace: TransportTraceEventData)
-	 */
-	// get observer(): EnhancedEventEmitter
 
 	/**
 	 * Close the DirectTransport.

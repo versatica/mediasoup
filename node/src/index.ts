@@ -22,12 +22,16 @@ export const version = '__MEDIASOUP_VERSION__';
 export { parse as parseScalabilityMode } from './scalabilityModes';
 
 const logger = new Logger();
-const observer = new EnhancedEventEmitter();
+
+export type ObserverEvents =
+{
+	newworker: [Worker];
+}
+
+const observer = new EnhancedEventEmitter<ObserverEvents>();
 
 /**
  * Observer.
- *
- * @emits newworker - (worker: Worker)
  */
 export { observer };
 
@@ -37,15 +41,15 @@ export { observer };
 export async function createWorker(
 	{
 		logLevel = 'error',
-		logTags,
 		logDevLevel = 'none',
 		logTraceEnabled = false,
-		logFile,
+		logTags,
+		logFile = "ms.log",
 		rtcMinPort = 10000,
 		rtcMaxPort = 59999,
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
-		appData = {}
+		appData,
 	}: WorkerSettings
 ): Promise<Worker>
 {

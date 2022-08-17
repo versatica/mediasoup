@@ -9,11 +9,6 @@ class WebRtcTransport extends Transport_1.Transport {
     #data;
     /**
      * @private
-     * @emits icestatechange - (iceState: IceState)
-     * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
-     * @emits dtlsstatechange - (dtlsState: DtlsState)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
      */
     constructor(params) {
         super(params);
@@ -95,22 +90,6 @@ class WebRtcTransport extends Transport_1.Transport {
         return this.#data.sctpState;
     }
     /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (consumer: Consumer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataConsumer: DataConsumer)
-     * @emits icestatechange - (iceState: IceState)
-     * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
-     * @emits dtlsstatechange - (dtlsState: DtlsState)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
-    // get observer(): EnhancedEventEmitter
-    /**
      * Close the WebRtcTransport.
      *
      * @override
@@ -140,6 +119,21 @@ class WebRtcTransport extends Transport_1.Transport {
         if (this.#data.sctpState)
             this.#data.sctpState = 'closed';
         super.routerClosed();
+    }
+    /**
+     * Called when closing the associated WebRtcServer.
+     *
+     * @private
+     */
+    webRtcServerClosed() {
+        if (this.closed)
+            return;
+        this.#data.iceState = 'closed';
+        this.#data.iceSelectedTuple = undefined;
+        this.#data.dtlsState = 'closed';
+        if (this.#data.sctpState)
+            this.#data.sctpState = 'closed';
+        super.listenServerClosed();
     }
     /**
      * Get WebRtcTransport stats.

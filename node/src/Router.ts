@@ -31,7 +31,7 @@ export type RouterOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export type PipeToRouterOptions =
@@ -108,6 +108,8 @@ type PipeTransportPair =
 export type RouterEvents =
 { 
 	workerclose: [];
+	// Private events.
+	'@close': [];
 }
 
 export type RouterObserverEvents =
@@ -143,7 +145,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Transports map.
 	readonly #transports: Map<string, Transport> = new Map();
@@ -167,8 +169,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 	/**
 	 * @private
-	 * @emits workerclose
-	 * @emits @close
 	 */
 	constructor(
 		{
@@ -183,7 +183,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: any;
+			appData?: Record<string, unknown>;
 		}
 	)
 	{
@@ -195,7 +195,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 	}
 
 	/**
@@ -225,7 +225,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -233,21 +233,26 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits newtransport - (transport: Transport)
-	 * @emits newrtpobserver - (rtpObserver: RtpObserver)
 	 */
 	get observer(): EnhancedEventEmitter<RouterObserverEvents>
 	{
 		return this.#observer;
+	}
+
+	/**
+	 * @private
+	 * Just for testing purposes.
+	 */
+	get transportsForTesting(): Map<string, Transport>
+	{
+		return this.#transports;
 	}
 
 	/**
@@ -346,6 +351,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	 */
 	async createWebRtcTransport(
 		{
+			webRtcServer,
 			listenIps,
 			port,
 			enableUdp = true,
@@ -357,39 +363,48 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			maxSctpMessageSize = 262144,
 			sctpSendBufferSize = 262144,
-			appData = {},
-			binlog = {},
+			appData
 		}: WebRtcTransportOptions
 	): Promise<WebRtcTransport>
 	{
 		logger.debug('createWebRtcTransport()');
 
-		if (!Array.isArray(listenIps))
-			throw new TypeError('missing listenIps');
+		if (!webRtcServer && !Array.isArray(listenIps))
+			throw new TypeError('missing webRtcServer and listenIps (one of them is mandatory)');
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		listenIps = listenIps.map((listenIp) =>
+		if (listenIps)
 		{
-			if (typeof listenIp === 'string' && listenIp)
+			listenIps = listenIps.map((listenIp) =>
 			{
-				return { ip: listenIp };
-			}
-			else if (typeof listenIp === 'object')
-			{
-				return {
-					ip          : listenIp.ip,
-					announcedIp : listenIp.announcedIp || undefined
-				};
-			}
-			else
-			{
-				throw new TypeError('wrong listenIp');
-			}
-		});
+				if (typeof listenIp === 'string' && listenIp)
+				{
+					return { ip: listenIp };
+				}
+				else if (typeof listenIp === 'object')
+				{
+					return {
+						ip          : listenIp.ip,
+						announcedIp : listenIp.announcedIp || undefined
+					};
+				}
+				else
+				{
+					throw new TypeError('wrong listenIp');
+				}
+			});
+		}
 
-		const internal = { ...this.#internal, transportId: uuidv4() };
-		const reqData = {
+		const internal =
+		{
+			...this.#internal,
+			transportId : uuidv4()
+		};
+
+		const reqData =
+		{
+			webRtcServerId : webRtcServer ? webRtcServer.id : undefined,
 			listenIps,
 			port,
 			enableUdp,
@@ -401,13 +416,13 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			numSctpStreams,
 			maxSctpMessageSize,
 			sctpSendBufferSize,
-			isDataChannel : true,
 			appData,
-			binlog,
+			isDataChannel  : true
 		};
 
-		const data =
-			await this.#channel.request('router.createWebRtcTransport', internal, reqData);
+		const data = webRtcServer
+			? await this.#channel.request('router.createWebRtcTransportWithServer', internal, reqData)
+			: await this.#channel.request('router.createWebRtcTransport', internal, reqData);
 
 		const transport = new WebRtcTransport(
 			{
@@ -427,6 +442,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
@@ -435,6 +451,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		transport.on('@dataproducerclose', (dataProducer: DataProducer) => (
 			this.#dataProducers.delete(dataProducer.id)
 		));
+
+		if (webRtcServer)
+			webRtcServer.handleWebRtcTransport(transport);
 
 		// Emit observer event.
 		this.#observer.safeEmit('newtransport', transport);
@@ -458,8 +477,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			sctpSendBufferSize = 262144,
 			enableSrtp = false,
 			srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
-			appData = {},
-			binlog = {},
+			appData,
 		}: PlainTransportOptions
 	): Promise<PlainTransport>
 	{
@@ -502,7 +520,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			enableSrtp,
 			srtpCryptoSuite,
 			appData,
-			binlog,
 		};
 
 		const data =
@@ -526,6 +543,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
@@ -542,19 +560,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	}
 
 	/**
-	 * DEPRECATED: Use createPlainTransport().
-	 */
-	async createPlainRtpTransport(
-		options: PlainTransportOptions
-	): Promise<PlainTransport>
-	{
-		logger.warn(
-			'createPlainRtpTransport() is DEPRECATED, use createPlainTransport()');
-
-		return this.createPlainTransport(options);
-	}
-
-	/**
 	 * Create a PipeTransport.
 	 */
 	async createPipeTransport(
@@ -568,8 +573,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			sctpSendBufferSize = 268435456,
 			enableRtx = false,
 			enableSrtp = false,
-			appData = {},
-			binlog = {},
+			appData,
 		}: PipeTransportOptions
 	): Promise<PipeTransport>
 	{
@@ -610,7 +614,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			enableRtx,
 			enableSrtp,
 			appData,
-			binlog,
 		};
 
 		const data =
@@ -634,6 +637,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
@@ -655,8 +659,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	async createDirectTransport(
 		{
 			maxMessageSize = 262144,
-			appData = {},
-			binlog = {},
+			appData,
 		}: DirectTransportOptions =
 		{
 			maxMessageSize : 262144
@@ -670,7 +673,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			direct: true, 
 			maxMessageSize,
 			appData,
-			binlog,
 		};
 
 		const data =
@@ -694,6 +696,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () => this.#transports.delete(transport.id));
 		transport.on('@newproducer', (producer: Producer) => this.#producers.set(producer.id, producer));
 		transport.on('@producerclose', (producer: Producer) => this.#producers.delete(producer.id));
 		transport.on('@newdataproducer', (dataProducer: DataProducer) => (
@@ -725,8 +728,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			listenIp,
 			shm,
 			log,
-			appData = {},
-			binlog = {},
+			appData,
 		} : ShmTransportOptions
 	): Promise<ShmTransport>
 	{
@@ -760,7 +762,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			shm,
 			log,
 			appData,
-			// no binlog until different binlog data collection process is implemented for ShmTransport 
 		};
 
 		/*
@@ -1115,7 +1116,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	async createActiveSpeakerObserver(
 		{
 			interval = 300,
-			appData = {}
+			appData
 		}: ActiveSpeakerObserverOptions = {}
 	): Promise<ActiveSpeakerObserver>
 	{
@@ -1160,7 +1161,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			maxEntries = 1,
 			threshold = -80,
 			interval = 1000,
-			appData = {}
+			appData
 		}: AudioLevelObserverOptions = {}
 	): Promise<AudioLevelObserver>
 	{

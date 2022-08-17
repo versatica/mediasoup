@@ -21,13 +21,6 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
-     * @emits transportclose
-     * @emits dataproducerclose
-     * @emits message - (message: Buffer, ppid: number)
-     * @emits sctpsendbufferfull
-     * @emits bufferedamountlow - (bufferedAmount: number)
-     * @emits @close
-     * @emits @dataproducerclose
      */
     constructor({ internal, data, channel, payloadChannel, appData }) {
         super();
@@ -36,7 +29,7 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.handleWorkerNotifications();
     }
     /**
@@ -49,7 +42,7 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Associated DataProducer id.
      */
     get dataProducerId() {
-        return this.#internal.dataProducerId;
+        return this.#data.dataProducerId;
     }
     /**
      * Whether the DataConsumer is closed.
@@ -95,8 +88,6 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
      */
     get observer() {
         return this.#observer;

@@ -109,7 +109,7 @@ namespace RTC
 		this->rtxStream = new RTC::RtxStream(params);
 	}
 
-	bool RtpStream::ReceivePacket(RTC::RtpPacket* packet)
+	bool RtpStream::ReceiveStreamPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 

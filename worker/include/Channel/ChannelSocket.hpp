@@ -51,15 +51,22 @@ namespace Channel
 	class ChannelSocket : public ConsumerSocket::Listener
 	{
 	public:
-		class Listener
+		class RequestHandler
+		{
+		public:
+			virtual ~RequestHandler() = default;
+
+		public:
+			virtual void HandleRequest(Channel::ChannelRequest* request) = 0;
+		};
+
+		class Listener : public RequestHandler
 		{
 		public:
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnChannelRequest(
-			  Channel::ChannelSocket* channel, Channel::ChannelRequest* request) = 0;
-			virtual void OnChannelClosed(Channel::ChannelSocket* channel)        = 0;
+			virtual void OnChannelClosed(Channel::ChannelSocket* channel) = 0;
 		};
 
 	public:

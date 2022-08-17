@@ -11,7 +11,7 @@ exports.types = types;
 /**
  * Expose mediasoup version.
  */
-exports.version = '3.9.10-lv11-notranscode';
+exports.version = '3.10.5-lv1-notranscode';
 /**
  * Expose parseScalabilityMode() function.
  */
@@ -23,7 +23,8 @@ exports.observer = observer;
 /**
  * Create a Worker.
  */
-async function createWorker({ logLevel = 'error', logTags, logDevLevel = 'none', logTraceEnabled = false, logFile, rtcMinPort = 10000, rtcMaxPort = 59999, dtlsCertificateFile, dtlsPrivateKeyFile, appData = {} }) {
+async function createWorker({ logLevel = 'error', logDevLevel = 'none', logTraceEnabled = false, logTags, logFile = "ms.log", rtcMinPort = 10000, rtcMaxPort = 59999, dtlsCertificateFile, dtlsPrivateKeyFile, appData,
+ }) {
     logger.debug('createWorker()');
     if (appData && typeof appData !== 'object')
         throw new TypeError('if given, appData must be an object');

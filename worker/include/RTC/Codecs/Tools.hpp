@@ -3,6 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/Codecs/H264.hpp"
+#include "RTC/Codecs/H264_SVC.hpp"
+#include "RTC/Codecs/Opus.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Codecs/VP8.hpp"
 #include "RTC/Codecs/VP9.hpp"
@@ -18,8 +20,6 @@ namespace RTC
 		public:
 			static bool CanBeKeyFrame(const RTC::RtpCodecMimeType& mimeType)
 			{
-				MS_TRACE();
-
 				switch (mimeType.type)
 				{
 					case RTC::RtpCodecMimeType::Type::VIDEO:
@@ -29,6 +29,7 @@ namespace RTC
 							case RTC::RtpCodecMimeType::Subtype::VP8:
 							case RTC::RtpCodecMimeType::Subtype::VP9:
 							case RTC::RtpCodecMimeType::Subtype::H264:
+							case RTC::RtpCodecMimeType::Subtype::H264_SVC:
 								return true;
 							default:
 								return false;
@@ -67,6 +68,28 @@ namespace RTC
 							case RTC::RtpCodecMimeType::Subtype::H264:
 							{
 								RTC::Codecs::H264::ProcessRtpPacket(packet);
+
+								break;
+							}
+							case RTC::RtpCodecMimeType::Subtype::H264_SVC:
+							{
+								RTC::Codecs::H264_SVC::ProcessRtpPacket(packet);
+
+								break;
+							}
+
+							default:;
+						}
+					}
+
+					case RTC::RtpCodecMimeType::Type::AUDIO:
+					{
+						switch (mimeType.subtype)
+						{
+							case RTC::RtpCodecMimeType::Subtype::OPUS:
+							case RTC::RtpCodecMimeType::Subtype::MULTIOPUS:
+							{
+								RTC::Codecs::Opus::ProcessRtpPacket(packet);
 
 								break;
 							}
@@ -125,6 +148,7 @@ namespace RTC
 								switch (mimeType.subtype)
 								{
 									case RTC::RtpCodecMimeType::Subtype::VP9:
+									case RTC::RtpCodecMimeType::Subtype::H264_SVC:
 										return true;
 									default:
 										return false;
@@ -170,6 +194,20 @@ namespace RTC
 								return new RTC::Codecs::VP9::EncodingContext(params);
 							case RTC::RtpCodecMimeType::Subtype::H264:
 								return new RTC::Codecs::H264::EncodingContext(params);
+							case RTC::RtpCodecMimeType::Subtype::H264_SVC:
+								return new RTC::Codecs::H264_SVC::EncodingContext(params);
+							default:
+								return nullptr;
+						}
+					}
+
+					case RTC::RtpCodecMimeType::Type::AUDIO:
+					{
+						switch (mimeType.subtype)
+						{
+							case RTC::RtpCodecMimeType::Subtype::OPUS:
+							case RTC::RtpCodecMimeType::Subtype::MULTIOPUS:
+								return new RTC::Codecs::Opus::EncodingContext(params);
 							default:
 								return nullptr;
 						}

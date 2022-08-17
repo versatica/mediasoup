@@ -97,11 +97,16 @@ fn create_router_succeeds() {
             .expect("Failed to create router");
 
         assert_eq!(new_router_count.load(Ordering::SeqCst), 1);
-        assert_eq!(router.closed(), false);
+        assert!(!router.closed());
         assert_eq!(
             router.app_data().downcast_ref::<CustomAppData>(),
             Some(&CustomAppData { foo: 123 }),
         );
+
+        let worker_dump = worker.dump().await.expect("Failed to dump worker");
+
+        assert_eq!(worker_dump.router_ids, vec![router.id()]);
+        assert_eq!(worker_dump.webrtc_server_ids, vec![]);
 
         let dump = router.dump().await.expect("Failed to dump router");
 

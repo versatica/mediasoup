@@ -7,8 +7,8 @@ use crate::consumer::{
 use crate::data_consumer::{DataConsumerDump, DataConsumerId, DataConsumerStat, DataConsumerType};
 use crate::data_producer::{DataProducerDump, DataProducerId, DataProducerStat, DataProducerType};
 use crate::data_structures::{
-    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState, SctpState,
-    TransportListenIp, TransportTuple,
+    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenIp,
+    SctpState, TransportTuple,
 };
 use crate::direct_transport::DirectTransportOptions;
 use crate::ortc::RtpMapping;
@@ -23,7 +23,8 @@ use crate::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
 use crate::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameters};
 use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{TransportId, TransportTraceEventType};
-use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
+use crate::webrtc_server::{WebRtcServerDump, WebRtcServerId, WebRtcServerListenInfos};
+use crate::webrtc_transport::{TransportListenIps, WebRtcTransportListen, WebRtcTransportOptions};
 use crate::worker::{WorkerDump, WorkerUpdateSettings};
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
@@ -37,6 +38,13 @@ use std::num::NonZeroU16;
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterInternal {
     pub(crate) router_id: RouterId,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct WebRtcServerInternal {
+    #[serde(rename = "webRtcServerId")]
+    pub(crate) webrtc_server_id: WebRtcServerId,
 }
 
 #[derive(Debug, Serialize)]
@@ -67,7 +75,6 @@ pub(crate) struct ConsumerInternal {
     pub(crate) router_id: RouterId,
     pub(crate) transport_id: TransportId,
     pub(crate) consumer_id: ConsumerId,
-    pub(crate) producer_id: ProducerId,
 }
 
 #[derive(Debug, Serialize)]
@@ -83,7 +90,6 @@ pub(crate) struct DataProducerInternal {
 pub(crate) struct DataConsumerInternal {
     pub(crate) router_id: RouterId,
     pub(crate) transport_id: TransportId,
-    pub(crate) data_producer_id: DataProducerId,
     pub(crate) data_consumer_id: DataConsumerId,
 }
 
@@ -191,6 +197,37 @@ request_response!(
     },
 );
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct WorkerCreateWebRtcServerData {
+    pub(crate) listen_infos: WebRtcServerListenInfos,
+}
+
+request_response!(
+    "worker.createWebRtcServer",
+    WorkerCreateWebRtcServerRequest {
+        internal: WebRtcServerInternal,
+        data: WorkerCreateWebRtcServerData,
+    },
+);
+
+request_response!(
+    "webRtcServer.close",
+    WebRtcServerCloseRequest {
+        internal: WebRtcServerInternal,
+    },
+    (),
+    Some(()),
+);
+
+request_response!(
+    "webRtcServer.dump",
+    WebRtcServerDumpRequest {
+        internal: WebRtcServerInternal,
+    },
+    WebRtcServerDump,
+);
+
 request_response!(
     "worker.createRouter",
     WorkerCreateRouterRequest {
@@ -241,11 +278,25 @@ request_response!(
 );
 
 #[derive(Debug, Serialize)]
+#[serde(untagged)]
+enum RouterCreateWebrtcTransportListen {
+    #[serde(rename_all = "camelCase")]
+    Individual {
+        listen_ips: TransportListenIps,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        port: Option<u16>,
+    },
+    Server {
+        #[serde(rename = "webRtcServerId")]
+        webrtc_server_id: WebRtcServerId,
+    },
+}
+
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateWebrtcTransportData {
-    listen_ips: TransportListenIps,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    port: Option<u16>,
+    #[serde(flatten)]
+    listen: RouterCreateWebrtcTransportListen,
     enable_udp: bool,
     enable_tcp: bool,
     prefer_udp: bool,
@@ -261,8 +312,19 @@ pub(crate) struct RouterCreateWebrtcTransportData {
 impl RouterCreateWebrtcTransportData {
     pub(crate) fn from_options(webrtc_transport_options: &WebRtcTransportOptions) -> Self {
         Self {
-            listen_ips: webrtc_transport_options.listen_ips.clone(),
-            port: webrtc_transport_options.port,
+            listen: match &webrtc_transport_options.listen {
+                WebRtcTransportListen::Individual { listen_ips, port } => {
+                    RouterCreateWebrtcTransportListen::Individual {
+                        listen_ips: listen_ips.clone(),
+                        port: *port,
+                    }
+                }
+                WebRtcTransportListen::Server { webrtc_server } => {
+                    RouterCreateWebrtcTransportListen::Server {
+                        webrtc_server_id: webrtc_server.id(),
+                    }
+                }
+            },
             enable_udp: webrtc_transport_options.enable_udp,
             enable_tcp: webrtc_transport_options.enable_tcp,
             prefer_udp: webrtc_transport_options.prefer_udp,
@@ -278,30 +340,44 @@ impl RouterCreateWebrtcTransportData {
     }
 }
 
-request_response!(
-    "router.createWebRtcTransport",
-    RouterCreateWebrtcTransportRequest {
-        internal: TransportInternal,
-        data: RouterCreateWebrtcTransportData,
-    },
-    WebRtcTransportData {
-        ice_role: IceRole,
-        ice_parameters: IceParameters,
-        ice_candidates: Vec<IceCandidate>,
-        ice_state: Mutex<IceState>,
-        ice_selected_tuple: Mutex<Option<TransportTuple>>,
-        dtls_parameters: Mutex<DtlsParameters>,
-        dtls_state: Mutex<DtlsState>,
-        dtls_remote_cert: Mutex<Option<String>>,
-        sctp_parameters: Option<SctpParameters>,
-        sctp_state: Mutex<Option<SctpState>>,
-    },
-);
+#[derive(Debug, Serialize)]
+pub(crate) struct RouterCreateWebrtcTransportRequest {
+    pub(crate) internal: TransportInternal,
+    pub(crate) data: RouterCreateWebrtcTransportData,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct WebRtcTransportData {
+    pub(crate) ice_role: IceRole,
+    pub(crate) ice_parameters: IceParameters,
+    pub(crate) ice_candidates: Vec<IceCandidate>,
+    pub(crate) ice_state: Mutex<IceState>,
+    pub(crate) ice_selected_tuple: Mutex<Option<TransportTuple>>,
+    pub(crate) dtls_parameters: Mutex<DtlsParameters>,
+    pub(crate) dtls_state: Mutex<DtlsState>,
+    pub(crate) dtls_remote_cert: Mutex<Option<String>>,
+    pub(crate) sctp_parameters: Option<SctpParameters>,
+    pub(crate) sctp_state: Mutex<Option<SctpState>>,
+}
+
+impl Request for RouterCreateWebrtcTransportRequest {
+    type Response = WebRtcTransportData;
+
+    fn as_method(&self) -> &'static str {
+        match &self.data.listen {
+            RouterCreateWebrtcTransportListen::Individual { .. } => "router.createWebRtcTransport",
+            RouterCreateWebrtcTransportListen::Server { .. } => {
+                "router.createWebRtcTransportWithServer"
+            }
+        }
+    }
+}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreatePlainTransportData {
-    listen_ip: TransportListenIp,
+    listen_ip: ListenIp,
     #[serde(skip_serializing_if = "Option::is_none")]
     port: Option<u16>,
     rtcp_mux: bool,
@@ -354,7 +430,7 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreatePipeTransportData {
-    listen_ip: TransportListenIp,
+    listen_ip: ListenIp,
     #[serde(skip_serializing_if = "Option::is_none")]
     port: Option<u16>,
     enable_sctp: bool,
@@ -597,12 +673,14 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct TransportConsumeData {
+    pub(crate) producer_id: ProducerId,
     pub(crate) kind: MediaKind,
     pub(crate) rtp_parameters: RtpParameters,
     pub(crate) r#type: ConsumerType,
     pub(crate) consumable_rtp_encodings: Vec<RtpEncodingParameters>,
     pub(crate) paused: bool,
     pub(crate) preferred_layers: Option<ConsumerLayers>,
+    pub(crate) ignore_dtx: bool,
 }
 
 request_response!(
@@ -646,6 +724,7 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct TransportConsumeDataData {
+    pub(crate) data_producer_id: DataProducerId,
     pub(crate) r#type: DataConsumerType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) sctp_stream_parameters: Option<SctpStreamParameters>,
@@ -833,7 +912,7 @@ pub(crate) struct ConsumerEnableTraceEventData {
 }
 
 request_response!(
-    "producer.enableTraceEvent",
+    "consumer.enableTraceEvent",
     ConsumerEnableTraceEventRequest {
         internal: ConsumerInternal,
         data: ConsumerEnableTraceEventData,

@@ -21,7 +21,6 @@ namespace RTC
 	private:
 		static absl::flat_hash_map<std::string, RTC::SrtpSession::CryptoSuite> string2SrtpCryptoSuite;
 		static absl::flat_hash_map<RTC::SrtpSession::CryptoSuite, std::string> srtpCryptoSuite2String;
-		static size_t srtpMasterLength;
 
 	public:
 		PlainTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
@@ -30,7 +29,13 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
+	public:
 		void HandleNotification(PayloadChannel::Notification* notification) override;
 
 	private:
@@ -81,6 +86,7 @@ namespace RTC
 			RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80
 		};
 		std::string srtpKey;
+		size_t srtpMasterLength{ 0 };
 		std::string srtpKeyBase64;
 		bool connectCalled{ false }; // Whether connect() was succesfully called.
 	};

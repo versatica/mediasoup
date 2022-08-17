@@ -11,12 +11,13 @@ namespace RTC
 {
 	/* Static. */
 
-	// NOTE: PipeTransport just allows AES_CM_128_HMAC_SHA1_80 SRTP crypto suite.
+	// NOTE: PipeTransport just allows AEAD_AES_256_GCM SRTP crypto suite.
 	RTC::SrtpSession::CryptoSuite PipeTransport::srtpCryptoSuite{
-		RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80
+		RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM
 	};
-	std::string PipeTransport::srtpCryptoSuiteString{ "AES_CM_128_HMAC_SHA1_80" };
-	size_t PipeTransport::srtpMasterLength{ 30 };
+	std::string PipeTransport::srtpCryptoSuiteString{ "AEAD_AES_256_GCM" };
+	// MAster length of AEAD_AES_256_GCM.
+	size_t PipeTransport::srtpMasterLength{ 44 };
 
 	/* Instance methods. */
 
@@ -251,7 +252,7 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing srtpParameters.cryptoSuite)");
 						}
 
-						// NOTE: We just use AES_CM_128_HMAC_SHA1_80 as SRTP crypto suite in
+						// NOTE: We just use AEAD_AES_256_GCM as SRTP crypto suite in
 						// PipeTransport.
 						if (jsonCryptoSuiteIt->get<std::string>() != PipeTransport::srtpCryptoSuiteString)
 						{

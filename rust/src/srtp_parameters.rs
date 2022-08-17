@@ -16,6 +16,12 @@ pub struct SrtpParameters {
 /// SRTP crypto suite.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 pub enum SrtpCryptoSuite {
+    /// AEAD_AES_256_GCM
+    #[serde(rename = "AEAD_AES_256_GCM")]
+    AeadAes256Gcm,
+    /// AEAD_AES_128_GCM
+    #[serde(rename = "AEAD_AES_128_GCM")]
+    AeadAes128Gcm,
     /// AES_CM_128_HMAC_SHA1_80
     #[serde(rename = "AES_CM_128_HMAC_SHA1_80")]
     AesCm128HmacSha180,

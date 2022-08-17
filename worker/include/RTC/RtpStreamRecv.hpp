@@ -43,7 +43,10 @@ namespace RTC
 		};
 
 	public:
-		RtpStreamRecv(RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params);
+		RtpStreamRecv(
+		  RTC::RtpStreamRecv::Listener* listener,
+		  RTC::RtpStream::Params& params,
+		  unsigned int sendNackDelayMs);
 		~RtpStreamRecv();
 
 		void FillStats(size_t& packetsCount, size_t& bytesCount, uint32_t& packetsLost, size_t& packetsDiscarded,
@@ -64,7 +67,7 @@ namespace RTC
 		}
 
 		void FillJsonStats(json& jsonObject) override;
-		bool ReceivePacket(RTC::RtpPacket* packet) override;
+		bool ReceivePacket(RTC::RtpPacket* packet);
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		RTC::RTCP::ReceiverReport* GetRtxRtcpReceiverReport();
@@ -109,6 +112,9 @@ namespace RTC
 		void OnNackGeneratorKeyFrameRequired() override;
 
 	private:
+		// Passed by argument.
+		unsigned int sendNackDelayMs{ 0u };
+		// Others.
 		uint32_t expectedPrior{ 0u };      // Packets expected at last interval.
 		uint32_t expectedPriorScore{ 0u }; // Packets expected at last interval for score calculation.
 		uint32_t receivedPrior{ 0u };      // Packets received at last interval.
