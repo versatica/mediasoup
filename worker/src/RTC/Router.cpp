@@ -1085,6 +1085,7 @@ namespace RTC
 		// Add to the map.
 		this->mapProducerRtpObservers[producer].insert(rtpObserver);
 	}
+
 	void Router::OnRtpObserverRemoveProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer)
 	{
 		// Remove from the map.
