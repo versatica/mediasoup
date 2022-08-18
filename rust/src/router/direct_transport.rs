@@ -49,7 +49,7 @@ impl Default for DirectTransportOptions {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 #[non_exhaustive]
@@ -110,6 +110,7 @@ pub struct DirectTransportStat {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     rtcp: Bag<Arc<dyn Fn(&[u8]) + Send + Sync>>,
     new_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,

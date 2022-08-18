@@ -37,6 +37,7 @@ pub(super) enum InternalMessage {
     Unexpected(Vec<u8>),
 }
 
+#[allow(clippy::type_complexity)]
 pub(crate) struct BufferMessagesGuard {
     target_id: SubscriptionTarget,
     buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
@@ -158,6 +159,7 @@ struct OutgoingMessageBuffer {
     messages: VecDeque<Arc<AtomicTake<Vec<u8>>>>,
 }
 
+#[allow(clippy::type_complexity)]
 struct Inner {
     outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,

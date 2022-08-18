@@ -92,8 +92,9 @@ namespace RTC
 		return changed;
 	}
 
-	ActiveSpeakerObserver::ActiveSpeakerObserver(const std::string& id, json& data)
-	  : RTC::RtpObserver(id)
+	ActiveSpeakerObserver::ActiveSpeakerObserver(
+	  const std::string& id, RTC::RtpObserver::Listener* listener, json& data)
+	  : RTC::RtpObserver(id, listener)
 	{
 		MS_TRACE();
 

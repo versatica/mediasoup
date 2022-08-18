@@ -89,7 +89,7 @@ impl ProducerOptions {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpStreamRecv {
@@ -278,6 +278,7 @@ enum Notification {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     score: Bag<Arc<dyn Fn(&[ProducerScore]) + Send + Sync>>,
     video_orientation_change: Bag<Arc<dyn Fn(ProducerVideoOrientation) + Send + Sync>>,

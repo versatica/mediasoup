@@ -24,12 +24,10 @@ async fn init() -> Router {
         .await
         .expect("Failed to create worker");
 
-    let router = worker
+    worker
         .create_router(RouterOptions::default())
         .await
-        .expect("Failed to create router");
-
-    router
+        .expect("Failed to create router")
 }
 
 #[test]

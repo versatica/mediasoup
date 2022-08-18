@@ -18,6 +18,10 @@
 
 namespace RTC
 {
+	/* Static variables. */
+
+	thread_local uint8_t* Producer::buffer{ nullptr };
+
 	/* Static. */
 
 	static constexpr unsigned int SendNackDelay{ 10u }; // In ms.
@@ -601,6 +605,56 @@ namespace RTC
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			}
+		}
+	}
+
+	void Producer::HandleNotification(PayloadChannel::Notification* notification)
+	{
+		MS_TRACE();
+
+		switch (notification->eventId)
+		{
+			case PayloadChannel::Notification::EventId::PRODUCER_SEND:
+			{
+				const auto* data = notification->payload;
+				auto len         = notification->payloadLen;
+
+				// Increase receive transmission.
+				this->listener->OnProducerReceiveData(this, len);
+
+				if (len > RTC::MtuSize + 100)
+				{
+					MS_WARN_TAG(rtp, "given RTP packet exceeds maximum size [len:%zu]", len);
+
+					break;
+				}
+
+				// If this is the first time to receive a RTP packet then allocate the receiving buffer now.
+				if (!Producer::buffer)
+					Producer::buffer = new uint8_t[RTC::MtuSize + 100];
+
+				// Copy the received packet into this buffer so it can be expanded later.
+				std::memcpy(Producer::buffer, data, static_cast<size_t>(len));
+
+				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(Producer::buffer, len);
+
+				if (!packet)
+				{
+					MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
+
+					break;
+				}
+
+				// Pass the packet to the parent transport.
+				this->listener->OnProducerReceiveRtpPacket(this, packet);
+
+				break;
+			}
+
+			default:
+			{
+				MS_ERROR("unknown event '%s'", notification->event.c_str());
 			}
 		}
 	}

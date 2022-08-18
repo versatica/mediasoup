@@ -17,6 +17,7 @@ use std::sync::Arc;
 use std::{fmt, io, mem};
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     new_worker: Bag<Arc<dyn Fn(&Worker) + Send + Sync>, Worker>,
 }

@@ -49,6 +49,7 @@ pub struct ActiveSpeakerObserverDominantSpeaker {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     dominant_speaker: Bag<
         Arc<dyn Fn(&ActiveSpeakerObserverDominantSpeaker) + Send + Sync>,

@@ -274,6 +274,7 @@ pub enum CreateRouterError {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     new_router: Bag<Arc<dyn Fn(&Router) + Send + Sync>, Router>,
     new_webrtc_server: Bag<Arc<dyn Fn(&WebRtcServer) + Send + Sync>, WebRtcServer>,

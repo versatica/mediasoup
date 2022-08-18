@@ -125,7 +125,7 @@ impl DataConsumerOptions {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 #[non_exhaustive]
@@ -140,7 +140,7 @@ pub struct DataConsumerDump {
 }
 
 /// RTC statistics of the data consumer.
-#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 #[allow(missing_docs)]
@@ -182,6 +182,7 @@ enum PayloadNotification {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     message: Bag<Arc<dyn Fn(&WebRtcMessage<'_>) + Send + Sync>>,
     sctp_send_buffer_full: Bag<Arc<dyn Fn() + Send + Sync>>,

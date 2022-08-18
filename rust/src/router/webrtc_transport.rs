@@ -183,7 +183,7 @@ impl WebRtcTransportOptions {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 #[non_exhaustive]
@@ -258,7 +258,7 @@ pub struct WebRtcTransportStat {
 }
 
 /// Remote parameters for [`WebRtcTransport`].
-#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebRtcTransportRemoteParameters {
     /// Remote DTLS parameters.
@@ -266,6 +266,7 @@ pub struct WebRtcTransportRemoteParameters {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     new_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
     new_consumer: Bag<Arc<dyn Fn(&Consumer) + Send + Sync>, Consumer>,

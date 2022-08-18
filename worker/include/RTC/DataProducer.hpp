@@ -4,13 +4,16 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include "PayloadChannel/PayloadChannelSocket.hpp"
+#include "RTC/RTCP/Packet.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include <nlohmann/json.hpp>
 #include <string>
 
 namespace RTC
 {
-	class DataProducer : public Channel::ChannelSocket::RequestHandler
+	class DataProducer : public Channel::ChannelSocket::RequestHandler,
+	                     public PayloadChannel::PayloadChannelSocket::NotificationHandler
 	{
 	public:
 		class Listener
@@ -19,6 +22,7 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
+			virtual void OnDataProducerReceiveData(RTC::DataProducer* producer, size_t len) = 0;
 			virtual void OnDataProducerMessageReceived(
 			  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
 		};
@@ -31,7 +35,8 @@ namespace RTC
 		};
 
 	public:
-		DataProducer(const std::string& id, RTC::DataProducer::Listener* listener, json& data);
+		DataProducer(
+		  const std::string& id, size_t maxMessageSize, RTC::DataProducer::Listener* listener, json& data);
 		virtual ~DataProducer();
 
 	public:
@@ -51,12 +56,17 @@ namespace RTC
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
+	public:
+		void HandleNotification(PayloadChannel::Notification* notification) override;
+
 	public:
 		// Passed by argument.
 		const std::string id;
 
 	private:
 		// Passed by argument.
+		size_t maxMessageSize{ 0u };
 		RTC::DataProducer::Listener* listener{ nullptr };
 		// Others.
 		Type type;

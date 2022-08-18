@@ -59,7 +59,7 @@ pub struct WebRtcServerTupleHash {
     pub webrtc_transport_id: TransportId,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 #[non_exhaustive]
@@ -151,6 +151,7 @@ impl WebRtcServerOptions {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     new_webrtc_transport: BagOnce<Box<dyn Fn(&WebRtcTransport) + Send>>,
     worker_close: BagOnce<Box<dyn FnOnce() + Send>>,

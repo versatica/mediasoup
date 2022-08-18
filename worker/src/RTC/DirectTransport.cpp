@@ -20,8 +20,6 @@ namespace RTC
 	DirectTransport::~DirectTransport()
 	{
 		MS_TRACE();
-
-		delete[] this->buffer;
 	}
 
 	void DirectTransport::FillJson(json& jsonObject) const
@@ -91,37 +89,10 @@ namespace RTC
 
 			case PayloadChannel::Notification::EventId::PRODUCER_SEND:
 			{
-				const auto* data = notification->payload;
-				auto len         = notification->payloadLen;
+				// This may throw.
+				RTC::Producer* producer = GetProducerFromInternal(notification->internal);
 
-				// Increase receive transmission.
-				RTC::Transport::DataReceived(len);
-
-				if (len > RTC::MtuSize + 100)
-				{
-					MS_WARN_TAG(rtp, "given RTP packet exceeds maximum size [len:%zu]", len);
-
-					return;
-				}
-
-				// If this is the first time to reveive a RTP packet then allocate the receiving buffer now.
-				if (!this->buffer)
-					this->buffer = new uint8_t[RTC::MtuSize + 100];
-
-				// Copy the received packet into this buffer so it can be expanded later.
-				std::memcpy(this->buffer, data, static_cast<size_t>(len));
-
-				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(this->buffer, len);
-
-				if (!packet)
-				{
-					MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
-
-					return;
-				}
-
-				// Pass the packet to the parent transport.
-				RTC::Transport::ReceiveRtpPacket(packet);
+				producer->HandleNotification(notification);
 
 				break;
 			}
@@ -131,32 +102,7 @@ namespace RTC
 				// This may throw.
 				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(notification->internal);
 
-				auto jsonPpidIt = notification->data.find("ppid");
-
-				if (jsonPpidIt == notification->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
-				{
-					MS_THROW_TYPE_ERROR("invalid ppid");
-				}
-
-				auto ppid       = jsonPpidIt->get<uint32_t>();
-				const auto* msg = notification->payload;
-				auto len        = notification->payloadLen;
-
-				if (len > this->maxMessageSize)
-				{
-					MS_WARN_TAG(
-					  message,
-					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
-					  len,
-					  this->maxMessageSize);
-
-					return;
-				}
-
-				dataProducer->ReceiveMessage(ppid, msg, len);
-
-				// Increase receive transmission.
-				RTC::Transport::DataReceived(len);
+				dataProducer->HandleNotification(notification);
 
 				break;
 			}

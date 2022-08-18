@@ -12,6 +12,10 @@
 
 namespace RTC
 {
+	// Define class here such that we can use it even though we don't know what it looks like yet
+	// (this is to avoid circular dependencies).
+	class SctpAssociation;
+
 	class DataConsumer : public Channel::ChannelSocket::RequestHandler,
 	                     public PayloadChannel::PayloadChannelSocket::RequestHandler
 	{
@@ -45,6 +49,7 @@ namespace RTC
 		DataConsumer(
 		  const std::string& id,
 		  const std::string& dataProducerId,
+		  RTC::SctpAssociation* sctpAssociation,
 		  RTC::DataConsumer::Listener* listener,
 		  json& data,
 		  size_t maxMessageSize);
@@ -94,6 +99,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
+		RTC::SctpAssociation* sctpAssociation{ nullptr };
 		RTC::DataConsumer::Listener* listener{ nullptr };
 		size_t maxMessageSize{ 0u };
 		// Others.

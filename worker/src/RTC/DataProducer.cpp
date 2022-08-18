@@ -11,8 +11,9 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	DataProducer::DataProducer(const std::string& id, RTC::DataProducer::Listener* listener, json& data)
-	  : id(id), listener(listener)
+	DataProducer::DataProducer(
+	  const std::string& id, size_t maxMessageSize, RTC::DataProducer::Listener* listener, json& data)
+	  : id(id), maxMessageSize(maxMessageSize), listener(listener)
 	{
 		MS_TRACE();
 
@@ -141,6 +142,51 @@ namespace RTC
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			}
+		}
+	}
+
+	void DataProducer::HandleNotification(PayloadChannel::Notification* notification)
+	{
+		MS_TRACE();
+
+		switch (notification->eventId)
+		{
+			case PayloadChannel::Notification::EventId::DATA_PRODUCER_SEND:
+			{
+				auto jsonPpidIt = notification->data.find("ppid");
+
+				if (jsonPpidIt == notification->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
+				{
+					MS_THROW_TYPE_ERROR("invalid ppid");
+				}
+
+				auto ppid       = jsonPpidIt->get<uint32_t>();
+				const auto* msg = notification->payload;
+				auto len        = notification->payloadLen;
+
+				if (len > this->maxMessageSize)
+				{
+					MS_WARN_TAG(
+					  message,
+					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
+					  len,
+					  this->maxMessageSize);
+
+					break;
+				}
+
+				this->ReceiveMessage(ppid, msg, len);
+
+				// Increase receive transmission.
+				this->listener->OnDataProducerReceiveData(this, len);
+
+				break;
+			}
+
+			default:
+			{
+				MS_ERROR("unknown event '%s'", notification->event.c_str());
 			}
 		}
 	}

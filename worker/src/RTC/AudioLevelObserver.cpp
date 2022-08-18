@@ -14,7 +14,9 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	AudioLevelObserver::AudioLevelObserver(const std::string& id, json& data) : RTC::RtpObserver(id)
+	AudioLevelObserver::AudioLevelObserver(
+	  const std::string& id, RTC::RtpObserver::Listener* listener, json& data)
+	  : RTC::RtpObserver(id, listener)
 	{
 		MS_TRACE();
 

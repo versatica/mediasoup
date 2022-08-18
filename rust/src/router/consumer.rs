@@ -104,7 +104,7 @@ impl ConsumerOptions {
     }
 }
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpStreamParams {
@@ -125,7 +125,7 @@ pub struct RtpStreamParams {
     pub rtc_payload_type: Option<u8>,
 }
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpStream {
@@ -133,7 +133,7 @@ pub struct RtpStream {
     pub score: u8,
 }
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpRtxParameters {
@@ -347,6 +347,7 @@ enum PayloadNotification {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     rtp: Bag<Arc<dyn Fn(&[u8]) + Send + Sync>>,
     pause: Bag<Arc<dyn Fn() + Send + Sync>>,
