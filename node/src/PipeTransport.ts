@@ -311,10 +311,10 @@ export class PipeTransport
 		const consumer = new Consumer(
 			{
 				internal :
-					{
-						...this.internal,
-						consumerId : reqData.consumerId
-					},
+				{
+					...this.internal,
+					consumerId : reqData.consumerId
+				},
 				data,
 				channel        : this.channel,
 				payloadChannel : this.payloadChannel,

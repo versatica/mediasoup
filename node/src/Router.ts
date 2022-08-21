@@ -422,10 +422,10 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const transport = new WebRtcTransport(
 			{
 				internal :
-					{
-						...this.#internal,
-						transportId : reqData.transportId
-					},
+				{
+					...this.#internal,
+					transportId : reqData.transportId
+				},
 				data,
 				channel                  : this.#channel,
 				payloadChannel           : this.#payloadChannel,
@@ -503,7 +503,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			throw new TypeError('wrong listenIp');
 		}
 
-		const reqData = {
+		const reqData =
+		{
 			transportId   : uuidv4(),
 			listenIp,
 			port,
@@ -524,10 +525,10 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const transport = new PlainTransport(
 			{
 				internal :
-					{
-						...this.#internal,
-						transportId : reqData.transportId
-					},
+				{
+					...this.#internal,
+					transportId : reqData.transportId
+				},
 				data,
 				channel                  : this.#channel,
 				payloadChannel           : this.#payloadChannel,
@@ -600,7 +601,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			throw new TypeError('wrong listenIp');
 		}
 
-		const reqData = {
+		const reqData =
+		{
 			transportId   : uuidv4(),
 			listenIp,
 			port,
@@ -619,10 +621,10 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const transport = new PipeTransport(
 			{
 				internal :
-					{
-						...this.#internal,
-						transportId : reqData.transportId
-					},
+				{
+					...this.#internal,
+					transportId : reqData.transportId
+				},
 				data,
 				channel                  : this.#channel,
 				payloadChannel           : this.#payloadChannel,
@@ -669,7 +671,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	{
 		logger.debug('createDirectTransport()');
 
-		const reqData = {
+		const reqData =
+		{
 			transportId : uuidv4(),
 			direct      : true,
 			maxMessageSize
@@ -681,10 +684,10 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const transport = new DirectTransport(
 			{
 				internal :
-					{
-						...this.#internal,
-						transportId : reqData.transportId
-					},
+				{
+					...this.#internal,
+					transportId : reqData.transportId
+				},
 				data,
 				channel                  : this.#channel,
 				payloadChannel           : this.#payloadChannel,
@@ -1020,7 +1023,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 		
-		const reqData = {
+		const reqData =
+		{
 			rtpObserverId : uuidv4(),
 			interval
 		};
@@ -1030,10 +1034,10 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const activeSpeakerObserver = new ActiveSpeakerObserver(
 			{
 				internal :
-					{
-						...this.#internal,
-						rtpObserverId : reqData.rtpObserverId
-					},
+				{
+					...this.#internal,
+					rtpObserverId : reqData.rtpObserverId
+				},
 				channel         : this.#channel,
 				payloadChannel  : this.#payloadChannel,
 				appData,
@@ -1071,7 +1075,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		const reqData = {
+		const reqData =
+		{
 			rtpObserverId : uuidv4(),
 			maxEntries,
 			threshold,
@@ -1083,10 +1088,10 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const audioLevelObserver = new AudioLevelObserver(
 			{
 				internal :
-					{
-						...this.#internal,
-						rtpObserverId : reqData.rtpObserverId
-					},
+				{
+					...this.#internal,
+					rtpObserverId : reqData.rtpObserverId
+				},
 				channel         : this.#channel,
 				payloadChannel  : this.#payloadChannel,
 				appData,

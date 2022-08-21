@@ -593,7 +593,8 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		const reqData = {
+		const reqData =
+		{
 			webRtcServerId : uuidv4(),
 			listenInfos
 		};
@@ -640,7 +641,8 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		const data = { rtpCapabilities };
 		const router = new Router(
 			{
-				internal : {
+				internal : 
+				{
 					routerId : reqData.routerId
 				},
 				data,

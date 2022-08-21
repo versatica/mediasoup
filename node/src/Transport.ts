@@ -574,7 +574,8 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const consumableRtpParameters = ortc.getConsumableRtpParameters(
 			kind, rtpParameters, routerRtpCapabilities, rtpMapping);
 
-		const reqData = {
+		const reqData =
+		{
 			producerId : id || uuidv4(),
 			kind,
 			rtpParameters,
@@ -597,10 +598,10 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const producer = new Producer(
 			{
 				internal :
-					{
-						...this.internal,
-						producerId : reqData.producerId
-					},
+				{
+					...this.internal,
+					producerId : reqData.producerId
+				},
 				data,
 				channel        : this.channel,
 				payloadChannel : this.payloadChannel,
@@ -711,10 +712,10 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const consumer = new Consumer(
 			{
 				internal :
-					{
-						...this.internal,
-						consumerId : reqData.consumerId
-					},
+				{
+					...this.internal,
+					consumerId : reqData.consumerId
+				},
 				data,
 				channel         : this.channel,
 				payloadChannel  : this.payloadChannel,
@@ -792,10 +793,10 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const dataProducer = new DataProducer(
 			{
 				internal :
-					{
-						...this.internal,
-						dataProducerId : reqData.dataProducerId
-					},
+				{
+					...this.internal,
+					dataProducerId : reqData.dataProducerId
+				},
 				data,
 				channel        : this.channel,
 				payloadChannel : this.payloadChannel,
@@ -904,10 +905,10 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const dataConsumer = new DataConsumer(
 			{
 				internal :
-					{
-						...this.internal,
-						dataConsumerId : reqData.dataConsumerId
-					},
+				{
+					...this.internal,
+					dataConsumerId : reqData.dataConsumerId
+				},
 				data,
 				channel        : this.channel,
 				payloadChannel : this.payloadChannel,
