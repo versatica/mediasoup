@@ -60,12 +60,10 @@ namespace PayloadChannel
 
 		this->eventId = eventIdIt->second;
 
-		auto jsonInternalIt = jsonNotification.find("internal");
+		auto jsonHandlerIdIt = jsonNotification.find("handlerId");
 
-		if (jsonInternalIt != jsonNotification.end() && jsonInternalIt->is_object())
-			this->internal = *jsonInternalIt;
-		else
-			this->internal = json::object();
+		if (jsonHandlerIdIt != jsonNotification.end() && jsonHandlerIdIt->is_string())
+			this->handlerId = *jsonHandlerIdIt;
 
 		auto jsonDataIt = jsonNotification.find("data");
 

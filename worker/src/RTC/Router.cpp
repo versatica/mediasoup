@@ -183,13 +183,17 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw.
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				// This may throw.
 				auto* webRtcTransport = new RTC::WebRtcTransport(transportId, this, request->data);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = webRtcTransport;
+
+				this->listener->OnChannelRequestHandlerAdded(transportId, webRtcTransport);
+				this->listener->OnPayloadChannelRequestHandlerAdded(transportId, webRtcTransport);
+				this->listener->OnPayloadChannelNotificationHandlerAdded(transportId, webRtcTransport);
 
 				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
 
@@ -207,7 +211,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw.
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto jsonWebRtcServerIdIt = request->data.find("webRtcServerId");
 
@@ -277,6 +281,10 @@ namespace RTC
 				// Insert into the map.
 				this->mapTransports[transportId] = webRtcTransport;
 
+				this->listener->OnChannelRequestHandlerAdded(transportId, webRtcTransport);
+				this->listener->OnPayloadChannelRequestHandlerAdded(transportId, webRtcTransport);
+				this->listener->OnPayloadChannelNotificationHandlerAdded(transportId, webRtcTransport);
+
 				MS_DEBUG_DEV(
 				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
 
@@ -294,12 +302,16 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto* plainTransport = new RTC::PlainTransport(transportId, this, request->data);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = plainTransport;
+
+				this->listener->OnChannelRequestHandlerAdded(transportId, plainTransport);
+				this->listener->OnPayloadChannelRequestHandlerAdded(transportId, plainTransport);
+				this->listener->OnPayloadChannelNotificationHandlerAdded(transportId, plainTransport);
 
 				MS_DEBUG_DEV("PlainTransport created [transportId:%s]", transportId.c_str());
 
@@ -317,12 +329,16 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto* pipeTransport = new RTC::PipeTransport(transportId, this, request->data);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = pipeTransport;
+
+				this->listener->OnChannelRequestHandlerAdded(transportId, pipeTransport);
+				this->listener->OnPayloadChannelRequestHandlerAdded(transportId, pipeTransport);
+				this->listener->OnPayloadChannelNotificationHandlerAdded(transportId, pipeTransport);
 
 				MS_DEBUG_DEV("PipeTransport created [transportId:%s]", transportId.c_str());
 
@@ -340,12 +356,16 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto* directTransport = new RTC::DirectTransport(transportId, this, request->data);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = directTransport;
+
+				this->listener->OnChannelRequestHandlerAdded(transportId, directTransport);
+				this->listener->OnPayloadChannelRequestHandlerAdded(transportId, directTransport);
+				this->listener->OnPayloadChannelNotificationHandlerAdded(transportId, directTransport);
 
 				MS_DEBUG_DEV("DirectTransport created [transportId:%s]", transportId.c_str());
 
@@ -363,13 +383,15 @@ namespace RTC
 				std::string rtpObserverId;
 
 				// This may throw.
-				SetNewRtpObserverIdFromInternal(request->internal, rtpObserverId);
+				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
 
 				auto* activeSpeakerObserver =
 				  new RTC::ActiveSpeakerObserver(rtpObserverId, this, request->data);
 
 				// Insert into the map.
 				this->mapRtpObservers[rtpObserverId] = activeSpeakerObserver;
+
+				this->listener->OnChannelRequestHandlerAdded(rtpObserverId, activeSpeakerObserver);
 
 				MS_DEBUG_DEV("ActiveSpeakerObserver created [rtpObserverId:%s]", rtpObserverId.c_str());
 
@@ -383,12 +405,14 @@ namespace RTC
 				std::string rtpObserverId;
 
 				// This may throw
-				SetNewRtpObserverIdFromInternal(request->internal, rtpObserverId);
+				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
 
 				auto* audioLevelObserver = new RTC::AudioLevelObserver(rtpObserverId, this, request->data);
 
 				// Insert into the map.
 				this->mapRtpObservers[rtpObserverId] = audioLevelObserver;
+
+				this->listener->OnChannelRequestHandlerAdded(rtpObserverId, audioLevelObserver);
 
 				MS_DEBUG_DEV("AudioLevelObserver created [rtpObserverId:%s]", rtpObserverId.c_str());
 
@@ -397,10 +421,10 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE:
+			case Channel::ChannelRequest::MethodId::ROUTER_CLOSE_TRANSPORT:
 			{
 				// This may throw.
-				RTC::Transport* transport = GetTransportFromInternal(request->internal);
+				RTC::Transport* transport = GetTransportFromData(request->data);
 
 				// Tell the Transport to close all its Producers and Consumers so it will
 				// notify us about their closures.
@@ -408,6 +432,10 @@ namespace RTC
 
 				// Remove it from the map.
 				this->mapTransports.erase(transport->id);
+
+				this->listener->OnChannelRequestHandlerRemoved(transport->id);
+				this->listener->OnPayloadChannelRequestHandlerRemoved(transport->id);
+				this->listener->OnPayloadChannelNotificationHandlerRemoved(transport->id);
 
 				MS_DEBUG_DEV("Transport closed [transportId:%s]", transport->id.c_str());
 
@@ -419,10 +447,10 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_CLOSE:
+			case Channel::ChannelRequest::MethodId::ROUTER_CLOSE_RTP_OBSERVER:
 			{
 				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
+				RTC::RtpObserver* rtpObserver = GetRtpObserverFromData(request->data);
 
 				// Remove it from the map.
 				this->mapRtpObservers.erase(rtpObserver->id);
@@ -435,6 +463,8 @@ namespace RTC
 					rtpObservers.erase(rtpObserver);
 				}
 
+				this->listener->OnChannelRequestHandlerRemoved(rtpObserver->id);
+
 				MS_DEBUG_DEV("RtpObserver closed [rtpObserverId:%s]", rtpObserver->id.c_str());
 
 				// Delete it.
@@ -445,59 +475,20 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_PAUSE:
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_RESUME:
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_ADD_PRODUCER:
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_REMOVE_PRODUCER:
-			{
-				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-
-				rtpObserver->HandleRequest(request);
-
-				break;
-			}
-
-			// Any other request must be delivered to the corresponding Transport.
 			default:
 			{
-				// This may throw.
-				RTC::Transport* transport = GetTransportFromInternal(request->internal);
-
-				transport->HandleRequest(request);
-
-				break;
+				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
 			}
 		}
 	}
 
-	void Router::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
+	void Router::SetNewTransportIdFromData(json& data, std::string& transportId) const
 	{
 		MS_TRACE();
 
-		// This may throw.
-		RTC::Transport* transport = GetTransportFromInternal(request->internal);
+		auto jsonTransportIdIt = data.find("transportId");
 
-		transport->HandleRequest(request);
-	}
-
-	void Router::HandleNotification(PayloadChannel::Notification* notification)
-	{
-		MS_TRACE();
-
-		// This may throw.
-		RTC::Transport* transport = GetTransportFromInternal(notification->internal);
-
-		transport->HandleNotification(notification);
-	}
-
-	void Router::SetNewTransportIdFromInternal(json& internal, std::string& transportId) const
-	{
-		MS_TRACE();
-
-		auto jsonTransportIdIt = internal.find("transportId");
-
-		if (jsonTransportIdIt == internal.end() || !jsonTransportIdIt->is_string())
+		if (jsonTransportIdIt == data.end() || !jsonTransportIdIt->is_string())
 		{
 			MS_THROW_TYPE_ERROR("missing transportId");
 		}
@@ -510,13 +501,13 @@ namespace RTC
 		}
 	}
 
-	RTC::Transport* Router::GetTransportFromInternal(json& internal) const
+	RTC::Transport* Router::GetTransportFromData(json& data) const
 	{
 		MS_TRACE();
 
-		auto jsonTransportIdIt = internal.find("transportId");
+		auto jsonTransportIdIt = data.find("transportId");
 
-		if (jsonTransportIdIt == internal.end() || !jsonTransportIdIt->is_string())
+		if (jsonTransportIdIt == data.end() || !jsonTransportIdIt->is_string())
 		{
 			MS_THROW_TYPE_ERROR("missing transportId");
 		}
@@ -531,13 +522,13 @@ namespace RTC
 		return transport;
 	}
 
-	void Router::SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const
+	void Router::SetNewRtpObserverIdFromData(json& data, std::string& rtpObserverId) const
 	{
 		MS_TRACE();
 
-		auto jsonRtpObserverIdIt = internal.find("rtpObserverId");
+		auto jsonRtpObserverIdIt = data.find("rtpObserverId");
 
-		if (jsonRtpObserverIdIt == internal.end() || !jsonRtpObserverIdIt->is_string())
+		if (jsonRtpObserverIdIt == data.end() || !jsonRtpObserverIdIt->is_string())
 		{
 			MS_THROW_TYPE_ERROR("missing rtpObserverId");
 		}
@@ -550,13 +541,13 @@ namespace RTC
 		}
 	}
 
-	RTC::RtpObserver* Router::GetRtpObserverFromInternal(json& internal) const
+	RTC::RtpObserver* Router::GetRtpObserverFromData(json& data) const
 	{
 		MS_TRACE();
 
-		auto jsonRtpObserverIdIt = internal.find("rtpObserverId");
+		auto jsonRtpObserverIdIt = data.find("rtpObserverId");
 
-		if (jsonRtpObserverIdIt == internal.end() || !jsonRtpObserverIdIt->is_string())
+		if (jsonRtpObserverIdIt == data.end() || !jsonRtpObserverIdIt->is_string())
 		{
 			MS_THROW_TYPE_ERROR("missing rtpObserverId");
 		}
@@ -569,27 +560,6 @@ namespace RTC
 		RTC::RtpObserver* rtpObserver = it->second;
 
 		return rtpObserver;
-	}
-
-	RTC::Producer* Router::GetProducerFromData(json& data) const
-	{
-		MS_TRACE();
-
-		auto jsonProducerIdIt = data.find("producerId");
-
-		if (jsonProducerIdIt == data.end() || !jsonProducerIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing producerId");
-		}
-
-		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
-
-		if (it == this->mapProducers.end())
-			MS_THROW_ERROR("Producer not found");
-
-		RTC::Producer* producer = it->second;
-
-		return producer;
 	}
 
 	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)
@@ -609,6 +579,9 @@ namespace RTC
 		this->mapProducers[producer->id] = producer;
 		this->mapProducerConsumers[producer];
 		this->mapProducerRtpObservers[producer];
+
+		this->listener->OnChannelRequestHandlerAdded(producer->id, producer);
+		this->listener->OnPayloadChannelNotificationHandlerAdded(producer->id, producer);
 	}
 
 	inline void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::Producer* producer)
@@ -654,6 +627,9 @@ namespace RTC
 		this->mapProducers.erase(mapProducersIt);
 		this->mapProducerConsumers.erase(mapProducerConsumersIt);
 		this->mapProducerRtpObservers.erase(mapProducerRtpObserversIt);
+
+		this->listener->OnChannelRequestHandlerRemoved(producer->id);
+		this->listener->OnPayloadChannelNotificationHandlerRemoved(producer->id);
 	}
 
 	inline void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::Producer* producer)
@@ -843,6 +819,8 @@ namespace RTC
 
 		// Provide the Consumer with the scores of all streams in the Producer.
 		consumer->ProducerRtpStreamScores(producer->GetRtpStreamScores());
+
+		this->listener->OnChannelRequestHandlerAdded(consumer->id, consumer);
 	}
 
 	inline void Router::OnTransportConsumerClosed(RTC::Transport* /*transport*/, RTC::Consumer* consumer)
@@ -874,6 +852,8 @@ namespace RTC
 
 		// Remove the Consumer from the map.
 		this->mapConsumerProducer.erase(mapConsumerProducerIt);
+
+		this->listener->OnChannelRequestHandlerRemoved(consumer->id);
 	}
 
 	inline void Router::OnTransportConsumerProducerClosed(
@@ -926,6 +906,9 @@ namespace RTC
 		// Insert the DataProducer in the maps.
 		this->mapDataProducers[dataProducer->id] = dataProducer;
 		this->mapDataProducerDataConsumers[dataProducer];
+
+		this->listener->OnChannelRequestHandlerAdded(dataProducer->id, dataProducer);
+		this->listener->OnPayloadChannelNotificationHandlerAdded(dataProducer->id, dataProducer);
 	}
 
 	inline void Router::OnTransportDataProducerClosed(
@@ -962,6 +945,9 @@ namespace RTC
 		// Remove the DataProducer from the maps.
 		this->mapDataProducers.erase(mapDataProducersIt);
 		this->mapDataProducerDataConsumers.erase(mapDataProducerDataConsumersIt);
+
+		this->listener->OnChannelRequestHandlerRemoved(dataProducer->id);
+		this->listener->OnPayloadChannelNotificationHandlerRemoved(dataProducer->id);
 	}
 
 	inline void Router::OnTransportDataProducerMessageReceived(
@@ -1006,6 +992,8 @@ namespace RTC
 
 		dataConsumers.insert(dataConsumer);
 		this->mapDataConsumerDataProducer[dataConsumer] = dataProducer;
+
+		this->listener->OnChannelRequestHandlerAdded(dataConsumer->id, dataConsumer);
 	}
 
 	inline void Router::OnTransportDataConsumerClosed(
@@ -1039,6 +1027,8 @@ namespace RTC
 
 		// Remove the DataConsumer from the map.
 		this->mapDataConsumerDataProducer.erase(mapDataConsumerDataProducerIt);
+
+		this->listener->OnChannelRequestHandlerRemoved(dataConsumer->id);
 	}
 
 	inline void Router::OnTransportDataConsumerDataProducerClosed(

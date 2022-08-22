@@ -4,7 +4,7 @@ mod tests;
 use crate::data_structures::AppData;
 use crate::messages::{
     RtpObserverAddProducerRequest, RtpObserverAddRemoveProducerRequestData,
-    RtpObserverCloseRequest, RtpObserverInternal, RtpObserverPauseRequest,
+    RtpObserverCloseRequest, RtpObserverCloseRequestData, RtpObserverPauseRequest,
     RtpObserverRemoveProducerRequest, RtpObserverResumeRequest,
 };
 use crate::producer::{Producer, ProducerId};
@@ -120,8 +120,8 @@ impl Inner {
             if close_request {
                 let channel = self.channel.clone();
                 let request = RtpObserverCloseRequest {
-                    internal: RtpObserverInternal {
-                        router_id: self.router.id(),
+                    handler_id: self.router.id(),
+                    data: RtpObserverCloseRequestData {
                         rtp_observer_id: self.id,
                     },
                 };
@@ -190,7 +190,7 @@ impl RtpObserver for AudioLevelObserver {
         self.inner
             .channel
             .request(RtpObserverPauseRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await?;
 
@@ -209,7 +209,7 @@ impl RtpObserver for AudioLevelObserver {
         self.inner
             .channel
             .request(RtpObserverResumeRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await?;
 
@@ -235,7 +235,7 @@ impl RtpObserver for AudioLevelObserver {
         self.inner
             .channel
             .request(RtpObserverAddProducerRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
                 data: RtpObserverAddRemoveProducerRequestData { producer_id },
             })
             .await?;
@@ -255,7 +255,7 @@ impl RtpObserver for AudioLevelObserver {
         self.inner
             .channel
             .request(RtpObserverRemoveProducerRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
                 data: RtpObserverAddRemoveProducerRequestData { producer_id },
             })
             .await?;
@@ -403,13 +403,6 @@ impl AudioLevelObserver {
     pub fn downgrade(&self) -> WeakAudioLevelObserver {
         WeakAudioLevelObserver {
             inner: Arc::downgrade(&self.inner),
-        }
-    }
-
-    fn get_internal(&self) -> RtpObserverInternal {
-        RtpObserverInternal {
-            router_id: self.inner.router.id(),
-            rtp_observer_id: self.inner.id,
         }
     }
 }

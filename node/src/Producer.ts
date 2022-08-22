@@ -353,7 +353,9 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		this.#channel.removeAllListeners(this.#internal.producerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
 
-		this.#channel.request('producer.close', this.#internal)
+		const reqData = { producerId: this.#internal.producerId };
+
+		this.#channel.request('transport.closeProducer', this.#internal.transportId, reqData)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -393,7 +395,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('producer.dump', this.#internal);
+		return this.#channel.request('producer.dump', this.#internal.producerId);
 	}
 
 	/**
@@ -403,7 +405,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('producer.getStats', this.#internal);
+		return this.#channel.request('producer.getStats', this.#internal.producerId);
 	}
 
 	/**
@@ -415,7 +417,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.request('producer.pause', this.#internal);
+		await this.#channel.request('producer.pause', this.#internal.producerId);
 
 		this.#paused = true;
 
@@ -433,7 +435,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.request('producer.resume', this.#internal);
+		await this.#channel.request('producer.resume', this.#internal.producerId);
 
 		this.#paused = false;
 
@@ -452,7 +454,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		const reqData = { types };
 
 		await this.#channel.request(
-			'producer.enableTraceEvent', this.#internal, reqData);
+			'producer.enableTraceEvent', this.#internal.producerId, reqData);
 	}
 
 	/**
@@ -466,7 +468,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		}
 
 		this.#payloadChannel.notify(
-			'producer.send', this.#internal, undefined, rtpPacket);
+			'producer.send', this.#internal.producerId, undefined, rtpPacket);
 	}
 
 	private handleWorkerNotifications(): void

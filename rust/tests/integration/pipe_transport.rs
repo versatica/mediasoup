@@ -214,7 +214,14 @@ fn consumer_device_capabilities() -> RtpCapabilities {
     }
 }
 
-async fn init() -> (Worker, Router, Router, WebRtcTransport, WebRtcTransport) {
+async fn init() -> (
+    Worker,
+    Worker,
+    Router,
+    Router,
+    WebRtcTransport,
+    WebRtcTransport,
+) {
     {
         let mut builder = env_logger::builder();
         if env::var(env_logger::DEFAULT_FILTER_ENV).is_err() {
@@ -225,17 +232,22 @@ async fn init() -> (Worker, Router, Router, WebRtcTransport, WebRtcTransport) {
 
     let worker_manager = WorkerManager::new();
 
-    let worker = worker_manager
+    let worker1 = worker_manager
         .create_worker(WorkerSettings::default())
         .await
         .expect("Failed to create worker");
 
-    let router1 = worker
+    let worker2 = worker_manager
+        .create_worker(WorkerSettings::default())
+        .await
+        .expect("Failed to create worker");
+
+    let router1 = worker1
         .create_router(RouterOptions::new(media_codecs()))
         .await
         .expect("Failed to create router");
 
-    let router2 = worker
+    let router2 = worker2
         .create_router(RouterOptions::new(media_codecs()))
         .await
         .expect("Failed to create router");
@@ -256,13 +268,13 @@ async fn init() -> (Worker, Router, Router, WebRtcTransport, WebRtcTransport) {
         .await
         .expect("Failed to create transport2");
 
-    (worker, router1, router2, transport_1, transport_2)
+    (worker1, worker2, router1, router2, transport_1, transport_2)
 }
 
 #[test]
 fn pipe_to_router_succeeds_with_audio() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, _transport2) = init().await;
 
         let audio_producer = transport1
             .produce(audio_producer_options())
@@ -383,7 +395,7 @@ fn pipe_to_router_succeeds_with_audio() {
 #[test]
 fn pipe_to_router_succeeds_with_video() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, _transport2) = init().await;
 
         let audio_producer = transport1
             .produce(audio_producer_options())
@@ -543,7 +555,7 @@ fn pipe_to_router_succeeds_with_video() {
 #[test]
 fn weak() {
     future::block_on(async move {
-        let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, _router2, _transport1, _transport2) = init().await;
 
         let pipe_transport = router1
             .create_pipe_transport({
@@ -571,7 +583,7 @@ fn weak() {
 #[test]
 fn create_with_fixed_port_succeeds() {
     future::block_on(async move {
-        let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, _router2, _transport1, _transport2) = init().await;
 
         let port = pick_unused_port().unwrap();
 
@@ -595,7 +607,7 @@ fn create_with_fixed_port_succeeds() {
 #[test]
 fn create_with_enable_rtx_succeeds() {
     future::block_on(async move {
-        let (_worker, router1, _router2, transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, _router2, transport1, _transport2) = init().await;
 
         let pipe_transport = router1
             .create_pipe_transport({
@@ -703,7 +715,7 @@ fn create_with_enable_rtx_succeeds() {
 #[test]
 fn create_with_enable_srtp_succeeds() {
     future::block_on(async move {
-        let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, _router2, _transport1, _transport2) = init().await;
 
         let pipe_transport = router1
             .create_pipe_transport({
@@ -755,7 +767,7 @@ fn create_with_enable_srtp_succeeds() {
 #[test]
 fn create_with_invalid_srtp_parameters_fails() {
     future::block_on(async move {
-        let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, _router2, _transport1, _transport2) = init().await;
 
         let pipe_transport = router1
             .create_pipe_transport(PipeTransportOptions::new(ListenIp {
@@ -786,7 +798,7 @@ fn create_with_invalid_srtp_parameters_fails() {
 #[test]
 fn consume_for_pipe_producer_succeeds() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, transport2) = init().await;
 
         let video_producer = transport1
             .produce(video_producer_options())
@@ -876,7 +888,7 @@ fn consume_for_pipe_producer_succeeds() {
 #[test]
 fn producer_pause_resume_are_transmitted_to_pipe_consumer() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, transport2) = init().await;
 
         let video_producer = transport1
             .produce(video_producer_options())
@@ -956,7 +968,7 @@ fn producer_pause_resume_are_transmitted_to_pipe_consumer() {
 #[test]
 fn pipe_to_router_succeeds_with_data() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, _transport2) = init().await;
 
         let data_producer = transport1
             .produce_data(data_producer_options())
@@ -1028,7 +1040,7 @@ fn pipe_to_router_succeeds_with_data() {
 #[test]
 fn data_consume_for_pipe_data_producer_succeeds() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, transport2) = init().await;
 
         let data_producer = transport1
             .produce_data(data_producer_options())
@@ -1067,14 +1079,14 @@ fn data_consume_for_pipe_data_producer_succeeds() {
 #[test]
 fn pipe_to_router_called_twice_generates_single_pair() {
     future::block_on(async move {
-        let (worker, _router1, _router2, _transport1, _transport2) = init().await;
+        let (worker1, worker2, _router1, _router2, _transport1, _transport2) = init().await;
 
-        let router_a = worker
+        let router_a = worker1
             .create_router(RouterOptions::new(media_codecs()))
             .await
             .expect("Failed to create router");
 
-        let router_b = worker
+        let router_b = worker2
             .create_router(RouterOptions::new(media_codecs()))
             .await
             .expect("Failed to create router");

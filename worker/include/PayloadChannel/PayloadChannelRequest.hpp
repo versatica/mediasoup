@@ -45,7 +45,7 @@ namespace PayloadChannel
 		uint32_t id{ 0u };
 		std::string method;
 		MethodId methodId;
-		json internal;
+		std::string handlerId;
 		json data;
 		const uint8_t* payload{ nullptr };
 		size_t payloadLen{ 0u };

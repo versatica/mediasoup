@@ -4,8 +4,8 @@ mod tests;
 use crate::consumer::RtpStreamParams;
 use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
 use crate::messages::{
-    ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventData,
-    ProducerEnableTraceEventRequest, ProducerGetStatsRequest, ProducerInternal,
+    ProducerCloseRequest, ProducerCloseRequestData, ProducerDumpRequest,
+    ProducerEnableTraceEventData, ProducerEnableTraceEventRequest, ProducerGetStatsRequest,
     ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
 };
 pub use crate::ortc::RtpMapping;
@@ -328,9 +328,8 @@ impl Inner {
             if close_request {
                 let channel = self.channel.clone();
                 let request = ProducerCloseRequest {
-                    internal: ProducerInternal {
-                        router_id: self.transport.router().id(),
-                        transport_id: self.transport.id(),
+                    handler_id: self.transport.id(),
+                    data: ProducerCloseRequestData {
                         producer_id: self.id,
                     },
                 };
@@ -590,7 +589,7 @@ impl Producer {
         self.inner()
             .channel
             .request(ProducerDumpRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await
     }
@@ -605,7 +604,7 @@ impl Producer {
         self.inner()
             .channel
             .request(ProducerGetStatsRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await
     }
@@ -619,7 +618,7 @@ impl Producer {
         self.inner()
             .channel
             .request(ProducerPauseRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await?;
 
@@ -641,7 +640,7 @@ impl Producer {
         self.inner()
             .channel
             .request(ProducerResumeRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await?;
 
@@ -664,7 +663,7 @@ impl Producer {
         self.inner()
             .channel
             .request(ProducerEnableTraceEventRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
                 data: ProducerEnableTraceEventData { types },
             })
             .await
@@ -756,14 +755,6 @@ impl Producer {
             Producer::Direct(producer) => &producer.inner,
         }
     }
-
-    fn get_internal(&self) -> ProducerInternal {
-        ProducerInternal {
-            router_id: self.inner().transport.router().id(),
-            transport_id: self.inner().transport.id(),
-            producer_id: self.inner().id,
-        }
-    }
 }
 
 impl DirectProducer {
@@ -771,11 +762,7 @@ impl DirectProducer {
     pub fn send(&self, rtp_packet: Vec<u8>) -> Result<(), NotificationError> {
         self.inner.payload_channel.notify(
             ProducerSendNotification {
-                internal: ProducerInternal {
-                    router_id: self.inner.transport.router().id(),
-                    transport_id: self.inner.transport.id(),
-                    producer_id: self.inner.id,
-                },
+                handler_id: self.inner.id,
             },
             rtp_packet,
         )

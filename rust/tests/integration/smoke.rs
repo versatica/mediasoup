@@ -355,7 +355,12 @@ fn smoke() {
                 .unwrap()
         );
 
-        let router2 = worker
+        let worker2 = worker_manager
+            .create_worker(WorkerSettings::default())
+            .await
+            .unwrap();
+
+        let router2 = worker2
             .create_router(RouterOptions::new(vec![RtpCodecCapability::Audio {
                 mime_type: MimeTypeAudio::Opus,
                 preferred_payload_type: None,

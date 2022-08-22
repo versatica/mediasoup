@@ -82,7 +82,7 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             return;
         logger.debug('close()');
         this.#closed = true;
-        // Remove event listeners but leave a fake 'error' hander to avoid
+        // Remove event listeners but leave a fake 'error' handler to avoid
         // propagation.
         this.#consumerSocket.removeAllListeners('end');
         this.#consumerSocket.removeAllListeners('error');
@@ -105,11 +105,11 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * @private
      */
-    notify(event, internal, data, payload) {
+    notify(event, handlerId, data, payload) {
         logger.debug('notify() [event:%s]', event);
         if (this.#closed)
             throw new errors_1.InvalidStateError('PayloadChannel closed');
-        const notification = JSON.stringify({ event, internal, data });
+        const notification = JSON.stringify({ event, handlerId, data });
         if (Buffer.byteLength(notification) > MESSAGE_MAX_LEN)
             throw new Error('PayloadChannel notification too big');
         else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
@@ -136,13 +136,13 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * @private
      */
-    async request(method, internal, data, payload) {
+    async request(method, handlerId, data, payload) {
         this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
         const id = this.#nextId;
         logger.debug('request() [method:%s, id:%s]', method, id);
         if (this.#closed)
             throw new errors_1.InvalidStateError('Channel closed');
-        const request = JSON.stringify({ id, method, internal, data });
+        const request = JSON.stringify({ id, method, handlerId, data });
         if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
             throw new Error('Channel request too big');
         else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)

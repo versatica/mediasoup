@@ -4,8 +4,8 @@ mod tests;
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
-    DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
-    DataConsumerGetStatsRequest, DataConsumerInternal, DataConsumerSendRequest,
+    DataConsumerCloseRequest, DataConsumerCloseRequestData, DataConsumerDumpRequest,
+    DataConsumerGetBufferedAmountRequest, DataConsumerGetStatsRequest, DataConsumerSendRequest,
     DataConsumerSendRequestData, DataConsumerSetBufferedAmountLowThresholdData,
     DataConsumerSetBufferedAmountLowThresholdRequest,
 };
@@ -232,9 +232,8 @@ impl Inner {
             if close_request {
                 let channel = self.channel.clone();
                 let request = DataConsumerCloseRequest {
-                    internal: DataConsumerInternal {
-                        router_id: self.transport.router().id(),
-                        transport_id: self.transport.id(),
+                    handler_id: self.transport.id(),
+                    data: DataConsumerCloseRequestData {
                         data_consumer_id: self.id,
                     },
                 };
@@ -533,7 +532,7 @@ impl DataConsumer {
         self.inner()
             .channel
             .request(DataConsumerDumpRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await
     }
@@ -548,7 +547,7 @@ impl DataConsumer {
         self.inner()
             .channel
             .request(DataConsumerGetStatsRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await
     }
@@ -567,7 +566,7 @@ impl DataConsumer {
             .inner()
             .channel
             .request(DataConsumerGetBufferedAmountRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await?;
 
@@ -588,7 +587,7 @@ impl DataConsumer {
         self.inner()
             .channel
             .request(DataConsumerSetBufferedAmountLowThresholdRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
                 data: DataConsumerSetBufferedAmountLowThresholdData { threshold },
             })
             .await
@@ -675,14 +674,6 @@ impl DataConsumer {
             DataConsumer::Direct(data_consumer) => &data_consumer.inner,
         }
     }
-
-    fn get_internal(&self) -> DataConsumerInternal {
-        DataConsumerInternal {
-            router_id: self.inner().transport.router().id(),
-            transport_id: self.inner().transport.id(),
-            data_consumer_id: self.inner().id,
-        }
-    }
 }
 
 impl DirectDataConsumer {
@@ -694,11 +685,7 @@ impl DirectDataConsumer {
             .payload_channel
             .request(
                 DataConsumerSendRequest {
-                    internal: DataConsumerInternal {
-                        router_id: self.inner.transport.router().id(),
-                        transport_id: self.inner.transport.id(),
-                        data_consumer_id: self.inner.id,
-                    },
+                    handler_id: self.inner.id,
                     data: DataConsumerSendRequestData { ppid },
                 },
                 payload.into_owned(),

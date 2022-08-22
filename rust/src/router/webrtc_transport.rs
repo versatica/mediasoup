@@ -9,8 +9,8 @@ use crate::data_structures::{
     SctpState, TransportTuple,
 };
 use crate::messages::{
-    TransportCloseRequest, TransportConnectRequestWebRtcData, TransportConnectWebRtcRequest,
-    TransportInternal, TransportRestartIceRequest, WebRtcTransportData,
+    TransportCloseRequest, TransportCloseRequestData, TransportConnectRequestWebRtcData,
+    TransportConnectWebRtcRequest, TransportRestartIceRequest, WebRtcTransportData,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -345,8 +345,8 @@ impl Inner {
             if close_request {
                 let channel = self.channel.clone();
                 let request = TransportCloseRequest {
-                    internal: TransportInternal {
-                        router_id: self.router.id(),
+                    handler_id: self.router.id(),
+                    data: TransportCloseRequestData {
                         transport_id: self.id,
                     },
                 };
@@ -763,7 +763,7 @@ impl WebRtcTransport {
             .inner
             .channel
             .request(TransportConnectWebRtcRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
                 data: TransportConnectRequestWebRtcData {
                     dtls_parameters: remote_parameters.dtls_parameters,
                 },
@@ -870,7 +870,7 @@ impl WebRtcTransport {
             .inner
             .channel
             .request(TransportRestartIceRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await?;
 
@@ -935,13 +935,6 @@ impl WebRtcTransport {
     pub fn downgrade(&self) -> WeakWebRtcTransport {
         WeakWebRtcTransport {
             inner: Arc::downgrade(&self.inner),
-        }
-    }
-
-    fn get_internal(&self) -> TransportInternal {
-        TransportInternal {
-            router_id: self.router().id(),
-            transport_id: self.id(),
         }
     }
 }

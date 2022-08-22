@@ -29,10 +29,10 @@ private:
 	void Close();
 	void FillJson(json& jsonObject) const;
 	void FillJsonResourceUsage(json& jsonObject) const;
-	void SetNewWebRtcServerIdFromInternal(json& internal, std::string& webRtcServerId) const;
-	RTC::WebRtcServer* GetWebRtcServerFromInternal(json& internal) const;
-	void SetNewRouterIdFromInternal(json& internal, std::string& routerId) const;
-	RTC::Router* GetRouterFromInternal(json& internal) const;
+	void SetNewWebRtcServerIdFromData(json& data, std::string& webRtcServerId) const;
+	RTC::WebRtcServer* GetWebRtcServerFromData(json& data) const;
+	void SetNewRouterIdFromData(json& data, std::string& routerId) const;
+	RTC::Router* GetRouterFromData(json& data) const;
 
 	/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 public:
@@ -60,6 +60,16 @@ public:
 
 	/* Pure virtual methods inherited from RTC::Router::Listener. */
 public:
+	void OnChannelRequestHandlerAdded(
+	  const std::string& id, Channel::ChannelSocket::RequestHandler* handler) override;
+	void OnChannelRequestHandlerRemoved(const std::string& id) override;
+	void OnPayloadChannelRequestHandlerAdded(
+	  const std::string& id, PayloadChannel::PayloadChannelSocket::RequestHandler* handler) override;
+	void OnPayloadChannelRequestHandlerRemoved(const std::string& id) override;
+	void OnPayloadChannelNotificationHandlerAdded(
+	  const std::string& id,
+	  PayloadChannel::PayloadChannelSocket::NotificationHandler* handler) override;
+	void OnPayloadChannelNotificationHandlerRemoved(const std::string& id) override;
 	RTC::WebRtcServer* OnRouterNeedWebRtcServer(RTC::Router* router, std::string& webRtcServerId) override;
 
 private:
@@ -70,6 +80,11 @@ private:
 	SignalsHandler* signalsHandler{ nullptr };
 	absl::flat_hash_map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
 	absl::flat_hash_map<std::string, RTC::Router*> mapRouters;
+	absl::flat_hash_map<std::string, Channel::ChannelSocket::RequestHandler*> mapChannelRequestHandlers;
+	absl::flat_hash_map<std::string, PayloadChannel::PayloadChannelSocket::RequestHandler*>
+	  mapPayloadChannelRequestHandlers;
+	absl::flat_hash_map<std::string, PayloadChannel::PayloadChannelSocket::NotificationHandler*>
+	  mapPayloadChannelNotificationHandlers;
 	// Others.
 	bool closed{ false };
 };

@@ -232,7 +232,7 @@ export class PipeTransport
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal);
+		return this.channel.request('transport.getStats', this.internal.transportId);
 	}
 
 	/**
@@ -258,7 +258,7 @@ export class PipeTransport
 		const reqData = { ip, port, srtpParameters };
 
 		const data =
-			await this.channel.request('transport.connect', this.internal, reqData);
+			await this.channel.request('transport.connect', this.internal.transportId, reqData);
 
 		// Update data.
 		this.#data.tuple = data.tuple;
@@ -287,9 +287,9 @@ export class PipeTransport
 		const rtpParameters = ortc.getPipeConsumerRtpParameters(
 			producer.consumableRtpParameters, this.#data.rtx);
 
-		const internal = { ...this.internal, consumerId: uuidv4() };
 		const reqData =
 		{
+			consumerId             : uuidv4(),
 			producerId,
 			kind                   : producer.kind,
 			rtpParameters,
@@ -298,7 +298,7 @@ export class PipeTransport
 		};
 
 		const status =
-			await this.channel.request('transport.consume', internal, reqData);
+			await this.channel.request('transport.consume', this.internal.transportId, reqData);
 
 		const data =
 		{
@@ -310,7 +310,11 @@ export class PipeTransport
 
 		const consumer = new Consumer(
 			{
-				internal,
+				internal :
+				{
+					...this.internal,
+					consumerId : reqData.consumerId
+				},
 				data,
 				channel        : this.channel,
 				payloadChannel : this.payloadChannel,

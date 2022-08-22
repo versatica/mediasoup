@@ -593,15 +593,18 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		const internal = { webRtcServerId: uuidv4() };
-		const reqData = { listenInfos };
+		const reqData =
+		{
+			webRtcServerId : uuidv4(),
+			listenInfos
+		};
 
-		await this.#channel.request('worker.createWebRtcServer', internal, reqData);
+		await this.#channel.request('worker.createWebRtcServer', undefined, reqData);
 
 		const webRtcServer = new WebRtcServer(
 			{
-				internal,
-				channel : this.#channel,
+				internal : { webRtcServerId: reqData.webRtcServerId },
+				channel  : this.#channel,
 				appData
 			});
 
@@ -631,14 +634,17 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		// This may throw.
 		const rtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
 
-		const internal = { routerId: uuidv4() };
+		const reqData = { routerId: uuidv4() };
 
-		await this.#channel.request('worker.createRouter', internal);
+		await this.#channel.request('worker.createRouter', undefined, reqData);
 
 		const data = { rtpCapabilities };
 		const router = new Router(
 			{
-				internal,
+				internal : 
+				{
+					routerId : reqData.routerId
+				},
 				data,
 				channel        : this.#channel,
 				payloadChannel : this.#payloadChannel,

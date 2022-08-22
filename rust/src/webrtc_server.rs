@@ -11,7 +11,9 @@
 mod tests;
 
 use crate::data_structures::{AppData, ListenIp, Protocol};
-use crate::messages::{WebRtcServerCloseRequest, WebRtcServerDumpRequest, WebRtcServerInternal};
+use crate::messages::{
+    WebRtcServerCloseRequest, WebRtcServerCloseRequestData, WebRtcServerDumpRequest,
+};
 use crate::transport::TransportId;
 use crate::uuid_based_wrapper_type;
 use crate::webrtc_transport::WebRtcTransport;
@@ -185,7 +187,7 @@ impl Inner {
             {
                 let channel = self.channel.clone();
                 let request = WebRtcServerCloseRequest {
-                    internal: WebRtcServerInternal {
+                    data: WebRtcServerCloseRequestData {
                         webrtc_server_id: self.id,
                     },
                 };
@@ -294,9 +296,7 @@ impl WebRtcServer {
         self.inner
             .channel
             .request(WebRtcServerDumpRequest {
-                internal: WebRtcServerInternal {
-                    webrtc_server_id: self.inner.id,
-                },
+                handler_id: self.id(),
             })
             .await
     }

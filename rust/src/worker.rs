@@ -8,7 +8,7 @@ mod utils;
 
 use crate::data_structures::AppData;
 use crate::messages::{
-    RouterInternal, WebRtcServerInternal, WorkerCloseRequest, WorkerCreateRouterRequest,
+    WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateRouterRequestData,
     WorkerCreateWebRtcServerData, WorkerCreateWebRtcServerRequest, WorkerDumpRequest,
     WorkerUpdateSettingsRequest,
 };
@@ -628,7 +628,6 @@ impl Worker {
         } = webrtc_server_options;
 
         let webrtc_server_id = WebRtcServerId::new();
-        let internal = WebRtcServerInternal { webrtc_server_id };
 
         let _buffer_guard = self
             .inner
@@ -638,8 +637,10 @@ impl Worker {
         self.inner
             .channel
             .request(WorkerCreateWebRtcServerRequest {
-                internal,
-                data: WorkerCreateWebRtcServerData { listen_infos },
+                data: WorkerCreateWebRtcServerData {
+                    webrtc_server_id,
+                    listen_infos,
+                },
             })
             .await
             .map_err(CreateWebRtcServerError::Request)?;
@@ -678,13 +679,14 @@ impl Worker {
             .map_err(CreateRouterError::FailedRtpCapabilitiesGeneration)?;
 
         let router_id = RouterId::new();
-        let internal = RouterInternal { router_id };
 
         let _buffer_guard = self.inner.channel.buffer_messages_for(router_id.into());
 
         self.inner
             .channel
-            .request(WorkerCreateRouterRequest { internal })
+            .request(WorkerCreateRouterRequest {
+                data: WorkerCreateRouterRequestData { router_id },
+            })
             .await
             .map_err(CreateRouterError::Request)?;
 

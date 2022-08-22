@@ -25,9 +25,7 @@ namespace RTC
 {
 	class Router : public RTC::Transport::Listener,
 	               public RTC::RtpObserver::Listener,
-	               public Channel::ChannelSocket::RequestHandler,
-	               public PayloadChannel::PayloadChannelSocket::RequestHandler,
-	               public PayloadChannel::PayloadChannelSocket::NotificationHandler
+	               public Channel::ChannelSocket::RequestHandler
 	{
 	public:
 		class Listener
@@ -36,6 +34,15 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
+			virtual void OnChannelRequestHandlerAdded(
+			  const std::string& id, Channel::ChannelSocket::RequestHandler* handler) = 0;
+			virtual void OnChannelRequestHandlerRemoved(const std::string& id)        = 0;
+			virtual void OnPayloadChannelRequestHandlerAdded(
+			  const std::string& id, PayloadChannel::PayloadChannelSocket::RequestHandler* handler) = 0;
+			virtual void OnPayloadChannelRequestHandlerRemoved(const std::string& id)               = 0;
+			virtual void OnPayloadChannelNotificationHandlerAdded(
+			  const std::string& id, PayloadChannel::PayloadChannelSocket::NotificationHandler* handler) = 0;
+			virtual void OnPayloadChannelNotificationHandlerRemoved(const std::string& id) = 0;
 			virtual RTC::WebRtcServer* OnRouterNeedWebRtcServer(
 			  RTC::Router* router, std::string& webRtcServerId) = 0;
 		};
@@ -51,20 +58,11 @@ namespace RTC
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
-		/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
-	public:
-		void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
-
-		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
-	public:
-		void HandleNotification(PayloadChannel::Notification* notification) override;
-
 	private:
-		void SetNewTransportIdFromInternal(json& internal, std::string& transportId) const;
-		RTC::Transport* GetTransportFromInternal(json& internal) const;
-		void SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const;
-		RTC::RtpObserver* GetRtpObserverFromInternal(json& internal) const;
-		RTC::Producer* GetProducerFromData(json& data) const;
+		void SetNewTransportIdFromData(json& data, std::string& transportId) const;
+		RTC::Transport* GetTransportFromData(json& data) const;
+		void SetNewRtpObserverIdFromData(json& data, std::string& rtpObserverId) const;
+		RTC::RtpObserver* GetRtpObserverFromData(json& data) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:

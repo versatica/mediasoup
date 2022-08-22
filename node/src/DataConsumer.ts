@@ -240,7 +240,9 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#channel.removeAllListeners(this.#internal.dataConsumerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
 
-		this.#channel.request('dataConsumer.close', this.#internal)
+		const reqData = { dataConsumerId: this.#internal.dataConsumerId };
+
+		this.#channel.request('transport.closeDataConsumer', this.#internal.transportId, reqData)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -280,7 +282,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('dataConsumer.dump', this.#internal);
+		return this.#channel.request('dataConsumer.dump', this.#internal.dataConsumerId);
 	}
 
 	/**
@@ -290,7 +292,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('dataConsumer.getStats', this.#internal);
+		return this.#channel.request('dataConsumer.getStats', this.#internal.dataConsumerId);
 	}
 
 	/**
@@ -303,7 +305,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		const reqData = { threshold };
 
 		await this.#channel.request(
-			'dataConsumer.setBufferedAmountLowThreshold', this.#internal, reqData);
+			'dataConsumer.setBufferedAmountLowThreshold', this.#internal.dataConsumerId, reqData);
 	}
 
 	/**
@@ -348,7 +350,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		const requestData = { ppid };
 
 		await this.#payloadChannel.request(
-			'dataConsumer.send', this.#internal, requestData, message);
+			'dataConsumer.send', this.#internal.dataConsumerId, requestData, message);
 	}
 
 	/**
@@ -359,7 +361,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		logger.debug('getBufferedAmount()');
 
 		const { bufferedAmount } =
-			await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal);
+			await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal.dataConsumerId);
 
 		return bufferedAmount;
 	}

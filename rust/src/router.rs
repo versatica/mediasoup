@@ -31,14 +31,13 @@ use crate::data_producer::{
 use crate::data_structures::{AppData, ListenIp};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
-    RouterCloseRequest, RouterCreateActiveSpeakerObserverData,
+    RouterCloseRequest, RouterCloseRequestData, RouterCreateActiveSpeakerObserverData,
     RouterCreateActiveSpeakerObserverRequest, RouterCreateAudioLevelObserverData,
     RouterCreateAudioLevelObserverRequest, RouterCreateDirectTransportData,
     RouterCreateDirectTransportRequest, RouterCreatePipeTransportData,
     RouterCreatePipeTransportRequest, RouterCreatePlainTransportData,
     RouterCreatePlainTransportRequest, RouterCreateWebrtcTransportData,
-    RouterCreateWebrtcTransportRequest, RouterDumpRequest, RouterInternal, RtpObserverInternal,
-    TransportInternal,
+    RouterCreateWebrtcTransportRequest, RouterDumpRequest,
 };
 use crate::pipe_transport::{
     PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,
@@ -399,7 +398,7 @@ impl Inner {
             {
                 let channel = self.channel.clone();
                 let request = RouterCloseRequest {
-                    internal: RouterInternal { router_id: self.id },
+                    data: RouterCloseRequestData { router_id: self.id },
                 };
                 self.executor
                     .spawn(async move {
@@ -537,9 +536,7 @@ impl Router {
         self.inner
             .channel
             .request(RouterDumpRequest {
-                internal: RouterInternal {
-                    router_id: self.inner.id,
-                },
+                handler_id: self.inner.id,
             })
             .await
     }
@@ -570,11 +567,11 @@ impl Router {
         self.inner
             .channel
             .request(RouterCreateDirectTransportRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.id,
+                handler_id: self.inner.id,
+                data: RouterCreateDirectTransportData::from_options(
                     transport_id,
-                },
-                data: RouterCreateDirectTransportData::from_options(&direct_transport_options),
+                    &direct_transport_options,
+                ),
             })
             .await?;
 
@@ -631,11 +628,11 @@ impl Router {
             .inner
             .channel
             .request(RouterCreateWebrtcTransportRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.id,
+                handler_id: self.inner.id,
+                data: RouterCreateWebrtcTransportData::from_options(
                     transport_id,
-                },
-                data: RouterCreateWebrtcTransportData::from_options(&webrtc_transport_options),
+                    &webrtc_transport_options,
+                ),
             })
             .await?;
 
@@ -695,11 +692,11 @@ impl Router {
             .inner
             .channel
             .request(RouterCreatePipeTransportRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.id,
+                handler_id: self.inner.id,
+                data: RouterCreatePipeTransportData::from_options(
                     transport_id,
-                },
-                data: RouterCreatePipeTransportData::from_options(&pipe_transport_options),
+                    &pipe_transport_options,
+                ),
             })
             .await?;
 
@@ -755,11 +752,11 @@ impl Router {
             .inner
             .channel
             .request(RouterCreatePlainTransportRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.id,
+                handler_id: self.inner.id,
+                data: RouterCreatePlainTransportData::from_options(
                     transport_id,
-                },
-                data: RouterCreatePlainTransportData::from_options(&plain_transport_options),
+                    &plain_transport_options,
+                ),
             })
             .await?;
 
@@ -820,11 +817,9 @@ impl Router {
         self.inner
             .channel
             .request(RouterCreateAudioLevelObserverRequest {
-                internal: RtpObserverInternal {
-                    router_id: self.inner.id,
-                    rtp_observer_id,
-                },
+                handler_id: self.inner.id,
                 data: RouterCreateAudioLevelObserverData::from_options(
+                    rtp_observer_id,
                     &audio_level_observer_options,
                 ),
             })
@@ -880,11 +875,9 @@ impl Router {
         self.inner
             .channel
             .request(RouterCreateActiveSpeakerObserverRequest {
-                internal: RtpObserverInternal {
-                    router_id: self.inner.id,
-                    rtp_observer_id,
-                },
+                handler_id: self.inner.id,
                 data: RouterCreateActiveSpeakerObserverData::from_options(
+                    rtp_observer_id,
                     &active_speaker_observer_options,
                 ),
             })

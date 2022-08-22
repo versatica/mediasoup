@@ -6,8 +6,8 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, Da
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, ListenIp, SctpState, TransportTuple};
 use crate::messages::{
-    PipeTransportData, TransportCloseRequest, TransportConnectPipeRequest,
-    TransportConnectRequestPipeData, TransportInternal,
+    PipeTransportData, TransportCloseRequest, TransportCloseRequestData,
+    TransportConnectPipeRequest, TransportConnectRequestPipeData,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -221,8 +221,8 @@ impl Inner {
             if close_request {
                 let channel = self.channel.clone();
                 let request = TransportCloseRequest {
-                    internal: TransportInternal {
-                        router_id: self.router.id(),
+                    handler_id: self.router.id(),
+                    data: TransportCloseRequestData {
                         transport_id: self.id,
                     },
                 };
@@ -559,7 +559,7 @@ impl PipeTransport {
             .inner
             .channel
             .request(TransportConnectPipeRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
                 data: TransportConnectRequestPipeData {
                     ip: remote_parameters.ip,
                     port: remote_parameters.port,
@@ -639,13 +639,6 @@ impl PipeTransport {
     pub fn downgrade(&self) -> WeakPipeTransport {
         WeakPipeTransport {
             inner: Arc::downgrade(&self.inner),
-        }
-    }
-
-    fn get_internal(&self) -> TransportInternal {
-        TransportInternal {
-            router_id: self.router().id(),
-            transport_id: self.id(),
         }
     }
 }

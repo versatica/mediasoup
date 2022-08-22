@@ -3,8 +3,8 @@ mod tests;
 
 use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
 use crate::messages::{
-    ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventData,
-    ConsumerEnableTraceEventRequest, ConsumerGetStatsRequest, ConsumerInternal,
+    ConsumerCloseRequest, ConsumerCloseRequestData, ConsumerDumpRequest,
+    ConsumerEnableTraceEventData, ConsumerEnableTraceEventRequest, ConsumerGetStatsRequest,
     ConsumerPauseRequest, ConsumerRequestKeyFrameRequest, ConsumerResumeRequest,
     ConsumerSetPreferredLayersRequest, ConsumerSetPriorityData, ConsumerSetPriorityRequest,
 };
@@ -405,9 +405,8 @@ impl Inner {
             if close_request {
                 let channel = self.channel.clone();
                 let request = ConsumerCloseRequest {
-                    internal: ConsumerInternal {
-                        router_id: self.transport.router().id(),
-                        transport_id: self.transport.id(),
+                    handler_id: self.transport.id(),
+                    data: ConsumerCloseRequestData {
                         consumer_id: self.id,
                     },
                 };
@@ -717,7 +716,7 @@ impl Consumer {
         self.inner
             .channel
             .request(ConsumerDumpRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await
     }
@@ -732,7 +731,7 @@ impl Consumer {
         self.inner
             .channel
             .request(ConsumerGetStatsRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await
     }
@@ -744,7 +743,7 @@ impl Consumer {
         self.inner
             .channel
             .request(ConsumerPauseRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await?;
 
@@ -766,7 +765,7 @@ impl Consumer {
         self.inner
             .channel
             .request(ConsumerResumeRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await?;
 
@@ -793,7 +792,7 @@ impl Consumer {
             .inner
             .channel
             .request(ConsumerSetPreferredLayersRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
                 data: consumer_layers,
             })
             .await?;
@@ -813,7 +812,7 @@ impl Consumer {
             .inner
             .channel
             .request(ConsumerSetPriorityRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
                 data: ConsumerSetPriorityData { priority },
             })
             .await?;
@@ -833,7 +832,7 @@ impl Consumer {
             .inner
             .channel
             .request(ConsumerSetPriorityRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
                 data: ConsumerSetPriorityData { priority },
             })
             .await?;
@@ -850,7 +849,7 @@ impl Consumer {
         self.inner
             .channel
             .request(ConsumerRequestKeyFrameRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
             })
             .await
     }
@@ -865,7 +864,7 @@ impl Consumer {
         self.inner
             .channel
             .request(ConsumerEnableTraceEventRequest {
-                internal: self.get_internal(),
+                handler_id: self.id(),
                 data: ConsumerEnableTraceEventData { types },
             })
             .await
@@ -971,14 +970,6 @@ impl Consumer {
     pub fn downgrade(&self) -> WeakConsumer {
         WeakConsumer {
             inner: Arc::downgrade(&self.inner),
-        }
-    }
-
-    fn get_internal(&self) -> ConsumerInternal {
-        ConsumerInternal {
-            router_id: self.inner.transport.router().id(),
-            transport_id: self.inner.transport.id(),
-            consumer_id: self.inner.id,
         }
     }
 }

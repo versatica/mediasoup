@@ -157,7 +157,9 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		this.channel.removeAllListeners(this.internal.rtpObserverId);
 		this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
 
-		this.channel.request('rtpObserver.close', this.internal)
+		const reqData = { rtpObserverId: this.internal.rtpObserverId };
+
+		this.channel.request('router.closeRtpObserver', this.internal.routerId, reqData)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -199,7 +201,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.channel.request('rtpObserver.pause', this.internal);
+		await this.channel.request('rtpObserver.pause', this.internal.rtpObserverId);
 
 		this.#paused = true;
 
@@ -217,7 +219,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.channel.request('rtpObserver.resume', this.internal);
+		await this.channel.request('rtpObserver.resume', this.internal.rtpObserverId);
 
 		this.#paused = false;
 
@@ -236,7 +238,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		const producer = this.getProducerById(producerId);
 		const reqData = { producerId };
 
-		await this.channel.request('rtpObserver.addProducer', this.internal, reqData);
+		await this.channel.request('rtpObserver.addProducer', this.internal.rtpObserverId, reqData);
 
 		// Emit observer event.
 		this.#observer.safeEmit('addproducer', producer);
@@ -252,7 +254,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		const producer = this.getProducerById(producerId);
 		const reqData = { producerId };
 
-		await this.channel.request('rtpObserver.removeProducer', this.internal, reqData);
+		await this.channel.request('rtpObserver.removeProducer', this.internal.rtpObserverId, reqData);
 
 		// Emit observer event.
 		this.#observer.safeEmit('removeproducer', producer);
