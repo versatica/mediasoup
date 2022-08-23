@@ -1,6 +1,13 @@
 # Changelog
 
 
+### Next
+
+* Node: Define TypeScript types for `internal` and `data` objects (PR #891).
+* `Channel` and `PayloadChannel`: Refactor `internal` with a single `handlerId` (PR #889).
+* Update NPM deps.
+
+
 ### 3.10.5
 
 * `RtpStreamSend`: Do not store too old RTP packets (PR #885).
