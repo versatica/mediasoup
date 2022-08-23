@@ -51,13 +51,13 @@ namespace RTC
 		RTC::Transport::HandleRequest(request);
 	}
 
-	void DirectTransport::HandleNotification(PayloadChannel::Notification* notification)
+	void DirectTransport::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 	{
 		MS_TRACE();
 
 		switch (notification->eventId)
 		{
-			case PayloadChannel::Notification::EventId::TRANSPORT_SEND_RTCP:
+			case PayloadChannel::PayloadChannelNotification::EventId::TRANSPORT_SEND_RTCP:
 			{
 				const auto* data = notification->payload;
 				auto len         = notification->payloadLen;

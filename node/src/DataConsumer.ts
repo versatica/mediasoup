@@ -350,7 +350,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		else if (ppid === 57)
 			message = Buffer.alloc(1);
 
-		const requestData = { ppid };
+		const requestData = String(ppid);
 
 		await this.#payloadChannel.request(
 			'dataConsumer.send', this.#internal.dataConsumerId, requestData, message);

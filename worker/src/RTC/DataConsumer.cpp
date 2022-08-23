@@ -198,12 +198,10 @@ namespace RTC
 				// Trigger 'bufferedamountlow' now.
 				if (this->bufferedAmount <= this->bufferedAmountLowThreshold)
 				{
-					// Notify the Node DataConsumer.
-					json data = json::object();
+					std::string data("{\"bufferedAmount\":\"");
 
-					data["bufferedAmount"] = this->bufferedAmount;
-
-					Channel::ChannelNotifier::Emit(this->id, "bufferedamountlow", data);
+					data.append(std::to_string(this->bufferedAmount));
+					data.append("\"}");
 				}
 				// Force the trigger of 'bufferedamountlow' once there is less or same
 				// buffered data than the given threshold.
@@ -240,14 +238,10 @@ namespace RTC
 					MS_THROW_ERROR("no SCTP association present");
 				}
 
-				auto jsonPpidIt = request->data.find("ppid");
-
-				if (jsonPpidIt == request->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
-				{
-					MS_THROW_TYPE_ERROR("invalid ppid");
-				}
-
-				auto ppid       = jsonPpidIt->get<uint32_t>();
+				// This may throw.
+				// TODO: If this throws the process is gonna crash since we just handle
+				// MediaSoupErrors.
+				auto ppid       = std::stoi(request->data);
 				const auto* msg = request->payload;
 				auto len        = request->payloadLen;
 
@@ -338,9 +332,10 @@ namespace RTC
 			this->forceTriggerBufferedAmountLow = false;
 
 			// Notify the Node DataConsumer.
-			json data = json::object();
+			std::string data("{\"bufferedAmount\":\"");
 
-			data["bufferedAmount"] = this->bufferedAmount;
+			data.append(std::to_string(this->bufferedAmount));
+			data.append("\"}");
 
 			Channel::ChannelNotifier::Emit(this->id, "bufferedamountlow", data);
 		}

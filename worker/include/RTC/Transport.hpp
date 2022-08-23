@@ -6,7 +6,7 @@
 #include "DepLibUV.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "PayloadChannel/Notification.hpp"
+#include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
@@ -139,7 +139,7 @@ namespace RTC
 
 		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
 	public:
-		void HandleNotification(PayloadChannel::Notification* notification) override;
+		void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
 
 	protected:
 		// Must be called from the subclass.

@@ -662,7 +662,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::HandleNotification(PayloadChannel::Notification* notification)
+	void WebRtcTransport::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 	{
 		MS_TRACE();
 

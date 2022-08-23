@@ -138,7 +138,7 @@ namespace RTC
 
 		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
 	public:
-		void HandleNotification(PayloadChannel::Notification* notification) override;
+		void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
 
 	private:
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);

@@ -146,22 +146,19 @@ namespace RTC
 		}
 	}
 
-	void DataProducer::HandleNotification(PayloadChannel::Notification* notification)
+	void DataProducer::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 	{
 		MS_TRACE();
 
 		switch (notification->eventId)
 		{
-			case PayloadChannel::Notification::EventId::DATA_PRODUCER_SEND:
+			case PayloadChannel::PayloadChannelNotification::EventId::DATA_PRODUCER_SEND:
 			{
-				auto jsonPpidIt = notification->data.find("ppid");
-
-				if (jsonPpidIt == notification->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
-				{
-					MS_THROW_TYPE_ERROR("invalid ppid");
-				}
-
-				auto ppid       = jsonPpidIt->get<uint32_t>();
+				// This may throw.
+				// TODO: If this throws the process is gonna crash since we just handle
+				// MediaSoupErrors.
+				// TODO: We must check whether it's a valid positive number.
+				auto ppid       = std::stoi(notification->data);
 				const auto* msg = notification->payload;
 				auto len        = notification->payloadLen;
 

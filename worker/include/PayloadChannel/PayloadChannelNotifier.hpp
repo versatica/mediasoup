@@ -6,6 +6,8 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+using json = nlohmann::json;
+
 namespace PayloadChannel
 {
 	class PayloadChannelNotifier
@@ -18,6 +20,12 @@ namespace PayloadChannel
 		  const std::string& targetId,
 		  const char* event,
 		  json& data,
+		  const uint8_t* payload,
+		  size_t payloadLen);
+		static void Emit(
+		  const std::string& targetId,
+		  const char* event,
+		  const std::string& data,
 		  const uint8_t* payload,
 		  size_t payloadLen);
 

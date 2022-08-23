@@ -23,13 +23,13 @@ namespace PayloadChannel
 		};
 
 	public:
-		static bool IsRequest(json& jsonRequest);
+		static bool IsRequest(const char* msg, size_t msgLen);
 
 	private:
 		static absl::flat_hash_map<std::string, MethodId> string2MethodId;
 
 	public:
-		PayloadChannelRequest(PayloadChannel::PayloadChannelSocket* channel, json& jsonRequest);
+		PayloadChannelRequest(PayloadChannel::PayloadChannelSocket* channel, char* msg, size_t msgLen);
 		virtual ~PayloadChannelRequest();
 
 	public:
@@ -46,7 +46,7 @@ namespace PayloadChannel
 		std::string method;
 		MethodId methodId;
 		std::string handlerId;
-		json data;
+		std::string data;
 		const uint8_t* payload{ nullptr };
 		size_t payloadLen{ 0u };
 		// Others.

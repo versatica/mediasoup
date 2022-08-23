@@ -82,7 +82,7 @@ namespace Channel
 		static absl::flat_hash_map<std::string, MethodId> string2MethodId;
 
 	public:
-		ChannelRequest(Channel::ChannelSocket* channel, json& jsonRequest);
+		ChannelRequest(Channel::ChannelSocket* channel, const char* msg, size_t msgLen);
 		virtual ~ChannelRequest();
 
 		void Accept();

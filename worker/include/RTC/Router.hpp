@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
-#include "PayloadChannel/Notification.hpp"
+#include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"

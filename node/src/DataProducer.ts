@@ -314,7 +314,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		else if (ppid === 57)
 			message = Buffer.alloc(1);
 
-		const notifData = { ppid };
+		const notifData = String(ppid);
 
 		this.#payloadChannel.notify(
 			'dataProducer.send', this.#internal.dataProducerId, notifData, message);

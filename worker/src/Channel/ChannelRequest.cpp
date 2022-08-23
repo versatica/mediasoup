@@ -75,24 +75,24 @@ namespace Channel
 
 	/* Instance methods. */
 
-	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, json& jsonRequest)
+	/**
+	 * msg contains "id:method:handlerId:data" where:
+	 * - id: The ID of the request.
+	 * - handlerId: The ID of the target entity
+	 * - data: JSON object.
+	 */
+	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, const char* msg, size_t msgLen)
 	  : channel(channel)
 	{
 		MS_TRACE();
 
-		auto jsonIdIt = jsonRequest.find("id");
+		auto info = Utils::String::Split(std::string(msg, msgLen), ':', 3);
 
-		if (jsonIdIt == jsonRequest.end() || !Utils::Json::IsPositiveInteger(*jsonIdIt))
-			MS_THROW_ERROR("missing id");
+		if (info.size() < 2)
+			MS_THROW_ERROR("too few arguments");
 
-		this->id = jsonIdIt->get<uint32_t>();
-
-		auto jsonMethodIt = jsonRequest.find("method");
-
-		if (jsonMethodIt == jsonRequest.end() || !jsonMethodIt->is_string())
-			MS_THROW_ERROR("missing method");
-
-		this->method = jsonMethodIt->get<std::string>();
+		this->id     = std::stoul(info[0]);
+		this->method = info[1];
 
 		auto methodIdIt = ChannelRequest::string2MethodId.find(this->method);
 
@@ -105,17 +105,33 @@ namespace Channel
 
 		this->methodId = methodIdIt->second;
 
-		auto jsonHandlerIdIt = jsonRequest.find("handlerId");
+		if (info.size() > 2)
+		{
+			auto& handlerId = info[2];
 
-		if (jsonHandlerIdIt != jsonRequest.end() && jsonHandlerIdIt->is_string())
-			this->handlerId = *jsonHandlerIdIt;
+			if (handlerId != "undefined")
+				this->handlerId = handlerId;
+		}
 
-		auto jsonDataIt = jsonRequest.find("data");
+		if (info.size() > 3)
+		{
+			auto& data = info[3];
 
-		if (jsonDataIt != jsonRequest.end() && jsonDataIt->is_object())
-			this->data = *jsonDataIt;
-		else
-			this->data = json::object();
+			if (data != "undefined")
+			{
+				try
+				{
+					this->data = json::parse(data);
+
+					if (!this->data.is_object())
+						this->data = json::object();
+				}
+				catch (const json::parse_error& error)
+				{
+					MS_THROW_TYPE_ERROR("JSON parsing error: %s", error.what());
+				}
+			}
+		}
 	}
 
 	ChannelRequest::~ChannelRequest()
@@ -131,12 +147,12 @@ namespace Channel
 
 		this->replied = true;
 
-		json jsonResponse = json::object();
+		std::string response("{\"id\":");
 
-		jsonResponse["id"]       = this->id;
-		jsonResponse["accepted"] = true;
+		response.append(std::to_string(this->id));
+		response.append(",\"accepted\":true}");
 
-		this->channel->Send(jsonResponse);
+		this->channel->Send(response);
 	}
 
 	void ChannelRequest::Accept(json& data)
