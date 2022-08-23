@@ -9,7 +9,7 @@ export type RtpObserverEvents =
 	routerclose: [];
 	// Private events.
 	'@close': [];
-}
+};
 
 export type RtpObserverObserverEvents =
 {
@@ -18,7 +18,7 @@ export type RtpObserverObserverEvents =
 	resume: [];
 	addproducer: [Producer];
 	removeproducer: [Producer];
-}
+};
 
 const logger = new Logger('RtpObserver');
 
@@ -28,7 +28,7 @@ export type RtpObserverAddRemoveProducerOptions =
 	 * The id of the Producer to be added or removed.
 	 */
 	producerId: string;
-}
+};
 
 export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	extends EnhancedEventEmitter<E>

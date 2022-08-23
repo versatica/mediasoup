@@ -25,7 +25,7 @@ export type WorkerLogTag =
   | 'simulcast'
   | 'svc'
   | 'sctp'
-  | 'message'
+  | 'message';
 
 export type WorkerSettings =
 {
@@ -68,7 +68,7 @@ export type WorkerSettings =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type WorkerUpdateableSettings = Pick<WorkerSettings, 'logLevel' | 'logTags'>;
 
@@ -163,7 +163,7 @@ export type WorkerResourceUsage =
 	ru_nivcsw: number;
 
 	/* eslint-enable camelcase */
-}
+};
 
 export type WorkerEvents = 
 { 
@@ -171,14 +171,14 @@ export type WorkerEvents =
 	// Private events.
 	'@success': [];
 	'@failure': [Error];
-}
+};
 
 export type WorkerObserverEvents = 
 {
 	close: [];
 	newwebrtcserver: [WebRtcServer];
 	newrouter: [Router];
-}
+};
 
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.

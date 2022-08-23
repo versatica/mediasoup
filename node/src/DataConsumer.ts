@@ -39,7 +39,7 @@ export type DataConsumerOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type DataConsumerStat =
 {
@@ -50,7 +50,7 @@ export type DataConsumerStat =
 	messagesSent: number;
 	bytesSent: number;
 	bufferedAmount: number;
-}
+};
 
 /**
  * DataConsumer type.
@@ -67,12 +67,12 @@ export type DataConsumerEvents =
 	// Private events.
 	'@close': [];
 	'@dataproducerclose': [];
-}
+};
 
 export type DataConsumerObserverEvents =
 {
 	close: [];
-}
+};
 
 const logger = new Logger('DataConsumer');
 

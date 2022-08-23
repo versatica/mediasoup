@@ -45,13 +45,13 @@ export type AudioLevelObserverEvents = RtpObserverEvents &
 {
 	volumes: [AudioLevelObserverVolume[]];
 	silence: [];
-}
+};
 
 export type AudioLevelObserverObserverEvents = RtpObserverObserverEvents & 
 {
 	volumes: [AudioLevelObserverVolume[]];
 	silence: [];
-}
+};
 
 const logger = new Logger('AudioLevelObserver');
 

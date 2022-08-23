@@ -14,7 +14,7 @@ export type DirectTransportOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type DirectTransportStat =
 {
@@ -39,17 +39,17 @@ export type DirectTransportStat =
 	availableOutgoingBitrate?: number;
 	availableIncomingBitrate?: number;
 	maxIncomingBitrate?: number;
-}
+};
 
 export type DirectTransportEvents = TransportEvents &
 {
 	rtcp: [Buffer];
-}
+};
 
 export type DirectTransportObserverEvents = TransportObserverEvents &
 {
 	rtcp: [Buffer];
-}
+};
 
 const logger = new Logger('DirectTransport');
 

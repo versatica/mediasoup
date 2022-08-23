@@ -13,7 +13,7 @@ export type RtpCapabilities =
 	 * Supported RTP header extensions.
 	 */
 	headerExtensions?: RtpHeaderExtension[];
-}
+};
 
 /**
  * Media kind ('audio' or 'video').
@@ -76,7 +76,7 @@ export type RtpCodecCapability =
 	 * Transport layer and codec-specific feedback messages for this codec.
 	 */
 	rtcpFeedback?: RtcpFeedback[];
-}
+};
 
 /**
  * Direction of RTP header extension.
@@ -123,7 +123,7 @@ export type RtpHeaderExtension =
 	 * means that mediasoup can receive (but not send) it.
 	 */
 	direction?: RtpHeaderExtensionDirection;
-}
+};
 
 /**
  * The RTP send parameters describe a media stream received by mediasoup from
@@ -182,7 +182,7 @@ export type RtpParameters =
 	 * Parameters used for RTCP.
 	 */
 	rtcp?: RtcpParameters;
-}
+};
 
 /**
  * Provides information on codec settings within the RTP parameters. The list
@@ -223,7 +223,7 @@ export type RtpCodecParameters =
 	 * Transport layer and codec-specific feedback messages for this codec.
 	 */
 	rtcpFeedback?: RtcpFeedback[];
-}
+};
 
 /**
  * Provides information on RTCP feedback messages for a specific codec. Those
@@ -242,7 +242,7 @@ export type RtcpFeedback =
 	 * RTCP feedback parameter.
 	 */
 	parameter?: string;
-}
+};
 
 /**
  * Provides information relating to an encoding, which represents a media RTP
@@ -291,7 +291,7 @@ export type RtpEncodingParameters =
 	 */
 	scaleResolutionDownBy?: number;
 	maxBitrate?: number;
-}
+};
 
 /**
  * Defines a RTP header extension within the RTP parameters. The list of RTP
@@ -322,7 +322,7 @@ export type RtpHeaderExtensionParameters =
 	 * Configuration parameters for the header extension.
 	 */
 	parameters?: any;
-}
+};
 
 /**
  * Provides information on RTCP settings within the RTP parameters.
@@ -350,4 +350,4 @@ export type RtcpParameters =
 	 * Whether RTCP-mux is used. Default true.
 	 */
 	mux?: boolean;
-}
+};

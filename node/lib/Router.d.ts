@@ -89,6 +89,9 @@ export declare type RouterObserverEvents = {
     newtransport: [Transport];
     newrtpobserver: [RtpObserver];
 };
+export declare type RouterInternal = {
+    routerId: string;
+};
 export declare class Router extends EnhancedEventEmitter<RouterEvents> {
     #private;
     /**

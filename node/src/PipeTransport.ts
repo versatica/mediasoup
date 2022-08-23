@@ -67,7 +67,7 @@ export type PipeTransportOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type PipeTransportStat =
 {
@@ -95,7 +95,7 @@ export type PipeTransportStat =
 	maxIncomingBitrate?: number;
 	// PipeTransport specific.
 	tuple: TransportTuple;
-}
+};
 
 export type PipeConsumerOptions =
 {
@@ -108,17 +108,17 @@ export type PipeConsumerOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type PipeTransportEvents = TransportEvents &
 {
 	sctpstatechange: [SctpState];
-}
+};
 
 export type PipeTransportObserverEvents = TransportObserverEvents &
 {
 	sctpstatechange: [SctpState];
-}
+};
 
 const logger = new Logger('PipeTransport');
 

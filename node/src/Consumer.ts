@@ -65,7 +65,7 @@ export type ConsumerOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 /**
  * Valid types for 'trace' event.
@@ -96,7 +96,7 @@ export type ConsumerTraceEventData =
 	 * Per type information.
 	 */
 	info: any;
-}
+};
 
 export type ConsumerScore =
 {
@@ -115,7 +115,7 @@ export type ConsumerScore =
 	 * useful when the producer uses simulcast).
 	 */
 	producerScores: number[];
-}
+};
 
 export type ConsumerLayers =
 {
@@ -128,7 +128,7 @@ export type ConsumerLayers =
 	 * The temporal layer index (from 0 to N).
 	 */
 	temporalLayer?: number;
-}
+};
 
 export type ConsumerStat =
 {
@@ -153,7 +153,7 @@ export type ConsumerStat =
 	byteCount: number;
 	bitrate: number;
 	roundTripTime?: number;
-}
+};
 
 /**
  * Consumer type.
@@ -173,7 +173,7 @@ export type ConsumerEvents =
 	// Private events.
 	'@close': [];
 	'@producerclose': [];
-}
+};
 
 export type ConsumerObserverEvents =
 {
@@ -183,7 +183,7 @@ export type ConsumerObserverEvents =
 	score: [ConsumerScore];
 	layerschange: [ConsumerLayers?];
 	trace: [ConsumerTraceEventData];
-}
+};
 
 const logger = new Logger('Consumer');
 

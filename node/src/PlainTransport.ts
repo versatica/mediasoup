@@ -75,7 +75,7 @@ export type PlainTransportOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 /**
  * DEPRECATED: Use PlainTransportOptions.
@@ -111,7 +111,7 @@ export type PlainTransportStat =
 	comedia: boolean;
 	tuple: TransportTuple;
 	rtcpTuple?: TransportTuple;
-}
+};
 
 /**
  * DEPRECATED: Use PlainTransportStat.
@@ -123,14 +123,14 @@ export type PlainTransportEvents = TransportEvents &
 	tuple: [TransportTuple];
 	rtcptuple: [TransportTuple];
 	sctpstatechange: [SctpState];
-}
+};
 
 export type PlainTransportObserverEvents = TransportObserverEvents &
 {
 	tuple: [TransportTuple];
 	rtcptuple: [TransportTuple];
 	sctpstatechange: [SctpState];	
-}
+};
 
 const logger = new Logger('PlainTransport');
 

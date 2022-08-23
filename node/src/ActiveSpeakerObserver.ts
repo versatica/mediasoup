@@ -24,12 +24,12 @@ export interface ActiveSpeakerObserverActivity
 export type ActiveSpeakerObserverEvents = RtpObserverEvents &
 {
 	dominantspeaker: [{ producer: Producer }];
-}
+};
 
 export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents &
 {
 	dominantspeaker: [{ producer: Producer }];
-}
+};
 
 const logger = new Logger('ActiveSpeakerObserver');
 

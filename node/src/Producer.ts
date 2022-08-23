@@ -36,7 +36,7 @@ export type ProducerOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 /**
  * Valid types for 'trace' event.
@@ -67,7 +67,7 @@ export type ProducerTraceEventData =
 	 * Per type information.
 	 */
 	info: any;
-}
+};
 
 export type ProducerScore =
 {
@@ -85,7 +85,7 @@ export type ProducerScore =
 	 * The score of the RTP stream.
 	 */
 	score: number;
-}
+};
 
 export type ProducerVideoOrientation =
 {
@@ -103,7 +103,7 @@ export type ProducerVideoOrientation =
 	 * Rotation degrees (0, 90, 180 or 270).
 	 */
 	rotation: number;
-}
+};
 
 export type ProducerStat =
 {
@@ -133,7 +133,7 @@ export type ProducerStat =
 	// RtpStreamRecv specific.
 	jitter: number;
 	bitrateByLayer?: any;
-}
+};
 
 /**
  * Producer type.
@@ -148,7 +148,7 @@ export type ProducerEvents =
 	trace: [ProducerTraceEventData];
 	// Private events.
 	'@close': [];
-}
+};
 
 export type ProducerObserverEvents =
 {
@@ -158,7 +158,7 @@ export type ProducerObserverEvents =
 	score: [ProducerScore[]];
 	videoorientationchange: [ProducerVideoOrientation];
 	trace: [ProducerTraceEventData];
-}
+};
 
 const logger = new Logger('Producer');
 

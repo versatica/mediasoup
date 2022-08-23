@@ -39,21 +39,21 @@ export type WebRtcServerOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type WebRtcServerEvents =
 { 
 	workerclose: [];
 	// Private events.
 	'@close': [];
-}
+};
 
 export type WebRtcServerObserverEvents =
 {
 	close: [];
 	webrtctransporthandled: [WebRtcTransport];
 	webrtctransportunhandled: [WebRtcTransport];
-}
+};
 
 const logger = new Logger('WebRtcServer');
 

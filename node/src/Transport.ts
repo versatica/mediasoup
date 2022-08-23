@@ -93,7 +93,7 @@ export type TransportEvents =
 	'@newdataproducer': [DataProducer];
 	'@dataproducerclose': [DataProducer];
 	'@listenserverclose': [];
-}
+};
 
 export type TransportObserverEvents =
 {
@@ -103,7 +103,7 @@ export type TransportObserverEvents =
 	newdataproducer: [DataProducer];
 	newdataconsumer: [DataConsumer];
 	trace: [TransportTraceEventData];
-}
+};
 
 const logger = new Logger('Transport');
 

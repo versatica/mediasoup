@@ -26,7 +26,7 @@ export type WebRtcTransportListenIndividual =
 	 * range.
 	 */
 	port?: number;
-}
+};
 
 export type WebRtcTransportListenServer =
 {
@@ -34,7 +34,7 @@ export type WebRtcTransportListenServer =
 	 * Instance of WebRtcServer. Mandatory unless listenIps is given.
 	 */
 	webRtcServer: WebRtcServer;
-}
+};
 
 export type WebRtcTransportListen =
 	Either<WebRtcTransportListenIndividual, WebRtcTransportListenServer>;
@@ -92,7 +92,7 @@ export type WebRtcTransportOptionsBase =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type WebRtcTransportOptions = WebRtcTransportOptionsBase & WebRtcTransportListen;
 
@@ -101,7 +101,7 @@ export type IceParameters =
 	usernameFragment: string;
 	password: string;
 	iceLite?: boolean;
-}
+};
 
 export type IceCandidate =
 {
@@ -112,13 +112,13 @@ export type IceCandidate =
 	port: number;
 	type: 'host';
 	tcpType: 'passive' | undefined;
-}
+};
 
 export type DtlsParameters =
 {
 	role?: DtlsRole;
 	fingerprints: DtlsFingerprint[];
-}
+};
 
 /**
  * The hash function algorithm (as defined in the "Hash function Textual Names"
@@ -130,7 +130,7 @@ export type DtlsFingerprint =
 {
 	algorithm: string;
 	value: string;
-}
+};
 
 export type IceState = 'new' | 'connected' | 'completed' | 'disconnected' | 'closed';
 
@@ -167,7 +167,7 @@ export type WebRtcTransportStat =
 	iceState: IceState;
 	iceSelectedTuple?: TransportTuple;
 	dtlsState: DtlsState;
-}
+};
 
 export type WebRtcTransportEvents = TransportEvents &
 {
@@ -175,7 +175,7 @@ export type WebRtcTransportEvents = TransportEvents &
 	iceselectedtuplechange: [TransportTuple];
 	dtlsstatechange: [DtlsState];
 	sctpstatechange: [SctpState];
-}
+};
 
 export type WebRtcTransportObserverEvents = TransportObserverEvents &
 {
@@ -183,7 +183,7 @@ export type WebRtcTransportObserverEvents = TransportObserverEvents &
 	iceselectedtuplechange: [TransportTuple];
 	dtlsstatechange: [DtlsState];
 	sctpstatechange: [SctpState];
-}
+};
 
 const logger = new Logger('WebRtcTransport');
 

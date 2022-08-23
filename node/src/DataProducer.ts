@@ -31,7 +31,7 @@ export type DataProducerOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type DataProducerStat =
 {
@@ -41,7 +41,7 @@ export type DataProducerStat =
 	protocol: string;
 	messagesReceived: number;
 	bytesReceived: number;
-}
+};
 
 /**
  * DataProducer type.
@@ -53,12 +53,12 @@ export type DataProducerEvents =
 	transportclose: [];
 	// Private events.
 	'@close': [];
-}
+};
 
 export type DataProducerObserverEvents =
 {
 	close: [];
-}
+};
 
 const logger = new Logger('DataProducer');
 

@@ -12,7 +12,7 @@ export type SrtpParameters =
 	 * SRTP keying material (master key and salt) in Base64.
 	 */
 	keyBase64: string;
-}
+};
 
 /**
  * SRTP crypto suite.
