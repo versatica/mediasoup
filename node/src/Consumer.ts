@@ -2,6 +2,7 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { TransportInternal } from './Transport';
 import { ProducerStat } from './Producer';
 import {
 	MediaKind,
@@ -65,7 +66,7 @@ export type ConsumerOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 /**
  * Valid types for 'trace' event.
@@ -96,7 +97,7 @@ export type ConsumerTraceEventData =
 	 * Per type information.
 	 */
 	info: any;
-}
+};
 
 export type ConsumerScore =
 {
@@ -115,7 +116,7 @@ export type ConsumerScore =
 	 * useful when the producer uses simulcast).
 	 */
 	producerScores: number[];
-}
+};
 
 export type ConsumerLayers =
 {
@@ -128,7 +129,7 @@ export type ConsumerLayers =
 	 * The temporal layer index (from 0 to N).
 	 */
 	temporalLayer?: number;
-}
+};
 
 export type ConsumerStat =
 {
@@ -153,7 +154,7 @@ export type ConsumerStat =
 	byteCount: number;
 	bitrate: number;
 	roundTripTime?: number;
-}
+};
 
 /**
  * Consumer type.
@@ -173,7 +174,7 @@ export type ConsumerEvents =
 	// Private events.
 	'@close': [];
 	'@producerclose': [];
-}
+};
 
 export type ConsumerObserverEvents =
 {
@@ -183,28 +184,30 @@ export type ConsumerObserverEvents =
 	score: [ConsumerScore];
 	layerschange: [ConsumerLayers?];
 	trace: [ConsumerTraceEventData];
-}
+};
+
+type ConsumerInternal = TransportInternal &
+{
+	consumerId: string;
+};
+
+type ConsumerData =
+{
+	producerId: string;
+	kind: MediaKind;
+	rtpParameters: RtpParameters;
+	type: ConsumerType;
+};
 
 const logger = new Logger('Consumer');
 
 export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		consumerId: string;
-	};
+	readonly #internal: ConsumerInternal;
 
 	// Consumer data.
-	readonly #data:
-	{
-		producerId: string;
-		kind: MediaKind;
-		rtpParameters: RtpParameters;
-		type: ConsumerType;
-	};
+	readonly #data: ConsumerData;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -255,8 +258,8 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			preferredLayers
 		}:
 		{
-			internal: any;
-			data: any;
+			internal: ConsumerInternal;
+			data: ConsumerData;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;

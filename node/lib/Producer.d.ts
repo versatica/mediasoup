@@ -2,6 +2,7 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters } from './RtpParameters';
 export declare type ProducerOptions = {
     /**
@@ -128,14 +129,23 @@ export declare type ProducerObserverEvents = {
     videoorientationchange: [ProducerVideoOrientation];
     trace: [ProducerTraceEventData];
 };
+declare type ProducerInternal = TransportInternal & {
+    producerId: string;
+};
+declare type ProducerData = {
+    kind: MediaKind;
+    rtpParameters: RtpParameters;
+    type: ProducerType;
+    consumableRtpParameters: RtpParameters;
+};
 export declare class Producer extends EnhancedEventEmitter<ProducerEvents> {
     #private;
     /**
      * @private
      */
     constructor({ internal, data, channel, payloadChannel, appData, paused }: {
-        internal: any;
-        data: any;
+        internal: ProducerInternal;
+        data: ProducerData;
         channel: Channel;
         payloadChannel: PayloadChannel;
         appData?: Record<string, unknown>;
@@ -228,4 +238,5 @@ export declare class Producer extends EnhancedEventEmitter<ProducerEvents> {
     send(rtpPacket: Buffer): void;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=Producer.d.ts.map

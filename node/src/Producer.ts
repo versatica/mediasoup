@@ -2,6 +2,7 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters } from './RtpParameters';
 
 export type ProducerOptions =
@@ -36,7 +37,7 @@ export type ProducerOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 /**
  * Valid types for 'trace' event.
@@ -67,7 +68,7 @@ export type ProducerTraceEventData =
 	 * Per type information.
 	 */
 	info: any;
-}
+};
 
 export type ProducerScore =
 {
@@ -85,7 +86,7 @@ export type ProducerScore =
 	 * The score of the RTP stream.
 	 */
 	score: number;
-}
+};
 
 export type ProducerVideoOrientation =
 {
@@ -103,7 +104,7 @@ export type ProducerVideoOrientation =
 	 * Rotation degrees (0, 90, 180 or 270).
 	 */
 	rotation: number;
-}
+};
 
 export type ProducerStat =
 {
@@ -133,7 +134,7 @@ export type ProducerStat =
 	// RtpStreamRecv specific.
 	jitter: number;
 	bitrateByLayer?: any;
-}
+};
 
 /**
  * Producer type.
@@ -148,7 +149,7 @@ export type ProducerEvents =
 	trace: [ProducerTraceEventData];
 	// Private events.
 	'@close': [];
-}
+};
 
 export type ProducerObserverEvents =
 {
@@ -158,28 +159,30 @@ export type ProducerObserverEvents =
 	score: [ProducerScore[]];
 	videoorientationchange: [ProducerVideoOrientation];
 	trace: [ProducerTraceEventData];
-}
+};
+
+type ProducerInternal = TransportInternal &
+{
+	producerId: string;
+};
+
+type ProducerData =
+{
+	kind: MediaKind;
+	rtpParameters: RtpParameters;
+	type: ProducerType;
+	consumableRtpParameters: RtpParameters;
+};
 
 const logger = new Logger('Producer');
 
 export class Producer extends EnhancedEventEmitter<ProducerEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		producerId: string;
-	};
+	readonly #internal: ProducerInternal;
 
 	// Producer data.
-	readonly #data:
-	{
-		kind: MediaKind;
-		rtpParameters: RtpParameters;
-		type: ProducerType;
-		consumableRtpParameters: RtpParameters;
-	};
+	readonly #data: ProducerData;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -215,8 +218,8 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			paused
 		}:
 		{
-			internal: any;
-			data: any;
+			internal: ProducerInternal;
+			data: ProducerData;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;

@@ -2,6 +2,7 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { RouterInternal } from './Router';
 import { Producer } from './Producer';
 
 export type RtpObserverEvents =
@@ -9,7 +10,7 @@ export type RtpObserverEvents =
 	routerclose: [];
 	// Private events.
 	'@close': [];
-}
+};
 
 export type RtpObserverObserverEvents =
 {
@@ -18,7 +19,21 @@ export type RtpObserverObserverEvents =
 	resume: [];
 	addproducer: [Producer];
 	removeproducer: [Producer];
-}
+};
+
+export type RtpObserverConstructorOptions =
+{
+	internal: RtpObserverObserverInternal;
+	channel: Channel;
+	payloadChannel: PayloadChannel;
+	appData?: Record<string, unknown>;
+	getProducerById: (producerId: string) => Producer | undefined;
+};
+
+export type RtpObserverObserverInternal = RouterInternal &
+{
+	rtpObserverId: string;
+};
 
 const logger = new Logger('RtpObserver');
 
@@ -28,17 +43,13 @@ export type RtpObserverAddRemoveProducerOptions =
 	 * The id of the Producer to be added or removed.
 	 */
 	producerId: string;
-}
+};
 
 export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	extends EnhancedEventEmitter<E>
 {
 	// Internal data.
-	protected readonly internal:
-	{
-		routerId: string;
-		rtpObserverId: string;
-	};
+	protected readonly internal: RtpObserverObserverInternal;
 
 	// Channel instance.
 	protected readonly channel: Channel;
@@ -56,7 +67,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	readonly #appData: Record<string, unknown>;
 
 	// Method to retrieve a Producer.
-	protected readonly getProducerById: (producerId: string) => Producer;
+	protected readonly getProducerById: (producerId: string) => Producer | undefined;
 
 	// Observer instance.
 	readonly #observer = new EnhancedEventEmitter<RtpObserverObserverEvents>();
@@ -72,14 +83,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 			payloadChannel,
 			appData,
 			getProducerById
-		}:
-		{
-			internal: any;
-			channel: Channel;
-			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
-			getProducerById: (producerId: string) => Producer;
-		}
+		}: RtpObserverConstructorOptions
 	)
 	{
 		super();
@@ -236,6 +240,10 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		logger.debug('addProducer()');
 
 		const producer = this.getProducerById(producerId);
+
+		if (!producer)
+			throw Error(`Producer with id "${producerId}" not found`);
+
 		const reqData = { producerId };
 
 		await this.channel.request('rtpObserver.addProducer', this.internal.rtpObserverId, reqData);
@@ -252,6 +260,10 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		logger.debug('removeProducer()');
 
 		const producer = this.getProducerById(producerId);
+
+		if (!producer)
+			throw Error(`Producer with id "${producerId}" not found`);
+
 		const reqData = { producerId };
 
 		await this.channel.request('rtpObserver.removeProducer', this.internal.rtpObserverId, reqData);

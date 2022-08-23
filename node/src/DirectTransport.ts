@@ -1,6 +1,13 @@
 import { Logger } from './Logger';
 import { UnsupportedError } from './errors';
-import { Transport, TransportTraceEventData, TransportEvents, TransportObserverEvents } from './Transport';
+import {
+	Transport,
+	TransportTraceEventData,
+	TransportEvents,
+	TransportObserverEvents,
+	TransportConstructorOptions
+} from './Transport';
+import { SctpParameters } from './SctpParameters';
 
 export type DirectTransportOptions =
 {
@@ -14,7 +21,7 @@ export type DirectTransportOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type DirectTransportStat =
 {
@@ -39,17 +46,27 @@ export type DirectTransportStat =
 	availableOutgoingBitrate?: number;
 	availableIncomingBitrate?: number;
 	maxIncomingBitrate?: number;
-}
+};
 
 export type DirectTransportEvents = TransportEvents &
 {
 	rtcp: [Buffer];
-}
+};
 
 export type DirectTransportObserverEvents = TransportObserverEvents &
 {
 	rtcp: [Buffer];
-}
+};
+
+type DirectTransportConstructorOptions = TransportConstructorOptions &
+{
+	data: DirectTransportData;
+};
+
+export type DirectTransportData =
+{
+	sctpParameters?: SctpParameters;
+};
 
 const logger = new Logger('DirectTransport');
 
@@ -57,23 +74,20 @@ export class DirectTransport extends
 	Transport<DirectTransportEvents, DirectTransportObserverEvents>
 {
 	// DirectTransport data.
-	readonly #data:
-	{
-		// Nothing for now.
-	};
+	readonly #data: DirectTransportData;
 
 	/**
 	 * @private
 	 */
-	constructor(params: any)
+	constructor(options: DirectTransportConstructorOptions)
 	{
-		super(params);
+		super(options);
 
 		logger.debug('constructor()');
 
 		this.#data =
 		{
-			// Nothing for now.
+			// Nothing.
 		};
 
 		this.handleWorkerNotifications();

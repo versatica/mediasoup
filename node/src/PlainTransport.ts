@@ -6,6 +6,7 @@ import {
 	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
+	TransportConstructorOptions,
 	SctpState
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
@@ -75,12 +76,7 @@ export type PlainTransportOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
-
-/**
- * DEPRECATED: Use PlainTransportOptions.
- */
-export type PlainRtpTransportOptions = PlainTransportOptions;
+};
 
 export type PlainTransportStat =
 {
@@ -111,26 +107,37 @@ export type PlainTransportStat =
 	comedia: boolean;
 	tuple: TransportTuple;
 	rtcpTuple?: TransportTuple;
-}
-
-/**
- * DEPRECATED: Use PlainTransportStat.
- */
-export type PlainRtpTransportStat = PlainTransportStat;
+};
 
 export type PlainTransportEvents = TransportEvents &
 {
 	tuple: [TransportTuple];
 	rtcptuple: [TransportTuple];
 	sctpstatechange: [SctpState];
-}
+};
 
 export type PlainTransportObserverEvents = TransportObserverEvents &
 {
 	tuple: [TransportTuple];
 	rtcptuple: [TransportTuple];
 	sctpstatechange: [SctpState];	
-}
+};
+
+type PlainTransportConstructorOptions = TransportConstructorOptions &
+{
+	data: PlainTransportData;
+};
+
+export type PlainTransportData =
+{
+	rtcpMux?: boolean;
+	comedia?: boolean;
+	tuple: TransportTuple;
+	rtcpTuple?: TransportTuple;
+	sctpParameters?: SctpParameters;
+	sctpState?: SctpState;
+	srtpParameters?: SrtpParameters;
+};
 
 const logger = new Logger('PlainTransport');
 
@@ -138,27 +145,18 @@ export class PlainTransport extends
 	Transport<PlainTransportEvents, PlainTransportObserverEvents>
 {
 	// PlainTransport data.
-	readonly #data:
-	{
-		rtcpMux?: boolean;
-		comedia?: boolean;
-		tuple: TransportTuple;
-		rtcpTuple?: TransportTuple;
-		sctpParameters?: SctpParameters;
-		sctpState?: SctpState;
-		srtpParameters?: SrtpParameters;
-	};
+	readonly #data: PlainTransportData;
 
 	/**
 	 * @private
 	 */
-	constructor(params: any)
+	constructor(options: PlainTransportConstructorOptions)
 	{
-		super(params);
+		super(options);
 
 		logger.debug('constructor()');
 
-		const { data } = params;
+		const { data } = options;
 
 		this.#data =
 		{
@@ -362,16 +360,5 @@ export class PlainTransport extends
 				}
 			}
 		});
-	}
-}
-
-/**
- * DEPRECATED: Use PlainTransport.
- */
-export class PlainRtpTransport extends PlainTransport
-{
-	constructor(params: any)
-	{
-		super(params);
 	}
 }

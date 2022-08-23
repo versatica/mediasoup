@@ -8,9 +8,10 @@ import {
 	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
+	TransportConstructorOptions,
 	SctpState
 } from './Transport';
-import { Consumer } from './Consumer';
+import { Consumer, ConsumerType } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
 
@@ -67,7 +68,7 @@ export type PipeTransportOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type PipeTransportStat =
 {
@@ -95,7 +96,7 @@ export type PipeTransportStat =
 	maxIncomingBitrate?: number;
 	// PipeTransport specific.
 	tuple: TransportTuple;
-}
+};
 
 export type PipeConsumerOptions =
 {
@@ -108,17 +109,31 @@ export type PipeConsumerOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type PipeTransportEvents = TransportEvents &
 {
 	sctpstatechange: [SctpState];
-}
+};
 
 export type PipeTransportObserverEvents = TransportObserverEvents &
 {
 	sctpstatechange: [SctpState];
-}
+};
+
+type PipeTransportConstructorOptions = TransportConstructorOptions &
+{
+	data: PipeTransportData;
+};
+
+export type PipeTransportData =
+{
+	tuple: TransportTuple;
+	sctpParameters?: SctpParameters;
+	sctpState?: SctpState;
+	rtx: boolean;
+	srtpParameters?: SrtpParameters;
+};
 
 const logger = new Logger('PipeTransport');
 
@@ -126,25 +141,18 @@ export class PipeTransport
 	extends Transport<PipeTransportEvents, PipeTransportObserverEvents>
 {
 	// PipeTransport data.
-	readonly #data:
-	{
-		tuple: TransportTuple;
-		sctpParameters?: SctpParameters;
-		sctpState?: SctpState;
-		rtx: boolean;
-		srtpParameters?: SrtpParameters;
-	};
+	readonly #data: PipeTransportData;
 
 	/**
 	 * @private
 	 */
-	constructor(params: any)
+	constructor(options: PipeTransportConstructorOptions)
 	{
-		super(params);
+		super(options);
 
 		logger.debug('constructor()');
 
-		const { data } = params;
+		const { data } = options;
 
 		this.#data =
 		{
@@ -305,7 +313,7 @@ export class PipeTransport
 			producerId,
 			kind : producer.kind,
 			rtpParameters,
-			type : 'pipe'
+			type : 'pipe' as ConsumerType
 		};
 
 		const consumer = new Consumer(

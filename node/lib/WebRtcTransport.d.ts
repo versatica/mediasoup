@@ -1,4 +1,4 @@
-import { Transport, TransportListenIp, TransportProtocol, TransportTuple, TransportEvents, TransportObserverEvents, SctpState } from './Transport';
+import { Transport, TransportListenIp, TransportProtocol, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { Either } from './utils';
@@ -136,12 +136,27 @@ export declare type WebRtcTransportObserverEvents = TransportObserverEvents & {
     dtlsstatechange: [DtlsState];
     sctpstatechange: [SctpState];
 };
+declare type WebRtcTransportConstructorOptions = TransportConstructorOptions & {
+    data: WebRtcTransportData;
+};
+export declare type WebRtcTransportData = {
+    iceRole: 'controlled';
+    iceParameters: IceParameters;
+    iceCandidates: IceCandidate[];
+    iceState: IceState;
+    iceSelectedTuple?: TransportTuple;
+    dtlsParameters: DtlsParameters;
+    dtlsState: DtlsState;
+    dtlsRemoteCert?: string;
+    sctpParameters?: SctpParameters;
+    sctpState?: SctpState;
+};
 export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents> {
     #private;
     /**
      * @private
      */
-    constructor(params: any);
+    constructor(options: WebRtcTransportConstructorOptions);
     /**
      * ICE role.
      */
@@ -221,4 +236,5 @@ export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, We
     restartIce(): Promise<IceParameters>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=WebRtcTransport.d.ts.map

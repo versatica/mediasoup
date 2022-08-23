@@ -5,8 +5,13 @@ import * as utils from './utils';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { RouterInternal } from './Router';
+import { WebRtcTransportData } from './WebRtcTransport';
+import { PlainTransportData } from './PlainTransport';
+import { PipeTransportData } from './PipeTransport';
+import { DirectTransportData } from './DirectTransport';
 import { Producer, ProducerOptions } from './Producer';
-import { Consumer, ConsumerOptions } from './Consumer';
+import { Consumer, ConsumerOptions, ConsumerType } from './Consumer';
 import {
 	DataProducer,
 	DataProducerOptions,
@@ -18,7 +23,7 @@ import {
 	DataConsumerType
 } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
-import { SctpParameters, SctpStreamParameters } from './SctpParameters';
+import { SctpStreamParameters } from './SctpParameters';
 
 export interface TransportListenIp
 {
@@ -93,7 +98,7 @@ export type TransportEvents =
 	'@newdataproducer': [DataProducer];
 	'@dataproducerclose': [DataProducer];
 	'@listenserverclose': [];
-}
+};
 
 export type TransportObserverEvents =
 {
@@ -103,7 +108,30 @@ export type TransportObserverEvents =
 	newdataproducer: [DataProducer];
 	newdataconsumer: [DataConsumer];
 	trace: [TransportTraceEventData];
-}
+};
+
+export type TransportConstructorOptions =
+{
+	internal: TransportInternal;
+	data: TransportData;
+	channel: Channel;
+	payloadChannel: PayloadChannel;
+	appData?: Record<string, unknown>;
+	getRouterRtpCapabilities: () => RtpCapabilities;
+	getProducerById: (producerId: string) => Producer | undefined;
+	getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
+};
+
+export type TransportInternal = RouterInternal &
+{
+	transportId: string;
+};
+
+type TransportData =
+  | WebRtcTransportData
+  | PlainTransportData
+  | PipeTransportData
+  | DirectTransportData;
 
 const logger = new Logger('Transport');
 
@@ -112,18 +140,10 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	extends EnhancedEventEmitter<Events>
 {
 	// Internal data.
-	protected readonly internal:
-	{
-		routerId: string;
-		transportId: string;
-	};
+	protected readonly internal: TransportInternal;
 
 	// Transport data. This is set by the subclass.
-	readonly #data:
-	{
-		sctpParameters?: SctpParameters;
-		sctpState?: SctpState;
-	};
+	readonly #data: TransportData;
 
 	// Channel instance.
 	protected readonly channel: Channel;
@@ -141,10 +161,11 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	readonly #getRouterRtpCapabilities: () => RtpCapabilities;
 
 	// Method to retrieve a Producer.
-	protected readonly getProducerById: (producerId: string) => Producer;
+	protected readonly getProducerById: (producerId: string) => Producer | undefined;
 
 	// Method to retrieve a DataProducer.
-	protected readonly getDataProducerById: (dataProducerId: string) => DataProducer;
+	protected readonly getDataProducerById:
+		(dataProducerId: string) => DataProducer | undefined;
 
 	// Producers map.
 	readonly #producers: Map<string, Producer> = new Map();
@@ -187,17 +208,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			getRouterRtpCapabilities,
 			getProducerById,
 			getDataProducerById
-		}:
-		{
-			internal: any;
-			data: any;
-			channel: Channel;
-			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
-			getRouterRtpCapabilities: () => RtpCapabilities;
-			getProducerById: (producerId: string) => Producer;
-			getDataProducerById: (dataProducerId: string) => DataProducer;
-		}
+		}: TransportConstructorOptions
 	)
 	{
 		super();
@@ -706,7 +717,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			producerId,
 			kind : producer.kind,
 			rtpParameters,
-			type : pipe ? 'pipe' : producer.type
+			type : pipe ? 'pipe' : producer.type as ConsumerType
 		};
 
 		const consumer = new Consumer(

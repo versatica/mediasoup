@@ -199,6 +199,7 @@ eslintConfig.overrides.push(
 			'@typescript-eslint/ban-ts-comment'                 : 0,
 			'@typescript-eslint/ban-ts-ignore'                  : 0,
 			'@typescript-eslint/explicit-module-boundary-types' : 0,
+			'@typescript-eslint/semi'                           : 2,
 			'@typescript-eslint/member-delimiter-style'         : [ 2,
 				{
 					multiline  : { delimiter: 'semi', requireLast: true },

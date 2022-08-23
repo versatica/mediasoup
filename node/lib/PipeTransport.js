@@ -13,10 +13,10 @@ class PipeTransport extends Transport_1.Transport {
     /**
      * @private
      */
-    constructor(params) {
-        super(params);
+    constructor(options) {
+        super(options);
         logger.debug('constructor()');
-        const { data } = params;
+        const { data } = options;
         this.#data =
             {
                 tuple: data.tuple,

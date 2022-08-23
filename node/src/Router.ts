@@ -31,7 +31,7 @@ export type RouterOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type PipeToRouterOptions =
 {
@@ -74,7 +74,7 @@ export type PipeToRouterOptions =
 	 * Enable SRTP.
 	 */
 	enableSrtp?: boolean;
-}
+};
 
 export type PipeToRouterResult =
 {
@@ -97,7 +97,7 @@ export type PipeToRouterResult =
 	 * The DataProducer created in the target Router.
 	 */
 	pipeDataProducer?: DataProducer;
-}
+};
 
 type PipeTransportPair =
 {
@@ -109,24 +109,26 @@ export type RouterEvents =
 	workerclose: [];
 	// Private events.
 	'@close': [];
-}
+};
 
 export type RouterObserverEvents =
 {
 	close: [];
 	newtransport: [Transport];
 	newrtpobserver: [RtpObserver];
-}
+};
+
+export type RouterInternal =
+{
+	routerId: string;
+};
 
 const logger = new Logger('Router');
 
 export class Router extends EnhancedEventEmitter<RouterEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-	};
+	readonly #internal: RouterInternal;
 
 	// Router data.
 	readonly #data:
@@ -178,7 +180,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			appData
 		}:
 		{
-			internal: any;
+			internal: RouterInternal;
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;

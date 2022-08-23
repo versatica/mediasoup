@@ -2,6 +2,7 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { TransportInternal } from './Transport';
 import { SctpStreamParameters } from './SctpParameters';
 
 export type DataConsumerOptions =
@@ -39,7 +40,7 @@ export type DataConsumerOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type DataConsumerStat =
 {
@@ -50,7 +51,7 @@ export type DataConsumerStat =
 	messagesSent: number;
 	bytesSent: number;
 	bufferedAmount: number;
-}
+};
 
 /**
  * DataConsumer type.
@@ -67,34 +68,36 @@ export type DataConsumerEvents =
 	// Private events.
 	'@close': [];
 	'@dataproducerclose': [];
-}
+};
 
 export type DataConsumerObserverEvents =
 {
 	close: [];
-}
+};
+
+type DataConsumerInternal = TransportInternal &
+{
+	dataConsumerId: string;
+};
+
+type DataConsumerData =
+{
+	dataProducerId: string;
+	type: DataConsumerType;
+	sctpStreamParameters?: SctpStreamParameters;
+	label: string;
+	protocol: string;
+};
 
 const logger = new Logger('DataConsumer');
 
 export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		dataConsumerId: string;
-	};
+	readonly #internal: DataConsumerInternal;
 
 	// DataConsumer data.
-	readonly #data:
-	{
-		dataProducerId: string;
-		type: DataConsumerType;
-		sctpStreamParameters?: SctpStreamParameters;
-		label: string;
-		protocol: string;
-	};
+	readonly #data: DataConsumerData;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -123,8 +126,8 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			appData
 		}:
 		{
-			internal: any;
-			data: any;
+			internal: DataConsumerInternal;
+			data: DataConsumerData;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;

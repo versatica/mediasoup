@@ -11,12 +11,12 @@ class DirectTransport extends Transport_1.Transport {
     /**
      * @private
      */
-    constructor(params) {
-        super(params);
+    constructor(options) {
+        super(options);
         logger.debug('constructor()');
         this.#data =
             {
-            // Nothing for now.
+            // Nothing.
             };
         this.handleWorkerNotifications();
     }

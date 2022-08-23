@@ -14,7 +14,7 @@ type Sent =
 	resolve: (data?: any) => void;
 	reject: (error: Error) => void;
 	close: () => void;
-}
+};
 
 // Binary length for a 4194304 bytes payload.
 const MESSAGE_MAX_LEN = 4194308;
