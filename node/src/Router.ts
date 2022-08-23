@@ -128,10 +128,7 @@ const logger = new Logger('Router');
 export class Router extends EnhancedEventEmitter<RouterEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-	};
+	readonly #internal: RouterInternal;
 
 	// Router data.
 	readonly #data:
@@ -183,7 +180,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			appData
 		}:
 		{
-			internal: any;
+			internal: RouterInternal;
 			data: any;
 			channel: Channel;
 			payloadChannel: PayloadChannel;

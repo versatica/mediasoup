@@ -1,6 +1,18 @@
 import { Logger } from './Logger';
 import { UnsupportedError } from './errors';
-import { Transport, TransportTraceEventData, TransportEvents, TransportObserverEvents } from './Transport';
+import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
+import {
+	Transport,
+	TransportTraceEventData,
+	TransportEvents,
+	TransportObserverEvents,
+	TransportInternal
+} from './Transport';
+import { Producer } from './Producer';
+import { DataProducer } from './DataProducer';
+import { RtpCapabilities } from './RtpParameters';
+import { SctpParameters } from './SctpParameters';
 
 export type DirectTransportOptions =
 {
@@ -51,6 +63,11 @@ export type DirectTransportObserverEvents = TransportObserverEvents &
 	rtcp: [Buffer];
 };
 
+export type DirectTransportData =
+{
+	sctpParameters?: SctpParameters;
+};
+
 const logger = new Logger('DirectTransport');
 
 export class DirectTransport extends
@@ -65,9 +82,40 @@ export class DirectTransport extends
 	/**
 	 * @private
 	 */
-	constructor(params: any)
+	constructor(
+		{
+			internal,
+			data,
+			channel,
+			payloadChannel,
+			appData,
+			getRouterRtpCapabilities,
+			getProducerById,
+			getDataProducerById
+		}:
+		{
+			internal: TransportInternal;
+			data: DirectTransportData;
+			channel: Channel;
+			payloadChannel: PayloadChannel;
+			appData?: Record<string, unknown>;
+			getRouterRtpCapabilities: () => RtpCapabilities;
+			getProducerById: (producerId: string) => Producer | undefined;
+			getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
+		}
+	)
 	{
-		super(params);
+		super(
+			{
+				internal,
+				data,
+				channel,
+				payloadChannel,
+				appData,
+				getRouterRtpCapabilities,
+				getProducerById,
+				getDataProducerById
+			});
 
 		logger.debug('constructor()');
 

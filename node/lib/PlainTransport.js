@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PlainRtpTransport = exports.PlainTransport = void 0;
+exports.PlainTransport = void 0;
 const Logger_1 = require("./Logger");
 const Transport_1 = require("./Transport");
 const logger = new Logger_1.Logger('PlainTransport');
@@ -10,10 +10,18 @@ class PlainTransport extends Transport_1.Transport {
     /**
      * @private
      */
-    constructor(params) {
-        super(params);
+    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }) {
+        super({
+            internal,
+            data,
+            channel,
+            payloadChannel,
+            appData,
+            getRouterRtpCapabilities,
+            getProducerById,
+            getDataProducerById
+        });
         logger.debug('constructor()');
-        const { data } = params;
         this.#data =
             {
                 rtcpMux: data.rtcpMux,
@@ -153,12 +161,3 @@ class PlainTransport extends Transport_1.Transport {
     }
 }
 exports.PlainTransport = PlainTransport;
-/**
- * DEPRECATED: Use PlainTransport.
- */
-class PlainRtpTransport extends PlainTransport {
-    constructor(params) {
-        super(params);
-    }
-}
-exports.PlainRtpTransport = PlainRtpTransport;

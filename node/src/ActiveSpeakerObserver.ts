@@ -1,7 +1,14 @@
 import { Logger } from './Logger';
-import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
-import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
+import {
+	RtpObserver,
+	RtpObserverEvents,
+	RtpObserverObserverEvents,
+	RtpObserverObserverInternal
+} from './RtpObserver';
+import { Producer } from './Producer';
 
 export interface ActiveSpeakerObserverOptions 
 {
@@ -23,12 +30,12 @@ export interface ActiveSpeakerObserverActivity
 
 export type ActiveSpeakerObserverEvents = RtpObserverEvents &
 {
-	dominantspeaker: [{ producer: Producer }];
+	dominantspeaker: [{ producer?: Producer }];
 };
 
 export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents &
 {
-	dominantspeaker: [{ producer: Producer }];
+	dominantspeaker: [{ producer?: Producer }];
 };
 
 const logger = new Logger('ActiveSpeakerObserver');
@@ -38,9 +45,31 @@ export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEven
 	/**
 	 * @private
 	 */
-	constructor(params: any)
+	constructor(
+		{
+			internal,
+			channel,
+			payloadChannel,
+			appData,
+			getProducerById
+		}:
+		{
+			internal: RtpObserverObserverInternal;
+			channel: Channel;
+			payloadChannel: PayloadChannel;
+			appData?: Record<string, unknown>;
+			getProducerById: (producerId: string) => Producer | undefined;
+		}
+	)
 	{
-		super(params);
+		super(
+			{
+				internal,
+				channel,
+				payloadChannel,
+				appData,
+				getProducerById
+			});
 
 		this.handleWorkerNotifications();
 	}

@@ -1,7 +1,14 @@
 import { Logger } from './Logger';
-import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
-import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
+import {
+	RtpObserver,
+	RtpObserverEvents,
+	RtpObserverObserverEvents,
+	RtpObserverObserverInternal
+} from './RtpObserver';
+import { Producer } from './Producer';
 
 export interface AudioLevelObserverOptions
 {
@@ -60,9 +67,31 @@ export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
 	/**
 	 * @private
 	 */
-	constructor(params: any)
+	constructor(
+		{
+			internal,
+			channel,
+			payloadChannel,
+			appData,
+			getProducerById
+		}:
+		{
+			internal: RtpObserverObserverInternal;
+			channel: Channel;
+			payloadChannel: PayloadChannel;
+			appData?: Record<string, unknown>;
+			getProducerById: (producerId: string) => Producer | undefined;
+		}
+	)
 	{
-		super(params);
+		super(
+			{
+				internal,
+				channel,
+				payloadChannel,
+				appData,
+				getProducerById
+			});
 
 		this.handleWorkerNotifications();
 	}

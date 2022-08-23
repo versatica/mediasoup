@@ -2,6 +2,7 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { TransportInternal } from './Transport';
 import { SctpStreamParameters } from './SctpParameters';
 
 export type DataProducerOptions =
@@ -60,26 +61,28 @@ export type DataProducerObserverEvents =
 	close: [];
 };
 
+export type DataProducerInternal = TransportInternal &
+{
+	dataProducerId: string;
+};
+
+type DataProducerData =
+{
+	type: DataProducerType;
+	sctpStreamParameters?: SctpStreamParameters;
+	label: string;
+	protocol: string;
+};
+
 const logger = new Logger('DataProducer');
 
 export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		dataProducerId: string;
-	};
+	readonly #internal: DataProducerInternal;
 
 	// DataProducer data.
-	readonly #data:
-	{
-		type: DataProducerType;
-		sctpStreamParameters?: SctpStreamParameters;
-		label: string;
-		protocol: string;
-	};
+	readonly #data: DataProducerData;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -108,8 +111,8 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 			appData
 		}:
 		{
-			internal: any;
-			data: any;
+			internal: DataProducerInternal;
+			data: DataProducerData;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;

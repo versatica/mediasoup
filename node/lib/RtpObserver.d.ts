@@ -1,6 +1,7 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { RouterInternal } from './Router';
 import { Producer } from './Producer';
 export declare type RtpObserverEvents = {
     routerclose: [];
@@ -13,6 +14,9 @@ export declare type RtpObserverObserverEvents = {
     addproducer: [Producer];
     removeproducer: [Producer];
 };
+export declare type RtpObserverObserverInternal = RouterInternal & {
+    rtpObserverId: string;
+};
 export declare type RtpObserverAddRemoveProducerOptions = {
     /**
      * The id of the Producer to be added or removed.
@@ -21,23 +25,20 @@ export declare type RtpObserverAddRemoveProducerOptions = {
 };
 export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents> extends EnhancedEventEmitter<E> {
     #private;
-    protected readonly internal: {
-        routerId: string;
-        rtpObserverId: string;
-    };
+    protected readonly internal: RtpObserverObserverInternal;
     protected readonly channel: Channel;
     protected readonly payloadChannel: PayloadChannel;
-    protected readonly getProducerById: (producerId: string) => Producer;
+    protected readonly getProducerById: (producerId: string) => Producer | undefined;
     /**
      * @private
      * @interface
      */
     constructor({ internal, channel, payloadChannel, appData, getProducerById }: {
-        internal: any;
+        internal: RtpObserverObserverInternal;
         channel: Channel;
         payloadChannel: PayloadChannel;
         appData?: Record<string, unknown>;
-        getProducerById: (producerId: string) => Producer;
+        getProducerById: (producerId: string) => Producer | undefined;
     });
     /**
      * RtpObserver id.

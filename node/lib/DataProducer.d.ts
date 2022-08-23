@@ -2,6 +2,7 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { TransportInternal } from './Transport';
 import { SctpStreamParameters } from './SctpParameters';
 export declare type DataProducerOptions = {
     /**
@@ -45,14 +46,23 @@ export declare type DataProducerEvents = {
 export declare type DataProducerObserverEvents = {
     close: [];
 };
+export declare type DataProducerInternal = TransportInternal & {
+    dataProducerId: string;
+};
+declare type DataProducerData = {
+    type: DataProducerType;
+    sctpStreamParameters?: SctpStreamParameters;
+    label: string;
+    protocol: string;
+};
 export declare class DataProducer extends EnhancedEventEmitter<DataProducerEvents> {
     #private;
     /**
      * @private
      */
     constructor({ internal, data, channel, payloadChannel, appData }: {
-        internal: any;
-        data: any;
+        internal: DataProducerInternal;
+        data: DataProducerData;
         channel: Channel;
         payloadChannel: PayloadChannel;
         appData?: Record<string, unknown>;
@@ -117,4 +127,5 @@ export declare class DataProducer extends EnhancedEventEmitter<DataProducerEvent
     send(message: string | Buffer, ppid?: number): void;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=DataProducer.d.ts.map

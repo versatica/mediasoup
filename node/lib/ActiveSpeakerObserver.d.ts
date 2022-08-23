@@ -1,6 +1,8 @@
-import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
-import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
+import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents, RtpObserverObserverInternal } from './RtpObserver';
+import { Producer } from './Producer';
 export interface ActiveSpeakerObserverOptions {
     interval?: number;
     /**
@@ -16,19 +18,25 @@ export interface ActiveSpeakerObserverActivity {
 }
 export declare type ActiveSpeakerObserverEvents = RtpObserverEvents & {
     dominantspeaker: [{
-        producer: Producer;
+        producer?: Producer;
     }];
 };
 export declare type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents & {
     dominantspeaker: [{
-        producer: Producer;
+        producer?: Producer;
     }];
 };
 export declare class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEvents> {
     /**
      * @private
      */
-    constructor(params: any);
+    constructor({ internal, channel, payloadChannel, appData, getProducerById }: {
+        internal: RtpObserverObserverInternal;
+        channel: Channel;
+        payloadChannel: PayloadChannel;
+        appData?: Record<string, unknown>;
+        getProducerById: (producerId: string) => Producer | undefined;
+    });
     /**
      * Observer.
      */

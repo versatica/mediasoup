@@ -55,15 +55,17 @@ export type WebRtcServerObserverEvents =
 	webrtctransportunhandled: [WebRtcTransport];
 };
 
+type WebRtcServerInternal =
+{
+	webRtcServerId: string;
+};
+
 const logger = new Logger('WebRtcServer');
 
 export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		webRtcServerId: string;
-	};
+	readonly #internal: WebRtcServerInternal;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -90,7 +92,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 			appData
 		}:
 		{
-			internal: any;
+			internal: WebRtcServerInternal;
 			channel: Channel;
 			appData?: Record<string, unknown>;
 		}

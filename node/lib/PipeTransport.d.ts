@@ -1,5 +1,10 @@
-import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, SctpState } from './Transport';
+import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
+import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportInternal, SctpState } from './Transport';
+import { Producer } from './Producer';
 import { Consumer } from './Consumer';
+import { DataProducer } from './DataProducer';
+import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
 export declare type PipeTransportOptions = {
@@ -87,12 +92,28 @@ export declare type PipeTransportEvents = TransportEvents & {
 export declare type PipeTransportObserverEvents = TransportObserverEvents & {
     sctpstatechange: [SctpState];
 };
+export declare type PipeTransportData = {
+    tuple: TransportTuple;
+    sctpParameters?: SctpParameters;
+    sctpState?: SctpState;
+    rtx: boolean;
+    srtpParameters?: SrtpParameters;
+};
 export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTransportObserverEvents> {
     #private;
     /**
      * @private
      */
-    constructor(params: any);
+    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
+        internal: TransportInternal;
+        data: PipeTransportData;
+        channel: Channel;
+        payloadChannel: PayloadChannel;
+        appData?: Record<string, unknown>;
+        getRouterRtpCapabilities: () => RtpCapabilities;
+        getProducerById: (producerId: string) => Producer | undefined;
+        getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
+    });
     /**
      * Transport tuple.
      */

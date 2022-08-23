@@ -1,5 +1,11 @@
 /// <reference types="node" />
-import { Transport, TransportEvents, TransportObserverEvents } from './Transport';
+import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
+import { Transport, TransportEvents, TransportObserverEvents, TransportInternal } from './Transport';
+import { Producer } from './Producer';
+import { DataProducer } from './DataProducer';
+import { RtpCapabilities } from './RtpParameters';
+import { SctpParameters } from './SctpParameters';
 export declare type DirectTransportOptions = {
     /**
      * Maximum allowed size for direct messages sent from DataProducers.
@@ -39,12 +45,24 @@ export declare type DirectTransportEvents = TransportEvents & {
 export declare type DirectTransportObserverEvents = TransportObserverEvents & {
     rtcp: [Buffer];
 };
+export declare type DirectTransportData = {
+    sctpParameters?: SctpParameters;
+};
 export declare class DirectTransport extends Transport<DirectTransportEvents, DirectTransportObserverEvents> {
     #private;
     /**
      * @private
      */
-    constructor(params: any);
+    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
+        internal: TransportInternal;
+        data: DirectTransportData;
+        channel: Channel;
+        payloadChannel: PayloadChannel;
+        appData?: Record<string, unknown>;
+        getRouterRtpCapabilities: () => RtpCapabilities;
+        getProducerById: (producerId: string) => Producer | undefined;
+        getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
+    });
     /**
      * Close the DirectTransport.
      *

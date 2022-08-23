@@ -8,8 +8,14 @@ class AudioLevelObserver extends RtpObserver_1.RtpObserver {
     /**
      * @private
      */
-    constructor(params) {
-        super(params);
+    constructor({ internal, channel, payloadChannel, appData, getProducerById }) {
+        super({
+            internal,
+            channel,
+            payloadChannel,
+            appData,
+            getProducerById
+        });
         this.handleWorkerNotifications();
     }
     /**

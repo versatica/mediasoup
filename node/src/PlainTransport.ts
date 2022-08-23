@@ -1,4 +1,6 @@
 import { Logger } from './Logger';
+import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import {
 	Transport,
 	TransportListenIp,
@@ -6,8 +8,12 @@ import {
 	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
+	TransportInternal,
 	SctpState
 } from './Transport';
+import { Producer } from './Producer';
+import { DataProducer } from './DataProducer';
+import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 
@@ -77,11 +83,6 @@ export type PlainTransportOptions =
 	appData?: Record<string, unknown>;
 };
 
-/**
- * DEPRECATED: Use PlainTransportOptions.
- */
-export type PlainRtpTransportOptions = PlainTransportOptions;
-
 export type PlainTransportStat =
 {
 	// Common to all Transports.
@@ -113,11 +114,6 @@ export type PlainTransportStat =
 	rtcpTuple?: TransportTuple;
 };
 
-/**
- * DEPRECATED: Use PlainTransportStat.
- */
-export type PlainRtpTransportStat = PlainTransportStat;
-
 export type PlainTransportEvents = TransportEvents &
 {
 	tuple: [TransportTuple];
@@ -132,33 +128,64 @@ export type PlainTransportObserverEvents = TransportObserverEvents &
 	sctpstatechange: [SctpState];	
 };
 
+export type PlainTransportData =
+{
+	rtcpMux?: boolean;
+	comedia?: boolean;
+	tuple: TransportTuple;
+	rtcpTuple?: TransportTuple;
+	sctpParameters?: SctpParameters;
+	sctpState?: SctpState;
+	srtpParameters?: SrtpParameters;
+};
+
 const logger = new Logger('PlainTransport');
 
 export class PlainTransport extends
 	Transport<PlainTransportEvents, PlainTransportObserverEvents>
 {
 	// PlainTransport data.
-	readonly #data:
-	{
-		rtcpMux?: boolean;
-		comedia?: boolean;
-		tuple: TransportTuple;
-		rtcpTuple?: TransportTuple;
-		sctpParameters?: SctpParameters;
-		sctpState?: SctpState;
-		srtpParameters?: SrtpParameters;
-	};
+	readonly #data: PlainTransportData;
 
 	/**
 	 * @private
 	 */
-	constructor(params: any)
+	constructor(
+		{
+			internal,
+			data,
+			channel,
+			payloadChannel,
+			appData,
+			getRouterRtpCapabilities,
+			getProducerById,
+			getDataProducerById
+		}:
+		{
+			internal: TransportInternal;
+			data: PlainTransportData;
+			channel: Channel;
+			payloadChannel: PayloadChannel;
+			appData?: Record<string, unknown>;
+			getRouterRtpCapabilities: () => RtpCapabilities;
+			getProducerById: (producerId: string) => Producer | undefined;
+			getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
+		}
+	)
 	{
-		super(params);
+		super(
+			{
+				internal,
+				data,
+				channel,
+				payloadChannel,
+				appData,
+				getRouterRtpCapabilities,
+				getProducerById,
+				getDataProducerById
+			});
 
 		logger.debug('constructor()');
-
-		const { data } = params;
 
 		this.#data =
 		{
@@ -362,16 +389,5 @@ export class PlainTransport extends
 				}
 			}
 		});
-	}
-}
-
-/**
- * DEPRECATED: Use PlainTransport.
- */
-export class PlainRtpTransport extends PlainTransport
-{
-	constructor(params: any)
-	{
-		super(params);
 	}
 }

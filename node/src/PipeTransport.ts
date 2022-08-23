@@ -1,6 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './Logger';
 import * as ortc from './ortc';
+import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import {
 	Transport,
 	TransportListenIp,
@@ -8,9 +10,13 @@ import {
 	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
+	TransportInternal,
 	SctpState
 } from './Transport';
-import { Consumer } from './Consumer';
+import { Producer } from './Producer';
+import { Consumer, ConsumerType } from './Consumer';
+import { DataProducer } from './DataProducer';
+import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
 
@@ -120,31 +126,62 @@ export type PipeTransportObserverEvents = TransportObserverEvents &
 	sctpstatechange: [SctpState];
 };
 
+export type PipeTransportData =
+{
+	tuple: TransportTuple;
+	sctpParameters?: SctpParameters;
+	sctpState?: SctpState;
+	rtx: boolean;
+	srtpParameters?: SrtpParameters;
+};
+
 const logger = new Logger('PipeTransport');
 
 export class PipeTransport
 	extends Transport<PipeTransportEvents, PipeTransportObserverEvents>
 {
 	// PipeTransport data.
-	readonly #data:
-	{
-		tuple: TransportTuple;
-		sctpParameters?: SctpParameters;
-		sctpState?: SctpState;
-		rtx: boolean;
-		srtpParameters?: SrtpParameters;
-	};
+	readonly #data: PipeTransportData;
 
 	/**
 	 * @private
 	 */
-	constructor(params: any)
+	constructor(
+		{
+			internal,
+			data,
+			channel,
+			payloadChannel,
+			appData,
+			getRouterRtpCapabilities,
+			getProducerById,
+			getDataProducerById
+		}:
+		{
+			internal: TransportInternal;
+			data: PipeTransportData;
+			channel: Channel;
+			payloadChannel: PayloadChannel;
+			appData?: Record<string, unknown>;
+			getRouterRtpCapabilities: () => RtpCapabilities;
+			getProducerById: (producerId: string) => Producer | undefined;
+			getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
+		}
+	)
 	{
-		super(params);
+		super(
+			{
+				internal,
+				data,
+				channel,
+				payloadChannel,
+				appData,
+				getRouterRtpCapabilities,
+				getProducerById,
+				getDataProducerById
+			});
 
 		logger.debug('constructor()');
-
-		const { data } = params;
 
 		this.#data =
 		{
@@ -305,7 +342,7 @@ export class PipeTransport
 			producerId,
 			kind : producer.kind,
 			rtpParameters,
-			type : 'pipe'
+			type : 'pipe' as ConsumerType
 		};
 
 		const consumer = new Consumer(

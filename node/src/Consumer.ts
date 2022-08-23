@@ -2,6 +2,7 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { TransportInternal } from './Transport';
 import { ProducerStat } from './Producer';
 import {
 	MediaKind,
@@ -185,26 +186,28 @@ export type ConsumerObserverEvents =
 	trace: [ConsumerTraceEventData];
 };
 
+export type ConsumerInternal = TransportInternal &
+{
+	consumerId: string;
+};
+
+type ConsumerData =
+{
+	producerId: string;
+	kind: MediaKind;
+	rtpParameters: RtpParameters;
+	type: ConsumerType;
+};
+
 const logger = new Logger('Consumer');
 
 export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		consumerId: string;
-	};
+	readonly #internal: ConsumerInternal;
 
 	// Consumer data.
-	readonly #data:
-	{
-		producerId: string;
-		kind: MediaKind;
-		rtpParameters: RtpParameters;
-		type: ConsumerType;
-	};
+	readonly #data: ConsumerData;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -255,8 +258,8 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			preferredLayers
 		}:
 		{
-			internal: any;
-			data: any;
+			internal: ConsumerInternal;
+			data: ConsumerData;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;

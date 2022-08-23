@@ -1,4 +1,6 @@
 import { Logger } from './Logger';
+import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
 import {
 	Transport,
 	TransportListenIp,
@@ -7,9 +9,13 @@ import {
 	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
+	TransportInternal,
 	SctpState
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
+import { Producer } from './Producer';
+import { DataProducer } from './DataProducer';
+import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { Either } from './utils';
 
@@ -185,36 +191,67 @@ export type WebRtcTransportObserverEvents = TransportObserverEvents &
 	sctpstatechange: [SctpState];
 };
 
+export type WebRtcTransportData =
+{
+	iceRole: 'controlled';
+	iceParameters: IceParameters;
+	iceCandidates: IceCandidate[];
+	iceState: IceState;
+	iceSelectedTuple?: TransportTuple;
+	dtlsParameters: DtlsParameters;
+	dtlsState: DtlsState;
+	dtlsRemoteCert?: string;
+	sctpParameters?: SctpParameters;
+	sctpState?: SctpState;
+};
+
 const logger = new Logger('WebRtcTransport');
 
 export class WebRtcTransport extends
 	Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents>
 {
 	// WebRtcTransport data.
-	readonly #data:
-	{
-		iceRole: 'controlled';
-		iceParameters: IceParameters;
-		iceCandidates: IceCandidate[];
-		iceState: IceState;
-		iceSelectedTuple?: TransportTuple;
-		dtlsParameters: DtlsParameters;
-		dtlsState: DtlsState;
-		dtlsRemoteCert?: string;
-		sctpParameters?: SctpParameters;
-		sctpState?: SctpState;
-	};
+	readonly #data: WebRtcTransportData;
 
 	/**
 	 * @private
 	 */
-	constructor(params: any)
+	constructor(
+		{
+			internal,
+			data,
+			channel,
+			payloadChannel,
+			appData,
+			getRouterRtpCapabilities,
+			getProducerById,
+			getDataProducerById
+		}:
+		{
+			internal: TransportInternal;
+			data: WebRtcTransportData;
+			channel: Channel;
+			payloadChannel: PayloadChannel;
+			appData?: Record<string, unknown>;
+			getRouterRtpCapabilities: () => RtpCapabilities;
+			getProducerById: (producerId: string) => Producer | undefined;
+			getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
+		}
+	)
 	{
-		super(params);
+		super(
+			{
+				internal,
+				data,
+				channel,
+				payloadChannel,
+				appData,
+				getRouterRtpCapabilities,
+				getProducerById,
+				getDataProducerById
+			});
 
 		logger.debug('constructor()');
-
-		const { data } = params;
 
 		this.#data =
 		{

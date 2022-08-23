@@ -1,4 +1,9 @@
-import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, SctpState } from './Transport';
+import { Channel } from './Channel';
+import { PayloadChannel } from './PayloadChannel';
+import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportInternal, SctpState } from './Transport';
+import { Producer } from './Producer';
+import { DataProducer } from './DataProducer';
+import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 export declare type PlainTransportOptions = {
@@ -55,10 +60,6 @@ export declare type PlainTransportOptions = {
      */
     appData?: Record<string, unknown>;
 };
-/**
- * DEPRECATED: Use PlainTransportOptions.
- */
-export declare type PlainRtpTransportOptions = PlainTransportOptions;
 export declare type PlainTransportStat = {
     type: string;
     transportId: string;
@@ -86,10 +87,6 @@ export declare type PlainTransportStat = {
     tuple: TransportTuple;
     rtcpTuple?: TransportTuple;
 };
-/**
- * DEPRECATED: Use PlainTransportStat.
- */
-export declare type PlainRtpTransportStat = PlainTransportStat;
 export declare type PlainTransportEvents = TransportEvents & {
     tuple: [TransportTuple];
     rtcptuple: [TransportTuple];
@@ -100,12 +97,30 @@ export declare type PlainTransportObserverEvents = TransportObserverEvents & {
     rtcptuple: [TransportTuple];
     sctpstatechange: [SctpState];
 };
+export declare type PlainTransportData = {
+    rtcpMux?: boolean;
+    comedia?: boolean;
+    tuple: TransportTuple;
+    rtcpTuple?: TransportTuple;
+    sctpParameters?: SctpParameters;
+    sctpState?: SctpState;
+    srtpParameters?: SrtpParameters;
+};
 export declare class PlainTransport extends Transport<PlainTransportEvents, PlainTransportObserverEvents> {
     #private;
     /**
      * @private
      */
-    constructor(params: any);
+    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
+        internal: TransportInternal;
+        data: PlainTransportData;
+        channel: Channel;
+        payloadChannel: PayloadChannel;
+        appData?: Record<string, unknown>;
+        getRouterRtpCapabilities: () => RtpCapabilities;
+        getProducerById: (producerId: string) => Producer | undefined;
+        getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
+    });
     /**
      * Transport tuple.
      */
@@ -157,11 +172,5 @@ export declare class PlainTransport extends Transport<PlainTransportEvents, Plai
         srtpParameters?: SrtpParameters;
     }): Promise<void>;
     private handleWorkerNotifications;
-}
-/**
- * DEPRECATED: Use PlainTransport.
- */
-export declare class PlainRtpTransport extends PlainTransport {
-    constructor(params: any);
 }
 //# sourceMappingURL=PlainTransport.d.ts.map

@@ -13,10 +13,18 @@ class PipeTransport extends Transport_1.Transport {
     /**
      * @private
      */
-    constructor(params) {
-        super(params);
+    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }) {
+        super({
+            internal,
+            data,
+            channel,
+            payloadChannel,
+            appData,
+            getRouterRtpCapabilities,
+            getProducerById,
+            getDataProducerById
+        });
         logger.debug('constructor()');
-        const { data } = params;
         this.#data =
             {
                 tuple: data.tuple,
