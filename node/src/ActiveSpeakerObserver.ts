@@ -30,12 +30,12 @@ export interface ActiveSpeakerObserverActivity
 
 export type ActiveSpeakerObserverEvents = RtpObserverEvents &
 {
-	dominantspeaker: [{ producer?: Producer }];
+	dominantspeaker: [{ producer: Producer }];
 };
 
 export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents &
 {
-	dominantspeaker: [{ producer?: Producer }];
+	dominantspeaker: [{ producer: Producer }];
 };
 
 const logger = new Logger('ActiveSpeakerObserver');
@@ -90,9 +90,12 @@ export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEven
 			{
 				case 'dominantspeaker':
 				{
-					const dominantSpeaker = {
-						producer : this.getProducerById(data.producerId)
-					};
+					const producer = this.getProducerById(data.producerId);
+
+					if (!producer)
+						break;
+
+					const dominantSpeaker = { producer };
 
 					this.safeEmit('dominantspeaker', dominantSpeaker);
 					this.observer.safeEmit('dominantspeaker', dominantSpeaker);
