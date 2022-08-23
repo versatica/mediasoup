@@ -1,10 +1,5 @@
-import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
-import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportInternal, SctpState } from './Transport';
-import { Producer } from './Producer';
+import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
 import { Consumer } from './Consumer';
-import { DataProducer } from './DataProducer';
-import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
 export declare type PipeTransportOptions = {
@@ -92,6 +87,9 @@ export declare type PipeTransportEvents = TransportEvents & {
 export declare type PipeTransportObserverEvents = TransportObserverEvents & {
     sctpstatechange: [SctpState];
 };
+declare type PipeTransportConstructorOptions = TransportConstructorOptions & {
+    data: PipeTransportData;
+};
 export declare type PipeTransportData = {
     tuple: TransportTuple;
     sctpParameters?: SctpParameters;
@@ -104,16 +102,7 @@ export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTr
     /**
      * @private
      */
-    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
-        internal: TransportInternal;
-        data: PipeTransportData;
-        channel: Channel;
-        payloadChannel: PayloadChannel;
-        appData?: Record<string, unknown>;
-        getRouterRtpCapabilities: () => RtpCapabilities;
-        getProducerById: (producerId: string) => Producer | undefined;
-        getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
-    });
+    constructor(options: PipeTransportConstructorOptions);
     /**
      * Transport tuple.
      */
@@ -167,4 +156,5 @@ export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTr
     consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=PipeTransport.d.ts.map

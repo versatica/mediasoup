@@ -21,6 +21,15 @@ export type RtpObserverObserverEvents =
 	removeproducer: [Producer];
 };
 
+export type RtpObserverConstructorOptions =
+{
+	internal: RtpObserverObserverInternal;
+	channel: Channel;
+	payloadChannel: PayloadChannel;
+	appData?: Record<string, unknown>;
+	getProducerById: (producerId: string) => Producer | undefined;
+};
+
 export type RtpObserverObserverInternal = RouterInternal &
 {
 	rtpObserverId: string;
@@ -74,14 +83,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 			payloadChannel,
 			appData,
 			getProducerById
-		}:
-		{
-			internal: RtpObserverObserverInternal;
-			channel: Channel;
-			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
-			getProducerById: (producerId: string) => Producer | undefined;
-		}
+		}: RtpObserverConstructorOptions
 	)
 	{
 		super();

@@ -1,8 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './Logger';
 import * as ortc from './ortc';
-import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import {
 	Transport,
 	TransportListenIp,
@@ -10,13 +8,10 @@ import {
 	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
-	TransportInternal,
+	TransportConstructorOptions,
 	SctpState
 } from './Transport';
-import { Producer } from './Producer';
 import { Consumer, ConsumerType } from './Consumer';
-import { DataProducer } from './DataProducer';
-import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
 
@@ -126,6 +121,11 @@ export type PipeTransportObserverEvents = TransportObserverEvents &
 	sctpstatechange: [SctpState];
 };
 
+type PipeTransportConstructorOptions = TransportConstructorOptions &
+{
+	data: PipeTransportData;
+};
+
 export type PipeTransportData =
 {
 	tuple: TransportTuple;
@@ -146,42 +146,13 @@ export class PipeTransport
 	/**
 	 * @private
 	 */
-	constructor(
-		{
-			internal,
-			data,
-			channel,
-			payloadChannel,
-			appData,
-			getRouterRtpCapabilities,
-			getProducerById,
-			getDataProducerById
-		}:
-		{
-			internal: TransportInternal;
-			data: PipeTransportData;
-			channel: Channel;
-			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
-			getRouterRtpCapabilities: () => RtpCapabilities;
-			getProducerById: (producerId: string) => Producer | undefined;
-			getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
-		}
-	)
+	constructor(options: PipeTransportConstructorOptions)
 	{
-		super(
-			{
-				internal,
-				data,
-				channel,
-				payloadChannel,
-				appData,
-				getRouterRtpCapabilities,
-				getProducerById,
-				getDataProducerById
-			});
+		super(options);
 
 		logger.debug('constructor()');
+
+		const { data } = options;
 
 		this.#data =
 		{

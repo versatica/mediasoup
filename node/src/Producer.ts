@@ -161,7 +161,7 @@ export type ProducerObserverEvents =
 	trace: [ProducerTraceEventData];
 };
 
-export type ProducerInternal = TransportInternal &
+type ProducerInternal = TransportInternal &
 {
 	producerId: string;
 };

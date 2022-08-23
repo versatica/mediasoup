@@ -8,14 +8,8 @@ class ActiveSpeakerObserver extends RtpObserver_1.RtpObserver {
     /**
      * @private
      */
-    constructor({ internal, channel, payloadChannel, appData, getProducerById }) {
-        super({
-            internal,
-            channel,
-            payloadChannel,
-            appData,
-            getProducerById
-        });
+    constructor(options) {
+        super(options);
         this.handleWorkerNotifications();
     }
     /**

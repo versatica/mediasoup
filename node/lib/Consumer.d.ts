@@ -150,7 +150,7 @@ export declare type ConsumerObserverEvents = {
     layerschange: [ConsumerLayers?];
     trace: [ConsumerTraceEventData];
 };
-export declare type ConsumerInternal = TransportInternal & {
+declare type ConsumerInternal = TransportInternal & {
     consumerId: string;
 };
 declare type ConsumerData = {

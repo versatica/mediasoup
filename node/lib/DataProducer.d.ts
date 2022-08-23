@@ -46,7 +46,7 @@ export declare type DataProducerEvents = {
 export declare type DataProducerObserverEvents = {
     close: [];
 };
-export declare type DataProducerInternal = TransportInternal & {
+declare type DataProducerInternal = TransportInternal & {
     dataProducerId: string;
 };
 declare type DataProducerData = {

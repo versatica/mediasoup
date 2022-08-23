@@ -1,6 +1,4 @@
 import { Logger } from './Logger';
-import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import {
 	Transport,
 	TransportListenIp,
@@ -8,12 +6,9 @@ import {
 	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
-	TransportInternal,
+	TransportConstructorOptions,
 	SctpState
 } from './Transport';
-import { Producer } from './Producer';
-import { DataProducer } from './DataProducer';
-import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 
@@ -128,6 +123,11 @@ export type PlainTransportObserverEvents = TransportObserverEvents &
 	sctpstatechange: [SctpState];	
 };
 
+type PlainTransportConstructorOptions = TransportConstructorOptions &
+{
+	data: PlainTransportData;
+};
+
 export type PlainTransportData =
 {
 	rtcpMux?: boolean;
@@ -150,42 +150,13 @@ export class PlainTransport extends
 	/**
 	 * @private
 	 */
-	constructor(
-		{
-			internal,
-			data,
-			channel,
-			payloadChannel,
-			appData,
-			getRouterRtpCapabilities,
-			getProducerById,
-			getDataProducerById
-		}:
-		{
-			internal: TransportInternal;
-			data: PlainTransportData;
-			channel: Channel;
-			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
-			getRouterRtpCapabilities: () => RtpCapabilities;
-			getProducerById: (producerId: string) => Producer | undefined;
-			getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
-		}
-	)
+	constructor(options: PlainTransportConstructorOptions)
 	{
-		super(
-			{
-				internal,
-				data,
-				channel,
-				payloadChannel,
-				appData,
-				getRouterRtpCapabilities,
-				getProducerById,
-				getDataProducerById
-			});
+		super(options);
 
 		logger.debug('constructor()');
+
+		const { data } = options;
 
 		this.#data =
 		{

@@ -60,7 +60,7 @@ export declare type DataConsumerEvents = {
 export declare type DataConsumerObserverEvents = {
     close: [];
 };
-export declare type DataConsumerInternal = TransportInternal & {
+declare type DataConsumerInternal = TransportInternal & {
     dataConsumerId: string;
 };
 declare type DataConsumerData = {

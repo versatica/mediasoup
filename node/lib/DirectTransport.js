@@ -11,21 +11,12 @@ class DirectTransport extends Transport_1.Transport {
     /**
      * @private
      */
-    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }) {
-        super({
-            internal,
-            data,
-            channel,
-            payloadChannel,
-            appData,
-            getRouterRtpCapabilities,
-            getProducerById,
-            getDataProducerById
-        });
+    constructor(options) {
+        super(options);
         logger.debug('constructor()');
         this.#data =
             {
-            // Nothing for now.
+            // Nothing.
             };
         this.handleWorkerNotifications();
     }

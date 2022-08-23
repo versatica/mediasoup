@@ -1,9 +1,4 @@
-import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
-import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportInternal, SctpState } from './Transport';
-import { Producer } from './Producer';
-import { DataProducer } from './DataProducer';
-import { RtpCapabilities } from './RtpParameters';
+import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 export declare type PlainTransportOptions = {
@@ -97,6 +92,9 @@ export declare type PlainTransportObserverEvents = TransportObserverEvents & {
     rtcptuple: [TransportTuple];
     sctpstatechange: [SctpState];
 };
+declare type PlainTransportConstructorOptions = TransportConstructorOptions & {
+    data: PlainTransportData;
+};
 export declare type PlainTransportData = {
     rtcpMux?: boolean;
     comedia?: boolean;
@@ -111,16 +109,7 @@ export declare class PlainTransport extends Transport<PlainTransportEvents, Plai
     /**
      * @private
      */
-    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
-        internal: TransportInternal;
-        data: PlainTransportData;
-        channel: Channel;
-        payloadChannel: PayloadChannel;
-        appData?: Record<string, unknown>;
-        getRouterRtpCapabilities: () => RtpCapabilities;
-        getProducerById: (producerId: string) => Producer | undefined;
-        getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
-    });
+    constructor(options: PlainTransportConstructorOptions);
     /**
      * Transport tuple.
      */
@@ -173,4 +162,5 @@ export declare class PlainTransport extends Transport<PlainTransportEvents, Plai
     }): Promise<void>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=PlainTransport.d.ts.map

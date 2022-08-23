@@ -61,7 +61,7 @@ export type DataProducerObserverEvents =
 	close: [];
 };
 
-export type DataProducerInternal = TransportInternal &
+type DataProducerInternal = TransportInternal &
 {
 	dataProducerId: string;
 };

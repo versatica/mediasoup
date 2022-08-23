@@ -1,17 +1,12 @@
 import { Logger } from './Logger';
 import { UnsupportedError } from './errors';
-import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import {
 	Transport,
 	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
-	TransportInternal
+	TransportConstructorOptions
 } from './Transport';
-import { Producer } from './Producer';
-import { DataProducer } from './DataProducer';
-import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters } from './SctpParameters';
 
 export type DirectTransportOptions =
@@ -63,6 +58,11 @@ export type DirectTransportObserverEvents = TransportObserverEvents &
 	rtcp: [Buffer];
 };
 
+type DirectTransportConstructorOptions = TransportConstructorOptions &
+{
+	data: DirectTransportData;
+};
+
 export type DirectTransportData =
 {
 	sctpParameters?: SctpParameters;
@@ -74,54 +74,20 @@ export class DirectTransport extends
 	Transport<DirectTransportEvents, DirectTransportObserverEvents>
 {
 	// DirectTransport data.
-	readonly #data:
-	{
-		// Nothing for now.
-	};
+	readonly #data: DirectTransportData;
 
 	/**
 	 * @private
 	 */
-	constructor(
-		{
-			internal,
-			data,
-			channel,
-			payloadChannel,
-			appData,
-			getRouterRtpCapabilities,
-			getProducerById,
-			getDataProducerById
-		}:
-		{
-			internal: TransportInternal;
-			data: DirectTransportData;
-			channel: Channel;
-			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
-			getRouterRtpCapabilities: () => RtpCapabilities;
-			getProducerById: (producerId: string) => Producer | undefined;
-			getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
-		}
-	)
+	constructor(options: DirectTransportConstructorOptions)
 	{
-		super(
-			{
-				internal,
-				data,
-				channel,
-				payloadChannel,
-				appData,
-				getRouterRtpCapabilities,
-				getProducerById,
-				getDataProducerById
-			});
+		super(options);
 
 		logger.debug('constructor()');
 
 		this.#data =
 		{
-			// Nothing for now.
+			// Nothing.
 		};
 
 		this.handleWorkerNotifications();

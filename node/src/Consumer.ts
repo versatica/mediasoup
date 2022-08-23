@@ -186,7 +186,7 @@ export type ConsumerObserverEvents =
 	trace: [ConsumerTraceEventData];
 };
 
-export type ConsumerInternal = TransportInternal &
+type ConsumerInternal = TransportInternal &
 {
 	consumerId: string;
 };

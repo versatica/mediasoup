@@ -129,7 +129,7 @@ export declare type ProducerObserverEvents = {
     videoorientationchange: [ProducerVideoOrientation];
     trace: [ProducerTraceEventData];
 };
-export declare type ProducerInternal = TransportInternal & {
+declare type ProducerInternal = TransportInternal & {
     producerId: string;
 };
 declare type ProducerData = {

@@ -10,18 +10,10 @@ class WebRtcTransport extends Transport_1.Transport {
     /**
      * @private
      */
-    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }) {
-        super({
-            internal,
-            data,
-            channel,
-            payloadChannel,
-            appData,
-            getRouterRtpCapabilities,
-            getProducerById,
-            getDataProducerById
-        });
+    constructor(options) {
+        super(options);
         logger.debug('constructor()');
+        const { data } = options;
         this.#data =
             {
                 iceRole: data.iceRole,

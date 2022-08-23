@@ -1,12 +1,10 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import {
 	RtpObserver,
 	RtpObserverEvents,
 	RtpObserverObserverEvents,
-	RtpObserverObserverInternal
+	RtpObserverConstructorOptions
 } from './RtpObserver';
 import { Producer } from './Producer';
 
@@ -60,6 +58,8 @@ export type AudioLevelObserverObserverEvents = RtpObserverObserverEvents &
 	silence: [];
 };
 
+type AudioLevelObserverConstructorOptions = RtpObserverConstructorOptions;
+
 const logger = new Logger('AudioLevelObserver');
 
 export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
@@ -67,31 +67,9 @@ export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
 	/**
 	 * @private
 	 */
-	constructor(
-		{
-			internal,
-			channel,
-			payloadChannel,
-			appData,
-			getProducerById
-		}:
-		{
-			internal: RtpObserverObserverInternal;
-			channel: Channel;
-			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
-			getProducerById: (producerId: string) => Producer | undefined;
-		}
-	)
+	constructor(options: AudioLevelObserverConstructorOptions)
 	{
-		super(
-			{
-				internal,
-				channel,
-				payloadChannel,
-				appData,
-				getProducerById
-			});
+		super(options);
 
 		this.handleWorkerNotifications();
 	}

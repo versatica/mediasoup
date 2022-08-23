@@ -1,6 +1,4 @@
 import { Logger } from './Logger';
-import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import {
 	Transport,
 	TransportListenIp,
@@ -9,13 +7,10 @@ import {
 	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
-	TransportInternal,
+	TransportConstructorOptions,
 	SctpState
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
-import { Producer } from './Producer';
-import { DataProducer } from './DataProducer';
-import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { Either } from './utils';
 
@@ -191,6 +186,11 @@ export type WebRtcTransportObserverEvents = TransportObserverEvents &
 	sctpstatechange: [SctpState];
 };
 
+type WebRtcTransportConstructorOptions = TransportConstructorOptions &
+{
+	data: WebRtcTransportData;
+};
+
 export type WebRtcTransportData =
 {
 	iceRole: 'controlled';
@@ -216,42 +216,13 @@ export class WebRtcTransport extends
 	/**
 	 * @private
 	 */
-	constructor(
-		{
-			internal,
-			data,
-			channel,
-			payloadChannel,
-			appData,
-			getRouterRtpCapabilities,
-			getProducerById,
-			getDataProducerById
-		}:
-		{
-			internal: TransportInternal;
-			data: WebRtcTransportData;
-			channel: Channel;
-			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
-			getRouterRtpCapabilities: () => RtpCapabilities;
-			getProducerById: (producerId: string) => Producer | undefined;
-			getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
-		}
-	)
+	constructor(options: WebRtcTransportConstructorOptions)
 	{
-		super(
-			{
-				internal,
-				data,
-				channel,
-				payloadChannel,
-				appData,
-				getRouterRtpCapabilities,
-				getProducerById,
-				getDataProducerById
-			});
+		super(options);
 
 		logger.debug('constructor()');
+
+		const { data } = options;
 
 		this.#data =
 		{

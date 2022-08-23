@@ -1,7 +1,5 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
-import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents, RtpObserverObserverInternal } from './RtpObserver';
+import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents, RtpObserverConstructorOptions } from './RtpObserver';
 import { Producer } from './Producer';
 export interface ActiveSpeakerObserverOptions {
     interval?: number;
@@ -26,21 +24,17 @@ export declare type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEve
         producer: Producer;
     }];
 };
+declare type RtpObserverObserverConstructorOptions = RtpObserverConstructorOptions;
 export declare class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEvents> {
     /**
      * @private
      */
-    constructor({ internal, channel, payloadChannel, appData, getProducerById }: {
-        internal: RtpObserverObserverInternal;
-        channel: Channel;
-        payloadChannel: PayloadChannel;
-        appData?: Record<string, unknown>;
-        getProducerById: (producerId: string) => Producer | undefined;
-    });
+    constructor(options: RtpObserverObserverConstructorOptions);
     /**
      * Observer.
      */
     get observer(): EnhancedEventEmitter<ActiveSpeakerObserverObserverEvents>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=ActiveSpeakerObserver.d.ts.map

@@ -1,10 +1,5 @@
-import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
-import { Transport, TransportListenIp, TransportProtocol, TransportTuple, TransportEvents, TransportObserverEvents, TransportInternal, SctpState } from './Transport';
+import { Transport, TransportListenIp, TransportProtocol, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
-import { Producer } from './Producer';
-import { DataProducer } from './DataProducer';
-import { RtpCapabilities } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { Either } from './utils';
 export declare type WebRtcTransportListenIndividual = {
@@ -141,6 +136,9 @@ export declare type WebRtcTransportObserverEvents = TransportObserverEvents & {
     dtlsstatechange: [DtlsState];
     sctpstatechange: [SctpState];
 };
+declare type WebRtcTransportConstructorOptions = TransportConstructorOptions & {
+    data: WebRtcTransportData;
+};
 export declare type WebRtcTransportData = {
     iceRole: 'controlled';
     iceParameters: IceParameters;
@@ -158,16 +156,7 @@ export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, We
     /**
      * @private
      */
-    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
-        internal: TransportInternal;
-        data: WebRtcTransportData;
-        channel: Channel;
-        payloadChannel: PayloadChannel;
-        appData?: Record<string, unknown>;
-        getRouterRtpCapabilities: () => RtpCapabilities;
-        getProducerById: (producerId: string) => Producer | undefined;
-        getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
-    });
+    constructor(options: WebRtcTransportConstructorOptions);
     /**
      * ICE role.
      */
@@ -247,4 +236,5 @@ export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, We
     restartIce(): Promise<IceParameters>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=WebRtcTransport.d.ts.map

@@ -110,6 +110,18 @@ export type TransportObserverEvents =
 	trace: [TransportTraceEventData];
 };
 
+export type TransportConstructorOptions =
+{
+	internal: TransportInternal;
+	data: TransportData;
+	channel: Channel;
+	payloadChannel: PayloadChannel;
+	appData?: Record<string, unknown>;
+	getRouterRtpCapabilities: () => RtpCapabilities;
+	getProducerById: (producerId: string) => Producer | undefined;
+	getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
+};
+
 export type TransportInternal = RouterInternal &
 {
 	transportId: string;
@@ -196,17 +208,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			getRouterRtpCapabilities,
 			getProducerById,
 			getDataProducerById
-		}:
-		{
-			internal: TransportInternal;
-			data: TransportData;
-			channel: Channel;
-			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
-			getRouterRtpCapabilities: () => RtpCapabilities;
-			getProducerById: (producerId: string) => Producer | undefined;
-			getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
-		}
+		}: TransportConstructorOptions
 	)
 	{
 		super();

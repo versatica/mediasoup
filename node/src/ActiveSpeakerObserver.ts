@@ -1,12 +1,10 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import {
 	RtpObserver,
 	RtpObserverEvents,
 	RtpObserverObserverEvents,
-	RtpObserverObserverInternal
+	RtpObserverConstructorOptions
 } from './RtpObserver';
 import { Producer } from './Producer';
 
@@ -38,6 +36,8 @@ export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents &
 	dominantspeaker: [{ producer: Producer }];
 };
 
+type RtpObserverObserverConstructorOptions = RtpObserverConstructorOptions;
+
 const logger = new Logger('ActiveSpeakerObserver');
 
 export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEvents>
@@ -45,31 +45,9 @@ export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEven
 	/**
 	 * @private
 	 */
-	constructor(
-		{
-			internal,
-			channel,
-			payloadChannel,
-			appData,
-			getProducerById
-		}:
-		{
-			internal: RtpObserverObserverInternal;
-			channel: Channel;
-			payloadChannel: PayloadChannel;
-			appData?: Record<string, unknown>;
-			getProducerById: (producerId: string) => Producer | undefined;
-		}
-	)
+	constructor(options: RtpObserverObserverConstructorOptions)
 	{
-		super(
-			{
-				internal,
-				channel,
-				payloadChannel,
-				appData,
-				getProducerById
-			});
+		super(options);
 
 		this.handleWorkerNotifications();
 	}

@@ -75,7 +75,7 @@ export type DataConsumerObserverEvents =
 	close: [];
 };
 
-export type DataConsumerInternal = TransportInternal &
+type DataConsumerInternal = TransportInternal &
 {
 	dataConsumerId: string;
 };

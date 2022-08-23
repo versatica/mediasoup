@@ -78,6 +78,16 @@ export declare type TransportObserverEvents = {
     newdataconsumer: [DataConsumer];
     trace: [TransportTraceEventData];
 };
+export declare type TransportConstructorOptions = {
+    internal: TransportInternal;
+    data: TransportData;
+    channel: Channel;
+    payloadChannel: PayloadChannel;
+    appData?: Record<string, unknown>;
+    getRouterRtpCapabilities: () => RtpCapabilities;
+    getProducerById: (producerId: string) => Producer | undefined;
+    getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
+};
 export declare type TransportInternal = RouterInternal & {
     transportId: string;
 };
@@ -96,16 +106,7 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      * @private
      * @interface
      */
-    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
-        internal: TransportInternal;
-        data: TransportData;
-        channel: Channel;
-        payloadChannel: PayloadChannel;
-        appData?: Record<string, unknown>;
-        getRouterRtpCapabilities: () => RtpCapabilities;
-        getProducerById: (producerId: string) => Producer | undefined;
-        getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
-    });
+    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: TransportConstructorOptions);
     /**
      * Transport id.
      */

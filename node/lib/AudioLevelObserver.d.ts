@@ -1,7 +1,5 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
-import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents, RtpObserverObserverInternal } from './RtpObserver';
+import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents, RtpObserverConstructorOptions } from './RtpObserver';
 import { Producer } from './Producer';
 export interface AudioLevelObserverOptions {
     /**
@@ -41,21 +39,17 @@ export declare type AudioLevelObserverObserverEvents = RtpObserverObserverEvents
     volumes: [AudioLevelObserverVolume[]];
     silence: [];
 };
+declare type AudioLevelObserverConstructorOptions = RtpObserverConstructorOptions;
 export declare class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents> {
     /**
      * @private
      */
-    constructor({ internal, channel, payloadChannel, appData, getProducerById }: {
-        internal: RtpObserverObserverInternal;
-        channel: Channel;
-        payloadChannel: PayloadChannel;
-        appData?: Record<string, unknown>;
-        getProducerById: (producerId: string) => Producer | undefined;
-    });
+    constructor(options: AudioLevelObserverConstructorOptions);
     /**
      * Observer.
      */
     get observer(): EnhancedEventEmitter<AudioLevelObserverObserverEvents>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=AudioLevelObserver.d.ts.map
