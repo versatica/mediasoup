@@ -6,6 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include <stdexcept>
 
 namespace RTC
 {
@@ -154,11 +155,20 @@ namespace RTC
 		{
 			case PayloadChannel::PayloadChannelNotification::EventId::DATA_PRODUCER_SEND:
 			{
+				int ppid;
+
 				// This may throw.
-				// TODO: If this throws the process is gonna crash since we just handle
-				// MediaSoupErrors.
-				// TODO: We must check whether it's a valid positive number.
-				auto ppid       = std::stoi(notification->data);
+				// NOTE: If this throws we have to catch the error and throw a MediaSoupError
+				// intead, otherwise the process would crash.
+				try
+				{
+					ppid = std::stoi(notification->data);
+				}
+				catch (const std::exception& error)
+				{
+					MS_THROW_TYPE_ERROR("invalid PPID value: %s", error.what());
+				}
+
 				const auto* msg = notification->payload;
 				auto len        = notification->payloadLen;
 

@@ -8,6 +8,7 @@
 #include "Utils.hpp"
 #include "Channel/ChannelNotifier.hpp"
 #include "RTC/SctpAssociation.hpp"
+#include <stdexcept>
 
 namespace RTC
 {
@@ -238,10 +239,20 @@ namespace RTC
 					MS_THROW_ERROR("no SCTP association present");
 				}
 
+				int ppid;
+
 				// This may throw.
-				// TODO: If this throws the process is gonna crash since we just handle
-				// MediaSoupErrors.
-				auto ppid       = std::stoi(request->data);
+				// NOTE: If this throws we have to catch the error and throw a MediaSoupError
+				// intead, otherwise the process would crash.
+				try
+				{
+					ppid = std::stoi(request->data);
+				}
+				catch (const std::exception& error)
+				{
+					MS_THROW_TYPE_ERROR("invalid PPID value: %s", error.what());
+				}
+
 				const auto* msg = request->payload;
 				auto len        = request->payloadLen;
 
