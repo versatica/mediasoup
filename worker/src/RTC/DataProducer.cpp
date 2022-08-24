@@ -174,13 +174,10 @@ namespace RTC
 
 				if (len > this->maxMessageSize)
 				{
-					MS_WARN_TAG(
-					  message,
+					MS_THROW_TYPE_ERROR(
 					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
 					  len,
 					  this->maxMessageSize);
-
-					break;
 				}
 
 				this->ReceiveMessage(ppid, msg, len);
