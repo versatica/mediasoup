@@ -11,7 +11,12 @@
 
 namespace Channel
 {
+	// Binary length for a 4194304 bytes payload.
+	static constexpr size_t MessageMaxLen{ 4194308 };
+	static constexpr size_t PayloadMaxLen{ 4194304 };
+
 	/* Static methods for UV callbacks. */
+
 	inline static void onAsync(uv_handle_t* handle)
 	{
 		while (static_cast<ChannelSocket*>(handle->data)->CallbackRead())
@@ -25,11 +30,54 @@ namespace Channel
 		delete handle;
 	}
 
-	// Binary length for a 4194304 bytes payload.
-	static constexpr size_t MessageMaxLen{ 4194308 };
-	static constexpr size_t PayloadMaxLen{ 4194304 };
+	/* Class variables. */
+
+	absl::flat_hash_map<std::string, ChannelSocket::RequestHandler*> ChannelSocket::mapRequestHandlers;
+
+	/* Static class methods. */
+
+	void ChannelSocket::RegisterRequestHandler(
+	  ChannelSocket::RequestHandler* handler, const std::string& id)
+	{
+		MS_TRACE_STD();
+
+		if (ChannelSocket::mapRequestHandlers.find(id) != ChannelSocket::mapRequestHandlers.end())
+		{
+			MS_THROW_ERROR_STD("request handler with ID %s already exists", id.c_str());
+		}
+
+		ChannelSocket::mapRequestHandlers[id] = handler;
+	}
+
+	void ChannelSocket::UnregisterRequestHandler(
+	  ChannelSocket::RequestHandler* handler, const std::string& id)
+	{
+		MS_TRACE_STD();
+
+		if (ChannelSocket::mapRequestHandlers.find(id) == ChannelSocket::mapRequestHandlers.end())
+		{
+			MS_ERROR_STD("request handler with ID %s not found", id.c_str());
+		}
+		else
+		{
+			ChannelSocket::mapRequestHandlers.erase(id);
+		}
+	}
+
+	ChannelSocket::RequestHandler* ChannelSocket::GetRegisteredRequestHandler(const std::string& id)
+	{
+		MS_TRACE_STD();
+
+		auto it = ChannelSocket::mapRequestHandlers.find(id);
+
+		if (it != ChannelSocket::mapRequestHandlers.end())
+			return it->second;
+		else
+			return nullptr;
+	}
 
 	/* Instance methods. */
+
 	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)
 	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
 	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen)),
@@ -258,8 +306,15 @@ namespace Channel
 		this->listener->OnChannelClosed(this);
 	}
 
+	/* Instance methods. */
+
 	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
+	{
+		MS_TRACE_STD();
+	}
+
+	ConsumerSocket::~ConsumerSocket()
 	{
 		MS_TRACE_STD();
 	}
@@ -320,6 +375,8 @@ namespace Channel
 		// Notify the listener.
 		this->listener->OnConsumerSocketClosed(this);
 	}
+
+	/* Instance methods. */
 
 	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::PRODUCER)

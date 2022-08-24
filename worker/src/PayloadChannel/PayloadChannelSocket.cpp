@@ -12,7 +12,12 @@
 
 namespace PayloadChannel
 {
-	/* Static. */
+	// Binary length for a 4194304 bytes payload.
+	static constexpr size_t MessageMaxLen{ 4194308 };
+	static constexpr size_t PayloadMaxLen{ 4194304 };
+
+	/* Static methods for UV callbacks. */
+
 	inline static void onAsync(uv_handle_t* handle)
 	{
 		while (static_cast<PayloadChannelSocket*>(handle->data)->CallbackRead())
@@ -26,11 +31,107 @@ namespace PayloadChannel
 		delete handle;
 	}
 
-	// Binary length for a 4194304 bytes payload.
-	static constexpr size_t MessageMaxLen{ 4194308 };
-	static constexpr size_t PayloadMaxLen{ 4194304 };
+	/* Class variables. */
+
+	absl::flat_hash_map<std::string, PayloadChannelSocket::RequestHandler*>
+	  PayloadChannelSocket::mapRequestHandlers;
+	absl::flat_hash_map<std::string, PayloadChannelSocket::NotificationHandler*>
+	  PayloadChannelSocket::mapNotificationHandlers;
+
+	/* Static class methods. */
+
+	void PayloadChannelSocket::RegisterRequestHandler(
+	  PayloadChannelSocket::RequestHandler* handler, const std::string& id)
+	{
+		MS_TRACE_STD();
+
+		if (
+		  PayloadChannelSocket::mapRequestHandlers.find(id) !=
+		  PayloadChannelSocket::mapRequestHandlers.end())
+		{
+			MS_THROW_ERROR_STD("request handler with ID %s already exists", id.c_str());
+		}
+
+		PayloadChannelSocket::mapRequestHandlers[id] = handler;
+	}
+
+	void PayloadChannelSocket::UnregisterRequestHandler(
+	  PayloadChannelSocket::RequestHandler* handler, const std::string& id)
+	{
+		MS_TRACE_STD();
+
+		if (
+		  PayloadChannelSocket::mapRequestHandlers.find(id) ==
+		  PayloadChannelSocket::mapRequestHandlers.end())
+		{
+			MS_ERROR_STD("request handler with ID %s not found", id.c_str());
+		}
+		else
+		{
+			PayloadChannelSocket::mapRequestHandlers.erase(id);
+		}
+	}
+
+	PayloadChannelSocket::RequestHandler* PayloadChannelSocket::GetRegisteredRequestHandler(
+	  const std::string& id)
+	{
+		MS_TRACE_STD();
+
+		auto it = PayloadChannelSocket::mapRequestHandlers.find(id);
+
+		if (it != PayloadChannelSocket::mapRequestHandlers.end())
+			return it->second;
+		else
+			return nullptr;
+	}
+
+	void PayloadChannelSocket::RegisterNotificationHandler(
+	  PayloadChannelSocket::NotificationHandler* handler, const std::string& id)
+	{
+		MS_TRACE_STD();
+
+		if (
+		  PayloadChannelSocket::mapNotificationHandlers.find(id) !=
+		  PayloadChannelSocket::mapNotificationHandlers.end())
+		{
+			MS_THROW_ERROR_STD("notification handler with ID %s already exists", id.c_str());
+		}
+
+		PayloadChannelSocket::mapNotificationHandlers[id] = handler;
+	}
+
+	void PayloadChannelSocket::UnregisterNotificationHandler(
+	  PayloadChannelSocket::NotificationHandler* handler, const std::string& id)
+	{
+		MS_TRACE_STD();
+
+		if (
+		  PayloadChannelSocket::mapNotificationHandlers.find(id) ==
+		  PayloadChannelSocket::mapNotificationHandlers.end())
+		{
+			MS_ERROR_STD("notification handler with ID %s not found", id.c_str());
+		}
+		else
+		{
+			PayloadChannelSocket::mapNotificationHandlers.erase(id);
+		}
+	}
+
+	PayloadChannelSocket::NotificationHandler* PayloadChannelSocket::GetRegisteredNotificationHandler(
+	  const std::string& id)
+	{
+		MS_TRACE_STD();
+
+		auto it = PayloadChannelSocket::mapNotificationHandlers.find(id);
+
+		if (it != PayloadChannelSocket::mapNotificationHandlers.end())
+			return it->second;
+		else
+			return nullptr;
+	}
 
 	/* Instance methods. */
+
 	PayloadChannelSocket::PayloadChannelSocket(int consumerFd, int producerFd)
 	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
 	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen)),
@@ -361,6 +462,8 @@ namespace PayloadChannel
 		this->listener->OnPayloadChannelClosed(this);
 	}
 
+	/* Instance methods. */
+
 	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
 	{
@@ -428,6 +531,8 @@ namespace PayloadChannel
 		// Notify the listener.
 		this->listener->OnConsumerSocketClosed(this);
 	}
+
+	/* Instance methods. */
 
 	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::PRODUCER)

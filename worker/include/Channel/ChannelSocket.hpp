@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -26,6 +27,8 @@ namespace Channel
 
 	public:
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
+		~ConsumerSocket();
+
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		void UserOnUnixStreamRead() override;
@@ -73,6 +76,11 @@ namespace Channel
 		};
 
 	public:
+		static void RegisterRequestHandler(RequestHandler* handler, const std::string& id);
+		static void UnregisterRequestHandler(RequestHandler* handler, const std::string& id);
+		static RequestHandler* GetRegisteredRequestHandler(const std::string& id);
+
+	public:
 		explicit ChannelSocket(int consumerFd, int producerFd);
 		explicit ChannelSocket(
 		  ChannelReadFn channelReadFn,
@@ -81,13 +89,16 @@ namespace Channel
 		  ChannelWriteCtx channelWriteCtx);
 		virtual ~ChannelSocket();
 
+	private:
+		static absl::flat_hash_map<std::string, RequestHandler*> mapRequestHandlers;
+
 	public:
 		void Close();
 		void SetListener(Listener* listener);
-		bool CallbackRead();
 		void Send(json& jsonMessage);
 		void Send(const std::string& message);
 		void SendLog(const char* message, uint32_t messageLen);
+		bool CallbackRead();
 
 	private:
 		void SendImpl(const uint8_t* payload, uint32_t payloadLen);

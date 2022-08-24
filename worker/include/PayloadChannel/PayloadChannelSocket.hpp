@@ -5,6 +5,7 @@
 #include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
+#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -85,6 +86,14 @@ namespace PayloadChannel
 		};
 
 	public:
+		static void RegisterRequestHandler(RequestHandler* handler, const std::string& id);
+		static void UnregisterRequestHandler(RequestHandler* handler, const std::string& id);
+		static RequestHandler* GetRegisteredRequestHandler(const std::string& id);
+		static void RegisterNotificationHandler(NotificationHandler* handler, const std::string& id);
+		static void UnregisterNotificationHandler(NotificationHandler* handler, const std::string& id);
+		static NotificationHandler* GetRegisteredNotificationHandler(const std::string& id);
+
+	public:
 		explicit PayloadChannelSocket(int consumerFd, int producerFd);
 		explicit PayloadChannelSocket(
 		  PayloadChannelReadFn payloadChannelReadFn,
@@ -93,14 +102,18 @@ namespace PayloadChannel
 		  PayloadChannelWriteCtx payloadChannelWriteCtx);
 		virtual ~PayloadChannelSocket();
 
+	private:
+		static absl::flat_hash_map<std::string, RequestHandler*> mapRequestHandlers;
+		static absl::flat_hash_map<std::string, NotificationHandler*> mapNotificationHandlers;
+
 	public:
 		void Close();
 		void SetListener(Listener* listener);
-		bool CallbackRead();
 		void Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen);
 		void Send(const std::string& message, const uint8_t* payload, size_t payloadLen);
 		void Send(json& jsonMessage);
 		void Send(const std::string& message);
+		bool CallbackRead();
 
 	private:
 		void SendImpl(const uint8_t* message, uint32_t messageLen);

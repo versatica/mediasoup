@@ -56,11 +56,37 @@ namespace RTC
 
 		if (jsonProtocolIt != data.end() && jsonProtocolIt->is_string())
 			this->protocol = jsonProtocolIt->get<std::string>();
+
+		try
+		{
+			// Register it as Channel::ChannelSocket::RequestHandler.
+			// NOTE: This may throw.
+			Channel::ChannelSocket::RegisterRequestHandler(this, this->id);
+
+			// Register it as PayloadChannel::PayloadChannelSocket::NotificationHandler.
+			PayloadChannel::PayloadChannelSocket::RegisterNotificationHandler(this, this->id);
+		}
+		catch (const MediaSoupError& error)
+		{
+			// Unregister it as Channel::ChannelSocket::RequestHandler.
+			Channel::ChannelSocket::UnregisterRequestHandler(this, this->id);
+
+			// Unregister it as PayloadChannel::ChannelSocket::NotificationHandler.
+			PayloadChannel::PayloadChannelSocket::UnregisterNotificationHandler(this, this->id);
+
+			throw;
+		}
 	}
 
 	DataProducer::~DataProducer()
 	{
 		MS_TRACE();
+
+		// Unregister it as Channel::ChannelSocket::RequestHandler.
+		Channel::ChannelSocket::UnregisterRequestHandler(this, this->id);
+
+		// Unregister it as PayloadChannel::ChannelSocket::NotificationHandler.
+		PayloadChannel::PayloadChannelSocket::UnregisterNotificationHandler(this, this->id);
 	}
 
 	void DataProducer::FillJson(json& jsonObject) const
