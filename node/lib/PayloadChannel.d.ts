@@ -16,11 +16,11 @@ export declare class PayloadChannel extends EnhancedEventEmitter {
     /**
      * @private
      */
-    notify(event: string, handlerId: string, data: any | undefined, payload: string | Buffer): void;
+    notify(event: string, handlerId: string, data: string | undefined, payload: string | Buffer): void;
     /**
      * @private
      */
-    request(method: string, handlerId: string, data: any, payload: string | Buffer): Promise<any>;
+    request(method: string, handlerId: string, data: string, payload: string | Buffer): Promise<any>;
     private processData;
 }
 //# sourceMappingURL=PayloadChannel.d.ts.map

@@ -679,7 +679,7 @@ namespace RTC
 		}
 	}
 
-	void PlainTransport::HandleNotification(PayloadChannel::Notification* notification)
+	void PlainTransport::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 	{
 		MS_TRACE();
 

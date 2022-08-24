@@ -609,13 +609,13 @@ namespace RTC
 		}
 	}
 
-	void Producer::HandleNotification(PayloadChannel::Notification* notification)
+	void Producer::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 	{
 		MS_TRACE();
 
 		switch (notification->eventId)
 		{
-			case PayloadChannel::Notification::EventId::PRODUCER_SEND:
+			case PayloadChannel::PayloadChannelNotification::EventId::PRODUCER_SEND:
 			{
 				const auto* data = notification->payload;
 				auto len         = notification->payloadLen;

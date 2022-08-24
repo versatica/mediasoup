@@ -10,6 +10,7 @@
 #include <mutex>
 #include <nlohmann/json.hpp>
 #include <sstream> // std::ostringstream
+#include <stdexcept>
 extern "C"
 {
 #include <getopt.h>

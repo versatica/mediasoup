@@ -415,7 +415,7 @@ namespace RTC
 		}
 	}
 
-	void PipeTransport::HandleNotification(PayloadChannel::Notification* notification)
+	void PipeTransport::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 	{
 		MS_TRACE();
 

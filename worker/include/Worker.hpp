@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "PayloadChannel/Notification.hpp"
+#include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/Router.hpp"
@@ -48,7 +48,7 @@ public:
 
 	/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
 public:
-	void HandleNotification(PayloadChannel::Notification* notification) override;
+	void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
 
 	/* Methods inherited from PayloadChannel::PayloadChannelSocket::Listener. */
 public:

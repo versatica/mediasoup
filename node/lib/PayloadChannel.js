@@ -109,7 +109,7 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('notify() [event:%s]', event);
         if (this.#closed)
             throw new errors_1.InvalidStateError('PayloadChannel closed');
-        const notification = JSON.stringify({ event, handlerId, data });
+        const notification = `n:${event}:${handlerId}:${data}`;
         if (Buffer.byteLength(notification) > MESSAGE_MAX_LEN)
             throw new Error('PayloadChannel notification too big');
         else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
@@ -141,10 +141,10 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const id = this.#nextId;
         logger.debug('request() [method:%s, id:%s]', method, id);
         if (this.#closed)
-            throw new errors_1.InvalidStateError('Channel closed');
-        const request = JSON.stringify({ id, method, handlerId, data });
+            throw new errors_1.InvalidStateError('PayloadChannel closed');
+        const request = `r:${id}:${method}:${handlerId}:${data}`;
         if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
-            throw new Error('Channel request too big');
+            throw new Error('PayloadChannel request too big');
         else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
             throw new Error('PayloadChannel payload too big');
         // This may throw if closed or remote side ended.
@@ -167,7 +167,7 @@ class PayloadChannel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                     pReject(error);
                 },
                 close: () => {
-                    pReject(new errors_1.InvalidStateError('Channel closed'));
+                    pReject(new errors_1.InvalidStateError('PayloadChannel closed'));
                 }
             };
             // Add sent stuff to the map.

@@ -234,16 +234,15 @@ export class Channel extends EnhancedEventEmitter
 		if (this.#closed)
 			throw new InvalidStateError('Channel closed');
 
-		const request = { id, method, handlerId, data };
-		const payload = JSON.stringify(request);
+		const request = `${id}:${method}:${handlerId}:${JSON.stringify(data)}`;
 
-		if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
+		if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');
 
 		// This may throw if closed or remote side ended.
 		this.#producerSocket.write(
-			Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
-		this.#producerSocket.write(payload);
+			Buffer.from(Uint32Array.of(Buffer.byteLength(request)).buffer));
+		this.#producerSocket.write(request);
 
 		return new Promise((pResolve, pReject) =>
 		{

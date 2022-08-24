@@ -452,7 +452,7 @@ inline void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
 	Close();
 }
 
-inline void Worker::HandleNotification(PayloadChannel::Notification* notification)
+inline void Worker::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 {
 	MS_TRACE();
 
@@ -562,39 +562,62 @@ inline void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 inline void Worker::OnChannelRequestHandlerAdded(
   const std::string& id, Channel::ChannelSocket::RequestHandler* handler)
 {
+	MS_TRACE();
+
 	if (this->mapChannelRequestHandlers.find(id) != this->mapChannelRequestHandlers.end())
+	{
 		MS_THROW_ERROR("Channel request handler with ID %s already exists", id.c_str());
+	}
 
 	this->mapChannelRequestHandlers[id] = handler;
 }
+
 inline void Worker::OnChannelRequestHandlerRemoved(const std::string& id)
 {
+	MS_TRACE();
+
 	this->mapChannelRequestHandlers.erase(id);
 }
+
 inline void Worker::OnPayloadChannelRequestHandlerAdded(
   const std::string& id, PayloadChannel::PayloadChannelSocket::RequestHandler* handler)
 {
+	MS_TRACE();
+
 	if (this->mapPayloadChannelRequestHandlers.find(id) != this->mapPayloadChannelRequestHandlers.end())
-		MS_THROW_ERROR("Payload channel request handler with ID %s already exists", id.c_str());
+	{
+		MS_THROW_ERROR("PayloadChannel request handler with ID %s already exists", id.c_str());
+	}
 
 	this->mapPayloadChannelRequestHandlers[id] = handler;
 }
+
 inline void Worker::OnPayloadChannelRequestHandlerRemoved(const std::string& id)
 {
+	MS_TRACE();
+
 	this->mapPayloadChannelRequestHandlers.erase(id);
 }
+
 inline void Worker::OnPayloadChannelNotificationHandlerAdded(
   const std::string& id, PayloadChannel::PayloadChannelSocket::NotificationHandler* handler)
 {
+	MS_TRACE();
+
 	if (
 	  this->mapPayloadChannelNotificationHandlers.find(id) !=
 	  this->mapPayloadChannelNotificationHandlers.end())
-		MS_THROW_ERROR("Payload channel notification handler with ID %s already exists", id.c_str());
+	{
+		MS_THROW_ERROR("PayloadChannel notification handler with ID %s already exists", id.c_str());
+	}
 
 	this->mapPayloadChannelNotificationHandlers[id] = handler;
 }
+
 inline void Worker::OnPayloadChannelNotificationHandlerRemoved(const std::string& id)
 {
+	MS_TRACE();
+
 	this->mapPayloadChannelNotificationHandlers.erase(id);
 }
 
