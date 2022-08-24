@@ -108,7 +108,7 @@ test('directTransport.connect() succeeds', async () =>
 		.toBeUndefined();
 }, 2000);
 
-test.only('dataProducer.send() succeeds', async () =>
+test('dataProducer.send() succeeds', async () =>
 {
 	const transport2 = await router.createDirectTransport();
 	const dataProducer = await transport2.produceData(
