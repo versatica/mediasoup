@@ -34,15 +34,6 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnChannelRequestHandlerAdded(
-			  const std::string& id, Channel::ChannelSocket::RequestHandler* handler) = 0;
-			virtual void OnChannelRequestHandlerRemoved(const std::string& id)        = 0;
-			virtual void OnPayloadChannelRequestHandlerAdded(
-			  const std::string& id, PayloadChannel::PayloadChannelSocket::RequestHandler* handler) = 0;
-			virtual void OnPayloadChannelRequestHandlerRemoved(const std::string& id)               = 0;
-			virtual void OnPayloadChannelNotificationHandlerAdded(
-			  const std::string& id, PayloadChannel::PayloadChannelSocket::NotificationHandler* handler) = 0;
-			virtual void OnPayloadChannelNotificationHandlerRemoved(const std::string& id) = 0;
 			virtual RTC::WebRtcServer* OnRouterNeedWebRtcServer(
 			  RTC::Router* router, std::string& webRtcServerId) = 0;
 		};

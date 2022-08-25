@@ -91,11 +91,6 @@ void Worker::Close()
 
 	// Close the PayloadChannel.
 	this->payloadChannel->Close();
-
-	// Clear all request and notification handlers.
-	this->mapChannelRequestHandlers.clear();
-	this->mapPayloadChannelRequestHandlers.clear();
-	this->mapPayloadChannelNotificationHandlers.clear();
 }
 
 void Worker::FillJson(json& jsonObject) const
@@ -320,7 +315,6 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 				auto* webRtcServer = new RTC::WebRtcServer(webRtcServerId, request->data);
 
 				this->mapWebRtcServers[webRtcServerId] = webRtcServer;
-				this->OnChannelRequestHandlerAdded(webRtcServerId, webRtcServer);
 
 				MS_DEBUG_DEV("WebRtcServer created [webRtcServerId:%s]", webRtcServerId.c_str());
 
@@ -353,7 +347,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			// Remove it from the map and delete it.
 			this->mapWebRtcServers.erase(webRtcServer->id);
-			this->OnChannelRequestHandlerRemoved(webRtcServer->id);
+
 			delete webRtcServer;
 
 			MS_DEBUG_DEV("WebRtcServer closed [id:%s]", webRtcServer->id.c_str());
@@ -379,7 +373,6 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			auto* router = new RTC::Router(routerId, this);
 
 			this->mapRouters[routerId] = router;
-			this->OnChannelRequestHandlerAdded(routerId, router);
 
 			MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
 
@@ -403,7 +396,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			// Remove it from the map and delete it.
 			this->mapRouters.erase(router->id);
-			this->OnChannelRequestHandlerRemoved(router->id);
+
 			delete router;
 
 			MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
@@ -418,12 +411,14 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			try
 			{
-				auto it = this->mapChannelRequestHandlers.find(request->handlerId);
+				auto* handler = ChannelMessageHandlers::GetChannelRequestHandler(request->handlerId);
 
-				if (it == this->mapChannelRequestHandlers.end())
-					MS_THROW_ERROR("Channel handler with ID %s not found", request->handlerId.c_str());
+				if (handler == nullptr)
+				{
+					MS_THROW_ERROR("Channel request handler with ID %s not found", request->handlerId.c_str());
+				}
 
-				it->second->HandleRequest(request);
+				handler->HandleRequest(request);
 			}
 			catch (const MediaSoupTypeError& error)
 			{
@@ -453,31 +448,6 @@ inline void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
 	Close();
 }
 
-inline void Worker::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
-{
-	MS_TRACE();
-
-	MS_DEBUG_DEV("PayloadChannel notification received [event:%s]", notification->event.c_str());
-
-	try
-	{
-		auto it = this->mapPayloadChannelNotificationHandlers.find(notification->handlerId);
-
-		if (it == this->mapPayloadChannelNotificationHandlers.end())
-			MS_THROW_ERROR("Notification handler with ID %s not found", notification->handlerId.c_str());
-
-		it->second->HandleNotification(notification);
-	}
-	catch (const MediaSoupTypeError& error)
-	{
-		MS_THROW_TYPE_ERROR("%s [event:%s]", error.what(), notification->event.c_str());
-	}
-	catch (const MediaSoupError& error)
-	{
-		MS_THROW_ERROR("%s [method:%s]", error.what(), notification->event.c_str());
-	}
-}
-
 inline void Worker::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
 {
 	MS_TRACE();
@@ -489,12 +459,15 @@ inline void Worker::HandleRequest(PayloadChannel::PayloadChannelRequest* request
 
 	try
 	{
-		auto it = this->mapPayloadChannelRequestHandlers.find(request->handlerId);
+		auto* handler = ChannelMessageHandlers::GetPayloadChannelRequestHandler(request->handlerId);
 
-		if (it == this->mapPayloadChannelRequestHandlers.end())
-			MS_THROW_ERROR("Payload channel handler with ID %s not found", request->handlerId.c_str());
+		if (handler == nullptr)
+		{
+			MS_THROW_ERROR(
+			  "PayloadChannel request handler with ID %s not found", request->handlerId.c_str());
+		}
 
-		it->second->HandleRequest(request);
+		handler->HandleRequest(request);
 	}
 	catch (const MediaSoupTypeError& error)
 	{
@@ -503,6 +476,35 @@ inline void Worker::HandleRequest(PayloadChannel::PayloadChannelRequest* request
 	catch (const MediaSoupError& error)
 	{
 		MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+	}
+}
+
+inline void Worker::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
+{
+	MS_TRACE();
+
+	MS_DEBUG_DEV("PayloadChannel notification received [event:%s]", notification->event.c_str());
+
+	try
+	{
+		auto* handler =
+		  ChannelMessageHandlers::GetPayloadChannelNotificationHandler(notification->handlerId);
+
+		if (handler == nullptr)
+		{
+			MS_THROW_ERROR(
+			  "PayloadChannel notification handler with ID %s not found", notification->handlerId.c_str());
+		}
+
+		handler->HandleNotification(notification);
+	}
+	catch (const MediaSoupTypeError& error)
+	{
+		MS_THROW_TYPE_ERROR("%s [event:%s]", error.what(), notification->event.c_str());
+	}
+	catch (const MediaSoupError& error)
+	{
+		MS_THROW_ERROR("%s [method:%s]", error.what(), notification->event.c_str());
 	}
 }
 
@@ -558,68 +560,6 @@ inline void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
 			MS_WARN_DEV("received a non handled signal [signum:%d]", signum);
 		}
 	}
-}
-
-inline void Worker::OnChannelRequestHandlerAdded(
-  const std::string& id, Channel::ChannelSocket::RequestHandler* handler)
-{
-	MS_TRACE();
-
-	if (this->mapChannelRequestHandlers.find(id) != this->mapChannelRequestHandlers.end())
-	{
-		MS_THROW_ERROR("Channel request handler with ID %s already exists", id.c_str());
-	}
-
-	this->mapChannelRequestHandlers[id] = handler;
-}
-
-inline void Worker::OnChannelRequestHandlerRemoved(const std::string& id)
-{
-	MS_TRACE();
-
-	this->mapChannelRequestHandlers.erase(id);
-}
-
-inline void Worker::OnPayloadChannelRequestHandlerAdded(
-  const std::string& id, PayloadChannel::PayloadChannelSocket::RequestHandler* handler)
-{
-	MS_TRACE();
-
-	if (this->mapPayloadChannelRequestHandlers.find(id) != this->mapPayloadChannelRequestHandlers.end())
-	{
-		MS_THROW_ERROR("PayloadChannel request handler with ID %s already exists", id.c_str());
-	}
-
-	this->mapPayloadChannelRequestHandlers[id] = handler;
-}
-
-inline void Worker::OnPayloadChannelRequestHandlerRemoved(const std::string& id)
-{
-	MS_TRACE();
-
-	this->mapPayloadChannelRequestHandlers.erase(id);
-}
-
-inline void Worker::OnPayloadChannelNotificationHandlerAdded(
-  const std::string& id, PayloadChannel::PayloadChannelSocket::NotificationHandler* handler)
-{
-	MS_TRACE();
-
-	if (
-	  this->mapPayloadChannelNotificationHandlers.find(id) !=
-	  this->mapPayloadChannelNotificationHandlers.end())
-	{
-		MS_THROW_ERROR("PayloadChannel notification handler with ID %s already exists", id.c_str());
-	}
-
-	this->mapPayloadChannelNotificationHandlers[id] = handler;
-}
-
-inline void Worker::OnPayloadChannelNotificationHandlerRemoved(const std::string& id)
-{
-	MS_TRACE();
-
-	this->mapPayloadChannelNotificationHandlers.erase(id);
 }
 
 inline RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(

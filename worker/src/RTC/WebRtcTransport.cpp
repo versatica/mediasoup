@@ -258,8 +258,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
-
 		try
 		{
 			if (iceCandidates.empty())
@@ -301,6 +299,8 @@ namespace RTC
 	WebRtcTransport::~WebRtcTransport()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		// Must delete the DTLS transport first since it will generate a DTLS alert
 		// to be sent.

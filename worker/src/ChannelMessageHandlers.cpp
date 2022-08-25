@@ -32,7 +32,7 @@ void ChannelMessageHandlers::RegisterHandler(
 			  ChannelMessageHandlers::mapChannelRequestHandlers.find(id) !=
 			  ChannelMessageHandlers::mapChannelRequestHandlers.end())
 			{
-				MS_THROW_ERROR_STD("Channel request handler with ID %s already exists", id.c_str());
+				MS_THROW_ERROR("Channel request handler with ID %s already exists", id.c_str());
 			}
 
 			ChannelMessageHandlers::mapChannelRequestHandlers[id] = channelRequestHandler;
@@ -44,7 +44,7 @@ void ChannelMessageHandlers::RegisterHandler(
 			  ChannelMessageHandlers::mapPayloadChannelRequestHandlers.find(id) !=
 			  ChannelMessageHandlers::mapPayloadChannelRequestHandlers.end())
 			{
-				MS_THROW_ERROR_STD("PayloadChannel request handler with ID %s already exists", id.c_str());
+				MS_THROW_ERROR("PayloadChannel request handler with ID %s already exists", id.c_str());
 			}
 
 			ChannelMessageHandlers::mapPayloadChannelRequestHandlers[id] = payloadChannelRequestHandler;
@@ -56,8 +56,7 @@ void ChannelMessageHandlers::RegisterHandler(
 			  ChannelMessageHandlers::mapPayloadChannelNotificationHandlers.find(id) !=
 			  ChannelMessageHandlers::mapPayloadChannelNotificationHandlers.end())
 			{
-				MS_THROW_ERROR_STD(
-				  "PayloadChannel notification handler with ID %s already exists", id.c_str());
+				MS_THROW_ERROR("PayloadChannel notification handler with ID %s already exists", id.c_str());
 			}
 
 			ChannelMessageHandlers::mapPayloadChannelNotificationHandlers[id] =
@@ -80,4 +79,55 @@ void ChannelMessageHandlers::UnregisterHandler(const std::string& id)
 	ChannelMessageHandlers::mapChannelRequestHandlers.erase(id);
 	ChannelMessageHandlers::mapPayloadChannelRequestHandlers.erase(id);
 	ChannelMessageHandlers::mapPayloadChannelNotificationHandlers.erase(id);
+}
+
+Channel::ChannelSocket::RequestHandler* ChannelMessageHandlers::GetChannelRequestHandler(
+  const std::string& id)
+{
+	MS_TRACE();
+
+	auto it = ChannelMessageHandlers::mapChannelRequestHandlers.find(id);
+
+	if (it != ChannelMessageHandlers::mapChannelRequestHandlers.end())
+	{
+		return it->second;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+PayloadChannel::PayloadChannelSocket::RequestHandler* ChannelMessageHandlers::GetPayloadChannelRequestHandler(
+  const std::string& id)
+{
+	MS_TRACE();
+
+	auto it = ChannelMessageHandlers::mapPayloadChannelRequestHandlers.find(id);
+
+	if (it != ChannelMessageHandlers::mapPayloadChannelRequestHandlers.end())
+	{
+		return it->second;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+PayloadChannel::PayloadChannelSocket::NotificationHandler* ChannelMessageHandlers::
+  GetPayloadChannelNotificationHandler(const std::string& id)
+{
+	MS_TRACE();
+
+	auto it = ChannelMessageHandlers::mapPayloadChannelNotificationHandlers.find(id);
+
+	if (it != ChannelMessageHandlers::mapPayloadChannelNotificationHandlers.end())
+	{
+		return it->second;
+	}
+	else
+	{
+		return nullptr;
+	}
 }
