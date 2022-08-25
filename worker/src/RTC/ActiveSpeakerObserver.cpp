@@ -1,6 +1,7 @@
 #define MS_CLASS "RTC::ActiveSpeakerObserver"
 
 #include "RTC/ActiveSpeakerObserver.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -101,7 +102,9 @@ namespace RTC
 		auto jsonIntervalIt = data.find("interval");
 
 		if (jsonIntervalIt == data.end() || !jsonIntervalIt->is_number())
+		{
 			MS_THROW_TYPE_ERROR("missing interval");
+		}
 
 		this->interval = jsonIntervalIt->get<int16_t>();
 
@@ -113,11 +116,20 @@ namespace RTC
 		this->periodicTimer = new Timer(this);
 
 		this->periodicTimer->Start(interval, interval);
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ nullptr,
+		  /*payloadChannelNotificationHandler*/ nullptr);
 	}
 
 	ActiveSpeakerObserver::~ActiveSpeakerObserver()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		delete this->periodicTimer;
 	}

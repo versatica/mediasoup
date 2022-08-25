@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Router.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -19,11 +20,20 @@ namespace RTC
 	Router::Router(const std::string& id, Listener* listener) : id(id), listener(listener)
 	{
 		MS_TRACE();
+
+		// NOTE: This may throw.
+											ChannelMessageHandlers::RegisterHandler(
+											  this->id,
+											  /*channelRequestHandler*/ this,
+											  /*payloadChannelRequestHandler*/ nullptr,
+											  /*payloadChannelNotificationHandler*/ nullptr);
 	}
 
 	Router::~Router()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		// Close all Transports.
 		for (auto& kv : this->mapTransports)

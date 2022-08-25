@@ -30,52 +30,6 @@ namespace Channel
 		delete handle;
 	}
 
-	/* Class variables. */
-
-	absl::flat_hash_map<std::string, ChannelSocket::RequestHandler*> ChannelSocket::mapRequestHandlers;
-
-	/* Static class methods. */
-
-	void ChannelSocket::RegisterRequestHandler(
-	  ChannelSocket::RequestHandler* handler, const std::string& id)
-	{
-		MS_TRACE_STD();
-
-		if (ChannelSocket::mapRequestHandlers.find(id) != ChannelSocket::mapRequestHandlers.end())
-		{
-			MS_THROW_ERROR_STD("request handler with ID %s already exists", id.c_str());
-		}
-
-		ChannelSocket::mapRequestHandlers[id] = handler;
-	}
-
-	void ChannelSocket::UnregisterRequestHandler(
-	  ChannelSocket::RequestHandler* handler, const std::string& id)
-	{
-		MS_TRACE_STD();
-
-		if (ChannelSocket::mapRequestHandlers.find(id) == ChannelSocket::mapRequestHandlers.end())
-		{
-			MS_ERROR_STD("request handler with ID %s not found", id.c_str());
-		}
-		else
-		{
-			ChannelSocket::mapRequestHandlers.erase(id);
-		}
-	}
-
-	ChannelSocket::RequestHandler* ChannelSocket::GetRegisteredRequestHandler(const std::string& id)
-	{
-		MS_TRACE_STD();
-
-		auto it = ChannelSocket::mapRequestHandlers.find(id);
-
-		if (it != ChannelSocket::mapRequestHandlers.end())
-			return it->second;
-		else
-			return nullptr;
-	}
-
 	/* Instance methods. */
 
 	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)

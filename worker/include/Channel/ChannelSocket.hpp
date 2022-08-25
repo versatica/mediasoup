@@ -1,10 +1,9 @@
-#ifndef MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
-#define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
+#ifndef MS_CHANNEL_SOCKET_HPP
+#define MS_CHANNEL_SOCKET_HPP
 
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
-#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -76,11 +75,6 @@ namespace Channel
 		};
 
 	public:
-		static void RegisterRequestHandler(RequestHandler* handler, const std::string& id);
-		static void UnregisterRequestHandler(RequestHandler* handler, const std::string& id);
-		static RequestHandler* GetRegisteredRequestHandler(const std::string& id);
-
-	public:
 		explicit ChannelSocket(int consumerFd, int producerFd);
 		explicit ChannelSocket(
 		  ChannelReadFn channelReadFn,
@@ -88,9 +82,6 @@ namespace Channel
 		  ChannelWriteFn channelWriteFn,
 		  ChannelWriteCtx channelWriteCtx);
 		virtual ~ChannelSocket();
-
-	private:
-		static absl::flat_hash_map<std::string, RequestHandler*> mapRequestHandlers;
 
 	public:
 		void Close();

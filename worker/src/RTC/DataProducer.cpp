@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataProducer.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -57,36 +58,19 @@ namespace RTC
 		if (jsonProtocolIt != data.end() && jsonProtocolIt->is_string())
 			this->protocol = jsonProtocolIt->get<std::string>();
 
-		try
-		{
-			// Register it as Channel::ChannelSocket::RequestHandler.
-			// NOTE: This may throw.
-			Channel::ChannelSocket::RegisterRequestHandler(this, this->id);
-
-			// Register it as PayloadChannel::PayloadChannelSocket::NotificationHandler.
-			PayloadChannel::PayloadChannelSocket::RegisterNotificationHandler(this, this->id);
-		}
-		catch (const MediaSoupError& error)
-		{
-			// Unregister it as Channel::ChannelSocket::RequestHandler.
-			Channel::ChannelSocket::UnregisterRequestHandler(this, this->id);
-
-			// Unregister it as PayloadChannel::ChannelSocket::NotificationHandler.
-			PayloadChannel::PayloadChannelSocket::UnregisterNotificationHandler(this, this->id);
-
-			throw;
-		}
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ nullptr,
+		  /*payloadChannelNotificationHandler*/ this);
 	}
 
 	DataProducer::~DataProducer()
 	{
 		MS_TRACE();
 
-		// Unregister it as Channel::ChannelSocket::RequestHandler.
-		Channel::ChannelSocket::UnregisterRequestHandler(this, this->id);
-
-		// Unregister it as PayloadChannel::ChannelSocket::NotificationHandler.
-		PayloadChannel::PayloadChannelSocket::UnregisterNotificationHandler(this, this->id);
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 	}
 
 	void DataProducer::FillJson(json& jsonObject) const

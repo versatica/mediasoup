@@ -1,11 +1,10 @@
-#ifndef MS_PAYLOAD_CHANNEL_UNIX_STREAM_SOCKET_HPP
-#define MS_PAYLOAD_CHANNEL_UNIX_STREAM_SOCKET_HPP
+#ifndef MS_PAYLOAD_CHANNEL_SOCKET_HPP
+#define MS_PAYLOAD_CHANNEL_SOCKET_HPP
 
 #include "common.hpp"
 #include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
-#include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -86,14 +85,6 @@ namespace PayloadChannel
 		};
 
 	public:
-		static void RegisterRequestHandler(RequestHandler* handler, const std::string& id);
-		static void UnregisterRequestHandler(RequestHandler* handler, const std::string& id);
-		static RequestHandler* GetRegisteredRequestHandler(const std::string& id);
-		static void RegisterNotificationHandler(NotificationHandler* handler, const std::string& id);
-		static void UnregisterNotificationHandler(NotificationHandler* handler, const std::string& id);
-		static NotificationHandler* GetRegisteredNotificationHandler(const std::string& id);
-
-	public:
 		explicit PayloadChannelSocket(int consumerFd, int producerFd);
 		explicit PayloadChannelSocket(
 		  PayloadChannelReadFn payloadChannelReadFn,
@@ -101,10 +92,6 @@ namespace PayloadChannel
 		  PayloadChannelWriteFn payloadChannelWriteFn,
 		  PayloadChannelWriteCtx payloadChannelWriteCtx);
 		virtual ~PayloadChannelSocket();
-
-	private:
-		static absl::flat_hash_map<std::string, RequestHandler*> mapRequestHandlers;
-		static absl::flat_hash_map<std::string, NotificationHandler*> mapNotificationHandlers;
 
 	public:
 		void Close();

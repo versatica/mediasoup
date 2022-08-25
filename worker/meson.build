@@ -49,6 +49,7 @@ common_sources = [
   'src/MediaSoupErrors.cpp',
   'src/Settings.cpp',
   'src/Worker.cpp',
+  'src/ChannelMessageHandlers.cpp',
   'src/Utils/Crypto.cpp',
   'src/Utils/File.cpp',
   'src/Utils/IP.cpp',
