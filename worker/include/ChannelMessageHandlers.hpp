@@ -5,11 +5,13 @@
 #include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/PayloadChannelSocket.hpp"
 #include <absl/container/flat_hash_map.h>
+#include <nlohmann/json.hpp>
 #include <string>
 
 class ChannelMessageHandlers
 {
 public:
+	static void FillJson(json& jsonObject);
 	static void RegisterHandler(
 	  const std::string& id,
 	  Channel::ChannelSocket::RequestHandler* channelRequestHandler,

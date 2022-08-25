@@ -16,6 +16,45 @@ thread_local absl::flat_hash_map<std::string, PayloadChannel::PayloadChannelSock
 
 /* Class methods. */
 
+void ChannelMessageHandlers::FillJson(json& jsonObject)
+{
+	MS_TRACE();
+
+	// Add channelRequestHandlers.
+	jsonObject["channelRequestHandlers"] = json::array();
+	auto jsonChannelRequestHandlersIt    = jsonObject.find("channelRequestHandlers");
+
+	for (const auto& kv : ChannelMessageHandlers::mapChannelRequestHandlers)
+	{
+		const auto& handlerId = kv.first;
+
+		jsonChannelRequestHandlersIt->emplace_back(handlerId);
+	}
+
+	// Add payloadChannelRequestHandlers.
+	jsonObject["payloadChannelRequestHandlers"] = json::array();
+	auto jsonPayloadChannelRequestHandlersIt    = jsonObject.find("payloadChannelRequestHandlers");
+
+	for (const auto& kv : ChannelMessageHandlers::mapPayloadChannelRequestHandlers)
+	{
+		const auto& handlerId = kv.first;
+
+		jsonPayloadChannelRequestHandlersIt->emplace_back(handlerId);
+	}
+
+	// Add payloadChannelNotificationHandlers.
+	jsonObject["payloadChannelNotificationHandlers"] = json::array();
+	auto jsonPayloadChannelNotificationHandlersIt =
+	  jsonObject.find("payloadChannelNotificationHandlers");
+
+	for (const auto& kv : ChannelMessageHandlers::mapPayloadChannelNotificationHandlers)
+	{
+		const auto& handlerId = kv.first;
+
+		jsonPayloadChannelNotificationHandlersIt->emplace_back(handlerId);
+	}
+}
+
 void ChannelMessageHandlers::RegisterHandler(
   const std::string& id,
   Channel::ChannelSocket::RequestHandler* channelRequestHandler,

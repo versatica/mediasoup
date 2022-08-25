@@ -121,6 +121,12 @@ void Worker::FillJson(json& jsonObject) const
 
 		jsonRouterIdsIt->emplace_back(routerId);
 	}
+
+	// Add channelMessageHandlers.
+	jsonObject["channelMessageHandlers"] = json::object();
+	auto jsonChannelMessageHandlersIt    = jsonObject.find("channelMessageHandlers");
+
+	ChannelMessageHandlers::FillJson(*jsonChannelMessageHandlersIt);
 }
 
 void Worker::FillJsonResourceUsage(json& jsonObject) const
