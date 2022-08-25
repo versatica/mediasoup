@@ -1,5 +1,5 @@
-#ifndef MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
-#define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
+#ifndef MS_CHANNEL_SOCKET_HPP
+#define MS_CHANNEL_SOCKET_HPP
 
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
@@ -26,6 +26,8 @@ namespace Channel
 
 	public:
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
+		~ConsumerSocket();
+
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		void UserOnUnixStreamRead() override;
@@ -84,10 +86,10 @@ namespace Channel
 	public:
 		void Close();
 		void SetListener(Listener* listener);
-		bool CallbackRead();
 		void Send(json& jsonMessage);
 		void Send(const std::string& message);
 		void SendLog(const char* message, uint32_t messageLen);
+		bool CallbackRead();
 
 	private:
 		void SendImpl(const uint8_t* payload, uint32_t payloadLen);

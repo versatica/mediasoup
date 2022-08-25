@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DirectTransport.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "PayloadChannel/PayloadChannelNotifier.hpp"
@@ -15,11 +16,20 @@ namespace RTC
 	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ this,
+		  /*payloadChannelNotificationHandler*/ this);
 	}
 
 	DirectTransport::~DirectTransport()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 	}
 
 	void DirectTransport::FillJson(json& jsonObject) const

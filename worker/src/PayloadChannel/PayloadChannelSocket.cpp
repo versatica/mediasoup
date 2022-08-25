@@ -12,7 +12,12 @@
 
 namespace PayloadChannel
 {
-	/* Static. */
+	// Binary length for a 4194304 bytes payload.
+	static constexpr size_t MessageMaxLen{ 4194308 };
+	static constexpr size_t PayloadMaxLen{ 4194304 };
+
+	/* Static methods for UV callbacks. */
+
 	inline static void onAsync(uv_handle_t* handle)
 	{
 		while (static_cast<PayloadChannelSocket*>(handle->data)->CallbackRead())
@@ -26,11 +31,8 @@ namespace PayloadChannel
 		delete handle;
 	}
 
-	// Binary length for a 4194304 bytes payload.
-	static constexpr size_t MessageMaxLen{ 4194308 };
-	static constexpr size_t PayloadMaxLen{ 4194304 };
-
 	/* Instance methods. */
+
 	PayloadChannelSocket::PayloadChannelSocket(int consumerFd, int producerFd)
 	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
 	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen)),
@@ -361,6 +363,8 @@ namespace PayloadChannel
 		this->listener->OnPayloadChannelClosed(this);
 	}
 
+	/* Instance methods. */
+
 	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
 	{
@@ -428,6 +432,8 @@ namespace PayloadChannel
 		// Notify the listener.
 		this->listener->OnConsumerSocketClosed(this);
 	}
+
+	/* Instance methods. */
 
 	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::PRODUCER)

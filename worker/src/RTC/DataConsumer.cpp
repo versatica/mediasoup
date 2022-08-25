@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataConsumer.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -64,11 +65,20 @@ namespace RTC
 
 		if (jsonProtocolIt != data.end() && jsonProtocolIt->is_string())
 			this->protocol = jsonProtocolIt->get<std::string>();
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ this,
+		  /*payloadChannelNotificationHandler*/ nullptr);
 	}
 
 	DataConsumer::~DataConsumer()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 	}
 
 	void DataConsumer::FillJson(json& jsonObject) const

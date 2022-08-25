@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SimulcastConsumer.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -119,11 +120,20 @@ namespace RTC
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ nullptr,
+		  /*payloadChannelNotificationHandler*/ nullptr);
 	}
 
 	SimulcastConsumer::~SimulcastConsumer()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		delete this->rtpStream;
 	}

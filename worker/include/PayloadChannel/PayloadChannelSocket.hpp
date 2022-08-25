@@ -1,5 +1,5 @@
-#ifndef MS_PAYLOAD_CHANNEL_UNIX_STREAM_SOCKET_HPP
-#define MS_PAYLOAD_CHANNEL_UNIX_STREAM_SOCKET_HPP
+#ifndef MS_PAYLOAD_CHANNEL_SOCKET_HPP
+#define MS_PAYLOAD_CHANNEL_SOCKET_HPP
 
 #include "common.hpp"
 #include "PayloadChannel/PayloadChannelNotification.hpp"
@@ -96,11 +96,11 @@ namespace PayloadChannel
 	public:
 		void Close();
 		void SetListener(Listener* listener);
-		bool CallbackRead();
 		void Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen);
 		void Send(const std::string& message, const uint8_t* payload, size_t payloadLen);
 		void Send(json& jsonMessage);
 		void Send(const std::string& message);
+		bool CallbackRead();
 
 	private:
 		void SendImpl(const uint8_t* message, uint32_t messageLen);

@@ -11,7 +11,12 @@
 
 namespace Channel
 {
+	// Binary length for a 4194304 bytes payload.
+	static constexpr size_t MessageMaxLen{ 4194308 };
+	static constexpr size_t PayloadMaxLen{ 4194304 };
+
 	/* Static methods for UV callbacks. */
+
 	inline static void onAsync(uv_handle_t* handle)
 	{
 		while (static_cast<ChannelSocket*>(handle->data)->CallbackRead())
@@ -25,11 +30,8 @@ namespace Channel
 		delete handle;
 	}
 
-	// Binary length for a 4194304 bytes payload.
-	static constexpr size_t MessageMaxLen{ 4194308 };
-	static constexpr size_t PayloadMaxLen{ 4194304 };
-
 	/* Instance methods. */
+
 	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)
 	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
 	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen)),
@@ -258,8 +260,15 @@ namespace Channel
 		this->listener->OnChannelClosed(this);
 	}
 
+	/* Instance methods. */
+
 	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
+	{
+		MS_TRACE_STD();
+	}
+
+	ConsumerSocket::~ConsumerSocket()
 	{
 		MS_TRACE_STD();
 	}
@@ -320,6 +329,8 @@ namespace Channel
 		// Notify the listener.
 		this->listener->OnConsumerSocketClosed(this);
 	}
+
+	/* Instance methods. */
 
 	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::PRODUCER)

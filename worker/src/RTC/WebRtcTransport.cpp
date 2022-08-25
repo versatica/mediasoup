@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/WebRtcTransport.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -203,6 +204,13 @@ namespace RTC
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
+
+			// NOTE: This may throw.
+			ChannelMessageHandlers::RegisterHandler(
+			  this->id,
+			  /*channelRequestHandler*/ this,
+			  /*payloadChannelRequestHandler*/ this,
+			  /*payloadChannelNotificationHandler*/ this);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -264,6 +272,13 @@ namespace RTC
 
 			// Notify the webRtcTransportListener.
 			this->webRtcTransportListener->OnWebRtcTransportCreated(this);
+
+			// NOTE: This may throw.
+			ChannelMessageHandlers::RegisterHandler(
+			  this->id,
+			  /*channelRequestHandler*/ this,
+			  /*payloadChannelRequestHandler*/ this,
+			  /*payloadChannelNotificationHandler*/ this);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -284,6 +299,8 @@ namespace RTC
 	WebRtcTransport::~WebRtcTransport()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		// Must delete the DTLS transport first since it will generate a DTLS alert
 		// to be sent.
