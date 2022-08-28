@@ -191,6 +191,43 @@ namespace Channel
 		auto free = this->channelReadFn(
 		  &message, &messageLen, &messageCtx, this->uvReadHandle, this->channelReadCtx);
 
+		if (free)
+		{
+			try
+			{
+				char* charMessage{ reinterpret_cast<char*>(message) };
+
+				auto* request = new Channel::ChannelRequest(this, charMessage, messageLen);
+
+				// Notify the listener.
+				try
+				{
+					this->listener->HandleRequest(request);
+				}
+				catch (const MediaSoupTypeError& error)
+				{
+					request->TypeError(error.what());
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Error(error.what());
+				}
+
+				// Delete the Request.
+				delete request;
+			}
+			catch (const json::parse_error& error)
+			{
+				MS_ERROR_STD("message parsing error: %s", error.what());
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
+			}
+
+			free(message, messageLen, messageCtx);
+		}
+
 		return free != nullptr;
 	}
 
