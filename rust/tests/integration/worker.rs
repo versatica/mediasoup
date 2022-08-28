@@ -1,7 +1,8 @@
 use futures_lite::future;
 use mediasoup::data_structures::AppData;
 use mediasoup::worker::{
-    WorkerDtlsFiles, WorkerLogLevel, WorkerLogTag, WorkerSettings, WorkerUpdateSettings,
+    ChannelMessageHandlers, WorkerDtlsFiles, WorkerLogLevel, WorkerLogTag, WorkerSettings,
+    WorkerUpdateSettings,
 };
 use mediasoup::worker_manager::WorkerManager;
 use std::{env, io};
@@ -143,6 +144,14 @@ fn dump_succeeds() {
 
         assert_eq!(dump.router_ids, vec![]);
         assert_eq!(dump.webrtc_server_ids, vec![]);
+        assert_eq!(
+            dump.channel_message_handlers,
+            ChannelMessageHandlers {
+                channel_request_handlers: vec![],
+                payload_channel_request_handlers: vec![],
+                payload_channel_notification_handlers: vec![]
+            }
+        );
     });
 }
 

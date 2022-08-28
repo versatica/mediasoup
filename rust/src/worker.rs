@@ -34,6 +34,7 @@ use std::sync::Arc;
 use std::{fmt, io};
 use thiserror::Error;
 use utils::WorkerRunResult;
+use uuid::Uuid;
 
 uuid_based_wrapper_type!(
     /// Worker identifier.
@@ -256,6 +257,15 @@ pub struct WorkerUpdateSettings {
     pub log_tags: Option<Vec<WorkerLogTag>>,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct ChannelMessageHandlers {
+    pub channel_request_handlers: Vec<Uuid>,
+    pub payload_channel_request_handlers: Vec<Uuid>,
+    pub payload_channel_notification_handlers: Vec<Uuid>,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
@@ -265,6 +275,7 @@ pub struct WorkerDump {
     pub router_ids: Vec<RouterId>,
     #[serde(rename = "webRtcServerIds")]
     pub webrtc_server_ids: Vec<WebRtcServerId>,
+    pub channel_message_handlers: ChannelMessageHandlers,
 }
 
 /// Error that caused [`Worker::create_webrtc_server`] to fail.
