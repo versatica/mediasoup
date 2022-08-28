@@ -3,8 +3,7 @@ mod tests;
 
 use crate::data_structures::AppData;
 use crate::messages::{
-    RtpObserverAddProducerRequest, RtpObserverAddRemoveProducerRequestData,
-    RtpObserverCloseRequest, RtpObserverCloseRequestData, RtpObserverPauseRequest,
+    RtpObserverAddProducerRequest, RtpObserverCloseRequest, RtpObserverPauseRequest,
     RtpObserverRemoveProducerRequest, RtpObserverResumeRequest,
 };
 use crate::producer::{Producer, ProducerId};
@@ -108,16 +107,14 @@ impl Inner {
 
             if close_request {
                 let channel = self.channel.clone();
+                let router_id = self.router.id();
                 let request = RtpObserverCloseRequest {
-                    handler_id: self.router.id(),
-                    data: RtpObserverCloseRequestData {
-                        rtp_observer_id: self.id,
-                    },
+                    rtp_observer_id: self.id,
                 };
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
+                        if let Err(error) = channel.request(router_id, request).await {
                             error!("active speaker observer closing failed on drop: {}", error);
                         }
                     })
@@ -178,9 +175,7 @@ impl RtpObserver for ActiveSpeakerObserver {
 
         self.inner
             .channel
-            .request(RtpObserverPauseRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), RtpObserverPauseRequest {})
             .await?;
 
         let was_paused = self.inner.paused.swap(true, Ordering::SeqCst);
@@ -197,9 +192,7 @@ impl RtpObserver for ActiveSpeakerObserver {
 
         self.inner
             .channel
-            .request(RtpObserverResumeRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), RtpObserverResumeRequest {})
             .await?;
 
         let was_paused = self.inner.paused.swap(false, Ordering::SeqCst);
@@ -223,10 +216,7 @@ impl RtpObserver for ActiveSpeakerObserver {
         };
         self.inner
             .channel
-            .request(RtpObserverAddProducerRequest {
-                handler_id: self.id(),
-                data: RtpObserverAddRemoveProducerRequestData { producer_id },
-            })
+            .request(self.id(), RtpObserverAddProducerRequest { producer_id })
             .await?;
 
         self.inner.handlers.add_producer.call_simple(&producer);
@@ -243,10 +233,7 @@ impl RtpObserver for ActiveSpeakerObserver {
         };
         self.inner
             .channel
-            .request(RtpObserverRemoveProducerRequest {
-                handler_id: self.id(),
-                data: RtpObserverAddRemoveProducerRequestData { producer_id },
-            })
+            .request(self.id(), RtpObserverRemoveProducerRequest { producer_id })
             .await?;
 
         self.inner.handlers.remove_producer.call_simple(&producer);

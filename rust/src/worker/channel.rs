@@ -9,11 +9,11 @@ use log::{debug, error, trace, warn};
 use lru::LruCache;
 use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::Value;
 use std::any::TypeId;
 use std::collections::VecDeque;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
@@ -104,14 +104,6 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
         // Unknown
         _ => ChannelReceiveMessage::Event(InternalMessage::Unexpected(Vec::from(bytes))),
     }
-}
-
-#[derive(Debug, Serialize)]
-struct RequestMessage<'a, R: Serialize> {
-    id: u32,
-    method: &'static str,
-    #[serde(flatten)]
-    request: &'a R,
 }
 
 struct ResponseError {
@@ -309,9 +301,14 @@ impl Channel {
         }
     }
 
-    pub(crate) async fn request<R>(&self, request: R) -> Result<R::Response, RequestError>
+    pub(crate) async fn request<R, HandlerId>(
+        &self,
+        handler_id: HandlerId,
+        request: R,
+    ) -> Result<R::Response, RequestError>
     where
-        R: Request + 'static,
+        R: Request<HandlerId = HandlerId> + 'static,
+        HandlerId: Display,
     {
         let method = request.as_method();
 
@@ -339,13 +336,14 @@ impl Channel {
 
         debug!("request() [method:{}, id:{}]: {:?}", method, id, request);
 
+        // TODO: Todo pre-allocate fixed size string sufficient for most cases by default
+        // TODO: Refactor to avoid extra allocation during JSON serialization if possible
         let message = Arc::new(AtomicTake::new(
-            serde_json::to_vec(&RequestMessage {
-                id,
-                method,
-                request: &request,
-            })
-            .unwrap(),
+            format!(
+                "{id}:{method}:{handler_id}:{}",
+                serde_json::to_string(&request).unwrap()
+            )
+            .into_bytes(),
         ));
 
         {

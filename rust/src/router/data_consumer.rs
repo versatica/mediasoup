@@ -4,9 +4,8 @@ mod tests;
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
-    DataConsumerCloseRequest, DataConsumerCloseRequestData, DataConsumerDumpRequest,
-    DataConsumerGetBufferedAmountRequest, DataConsumerGetStatsRequest, DataConsumerSendRequest,
-    DataConsumerSendRequestData, DataConsumerSetBufferedAmountLowThresholdData,
+    DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
+    DataConsumerGetStatsRequest, DataConsumerSendRequest,
     DataConsumerSetBufferedAmountLowThresholdRequest,
 };
 use crate::sctp_parameters::SctpStreamParameters;
@@ -231,18 +230,16 @@ impl Inner {
 
             if close_request {
                 let channel = self.channel.clone();
+                let transport_id = self.transport.id();
                 let request = DataConsumerCloseRequest {
-                    handler_id: self.transport.id(),
-                    data: DataConsumerCloseRequestData {
-                        data_consumer_id: self.id,
-                    },
+                    data_consumer_id: self.id,
                 };
                 let weak_data_producer = self.weak_data_producer.clone();
 
                 self.executor
                     .spawn(async move {
                         if weak_data_producer.upgrade().is_some() {
-                            if let Err(error) = channel.request(request).await {
+                            if let Err(error) = channel.request(transport_id, request).await {
                                 error!("consumer closing failed on drop: {}", error);
                             }
                         }
@@ -531,9 +528,7 @@ impl DataConsumer {
 
         self.inner()
             .channel
-            .request(DataConsumerDumpRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), DataConsumerDumpRequest {})
             .await
     }
 
@@ -546,9 +541,7 @@ impl DataConsumer {
 
         self.inner()
             .channel
-            .request(DataConsumerGetStatsRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), DataConsumerGetStatsRequest {})
             .await
     }
 
@@ -565,9 +558,7 @@ impl DataConsumer {
         let response = self
             .inner()
             .channel
-            .request(DataConsumerGetBufferedAmountRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), DataConsumerGetBufferedAmountRequest {})
             .await?;
 
         Ok(response.buffered_amount)
@@ -586,10 +577,10 @@ impl DataConsumer {
 
         self.inner()
             .channel
-            .request(DataConsumerSetBufferedAmountLowThresholdRequest {
-                handler_id: self.id(),
-                data: DataConsumerSetBufferedAmountLowThresholdData { threshold },
-            })
+            .request(
+                self.id(),
+                DataConsumerSetBufferedAmountLowThresholdRequest { threshold },
+            )
             .await
     }
 
@@ -684,10 +675,8 @@ impl DirectDataConsumer {
         self.inner
             .payload_channel
             .request(
-                DataConsumerSendRequest {
-                    handler_id: self.inner.id,
-                    data: DataConsumerSendRequestData { ppid },
-                },
+                self.inner.id,
+                DataConsumerSendRequest { ppid },
                 payload.into_owned(),
             )
             .await

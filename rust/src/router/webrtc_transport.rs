@@ -9,8 +9,8 @@ use crate::data_structures::{
     SctpState, TransportTuple,
 };
 use crate::messages::{
-    TransportCloseRequest, TransportCloseRequestData, TransportConnectRequestWebRtcData,
-    TransportConnectWebRtcRequest, TransportRestartIceRequest, WebRtcTransportData,
+    TransportCloseRequest, TransportConnectWebRtcRequest, TransportRestartIceRequest,
+    WebRtcTransportData,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -344,16 +344,14 @@ impl Inner {
 
             if close_request {
                 let channel = self.channel.clone();
+                let router_id = self.router.id();
                 let request = TransportCloseRequest {
-                    handler_id: self.router.id(),
-                    data: TransportCloseRequestData {
-                        transport_id: self.id,
-                    },
+                    transport_id: self.id,
                 };
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
+                        if let Err(error) = channel.request(router_id, request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
                     })
@@ -762,12 +760,12 @@ impl WebRtcTransport {
         let response = self
             .inner
             .channel
-            .request(TransportConnectWebRtcRequest {
-                handler_id: self.id(),
-                data: TransportConnectRequestWebRtcData {
+            .request(
+                self.id(),
+                TransportConnectWebRtcRequest {
                     dtls_parameters: remote_parameters.dtls_parameters,
                 },
-            })
+            )
             .await?;
 
         self.inner.data.dtls_parameters.lock().role = response.dtls_local_role;
@@ -869,9 +867,7 @@ impl WebRtcTransport {
         let response = self
             .inner
             .channel
-            .request(TransportRestartIceRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), TransportRestartIceRequest {})
             .await?;
 
         Ok(response.ice_parameters)

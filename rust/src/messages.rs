@@ -30,11 +30,15 @@ use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::net::IpAddr;
 use std::num::NonZeroU16;
 
-pub(crate) trait Request: Debug + Serialize {
+pub(crate) trait Request
+where
+    Self: Debug + Serialize,
+{
+    type HandlerId: Display;
     type Response: DeserializeOwned;
 
     /// Request method to call on worker.
@@ -48,24 +52,31 @@ pub(crate) trait Request: Debug + Serialize {
 }
 
 pub(crate) trait Notification: Debug + Serialize {
+    type HandlerId: Display;
+
     /// Request event to call on worker.
     fn as_event(&self) -> &'static str;
 }
 
 macro_rules! request_response {
     (
+        $handler_id_type: ty,
         $method: literal,
-        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty$(,)? )* },
+        $request_struct_name: ident { $( $(#[$request_field_name_attributes: meta])? $request_field_name: ident: $request_field_type: ty$(,)? )* },
         $existing_response_type: ty,
         $default_for_soft_error: expr $(,)?
     ) => {
         #[derive(Debug, Serialize)]
         #[serde(rename_all = "camelCase")]
         pub(crate) struct $request_struct_name {
-            $( pub(crate) $request_field_name: $request_field_type, )*
+            $(
+                $(#[$request_field_name_attributes])*
+                pub(crate) $request_field_name: $request_field_type,
+            )*
         }
 
         impl Request for $request_struct_name {
+            type HandlerId = $handler_id_type;
             type Response = $existing_response_type;
 
             fn as_method(&self) -> &'static str {
@@ -79,11 +90,13 @@ macro_rules! request_response {
     };
     // Call above macro with no default for soft error
     (
+        $handler_id_type: ty,
         $method: literal,
         $request_struct_name: ident $request_struct_impl: tt $(,)?
         $existing_response_type: ty $(,)?
     ) => {
         request_response!(
+            $handler_id_type,
             $method,
             $request_struct_name $request_struct_impl,
             $existing_response_type,
@@ -92,10 +105,12 @@ macro_rules! request_response {
     };
     // Call above macro with unit type as expected response
     (
+        $handler_id_type: ty,
         $method: literal,
         $request_struct_name: ident $request_struct_impl: tt $(,)?
     ) => {
         request_response!(
+            $handler_id_type,
             $method,
             $request_struct_name $request_struct_impl,
             (),
@@ -103,14 +118,18 @@ macro_rules! request_response {
         );
     };
     (
+        $handler_id_type: ty,
         $method: literal,
-        $request_struct_name: ident { $( $request_field_name: ident: $request_field_type: ty$(,)? )* },
+        $request_struct_name: ident { $( $(#[$request_field_name_attributes: meta])? $request_field_name: ident: $request_field_type: ty$(,)? )* },
         $response_struct_name: ident { $( $response_field_name: ident: $response_field_type: ty$(,)? )* },
     ) => {
         #[derive(Debug, Serialize)]
         #[serde(rename_all = "camelCase")]
         pub(crate) struct $request_struct_name {
-            $( pub(crate) $request_field_name: $request_field_type, )*
+            $(
+                $(#[$request_field_name_attributes])*
+                pub(crate) $request_field_name: $request_field_type,
+            )*
         }
 
         #[derive(Debug, Deserialize)]
@@ -120,6 +139,7 @@ macro_rules! request_response {
         }
 
         impl Request for $request_struct_name {
+            type HandlerId = $handler_id_type;
             type Response = $response_struct_name;
 
             fn as_method(&self) -> &'static str {
@@ -129,98 +149,78 @@ macro_rules! request_response {
     };
 }
 
-request_response!("worker.close", WorkerCloseRequest {});
-
-request_response!("worker.dump", WorkerDumpRequest {}, WorkerDump);
+request_response!(&'static str, "worker.close", WorkerCloseRequest {});
 
 request_response!(
+    &'static str,
+    "worker.dump",
+    WorkerDumpRequest {},
+    WorkerDump
+);
+
+request_response!(
+    &'static str,
     "worker.updateSettings",
     WorkerUpdateSettingsRequest {
+        #[serde(flatten)]
         data: WorkerUpdateSettings,
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct WorkerCreateWebRtcServerData {
-    #[serde(rename = "webRtcServerId")]
-    pub(crate) webrtc_server_id: WebRtcServerId,
-    pub(crate) listen_infos: WebRtcServerListenInfos,
-}
-
 request_response!(
+    &'static str,
     "worker.createWebRtcServer",
     WorkerCreateWebRtcServerRequest {
-        data: WorkerCreateWebRtcServerData,
+        #[serde(rename = "webRtcServerId")]
+        webrtc_server_id: WebRtcServerId,
+        listen_infos: WebRtcServerListenInfos,
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct WebRtcServerCloseRequestData {
-    #[serde(rename = "webRtcServerId")]
-    pub(crate) webrtc_server_id: WebRtcServerId,
-}
-
 request_response!(
+    &'static str,
     "worker.closeWebRtcServer",
     WebRtcServerCloseRequest {
-        data: WebRtcServerCloseRequestData,
+        #[serde(rename = "webRtcServerId")]
+        webrtc_server_id: WebRtcServerId,
     },
     (),
     Some(()),
 );
 
 request_response!(
+    WebRtcServerId,
     "webRtcServer.dump",
-    WebRtcServerDumpRequest {
-        handler_id: WebRtcServerId,
-    },
+    WebRtcServerDumpRequest {},
     WebRtcServerDump,
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct WorkerCreateRouterRequestData {
-    pub(crate) router_id: RouterId,
-}
-
 request_response!(
+    &'static str,
     "worker.createRouter",
     WorkerCreateRouterRequest {
-        data: WorkerCreateRouterRequestData,
+        router_id: RouterId,
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RouterCloseRequestData {
-    pub(crate) router_id: RouterId,
-}
-
 request_response!(
+    &'static str,
     "worker.closeRouter",
     RouterCloseRequest {
-        data: RouterCloseRequestData,
+        router_id: RouterId,
     },
     (),
     Some(()),
 );
 
-request_response!(
-    "router.dump",
-    RouterDumpRequest {
-        handler_id: RouterId,
-    },
-    RouterDump,
-);
+request_response!(RouterId, "router.dump", RouterDumpRequest {}, RouterDump);
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateDirectTransportData {
-    pub(crate) transport_id: TransportId,
-    pub(crate) direct: bool,
-    pub(crate) max_message_size: usize,
+    transport_id: TransportId,
+    direct: bool,
+    max_message_size: usize,
 }
 
 impl RouterCreateDirectTransportData {
@@ -237,9 +237,10 @@ impl RouterCreateDirectTransportData {
 }
 
 request_response!(
+    RouterId,
     "router.createDirectTransport",
     RouterCreateDirectTransportRequest {
-        handler_id: RouterId,
+        #[serde(flatten)]
         data: RouterCreateDirectTransportData,
     },
     RouterCreateDirectTransportResponse {},
@@ -262,7 +263,7 @@ enum RouterCreateWebrtcTransportListen {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct RouterCreateWebrtcTransportData {
+pub(crate) struct RouterCreateWebrtcTransportRequest {
     transport_id: TransportId,
     #[serde(flatten)]
     listen: RouterCreateWebrtcTransportListen,
@@ -278,7 +279,7 @@ pub(crate) struct RouterCreateWebrtcTransportData {
     is_data_channel: bool,
 }
 
-impl RouterCreateWebrtcTransportData {
+impl RouterCreateWebrtcTransportRequest {
     pub(crate) fn from_options(
         transport_id: TransportId,
         webrtc_transport_options: &WebRtcTransportOptions,
@@ -313,13 +314,6 @@ impl RouterCreateWebrtcTransportData {
     }
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RouterCreateWebrtcTransportRequest {
-    pub(crate) handler_id: RouterId,
-    pub(crate) data: RouterCreateWebrtcTransportData,
-}
-
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct WebRtcTransportData {
@@ -336,10 +330,11 @@ pub(crate) struct WebRtcTransportData {
 }
 
 impl Request for RouterCreateWebrtcTransportRequest {
+    type HandlerId = RouterId;
     type Response = WebRtcTransportData;
 
     fn as_method(&self) -> &'static str {
-        match &self.data.listen {
+        match &self.listen {
             RouterCreateWebrtcTransportListen::Individual { .. } => "router.createWebRtcTransport",
             RouterCreateWebrtcTransportListen::Server { .. } => {
                 "router.createWebRtcTransportWithServer"
@@ -389,9 +384,10 @@ impl RouterCreatePlainTransportData {
 }
 
 request_response!(
+    RouterId,
     "router.createPlainTransport",
     RouterCreatePlainTransportRequest {
-        handler_id: RouterId,
+        #[serde(flatten)]
         data: RouterCreatePlainTransportData,
     },
     PlainTransportData {
@@ -443,9 +439,10 @@ impl RouterCreatePipeTransportData {
 }
 
 request_response!(
+    RouterId,
     "router.createPipeTransport",
     RouterCreatePipeTransportRequest {
-        handler_id: RouterId,
+        #[serde(flatten)]
         data: RouterCreatePipeTransportData,
     },
     PipeTransportData {
@@ -460,10 +457,10 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateAudioLevelObserverData {
-    pub(crate) rtp_observer_id: RtpObserverId,
-    pub(crate) max_entries: NonZeroU16,
-    pub(crate) threshold: i8,
-    pub(crate) interval: u16,
+    rtp_observer_id: RtpObserverId,
+    max_entries: NonZeroU16,
+    threshold: i8,
+    interval: u16,
 }
 
 impl RouterCreateAudioLevelObserverData {
@@ -481,9 +478,10 @@ impl RouterCreateAudioLevelObserverData {
 }
 
 request_response!(
+    RouterId,
     "router.createAudioLevelObserver",
     RouterCreateAudioLevelObserverRequest {
-        handler_id: RouterId,
+        #[serde(flatten)]
         data: RouterCreateAudioLevelObserverData,
     },
 );
@@ -491,8 +489,8 @@ request_response!(
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateActiveSpeakerObserverData {
-    pub(crate) rtp_observer_id: RtpObserverId,
-    pub(crate) interval: u16,
+    rtp_observer_id: RtpObserverId,
+    interval: u16,
 }
 
 impl RouterCreateActiveSpeakerObserverData {
@@ -508,100 +506,75 @@ impl RouterCreateActiveSpeakerObserverData {
 }
 
 request_response!(
+    RouterId,
     "router.createActiveSpeakerObserver",
     RouterCreateActiveSpeakerObserverRequest {
-        handler_id: RouterId,
+        #[serde(flatten)]
         data: RouterCreateActiveSpeakerObserverData,
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TransportCloseRequestData {
-    pub(crate) transport_id: TransportId,
-}
-
 request_response!(
+    RouterId,
     "router.closeTransport",
     TransportCloseRequest {
-        handler_id: RouterId,
-        data: TransportCloseRequestData,
+        transport_id: TransportId,
     },
     (),
     Some(()),
 );
 
 request_response!(
+    TransportId,
     "transport.dump",
-    TransportDumpRequest {
-        handler_id: TransportId,
-    },
+    TransportDumpRequest {},
     Value,
 );
 
 request_response!(
+    TransportId,
     "transport.getStats",
-    TransportGetStatsRequest {
-        handler_id: TransportId,
-    },
+    TransportGetStatsRequest {},
     Value,
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TransportConnectRequestWebRtcData {
-    pub(crate) dtls_parameters: DtlsParameters,
-}
-
 request_response!(
+    TransportId,
     "transport.connect",
     TransportConnectWebRtcRequest {
-        handler_id: TransportId,
-        data: TransportConnectRequestWebRtcData,
+        dtls_parameters: DtlsParameters,
     },
     TransportConnectResponseWebRtc {
         dtls_local_role: DtlsRole,
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TransportConnectRequestPipeData {
-    pub(crate) ip: IpAddr,
-    pub(crate) port: u16,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) srtp_parameters: Option<SrtpParameters>,
-}
-
 request_response!(
+    TransportId,
     "transport.connect",
     TransportConnectPipeRequest {
-        handler_id: TransportId,
-        data: TransportConnectRequestPipeData,
+        ip: IpAddr,
+        port: u16,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        srtp_parameters: Option<SrtpParameters>,
     },
     TransportConnectResponsePipe {
         tuple: TransportTuple,
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TransportConnectRequestPlainData {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) ip: Option<IpAddr>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) port: Option<u16>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) rtcp_port: Option<u16>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) srtp_parameters: Option<SrtpParameters>,
-}
-
 request_response!(
+    TransportId,
     "transport.connect",
     TransportConnectPlainRequest {
-        handler_id: TransportId,
-        data: TransportConnectRequestPlainData,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        ip: Option<IpAddr>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        port: Option<u16>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        rtcp_port: Option<u16>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        srtp_parameters: Option<SrtpParameters>,
     },
     TransportConnectResponsePlain {
         tuple: Option<TransportTuple>,
@@ -610,85 +583,56 @@ request_response!(
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TransportSetMaxIncomingBitrateData {
-    pub(crate) bitrate: u32,
-}
-
 request_response!(
+    TransportId,
     "transport.setMaxIncomingBitrate",
-    TransportSetMaxIncomingBitrateRequest {
-        handler_id: TransportId,
-        data: TransportSetMaxIncomingBitrateData,
-    },
+    TransportSetMaxIncomingBitrateRequest { bitrate: u32 },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TransportSetMaxOutgoingBitrateData {
-    pub(crate) bitrate: u32,
-}
-
 request_response!(
+    TransportId,
     "transport.setMaxOutgoingBitrate",
-    TransportSetMaxOutgoingBitrateRequest {
-        handler_id: TransportId,
-        data: TransportSetMaxOutgoingBitrateData,
-    },
+    TransportSetMaxOutgoingBitrateRequest { bitrate: u32 },
 );
 
 request_response!(
+    TransportId,
     "transport.restartIce",
-    TransportRestartIceRequest {
-        handler_id: TransportId,
-    },
+    TransportRestartIceRequest {},
     TransportRestartIceResponse {
         ice_parameters: IceParameters,
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TransportProduceData {
-    pub(crate) producer_id: ProducerId,
-    pub(crate) kind: MediaKind,
-    pub(crate) rtp_parameters: RtpParameters,
-    pub(crate) rtp_mapping: RtpMapping,
-    pub(crate) key_frame_request_delay: u32,
-    pub(crate) paused: bool,
-}
-
 request_response!(
+    TransportId,
     "transport.produce",
     TransportProduceRequest {
-        handler_id: TransportId,
-        data: TransportProduceData,
+        producer_id: ProducerId,
+        kind: MediaKind,
+        rtp_parameters: RtpParameters,
+        rtp_mapping: RtpMapping,
+        key_frame_request_delay: u32,
+        paused: bool,
     },
     TransportProduceResponse {
         r#type: ProducerType,
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TransportConsumeData {
-    pub(crate) consumer_id: ConsumerId,
-    pub(crate) producer_id: ProducerId,
-    pub(crate) kind: MediaKind,
-    pub(crate) rtp_parameters: RtpParameters,
-    pub(crate) r#type: ConsumerType,
-    pub(crate) consumable_rtp_encodings: Vec<RtpEncodingParameters>,
-    pub(crate) paused: bool,
-    pub(crate) preferred_layers: Option<ConsumerLayers>,
-    pub(crate) ignore_dtx: bool,
-}
-
 request_response!(
+    TransportId,
     "transport.consume",
     TransportConsumeRequest {
-        handler_id: TransportId,
-        data: TransportConsumeData,
+        consumer_id: ConsumerId,
+        producer_id: ProducerId,
+        kind: MediaKind,
+        rtp_parameters: RtpParameters,
+        r#type: ConsumerType,
+        consumable_rtp_encodings: Vec<RtpEncodingParameters>,
+        paused: bool,
+        preferred_layers: Option<ConsumerLayers>,
+        ignore_dtx: bool,
     },
     TransportConsumeResponse {
         paused: bool,
@@ -698,22 +642,16 @@ request_response!(
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TransportProduceDataData {
-    pub(crate) data_producer_id: DataProducerId,
-    pub(crate) r#type: DataProducerType,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) sctp_stream_parameters: Option<SctpStreamParameters>,
-    pub(crate) label: String,
-    pub(crate) protocol: String,
-}
-
 request_response!(
+    TransportId,
     "transport.produceData",
     TransportProduceDataRequest {
-        handler_id: TransportId,
-        data: TransportProduceDataData,
+        data_producer_id: DataProducerId,
+        r#type: DataProducerType,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        sctp_stream_parameters: Option<SctpStreamParameters>,
+        label: String,
+        protocol: String,
     },
     TransportProduceDataResponse {
         r#type: DataProducerType,
@@ -723,23 +661,17 @@ request_response!(
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TransportConsumeDataData {
-    pub(crate) data_consumer_id: DataConsumerId,
-    pub(crate) data_producer_id: DataProducerId,
-    pub(crate) r#type: DataConsumerType,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) sctp_stream_parameters: Option<SctpStreamParameters>,
-    pub(crate) label: String,
-    pub(crate) protocol: String,
-}
-
 request_response!(
+    TransportId,
     "transport.consumeData",
     TransportConsumeDataRequest {
-        handler_id: TransportId,
-        data: TransportConsumeDataData,
+        data_consumer_id: DataConsumerId,
+        data_producer_id: DataProducerId,
+        r#type: DataConsumerType,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        sctp_stream_parameters: Option<SctpStreamParameters>,
+        label: String,
+        protocol: String,
     },
     TransportConsumeDataResponse {
         r#type: DataConsumerType,
@@ -749,364 +681,272 @@ request_response!(
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TransportEnableTraceEventData {
-    pub(crate) types: Vec<TransportTraceEventType>,
-}
-
 request_response!(
+    TransportId,
     "transport.enableTraceEvent",
     TransportEnableTraceEventRequest {
-        handler_id: TransportId,
-        data: TransportEnableTraceEventData,
+        types: Vec<TransportTraceEventType>,
     },
 );
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct TransportSendRtcpNotification {
-    pub(crate) handler_id: TransportId,
-}
+pub(crate) struct TransportSendRtcpNotification {}
 
 impl Notification for TransportSendRtcpNotification {
+    type HandlerId = TransportId;
+
     fn as_event(&self) -> &'static str {
         "transport.sendRtcp"
     }
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct ProducerCloseRequestData {
-    pub(crate) producer_id: ProducerId,
-}
-
 request_response!(
+    TransportId,
     "transport.closeProducer",
     ProducerCloseRequest {
-        handler_id: TransportId,
-        data: ProducerCloseRequestData,
+        producer_id: ProducerId,
     },
     (),
     Some(()),
 );
 
 request_response!(
+    ProducerId,
     "producer.dump",
-    ProducerDumpRequest {
-        handler_id: ProducerId,
-    },
+    ProducerDumpRequest {},
     ProducerDump
 );
 
 request_response!(
+    ProducerId,
     "producer.getStats",
-    ProducerGetStatsRequest {
-        handler_id: ProducerId,
-    },
+    ProducerGetStatsRequest {},
     Vec<ProducerStat>,
 );
 
-request_response!(
-    "producer.pause",
-    ProducerPauseRequest {
-        handler_id: ProducerId,
-    },
-);
+request_response!(ProducerId, "producer.pause", ProducerPauseRequest {});
+
+request_response!(ProducerId, "producer.resume", ProducerResumeRequest {});
 
 request_response!(
-    "producer.resume",
-    ProducerResumeRequest {
-        handler_id: ProducerId,
-    },
-);
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct ProducerEnableTraceEventData {
-    pub(crate) types: Vec<ProducerTraceEventType>,
-}
-
-request_response!(
+    ProducerId,
     "producer.enableTraceEvent",
     ProducerEnableTraceEventRequest {
-        handler_id: ProducerId,
-        data: ProducerEnableTraceEventData,
+        types: Vec<ProducerTraceEventType>,
     },
 );
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct ProducerSendNotification {
-    pub(crate) handler_id: ProducerId,
-}
+pub(crate) struct ProducerSendNotification {}
 
 impl Notification for ProducerSendNotification {
+    type HandlerId = ProducerId;
+
     fn as_event(&self) -> &'static str {
         "producer.send"
     }
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct ConsumerCloseRequestData {
-    pub(crate) consumer_id: ConsumerId,
-}
-
 request_response!(
+    TransportId,
     "transport.closeConsumer",
     ConsumerCloseRequest {
-        handler_id: TransportId,
-        data: ConsumerCloseRequestData,
+        consumer_id: ConsumerId,
     },
     (),
     Some(()),
 );
 
 request_response!(
+    ConsumerId,
     "consumer.dump",
-    ConsumerDumpRequest {
-        handler_id: ConsumerId,
-    },
+    ConsumerDumpRequest {},
     ConsumerDump,
 );
 
 request_response!(
+    ConsumerId,
     "consumer.getStats",
-    ConsumerGetStatsRequest {
-        handler_id: ConsumerId,
-    },
+    ConsumerGetStatsRequest {},
     ConsumerStats,
 );
 
-request_response!(
-    "consumer.pause",
-    ConsumerPauseRequest {
-        handler_id: ConsumerId,
-    },
-);
+request_response!(ConsumerId, "consumer.pause", ConsumerPauseRequest {},);
+
+request_response!(ConsumerId, "consumer.resume", ConsumerResumeRequest {},);
 
 request_response!(
-    "consumer.resume",
-    ConsumerResumeRequest {
-        handler_id: ConsumerId,
-    },
-);
-
-request_response!(
+    ConsumerId,
     "consumer.setPreferredLayers",
     ConsumerSetPreferredLayersRequest {
-        handler_id: ConsumerId,
+        #[serde(flatten)]
         data: ConsumerLayers,
     },
     Option<ConsumerLayers>,
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct ConsumerSetPriorityData {
-    pub(crate) priority: u8,
-}
-
 request_response!(
+    ConsumerId,
     "consumer.setPriority",
-    ConsumerSetPriorityRequest {
-        handler_id: ConsumerId,
-        data: ConsumerSetPriorityData,
-    },
+    ConsumerSetPriorityRequest { priority: u8 },
     ConsumerSetPriorityResponse { priority: u8 },
 );
 
 request_response!(
+    ConsumerId,
     "consumer.requestKeyFrame",
-    ConsumerRequestKeyFrameRequest {
-        handler_id: ConsumerId,
-    },
+    ConsumerRequestKeyFrameRequest {},
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct ConsumerEnableTraceEventData {
-    pub(crate) types: Vec<ConsumerTraceEventType>,
-}
-
 request_response!(
+    ConsumerId,
     "consumer.enableTraceEvent",
     ConsumerEnableTraceEventRequest {
-        handler_id: ConsumerId,
-        data: ConsumerEnableTraceEventData,
+        types: Vec<ConsumerTraceEventType>,
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct DataProducerCloseRequestData {
-    pub(crate) data_producer_id: DataProducerId,
-}
-
 request_response!(
+    TransportId,
     "transport.closeDataProducer",
     DataProducerCloseRequest {
-        handler_id: TransportId,
-        data: DataProducerCloseRequestData,
+        data_producer_id: DataProducerId,
     },
     (),
     Some(()),
 );
 
 request_response!(
+    DataProducerId,
     "dataProducer.dump",
-    DataProducerDumpRequest {
-        handler_id: DataProducerId,
-    },
+    DataProducerDumpRequest {},
     DataProducerDump,
 );
 
 request_response!(
+    DataProducerId,
     "dataProducer.getStats",
-    DataProducerGetStatsRequest {
-        handler_id: DataProducerId,
-    },
+    DataProducerGetStatsRequest {},
     Vec<DataProducerStat>,
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct DataProducerSendData {
+#[derive(Debug, Copy, Clone, Serialize)]
+#[serde(into = "u32")]
+pub(crate) struct DataProducerSendNotification {
+    #[serde(flatten)]
     pub(crate) ppid: u32,
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct DataProducerSendNotification {
-    pub(crate) handler_id: DataProducerId,
-    pub(crate) data: DataProducerSendData,
+impl From<DataProducerSendNotification> for u32 {
+    fn from(notification: DataProducerSendNotification) -> Self {
+        notification.ppid
+    }
 }
 
 impl Notification for DataProducerSendNotification {
+    type HandlerId = DataProducerId;
+
     fn as_event(&self) -> &'static str {
         "dataProducer.send"
     }
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct DataConsumerCloseRequestData {
-    pub(crate) data_consumer_id: DataConsumerId,
-}
-
 request_response!(
+    TransportId,
     "transport.closeDataConsumer",
     DataConsumerCloseRequest {
-        handler_id: TransportId,
-        data: DataConsumerCloseRequestData,
+        data_consumer_id: DataConsumerId,
     },
     (),
     Some(()),
 );
 
 request_response!(
+    DataConsumerId,
     "dataConsumer.dump",
-    DataConsumerDumpRequest {
-        handler_id: DataConsumerId,
-    },
+    DataConsumerDumpRequest {},
     DataConsumerDump,
 );
 
 request_response!(
+    DataConsumerId,
     "dataConsumer.getStats",
-    DataConsumerGetStatsRequest {
-        handler_id: DataConsumerId,
-    },
+    DataConsumerGetStatsRequest {},
     Vec<DataConsumerStat>,
 );
 
 request_response!(
+    DataConsumerId,
     "dataConsumer.getBufferedAmount",
-    DataConsumerGetBufferedAmountRequest {
-        handler_id: DataConsumerId,
-    },
+    DataConsumerGetBufferedAmountRequest {},
     DataConsumerGetBufferedAmountResponse {
         buffered_amount: u32,
     },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct DataConsumerSetBufferedAmountLowThresholdData {
-    pub(crate) threshold: u32,
-}
-
 request_response!(
+    DataConsumerId,
     "dataConsumer.setBufferedAmountLowThreshold",
-    DataConsumerSetBufferedAmountLowThresholdRequest {
-        handler_id: DataConsumerId,
-        data: DataConsumerSetBufferedAmountLowThresholdData,
-    },
+    DataConsumerSetBufferedAmountLowThresholdRequest { threshold: u32 },
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct DataConsumerSendRequestData {
+#[derive(Debug, Copy, Clone, Serialize)]
+#[serde(into = "u32")]
+pub(crate) struct DataConsumerSendRequest {
     pub(crate) ppid: u32,
 }
 
-request_response!(
-    "dataConsumer.send",
-    DataConsumerSendRequest {
-        handler_id: DataConsumerId,
-        data: DataConsumerSendRequestData,
-    },
-);
+impl Request for DataConsumerSendRequest {
+    type HandlerId = DataConsumerId;
+    type Response = ();
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RtpObserverCloseRequestData {
-    pub(crate) rtp_observer_id: RtpObserverId,
+    fn as_method(&self) -> &'static str {
+        "dataConsumer.send"
+    }
+}
+
+impl From<DataConsumerSendRequest> for u32 {
+    fn from(request: DataConsumerSendRequest) -> Self {
+        request.ppid
+    }
 }
 
 request_response!(
+    RouterId,
     "router.closeRtpObserver",
     RtpObserverCloseRequest {
-        handler_id: RouterId,
-        data: RtpObserverCloseRequestData,
+        rtp_observer_id: RtpObserverId,
     },
     (),
     Some(()),
 );
 
 request_response!(
+    RtpObserverId,
     "rtpObserver.pause",
-    RtpObserverPauseRequest {
-        handler_id: RtpObserverId,
-    },
+    RtpObserverPauseRequest {},
 );
 
 request_response!(
+    RtpObserverId,
     "rtpObserver.resume",
-    RtpObserverResumeRequest {
-        handler_id: RtpObserverId,
-    },
+    RtpObserverResumeRequest {},
 );
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RtpObserverAddRemoveProducerRequestData {
-    pub(crate) producer_id: ProducerId,
-}
-
 request_response!(
+    RtpObserverId,
     "rtpObserver.addProducer",
     RtpObserverAddProducerRequest {
-        handler_id: RtpObserverId,
-        data: RtpObserverAddRemoveProducerRequestData,
+        producer_id: ProducerId,
     },
 );
 
 request_response!(
+    RtpObserverId,
     "rtpObserver.removeProducer",
     RtpObserverRemoveProducerRequest {
-        handler_id: RtpObserverId,
-        data: RtpObserverAddRemoveProducerRequestData,
+        producer_id: ProducerId,
     },
 );
