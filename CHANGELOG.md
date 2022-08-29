@@ -7,6 +7,7 @@
 * `Channel` and `PayloadChannel`: Refactor `internal` with a single `handlerId` (PR #889).
 * `Channel` and `PayloadChannel`: Optimize message format and JSON generation (PR #893).
 * New C++ `ChannelMessageHandlers` class (PR #894).
+* Fix Rust support after recent changes (PR #898).
 * Update NPM deps.
 
 
