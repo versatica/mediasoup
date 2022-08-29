@@ -4,7 +4,7 @@ use mediasoup::data_structures::{AppData, ListenIp, Protocol};
 use mediasoup::webrtc_server::{
     WebRtcServerIpPort, WebRtcServerListenInfo, WebRtcServerListenInfos, WebRtcServerOptions,
 };
-use mediasoup::worker::{CreateWebRtcServerError, Worker, WorkerSettings};
+use mediasoup::worker::{ChannelMessageHandlers, CreateWebRtcServerError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use portpicker::pick_unused_port;
 use std::env;
@@ -97,6 +97,14 @@ fn create_webrtc_server_succeeds() {
 
         assert_eq!(worker_dump.router_ids, vec![]);
         assert_eq!(worker_dump.webrtc_server_ids, vec![webrtc_server.id()]);
+        assert_eq!(
+            worker_dump.channel_message_handlers,
+            ChannelMessageHandlers {
+                channel_request_handlers: vec![webrtc_server.id().into()],
+                payload_channel_request_handlers: vec![],
+                payload_channel_notification_handlers: vec![]
+            }
+        );
 
         let dump = webrtc_server
             .dump()

@@ -188,9 +188,52 @@ namespace Channel
 		uint32_t messageLen;
 		size_t messageCtx;
 
+		// Try to read next message using `channelReadFn`, message, its length and context will be
+		// stored in provided arguments.
 		auto free = this->channelReadFn(
 		  &message, &messageLen, &messageCtx, this->uvReadHandle, this->channelReadCtx);
 
+		// Non-null free function pointer means message was successfully read above and will need to be
+		// freed later.
+		if (free)
+		{
+			try
+			{
+				char* charMessage{ reinterpret_cast<char*>(message) };
+
+				auto* request = new Channel::ChannelRequest(this, charMessage, messageLen);
+
+				// Notify the listener.
+				try
+				{
+					this->listener->HandleRequest(request);
+				}
+				catch (const MediaSoupTypeError& error)
+				{
+					request->TypeError(error.what());
+				}
+				catch (const MediaSoupError& error)
+				{
+					request->Error(error.what());
+				}
+
+				// Delete the Request.
+				delete request;
+			}
+			catch (const json::parse_error& error)
+			{
+				MS_ERROR_STD("message parsing error: %s", error.what());
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
+			}
+
+			// Message needs to be freed using stored function pointer.
+			free(message, messageLen, messageCtx);
+		}
+
+		// Return `true` if something was processed.
 		return free != nullptr;
 	}
 

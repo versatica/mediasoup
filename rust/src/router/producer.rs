@@ -4,9 +4,8 @@ mod tests;
 use crate::consumer::RtpStreamParams;
 use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
 use crate::messages::{
-    ProducerCloseRequest, ProducerCloseRequestData, ProducerDumpRequest,
-    ProducerEnableTraceEventData, ProducerEnableTraceEventRequest, ProducerGetStatsRequest,
-    ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
+    ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
+    ProducerGetStatsRequest, ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
 };
 pub use crate::ortc::RtpMapping;
 use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
@@ -327,16 +326,14 @@ impl Inner {
 
             if close_request {
                 let channel = self.channel.clone();
+                let transport_id = self.transport.id();
                 let request = ProducerCloseRequest {
-                    handler_id: self.transport.id(),
-                    data: ProducerCloseRequestData {
-                        producer_id: self.id,
-                    },
+                    producer_id: self.id,
                 };
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
+                        if let Err(error) = channel.request(transport_id, request).await {
                             error!("producer closing failed on drop: {}", error);
                         }
                     })
@@ -588,9 +585,7 @@ impl Producer {
 
         self.inner()
             .channel
-            .request(ProducerDumpRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), ProducerDumpRequest {})
             .await
     }
 
@@ -603,9 +598,7 @@ impl Producer {
 
         self.inner()
             .channel
-            .request(ProducerGetStatsRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), ProducerGetStatsRequest {})
             .await
     }
 
@@ -617,9 +610,7 @@ impl Producer {
 
         self.inner()
             .channel
-            .request(ProducerPauseRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), ProducerPauseRequest {})
             .await?;
 
         let was_paused = self.inner().paused.swap(true, Ordering::SeqCst);
@@ -639,9 +630,7 @@ impl Producer {
 
         self.inner()
             .channel
-            .request(ProducerResumeRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), ProducerResumeRequest {})
             .await?;
 
         let was_paused = self.inner().paused.swap(false, Ordering::SeqCst);
@@ -662,10 +651,7 @@ impl Producer {
 
         self.inner()
             .channel
-            .request(ProducerEnableTraceEventRequest {
-                handler_id: self.id(),
-                data: ProducerEnableTraceEventData { types },
-            })
+            .request(self.id(), ProducerEnableTraceEventRequest { types })
             .await
     }
 
@@ -760,12 +746,9 @@ impl Producer {
 impl DirectProducer {
     /// Sends a RTP packet from the Rust process.
     pub fn send(&self, rtp_packet: Vec<u8>) -> Result<(), NotificationError> {
-        self.inner.payload_channel.notify(
-            ProducerSendNotification {
-                handler_id: self.inner.id,
-            },
-            rtp_packet,
-        )
+        self.inner
+            .payload_channel
+            .notify(self.inner.id, ProducerSendNotification {}, rtp_packet)
     }
 }
 

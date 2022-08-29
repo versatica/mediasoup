@@ -3,12 +3,10 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, Da
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, BweTraceInfo, RtpPacketTraceInfo, TraceEventDirection};
 use crate::messages::{
-    TransportConsumeData, TransportConsumeDataData, TransportConsumeDataRequest,
-    TransportConsumeRequest, TransportDumpRequest, TransportEnableTraceEventData,
-    TransportEnableTraceEventRequest, TransportGetStatsRequest, TransportProduceData,
-    TransportProduceDataData, TransportProduceDataRequest, TransportProduceRequest,
-    TransportSetMaxIncomingBitrateData, TransportSetMaxIncomingBitrateRequest,
-    TransportSetMaxOutgoingBitrateData, TransportSetMaxOutgoingBitrateRequest,
+    TransportConsumeDataRequest, TransportConsumeRequest, TransportDumpRequest,
+    TransportEnableTraceEventRequest, TransportGetStatsRequest, TransportProduceDataRequest,
+    TransportProduceRequest, TransportSetMaxIncomingBitrateRequest,
+    TransportSetMaxOutgoingBitrateRequest,
 };
 pub use crate::ortc::{
     ConsumerRtpParametersError, RtpCapabilitiesError, RtpParametersError, RtpParametersMappingError,
@@ -366,35 +364,25 @@ pub(super) trait TransportImpl: TransportGeneric {
 
     async fn dump_impl(&self) -> Result<Value, RequestError> {
         self.channel()
-            .request(TransportDumpRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), TransportDumpRequest {})
             .await
     }
 
     async fn get_stats_impl(&self) -> Result<Value, RequestError> {
         self.channel()
-            .request(TransportGetStatsRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), TransportGetStatsRequest {})
             .await
     }
 
     async fn set_max_incoming_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
         self.channel()
-            .request(TransportSetMaxIncomingBitrateRequest {
-                handler_id: self.id(),
-                data: TransportSetMaxIncomingBitrateData { bitrate },
-            })
+            .request(self.id(), TransportSetMaxIncomingBitrateRequest { bitrate })
             .await
     }
 
     async fn set_max_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
         self.channel()
-            .request(TransportSetMaxOutgoingBitrateRequest {
-                handler_id: self.id(),
-                data: TransportSetMaxOutgoingBitrateData { bitrate },
-            })
+            .request(self.id(), TransportSetMaxOutgoingBitrateRequest { bitrate })
             .await
     }
 
@@ -403,10 +391,7 @@ pub(super) trait TransportImpl: TransportGeneric {
         types: Vec<TransportTraceEventType>,
     ) -> Result<(), RequestError> {
         self.channel()
-            .request(TransportEnableTraceEventRequest {
-                handler_id: self.id(),
-                data: TransportEnableTraceEventData { types },
-            })
+            .request(self.id(), TransportEnableTraceEventRequest { types })
             .await
     }
 
@@ -478,9 +463,9 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let response = self
             .channel()
-            .request(TransportProduceRequest {
-                handler_id: self.id(),
-                data: TransportProduceData {
+            .request(
+                self.id(),
+                TransportProduceRequest {
                     producer_id,
                     kind,
                     rtp_parameters: rtp_parameters.clone(),
@@ -488,7 +473,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                     key_frame_request_delay,
                     paused,
                 },
-            })
+            )
             .await
             .map_err(ProduceError::Request)?;
 
@@ -573,9 +558,9 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let response = self
             .channel()
-            .request(TransportConsumeRequest {
-                handler_id: self.id(),
-                data: TransportConsumeData {
+            .request(
+                self.id(),
+                TransportConsumeRequest {
                     consumer_id,
                     producer_id: producer.id(),
                     kind: producer.kind(),
@@ -589,7 +574,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                     preferred_layers,
                     ignore_dtx,
                 },
-            })
+            )
             .await
             .map_err(ConsumeError::Request)?;
 
@@ -651,16 +636,16 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let response = self
             .channel()
-            .request(TransportProduceDataRequest {
-                handler_id: self.id(),
-                data: TransportProduceDataData {
+            .request(
+                self.id(),
+                TransportProduceDataRequest {
                     data_producer_id,
                     r#type,
                     sctp_stream_parameters,
                     label,
                     protocol,
                 },
-            })
+            )
             .await
             .map_err(ProduceDataError::Request)?;
 
@@ -736,9 +721,9 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let response = self
             .channel()
-            .request(TransportConsumeDataRequest {
-                handler_id: self.id(),
-                data: TransportConsumeDataData {
+            .request(
+                self.id(),
+                TransportConsumeDataRequest {
                     data_consumer_id,
                     data_producer_id: data_producer.id(),
                     r#type,
@@ -746,7 +731,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                     label: data_producer.label().clone(),
                     protocol: data_producer.protocol().clone(),
                 },
-            })
+            )
             .await
             .map_err(ConsumeDataError::Request)?;
 

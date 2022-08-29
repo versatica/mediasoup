@@ -216,6 +216,8 @@ namespace PayloadChannel
 		uint32_t payloadLen;
 		size_t payloadCapacity;
 
+		// Try to read next message and payload using `payloadChannelReadFn`, message and payload,
+		// alongside their lengths and contexts will be stored in provided arguments.
 		auto free = this->payloadChannelReadFn(
 		  &message,
 		  &messageLen,
@@ -226,6 +228,100 @@ namespace PayloadChannel
 		  this->uvReadHandle,
 		  this->payloadChannelReadCtx);
 
+		// Non-null free function pointer means message was successfully read above and will need to be
+		// freed later.
+		if (free)
+		{
+			try
+			{
+				char* charMessage{ reinterpret_cast<char*>(message) };
+
+				if (PayloadChannelRequest::IsRequest(charMessage, messageLen))
+				{
+					try
+					{
+						auto* request =
+						  new PayloadChannel::PayloadChannelRequest(this, charMessage + 2, messageLen - 2);
+						request->SetPayload(payload, payloadLen);
+
+						// Notify the listener.
+						try
+						{
+							this->listener->HandleRequest(request);
+						}
+						catch (const MediaSoupTypeError& error)
+						{
+							request->TypeError(error.what());
+						}
+						catch (const MediaSoupError& error)
+						{
+							request->Error(error.what());
+						}
+
+						// Delete the Request.
+						delete request;
+					}
+					catch (const json::parse_error& error)
+					{
+						MS_ERROR_STD("message parsing error: %s", error.what());
+					}
+					catch (const MediaSoupError& error)
+					{
+						MS_ERROR("discarding wrong PayloadChannel request: %s", error.what());
+					}
+				}
+
+				else if (PayloadChannelNotification::IsNotification(charMessage, messageLen))
+				{
+					try
+					{
+						auto* notification =
+						  new PayloadChannel::PayloadChannelNotification(charMessage + 2, messageLen - 2);
+						notification->SetPayload(payload, payloadLen);
+
+						// Notify the listener.
+						try
+						{
+							this->listener->HandleNotification(notification);
+						}
+						catch (const MediaSoupError& error)
+						{
+							MS_ERROR("notification failed: %s", error.what());
+						}
+
+						// Delete the Notification.
+						delete notification;
+					}
+					catch (const json::parse_error& error)
+					{
+						MS_ERROR_STD("message parsing error: %s", error.what());
+					}
+					catch (const MediaSoupError& error)
+					{
+						MS_ERROR("discarding wrong PayloadChannel notification: %s", error.what());
+					}
+				}
+
+				else
+				{
+					MS_ERROR("discarding wrong PayloadChannel data");
+				}
+			}
+			catch (const json::parse_error& error)
+			{
+				MS_ERROR("JSON parsing error: %s", error.what());
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR("discarding wrong Channel request: %s", error.what());
+			}
+
+			// Message and payload need to be freed using stored function pointer.
+			free(message, messageLen, messageCtx);
+			free(payload, payloadLen, payloadCapacity);
+		}
+
+		// Return `true` if something was processed.
 		return free != nullptr;
 	}
 

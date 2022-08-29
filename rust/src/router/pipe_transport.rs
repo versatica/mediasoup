@@ -5,10 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, ListenIp, SctpState, TransportTuple};
-use crate::messages::{
-    PipeTransportData, TransportCloseRequest, TransportCloseRequestData,
-    TransportConnectPipeRequest, TransportConnectRequestPipeData,
-};
+use crate::messages::{PipeTransportData, TransportCloseRequest, TransportConnectPipeRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::Router;
@@ -220,16 +217,14 @@ impl Inner {
 
             if close_request {
                 let channel = self.channel.clone();
+                let router_id = self.router.id();
                 let request = TransportCloseRequest {
-                    handler_id: self.router.id(),
-                    data: TransportCloseRequestData {
-                        transport_id: self.id,
-                    },
+                    transport_id: self.id,
                 };
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
+                        if let Err(error) = channel.request(router_id, request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
                     })
@@ -558,14 +553,14 @@ impl PipeTransport {
         let response = self
             .inner
             .channel
-            .request(TransportConnectPipeRequest {
-                handler_id: self.id(),
-                data: TransportConnectRequestPipeData {
+            .request(
+                self.id(),
+                TransportConnectPipeRequest {
                     ip: remote_parameters.ip,
                     port: remote_parameters.port,
                     srtp_parameters: remote_parameters.srtp_parameters,
                 },
-            })
+            )
             .await?;
 
         *self.inner.data.tuple.lock() = response.tuple;

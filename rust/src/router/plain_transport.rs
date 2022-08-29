@@ -5,10 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, ListenIp, SctpState, TransportTuple};
-use crate::messages::{
-    PlainTransportData, TransportCloseRequest, TransportCloseRequestData,
-    TransportConnectPlainRequest, TransportConnectRequestPlainData,
-};
+use crate::messages::{PlainTransportData, TransportCloseRequest, TransportConnectPlainRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::Router;
@@ -257,16 +254,14 @@ impl Inner {
 
             if close_request {
                 let channel = self.channel.clone();
+                let router_id = self.router.id();
                 let request = TransportCloseRequest {
-                    handler_id: self.router.id(),
-                    data: TransportCloseRequestData {
-                        transport_id: self.id,
-                    },
+                    transport_id: self.id,
                 };
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
+                        if let Err(error) = channel.request(router_id, request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
                     })
@@ -693,15 +688,15 @@ impl PlainTransport {
         let response = self
             .inner
             .channel
-            .request(TransportConnectPlainRequest {
-                handler_id: self.inner.id,
-                data: TransportConnectRequestPlainData {
+            .request(
+                self.inner.id,
+                TransportConnectPlainRequest {
                     ip: remote_parameters.ip,
                     port: remote_parameters.port,
                     rtcp_port: remote_parameters.rtcp_port,
                     srtp_parameters: remote_parameters.srtp_parameters,
                 },
-            })
+            )
             .await?;
 
         if let Some(tuple) = response.tuple {

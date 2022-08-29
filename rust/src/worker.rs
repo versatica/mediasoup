@@ -8,9 +8,8 @@ mod utils;
 
 use crate::data_structures::AppData;
 use crate::messages::{
-    WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateRouterRequestData,
-    WorkerCreateWebRtcServerData, WorkerCreateWebRtcServerRequest, WorkerDumpRequest,
-    WorkerUpdateSettingsRequest,
+    WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest,
+    WorkerDumpRequest, WorkerUpdateSettingsRequest,
 };
 pub use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
@@ -35,6 +34,7 @@ use std::sync::Arc;
 use std::{fmt, io};
 use thiserror::Error;
 use utils::WorkerRunResult;
+use uuid::Uuid;
 
 uuid_based_wrapper_type!(
     /// Worker identifier.
@@ -192,8 +192,22 @@ pub struct WorkerSettings {
 impl Default for WorkerSettings {
     fn default() -> Self {
         Self {
-            log_level: WorkerLogLevel::default(),
-            log_tags: Vec::new(),
+            log_level: WorkerLogLevel::Debug,
+            log_tags: vec![
+                WorkerLogTag::Info,
+                WorkerLogTag::Ice,
+                WorkerLogTag::Dtls,
+                WorkerLogTag::Rtp,
+                WorkerLogTag::Srtp,
+                WorkerLogTag::Rtcp,
+                WorkerLogTag::Rtx,
+                WorkerLogTag::Bwe,
+                WorkerLogTag::Score,
+                WorkerLogTag::Simulcast,
+                WorkerLogTag::Svc,
+                WorkerLogTag::Sctp,
+                WorkerLogTag::Message,
+            ],
             rtc_ports_range: 10000..=59999,
             dtls_files: None,
             thread_initializer: None,
@@ -243,6 +257,15 @@ pub struct WorkerUpdateSettings {
     pub log_tags: Option<Vec<WorkerLogTag>>,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct ChannelMessageHandlers {
+    pub channel_request_handlers: Vec<Uuid>,
+    pub payload_channel_request_handlers: Vec<Uuid>,
+    pub payload_channel_notification_handlers: Vec<Uuid>,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
@@ -252,6 +275,7 @@ pub struct WorkerDump {
     pub router_ids: Vec<RouterId>,
     #[serde(rename = "webRtcServerIds")]
     pub webrtc_server_ids: Vec<WebRtcServerId>,
+    pub channel_message_handlers: ChannelMessageHandlers,
 }
 
 /// Error that caused [`Worker::create_webrtc_server`] to fail.
@@ -530,7 +554,7 @@ impl Inner {
 
             self.executor
                 .spawn(async move {
-                    let _ = channel.request(WorkerCloseRequest {}).await;
+                    let _ = channel.request("", WorkerCloseRequest {}).await;
 
                     // Drop channels in here after response from worker
                     drop(channel);
@@ -600,7 +624,7 @@ impl Worker {
     pub async fn dump(&self) -> Result<WorkerDump, RequestError> {
         debug!("dump()");
 
-        self.inner.channel.request(WorkerDumpRequest {}).await
+        self.inner.channel.request("", WorkerDumpRequest {}).await
     }
 
     /// Updates the worker settings in runtime. Just a subset of the worker settings can be updated.
@@ -609,7 +633,7 @@ impl Worker {
 
         self.inner
             .channel
-            .request(WorkerUpdateSettingsRequest { data })
+            .request("", WorkerUpdateSettingsRequest { data })
             .await
     }
 
@@ -636,12 +660,13 @@ impl Worker {
 
         self.inner
             .channel
-            .request(WorkerCreateWebRtcServerRequest {
-                data: WorkerCreateWebRtcServerData {
+            .request(
+                "",
+                WorkerCreateWebRtcServerRequest {
                     webrtc_server_id,
                     listen_infos,
                 },
-            })
+            )
             .await
             .map_err(CreateWebRtcServerError::Request)?;
 
@@ -684,9 +709,7 @@ impl Worker {
 
         self.inner
             .channel
-            .request(WorkerCreateRouterRequest {
-                data: WorkerCreateRouterRequestData { router_id },
-            })
+            .request("", WorkerCreateRouterRequest { router_id })
             .await
             .map_err(CreateRouterError::Request)?;
 

@@ -3,8 +3,8 @@ mod tests;
 
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
-    DataProducerCloseRequest, DataProducerCloseRequestData, DataProducerDumpRequest,
-    DataProducerGetStatsRequest, DataProducerSendData, DataProducerSendNotification,
+    DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
+    DataProducerSendNotification,
 };
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
@@ -162,15 +162,13 @@ impl Inner {
 
             if close_request {
                 let channel = self.channel.clone();
+                let transport_id = self.transport.id();
                 let request = DataProducerCloseRequest {
-                    handler_id: self.transport.id(),
-                    data: DataProducerCloseRequestData {
-                        data_producer_id: self.id,
-                    },
+                    data_producer_id: self.id,
                 };
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
+                        if let Err(error) = channel.request(transport_id, request).await {
                             error!("data producer closing failed on drop: {}", error);
                         }
                     })
@@ -372,9 +370,7 @@ impl DataProducer {
 
         self.inner()
             .channel
-            .request(DataProducerDumpRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), DataProducerDumpRequest {})
             .await
     }
 
@@ -387,9 +383,7 @@ impl DataProducer {
 
         self.inner()
             .channel
-            .request(DataProducerGetStatsRequest {
-                handler_id: self.id(),
-            })
+            .request(self.id(), DataProducerGetStatsRequest {})
             .await
     }
 
@@ -440,10 +434,8 @@ impl DirectDataProducer {
         let (ppid, payload) = message.into_ppid_and_payload();
 
         self.inner.payload_channel.notify(
-            DataProducerSendNotification {
-                handler_id: self.inner.id,
-                data: DataProducerSendData { ppid },
-            },
+            self.inner.id,
+            DataProducerSendNotification { ppid },
             payload.into_owned(),
         )
     }
