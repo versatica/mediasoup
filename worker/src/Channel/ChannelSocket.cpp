@@ -188,9 +188,13 @@ namespace Channel
 		uint32_t messageLen;
 		size_t messageCtx;
 
+		// Try to read next message using `channelReadFn`, message, its length and context will be
+		// stored in provided arguments.
 		auto free = this->channelReadFn(
 		  &message, &messageLen, &messageCtx, this->uvReadHandle, this->channelReadCtx);
 
+		// Non-null free function pointer means message was successfully read above and will need to be
+		// freed later.
 		if (free)
 		{
 			try
@@ -225,9 +229,11 @@ namespace Channel
 				MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
 			}
 
+			// Message needs to be freed using stored function pointer.
 			free(message, messageLen, messageCtx);
 		}
 
+		// Return `true` if something was processed.
 		return free != nullptr;
 	}
 

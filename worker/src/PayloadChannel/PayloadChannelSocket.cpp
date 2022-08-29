@@ -216,6 +216,8 @@ namespace PayloadChannel
 		uint32_t payloadLen;
 		size_t payloadCapacity;
 
+		// Try to read next message and payload using `payloadChannelReadFn`, message and payload,
+		// alongside their lengths and contexts will be stored in provided arguments.
 		auto free = this->payloadChannelReadFn(
 		  &message,
 		  &messageLen,
@@ -226,6 +228,8 @@ namespace PayloadChannel
 		  this->uvReadHandle,
 		  this->payloadChannelReadCtx);
 
+		// Non-null free function pointer means message was successfully read above and will need to be
+		// freed later.
 		if (free)
 		{
 			try
@@ -312,10 +316,12 @@ namespace PayloadChannel
 				MS_ERROR("discarding wrong Channel request: %s", error.what());
 			}
 
+			// Message and payload need to be freed using stored function pointer.
 			free(message, messageLen, messageCtx);
 			free(payload, payloadLen, payloadCapacity);
 		}
 
+		// Return `true` if something was processed.
 		return free != nullptr;
 	}
 
