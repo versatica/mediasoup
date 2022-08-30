@@ -6,7 +6,7 @@
 #include "DepLibUV.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "PayloadChannel/Notification.hpp"
+#include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
@@ -139,7 +139,7 @@ namespace RTC
 
 		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
 	public:
-		void HandleNotification(PayloadChannel::Notification* notification) override;
+		void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
 
 	protected:
 		// Must be called from the subclass.
@@ -156,16 +156,16 @@ namespace RTC
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
-		void SetNewProducerIdFromInternal(json& internal, std::string& producerId) const;
-		RTC::Producer* GetProducerFromInternal(json& internal) const;
-		void SetNewConsumerIdFromInternal(json& internal, std::string& consumerId) const;
-		RTC::Consumer* GetConsumerFromInternal(json& internal) const;
+		void SetNewProducerIdFromData(json& data, std::string& producerId) const;
+		RTC::Producer* GetProducerFromData(json& data) const;
+		void SetNewConsumerIdFromData(json& data, std::string& consumerId) const;
+		RTC::Consumer* GetConsumerFromData(json& data) const;
 		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
 		RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const;
-		void SetNewDataProducerIdFromInternal(json& internal, std::string& dataProducerId) const;
-		RTC::DataProducer* GetDataProducerFromInternal(json& internal) const;
-		void SetNewDataConsumerIdFromInternal(json& internal, std::string& dataConsumerId) const;
-		RTC::DataConsumer* GetDataConsumerFromInternal(json& internal) const;
+		void SetNewDataProducerIdFromData(json& data, std::string& dataProducerId) const;
+		RTC::DataProducer* GetDataProducerFromData(json& data) const;
+		void SetNewDataConsumerIdFromData(json& data, std::string& dataConsumerId) const;
+		RTC::DataConsumer* GetDataConsumerFromData(json& data) const;
 
 	private:
 		virtual bool IsConnected() const = 0;

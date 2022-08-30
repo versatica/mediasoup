@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DirectTransport.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "PayloadChannel/PayloadChannelNotifier.hpp"
@@ -15,11 +16,20 @@ namespace RTC
 	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ this,
+		  /*payloadChannelNotificationHandler*/ this);
 	}
 
 	DirectTransport::~DirectTransport()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 	}
 
 	void DirectTransport::FillJson(json& jsonObject) const
@@ -51,13 +61,13 @@ namespace RTC
 		RTC::Transport::HandleRequest(request);
 	}
 
-	void DirectTransport::HandleNotification(PayloadChannel::Notification* notification)
+	void DirectTransport::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 	{
 		MS_TRACE();
 
 		switch (notification->eventId)
 		{
-			case PayloadChannel::Notification::EventId::TRANSPORT_SEND_RTCP:
+			case PayloadChannel::PayloadChannelNotification::EventId::TRANSPORT_SEND_RTCP:
 			{
 				const auto* data = notification->payload;
 				auto len         = notification->payloadLen;
@@ -83,26 +93,6 @@ namespace RTC
 
 				// Pass the packet to the parent transport.
 				RTC::Transport::ReceiveRtcpPacket(packet);
-
-				break;
-			}
-
-			case PayloadChannel::Notification::EventId::PRODUCER_SEND:
-			{
-				// This may throw.
-				RTC::Producer* producer = GetProducerFromInternal(notification->internal);
-
-				producer->HandleNotification(notification);
-
-				break;
-			}
-
-			case PayloadChannel::Notification::EventId::DATA_PRODUCER_SEND:
-			{
-				// This may throw.
-				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(notification->internal);
-
-				dataProducer->HandleNotification(notification);
 
 				break;
 			}

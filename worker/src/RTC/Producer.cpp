@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Producer.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -313,11 +314,20 @@ namespace RTC
 
 			this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this, keyFrameRequestDelay);
 		}
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ nullptr,
+		  /*payloadChannelNotificationHandler*/ this);
 	}
 
 	Producer::~Producer()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		// Delete all streams.
 		for (auto& kv : this->mapSsrcRtpStream)
@@ -609,13 +619,13 @@ namespace RTC
 		}
 	}
 
-	void Producer::HandleNotification(PayloadChannel::Notification* notification)
+	void Producer::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 	{
 		MS_TRACE();
 
 		switch (notification->eventId)
 		{
-			case PayloadChannel::Notification::EventId::PRODUCER_SEND:
+			case PayloadChannel::PayloadChannelNotification::EventId::PRODUCER_SEND:
 			{
 				const auto* data = notification->payload;
 				auto len         = notification->payloadLen;

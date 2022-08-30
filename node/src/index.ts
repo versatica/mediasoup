@@ -26,7 +26,7 @@ const logger = new Logger();
 export type ObserverEvents =
 {
 	newworker: [Worker];
-}
+};
 
 const observer = new EnhancedEventEmitter<ObserverEvents>();
 

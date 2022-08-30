@@ -3,10 +3,9 @@ mod tests;
 
 use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
 use crate::messages::{
-    ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventData,
-    ConsumerEnableTraceEventRequest, ConsumerGetStatsRequest, ConsumerInternal,
-    ConsumerPauseRequest, ConsumerRequestKeyFrameRequest, ConsumerResumeRequest,
-    ConsumerSetPreferredLayersRequest, ConsumerSetPriorityData, ConsumerSetPriorityRequest,
+    ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventRequest,
+    ConsumerGetStatsRequest, ConsumerPauseRequest, ConsumerRequestKeyFrameRequest,
+    ConsumerResumeRequest, ConsumerSetPreferredLayersRequest, ConsumerSetPriorityRequest,
 };
 use crate::producer::{Producer, ProducerId, ProducerStat, ProducerType, WeakProducer};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
@@ -404,19 +403,16 @@ impl Inner {
 
             if close_request {
                 let channel = self.channel.clone();
+                let transport_id = self.transport.id();
                 let request = ConsumerCloseRequest {
-                    internal: ConsumerInternal {
-                        router_id: self.transport.router().id(),
-                        transport_id: self.transport.id(),
-                        consumer_id: self.id,
-                    },
+                    consumer_id: self.id,
                 };
                 let weak_producer = self.weak_producer.clone();
 
                 self.executor
                     .spawn(async move {
                         if weak_producer.upgrade().is_some() {
-                            if let Err(error) = channel.request(request).await {
+                            if let Err(error) = channel.request(transport_id, request).await {
                                 error!("consumer closing failed on drop: {}", error);
                             }
                         }
@@ -716,9 +712,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request(ConsumerDumpRequest {
-                internal: self.get_internal(),
-            })
+            .request(self.id(), ConsumerDumpRequest {})
             .await
     }
 
@@ -731,9 +725,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request(ConsumerGetStatsRequest {
-                internal: self.get_internal(),
-            })
+            .request(self.id(), ConsumerGetStatsRequest {})
             .await
     }
 
@@ -743,9 +735,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request(ConsumerPauseRequest {
-                internal: self.get_internal(),
-            })
+            .request(self.id(), ConsumerPauseRequest {})
             .await?;
 
         let mut paused = self.inner.paused.lock();
@@ -765,9 +755,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request(ConsumerResumeRequest {
-                internal: self.get_internal(),
-            })
+            .request(self.id(), ConsumerResumeRequest {})
             .await?;
 
         let mut paused = self.inner.paused.lock();
@@ -792,10 +780,12 @@ impl Consumer {
         let consumer_layers = self
             .inner
             .channel
-            .request(ConsumerSetPreferredLayersRequest {
-                internal: self.get_internal(),
-                data: consumer_layers,
-            })
+            .request(
+                self.id(),
+                ConsumerSetPreferredLayersRequest {
+                    data: consumer_layers,
+                },
+            )
             .await?;
 
         *self.inner.preferred_layers.lock() = consumer_layers;
@@ -812,10 +802,7 @@ impl Consumer {
         let result = self
             .inner
             .channel
-            .request(ConsumerSetPriorityRequest {
-                internal: self.get_internal(),
-                data: ConsumerSetPriorityData { priority },
-            })
+            .request(self.id(), ConsumerSetPriorityRequest { priority })
             .await?;
 
         *self.inner.priority.lock() = result.priority;
@@ -832,10 +819,7 @@ impl Consumer {
         let result = self
             .inner
             .channel
-            .request(ConsumerSetPriorityRequest {
-                internal: self.get_internal(),
-                data: ConsumerSetPriorityData { priority },
-            })
+            .request(self.id(), ConsumerSetPriorityRequest { priority })
             .await?;
 
         *self.inner.priority.lock() = result.priority;
@@ -849,9 +833,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request(ConsumerRequestKeyFrameRequest {
-                internal: self.get_internal(),
-            })
+            .request(self.id(), ConsumerRequestKeyFrameRequest {})
             .await
     }
 
@@ -864,10 +846,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request(ConsumerEnableTraceEventRequest {
-                internal: self.get_internal(),
-                data: ConsumerEnableTraceEventData { types },
-            })
+            .request(self.id(), ConsumerEnableTraceEventRequest { types })
             .await
     }
 
@@ -971,14 +950,6 @@ impl Consumer {
     pub fn downgrade(&self) -> WeakConsumer {
         WeakConsumer {
             inner: Arc::downgrade(&self.inner),
-        }
-    }
-
-    fn get_internal(&self) -> ConsumerInternal {
-        ConsumerInternal {
-            router_id: self.inner.transport.router().id(),
-            transport_id: self.inner.transport.id(),
-            consumer_id: self.inner.id,
         }
     }
 }

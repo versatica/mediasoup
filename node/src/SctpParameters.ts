@@ -1,7 +1,7 @@
 export type SctpCapabilities =
 {
   numStreams: NumSctpStreams;
-}
+};
 
 /**
  * Both OS and MIS are part of the SCTP INIT+ACK handshake. OS refers to the
@@ -36,7 +36,7 @@ export type NumSctpStreams =
 	 * Maximum number of incoming SCTP streams.
 	 */
 	MIS: number;
-}
+};
 
 export type SctpParameters =
 {
@@ -59,7 +59,7 @@ export type SctpParameters =
 	 * Maximum allowed size for SCTP messages.
 	 */
 	maxMessageSize: number;
-}
+};
 
 /**
  * SCTP stream parameters describe the reliability of a certain SCTP stream.
@@ -92,4 +92,4 @@ export type SctpStreamParameters =
 	 * be retransmitted.
 	 */
 	maxRetransmits?: number;
-}
+};

@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/WebRtcServer.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -122,6 +123,13 @@ namespace RTC
 					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, listenInfo.announcedIp);
 				}
 			}
+
+			// NOTE: This may throw.
+			ChannelMessageHandlers::RegisterHandler(
+			  this->id,
+			  /*channelRequestHandler*/ this,
+			  /*payloadChannelRequestHandler*/ nullptr,
+			  /*payloadChannelNotificationHandler*/ nullptr);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -144,6 +152,8 @@ namespace RTC
 	WebRtcServer::~WebRtcServer()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		for (auto& item : this->udpSocketOrTcpServers)
 		{

@@ -40,13 +40,16 @@ export declare type WebRtcServerObserverEvents = {
     webrtctransporthandled: [WebRtcTransport];
     webrtctransportunhandled: [WebRtcTransport];
 };
+declare type WebRtcServerInternal = {
+    webRtcServerId: string;
+};
 export declare class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents> {
     #private;
     /**
      * @private
      */
     constructor({ internal, channel, appData }: {
-        internal: any;
+        internal: WebRtcServerInternal;
         channel: Channel;
         appData?: Record<string, unknown>;
     });
@@ -94,4 +97,5 @@ export declare class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvent
      */
     handleWebRtcTransport(webRtcTransport: WebRtcTransport): void;
 }
+export {};
 //# sourceMappingURL=WebRtcServer.d.ts.map

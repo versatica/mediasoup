@@ -2,10 +2,12 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataProducer.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include <stdexcept>
 
 namespace RTC
 {
@@ -55,11 +57,20 @@ namespace RTC
 
 		if (jsonProtocolIt != data.end() && jsonProtocolIt->is_string())
 			this->protocol = jsonProtocolIt->get<std::string>();
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ nullptr,
+		  /*payloadChannelNotificationHandler*/ this);
 	}
 
 	DataProducer::~DataProducer()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 	}
 
 	void DataProducer::FillJson(json& jsonObject) const
@@ -146,34 +157,37 @@ namespace RTC
 		}
 	}
 
-	void DataProducer::HandleNotification(PayloadChannel::Notification* notification)
+	void DataProducer::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 	{
 		MS_TRACE();
 
 		switch (notification->eventId)
 		{
-			case PayloadChannel::Notification::EventId::DATA_PRODUCER_SEND:
+			case PayloadChannel::PayloadChannelNotification::EventId::DATA_PRODUCER_SEND:
 			{
-				auto jsonPpidIt = notification->data.find("ppid");
+				int ppid;
 
-				if (jsonPpidIt == notification->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
+				// This may throw.
+				// NOTE: If this throws we have to catch the error and throw a MediaSoupError
+				// intead, otherwise the process would crash.
+				try
 				{
-					MS_THROW_TYPE_ERROR("invalid ppid");
+					ppid = std::stoi(notification->data);
+				}
+				catch (const std::exception& error)
+				{
+					MS_THROW_TYPE_ERROR("invalid PPID value: %s", error.what());
 				}
 
-				auto ppid       = jsonPpidIt->get<uint32_t>();
 				const auto* msg = notification->payload;
 				auto len        = notification->payloadLen;
 
 				if (len > this->maxMessageSize)
 				{
-					MS_WARN_TAG(
-					  message,
+					MS_THROW_TYPE_ERROR(
 					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
 					  len,
 					  this->maxMessageSize);
-
-					break;
 				}
 
 				this->ReceiveMessage(ppid, msg, len);

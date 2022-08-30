@@ -39,7 +39,7 @@ namespace RTC
 
 		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
 	public:
-		void HandleNotification(PayloadChannel::Notification* notification) override;
+		void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
 	};
 } // namespace RTC
 

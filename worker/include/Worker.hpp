@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "PayloadChannel/Notification.hpp"
+#include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/Router.hpp"
@@ -29,10 +29,10 @@ private:
 	void Close();
 	void FillJson(json& jsonObject) const;
 	void FillJsonResourceUsage(json& jsonObject) const;
-	void SetNewWebRtcServerIdFromInternal(json& internal, std::string& webRtcServerId) const;
-	RTC::WebRtcServer* GetWebRtcServerFromInternal(json& internal) const;
-	void SetNewRouterIdFromInternal(json& internal, std::string& routerId) const;
-	RTC::Router* GetRouterFromInternal(json& internal) const;
+	void SetNewWebRtcServerIdFromData(json& data, std::string& webRtcServerId) const;
+	RTC::WebRtcServer* GetWebRtcServerFromData(json& data) const;
+	void SetNewRouterIdFromData(json& data, std::string& routerId) const;
+	RTC::Router* GetRouterFromData(json& data) const;
 
 	/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 public:
@@ -48,7 +48,7 @@ public:
 
 	/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
 public:
-	void HandleNotification(PayloadChannel::Notification* notification) override;
+	void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
 
 	/* Methods inherited from PayloadChannel::PayloadChannelSocket::Listener. */
 public:

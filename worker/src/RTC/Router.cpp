@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Router.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -19,11 +20,20 @@ namespace RTC
 	Router::Router(const std::string& id, Listener* listener) : id(id), listener(listener)
 	{
 		MS_TRACE();
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ nullptr,
+		  /*payloadChannelNotificationHandler*/ nullptr);
 	}
 
 	Router::~Router()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		// Close all Transports.
 		for (auto& kv : this->mapTransports)
@@ -183,7 +193,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw.
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				// This may throw.
 				auto* webRtcTransport = new RTC::WebRtcTransport(transportId, this, request->data);
@@ -207,7 +217,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw.
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto jsonWebRtcServerIdIt = request->data.find("webRtcServerId");
 
@@ -294,7 +304,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto* plainTransport = new RTC::PlainTransport(transportId, this, request->data);
 
@@ -317,7 +327,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto* pipeTransport = new RTC::PipeTransport(transportId, this, request->data);
 
@@ -340,7 +350,7 @@ namespace RTC
 				std::string transportId;
 
 				// This may throw
-				SetNewTransportIdFromInternal(request->internal, transportId);
+				SetNewTransportIdFromData(request->data, transportId);
 
 				auto* directTransport = new RTC::DirectTransport(transportId, this, request->data);
 
@@ -363,7 +373,7 @@ namespace RTC
 				std::string rtpObserverId;
 
 				// This may throw.
-				SetNewRtpObserverIdFromInternal(request->internal, rtpObserverId);
+				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
 
 				auto* activeSpeakerObserver =
 				  new RTC::ActiveSpeakerObserver(rtpObserverId, this, request->data);
@@ -383,7 +393,7 @@ namespace RTC
 				std::string rtpObserverId;
 
 				// This may throw
-				SetNewRtpObserverIdFromInternal(request->internal, rtpObserverId);
+				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
 
 				auto* audioLevelObserver = new RTC::AudioLevelObserver(rtpObserverId, this, request->data);
 
@@ -397,10 +407,10 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE:
+			case Channel::ChannelRequest::MethodId::ROUTER_CLOSE_TRANSPORT:
 			{
 				// This may throw.
-				RTC::Transport* transport = GetTransportFromInternal(request->internal);
+				RTC::Transport* transport = GetTransportFromData(request->data);
 
 				// Tell the Transport to close all its Producers and Consumers so it will
 				// notify us about their closures.
@@ -419,10 +429,10 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_CLOSE:
+			case Channel::ChannelRequest::MethodId::ROUTER_CLOSE_RTP_OBSERVER:
 			{
 				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
+				RTC::RtpObserver* rtpObserver = GetRtpObserverFromData(request->data);
 
 				// Remove it from the map.
 				this->mapRtpObservers.erase(rtpObserver->id);
@@ -445,59 +455,20 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_PAUSE:
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_RESUME:
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_ADD_PRODUCER:
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_REMOVE_PRODUCER:
-			{
-				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-
-				rtpObserver->HandleRequest(request);
-
-				break;
-			}
-
-			// Any other request must be delivered to the corresponding Transport.
 			default:
 			{
-				// This may throw.
-				RTC::Transport* transport = GetTransportFromInternal(request->internal);
-
-				transport->HandleRequest(request);
-
-				break;
+				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
 			}
 		}
 	}
 
-	void Router::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
+	void Router::SetNewTransportIdFromData(json& data, std::string& transportId) const
 	{
 		MS_TRACE();
 
-		// This may throw.
-		RTC::Transport* transport = GetTransportFromInternal(request->internal);
+		auto jsonTransportIdIt = data.find("transportId");
 
-		transport->HandleRequest(request);
-	}
-
-	void Router::HandleNotification(PayloadChannel::Notification* notification)
-	{
-		MS_TRACE();
-
-		// This may throw.
-		RTC::Transport* transport = GetTransportFromInternal(notification->internal);
-
-		transport->HandleNotification(notification);
-	}
-
-	void Router::SetNewTransportIdFromInternal(json& internal, std::string& transportId) const
-	{
-		MS_TRACE();
-
-		auto jsonTransportIdIt = internal.find("transportId");
-
-		if (jsonTransportIdIt == internal.end() || !jsonTransportIdIt->is_string())
+		if (jsonTransportIdIt == data.end() || !jsonTransportIdIt->is_string())
 		{
 			MS_THROW_TYPE_ERROR("missing transportId");
 		}
@@ -510,13 +481,13 @@ namespace RTC
 		}
 	}
 
-	RTC::Transport* Router::GetTransportFromInternal(json& internal) const
+	RTC::Transport* Router::GetTransportFromData(json& data) const
 	{
 		MS_TRACE();
 
-		auto jsonTransportIdIt = internal.find("transportId");
+		auto jsonTransportIdIt = data.find("transportId");
 
-		if (jsonTransportIdIt == internal.end() || !jsonTransportIdIt->is_string())
+		if (jsonTransportIdIt == data.end() || !jsonTransportIdIt->is_string())
 		{
 			MS_THROW_TYPE_ERROR("missing transportId");
 		}
@@ -531,13 +502,13 @@ namespace RTC
 		return transport;
 	}
 
-	void Router::SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const
+	void Router::SetNewRtpObserverIdFromData(json& data, std::string& rtpObserverId) const
 	{
 		MS_TRACE();
 
-		auto jsonRtpObserverIdIt = internal.find("rtpObserverId");
+		auto jsonRtpObserverIdIt = data.find("rtpObserverId");
 
-		if (jsonRtpObserverIdIt == internal.end() || !jsonRtpObserverIdIt->is_string())
+		if (jsonRtpObserverIdIt == data.end() || !jsonRtpObserverIdIt->is_string())
 		{
 			MS_THROW_TYPE_ERROR("missing rtpObserverId");
 		}
@@ -550,13 +521,13 @@ namespace RTC
 		}
 	}
 
-	RTC::RtpObserver* Router::GetRtpObserverFromInternal(json& internal) const
+	RTC::RtpObserver* Router::GetRtpObserverFromData(json& data) const
 	{
 		MS_TRACE();
 
-		auto jsonRtpObserverIdIt = internal.find("rtpObserverId");
+		auto jsonRtpObserverIdIt = data.find("rtpObserverId");
 
-		if (jsonRtpObserverIdIt == internal.end() || !jsonRtpObserverIdIt->is_string())
+		if (jsonRtpObserverIdIt == data.end() || !jsonRtpObserverIdIt->is_string())
 		{
 			MS_THROW_TYPE_ERROR("missing rtpObserverId");
 		}
@@ -569,27 +540,6 @@ namespace RTC
 		RTC::RtpObserver* rtpObserver = it->second;
 
 		return rtpObserver;
-	}
-
-	RTC::Producer* Router::GetProducerFromData(json& data) const
-	{
-		MS_TRACE();
-
-		auto jsonProducerIdIt = data.find("producerId");
-
-		if (jsonProducerIdIt == data.end() || !jsonProducerIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing producerId");
-		}
-
-		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
-
-		if (it == this->mapProducers.end())
-			MS_THROW_ERROR("Producer not found");
-
-		RTC::Producer* producer = it->second;
-
-		return producer;
 	}
 
 	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)

@@ -1,4 +1,4 @@
-import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, SctpState } from './Transport';
+import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
 import { Consumer } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
@@ -87,12 +87,22 @@ export declare type PipeTransportEvents = TransportEvents & {
 export declare type PipeTransportObserverEvents = TransportObserverEvents & {
     sctpstatechange: [SctpState];
 };
+declare type PipeTransportConstructorOptions = TransportConstructorOptions & {
+    data: PipeTransportData;
+};
+export declare type PipeTransportData = {
+    tuple: TransportTuple;
+    sctpParameters?: SctpParameters;
+    sctpState?: SctpState;
+    rtx: boolean;
+    srtpParameters?: SrtpParameters;
+};
 export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTransportObserverEvents> {
     #private;
     /**
      * @private
      */
-    constructor(params: any);
+    constructor(options: PipeTransportConstructorOptions);
     /**
      * Transport tuple.
      */
@@ -146,4 +156,5 @@ export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTr
     consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=PipeTransport.d.ts.map

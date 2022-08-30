@@ -6,7 +6,7 @@ export type ScalabilityMode =
 	spatialLayers: number;
 	temporalLayers: number;
 	ksvc: boolean;
-}
+};
 
 export function parse(scalabilityMode?: string): ScalabilityMode
 {

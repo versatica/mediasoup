@@ -11,12 +11,12 @@ class DirectTransport extends Transport_1.Transport {
     /**
      * @private
      */
-    constructor(params) {
-        super(params);
+    constructor(options) {
+        super(options);
         logger.debug('constructor()');
         this.#data =
             {
-            // Nothing for now.
+            // Nothing.
             };
         this.handleWorkerNotifications();
     }
@@ -48,7 +48,7 @@ class DirectTransport extends Transport_1.Transport {
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.channel.request('transport.getStats', this.internal);
+        return this.channel.request('transport.getStats', this.internal.transportId);
     }
     /**
      * NO-OP method in DirectTransport.
@@ -79,7 +79,7 @@ class DirectTransport extends Transport_1.Transport {
         if (!Buffer.isBuffer(rtcpPacket)) {
             throw new TypeError('rtcpPacket must be a Buffer');
         }
-        this.payloadChannel.notify('transport.sendRtcp', this.internal, undefined, rtcpPacket);
+        this.payloadChannel.notify('transport.sendRtcp', this.internal.transportId, undefined, rtcpPacket);
     }
     handleWorkerNotifications() {
         this.channel.on(this.internal.transportId, (event, data) => {

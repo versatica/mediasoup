@@ -4,7 +4,7 @@ mod tests;
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
-    DataProducerInternal, DataProducerSendData, DataProducerSendNotification,
+    DataProducerSendNotification,
 };
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
@@ -162,16 +162,13 @@ impl Inner {
 
             if close_request {
                 let channel = self.channel.clone();
+                let transport_id = self.transport.id();
                 let request = DataProducerCloseRequest {
-                    internal: DataProducerInternal {
-                        router_id: self.transport.router().id(),
-                        transport_id: self.transport.id(),
-                        data_producer_id: self.id,
-                    },
+                    data_producer_id: self.id,
                 };
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
+                        if let Err(error) = channel.request(transport_id, request).await {
                             error!("data producer closing failed on drop: {}", error);
                         }
                     })
@@ -373,9 +370,7 @@ impl DataProducer {
 
         self.inner()
             .channel
-            .request(DataProducerDumpRequest {
-                internal: self.get_internal(),
-            })
+            .request(self.id(), DataProducerDumpRequest {})
             .await
     }
 
@@ -388,9 +383,7 @@ impl DataProducer {
 
         self.inner()
             .channel
-            .request(DataProducerGetStatsRequest {
-                internal: self.get_internal(),
-            })
+            .request(self.id(), DataProducerGetStatsRequest {})
             .await
     }
 
@@ -433,14 +426,6 @@ impl DataProducer {
             DataProducer::Direct(data_producer) => &data_producer.inner,
         }
     }
-
-    fn get_internal(&self) -> DataProducerInternal {
-        DataProducerInternal {
-            router_id: self.inner().transport.router().id(),
-            transport_id: self.inner().transport.id(),
-            data_producer_id: self.inner().id,
-        }
-    }
 }
 
 impl DirectDataProducer {
@@ -449,14 +434,8 @@ impl DirectDataProducer {
         let (ppid, payload) = message.into_ppid_and_payload();
 
         self.inner.payload_channel.notify(
-            DataProducerSendNotification {
-                internal: DataProducerInternal {
-                    router_id: self.inner.transport.router().id(),
-                    transport_id: self.inner.transport.id(),
-                    data_producer_id: self.inner.id,
-                },
-                data: DataProducerSendData { ppid },
-            },
+            self.inner.id,
+            DataProducerSendNotification { ppid },
             payload.into_owned(),
         )
     }

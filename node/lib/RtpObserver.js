@@ -81,7 +81,8 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.channel.removeAllListeners(this.internal.rtpObserverId);
         this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
-        this.channel.request('rtpObserver.close', this.internal)
+        const reqData = { rtpObserverId: this.internal.rtpObserverId };
+        this.channel.request('router.closeRtpObserver', this.internal.routerId, reqData)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
@@ -110,7 +111,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async pause() {
         logger.debug('pause()');
         const wasPaused = this.#paused;
-        await this.channel.request('rtpObserver.pause', this.internal);
+        await this.channel.request('rtpObserver.pause', this.internal.rtpObserverId);
         this.#paused = true;
         // Emit observer event.
         if (!wasPaused)
@@ -122,7 +123,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async resume() {
         logger.debug('resume()');
         const wasPaused = this.#paused;
-        await this.channel.request('rtpObserver.resume', this.internal);
+        await this.channel.request('rtpObserver.resume', this.internal.rtpObserverId);
         this.#paused = false;
         // Emit observer event.
         if (wasPaused)
@@ -134,8 +135,10 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async addProducer({ producerId }) {
         logger.debug('addProducer()');
         const producer = this.getProducerById(producerId);
+        if (!producer)
+            throw Error(`Producer with id "${producerId}" not found`);
         const reqData = { producerId };
-        await this.channel.request('rtpObserver.addProducer', this.internal, reqData);
+        await this.channel.request('rtpObserver.addProducer', this.internal.rtpObserverId, reqData);
         // Emit observer event.
         this.#observer.safeEmit('addproducer', producer);
     }
@@ -145,8 +148,10 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async removeProducer({ producerId }) {
         logger.debug('removeProducer()');
         const producer = this.getProducerById(producerId);
+        if (!producer)
+            throw Error(`Producer with id "${producerId}" not found`);
         const reqData = { producerId };
-        await this.channel.request('rtpObserver.removeProducer', this.internal, reqData);
+        await this.channel.request('rtpObserver.removeProducer', this.internal.rtpObserverId, reqData);
         // Emit observer event.
         this.#observer.safeEmit('removeproducer', producer);
     }

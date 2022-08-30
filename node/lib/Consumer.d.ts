@@ -2,6 +2,7 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { TransportInternal } from './Transport';
 import { ProducerStat } from './Producer';
 import { MediaKind, RtpCapabilities, RtpParameters } from './RtpParameters';
 export declare type ConsumerOptions = {
@@ -149,14 +150,23 @@ export declare type ConsumerObserverEvents = {
     layerschange: [ConsumerLayers?];
     trace: [ConsumerTraceEventData];
 };
+declare type ConsumerInternal = TransportInternal & {
+    consumerId: string;
+};
+declare type ConsumerData = {
+    producerId: string;
+    kind: MediaKind;
+    rtpParameters: RtpParameters;
+    type: ConsumerType;
+};
 export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
     #private;
     /**
      * @private
      */
     constructor({ internal, data, channel, payloadChannel, appData, paused, producerPaused, score, preferredLayers }: {
-        internal: any;
-        data: any;
+        internal: ConsumerInternal;
+        data: ConsumerData;
         channel: Channel;
         payloadChannel: PayloadChannel;
         appData?: Record<string, unknown>;
@@ -278,4 +288,5 @@ export declare class Consumer extends EnhancedEventEmitter<ConsumerEvents> {
     enableTraceEvent(types?: ConsumerTraceEventType[]): Promise<void>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=Consumer.d.ts.map

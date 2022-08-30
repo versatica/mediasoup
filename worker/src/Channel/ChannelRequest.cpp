@@ -19,18 +19,19 @@ namespace Channel
 		{ "worker.updateSettings",                       ChannelRequest::MethodId::WORKER_UPDATE_SETTINGS                           },
 		{ "worker.createWebRtcServer",                   ChannelRequest::MethodId::WORKER_CREATE_WEBRTC_SERVER                      },
 		{ "worker.createRouter",                         ChannelRequest::MethodId::WORKER_CREATE_ROUTER                             },
-		{ "webRtcServer.close",                          ChannelRequest::MethodId::WEBRTC_SERVER_CLOSE                              },
+		{ "worker.closeWebRtcServer",                    ChannelRequest::MethodId::WORKER_WEBRTC_SERVER_CLOSE                       },
 		{ "webRtcServer.dump",                           ChannelRequest::MethodId::WEBRTC_SERVER_DUMP                               },
-		{ "router.close",                                ChannelRequest::MethodId::ROUTER_CLOSE                                     },
+		{ "worker.closeRouter",                          ChannelRequest::MethodId::WORKER_CLOSE_ROUTER                              },
 		{ "router.dump",                                 ChannelRequest::MethodId::ROUTER_DUMP                                      },
 		{ "router.createWebRtcTransport",                ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT                   },
 		{ "router.createWebRtcTransportWithServer",      ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER       },
 		{ "router.createPlainTransport",                 ChannelRequest::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT                    },
 		{ "router.createPipeTransport",                  ChannelRequest::MethodId::ROUTER_CREATE_PIPE_TRANSPORT                     },
 		{ "router.createDirectTransport",                ChannelRequest::MethodId::ROUTER_CREATE_DIRECT_TRANSPORT                   },
+		{ "router.closeTransport",                       ChannelRequest::MethodId::ROUTER_CLOSE_TRANSPORT                           },
 		{ "router.createActiveSpeakerObserver",          ChannelRequest::MethodId::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER            },
 		{ "router.createAudioLevelObserver",             ChannelRequest::MethodId::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER               },
-		{ "transport.close",                             ChannelRequest::MethodId::TRANSPORT_CLOSE                                  },
+		{ "router.closeRtpObserver",                     ChannelRequest::MethodId::ROUTER_CLOSE_RTP_OBSERVER                        },
 		{ "transport.dump",                              ChannelRequest::MethodId::TRANSPORT_DUMP                                   },
 		{ "transport.getStats",                          ChannelRequest::MethodId::TRANSPORT_GET_STATS                              },
 		{ "transport.connect",                           ChannelRequest::MethodId::TRANSPORT_CONNECT                                },
@@ -42,13 +43,15 @@ namespace Channel
 		{ "transport.produceData",                       ChannelRequest::MethodId::TRANSPORT_PRODUCE_DATA                           },
 		{ "transport.consumeData",                       ChannelRequest::MethodId::TRANSPORT_CONSUME_DATA                           },
 		{ "transport.enableTraceEvent",                  ChannelRequest::MethodId::TRANSPORT_ENABLE_TRACE_EVENT                     },
-		{ "producer.close",                              ChannelRequest::MethodId::PRODUCER_CLOSE                                   },
+		{ "transport.closeProducer",                     ChannelRequest::MethodId::TRANSPORT_CLOSE_PRODUCER                         },
+		{ "transport.closeConsumer",                     ChannelRequest::MethodId::TRANSPORT_CLOSE_CONSUMER                         },
+		{ "transport.closeDataProducer",                 ChannelRequest::MethodId::TRANSPORT_CLOSE_DATA_PRODUCER                    },
+		{ "transport.closeDataConsumer",                 ChannelRequest::MethodId::TRANSPORT_CLOSE_DATA_CONSUMER                    },
 		{ "producer.dump",                               ChannelRequest::MethodId::PRODUCER_DUMP                                    },
 		{ "producer.getStats",                           ChannelRequest::MethodId::PRODUCER_GET_STATS                               },
 		{ "producer.pause",                              ChannelRequest::MethodId::PRODUCER_PAUSE                                   },
 		{ "producer.resume" ,                            ChannelRequest::MethodId::PRODUCER_RESUME                                  },
 		{ "producer.enableTraceEvent",                   ChannelRequest::MethodId::PRODUCER_ENABLE_TRACE_EVENT                      },
-		{ "consumer.close",                              ChannelRequest::MethodId::CONSUMER_CLOSE                                   },
 		{ "consumer.dump",                               ChannelRequest::MethodId::CONSUMER_DUMP                                    },
 		{ "consumer.getStats",                           ChannelRequest::MethodId::CONSUMER_GET_STATS                               },
 		{ "consumer.pause",                              ChannelRequest::MethodId::CONSUMER_PAUSE                                   },
@@ -57,15 +60,12 @@ namespace Channel
 		{ "consumer.setPriority",                        ChannelRequest::MethodId::CONSUMER_SET_PRIORITY                            },
 		{ "consumer.requestKeyFrame",                    ChannelRequest::MethodId::CONSUMER_REQUEST_KEY_FRAME                       },
 		{ "consumer.enableTraceEvent",                   ChannelRequest::MethodId::CONSUMER_ENABLE_TRACE_EVENT                      },
-		{ "dataProducer.close",                          ChannelRequest::MethodId::DATA_PRODUCER_CLOSE                              },
 		{ "dataProducer.dump",                           ChannelRequest::MethodId::DATA_PRODUCER_DUMP                               },
 		{ "dataProducer.getStats",                       ChannelRequest::MethodId::DATA_PRODUCER_GET_STATS                          },
-		{ "dataConsumer.close",                          ChannelRequest::MethodId::DATA_CONSUMER_CLOSE                              },
 		{ "dataConsumer.dump",                           ChannelRequest::MethodId::DATA_CONSUMER_DUMP                               },
 		{ "dataConsumer.getStats",                       ChannelRequest::MethodId::DATA_CONSUMER_GET_STATS                          },
 		{ "dataConsumer.getBufferedAmount",              ChannelRequest::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT                },
 		{ "dataConsumer.setBufferedAmountLowThreshold",  ChannelRequest::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD  },
-		{ "rtpObserver.close",                           ChannelRequest::MethodId::RTP_OBSERVER_CLOSE                               },
 		{ "rtpObserver.pause",                           ChannelRequest::MethodId::RTP_OBSERVER_PAUSE                               },
 		{ "rtpObserver.resume",                          ChannelRequest::MethodId::RTP_OBSERVER_RESUME                              },
 		{ "rtpObserver.addProducer",                     ChannelRequest::MethodId::RTP_OBSERVER_ADD_PRODUCER                        },
@@ -75,24 +75,24 @@ namespace Channel
 
 	/* Instance methods. */
 
-	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, json& jsonRequest)
+	/**
+	 * msg contains "id:method:handlerId:data" where:
+	 * - id: The ID of the request.
+	 * - handlerId: The ID of the target entity
+	 * - data: JSON object.
+	 */
+	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, const char* msg, size_t msgLen)
 	  : channel(channel)
 	{
 		MS_TRACE();
 
-		auto jsonIdIt = jsonRequest.find("id");
+		auto info = Utils::String::Split(std::string(msg, msgLen), ':', 3);
 
-		if (jsonIdIt == jsonRequest.end() || !Utils::Json::IsPositiveInteger(*jsonIdIt))
-			MS_THROW_ERROR("missing id");
+		if (info.size() < 2)
+			MS_THROW_ERROR("too few arguments");
 
-		this->id = jsonIdIt->get<uint32_t>();
-
-		auto jsonMethodIt = jsonRequest.find("method");
-
-		if (jsonMethodIt == jsonRequest.end() || !jsonMethodIt->is_string())
-			MS_THROW_ERROR("missing method");
-
-		this->method = jsonMethodIt->get<std::string>();
+		this->id     = std::stoul(info[0]);
+		this->method = info[1];
 
 		auto methodIdIt = ChannelRequest::string2MethodId.find(this->method);
 
@@ -105,19 +105,33 @@ namespace Channel
 
 		this->methodId = methodIdIt->second;
 
-		auto jsonInternalIt = jsonRequest.find("internal");
+		if (info.size() > 2)
+		{
+			auto& handlerId = info[2];
 
-		if (jsonInternalIt != jsonRequest.end() && jsonInternalIt->is_object())
-			this->internal = *jsonInternalIt;
-		else
-			this->internal = json::object();
+			if (handlerId != "undefined")
+				this->handlerId = handlerId;
+		}
 
-		auto jsonDataIt = jsonRequest.find("data");
+		if (info.size() > 3)
+		{
+			auto& data = info[3];
 
-		if (jsonDataIt != jsonRequest.end() && jsonDataIt->is_object())
-			this->data = *jsonDataIt;
-		else
-			this->data = json::object();
+			if (data != "undefined")
+			{
+				try
+				{
+					this->data = json::parse(data);
+
+					if (!this->data.is_object())
+						this->data = json::object();
+				}
+				catch (const json::parse_error& error)
+				{
+					MS_THROW_TYPE_ERROR("JSON parsing error: %s", error.what());
+				}
+			}
+		}
 	}
 
 	ChannelRequest::~ChannelRequest()
@@ -133,12 +147,12 @@ namespace Channel
 
 		this->replied = true;
 
-		json jsonResponse = json::object();
+		std::string response("{\"id\":");
 
-		jsonResponse["id"]       = this->id;
-		jsonResponse["accepted"] = true;
+		response.append(std::to_string(this->id));
+		response.append(",\"accepted\":true}");
 
-		this->channel->Send(jsonResponse);
+		this->channel->Send(response);
 	}
 
 	void ChannelRequest::Accept(json& data)

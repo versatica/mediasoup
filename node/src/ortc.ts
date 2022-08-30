@@ -37,7 +37,7 @@ type RtpMapping =
 		scalabilityMode?: string;
 		mappedSsrc: number;
 	}[];
-}
+};
 
 const DynamicPayloadTypes =
 [

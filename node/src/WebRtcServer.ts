@@ -39,31 +39,33 @@ export type WebRtcServerOptions =
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
 export type WebRtcServerEvents =
 { 
 	workerclose: [];
 	// Private events.
 	'@close': [];
-}
+};
 
 export type WebRtcServerObserverEvents =
 {
 	close: [];
 	webrtctransporthandled: [WebRtcTransport];
 	webrtctransportunhandled: [WebRtcTransport];
-}
+};
+
+type WebRtcServerInternal =
+{
+	webRtcServerId: string;
+};
 
 const logger = new Logger('WebRtcServer');
 
 export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		webRtcServerId: string;
-	};
+	readonly #internal: WebRtcServerInternal;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -90,7 +92,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 			appData
 		}:
 		{
-			internal: any;
+			internal: WebRtcServerInternal;
 			channel: Channel;
 			appData?: Record<string, unknown>;
 		}
@@ -166,7 +168,9 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 
 		this.#closed = true;
 
-		this.#channel.request('webRtcServer.close', this.#internal)
+		const reqData = { webRtcServerId: this.#internal.webRtcServerId };
+
+		this.#channel.request('worker.closeWebRtcServer', undefined, reqData)
 			.catch(() => {});
 
 		// Close every WebRtcTransport.
@@ -216,7 +220,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('webRtcServer.dump', this.#internal);
+		return this.#channel.request('webRtcServer.dump', this.#internal.webRtcServerId);
 	}
 
 	/**

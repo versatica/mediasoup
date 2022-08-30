@@ -6,7 +6,7 @@
  * files (.hpp) MUST NOT include Logger.hpp.
  *
  * All the logging macros use the same format as printf(). The XXX_STD() version
- * of a macro logs to stdoud/stderr instead of using the Channel instance.
+ * of a macro logs to stdoud/stderr instead of using the ChannelSocket instance.
  * However some macros such as MS_ABORT() and MS_ASSERT() always log to stderr.
  *
  * If the macro MS_LOG_STD is defined, all the macros log to stdout/stderr.

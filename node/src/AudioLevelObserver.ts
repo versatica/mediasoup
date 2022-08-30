@@ -1,7 +1,12 @@
 import { Logger } from './Logger';
-import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
-import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import {
+	RtpObserver,
+	RtpObserverEvents,
+	RtpObserverObserverEvents,
+	RtpObserverConstructorOptions
+} from './RtpObserver';
+import { Producer } from './Producer';
 
 export interface AudioLevelObserverOptions
 {
@@ -45,13 +50,15 @@ export type AudioLevelObserverEvents = RtpObserverEvents &
 {
 	volumes: [AudioLevelObserverVolume[]];
 	silence: [];
-}
+};
 
 export type AudioLevelObserverObserverEvents = RtpObserverObserverEvents & 
 {
 	volumes: [AudioLevelObserverVolume[]];
 	silence: [];
-}
+};
+
+type AudioLevelObserverConstructorOptions = RtpObserverConstructorOptions;
 
 const logger = new Logger('AudioLevelObserver');
 
@@ -60,9 +67,9 @@ export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
 	/**
 	 * @private
 	 */
-	constructor(params: any)
+	constructor(options: AudioLevelObserverConstructorOptions)
 	{
-		super(params);
+		super(options);
 
 		this.handleWorkerNotifications();
 	}
