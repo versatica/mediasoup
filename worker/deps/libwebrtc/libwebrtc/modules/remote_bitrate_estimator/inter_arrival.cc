@@ -48,7 +48,7 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
     current_timestamp_group_.timestamp = timestamp;
     current_timestamp_group_.first_timestamp = timestamp;
     current_timestamp_group_.first_arrival_ms = arrival_time_ms;
-  } else if (!PacketInOrder(timestamp, arrival_time_ms)) {
+  } else if (!PacketInOrder(timestamp)) {
     return false;
   } else if (NewTimestampGroup(arrival_time_ms, timestamp)) {
     // First packet of a later frame, the previous frame sample is ready.
@@ -115,17 +115,9 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
   return calculated_deltas;
 }
 
-bool InterArrival::PacketInOrder(uint32_t timestamp, int64_t arrival_time_ms) {
+bool InterArrival::PacketInOrder(uint32_t timestamp) {
   if (current_timestamp_group_.IsFirstPacket()) {
     return true;
-  } else if (arrival_time_ms < 0) {
-    // NOTE: Change related to https://github.com/versatica/mediasoup/issues/357
-    //
-    // Sometimes we do get negative arrival time, which causes BelongsToBurst()
-    // to fail, which may cause anything that uses InterArrival to crash.
-    //
-    // Credits to @sspanak and @Ivaka.
-    return false;
   } else {
     // Assume that a diff which is bigger than half the timestamp interval
     // (32 bits) must be due to reordering. This code is almost identical to
