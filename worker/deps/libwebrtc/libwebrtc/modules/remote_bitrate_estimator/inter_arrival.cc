@@ -42,32 +42,24 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
   MS_ASSERT(arrival_time_delta_ms != nullptr, "arrival_time_delta_ms is null");
   MS_ASSERT(packet_size_delta != nullptr, "packet_size_delta is null");
   bool calculated_deltas = false;
-	if (current_timestamp_group_.IsFirstPacket())
-	{
-		// We don't have enough data to update the filter, so we store it until we
-		// have two frames of data to process.
-		current_timestamp_group_.timestamp        = timestamp;
-		current_timestamp_group_.first_timestamp  = timestamp;
-		current_timestamp_group_.first_arrival_ms = arrival_time_ms;
-	}
-	else if (!PacketInOrder(timestamp))
-	{
-		return false;
-	}
-	else if (NewTimestampGroup(arrival_time_ms, timestamp))
-	{
-		// First packet of a later frame, the previous frame sample is ready.
-		if (prev_timestamp_group_.complete_time_ms >= 0)
-		{
-			*timestamp_delta = current_timestamp_group_.timestamp - prev_timestamp_group_.timestamp;
-			*arrival_time_delta_ms =
-				current_timestamp_group_.complete_time_ms - prev_timestamp_group_.complete_time_ms;
-			MS_DEBUG_DEV(
-				"timestamp previous/current [%" PRIu32 "/%" PRIu32
-				"] complete time previous/current [%" PRIi64 "/%" PRIi64 "]",
-				prev_timestamp_group_.timestamp,
-				current_timestamp_group_.timestamp,
-				prev_timestamp_group_.complete_time_ms, current_timestamp_group_.complete_time_ms);
+  if (current_timestamp_group_.IsFirstPacket()) {
+    // We don't have enough data to update the filter, so we store it until we
+    // have two frames of data to process.
+    current_timestamp_group_.timestamp = timestamp;
+    current_timestamp_group_.first_timestamp = timestamp;
+    current_timestamp_group_.first_arrival_ms = arrival_time_ms;
+  } else if (!PacketInOrder(timestamp, arrival_time_ms)) {
+    return false;
+  } else if (NewTimestampGroup(arrival_time_ms, timestamp)) {
+    // First packet of a later frame, the previous frame sample is ready.
+    if (prev_timestamp_group_.complete_time_ms >= 0) {
+      *timestamp_delta =
+          current_timestamp_group_.timestamp - prev_timestamp_group_.timestamp;
+      *arrival_time_delta_ms = current_timestamp_group_.complete_time_ms -
+                               prev_timestamp_group_.complete_time_ms;
+      MS_DEBUG_DEV("timestamp previous/current [%" PRIu32 "/%" PRIu32"] complete time previous/current [%" PRIi64 "/%" PRIi64 "]",
+          prev_timestamp_group_.timestamp, current_timestamp_group_.timestamp,
+          prev_timestamp_group_.complete_time_ms, current_timestamp_group_.complete_time_ms);
       // Check system time differences to see if we have an unproportional jump
       // in arrival time. In that case reset the inter-arrival computations.
       int64_t system_time_delta_ms =
@@ -123,22 +115,27 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
   return calculated_deltas;
 }
 
-bool InterArrival::PacketInOrder(uint32_t timestamp)
-{
-	if (current_timestamp_group_.IsFirstPacket())
-	{
-		return true;
-	}
-	else
-	{
-		// Assume that a diff which is bigger than half the timestamp interval
-		// (32 bits) must be due to reordering. This code is almost identical to
-		// that in IsNewerTimestamp() in module_common_types.h.
-		uint32_t timestamp_diff = timestamp - current_timestamp_group_.first_timestamp;
+bool InterArrival::PacketInOrder(uint32_t timestamp, int64_t arrival_time_ms) {
+  if (current_timestamp_group_.IsFirstPacket()) {
+    return true;
+  } else if (arrival_time_ms < 0) {
+    // NOTE: Change related to https://github.com/versatica/mediasoup/issues/357
+    //
+    // Sometimes we do get negative arrival time, which causes BelongsToBurst()
+    // to fail, which may cause anything that uses InterArrival to crash.
+    //
+    // Credits to @sspanak and @Ivaka.
+    return false;
+  } else {
+    // Assume that a diff which is bigger than half the timestamp interval
+    // (32 bits) must be due to reordering. This code is almost identical to
+    // that in IsNewerTimestamp() in module_common_types.h.
+    uint32_t timestamp_diff =
+        timestamp - current_timestamp_group_.first_timestamp;
 
-		const static uint32_t int_middle = 0x80000000;
+    const static uint32_t int_middle = 0x80000000;
 
-		if (timestamp_diff == int_middle) {
+    if (timestamp_diff == int_middle) {
       return timestamp > current_timestamp_group_.first_timestamp;
     }
 
