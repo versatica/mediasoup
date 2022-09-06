@@ -41,10 +41,9 @@ namespace RTC
 	{
 		class FeedbackRtpTransportPacket : public FeedbackRtpPacket
 		{
+		public:
 			static constexpr int64_t kBaseTimeTick   = 64;
 			static constexpr int64_t kTimeWrapPeriod = kBaseTimeTick * (1ll << 24);
-
-		public:
 			struct PacketResult
 			{
 				PacketResult(uint16_t sequenceNumber, bool received)
@@ -240,9 +239,29 @@ namespace RTC
 			{
 				return this->referenceTime;
 			}
+			// We only use this for testing purpose
+			void SetReferenceTime(uint64_t referenceTime)
+			{
+				this->referenceTime = (referenceTime % kTimeWrapPeriod) / kBaseTimeTick;
+			}
 			int64_t GetReferenceTimestamp() const // Reference time in ms.
 			{
 				return kTimeWrapPeriod + static_cast<int64_t>(this->referenceTime) * kBaseTimeTick;
+			}
+			int64_t GetBaseDelta(const int64_t previousTimestampMs) const
+			{
+				int64_t delta = GetReferenceTimestamp() - previousTimestampMs;
+				// Compensate for wrap around.
+				if (std::abs(delta - kTimeWrapPeriod) < std::abs(delta))
+				{
+					delta -= kTimeWrapPeriod;
+				}
+				else if (std::abs(delta + kTimeWrapPeriod) < std::abs(delta))
+				{
+					delta += kTimeWrapPeriod;
+				}
+
+				return delta;
 			}
 			uint8_t GetFeedbackPacketCount() const
 			{
@@ -293,7 +312,7 @@ namespace RTC
 
 		private:
 			uint16_t baseSequenceNumber{ 0u };
-			int32_t referenceTime{ 0 };
+			uint32_t referenceTime{ 0 };
 			uint16_t latestSequenceNumber{ 0u }; // Just for locally generated packets.
 			uint64_t latestTimestamp{ 0u };      // Just for locally generated packets.
 			uint16_t packetStatusCount{ 0u };

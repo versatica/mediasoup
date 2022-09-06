@@ -476,7 +476,10 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetBaseSequenceNumber() == 39);
 		REQUIRE(packet->GetPacketStatusCount() == 13);
 		REQUIRE(packet->GetReferenceTime() == 6275825); // 0x5FC2F1 (signed 24 bits)
-		REQUIRE(packet->GetReferenceTimestamp() == 6275825 * 64);
+		REQUIRE(
+		  packet->GetReferenceTimestamp() ==
+		  FeedbackRtpTransportPacket::kTimeWrapPeriod +
+		    static_cast<int64_t>(6275825) * FeedbackRtpTransportPacket::kBaseTimeTick);
 		REQUIRE(packet->GetFeedbackPacketCount() == 3);
 
 		SECTION("serialize packet")
@@ -510,8 +513,11 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetSize() == sizeof(data));
 		REQUIRE(packet->GetBaseSequenceNumber() == 39);
 		REQUIRE(packet->GetPacketStatusCount() == 0);
-		REQUIRE(packet->GetReferenceTime() == -2); // 0xFFFFFE (signed 24 bits)
-		REQUIRE(packet->GetReferenceTimestamp() == -2 * 64);
+		REQUIRE(packet->GetReferenceTime() == 16777214); // 0xFFFFFE (unsigned 24 bits)
+		REQUIRE(
+		  packet->GetReferenceTimestamp() ==
+		  FeedbackRtpTransportPacket::kTimeWrapPeriod +
+		    static_cast<int64_t>(16777214) * FeedbackRtpTransportPacket::kBaseTimeTick);
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
 
 		SECTION("serialize packet")
@@ -546,18 +552,15 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetSize() == sizeof(data));
 		REQUIRE(packet->GetBaseSequenceNumber() == 1);
 		REQUIRE(packet->GetPacketStatusCount() == 2);
-		REQUIRE(packet->GetReferenceTime() == -4368470);
-		REQUIRE(packet->GetReferenceTimestamp() == -4368470 * 64);
+		REQUIRE(packet->GetReferenceTime() == 12408746);
+		REQUIRE(
+		  packet->GetReferenceTimestamp() ==
+		  FeedbackRtpTransportPacket::kTimeWrapPeriod +
+		    static_cast<int64_t>(12408746) * FeedbackRtpTransportPacket::kBaseTimeTick);
 
 		// Let's also test the reference time reported by Wireshark.
 		int32_t wiresharkValue{ 12408746 };
 
-		// Constraint it to signed 24 bits.
-		wiresharkValue = wiresharkValue << 8;
-		wiresharkValue = wiresharkValue >> 8;
-
-		REQUIRE(packet->GetReferenceTime() == wiresharkValue);
-		REQUIRE(packet->GetReferenceTimestamp() == wiresharkValue * 64);
 		REQUIRE(packet->GetFeedbackPacketCount() == 0);
 
 		SECTION("serialize packet")
@@ -729,6 +732,39 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 				REQUIRE(static_cast<int16_t>(resultDelta / 4) == delta);
 				deltasIt++;
 			}
+			delete feedback;
 		}
+	}
+
+	SECTION("Check GetBaseDelta Wraparound")
+	{
+		auto kMaxBaseTime =
+		  FeedbackRtpTransportPacket::kTimeWrapPeriod - FeedbackRtpTransportPacket::kBaseTimeTick;
+		auto* packet1 = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
+		auto* packet2 = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
+		auto* packet3 = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
+
+		packet1->SetReferenceTime(kMaxBaseTime);
+		packet2->SetReferenceTime(kMaxBaseTime + FeedbackRtpTransportPacket::kBaseTimeTick);
+		packet3->SetReferenceTime(
+		  kMaxBaseTime + FeedbackRtpTransportPacket::kBaseTimeTick +
+		  FeedbackRtpTransportPacket::kBaseTimeTick);
+
+		REQUIRE(packet1->GetReferenceTime() == 16777215);
+		REQUIRE(packet2->GetReferenceTime() == 0);
+		REQUIRE(packet3->GetReferenceTime() == 1);
+
+		REQUIRE(packet1->GetReferenceTimestamp() == 2147483584);
+		REQUIRE(packet2->GetReferenceTimestamp() == 1073741824);
+		REQUIRE(packet3->GetReferenceTimestamp() == 1073741888);
+
+		REQUIRE(packet1->GetBaseDelta(packet1->GetReferenceTimestamp()) == 0);
+		REQUIRE(packet2->GetBaseDelta(packet1->GetReferenceTimestamp()) == 64);
+		REQUIRE(packet3->GetBaseDelta(packet2->GetReferenceTimestamp()) == 64);
+		REQUIRE(packet3->GetBaseDelta(packet1->GetReferenceTimestamp()) == 128);
+
+		delete packet1;
+		delete packet2;
+		delete packet3;
 	}
 }
