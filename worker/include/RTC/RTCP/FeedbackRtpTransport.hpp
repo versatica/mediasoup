@@ -41,6 +41,9 @@ namespace RTC
 	{
 		class FeedbackRtpTransportPacket : public FeedbackRtpPacket
 		{
+			static constexpr int64_t kBaseTimeTick   = 64;
+			static constexpr int64_t kTimeWrapPeriod = kBaseTimeTick * (1ll << 24);
+
 		public:
 			struct PacketResult
 			{
@@ -239,7 +242,7 @@ namespace RTC
 			}
 			int64_t GetReferenceTimestamp() const // Reference time in ms.
 			{
-				return static_cast<int64_t>(this->referenceTime) * 64;
+				return kTimeWrapPeriod + static_cast<int64_t>(this->referenceTime) * kBaseTimeTick;
 			}
 			uint8_t GetFeedbackPacketCount() const
 			{
