@@ -143,7 +143,7 @@ namespace RTC
 		virtual void ApplyLayers()                                          = 0;
 		virtual uint32_t GetDesiredBitrate() const                          = 0;
 		virtual void SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket) = 0;
-		virtual std::vector<RTC::RtpStreamSend*> GetRtpStreams() = 0;
+		virtual const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const = 0;
 		virtual void GetRtcp(
 		  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs) = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
