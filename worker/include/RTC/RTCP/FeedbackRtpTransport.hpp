@@ -42,8 +42,10 @@ namespace RTC
 		class FeedbackRtpTransportPacket : public FeedbackRtpPacket
 		{
 		public:
-			static constexpr int64_t kBaseTimeTick   = 64;
-			static constexpr int64_t kTimeWrapPeriod = kBaseTimeTick * (1ll << 24);
+			static constexpr int64_t BaseTimeTick    = 64;
+			static constexpr int64_t TimeWrapPeriod  = BaseTimeTick * (1ll << 24);
+
+		public:
 			struct PacketResult
 			{
 				PacketResult(uint16_t sequenceNumber, bool received)
@@ -239,26 +241,26 @@ namespace RTC
 			{
 				return this->referenceTime;
 			}
-			// We only use this for testing purpose
+			// We only use this for testing purpose.
 			void SetReferenceTime(uint64_t referenceTime)
 			{
-				this->referenceTime = (referenceTime % kTimeWrapPeriod) / kBaseTimeTick;
+				this->referenceTime = (referenceTime % TimeWrapPeriod) / BaseTimeTick;
 			}
 			int64_t GetReferenceTimestamp() const // Reference time in ms.
 			{
-				return kTimeWrapPeriod + static_cast<int64_t>(this->referenceTime) * kBaseTimeTick;
+				return TimeWrapPeriod + static_cast<int64_t>(this->referenceTime) * BaseTimeTick;
 			}
 			int64_t GetBaseDelta(const int64_t previousTimestampMs) const
 			{
 				int64_t delta = GetReferenceTimestamp() - previousTimestampMs;
 				// Compensate for wrap around.
-				if (std::abs(delta - kTimeWrapPeriod) < std::abs(delta))
+				if (std::abs(delta - TimeWrapPeriod) < std::abs(delta))
 				{
-					delta -= kTimeWrapPeriod;
+					delta -= TimeWrapPeriod;
 				}
-				else if (std::abs(delta + kTimeWrapPeriod) < std::abs(delta))
+				else if (std::abs(delta + TimeWrapPeriod) < std::abs(delta))
 				{
-					delta += kTimeWrapPeriod;
+					delta += TimeWrapPeriod;
 				}
 
 				return delta;

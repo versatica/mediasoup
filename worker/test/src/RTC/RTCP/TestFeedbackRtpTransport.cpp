@@ -478,8 +478,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetReferenceTime() == 6275825); // 0x5FC2F1 (signed 24 bits)
 		REQUIRE(
 		  packet->GetReferenceTimestamp() ==
-		  FeedbackRtpTransportPacket::kTimeWrapPeriod +
-		    static_cast<int64_t>(6275825) * FeedbackRtpTransportPacket::kBaseTimeTick);
+		  FeedbackRtpTransportPacket::TimeWrapPeriod +
+		    static_cast<int64_t>(6275825) * FeedbackRtpTransportPacket::BaseTimeTick);
 		REQUIRE(packet->GetFeedbackPacketCount() == 3);
 
 		SECTION("serialize packet")
@@ -516,8 +516,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetReferenceTime() == 16777214); // 0xFFFFFE (unsigned 24 bits)
 		REQUIRE(
 		  packet->GetReferenceTimestamp() ==
-		  FeedbackRtpTransportPacket::kTimeWrapPeriod +
-		    static_cast<int64_t>(16777214) * FeedbackRtpTransportPacket::kBaseTimeTick);
+		  FeedbackRtpTransportPacket::TimeWrapPeriod +
+		    static_cast<int64_t>(16777214) * FeedbackRtpTransportPacket::BaseTimeTick);
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
 
 		SECTION("serialize packet")
@@ -555,8 +555,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetReferenceTime() == 12408746);
 		REQUIRE(
 		  packet->GetReferenceTimestamp() ==
-		  FeedbackRtpTransportPacket::kTimeWrapPeriod +
-		    static_cast<int64_t>(12408746) * FeedbackRtpTransportPacket::kBaseTimeTick);
+		  FeedbackRtpTransportPacket::TimeWrapPeriod +
+		    static_cast<int64_t>(12408746) * FeedbackRtpTransportPacket::BaseTimeTick);
 
 		// Let's also test the reference time reported by Wireshark.
 		int32_t wiresharkValue{ 12408746 };
@@ -738,17 +738,17 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 	SECTION("Check GetBaseDelta Wraparound")
 	{
-		auto kMaxBaseTime =
-		  FeedbackRtpTransportPacket::kTimeWrapPeriod - FeedbackRtpTransportPacket::kBaseTimeTick;
+		auto MaxBaseTime =
+		  FeedbackRtpTransportPacket::TimeWrapPeriod - FeedbackRtpTransportPacket::BaseTimeTick;
 		auto* packet1 = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 		auto* packet2 = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 		auto* packet3 = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
 
-		packet1->SetReferenceTime(kMaxBaseTime);
-		packet2->SetReferenceTime(kMaxBaseTime + FeedbackRtpTransportPacket::kBaseTimeTick);
+		packet1->SetReferenceTime(MaxBaseTime);
+		packet2->SetReferenceTime(MaxBaseTime + FeedbackRtpTransportPacket::BaseTimeTick);
 		packet3->SetReferenceTime(
-		  kMaxBaseTime + FeedbackRtpTransportPacket::kBaseTimeTick +
-		  FeedbackRtpTransportPacket::kBaseTimeTick);
+		  MaxBaseTime + FeedbackRtpTransportPacket::BaseTimeTick +
+		  FeedbackRtpTransportPacket::BaseTimeTick);
 
 		REQUIRE(packet1->GetReferenceTime() == 16777215);
 		REQUIRE(packet2->GetReferenceTime() == 0);
