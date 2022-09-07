@@ -361,8 +361,8 @@ namespace Utils
 		}
 	};
 
-	// Simple implementation of object pool only for single objects
-	// Arrays are allocated as usual
+	// Simple implementation of object pool only for single objects.
+	// Arrays are allocated as usual.
 	template<typename T>
 	class ObjectPoolAllocator
 	{
