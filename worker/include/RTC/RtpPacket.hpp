@@ -615,7 +615,6 @@ namespace RTC
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
 
 	private:
-		// friend AllocatorTraits;
 		void ParseExtensions();
 
 	private:
