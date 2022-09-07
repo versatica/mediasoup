@@ -127,7 +127,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
-		auto* clonedPacket = packet->Clone();
+		auto clonedPacket = packet->Clone();
 
 		std::memset(buffer, '0', sizeof(buffer));
 
@@ -164,7 +164,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(absSendTime == 0x65341e);
 
 		delete packet;
-		delete clonedPacket;
 	}
 
 	SECTION("create RtpPacket without header extension")
@@ -369,8 +368,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(rtxPacket->GetHeaderExtensionLength() == 12);
 		REQUIRE(rtxPacket->HasOneByteExtensions() == false);
 		REQUIRE(rtxPacket->HasTwoBytesExtensions());
-
-		delete rtxPacket;
 	}
 
 	SECTION("create RtpPacket and apply payload shift to it")
