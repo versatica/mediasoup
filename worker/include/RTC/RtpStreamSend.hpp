@@ -26,6 +26,9 @@ namespace RTC
 	public:
 		struct StorageItem
 		{
+			using Allocator       = Utils::ObjectPoolAllocator<RtpStreamSend::StorageItem>;
+			using AllocatorTraits = std::allocator_traits<Allocator>;
+
 			void Reset();
 
 			// Original packet.
