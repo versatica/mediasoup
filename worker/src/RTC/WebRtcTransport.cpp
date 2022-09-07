@@ -831,7 +831,10 @@ namespace RTC
 	}
 
 	void WebRtcTransport::SendRtpPacket(
-	  RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	  RTC::Consumer* /*consumer*/,
+	  RTC::RtpPacket* packet,
+	  RTC::Transport::onSendCallback* cb,
+	  RTC::Transport::OnSendCallbackCtx* ctx)
 	{
 		MS_TRACE();
 
@@ -839,8 +842,7 @@ namespace RTC
 		{
 			if (cb)
 			{
-				(*cb)(false);
-				delete cb;
+				(*cb)(false, ctx);
 			}
 
 			return;
@@ -853,8 +855,7 @@ namespace RTC
 
 			if (cb)
 			{
-				(*cb)(false);
-				delete cb;
+				(*cb)(false, ctx);
 			}
 
 			return;
@@ -867,8 +868,7 @@ namespace RTC
 		{
 			if (cb)
 			{
-				(*cb)(false);
-				delete cb;
+				(*cb)(false, ctx);
 			}
 
 			return;
@@ -876,7 +876,7 @@ namespace RTC
 
 		auto len = static_cast<size_t>(intLen);
 
-		this->iceServer->GetSelectedTuple()->Send(data, len, cb);
+		this->iceServer->GetSelectedTuple()->Send(data, len, cb, ctx);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
