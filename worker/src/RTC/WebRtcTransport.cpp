@@ -1119,7 +1119,7 @@ namespace RTC
 				  packet->GetPayloadType(),
 				  packet->GetSequenceNumber());
 
-				delete packet;
+				RtpPacket::Deallocate(packet);
 			}
 
 			return;
