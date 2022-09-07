@@ -9,7 +9,6 @@
 
 #include "common.hpp"
 #include "Logger.hpp"
-#include "handles/Timer.hpp"
 #include <openssl/evp.h>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
@@ -365,7 +364,7 @@ namespace Utils
 	// Simple implementation of object pool only for single objects
 	// Arrays are allocated as usual
 	template<typename T>
-	class ObjectPoolAllocator : public Timer::Listener
+	class ObjectPoolAllocator
 	{
 		std::shared_ptr<std::vector<T*>> pool_data;
 
@@ -385,9 +384,6 @@ namespace Utils
 				  }
 				  delete pool;
 			  });
-
-			this->timer = new Timer(this);
-			this->timer->Start(3000);
 		}
 
 		template<typename U>
@@ -398,10 +394,6 @@ namespace Utils
 
 		~ObjectPoolAllocator()
 		{
-			if (this->timer)
-			{
-				this->timer->Stop();
-			}
 		}
 
 		T* allocate(size_t n)
@@ -410,8 +402,6 @@ namespace Utils
 
 			if (this->pool_data->empty())
 			{
-				this->allocated++;
-
 				return static_cast<T*>(std::malloc(sizeof(T)));
 			}
 
@@ -440,19 +430,6 @@ namespace Utils
 			this->pool_data->push_back(ptr);
 #endif
 		}
-
-		/* Pure virtual methods inherited from Timer::Listener. */
-	public:
-		void OnTimer(Timer* timer) override
-		{
-			MS_ERROR("allocated: %zu, available: %zu", this->allocated, this->pool_data->size());
-
-			this->timer->Start(3000);
-		}
-
-	private:
-		Timer* timer{ nullptr };
-		size_t allocated{ 0 };
 	};
 
 	template<typename T>
