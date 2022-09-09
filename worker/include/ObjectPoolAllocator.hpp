@@ -4,6 +4,7 @@
 // #define MS_ALLOCATOR_FREE_ON_RETURN 1
 
 #include "common.hpp"
+#include <vector>
 
 namespace Utils
 {
