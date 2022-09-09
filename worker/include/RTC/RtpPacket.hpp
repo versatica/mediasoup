@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_PACKET_HPP
 
 #include "common.hpp"
+#include "ObjectPoolAllocator.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include <absl/container/flat_hash_map.h>

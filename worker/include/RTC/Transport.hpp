@@ -4,6 +4,7 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "ObjectPoolAllocator.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/PayloadChannelNotification.hpp"

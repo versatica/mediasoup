@@ -1,6 +1,7 @@
 #ifndef MS_RTC_RTP_STREAM_SEND_HPP
 #define MS_RTC_RTP_STREAM_SEND_HPP
 
+#include "ObjectPoolAllocator.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpStream.hpp"
 #include <deque>
