@@ -6,7 +6,7 @@
 #include <catch2/catch.hpp>
 #include <vector>
 
-// #define PERFORMANCE_TEST 1
+#define PERFORMANCE_TEST 1
 
 using namespace RTC;
 
@@ -454,14 +454,15 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		}
 
 		std::chrono::duration<double> dur = std::chrono::system_clock::now() - start;
-		std::cout << iterations << " video RtpPackets processed in \t" << dur.count() << " seconds for a NACK enabled stream" << std::endl;
+		std::cout << iterations << " video RtpPackets processed in \t" << dur.count()
+		          << " seconds for a NACK enabled stream" << std::endl;
 
 		delete stream;
 
 		// Perform the same test with NACK disabled.
 
 		params.useNack = false;
-		stream               = new RtpStreamSend(&testRtpStreamListener, params, mid);
+		stream         = new RtpStreamSend(&testRtpStreamListener, params, mid);
 
 		start = std::chrono::system_clock::now();
 
@@ -474,7 +475,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		}
 
 		dur = std::chrono::system_clock::now() - start;
-		std::cout << iterations << " video RtpPackets processed in \t" << dur.count() << " seconds for a NACK disabled stream" << std::endl;
+		std::cout << iterations << " video RtpPackets processed in \t" << dur.count()
+		          << " seconds for a NACK disabled stream" << std::endl;
 
 		delete stream;
 
