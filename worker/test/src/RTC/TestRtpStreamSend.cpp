@@ -441,23 +441,26 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 		auto start = std::chrono::system_clock::now();
 
+		// Create packet.
+		auto* packet = RtpPacket::Parse(rtpBuffer1, 1500);
+		packet->SetSsrc(1111);
+
 		for (size_t i = 0; i < iterations; i++)
 		{
-			// Create packet.
-			auto* packet = RtpPacket::Parse(rtpBuffer1, 1500);
-			packet->SetSsrc(1111);
-
-			std::shared_ptr<RtpPacket> sharedPacket(packet);
+			std::shared_ptr<RtpPacket> sharedPacket;
 
 			stream->ReceivePacket(packet, sharedPacket);
+			stream->Pause();
 		}
 
 		std::chrono::duration<double> dur = std::chrono::system_clock::now() - start;
-		std::cout << "nullptr && initialized shared_ptr: \t" << dur.count() << " seconds" << std::endl;
+		std::cout << iterations << " video RtpPackets processed in \t" << dur.count() << " seconds for a NACK enabled stream" << std::endl;
 
 		delete stream;
 
-		params.mimeType.type = RTC::RtpCodecMimeType::Type::AUDIO;
+		// Perform the same test with NACK disabled.
+
+		params.useNack = false;
 		stream               = new RtpStreamSend(&testRtpStreamListener, params, mid);
 
 		start = std::chrono::system_clock::now();
@@ -466,17 +469,16 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		{
 			std::shared_ptr<RtpPacket> sharedPacket;
 
-			// Create packet.
-			auto* packet = RtpPacket::Parse(rtpBuffer1, 1500);
-			packet->SetSsrc(1111);
-
 			stream->ReceivePacket(packet, sharedPacket);
+			stream->Pause();
 		}
 
 		dur = std::chrono::system_clock::now() - start;
-		std::cout << "raw && empty shared_ptr duration: \t" << dur.count() << " seconds" << std::endl;
+		std::cout << iterations << " video RtpPackets processed in \t" << dur.count() << " seconds for a NACK disabled stream" << std::endl;
 
 		delete stream;
+
+		RTC::RtpPacket::Deallocate(packet);
 	}
 #endif
 }

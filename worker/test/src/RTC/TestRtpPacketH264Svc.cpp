@@ -12,7 +12,7 @@ using namespace RTC;
 static uint8_t buffer[65536];
 static uint8_t buffer2[65536];
 
-SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
+SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp][h264]")
 {
 	SECTION("parse I0-7.bin")
 	{
@@ -70,8 +70,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
 
 		delete payloadDescriptor;
-
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("parse I0-8.bin")
@@ -130,8 +129,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->isKeyFrame == false);
 
 		delete payloadDescriptor;
-
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("parse I0-5.bin")
@@ -189,8 +187,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->hasTlIndex == false);
 
 		delete payloadDescriptor;
-
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("parse I1-15.bin")
@@ -249,8 +246,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->isKeyFrame == false);
 
 		delete payloadDescriptor;
-
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("parse I0-14.bin")
@@ -309,8 +305,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
 
 		delete payloadDescriptor;
-
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("parse 2SL-I14.bin")
@@ -370,8 +365,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
 
 		delete payloadDescriptor;
-
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("create and test RTP files")
@@ -446,7 +440,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 				rows++;
 
 				delete payloadDescriptor;
-				delete packet;
+				RTC::RtpPacket::Deallocate(packet);
 			}
 
 			nf.close();
