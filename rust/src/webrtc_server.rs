@@ -83,7 +83,8 @@ pub struct WebRtcServerListenInfo {
     #[serde(flatten)]
     pub listen_ip: ListenIp,
     /// Listening port.
-    pub port: u16,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port: Option<u16>,
 }
 
 /// Struct that protects an invariant of having non-empty list of listen infos.
