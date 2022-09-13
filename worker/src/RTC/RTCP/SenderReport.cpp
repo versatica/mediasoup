@@ -81,14 +81,23 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_ASSERT(this->reports.size() == 1, "invalid number of sender reports");
+			size_t offset{ 0 };
+			uint8_t* header = { nullptr };
 
-			size_t offset = Packet::Serialize(buffer);
-
-			// Serialize reports.
+			// Serialize packets (common header + 1 report) each.
 			for (auto* report : this->reports)
 			{
+				// Reference current common header.
+				header = buffer + offset;
+
+				offset += Packet::Serialize(buffer + offset);
 				offset += report->Serialize(buffer + offset);
+
+				// Adjust the header length field.
+				size_t length = Packet::CommonHeaderSize;
+				length += SenderReport::HeaderSize;
+
+				reinterpret_cast<Packet::CommonHeader*>(header)->length = uint16_t{ htons((length / 4) - 1) };
 			}
 
 			return offset;
