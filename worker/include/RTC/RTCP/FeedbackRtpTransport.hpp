@@ -42,8 +42,8 @@ namespace RTC
 		class FeedbackRtpTransportPacket : public FeedbackRtpPacket
 		{
 		public:
-			static constexpr int64_t BaseTimeTick    = 64;
-			static constexpr int64_t TimeWrapPeriod  = BaseTimeTick * (1ll << 24);
+			static constexpr int64_t BaseTimeTick   = 64;
+			static constexpr int64_t TimeWrapPeriod = BaseTimeTick * (1ll << 24);
 
 		public:
 			struct PacketResult
@@ -241,8 +241,7 @@ namespace RTC
 			{
 				return this->referenceTime;
 			}
-			// We only use this for testing purpose.
-			void SetReferenceTime(uint64_t referenceTime)
+			void SetReferenceTime(uint64_t referenceTime) // We only use this for testing purpose.
 			{
 				this->referenceTime = (referenceTime % TimeWrapPeriod) / BaseTimeTick;
 			}
@@ -253,6 +252,7 @@ namespace RTC
 			int64_t GetBaseDelta(const int64_t previousTimestampMs) const
 			{
 				int64_t delta = GetReferenceTimestamp() - previousTimestampMs;
+
 				// Compensate for wrap around.
 				if (std::abs(delta - TimeWrapPeriod) < std::abs(delta))
 				{
