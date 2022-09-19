@@ -9,6 +9,7 @@
 * New C++ `ChannelMessageHandlers` class (PR #894).
 * Fix Rust support after recent changes (PR #898).
 * Update NPM deps.
+* Modify `FeedbackRtpTransport` and tests to be compliant with latest libwebrtc code, make reference time to be unsigned (PR #899 by @penguinol and @sarumjanuch). 
 
 
 ### 3.10.5
