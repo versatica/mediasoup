@@ -104,6 +104,7 @@ namespace RTC
 
 				port = jsonPortIt->get<uint16_t>();
 			}
+
 			listenInfo.port = port;
 		}
 
@@ -127,6 +128,7 @@ namespace RTC
 				{
 					// This may throw.
 					RTC::TcpServer* tcpServer;
+
 					if (listenInfo.port != 0)
 						tcpServer = new RTC::TcpServer(this, this, listenInfo.ip, listenInfo.port);
 					else
