@@ -2245,7 +2245,6 @@ namespace RTC
 			// Send the RTCP compound packet if it's full.
 			if (!consumer->GetRtcp(packet.get(), nowMs))
 			{
-				packet->Serialize(RTC::RTCP::Buffer);
 				SendRtcpCompoundPacket(packet.get());
 
 				// Create a new compount packet.
@@ -2262,7 +2261,6 @@ namespace RTC
 			// Send the RTCP compound packet if it's full.
 			if (!producer->GetRtcp(packet.get(), nowMs))
 			{
-				packet->Serialize(RTC::RTCP::Buffer);
 				SendRtcpCompoundPacket(packet.get());
 
 				// Create a new compount packet.
@@ -2275,7 +2273,6 @@ namespace RTC
 		// Send the RTCP compound packet if there is any sender or receiver report.
 		if (packet->GetReceiverReportCount() > 0u || packet->GetSenderReportCount() > 0u)
 		{
-			packet->Serialize(RTC::RTCP::Buffer);
 			SendRtcpCompoundPacket(packet.get());
 		}
 	}

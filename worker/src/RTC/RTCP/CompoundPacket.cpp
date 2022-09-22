@@ -111,7 +111,8 @@ namespace RTC
 		}
 
 		bool CompoundPacket::Add(
-		  std::vector<ReceiverReport*>& receiverReports, ReceiverReferenceTime* receiverReferenceTimeReport)
+		  std::vector<ReceiverReport*>& receiverReports,
+		  ReceiverReferenceTime* receiverReferenceTimeReport)
 		{
 			// Add the items into the packet.
 
