@@ -93,6 +93,9 @@ namespace RTC
 				offset += Packet::Serialize(buffer + offset);
 				offset += report->Serialize(buffer + offset);
 
+				// Adjust the header count field.
+				reinterpret_cast<Packet::CommonHeader*>(header)->count = 0;
+
 				// Adjust the header length field.
 				size_t length = Packet::CommonHeaderSize;
 				length += SenderReport::HeaderSize;

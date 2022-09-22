@@ -289,7 +289,7 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
-	void PipeConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
+	bool PipeConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -302,35 +302,44 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			return;
+			return true;
 		}
+
+		std::vector<RTCP::SenderReport*> senderReports;
+		std::vector<RTCP::SdesChunk*> sdesChunks;
+		std::vector<RTCP::DelaySinceLastRr*> xrReports;
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
 			auto* report = rtpStream->GetRtcpSenderReport(nowMs);
 
 			if (!report)
-				return;
+				continue;
 
-			packet->AddSenderReport(report);
+			senderReports.push_back(report);
 
 			// Build SDES chunk for this sender.
 			auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
-
-			packet->AddSdesChunk(sdesChunk);
+			sdesChunks.push_back(sdesChunk);
 
 			auto* dlrr = rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
 
 			if (dlrr)
 			{
 				auto* report = new RTC::RTCP::DelaySinceLastRr();
-
 				report->AddSsrcInfo(dlrr);
-				packet->AddDelaySinceLastRr(report);
-			}
 
-			this->lastRtcpSentTime = nowMs;
+				xrReports.push_back(report);
+			}
 		}
+
+		// RTCP Compound packet buffer cannot hold the data.
+		if (!packet->Add(senderReports, sdesChunks, xrReports))
+			return false;
+
+		this->lastRtcpSentTime = nowMs;
+
+		return true;
 	}
 
 	void PipeConsumer::NeedWorstRemoteFractionLost(uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)

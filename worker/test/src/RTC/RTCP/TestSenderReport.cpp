@@ -120,7 +120,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 		// Serialization must contain 3 SR packets.
 		packet.Serialize(buffer);
 
-		SenderReport* reports[count] { nullptr };
+		SenderReport* reports[count]{ nullptr };
 
 		auto* packet2 = static_cast<SenderReportPacket*>(Packet::Parse(buffer, sizeof(buffer)));
 

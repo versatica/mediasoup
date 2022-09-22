@@ -180,6 +180,13 @@ namespace RTC
 			{
 				this->chunks.push_back(chunk);
 			}
+			void RemoveChunk(SdesChunk* chunk)
+			{
+				auto it = std::find(this->chunks.begin(), this->chunks.end(), chunk);
+
+				if (it != this->chunks.end())
+					this->chunks.erase(it);
+			}
 			Iterator Begin()
 			{
 				return this->chunks.begin();

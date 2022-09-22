@@ -2236,49 +2236,44 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ nullptr };
+		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ new RTC::RTCP::CompoundPacket() };
 
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
 
-			for (auto* rtpStream : consumer->GetRtpStreams())
+			// Send the RTCP compound packet if it's full.
+			if (!consumer->GetRtcp(packet.get(), nowMs))
 			{
-				// Reset the Compound packet.
+				packet->Serialize(RTC::RTCP::Buffer);
+				SendRtcpCompoundPacket(packet.get());
+
+				// Create a new compount packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
-
-				consumer->GetRtcp(packet.get(), rtpStream, nowMs);
-
-				// Send the RTCP compound packet if there is a sender report.
-				if (packet->HasSenderReport())
-				{
-					packet->Serialize(RTC::RTCP::Buffer);
-					SendRtcpCompoundPacket(packet.get());
-				}
 			}
-		}
 
-		// Reset the Compound packet.
-		packet.reset(new RTC::RTCP::CompoundPacket());
+			consumer->GetRtcp(packet.get(), nowMs);
+		}
 
 		for (auto& kv : this->mapProducers)
 		{
 			auto* producer = kv.second;
 
-			producer->GetRtcp(packet.get(), nowMs);
-
-			// One more RR would exceed the MTU, send the compound packet now.
-			if (packet->GetSize() + sizeof(RTCP::ReceiverReport::Header) > RTC::MtuSize)
+			// Send the RTCP compound packet if it's full.
+			if (!producer->GetRtcp(packet.get(), nowMs))
 			{
 				packet->Serialize(RTC::RTCP::Buffer);
 				SendRtcpCompoundPacket(packet.get());
 
-				// Reset the Compound packet.
+				// Create a new compount packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
 			}
+
+			producer->GetRtcp(packet.get(), nowMs);
 		}
 
-		if (packet->GetReceiverReportCount() != 0u)
+		// Send the RTCP compound packet if there is any sender or receiver report.
+		if (packet->GetReceiverReportCount() > 0u || packet->GetSenderReportCount() > 0u)
 		{
 			packet->Serialize(RTC::RTCP::Buffer);
 			SendRtcpCompoundPacket(packet.get());
