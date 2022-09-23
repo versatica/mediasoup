@@ -3030,34 +3030,12 @@ namespace RTC
 
 			SendRtcp(nowMs);
 
-			// Recalculate next RTCP interval.
-			if (!this->mapConsumers.empty())
-			{
-				// Transmission rate in kbps.
-				uint32_t rate{ 0 };
-
-				// Get the RTP sending rate.
-				for (auto& kv : this->mapConsumers)
-				{
-					auto* consumer = kv.second;
-
-					rate += consumer->GetTransmissionRate(nowMs) / 1000;
-				}
-
-				// Calculate bandwidth: 360 / transmission bandwidth in kbit/s.
-				if (rate != 0u)
-					interval = 360000 / rate;
-
-				if (interval > RTC::RTCP::MaxVideoIntervalMs)
-					interval = RTC::RTCP::MaxVideoIntervalMs;
-			}
-
 			/*
 			 * The interval between RTCP packets is varied randomly over the range
-			 * [0.5,1.5] times the calculated interval to avoid unintended synchronization
+			 * [1.0,1.5] times the calculated interval to avoid unintended synchronization
 			 * of all participants.
 			 */
-			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
+			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(10, 15)) / 10;
 
 			this->rtcpTimer->Start(interval);
 		}
