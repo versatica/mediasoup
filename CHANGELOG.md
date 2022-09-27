@@ -3,13 +3,22 @@
 
 ### Next
 
+
+### 3.10.7
+
+* Forward `abs-capture-time` RTP extension also for audio packets (PR #911).
+* Update NPM deps.
+
+
+### 3.10.6
+
 * Node: Define TypeScript types for `internal` and `data` objects (PR #891).
 * `Channel` and `PayloadChannel`: Refactor `internal` with a single `handlerId` (PR #889).
 * `Channel` and `PayloadChannel`: Optimize message format and JSON generation (PR #893).
 * New C++ `ChannelMessageHandlers` class (PR #894).
 * Fix Rust support after recent changes (PR #898).
-* Update NPM deps.
 * Modify `FeedbackRtpTransport` and tests to be compliant with latest libwebrtc code, make reference time to be unsigned (PR #899 by @penguinol and @sarumjanuch). 
+* Update NPM deps.
 
 
 ### 3.10.5
