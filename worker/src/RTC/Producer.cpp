@@ -1303,21 +1303,6 @@ namespace RTC
 				bufferPtr += extenLen;
 			}
 
-			// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
-			{
-				extenLen = 3u;
-
-				// NOTE: Add value 0. The sending Transport will update it.
-				uint32_t absSendTime{ 0u };
-
-				Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
-
-				extensions.emplace_back(
-				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
-
-				bufferPtr += extenLen;
-			}
-
 			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time.
 			extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.absCaptureTime, extenLen);
 
@@ -1353,6 +1338,22 @@ namespace RTC
 			}
 			else if (this->kind == RTC::Media::Kind::VIDEO)
 			{
+				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+				// NOTE: This is for REMB.
+				{
+					extenLen = 3u;
+
+					// NOTE: Add value 0. The sending Transport will update it.
+					uint32_t absSendTime{ 0u };
+
+					Utils::Byte::Set3Bytes(bufferPtr, 0, absSendTime);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
 				// Add http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01.
 				// NOTE: We don't include it in outbound audio packets for now.
 				{
