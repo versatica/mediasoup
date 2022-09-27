@@ -181,7 +181,10 @@ namespace RTC
 			{
 				for (const auto& extension : this->oneByteExtensions)
 				{
-					extIds.push_back(std::to_string(extension->id));
+					if (extension != nullptr)
+					{
+						extIds.push_back(std::to_string(extension->id));
+					}
 				}
 			}
 			else
