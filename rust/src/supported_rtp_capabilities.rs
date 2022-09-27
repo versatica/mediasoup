@@ -373,14 +373,14 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: MediaKind::Video,
+                kind: MediaKind::Audio,
                 uri: RtpHeaderExtensionUri::AbsCaptureTime,
                 preferred_id: 13,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },
             RtpHeaderExtension {
-                kind: MediaKind::Audio,
+                kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::AbsCaptureTime,
                 preferred_id: 13,
                 preferred_encrypt: false,
