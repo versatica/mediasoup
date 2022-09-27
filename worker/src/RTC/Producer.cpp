@@ -1330,8 +1330,7 @@ namespace RTC
 				  extenLen,
 				  bufferPtr);
 
-				// Not needed since this is the latest added extension.
-				// bufferPtr += extenLen;
+				bufferPtr += extenLen;
 			}
 
 			if (this->kind == RTC::Media::Kind::AUDIO)
