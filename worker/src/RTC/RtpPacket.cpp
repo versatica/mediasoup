@@ -415,14 +415,18 @@ namespace RTC
 			if (type == 1u)
 			{
 				if (extension.id == 0 || extension.id > 14 || extension.len == 0 || extension.len > 16)
+				{
 					continue;
+				}
 
 				extensionsTotalSize += (1 + extension.len);
 			}
 			else if (type == 2u)
 			{
 				if (extension.id == 0)
+				{
 					continue;
+				}
 
 				extensionsTotalSize += (2 + extension.len);
 			}
