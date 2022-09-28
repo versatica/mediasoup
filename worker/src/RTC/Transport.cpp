@@ -2145,7 +2145,7 @@ namespace RTC
 			case RTC::RTCP::Type::SDES:
 			{
 				// According to RFC 3550 section 6.1 "a CNAME item MUST be included in
-				// in each compound RTCP packet". So this is true even for compound
+				// each compound RTCP packet". So this is true even for compound
 				// packets sent by endpoints that are not sending any RTP stream to us
 				// (thus chunks in such a SDES will have an SSCR does not match with
 				// any Producer created in this Transport).
