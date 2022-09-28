@@ -14,7 +14,7 @@ namespace RTC
 	void RtpPacket::Deallocate(RtpPacket* packet)
 	{
 		// Destroy and deallocate the RtpPacket.
-		packet->~RtpPacket();
+		RtpPacket::AllocatorTraits::destroy(RtpPacket::Allocator::Pool, packet);
 		RtpPacket::Allocator::Pool.deallocate(packet, 1);
 	}
 
