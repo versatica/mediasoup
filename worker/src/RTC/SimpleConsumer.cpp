@@ -370,33 +370,26 @@ namespace RTC
 		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 			return true;
 
-		std::vector<RTCP::SenderReport*> senderReports;
-		std::vector<RTCP::SdesChunk*> sdesChunks;
-		std::vector<RTCP::DelaySinceLastRr*> xrReports;
+		auto* senderReport = this->rtpStream->GetRtcpSenderReport(nowMs);
 
-		auto* report = this->rtpStream->GetRtcpSenderReport(nowMs);
-
-		if (!report)
+		if (!senderReport)
 			return true;
-
-		senderReports.push_back(report);
 
 		// Build SDES chunk for this sender.
 		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
-		sdesChunks.push_back(sdesChunk);
+
+		RTC::RTCP::DelaySinceLastRr* delaySinceLastRrReport{ nullptr };
 
 		auto* dlrr = this->rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
 
 		if (dlrr)
 		{
-			auto* report = new RTC::RTCP::DelaySinceLastRr();
-			report->AddSsrcInfo(dlrr);
-
-			xrReports.push_back(report);
+			delaySinceLastRrReport = new RTC::RTCP::DelaySinceLastRr();
+			delaySinceLastRrReport->AddSsrcInfo(dlrr);
 		}
 
 		// RTCP Compound packet buffer cannot hold the data.
-		if (!packet->Add(senderReports, sdesChunks, xrReports))
+		if (!packet->Add(senderReport, sdesChunk, delaySinceLastRrReport))
 			return false;
 
 		this->lastRtcpSentTime = nowMs;

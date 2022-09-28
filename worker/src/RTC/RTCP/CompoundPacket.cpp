@@ -67,6 +67,48 @@ namespace RTC
 		}
 
 		bool CompoundPacket::Add(
+		  SenderReport* senderReport, SdesChunk* sdesChunk, DelaySinceLastRr* delaySinceLastRrReport)
+		{
+			// Add the items into the packet.
+
+			if (senderReport)
+				this->senderReportPacket.AddReport(senderReport);
+
+			if (sdesChunk)
+				this->sdesPacket.AddChunk(sdesChunk);
+
+			if (delaySinceLastRrReport)
+				this->xrPacket.AddReport(delaySinceLastRrReport);
+
+			// New items can hold in the packet, report it.
+			if (GetSize() <= MaxSize)
+				return true;
+
+			// New items can not hold in the packet, remove them,
+			// delete and report it.
+
+			if (senderReport)
+			{
+				this->senderReportPacket.RemoveReport(senderReport);
+				delete senderReport;
+			}
+
+			if (sdesChunk)
+			{
+				this->sdesPacket.RemoveChunk(sdesChunk);
+				delete sdesChunk;
+			}
+
+			if (delaySinceLastRrReport)
+			{
+				this->xrPacket.RemoveReport(delaySinceLastRrReport);
+				delete delaySinceLastRrReport;
+			}
+
+			return false;
+		}
+
+		bool CompoundPacket::Add(
 		  std::vector<SenderReport*>& senderReports,
 		  std::vector<SdesChunk*>& sdesChunks,
 		  std::vector<DelaySinceLastRr*>& delaySinceLastRrReports)

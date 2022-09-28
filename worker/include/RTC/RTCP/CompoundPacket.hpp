@@ -41,7 +41,12 @@ namespace RTC
 				return this->receiverReportPacket.GetCount();
 			}
 			void Dump();
-			// RTCP additions per Consumer.
+			// RTCP additions per Consumer (non pipe).
+			// Adds the given data and returns true if there is enough space to hold it,
+			// false otherwise.
+			bool Add(
+			  SenderReport* senderReport, SdesChunk* sdesChunk, DelaySinceLastRr* delaySinceLastRrReport);
+			// RTCP additions per Consumer (pipe).
 			// Adds the given data and returns true if there is enough space to hold it,
 			// false otherwise.
 			bool Add(
