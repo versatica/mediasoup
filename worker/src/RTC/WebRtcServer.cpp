@@ -347,7 +347,7 @@ namespace RTC
 		// before the ":" symbol.
 
 		auto& username  = packet->GetUsername();
-		size_t colonPos = username.find(":");
+		size_t colonPos = username.find(':');
 
 		// If no colon is found just return the whole USERNAME attribute anyway.
 		if (colonPos == std::string::npos)

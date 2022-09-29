@@ -78,7 +78,7 @@ SCENARIO("RTCP Feeback RTP TMMBR parsing", "[parser][rtcp][feedback-rtp][tmmb]")
 	SECTION("create FeedbackRtpTmmbrPacket")
 	{
 		FeedbackRtpTmmbrPacket packet(senderSsrc, mediaSsrc);
-		FeedbackRtpTmmbrItem* item = new FeedbackRtpTmmbrItem();
+		auto* item = new FeedbackRtpTmmbrItem();
 
 		item->SetSsrc(ssrc);
 		item->SetBitrate(bitrate);

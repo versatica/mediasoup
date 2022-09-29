@@ -72,7 +72,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 	SECTION("create SdesChunk")
 	{
-		SdesItem* item = new SdesItem(type, length, value.c_str());
+		auto* item = new SdesItem(type, length, value.c_str());
 
 		// Create sdes chunk.
 		SdesChunk chunk(ssrc);

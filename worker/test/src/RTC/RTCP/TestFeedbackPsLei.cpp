@@ -66,7 +66,7 @@ SCENARIO("RTCP Feedback PS LEI parsing", "[parser][rtcp][feedback-ps][lei]")
 	{
 		FeedbackPsLeiPacket packet(senderSsrc, mediaSsrc);
 
-		FeedbackPsLeiItem* item = new FeedbackPsLeiItem(ssrc);
+		auto* item = new FeedbackPsLeiItem(ssrc);
 
 		packet.AddItem(item);
 

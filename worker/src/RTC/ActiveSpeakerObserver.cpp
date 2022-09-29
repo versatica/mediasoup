@@ -308,10 +308,10 @@ namespace RTC
 			dominantSpeaker->EvalActivityScores();
 			double newDominantC2 = C2;
 
-			for (auto it = this->mapProducerSpeaker.begin(); it != this->mapProducerSpeaker.end(); ++it)
+			for (const auto& it : this->mapProducerSpeaker)
 			{
-				Speaker* speaker      = it->second.speaker;
-				const std::string& id = it->second.producer->id;
+				Speaker* speaker      = it.second.speaker;
+				const std::string& id = it.second.producer->id;
 
 				if (id == this->dominantId || speaker->paused)
 				{
@@ -351,10 +351,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto it = this->mapProducerSpeaker.begin(); it != this->mapProducerSpeaker.end(); ++it)
+		for (const auto& it : this->mapProducerSpeaker)
 		{
-			Speaker* speaker      = it->second.speaker;
-			const std::string& id = it->second.producer->id;
+			Speaker* speaker      = it.second.speaker;
+			const std::string& id = it.second.producer->id;
 			uint64_t idle         = now - speaker->lastLevelChangeTime;
 
 			if (SpeakerIdleTimeout < idle && (this->dominantId.empty() || id != this->dominantId))
