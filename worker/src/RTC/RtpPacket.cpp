@@ -837,7 +837,7 @@ namespace RTC
 			MS_ASSERT(shift <= (this->payloadLength - payloadOffset), "shift too big");
 
 		uint8_t* payloadOffsetPtr = this->payload + payloadOffset;
-		size_t shiftedLen;
+		size_t shiftedLen{ 0 };
 
 		if (expand)
 		{
