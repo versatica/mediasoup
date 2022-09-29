@@ -296,27 +296,23 @@ namespace RTC
 		if (!removedTuple)
 			return;
 
+		// Notify the listener.
+		this->listener->OnIceServerTupleRemoved(this, removedTuple);
+
+		// Remove it from the list of tuples.
+		// NOTE: Do it after notifying the listener since the listener may need to
+		// use/read the tuple being removed so we cannot free it yet.
+		this->tuples.erase(it);
+
 		// If this is the selected tuple, do things.
 		if (removedTuple == this->selectedTuple)
 		{
 			this->selectedTuple = nullptr;
 
-			// Mark the first tuple as selected tuple (if any).
-			// NOTE: The tuple being removed is still in the list.
-			if (this->tuples.size() >= 2)
+			// MArk next tuple as selected one.
+			if (this->tuples.begin() != this->tuples.end())
 			{
-				for (auto it2 = this->tuples.begin(); it2 != this->tuples.end(); ++it2)
-				{
-					RTC::TransportTuple* storedTuple = std::addressof(*it2);
-
-					// Ignore the tuple being removed (which was the previously selected one).
-					if (!storedTuple->Compare(removedTuple))
-					{
-						SetSelectedTuple(storedTuple);
-
-						break;
-					}
-				}
+				SetSelectedTuple(std::addressof(*this->tuples.begin()));
 			}
 			// Or just emit 'disconnected'.
 			else
