@@ -309,7 +309,7 @@ namespace RTC
 		{
 			this->selectedTuple = nullptr;
 
-			// MArk next tuple as selected one.
+			// Mark the first tuple as selected tuple (if any).
 			if (this->tuples.begin() != this->tuples.end())
 			{
 				SetSelectedTuple(std::addressof(*this->tuples.begin()));
