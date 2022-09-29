@@ -46,6 +46,8 @@ namespace RTC
 			// Notify the listener.
 			this->listener->OnIceServerTupleRemoved(this, storedTuple);
 		}
+
+		this->tuples.clear();
 	}
 
 	void IceServer::ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple)
@@ -294,7 +296,12 @@ namespace RTC
 		if (!removedTuple)
 			return;
 
+		// Notify the listener.
+		this->listener->OnIceServerTupleRemoved(this, removedTuple);
+
 		// Remove it from the list of tuples.
+		// NOTE: Do it after notifying the listener since the listener may need to
+		// use/read the tuple being removed so we cannot free it yet.
 		this->tuples.erase(it);
 
 		// If this is the selected tuple, do things.
@@ -316,9 +323,6 @@ namespace RTC
 				this->listener->OnIceServerDisconnected(this);
 			}
 		}
-
-		// Notify the listener.
-		this->listener->OnIceServerTupleRemoved(this, removedTuple);
 	}
 
 	void IceServer::ForceSelectedTuple(const RTC::TransportTuple* tuple)
@@ -591,13 +595,15 @@ namespace RTC
 			// This should not happen by design.
 			MS_ASSERT(removedTuple, "couldn't find any tuple to be removed");
 
+			// Notify the listener.
+			this->listener->OnIceServerTupleRemoved(this, removedTuple);
+
 			// Remove it from the list of tuples.
+			// NOTE: Do it after notifying the listener since the listener may need to
+			// use/read the tuple being removed so we cannot free it yet.
 			// NOTE: This trick is needed since it is a reverse_iterator and
 			// erase() requires a iterator, const_iterator or bidirectional_iterator.
 			this->tuples.erase(std::next(it).base());
-
-			// Notify the listener.
-			this->listener->OnIceServerTupleRemoved(this, removedTuple);
 		}
 
 		// Return the address of the inserted tuple.

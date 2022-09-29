@@ -3,6 +3,8 @@
 
 ### Next
 
+* Fix SIGSEGV at `RTC::WebRtcTransport::OnIceServerTupleRemoved()` (PR #915, credits to @ybybwdwd).
+
 
 ### 3.10.7
 
