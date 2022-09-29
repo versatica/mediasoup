@@ -323,14 +323,6 @@ namespace RTC
 				this->listener->OnIceServerDisconnected(this);
 			}
 		}
-
-		// Notify the listener.
-		this->listener->OnIceServerTupleRemoved(this, removedTuple);
-
-		// Remove it from the list of tuples.
-		// NOTE: Do it after notifying the listener since the listener may need to
-		// use/read the tuple being removed so we cannot free it yet.
-		this->tuples.erase(it);
 	}
 
 	void IceServer::ForceSelectedTuple(const RTC::TransportTuple* tuple)
