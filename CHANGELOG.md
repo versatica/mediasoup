@@ -3,6 +3,9 @@
 
 ### Next
 
+* Consumer: use a bitset instead of a set for supported payload types (#919).
+* RtpPacket: optimize UpdateMid() (#920).
+* Little optimizations and modernization (#916).
 * Fix SIGSEGV at `RTC::WebRtcTransport::OnIceServerTupleRemoved()` (PR #915, credits to @ybybwdwd).
 
 
