@@ -187,7 +187,9 @@ namespace RTC
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		const std::vector<uint8_t>* producerRtpStreamScores{ nullptr };
 		// Others.
-		absl::flat_hash_set<uint8_t> supportedCodecPayloadTypes;
+		// Whether a payload type is supported or not is represented in the
+		// corresponding position of the bitset.
+		std::bitset<128u> supportedCodecPayloadTypes;
 		uint64_t lastRtcpSentTime{ 0u };
 		uint16_t maxRtcpInterval{ 0u };
 		bool externallyManagedBitrate{ false };

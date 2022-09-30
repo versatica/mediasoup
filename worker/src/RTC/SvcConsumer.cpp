@@ -563,7 +563,7 @@ namespace RTC
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
 		// in the corresponding Producer.
-		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
+		if (!this->supportedCodecPayloadTypes[payloadType])
 		{
 			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 

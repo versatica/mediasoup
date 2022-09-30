@@ -130,7 +130,7 @@ namespace RTC
 		for (auto& codec : this->rtpParameters.codecs)
 		{
 			if (codec.mimeType.IsMediaCodec())
-				this->supportedCodecPayloadTypes.insert(codec.payloadType);
+				this->supportedCodecPayloadTypes[codec.payloadType] = true;
 		}
 
 		// Fill media SSRCs vector.
@@ -192,7 +192,13 @@ namespace RTC
 		}
 
 		// Add supportedCodecPayloadTypes.
-		jsonObject["supportedCodecPayloadTypes"] = this->supportedCodecPayloadTypes;
+		jsonObject["supportedCodecPayloadTypes"] = json::array();
+
+		for (auto i = 0; i < 128; ++i)
+		{
+			if (this->supportedCodecPayloadTypes[i])
+				jsonObject["supportedCodecPayloadTypes"].push_back(i);
+		}
 
 		// Add paused.
 		jsonObject["paused"] = this->paused;
