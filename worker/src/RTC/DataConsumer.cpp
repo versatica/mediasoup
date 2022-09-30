@@ -209,7 +209,7 @@ namespace RTC
 				// Trigger 'bufferedamountlow' now.
 				if (this->bufferedAmount <= this->bufferedAmountLowThreshold)
 				{
-					std::string data("{\"bufferedAmount\":\"");
+					std::string data(R"({"bufferedAmount":")");
 
 					data.append(std::to_string(this->bufferedAmount));
 					data.append("\"}");
@@ -350,7 +350,7 @@ namespace RTC
 			this->forceTriggerBufferedAmountLow = false;
 
 			// Notify the Node DataConsumer.
-			std::string data("{\"bufferedAmount\":\"");
+			std::string data(R"({"bufferedAmount":")");
 
 			data.append(std::to_string(this->bufferedAmount));
 			data.append("\"}");

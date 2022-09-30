@@ -69,7 +69,7 @@ SCENARIO("RTCP Feedback PS FIR parsing", "[parser][rtcp][feedback-ps][fir]")
 	{
 		FeedbackPsFirPacket packet(senderSsrc, mediaSsrc);
 
-		FeedbackPsFirItem* item = new FeedbackPsFirItem(ssrc, seq);
+		auto* item = new FeedbackPsFirItem(ssrc, seq);
 
 		packet.AddItem(item);
 
