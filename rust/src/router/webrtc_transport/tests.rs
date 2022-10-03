@@ -58,7 +58,7 @@ fn create_with_webrtc_server_succeeds() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                     },
-                    port: port1,
+                    port: Some(port1),
                 });
                 let listen_infos = listen_infos.insert(WebRtcServerListenInfo {
                     protocol: Protocol::Tcp,
@@ -66,7 +66,7 @@ fn create_with_webrtc_server_succeeds() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                     },
-                    port: port2,
+                    port: Some(port2),
                 });
                 WebRtcServerOptions::new(listen_infos)
             })
@@ -263,7 +263,7 @@ fn webrtc_server_close_event() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                     },
-                    port: port1,
+                    port: Some(port1),
                 });
                 let listen_infos = listen_infos.insert(WebRtcServerListenInfo {
                     protocol: Protocol::Tcp,
@@ -271,7 +271,7 @@ fn webrtc_server_close_event() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                     },
-                    port: port2,
+                    port: Some(port2),
                 });
                 WebRtcServerOptions::new(listen_infos)
             })

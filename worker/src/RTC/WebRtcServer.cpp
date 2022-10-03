@@ -94,14 +94,18 @@ namespace RTC
 				listenInfo.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
 			}
 
+			uint16_t port{ 0 };
 			auto jsonPortIt = jsonListenInfo.find("port");
 
-			if (jsonPortIt == jsonListenInfo.end())
-				MS_THROW_TYPE_ERROR("missing listenInfo.port");
-			else if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
-				MS_THROW_TYPE_ERROR("wrong listenInfo.port (not a positive number)");
+			if (jsonPortIt != jsonListenInfo.end())
+			{
+				if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
+					MS_THROW_TYPE_ERROR("wrong port (not a positive number)");
 
-			listenInfo.port = jsonPortIt->get<uint16_t>();
+				port = jsonPortIt->get<uint16_t>();
+			}
+
+			listenInfo.port = port;
 		}
 
 		try
@@ -111,14 +115,24 @@ namespace RTC
 				if (listenInfo.protocol == RTC::TransportTuple::Protocol::UDP)
 				{
 					// This may throw.
-					auto* udpSocket = new RTC::UdpSocket(this, listenInfo.ip, listenInfo.port);
+					RTC::UdpSocket* udpSocket;
+
+					if (listenInfo.port != 0)
+						udpSocket = new RTC::UdpSocket(this, listenInfo.ip, listenInfo.port);
+					else
+						udpSocket = new RTC::UdpSocket(this, listenInfo.ip);
 
 					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, listenInfo.announcedIp);
 				}
 				else if (listenInfo.protocol == RTC::TransportTuple::Protocol::TCP)
 				{
 					// This may throw.
-					auto* tcpServer = new RTC::TcpServer(this, this, listenInfo.ip, listenInfo.port);
+					RTC::TcpServer* tcpServer;
+
+					if (listenInfo.port != 0)
+						tcpServer = new RTC::TcpServer(this, this, listenInfo.ip, listenInfo.port);
+					else
+						tcpServer = new RTC::TcpServer(this, this, listenInfo.ip);
 
 					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, listenInfo.announcedIp);
 				}
