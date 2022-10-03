@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "3.10.7",
+  "version": "3.10.8",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -88,6 +88,6 @@
     "pick-port": "^1.0.1",
     "sctp": "^1.0.0",
     "tsc-watch": "^5.0.3",
-    "typescript": "^4.8.3"
+    "typescript": "^4.8.4"
   }
 }
