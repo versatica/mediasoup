@@ -133,7 +133,7 @@ fn create_webrtc_server_succeeds() {
 }
 
 #[test]
-fn create_webrtc_server_use_portrange_succeeds() {
+fn create_webrtc_server_without_specifying_port_succeeds() {
     future::block_on(async move {
         let (worker1, _worker2) = init().await;
 

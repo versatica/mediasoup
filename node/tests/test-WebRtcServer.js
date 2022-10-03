@@ -91,7 +91,7 @@ test('worker.createWebRtcServer() succeeds', async () =>
 	expect(worker.webRtcServersForTesting.size).toBe(0);
 }, 2000);
 
-test('worker.createWebRtcServer() use portrange succeeds', async () =>
+test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 {
 	worker = await createWorker();
 
