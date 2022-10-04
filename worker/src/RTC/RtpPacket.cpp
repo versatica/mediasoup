@@ -14,8 +14,8 @@ namespace RTC
 	void RtpPacket::Deallocate(RtpPacket* packet)
 	{
 		// Destroy and deallocate the RtpPacket.
-		RtpPacket::AllocatorTraits::destroy(RtpPacket::Allocator::Pool, packet);
-		RtpPacket::Allocator::Pool.deallocate(packet, 1);
+		AllocatorTraits::destroy(Allocator::Pool, packet);
+		Allocator::Pool.deallocate(packet, 1);
 	}
 
 	/* Class methods. */
@@ -168,8 +168,9 @@ namespace RTC
 		// This is a cloned RtpPacket.
 		if (this->buffer)
 		{
-			this->buffer->~array();
-			RtpPacket::BufferAllocator::Pool.deallocate(this->buffer, 1);
+			// Destroy and deallocate the RtpPacket buffer.
+			BufferAllocatorTraits::destroy(BufferAllocator::Pool, this->buffer);
+			BufferAllocator::Pool.deallocate(this->buffer, 1);
 			this->buffer = nullptr;
 		}
 	}

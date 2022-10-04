@@ -123,9 +123,8 @@ namespace RTC
 
 		auto* storageItem = this->buffer[0];
 
-		// Reset (free RTP packet) the old storage item.
-		storageItem->Reset();
-		// Return into the pool.
+		// Destroy and deallocate the StorageItem.
+		StorageItem::AllocatorTraits::destroy(StorageItem::Allocator::Pool, storageItem);
 		StorageItem::Allocator::Pool.deallocate(storageItem, 1);
 
 		this->buffer[0] = nullptr;
@@ -146,9 +145,8 @@ namespace RTC
 			if (!storageItem)
 				continue;
 
-			// Reset the storage item (decrease RTP packet shared pointer counter).
-			storageItem->Reset();
-			// Return into the pool.
+			// Destroy and deallocate the StorageItem.
+			StorageItem::AllocatorTraits::destroy(StorageItem::Allocator::Pool, storageItem);
 			StorageItem::Allocator::Pool.deallocate(storageItem, 1);
 		}
 

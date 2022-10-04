@@ -42,6 +42,7 @@ namespace RTC
 			ctx->senderBwe->RtpPacketSent(ctx->sentInfo);
 		}
 
+		OnSendCallbackCtx::AllocatorTraits::destroy(OnSendCallbackCtx::Allocator::Pool, ctx);
 		OnSendCallbackCtx::Allocator::Pool.deallocate(ctx, 1);
 	}
 #else
@@ -50,6 +51,7 @@ namespace RTC
 		if (sent)
 			ctx->tccClient->PacketSent(ctx->packetInfo, DepLibUV::GetTimeMsInt64());
 
+		OnSendCallbackCtx::AllocatorTraits::destroy(OnSendCallbackCtx::Allocator::Pool, ctx);
 		OnSendCallbackCtx::Allocator::Pool.deallocate(ctx, 1);
 	}
 #endif
