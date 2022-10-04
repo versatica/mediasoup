@@ -2236,51 +2236,43 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ nullptr };
+		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ new RTC::RTCP::CompoundPacket() };
 
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
 
-			for (auto* rtpStream : consumer->GetRtpStreams())
+			// Send the RTCP compound packet if it's full.
+			if (!consumer->GetRtcp(packet.get(), nowMs))
 			{
-				// Reset the Compound packet.
+				SendRtcpCompoundPacket(packet.get());
+
+				// Create a new compount packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
-
-				consumer->GetRtcp(packet.get(), rtpStream, nowMs);
-
-				// Send the RTCP compound packet if there is a sender report.
-				if (packet->HasSenderReport())
-				{
-					packet->Serialize(RTC::RTCP::Buffer);
-					SendRtcpCompoundPacket(packet.get());
-				}
 			}
-		}
 
-		// Reset the Compound packet.
-		packet.reset(new RTC::RTCP::CompoundPacket());
+			consumer->GetRtcp(packet.get(), nowMs);
+		}
 
 		for (auto& kv : this->mapProducers)
 		{
 			auto* producer = kv.second;
 
-			producer->GetRtcp(packet.get(), nowMs);
-
-			// One more RR would exceed the MTU, send the compound packet now.
-			if (packet->GetSize() + sizeof(RTCP::ReceiverReport::Header) > RTC::MtuSize)
+			// Send the RTCP compound packet if it's full.
+			if (!producer->GetRtcp(packet.get(), nowMs))
 			{
-				packet->Serialize(RTC::RTCP::Buffer);
 				SendRtcpCompoundPacket(packet.get());
 
-				// Reset the Compound packet.
+				// Create a new compount packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
 			}
+
+			producer->GetRtcp(packet.get(), nowMs);
 		}
 
-		if (packet->GetReceiverReportCount() != 0u)
+		// Send the RTCP compound packet if there is any sender or receiver report.
+		if (packet->GetReceiverReportCount() > 0u || packet->GetSenderReportCount() > 0u)
 		{
-			packet->Serialize(RTC::RTCP::Buffer);
 			SendRtcpCompoundPacket(packet.get());
 		}
 	}
@@ -3038,34 +3030,12 @@ namespace RTC
 
 			SendRtcp(nowMs);
 
-			// Recalculate next RTCP interval.
-			if (!this->mapConsumers.empty())
-			{
-				// Transmission rate in kbps.
-				uint32_t rate{ 0 };
-
-				// Get the RTP sending rate.
-				for (auto& kv : this->mapConsumers)
-				{
-					auto* consumer = kv.second;
-
-					rate += consumer->GetTransmissionRate(nowMs) / 1000;
-				}
-
-				// Calculate bandwidth: 360 / transmission bandwidth in kbit/s.
-				if (rate != 0u)
-					interval = 360000 / rate;
-
-				if (interval > RTC::RTCP::MaxVideoIntervalMs)
-					interval = RTC::RTCP::MaxVideoIntervalMs;
-			}
-
 			/*
 			 * The interval between RTCP packets is varied randomly over the range
-			 * [0.5,1.5] times the calculated interval to avoid unintended synchronization
+			 * [1.0,1.5] times the calculated interval to avoid unintended synchronization
 			 * of all participants.
 			 */
-			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(5, 15)) / 10;
+			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(10, 15)) / 10;
 
 			this->rtcpTimer->Start(interval);
 		}

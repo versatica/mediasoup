@@ -128,6 +128,13 @@ namespace RTC
 			{
 				this->reports.push_back(report);
 			}
+			void RemoveReport(SenderReport* report)
+			{
+				auto it = std::find(this->reports.begin(), this->reports.end(), report);
+
+				if (it != this->reports.end())
+					this->reports.erase(it);
+			}
 			Iterator Begin()
 			{
 				return this->reports.begin();
@@ -143,14 +150,17 @@ namespace RTC
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetCount() const override
 			{
-				return 0;
+				return this->reports.size();
 			}
 			size_t GetSize() const override
 			{
-				size_t size = Packet::CommonHeaderSize;
+				// A serialized packet consists of a series of SR packets with
+				// one SR report each.
+				size_t size{ 0 };
 
 				for (auto* report : this->reports)
 				{
+					size += Packet::CommonHeaderSize;
 					size += report->GetSize();
 				}
 

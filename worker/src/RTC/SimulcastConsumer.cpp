@@ -957,39 +957,38 @@ namespace RTC
 		packet->RestorePayload();
 	}
 
-	void SimulcastConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
+	bool SimulcastConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(rtpStream == this->rtpStream, "RTP stream does not match");
-
 		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
-			return;
+			return true;
 
-		auto* report = this->rtpStream->GetRtcpSenderReport(nowMs);
+		auto* senderReport = this->rtpStream->GetRtcpSenderReport(nowMs);
 
-		if (!report)
-			return;
-
-		packet->AddSenderReport(report);
+		if (!senderReport)
+			return true;
 
 		// Build SDES chunk for this sender.
 		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
 
-		packet->AddSdesChunk(sdesChunk);
+		RTC::RTCP::DelaySinceLastRr* delaySinceLastRrReport{ nullptr };
 
 		auto* dlrr = this->rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
 
 		if (dlrr)
 		{
-			auto* report = new RTC::RTCP::DelaySinceLastRr();
-
-			report->AddSsrcInfo(dlrr);
-			packet->AddDelaySinceLastRr(report);
+			delaySinceLastRrReport = new RTC::RTCP::DelaySinceLastRr();
+			delaySinceLastRrReport->AddSsrcInfo(dlrr);
 		}
 
+		// RTCP Compound packet buffer cannot hold the data.
+		if (!packet->Add(senderReport, sdesChunk, delaySinceLastRrReport))
+			return false;
+
 		this->lastRtcpSentTime = nowMs;
+
+		return true;
 	}
 
 	void SimulcastConsumer::NeedWorstRemoteFractionLost(

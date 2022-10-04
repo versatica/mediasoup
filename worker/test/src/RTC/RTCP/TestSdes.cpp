@@ -52,6 +52,9 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 		SdesPacket* packet = SdesPacket::Parse(buffer, sizeof(buffer));
 		SdesChunk* chunk   = *(packet->Begin());
 
+		auto* header = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer);
+
+		REQUIRE(ntohs(header->length) == 6);
 		REQUIRE(chunk);
 
 		verify(chunk);
@@ -68,6 +71,75 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 			}
 		}
 		delete packet;
+	}
+
+	SECTION("create SDES packet with more than 31 chunks")
+	{
+		const size_t count = 33;
+
+		SdesPacket packet;
+
+		for (auto i = 1; i <= count; i++)
+		{
+			// Create chunk and add to packet.
+			SdesChunk* chunk = new SdesChunk(i /*ssrc*/);
+
+			auto* item = new RTC::RTCP::SdesItem(SdesItem::Type::CNAME, value.size(), value.c_str());
+
+			chunk->AddItem(item);
+
+			packet.AddChunk(chunk);
+		}
+
+		REQUIRE(packet.GetCount() == count);
+
+		uint8_t buffer[1500] = { 0 };
+
+		// Serialization must contain 2 RR packets since report count exceeds 31.
+		packet.Serialize(buffer);
+
+		auto* packet2 = static_cast<SdesPacket*>(Packet::Parse(buffer, sizeof(buffer)));
+
+		REQUIRE(packet2 != nullptr);
+		REQUIRE(packet2->GetCount() == 31);
+
+		auto reportIt = packet2->Begin();
+
+		for (auto i = 1; i <= 31; i++, reportIt++)
+		{
+			auto* chunk = *reportIt;
+
+			REQUIRE(chunk->GetSsrc() == i);
+
+			auto* item = *(chunk->Begin());
+
+			REQUIRE(item->GetType() == SdesItem::Type::CNAME);
+			REQUIRE(item->GetSize() == 2 + value.size());
+			REQUIRE(std::string(item->GetValue()) == value);
+		}
+
+		SdesPacket* packet3 = static_cast<SdesPacket*>(packet2->GetNext());
+
+		REQUIRE(packet3 != nullptr);
+		REQUIRE(packet3->GetCount() == 2);
+
+		reportIt = packet3->Begin();
+
+		for (auto i = 1; i <= 2; i++, reportIt++)
+		{
+			auto* chunk = *reportIt;
+
+			REQUIRE(chunk->GetSsrc() == 31 + i);
+
+			auto* item = *(chunk->Begin());
+
+			REQUIRE(item->GetType() == SdesItem::Type::CNAME);
+			REQUIRE(item->GetSize() == 2 + value.size());
+			REQUIRE(std::string(item->GetValue()) == value);
+		}
+
+		delete packet2;
+		delete packet3;
 	}
 
 	SECTION("create SdesChunk")
