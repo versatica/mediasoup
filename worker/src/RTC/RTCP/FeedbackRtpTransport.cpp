@@ -8,46 +8,6 @@
 #include <limits> // std::numeric_limits()
 #include <sstream>
 
-// Code taken and adapted from libwebrtc (byte_io.h).
-inline static int32_t parseReferenceTime(uint8_t* buffer)
-{
-	int32_t referenceTime;
-	uint32_t unsignedVal = Utils::Byte::Get3Bytes(buffer, 0);
-
-	const auto msb = static_cast<uint8_t>(unsignedVal >> ((3 - 1) * 8));
-
-	if ((msb & 0x80) != 0)
-	{
-		// Create a mask where all bits used by the 3 bytes are set to one, for
-		// instance 0x00FFFFFF. Bit-wise inverts that mask to 0xFF000000 and adds
-		// it to the input value.
-		static uint32_t usedBitMask = (1 << ((3 % sizeof(int32_t)) * 8)) - 1;
-
-		unsignedVal = ~usedBitMask | unsignedVal;
-	}
-
-	// An unsigned value with only the highest order bit set (ex 0x80).
-	static uint32_t unsignedHighestBitMask = static_cast<uint32_t>(1) << ((sizeof(uint32_t) * 8) - 1);
-
-	// A signed value with only the highest bit set. Since this is two's
-	// complement form, we can use the min value from std::numeric_limits.
-	static int32_t signedHighestBitMask = std::numeric_limits<int32_t>::min();
-
-	if ((unsignedVal & unsignedHighestBitMask) != 0)
-	{
-		// Casting is only safe when unsigned value can be represented in the
-		// signed target type, so mask out highest bit and mask it back manually.
-		referenceTime = static_cast<int32_t>(unsignedVal & ~unsignedHighestBitMask);
-		referenceTime |= signedHighestBitMask;
-	}
-	else
-	{
-		referenceTime = static_cast<int32_t>(unsignedVal);
-	}
-
-	return referenceTime;
-}
-
 namespace RTC
 {
 	namespace RTCP
@@ -117,7 +77,7 @@ namespace RTC
 
 			this->baseSequenceNumber  = Utils::Byte::Get2Bytes(data, 0);
 			this->packetStatusCount   = Utils::Byte::Get2Bytes(data, 2);
-			this->referenceTime       = parseReferenceTime(data + 4);
+			this->referenceTime       = Utils::Byte::Get3Bytes(data, 4);
 			this->feedbackPacketCount = Utils::Byte::Get1Byte(data, 7);
 			this->size                = len;
 
@@ -432,7 +392,7 @@ namespace RTC
 			}
 
 			size_t deltaIdx{ 0u };
-			int64_t currentReceivedAtMs = static_cast<int64_t>(this->referenceTime * 64);
+			auto currentReceivedAtMs = static_cast<int64_t>(this->referenceTime * 64);
 
 			for (size_t idx{ 0u }; idx < packetResults.size(); ++idx)
 			{

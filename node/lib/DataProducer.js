@@ -21,8 +21,6 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
-     * @emits transportclose
-     * @emits @close
      */
     constructor({ internal, data, channel, payloadChannel, appData }) {
         super();
@@ -31,7 +29,7 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.handleWorkerNotifications();
     }
     /**
@@ -84,8 +82,6 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
      */
     get observer() {
         return this.#observer;
@@ -101,7 +97,8 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.#channel.removeAllListeners(this.#internal.dataProducerId);
         this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
-        this.#channel.request('dataProducer.close', this.#internal)
+        const reqData = { dataProducerId: this.#internal.dataProducerId };
+        this.#channel.request('transport.closeDataProducer', this.#internal.transportId, reqData)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
@@ -129,14 +126,14 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('dataProducer.dump', this.#internal);
+        return this.#channel.request('dataProducer.dump', this.#internal.dataProducerId);
     }
     /**
      * Get DataProducer stats.
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.#channel.request('dataProducer.getStats', this.#internal);
+        return this.#channel.request('dataProducer.getStats', this.#internal.dataProducerId);
     }
     /**
      * Send data (just valid for DataProducers created on a DirectTransport).
@@ -170,8 +167,8 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             message = ' ';
         else if (ppid === 57)
             message = Buffer.alloc(1);
-        const notifData = { ppid };
-        this.#payloadChannel.notify('dataProducer.send', this.#internal, notifData, message);
+        const notifData = String(ppid);
+        this.#payloadChannel.notify('dataProducer.send', this.#internal.dataProducerId, notifData, message);
     }
     handleWorkerNotifications() {
         // No need to subscribe to any event.

@@ -2,6 +2,7 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters } from './RtpParameters';
 
 export type ProducerOptions =
@@ -35,8 +36,8 @@ export type ProducerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
-}
+	appData?: Record<string, unknown>;
+};
 
 /**
  * Valid types for 'trace' event.
@@ -67,7 +68,7 @@ export type ProducerTraceEventData =
 	 * Per type information.
 	 */
 	info: any;
-}
+};
 
 export type ProducerScore =
 {
@@ -85,7 +86,7 @@ export type ProducerScore =
 	 * The score of the RTP stream.
 	 */
 	score: number;
-}
+};
 
 export type ProducerVideoOrientation =
 {
@@ -103,7 +104,7 @@ export type ProducerVideoOrientation =
 	 * Rotation degrees (0, 90, 180 or 270).
 	 */
 	rotation: number;
-}
+};
 
 export type ProducerStat =
 {
@@ -133,7 +134,7 @@ export type ProducerStat =
 	// RtpStreamRecv specific.
 	jitter: number;
 	bitrateByLayer?: any;
-}
+};
 
 /**
  * Producer type.
@@ -146,7 +147,9 @@ export type ProducerEvents =
 	score: [ProducerScore[]];
 	videoorientationchange: [ProducerVideoOrientation];
 	trace: [ProducerTraceEventData];
-}
+	// Private events.
+	'@close': [];
+};
 
 export type ProducerObserverEvents =
 {
@@ -156,28 +159,30 @@ export type ProducerObserverEvents =
 	score: [ProducerScore[]];
 	videoorientationchange: [ProducerVideoOrientation];
 	trace: [ProducerTraceEventData];
-}
+};
+
+type ProducerInternal = TransportInternal &
+{
+	producerId: string;
+};
+
+type ProducerData =
+{
+	kind: MediaKind;
+	rtpParameters: RtpParameters;
+	type: ProducerType;
+	consumableRtpParameters: RtpParameters;
+};
 
 const logger = new Logger('Producer');
 
 export class Producer extends EnhancedEventEmitter<ProducerEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		producerId: string;
-	};
+	readonly #internal: ProducerInternal;
 
 	// Producer data.
-	readonly #data:
-	{
-		kind: MediaKind;
-		rtpParameters: RtpParameters;
-		type: ProducerType;
-		consumableRtpParameters: RtpParameters;
-	};
+	readonly #data: ProducerData;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -189,7 +194,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Paused flag.
 	#paused = false;
@@ -202,11 +207,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 	/**
 	 * @private
-	 * @emits transportclose
-	 * @emits score - (score: ProducerScore[])
-	 * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
-	 * @emits trace - (trace: ProducerTraceEventData)
-	 * @emits @close
 	 */
 	constructor(
 		{
@@ -218,11 +218,11 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			paused
 		}:
 		{
-			internal: any;
-			data: any;
+			internal: ProducerInternal;
+			data: ProducerData;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData?: any;
+			appData?: Record<string, unknown>;
 			paused: boolean;
 		}
 	)
@@ -235,7 +235,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 		this.#paused = paused;
 
 		this.handleWorkerNotifications();
@@ -310,7 +310,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -318,20 +318,13 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits pause
-	 * @emits resume
-	 * @emits score - (score: ProducerScore[])
-	 * @emits videoorientationchange - (videoOrientation: ProducerVideoOrientation)
-	 * @emits trace - (trace: ProducerTraceEventData)
 	 */
 	get observer(): EnhancedEventEmitter<ProducerObserverEvents>
 	{
@@ -363,7 +356,9 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		this.#channel.removeAllListeners(this.#internal.producerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
 
-		this.#channel.request('producer.close', this.#internal)
+		const reqData = { producerId: this.#internal.producerId };
+
+		this.#channel.request('transport.closeProducer', this.#internal.transportId, reqData)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -403,7 +398,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('producer.dump', this.#internal);
+		return this.#channel.request('producer.dump', this.#internal.producerId);
 	}
 
 	/**
@@ -413,7 +408,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('producer.getStats', this.#internal);
+		return this.#channel.request('producer.getStats', this.#internal.producerId);
 	}
 
 	/**
@@ -425,7 +420,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.request('producer.pause', this.#internal);
+		await this.#channel.request('producer.pause', this.#internal.producerId);
 
 		this.#paused = true;
 
@@ -443,7 +438,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.request('producer.resume', this.#internal);
+		await this.#channel.request('producer.resume', this.#internal.producerId);
 
 		this.#paused = false;
 
@@ -462,7 +457,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		const reqData = { types };
 
 		await this.#channel.request(
-			'producer.enableTraceEvent', this.#internal, reqData);
+			'producer.enableTraceEvent', this.#internal.producerId, reqData);
 	}
 
 	/**
@@ -476,7 +471,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		}
 
 		this.#payloadChannel.notify(
-			'producer.send', this.#internal, undefined, rtpPacket);
+			'producer.send', this.#internal.producerId, undefined, rtpPacket);
 	}
 
 	private handleWorkerNotifications(): void

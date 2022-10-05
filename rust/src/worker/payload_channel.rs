@@ -7,10 +7,10 @@ use log::{debug, error, trace, warn};
 use mediasoup_sys::UvAsyncT;
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::Value;
 use std::collections::VecDeque;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 use thiserror::Error;
@@ -56,14 +56,6 @@ fn deserialize_message(bytes: &[u8]) -> PayloadChannelReceiveMessage {
             )))
         }
     }
-}
-
-#[derive(Debug, Serialize)]
-struct RequestMessage<'a, R> {
-    id: u32,
-    method: &'static str,
-    #[serde(flatten)]
-    request: &'a R,
 }
 
 struct ResponseError {
@@ -119,13 +111,6 @@ enum OutgoingMessage {
 struct OutgoingMessageBuffer {
     handle: Option<UvAsyncT>,
     messages: VecDeque<OutgoingMessage>,
-}
-
-#[derive(Debug, Serialize)]
-struct NotificationMessage<'a, N: Serialize> {
-    event: &'static str,
-    #[serde(flatten)]
-    notification: &'a N,
 }
 
 #[derive(Debug, Error, Eq, PartialEq)]
@@ -259,13 +244,15 @@ impl PayloadChannel {
         self.inner.internal_message_receiver.clone()
     }
 
-    pub(crate) async fn request<R>(
+    pub(crate) async fn request<R, HandlerId>(
         &self,
+        handler_id: HandlerId,
         request: R,
         payload: Vec<u8>,
     ) -> Result<R::Response, RequestError>
     where
-        R: Request,
+        R: Request<HandlerId = HandlerId>,
+        HandlerId: Display,
     {
         let method = request.as_method();
 
@@ -288,12 +275,14 @@ impl PayloadChannel {
 
         debug!("request() [method:{}, id:{}]: {:?}", method, id, request);
 
-        let message = serde_json::to_vec(&RequestMessage {
-            id,
-            method: request.as_method(),
-            request: &request,
-        })
-        .unwrap();
+        // TODO: Todo pre-allocate fixed size string sufficient for most cases by default
+        // TODO: Refactor to avoid extra allocation during JSON serialization if possible
+        let message = format!(
+            "r:{id}:{}:{handler_id}:{}",
+            request.as_method(),
+            serde_json::to_string(&request).unwrap()
+        )
+        .into_bytes();
 
         let message_with_payload =
             Arc::new(AtomicTake::new(OutgoingMessageRequest { message, payload }));
@@ -349,21 +338,26 @@ impl PayloadChannel {
         }
     }
 
-    pub(crate) fn notify<N>(
+    pub(crate) fn notify<N, HandlerId>(
         &self,
+        handler_id: HandlerId,
         notification: N,
         payload: Vec<u8>,
     ) -> Result<(), NotificationError>
     where
-        N: Notification,
+        N: Notification<HandlerId = HandlerId>,
+        HandlerId: Display,
     {
         debug!("notify() [event:{}]", notification.as_event());
 
-        let message = serde_json::to_vec(&NotificationMessage {
-            event: notification.as_event(),
-            notification: &notification,
-        })
-        .unwrap();
+        // TODO: Todo pre-allocate fixed size string sufficient for most cases by default
+        // TODO: Refactor to avoid extra allocation during JSON serialization if possible
+        let message = format!(
+            "n:{}:{handler_id}:{}",
+            notification.as_event(),
+            serde_json::to_string(&notification).unwrap()
+        )
+        .into_bytes();
 
         {
             let mut outgoing_message_buffer = self.inner.outgoing_message_buffer.lock();

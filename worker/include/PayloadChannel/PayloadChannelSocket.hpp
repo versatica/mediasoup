@@ -1,11 +1,14 @@
-#ifndef MS_PAYLOAD_CHANNEL_UNIX_STREAM_SOCKET_HPP
-#define MS_PAYLOAD_CHANNEL_UNIX_STREAM_SOCKET_HPP
+#ifndef MS_PAYLOAD_CHANNEL_SOCKET_HPP
+#define MS_PAYLOAD_CHANNEL_SOCKET_HPP
 
 #include "common.hpp"
-#include "PayloadChannel/Notification.hpp"
+#include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
 #include <nlohmann/json.hpp>
+#include <string>
+
+using json = nlohmann::json;
 
 namespace PayloadChannel
 {
@@ -54,18 +57,30 @@ namespace PayloadChannel
 	class PayloadChannelSocket : public ConsumerSocket::Listener
 	{
 	public:
-		class Listener
+		class RequestHandler
+		{
+		public:
+			virtual ~RequestHandler() = default;
+
+		public:
+			virtual void HandleRequest(PayloadChannel::PayloadChannelRequest* request) = 0;
+		};
+
+		class NotificationHandler
+		{
+		public:
+			virtual ~NotificationHandler() = default;
+
+		public:
+			virtual void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) = 0;
+		};
+
+		class Listener : public RequestHandler, public NotificationHandler
 		{
 		public:
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnPayloadChannelNotification(
-			  PayloadChannel::PayloadChannelSocket* payloadChannel,
-			  PayloadChannel::Notification* notification) = 0;
-			virtual void OnPayloadChannelRequest(
-			  PayloadChannel::PayloadChannelSocket* payloadChannel,
-			  PayloadChannel::PayloadChannelRequest* request)                                         = 0;
 			virtual void OnPayloadChannelClosed(PayloadChannel::PayloadChannelSocket* payloadChannel) = 0;
 		};
 
@@ -81,9 +96,11 @@ namespace PayloadChannel
 	public:
 		void Close();
 		void SetListener(Listener* listener);
-		bool CallbackRead();
 		void Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen);
+		void Send(const std::string& message, const uint8_t* payload, size_t payloadLen);
 		void Send(json& jsonMessage);
+		void Send(const std::string& message);
+		bool CallbackRead();
 
 	private:
 		void SendImpl(const uint8_t* message, uint32_t messageLen);
@@ -106,7 +123,7 @@ namespace PayloadChannel
 		PayloadChannelReadCtx payloadChannelReadCtx{ nullptr };
 		PayloadChannelWriteFn payloadChannelWriteFn{ nullptr };
 		PayloadChannelWriteCtx payloadChannelWriteCtx{ nullptr };
-		PayloadChannel::Notification* ongoingNotification{ nullptr };
+		PayloadChannel::PayloadChannelNotification* ongoingNotification{ nullptr };
 		PayloadChannel::PayloadChannelRequest* ongoingRequest{ nullptr };
 		uv_async_t* uvReadHandle{ nullptr };
 		uint8_t* writeBuffer{ nullptr };

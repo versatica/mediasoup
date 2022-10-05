@@ -1,6 +1,11 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { RouterInternal } from './Router';
+import { WebRtcTransportData } from './WebRtcTransport';
+import { PlainTransportData } from './PlainTransport';
+import { PipeTransportData } from './PipeTransport';
+import { DirectTransportData } from './DirectTransport';
 import { Producer, ProducerOptions } from './Producer';
 import { Consumer, ConsumerOptions } from './Consumer';
 import { DataProducer, DataProducerOptions } from './DataProducer';
@@ -56,7 +61,14 @@ export interface TransportTraceEventData {
 export declare type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 export declare type TransportEvents = {
     routerclose: [];
+    listenserverclose: [];
     trace: [TransportTraceEventData];
+    '@close': [];
+    '@newproducer': [Producer];
+    '@producerclose': [Producer];
+    '@newdataproducer': [DataProducer];
+    '@dataproducerclose': [DataProducer];
+    '@listenserverclose': [];
 };
 export declare type TransportObserverEvents = {
     close: [];
@@ -66,39 +78,35 @@ export declare type TransportObserverEvents = {
     newdataconsumer: [DataConsumer];
     trace: [TransportTraceEventData];
 };
+export declare type TransportConstructorOptions = {
+    internal: TransportInternal;
+    data: TransportData;
+    channel: Channel;
+    payloadChannel: PayloadChannel;
+    appData?: Record<string, unknown>;
+    getRouterRtpCapabilities: () => RtpCapabilities;
+    getProducerById: (producerId: string) => Producer | undefined;
+    getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
+};
+export declare type TransportInternal = RouterInternal & {
+    transportId: string;
+};
+declare type TransportData = WebRtcTransportData | PlainTransportData | PipeTransportData | DirectTransportData;
 export declare class Transport<Events extends TransportEvents = TransportEvents, ObserverEvents extends TransportObserverEvents = TransportObserverEvents> extends EnhancedEventEmitter<Events> {
     #private;
-    protected readonly internal: {
-        routerId: string;
-        transportId: string;
-    };
+    protected readonly internal: TransportInternal;
     protected readonly channel: Channel;
     protected readonly payloadChannel: PayloadChannel;
-    protected readonly getProducerById: (producerId: string) => Producer;
-    protected readonly getDataProducerById: (dataProducerId: string) => DataProducer;
+    protected readonly getProducerById: (producerId: string) => Producer | undefined;
+    protected readonly getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
     protected readonly consumers: Map<string, Consumer>;
     protected readonly dataProducers: Map<string, DataProducer>;
     protected readonly dataConsumers: Map<string, DataConsumer>;
     /**
      * @private
      * @interface
-     * @emits routerclose
-     * @emits @close
-     * @emits @newproducer - (producer: Producer)
-     * @emits @producerclose - (producer: Producer)
-     * @emits @newdataproducer - (dataProducer: DataProducer)
-     * @emits @dataproducerclose - (dataProducer: DataProducer)
      */
-    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: {
-        internal: any;
-        data: any;
-        channel: Channel;
-        payloadChannel: PayloadChannel;
-        appData: any;
-        getRouterRtpCapabilities: () => RtpCapabilities;
-        getProducerById: (producerId: string) => Producer;
-        getDataProducerById: (dataProducerId: string) => DataProducer;
-    });
+    constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }: TransportConstructorOptions);
     /**
      * Transport id.
      */
@@ -110,19 +118,13 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (producer: Producer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataProducer: DataProducer)
      */
     get observer(): EnhancedEventEmitter<ObserverEvents>;
     /**
@@ -141,6 +143,13 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      * @virtual
      */
     routerClosed(): void;
+    /**
+     * Listen server was closed (this just happens in WebRtcTransports when their
+     * associated WebRtcServer is closed).
+     *
+     * @private
+     */
+    listenServerClosed(): void;
     /**
      * Dump Transport.
      */
@@ -174,7 +183,7 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      *
      * @virtual
      */
-    consume({ producerId, rtpCapabilities, paused, mid, preferredLayers, pipe, appData }: ConsumerOptions): Promise<Consumer>;
+    consume({ producerId, rtpCapabilities, paused, mid, preferredLayers, ignoreDtx, pipe, appData }: ConsumerOptions): Promise<Consumer>;
     /**
      * Create a DataProducer.
      */
@@ -189,4 +198,5 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
     enableTraceEvent(types?: TransportTraceEventType[]): Promise<void>;
     private getNextSctpStreamId;
 }
+export {};
 //# sourceMappingURL=Transport.d.ts.map

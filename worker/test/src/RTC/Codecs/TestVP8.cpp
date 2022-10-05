@@ -210,3 +210,86 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		REQUIRE_FALSE(payloadDescriptor);
 	}
 }
+
+Codecs::VP8::PayloadDescriptor* CreatePacket(
+  uint8_t* buffer,
+  size_t bufferLen,
+  uint16_t pictureId,
+  uint8_t tl0PictureIndex,
+  uint8_t tlIndex,
+  bool layerSync = true)
+{
+	uint16_t netPictureId = htons(pictureId);
+	std::memcpy(buffer + 2, &netPictureId, 2);
+	buffer[2] |= 0x80;
+	buffer[4] = tl0PictureIndex;
+	buffer[5] = tlIndex << 6;
+
+	if (layerSync)
+		buffer[5] |= 0x20; // y bit
+
+	auto* payloadDescriptor = Codecs::VP8::Parse(buffer, bufferLen);
+
+	REQUIRE(payloadDescriptor);
+
+	return payloadDescriptor;
+}
+
+std::unique_ptr<Codecs::VP8::PayloadDescriptor> ProcessPacket(
+  Codecs::VP8::EncodingContext& context,
+  uint16_t pictureId,
+  uint8_t tl0PictureIndex,
+  uint8_t tlIndex,
+  bool layerSync = true)
+{
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		0x90, 0xe0, 0x80, 0x00, 0x00, 0x00
+	};
+	// clang-format on
+	bool marker;
+	auto* payloadDescriptor =
+	  CreatePacket(buffer, sizeof(buffer), pictureId, tl0PictureIndex, tlIndex, layerSync);
+	std::unique_ptr<Codecs::VP8::PayloadDescriptorHandler> payloadDescriptorHandler(
+	  new Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor));
+
+	if (payloadDescriptorHandler->Process(&context, buffer, marker))
+	{
+		return std::unique_ptr<Codecs::VP8::PayloadDescriptor>(Codecs::VP8::Parse(buffer, sizeof(buffer)));
+	}
+
+	return nullptr;
+}
+
+SCENARIO("process VP8 payload descriptor", "[codecs][vp8]")
+{
+	SECTION("do not drop TL0PICIDX from temporal layers higher than 0")
+	{
+		RTC::Codecs::EncodingContext::Params params;
+		params.spatialLayers  = 0;
+		params.temporalLayers = 2;
+		Codecs::VP8::EncodingContext context(params);
+
+		context.SetCurrentTemporalLayer(0);
+		context.SetTargetTemporalLayer(0);
+
+		// Frame 1
+		auto forwarded = ProcessPacket(context, 0, 0, 0);
+		REQUIRE(forwarded);
+		REQUIRE(forwarded->pictureId == 0);
+		REQUIRE(forwarded->tl0PictureIndex == 0);
+
+		// Frame 2 gets lost
+
+		// Frame 3
+		forwarded = ProcessPacket(context, 2, 1, 1);
+		REQUIRE_FALSE(forwarded);
+
+		// Frame 2 retransmitted
+		forwarded = ProcessPacket(context, 1, 1, 0);
+		REQUIRE(forwarded);
+		REQUIRE(forwarded->pictureId == 1);
+		REQUIRE(forwarded->tl0PictureIndex == 1);
+	}
+}

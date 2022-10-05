@@ -1,7 +1,12 @@
 import { Logger } from './Logger';
-import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
-import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import {
+	RtpObserver,
+	RtpObserverEvents,
+	RtpObserverObserverEvents,
+	RtpObserverConstructorOptions
+} from './RtpObserver';
+import { Producer } from './Producer';
 
 export interface AudioLevelObserverOptions
 {
@@ -24,7 +29,7 @@ export interface AudioLevelObserverOptions
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export interface AudioLevelObserverVolume
@@ -45,13 +50,15 @@ export type AudioLevelObserverEvents = RtpObserverEvents &
 {
 	volumes: [AudioLevelObserverVolume[]];
 	silence: [];
-}
+};
 
 export type AudioLevelObserverObserverEvents = RtpObserverObserverEvents & 
 {
 	volumes: [AudioLevelObserverVolume[]];
 	silence: [];
-}
+};
+
+type AudioLevelObserverConstructorOptions = RtpObserverConstructorOptions;
 
 const logger = new Logger('AudioLevelObserver');
 
@@ -59,26 +66,16 @@ export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
 {
 	/**
 	 * @private
-	 * @emits volumes - (volumes: AudioLevelObserverVolume[])
-	 * @emits silence
 	 */
-	constructor(params: any)
+	constructor(options: AudioLevelObserverConstructorOptions)
 	{
-		super(params);
+		super(options);
 
 		this.handleWorkerNotifications();
 	}
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
-	 * @emits pause
-	 * @emits resume
-	 * @emits addproducer - (producer: Producer)
-	 * @emits removeproducer - (producer: Producer)
-	 * @emits volumes - (volumes: AudioLevelObserverVolume[])
-	 * @emits silence
 	 */
 	get observer(): EnhancedEventEmitter<AudioLevelObserverObserverEvents>
 	{

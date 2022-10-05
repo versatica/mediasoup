@@ -62,7 +62,7 @@ namespace RTC
 		};
 
 	public:
-		ActiveSpeakerObserver(const std::string& id, json& data);
+		ActiveSpeakerObserver(const std::string& id, RTC::RtpObserver::Listener* listener, json& data);
 		~ActiveSpeakerObserver() override;
 
 	public:

@@ -33,16 +33,6 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
-     * @emits transportclose
-     * @emits producerclose
-     * @emits producerpause
-     * @emits producerresume
-     * @emits score - (score: ConsumerScore)
-     * @emits layerschange - (layers: ConsumerLayers | undefined)
-     * @emits rtp - (packet: Buffer)
-     * @emits trace - (trace: ConsumerTraceEventData)
-     * @emits @close
-     * @emits @producerclose
      */
     constructor({ internal, data, channel, payloadChannel, appData, paused, producerPaused, score = { score: 10, producerScore: 10, producerScores: [] }, preferredLayers }) {
         super();
@@ -51,7 +41,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.#paused = paused;
         this.#producerPaused = producerPaused;
         this.#score = score;
@@ -68,7 +58,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Associated Producer id.
      */
     get producerId() {
-        return this.#internal.producerId;
+        return this.#data.producerId;
     }
     /**
      * Whether the Consumer is closed.
@@ -144,13 +134,6 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits pause
-     * @emits resume
-     * @emits score - (score: ConsumerScore)
-     * @emits layerschange - (layers: ConsumerLayers | undefined)
-     * @emits trace - (trace: ConsumerTraceEventData)
      */
     get observer() {
         return this.#observer;
@@ -173,7 +156,8 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.#channel.removeAllListeners(this.#internal.consumerId);
         this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
-        this.#channel.request('consumer.close', this.#internal)
+        const reqData = { consumerId: this.#internal.consumerId };
+        this.#channel.request('transport.closeConsumer', this.#internal.transportId, reqData)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
@@ -201,14 +185,14 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('consumer.dump', this.#internal);
+        return this.#channel.request('consumer.dump', this.#internal.consumerId);
     }
     /**
      * Get Consumer stats.
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.#channel.request('consumer.getStats', this.#internal);
+        return this.#channel.request('consumer.getStats', this.#internal.consumerId);
     }
     /**
      * Pause the Consumer.
@@ -216,7 +200,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async pause() {
         logger.debug('pause()');
         const wasPaused = this.#paused || this.#producerPaused;
-        await this.#channel.request('consumer.pause', this.#internal);
+        await this.#channel.request('consumer.pause', this.#internal.consumerId);
         this.#paused = true;
         // Emit observer event.
         if (!wasPaused)
@@ -228,7 +212,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async resume() {
         logger.debug('resume()');
         const wasPaused = this.#paused || this.#producerPaused;
-        await this.#channel.request('consumer.resume', this.#internal);
+        await this.#channel.request('consumer.resume', this.#internal.consumerId);
         this.#paused = false;
         // Emit observer event.
         if (wasPaused && !this.#producerPaused)
@@ -240,7 +224,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setPreferredLayers({ spatialLayer, temporalLayer }) {
         logger.debug('setPreferredLayers()');
         const reqData = { spatialLayer, temporalLayer };
-        const data = await this.#channel.request('consumer.setPreferredLayers', this.#internal, reqData);
+        const data = await this.#channel.request('consumer.setPreferredLayers', this.#internal.consumerId, reqData);
         this.#preferredLayers = data || undefined;
     }
     /**
@@ -249,7 +233,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setPriority(priority) {
         logger.debug('setPriority()');
         const reqData = { priority };
-        const data = await this.#channel.request('consumer.setPriority', this.#internal, reqData);
+        const data = await this.#channel.request('consumer.setPriority', this.#internal.consumerId, reqData);
         this.#priority = data.priority;
     }
     /**
@@ -258,7 +242,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async unsetPriority() {
         logger.debug('unsetPriority()');
         const reqData = { priority: 1 };
-        const data = await this.#channel.request('consumer.setPriority', this.#internal, reqData);
+        const data = await this.#channel.request('consumer.setPriority', this.#internal.consumerId, reqData);
         this.#priority = data.priority;
     }
     /**
@@ -266,7 +250,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async requestKeyFrame() {
         logger.debug('requestKeyFrame()');
-        await this.#channel.request('consumer.requestKeyFrame', this.#internal);
+        await this.#channel.request('consumer.requestKeyFrame', this.#internal.consumerId);
     }
     /**
      * Enable 'trace' event.
@@ -274,7 +258,7 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async enableTraceEvent(types = []) {
         logger.debug('enableTraceEvent()');
         const reqData = { types };
-        await this.#channel.request('consumer.enableTraceEvent', this.#internal, reqData);
+        await this.#channel.request('consumer.enableTraceEvent', this.#internal.consumerId, reqData);
     }
     handleWorkerNotifications() {
         this.#channel.on(this.#internal.consumerId, (event, data) => {

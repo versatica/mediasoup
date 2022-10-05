@@ -1,0 +1,2 @@
+option('ms_log_trace', type : 'boolean', value : false, description : 'When enabled, logs the current method/function if current log level is "debug"')
+option('ms_log_file_line', type : 'boolean', value : false, description : 'When enabled, all the logging macros print more verbose information, including current file and line')

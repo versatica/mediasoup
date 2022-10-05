@@ -2,17 +2,20 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataProducer.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include <stdexcept>
 
 namespace RTC
 {
 	/* Instance methods. */
 
-	DataProducer::DataProducer(const std::string& id, RTC::DataProducer::Listener* listener, json& data)
-	  : id(id), listener(listener)
+	DataProducer::DataProducer(
+	  const std::string& id, size_t maxMessageSize, RTC::DataProducer::Listener* listener, json& data)
+	  : id(id), maxMessageSize(maxMessageSize), listener(listener)
 	{
 		MS_TRACE();
 
@@ -54,11 +57,20 @@ namespace RTC
 
 		if (jsonProtocolIt != data.end() && jsonProtocolIt->is_string())
 			this->protocol = jsonProtocolIt->get<std::string>();
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ nullptr,
+		  /*payloadChannelNotificationHandler*/ this);
 	}
 
 	DataProducer::~DataProducer()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 	}
 
 	void DataProducer::FillJson(json& jsonObject) const
@@ -110,7 +122,7 @@ namespace RTC
 		jsonObject["bytesReceived"] = this->bytesReceived;
 	}
 
-	void DataProducer::HandleRequest(Channel::ChannelRequest* request) const
+	void DataProducer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
@@ -141,6 +153,54 @@ namespace RTC
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			}
+		}
+	}
+
+	void DataProducer::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
+	{
+		MS_TRACE();
+
+		switch (notification->eventId)
+		{
+			case PayloadChannel::PayloadChannelNotification::EventId::DATA_PRODUCER_SEND:
+			{
+				int ppid;
+
+				// This may throw.
+				// NOTE: If this throws we have to catch the error and throw a MediaSoupError
+				// intead, otherwise the process would crash.
+				try
+				{
+					ppid = std::stoi(notification->data);
+				}
+				catch (const std::exception& error)
+				{
+					MS_THROW_TYPE_ERROR("invalid PPID value: %s", error.what());
+				}
+
+				const auto* msg = notification->payload;
+				auto len        = notification->payloadLen;
+
+				if (len > this->maxMessageSize)
+				{
+					MS_THROW_TYPE_ERROR(
+					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
+					  len,
+					  this->maxMessageSize);
+				}
+
+				this->ReceiveMessage(ppid, msg, len);
+
+				// Increase receive transmission.
+				this->listener->OnDataProducerReceiveData(this, len);
+
+				break;
+			}
+
+			default:
+			{
+				MS_ERROR("unknown event '%s'", notification->event.c_str());
 			}
 		}
 	}

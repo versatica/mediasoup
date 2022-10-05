@@ -11,7 +11,12 @@
 
 namespace Channel
 {
+	// Binary length for a 4194304 bytes payload.
+	static constexpr size_t MessageMaxLen{ 4194308 };
+	static constexpr size_t PayloadMaxLen{ 4194304 };
+
 	/* Static methods for UV callbacks. */
+
 	inline static void onAsync(uv_handle_t* handle)
 	{
 		while (static_cast<ChannelSocket*>(handle->data)->CallbackRead())
@@ -25,11 +30,8 @@ namespace Channel
 		delete handle;
 	}
 
-	// Binary length for a 4194304 bytes payload.
-	static constexpr size_t MessageMaxLen{ 4194308 };
-	static constexpr size_t PayloadMaxLen{ 4194304 };
-
 	/* Instance methods. */
+
 	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)
 	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
 	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen)),
@@ -140,6 +142,24 @@ namespace Channel
 		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
 	}
 
+	void ChannelSocket::Send(const std::string& message)
+	{
+		MS_TRACE_STD();
+
+		if (this->closed)
+			return;
+
+		if (message.length() > PayloadMaxLen)
+		{
+			MS_ERROR_STD("message too big");
+
+			return;
+		}
+
+		SendImpl(
+		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
+	}
+
 	void ChannelSocket::SendLog(const char* message, uint32_t messageLen)
 	{
 		MS_TRACE_STD();
@@ -168,20 +188,25 @@ namespace Channel
 		uint32_t messageLen;
 		size_t messageCtx;
 
+		// Try to read next message using `channelReadFn`, message, its length and context will be
+		// stored in provided arguments.
 		auto free = this->channelReadFn(
 		  &message, &messageLen, &messageCtx, this->uvReadHandle, this->channelReadCtx);
 
+		// Non-null free function pointer means message was successfully read above and will need to be
+		// freed later.
 		if (free)
 		{
 			try
 			{
-				json jsonMessage = json::parse(message, message + static_cast<size_t>(messageLen));
-				auto* request    = new Channel::ChannelRequest(this, jsonMessage);
+				char* charMessage{ reinterpret_cast<char*>(message) };
+
+				auto* request = new Channel::ChannelRequest(this, charMessage, messageLen);
 
 				// Notify the listener.
 				try
 				{
-					this->listener->OnChannelRequest(this, request);
+					this->listener->HandleRequest(request);
 				}
 				catch (const MediaSoupTypeError& error)
 				{
@@ -197,16 +222,18 @@ namespace Channel
 			}
 			catch (const json::parse_error& error)
 			{
-				MS_ERROR_STD("JSON parsing error: %s", error.what());
+				MS_ERROR_STD("message parsing error: %s", error.what());
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_ERROR_STD("discarding wrong Channel request");
+				MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
 			}
 
+			// Message needs to be freed using stored function pointer.
 			free(message, messageLen, messageCtx);
 		}
 
+		// Return `true` if something was processed.
 		return free != nullptr;
 	}
 
@@ -240,13 +267,12 @@ namespace Channel
 
 		try
 		{
-			json jsonMessage = json::parse(msg, msg + msgLen);
-			auto* request    = new Channel::ChannelRequest(this, jsonMessage);
+			auto* request = new Channel::ChannelRequest(this, msg, msgLen);
 
 			// Notify the listener.
 			try
 			{
-				this->listener->OnChannelRequest(this, request);
+				this->listener->HandleRequest(request);
 			}
 			catch (const MediaSoupTypeError& error)
 			{
@@ -266,7 +292,7 @@ namespace Channel
 		}
 		catch (const MediaSoupError& error)
 		{
-			MS_ERROR_STD("discarding wrong Channel request");
+			MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
 		}
 	}
 
@@ -277,8 +303,15 @@ namespace Channel
 		this->listener->OnChannelClosed(this);
 	}
 
+	/* Instance methods. */
+
 	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
+	{
+		MS_TRACE_STD();
+	}
+
+	ConsumerSocket::~ConsumerSocket()
 	{
 		MS_TRACE_STD();
 	}
@@ -339,6 +372,8 @@ namespace Channel
 		// Notify the listener.
 		this->listener->OnConsumerSocketClosed(this);
 	}
+
+	/* Instance methods. */
 
 	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
 	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::PRODUCER)

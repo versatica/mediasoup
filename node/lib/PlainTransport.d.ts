@@ -1,4 +1,4 @@
-import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, SctpState } from './Transport';
+import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 export declare type PlainTransportOptions = {
@@ -53,12 +53,8 @@ export declare type PlainTransportOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
-/**
- * DEPRECATED: Use PlainTransportOptions.
- */
-export declare type PlainRtpTransportOptions = PlainTransportOptions;
 export declare type PlainTransportStat = {
     type: string;
     transportId: string;
@@ -86,10 +82,6 @@ export declare type PlainTransportStat = {
     tuple: TransportTuple;
     rtcpTuple?: TransportTuple;
 };
-/**
- * DEPRECATED: Use PlainTransportStat.
- */
-export declare type PlainRtpTransportStat = PlainTransportStat;
 export declare type PlainTransportEvents = TransportEvents & {
     tuple: [TransportTuple];
     rtcptuple: [TransportTuple];
@@ -100,16 +92,24 @@ export declare type PlainTransportObserverEvents = TransportObserverEvents & {
     rtcptuple: [TransportTuple];
     sctpstatechange: [SctpState];
 };
+declare type PlainTransportConstructorOptions = TransportConstructorOptions & {
+    data: PlainTransportData;
+};
+export declare type PlainTransportData = {
+    rtcpMux?: boolean;
+    comedia?: boolean;
+    tuple: TransportTuple;
+    rtcpTuple?: TransportTuple;
+    sctpParameters?: SctpParameters;
+    sctpState?: SctpState;
+    srtpParameters?: SrtpParameters;
+};
 export declare class PlainTransport extends Transport<PlainTransportEvents, PlainTransportObserverEvents> {
     #private;
     /**
      * @private
-     * @emits tuple - (tuple: TransportTuple)
-     * @emits rtcptuple - (rtcpTuple: TransportTuple)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
      */
-    constructor(params: any);
+    constructor(options: PlainTransportConstructorOptions);
     /**
      * Transport tuple.
      */
@@ -130,20 +130,6 @@ export declare class PlainTransport extends Transport<PlainTransportEvents, Plai
      * SRTP parameters.
      */
     get srtpParameters(): SrtpParameters | undefined;
-    /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (consumer: Consumer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataConsumer: DataConsumer)
-     * @emits tuple - (tuple: TransportTuple)
-     * @emits rtcptuple - (rtcpTuple: TransportTuple)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
     /**
      * Close the PlainTransport.
      *
@@ -176,10 +162,5 @@ export declare class PlainTransport extends Transport<PlainTransportEvents, Plai
     }): Promise<void>;
     private handleWorkerNotifications;
 }
-/**
- * DEPRECATED: Use PlainTransport.
- */
-export declare class PlainRtpTransport extends PlainTransport {
-    constructor(params: any);
-}
+export {};
 //# sourceMappingURL=PlainTransport.d.ts.map

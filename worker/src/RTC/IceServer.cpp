@@ -12,6 +12,7 @@ namespace RTC
 
 	static constexpr size_t StunSerializeBufferSize{ 65536 };
 	thread_local static uint8_t StunSerializeBuffer[StunSerializeBufferSize];
+	static constexpr size_t MaxTuples{ 8 };
 
 	/* Instance methods. */
 
@@ -19,6 +20,34 @@ namespace RTC
 	  : listener(listener), usernameFragment(usernameFragment), password(password)
 	{
 		MS_TRACE();
+
+		// Notify the listener.
+		this->listener->OnIceServerLocalUsernameFragmentAdded(this, usernameFragment);
+	}
+
+	IceServer::~IceServer()
+	{
+		MS_TRACE();
+
+		// Here we must notify the listener about the removal of current
+		// usernameFragments (and also the old one if any) and all tuples.
+
+		this->listener->OnIceServerLocalUsernameFragmentRemoved(this, usernameFragment);
+
+		if (!this->oldUsernameFragment.empty())
+		{
+			this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->oldUsernameFragment);
+		}
+
+		for (const auto& it : this->tuples)
+		{
+			auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
+
+			// Notify the listener.
+			this->listener->OnIceServerTupleRemoved(this, storedTuple);
+		}
+
+		this->tuples.clear();
 	}
 
 	void IceServer::ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple)
@@ -102,9 +131,12 @@ namespace RTC
 				{
 					case RTC::StunPacket::Authentication::OK:
 					{
-						if (!this->oldPassword.empty())
+						if (!this->oldUsernameFragment.empty() && !this->oldPassword.empty())
 						{
 							MS_DEBUG_TAG(ice, "new ICE credentials applied");
+
+							// Notify the listener.
+							this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->oldUsernameFragment);
 
 							this->oldUsernameFragment.clear();
 							this->oldPassword.clear();
@@ -264,28 +296,32 @@ namespace RTC
 		if (!removedTuple)
 			return;
 
-		// Remove from the list of tuples.
+		// Notify the listener.
+		this->listener->OnIceServerTupleRemoved(this, removedTuple);
+
+		// Remove it from the list of tuples.
+		// NOTE: Do it after notifying the listener since the listener may need to
+		// use/read the tuple being removed so we cannot free it yet.
 		this->tuples.erase(it);
 
-		// If this is not the selected tuple, stop here.
-		if (removedTuple != this->selectedTuple)
-			return;
-
-		// Otherwise this was the selected tuple.
-		this->selectedTuple = nullptr;
-
-		// Mark the first tuple as selected tuple (if any).
-		if (this->tuples.begin() != this->tuples.end())
+		// If this is the selected tuple, do things.
+		if (removedTuple == this->selectedTuple)
 		{
-			SetSelectedTuple(std::addressof(*this->tuples.begin()));
-		}
-		// Or just emit 'disconnected'.
-		else
-		{
-			// Update state.
-			this->state = IceState::DISCONNECTED;
-			// Notify the listener.
-			this->listener->OnIceServerDisconnected(this);
+			this->selectedTuple = nullptr;
+
+			// Mark the first tuple as selected tuple (if any).
+			if (this->tuples.begin() != this->tuples.end())
+			{
+				SetSelectedTuple(std::addressof(*this->tuples.begin()));
+			}
+			// Or just emit 'disconnected'.
+			else
+			{
+				// Update state.
+				this->state = IceState::DISCONNECTED;
+				// Notify the listener.
+				this->listener->OnIceServerDisconnected(this);
+			}
 		}
 	}
 
@@ -530,6 +566,45 @@ namespace RTC
 		// just a pointer that will be freed soon).
 		if (storedTuple->GetProtocol() == TransportTuple::Protocol::UDP)
 			storedTuple->StoreUdpRemoteAddress();
+
+		// Notify the listener.
+		this->listener->OnIceServerTupleAdded(this, storedTuple);
+
+		// Don't allow more than MaxTuples.
+		if (this->tuples.size() > MaxTuples)
+		{
+			MS_WARN_TAG(ice, "too too many tuples, removing the oldest non selected one");
+
+			// Find the oldest tuple which is neither the added one nor the selected
+			// one (if any), and remove it.
+			RTC::TransportTuple* removedTuple{ nullptr };
+			auto it = this->tuples.rbegin();
+
+			for (; it != this->tuples.rend(); ++it)
+			{
+				RTC::TransportTuple* otherStoredTuple = std::addressof(*it);
+
+				if (otherStoredTuple != storedTuple && otherStoredTuple != this->selectedTuple)
+				{
+					removedTuple = otherStoredTuple;
+
+					break;
+				}
+			}
+
+			// This should not happen by design.
+			MS_ASSERT(removedTuple, "couldn't find any tuple to be removed");
+
+			// Notify the listener.
+			this->listener->OnIceServerTupleRemoved(this, removedTuple);
+
+			// Remove it from the list of tuples.
+			// NOTE: Do it after notifying the listener since the listener may need to
+			// use/read the tuple being removed so we cannot free it yet.
+			// NOTE: This trick is needed since it is a reverse_iterator and
+			// erase() requires a iterator, const_iterator or bidirectional_iterator.
+			this->tuples.erase(std::next(it).base());
+		}
 
 		// Return the address of the inserted tuple.
 		return storedTuple;

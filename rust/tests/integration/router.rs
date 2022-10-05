@@ -5,7 +5,7 @@ use mediasoup::router::RouterOptions;
 use mediasoup::rtp_parameters::{
     MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
 };
-use mediasoup::worker::{Worker, WorkerSettings};
+use mediasoup::worker::{ChannelMessageHandlers, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use std::env;
 use std::num::{NonZeroU32, NonZeroU8};
@@ -97,10 +97,23 @@ fn create_router_succeeds() {
             .expect("Failed to create router");
 
         assert_eq!(new_router_count.load(Ordering::SeqCst), 1);
-        assert_eq!(router.closed(), false);
+        assert!(!router.closed());
         assert_eq!(
             router.app_data().downcast_ref::<CustomAppData>(),
             Some(&CustomAppData { foo: 123 }),
+        );
+
+        let worker_dump = worker.dump().await.expect("Failed to dump worker");
+
+        assert_eq!(worker_dump.router_ids, vec![router.id()]);
+        assert_eq!(worker_dump.webrtc_server_ids, vec![]);
+        assert_eq!(
+            worker_dump.channel_message_handlers,
+            ChannelMessageHandlers {
+                channel_request_handlers: vec![router.id().into()],
+                payload_channel_request_handlers: vec![],
+                payload_channel_notification_handlers: vec![]
+            }
         );
 
         let dump = router.dump().await.expect("Failed to dump router");

@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/PipeTransport.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -11,12 +12,13 @@ namespace RTC
 {
 	/* Static. */
 
-	// NOTE: PipeTransport just allows AES_CM_128_HMAC_SHA1_80 SRTP crypto suite.
+	// NOTE: PipeTransport just allows AEAD_AES_256_GCM SRTP crypto suite.
 	RTC::SrtpSession::CryptoSuite PipeTransport::srtpCryptoSuite{
-		RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80
+		RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM
 	};
-	std::string PipeTransport::srtpCryptoSuiteString{ "AES_CM_128_HMAC_SHA1_80" };
-	size_t PipeTransport::srtpMasterLength{ 30 };
+	std::string PipeTransport::srtpCryptoSuiteString{ "AEAD_AES_256_GCM" };
+	// MAster length of AEAD_AES_256_GCM.
+	size_t PipeTransport::srtpMasterLength{ 44 };
 
 	/* Instance methods. */
 
@@ -92,6 +94,13 @@ namespace RTC
 				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip, port);
 			else
 				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
+
+			// NOTE: This may throw.
+			ChannelMessageHandlers::RegisterHandler(
+			  this->id,
+			  /*channelRequestHandler*/ this,
+			  /*payloadChannelRequestHandler*/ this,
+			  /*payloadChannelNotificationHandler*/ this);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -107,6 +116,8 @@ namespace RTC
 	PipeTransport::~PipeTransport()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		delete this->udpSocket;
 		this->udpSocket = nullptr;
@@ -241,7 +252,7 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing srtpParameters.cryptoSuite)");
 						}
 
-						// NOTE: We just use AES_CM_128_HMAC_SHA1_80 as SRTP crypto suite in
+						// NOTE: We just use AEAD_AES_256_GCM as SRTP crypto suite in
 						// PipeTransport.
 						if (jsonCryptoSuiteIt->get<std::string>() != PipeTransport::srtpCryptoSuiteString)
 						{
@@ -414,7 +425,7 @@ namespace RTC
 		}
 	}
 
-	void PipeTransport::HandleNotification(PayloadChannel::Notification* notification)
+	void PipeTransport::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 	{
 		MS_TRACE();
 
@@ -497,6 +508,8 @@ namespace RTC
 
 		if (!IsConnected())
 			return;
+
+		packet->Serialize(RTC::RTCP::Buffer);
 
 		const uint8_t* data = packet->GetData();
 		auto intLen         = static_cast<int>(packet->GetSize());

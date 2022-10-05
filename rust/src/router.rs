@@ -28,7 +28,7 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
 use crate::data_producer::{
     DataProducer, DataProducerId, DataProducerOptions, NonClosingDataProducer, WeakDataProducer,
 };
-use crate::data_structures::{AppData, TransportListenIp};
+use crate::data_structures::{AppData, ListenIp};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
     RouterCloseRequest, RouterCreateActiveSpeakerObserverData,
@@ -36,9 +36,7 @@ use crate::messages::{
     RouterCreateAudioLevelObserverRequest, RouterCreateDirectTransportData,
     RouterCreateDirectTransportRequest, RouterCreatePipeTransportData,
     RouterCreatePipeTransportRequest, RouterCreatePlainTransportData,
-    RouterCreatePlainTransportRequest, RouterCreateWebrtcTransportData,
-    RouterCreateWebrtcTransportRequest, RouterDumpRequest, RouterInternal, RtpObserverInternal,
-    TransportInternal,
+    RouterCreatePlainTransportRequest, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
 };
 use crate::pipe_transport::{
     PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,
@@ -52,7 +50,7 @@ use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, Transport, TransportGeneric,
     TransportId,
 };
-use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportOptions};
+use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportListen, WebRtcTransportOptions};
 use crate::worker::{Channel, PayloadChannel, RequestError, Worker};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
@@ -64,6 +62,7 @@ use log::{debug, error};
 use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::net::{IpAddr, Ipv4Addr};
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -118,7 +117,7 @@ pub struct PipeToRouterOptions {
     /// IP used in the PipeTransport pair.
     ///
     /// Default `127.0.0.1`.
-    listen_ip: TransportListenIp,
+    listen_ip: ListenIp,
     /// Create a SCTP association.
     ///
     /// Default `true`.
@@ -141,8 +140,8 @@ impl PipeToRouterOptions {
     pub fn new(router: Router) -> Self {
         Self {
             router,
-            listen_ip: TransportListenIp {
-                ip: "127.0.0.1".parse().unwrap(),
+            listen_ip: ListenIp {
+                ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_ip: None,
             },
             enable_sctp: true,
@@ -355,6 +354,7 @@ impl WeakPipeTransportPair {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     new_transport: Bag<Arc<dyn Fn(NewTransport<'_>) + Send + Sync>>,
     new_rtp_observer: Bag<Arc<dyn Fn(NewRtpObserver<'_>) + Send + Sync>>,
@@ -396,12 +396,10 @@ impl Inner {
 
             {
                 let channel = self.channel.clone();
-                let request = RouterCloseRequest {
-                    internal: RouterInternal { router_id: self.id },
-                };
+                let request = RouterCloseRequest { router_id: self.id };
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
+                        if let Err(error) = channel.request("", request).await {
                             error!("router closing failed on drop: {}", error);
                         }
                     })
@@ -534,11 +532,7 @@ impl Router {
 
         self.inner
             .channel
-            .request(RouterDumpRequest {
-                internal: RouterInternal {
-                    router_id: self.inner.id,
-                },
-            })
+            .request(self.inner.id, RouterDumpRequest {})
             .await
     }
 
@@ -567,13 +561,15 @@ impl Router {
 
         self.inner
             .channel
-            .request(RouterCreateDirectTransportRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.id,
-                    transport_id,
+            .request(
+                self.inner.id,
+                RouterCreateDirectTransportRequest {
+                    data: RouterCreateDirectTransportData::from_options(
+                        transport_id,
+                        &direct_transport_options,
+                    ),
                 },
-                data: RouterCreateDirectTransportData::from_options(&direct_transport_options),
-            })
+            )
             .await?;
 
         let transport = DirectTransport::new(
@@ -601,12 +597,13 @@ impl Router {
     /// # Example
     /// ```rust
     /// use mediasoup::prelude::*;
+    /// use std::net::{IpAddr, Ipv4Addr};
     ///
     /// # async fn f(router: Router) -> Result<(), Box<dyn std::error::Error>> {
     /// let transport = router
     ///     .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-    ///         TransportListenIp {
-    ///             ip: "127.0.0.1".parse().unwrap(),
+    ///         ListenIp {
+    ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///         },
     ///     )))
@@ -627,13 +624,13 @@ impl Router {
         let data = self
             .inner
             .channel
-            .request(RouterCreateWebrtcTransportRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.id,
+            .request(
+                self.inner.id,
+                RouterCreateWebrtcTransportRequest::from_options(
                     transport_id,
-                },
-                data: RouterCreateWebrtcTransportData::from_options(&webrtc_transport_options),
-            })
+                    &webrtc_transport_options,
+                ),
+            )
             .await?;
 
         let transport = WebRtcTransport::new(
@@ -644,6 +641,10 @@ impl Router {
             data,
             webrtc_transport_options.app_data,
             self.clone(),
+            match webrtc_transport_options.listen {
+                WebRtcTransportListen::Individual { .. } => None,
+                WebRtcTransportListen::Server { webrtc_server } => Some(webrtc_server),
+            },
         );
 
         self.inner.handlers.new_transport.call(|callback| {
@@ -662,11 +663,12 @@ impl Router {
     /// # Example
     /// ```rust
     /// use mediasoup::prelude::*;
+    /// use std::net::{IpAddr, Ipv4Addr};
     ///
     /// # async fn f(router: Router) -> Result<(), Box<dyn std::error::Error>> {
     /// let transport = router
-    ///     .create_pipe_transport(PipeTransportOptions::new(TransportListenIp {
-    ///         ip: "127.0.0.1".parse().unwrap(),
+    ///     .create_pipe_transport(PipeTransportOptions::new(ListenIp {
+    ///         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///         announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///     }))
     ///     .await?;
@@ -686,13 +688,15 @@ impl Router {
         let data = self
             .inner
             .channel
-            .request(RouterCreatePipeTransportRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.id,
-                    transport_id,
+            .request(
+                self.inner.id,
+                RouterCreatePipeTransportRequest {
+                    data: RouterCreatePipeTransportData::from_options(
+                        transport_id,
+                        &pipe_transport_options,
+                    ),
                 },
-                data: RouterCreatePipeTransportData::from_options(&pipe_transport_options),
-            })
+            )
             .await?;
 
         let transport = PipeTransport::new(
@@ -721,11 +725,12 @@ impl Router {
     /// # Example
     /// ```rust
     /// use mediasoup::prelude::*;
+    /// use std::net::{IpAddr, Ipv4Addr};
     ///
     /// # async fn f(router: Router) -> Result<(), Box<dyn std::error::Error>> {
     /// let transport = router
-    ///     .create_plain_transport(PlainTransportOptions::new(TransportListenIp {
-    ///         ip: "127.0.0.1".parse().unwrap(),
+    ///     .create_plain_transport(PlainTransportOptions::new(ListenIp {
+    ///         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///         announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///     }))
     ///     .await?;
@@ -745,13 +750,15 @@ impl Router {
         let data = self
             .inner
             .channel
-            .request(RouterCreatePlainTransportRequest {
-                internal: TransportInternal {
-                    router_id: self.inner.id,
-                    transport_id,
+            .request(
+                self.inner.id,
+                RouterCreatePlainTransportRequest {
+                    data: RouterCreatePlainTransportData::from_options(
+                        transport_id,
+                        &plain_transport_options,
+                    ),
                 },
-                data: RouterCreatePlainTransportData::from_options(&plain_transport_options),
-            })
+            )
             .await?;
 
         let transport = PlainTransport::new(
@@ -810,15 +817,15 @@ impl Router {
 
         self.inner
             .channel
-            .request(RouterCreateAudioLevelObserverRequest {
-                internal: RtpObserverInternal {
-                    router_id: self.inner.id,
-                    rtp_observer_id,
+            .request(
+                self.inner.id,
+                RouterCreateAudioLevelObserverRequest {
+                    data: RouterCreateAudioLevelObserverData::from_options(
+                        rtp_observer_id,
+                        &audio_level_observer_options,
+                    ),
                 },
-                data: RouterCreateAudioLevelObserverData::from_options(
-                    &audio_level_observer_options,
-                ),
-            })
+            )
             .await?;
 
         let audio_level_observer = AudioLevelObserver::new(
@@ -870,15 +877,15 @@ impl Router {
 
         self.inner
             .channel
-            .request(RouterCreateActiveSpeakerObserverRequest {
-                internal: RtpObserverInternal {
-                    router_id: self.inner.id,
-                    rtp_observer_id,
+            .request(
+                self.inner.id,
+                RouterCreateActiveSpeakerObserverRequest {
+                    data: RouterCreateActiveSpeakerObserverData::from_options(
+                        rtp_observer_id,
+                        &active_speaker_observer_options,
+                    ),
                 },
-                data: RouterCreateActiveSpeakerObserverData::from_options(
-                    &active_speaker_observer_options,
-                ),
-            })
+            )
             .await?;
 
         let active_speaker_observer = ActiveSpeakerObserver::new(
@@ -902,11 +909,10 @@ impl Router {
     /// ```rust
     /// use mediasoup::prelude::*;
     /// use mediasoup::rtp_parameters::RtpCodecParameters;
+    /// use std::net::{IpAddr, Ipv4Addr};
     /// use std::num::{NonZeroU32, NonZeroU8};
     ///
-    /// # async fn f(
-    /// #     worker_manager: mediasoup::worker_manager::WorkerManager,
-    /// # ) -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn f(worker_manager: WorkerManager) -> Result<(), Box<dyn std::error::Error>> {
     /// // Have two workers.
     /// let worker1 = worker_manager.create_worker(WorkerSettings::default()).await?;
     /// let worker2 = worker_manager.create_worker(WorkerSettings::default()).await?;
@@ -930,8 +936,8 @@ impl Router {
     /// // Produce in router1.
     /// let transport1 = router1
     ///     .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-    ///         TransportListenIp {
-    ///             ip: "127.0.0.1".parse().unwrap(),
+    ///         ListenIp {
+    ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///         },
     ///     )))
@@ -968,8 +974,8 @@ impl Router {
     /// // Consume producer1 from router2.
     /// let transport2 = router2
     ///     .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-    ///         TransportListenIp {
-    ///             ip: "127.0.0.1".parse().unwrap(),
+    ///         ListenIp {
+    ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///         },
     ///     )))
@@ -1134,10 +1140,9 @@ impl Router {
     /// # Example
     /// ```rust
     /// use mediasoup::prelude::*;
+    /// use std::net::{IpAddr, Ipv4Addr};
     ///
-    /// # async fn f(
-    /// #     worker_manager: mediasoup::worker_manager::WorkerManager,
-    /// # ) -> Result<(), Box<dyn std::error::Error>> {
+    /// # async fn f(worker_manager: WorkerManager) -> Result<(), Box<dyn std::error::Error>> {
     /// // Have two workers.
     /// let worker1 = worker_manager.create_worker(WorkerSettings::default()).await?;
     /// let worker2 = worker_manager.create_worker(WorkerSettings::default()).await?;
@@ -1150,8 +1155,8 @@ impl Router {
     /// let transport1 = router1
     ///     .create_webrtc_transport({
     ///         let mut options = WebRtcTransportOptions::new(TransportListenIps::new(
-    ///             TransportListenIp {
-    ///                 ip: "127.0.0.1".parse().unwrap(),
+    ///             ListenIp {
+    ///                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///                 announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///             },
     ///         ));
@@ -1177,8 +1182,8 @@ impl Router {
     /// let transport2 = router2
     ///     .create_webrtc_transport({
     ///         let mut options = WebRtcTransportOptions::new(TransportListenIps::new(
-    ///             TransportListenIp {
-    ///                 ip: "127.0.0.1".parse().unwrap(),
+    ///             ListenIp {
+    ///                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///                 announced_ip: Some("9.9.9.1".parse().unwrap()),
     ///             },
     ///         ));

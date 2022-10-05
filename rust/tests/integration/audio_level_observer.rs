@@ -71,8 +71,8 @@ fn create() {
             .expect("Failed to create AudioLevelObserver");
 
         assert_eq!(new_observer_count.load(Ordering::SeqCst), 1);
-        assert_eq!(audio_level_observer.closed(), false);
-        assert_eq!(audio_level_observer.paused(), false);
+        assert!(!audio_level_observer.closed());
+        assert!(!audio_level_observer.paused());
 
         let dump = router.dump().await.expect("Failed to get router dump");
 
@@ -124,13 +124,13 @@ fn pause_resume() {
             .expect("Failed to create AudioLevelObserver");
 
         audio_level_observer.pause().await.expect("Failed to pause");
-        assert_eq!(audio_level_observer.paused(), true);
+        assert!(audio_level_observer.paused());
 
         audio_level_observer
             .resume()
             .await
             .expect("Failed to resume");
-        assert_eq!(audio_level_observer.paused(), false);
+        assert!(!audio_level_observer.paused());
     });
 }
 

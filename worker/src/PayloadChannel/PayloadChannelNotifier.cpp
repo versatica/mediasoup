@@ -26,12 +26,14 @@ namespace PayloadChannel
 
 		MS_ASSERT(PayloadChannelNotifier::payloadChannel, "payloadChannel unset");
 
-		json jsonNotification = json::object();
+		std::string notification("{\"targetId\":\"");
 
-		jsonNotification["targetId"] = targetId;
-		jsonNotification["event"]    = event;
+		notification.append(targetId);
+		notification.append("\",\"event\":\"");
+		notification.append(event);
+		notification.append("}");
 
-		PayloadChannelNotifier::payloadChannel->Send(jsonNotification, payload, payloadLen);
+		PayloadChannelNotifier::payloadChannel->Send(notification, payload, payloadLen);
 	}
 
 	void PayloadChannelNotifier::Emit(

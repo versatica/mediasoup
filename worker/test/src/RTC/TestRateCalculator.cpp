@@ -15,11 +15,10 @@ struct data
 
 void validate(RateCalculator& rate, uint64_t timeBase, std::vector<data>& input)
 {
-	for (auto it = input.begin(); it != input.end(); ++it)
+	for (auto& item : input)
 	{
-		auto& item = *it;
-
 		rate.Update(item.size, timeBase + item.offset);
+
 		REQUIRE(rate.GetRate(timeBase + item.offset) == item.rate);
 	}
 }
@@ -53,6 +52,22 @@ SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 			{ 100, 2, 56  },
 			{ 300, 2, 72  },
 			{ 999, 4, 104 }
+		};
+		// clang-format on
+
+		validate(rate, nowMs, input);
+	}
+
+	SECTION("receive item every 1000 ms")
+	{
+		RateCalculator rate(1000, 8000, 100);
+
+		// clang-format off
+		std::vector<data> input =
+		{
+			{ 0,    5, 40 },
+			{ 1000, 5, 40 },
+			{ 2000, 5, 40 }
 		};
 		// clang-format on
 

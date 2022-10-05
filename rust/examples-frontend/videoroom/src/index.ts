@@ -305,7 +305,7 @@ async function init()
 					audio : true,
 					video : {
 						width : {
-							ideal : 1270
+							ideal : 1280
 						},
 						height : {
 							ideal : 720

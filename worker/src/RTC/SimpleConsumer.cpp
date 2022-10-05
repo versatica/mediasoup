@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SimpleConsumer.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -29,11 +30,41 @@ namespace RTC
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
+
+		// Create the encoding context for Opus.
+		if (
+		  mediaCodec->mimeType.type == RTC::RtpCodecMimeType::Type::AUDIO &&
+		  (mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::OPUS ||
+		   mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::MULTIOPUS))
+		{
+			RTC::Codecs::EncodingContext::Params params;
+
+			this->encodingContext.reset(
+			  RTC::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
+
+			auto jsonIgnoreDtx = data.find("ignoreDtx");
+
+			if (jsonIgnoreDtx != data.end() && jsonIgnoreDtx->is_boolean())
+			{
+				auto ignoreDtx = jsonIgnoreDtx->get<bool>();
+
+				this->encodingContext->SetIgnoreDtx(ignoreDtx);
+			}
+		}
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ nullptr,
+		  /*payloadChannelNotificationHandler*/ nullptr);
 	}
 
 	SimpleConsumer::~SimpleConsumer()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		delete this->rtpStream;
 	}
@@ -228,7 +259,7 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -239,9 +270,25 @@ namespace RTC
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
 		// in the corresponding Producer.
-		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
+		if (!this->supportedCodecPayloadTypes[payloadType])
 		{
 			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+
+			return;
+		}
+
+		bool marker;
+
+		// Process the payload if needed. Drop packet if necessary.
+		if (this->encodingContext && !packet->ProcessPayload(this->encodingContext.get(), marker))
+		{
+			MS_DEBUG_DEV(
+			  "discarding packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp());
+
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 			return;
 		}
@@ -291,7 +338,7 @@ namespace RTC
 		}
 
 		// Process the packet.
-		if (this->rtpStream->ReceivePacket(packet))
+		if (this->rtpStream->ReceivePacket(packet, sharedPacket))
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
@@ -316,29 +363,38 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
-	void SimpleConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
+	bool SimpleConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(rtpStream == this->rtpStream, "RTP stream does not match");
-
 		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
-			return;
+			return true;
 
-		auto* report = this->rtpStream->GetRtcpSenderReport(nowMs);
+		auto* senderReport = this->rtpStream->GetRtcpSenderReport(nowMs);
 
-		if (!report)
-			return;
-
-		packet->AddSenderReport(report);
+		if (!senderReport)
+			return true;
 
 		// Build SDES chunk for this sender.
 		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
 
-		packet->AddSdesChunk(sdesChunk);
+		RTC::RTCP::DelaySinceLastRr* delaySinceLastRrReport{ nullptr };
+
+		auto* dlrr = this->rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
+
+		if (dlrr)
+		{
+			delaySinceLastRrReport = new RTC::RTCP::DelaySinceLastRr();
+			delaySinceLastRrReport->AddSsrcInfo(dlrr);
+		}
+
+		// RTCP Compound packet buffer cannot hold the data.
+		if (!packet->Add(senderReport, sdesChunk, delaySinceLastRrReport))
+			return false;
 
 		this->lastRtcpSentTime = nowMs;
+
+		return true;
 	}
 
 	void SimpleConsumer::NeedWorstRemoteFractionLost(
@@ -404,6 +460,13 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
+	}
+
+	void SimpleConsumer::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+	{
+		MS_TRACE();
+
+		this->rtpStream->ReceiveRtcpXrReceiverReferenceTime(report);
 	}
 
 	uint32_t SimpleConsumer::GetTransmissionRate(uint64_t nowMs)
@@ -525,10 +588,7 @@ namespace RTC
 			}
 		}
 
-		// Create a RtpStreamSend for sending a single media stream.
-		size_t bufferSize = params.useNack ? 600u : 0u;
-
-		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
+		this->rtpStream = new RTC::RtpStreamSend(this, params, this->rtpParameters.mid);
 		this->rtpStreams.push_back(this->rtpStream);
 
 		// If the Consumer is paused, tell the RtpStreamSend.

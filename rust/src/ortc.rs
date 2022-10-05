@@ -999,7 +999,7 @@ fn match_codecs(
                 return Err(());
             }
         }
-        MimeType::Video(MimeTypeVideo::H264) => {
+        MimeType::Video(MimeTypeVideo::H264 | MimeTypeVideo::H264Svc) => {
             if strict {
                 let packetization_mode_a = codec_a
                     .parameters

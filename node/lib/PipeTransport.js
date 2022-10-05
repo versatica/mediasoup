@@ -12,13 +12,11 @@ class PipeTransport extends Transport_1.Transport {
     #data;
     /**
      * @private
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
      */
-    constructor(params) {
-        super(params);
+    constructor(options) {
+        super(options);
         logger.debug('constructor()');
-        const { data } = params;
+        const { data } = options;
         this.#data =
             {
                 tuple: data.tuple,
@@ -54,19 +52,6 @@ class PipeTransport extends Transport_1.Transport {
         return this.#data.srtpParameters;
     }
     /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (consumer: Consumer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataConsumer: DataConsumer)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
-    // get observer(): EnhancedEventEmitter
-    /**
      * Close the PipeTransport.
      *
      * @override
@@ -98,7 +83,7 @@ class PipeTransport extends Transport_1.Transport {
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.channel.request('transport.getStats', this.internal);
+        return this.channel.request('transport.getStats', this.internal.transportId);
     }
     /**
      * Provide the PipeTransport remote parameters.
@@ -108,7 +93,7 @@ class PipeTransport extends Transport_1.Transport {
     async connect({ ip, port, srtpParameters }) {
         logger.debug('connect()');
         const reqData = { ip, port, srtpParameters };
-        const data = await this.channel.request('transport.connect', this.internal, reqData);
+        const data = await this.channel.request('transport.connect', this.internal.transportId, reqData);
         // Update data.
         this.#data.tuple = data.tuple;
     }
@@ -117,7 +102,7 @@ class PipeTransport extends Transport_1.Transport {
      *
      * @override
      */
-    async consume({ producerId, appData = {} }) {
+    async consume({ producerId, appData }) {
         logger.debug('consume()');
         if (!producerId || typeof producerId !== 'string')
             throw new TypeError('missing producerId');
@@ -128,17 +113,26 @@ class PipeTransport extends Transport_1.Transport {
             throw Error(`Producer with id "${producerId}" not found`);
         // This may throw.
         const rtpParameters = ortc.getPipeConsumerRtpParameters(producer.consumableRtpParameters, this.#data.rtx);
-        const internal = { ...this.internal, consumerId: (0, uuid_1.v4)(), producerId };
         const reqData = {
+            consumerId: (0, uuid_1.v4)(),
+            producerId,
             kind: producer.kind,
             rtpParameters,
             type: 'pipe',
             consumableRtpEncodings: producer.consumableRtpParameters.encodings
         };
-        const status = await this.channel.request('transport.consume', internal, reqData);
-        const data = { kind: producer.kind, rtpParameters, type: 'pipe' };
+        const status = await this.channel.request('transport.consume', this.internal.transportId, reqData);
+        const data = {
+            producerId,
+            kind: producer.kind,
+            rtpParameters,
+            type: 'pipe'
+        };
         const consumer = new Consumer_1.Consumer({
-            internal,
+            internal: {
+                ...this.internal,
+                consumerId: reqData.consumerId
+            },
             data,
             channel: this.channel,
             payloadChannel: this.payloadChannel,

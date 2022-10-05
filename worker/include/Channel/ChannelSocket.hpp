@@ -1,10 +1,13 @@
-#ifndef MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
-#define MS_CHANNEL_UNIX_STREAM_SOCKET_HPP
+#ifndef MS_CHANNEL_SOCKET_HPP
+#define MS_CHANNEL_SOCKET_HPP
 
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
 #include <nlohmann/json.hpp>
+#include <string>
+
+using json = nlohmann::json;
 
 namespace Channel
 {
@@ -23,6 +26,8 @@ namespace Channel
 
 	public:
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
+		~ConsumerSocket();
+
 		/* Pure virtual methods inherited from ::UnixStreamSocket. */
 	public:
 		void UserOnUnixStreamRead() override;
@@ -51,15 +56,22 @@ namespace Channel
 	class ChannelSocket : public ConsumerSocket::Listener
 	{
 	public:
-		class Listener
+		class RequestHandler
+		{
+		public:
+			virtual ~RequestHandler() = default;
+
+		public:
+			virtual void HandleRequest(Channel::ChannelRequest* request) = 0;
+		};
+
+		class Listener : public RequestHandler
 		{
 		public:
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnChannelRequest(
-			  Channel::ChannelSocket* channel, Channel::ChannelRequest* request) = 0;
-			virtual void OnChannelClosed(Channel::ChannelSocket* channel)        = 0;
+			virtual void OnChannelClosed(Channel::ChannelSocket* channel) = 0;
 		};
 
 	public:
@@ -74,9 +86,10 @@ namespace Channel
 	public:
 		void Close();
 		void SetListener(Listener* listener);
-		bool CallbackRead();
 		void Send(json& jsonMessage);
+		void Send(const std::string& message);
 		void SendLog(const char* message, uint32_t messageLen);
+		bool CallbackRead();
 
 	private:
 		void SendImpl(const uint8_t* payload, uint32_t payloadLen);

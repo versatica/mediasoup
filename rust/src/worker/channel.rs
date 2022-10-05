@@ -9,11 +9,11 @@ use log::{debug, error, trace, warn};
 use lru::LruCache;
 use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::Value;
 use std::any::TypeId;
 use std::collections::VecDeque;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
@@ -37,6 +37,7 @@ pub(super) enum InternalMessage {
     Unexpected(Vec<u8>),
 }
 
+#[allow(clippy::type_complexity)]
 pub(crate) struct BufferMessagesGuard {
     target_id: SubscriptionTarget,
     buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
@@ -105,14 +106,6 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
     }
 }
 
-#[derive(Debug, Serialize)]
-struct RequestMessage<'a, R: Serialize> {
-    id: u32,
-    method: &'static str,
-    #[serde(flatten)]
-    request: &'a R,
-}
-
 struct ResponseError {
     reason: String,
 }
@@ -158,6 +151,7 @@ struct OutgoingMessageBuffer {
     messages: VecDeque<Arc<AtomicTake<Vec<u8>>>>,
 }
 
+#[allow(clippy::type_complexity)]
 struct Inner {
     outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
@@ -307,9 +301,14 @@ impl Channel {
         }
     }
 
-    pub(crate) async fn request<R>(&self, request: R) -> Result<R::Response, RequestError>
+    pub(crate) async fn request<R, HandlerId>(
+        &self,
+        handler_id: HandlerId,
+        request: R,
+    ) -> Result<R::Response, RequestError>
     where
-        R: Request + 'static,
+        R: Request<HandlerId = HandlerId> + 'static,
+        HandlerId: Display,
     {
         let method = request.as_method();
 
@@ -317,28 +316,34 @@ impl Channel {
         let (result_sender, result_receiver) = async_oneshot::oneshot();
 
         {
-            let requests_container_lock = self
-                .inner
-                .requests_container_weak
-                .upgrade()
-                .ok_or(RequestError::ChannelClosed)?;
-            let mut requests_container = requests_container_lock.lock();
+            let requests_container = match self.inner.requests_container_weak.upgrade() {
+                Some(requests_container_lock) => requests_container_lock,
+                None => {
+                    if let Some(default_response) = R::default_for_soft_error() {
+                        return Ok(default_response);
+                    }
 
-            id = requests_container.next_id;
+                    return Err(RequestError::ChannelClosed);
+                }
+            };
+            let mut requests_container_lock = requests_container.lock();
 
-            requests_container.next_id = requests_container.next_id.wrapping_add(1);
-            requests_container.handlers.insert(id, result_sender);
+            id = requests_container_lock.next_id;
+
+            requests_container_lock.next_id = requests_container_lock.next_id.wrapping_add(1);
+            requests_container_lock.handlers.insert(id, result_sender);
         }
 
         debug!("request() [method:{}, id:{}]: {:?}", method, id, request);
 
+        // TODO: Todo pre-allocate fixed size string sufficient for most cases by default
+        // TODO: Refactor to avoid extra allocation during JSON serialization if possible
         let message = Arc::new(AtomicTake::new(
-            serde_json::to_vec(&RequestMessage {
-                id,
-                method,
-                request: &request,
-            })
-            .unwrap(),
+            format!(
+                "{id}:{method}:{handler_id}:{}",
+                serde_json::to_string(&request).unwrap()
+            )
+            .into_bytes(),
         ));
 
         {
@@ -354,6 +359,10 @@ impl Channel {
                         && !self.inner.closed.swap(true, Ordering::Relaxed);
 
                     if !first_worker_closing {
+                        if let Some(default_response) = R::default_for_soft_error() {
+                            return Ok(default_response);
+                        }
+
                         return Err(RequestError::ChannelClosed);
                     }
                 }
@@ -362,6 +371,10 @@ impl Channel {
                     let ret = mediasoup_sys::uv_async_send(handle);
                     if ret != 0 {
                         error!("uv_async_send call failed with code {}", ret);
+                        if let Some(default_response) = R::default_for_soft_error() {
+                            return Ok(default_response);
+                        }
+
                         return Err(RequestError::ChannelClosed);
                     }
                 }
@@ -380,7 +393,18 @@ impl Channel {
 
         request_drop_guard.remove();
 
-        match response_result_fut.map_err(|_| RequestError::ChannelClosed {})? {
+        let response_result = match response_result_fut {
+            Ok(response_result) => response_result,
+            Err(_closed) => {
+                return if let Some(default_response) = R::default_for_soft_error() {
+                    Ok(default_response)
+                } else {
+                    Err(RequestError::ChannelClosed)
+                };
+            }
+        };
+
+        match response_result {
             Ok(data) => {
                 debug!("request succeeded [method:{}, id:{}]", method, id);
 
@@ -393,8 +417,15 @@ impl Channel {
             }
             Err(ResponseError { reason }) => {
                 debug!("request failed [method:{}, id:{}]: {}", method, id, reason);
-
-                Err(RequestError::Response { reason })
+                if reason.contains("not found") {
+                    if let Some(default_response) = R::default_for_soft_error() {
+                        Ok(default_response)
+                    } else {
+                        Err(RequestError::ChannelClosed)
+                    }
+                } else {
+                    Err(RequestError::Response { reason })
+                }
             }
         }
     }

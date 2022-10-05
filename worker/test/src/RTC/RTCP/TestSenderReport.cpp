@@ -94,6 +94,71 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 		delete report;
 	}
 
+	SECTION("create SR packet multiple reports")
+	{
+		const size_t count = 3;
+
+		SenderReportPacket packet;
+
+		for (auto i = 1; i <= count; i++)
+		{
+			// Create report and add to packet.
+			SenderReport* report = new SenderReport();
+
+			report->SetSsrc(i);
+			report->SetNtpSec(i);
+			report->SetNtpFrac(i);
+			report->SetRtpTs(i);
+			report->SetPacketCount(i);
+			report->SetOctetCount(i);
+
+			packet.AddReport(report);
+		}
+
+		uint8_t buffer[1500] = { 0 };
+
+		// Serialization must contain 3 SR packets.
+		packet.Serialize(buffer);
+
+		SenderReport* reports[count]{ nullptr };
+
+		auto* packet2 = static_cast<SenderReportPacket*>(Packet::Parse(buffer, sizeof(buffer)));
+
+		REQUIRE(packet2 != nullptr);
+
+		reports[0] = *(packet2->Begin());
+
+		auto* packet3 = static_cast<SenderReportPacket*>(packet2->GetNext());
+
+		REQUIRE(packet3 != nullptr);
+
+		reports[1] = *(packet3->Begin());
+
+		auto* packet4 = static_cast<SenderReportPacket*>(packet3->GetNext());
+
+		REQUIRE(packet4 != nullptr);
+
+		reports[2] = *(packet4->Begin());
+
+		for (auto i = 1; i <= count; i++)
+		{
+			auto* report = reports[i - 1];
+
+			REQUIRE(report != nullptr);
+
+			REQUIRE(report->GetSsrc() == i);
+			REQUIRE(report->GetNtpSec() == i);
+			REQUIRE(report->GetNtpFrac() == i);
+			REQUIRE(report->GetRtpTs() == i);
+			REQUIRE(report->GetPacketCount() == i);
+			REQUIRE(report->GetOctetCount() == i);
+		}
+
+		delete packet2;
+		delete packet3;
+		delete packet4;
+	}
+
 	SECTION("create SR")
 	{
 		// Create local report and check content.

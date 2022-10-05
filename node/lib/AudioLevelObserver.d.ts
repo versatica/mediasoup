@@ -1,6 +1,6 @@
-import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
-import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents, RtpObserverConstructorOptions } from './RtpObserver';
+import { Producer } from './Producer';
 export interface AudioLevelObserverOptions {
     /**
      * Maximum number of entries in the 'volumes”' event. Default 1.
@@ -18,7 +18,7 @@ export interface AudioLevelObserverOptions {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 }
 export interface AudioLevelObserverVolume {
     /**
@@ -39,25 +39,17 @@ export declare type AudioLevelObserverObserverEvents = RtpObserverObserverEvents
     volumes: [AudioLevelObserverVolume[]];
     silence: [];
 };
+declare type AudioLevelObserverConstructorOptions = RtpObserverConstructorOptions;
 export declare class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents> {
     /**
      * @private
-     * @emits volumes - (volumes: AudioLevelObserverVolume[])
-     * @emits silence
      */
-    constructor(params: any);
+    constructor(options: AudioLevelObserverConstructorOptions);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits pause
-     * @emits resume
-     * @emits addproducer - (producer: Producer)
-     * @emits removeproducer - (producer: Producer)
-     * @emits volumes - (volumes: AudioLevelObserverVolume[])
-     * @emits silence
      */
     get observer(): EnhancedEventEmitter<AudioLevelObserverObserverEvents>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=AudioLevelObserver.d.ts.map

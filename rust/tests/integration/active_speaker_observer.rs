@@ -71,8 +71,8 @@ fn create() {
             .expect("Failed to create ActiveSpeakerObserver");
 
         assert_eq!(new_observer_count.load(Ordering::SeqCst), 1);
-        assert_eq!(active_speaker_observer.closed(), false);
-        assert_eq!(active_speaker_observer.paused(), false);
+        assert!(!active_speaker_observer.closed());
+        assert!(!active_speaker_observer.paused());
 
         let dump = router.dump().await.expect("Failed to get router dump");
 
@@ -127,13 +127,13 @@ fn pause_resume() {
             .pause()
             .await
             .expect("Failed to pause");
-        assert_eq!(active_speaker_observer.paused(), true);
+        assert!(active_speaker_observer.paused());
 
         active_speaker_observer
             .resume()
             .await
             .expect("Failed to resume");
-        assert_eq!(active_speaker_observer.paused(), false);
+        assert!(!active_speaker_observer.paused());
     });
 }
 

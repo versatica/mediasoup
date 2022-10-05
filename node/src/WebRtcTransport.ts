@@ -7,15 +7,18 @@ import {
 	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
+	TransportConstructorOptions,
 	SctpState
 } from './Transport';
+import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import { Either } from './utils';
 
-export type WebRtcTransportOptions =
+export type WebRtcTransportListenIndividual =
 {
 	/**
 	 * Listening IP address or addresses in order of preference (first one is the
-	 * preferred one).
+	 * preferred one). Mandatory unless webRtcServer is given.
 	 */
 	listenIps: (TransportListenIp | string)[];
 
@@ -24,7 +27,21 @@ export type WebRtcTransportOptions =
 	 * range.
 	 */
 	port?: number;
+};
 
+export type WebRtcTransportListenServer =
+{
+	/**
+	 * Instance of WebRtcServer. Mandatory unless listenIps is given.
+	 */
+	webRtcServer: WebRtcServer;
+};
+
+export type WebRtcTransportListen =
+	Either<WebRtcTransportListenIndividual, WebRtcTransportListenServer>;
+
+export type WebRtcTransportOptionsBase =
+{
 	/**
 	 * Listen in UDP. Default true.
 	 */
@@ -75,15 +92,17 @@ export type WebRtcTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
-}
+	appData?: Record<string, unknown>;
+};
+
+export type WebRtcTransportOptions = WebRtcTransportOptionsBase & WebRtcTransportListen;
 
 export type IceParameters =
 {
 	usernameFragment: string;
 	password: string;
 	iceLite?: boolean;
-}
+};
 
 export type IceCandidate =
 {
@@ -94,13 +113,13 @@ export type IceCandidate =
 	port: number;
 	type: 'host';
 	tcpType: 'passive' | undefined;
-}
+};
 
 export type DtlsParameters =
 {
 	role?: DtlsRole;
 	fingerprints: DtlsFingerprint[];
-}
+};
 
 /**
  * The hash function algorithm (as defined in the "Hash function Textual Names"
@@ -112,7 +131,7 @@ export type DtlsFingerprint =
 {
 	algorithm: string;
 	value: string;
-}
+};
 
 export type IceState = 'new' | 'connected' | 'completed' | 'disconnected' | 'closed';
 
@@ -149,7 +168,7 @@ export type WebRtcTransportStat =
 	iceState: IceState;
 	iceSelectedTuple?: TransportTuple;
 	dtlsState: DtlsState;
-}
+};
 
 export type WebRtcTransportEvents = TransportEvents &
 {
@@ -157,7 +176,7 @@ export type WebRtcTransportEvents = TransportEvents &
 	iceselectedtuplechange: [TransportTuple];
 	dtlsstatechange: [DtlsState];
 	sctpstatechange: [SctpState];
-}
+};
 
 export type WebRtcTransportObserverEvents = TransportObserverEvents &
 {
@@ -165,7 +184,26 @@ export type WebRtcTransportObserverEvents = TransportObserverEvents &
 	iceselectedtuplechange: [TransportTuple];
 	dtlsstatechange: [DtlsState];
 	sctpstatechange: [SctpState];
-}
+};
+
+type WebRtcTransportConstructorOptions = TransportConstructorOptions &
+{
+	data: WebRtcTransportData;
+};
+
+export type WebRtcTransportData =
+{
+	iceRole: 'controlled';
+	iceParameters: IceParameters;
+	iceCandidates: IceCandidate[];
+	iceState: IceState;
+	iceSelectedTuple?: TransportTuple;
+	dtlsParameters: DtlsParameters;
+	dtlsState: DtlsState;
+	dtlsRemoteCert?: string;
+	sctpParameters?: SctpParameters;
+	sctpState?: SctpState;
+};
 
 const logger = new Logger('WebRtcTransport');
 
@@ -173,35 +211,18 @@ export class WebRtcTransport extends
 	Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents>
 {
 	// WebRtcTransport data.
-	readonly #data:
-	{
-		iceRole: 'controlled';
-		iceParameters: IceParameters;
-		iceCandidates: IceCandidate[];
-		iceState: IceState;
-		iceSelectedTuple?: TransportTuple;
-		dtlsParameters: DtlsParameters;
-		dtlsState: DtlsState;
-		dtlsRemoteCert?: string;
-		sctpParameters?: SctpParameters;
-		sctpState?: SctpState;
-	};
+	readonly #data: WebRtcTransportData;
 
 	/**
 	 * @private
-	 * @emits icestatechange - (iceState: IceState)
-	 * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
-	 * @emits dtlsstatechange - (dtlsState: DtlsState)
-	 * @emits sctpstatechange - (sctpState: SctpState)
-	 * @emits trace - (trace: TransportTraceEventData)
 	 */
-	constructor(params: any)
+	constructor(options: WebRtcTransportConstructorOptions)
 	{
-		super(params);
+		super(options);
 
 		logger.debug('constructor()');
 
-		const { data } = params;
+		const { data } = options;
 
 		this.#data =
 		{
@@ -301,23 +322,6 @@ export class WebRtcTransport extends
 	}
 
 	/**
-	 * Observer.
-	 *
-	 * @override
-	 * @emits close
-	 * @emits newproducer - (producer: Producer)
-	 * @emits newconsumer - (consumer: Consumer)
-	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataConsumer: DataConsumer)
-	 * @emits icestatechange - (iceState: IceState)
-	 * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
-	 * @emits dtlsstatechange - (dtlsState: DtlsState)
-	 * @emits sctpstatechange - (sctpState: SctpState)
-	 * @emits trace - (trace: TransportTraceEventData)
-	 */
-	// get observer(): EnhancedEventEmitter
-
-	/**
 	 * Close the WebRtcTransport.
 	 *
 	 * @override
@@ -359,6 +363,26 @@ export class WebRtcTransport extends
 	}
 
 	/**
+	 * Called when closing the associated WebRtcServer.
+	 *
+	 * @private
+	 */
+	webRtcServerClosed(): void
+	{
+		if (this.closed)
+			return;
+
+		this.#data.iceState = 'closed';
+		this.#data.iceSelectedTuple = undefined;
+		this.#data.dtlsState = 'closed';
+
+		if (this.#data.sctpState)
+			this.#data.sctpState = 'closed';
+
+		super.listenServerClosed();
+	}
+
+	/**
 	 * Get WebRtcTransport stats.
 	 *
 	 * @override
@@ -367,7 +391,7 @@ export class WebRtcTransport extends
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal);
+		return this.channel.request('transport.getStats', this.internal.transportId);
 	}
 
 	/**
@@ -382,7 +406,7 @@ export class WebRtcTransport extends
 		const reqData = { dtlsParameters };
 
 		const data =
-			await this.channel.request('transport.connect', this.internal, reqData);
+			await this.channel.request('transport.connect', this.internal.transportId, reqData);
 
 		// Update data.
 		this.#data.dtlsParameters.role = data.dtlsLocalRole;
@@ -396,7 +420,7 @@ export class WebRtcTransport extends
 		logger.debug('restartIce()');
 
 		const data =
-			await this.channel.request('transport.restartIce', this.internal);
+			await this.channel.request('transport.restartIce', this.internal.transportId);
 
 		const { iceParameters } = data;
 

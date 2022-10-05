@@ -71,7 +71,7 @@ SCENARIO("RTCP Feedback PS TSTN parsing", "[parser][rtcp][feedback-ps][tstn]")
 	{
 		FeedbackPsTstnPacket packet(senderSsrc, mediaSsrc);
 
-		FeedbackPsTstnItem* item = new FeedbackPsTstnItem(ssrc, seq, TestFeedbackPsTstn::index);
+		auto* item = new FeedbackPsTstnItem(ssrc, seq, TestFeedbackPsTstn::index);
 
 		packet.AddItem(item);
 

@@ -5,7 +5,8 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "Channel/ChannelRequest.hpp"
-#include "PayloadChannel/Notification.hpp"
+#include "Channel/ChannelSocket.hpp"
+#include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
@@ -41,6 +42,9 @@ namespace RTC
 	                  public RTC::SctpAssociation::Listener,
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
+	                  public Channel::ChannelSocket::RequestHandler,
+	                  public PayloadChannel::PayloadChannelSocket::RequestHandler,
+	                  public PayloadChannel::PayloadChannelSocket::NotificationHandler,
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 	                  public RTC::SenderBandwidthEstimator::Listener,
 #endif
@@ -103,7 +107,8 @@ namespace RTC
 			virtual void OnTransportDataConsumerClosed(
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
 			virtual void OnTransportDataConsumerDataProducerClosed(
-			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
+			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer)         = 0;
+			virtual void OnTransportListenServerClosed(RTC::Transport* transport) = 0;
 		};
 
 	private:
@@ -119,14 +124,22 @@ namespace RTC
 
 	public:
 		void CloseProducersAndConsumers();
+		void ListenServerClosed();
 		// Subclasses must also invoke the parent Close().
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray);
-		// Subclasses must implement these methods and call the parent's ones to
-		// handle common requests.
-		virtual void HandleRequest(Channel::ChannelRequest* request);
-		virtual void HandleRequest(PayloadChannel::PayloadChannelRequest* request);
-		virtual void HandleNotification(PayloadChannel::Notification* notification);
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
+	public:
+		void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
 
 	protected:
 		// Must be called from the subclass.
@@ -143,16 +156,16 @@ namespace RTC
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
-		void SetNewProducerIdFromInternal(json& internal, std::string& producerId) const;
-		RTC::Producer* GetProducerFromInternal(json& internal) const;
-		void SetNewConsumerIdFromInternal(json& internal, std::string& consumerId) const;
-		RTC::Consumer* GetConsumerFromInternal(json& internal) const;
+		void SetNewProducerIdFromData(json& data, std::string& producerId) const;
+		RTC::Producer* GetProducerFromData(json& data) const;
+		void SetNewConsumerIdFromData(json& data, std::string& consumerId) const;
+		RTC::Consumer* GetConsumerFromData(json& data) const;
 		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
 		RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const;
-		void SetNewDataProducerIdFromInternal(json& internal, std::string& dataProducerId) const;
-		RTC::DataProducer* GetDataProducerFromInternal(json& internal) const;
-		void SetNewDataConsumerIdFromInternal(json& internal, std::string& dataConsumerId) const;
-		RTC::DataConsumer* GetDataConsumerFromInternal(json& internal) const;
+		void SetNewDataProducerIdFromData(json& data, std::string& dataProducerId) const;
+		RTC::DataProducer* GetDataProducerFromData(json& data) const;
+		void SetNewDataConsumerIdFromData(json& data, std::string& dataConsumerId) const;
+		RTC::DataConsumer* GetDataConsumerFromData(json& data) const;
 
 	private:
 		virtual bool IsConnected() const = 0;
@@ -178,6 +191,14 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
+		void OnProducerReceiveData(RTC::Producer* /*producer*/, size_t len) override
+		{
+			this->DataReceived(len);
+		}
+		void OnProducerReceiveRtpPacket(RTC::Producer* /*producer*/, RTC::RtpPacket* packet) override
+		{
+			this->ReceiveRtpPacket(packet);
+		}
 		void OnProducerPaused(RTC::Producer* producer) override;
 		void OnProducerResumed(RTC::Producer* producer) override;
 		void OnProducerNewRtpStream(
@@ -202,6 +223,10 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::DataProducer::Listener. */
 	public:
+		void OnDataProducerReceiveData(RTC::DataProducer* /*dataProducer*/, size_t len) override
+		{
+			this->DataReceived(len);
+		}
 		void OnDataProducerMessageReceived(
 		  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) override;
 

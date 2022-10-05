@@ -50,7 +50,7 @@ impl AppData {
 /// If you use "0.0.0.0" or "::" as ip value, then you need to also provide `announced_ip`.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct TransportListenIp {
+pub struct ListenIp {
     /// Listening IPv4 or IPv6.
     pub ip: IpAddr,
     /// Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with private IP).
@@ -111,7 +111,7 @@ pub enum IceCandidateTcpType {
 /// Transport protocol.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
-pub enum TransportProtocol {
+pub enum Protocol {
     /// TCP.
     Tcp,
     /// UDP.
@@ -130,7 +130,7 @@ pub struct IceCandidate {
     /// The IP address of the candidate.
     pub ip: IpAddr,
     /// The protocol of the candidate.
-    pub protocol: TransportProtocol,
+    pub protocol: Protocol,
     /// The port for the candidate.
     pub port: u16,
     /// The type of candidate (always `Host`).
@@ -182,7 +182,7 @@ pub enum TransportTuple {
         /// Remote port.
         remote_port: u16,
         /// Protocol
-        protocol: TransportProtocol,
+        protocol: Protocol,
     },
     /// Transport tuple without remote endpoint info.
     #[serde(rename_all = "camelCase")]
@@ -192,7 +192,7 @@ pub enum TransportTuple {
         /// Local port.
         local_port: u16,
         /// Protocol
-        protocol: TransportProtocol,
+        protocol: Protocol,
     },
 }
 
@@ -210,7 +210,7 @@ impl TransportTuple {
     }
 
     /// Protocol.
-    pub fn protocol(&self) -> TransportProtocol {
+    pub fn protocol(&self) -> Protocol {
         let (Self::WithRemote { protocol, .. } | Self::LocalOnly { protocol, .. }) = self;
         *protocol
     }
@@ -289,7 +289,7 @@ impl Default for DtlsRole {
 /// The hash function algorithm (as defined in the "Hash function Textual Names" registry initially
 /// specified in [RFC 4572](https://tools.ietf.org/html/rfc4572#section-8) Section 8) and its
 /// corresponding certificate fingerprint value.
-#[derive(Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Copy, Clone, PartialOrd, Eq, PartialEq)]
 pub enum DtlsFingerprint {
     /// sha-1
     Sha1 {
@@ -748,7 +748,7 @@ impl DtlsFingerprint {
 }
 
 /// DTLS parameters.
-#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 pub struct DtlsParameters {
     /// DTLS role.
     pub role: DtlsRole,

@@ -9,16 +9,11 @@ class WebRtcTransport extends Transport_1.Transport {
     #data;
     /**
      * @private
-     * @emits icestatechange - (iceState: IceState)
-     * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
-     * @emits dtlsstatechange - (dtlsState: DtlsState)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
      */
-    constructor(params) {
-        super(params);
+    constructor(options) {
+        super(options);
         logger.debug('constructor()');
-        const { data } = params;
+        const { data } = options;
         this.#data =
             {
                 iceRole: data.iceRole,
@@ -95,22 +90,6 @@ class WebRtcTransport extends Transport_1.Transport {
         return this.#data.sctpState;
     }
     /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (consumer: Consumer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataConsumer: DataConsumer)
-     * @emits icestatechange - (iceState: IceState)
-     * @emits iceselectedtuplechange - (iceSelectedTuple: TransportTuple)
-     * @emits dtlsstatechange - (dtlsState: DtlsState)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
-    // get observer(): EnhancedEventEmitter
-    /**
      * Close the WebRtcTransport.
      *
      * @override
@@ -142,13 +121,28 @@ class WebRtcTransport extends Transport_1.Transport {
         super.routerClosed();
     }
     /**
+     * Called when closing the associated WebRtcServer.
+     *
+     * @private
+     */
+    webRtcServerClosed() {
+        if (this.closed)
+            return;
+        this.#data.iceState = 'closed';
+        this.#data.iceSelectedTuple = undefined;
+        this.#data.dtlsState = 'closed';
+        if (this.#data.sctpState)
+            this.#data.sctpState = 'closed';
+        super.listenServerClosed();
+    }
+    /**
      * Get WebRtcTransport stats.
      *
      * @override
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.channel.request('transport.getStats', this.internal);
+        return this.channel.request('transport.getStats', this.internal.transportId);
     }
     /**
      * Provide the WebRtcTransport remote parameters.
@@ -158,7 +152,7 @@ class WebRtcTransport extends Transport_1.Transport {
     async connect({ dtlsParameters }) {
         logger.debug('connect()');
         const reqData = { dtlsParameters };
-        const data = await this.channel.request('transport.connect', this.internal, reqData);
+        const data = await this.channel.request('transport.connect', this.internal.transportId, reqData);
         // Update data.
         this.#data.dtlsParameters.role = data.dtlsLocalRole;
     }
@@ -167,7 +161,7 @@ class WebRtcTransport extends Transport_1.Transport {
      */
     async restartIce() {
         logger.debug('restartIce()');
-        const data = await this.channel.request('transport.restartIce', this.internal);
+        const data = await this.channel.request('transport.restartIce', this.internal.transportId);
         const { iceParameters } = data;
         this.#data.iceParameters = iceParameters;
         return iceParameters;

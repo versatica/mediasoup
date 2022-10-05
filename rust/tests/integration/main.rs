@@ -10,5 +10,6 @@ mod plain_transport;
 mod producer;
 mod router;
 mod smoke;
+mod webrtc_server;
 mod webrtc_transport;
 mod worker;

@@ -1,5 +1,15 @@
 # Changelog
 
+# 0.11.0
+
+* Updates from mediasoup TypeScript `3.10.2..=3.10.6`.
+
+# 0.10.0
+
+* Updates from mediasoup TypeScript `3.9.10..=3.10.1`.
+* `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port (PR #834, PR #845).
+* Minor API breaking changes.
+
 # 0.9.3
 
 * Fix a segfaults in tests and under multithreaded executor
@@ -64,7 +74,7 @@
 
 * Add convenience methods for getting information from `TransportTuple` enum, especially local IP/port
 * Add `mid` option in `ConsumerOptions` to provide way to override MID
-* Add convenience method `ConsumerStats::cosumer_stat()`
+* Add convenience method `ConsumerStats::consumer_stat()`
 
 ### 0.8.0
 

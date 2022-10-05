@@ -61,6 +61,10 @@ namespace RTC
 			{
 				return this->currentTemporalLayer;
 			}
+			bool GetIgnoreDtx() const
+			{
+				return this->ignoreDtx;
+			}
 			void SetTargetSpatialLayer(int16_t spatialLayer)
 			{
 				this->targetSpatialLayer = spatialLayer;
@@ -77,6 +81,10 @@ namespace RTC
 			{
 				this->currentTemporalLayer = temporalLayer;
 			}
+			void SetIgnoreDtx(bool ignoreDtx)
+			{
+				this->ignoreDtx = ignoreDtx;
+			}
 			virtual void SyncRequired() = 0;
 
 		private:
@@ -85,6 +93,7 @@ namespace RTC
 			int16_t targetTemporalLayer{ -1 };
 			int16_t currentSpatialLayer{ -1 };
 			int16_t currentTemporalLayer{ -1 };
+			bool ignoreDtx{ false };
 		};
 
 		class PayloadDescriptorHandler

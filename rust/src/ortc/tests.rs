@@ -644,7 +644,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
     assert_eq!(
         pipe_consumer_rtp_parameters.rtcp,
         RtcpParameters {
-            cname: rtp_parameters.rtcp.cname.clone(),
+            cname: rtp_parameters.rtcp.cname,
             reduced_size: true,
             mux: Some(true),
         },

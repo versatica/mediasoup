@@ -5,7 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, SctpState};
-use crate::messages::{TransportCloseRequest, TransportInternal, TransportSendRtcpNotification};
+use crate::messages::{TransportCloseRequest, TransportSendRtcpNotification};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::Router;
@@ -25,9 +25,9 @@ use log::{debug, error};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
-use std::{fmt, mem};
 
 /// [`DirectTransport`] options.
 #[derive(Debug, Clone)]
@@ -49,7 +49,7 @@ impl Default for DirectTransportOptions {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 #[non_exhaustive]
@@ -110,6 +110,7 @@ pub struct DirectTransportStat {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     rtcp: Bag<Arc<dyn Fn(&[u8]) + Send + Sync>>,
     new_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
@@ -147,7 +148,7 @@ struct Inner {
     router: Router,
     closed: AtomicBool,
     // Drop subscription to transport-specific notifications when transport itself is dropped
-    subscription_handlers: Mutex<Vec<Option<SubscriptionHandler>>>,
+    _subscription_handlers: Mutex<Vec<Option<SubscriptionHandler>>>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 
@@ -166,36 +167,20 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
-            let subscription_handlers: Vec<_> = mem::take(&mut self.subscription_handlers.lock());
-
             if close_request {
                 let channel = self.channel.clone();
+                let router_id = self.router.id();
                 let request = TransportCloseRequest {
-                    internal: TransportInternal {
-                        router_id: self.router.id(),
-                        transport_id: self.id,
-                    },
+                    transport_id: self.id,
                 };
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
+                        if let Err(error) = channel.request(router_id, request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
-
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handlers);
                     })
                     .detach();
-            } else {
-                self.executor
-                    .spawn(async move {
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handlers);
-                    })
-                    .detach()
             }
         }
     }
@@ -513,7 +498,7 @@ impl DirectTransport {
             app_data,
             router,
             closed: AtomicBool::new(false),
-            subscription_handlers: Mutex::new(vec![
+            _subscription_handlers: Mutex::new(vec![
                 subscription_handler,
                 payload_subscription_handler,
             ]),
@@ -529,12 +514,9 @@ impl DirectTransport {
     ///
     /// * `rtcp_packet` - Bytes containing a valid RTCP packet (can be a compound packet).
     pub fn send_rtcp(&self, rtcp_packet: Vec<u8>) -> Result<(), NotificationError> {
-        self.inner.payload_channel.notify(
-            TransportSendRtcpNotification {
-                internal: self.get_internal(),
-            },
-            rtcp_packet,
-        )
+        self.inner
+            .payload_channel
+            .notify(self.id(), TransportSendRtcpNotification {}, rtcp_packet)
     }
 
     /// Callback is called when the direct transport receives a RTCP packet from its router.
@@ -547,13 +529,6 @@ impl DirectTransport {
     pub fn downgrade(&self) -> WeakDirectTransport {
         WeakDirectTransport {
             inner: Arc::downgrade(&self.inner),
-        }
-    }
-
-    fn get_internal(&self) -> TransportInternal {
-        TransportInternal {
-            router_id: self.router().id(),
-            transport_id: self.id(),
         }
     }
 }

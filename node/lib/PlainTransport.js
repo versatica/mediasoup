@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PlainRtpTransport = exports.PlainTransport = void 0;
+exports.PlainTransport = void 0;
 const Logger_1 = require("./Logger");
 const Transport_1 = require("./Transport");
 const logger = new Logger_1.Logger('PlainTransport');
@@ -9,15 +9,11 @@ class PlainTransport extends Transport_1.Transport {
     #data;
     /**
      * @private
-     * @emits tuple - (tuple: TransportTuple)
-     * @emits rtcptuple - (rtcpTuple: TransportTuple)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
      */
-    constructor(params) {
-        super(params);
+    constructor(options) {
+        super(options);
         logger.debug('constructor()');
-        const { data } = params;
+        const { data } = options;
         this.#data =
             {
                 rtcpMux: data.rtcpMux,
@@ -61,21 +57,6 @@ class PlainTransport extends Transport_1.Transport {
         return this.#data.srtpParameters;
     }
     /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (consumer: Consumer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataConsumer: DataConsumer)
-     * @emits tuple - (tuple: TransportTuple)
-     * @emits rtcptuple - (rtcpTuple: TransportTuple)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
-    // get observer(): EnhancedEventEmitter
-    /**
      * Close the PlainTransport.
      *
      * @override
@@ -107,7 +88,7 @@ class PlainTransport extends Transport_1.Transport {
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.channel.request('transport.getStats', this.internal);
+        return this.channel.request('transport.getStats', this.internal.transportId);
     }
     /**
      * Provide the PlainTransport remote parameters.
@@ -117,7 +98,7 @@ class PlainTransport extends Transport_1.Transport {
     async connect({ ip, port, rtcpPort, srtpParameters }) {
         logger.debug('connect()');
         const reqData = { ip, port, rtcpPort, srtpParameters };
-        const data = await this.channel.request('transport.connect', this.internal, reqData);
+        const data = await this.channel.request('transport.connect', this.internal.transportId, reqData);
         // Update data.
         if (data.tuple)
             this.#data.tuple = data.tuple;
@@ -172,12 +153,3 @@ class PlainTransport extends Transport_1.Transport {
     }
 }
 exports.PlainTransport = PlainTransport;
-/**
- * DEPRECATED: Use PlainTransport.
- */
-class PlainRtpTransport extends PlainTransport {
-    constructor(params) {
-        super(params);
-    }
-}
-exports.PlainRtpTransport = PlainRtpTransport;

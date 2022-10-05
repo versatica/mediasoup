@@ -51,12 +51,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * @private
      * @interface
-     * @emits routerclose
-     * @emits @close
-     * @emits @newproducer - (producer: Producer)
-     * @emits @producerclose - (producer: Producer)
-     * @emits @newdataproducer - (dataProducer: DataProducer)
-     * @emits @dataproducerclose - (dataProducer: DataProducer)
      */
     constructor({ internal, data, channel, payloadChannel, appData, getRouterRtpCapabilities, getProducerById, getDataProducerById }) {
         super();
@@ -65,7 +59,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.channel = channel;
         this.payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
         this.getProducerById = getProducerById;
         this.getDataProducerById = getDataProducerById;
@@ -96,12 +90,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (producer: Producer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataProducer: DataProducer)
      */
     get observer() {
         return this.#observer;
@@ -124,7 +112,8 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.channel.removeAllListeners(this.internal.transportId);
         this.payloadChannel.removeAllListeners(this.internal.transportId);
-        this.channel.request('transport.close', this.internal)
+        const reqData = { transportId: this.internal.transportId };
+        this.channel.request('router.closeTransport', this.internal.routerId, reqData)
             .catch(() => { });
         // Close every Producer.
         for (const producer of this.#producers.values()) {
@@ -197,11 +186,57 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#observer.safeEmit('close');
     }
     /**
+     * Listen server was closed (this just happens in WebRtcTransports when their
+     * associated WebRtcServer is closed).
+     *
+     * @private
+     */
+    listenServerClosed() {
+        if (this.#closed)
+            return;
+        logger.debug('listenServerClosed()');
+        this.#closed = true;
+        // Remove notification subscriptions.
+        this.channel.removeAllListeners(this.internal.transportId);
+        this.payloadChannel.removeAllListeners(this.internal.transportId);
+        // Close every Producer.
+        for (const producer of this.#producers.values()) {
+            producer.transportClosed();
+            // NOTE: No need to tell the Router since it already knows (it has
+            // been closed in fact).
+        }
+        this.#producers.clear();
+        // Close every Consumer.
+        for (const consumer of this.consumers.values()) {
+            consumer.transportClosed();
+        }
+        this.consumers.clear();
+        // Close every DataProducer.
+        for (const dataProducer of this.dataProducers.values()) {
+            dataProducer.transportClosed();
+            // NOTE: No need to tell the Router since it already knows (it has
+            // been closed in fact).
+        }
+        this.dataProducers.clear();
+        // Close every DataConsumer.
+        for (const dataConsumer of this.dataConsumers.values()) {
+            dataConsumer.transportClosed();
+        }
+        this.dataConsumers.clear();
+        // Need to emit this event to let the parent Router know since
+        // transport.listenServerClosed() is called by the listen server.
+        // NOTE: Currently there is just WebRtcServer for WebRtcTransports.
+        this.emit('@listenserverclose');
+        this.safeEmit('listenserverclose');
+        // Emit observer event.
+        this.#observer.safeEmit('close');
+    }
+    /**
      * Dump Transport.
      */
     async dump() {
         logger.debug('dump()');
-        return this.channel.request('transport.dump', this.internal);
+        return this.channel.request('transport.dump', this.internal.transportId);
     }
     /**
      * Get Transport stats.
@@ -228,7 +263,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setMaxIncomingBitrate(bitrate) {
         logger.debug('setMaxIncomingBitrate() [bitrate:%s]', bitrate);
         const reqData = { bitrate };
-        await this.channel.request('transport.setMaxIncomingBitrate', this.internal, reqData);
+        await this.channel.request('transport.setMaxIncomingBitrate', this.internal.transportId, reqData);
     }
     /**
      * Set maximum outgoing bitrate for sending media.
@@ -236,12 +271,12 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setMaxOutgoingBitrate(bitrate) {
         logger.debug('setMaxOutgoingBitrate() [bitrate:%s]', bitrate);
         const reqData = { bitrate };
-        await this.channel.request('transport.setMaxOutgoingBitrate', this.internal, reqData);
+        await this.channel.request('transport.setMaxOutgoingBitrate', this.internal.transportId, reqData);
     }
     /**
      * Create a Producer.
      */
-    async produce({ id = undefined, kind, rtpParameters, paused = false, keyFrameRequestDelay, appData = {} }) {
+    async produce({ id = undefined, kind, rtpParameters, paused = false, keyFrameRequestDelay, appData }) {
         logger.debug('produce()');
         if (id && this.#producers.has(id))
             throw new TypeError(`a Producer with same id "${id}" already exists`);
@@ -279,9 +314,15 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const rtpMapping = ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities);
         // This may throw.
         const consumableRtpParameters = ortc.getConsumableRtpParameters(kind, rtpParameters, routerRtpCapabilities, rtpMapping);
-        const internal = { ...this.internal, producerId: id || (0, uuid_1.v4)() };
-        const reqData = { kind, rtpParameters, rtpMapping, keyFrameRequestDelay, paused };
-        const status = await this.channel.request('transport.produce', internal, reqData);
+        const reqData = {
+            producerId: id || (0, uuid_1.v4)(),
+            kind,
+            rtpParameters,
+            rtpMapping,
+            keyFrameRequestDelay,
+            paused
+        };
+        const status = await this.channel.request('transport.produce', this.internal.transportId, reqData);
         const data = {
             kind,
             rtpParameters,
@@ -289,7 +330,10 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             consumableRtpParameters
         };
         const producer = new Producer_1.Producer({
-            internal,
+            internal: {
+                ...this.internal,
+                producerId: reqData.producerId
+            },
             data,
             channel: this.channel,
             payloadChannel: this.payloadChannel,
@@ -311,7 +355,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      *
      * @virtual
      */
-    async consume({ producerId, rtpCapabilities, paused = false, mid, preferredLayers, pipe = false, appData = {} }) {
+    async consume({ producerId, rtpCapabilities, paused = false, mid, preferredLayers, ignoreDtx = false, pipe = false, appData }) {
         logger.debug('consume()');
         if (!producerId || typeof producerId !== 'string')
             throw new TypeError('missing producerId');
@@ -340,23 +384,29 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 }
             }
         }
-        const internal = { ...this.internal, consumerId: (0, uuid_1.v4)(), producerId };
         const reqData = {
+            consumerId: (0, uuid_1.v4)(),
+            producerId,
             kind: producer.kind,
             rtpParameters,
             type: pipe ? 'pipe' : producer.type,
             consumableRtpEncodings: producer.consumableRtpParameters.encodings,
             paused,
-            preferredLayers
+            preferredLayers,
+            ignoreDtx
         };
-        const status = await this.channel.request('transport.consume', internal, reqData);
+        const status = await this.channel.request('transport.consume', this.internal.transportId, reqData);
         const data = {
+            producerId,
             kind: producer.kind,
             rtpParameters,
             type: pipe ? 'pipe' : producer.type
         };
         const consumer = new Consumer_1.Consumer({
-            internal,
+            internal: {
+                ...this.internal,
+                consumerId: reqData.consumerId
+            },
             data,
             channel: this.channel,
             payloadChannel: this.payloadChannel,
@@ -376,7 +426,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a DataProducer.
      */
-    async produceData({ id = undefined, sctpStreamParameters, label = '', protocol = '', appData = {} } = {}) {
+    async produceData({ id = undefined, sctpStreamParameters, label = '', protocol = '', appData } = {}) {
         logger.debug('produceData()');
         if (id && this.dataProducers.has(id))
             throw new TypeError(`a DataProducer with same id "${id}" already exists`);
@@ -396,16 +446,19 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 logger.warn('produceData() | sctpStreamParameters are ignored when producing data on a DirectTransport');
             }
         }
-        const internal = { ...this.internal, dataProducerId: id || (0, uuid_1.v4)() };
         const reqData = {
+            dataProducerId: id || (0, uuid_1.v4)(),
             type,
             sctpStreamParameters,
             label,
             protocol
         };
-        const data = await this.channel.request('transport.produceData', internal, reqData);
+        const data = await this.channel.request('transport.produceData', this.internal.transportId, reqData);
         const dataProducer = new DataProducer_1.DataProducer({
-            internal,
+            internal: {
+                ...this.internal,
+                dataProducerId: reqData.dataProducerId
+            },
             data,
             channel: this.channel,
             payloadChannel: this.payloadChannel,
@@ -424,7 +477,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a DataConsumer.
      */
-    async consumeData({ dataProducerId, ordered, maxPacketLifeTime, maxRetransmits, appData = {} }) {
+    async consumeData({ dataProducerId, ordered, maxPacketLifeTime, maxRetransmits, appData }) {
         logger.debug('consumeData()');
         if (!dataProducerId || typeof dataProducerId !== 'string')
             throw new TypeError('missing dataProducerId');
@@ -464,16 +517,20 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             }
         }
         const { label, protocol } = dataProducer;
-        const internal = { ...this.internal, dataConsumerId: (0, uuid_1.v4)(), dataProducerId };
         const reqData = {
+            dataConsumerId: (0, uuid_1.v4)(),
+            dataProducerId,
             type,
             sctpStreamParameters,
             label,
             protocol
         };
-        const data = await this.channel.request('transport.consumeData', internal, reqData);
+        const data = await this.channel.request('transport.consumeData', this.internal.transportId, reqData);
         const dataConsumer = new DataConsumer_1.DataConsumer({
-            internal,
+            internal: {
+                ...this.internal,
+                dataConsumerId: reqData.dataConsumerId
+            },
             data,
             channel: this.channel,
             payloadChannel: this.payloadChannel,
@@ -500,12 +557,12 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async enableTraceEvent(types = []) {
         logger.debug('pause()');
         const reqData = { types };
-        await this.channel.request('transport.enableTraceEvent', this.internal, reqData);
+        await this.channel.request('transport.enableTraceEvent', this.internal.transportId, reqData);
     }
     getNextSctpStreamId() {
         if (!this.#data.sctpParameters ||
             typeof this.#data.sctpParameters.MIS !== 'number') {
-            throw new TypeError('missing data.sctpParameters.MIS');
+            throw new TypeError('missing sctpParameters.MIS');
         }
         const numStreams = this.#data.sctpParameters.MIS;
         if (!this.#sctpStreamIds)

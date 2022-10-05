@@ -1,7 +1,12 @@
 import { Logger } from './Logger';
-import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents } from './RtpObserver';
-import { Producer } from './Producer';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import {
+	RtpObserver,
+	RtpObserverEvents,
+	RtpObserverObserverEvents,
+	RtpObserverConstructorOptions
+} from './RtpObserver';
+import { Producer } from './Producer';
 
 export interface ActiveSpeakerObserverOptions 
 {
@@ -10,7 +15,7 @@ export interface ActiveSpeakerObserverOptions
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
+	appData?: Record<string, unknown>;
 }
 
 export interface ActiveSpeakerObserverActivity 
@@ -24,12 +29,14 @@ export interface ActiveSpeakerObserverActivity
 export type ActiveSpeakerObserverEvents = RtpObserverEvents &
 {
 	dominantspeaker: [{ producer: Producer }];
-}
+};
 
 export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents &
 {
 	dominantspeaker: [{ producer: Producer }];
-}
+};
+
+type RtpObserverObserverConstructorOptions = RtpObserverConstructorOptions;
 
 const logger = new Logger('ActiveSpeakerObserver');
 
@@ -38,9 +45,9 @@ export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEven
 	/**
 	 * @private
 	 */
-	constructor(params: any)
+	constructor(options: RtpObserverObserverConstructorOptions)
 	{
-		super(params);
+		super(options);
 
 		this.handleWorkerNotifications();
 	}
@@ -61,9 +68,12 @@ export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEven
 			{
 				case 'dominantspeaker':
 				{
-					const dominantSpeaker = {
-						producer : this.getProducerById(data.producerId)
-					};
+					const producer = this.getProducerById(data.producerId);
+
+					if (!producer)
+						break;
+
+					const dominantSpeaker = { producer };
 
 					this.safeEmit('dominantspeaker', dominantSpeaker);
 					this.observer.safeEmit('dominantspeaker', dominantSpeaker);

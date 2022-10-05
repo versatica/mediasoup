@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DirectTransport.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "PayloadChannel/PayloadChannelNotifier.hpp"
@@ -15,11 +16,20 @@ namespace RTC
 	  : RTC::Transport::Transport(id, listener, data)
 	{
 		MS_TRACE();
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ this,
+		  /*payloadChannelNotificationHandler*/ this);
 	}
 
 	DirectTransport::~DirectTransport()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 	}
 
 	void DirectTransport::FillJson(json& jsonObject) const
@@ -51,13 +61,13 @@ namespace RTC
 		RTC::Transport::HandleRequest(request);
 	}
 
-	void DirectTransport::HandleNotification(PayloadChannel::Notification* notification)
+	void DirectTransport::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
 	{
 		MS_TRACE();
 
 		switch (notification->eventId)
 		{
-			case PayloadChannel::Notification::EventId::TRANSPORT_SEND_RTCP:
+			case PayloadChannel::PayloadChannelNotification::EventId::TRANSPORT_SEND_RTCP:
 			{
 				const auto* data = notification->payload;
 				auto len         = notification->payloadLen;
@@ -83,71 +93,6 @@ namespace RTC
 
 				// Pass the packet to the parent transport.
 				RTC::Transport::ReceiveRtcpPacket(packet);
-
-				break;
-			}
-
-			case PayloadChannel::Notification::EventId::PRODUCER_SEND:
-			{
-				const auto* data = notification->payload;
-				auto len         = notification->payloadLen;
-
-				// Increase receive transmission.
-				RTC::Transport::DataReceived(len);
-
-				if (len > RTC::MtuSize + 100)
-				{
-					MS_WARN_TAG(rtp, "given RTP packet exceeds maximum size [len:%zu]", len);
-
-					return;
-				}
-
-				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
-
-				if (!packet)
-				{
-					MS_WARN_TAG(rtp, "received data is not a valid RTP packet");
-
-					return;
-				}
-
-				// Pass the packet to the parent transport.
-				RTC::Transport::ReceiveRtpPacket(packet);
-
-				break;
-			}
-
-			case PayloadChannel::Notification::EventId::DATA_PRODUCER_SEND:
-			{
-				// This may throw.
-				RTC::DataProducer* dataProducer = GetDataProducerFromInternal(notification->internal);
-
-				auto jsonPpidIt = notification->data.find("ppid");
-
-				if (jsonPpidIt == notification->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
-				{
-					MS_THROW_TYPE_ERROR("invalid ppid");
-				}
-
-				auto ppid       = jsonPpidIt->get<uint32_t>();
-				const auto* msg = notification->payload;
-				auto len        = notification->payloadLen;
-
-				if (len > this->maxMessageSize)
-				{
-					MS_WARN_TAG(
-					  message,
-					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
-					  len,
-					  this->maxMessageSize);
-
-					return;
-				}
-
-				dataProducer->ReceiveMessage(ppid, msg, len);
-
-				// Increase receive transmission.
-				RTC::Transport::DataReceived(len);
 
 				break;
 			}
@@ -210,6 +155,8 @@ namespace RTC
 	void DirectTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
 	{
 		MS_TRACE();
+
+		packet->Serialize(RTC::RTCP::Buffer);
 
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
