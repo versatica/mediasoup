@@ -51,9 +51,11 @@ using namespace TestReceiverReport;
 
 SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 {
-	SECTION("parse RR packet")
+	SECTION("parse RR packet with a single report")
 	{
 		ReceiverReportPacket* packet = ReceiverReportPacket::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(packet->GetCount() == 1);
 
 		auto* report = *(packet->Begin());
 
@@ -64,6 +66,22 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 			uint8_t serialized[sizeof(buffer)] = { 0 };
 
 			packet->Serialize(serialized);
+
+			ReceiverReportPacket* packet2 = ReceiverReportPacket::Parse(serialized, sizeof(buffer));
+
+			REQUIRE(packet2->GetType() == Type::RR);
+			REQUIRE(packet2->GetCount() == 1);
+			REQUIRE(packet2->GetSize() == 32);
+
+			auto* buf = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer);
+
+			REQUIRE(ntohs(buf->length) == 7);
+
+			report = *(packet2->Begin());
+
+			verify(report);
+
+			delete packet2;
 
 			SECTION("compare serialized packet with original buffer")
 			{
@@ -85,7 +103,80 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 		delete report;
 	}
 
-	SECTION("create RR")
+	SECTION("create RR packet with more than 31 reports")
+	{
+		const size_t count = 33;
+
+		ReceiverReportPacket packet;
+
+		for (auto i = 1; i <= count; i++)
+		{
+			// Create report and add to packet.
+			ReceiverReport* report = new ReceiverReport();
+
+			report->SetSsrc(i);
+			report->SetFractionLost(i);
+			report->SetTotalLost(i);
+			report->SetLastSeq(i);
+			report->SetJitter(i);
+			report->SetLastSenderReport(i);
+			report->SetDelaySinceLastSenderReport(i);
+
+			packet.AddReport(report);
+		}
+
+		REQUIRE(packet.GetCount() == count);
+
+		uint8_t buffer[1500] = { 0 };
+
+		// Serialization must contain 2 RR packets since report count exceeds 31.
+		packet.Serialize(buffer);
+
+		auto* packet2 = static_cast<ReceiverReportPacket*>(Packet::Parse(buffer, sizeof(buffer)));
+
+		REQUIRE(packet2 != nullptr);
+		REQUIRE(packet2->GetCount() == 31);
+
+		auto reportIt = packet2->Begin();
+
+		for (auto i = 1; i <= 31; i++, reportIt++)
+		{
+			auto* report = *reportIt;
+
+			REQUIRE(report->GetSsrc() == i);
+			REQUIRE(report->GetFractionLost() == i);
+			REQUIRE(report->GetTotalLost() == i);
+			REQUIRE(report->GetLastSeq() == i);
+			REQUIRE(report->GetJitter() == i);
+			REQUIRE(report->GetLastSenderReport() == i);
+			REQUIRE(report->GetDelaySinceLastSenderReport() == i);
+		}
+
+		ReceiverReportPacket* packet3 = static_cast<ReceiverReportPacket*>(packet2->GetNext());
+
+		REQUIRE(packet3 != nullptr);
+		REQUIRE(packet3->GetCount() == 2);
+
+		reportIt = packet3->Begin();
+
+		for (auto i = 1; i <= 2; i++, reportIt++)
+		{
+			auto* report = *reportIt;
+
+			REQUIRE(report->GetSsrc() == 31 + i);
+			REQUIRE(report->GetFractionLost() == 31 + i);
+			REQUIRE(report->GetTotalLost() == 31 + i);
+			REQUIRE(report->GetLastSeq() == 31 + i);
+			REQUIRE(report->GetJitter() == 31 + i);
+			REQUIRE(report->GetLastSenderReport() == 31 + i);
+			REQUIRE(report->GetDelaySinceLastSenderReport() == 31 + i);
+		}
+
+		delete packet2;
+		delete packet3;
+	}
+
+	SECTION("create RR report")
 	{
 		// Create local report and check content.
 		ReceiverReport report1;

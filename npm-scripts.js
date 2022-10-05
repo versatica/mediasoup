@@ -42,7 +42,7 @@ switch (task)
 		}
 		else
 		{
-			execute('rmdir /s /q node/lib');
+			execute('rmdir /s /q "node/lib"');
 		}
 
 		execute('tsc --project node');
@@ -61,7 +61,7 @@ switch (task)
 		}
 		else
 		{
-			execute('rmdir /s /q node/lib');
+			execute('rmdir /s /q "node/lib"');
 		}
 
 		const watch = new TscWatchClient();

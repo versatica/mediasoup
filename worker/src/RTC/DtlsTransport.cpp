@@ -6,11 +6,8 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include <openssl/asn1.h>
-#include <openssl/bn.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
-#include <openssl/rsa.h>
 #include <uv.h>
 #include <cstdio>  // std::sprintf(), std::fopen()
 #include <cstring> // std::memcpy(), std::strcmp()
@@ -108,8 +105,8 @@ namespace RTC
 	thread_local std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
 	std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::srtpCryptoSuites =
 	{
-		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM, "SRTP_AEAD_AES_256_GCM" },
-		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM, "SRTP_AEAD_AES_128_GCM" },
+		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM,        "SRTP_AEAD_AES_256_GCM"  },
+		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM,        "SRTP_AEAD_AES_128_GCM"  },
 		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80, "SRTP_AES128_CM_SHA1_80" },
 		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32, "SRTP_AES128_CM_SHA1_32" }
 	};
@@ -157,55 +154,19 @@ namespace RTC
 		MS_TRACE();
 
 		int ret{ 0 };
-		EC_KEY* ecKey{ nullptr };
 		X509_NAME* certName{ nullptr };
 		std::string subject =
 		  std::string("mediasoup") + std::to_string(Utils::Crypto::GetRandomUInt(100000, 999999));
 
 		// Create key with curve.
-		ecKey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-
-		if (!ecKey)
-		{
-			LOG_OPENSSL_ERROR("EC_KEY_new_by_curve_name() failed");
-
-			goto error;
-		}
-
-		EC_KEY_set_asn1_flag(ecKey, OPENSSL_EC_NAMED_CURVE);
-
-		// NOTE: This can take some time.
-		ret = EC_KEY_generate_key(ecKey);
-
-		if (ret == 0)
-		{
-			LOG_OPENSSL_ERROR("EC_KEY_generate_key() failed");
-
-			goto error;
-		}
-
-		// Create a private key object.
-		DtlsTransport::privateKey = EVP_PKEY_new();
+		DtlsTransport::privateKey = EVP_EC_gen(SN_X9_62_prime256v1);
 
 		if (!DtlsTransport::privateKey)
 		{
-			LOG_OPENSSL_ERROR("EVP_PKEY_new() failed");
+			LOG_OPENSSL_ERROR("EVP_EC_gen() failed");
 
 			goto error;
 		}
-
-		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
-		ret = EVP_PKEY_assign_EC_KEY(DtlsTransport::privateKey, ecKey);
-
-		if (ret == 0)
-		{
-			LOG_OPENSSL_ERROR("EVP_PKEY_assign_EC_KEY() failed");
-
-			goto error;
-		}
-
-		// The EC key now belongs to the private key, so don't clean it up separately.
-		ecKey = nullptr;
 
 		// Create the X509 certificate.
 		DtlsTransport::certificate = X509_new();
@@ -278,11 +239,8 @@ namespace RTC
 
 	error:
 
-		if (ecKey)
-			EC_KEY_free(ecKey);
-
 		if (DtlsTransport::privateKey)
-			EVP_PKEY_free(DtlsTransport::privateKey); // NOTE: This also frees the EC key.
+			EVP_PKEY_free(DtlsTransport::privateKey);
 
 		if (DtlsTransport::certificate)
 			X509_free(DtlsTransport::certificate);
@@ -744,7 +702,7 @@ namespace RTC
 		}
 	}
 
-	bool DtlsTransport::SetRemoteFingerprint(Fingerprint fingerprint)
+	bool DtlsTransport::SetRemoteFingerprint(const Fingerprint& fingerprint)
 	{
 		MS_TRACE();
 
@@ -1022,25 +980,27 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ASSERT(this->ssl, "this->ssl is not set");
 		MS_ASSERT(
 		  this->state == DtlsState::CONNECTING || this->state == DtlsState::CONNECTED,
 		  "invalid DTLS state");
 
-		int64_t ret;
 		uv_timeval_t dtlsTimeout{ 0, 0 };
 		uint64_t timeoutMs;
 
-		// NOTE: If ret == 0 then ignore the value in dtlsTimeout.
-		// NOTE: No DTLSv_1_2_get_timeout() or DTLS_get_timeout() in OpenSSL 1.1.0-dev.
-		ret = DTLSv1_get_timeout(this->ssl, static_cast<void*>(&dtlsTimeout)); // NOLINT
-
-		if (ret == 0)
-			return true;
+		// DTLSv1_get_timeout queries the next DTLS handshake timeout. If there is
+		// a timeout in progress, it sets *out to the time remaining and returns
+		// one. Otherwise, it returns zero.
+		DTLSv1_get_timeout(this->ssl, static_cast<void*>(&dtlsTimeout)); // NOLINT
 
 		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
 
 		if (timeoutMs == 0)
 		{
+			MS_DEBUG_DEV("timeout is 0, calling OnTimer() callback directly");
+
+			OnTimer(this->timer);
+
 			return true;
 		}
 		else if (timeoutMs < 30000)
@@ -1246,16 +1206,6 @@ namespace RTC
 
 		switch (srtpCryptoSuite)
 		{
-			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
-			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
-			{
-				srtpKeyLength    = SrtpMasterKeyLength;
-				srtpSaltLength   = SrtpMasterSaltLength;
-				srtpMasterLength = SrtpMasterLength;
-
-				break;
-			}
-
 			case RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
 			{
 				srtpKeyLength    = SrtpAesGcm256MasterKeyLength;
@@ -1270,6 +1220,16 @@ namespace RTC
 				srtpKeyLength    = SrtpAesGcm128MasterKeyLength;
 				srtpSaltLength   = SrtpAesGcm128MasterSaltLength;
 				srtpMasterLength = SrtpAesGcm128MasterLength;
+
+				break;
+			}
+
+			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
+			case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
+			{
+				srtpKeyLength    = SrtpMasterKeyLength;
+				srtpSaltLength   = SrtpMasterSaltLength;
+				srtpMasterLength = SrtpMasterLength;
 
 				break;
 			}
@@ -1461,12 +1421,29 @@ namespace RTC
 			return;
 		}
 
-		DTLSv1_handle_timeout(this->ssl);
+		// DTLSv1_handle_timeout is called when a DTLS handshake timeout expires.
+		// If no timeout had expired, it returns 0. Otherwise, it retransmits the
+		// previous flight of handshake messages and returns 1. If too many timeouts
+		// had expired without progress or an error occurs, it returns -1.
+		auto ret = DTLSv1_handle_timeout(this->ssl);
 
-		// If required, send DTLS data.
-		SendPendingOutgoingDtlsData();
+		if (ret == 1)
+		{
+			// If required, send DTLS data.
+			SendPendingOutgoingDtlsData();
 
-		// Set the DTLS timer again.
-		SetTimeout();
+			// Set the DTLS timer again.
+			SetTimeout();
+		}
+		else if (ret == -1)
+		{
+			MS_WARN_TAG(dtls, "DTLSv1_handle_timeout() failed");
+
+			Reset();
+
+			// Set state and notify the listener.
+			this->state = DtlsState::FAILED;
+			this->listener->OnDtlsTransportFailed(this);
+		}
 	}
 } // namespace RTC

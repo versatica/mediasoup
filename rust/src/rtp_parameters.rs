@@ -264,6 +264,9 @@ pub enum MimeTypeVideo {
     /// H264
     #[serde(rename = "video/H264")]
     H264,
+    /// H264-SVC
+    #[serde(rename = "video/H264-SVC")]
+    H264Svc,
     /// H265
     #[serde(rename = "video/H265")]
     H265,
@@ -432,7 +435,7 @@ pub enum RtpHeaderExtensionUri {
     /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")]
     AbsSendTime,
-    /// http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time
+    /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time")]
     AbsCaptureTime,
     #[doc(hidden)]

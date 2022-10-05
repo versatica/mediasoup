@@ -1,4 +1,4 @@
-import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, SctpState } from './Transport';
+import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
 import { Consumer } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
@@ -45,7 +45,7 @@ export declare type PipeTransportOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type PipeTransportStat = {
     type: string;
@@ -79,7 +79,7 @@ export declare type PipeConsumerOptions = {
     /**
      * Custom application data.
      */
-    appData?: any;
+    appData?: Record<string, unknown>;
 };
 export declare type PipeTransportEvents = TransportEvents & {
     sctpstatechange: [SctpState];
@@ -87,14 +87,22 @@ export declare type PipeTransportEvents = TransportEvents & {
 export declare type PipeTransportObserverEvents = TransportObserverEvents & {
     sctpstatechange: [SctpState];
 };
+declare type PipeTransportConstructorOptions = TransportConstructorOptions & {
+    data: PipeTransportData;
+};
+export declare type PipeTransportData = {
+    tuple: TransportTuple;
+    sctpParameters?: SctpParameters;
+    sctpState?: SctpState;
+    rtx: boolean;
+    srtpParameters?: SrtpParameters;
+};
 export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTransportObserverEvents> {
     #private;
     /**
      * @private
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
      */
-    constructor(params: any);
+    constructor(options: PipeTransportConstructorOptions);
     /**
      * Transport tuple.
      */
@@ -111,18 +119,6 @@ export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTr
      * SRTP parameters.
      */
     get srtpParameters(): SrtpParameters | undefined;
-    /**
-     * Observer.
-     *
-     * @override
-     * @emits close
-     * @emits newproducer - (producer: Producer)
-     * @emits newconsumer - (consumer: Consumer)
-     * @emits newdataproducer - (dataProducer: DataProducer)
-     * @emits newdataconsumer - (dataConsumer: DataConsumer)
-     * @emits sctpstatechange - (sctpState: SctpState)
-     * @emits trace - (trace: TransportTraceEventData)
-     */
     /**
      * Close the PipeTransport.
      *
@@ -160,4 +156,5 @@ export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTr
     consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>;
     private handleWorkerNotifications;
 }
+export {};
 //# sourceMappingURL=PipeTransport.d.ts.map

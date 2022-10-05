@@ -1,9 +1,9 @@
 [package]
 name = "mediasoup-sys"
-version = "0.3.3"
+version = "0.5.0"
 description = "FFI bindings to C++ libmediasoup-worker"
 authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
-edition = "2018"
+edition = "2021"
 license = "ISC"
 documentation = "https://docs.rs/mediasoup-sys"
 repository = "https://github.com/versatica/mediasoup/tree/v3/worker"
@@ -15,7 +15,6 @@ include = [
     "/scripts",
     "!/scripts/node_modules",
     "/src",
-    "/subprojects/packagefiles",
     "/subprojects/*.wrap",
     "/test/include",
     "/test/src",
@@ -23,6 +22,7 @@ include = [
     "/Cargo.toml",
     "/Makefile",
     "/meson.build",
+    "/meson_options.txt",
 ]
 
 [package.metadata.docs.rs]

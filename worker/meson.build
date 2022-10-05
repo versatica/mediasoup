@@ -26,6 +26,18 @@ if host_machine.system() == 'windows'
   ]
 endif
 
+if get_option('ms_log_trace')
+  cpp_args += [
+    '-DMS_LOG_TRACE',
+  ]
+endif
+
+if get_option('ms_log_file_line')
+  cpp_args += [
+    '-DMS_LOG_FILE_LINE',
+  ]
+endif
+
 common_sources = [
   'src/lib.cpp',
   'src/DepLibSRTP.cpp',
@@ -37,6 +49,7 @@ common_sources = [
   'src/MediaSoupErrors.cpp',
   'src/Settings.cpp',
   'src/Worker.cpp',
+  'src/ChannelMessageHandlers.cpp',
   'src/Utils/Crypto.cpp',
   'src/Utils/File.cpp',
   'src/Utils/IP.cpp',
@@ -50,7 +63,7 @@ common_sources = [
   'src/Channel/ChannelNotifier.cpp',
   'src/Channel/ChannelRequest.cpp',
   'src/Channel/ChannelSocket.cpp',
-  'src/PayloadChannel/Notification.cpp',
+  'src/PayloadChannel/PayloadChannelNotification.cpp',
   'src/PayloadChannel/PayloadChannelNotifier.cpp',
   'src/PayloadChannel/PayloadChannelRequest.cpp',
   'src/PayloadChannel/PayloadChannelSocket.cpp',
@@ -97,10 +110,13 @@ common_sources = [
   'src/RTC/TransportTuple.cpp',
   'src/RTC/TrendCalculator.cpp',
   'src/RTC/UdpSocket.cpp',
+  'src/RTC/WebRtcServer.cpp',
   'src/RTC/WebRtcTransport.cpp',
   'src/RTC/Codecs/H264.cpp',
+  'src/RTC/Codecs/H264_SVC.cpp',
   'src/RTC/Codecs/VP8.cpp',
   'src/RTC/Codecs/VP9.cpp',
+  'src/RTC/Codecs/Opus.cpp',
   'src/RTC/RtpDictionaries/Media.cpp',
   'src/RTC/RtpDictionaries/Parameters.cpp',
   'src/RTC/RtpDictionaries/RtcpFeedback.cpp',
@@ -265,16 +281,21 @@ mediasoup_worker_test = executable(
   ],
   sources: common_sources + [
     'test/src/tests.cpp',
+    'test/src/PayloadChannel/TestPayloadChannelNotification.cpp',
+    'test/src/PayloadChannel/TestPayloadChannelRequest.cpp',
     'test/src/RTC/TestKeyFrameRequestManager.cpp',
     'test/src/RTC/TestNackGenerator.cpp',
     'test/src/RTC/TestRateCalculator.cpp',
     'test/src/RTC/TestRtpPacket.cpp',
+    'test/src/RTC/TestRtpPacketH264Svc.cpp',
     'test/src/RTC/TestRtpStreamSend.cpp',
     'test/src/RTC/TestRtpStreamRecv.cpp',
     'test/src/RTC/TestSeqManager.cpp',
     'test/src/RTC/TestTrendCalculator.cpp',
     'test/src/RTC/TestRtpEncodingParameters.cpp',
     'test/src/RTC/Codecs/TestVP8.cpp',
+    'test/src/RTC/Codecs/TestH264.cpp',
+    'test/src/RTC/Codecs/TestH264_SVC.cpp',
     'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
     'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',
     'test/src/RTC/RTCP/TestFeedbackPsLei.cpp',
@@ -315,58 +336,57 @@ mediasoup_worker_test = executable(
 test(
   'mediasoup-worker-test',
   mediasoup_worker_test,
-  workdir: meson.source_root(),
+  workdir: meson.project_source_root(),
 )
 
-if host_machine.system() == 'linux'
-  executable(
-    'mediasoup-worker-fuzzer',
-    build_by_default: false,
-    install: true,
-    install_tag: 'mediasoup-worker-fuzzer',
-    dependencies: dependencies,
-    sources: common_sources + [
-      'fuzzer/src/fuzzer.cpp',
-      'fuzzer/src/FuzzerUtils.cpp',
-      'fuzzer/src/RTC/FuzzerStunPacket.cpp',
-      'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
-      'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsFir.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsLei.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsPli.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRemb.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRpsi.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsSli.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsTst.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsVbcm.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtp.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpEcn.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpNack.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpSrReq.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTllei.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTmmb.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTransport.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerPacket.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerReceiverReport.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
-      'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
-    ],
-    include_directories: include_directories(
-      'include',
-      'fuzzer/include',
-    ),
-    cpp_args: cpp_args + [
-      '-g',
-      '-O0',
-      '-fsanitize=address,fuzzer',
-      '-DMS_LOG_STD',
-    ],
-    link_args: [
-      '-fsanitize=address,fuzzer',
-    ],
-  )
-endif
+executable(
+  'mediasoup-worker-fuzzer',
+  build_by_default: false,
+  install: true,
+  install_tag: 'mediasoup-worker-fuzzer',
+  dependencies: dependencies,
+  sources: common_sources + [
+    'fuzzer/src/fuzzer.cpp',
+    'fuzzer/src/FuzzerUtils.cpp',
+    'fuzzer/src/RTC/FuzzerStunPacket.cpp',
+    'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
+    'fuzzer/src/RTC/FuzzerRtpStreamSend.cpp',
+    'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsFir.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsLei.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsPli.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRemb.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRpsi.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsSli.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsTst.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsVbcm.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtp.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpEcn.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpNack.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpSrReq.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTllei.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTmmb.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTransport.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerPacket.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerReceiverReport.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
+    'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
+  ],
+  include_directories: include_directories(
+    'include',
+    'fuzzer/include',
+  ),
+  cpp_args: cpp_args + [
+    '-g',
+    '-O0',
+    '-fsanitize=address,fuzzer',
+    '-DMS_LOG_STD',
+  ],
+  link_args: [
+    '-fsanitize=address,fuzzer',
+  ],
+)

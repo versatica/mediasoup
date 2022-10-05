@@ -3,8 +3,7 @@ mod tests;
 
 use crate::data_structures::AppData;
 use crate::messages::{
-    RtpObserverAddProducerRequest, RtpObserverAddRemoveProducerRequestData,
-    RtpObserverCloseRequest, RtpObserverInternal, RtpObserverPauseRequest,
+    RtpObserverAddProducerRequest, RtpObserverCloseRequest, RtpObserverPauseRequest,
     RtpObserverRemoveProducerRequest, RtpObserverResumeRequest,
 };
 use crate::producer::{Producer, ProducerId};
@@ -49,6 +48,7 @@ pub struct ActiveSpeakerObserverDominantSpeaker {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     dominant_speaker: Bag<
         Arc<dyn Fn(&ActiveSpeakerObserverDominantSpeaker) + Send + Sync>,
@@ -86,7 +86,7 @@ struct Inner {
     closed: AtomicBool,
     // Drop subscription to audio speaker observer-specific notifications when observer itself is
     // dropped
-    subscription_handler: Mutex<Option<SubscriptionHandler>>,
+    _subscription_handler: Mutex<Option<SubscriptionHandler>>,
     _on_router_close_handler: Mutex<HandlerId>,
 }
 
@@ -105,34 +105,18 @@ impl Inner {
 
             self.handlers.close.call_simple();
 
-            let subscription_handler = self.subscription_handler.lock().take();
-
             if close_request {
                 let channel = self.channel.clone();
+                let router_id = self.router.id();
                 let request = RtpObserverCloseRequest {
-                    internal: RtpObserverInternal {
-                        router_id: self.router.id(),
-                        rtp_observer_id: self.id,
-                    },
+                    rtp_observer_id: self.id,
                 };
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(request).await {
+                        if let Err(error) = channel.request(router_id, request).await {
                             error!("active speaker observer closing failed on drop: {}", error);
                         }
-
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handler);
-                    })
-                    .detach();
-            } else {
-                self.executor
-                    .spawn(async move {
-                        // Drop from a different thread to avoid deadlock with recursive dropping
-                        // from within another subscription drop.
-                        drop(subscription_handler);
                     })
                     .detach();
             }
@@ -142,7 +126,7 @@ impl Inner {
 
 /// An active speaker observer monitors the volume of the selected audio producers.
 ///
-/// It just handles audio producers (if [`AudioLevelObserver::add_producer()`] is called with a
+/// It just handles audio producers (if [`ActiveSpeakerObserver::add_producer()`] is called with a
 /// video producer it will fail).
 ///
 /// Audio levels are read from an RTP header extension. No decoding of audio data is done. See
@@ -191,9 +175,7 @@ impl RtpObserver for ActiveSpeakerObserver {
 
         self.inner
             .channel
-            .request(RtpObserverPauseRequest {
-                internal: self.get_internal(),
-            })
+            .request(self.id(), RtpObserverPauseRequest {})
             .await?;
 
         let was_paused = self.inner.paused.swap(true, Ordering::SeqCst);
@@ -210,9 +192,7 @@ impl RtpObserver for ActiveSpeakerObserver {
 
         self.inner
             .channel
-            .request(RtpObserverResumeRequest {
-                internal: self.get_internal(),
-            })
+            .request(self.id(), RtpObserverResumeRequest {})
             .await?;
 
         let was_paused = self.inner.paused.swap(false, Ordering::SeqCst);
@@ -236,10 +216,7 @@ impl RtpObserver for ActiveSpeakerObserver {
         };
         self.inner
             .channel
-            .request(RtpObserverAddProducerRequest {
-                internal: self.get_internal(),
-                data: RtpObserverAddRemoveProducerRequestData { producer_id },
-            })
+            .request(self.id(), RtpObserverAddProducerRequest { producer_id })
             .await?;
 
         self.inner.handlers.add_producer.call_simple(&producer);
@@ -256,10 +233,7 @@ impl RtpObserver for ActiveSpeakerObserver {
         };
         self.inner
             .channel
-            .request(RtpObserverRemoveProducerRequest {
-                internal: self.get_internal(),
-                data: RtpObserverAddRemoveProducerRequestData { producer_id },
-            })
+            .request(self.id(), RtpObserverRemoveProducerRequest { producer_id })
             .await?;
 
         self.inner.handlers.remove_producer.call_simple(&producer);
@@ -368,7 +342,7 @@ impl ActiveSpeakerObserver {
             app_data,
             router,
             closed: AtomicBool::new(false),
-            subscription_handler: Mutex::new(subscription_handler),
+            _subscription_handler: Mutex::new(subscription_handler),
             _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 
@@ -392,13 +366,6 @@ impl ActiveSpeakerObserver {
     pub fn downgrade(&self) -> WeakActiveSpeakerObserver {
         WeakActiveSpeakerObserver {
             inner: Arc::downgrade(&self.inner),
-        }
-    }
-
-    fn get_internal(&self) -> RtpObserverInternal {
-        RtpObserverInternal {
-            router_id: self.inner.router.id(),
-            rtp_observer_id: self.inner.id,
         }
     }
 }

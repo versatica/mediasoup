@@ -39,7 +39,7 @@ namespace mediasoup_helpers
 		int64_t GetBaseDeltaUs(
 		  const RTC::RTCP::FeedbackRtpTransportPacket* packet, int64_t prev_timestamp_us)
 		{
-			return GetBaseTimeUs(packet) - prev_timestamp_us;
+			return packet->GetBaseDelta(prev_timestamp_us / 1000) * 1000;
 		}
 	} // namespace FeedbackRtpTransport
 } // namespace mediasoup_helpers

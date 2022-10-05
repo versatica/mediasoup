@@ -5,7 +5,8 @@ const { createWorker } = mediasoup;
 
 expect.extend({ toBeType });
 
-let worker;
+let worker1;
+let worker2;
 let router1;
 let router2;
 let transport1;
@@ -190,9 +191,10 @@ const consumerDeviceCapabilities =
 
 beforeAll(async () =>
 {
-	worker = await createWorker();
-	router1 = await worker.createRouter({ mediaCodecs });
-	router2 = await worker.createRouter({ mediaCodecs });
+	worker1 = await createWorker();
+	worker2 = await createWorker();
+	router1 = await worker1.createRouter({ mediaCodecs });
+	router2 = await worker2.createRouter({ mediaCodecs });
 	transport1 = await router1.createWebRtcTransport(
 		{
 			listenIps  : [ '127.0.0.1' ],
@@ -211,7 +213,11 @@ beforeAll(async () =>
 	await videoProducer.pause();
 });
 
-afterAll(() => worker.close());
+afterAll(() =>
+{
+	worker1.close();
+	worker2.close();
+});
 
 test('router.pipeToRouter() succeeds with audio', async () =>
 {
@@ -555,8 +561,8 @@ test('router.createPipeTransport() with invalid srtpParameters must fail', async
 			port           : 9999,
 			srtpParameters :
 				{
-					cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
-					keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+					cryptoSuite : 'AEAD_AES_256_GCM',
+					keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 				}
 		}))
 		.rejects
@@ -585,7 +591,8 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 
 	expect(pipeTransport.id).toBeType('string');
 	expect(pipeTransport.srtpParameters).toBeType('object');
-	expect(pipeTransport.srtpParameters.keyBase64.length).toBe(40);
+	// The master length of AEAD_AES_256_GCM.
+	expect(pipeTransport.srtpParameters.keyBase64.length).toBe(60);
 
 	// Missing srtpParameters.
 	await expect(pipeTransport.connect(
@@ -613,7 +620,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			port           : 9999,
 			srtpParameters :
 			{
-				keyBase64 : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+				keyBase64 : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 			}
 		}))
 		.rejects
@@ -626,7 +633,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			port           : 9999,
 			srtpParameters :
 			{
-				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80'
+				cryptoSuite : 'AEAD_AES_256_GCM'
 			}
 		}))
 		.rejects
@@ -640,7 +647,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			srtpParameters :
 			{
 				cryptoSuite : 'FOO',
-				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+				keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 			}
 		}))
 		.rejects
@@ -654,7 +661,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			srtpParameters :
 			{
 				cryptoSuite : 123,
-				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+				keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 			}
 		}))
 		.rejects
@@ -667,7 +674,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			port           : 9999,
 			srtpParameters :
 			{
-				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
+				cryptoSuite : 'AEAD_AES_256_GCM',
 				keyBase64   : []
 			}
 		}))
@@ -681,8 +688,8 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			port           : 9999,
 			srtpParameters :
 			{
-				cryptoSuite : 'AES_CM_128_HMAC_SHA1_80',
-				keyBase64   : 'ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv'
+				cryptoSuite : 'AEAD_AES_256_GCM',
+				keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 			}
 		}))
 		.resolves
@@ -889,8 +896,8 @@ test('dataProducer.close() is transmitted to pipe DataConsumer', async () =>
 
 test('router.pipeToRouter() called twice generates a single PipeTransport pair', async () =>
 {
-	const routerA = await worker.createRouter({ mediaCodecs });
-	const routerB = await worker.createRouter({ mediaCodecs });
+	const routerA = await worker1.createRouter({ mediaCodecs });
+	const routerB = await worker2.createRouter({ mediaCodecs });
 	const transportA1 = await routerA.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] });
 	const transportA2 = await routerA.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] });
 	const audioProducerA1 = await transportA1.produce(audioProducerParameters);
@@ -935,8 +942,8 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 	router1.close();
 	router2.close();
 
-	const routerA = await worker.createRouter({ mediaCodecs });
-	const routerB = await worker.createRouter({ mediaCodecs });
+	const routerA = await worker1.createRouter({ mediaCodecs });
+	const routerB = await worker2.createRouter({ mediaCodecs });
 	const transportA = await routerA.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] });
 	const transportB = await routerB.createWebRtcTransport({ listenIps: [ '127.0.0.1' ] });
 	const audioProducerA = await transportA.produce(audioProducerParameters);

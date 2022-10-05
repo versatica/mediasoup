@@ -117,10 +117,7 @@ namespace RTC
 		           payloadLength + size_t{ payloadPadding },
 		  "packet's computed size does not match received size");
 
-		auto* packet =
-		  new RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
-
-		return packet;
+		return new RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
 	}
 
 	/* Instance methods. */
@@ -147,6 +144,11 @@ namespace RTC
 	RtpPacket::~RtpPacket()
 	{
 		MS_TRACE();
+
+		if (this->buffer)
+		{
+			delete[] this->buffer;
+		}
 	}
 
 	void RtpPacket::Dump() const
@@ -179,7 +181,10 @@ namespace RTC
 			{
 				for (const auto& extension : this->oneByteExtensions)
 				{
-					extIds.push_back(std::to_string(extension->id));
+					if (extension != nullptr)
+					{
+						extIds.push_back(std::to_string(extension->id));
+					}
 				}
 			}
 			else
@@ -410,14 +415,18 @@ namespace RTC
 			if (type == 1u)
 			{
 				if (extension.id == 0 || extension.id > 14 || extension.len == 0 || extension.len > 16)
+				{
 					continue;
+				}
 
 				extensionsTotalSize += (1 + extension.len);
 			}
 			else if (type == 2u)
 			{
 				if (extension.id == 0)
+				{
 					continue;
+				}
 
 				extensionsTotalSize += (2 + extension.len);
 			}
@@ -524,7 +533,7 @@ namespace RTC
 		MS_ASSERT(ptr == this->payload, "wrong ptr calculation");
 	}
 
-	bool RtpPacket::UpdateMid(const std::string& mid)
+	void RtpPacket::UpdateMid(const std::string& mid)
 	{
 		MS_TRACE();
 
@@ -532,25 +541,25 @@ namespace RTC
 		uint8_t* extenValue = GetExtension(this->midExtensionId, extenLen);
 
 		if (!extenValue)
-			return false;
+			return;
+
+		size_t midLen = mid.length();
 
 		// Here we assume that there is MidMaxLength available bytes, even if now
 		// they are padding bytes.
-		if (mid.size() > RTC::MidMaxLength)
+		if (midLen > RTC::MidMaxLength)
 		{
 			MS_ERROR(
 			  "no enough space for MID value [MidMaxLength:%" PRIu8 ", mid:'%s']",
 			  RTC::MidMaxLength,
 			  mid.c_str());
 
-			return false;
+			return;
 		}
 
-		std::memcpy(extenValue, mid.c_str(), mid.size());
+		std::memcpy(extenValue, mid.c_str(), midLen);
 
-		SetExtensionLength(this->midExtensionId, mid.size());
-
-		return true;
+		SetExtensionLength(this->midExtensionId, midLen);
 	}
 
 	/**
@@ -631,11 +640,13 @@ namespace RTC
 		SetPayloadPaddingFlag(false);
 	}
 
-	RtpPacket* RtpPacket::Clone(const uint8_t* buffer) const
+	RtpPacket* RtpPacket::Clone() const
 	{
 		MS_TRACE();
 
-		auto* ptr = const_cast<uint8_t*>(buffer);
+		auto* buffer = new uint8_t[MtuSize + 100];
+		auto* ptr    = const_cast<uint8_t*>(buffer);
+
 		size_t numBytes{ 0 };
 
 		// Copy the minimum header.
@@ -704,6 +715,10 @@ namespace RTC
 		packet->frameMarkingExtensionId      = this->frameMarkingExtensionId;
 		packet->ssrcAudioLevelExtensionId    = this->ssrcAudioLevelExtensionId;
 		packet->videoOrientationExtensionId  = this->videoOrientationExtensionId;
+		// Assign the payload descriptor handler.
+		packet->payloadDescriptorHandler = this->payloadDescriptorHandler;
+		// Store allocated buffer.
+		packet->buffer = buffer;
 
 		return packet;
 	}
@@ -782,20 +797,15 @@ namespace RTC
 		return true;
 	}
 
-	bool RtpPacket::ProcessPayload(RTC::Codecs::EncodingContext* context)
+	bool RtpPacket::ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker)
 	{
 		MS_TRACE();
 
 		if (!this->payloadDescriptorHandler)
 			return true;
 
-		bool marker{ false };
-
 		if (this->payloadDescriptorHandler->Process(context, this->payload, marker))
 		{
-			if (marker)
-				SetMarker(true);
-
 			return true;
 		}
 		else
@@ -827,7 +837,7 @@ namespace RTC
 			MS_ASSERT(shift <= (this->payloadLength - payloadOffset), "shift too big");
 
 		uint8_t* payloadOffsetPtr = this->payload + payloadOffset;
-		size_t shiftedLen;
+		size_t shiftedLen{ 0 };
 
 		if (expand)
 		{

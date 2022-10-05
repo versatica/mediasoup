@@ -8,6 +8,8 @@
 
 using namespace RTC;
 
+static constexpr unsigned int SendNackDelay{ 0u }; // In ms.
+
 struct TestNackGeneratorInput
 {
 	TestNackGeneratorInput() = default;
@@ -35,28 +37,28 @@ class TestPayloadDescriptorHandler : public Codecs::PayloadDescriptorHandler
 {
 public:
 	explicit TestPayloadDescriptorHandler(bool isKeyFrame) : isKeyFrame(isKeyFrame){};
-	~TestPayloadDescriptorHandler() = default;
-	void Dump() const
+	~TestPayloadDescriptorHandler() override = default;
+	void Dump() const override
 	{
 		return;
 	};
-	bool Process(Codecs::EncodingContext* /*context*/, uint8_t* /*data*/, bool& /*marker*/)
+	bool Process(Codecs::EncodingContext* /*context*/, uint8_t* /*data*/, bool& /*marker*/) override
 	{
 		return true;
 	};
-	void Restore(uint8_t* /*data*/)
+	void Restore(uint8_t* /*data*/) override
 	{
 		return;
 	};
-	uint8_t GetSpatialLayer() const
+	uint8_t GetSpatialLayer() const override
 	{
 		return 0;
 	};
-	uint8_t GetTemporalLayer() const
+	uint8_t GetTemporalLayer() const override
 	{
 		return 0;
 	};
-	bool IsKeyFrame() const
+	bool IsKeyFrame() const override
 	{
 		return this->isKeyFrame;
 	};
@@ -121,13 +123,13 @@ RtpPacket* packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
 void validate(std::vector<TestNackGeneratorInput>& inputs)
 {
 	TestNackGeneratorListener listener;
-	NackGenerator nackGenerator = NackGenerator(&listener);
+	NackGenerator nackGenerator = NackGenerator(&listener, SendNackDelay);
 
 	for (auto input : inputs)
 	{
 		listener.Reset(input);
 
-		TestPayloadDescriptorHandler* tpdh = new TestPayloadDescriptorHandler(input.isKeyFrame);
+		auto* tpdh = new TestPayloadDescriptorHandler(input.isKeyFrame);
 
 		packet->SetPayloadDescriptorHandler(tpdh);
 		packet->SetSequenceNumber(input.seq);

@@ -8,11 +8,12 @@ mod utils;
 
 use crate::data_structures::AppData;
 use crate::messages::{
-    RouterInternal, WorkerCloseRequest, WorkerCreateRouterRequest, WorkerDumpRequest,
-    WorkerUpdateSettingsRequest,
+    WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest,
+    WorkerDumpRequest, WorkerUpdateSettingsRequest,
 };
 pub use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
+use crate::webrtc_server::{WebRtcServer, WebRtcServerId, WebRtcServerOptions};
 use crate::worker::channel::BufferMessagesGuard;
 pub use crate::worker::utils::ExitError;
 use crate::worker_manager::WorkerManager;
@@ -33,6 +34,7 @@ use std::sync::Arc;
 use std::{fmt, io};
 use thiserror::Error;
 use utils::WorkerRunResult;
+use uuid::Uuid;
 
 uuid_based_wrapper_type!(
     /// Worker identifier.
@@ -190,8 +192,22 @@ pub struct WorkerSettings {
 impl Default for WorkerSettings {
     fn default() -> Self {
         Self {
-            log_level: WorkerLogLevel::default(),
-            log_tags: Vec::new(),
+            log_level: WorkerLogLevel::Debug,
+            log_tags: vec![
+                WorkerLogTag::Info,
+                WorkerLogTag::Ice,
+                WorkerLogTag::Dtls,
+                WorkerLogTag::Rtp,
+                WorkerLogTag::Srtp,
+                WorkerLogTag::Rtcp,
+                WorkerLogTag::Rtx,
+                WorkerLogTag::Bwe,
+                WorkerLogTag::Score,
+                WorkerLogTag::Simulcast,
+                WorkerLogTag::Svc,
+                WorkerLogTag::Sctp,
+                WorkerLogTag::Message,
+            ],
             rtc_ports_range: 10000..=59999,
             dtls_files: None,
             thread_initializer: None,
@@ -241,6 +257,15 @@ pub struct WorkerUpdateSettings {
     pub log_tags: Option<Vec<WorkerLogTag>>,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct ChannelMessageHandlers {
+    pub channel_request_handlers: Vec<Uuid>,
+    pub payload_channel_request_handlers: Vec<Uuid>,
+    pub payload_channel_notification_handlers: Vec<Uuid>,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
@@ -248,6 +273,17 @@ pub struct WorkerUpdateSettings {
 pub struct WorkerDump {
     // Dump has `pid` field too, but it is useless here because of thead-based worker usage
     pub router_ids: Vec<RouterId>,
+    #[serde(rename = "webRtcServerIds")]
+    pub webrtc_server_ids: Vec<WebRtcServerId>,
+    pub channel_message_handlers: ChannelMessageHandlers,
+}
+
+/// Error that caused [`Worker::create_webrtc_server`] to fail.
+#[derive(Debug, Error, Eq, PartialEq)]
+pub enum CreateWebRtcServerError {
+    /// Request to worker failed
+    #[error("Request to worker failed: {0}")]
+    Request(RequestError),
 }
 
 /// Error that caused [`Worker::create_router`] to fail.
@@ -262,8 +298,10 @@ pub enum CreateRouterError {
 }
 
 #[derive(Default)]
+#[allow(clippy::type_complexity)]
 struct Handlers {
     new_router: Bag<Arc<dyn Fn(&Router) + Send + Sync>, Router>,
+    new_webrtc_server: Bag<Arc<dyn Fn(&WebRtcServer) + Send + Sync>, WebRtcServer>,
     #[allow(clippy::type_complexity)]
     dead: BagOnce<Box<dyn FnOnce(Result<(), ExitError>) + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
@@ -516,7 +554,7 @@ impl Inner {
 
             self.executor
                 .spawn(async move {
-                    let _ = channel.request(WorkerCloseRequest {}).await;
+                    let _ = channel.request("", WorkerCloseRequest {}).await;
 
                     // Drop channels in here after response from worker
                     drop(channel);
@@ -586,7 +624,7 @@ impl Worker {
     pub async fn dump(&self) -> Result<WorkerDump, RequestError> {
         debug!("dump()");
 
-        self.inner.channel.request(WorkerDumpRequest {}).await
+        self.inner.channel.request("", WorkerDumpRequest {}).await
     }
 
     /// Updates the worker settings in runtime. Just a subset of the worker settings can be updated.
@@ -595,8 +633,57 @@ impl Worker {
 
         self.inner
             .channel
-            .request(WorkerUpdateSettingsRequest { data })
+            .request("", WorkerUpdateSettingsRequest { data })
             .await
+    }
+
+    /// Create a WebRtcServer.
+    ///
+    /// Worker will be kept alive as long as at least one WebRTC server instance is alive.
+    pub async fn create_webrtc_server(
+        &self,
+        webrtc_server_options: WebRtcServerOptions,
+    ) -> Result<WebRtcServer, CreateWebRtcServerError> {
+        debug!("create_router()");
+
+        let WebRtcServerOptions {
+            listen_infos,
+            app_data,
+        } = webrtc_server_options;
+
+        let webrtc_server_id = WebRtcServerId::new();
+
+        let _buffer_guard = self
+            .inner
+            .channel
+            .buffer_messages_for(webrtc_server_id.into());
+
+        self.inner
+            .channel
+            .request(
+                "",
+                WorkerCreateWebRtcServerRequest {
+                    webrtc_server_id,
+                    listen_infos,
+                },
+            )
+            .await
+            .map_err(CreateWebRtcServerError::Request)?;
+
+        let webrtc_server = WebRtcServer::new(
+            webrtc_server_id,
+            Arc::clone(&self.inner.executor),
+            self.inner.channel.clone(),
+            app_data,
+            self.clone(),
+        );
+
+        self.inner
+            .handlers
+            .new_webrtc_server
+            .call_simple(&webrtc_server);
+
+        Ok(webrtc_server)
     }
 
     /// Create a Router.
@@ -617,13 +704,12 @@ impl Worker {
             .map_err(CreateRouterError::FailedRtpCapabilitiesGeneration)?;
 
         let router_id = RouterId::new();
-        let internal = RouterInternal { router_id };
 
         let _buffer_guard = self.inner.channel.buffer_messages_for(router_id.into());
 
         self.inner
             .channel
-            .request(WorkerCreateRouterRequest { internal })
+            .request("", WorkerCreateRouterRequest { router_id })
             .await
             .map_err(CreateRouterError::Request)?;
 
@@ -640,6 +726,17 @@ impl Worker {
         self.inner.handlers.new_router.call_simple(&router);
 
         Ok(router)
+    }
+
+    /// Callback is called when a new WebRTC server is created.
+    pub fn on_new_webrtc_server<F: Fn(&WebRtcServer) + Send + Sync + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
+        self.inner
+            .handlers
+            .new_webrtc_server
+            .add(Arc::new(callback))
     }
 
     /// Callback is called when a new router is created.

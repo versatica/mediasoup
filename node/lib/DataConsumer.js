@@ -21,13 +21,6 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #observer = new EnhancedEventEmitter_1.EnhancedEventEmitter();
     /**
      * @private
-     * @emits transportclose
-     * @emits dataproducerclose
-     * @emits message - (message: Buffer, ppid: number)
-     * @emits sctpsendbufferfull
-     * @emits bufferedamountlow - (bufferedAmount: number)
-     * @emits @close
-     * @emits @dataproducerclose
      */
     constructor({ internal, data, channel, payloadChannel, appData }) {
         super();
@@ -36,7 +29,7 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#data = data;
         this.#channel = channel;
         this.#payloadChannel = payloadChannel;
-        this.#appData = appData;
+        this.#appData = appData || {};
         this.handleWorkerNotifications();
     }
     /**
@@ -49,7 +42,7 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Associated DataProducer id.
      */
     get dataProducerId() {
-        return this.#internal.dataProducerId;
+        return this.#data.dataProducerId;
     }
     /**
      * Whether the DataConsumer is closed.
@@ -95,8 +88,6 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Observer.
-     *
-     * @emits close
      */
     get observer() {
         return this.#observer;
@@ -112,7 +103,8 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.#channel.removeAllListeners(this.#internal.dataConsumerId);
         this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
-        this.#channel.request('dataConsumer.close', this.#internal)
+        const reqData = { dataConsumerId: this.#internal.dataConsumerId };
+        this.#channel.request('transport.closeDataConsumer', this.#internal.transportId, reqData)
             .catch(() => { });
         this.emit('@close');
         // Emit observer event.
@@ -140,14 +132,14 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('dataConsumer.dump', this.#internal);
+        return this.#channel.request('dataConsumer.dump', this.#internal.dataConsumerId);
     }
     /**
      * Get DataConsumer stats.
      */
     async getStats() {
         logger.debug('getStats()');
-        return this.#channel.request('dataConsumer.getStats', this.#internal);
+        return this.#channel.request('dataConsumer.getStats', this.#internal.dataConsumerId);
     }
     /**
      * Set buffered amount low threshold.
@@ -155,7 +147,7 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async setBufferedAmountLowThreshold(threshold) {
         logger.debug('setBufferedAmountLowThreshold() [threshold:%s]', threshold);
         const reqData = { threshold };
-        await this.#channel.request('dataConsumer.setBufferedAmountLowThreshold', this.#internal, reqData);
+        await this.#channel.request('dataConsumer.setBufferedAmountLowThreshold', this.#internal.dataConsumerId, reqData);
     }
     /**
      * Send data.
@@ -189,15 +181,15 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             message = ' ';
         else if (ppid === 57)
             message = Buffer.alloc(1);
-        const requestData = { ppid };
-        await this.#payloadChannel.request('dataConsumer.send', this.#internal, requestData, message);
+        const requestData = String(ppid);
+        await this.#payloadChannel.request('dataConsumer.send', this.#internal.dataConsumerId, requestData, message);
     }
     /**
      * Get buffered amount size.
      */
     async getBufferedAmount() {
         logger.debug('getBufferedAmount()');
-        const { bufferedAmount } = await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal);
+        const { bufferedAmount } = await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal.dataConsumerId);
         return bufferedAmount;
     }
     handleWorkerNotifications() {

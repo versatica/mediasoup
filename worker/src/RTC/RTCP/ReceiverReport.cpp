@@ -57,6 +57,10 @@ namespace RTC
 			return HeaderSize;
 		}
 
+		/* Static Class members */
+
+		size_t ReceiverReportPacket::MaxReportsPerPacket = 31;
+
 		/* Class methods. */
 
 		/**
@@ -116,16 +120,35 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t offset = Packet::Serialize(buffer);
+			size_t offset   = 0;
+			uint8_t* header = { nullptr };
 
-			// Copy the SSRC.
-			Utils::Byte::Set4Bytes(buffer, Packet::CommonHeaderSize, this->ssrc);
-			offset += 4u;
-
-			// Serialize reports.
-			for (auto* report : this->reports)
+			for (size_t i = 0; i < this->GetCount(); i++)
 			{
-				offset += report->Serialize(buffer + offset);
+				// Create a new RR packet header for each 31 reports.
+				if (i % MaxReportsPerPacket == 0)
+				{
+					// Reference current common header.
+					header = buffer + offset;
+					offset += Packet::Serialize(buffer + offset);
+
+					// Copy the SSRC.
+					Utils::Byte::Set4Bytes(header, Packet::CommonHeaderSize, this->ssrc);
+					offset += 4u;
+				}
+
+				// Serialize next report.
+				offset += this->reports[i]->Serialize(buffer + offset);
+
+				// Adjust the header count field.
+				reinterpret_cast<Packet::CommonHeader*>(header)->count =
+				  static_cast<uint8_t>((i % MaxReportsPerPacket) + 1);
+
+				// Adjust the header length field.
+				size_t length = (Packet::CommonHeaderSize + 4u /* this->ssrc */);
+				length += ReceiverReport::HeaderSize * ((i % MaxReportsPerPacket) + 1);
+
+				reinterpret_cast<Packet::CommonHeader*>(header)->length = uint16_t{ htons((length / 4) - 1) };
 			}
 
 			return offset;

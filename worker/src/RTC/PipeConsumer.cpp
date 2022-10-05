@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/PipeConsumer.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -28,11 +29,20 @@ namespace RTC
 
 		// Create RtpStreamSend instances.
 		CreateRtpStreams();
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ nullptr,
+		  /*payloadChannelNotificationHandler*/ nullptr);
 	}
 
 	PipeConsumer::~PipeConsumer()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
@@ -184,7 +194,7 @@ namespace RTC
 		return 0u;
 	}
 
-	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -195,7 +205,7 @@ namespace RTC
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
 		// in the corresponding Producer.
-		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
+		if (!this->supportedCodecPayloadTypes[payloadType])
 		{
 			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
@@ -253,7 +263,7 @@ namespace RTC
 		}
 
 		// Process the packet.
-		if (rtpStream->ReceivePacket(packet))
+		if (rtpStream->ReceivePacket(packet, sharedPacket))
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
@@ -279,14 +289,9 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
-	void PipeConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
+	bool PipeConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(
-		  std::find(this->rtpStreams.begin(), this->rtpStreams.end(), rtpStream) != this->rtpStreams.end(),
-		  "RTP stream does exist");
 
 		// Special condition for PipeConsumer since this method will be called in a loop for
 		// each stream in this PipeConsumer.
@@ -297,22 +302,44 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			return;
+			return true;
 		}
 
-		auto* report = rtpStream->GetRtcpSenderReport(nowMs);
+		std::vector<RTCP::SenderReport*> senderReports;
+		std::vector<RTCP::SdesChunk*> sdesChunks;
+		std::vector<RTCP::DelaySinceLastRr*> xrReports;
 
-		if (!report)
-			return;
+		for (auto* rtpStream : this->rtpStreams)
+		{
+			auto* report = rtpStream->GetRtcpSenderReport(nowMs);
 
-		packet->AddSenderReport(report);
+			if (!report)
+				continue;
 
-		// Build SDES chunk for this sender.
-		auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
+			senderReports.push_back(report);
 
-		packet->AddSdesChunk(sdesChunk);
+			// Build SDES chunk for this sender.
+			auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
+			sdesChunks.push_back(sdesChunk);
+
+			auto* dlrr = rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
+
+			if (dlrr)
+			{
+				auto* report = new RTC::RTCP::DelaySinceLastRr();
+				report->AddSsrcInfo(dlrr);
+
+				xrReports.push_back(report);
+			}
+		}
+
+		// RTCP Compound packet buffer cannot hold the data.
+		if (!packet->Add(senderReports, sdesChunks, xrReports))
+			return false;
 
 		this->lastRtcpSentTime = nowMs;
+
+		return true;
 	}
 
 	void PipeConsumer::NeedWorstRemoteFractionLost(uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)
@@ -386,6 +413,16 @@ namespace RTC
 		auto* rtpStream = this->mapSsrcRtpStream.at(report->GetSsrc());
 
 		rtpStream->ReceiveRtcpReceiverReport(report);
+	}
+
+	void PipeConsumer::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+	{
+		MS_TRACE();
+
+		for (auto* rtpStream : this->rtpStreams)
+		{
+			rtpStream->ReceiveRtcpXrReceiverReferenceTime(report);
+		}
 	}
 
 	uint32_t PipeConsumer::GetTransmissionRate(uint64_t nowMs)
@@ -553,9 +590,7 @@ namespace RTC
 				}
 			}
 
-			// Create a RtpStreamSend for sending a single media stream.
-			size_t bufferSize = params.useNack ? 600u : 0u;
-			auto* rtpStream   = new RTC::RtpStreamSend(this, params, bufferSize);
+			auto* rtpStream = new RTC::RtpStreamSend(this, params, this->rtpParameters.mid);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())

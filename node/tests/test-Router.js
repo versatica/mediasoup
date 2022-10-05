@@ -63,7 +63,18 @@ test('worker.createRouter() succeeds', async () =>
 
 	await expect(worker.dump())
 		.resolves
-		.toEqual({ pid: worker.pid, routerIds: [ router.id ] });
+		.toEqual(
+			{
+				pid                    : worker.pid,
+				webRtcServerIds        : [],
+				routerIds              : [ router.id ],
+				channelMessageHandlers :
+				{
+					channelRequestHandlers             : [ router.id ],
+					payloadChannelRequestHandlers      : [],
+					payloadChannelNotificationHandlers : []
+				}
+			});
 
 	await expect(router.dump())
 		.resolves

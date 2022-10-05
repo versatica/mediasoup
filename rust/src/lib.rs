@@ -60,6 +60,7 @@ pub mod scalability_modes;
 pub mod sctp_parameters;
 pub mod srtp_parameters;
 pub mod supported_rtp_capabilities;
+pub mod webrtc_server;
 pub mod worker;
 pub mod worker_manager;
 

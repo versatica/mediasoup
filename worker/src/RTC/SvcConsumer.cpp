@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SvcConsumer.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -102,11 +103,20 @@ namespace RTC
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ nullptr,
+		  /*payloadChannelNotificationHandler*/ nullptr);
 	}
 
 	SvcConsumer::~SvcConsumer()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		delete this->rtpStream;
 	}
@@ -532,7 +542,7 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	void SvcConsumer::SendRtpPacket(RTC::RtpPacket* packet)
+	void SvcConsumer::SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -553,7 +563,7 @@ namespace RTC
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
 		// in the corresponding Producer.
-		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
+		if (!this->supportedCodecPayloadTypes[payloadType])
 		{
 			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
@@ -581,7 +591,10 @@ namespace RTC
 		auto previousSpatialLayer  = this->encodingContext->GetCurrentSpatialLayer();
 		auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
 
-		if (!packet->ProcessPayload(this->encodingContext.get()))
+		bool marker{ false };
+		bool origMarker = packet->HasMarker();
+
+		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 		{
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
@@ -612,6 +625,11 @@ namespace RTC
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
 
+		if (marker)
+		{
+			packet->SetMarker(true);
+		}
+
 		if (isSyncPacket)
 		{
 			MS_DEBUG_TAG(
@@ -625,7 +643,7 @@ namespace RTC
 		}
 
 		// Process the packet.
-		if (this->rtpStream->ReceivePacket(packet))
+		if (this->rtpStream->ReceivePacket(packet, sharedPacket))
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
@@ -649,34 +667,44 @@ namespace RTC
 		// Restore packet fields.
 		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
+		packet->SetMarker(origMarker);
 
 		// Restore the original payload if needed.
 		packet->RestorePayload();
 	}
 
-	void SvcConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
+	bool SvcConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(rtpStream == this->rtpStream, "RTP stream does not match");
-
 		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
-			return;
+			return true;
 
-		auto* report = this->rtpStream->GetRtcpSenderReport(nowMs);
+		auto* senderReport = this->rtpStream->GetRtcpSenderReport(nowMs);
 
-		if (!report)
-			return;
-
-		packet->AddSenderReport(report);
+		if (!senderReport)
+			return true;
 
 		// Build SDES chunk for this sender.
 		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
 
-		packet->AddSdesChunk(sdesChunk);
+		RTC::RTCP::DelaySinceLastRr* delaySinceLastRrReport{ nullptr };
+
+		auto* dlrr = this->rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
+
+		if (dlrr)
+		{
+			delaySinceLastRrReport = new RTC::RTCP::DelaySinceLastRr();
+			delaySinceLastRrReport->AddSsrcInfo(dlrr);
+		}
+
+		// RTCP Compound packet buffer cannot hold the data.
+		if (!packet->Add(senderReport, sdesChunk, delaySinceLastRrReport))
+			return false;
 
 		this->lastRtcpSentTime = nowMs;
+
+		return true;
 	}
 
 	void SvcConsumer::NeedWorstRemoteFractionLost(uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)
@@ -740,6 +768,13 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtpStream->ReceiveRtcpReceiverReport(report);
+	}
+
+	void SvcConsumer::ReceiveRtcpXrReceiverReferenceTime(RTC::RTCP::ReceiverReferenceTime* report)
+	{
+		MS_TRACE();
+
+		this->rtpStream->ReceiveRtcpXrReceiverReferenceTime(report);
 	}
 
 	uint32_t SvcConsumer::GetTransmissionRate(uint64_t nowMs)
@@ -871,10 +906,7 @@ namespace RTC
 			}
 		}
 
-		// Create a RtpStreamSend for sending a single media stream.
-		size_t bufferSize = params.useNack ? 600u : 0u;
-
-		this->rtpStream = new RTC::RtpStreamSend(this, params, bufferSize);
+		this->rtpStream = new RTC::RtpStreamSend(this, params, this->rtpParameters.mid);
 		this->rtpStreams.push_back(this->rtpStream);
 
 		// If the Consumer is paused, tell the RtpStreamSend.

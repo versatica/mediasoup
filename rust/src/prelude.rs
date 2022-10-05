@@ -19,6 +19,11 @@ pub use crate::router::{
     PipeProducerToRouterPair, PipeToRouterOptions, Router, RouterOptions,
 };
 
+pub use crate::webrtc_server::{
+    WebRtcServer, WebRtcServerId, WebRtcServerListenInfo, WebRtcServerListenInfos,
+    WebRtcServerOptions,
+};
+
 pub use crate::direct_transport::{DirectTransport, DirectTransportOptions, WeakDirectTransport};
 pub use crate::pipe_transport::{
     PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,
@@ -55,7 +60,7 @@ pub use crate::data_producer::{
 pub use crate::producer::{Producer, ProducerId, ProducerOptions, WeakProducer};
 
 pub use crate::data_structures::{
-    AppData, DtlsParameters, IceCandidate, IceParameters, TransportListenIp, WebRtcMessage,
+    AppData, DtlsParameters, IceCandidate, IceParameters, ListenIp, WebRtcMessage,
 };
 pub use crate::rtp_parameters::{
     MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtpCapabilities,

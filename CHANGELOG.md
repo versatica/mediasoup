@@ -1,6 +1,138 @@
 # Changelog
 
 
+### Next
+
+* Rtcp enhancements (#914)
+
+
+### 3.10.8
+
+* `Consumer`: use a bitset instead of a set for supported payload types (#919).
+* RtpPacket: optimize UpdateMid() (#920).
+* Little optimizations and modernization (#916).
+* Fix SIGSEGV at `RTC::WebRtcTransport::OnIceServerTupleRemoved()` (PR #915, credits to @ybybwdwd).
+* `WebRtcServer`: Make `port` optional (if not given, a random available port from the `Worker` port range is used) (PR #908 by @satoren).
+
+
+### 3.10.7
+
+* Forward `abs-capture-time` RTP extension also for audio packets (PR #911).
+* Update NPM deps.
+
+
+### 3.10.6
+
+* Node: Define TypeScript types for `internal` and `data` objects (PR #891).
+* `Channel` and `PayloadChannel`: Refactor `internal` with a single `handlerId` (PR #889).
+* `Channel` and `PayloadChannel`: Optimize message format and JSON generation (PR #893).
+* New C++ `ChannelMessageHandlers` class (PR #894).
+* Fix Rust support after recent changes (PR #898).
+* Modify `FeedbackRtpTransport` and tests to be compliant with latest libwebrtc code, make reference time to be unsigned (PR #899 by @penguinol and @sarumjanuch). 
+* Update NPM deps.
+
+
+### 3.10.5
+
+* `RtpStreamSend`: Do not store too old RTP packets (PR #885).
+* Do not clone RTP packets if not needed (PR #850).
+* Log error details in channel socket. (PR #875 by @mstyura).
+
+### 3.10.4
+
+* Do not clone RTP packets if not needed (PR #850).
+* Fix DTLS related crash (PR #867).
+* Update NPM deps. 
+
+
+### 3.10.3
+
+* `SimpleConsumer`: Fix. Only process Opus codec (PR #865).
+* TypeScript: Improve `WebRtcTransportOptions` type to not allow `webRtcServer` and `listenIps`options at the same time (PR #852).
+
+
+### 3.10.2
+
+* Fix release contents by including meson_options.txt (PR #863).
+
+
+### 3.10.1
+
+* `RtpStreamSend`: Memory optimizations (PR #840). Extracted from #675, by @nazar-pc.
+* `SimpleConsumer`: Opus DTX ignore capabilities (PR #846).
+* Update `libuv` to 1.44.1: Fixes `libuv` build (PR #857).
+* Update NPM deps.
+
+
+### 3.10.0
+
+* `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port (PR #834).
+* More SRTP crypto suites (PR #837).
+* Improve `EnhancedEventEmitter` (PR #836).
+* `TransportCongestionControlClient`: Allow setting max outgoing bitrate before `tccClient` is created (PR #833).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.17
+
+* `RateCalculator`: Fix old buffer items cleanup (PR #830 by @dsdolzhenko).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.16
+
+* `SimulcastConsumer`: Fix spatial layer switch with unordered packets (PR #823 by @jcague).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.15
+
+* `RateCalculator`: Revert Fix old buffer items cleanup (PR #819 by @dsdolzhenko).
+
+
+### 3.9.14
+
+* `NackGenerator`: Add a configurable delay before sending NACK (PR #827, credits to @penguinol).
+* `SimulcastConsumer`: Fix a race condition in SimulcastConsumer (PR #825 by @dsdolzhenko).
+* Add support for H264 SVC (#798 by @prtmD).
+* `RtpStreamSend`: Support receive RTCP-XR RRT and send RTCP-XR DLRR (PR #781 by @aggresss).
+* `RateCalculator`: Fix old buffer items cleanup (PR #819 by @dsdolzhenko).
+* `DirectTransport`: Create a buffer to process RTP packets (PR #730 by @rtctt).
+* Node: Improve `appData` TypeScript syntax and initialization.
+* Allow setting max outgoing bitrate below the initial value (PR #826 by @ggarber).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.13
+
+* `VP8`: Do not discard `TL0PICIDX` from Temporal Layers higher than 0 (PR @817 by @jcague).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.12
+
+* `DtlsTransport`: Make DTLS negotiation run immediately (PR #815).
+* Update NPM deps and TypeScript version.
+
+
+### 3.9.11
+
+* Modify `SimulcastConsumer` to keep using layers without good scores (PR #804 by @ggarber).
+* Update NPM deps.
+
+
+### 3.9.10
+
+* Update worker dependencies:
+    * OpenSSL 3.0.2.
+    * abseil-cpp 20211102.0.
+    * nlohmann_json 3.10.5.
+    * usrsctp snapshot 4e06feb01cadcd127d119486b98a4bd3d64aa1e7.
+    * wingetopt 1.00.
+* Update NPM deps and TypeScript version.
+* Fix RTP marker bit not being reseted after mangling in each `Consumer` (PR #811 by @ggarber).
+
+
 ### 3.9.9
 
 * Optimize RTP header extension handling (PR #786).

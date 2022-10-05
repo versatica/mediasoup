@@ -6,6 +6,10 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 
+/* Static. */
+
+static constexpr int ListenBacklog{ 512 };
+
 /* Static methods for UV callbacks. */
 
 inline static void onConnection(uv_stream_t* handle, int status)
@@ -24,7 +28,7 @@ inline static void onClose(uv_handle_t* handle)
 /* Instance methods. */
 
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-TcpServerHandler::TcpServerHandler(uv_tcp_t* uvHandle, int backlog) : uvHandle(uvHandle)
+TcpServerHandler::TcpServerHandler(uv_tcp_t* uvHandle) : uvHandle(uvHandle)
 {
 	MS_TRACE();
 
@@ -34,7 +38,7 @@ TcpServerHandler::TcpServerHandler(uv_tcp_t* uvHandle, int backlog) : uvHandle(u
 
 	err = uv_listen(
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
-	  backlog,
+	  ListenBacklog,
 	  static_cast<uv_connection_cb>(onConnection));
 
 	if (err != 0)

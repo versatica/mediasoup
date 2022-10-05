@@ -2,6 +2,7 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { TransportInternal } from './Transport';
 import { SctpStreamParameters } from './SctpParameters';
 
 export type DataProducerOptions =
@@ -30,8 +31,8 @@ export type DataProducerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
-}
+	appData?: Record<string, unknown>;
+};
 
 export type DataProducerStat =
 {
@@ -41,7 +42,7 @@ export type DataProducerStat =
 	protocol: string;
 	messagesReceived: number;
 	bytesReceived: number;
-}
+};
 
 /**
  * DataProducer type.
@@ -51,33 +52,37 @@ export type DataProducerType = 'sctp' | 'direct';
 export type DataProducerEvents =
 {
 	transportclose: [];
-}
+	// Private events.
+	'@close': [];
+};
 
 export type DataProducerObserverEvents =
 {
 	close: [];
-}
+};
+
+type DataProducerInternal = TransportInternal &
+{
+	dataProducerId: string;
+};
+
+type DataProducerData =
+{
+	type: DataProducerType;
+	sctpStreamParameters?: SctpStreamParameters;
+	label: string;
+	protocol: string;
+};
 
 const logger = new Logger('DataProducer');
 
 export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		dataProducerId: string;
-	};
+	readonly #internal: DataProducerInternal;
 
 	// DataProducer data.
-	readonly #data:
-	{
-		type: DataProducerType;
-		sctpStreamParameters?: SctpStreamParameters;
-		label: string;
-		protocol: string;
-	};
+	readonly #data: DataProducerData;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -89,15 +94,13 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Observer instance.
 	readonly #observer = new EnhancedEventEmitter<DataProducerObserverEvents>();
 
 	/**
 	 * @private
-	 * @emits transportclose
-	 * @emits @close
 	 */
 	constructor(
 		{
@@ -108,11 +111,11 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 			appData
 		}:
 		{
-			internal: any;
-			data: any;
+			internal: DataProducerInternal;
+			data: DataProducerData;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData: any;
+			appData?: Record<string, unknown>;
 		}
 	)
 	{
@@ -124,7 +127,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 
 		this.handleWorkerNotifications();
 	}
@@ -180,7 +183,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -188,15 +191,13 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
 	 */
 	get observer(): EnhancedEventEmitter<DataProducerObserverEvents>
 	{
@@ -219,7 +220,9 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#channel.removeAllListeners(this.#internal.dataProducerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
 
-		this.#channel.request('dataProducer.close', this.#internal)
+		const reqData = { dataProducerId: this.#internal.dataProducerId };
+
+		this.#channel.request('transport.closeDataProducer', this.#internal.transportId, reqData)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -259,7 +262,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('dataProducer.dump', this.#internal);
+		return this.#channel.request('dataProducer.dump', this.#internal.dataProducerId);
 	}
 
 	/**
@@ -269,7 +272,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('dataProducer.getStats', this.#internal);
+		return this.#channel.request('dataProducer.getStats', this.#internal.dataProducerId);
 	}
 
 	/**
@@ -311,10 +314,10 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		else if (ppid === 57)
 			message = Buffer.alloc(1);
 
-		const notifData = { ppid };
+		const notifData = String(ppid);
 
 		this.#payloadChannel.notify(
-			'dataProducer.send', this.#internal, notifData, message);
+			'dataProducer.send', this.#internal.dataProducerId, notifData, message);
 	}
 
 	private handleWorkerNotifications(): void

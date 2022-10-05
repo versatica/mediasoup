@@ -2,6 +2,7 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { TransportInternal } from './Transport';
 import { SctpStreamParameters } from './SctpParameters';
 
 export type DataConsumerOptions =
@@ -38,8 +39,8 @@ export type DataConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
-}
+	appData?: Record<string, unknown>;
+};
 
 export type DataConsumerStat =
 {
@@ -50,7 +51,7 @@ export type DataConsumerStat =
 	messagesSent: number;
 	bytesSent: number;
 	bufferedAmount: number;
-}
+};
 
 /**
  * DataConsumer type.
@@ -64,34 +65,39 @@ export type DataConsumerEvents =
 	message: [Buffer, number];
 	sctpsendbufferfull: [];
 	bufferedamountlow: [number];
-}
+	// Private events.
+	'@close': [];
+	'@dataproducerclose': [];
+};
 
 export type DataConsumerObserverEvents =
 {
 	close: [];
-}
+};
+
+type DataConsumerInternal = TransportInternal &
+{
+	dataConsumerId: string;
+};
+
+type DataConsumerData =
+{
+	dataProducerId: string;
+	type: DataConsumerType;
+	sctpStreamParameters?: SctpStreamParameters;
+	label: string;
+	protocol: string;
+};
 
 const logger = new Logger('DataConsumer');
 
 export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 {
 	// Internal data.
-	readonly #internal:
-	{
-		routerId: string;
-		transportId: string;
-		dataProducerId: string;
-		dataConsumerId: string;
-	};
+	readonly #internal: DataConsumerInternal;
 
 	// DataConsumer data.
-	readonly #data:
-	{
-		type: DataConsumerType;
-		sctpStreamParameters?: SctpStreamParameters;
-		label: string;
-		protocol: string;
-	};
+	readonly #data: DataConsumerData;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -103,20 +109,13 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData?: any;
+	readonly #appData: Record<string, unknown>;
 
 	// Observer instance.
 	readonly #observer = new EnhancedEventEmitter<DataConsumerObserverEvents>();
 
 	/**
 	 * @private
-	 * @emits transportclose
-	 * @emits dataproducerclose
-	 * @emits message - (message: Buffer, ppid: number)
-	 * @emits sctpsendbufferfull
-	 * @emits bufferedamountlow - (bufferedAmount: number)
-	 * @emits @close
-	 * @emits @dataproducerclose
 	 */
 	constructor(
 		{
@@ -127,11 +126,11 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			appData
 		}:
 		{
-			internal: any;
-			data: any;
+			internal: DataConsumerInternal;
+			data: DataConsumerData;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
-			appData: any;
+			appData?: Record<string, unknown>;
 		}
 	)
 	{
@@ -143,7 +142,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#data = data;
 		this.#channel = channel;
 		this.#payloadChannel = payloadChannel;
-		this.#appData = appData;
+		this.#appData = appData || {};
 
 		this.handleWorkerNotifications();
 	}
@@ -161,7 +160,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	 */
 	get dataProducerId(): string
 	{
-		return this.#internal.dataProducerId;
+		return this.#data.dataProducerId;
 	}
 
 	/**
@@ -207,7 +206,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): any
+	get appData(): Record<string, unknown>
 	{
 		return this.#appData;
 	}
@@ -215,15 +214,13 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	/**
 	 * Invalid setter.
 	 */
-	set appData(appData: any) // eslint-disable-line no-unused-vars
+	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
 	{
 		throw new Error('cannot override appData object');
 	}
 
 	/**
 	 * Observer.
-	 *
-	 * @emits close
 	 */
 	get observer(): EnhancedEventEmitter<DataConsumerObserverEvents>
 	{
@@ -246,7 +243,9 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#channel.removeAllListeners(this.#internal.dataConsumerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
 
-		this.#channel.request('dataConsumer.close', this.#internal)
+		const reqData = { dataConsumerId: this.#internal.dataConsumerId };
+
+		this.#channel.request('transport.closeDataConsumer', this.#internal.transportId, reqData)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -286,7 +285,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('dataConsumer.dump', this.#internal);
+		return this.#channel.request('dataConsumer.dump', this.#internal.dataConsumerId);
 	}
 
 	/**
@@ -296,7 +295,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('dataConsumer.getStats', this.#internal);
+		return this.#channel.request('dataConsumer.getStats', this.#internal.dataConsumerId);
 	}
 
 	/**
@@ -309,7 +308,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		const reqData = { threshold };
 
 		await this.#channel.request(
-			'dataConsumer.setBufferedAmountLowThreshold', this.#internal, reqData);
+			'dataConsumer.setBufferedAmountLowThreshold', this.#internal.dataConsumerId, reqData);
 	}
 
 	/**
@@ -351,10 +350,10 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		else if (ppid === 57)
 			message = Buffer.alloc(1);
 
-		const requestData = { ppid };
+		const requestData = String(ppid);
 
 		await this.#payloadChannel.request(
-			'dataConsumer.send', this.#internal, requestData, message);
+			'dataConsumer.send', this.#internal.dataConsumerId, requestData, message);
 	}
 
 	/**
@@ -365,7 +364,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		logger.debug('getBufferedAmount()');
 
 		const { bufferedAmount } =
-			await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal);
+			await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal.dataConsumerId);
 
 		return bufferedAmount;
 	}

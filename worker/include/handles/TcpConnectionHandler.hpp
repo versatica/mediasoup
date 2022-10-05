@@ -51,16 +51,16 @@ public:
 
 public:
 	void Close();
+	bool IsClosed() const
+	{
+		return this->closed;
+	}
 	virtual void Dump() const;
 	void Setup(
 	  Listener* listener,
 	  struct sockaddr_storage* localAddr,
 	  const std::string& localIp,
 	  uint16_t localPort);
-	bool IsClosed() const
-	{
-		return this->closed;
-	}
 	uv_tcp_t* GetUvHandle() const
 	{
 		return this->uvHandle;

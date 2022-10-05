@@ -2,7 +2,7 @@ use futures_lite::future;
 use mediasoup::consumer::{ConsumerOptions, ConsumerScore, ConsumerType};
 use mediasoup::data_consumer::{DataConsumerOptions, DataConsumerType};
 use mediasoup::data_producer::{DataProducerOptions, DataProducerType};
-use mediasoup::data_structures::{AppData, TransportListenIp};
+use mediasoup::data_structures::{AppData, ListenIp};
 use mediasoup::pipe_transport::{PipeTransportOptions, PipeTransportRemoteParameters};
 use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
@@ -22,7 +22,9 @@ use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTra
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use parking_lot::Mutex;
+use portpicker::pick_unused_port;
 use std::env;
+use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 
 struct CustomAppData {
@@ -212,7 +214,14 @@ fn consumer_device_capabilities() -> RtpCapabilities {
     }
 }
 
-async fn init() -> (Worker, Router, Router, WebRtcTransport, WebRtcTransport) {
+async fn init() -> (
+    Worker,
+    Worker,
+    Router,
+    Router,
+    WebRtcTransport,
+    WebRtcTransport,
+) {
     {
         let mut builder = env_logger::builder();
         if env::var(env_logger::DEFAULT_FILTER_ENV).is_err() {
@@ -223,26 +232,30 @@ async fn init() -> (Worker, Router, Router, WebRtcTransport, WebRtcTransport) {
 
     let worker_manager = WorkerManager::new();
 
-    let worker = worker_manager
+    let worker1 = worker_manager
         .create_worker(WorkerSettings::default())
         .await
         .expect("Failed to create worker");
 
-    let router1 = worker
+    let worker2 = worker_manager
+        .create_worker(WorkerSettings::default())
+        .await
+        .expect("Failed to create worker");
+
+    let router1 = worker1
         .create_router(RouterOptions::new(media_codecs()))
         .await
         .expect("Failed to create router");
 
-    let router2 = worker
+    let router2 = worker2
         .create_router(RouterOptions::new(media_codecs()))
         .await
         .expect("Failed to create router");
 
-    let mut transport_options =
-        WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-            ip: "127.0.0.1".parse().unwrap(),
-            announced_ip: None,
-        }));
+    let mut transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
+        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+        announced_ip: None,
+    }));
     transport_options.enable_sctp = true;
 
     let transport_1 = router1
@@ -255,13 +268,13 @@ async fn init() -> (Worker, Router, Router, WebRtcTransport, WebRtcTransport) {
         .await
         .expect("Failed to create transport2");
 
-    (worker, router1, router2, transport_1, transport_2)
+    (worker1, worker2, router1, router2, transport_1, transport_2)
 }
 
 #[test]
 fn pipe_to_router_succeeds_with_audio() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, _transport2) = init().await;
 
         let audio_producer = transport1
             .produce(audio_producer_options())
@@ -331,8 +344,8 @@ fn pipe_to_router_succeeds_with_audio() {
             ],
         );
         assert_eq!(pipe_consumer.r#type(), ConsumerType::Pipe);
-        assert_eq!(pipe_consumer.paused(), false);
-        assert_eq!(pipe_consumer.producer_paused(), false);
+        assert!(!pipe_consumer.paused());
+        assert!(!pipe_consumer.producer_paused());
         assert_eq!(
             pipe_consumer.score(),
             ConsumerScore {
@@ -375,14 +388,14 @@ fn pipe_to_router_succeeds_with_audio() {
                 }
             ],
         );
-        assert_eq!(pipe_producer.paused(), false);
+        assert!(!pipe_producer.paused());
     });
 }
 
 #[test]
 fn pipe_to_router_succeeds_with_video() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, _transport2) = init().await;
 
         let audio_producer = transport1
             .produce(audio_producer_options())
@@ -479,8 +492,8 @@ fn pipe_to_router_succeeds_with_video() {
             ],
         );
         assert_eq!(pipe_consumer.r#type(), ConsumerType::Pipe);
-        assert_eq!(pipe_consumer.paused(), false);
-        assert_eq!(pipe_consumer.producer_paused(), true);
+        assert!(!pipe_consumer.paused());
+        assert!(pipe_consumer.producer_paused());
         assert_eq!(
             pipe_consumer.score(),
             ConsumerScore {
@@ -535,19 +548,19 @@ fn pipe_to_router_succeeds_with_video() {
                 },
             ],
         );
-        assert_eq!(pipe_producer.paused(), true);
+        assert!(pipe_producer.paused());
     });
 }
 
 #[test]
 fn weak() {
     future::block_on(async move {
-        let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, _router2, _transport1, _transport2) = init().await;
 
         let pipe_transport = router1
             .create_pipe_transport({
-                let mut options = PipeTransportOptions::new(TransportListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                let mut options = PipeTransportOptions::new(ListenIp {
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
                 options.enable_rtx = true;
@@ -570,34 +583,36 @@ fn weak() {
 #[test]
 fn create_with_fixed_port_succeeds() {
     future::block_on(async move {
-        let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, _router2, _transport1, _transport2) = init().await;
+
+        let port = pick_unused_port().unwrap();
 
         let pipe_transport = router1
             .create_pipe_transport({
-                let mut options = PipeTransportOptions::new(TransportListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                let mut options = PipeTransportOptions::new(ListenIp {
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
-                options.port = Some(60_000);
+                options.port = Some(port);
 
                 options
             })
             .await
             .expect("Failed to create Pipe transport");
 
-        assert_eq!(pipe_transport.tuple().local_port(), 60_000);
+        assert_eq!(pipe_transport.tuple().local_port(), port);
     });
 }
 
 #[test]
 fn create_with_enable_rtx_succeeds() {
     future::block_on(async move {
-        let (_worker, router1, _router2, transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, _router2, transport1, _transport2) = init().await;
 
         let pipe_transport = router1
             .create_pipe_transport({
-                let mut options = PipeTransportOptions::new(TransportListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                let mut options = PipeTransportOptions::new(ListenIp {
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
                 options.enable_rtx = true;
@@ -683,8 +698,8 @@ fn create_with_enable_rtx_succeeds() {
             ],
         );
         assert_eq!(pipe_consumer.r#type(), ConsumerType::Pipe);
-        assert_eq!(pipe_consumer.paused(), false);
-        assert_eq!(pipe_consumer.producer_paused(), true);
+        assert!(!pipe_consumer.paused());
+        assert!(pipe_consumer.producer_paused());
         assert_eq!(
             pipe_consumer.score(),
             ConsumerScore {
@@ -700,12 +715,12 @@ fn create_with_enable_rtx_succeeds() {
 #[test]
 fn create_with_enable_srtp_succeeds() {
     future::block_on(async move {
-        let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, _router2, _transport1, _transport2) = init().await;
 
         let pipe_transport = router1
             .create_pipe_transport({
-                let mut options = PipeTransportOptions::new(TransportListenIp {
-                    ip: "127.0.0.1".parse().unwrap(),
+                let mut options = PipeTransportOptions::new(ListenIp {
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                 });
                 options.enable_srtp = true;
@@ -718,7 +733,7 @@ fn create_with_enable_srtp_succeeds() {
         assert!(pipe_transport.srtp_parameters().is_some());
         assert_eq!(
             pipe_transport.srtp_parameters().unwrap().key_base64.len(),
-            40
+            60
         );
 
         // Missing srtp_parameters.
@@ -739,8 +754,9 @@ fn create_with_enable_srtp_succeeds() {
                 ip: "127.0.0.2".parse().unwrap(),
                 port: 9999,
                 srtp_parameters: Some(SrtpParameters {
-                    crypto_suite: SrtpCryptoSuite::AesCm128HmacSha180,
-                    key_base64: "ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv".to_string(),
+                    crypto_suite: SrtpCryptoSuite::AeadAes256Gcm,
+                    key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo="
+                        .to_string(),
                 }),
             })
             .await
@@ -751,11 +767,11 @@ fn create_with_enable_srtp_succeeds() {
 #[test]
 fn create_with_invalid_srtp_parameters_fails() {
     future::block_on(async move {
-        let (_worker, router1, _router2, _transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, _router2, _transport1, _transport2) = init().await;
 
         let pipe_transport = router1
-            .create_pipe_transport(PipeTransportOptions::new(TransportListenIp {
-                ip: "127.0.0.1".parse().unwrap(),
+            .create_pipe_transport(PipeTransportOptions::new(ListenIp {
+                ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_ip: None,
             }))
             .await
@@ -768,8 +784,9 @@ fn create_with_invalid_srtp_parameters_fails() {
                     ip: "127.0.0.2".parse().unwrap(),
                     port: 9999,
                     srtp_parameters: Some(SrtpParameters {
-                        crypto_suite: SrtpCryptoSuite::AesCm128HmacSha180,
-                        key_base64: "ZnQ3eWJraDg0d3ZoYzM5cXN1Y2pnaHU5NWxrZTVv".to_string(),
+                        crypto_suite: SrtpCryptoSuite::AeadAes256Gcm,
+                        key_base64: "YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo="
+                            .to_string(),
                     }),
                 })
                 .await,
@@ -781,7 +798,7 @@ fn create_with_invalid_srtp_parameters_fails() {
 #[test]
 fn consume_for_pipe_producer_succeeds() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, transport2) = init().await;
 
         let video_producer = transport1
             .produce(video_producer_options())
@@ -854,8 +871,8 @@ fn consume_for_pipe_producer_succeeds() {
         assert!(video_consumer.rtp_parameters().encodings[0].ssrc.is_some());
         assert!(video_consumer.rtp_parameters().encodings[0].rtx.is_some());
         assert_eq!(video_consumer.r#type(), ConsumerType::Simulcast);
-        assert_eq!(video_consumer.paused(), false);
-        assert_eq!(video_consumer.producer_paused(), true);
+        assert!(!video_consumer.paused());
+        assert!(video_consumer.producer_paused());
         assert_eq!(
             video_consumer.score(),
             ConsumerScore {
@@ -871,7 +888,7 @@ fn consume_for_pipe_producer_succeeds() {
 #[test]
 fn producer_pause_resume_are_transmitted_to_pipe_consumer() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, transport2) = init().await;
 
         let video_producer = transport1
             .produce(video_producer_options())
@@ -900,9 +917,9 @@ fn producer_pause_resume_are_transmitted_to_pipe_consumer() {
             .await
             .expect("Failed to consume video");
 
-        assert_eq!(video_producer.paused(), true);
-        assert_eq!(video_consumer.producer_paused(), true);
-        assert_eq!(video_consumer.paused(), false);
+        assert!(video_producer.paused());
+        assert!(video_consumer.producer_paused());
+        assert!(!video_consumer.paused());
 
         let (producer_resume_tx, producer_resume_rx) = async_oneshot::oneshot::<()>();
         let _handler = video_consumer.on_producer_resume({
@@ -922,8 +939,8 @@ fn producer_pause_resume_are_transmitted_to_pipe_consumer() {
             .await
             .expect("Failed to receive producer resume event");
 
-        assert_eq!(video_consumer.producer_paused(), false);
-        assert_eq!(video_consumer.paused(), false);
+        assert!(!video_consumer.producer_paused());
+        assert!(!video_consumer.paused());
 
         let (producer_pause_tx, producer_pause_rx) = async_oneshot::oneshot::<()>();
         let _handler = video_consumer.on_producer_pause({
@@ -943,15 +960,15 @@ fn producer_pause_resume_are_transmitted_to_pipe_consumer() {
             .await
             .expect("Failed to receive producer pause event");
 
-        assert_eq!(video_consumer.producer_paused(), true);
-        assert_eq!(video_consumer.paused(), false);
+        assert!(video_consumer.producer_paused());
+        assert!(!video_consumer.paused());
     });
 }
 
 #[test]
 fn pipe_to_router_succeeds_with_data() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, _transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, _transport2) = init().await;
 
         let data_producer = transport1
             .produce_data(data_producer_options())
@@ -993,7 +1010,7 @@ fn pipe_to_router_succeeds_with_data() {
         {
             let sctp_stream_parameters = pipe_data_consumer.sctp_stream_parameters();
             assert!(sctp_stream_parameters.is_some());
-            assert_eq!(sctp_stream_parameters.unwrap().ordered(), false);
+            assert!(!sctp_stream_parameters.unwrap().ordered());
             assert_eq!(
                 sctp_stream_parameters.unwrap().max_packet_life_time(),
                 Some(5000),
@@ -1008,7 +1025,7 @@ fn pipe_to_router_succeeds_with_data() {
         {
             let sctp_stream_parameters = pipe_data_producer.sctp_stream_parameters();
             assert!(sctp_stream_parameters.is_some());
-            assert_eq!(sctp_stream_parameters.unwrap().ordered(), false);
+            assert!(!sctp_stream_parameters.unwrap().ordered());
             assert_eq!(
                 sctp_stream_parameters.unwrap().max_packet_life_time(),
                 Some(5000),
@@ -1023,7 +1040,7 @@ fn pipe_to_router_succeeds_with_data() {
 #[test]
 fn data_consume_for_pipe_data_producer_succeeds() {
     future::block_on(async move {
-        let (_worker, router1, router2, transport1, transport2) = init().await;
+        let (_worker1, _worker2, router1, router2, transport1, transport2) = init().await;
 
         let data_producer = transport1
             .produce_data(data_producer_options())
@@ -1047,7 +1064,7 @@ fn data_consume_for_pipe_data_producer_succeeds() {
         {
             let sctp_stream_parameters = data_consumer.sctp_stream_parameters();
             assert!(sctp_stream_parameters.is_some());
-            assert_eq!(sctp_stream_parameters.unwrap().ordered(), false);
+            assert!(!sctp_stream_parameters.unwrap().ordered());
             assert_eq!(
                 sctp_stream_parameters.unwrap().max_packet_life_time(),
                 Some(5000),
@@ -1062,21 +1079,21 @@ fn data_consume_for_pipe_data_producer_succeeds() {
 #[test]
 fn pipe_to_router_called_twice_generates_single_pair() {
     future::block_on(async move {
-        let (worker, _router1, _router2, _transport1, _transport2) = init().await;
+        let (worker1, worker2, _router1, _router2, _transport1, _transport2) = init().await;
 
-        let router_a = worker
+        let router_a = worker1
             .create_router(RouterOptions::new(media_codecs()))
             .await
             .expect("Failed to create router");
 
-        let router_b = worker
+        let router_b = worker2
             .create_router(RouterOptions::new(media_codecs()))
             .await
             .expect("Failed to create router");
 
         let mut transport_options =
-            WebRtcTransportOptions::new(TransportListenIps::new(TransportListenIp {
-                ip: "127.0.0.1".parse().unwrap(),
+            WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
+                ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_ip: None,
             }));
         transport_options.enable_sctp = true;

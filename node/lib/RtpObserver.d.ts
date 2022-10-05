@@ -1,9 +1,11 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
+import { RouterInternal } from './Router';
 import { Producer } from './Producer';
 export declare type RtpObserverEvents = {
     routerclose: [];
+    '@close': [];
 };
 export declare type RtpObserverObserverEvents = {
     close: [];
@@ -11,6 +13,16 @@ export declare type RtpObserverObserverEvents = {
     resume: [];
     addproducer: [Producer];
     removeproducer: [Producer];
+};
+export declare type RtpObserverConstructorOptions = {
+    internal: RtpObserverObserverInternal;
+    channel: Channel;
+    payloadChannel: PayloadChannel;
+    appData?: Record<string, unknown>;
+    getProducerById: (producerId: string) => Producer | undefined;
+};
+export declare type RtpObserverObserverInternal = RouterInternal & {
+    rtpObserverId: string;
 };
 export declare type RtpObserverAddRemoveProducerOptions = {
     /**
@@ -20,26 +32,15 @@ export declare type RtpObserverAddRemoveProducerOptions = {
 };
 export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents> extends EnhancedEventEmitter<E> {
     #private;
-    protected readonly internal: {
-        routerId: string;
-        rtpObserverId: string;
-    };
+    protected readonly internal: RtpObserverObserverInternal;
     protected readonly channel: Channel;
     protected readonly payloadChannel: PayloadChannel;
-    protected readonly getProducerById: (producerId: string) => Producer;
+    protected readonly getProducerById: (producerId: string) => Producer | undefined;
     /**
      * @private
      * @interface
-     * @emits routerclose
-     * @emits @close
      */
-    constructor({ internal, channel, payloadChannel, appData, getProducerById }: {
-        internal: any;
-        channel: Channel;
-        payloadChannel: PayloadChannel;
-        appData: any;
-        getProducerById: (producerId: string) => Producer;
-    });
+    constructor({ internal, channel, payloadChannel, appData, getProducerById }: RtpObserverConstructorOptions);
     /**
      * RtpObserver id.
      */
@@ -55,19 +56,13 @@ export declare class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents
     /**
      * App custom data.
      */
-    get appData(): any;
+    get appData(): Record<string, unknown>;
     /**
      * Invalid setter.
      */
-    set appData(appData: any);
+    set appData(appData: Record<string, unknown>);
     /**
      * Observer.
-     *
-     * @emits close
-     * @emits pause
-     * @emits resume
-     * @emits addproducer - (producer: Producer)
-     * @emits removeproducer - (producer: Producer)
      */
     get observer(): EnhancedEventEmitter<RtpObserverObserverEvents>;
     /**

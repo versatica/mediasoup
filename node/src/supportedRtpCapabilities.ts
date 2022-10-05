@@ -242,6 +242,21 @@ const supportedRtpCapabilities: RtpCapabilities =
 		},
 		{
 			kind       : 'video',
+			mimeType   : 'video/H264-SVC',
+			clockRate  : 90000,
+			parameters : {
+				'level-asymmetry-allowed' : 1
+			},
+			rtcpFeedback : [
+				{ type: 'nack' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'ccm', parameter: 'fir' },
+				{ type: 'goog-remb' },
+				{ type: 'transport-cc' }
+			]
+		},
+		{
+			kind       : 'video',
 			mimeType   : 'video/H265',
 			clockRate  : 90000,
 			parameters :
@@ -354,14 +369,14 @@ const supportedRtpCapabilities: RtpCapabilities =
 			direction        : 'sendrecv'
 		},
 		{
-			kind             : 'video',
+			kind             : 'audio',
 			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
 			preferredId      : 13,
 			preferredEncrypt : false,
 			direction        : 'sendrecv'
 		},
 		{
-			kind             : 'audio',
+			kind             : 'video',
 			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
 			preferredId      : 13,
 			preferredEncrypt : false,

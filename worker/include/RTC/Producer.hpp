@@ -3,6 +3,8 @@
 
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
+#include "Channel/ChannelSocket.hpp"
+#include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
@@ -20,7 +22,10 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class Producer : public RTC::RtpStreamRecv::Listener, public RTC::KeyFrameRequestManager::Listener
+	class Producer : public RTC::RtpStreamRecv::Listener,
+	                 public RTC::KeyFrameRequestManager::Listener,
+	                 public Channel::ChannelSocket::RequestHandler,
+	                 public PayloadChannel::PayloadChannelSocket::NotificationHandler
 	{
 	public:
 		class Listener
@@ -29,8 +34,10 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
-			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
+			virtual void OnProducerReceiveData(RTC::Producer* producer, size_t len)                  = 0;
+			virtual void OnProducerReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
+			virtual void OnProducerPaused(RTC::Producer* producer)                                   = 0;
+			virtual void OnProducerResumed(RTC::Producer* producer)                                  = 0;
 			virtual void OnProducerNewRtpStream(
 			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
 			virtual void OnProducerRtpStreamScore(
@@ -91,7 +98,6 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void FillJsonStats(json& jsonArray) const;
-		void HandleRequest(Channel::ChannelRequest* request);
 		RTC::Media::Kind GetKind() const
 		{
 			return this->kind;
@@ -123,8 +129,16 @@ namespace RTC
 		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
-		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
+		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
 		void RequestKeyFrame(uint32_t mappedSsrc);
+
+		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
+	public:
+		void HandleRequest(Channel::ChannelRequest* request) override;
+
+		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
+	public:
+		void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
 
 	private:
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
@@ -182,6 +196,8 @@ namespace RTC
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
+		// Static buffer.
+		thread_local static uint8_t* buffer;
 	};
 } // namespace RTC
 

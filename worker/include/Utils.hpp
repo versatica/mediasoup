@@ -2,11 +2,12 @@
 #define MS_UTILS_HPP
 
 #include "common.hpp"
-#include <openssl/hmac.h>
+#include <openssl/evp.h>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <nlohmann/json.hpp>
 #include <string>
+#include <vector>
 #ifdef _WIN32
 #include <ws2ipdef.h>
 // https://stackoverflow.com/a/24550632/2085408
@@ -255,7 +256,8 @@ namespace Utils
 
 	private:
 		thread_local static uint32_t seed;
-		thread_local static HMAC_CTX* hmacSha1Ctx;
+		thread_local static EVP_MAC* mac;
+		thread_local static EVP_MAC_CTX* hmacSha1Ctx;
 		thread_local static uint8_t hmacSha1Buffer[];
 		static const uint32_t crc32Table[256];
 	};
@@ -275,6 +277,8 @@ namespace Utils
 		static uint8_t* Base64Decode(const uint8_t* data, size_t len, size_t& outLen);
 
 		static uint8_t* Base64Decode(const std::string& str, size_t& outLen);
+
+		static std::vector<std::string> Split(const std::string& str, char separator, size_t limit = 0);
 	};
 
 	class Time

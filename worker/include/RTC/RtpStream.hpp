@@ -10,6 +10,8 @@
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtxStream.hpp"
 #include <nlohmann/json.hpp>
@@ -114,7 +116,7 @@ namespace RTC
 		{
 			return this->params.temporalLayers;
 		}
-		virtual bool ReceivePacket(RTC::RtpPacket* packet);
+		virtual bool ReceiveStreamPacket(RTC::RtpPacket* packet);
 		virtual void Pause()                                                                     = 0;
 		virtual void Resume()                                                                    = 0;
 		virtual uint32_t GetBitrate(uint64_t nowMs)                                              = 0;

@@ -69,7 +69,7 @@ SCENARIO("RTCP Feeback RTP NACK parsing", "[parser][rtcp][feedback-rtp][nack]")
 	SECTION("create FeedbackRtpNackPacket")
 	{
 		FeedbackRtpNackPacket packet(senderSsrc, mediaSsrc);
-		FeedbackRtpNackItem* item = new FeedbackRtpNackItem(pid, lostPacketBitmask);
+		auto* item = new FeedbackRtpNackItem(pid, lostPacketBitmask);
 
 		packet.AddItem(item);
 

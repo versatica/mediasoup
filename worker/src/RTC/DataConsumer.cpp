@@ -2,11 +2,14 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataConsumer.hpp"
+#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "Channel/ChannelNotifier.hpp"
+#include "RTC/SctpAssociation.hpp"
+#include <stdexcept>
 
 namespace RTC
 {
@@ -15,10 +18,12 @@ namespace RTC
 	DataConsumer::DataConsumer(
 	  const std::string& id,
 	  const std::string& dataProducerId,
+	  RTC::SctpAssociation* sctpAssociation,
 	  RTC::DataConsumer::Listener* listener,
 	  json& data,
 	  size_t maxMessageSize)
-	  : id(id), dataProducerId(dataProducerId), listener(listener), maxMessageSize(maxMessageSize)
+	  : id(id), dataProducerId(dataProducerId), sctpAssociation(sctpAssociation), listener(listener),
+	    maxMessageSize(maxMessageSize)
 	{
 		MS_TRACE();
 
@@ -60,11 +65,20 @@ namespace RTC
 
 		if (jsonProtocolIt != data.end() && jsonProtocolIt->is_string())
 			this->protocol = jsonProtocolIt->get<std::string>();
+
+		// NOTE: This may throw.
+		ChannelMessageHandlers::RegisterHandler(
+		  this->id,
+		  /*channelRequestHandler*/ this,
+		  /*payloadChannelRequestHandler*/ this,
+		  /*payloadChannelNotificationHandler*/ nullptr);
 	}
 
 	DataConsumer::~DataConsumer()
 	{
 		MS_TRACE();
+
+		ChannelMessageHandlers::UnregisterHandler(this->id);
 	}
 
 	void DataConsumer::FillJson(json& jsonObject) const
@@ -153,8 +167,35 @@ namespace RTC
 				break;
 			}
 
+			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
+			{
+				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
+				{
+					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
+				}
+
+				if (!this->sctpAssociation)
+				{
+					MS_THROW_ERROR("no SCTP association present");
+				}
+
+				// Create status response.
+				json data = json::object();
+
+				data["bufferedAmount"] = this->sctpAssociation->GetSctpBufferedAmount();
+
+				request->Accept(data);
+
+				break;
+			}
+
 			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
 			{
+				if (this->GetType() != DataConsumer::Type::SCTP)
+				{
+					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
+				}
+
 				auto jsonThresholdIt = request->data.find("threshold");
 
 				if (jsonThresholdIt == request->data.end() || !jsonThresholdIt->is_number_unsigned())
@@ -168,12 +209,10 @@ namespace RTC
 				// Trigger 'bufferedamountlow' now.
 				if (this->bufferedAmount <= this->bufferedAmountLowThreshold)
 				{
-					// Notify the Node DataConsumer.
-					json data = json::object();
+					std::string data(R"({"bufferedAmount":")");
 
-					data["bufferedAmount"] = this->bufferedAmount;
-
-					Channel::ChannelNotifier::Emit(this->id, "bufferedamountlow", data);
+					data.append(std::to_string(this->bufferedAmount));
+					data.append("\"}");
 				}
 				// Force the trigger of 'bufferedamountlow' once there is less or same
 				// buffered data than the given threshold.
@@ -200,26 +239,39 @@ namespace RTC
 		{
 			case PayloadChannel::PayloadChannelRequest::MethodId::DATA_CONSUMER_SEND:
 			{
-				auto jsonPpidIt = request->data.find("ppid");
-
-				if (jsonPpidIt == request->data.end() || !Utils::Json::IsPositiveInteger(*jsonPpidIt))
+				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
-					MS_THROW_TYPE_ERROR("invalid ppid");
+					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
-				auto ppid       = jsonPpidIt->get<uint32_t>();
+				if (!this->sctpAssociation)
+				{
+					MS_THROW_ERROR("no SCTP association present");
+				}
+
+				int ppid;
+
+				// This may throw.
+				// NOTE: If this throws we have to catch the error and throw a MediaSoupError
+				// intead, otherwise the process would crash.
+				try
+				{
+					ppid = std::stoi(request->data);
+				}
+				catch (const std::exception& error)
+				{
+					MS_THROW_TYPE_ERROR("invalid PPID value: %s", error.what());
+				}
+
 				const auto* msg = request->payload;
 				auto len        = request->payloadLen;
 
 				if (len > this->maxMessageSize)
 				{
-					MS_WARN_TAG(
-					  message,
+					MS_THROW_TYPE_ERROR(
 					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
 					  len,
 					  this->maxMessageSize);
-
-					return;
 				}
 
 				const auto* cb = new onQueuedCallback(
@@ -298,9 +350,10 @@ namespace RTC
 			this->forceTriggerBufferedAmountLow = false;
 
 			// Notify the Node DataConsumer.
-			json data = json::object();
+			std::string data(R"({"bufferedAmount":")");
 
-			data["bufferedAmount"] = this->bufferedAmount;
+			data.append(std::to_string(this->bufferedAmount));
+			data.append("\"}");
 
 			Channel::ChannelNotifier::Emit(this->id, "bufferedamountlow", data);
 		}

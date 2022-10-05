@@ -8,9 +8,10 @@ import {
 	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
+	TransportConstructorOptions,
 	SctpState
 } from './Transport';
-import { Consumer } from './Consumer';
+import { Consumer, ConsumerType } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
 
@@ -66,8 +67,8 @@ export type PipeTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
-}
+	appData?: Record<string, unknown>;
+};
 
 export type PipeTransportStat =
 {
@@ -95,7 +96,7 @@ export type PipeTransportStat =
 	maxIncomingBitrate?: number;
 	// PipeTransport specific.
 	tuple: TransportTuple;
-}
+};
 
 export type PipeConsumerOptions =
 {
@@ -107,18 +108,32 @@ export type PipeConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: any;
-}
+	appData?: Record<string, unknown>;
+};
 
 export type PipeTransportEvents = TransportEvents &
 {
 	sctpstatechange: [SctpState];
-}
+};
 
 export type PipeTransportObserverEvents = TransportObserverEvents &
 {
 	sctpstatechange: [SctpState];
-}
+};
+
+type PipeTransportConstructorOptions = TransportConstructorOptions &
+{
+	data: PipeTransportData;
+};
+
+export type PipeTransportData =
+{
+	tuple: TransportTuple;
+	sctpParameters?: SctpParameters;
+	sctpState?: SctpState;
+	rtx: boolean;
+	srtpParameters?: SrtpParameters;
+};
 
 const logger = new Logger('PipeTransport');
 
@@ -126,27 +141,18 @@ export class PipeTransport
 	extends Transport<PipeTransportEvents, PipeTransportObserverEvents>
 {
 	// PipeTransport data.
-	readonly #data:
-	{
-		tuple: TransportTuple;
-		sctpParameters?: SctpParameters;
-		sctpState?: SctpState;
-		rtx: boolean;
-		srtpParameters?: SrtpParameters;
-	};
+	readonly #data: PipeTransportData;
 
 	/**
 	 * @private
-	 * @emits sctpstatechange - (sctpState: SctpState)
-	 * @emits trace - (trace: TransportTraceEventData)
 	 */
-	constructor(params: any)
+	constructor(options: PipeTransportConstructorOptions)
 	{
-		super(params);
+		super(options);
 
 		logger.debug('constructor()');
 
-		const { data } = params;
+		const { data } = options;
 
 		this.#data =
 		{
@@ -193,20 +199,6 @@ export class PipeTransport
 	}
 
 	/**
-	 * Observer.
-	 *
-	 * @override
-	 * @emits close
-	 * @emits newproducer - (producer: Producer)
-	 * @emits newconsumer - (consumer: Consumer)
-	 * @emits newdataproducer - (dataProducer: DataProducer)
-	 * @emits newdataconsumer - (dataConsumer: DataConsumer)
-	 * @emits sctpstatechange - (sctpState: SctpState)
-	 * @emits trace - (trace: TransportTraceEventData)
-	 */
-	// get observer(): EnhancedEventEmitter
-
-	/**
 	 * Close the PipeTransport.
 	 *
 	 * @override
@@ -248,7 +240,7 @@ export class PipeTransport
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal);
+		return this.channel.request('transport.getStats', this.internal.transportId);
 	}
 
 	/**
@@ -274,7 +266,7 @@ export class PipeTransport
 		const reqData = { ip, port, srtpParameters };
 
 		const data =
-			await this.channel.request('transport.connect', this.internal, reqData);
+			await this.channel.request('transport.connect', this.internal.transportId, reqData);
 
 		// Update data.
 		this.#data.tuple = data.tuple;
@@ -285,7 +277,7 @@ export class PipeTransport
 	 *
 	 * @override
 	 */
-	async consume({ producerId, appData = {} }: PipeConsumerOptions): Promise<Consumer>
+	async consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>
 	{
 		logger.debug('consume()');
 
@@ -303,9 +295,10 @@ export class PipeTransport
 		const rtpParameters = ortc.getPipeConsumerRtpParameters(
 			producer.consumableRtpParameters, this.#data.rtx);
 
-		const internal = { ...this.internal, consumerId: uuidv4(), producerId };
 		const reqData =
 		{
+			consumerId             : uuidv4(),
+			producerId,
 			kind                   : producer.kind,
 			rtpParameters,
 			type                   : 'pipe',
@@ -313,13 +306,23 @@ export class PipeTransport
 		};
 
 		const status =
-			await this.channel.request('transport.consume', internal, reqData);
+			await this.channel.request('transport.consume', this.internal.transportId, reqData);
 
-		const data = { kind: producer.kind, rtpParameters, type: 'pipe' };
+		const data =
+		{
+			producerId,
+			kind : producer.kind,
+			rtpParameters,
+			type : 'pipe' as ConsumerType
+		};
 
 		const consumer = new Consumer(
 			{
-				internal,
+				internal :
+				{
+					...this.internal,
+					consumerId : reqData.consumerId
+				},
 				data,
 				channel        : this.channel,
 				payloadChannel : this.payloadChannel,

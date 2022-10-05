@@ -3,11 +3,9 @@ import { Logger } from './Logger';
 
 const logger = new Logger('EnhancedEventEmitter');
 
-type Events = Record<string, any[]>
-type InternalEvents = Record<`@${string}`, any[]>
+type Events = Record<string, any[]>;
 
-export class EnhancedEventEmitter<PublicEvents extends Events = Events,
-E extends PublicEvents = PublicEvents & InternalEvents> extends EventEmitter
+export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitter
 {
 	constructor()
 	{
@@ -15,89 +13,121 @@ E extends PublicEvents = PublicEvents & InternalEvents> extends EventEmitter
 		this.setMaxListeners(Infinity);
 	}
 
-	safeEmit<K extends keyof E & string>(event: K, ...args: E[K]): boolean
+	emit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean
 	{
-		const numListeners = this.listenerCount(event);
+		return super.emit(eventName, ...args);
+	}
+
+	/**
+	 * Special addition to the EventEmitter API.
+	 */
+	safeEmit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean
+	{
+		const numListeners = super.listenerCount(eventName);
 
 		try
 		{
-			return this.emit(event, ...args);
+			return super.emit(eventName, ...args);
 		}
 		catch (error)
 		{
 			logger.error(
-				'safeEmit() | event listener threw an error [event:%s]:%o',
-				event, error);
+				'safeEmit() | event listener threw an error [eventName:%s]:%o',
+				eventName, error);
 
 			return Boolean(numListeners);
 		}
 	}
 
-	async safeEmitAsPromise<K extends keyof E & string>(event: K, ...args: E[K]):
-	Promise<any>
+	on<K extends keyof E & string>(
+		eventName: K,
+		listener: (...args: E[K]) => void
+	): this
 	{
-		return new Promise((resolve, reject) =>
-		{
-			try
-			{
-				this.emit(event, ...args, resolve, reject);
-			}
-			catch (error)
-			{
-				logger.error(
-					'safeEmitAsPromise() | event listener threw an error [event:%s]:%o',
-					event, error);
-
-				reject(error);
-			}
-		});
-	}
-
-	on<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void)
-	{
-		super.on(event, listener as (...args: any[]) => void);
+		super.on(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
 
-	off<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void)
+	off<K extends keyof E & string>(
+		eventName: K,
+		listener: (...args: E[K]) => void
+	): this
 	{
-		super.off(event, listener as (...args: any[]) => void);
+		super.off(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
 
-	addListener<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void)
+	addListener<K extends keyof E & string>(
+		eventName: K,
+		listener: (...args: E[K]) => void
+	): this
 	{
-		super.on(event, listener as (...args: any[]) => void);
-
-		return this;
-	}
-	prependListener<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void)
-	{
-		super.prependListener(event, listener as (...args: any[]) => void);
+		super.on(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
 
-	once<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void) 
+	prependListener<K extends keyof E & string>(
+		eventName: K,
+		listener: (...args: E[K]) => void
+	): this
 	{
-		super.once(event, listener as (...args: any[]) => void);
+		super.prependListener(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
-	prependOnceListener<K extends keyof E & string>(event: K,
-		listener: (...args: E[K]) => void)
+
+	once<K extends keyof E & string>(
+		eventName: K,
+		listener: (...args: E[K]) => void
+	): this
 	{
-		super.prependOnceListener(event, listener as (...args: any[]) => void);
-	
+		super.once(eventName, listener as (...args: any[]) => void);
+
 		return this;
 	}
 
-	removeListener<K extends keyof E & string>(event: K, listener: (...args: E[K]) => void)
+	prependOnceListener<K extends keyof E & string>(
+		eventName: K,
+		listener: (...args: E[K]) => void
+	): this
 	{
-		super.off(event, listener as (...args: any[]) => void);
+		super.prependOnceListener(eventName, listener as (...args: any[]) => void);
 
 		return this;
+	}
+
+	removeListener<K extends keyof E & string>(
+		eventName: K,
+		listener: (...args: E[K]) => void
+	): this
+	{
+		super.off(eventName, listener as (...args: any[]) => void);
+
+		return this;
+	}
+
+	removeAllListeners<K extends keyof E & string>(eventName?: K): this
+	{
+		super.removeAllListeners(eventName);
+
+		return this;
+	}
+
+	listenerCount<K extends keyof E & string>(eventName: K): number
+	{
+		return super.listenerCount(eventName);
+	}
+
+	listeners<K extends keyof E & string>(eventName: K): Function[]
+	{
+		return super.listeners(eventName);
+	}
+
+	rawListeners<K extends keyof E & string>(eventName: K): Function[]
+	{
+		return super.rawListeners(eventName);
 	}
 }
