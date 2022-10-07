@@ -6,11 +6,14 @@
 #include "PayloadChannel/PayloadChannelSocket.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
+#include <flatbuffers/flatbuffer_builder.h>
+#include "FBS/worker_generated.h"
 #include <string>
 
 class ChannelMessageHandlers
 {
 public:
+	static flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> FillBuffer(flatbuffers::FlatBufferBuilder& builder);
 	static void FillJson(json& jsonObject);
 	static void RegisterHandler(
 	  const std::string& id,

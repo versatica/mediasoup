@@ -4,6 +4,8 @@
 #include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+// TODO: Move needed type to FBS/channelmessagehandlers.h
+#include "FBS/worker_generated.h"
 
 /* Class variables. */
 
@@ -15,6 +17,44 @@ thread_local absl::flat_hash_map<std::string, PayloadChannel::PayloadChannelSock
   ChannelMessageHandlers::mapPayloadChannelNotificationHandlers;
 
 /* Class methods. */
+
+flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> ChannelMessageHandlers::FillBuffer(flatbuffers::FlatBufferBuilder& builder)
+{
+	// Add channelRequestHandlerIds.
+	std::vector<std::string> channelRequestHandlerIds;
+	for (const auto& kv : ChannelMessageHandlers::mapChannelRequestHandlers)
+	{
+		const auto& handlerId = kv.first;
+
+		channelRequestHandlerIds.push_back(handlerId);
+	}
+
+	auto channelRequestHandlers = builder.CreateVectorOfStrings(channelRequestHandlerIds);
+
+	// Add payloadChannelRequestHandlerIds.
+	std::vector<std::string> payloadChannelRequestHandlerIds;
+	for (const auto& kv : ChannelMessageHandlers::mapPayloadChannelRequestHandlers)
+	{
+		const auto& handlerId = kv.first;
+
+		channelRequestHandlerIds.push_back(handlerId);
+	}
+
+	auto payloadChannelRequestHandlers = builder.CreateVectorOfStrings(payloadChannelRequestHandlerIds);
+
+	// Add payloadChannelNotificationHandlerIds.
+	std::vector<std::string> payloadChannelNotificationHandlerIds;
+	for (const auto& kv : ChannelMessageHandlers::mapPayloadChannelNotificationHandlers)
+	{
+		const auto& handlerId = kv.first;
+
+		payloadChannelNotificationHandlerIds.push_back(handlerId);
+	}
+
+	auto payloadChannelNotificationHandlers = builder.CreateVectorOfStrings(payloadChannelNotificationHandlerIds);
+
+	return FBS::Worker::CreateChannelMessageHandlers(builder, channelRequestHandlers, payloadChannelRequestHandlers, payloadChannelNotificationHandlers);
+}
 
 void ChannelMessageHandlers::FillJson(json& jsonObject)
 {

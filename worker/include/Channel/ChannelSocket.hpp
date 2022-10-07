@@ -88,6 +88,7 @@ namespace Channel
 		void SetListener(Listener* listener);
 		void Send(json& jsonMessage);
 		void Send(const std::string& message);
+		void Send(const uint8_t* message, uint32_t messageLen);
 		void SendLog(const char* message, uint32_t messageLen);
 		bool CallbackRead();
 

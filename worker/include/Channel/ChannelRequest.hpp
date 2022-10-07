@@ -2,8 +2,10 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
+#include "FBS/request_generated.h"
 #include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
+#include <flatbuffers/flatbuffer_builder.h>
 #include <string>
 
 using json = nlohmann::json;
@@ -86,6 +88,8 @@ namespace Channel
 		virtual ~ChannelRequest();
 
 		void Accept();
+		void Accept(flatbuffers::FlatBufferBuilder& builder, flatbuffers::Offset<FBS::Request::ResponseBody>& body );
+		void Accept(uint8_t* buf, size_t size);
 		void Accept(json& data);
 		void Error(const char* reason = nullptr);
 		void TypeError(const char* reason = nullptr);

@@ -9,6 +9,8 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Channel/ChannelNotifier.hpp"
+#include "FBS/worker_generated.h"
+#include "FBS/request_generated.h"
 
 /* Instance methods. */
 
@@ -91,6 +93,35 @@ void Worker::Close()
 
 	// Close the PayloadChannel.
 	this->payloadChannel->Close();
+}
+
+flatbuffers::Offset<FBS::Worker::Dump> Worker::FillBuffer(flatbuffers::FlatBufferBuilder& builder) const
+{
+	// Add webRtcServerIds.
+	std::vector<std::string> webRtcServerIds;
+	for (auto& kv : this->mapWebRtcServers)
+	{
+		auto& WebRtcServerId = kv.first;
+
+		webRtcServerIds.push_back(WebRtcServerId);
+	}
+
+	auto webRtcServers = builder.CreateVectorOfStrings(webRtcServerIds);
+
+	// Add routerIds.
+	std::vector<std::string> routerIds;
+	for (auto& kv : this->mapRouters)
+	{
+		auto& routerId = kv.first;
+
+		routerIds.push_back(routerId);
+	}
+
+	auto routers = builder.CreateVectorOfStrings(routerIds);
+
+	auto channelMessageHandlers = ChannelMessageHandlers::FillBuffer(builder);
+
+	return FBS::Worker::CreateDump(builder, Logger::pid, webRtcServers, routers, channelMessageHandlers);
 }
 
 void Worker::FillJson(json& jsonObject) const
@@ -283,11 +314,13 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::MethodId::WORKER_DUMP:
 		{
-			json data = json::object();
+			flatbuffers::FlatBufferBuilder builder(1024);
 
-			FillJson(data);
+			auto dump = FillBuffer(builder);
+			auto body = FBS::Request::CreateResponseBody(builder, FBS::Request::ResponseBodyTypes_FBS_Worker_Dump, dump.Union());
 
-			request->Accept(data);
+
+			request->Accept(builder, body);
 
 			break;
 		}

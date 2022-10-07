@@ -12,6 +12,8 @@
 #include "handles/SignalsHandler.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
+#include <flatbuffers/flatbuffer_builder.h>
+#include "FBS/worker_generated.h"
 #include <string>
 
 using json = nlohmann::json;
@@ -27,6 +29,7 @@ public:
 
 private:
 	void Close();
+	flatbuffers::Offset<FBS::Worker::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 	void FillJson(json& jsonObject) const;
 	void FillJsonResourceUsage(json& jsonObject) const;
 	void SetNewWebRtcServerIdFromData(json& data, std::string& webRtcServerId) const;

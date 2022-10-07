@@ -160,6 +160,23 @@ namespace Channel
 		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
 	}
 
+	void ChannelSocket::Send(const uint8_t* message, uint32_t messageLen)
+	{
+		MS_TRACE_STD();
+
+		if (this->closed)
+			return;
+
+		if (messageLen > PayloadMaxLen)
+		{
+			MS_ERROR_STD("message too big");
+
+			return;
+		}
+
+		SendImpl(reinterpret_cast<const uint8_t*>(message), messageLen);
+	}
+
 	void ChannelSocket::SendLog(const char* message, uint32_t messageLen)
 	{
 		MS_TRACE_STD();

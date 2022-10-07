@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include <flatbuffers/minireflect.h>
 
 namespace Channel
 {
@@ -153,6 +154,35 @@ namespace Channel
 		response.append(",\"accepted\":true}");
 
 		this->channel->Send(response);
+	}
+
+	void ChannelRequest::Accept(flatbuffers::FlatBufferBuilder& builder, flatbuffers::Offset<FBS::Request::ResponseBody>& body )
+	{
+		MS_TRACE();
+
+		MS_ASSERT(!this->replied, "request already replied");
+
+		auto response = FBS::Request::CreateResponse(builder, this->id, true, body);
+
+		builder.Finish(response);
+
+		this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
+
+		auto s = flatbuffers::FlatBufferToString(builder.GetBufferPointer(), FBS::Request::ResponseTypeTable());
+
+		MS_ERROR("response:\n%s", s.c_str());
+	}
+
+	void ChannelRequest::Accept(uint8_t* buf, size_t size)
+	{
+		MS_TRACE();
+
+		MS_ASSERT(!this->replied, "request already replied");
+
+		// TODO: Add missing 'id' and 'accepted'.
+
+
+		this->channel->Send(buf, size);
 	}
 
 	void ChannelRequest::Accept(json& data)

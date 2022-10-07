@@ -208,6 +208,12 @@ catch2_proj = subproject(
     'warning_level=0',
   ],
 )
+flatbuffers_proj = subproject(
+  'flatbuffers',
+  default_options: [
+    'warning_level=0',
+  ],
+)
 libwebrtc_include_directories = include_directories('include')
 subdir('deps/libwebrtc')
 
@@ -218,6 +224,7 @@ dependencies = [
   libuv_proj.get_variable('libuv_dep'),
   libsrtp2_proj.get_variable('libsrtp2_dep'),
   usrsctp_proj.get_variable('usrsctp_dep'),
+  flatbuffers_proj.get_variable('flatbuffers_dep'),
   libwebrtc_dep,
 ]
 
@@ -228,6 +235,7 @@ link_whole = [
   libuv_proj.get_variable('libuv'),
   libsrtp2_proj.get_variable('libsrtp2'),
   usrsctp_proj.get_variable('usrsctp'),
+  flatbuffers_proj.get_variable('flatbuffers_lib'),
   libwebrtc,
 ]
 
