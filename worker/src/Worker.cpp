@@ -314,13 +314,11 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::MethodId::WORKER_DUMP:
 		{
-			flatbuffers::FlatBufferBuilder builder(1024);
+			auto& builder = Channel::ChannelRequest::bufferBuilder;
 
 			auto dump = FillBuffer(builder);
-			auto body = FBS::Request::CreateResponseBody(builder, FBS::Request::ResponseBodyTypes_FBS_Worker_Dump, dump.Union());
 
-
-			request->Accept(builder, body);
+			request->Accept(builder, FBS::Request::ResponseBody_FBS_Worker_Dump, dump);
 
 			break;
 		}

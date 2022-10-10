@@ -1,0 +1,14 @@
+[wrap-file]
+directory = flatbuffers-2.0.6
+source_url = https://github.com/google/flatbuffers/archive/v2.0.6.tar.gz
+source_filename = flatbuffers-2.0.6.tar.gz
+source_hash = e2dc24985a85b278dd06313481a9ca051d048f9474e0f199e372fea3ea4248c9
+patch_filename = flatbuffers_2.0.6-2_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/flatbuffers_2.0.6-2/get_patch
+patch_hash = 2dc931e590034f08ca2e27b379226f428f4ecfeece93f5dfd9ddd2599b421ee6
+wrapdb_version = 2.0.6-2
+
+[provide]
+flatbuffers = flatbuffers_dep
+program_names = flatc, flathash
+

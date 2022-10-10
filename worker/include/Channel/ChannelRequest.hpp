@@ -5,7 +5,7 @@
 #include "FBS/request_generated.h"
 #include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
-#include <flatbuffers/flatbuffer_builder.h>
+#include <flatbuffers/minireflect.h>
 #include <string>
 
 using json = nlohmann::json;
@@ -84,15 +84,34 @@ namespace Channel
 		static absl::flat_hash_map<std::string, MethodId> string2MethodId;
 
 	public:
+		static flatbuffers::FlatBufferBuilder bufferBuilder;
+
+	public:
 		ChannelRequest(Channel::ChannelSocket* channel, const char* msg, size_t msgLen);
 		virtual ~ChannelRequest();
 
 		void Accept();
-		void Accept(flatbuffers::FlatBufferBuilder& builder, flatbuffers::Offset<FBS::Request::ResponseBody>& body );
-		void Accept(uint8_t* buf, size_t size);
+		template <class Body>
+		void Accept(flatbuffers::FlatBufferBuilder& builder, FBS::Request::ResponseBody type, flatbuffers::Offset<Body>& body)
+		{
+			auto response = FBS::Request::CreateResponse(builder, this->id, true, type, body.Union());
+
+			builder.Finish(response);
+
+			this->Send(builder.GetBufferPointer(), builder.GetSize());
+
+			auto s = flatbuffers::FlatBufferToString(builder.GetBufferPointer(), FBS::Request::ResponseTypeTable());
+
+			std::cout << "response: " << s.c_str() << std::endl;
+
+			builder.Reset();
+		}
 		void Accept(json& data);
 		void Error(const char* reason = nullptr);
 		void TypeError(const char* reason = nullptr);
+
+	private:
+		void Send(uint8_t* buffer, size_t size);
 
 	public:
 		// Passed by argument.
