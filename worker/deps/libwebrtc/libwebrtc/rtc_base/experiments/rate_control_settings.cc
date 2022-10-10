@@ -11,6 +11,7 @@
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "api/transport/field_trial_based_config.h"
 #include "rtc_base/experiments/field_trial_parser.h"
+#include "rtc_base/experiments/struct_parameters_parser.h"
 #include "rtc_base/numerics/safe_conversions.h"
 
 #include <inttypes.h>
@@ -21,27 +22,69 @@ namespace webrtc {
 
 namespace {
 
-const int kDefaultAcceptedQueueMs = 250;
+const int kDefaultAcceptedQueueMs = 350;
 
 const int kDefaultMinPushbackTargetBitrateBps = 30000;
 
+const char kCongestionWindowDefaultFieldTrialString[] =
+    "QueueSize:350,MinBitrate:30000,DropFrame:true";
+
+const char kUseBaseHeavyVp8Tl3RateAllocationFieldTrialName[] =
+    "WebRTC-UseBaseHeavyVP8TL3RateAllocation";
+
+bool IsEnabled(const WebRtcKeyValueConfig* const key_value_config,
+               absl::string_view key) {
+  return key_value_config->Lookup(key).find("Enabled") == 0;
+}
+
 }  // namespace
 
+constexpr char CongestionWindowConfig::kKey[];
+
+std::unique_ptr<StructParametersParser> CongestionWindowConfig::Parser() {
+  return StructParametersParser::Create("QueueSize", &queue_size_ms,  //
+                                        "MinBitrate", &min_bitrate_bps,
+                                        "InitWin", &initial_data_window,
+                                        "DropFrame", &drop_frame_only);
+}
+
+// static
+CongestionWindowConfig CongestionWindowConfig::Parse(absl::string_view config) {
+  CongestionWindowConfig res;
+  res.Parser()->Parse(config);
+  return res;
+}
+
+constexpr char VideoRateControlConfig::kKey[];
+
+std::unique_ptr<StructParametersParser> VideoRateControlConfig::Parser() {
+  // The empty comments ensures that each pair is on a separate line.
+  return StructParametersParser::Create(
+      "pacing_factor", &pacing_factor,                  //
+      "alr_probing", &alr_probing,                      //
+      "vp8_qp_max", &vp8_qp_max,                        //
+      "vp8_min_pixels", &vp8_min_pixels,                //
+      "trust_vp8", &trust_vp8,                          //
+      "trust_vp9", &trust_vp9,                          //
+      "probe_max_allocation", &probe_max_allocation,    //
+      "bitrate_adjuster", &bitrate_adjuster,            //
+      "adjuster_use_headroom", &adjuster_use_headroom,  //
+      "vp8_s0_boost", &vp8_s0_boost,                    //
+      "vp8_base_heavy_tl3_alloc", &vp8_base_heavy_tl3_alloc);
+}
+
 RateControlSettings::RateControlSettings(
-    const WebRtcKeyValueConfig* const key_value_config)
-    : congestion_window_("QueueSize"),
-      congestion_window_pushback_("MinBitrate"),
-      pacing_factor_("pacing_factor"),
-      alr_probing_("alr_probing", false),
-      probe_max_allocation_("probe_max_allocation", true),
-      bitrate_adjuster_("bitrate_adjuster", false),
-      adjuster_use_headroom_("adjuster_use_headroom", false) {
-  ParseFieldTrial({&congestion_window_, &congestion_window_pushback_},
-                  key_value_config->Lookup("WebRTC-CongestionWindow"));
-  ParseFieldTrial(
-      {&pacing_factor_, &alr_probing_,
-       &probe_max_allocation_, &bitrate_adjuster_, &adjuster_use_headroom_},
-      key_value_config->Lookup("WebRTC-VideoRateControl"));
+    const WebRtcKeyValueConfig* const key_value_config) {
+  std::string congestion_window_config =
+      key_value_config->Lookup(CongestionWindowConfig::kKey).empty()
+          ? kCongestionWindowDefaultFieldTrialString
+          : key_value_config->Lookup(CongestionWindowConfig::kKey);
+  congestion_window_config_ =
+      CongestionWindowConfig::Parse(congestion_window_config);
+  video_config_.vp8_base_heavy_tl3_alloc = IsEnabled(
+      key_value_config, kUseBaseHeavyVp8Tl3RateAllocationFieldTrialName);
+  video_config_.Parser()->Parse(
+      key_value_config->Lookup(VideoRateControlConfig::kKey));
 }
 
 RateControlSettings::~RateControlSettings() = default;
@@ -60,41 +103,84 @@ RateControlSettings RateControlSettings::ParseFromKeyValueConfig(
 }
 
 bool RateControlSettings::UseCongestionWindow() const {
-  return static_cast<bool>(congestion_window_);
+  return static_cast<bool>(congestion_window_config_.queue_size_ms);
 }
 
 int64_t RateControlSettings::GetCongestionWindowAdditionalTimeMs() const {
-  return congestion_window_.GetOptional().value_or(kDefaultAcceptedQueueMs);
+  return congestion_window_config_.queue_size_ms.value_or(
+      kDefaultAcceptedQueueMs);
 }
 
 bool RateControlSettings::UseCongestionWindowPushback() const {
-  return congestion_window_ && congestion_window_pushback_;
+  return congestion_window_config_.queue_size_ms &&
+         congestion_window_config_.min_bitrate_bps;
+}
+
+bool RateControlSettings::UseCongestionWindowDropFrameOnly() const {
+  return congestion_window_config_.drop_frame_only;
 }
 
 uint32_t RateControlSettings::CongestionWindowMinPushbackTargetBitrateBps()
     const {
-  return congestion_window_pushback_.GetOptional().value_or(
+  return congestion_window_config_.min_bitrate_bps.value_or(
       kDefaultMinPushbackTargetBitrateBps);
 }
 
+absl::optional<DataSize>
+RateControlSettings::CongestionWindowInitialDataWindow() const {
+  return congestion_window_config_.initial_data_window;
+}
+
 absl::optional<double> RateControlSettings::GetPacingFactor() const {
-  return pacing_factor_.GetOptional();
+  return video_config_.pacing_factor;
 }
 
 bool RateControlSettings::UseAlrProbing() const {
-  return alr_probing_.Get();
+  return video_config_.alr_probing;
+}
+
+absl::optional<int> RateControlSettings::LibvpxVp8QpMax() const {
+  if (video_config_.vp8_qp_max &&
+      (*video_config_.vp8_qp_max < 0 || *video_config_.vp8_qp_max > 63)) {
+    // RTC_LOG(LS_WARNING) << "Unsupported vp8_qp_max_ value, ignored.";
+    return absl::nullopt;
+  }
+  return video_config_.vp8_qp_max;
+}
+
+absl::optional<int> RateControlSettings::LibvpxVp8MinPixels() const {
+  if (video_config_.vp8_min_pixels && *video_config_.vp8_min_pixels < 1) {
+    return absl::nullopt;
+  }
+  return video_config_.vp8_min_pixels;
+}
+
+bool RateControlSettings::LibvpxVp8TrustedRateController() const {
+  return video_config_.trust_vp8;
+}
+
+bool RateControlSettings::Vp8BoostBaseLayerQuality() const {
+  return video_config_.vp8_s0_boost;
+}
+
+bool RateControlSettings::LibvpxVp9TrustedRateController() const {
+  return video_config_.trust_vp9;
+}
+
+bool RateControlSettings::Vp8BaseHeavyTl3RateAllocation() const {
+  return video_config_.vp8_base_heavy_tl3_alloc;
 }
 
 bool RateControlSettings::TriggerProbeOnMaxAllocatedBitrateChange() const {
-  return probe_max_allocation_.Get();
+  return video_config_.probe_max_allocation;
 }
 
 bool RateControlSettings::UseEncoderBitrateAdjuster() const {
-  return bitrate_adjuster_.Get();
+  return video_config_.bitrate_adjuster;
 }
 
 bool RateControlSettings::BitrateAdjusterCanUseNetworkHeadroom() const {
-  return adjuster_use_headroom_.Get();
+  return video_config_.adjuster_use_headroom;
 }
 
 }  // namespace webrtc

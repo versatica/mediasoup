@@ -13,8 +13,7 @@
 #include <algorithm>
 
 namespace webrtc {
-// TODO(srte): Revert to using default after removing union member.
-StreamsConfig::StreamsConfig() {}
+StreamsConfig::StreamsConfig() = default;
 StreamsConfig::StreamsConfig(const StreamsConfig&) = default;
 StreamsConfig::~StreamsConfig() = default;
 
@@ -49,7 +48,7 @@ std::vector<PacketResult> TransportPacketsFeedback::ReceivedWithSendInfo()
     const {
   std::vector<PacketResult> res;
   for (const PacketResult& fb : packet_feedbacks) {
-    if (fb.receive_time.IsFinite()) {
+    if (fb.IsReceived()) {
       res.push_back(fb);
     }
   }
@@ -59,7 +58,7 @@ std::vector<PacketResult> TransportPacketsFeedback::ReceivedWithSendInfo()
 std::vector<PacketResult> TransportPacketsFeedback::LostWithSendInfo() const {
   std::vector<PacketResult> res;
   for (const PacketResult& fb : packet_feedbacks) {
-    if (fb.receive_time.IsPlusInfinity()) {
+    if (!fb.IsReceived()) {
       res.push_back(fb);
     }
   }
@@ -75,7 +74,7 @@ std::vector<PacketResult> TransportPacketsFeedback::SortedByReceiveTime()
     const {
   std::vector<PacketResult> res;
   for (const PacketResult& fb : packet_feedbacks) {
-    if (fb.receive_time.IsFinite()) {
+    if (fb.IsReceived()) {
       res.push_back(fb);
     }
   }

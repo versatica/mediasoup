@@ -29,6 +29,8 @@ DataRate GetMinBitrate();
 
 static const int64_t kBitrateWindowMs = 1000;
 
+constexpr DataRate kCongestionControllerMinBitrate = DataRate::BitsPerSec<5000>();
+
 extern const char kBweTypeHistogram[];
 
 enum BweNames {

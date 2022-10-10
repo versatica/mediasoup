@@ -13,11 +13,39 @@
 
 #include "api/transport/webrtc_key_value_config.h"
 #include "rtc_base/experiments/field_trial_parser.h"
-// #include "rtc_base/experiments/field_trial_units.h"
+#include "rtc_base/experiments/field_trial_units.h"
+#include "rtc_base/experiments/struct_parameters_parser.h"
 
 #include <absl/types/optional.h>
 
 namespace webrtc {
+
+struct CongestionWindowConfig {
+  static constexpr char kKey[] = "WebRTC-CongestionWindow";
+  absl::optional<int> queue_size_ms;
+  absl::optional<int> min_bitrate_bps;
+  absl::optional<DataSize> initial_data_window;
+  bool drop_frame_only = false;
+  std::unique_ptr<StructParametersParser> Parser();
+  static CongestionWindowConfig Parse(absl::string_view config);
+};
+
+struct VideoRateControlConfig {
+  static constexpr char kKey[] = "WebRTC-VideoRateControl";
+  absl::optional<double> pacing_factor;
+  bool alr_probing = false;
+  absl::optional<int> vp8_qp_max;
+  absl::optional<int> vp8_min_pixels;
+  bool trust_vp8 = true;
+  bool trust_vp9 = true;
+  bool probe_max_allocation = true;
+  bool bitrate_adjuster = true;
+  bool adjuster_use_headroom = true;
+  bool vp8_s0_boost = false;
+  bool vp8_base_heavy_tl3_alloc = false;
+
+  std::unique_ptr<StructParametersParser> Parser();
+};
 
 class RateControlSettings final {
  public:
@@ -34,10 +62,22 @@ class RateControlSettings final {
   bool UseCongestionWindow() const;
   int64_t GetCongestionWindowAdditionalTimeMs() const;
   bool UseCongestionWindowPushback() const;
+  bool UseCongestionWindowDropFrameOnly() const;
   uint32_t CongestionWindowMinPushbackTargetBitrateBps() const;
+  absl::optional<DataSize> CongestionWindowInitialDataWindow() const;
 
   absl::optional<double> GetPacingFactor() const;
   bool UseAlrProbing() const;
+
+  absl::optional<int> LibvpxVp8QpMax() const;
+  absl::optional<int> LibvpxVp8MinPixels() const;
+  bool LibvpxVp8TrustedRateController() const;
+  bool Vp8BoostBaseLayerQuality() const;
+  bool Vp8DynamicRateSettings() const;
+  bool LibvpxVp9TrustedRateController() const;
+  bool Vp9DynamicRateSettings() const;
+
+  bool Vp8BaseHeavyTl3RateAllocation() const;
 
   bool TriggerProbeOnMaxAllocatedBitrateChange() const;
   bool UseEncoderBitrateAdjuster() const;
@@ -47,15 +87,8 @@ class RateControlSettings final {
   explicit RateControlSettings(
       const WebRtcKeyValueConfig* const key_value_config);
 
-  double GetSimulcastScreenshareHysteresisFactor() const;
-
-  FieldTrialOptional<int> congestion_window_;
-  FieldTrialOptional<int> congestion_window_pushback_;
-  FieldTrialOptional<double> pacing_factor_;
-  FieldTrialParameter<bool> alr_probing_;
-  FieldTrialParameter<bool> probe_max_allocation_;
-  FieldTrialParameter<bool> bitrate_adjuster_;
-  FieldTrialParameter<bool> adjuster_use_headroom_;
+  CongestionWindowConfig congestion_window_config_;
+  VideoRateControlConfig video_config_;
 };
 
 }  // namespace webrtc

@@ -11,7 +11,6 @@
 #define MODULES_CONGESTION_CONTROLLER_GOOG_CC_DELAY_INCREASE_DETECTOR_INTERFACE_H_
 
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
-#include "rtc_base/constructor_magic.h"
 
 #include <stdint.h>
 
@@ -22,17 +21,21 @@ class DelayIncreaseDetectorInterface {
   DelayIncreaseDetectorInterface() {}
   virtual ~DelayIncreaseDetectorInterface() {}
 
+  DelayIncreaseDetectorInterface(const DelayIncreaseDetectorInterface&) =
+      delete;
+  DelayIncreaseDetectorInterface& operator=(
+      const DelayIncreaseDetectorInterface&) = delete;
+
   // Update the detector with a new sample. The deltas should represent deltas
   // between timestamp groups as defined by the InterArrival class.
   virtual void Update(double recv_delta_ms,
                       double send_delta_ms,
                       int64_t send_time_ms,
                       int64_t arrival_time_ms,
+                      size_t packet_size,
                       bool calculated_deltas) = 0;
 
   virtual BandwidthUsage State() const = 0;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(DelayIncreaseDetectorInterface);
 };
 
 }  // namespace webrtc

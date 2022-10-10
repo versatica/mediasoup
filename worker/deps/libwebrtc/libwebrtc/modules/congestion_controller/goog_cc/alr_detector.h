@@ -15,6 +15,7 @@
 #include "modules/pacing/interval_budget.h"
 #include "rtc_base/experiments/alr_experiment.h"
 #include "rtc_base/experiments/field_trial_units.h"
+#include "rtc_base/experiments/struct_parameters_parser.h"
 
 #include <absl/types/optional.h>
 #include <stddef.h>
@@ -23,6 +24,19 @@
 
 namespace webrtc {
 
+class RtcEventLog;
+
+struct AlrDetectorConfig {
+  // Sent traffic ratio as a function of network capacity used to determine
+  // application-limited region. ALR region start when bandwidth usage drops
+  // below kAlrStartUsageRatio and ends when it raises above
+  // kAlrEndUsageRatio. NOTE: This is intentionally conservative at the moment
+  // until BW adjustments of application limited region is fine tuned.
+  double bandwidth_usage_ratio = 0.65;
+  double start_budget_level_ratio = 0.80;
+  double stop_budget_level_ratio = 0.50;
+  std::unique_ptr<StructParametersParser> Parser();
+};
 // Application limited region detector is a class that utilizes signals of
 // elapsed time and bytes sent to estimate whether network traffic is
 // currently limited by the application's ability to generate traffic.
@@ -32,6 +46,7 @@ namespace webrtc {
 // Note: This class is not thread-safe.
 class AlrDetector {
  public:
+	AlrDetector(AlrDetectorConfig config);
   explicit AlrDetector(const WebRtcKeyValueConfig* key_value_config);
   ~AlrDetector();
 
@@ -44,26 +59,9 @@ class AlrDetector {
   // started or empty result if the sender is currently not application-limited.
   absl::optional<int64_t> GetApplicationLimitedRegionStartTime() const;
 
-  void UpdateBudgetWithElapsedTime(int64_t delta_time_ms);
-  void UpdateBudgetWithBytesSent(size_t bytes_sent);
-
  private:
-  // Sent traffic ratio as a function of network capacity used to determine
-  // application-limited region. ALR region start when bandwidth usage drops
-  // below kAlrStartUsageRatio and ends when it raises above
-  // kAlrEndUsageRatio. NOTE: This is intentionally conservative at the moment
-  // until BW adjustments of application limited region is fine tuned.
-  static constexpr double kDefaultBandwidthUsageRatio = 0.65;
-  static constexpr double kDefaultStartBudgetLevelRatio = 0.80;
-  static constexpr double kDefaultStopBudgetLevelRatio = 0.50;
-
-  AlrDetector(const WebRtcKeyValueConfig* key_value_config,
-              absl::optional<AlrExperimentSettings> experiment_settings);
-
   friend class GoogCcStatePrinter;
-  FieldTrialParameter<double>  bandwidth_usage_ratio_;
-  FieldTrialParameter<double>  start_budget_level_ratio_;
-  FieldTrialParameter<double>  stop_budget_level_ratio_;
+  const AlrDetectorConfig conf_;
 
   absl::optional<int64_t> last_send_time_ms_;
 
