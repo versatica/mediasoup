@@ -10,7 +10,7 @@
 #include "Settings.hpp"
 #include "Channel/ChannelNotifier.hpp"
 #include "FBS/worker_generated.h"
-#include "FBS/request_generated.h"
+#include "FBS/response_generated.h"
 
 /* Instance methods. */
 
@@ -95,7 +95,7 @@ void Worker::Close()
 	this->payloadChannel->Close();
 }
 
-flatbuffers::Offset<FBS::Worker::Dump> Worker::FillBuffer(flatbuffers::FlatBufferBuilder& builder) const
+flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(flatbuffers::FlatBufferBuilder& builder) const
 {
 	// Add webRtcServerIds.
 	std::vector<std::string> webRtcServerIds;
@@ -121,7 +121,7 @@ flatbuffers::Offset<FBS::Worker::Dump> Worker::FillBuffer(flatbuffers::FlatBuffe
 
 	auto channelMessageHandlers = ChannelMessageHandlers::FillBuffer(builder);
 
-	return FBS::Worker::CreateDump(builder, Logger::pid, webRtcServers, routers, channelMessageHandlers);
+	return FBS::Worker::CreateDumpResponse(builder, Logger::pid, webRtcServers, routers, channelMessageHandlers);
 }
 
 void Worker::FillJson(json& jsonObject) const
@@ -318,7 +318,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			auto dump = FillBuffer(builder);
 
-			request->Accept(builder, FBS::Response::Body_FBS_Worker_Dump, dump);
+			request->Accept(builder, FBS::Response::Body_FBS_Worker_DumpResponse, dump);
 
 			break;
 		}
