@@ -92,17 +92,13 @@ namespace Channel
 
 		void Accept();
 		template <class Body>
-		void Accept(flatbuffers::FlatBufferBuilder& builder, FBS::Request::ResponseBody type, flatbuffers::Offset<Body>& body)
+		void Accept(flatbuffers::FlatBufferBuilder& builder, FBS::Response::Body type, flatbuffers::Offset<Body>& body)
 		{
-			auto response = FBS::Request::CreateResponse(builder, this->id, true, type, body.Union());
+			auto response = FBS::Response::CreateResponse(builder, this->id, true, type, body.Union());
 
 			builder.Finish(response);
 
 			this->Send(builder.GetBufferPointer(), builder.GetSize());
-
-			auto s = flatbuffers::FlatBufferToString(builder.GetBufferPointer(), FBS::Request::ResponseTypeTable());
-
-			std::cout << "response: " << s.c_str() << std::endl;
 
 			builder.Reset();
 		}

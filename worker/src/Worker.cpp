@@ -318,7 +318,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			auto dump = FillBuffer(builder);
 
-			request->Accept(builder, FBS::Request::ResponseBody_FBS_Worker_Dump, dump);
+			request->Accept(builder, FBS::Response::Body_FBS_Worker_Dump, dump);
 
 			break;
 		}
