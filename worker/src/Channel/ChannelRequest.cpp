@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/ChannelRequest.hpp"
+#include "FBS/request_generated.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -135,6 +136,22 @@ namespace Channel
 				}
 			}
 		}
+	}
+
+	/**
+	 * msg contains the request flatbuffer.
+	 */
+	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, const uint8_t* msg)
+	  : channel(channel)
+	{
+		MS_TRACE();
+
+		// TMP.
+		auto s = flatbuffers::FlatBufferToString(msg, FBS::Request::RequestTypeTable());
+		MS_ERROR("%s", s.c_str());
+
+		this->_data = FBS::Request::GetRequest(msg);
+		this->id = this->_data->id();
 	}
 
 	ChannelRequest::~ChannelRequest()

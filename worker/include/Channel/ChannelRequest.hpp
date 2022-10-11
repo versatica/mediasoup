@@ -2,6 +2,7 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
+#include "FBS/request_generated.h"
 #include "FBS/response_generated.h"
 #include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
@@ -88,6 +89,7 @@ namespace Channel
 
 	public:
 		ChannelRequest(Channel::ChannelSocket* channel, const char* msg, size_t msgLen);
+		ChannelRequest(Channel::ChannelSocket* channel, const uint8_t* msg);
 		virtual ~ChannelRequest();
 
 		void Accept();
@@ -117,6 +119,8 @@ namespace Channel
 		MethodId methodId;
 		std::string handlerId;
 		json data;
+		// TODO: Rename to `data` once JSON is removed.
+		const FBS::Request::Request* _data{ nullptr };
 		// Others.
 		bool replied{ false };
 	};

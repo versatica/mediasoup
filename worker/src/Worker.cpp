@@ -295,8 +295,12 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
-	MS_DEBUG_DEV(
+	MS_ERROR(
 	  "Channel request received [method:%s, id:%" PRIu32 "]", request->method.c_str(), request->id);
+
+	// TODO: Remove when every request is ported to flatbuffers.
+	if (request->_data)
+		goto binary;
 
 	switch (request->methodId)
 	{
@@ -467,6 +471,29 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			}
 
 			break;
+		}
+	}
+
+	return;
+
+	binary:
+
+	switch (request->_data->body_type())
+	{
+		case FBS::Request::Body::Body_FBS_Worker_DumpRequest:
+		{
+			auto& builder = Channel::ChannelRequest::bufferBuilder;
+
+			auto dump = FillBuffer(builder);
+
+			request->Accept(builder, FBS::Response::Body_FBS_Worker_DumpResponse, dump);
+
+			return;
+		}
+
+		default:
+		{
+			MS_ERROR("unknown method");
 		}
 	}
 }
