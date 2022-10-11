@@ -71,6 +71,7 @@
   "dependencies": {
     "@types/node": "^16.11.10",
     "debug": "^4.3.4",
+    "flatbuffers": "^2.0.7",
     "h264-profile-level-id": "^1.0.1",
     "supports-color": "^9.2.3",
     "uuid": "^8.3.2"

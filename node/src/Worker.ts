@@ -9,6 +9,10 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
+import * as flatbuffers from 'flatbuffers';
+import { Body as RequestBody, DumpRequest } from './fbs/request';
+import { DumpResponse } from './fbs/response';
+import { ChannelMessageHandlers } from './fbs/worker';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
@@ -549,7 +553,50 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('worker.dump');
+		const builder = new flatbuffers.Builder(1024);
+		const dumpRequest = DumpRequest.createDumpRequest(builder);
+		const response = await this.#channel.requestBinary(
+			builder, RequestBody.FBS_Worker_DumpRequest, dumpRequest);
+
+		const dumpResponse = new DumpResponse();
+
+		response.body(dumpResponse);
+
+		const webrtcServerIds: string[] = [];
+
+		for (let idx=0; idx < dumpResponse.webrtcServerIdsLength(); ++idx)
+		{
+			webrtcServerIds.push(dumpResponse.webrtcServerIds(idx));
+		}
+
+		const routerIds: string[] = [];
+
+		for (let idx=0; idx < dumpResponse.routerIdsLength(); ++idx)
+		{
+			routerIds.push(dumpResponse.routerIds(idx));
+		}
+
+		const channelMessageHandlers = new ChannelMessageHandlers();
+
+		dumpResponse.channelMessageHandlers(channelMessageHandlers);
+
+		const channelRequestHandlers: string[] = [];
+
+		for (let idx=0; idx < channelMessageHandlers.channelRequestHandlersLength(); ++idx)
+		{
+			channelRequestHandlers.push(channelMessageHandlers.channelRequestHandlers(idx));
+		}
+
+		const result = {
+			pid                    : Number(dumpResponse.pid()),
+			webrtcServerIds        : webrtcServerIds,
+			routerIds              : routerIds,
+			channelMessageHandlers : {
+				channelRequestHandlers
+			}
+		};
+
+		return result;
 	}
 
 	/**

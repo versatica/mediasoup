@@ -12,6 +12,10 @@ const Channel_1 = require("./Channel");
 const PayloadChannel_1 = require("./PayloadChannel");
 const Router_1 = require("./Router");
 const WebRtcServer_1 = require("./WebRtcServer");
+const flatbuffers = require("flatbuffers");
+const request_1 = require("./fbs/request");
+const response_1 = require("./fbs/response");
+const worker_1 = require("./fbs/worker");
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
@@ -259,7 +263,34 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('worker.dump');
+        const builder = new flatbuffers.Builder(1024);
+        const dumpRequest = request_1.DumpRequest.createDumpRequest(builder);
+        const response = await this.#channel.requestBinary(builder, request_1.Body.FBS_Worker_DumpRequest, dumpRequest);
+        const dumpResponse = new response_1.DumpResponse();
+        response.body(dumpResponse);
+        const webrtcServerIds = [];
+        for (let idx = 0; idx < dumpResponse.webrtcServerIdsLength(); ++idx) {
+            webrtcServerIds.push(dumpResponse.webrtcServerIds(idx));
+        }
+        const routerIds = [];
+        for (let idx = 0; idx < dumpResponse.routerIdsLength(); ++idx) {
+            routerIds.push(dumpResponse.routerIds(idx));
+        }
+        const channelMessageHandlers = new worker_1.ChannelMessageHandlers();
+        dumpResponse.channelMessageHandlers(channelMessageHandlers);
+        const channelRequestHandlers = [];
+        for (let idx = 0; idx < channelMessageHandlers.channelRequestHandlersLength(); ++idx) {
+            channelRequestHandlers.push(channelMessageHandlers.channelRequestHandlers(idx));
+        }
+        const result = {
+            pid: Number(dumpResponse.pid()),
+            webrtcServerIds: webrtcServerIds,
+            routerIds: routerIds,
+            channelMessageHandlers: {
+                channelRequestHandlers
+            }
+        };
+        return result;
     }
     /**
      * Get mediasoup-worker process resource usage.

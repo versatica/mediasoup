@@ -66,7 +66,7 @@ switch (task)
 
 	case 'lint:node':
 	{
-		execute('eslint -c node/.eslintrc.js --max-warnings 0 node/src/ node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
+		execute('eslint -c node/.eslintrc.js --ignore-path node/.eslintignore --max-warnings 0 node/src/ node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
 
 		break;
 	}

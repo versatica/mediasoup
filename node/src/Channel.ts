@@ -1,8 +1,12 @@
 import * as os from 'os';
 import { Duplex } from 'stream';
+import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
+import { Request } from './fbs/f-b-s/request/request';
+import { Response } from './fbs/f-b-s/response/response';
+import { Body as RequestBody } from './fbs/request';
 
 const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('Channel');
@@ -149,6 +153,8 @@ export class Channel extends EnhancedEventEmitter
 							console.warn(
 								`worker[pid:${pid}] unexpected data: %s`,
 								payload.toString('utf8', 1));
+
+							this.processBuffer(payload);
 					}
 				}
 				catch (error)
@@ -234,7 +240,7 @@ export class Channel extends EnhancedEventEmitter
 		if (this.#closed)
 			throw new InvalidStateError('Channel closed');
 
-		const request = `${id}:${method}:${handlerId}:${JSON.stringify(data)}`;
+		const request = `r${id}:${method}:${handlerId}:${JSON.stringify(data)}`;
 
 		if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');
@@ -250,6 +256,69 @@ export class Channel extends EnhancedEventEmitter
 			{
 				id      : id,
 				method  : method,
+				resolve : (data2) =>
+				{
+					if (!this.#sents.delete(id))
+						return;
+
+					pResolve(data2);
+				},
+				reject : (error) =>
+				{
+					if (!this.#sents.delete(id))
+						return;
+
+					pReject(error);
+				},
+				close : () =>
+				{
+					pReject(new InvalidStateError('Channel closed'));
+				}
+			};
+
+			// Add sent stuff to the map.
+			this.#sents.set(id, sent);
+		});
+	}
+
+	async requestBinary(
+		builder: flatbuffers.Builder,
+		bodyType: RequestBody,
+		bodyOffset: number,
+		handlerId?: string): Promise<Response>
+	{
+		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
+
+		const id = this.#nextId;
+
+		// logger.debug('request() [method:%s, id:%s]', data., id);
+
+		if (this.#closed)
+			throw new InvalidStateError('Channel closed');
+
+		const handlerIdOffset = builder.createString(handlerId);
+		const request = Request.createRequest(
+			builder, id, handlerIdOffset, bodyType, bodyOffset);
+
+		builder.finish(request);
+
+		const buffer = builder.asUint8Array();
+
+		if (buffer.byteLength > MESSAGE_MAX_LEN)
+			throw new Error('Channel request too big');
+
+		// This may throw if closed or remote side ended.
+		this.#producerSocket.write(
+			Buffer.from(Uint32Array.of(buffer.byteLength).buffer));
+		// Set buffer enconding to 'binary.'
+		this.#producerSocket.write(buffer, 'binary');
+
+		return new Promise((pResolve, pReject) =>
+		{
+			const sent: Sent =
+			{
+				id      : id,
+				method  : '',
 				resolve : (data2) =>
 				{
 					if (!this.#sents.delete(id))
@@ -337,5 +406,77 @@ export class Channel extends EnhancedEventEmitter
 			logger.error(
 				'received message is not a response nor a notification');
 		}
+	}
+
+	private processBuffer(data: Buffer): void
+	{
+		const buffer = new flatbuffers.ByteBuffer(new Uint8Array(data));
+
+		const msg = Response.getRootAsResponse(buffer);
+
+		// If a response, retrieve its associated request.
+		if (msg.id())
+		{
+			const sent = this.#sents.get(msg.id());
+
+			if (!sent)
+			{
+				logger.error(
+					'received response does not match any sent request [id:%s]', msg.id);
+
+				return;
+			}
+
+			if (msg.accepted())
+			{
+				logger.debug(
+					'request succeeded [method:%s, id:%s]', sent.method, sent.id);
+
+				sent.resolve(msg);
+			}
+			/*
+			else if (msg.error)
+			{
+				logger.warn(
+					'request failed [method:%s, id:%s]: %s',
+					sent.method, sent.id, msg.reason);
+
+				switch (msg.error)
+				{
+					case 'TypeError':
+						sent.reject(new TypeError(msg.reason));
+						break;
+
+					default:
+						sent.reject(new Error(msg.reason));
+				}
+			}
+			*/
+			else
+			{
+				logger.error(
+					'received response is not accepted nor rejected [method:%s, id:%s]',
+					sent.method, sent.id);
+			}
+		}
+		/*
+		// If a notification emit it to the corresponding entity.
+		else if (msg.targetId && msg.event)
+		{
+			// Due to how Promises work, it may happen that we receive a response
+			// from the worker followed by a notification from the worker. If we
+			// emit the notification immediately it may reach its target **before**
+			// the response, destroying the ordered delivery. So we must wait a bit
+			// here.
+			// See https://github.com/versatica/mediasoup/issues/510
+			setImmediate(() => this.emit(String(msg.targetId), msg.event, msg.data));
+		}
+		// Otherwise unexpected message.
+		else
+		{
+			logger.error(
+				'received message is not a response nor a notification');
+		}
+		*/
 	}
 }

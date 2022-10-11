@@ -1,4 +1,7 @@
+import * as flatbuffers from 'flatbuffers';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { Response } from './fbs/f-b-s/response/response';
+import { Body as RequestBody } from './fbs/request';
 export declare class Channel extends EnhancedEventEmitter {
     #private;
     /**
@@ -17,6 +20,8 @@ export declare class Channel extends EnhancedEventEmitter {
      * @private
      */
     request(method: string, handlerId?: string, data?: any): Promise<any>;
+    requestBinary(builder: flatbuffers.Builder, bodyType: RequestBody, bodyOffset: number, handlerId?: string): Promise<Response>;
     private processMessage;
+    private processBuffer;
 }
 //# sourceMappingURL=Channel.d.ts.map
