@@ -9,7 +9,6 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
-import * as flatbuffers from 'flatbuffers';
 import { Body as RequestBody, DumpRequest } from './fbs/request';
 import { DumpResponse } from './fbs/response';
 import { ChannelMessageHandlers } from './fbs/worker';
@@ -168,6 +167,18 @@ export type WorkerResourceUsage =
 	ru_nivcsw: number;
 
 	/* eslint-enable camelcase */
+};
+
+export type WorkerDump =
+{
+	pid : number;
+	webrtcServerIds : string[];
+	routerIds : string[];
+	channelMessageHandlers : {
+		channelRequestHandlers : string[];
+		payloadChannelRequestHandlers : string[];
+		payloadNotificationHandlers : string[];
+	};
 };
 
 export type WorkerEvents = 
@@ -554,35 +565,20 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	{
 		logger.debug('dump()');
 
-		// Create flatbuffer builder.
-		const builder = new flatbuffers.Builder(1024);
-		// Create Dump Request builder.
+		// Get flatbuffer builder.
+		const builder = this.#channel.bufferBuilder;
+		// Create Dump Request.
 		const dumpRequest = DumpRequest.createDumpRequest(builder);
 		// Send the request and wait for the response.
 		const response = await this.#channel.requestBinary(
-			builder, RequestBody.FBS_Worker_DumpRequest, dumpRequest);
+			RequestBody.FBS_Worker_DumpRequest, dumpRequest);
 
-		/* Decode the reponse into an object. */
+		/* Decode the response. */
 		const dumpResponse = new DumpResponse();
 
 		response.body(dumpResponse);
 
-		const channelMessageHandlers = new ChannelMessageHandlers();
-
-		dumpResponse.channelMessageHandlers(channelMessageHandlers);
-
-		const result = {
-			pid                    : Number(dumpResponse.pid()),
-			webrtcServerIds        : getArray(dumpResponse, 'webrtcServerIds'),
-			routerIds              : getArray(dumpResponse, 'routerIds'),
-			channelMessageHandlers : {
-				channelRequestHandlers        : getArray(channelMessageHandlers, 'channelRequestHandlers'),
-				payloadChannelRequestHandlers : getArray(channelMessageHandlers, 'payloadchannelRequestHandlers'),
-				payloadNotificationHandlers   : getArray(channelMessageHandlers, 'payloadchannelNotificationHandlers')
-			}
-		};
-
-		return result;
+		return this.parseDumpResponse(dumpResponse);
 	}
 
 	/**
@@ -727,5 +723,27 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		// Emit observer event.
 		this.#observer.safeEmit('close');
+	}
+
+	/**
+	 * flatbuffers helpers
+	 */
+
+	private parseDumpResponse(dumpResponse: DumpResponse): WorkerDump
+	{
+		const channelMessageHandlers = new ChannelMessageHandlers();
+
+		dumpResponse.channelMessageHandlers(channelMessageHandlers);
+
+		return {
+			pid                    : Number(dumpResponse.pid()),
+			webrtcServerIds        : getArray(dumpResponse, 'webrtcServerIds'),
+			routerIds              : getArray(dumpResponse, 'routerIds'),
+			channelMessageHandlers : {
+				channelRequestHandlers        : getArray(channelMessageHandlers, 'channelRequestHandlers'),
+				payloadChannelRequestHandlers : getArray(channelMessageHandlers, 'payloadchannelRequestHandlers'),
+				payloadNotificationHandlers   : getArray(channelMessageHandlers, 'payloadchannelNotificationHandlers')
+			}
+		};
 	}
 }

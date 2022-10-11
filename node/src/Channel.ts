@@ -44,6 +44,9 @@ export class Channel extends EnhancedEventEmitter
 	// Buffer for reading messages from the worker.
 	#recvBuffer = Buffer.alloc(0);
 
+	// flatbuffers builder.
+	#bufferBuilder:flatbuffers.Builder = new flatbuffers.Builder(1024);
+
 	/**
 	 * @private
 	 */
@@ -189,6 +192,14 @@ export class Channel extends EnhancedEventEmitter
 	}
 
 	/**
+	 * flatbuffer builder.
+	 */
+	get bufferBuilder(): flatbuffers.Builder
+	{
+		return this.#bufferBuilder;
+	}
+
+	/**
 	 * @private
 	 */
 	close(): void
@@ -282,7 +293,6 @@ export class Channel extends EnhancedEventEmitter
 	}
 
 	async requestBinary(
-		builder: flatbuffers.Builder,
 		bodyType: RequestBody,
 		bodyOffset: number,
 		handlerId?: string): Promise<Response>
@@ -296,13 +306,13 @@ export class Channel extends EnhancedEventEmitter
 		if (this.#closed)
 			throw new InvalidStateError('Channel closed');
 
-		const handlerIdOffset = builder.createString(handlerId);
+		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
 		const request = Request.createRequest(
-			builder, id, handlerIdOffset, bodyType, bodyOffset);
+			this.#bufferBuilder, id, handlerIdOffset, bodyType, bodyOffset);
 
-		builder.finish(request);
+		this.#bufferBuilder.finish(request);
 
-		const buffer = builder.asUint8Array();
+		const buffer = this.#bufferBuilder.asUint8Array();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');
