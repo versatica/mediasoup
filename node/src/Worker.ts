@@ -13,6 +13,7 @@ import * as flatbuffers from 'flatbuffers';
 import { Body as RequestBody, DumpRequest } from './fbs/request';
 import { DumpResponse } from './fbs/response';
 import { ChannelMessageHandlers } from './fbs/worker';
+import { getArray } from './fbs/utils';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
@@ -553,46 +554,31 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	{
 		logger.debug('dump()');
 
+		// Create flatbuffer builder.
 		const builder = new flatbuffers.Builder(1024);
+		// Create Dump Request builder.
 		const dumpRequest = DumpRequest.createDumpRequest(builder);
+		// Send the request and wait for the response.
 		const response = await this.#channel.requestBinary(
 			builder, RequestBody.FBS_Worker_DumpRequest, dumpRequest);
 
+		/* Decode the reponse into an object. */
 		const dumpResponse = new DumpResponse();
 
 		response.body(dumpResponse);
-
-		const webrtcServerIds: string[] = [];
-
-		for (let idx=0; idx < dumpResponse.webrtcServerIdsLength(); ++idx)
-		{
-			webrtcServerIds.push(dumpResponse.webrtcServerIds(idx));
-		}
-
-		const routerIds: string[] = [];
-
-		for (let idx=0; idx < dumpResponse.routerIdsLength(); ++idx)
-		{
-			routerIds.push(dumpResponse.routerIds(idx));
-		}
 
 		const channelMessageHandlers = new ChannelMessageHandlers();
 
 		dumpResponse.channelMessageHandlers(channelMessageHandlers);
 
-		const channelRequestHandlers: string[] = [];
-
-		for (let idx=0; idx < channelMessageHandlers.channelRequestHandlersLength(); ++idx)
-		{
-			channelRequestHandlers.push(channelMessageHandlers.channelRequestHandlers(idx));
-		}
-
 		const result = {
 			pid                    : Number(dumpResponse.pid()),
-			webrtcServerIds        : webrtcServerIds,
-			routerIds              : routerIds,
+			webrtcServerIds        : getArray(dumpResponse, 'webrtcServerIds'),
+			routerIds              : getArray(dumpResponse, 'routerIds'),
 			channelMessageHandlers : {
-				channelRequestHandlers
+				channelRequestHandlers        : getArray(channelMessageHandlers, 'channelRequestHandlers'),
+				payloadChannelRequestHandlers : getArray(channelMessageHandlers, 'payloadchannelRequestHandlers'),
+				payloadNotificationHandlers   : getArray(channelMessageHandlers, 'payloadchannelNotificationHandlers')
 			}
 		};
 

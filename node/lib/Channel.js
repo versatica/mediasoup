@@ -182,10 +182,8 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // logger.debug('request() [method:%s, id:%s]', data., id);
         if (this.#closed)
             throw new errors_1.InvalidStateError('Channel closed');
-        // const request = `${id}:${method}:${handlerId}:${JSON.stringify(data)}`;
         const handlerIdOffset = builder.createString(handlerId);
         const request = request_1.Request.createRequest(builder, id, handlerIdOffset, bodyType, bodyOffset);
-        // Call `finish()` to instruct the builder that this monster is complete.
         builder.finish(request);
         const buffer = builder.asUint8Array();
         if (buffer.byteLength > MESSAGE_MAX_LEN)
@@ -197,7 +195,7 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         return new Promise((pResolve, pReject) => {
             const sent = {
                 id: id,
-                method: 'methodXYZ',
+                method: '',
                 resolve: (data2) => {
                     if (!this.#sents.delete(id))
                         return;

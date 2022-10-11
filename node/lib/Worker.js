@@ -16,6 +16,7 @@ const flatbuffers = require("flatbuffers");
 const request_1 = require("./fbs/request");
 const response_1 = require("./fbs/response");
 const worker_1 = require("./fbs/worker");
+const utils_1 = require("./fbs/utils");
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
@@ -263,31 +264,25 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
+        // Create flatbuffer builder.
         const builder = new flatbuffers.Builder(1024);
+        // Create Dump Request builder.
         const dumpRequest = request_1.DumpRequest.createDumpRequest(builder);
+        // Send the request and wait for the response.
         const response = await this.#channel.requestBinary(builder, request_1.Body.FBS_Worker_DumpRequest, dumpRequest);
+        /* Decode the reponse into an object. */
         const dumpResponse = new response_1.DumpResponse();
         response.body(dumpResponse);
-        const webrtcServerIds = [];
-        for (let idx = 0; idx < dumpResponse.webrtcServerIdsLength(); ++idx) {
-            webrtcServerIds.push(dumpResponse.webrtcServerIds(idx));
-        }
-        const routerIds = [];
-        for (let idx = 0; idx < dumpResponse.routerIdsLength(); ++idx) {
-            routerIds.push(dumpResponse.routerIds(idx));
-        }
         const channelMessageHandlers = new worker_1.ChannelMessageHandlers();
         dumpResponse.channelMessageHandlers(channelMessageHandlers);
-        const channelRequestHandlers = [];
-        for (let idx = 0; idx < channelMessageHandlers.channelRequestHandlersLength(); ++idx) {
-            channelRequestHandlers.push(channelMessageHandlers.channelRequestHandlers(idx));
-        }
         const result = {
             pid: Number(dumpResponse.pid()),
-            webrtcServerIds: webrtcServerIds,
-            routerIds: routerIds,
+            webrtcServerIds: (0, utils_1.getArray)(dumpResponse, 'webrtcServerIds'),
+            routerIds: (0, utils_1.getArray)(dumpResponse, 'routerIds'),
             channelMessageHandlers: {
-                channelRequestHandlers
+                channelRequestHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'channelRequestHandlers'),
+                payloadChannelRequestHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'payloadchannelRequestHandlers'),
+                payloadNotificationHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'payloadchannelNotificationHandlers')
             }
         };
         return result;
