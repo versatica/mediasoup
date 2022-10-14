@@ -1,7 +1,7 @@
 
 namespace FBS.RtpParameters;
 
-enum MediaKind : uint8 { AUDIO = 0, VIDEO }
+enum MediaKind : uint8 { ALL = 0, AUDIO, VIDEO }
 enum Type: uint8 { NONE = 0, SIMPLE, SIMULCAST, SVC, PIPE }
 
 // Boolean is a uint8/byte type.

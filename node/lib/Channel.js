@@ -91,8 +91,7 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                             console.log(payload.toString('utf8', 1));
                             break;
                         default:
-                            // eslint-disable-next-line no-console
-                            console.warn(`worker[pid:${pid}] unexpected data: %s`, payload.toString('utf8', 1));
+                            // TODO: Consider it a flatbuffer.
                             this.processBuffer(payload);
                     }
                 }

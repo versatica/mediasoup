@@ -75,14 +75,16 @@ inline const flatbuffers::TypeTable *RtcpParametersTypeTable();
 inline const flatbuffers::TypeTable *RtpParametersTypeTable();
 
 enum MediaKind : uint8_t {
-  MediaKind_AUDIO = 0,
-  MediaKind_VIDEO = 1,
-  MediaKind_MIN = MediaKind_AUDIO,
+  MediaKind_ALL = 0,
+  MediaKind_AUDIO = 1,
+  MediaKind_VIDEO = 2,
+  MediaKind_MIN = MediaKind_ALL,
   MediaKind_MAX = MediaKind_VIDEO
 };
 
-inline const MediaKind (&EnumValuesMediaKind())[2] {
+inline const MediaKind (&EnumValuesMediaKind())[3] {
   static const MediaKind values[] = {
+    MediaKind_ALL,
     MediaKind_AUDIO,
     MediaKind_VIDEO
   };
@@ -90,7 +92,8 @@ inline const MediaKind (&EnumValuesMediaKind())[2] {
 }
 
 inline const char * const *EnumNamesMediaKind() {
-  static const char * const names[3] = {
+  static const char * const names[4] = {
+    "ALL",
     "AUDIO",
     "VIDEO",
     nullptr
@@ -99,7 +102,7 @@ inline const char * const *EnumNamesMediaKind() {
 }
 
 inline const char *EnumNameMediaKind(MediaKind e) {
-  if (flatbuffers::IsOutRange(e, MediaKind_AUDIO, MediaKind_VIDEO)) return "";
+  if (flatbuffers::IsOutRange(e, MediaKind_ALL, MediaKind_VIDEO)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesMediaKind()[index];
 }
@@ -1270,17 +1273,19 @@ inline bool VerifyValueVector(flatbuffers::Verifier &verifier, const flatbuffers
 inline const flatbuffers::TypeTable *MediaKindTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_UCHAR, 0, 0 },
+    { flatbuffers::ET_UCHAR, 0, 0 },
     { flatbuffers::ET_UCHAR, 0, 0 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::RtpParameters::MediaKindTypeTable
   };
   static const char * const names[] = {
+    "ALL",
     "AUDIO",
     "VIDEO"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_ENUM, 2, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_ENUM, 3, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

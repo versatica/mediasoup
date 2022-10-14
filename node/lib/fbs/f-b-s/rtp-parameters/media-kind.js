@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MediaKind = void 0;
 var MediaKind;
 (function (MediaKind) {
-    MediaKind[MediaKind["AUDIO"] = 0] = "AUDIO";
-    MediaKind[MediaKind["VIDEO"] = 1] = "VIDEO";
+    MediaKind[MediaKind["ALL"] = 0] = "ALL";
+    MediaKind[MediaKind["AUDIO"] = 1] = "AUDIO";
+    MediaKind[MediaKind["VIDEO"] = 2] = "VIDEO";
 })(MediaKind = exports.MediaKind || (exports.MediaKind = {}));
