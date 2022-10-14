@@ -147,8 +147,8 @@ namespace Channel
 		MS_TRACE();
 
 		// TMP.
-		auto s = flatbuffers::FlatBufferToString(msg, FBS::Request::RequestTypeTable());
-		MS_ERROR("%s", s.c_str());
+		// auto s = flatbuffers::FlatBufferToString(msg, FBS::Request::RequestTypeTable());
+		// MS_ERROR("%s", s.c_str());
 
 		this->_data = FBS::Request::GetRequest(msg);
 		this->handlerId = this->_data->handler_id()->str();
