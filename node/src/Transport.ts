@@ -11,7 +11,7 @@ import { PlainTransportData } from './PlainTransport';
 import { PipeTransportData } from './PipeTransport';
 import { DirectTransportData } from './DirectTransport';
 import { Producer, ProducerOptions } from './Producer';
-import { Consumer, ConsumerOptions, ConsumerType } from './Consumer';
+import { Consumer, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType } from './Consumer';
 import {
 	DataProducer,
 	DataProducerOptions,
@@ -22,8 +22,12 @@ import {
 	DataConsumerOptions,
 	DataConsumerType
 } from './DataConsumer';
-import { RtpCapabilities } from './RtpParameters';
+import { RtpCapabilities, RtpParameters } from './RtpParameters';
 import { SctpStreamParameters } from './SctpParameters';
+import { Body as RequestBody, ConsumeRequest } from './fbs/request';
+import { ConsumeResponse } from './fbs/response';
+import { MediaKind as FbsMediaKind, ConsumerLayers as FbsConsumerLayers } from './fbs/transport';
+import { getRtpParametersType, serializeRtpParameters, serializeRtpEncodingParameters } from './fbs/utils';
 
 export interface TransportListenIp
 {
@@ -655,6 +659,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	{
 		logger.debug('consume()');
 
+		logger.error("consume()");
 		if (!producerId || typeof producerId !== 'string')
 			throw new TypeError('missing producerId');
 		else if (appData && typeof appData !== 'object')
@@ -696,21 +701,30 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			}
 		}
 
-		const reqData =
-		{
-			consumerId             : uuidv4(),
-			producerId,
-			kind                   : producer.kind,
+		const consumerId = uuidv4();
+
+		const consumeRequestOffset = this.createConsumeRequest({
+			producer,
+			consumerId,
 			rtpParameters,
-			type                   : pipe ? 'pipe' : producer.type,
-			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
 			paused,
 			preferredLayers,
-			ignoreDtx
-		};
+			ignoreDtx,
+			pipe
+		});
 
-		const status =
-			await this.channel.request('transport.consume', this.internal.transportId, reqData);
+		const response = await this.channel.requestBinary(
+			RequestBody.FBS_Transport_ConsumeRequest,
+			consumeRequestOffset,
+			this.internal.transportId
+		);
+
+		/* Decode the response. */
+		const consumeResponse = new ConsumeResponse();
+
+		response.body(consumeResponse);
+
+		const status = this.parseConsumeResponse(consumeResponse);
 
 		const data =
 		{
@@ -725,7 +739,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 				internal :
 				{
 					...this.internal,
-					consumerId : reqData.consumerId
+					consumerId
 				},
 				data,
 				channel         : this.channel,
@@ -991,5 +1005,106 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		}
 
 		throw new Error('no sctpStreamId available');
+	}
+
+	/**
+	 * flatbuffers helpers
+	 */
+
+	private createConsumeRequest({
+		producer,
+		consumerId,
+		rtpParameters,
+		paused,
+		preferredLayers,
+		ignoreDtx,
+		pipe
+	} : {
+		producer: Producer;
+		consumerId: string;
+		rtpParameters: RtpParameters;
+		paused: boolean;
+		preferredLayers?: ConsumerLayers;
+		ignoreDtx?: boolean;
+		pipe: boolean;
+	}): number
+	{
+		// Get flatbuffer builder.
+		const builder = this.channel.bufferBuilder;
+
+		const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
+		const consumerIdOffset = builder.createString(consumerId);
+		const producerIdOffset = builder.createString(producer.id);
+		let consumableRtpEncodingsOffset: number | undefined;
+		let preferredLayersOffset: number | undefined;
+
+		if (producer.consumableRtpParameters.encodings)
+		{
+			consumableRtpEncodingsOffset = serializeRtpEncodingParameters(
+				builder, producer.consumableRtpParameters.encodings
+			);
+		}
+
+		if (preferredLayers)
+		{
+			// NOTE: Add the maximum possible temporae layer if not provided.
+			FbsConsumerLayers.createConsumerLayers(
+				builder, preferredLayers.spatialLayer, preferredLayers.temporalLayer ?? 255
+			);
+		}
+
+		// Create Consume Request.
+		ConsumeRequest.startConsumeRequest(builder);
+		ConsumeRequest.addConsumerId(builder, consumerIdOffset);
+		ConsumeRequest.addProducerId(builder, producerIdOffset);
+		ConsumeRequest.addKind(
+			builder, producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
+		ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
+		ConsumeRequest.addType(
+			builder,
+			getRtpParametersType(producer.type, pipe)
+		);
+
+		if (consumableRtpEncodingsOffset)
+			ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
+
+		ConsumeRequest.addPaused(builder, paused);
+
+		if (preferredLayersOffset)
+			ConsumeRequest.addPreferredLayers(builder, preferredLayersOffset);
+
+		ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
+
+		return ConsumeRequest.endConsumeRequest(builder);
+	}
+
+	private parseConsumeResponse(consumeResponse: ConsumeResponse):
+	{
+		paused : boolean;
+		producerPaused : boolean;
+		score : ConsumerScore;
+		preferredLayers? : ConsumerLayers;
+	}
+	{
+		// const preferredLayers = new FbsConsumerLayers();
+
+		// consumeResponse.preferredLayers(preferredLayers);
+
+		return {
+			paused         : consumeResponse.paused(),
+			producerPaused : consumeResponse.producerPaused(),
+			score          : {
+				score          : 10,
+				producerScore  : 10,
+				producerScores : [ 10 ]
+			}
+			/*
+			 * TODO: Missing in server side.
+			preferredLayers : {
+				spatialLayer  : preferredLayers.spatialLayer(),
+				temporalLayer : preferredLayers.temporalLayer()
+			}
+			*/
+		};
 	}
 }

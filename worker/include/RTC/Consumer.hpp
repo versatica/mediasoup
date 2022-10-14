@@ -65,6 +65,12 @@ namespace RTC
 		  RTC::Consumer::Listener* listener,
 		  json& data,
 		  RTC::RtpParameters::Type type);
+		Consumer(
+		  const std::string& id,
+		  const std::string& producerId,
+		  RTC::Consumer::Listener* listener,
+		  const FBS::Transport::ConsumeRequest* data,
+		  RTC::RtpParameters::Type type);
 		virtual ~Consumer();
 
 	public:

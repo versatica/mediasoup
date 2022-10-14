@@ -31,6 +31,17 @@ namespace RTC
 		}
 	}
 
+	RtpRtxParameters::RtpRtxParameters(const FBS::RtpParameters::Rtx* data)
+	{
+		MS_TRACE();
+
+		// ssrc is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::Rtx::VT_SSRC))
+		{
+			this->ssrc = data->ssrc();
+		}
+	}
+
 	void RtpRtxParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();

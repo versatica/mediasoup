@@ -89,6 +89,45 @@ namespace RTC
 		CheckCodec();
 	}
 
+	RtpCodecParameters::RtpCodecParameters(const FBS::RtpParameters::RtpCodecParameters* data)
+	{
+		MS_TRACE();
+
+		// Set MIME field.
+		// This may throw.
+		this->mimeType.SetMimeType(data->mime_type()->str());
+
+		// payloadType.
+		this->payloadType = data->payload_type();
+
+		// clockRate.
+		this->clockRate = data->clock_rate();
+
+		// channels is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpCodecParameters::VT_CHANNELS))
+		{
+			this->channels = data->channels();
+		}
+
+		// parameters is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpCodecParameters::VT_PARAMETERS))
+			this->parameters.Set(data->parameters());
+
+		// rtcpFeedback is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpCodecParameters::VT_RTCP_FEEDBACK))
+		{
+			this->rtcpFeedback.reserve(data->rtcp_feedback()->size());
+
+			for (auto* entry : *data->rtcp_feedback())
+			{
+				this->rtcpFeedback.emplace_back(entry);
+			}
+		}
+
+		// Check codec.
+		CheckCodec();
+	}
+
 	void RtpCodecParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();

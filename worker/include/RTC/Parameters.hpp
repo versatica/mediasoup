@@ -2,6 +2,7 @@
 #define MS_RTC_PARAMETERS_HPP
 
 #include "common.hpp"
+#include "FBS/rtpParameters_generated.h"
 #include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -64,6 +65,7 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const;
 		void Set(json& data);
+		void Set(const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>>* data);
 		bool HasBoolean(const std::string& key) const;
 		bool HasInteger(const std::string& key) const;
 		bool HasPositiveInteger(const std::string& key) const;

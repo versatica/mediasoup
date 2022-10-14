@@ -1,6 +1,7 @@
 #ifndef MS_RTC_SIMPLE_CONSUMER_HPP
 #define MS_RTC_SIMPLE_CONSUMER_HPP
 
+#include "FBS/transport_generated.h"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
@@ -14,7 +15,7 @@ namespace RTC
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
-		  json& data);
+		  const FBS::Transport::ConsumeRequest* data);
 		~SimpleConsumer() override;
 
 	public:

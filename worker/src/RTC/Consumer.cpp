@@ -153,6 +153,126 @@ namespace RTC
 			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
 	}
 
+	Consumer::Consumer(
+	  const std::string& id,
+	  const std::string& producerId,
+	  Listener* listener,
+	  const FBS::Transport::ConsumeRequest* data,
+	  RTC::RtpParameters::Type type)
+	  : id(id), producerId(producerId), listener(listener), type(type)
+	{
+		MS_TRACE();
+
+		this->kind = RTC::Media::Kind(data->kind());
+
+		// This may throw.
+		this->rtpParameters = RTC::RtpParameters(data->rtp_parameters());
+
+		if (this->rtpParameters.encodings.empty())
+			MS_THROW_TYPE_ERROR("empty rtpParameters.encodings");
+
+		// All encodings must have SSRCs.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			if (encoding.ssrc == 0)
+				MS_THROW_TYPE_ERROR("invalid encoding in rtpParameters (missing ssrc)");
+			else if (encoding.hasRtx && encoding.rtx.ssrc == 0)
+				MS_THROW_TYPE_ERROR("invalid encoding in rtpParameters (missing rtx.ssrc)");
+		}
+
+		if (data->consumable_rtp_encodings()->size() == 0)
+			MS_THROW_TYPE_ERROR("empty consumableRtpEncodings");
+
+		this->consumableRtpEncodings.reserve(data->consumable_rtp_encodings()->size());
+
+		for (size_t i{ 0 }; i < data->consumable_rtp_encodings()->size(); ++i)
+		{
+			auto* entry = data->consumable_rtp_encodings()->Get(i);
+
+			// This may throw due the constructor of RTC::RtpEncodingParameters.
+			this->consumableRtpEncodings.emplace_back(entry);
+
+			// Verify that it has ssrc field.
+			auto& encoding = this->consumableRtpEncodings[i];
+
+			if (encoding.ssrc == 0u)
+				MS_THROW_TYPE_ERROR("wrong encoding in consumableRtpEncodings (missing ssrc)");
+		}
+
+		MS_ERROR("header extension size: %zu", this->rtpParameters.headerExtensions.size());
+		// Fill RTP header extension ids and their mapped values.
+		// This may throw.
+		for (auto& exten : this->rtpParameters.headerExtensions)
+		{
+			if (exten.id == 0u)
+				MS_THROW_TYPE_ERROR("RTP extension id cannot be 0");
+
+			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
+			{
+				this->rtpHeaderExtensionIds.ssrcAudioLevel = exten.id;
+			}
+
+			if (this->rtpHeaderExtensionIds.videoOrientation == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION)
+			{
+				this->rtpHeaderExtensionIds.videoOrientation = exten.id;
+			}
+
+			if (this->rtpHeaderExtensionIds.absSendTime == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
+			{
+				this->rtpHeaderExtensionIds.absSendTime = exten.id;
+			}
+
+			if (this->rtpHeaderExtensionIds.transportWideCc01 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01)
+			{
+				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
+			}
+
+			if (this->rtpHeaderExtensionIds.mid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
+			{
+				this->rtpHeaderExtensionIds.mid = exten.id;
+			}
+
+			if (this->rtpHeaderExtensionIds.rid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID)
+			{
+				this->rtpHeaderExtensionIds.rid = exten.id;
+			}
+
+			if (this->rtpHeaderExtensionIds.rrid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID)
+			{
+				this->rtpHeaderExtensionIds.rrid = exten.id;
+			}
+		}
+
+		// paused is set to false by default.
+		this->paused = data->paused();
+
+		// Fill supported codec payload types.
+		for (auto& codec : this->rtpParameters.codecs)
+		{
+			if (codec.mimeType.IsMediaCodec())
+				this->supportedCodecPayloadTypes[codec.payloadType] = true;
+		}
+
+		// Fill media SSRCs vector.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			this->mediaSsrcs.push_back(encoding.ssrc);
+		}
+
+		// Fill RTX SSRCs vector.
+		for (auto& encoding : this->rtpParameters.encodings)
+		{
+			if (encoding.hasRtx)
+				this->rtxSsrcs.push_back(encoding.rtx.ssrc);
+		}
+
+		// Set the RTCP report generation interval.
+		if (this->kind == RTC::Media::Kind::AUDIO)
+			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
+		else
+			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
+	}
+
 	Consumer::~Consumer()
 	{
 		MS_TRACE();

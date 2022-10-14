@@ -1,0 +1,17 @@
+include "transport.fbs";
+include "worker.fbs";
+
+namespace FBS.Request;
+
+union Body {
+  FBS.Worker.DumpRequest,
+  FBS.Transport.ConsumeRequest,
+}
+
+table Request {
+  id:uint32;
+  handler_id:string;
+  body:Body;
+}
+
+root_type Request;

@@ -92,6 +92,10 @@ namespace Channel
 		ChannelRequest(Channel::ChannelSocket* channel, const uint8_t* msg);
 		virtual ~ChannelRequest();
 
+		flatbuffers::FlatBufferBuilder& GetBufferBuilder()
+		{
+			return bufferBuilder;
+		}
 		void Accept();
 		template <class Body>
 		void Accept(flatbuffers::FlatBufferBuilder& builder, FBS::Response::Body type, flatbuffers::Offset<Body>& body)

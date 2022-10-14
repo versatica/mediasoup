@@ -1,0 +1,25 @@
+include "consumer.fbs";
+include "rtpParameters.fbs";
+
+namespace FBS.Transport;
+
+table ConsumeRequest {
+  consumer_id:string (required);
+  producer_id:string (required);
+  kind:FBS.RtpParameters.MediaKind;
+  rtp_parameters:FBS.RtpParameters.RtpParameters (required);
+  type:FBS.RtpParameters.Type;
+  consumable_rtp_encodings:[FBS.RtpParameters.RtpEncodingParameters] (required);
+  paused:bool = false;
+  preferred_layers:FBS.Consumer.ConsumerLayers;
+  ignore_dtx:bool = false;
+}
+
+table ConsumeResponse {
+  paused:bool;
+  producer_paused:bool;
+  score:uint8;
+  preferred_layers:FBS.Consumer.ConsumerLayers;
+}
+
+root_type ConsumeRequest;

@@ -112,6 +112,75 @@ namespace RTC
 		}
 	}
 
+	RtpEncodingParameters::RtpEncodingParameters(const FBS::RtpParameters::RtpEncodingParameters* data)
+	{
+		MS_TRACE();
+
+		// ssrc is optional.
+		// clang-format off
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_SSRC))
+		// clang-format on
+		{
+			this->ssrc = data->ssrc();
+		}
+
+		// rid is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_RID))
+			this->rid = data->rid()->str();
+
+		// codecPayloadType is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_CODEC_PAYLOAD_TYPE))
+		{
+			this->codecPayloadType    = data->codec_payload_type();
+			this->hasCodecPayloadType = true;
+		}
+
+		// rtx is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_RTX))
+		{
+			this->rtx    = RtpRtxParameters(data->rtx());
+			this->hasRtx = true;
+		}
+
+		// maxBitrate is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_MAX_BITRATE))
+		{
+			this->maxBitrate = data->max_bitrate();
+		}
+
+		// dtx is optional, defauled to false.
+		this->dtx = data->dtx();
+
+		// scalabilityMode is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_SCALABILITY_MODE))
+		{
+			std::string scalabilityMode = data->scalability_mode()->str();
+
+			static const std::regex ScalabilityModeRegex(
+			  "^[LS]([1-9]\\d{0,1})T([1-9]\\d{0,1})(_KEY)?.*", std::regex_constants::ECMAScript);
+
+			std::smatch match;
+
+			std::regex_match(scalabilityMode, match, ScalabilityModeRegex);
+
+			if (!match.empty())
+			{
+				this->scalabilityMode = scalabilityMode;
+
+				try
+				{
+					this->spatialLayers  = std::stoul(match[1].str());
+					this->temporalLayers = std::stoul(match[2].str());
+					this->ksvc           = match.size() >= 4 && match[3].str() == "_KEY";
+				}
+				catch (std::exception& e)
+				{
+					MS_THROW_TYPE_ERROR("invalid scalabilityMode: %s", e.what());
+				}
+			}
+		}
+	}
+
 	void RtpEncodingParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();

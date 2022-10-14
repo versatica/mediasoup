@@ -162,6 +162,70 @@ namespace RTC
 		ValidateEncodings();
 	}
 
+	RtpParameters::RtpParameters(const FBS::RtpParameters::RtpParameters* data)
+	{
+		MS_TRACE();
+
+		// mid is optional.
+		if (data->mid())
+		{
+			this->mid = data->mid()->str();
+
+			if (this->mid.empty())
+				MS_THROW_TYPE_ERROR("empty mid");
+		}
+
+		this->codecs.reserve(data->codecs()->size());
+
+		for (const auto* entry : *data->codecs())
+		{
+			// This may throw due the constructor of RTC::RtpCodecParameters.
+			this->codecs.emplace_back(entry);
+		}
+
+		if (this->codecs.empty())
+			MS_THROW_TYPE_ERROR("empty codecs");
+
+		// encodings is mandatory.
+		if (!flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpParameters::VT_ENCODINGS))
+			MS_THROW_TYPE_ERROR("missing encodings");
+
+		this->encodings.reserve(data->encodings()->size());
+
+		for (const auto* entry : *data->encodings())
+		{
+			// This may throw due the constructor of RTC::RtpEncodingParameters.
+			this->encodings.emplace_back(entry);
+		}
+
+		if (this->encodings.empty())
+			MS_THROW_TYPE_ERROR("empty encodings");
+
+		// headerExtensions is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpParameters::VT_HEADER_EXTENSIONS))
+		{
+			this->headerExtensions.reserve(data->header_extensions()->size());
+
+			for (const auto* entry : *data->header_extensions())
+			{
+				// This may throw due the constructor of RTC::RtpHeaderExtensionParameters.
+				this->headerExtensions.emplace_back(entry);
+			}
+		}
+
+		// rtcp is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpParameters::VT_RTCP))
+		{
+			// This may throw.
+			this->rtcp    = RTC::RtcpParameters(data->rtcp());
+			this->hasRtcp = true;
+		}
+
+		// Validate RTP parameters.
+		ValidateCodecs();
+		ValidateEncodings();
+	}
+
 	void RtpParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();

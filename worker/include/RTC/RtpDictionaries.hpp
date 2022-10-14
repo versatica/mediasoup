@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_DICTIONARIES_HPP
 
 #include "common.hpp"
+#include "FBS/rtpParameters_generated.h"
 #include "RTC/Parameters.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
@@ -156,6 +157,7 @@ namespace RTC
 	public:
 		RtcpFeedback() = default;
 		explicit RtcpFeedback(json& data);
+		explicit RtcpFeedback(const FBS::RtpParameters::RtcpFeedback* data);
 
 		void FillJson(json& jsonObject) const;
 
@@ -169,6 +171,7 @@ namespace RTC
 	public:
 		RtpCodecParameters() = default;
 		explicit RtpCodecParameters(json& data);
+		explicit RtpCodecParameters(const FBS::RtpParameters::RtpCodecParameters* data);
 
 		void FillJson(json& jsonObject) const;
 
@@ -189,6 +192,7 @@ namespace RTC
 	public:
 		RtpRtxParameters() = default;
 		explicit RtpRtxParameters(json& data);
+		explicit RtpRtxParameters(const FBS::RtpParameters::Rtx* data);
 
 		void FillJson(json& jsonObject) const;
 
@@ -201,6 +205,7 @@ namespace RTC
 	public:
 		RtpEncodingParameters() = default;
 		explicit RtpEncodingParameters(json& data);
+		explicit RtpEncodingParameters(const FBS::RtpParameters::RtpEncodingParameters* data);
 
 		void FillJson(json& jsonObject) const;
 
@@ -225,6 +230,7 @@ namespace RTC
 	public:
 		RtpHeaderExtensionParameters() = default;
 		explicit RtpHeaderExtensionParameters(json& data);
+		explicit RtpHeaderExtensionParameters(const FBS::RtpParameters::RtpHeaderExtensionParameters* const data);
 
 		void FillJson(json& jsonObject) const;
 
@@ -241,6 +247,7 @@ namespace RTC
 	public:
 		RtcpParameters() = default;
 		explicit RtcpParameters(json& data);
+		explicit RtcpParameters(const FBS::RtpParameters::RtcpParameters* data);
 
 		void FillJson(json& jsonObject) const;
 
@@ -275,6 +282,7 @@ namespace RTC
 	public:
 		RtpParameters() = default;
 		explicit RtpParameters(json& data);
+		explicit RtpParameters(const FBS::RtpParameters::RtpParameters* data);
 
 		void FillJson(json& jsonObject) const;
 		const RTC::RtpCodecParameters* GetCodecForEncoding(RtpEncodingParameters& encoding) const;

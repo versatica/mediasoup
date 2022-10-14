@@ -26,6 +26,8 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     #sents = new Map();
     // Buffer for reading messages from the worker.
     #recvBuffer = Buffer.alloc(0);
+    // flatbuffers builder.
+    #bufferBuilder = new flatbuffers.Builder(1024);
     /**
      * @private
      */
@@ -108,6 +110,12 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#producerSocket.on('error', (error) => (logger.error('Producer Channel error: %s', String(error))));
     }
     /**
+     * flatbuffer builder.
+     */
+    get bufferBuilder() {
+        return this.#bufferBuilder;
+    }
+    /**
      * @private
      */
     close() {
@@ -176,16 +184,16 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             this.#sents.set(id, sent);
         });
     }
-    async requestBinary(builder, bodyType, bodyOffset, handlerId) {
+    async requestBinary(bodyType, bodyOffset, handlerId) {
         this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
         const id = this.#nextId;
         // logger.debug('request() [method:%s, id:%s]', data., id);
         if (this.#closed)
             throw new errors_1.InvalidStateError('Channel closed');
-        const handlerIdOffset = builder.createString(handlerId);
-        const request = request_1.Request.createRequest(builder, id, handlerIdOffset, bodyType, bodyOffset);
-        builder.finish(request);
-        const buffer = builder.asUint8Array();
+        const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
+        const request = request_1.Request.createRequest(this.#bufferBuilder, id, handlerIdOffset, bodyType, bodyOffset);
+        this.#bufferBuilder.finish(request);
+        const buffer = this.#bufferBuilder.asUint8Array();
         if (buffer.byteLength > MESSAGE_MAX_LEN)
             throw new Error('Channel request too big');
         // This may throw if closed or remote side ended.

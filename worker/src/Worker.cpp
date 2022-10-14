@@ -476,7 +476,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 	return;
 
-	binary:
+binary:
 
 	switch (request->_data->body_type())
 	{
@@ -487,6 +487,31 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			auto dump = FillBuffer(builder);
 
 			request->Accept(builder, FBS::Response::Body_FBS_Worker_DumpResponse, dump);
+
+			break;
+		}
+
+		case FBS::Request::Body::Body_FBS_Transport_ConsumeRequest:
+		{
+			try
+			{
+				auto* handler = ChannelMessageHandlers::GetChannelRequestHandler(request->handlerId);
+
+				if (handler == nullptr)
+				{
+					MS_THROW_ERROR("Channel request handler with ID %s not found", request->handlerId.c_str());
+				}
+
+				handler->HandleRequest(request);
+			}
+			catch (const MediaSoupTypeError& error)
+			{
+				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+			}
 
 			return;
 		}

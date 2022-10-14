@@ -1,0 +1,20 @@
+
+namespace FBS.Worker;
+
+table DumpRequest {
+}
+
+table ChannelMessageHandlers {
+  channel_request_handlers:[string];
+  payloadchannel_request_handlers:[string];
+  payloadchannel_notification_handlers:[string];
+}
+
+table DumpResponse {
+  pid:uint64;
+  webrtc_server_ids:[string];
+  router_ids:[string];
+  channel_message_handlers:ChannelMessageHandlers;
+}
+
+root_type DumpResponse;

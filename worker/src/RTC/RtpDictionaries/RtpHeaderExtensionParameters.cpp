@@ -53,6 +53,36 @@ namespace RTC
 			this->parameters.Set(*jsonParametersIt);
 	}
 
+	RtpHeaderExtensionParameters::RtpHeaderExtensionParameters(const FBS::RtpParameters::RtpHeaderExtensionParameters* const data)
+	{
+		MS_TRACE();
+
+		// uri is mandatory.
+		this->uri = data->uri()->str();
+
+		if (this->uri.empty())
+			MS_THROW_TYPE_ERROR("empty uri");
+
+		// Get the type.
+		this->type = RTC::RtpHeaderExtensionUri::GetType(this->uri);
+
+		this->id = data->id();
+
+		// Don't allow id 0.
+		if (this->id == 0u)
+			MS_THROW_TYPE_ERROR("invalid id 0");
+
+		// encrypt is false by default.
+			this->encrypt = data->encrypt();
+
+		// parameters is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpHeaderExtensionParameters::VT_PARAMETERS))
+		{
+			// TODO.
+			// this->parameters.Set(data->parameters()->str());
+		}
+	}
+
 	void RtpHeaderExtensionParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();

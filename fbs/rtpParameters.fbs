@@ -1,0 +1,91 @@
+
+namespace FBS.RtpParameters;
+
+enum MediaKind : uint8 { AUDIO = 0, VIDEO }
+enum Type: uint8 { NONE = 0, SIMPLE, SIMULCAST, SVC, PIPE }
+
+// Boolean is a uint8/byte type.
+table Boolean {
+  value:uint8;
+}
+
+table Integer {
+  value:int32;
+}
+
+table IntegerArray {
+  value:[int32];
+}
+
+table Double {
+  value:double;
+}
+
+table String {
+  value:string;
+}
+
+union Value {
+  Boolean,
+  Integer,
+  Double,
+  String,
+  IntegerArray,
+}
+
+table Parameter {
+  name: string;
+  value: Value;
+}
+
+table RtcpFeedback {
+  type:string (required);
+  parameter:string;
+}
+
+table RtpCodecParameters {
+  mime_type:string (required);
+  payload_type:uint8;
+  clock_rate:uint32;
+  channels:uint8;
+  parameters:[Parameter];
+  rtcp_feedback:[RtcpFeedback];
+}
+
+table RtpHeaderExtensionParameters {
+  uri:string (required);
+  id:uint8;
+  encrypt:bool = false;
+  parameters:string;
+}
+
+table Rtx {
+  ssrc:uint32;
+}
+
+table RtpEncodingParameters {
+  ssrc:uint32;
+  rid:string;
+  codec_payload_type:uint8;
+  rtx:Rtx;
+  dtx:bool = false;
+  scalability_mode:string;
+  scale_resolution_down_by:uint8;
+  max_bitrate:uint32;
+}
+
+table RtcpParameters {
+  cname:string;
+  reduced_size:bool = true;
+  mux:bool = true;
+}
+
+table RtpParameters {
+  mid:string;
+  codecs:[RtpCodecParameters] (required);
+  header_extensions:[RtpHeaderExtensionParameters];
+  encodings:[RtpEncodingParameters];
+  rtcp:RtcpParameters;
+}
+
+root_type RtpParameters;

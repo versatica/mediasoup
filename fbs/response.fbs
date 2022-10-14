@@ -1,0 +1,17 @@
+include "transport.fbs";
+include "worker.fbs";
+
+namespace FBS.Response;
+
+union Body {
+  FBS.Worker.DumpResponse,
+  FBS.Transport.ConsumeResponse,
+}
+
+table Response {
+  id:uint32;
+  accepted:bool;
+  body:Body;
+}
+
+root_type Response;

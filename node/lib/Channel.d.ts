@@ -13,6 +13,10 @@ export declare class Channel extends EnhancedEventEmitter {
         pid: number;
     });
     /**
+     * flatbuffer builder.
+     */
+    get bufferBuilder(): flatbuffers.Builder;
+    /**
      * @private
      */
     close(): void;
@@ -20,7 +24,7 @@ export declare class Channel extends EnhancedEventEmitter {
      * @private
      */
     request(method: string, handlerId?: string, data?: any): Promise<any>;
-    requestBinary(builder: flatbuffers.Builder, bodyType: RequestBody, bodyOffset: number, handlerId?: string): Promise<Response>;
+    requestBinary(bodyType: RequestBody, bodyOffset: number, handlerId?: string): Promise<Response>;
     private processMessage;
     private processBuffer;
 }

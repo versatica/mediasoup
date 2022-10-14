@@ -41,6 +41,18 @@ namespace RTC
 			this->reducedSize = jsonRedicedSizeIt->get<bool>();
 	}
 
+	RtcpParameters::RtcpParameters(const FBS::RtpParameters::RtcpParameters* data)
+	{
+		MS_TRACE();
+
+		// cname is optional.
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtcpParameters::VT_CNAME))
+			this->cname = data->cname()->str();
+
+		// reducedSize is optional, default value is true.
+		this->reducedSize = data->reduced_size();
+	}
+
 	void RtcpParameters::FillJson(json& jsonObject) const
 	{
 		MS_TRACE();

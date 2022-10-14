@@ -115,6 +115,58 @@ namespace RTC
 		}
 	}
 
+	void Parameters::Set(
+		const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>>* data
+	)
+	{
+		MS_TRACE();
+
+		for (const auto* parameter : *data)
+		{
+			const auto key = parameter->name()->str();
+
+			switch (parameter->value_type())
+			{
+				case FBS::RtpParameters::Value::Value_Boolean:
+				{
+					this->mapKeyValues.emplace(key, Value((parameter->value_as_Boolean()->value() == 0) ? false : true));
+
+					break;
+				}
+
+				case FBS::RtpParameters::Value::Value_Integer:
+				{
+					this->mapKeyValues.emplace(key, Value(parameter->value_as_Integer()->value()));
+
+					break;
+				}
+
+				case FBS::RtpParameters::Value::Value_Double:
+				{
+					this->mapKeyValues.emplace(key, Value(parameter->value_as_Double()->value()));
+
+					break;
+				}
+
+				case FBS::RtpParameters::Value::Value_String:
+				{
+					this->mapKeyValues.emplace(key, Value(parameter->value_as_String()->value()));
+
+					break;
+				}
+
+				case FBS::RtpParameters::Value::Value_IntegerArray:
+				{
+					this->mapKeyValues.emplace(key, Value(parameter->value_as_IntegerArray()->value()));
+
+					break;
+				}
+
+				default:; // Just ignore other value types.
+			}
+		}
+	}
+
 	bool Parameters::HasBoolean(const std::string& key) const
 	{
 		MS_TRACE();

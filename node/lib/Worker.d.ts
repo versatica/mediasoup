@@ -111,6 +111,16 @@ export declare type WorkerResourceUsage = {
      */
     ru_nivcsw: number;
 };
+export declare type WorkerDump = {
+    pid: number;
+    webrtcServerIds: string[];
+    routerIds: string[];
+    channelMessageHandlers: {
+        channelRequestHandlers: string[];
+        payloadChannelRequestHandlers: string[];
+        payloadNotificationHandlers: string[];
+    };
+};
 export declare type WorkerEvents = {
     died: [Error];
     '@success': [];
@@ -186,5 +196,9 @@ export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
      */
     createRouter({ mediaCodecs, appData }?: RouterOptions): Promise<Router>;
     private workerDied;
+    /**
+     * flatbuffers helpers
+     */
+    private parseDumpResponse;
 }
 //# sourceMappingURL=Worker.d.ts.map

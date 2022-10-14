@@ -1,0 +1,164 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.serializeRtpEncodingParameters = exports.serializeRtpParameters = exports.getArray = exports.getRtpParametersType = void 0;
+const rtp_parameters_1 = require("./f-b-s/rtp-parameters/rtp-parameters");
+const type_1 = require("./f-b-s/rtp-parameters/type");
+const rtpParameters_1 = require("./rtpParameters");
+function getRtpParametersType(producerType, pipe) {
+    if (pipe) {
+        return type_1.Type.PIPE;
+    }
+    switch (producerType) {
+        case 'simple':
+            return type_1.Type.SIMPLE;
+        case 'simulcast':
+            return type_1.Type.SIMULCAST;
+        case 'svc':
+            return type_1.Type.SVC;
+        default:
+            return type_1.Type.NONE;
+    }
+}
+exports.getRtpParametersType = getRtpParametersType;
+/**
+ * Get array of type T from a flatbuffer arrays of T.
+ */
+function getArray(holder, field) {
+    const arr = [];
+    for (let idx = 0; idx < holder[`${field}Length`](); ++idx) {
+        arr.push(holder[field](idx));
+    }
+    return arr;
+}
+exports.getArray = getArray;
+function serializeRtpParameters(builder, rtpParameters) {
+    const codecs = [];
+    const headerExtensions = [];
+    console.error("serializeRtpParameters 1");
+    for (const codec of rtpParameters.codecs) {
+        const mimeTypeOffset = builder.createString(codec.mimeType);
+        const codecParameters = [];
+        for (const key of Object.keys(codec.parameters)) {
+            const value = codec.parameters[key];
+            const keyOffset = builder.createString(key);
+            let parameterOffset;
+            if (typeof value === 'boolean') {
+                parameterOffset = rtpParameters_1.Parameter.createParameter(builder, keyOffset, rtpParameters_1.Value.Boolean, value === true ? 1 : 0);
+            }
+            else if (typeof value === 'number') {
+                // Integer.
+                if (value % 1 === 0) {
+                    const valueOffset = rtpParameters_1.Integer.createInteger(builder, value);
+                    parameterOffset = rtpParameters_1.Parameter.createParameter(builder, keyOffset, rtpParameters_1.Value.Integer, valueOffset);
+                }
+                // Float.
+                else {
+                    const valueOffset = rtpParameters_1.Double.createDouble(builder, value);
+                    parameterOffset = rtpParameters_1.Parameter.createParameter(builder, keyOffset, rtpParameters_1.Value.Double, valueOffset);
+                }
+            }
+            else if (typeof value === 'string') {
+                const valueOffset = builder.createString(value);
+                parameterOffset = rtpParameters_1.Parameter.createParameter(builder, keyOffset, rtpParameters_1.Value.String, valueOffset);
+            }
+            else if (Array.isArray(value)) {
+                const valueOffset = rtpParameters_1.IntegerArray.createValueVector(builder, value);
+                parameterOffset = rtpParameters_1.Parameter.createParameter(builder, keyOffset, rtpParameters_1.Value.IntegerArray, valueOffset);
+            }
+            else {
+                throw new Error(`invalid parameter type [key:'${key}', value:${value}]`);
+            }
+            codecParameters.push(parameterOffset);
+        }
+        const parametersOffset = rtpParameters_1.RtpCodecParameters.createParametersVector(builder, codecParameters);
+        const rtcpFeedback = [];
+        for (const rtcp of codec.rtcpFeedback ?? []) {
+            const typeOffset = builder.createString(rtcp.type);
+            const rtcpParametersOffset = builder.createString(rtcp.parameter);
+            rtcpFeedback.push(rtpParameters_1.RtcpFeedback.createRtcpFeedback(builder, typeOffset, rtcpParametersOffset));
+        }
+        const rtcpFeedbackOffset = rtpParameters_1.RtpCodecParameters.createRtcpFeedbackVector(builder, rtcpFeedback);
+        codecs.push(rtpParameters_1.RtpCodecParameters.createRtpCodecParameters(builder, mimeTypeOffset, codec.payloadType, codec.clockRate, Number(codec.channels), parametersOffset, rtcpFeedbackOffset));
+    }
+    const codecsOffset = rtp_parameters_1.RtpParameters.createCodecsVector(builder, codecs);
+    console.error("serializeRtpParameters 2");
+    // RtpHeaderExtensionParameters.
+    for (const headerExtension of rtpParameters.headerExtensions ?? []) {
+        const uriOffset = builder.createString(headerExtension.uri);
+        const parametersOffset = builder.createString(headerExtension.parameters);
+        headerExtensions.push(rtpParameters_1.RtpHeaderExtensionParameters.createRtpHeaderExtensionParameters(builder, uriOffset, headerExtension.id, Boolean(headerExtension.encrypt), parametersOffset));
+    }
+    const headerExtensionsOffset = rtp_parameters_1.RtpParameters.createHeaderExtensionsVector(builder, headerExtensions);
+    console.error("serializeRtpParameters 3");
+    // RtpEncodingParameters.
+    let encodingsOffset;
+    if (rtpParameters.encodings)
+        encodingsOffset = serializeRtpEncodingParameters(builder, rtpParameters.encodings);
+    console.error("serializeRtpParameters 3.1");
+    // RtcpParameters.
+    let rtcpOffset;
+    if (rtpParameters.rtcp) {
+        const { cname, reducedSize, mux } = rtpParameters.rtcp;
+        const cnameOffset = builder.createString(cname);
+        rtcpOffset = rtpParameters_1.RtcpParameters.createRtcpParameters(builder, cnameOffset, Boolean(reducedSize), Boolean(mux));
+    }
+    console.error("serializeRtpParameters 4");
+    const midOffset = builder.createString(rtpParameters.mid);
+    rtp_parameters_1.RtpParameters.startRtpParameters(builder);
+    rtp_parameters_1.RtpParameters.addMid(builder, midOffset);
+    rtp_parameters_1.RtpParameters.addCodecs(builder, codecsOffset);
+    if (headerExtensions.length > 0)
+        rtp_parameters_1.RtpParameters.addHeaderExtensions(builder, headerExtensionsOffset);
+    if (encodingsOffset)
+        rtp_parameters_1.RtpParameters.addEncodings(builder, encodingsOffset);
+    if (rtcpOffset)
+        rtp_parameters_1.RtpParameters.addRtcp(builder, rtcpOffset);
+    console.error("serializeRtpParameters 5");
+    return rtp_parameters_1.RtpParameters.endRtpParameters(builder);
+}
+exports.serializeRtpParameters = serializeRtpParameters;
+function serializeRtpEncodingParameters(builder, rtpEncodingParameters) {
+    const encodings = [];
+    for (const encoding of rtpEncodingParameters ?? []) {
+        // Prepare Rid.
+        const ridOffset = builder.createString(encoding.rid);
+        // Prepare Rtx.
+        let rtxOffset;
+        if (encoding.rtx)
+            rtpParameters_1.Rtx.createRtx(builder, encoding.rtx.ssrc);
+        // Prepare scalability mode.
+        let scalabilityModeOffset;
+        if (encoding.scalabilityMode)
+            scalabilityModeOffset = builder.createString(encoding.scalabilityMode);
+        // Start serialization.
+        rtpParameters_1.RtpEncodingParameters.startRtpEncodingParameters(builder);
+        // Add SSRC.
+        if (encoding.ssrc)
+            rtpParameters_1.RtpEncodingParameters.addSsrc(builder, encoding.ssrc);
+        // Add Rid.
+        rtpParameters_1.RtpEncodingParameters.addRid(builder, ridOffset);
+        // Add payload type.
+        if (encoding.codecPayloadType)
+            rtpParameters_1.RtpEncodingParameters.addCodecPayloadType(builder, encoding.codecPayloadType);
+        // Add RTX.
+        if (rtxOffset)
+            rtpParameters_1.RtpEncodingParameters.addRtx(builder, rtxOffset);
+        // Add DTX.
+        if (encoding.dtx !== undefined)
+            rtpParameters_1.RtpEncodingParameters.addDtx(builder, encoding.dtx);
+        // Add scalability ode.
+        if (scalabilityModeOffset)
+            rtpParameters_1.RtpEncodingParameters.addScalabilityMode(builder, scalabilityModeOffset);
+        // Add scale resolution down by.
+        if (encoding.scaleResolutionDownBy !== undefined) {
+            rtpParameters_1.RtpEncodingParameters.addScaleResolutionDownBy(builder, encoding.scaleResolutionDownBy);
+        }
+        // Add max bitrate.
+        if (encoding.maxBitrate !== undefined)
+            rtpParameters_1.RtpEncodingParameters.addMaxBitrate(builder, encoding.maxBitrate);
+        // End serialization.
+        encodings.push(rtpParameters_1.RtpEncodingParameters.endRtpEncodingParameters(builder));
+    }
+    return rtp_parameters_1.RtpParameters.createEncodingsVector(builder, encodings);
+}
+exports.serializeRtpEncodingParameters = serializeRtpEncodingParameters;

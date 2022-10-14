@@ -197,6 +197,11 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      */
     enableTraceEvent(types?: TransportTraceEventType[]): Promise<void>;
     private getNextSctpStreamId;
+    /**
+     * flatbuffers helpers
+     */
+    private createConsumeRequest;
+    private parseConsumeResponse;
 }
 export {};
 //# sourceMappingURL=Transport.d.ts.map

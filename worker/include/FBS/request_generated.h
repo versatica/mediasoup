@@ -6,7 +6,10 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+#include "consumer_generated.h"
+#include "transport_generated.h"
 #include "worker_generated.h"
+#include "rtpParameters_generated.h"
 
 namespace FBS {
 namespace Request {
@@ -19,29 +22,32 @@ inline const flatbuffers::TypeTable *RequestTypeTable();
 enum Body : uint8_t {
   Body_NONE = 0,
   Body_FBS_Worker_DumpRequest = 1,
+  Body_FBS_Transport_ConsumeRequest = 2,
   Body_MIN = Body_NONE,
-  Body_MAX = Body_FBS_Worker_DumpRequest
+  Body_MAX = Body_FBS_Transport_ConsumeRequest
 };
 
-inline const Body (&EnumValuesBody())[2] {
+inline const Body (&EnumValuesBody())[3] {
   static const Body values[] = {
     Body_NONE,
-    Body_FBS_Worker_DumpRequest
+    Body_FBS_Worker_DumpRequest,
+    Body_FBS_Transport_ConsumeRequest
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[3] = {
+  static const char * const names[4] = {
     "NONE",
     "FBS_Worker_DumpRequest",
+    "FBS_Transport_ConsumeRequest",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameBody(Body e) {
-  if (flatbuffers::IsOutRange(e, Body_NONE, Body_FBS_Worker_DumpRequest)) return "";
+  if (flatbuffers::IsOutRange(e, Body_NONE, Body_FBS_Transport_ConsumeRequest)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesBody()[index];
 }
@@ -52,6 +58,10 @@ template<typename T> struct BodyTraits {
 
 template<> struct BodyTraits<FBS::Worker::DumpRequest> {
   static const Body enum_value = Body_FBS_Worker_DumpRequest;
+};
+
+template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
+  static const Body enum_value = Body_FBS_Transport_ConsumeRequest;
 };
 
 bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body type);
@@ -84,6 +94,9 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Worker::DumpRequest *body_as_FBS_Worker_DumpRequest() const {
     return body_type() == FBS::Request::Body_FBS_Worker_DumpRequest ? static_cast<const FBS::Worker::DumpRequest *>(body()) : nullptr;
   }
+  const FBS::Transport::ConsumeRequest *body_as_FBS_Transport_ConsumeRequest() const {
+    return body_type() == FBS::Request::Body_FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_ID, 4) &&
@@ -98,6 +111,10 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
 
 template<> inline const FBS::Worker::DumpRequest *Request::body_as<FBS::Worker::DumpRequest>() const {
   return body_as_FBS_Worker_DumpRequest();
+}
+
+template<> inline const FBS::Transport::ConsumeRequest *Request::body_as<FBS::Transport::ConsumeRequest>() const {
+  return body_as_FBS_Transport_ConsumeRequest();
 }
 
 struct RequestBuilder {
@@ -165,6 +182,10 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
       auto ptr = reinterpret_cast<const FBS::Worker::DumpRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
+    case Body_FBS_Transport_ConsumeRequest: {
+      auto ptr = reinterpret_cast<const FBS::Transport::ConsumeRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
     default: return true;
   }
 }
@@ -184,17 +205,20 @@ inline bool VerifyBodyVector(flatbuffers::Verifier &verifier, const flatbuffers:
 inline const flatbuffers::TypeTable *BodyTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_SEQUENCE, 0, -1 },
-    { flatbuffers::ET_SEQUENCE, 0, 0 }
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Worker::DumpRequestTypeTable
+    FBS::Worker::DumpRequestTypeTable,
+    FBS::Transport::ConsumeRequestTypeTable
   };
   static const char * const names[] = {
     "NONE",
-    "FBS_Worker_DumpRequest"
+    "FBS_Worker_DumpRequest",
+    "FBS_Transport_ConsumeRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 2, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 3, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

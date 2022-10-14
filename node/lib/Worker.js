@@ -12,7 +12,6 @@ const Channel_1 = require("./Channel");
 const PayloadChannel_1 = require("./PayloadChannel");
 const Router_1 = require("./Router");
 const WebRtcServer_1 = require("./WebRtcServer");
-const flatbuffers = require("flatbuffers");
 const request_1 = require("./fbs/request");
 const response_1 = require("./fbs/response");
 const worker_1 = require("./fbs/worker");
@@ -264,28 +263,16 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        // Create flatbuffer builder.
-        const builder = new flatbuffers.Builder(1024);
-        // Create Dump Request builder.
+        // Get flatbuffer builder.
+        const builder = this.#channel.bufferBuilder;
+        // Create Dump Request.
         const dumpRequest = request_1.DumpRequest.createDumpRequest(builder);
         // Send the request and wait for the response.
-        const response = await this.#channel.requestBinary(builder, request_1.Body.FBS_Worker_DumpRequest, dumpRequest);
-        /* Decode the reponse into an object. */
+        const response = await this.#channel.requestBinary(request_1.Body.FBS_Worker_DumpRequest, dumpRequest);
+        /* Decode the response. */
         const dumpResponse = new response_1.DumpResponse();
         response.body(dumpResponse);
-        const channelMessageHandlers = new worker_1.ChannelMessageHandlers();
-        dumpResponse.channelMessageHandlers(channelMessageHandlers);
-        const result = {
-            pid: Number(dumpResponse.pid()),
-            webrtcServerIds: (0, utils_1.getArray)(dumpResponse, 'webrtcServerIds'),
-            routerIds: (0, utils_1.getArray)(dumpResponse, 'routerIds'),
-            channelMessageHandlers: {
-                channelRequestHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'channelRequestHandlers'),
-                payloadChannelRequestHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'payloadchannelRequestHandlers'),
-                payloadNotificationHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'payloadchannelNotificationHandlers')
-            }
-        };
-        return result;
+        return this.parseDumpResponse(dumpResponse);
     }
     /**
      * Get mediasoup-worker process resource usage.
@@ -375,6 +362,23 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.safeEmit('died', error);
         // Emit observer event.
         this.#observer.safeEmit('close');
+    }
+    /**
+     * flatbuffers helpers
+     */
+    parseDumpResponse(dumpResponse) {
+        const channelMessageHandlers = new worker_1.ChannelMessageHandlers();
+        dumpResponse.channelMessageHandlers(channelMessageHandlers);
+        return {
+            pid: Number(dumpResponse.pid()),
+            webrtcServerIds: (0, utils_1.getArray)(dumpResponse, 'webrtcServerIds'),
+            routerIds: (0, utils_1.getArray)(dumpResponse, 'routerIds'),
+            channelMessageHandlers: {
+                channelRequestHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'channelRequestHandlers'),
+                payloadChannelRequestHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'payloadchannelRequestHandlers'),
+                payloadNotificationHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'payloadchannelNotificationHandlers')
+            }
+        };
     }
 }
 exports.Worker = Worker;

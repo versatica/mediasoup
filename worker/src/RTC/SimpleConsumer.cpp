@@ -14,7 +14,7 @@ namespace RTC
 	/* Instance methods. */
 
 	SimpleConsumer::SimpleConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
+	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, const FBS::Transport::ConsumeRequest* data)
 	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SIMPLE)
 	{
 		MS_TRACE();
@@ -42,14 +42,8 @@ namespace RTC
 			this->encodingContext.reset(
 			  RTC::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
 
-			auto jsonIgnoreDtx = data.find("ignoreDtx");
-
-			if (jsonIgnoreDtx != data.end() && jsonIgnoreDtx->is_boolean())
-			{
-				auto ignoreDtx = jsonIgnoreDtx->get<bool>();
-
-				this->encodingContext->SetIgnoreDtx(ignoreDtx);
-			}
+			// ignoreDtx is set to false by default.
+			this->encodingContext->SetIgnoreDtx(data->ignore_dtx());
 		}
 
 		// NOTE: This may throw.
@@ -263,6 +257,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_ERROR("Consumer ID: %s ++++1++++", this->id.c_str());
 		if (!IsActive())
 			return;
 
@@ -277,6 +272,7 @@ namespace RTC
 			return;
 		}
 
+		MS_ERROR("Consumer ID: %s ++++2++++", this->id.c_str());
 		bool marker;
 
 		// Process the payload if needed. Drop packet if necessary.
@@ -293,11 +289,13 @@ namespace RTC
 			return;
 		}
 
+		MS_ERROR("Consumer ID: %s ++++3++++", this->id.c_str());
 		// If we need to sync, support key frames and this is not a key frame, ignore
 		// the packet.
 		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
 			return;
 
+		MS_ERROR("Consumer ID: %s ++++4++++", this->id.c_str());
 		// Whether this is the first packet after re-sync.
 		bool isSyncPacket = this->syncRequired;
 
@@ -312,6 +310,7 @@ namespace RTC
 			this->syncRequired = false;
 		}
 
+		MS_ERROR("Consumer ID: %s ++++5++++", this->id.c_str());
 		// Update RTP seq number and timestamp.
 		uint16_t seq;
 
@@ -361,6 +360,8 @@ namespace RTC
 		// Restore packet fields.
 		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
+
+		MS_ERROR("Consumer ID: %s ++++10++++", this->id.c_str());
 	}
 
 	bool SimpleConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
