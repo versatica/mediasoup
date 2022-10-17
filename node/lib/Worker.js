@@ -263,12 +263,8 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        // Get flatbuffer builder.
-        const builder = this.#channel.bufferBuilder;
-        // Create Dump Request.
-        const dumpRequest = request_1.DumpRequest.createDumpRequest(builder);
         // Send the request and wait for the response.
-        const response = await this.#channel.requestBinary(request_1.Body.FBS_Worker_DumpRequest, dumpRequest);
+        const response = await this.#channel.requestBinary(request_1.Method.WORKER_DUMP);
         /* Decode the response. */
         const dumpResponse = new response_1.DumpResponse();
         response.body(dumpResponse);

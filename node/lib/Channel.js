@@ -8,6 +8,7 @@ const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const errors_1 = require("./errors");
 const request_1 = require("./fbs/f-b-s/request/request");
 const response_1 = require("./fbs/f-b-s/response/response");
+const request_2 = require("./fbs/request");
 const littleEndian = os.endianness() == 'LE';
 const logger = new Logger_1.Logger('Channel');
 // Binary length for a 4194304 bytes payload.
@@ -183,15 +184,21 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             this.#sents.set(id, sent);
         });
     }
-    async requestBinary(bodyType, bodyOffset, handlerId) {
+    async requestBinary(method, bodyType, bodyOffset, handlerId) {
         this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
         const id = this.#nextId;
-        // logger.debug('request() [method:%s, id:%s]', data., id);
+        logger.error('request() [method:%s, id:%s]', id);
         if (this.#closed)
             throw new errors_1.InvalidStateError('Channel closed');
         const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
-        const request = request_1.Request.createRequest(this.#bufferBuilder, id, handlerIdOffset, bodyType, bodyOffset);
-        this.#bufferBuilder.finish(request);
+        let requestOffset;
+        if (bodyType && bodyOffset) {
+            requestOffset = request_1.Request.createRequest(this.#bufferBuilder, id, method, handlerIdOffset, bodyType, bodyOffset);
+        }
+        else {
+            requestOffset = request_1.Request.createRequest(this.#bufferBuilder, id, method, handlerIdOffset, request_2.Body.NONE, 0);
+        }
+        this.#bufferBuilder.finish(requestOffset);
         const buffer = this.#bufferBuilder.asUint8Array();
         if (buffer.byteLength > MESSAGE_MAX_LEN)
             throw new Error('Channel request too big');

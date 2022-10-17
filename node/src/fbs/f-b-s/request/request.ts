@@ -3,8 +3,8 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { Body, unionToBody, unionListToBody } from '../../f-b-s/request/body';
+import { Method } from '../../f-b-s/request/method';
 import { ConsumeRequest, ConsumeRequestT } from '../../f-b-s/transport/consume-request';
-import { DumpRequest, DumpRequestT } from '../../f-b-s/worker/dump-request';
 
 
 export class Request {
@@ -30,41 +30,50 @@ id():number {
   return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
 }
 
+method():Method {
+  const offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : Method.WORKER_DUMP;
+}
+
 handlerId():string|null
 handlerId(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
 handlerId(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 6);
+  const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
 bodyType():Body {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
+  const offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? this.bb!.readUint8(this.bb_pos + offset) : Body.NONE;
 }
 
 body<T extends flatbuffers.Table>(obj:any):any|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
+  const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? this.bb!.__union(obj, this.bb_pos + offset) : null;
 }
 
 static startRequest(builder:flatbuffers.Builder) {
-  builder.startObject(4);
+  builder.startObject(5);
 }
 
 static addId(builder:flatbuffers.Builder, id:number) {
   builder.addFieldInt32(0, id, 0);
 }
 
+static addMethod(builder:flatbuffers.Builder, method:Method) {
+  builder.addFieldInt8(1, method, Method.WORKER_DUMP);
+}
+
 static addHandlerId(builder:flatbuffers.Builder, handlerIdOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, handlerIdOffset, 0);
+  builder.addFieldOffset(2, handlerIdOffset, 0);
 }
 
 static addBodyType(builder:flatbuffers.Builder, bodyType:Body) {
-  builder.addFieldInt8(2, bodyType, Body.NONE);
+  builder.addFieldInt8(3, bodyType, Body.NONE);
 }
 
 static addBody(builder:flatbuffers.Builder, bodyOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(3, bodyOffset, 0);
+  builder.addFieldOffset(4, bodyOffset, 0);
 }
 
 static endRequest(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -80,9 +89,10 @@ static finishSizePrefixedRequestBuffer(builder:flatbuffers.Builder, offset:flatb
   builder.finish(offset, undefined, true);
 }
 
-static createRequest(builder:flatbuffers.Builder, id:number, handlerIdOffset:flatbuffers.Offset, bodyType:Body, bodyOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createRequest(builder:flatbuffers.Builder, id:number, method:Method, handlerIdOffset:flatbuffers.Offset, bodyType:Body, bodyOffset:flatbuffers.Offset):flatbuffers.Offset {
   Request.startRequest(builder);
   Request.addId(builder, id);
+  Request.addMethod(builder, method);
   Request.addHandlerId(builder, handlerIdOffset);
   Request.addBodyType(builder, bodyType);
   Request.addBody(builder, bodyOffset);
@@ -92,6 +102,7 @@ static createRequest(builder:flatbuffers.Builder, id:number, handlerIdOffset:fla
 unpack(): RequestT {
   return new RequestT(
     this.id(),
+    this.method(),
     this.handlerId(),
     this.bodyType(),
     (() => {
@@ -105,6 +116,7 @@ unpack(): RequestT {
 
 unpackTo(_o: RequestT): void {
   _o.id = this.id();
+  _o.method = this.method();
   _o.handlerId = this.handlerId();
   _o.bodyType = this.bodyType();
   _o.body = (() => {
@@ -118,9 +130,10 @@ unpackTo(_o: RequestT): void {
 export class RequestT {
 constructor(
   public id: number = 0,
+  public method: Method = Method.WORKER_DUMP,
   public handlerId: string|Uint8Array|null = null,
   public bodyType: Body = Body.NONE,
-  public body: ConsumeRequestT|DumpRequestT|null = null
+  public body: ConsumeRequestT|null = null
 ){}
 
 
@@ -130,6 +143,7 @@ pack(builder:flatbuffers.Builder): flatbuffers.Offset {
 
   return Request.createRequest(builder,
     this.id,
+    this.method,
     handlerId,
     this.bodyType,
     body

@@ -24,7 +24,7 @@ import {
 } from './DataConsumer';
 import { RtpCapabilities, RtpParameters } from './RtpParameters';
 import { SctpStreamParameters } from './SctpParameters';
-import { Body as RequestBody, ConsumeRequest } from './fbs/request';
+import { Body as RequestBody, ConsumeRequest, Method } from './fbs/request';
 import { ConsumeResponse } from './fbs/response';
 import { MediaKind as FbsMediaKind, ConsumerLayers as FbsConsumerLayers } from './fbs/transport';
 import { getRtpParametersType, serializeRtpParameters, serializeRtpEncodingParameters } from './fbs/utils';
@@ -713,6 +713,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		});
 
 		const response = await this.channel.requestBinary(
+			Method.TRANSPORT_CONSUME,
 			RequestBody.FBS_Transport_ConsumeRequest,
 			consumeRequestOffset,
 			this.internal.transportId

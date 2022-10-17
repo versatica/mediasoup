@@ -9,7 +9,7 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
-import { Body as RequestBody, DumpRequest } from './fbs/request';
+import { Method } from './fbs/request';
 import { DumpResponse } from './fbs/response';
 import { ChannelMessageHandlers } from './fbs/worker';
 import { getArray } from './fbs/utils';
@@ -565,13 +565,10 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	{
 		logger.debug('dump()');
 
-		// Get flatbuffer builder.
-		const builder = this.#channel.bufferBuilder;
-		// Create Dump Request.
-		const dumpRequest = DumpRequest.createDumpRequest(builder);
 		// Send the request and wait for the response.
 		const response = await this.#channel.requestBinary(
-			RequestBody.FBS_Worker_DumpRequest, dumpRequest);
+			Method.WORKER_DUMP
+		);
 
 		/* Decode the response. */
 		const dumpResponse = new DumpResponse();

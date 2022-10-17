@@ -398,7 +398,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             ignoreDtx,
             pipe
         });
-        const response = await this.channel.requestBinary(request_1.Body.FBS_Transport_ConsumeRequest, consumeRequestOffset, this.internal.transportId);
+        const response = await this.channel.requestBinary(request_1.Method.TRANSPORT_CONSUME, request_1.Body.FBS_Transport_ConsumeRequest, consumeRequestOffset, this.internal.transportId);
         /* Decode the response. */
         const consumeResponse = new response_1.ConsumeResponse();
         response.body(consumeResponse);

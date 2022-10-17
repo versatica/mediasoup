@@ -152,11 +152,11 @@ namespace Channel
 
 		this->_data = FBS::Request::GetRequest(msg);
 
+		this->id = this->_data->id();
+		this->_method = this->_data->method();
 		// Handler ID is optional.
 		if (flatbuffers::IsFieldPresent(this->_data, FBS::Request::Request::VT_HANDLERID))
 			this->handlerId = this->_data->handlerId()->str();
-
-		this->id = this->_data->id();
 	}
 
 	ChannelRequest::~ChannelRequest()

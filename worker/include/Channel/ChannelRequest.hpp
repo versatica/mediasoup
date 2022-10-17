@@ -120,6 +120,8 @@ namespace Channel
 		Channel::ChannelSocket* channel{ nullptr };
 		uint32_t id{ 0u };
 		std::string method;
+		// TODO: Rename to `method` once JSON is removed.
+		FBS::Request::Method _method;
 		MethodId methodId;
 		std::string handlerId;
 		json data;

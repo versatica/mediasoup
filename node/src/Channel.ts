@@ -6,7 +6,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
 import { Request } from './fbs/f-b-s/request/request';
 import { Response } from './fbs/f-b-s/response/response';
-import { Body as RequestBody } from './fbs/request';
+import { Body as RequestBody, Method } from './fbs/request';
 
 const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('Channel');
@@ -289,24 +289,36 @@ export class Channel extends EnhancedEventEmitter
 	}
 
 	async requestBinary(
-		bodyType: RequestBody,
-		bodyOffset: number,
+		method: Method,
+		bodyType?: RequestBody,
+		bodyOffset?: number,
 		handlerId?: string): Promise<Response>
 	{
 		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
 
 		const id = this.#nextId;
 
-		// logger.debug('request() [method:%s, id:%s]', data., id);
+		logger.error('request() [method:%s, id:%s]', id);
 
 		if (this.#closed)
 			throw new InvalidStateError('Channel closed');
 
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
-		const request = Request.createRequest(
-			this.#bufferBuilder, id, handlerIdOffset, bodyType, bodyOffset);
 
-		this.#bufferBuilder.finish(request);
+		let requestOffset: number;
+
+		if (bodyType && bodyOffset)
+		{
+			requestOffset = Request.createRequest(
+				this.#bufferBuilder, id, method, handlerIdOffset, bodyType, bodyOffset);
+		}
+		else
+		{
+			requestOffset = Request.createRequest(
+				this.#bufferBuilder, id, method, handlerIdOffset, RequestBody.NONE, 0);
+		}
+
+		this.#bufferBuilder.finish(requestOffset);
 
 		const buffer = this.#bufferBuilder.asUint8Array();
 

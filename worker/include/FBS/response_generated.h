@@ -7,8 +7,9 @@
 #include "flatbuffers/flatbuffers.h"
 
 #include "rtpParameters_generated.h"
-#include "transport_generated.h"
 #include "worker_generated.h"
+#include "transport_generated.h"
+#include "consumer_generated.h"
 
 namespace FBS {
 namespace Response {

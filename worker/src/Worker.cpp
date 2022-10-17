@@ -295,12 +295,12 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
-	MS_ERROR(
-	  "Channel request received [method:%s, id:%" PRIu32 "]", request->method.c_str(), request->id);
-
 	// TODO: Remove when every request is ported to flatbuffers.
 	if (request->_data)
 		goto binary;
+
+	MS_ERROR(
+	  "Channel request received [method:%s, id:%" PRIu32 "]", request->method.c_str(), request->id);
 
 	switch (request->methodId)
 	{
@@ -478,9 +478,12 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 binary:
 
-	switch (request->_data->body_type())
+	MS_ERROR(
+	  "Channel request received [method:%" PRIu8 ", id:%" PRIu32 "]", request->_method, request->id);
+
+	switch (request->_method)
 	{
-		case FBS::Request::Body::FBS_Worker_DumpRequest:
+		case FBS::Request::Method::WORKER_DUMP:
 		{
 			auto& builder = Channel::ChannelRequest::bufferBuilder;
 
@@ -491,7 +494,7 @@ binary:
 			break;
 		}
 
-		case FBS::Request::Body::FBS_Transport_ConsumeRequest:
+		case FBS::Request::Method::TRANSPORT_CONSUME:
 		{
 			try
 			{

@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RequestT = exports.Request = void 0;
 const flatbuffers = require("flatbuffers");
 const body_1 = require("../../f-b-s/request/body");
+const method_1 = require("../../f-b-s/request/method");
 class Request {
     bb = null;
     bb_pos = 0;
@@ -23,32 +24,39 @@ class Request {
         const offset = this.bb.__offset(this.bb_pos, 4);
         return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
     }
-    handlerId(optionalEncoding) {
+    method() {
         const offset = this.bb.__offset(this.bb_pos, 6);
+        return offset ? this.bb.readUint8(this.bb_pos + offset) : method_1.Method.WORKER_DUMP;
+    }
+    handlerId(optionalEncoding) {
+        const offset = this.bb.__offset(this.bb_pos, 8);
         return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
     }
     bodyType() {
-        const offset = this.bb.__offset(this.bb_pos, 8);
+        const offset = this.bb.__offset(this.bb_pos, 10);
         return offset ? this.bb.readUint8(this.bb_pos + offset) : body_1.Body.NONE;
     }
     body(obj) {
-        const offset = this.bb.__offset(this.bb_pos, 10);
+        const offset = this.bb.__offset(this.bb_pos, 12);
         return offset ? this.bb.__union(obj, this.bb_pos + offset) : null;
     }
     static startRequest(builder) {
-        builder.startObject(4);
+        builder.startObject(5);
     }
     static addId(builder, id) {
         builder.addFieldInt32(0, id, 0);
     }
+    static addMethod(builder, method) {
+        builder.addFieldInt8(1, method, method_1.Method.WORKER_DUMP);
+    }
     static addHandlerId(builder, handlerIdOffset) {
-        builder.addFieldOffset(1, handlerIdOffset, 0);
+        builder.addFieldOffset(2, handlerIdOffset, 0);
     }
     static addBodyType(builder, bodyType) {
-        builder.addFieldInt8(2, bodyType, body_1.Body.NONE);
+        builder.addFieldInt8(3, bodyType, body_1.Body.NONE);
     }
     static addBody(builder, bodyOffset) {
-        builder.addFieldOffset(3, bodyOffset, 0);
+        builder.addFieldOffset(4, bodyOffset, 0);
     }
     static endRequest(builder) {
         const offset = builder.endObject();
@@ -60,16 +68,17 @@ class Request {
     static finishSizePrefixedRequestBuffer(builder, offset) {
         builder.finish(offset, undefined, true);
     }
-    static createRequest(builder, id, handlerIdOffset, bodyType, bodyOffset) {
+    static createRequest(builder, id, method, handlerIdOffset, bodyType, bodyOffset) {
         Request.startRequest(builder);
         Request.addId(builder, id);
+        Request.addMethod(builder, method);
         Request.addHandlerId(builder, handlerIdOffset);
         Request.addBodyType(builder, bodyType);
         Request.addBody(builder, bodyOffset);
         return Request.endRequest(builder);
     }
     unpack() {
-        return new RequestT(this.id(), this.handlerId(), this.bodyType(), (() => {
+        return new RequestT(this.id(), this.method(), this.handlerId(), this.bodyType(), (() => {
             let temp = (0, body_1.unionToBody)(this.bodyType(), this.body.bind(this));
             if (temp === null) {
                 return null;
@@ -79,6 +88,7 @@ class Request {
     }
     unpackTo(_o) {
         _o.id = this.id();
+        _o.method = this.method();
         _o.handlerId = this.handlerId();
         _o.bodyType = this.bodyType();
         _o.body = (() => {
@@ -93,11 +103,13 @@ class Request {
 exports.Request = Request;
 class RequestT {
     id;
+    method;
     handlerId;
     bodyType;
     body;
-    constructor(id = 0, handlerId = null, bodyType = body_1.Body.NONE, body = null) {
+    constructor(id = 0, method = method_1.Method.WORKER_DUMP, handlerId = null, bodyType = body_1.Body.NONE, body = null) {
         this.id = id;
+        this.method = method;
         this.handlerId = handlerId;
         this.bodyType = bodyType;
         this.body = body;
@@ -105,7 +117,7 @@ class RequestT {
     pack(builder) {
         const handlerId = (this.handlerId !== null ? builder.createString(this.handlerId) : 0);
         const body = builder.createObjectOffset(this.body);
-        return Request.createRequest(builder, this.id, handlerId, this.bodyType, body);
+        return Request.createRequest(builder, this.id, this.method, handlerId, this.bodyType, body);
     }
 }
 exports.RequestT = RequestT;

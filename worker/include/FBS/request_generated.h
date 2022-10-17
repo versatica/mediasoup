@@ -7,8 +7,9 @@
 #include "flatbuffers/flatbuffers.h"
 
 #include "rtpParameters_generated.h"
-#include "transport_generated.h"
 #include "worker_generated.h"
+#include "transport_generated.h"
+#include "consumer_generated.h"
 
 namespace FBS {
 namespace Request {
@@ -18,27 +19,54 @@ struct RequestBuilder;
 
 inline const flatbuffers::TypeTable *RequestTypeTable();
 
+enum class Method : uint8_t {
+  WORKER_DUMP = 0,
+  TRANSPORT_CONSUME = 1,
+  MIN = WORKER_DUMP,
+  MAX = TRANSPORT_CONSUME
+};
+
+inline const Method (&EnumValuesMethod())[2] {
+  static const Method values[] = {
+    Method::WORKER_DUMP,
+    Method::TRANSPORT_CONSUME
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesMethod() {
+  static const char * const names[3] = {
+    "WORKER_DUMP",
+    "TRANSPORT_CONSUME",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameMethod(Method e) {
+  if (flatbuffers::IsOutRange(e, Method::WORKER_DUMP, Method::TRANSPORT_CONSUME)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesMethod()[index];
+}
+
 enum class Body : uint8_t {
   NONE = 0,
-  FBS_Worker_DumpRequest = 1,
-  FBS_Transport_ConsumeRequest = 2,
+  FBS_Transport_ConsumeRequest = 1,
   MIN = NONE,
   MAX = FBS_Transport_ConsumeRequest
 };
 
-inline const Body (&EnumValuesBody())[3] {
+inline const Body (&EnumValuesBody())[2] {
   static const Body values[] = {
     Body::NONE,
-    Body::FBS_Worker_DumpRequest,
     Body::FBS_Transport_ConsumeRequest
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[4] = {
+  static const char * const names[3] = {
     "NONE",
-    "FBS_Worker_DumpRequest",
     "FBS_Transport_ConsumeRequest",
     nullptr
   };
@@ -55,10 +83,6 @@ template<typename T> struct BodyTraits {
   static const Body enum_value = Body::NONE;
 };
 
-template<> struct BodyTraits<FBS::Worker::DumpRequest> {
-  static const Body enum_value = Body::FBS_Worker_DumpRequest;
-};
-
 template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
   static const Body enum_value = Body::FBS_Transport_ConsumeRequest;
 };
@@ -73,12 +97,16 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_HANDLERID = 6,
-    VT_BODY_TYPE = 8,
-    VT_BODY = 10
+    VT_METHOD = 6,
+    VT_HANDLERID = 8,
+    VT_BODY_TYPE = 10,
+    VT_BODY = 12
   };
   uint32_t id() const {
     return GetField<uint32_t>(VT_ID, 0);
+  }
+  FBS::Request::Method method() const {
+    return static_cast<FBS::Request::Method>(GetField<uint8_t>(VT_METHOD, 0));
   }
   const flatbuffers::String *handlerId() const {
     return GetPointer<const flatbuffers::String *>(VT_HANDLERID);
@@ -90,15 +118,13 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return GetPointer<const void *>(VT_BODY);
   }
   template<typename T> const T *body_as() const;
-  const FBS::Worker::DumpRequest *body_as_FBS_Worker_DumpRequest() const {
-    return body_type() == FBS::Request::Body::FBS_Worker_DumpRequest ? static_cast<const FBS::Worker::DumpRequest *>(body()) : nullptr;
-  }
   const FBS::Transport::ConsumeRequest *body_as_FBS_Transport_ConsumeRequest() const {
     return body_type() == FBS::Request::Body::FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_ID, 4) &&
+           VerifyField<uint8_t>(verifier, VT_METHOD, 1) &&
            VerifyOffset(verifier, VT_HANDLERID) &&
            verifier.VerifyString(handlerId()) &&
            VerifyField<uint8_t>(verifier, VT_BODY_TYPE, 1) &&
@@ -107,10 +133,6 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.EndTable();
   }
 };
-
-template<> inline const FBS::Worker::DumpRequest *Request::body_as<FBS::Worker::DumpRequest>() const {
-  return body_as_FBS_Worker_DumpRequest();
-}
 
 template<> inline const FBS::Transport::ConsumeRequest *Request::body_as<FBS::Transport::ConsumeRequest>() const {
   return body_as_FBS_Transport_ConsumeRequest();
@@ -122,6 +144,9 @@ struct RequestBuilder {
   flatbuffers::uoffset_t start_;
   void add_id(uint32_t id) {
     fbb_.AddElement<uint32_t>(Request::VT_ID, id, 0);
+  }
+  void add_method(FBS::Request::Method method) {
+    fbb_.AddElement<uint8_t>(Request::VT_METHOD, static_cast<uint8_t>(method), 0);
   }
   void add_handlerId(flatbuffers::Offset<flatbuffers::String> handlerId) {
     fbb_.AddOffset(Request::VT_HANDLERID, handlerId);
@@ -146,6 +171,7 @@ struct RequestBuilder {
 inline flatbuffers::Offset<Request> CreateRequest(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t id = 0,
+    FBS::Request::Method method = FBS::Request::Method::WORKER_DUMP,
     flatbuffers::Offset<flatbuffers::String> handlerId = 0,
     FBS::Request::Body body_type = FBS::Request::Body::NONE,
     flatbuffers::Offset<void> body = 0) {
@@ -154,12 +180,14 @@ inline flatbuffers::Offset<Request> CreateRequest(
   builder_.add_handlerId(handlerId);
   builder_.add_id(id);
   builder_.add_body_type(body_type);
+  builder_.add_method(method);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<Request> CreateRequestDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t id = 0,
+    FBS::Request::Method method = FBS::Request::Method::WORKER_DUMP,
     const char *handlerId = nullptr,
     FBS::Request::Body body_type = FBS::Request::Body::NONE,
     flatbuffers::Offset<void> body = 0) {
@@ -167,6 +195,7 @@ inline flatbuffers::Offset<Request> CreateRequestDirect(
   return FBS::Request::CreateRequest(
       _fbb,
       id,
+      method,
       handlerId__,
       body_type,
       body);
@@ -176,10 +205,6 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
   switch (type) {
     case Body::NONE: {
       return true;
-    }
-    case Body::FBS_Worker_DumpRequest: {
-      auto ptr = reinterpret_cast<const FBS::Worker::DumpRequest *>(obj);
-      return verifier.VerifyTable(ptr);
     }
     case Body::FBS_Transport_ConsumeRequest: {
       auto ptr = reinterpret_cast<const FBS::Transport::ConsumeRequest *>(obj);
@@ -201,23 +226,38 @@ inline bool VerifyBodyVector(flatbuffers::Verifier &verifier, const flatbuffers:
   return true;
 }
 
+inline const flatbuffers::TypeTable *MethodTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UCHAR, 0, 0 },
+    { flatbuffers::ET_UCHAR, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Request::MethodTypeTable
+  };
+  static const char * const names[] = {
+    "WORKER_DUMP",
+    "TRANSPORT_CONSUME"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_ENUM, 2, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
 inline const flatbuffers::TypeTable *BodyTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_SEQUENCE, 0, -1 },
-    { flatbuffers::ET_SEQUENCE, 0, 0 },
-    { flatbuffers::ET_SEQUENCE, 0, 1 }
+    { flatbuffers::ET_SEQUENCE, 0, 0 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Worker::DumpRequestTypeTable,
     FBS::Transport::ConsumeRequestTypeTable
   };
   static const char * const names[] = {
     "NONE",
-    "FBS_Worker_DumpRequest",
     "FBS_Transport_ConsumeRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 3, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 2, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }
@@ -225,21 +265,24 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
 inline const flatbuffers::TypeTable *RequestTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_UCHAR, 0, 0 },
     { flatbuffers::ET_STRING, 0, -1 },
-    { flatbuffers::ET_UTYPE, 0, 0 },
-    { flatbuffers::ET_SEQUENCE, 0, 0 }
+    { flatbuffers::ET_UTYPE, 0, 1 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Request::MethodTypeTable,
     FBS::Request::BodyTypeTable
   };
   static const char * const names[] = {
     "id",
+    "method",
     "handlerId",
     "body_type",
     "body"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 4, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 5, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }
