@@ -58,7 +58,7 @@ typedef struct {
 typedef struct {
   uint64_t       start_tm;                    // the record start timestamp in milliseconds
   uint32_t       filled;                      // number of filled records in the array below
-  uint16_t       payload_id;                  // payload as in original RTP stream
+  uint16_t       ssrc;                        // ssrc as in original RTP stream
   uint8_t        payload_type;                // 'a' or 'v'
   uint8_t        fill;                        // empty byte
   char           consumer_id [UUID_BYTE_LEN]; // 
@@ -68,7 +68,7 @@ typedef struct {
 typedef struct {
   uint64_t       start_tm;                    // the record start timestamp in milliseconds
   uint32_t       filled;                      // number of filled records in the array below
-  uint16_t       payload_id;                  // payload as in original RTP stream
+  uint16_t       ssrc;                        // ssrc as in original RTP stream
   uint8_t        payload_type;                // 'a' or 'v'
   uint8_t        fill;                        // empty byte
 } stats_producer_record_header_t;
@@ -89,7 +89,7 @@ static const char *header[][3] = {
   {"producer_id                         ", "Producer ID", "ID of a consumer's producer or empty field"}, 
   {"start_ts",  "Start Time",            "The statime of the epoch (HH:MM:SS,sss)"},
   {"type",     "Stream Type",           "0 - producer, 1 - consumer"},
-  {"payload",  "Payload",               "Payload ID as in original RTP stream"},
+  {"ssrc",  "Ssrc",                    "16 bits of SSRC as in original RTP stream"},
   {"content",  "Content",               "Content type: audio or video"},
   {"pkt ",  "Packets Count",         "Packets received or sent during epoch"},
   {"lost ", "Packets Lost",          "Packets lost during epoch"},
@@ -644,7 +644,7 @@ format_output(FILE* fd, ms_binlog_config *conf)
   uint64_t                       rec_start_tm;
   stats_sample_t                 *sample;
   char                           *samples_pos;
-  uint8_t                        payload;
+  uint16_t                        ssrc;
   char                           content;
 
   stats_sample_t              sample_align[MAX_TIME_ALIGN];
@@ -713,7 +713,7 @@ format_output(FILE* fd, ms_binlog_config *conf)
       }
 
       samples_pos = (conf->type == 'c') ? ((char*)rec_c) + CONSUMER_HEADER_LEN : ((char*)rec_p) + PRODUCER_HEADER_LEN;
-      payload = (conf->type == 'c') ? rec_c->payload_id : rec_p->payload_id;
+      ssrc = (conf->type == 'c') ? rec_c->ssrc : rec_p->ssrc;
       content = (conf->type == 'c') ? rec_c->payload_type : rec_p->payload_type;
 
       total_epoch_len_in_samples = 0;
@@ -768,13 +768,13 @@ format_output(FILE* fd, ms_binlog_config *conf)
           fprintf(stdout, 
             "%s\t%s\t%s"
             "\t%"PRIu64
-            "\t%c\t%"PRIu8"\t%c\t%"PRIu16
+            "\t%c\t%"PRIu16"\t%c\t%"PRIu16
             "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
             "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
             "\t%"PRIu16"\t%"PRIu16"\t%"PRIu32"\t%"PRIu32"\n",
             call_id, object_id, producer_id,
             sample_ts[i],
-            conf->type, payload, content, sample[i].packets_count,
+            conf->type, ssrc, content, sample[i].packets_count,
             sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
             sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
             sample[i].kf_count, sample[i].rtt, sample[i].max_pts, sample[i].bytes_count);
