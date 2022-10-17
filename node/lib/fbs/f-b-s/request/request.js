@@ -26,7 +26,7 @@ class Request {
     }
     method() {
         const offset = this.bb.__offset(this.bb_pos, 6);
-        return offset ? this.bb.readUint8(this.bb_pos + offset) : method_1.Method.WORKER_DUMP;
+        return offset ? this.bb.readUint8(this.bb_pos + offset) : method_1.Method.WORKER_CLOSE;
     }
     handlerId(optionalEncoding) {
         const offset = this.bb.__offset(this.bb_pos, 8);
@@ -47,7 +47,7 @@ class Request {
         builder.addFieldInt32(0, id, 0);
     }
     static addMethod(builder, method) {
-        builder.addFieldInt8(1, method, method_1.Method.WORKER_DUMP);
+        builder.addFieldInt8(1, method, method_1.Method.WORKER_CLOSE);
     }
     static addHandlerId(builder, handlerIdOffset) {
         builder.addFieldOffset(2, handlerIdOffset, 0);
@@ -107,7 +107,7 @@ class RequestT {
     handlerId;
     bodyType;
     body;
-    constructor(id = 0, method = method_1.Method.WORKER_DUMP, handlerId = null, bodyType = body_1.Body.NONE, body = null) {
+    constructor(id = 0, method = method_1.Method.WORKER_CLOSE, handlerId = null, bodyType = body_1.Body.NONE, body = null) {
         this.id = id;
         this.method = method;
         this.handlerId = handlerId;

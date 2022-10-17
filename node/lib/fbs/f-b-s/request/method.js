@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Method = void 0;
 var Method;
 (function (Method) {
-    Method[Method["WORKER_DUMP"] = 0] = "WORKER_DUMP";
-    Method[Method["TRANSPORT_CONSUME"] = 1] = "TRANSPORT_CONSUME";
+    Method[Method["WORKER_CLOSE"] = 0] = "WORKER_CLOSE";
+    Method[Method["WORKER_DUMP"] = 1] = "WORKER_DUMP";
+    Method[Method["TRANSPORT_CONSUME"] = 2] = "TRANSPORT_CONSUME";
 })(Method = exports.Method || (exports.Method = {}));

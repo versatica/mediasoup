@@ -34,7 +34,6 @@ exports.getArray = getArray;
 function serializeRtpParameters(builder, rtpParameters) {
     const codecs = [];
     const headerExtensions = [];
-    console.error("serializeRtpParameters 1");
     for (const codec of rtpParameters.codecs) {
         const mimeTypeOffset = builder.createString(codec.mimeType);
         const codecParameters = [];
@@ -81,7 +80,6 @@ function serializeRtpParameters(builder, rtpParameters) {
         codecs.push(rtpParameters_1.RtpCodecParameters.createRtpCodecParameters(builder, mimeTypeOffset, codec.payloadType, codec.clockRate, Number(codec.channels), parametersOffset, rtcpFeedbackOffset));
     }
     const codecsOffset = rtp_parameters_1.RtpParameters.createCodecsVector(builder, codecs);
-    console.error("serializeRtpParameters 2");
     // RtpHeaderExtensionParameters.
     for (const headerExtension of rtpParameters.headerExtensions ?? []) {
         const uriOffset = builder.createString(headerExtension.uri);
@@ -89,12 +87,10 @@ function serializeRtpParameters(builder, rtpParameters) {
         headerExtensions.push(rtpParameters_1.RtpHeaderExtensionParameters.createRtpHeaderExtensionParameters(builder, uriOffset, headerExtension.id, Boolean(headerExtension.encrypt), parametersOffset));
     }
     const headerExtensionsOffset = rtp_parameters_1.RtpParameters.createHeaderExtensionsVector(builder, headerExtensions);
-    console.error("serializeRtpParameters 3");
     // RtpEncodingParameters.
     let encodingsOffset;
     if (rtpParameters.encodings)
         encodingsOffset = serializeRtpEncodingParameters(builder, rtpParameters.encodings);
-    console.error("serializeRtpParameters 3.1");
     // RtcpParameters.
     let rtcpOffset;
     if (rtpParameters.rtcp) {
@@ -102,7 +98,6 @@ function serializeRtpParameters(builder, rtpParameters) {
         const cnameOffset = builder.createString(cname);
         rtcpOffset = rtpParameters_1.RtcpParameters.createRtcpParameters(builder, cnameOffset, Boolean(reducedSize), Boolean(mux));
     }
-    console.error("serializeRtpParameters 4");
     const midOffset = builder.createString(rtpParameters.mid);
     rtp_parameters_1.RtpParameters.startRtpParameters(builder);
     rtp_parameters_1.RtpParameters.addMid(builder, midOffset);
@@ -113,7 +108,6 @@ function serializeRtpParameters(builder, rtpParameters) {
         rtp_parameters_1.RtpParameters.addEncodings(builder, encodingsOffset);
     if (rtcpOffset)
         rtp_parameters_1.RtpParameters.addRtcp(builder, rtcpOffset);
-    console.error("serializeRtpParameters 5");
     return rtp_parameters_1.RtpParameters.endRtpParameters(builder);
 }
 exports.serializeRtpParameters = serializeRtpParameters;

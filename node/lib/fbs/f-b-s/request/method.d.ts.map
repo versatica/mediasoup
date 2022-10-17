@@ -1,1 +1,1 @@
-{"version":3,"file":"method.d.ts","sourceRoot":"","sources":["../../../../src/fbs/f-b-s/request/method.ts"],"names":[],"mappings":"AAEA,oBAAY,MAAM;IAChB,WAAW,IAAI;IACf,iBAAiB,IAAI;CACtB"}
+{"version":3,"file":"method.d.ts","sourceRoot":"","sources":["../../../../src/fbs/f-b-s/request/method.ts"],"names":[],"mappings":"AAEA,oBAAY,MAAM;IAChB,YAAY,IAAI;IAChB,WAAW,IAAI;IACf,iBAAiB,IAAI;CACtB"}

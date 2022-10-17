@@ -75,6 +75,7 @@ namespace Channel
 	// clang-format off
 	absl::flat_hash_map<FBS::Request::Method, const char*> ChannelRequest::method2String =
 	{
+		{ FBS::Request::Method::WORKER_CLOSE,      "worker.close"      },
 		{ FBS::Request::Method::WORKER_DUMP,       "worker.dump"       },
 		{ FBS::Request::Method::TRANSPORT_CONSUME, "transport.consume" },
 	};
