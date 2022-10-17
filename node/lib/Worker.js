@@ -311,7 +311,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const builder = this.#channel.bufferBuilder;
         const updateableSettings = new worker_1.UpdateableSettingsT(logLevel, logTags);
         const updateableSettingsOffset = updateableSettings.pack(builder);
-        return this.#channel.requestBinary(request_1.Method.WORKER_UDATE_SETTINGS, request_1.Body.FBS_Worker_UpdateableSettings, updateableSettingsOffset);
+        await this.#channel.requestBinary(request_1.Method.WORKER_UDATE_SETTINGS, request_1.Body.FBS_Worker_UpdateableSettings, updateableSettingsOffset);
     }
     /**
      * Create a WebRtcServer.

@@ -179,12 +179,15 @@ namespace Channel
 
 		this->replied = true;
 
-		std::string response("{\"id\":");
+		auto& builder = ChannelRequest::bufferBuilder;
 
-		response.append(std::to_string(this->id));
-		response.append(",\"accepted\":true}");
+		auto response = FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
 
-		this->channel->Send(response);
+		builder.Finish(response);
+
+		this->Send(builder.GetBufferPointer(), builder.GetSize());
+
+		builder.Reset();
 	}
 
 	void ChannelRequest::Send(uint8_t* buffer, size_t size)

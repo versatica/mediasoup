@@ -102,6 +102,10 @@ namespace Channel
 		template <class Body>
 		void Accept(flatbuffers::FlatBufferBuilder& builder, FBS::Response::Body type, flatbuffers::Offset<Body>& body)
 		{
+			// TODO: Assert the request is not already replied.
+
+			this->replied = true;
+
 			auto response = FBS::Response::CreateResponse(builder, this->id, true, type, body.Union());
 
 			builder.Finish(response);

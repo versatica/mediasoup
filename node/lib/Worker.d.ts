@@ -186,7 +186,7 @@ export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
     /**
      * Update settings.
      */
-    updateSettings({ logLevel, logTags }?: WorkerUpdateableSettings): Promise<any>;
+    updateSettings({ logLevel, logTags }?: WorkerUpdateableSettings): Promise<void>;
     /**
      * Create a WebRtcServer.
      */
