@@ -30,8 +30,8 @@ constexpr uint8_t hexVal[256] = {
 };
 
 
-CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string callId, std::string obj, std::string producer)
-  : type(type), call_id(callId), object_id(obj), producer_id(producer) 
+CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, char payloadType, std::string callId, std::string obj, std::string producer)
+  : type(type), call_id(callId), object_id(obj), producer_id(producer)
 {
   uint64_t ts = Utils::Time::currentStdEpochMs();
   set_start_tm(ts);
@@ -40,7 +40,8 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
 
   if (type) // consumer
   {
-    record.c.payload = payload;
+    record.c.payload_id = payload;
+    record.c.payload_type = payloadType;
     std::memset(record.c.consumer_id, 0, UUID_BYTE_LEN);
     uuidToBytes(obj, record.c.consumer_id);
     
@@ -49,16 +50,17 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
 
     std::memset(record.c.samples, 0, sizeof(record.c.samples));
 
-    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): consumer start_tm=%" PRIu64 " payload=%" PRIu8 " callId=%s consumerId=%s producerId=%s", 
-      ts, payload, call_id.c_str(), object_id.c_str(), producer_id.c_str());
+    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): consumer start_tm=%" PRIu64 " payload=%" PRIu8 " type=%c callId=%s consumerId=%s producerId=%s", 
+      ts, payload, payloadType, call_id.c_str(), object_id.c_str(), producer_id.c_str());
   }
   else // producer
   {
-    record.p.payload = payload;
+    record.p.payload_id = payload;
+    record.p.payload_type = payloadType;
     std::memset(record.p.samples, 0, sizeof(record.p.samples));
 
-    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): producer start_tm=%" PRIu64 " payload=%" PRIu8 " callId=%s producerId=%s", 
-      ts, payload, call_id.c_str(), object_id.c_str());
+    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): producer start_tm=%" PRIu64 " payload=%" PRIu8 " type=%c callId=%s producerId=%s", 
+      ts, payload, payloadType, call_id.c_str(), object_id.c_str());
   }
 }
 

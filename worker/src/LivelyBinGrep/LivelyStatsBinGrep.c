@@ -18,7 +18,8 @@
 //#include <regex.h>
 
 // These defines should match LivelyBinLogs.hpp values
-#define BINLOG_FORMAT_VERSION "e58c1e"
+#define BINLOG_FORMAT_VERSION "fb7129"
+
 #define CALL_STATS_BIN_LOG_RECORDS_NUM 8 
 #define CALL_STATS_BIN_LOG_SAMPLING    2000
 
@@ -55,17 +56,21 @@ typedef struct {
 #define SAMPLE_SIZE 28
 
 typedef struct {
-  uint64_t       start_tm;                   // the record start timestamp in milliseconds
+  uint64_t       start_tm;                    // the record start timestamp in milliseconds
   uint32_t       filled;                      // number of filled records in the array below
-  uint32_t       payload;                     // payload as in original RTP stream
+  uint16_t       payload_id;                  // payload as in original RTP stream
+  uint8_t        payload_type;                // 'a' or 'v'
+  uint8_t        fill;                        // empty byte
   char           consumer_id [UUID_BYTE_LEN]; // 
   char           producer_id [UUID_BYTE_LEN]; // 
 } stats_consumer_record_header_t;
 
 typedef struct {
-  uint64_t       start_tm;                   // the record start timestamp in milliseconds
+  uint64_t       start_tm;                    // the record start timestamp in milliseconds
   uint32_t       filled;                      // number of filled records in the array below
-  uint32_t       payload;                     // payload as in original RTP stream
+  uint16_t       payload_id;                  // payload as in original RTP stream
+  uint8_t        payload_type;                // 'a' or 'v'
+  uint8_t        fill;                        // empty byte
 } stats_producer_record_header_t;
 
 // Bytes to skip over and start reading stats_sample_t
@@ -78,11 +83,6 @@ typedef struct {
 #define PRODUCER_RECORD_LEN (PRODUCER_HEADER_LEN + SAMPLE_SIZE * CALL_STATS_BIN_LOG_RECORDS_NUM)
 
 
-static const char source_string[2] = {
-  'p',
-  'c'
-};
-
 static const char *header[][3] = {
   {"call_id                             ", "Call ID",     "ID of a call"},
   {"object_id                           ", "Object ID",   "ID of a producer or consumer object"},
@@ -90,6 +90,7 @@ static const char *header[][3] = {
   {"start_ts",  "Start Time",            "The statime of the epoch (HH:MM:SS,sss)"},
   {"type",     "Stream Type",           "0 - producer, 1 - consumer"},
   {"payload",  "Payload",               "Payload ID as in original RTP stream"},
+  {"content",  "Content",               "Content type: audio or video"},
   {"pkt ",  "Packets Count",         "Packets received or sent during epoch"},
   {"lost ", "Packets Lost",          "Packets lost during epoch"},
   {"disc ", "Packets Discarded",     "Packets discarded during epoch"},
@@ -644,6 +645,7 @@ format_output(FILE* fd, ms_binlog_config *conf)
   stats_sample_t                 *sample;
   char                           *samples_pos;
   uint8_t                        payload;
+  char                           content;
 
   stats_sample_t              sample_align[MAX_TIME_ALIGN];
   uint64_t                    sample_ts[MAX_TIME_ALIGN];
@@ -711,7 +713,8 @@ format_output(FILE* fd, ms_binlog_config *conf)
       }
 
       samples_pos = (conf->type == 'c') ? ((char*)rec_c) + CONSUMER_HEADER_LEN : ((char*)rec_p) + PRODUCER_HEADER_LEN;
-      payload = (conf->type == 'c') ? rec_c->payload : rec_p->payload;
+      payload = (conf->type == 'c') ? rec_c->payload_id : rec_p->payload_id;
+      content = (conf->type == 'c') ? rec_c->payload_type : rec_p->payload_type;
 
       total_epoch_len_in_samples = 0;
 
@@ -765,13 +768,13 @@ format_output(FILE* fd, ms_binlog_config *conf)
           fprintf(stdout, 
             "%s\t%s\t%s"
             "\t%"PRIu64
-            "\t%c\t%"PRIu8"\t%"PRIu16
+            "\t%c\t%"PRIu8"\t%c\t%"PRIu16
             "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
             "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
             "\t%"PRIu16"\t%"PRIu16"\t%"PRIu32"\t%"PRIu32"\n",
             call_id, object_id, producer_id,
             sample_ts[i],
-            conf->type, payload, sample[i].packets_count,
+            conf->type, payload, content, sample[i].packets_count,
             sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
             sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
             sample[i].kf_count, sample[i].rtt, sample[i].max_pts, sample[i].bytes_count);

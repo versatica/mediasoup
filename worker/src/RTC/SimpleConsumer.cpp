@@ -595,7 +595,7 @@ namespace RTC
 		this->rtpStreams.push_back(this->rtpStream);
 
 		// Binary log samples collection
-		this->rtpStreamBinLogRecord = new Lively::CallStatsRecordCtx(1, this->rtpStream->GetPayloadType(), lively.callId, this->id, this->producerId);			
+		this->rtpStreamBinLogRecord = new Lively::CallStatsRecordCtx(1, this->rtpStream->GetPayloadType(), this->kind == Media::Kind::VIDEO ? 'v': 'a', lively.callId, this->id, this->producerId);			
 
 		// If the Consumer is paused, tell the RtpStreamSend.
 		if (IsPaused() || IsProducerPaused())

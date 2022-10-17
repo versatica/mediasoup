@@ -6,7 +6,7 @@
 #include "RTC/RtpStream.hpp"
 
 #define BINLOG_MIN_TIMESPAN   20000
-#define BINLOG_FORMAT_VERSION "e58c1e"
+#define BINLOG_FORMAT_VERSION "fb7129"
 
 // CALL_STATS_BIN_LOG_RECORDS_NUM * sizeof(CallStatsSample) should be
 // dividible by 16 b/c of alignment concerns;
@@ -54,19 +54,23 @@ struct CallStatsSample
 // 8          4     4       16            16           
 struct ConsumerRecord
 {
-  uint64_t        start_tm {UINT64_UNSET};                   // the record start timestamp in milliseconds
-  uint32_t        filled {UINT32_UNSET};                      // number of filled records in the array below
-  uint32_t        payload {0};                     // payload as in original RTP stream
-  uint8_t         consumer_id [UUID_BYTE_LEN]; // 
-  uint8_t         producer_id [UUID_BYTE_LEN]; //
+  uint64_t        start_tm {UINT64_UNSET};                 // the record start timestamp in milliseconds
+  uint32_t        filled {UINT32_UNSET};                   // number of filled records in the array below
+  uint16_t        payload_id {0};                          // payload as in original RTP stream
+  uint8_t         payload_type;                            // 'a' or 'v' 
+  uint8_t         fill {0};                                // an empty byte reserved
+  uint8_t         consumer_id [UUID_BYTE_LEN];             // 
+  uint8_t         producer_id [UUID_BYTE_LEN];             //
   CallStatsSample samples[CALL_STATS_BIN_LOG_RECORDS_NUM]; // collection of data samples
 };
 
 struct ProducerRecord
 {
-  uint64_t        start_tm {UINT64_UNSET};                   // the record start timestamp in milliseconds
-  uint32_t        filled {UINT32_UNSET};                      // number of filled records in the array below
-  uint32_t        payload {0};                     // payload as in original RTP stream
+  uint64_t        start_tm {UINT64_UNSET};                 // the record start timestamp in milliseconds
+  uint32_t        filled {UINT32_UNSET};                   // number of filled records in the array below
+  uint16_t        payload_id {0};                          // payload as in original RTP stream
+  uint8_t         payload_type;                            // 'a' or 'v' 
+  uint8_t         fill {0};                                // an empty byte reserved
   CallStatsSample samples[CALL_STATS_BIN_LOG_RECORDS_NUM]; // collection of data samples
 };
 
@@ -79,7 +83,7 @@ class CallStatsRecord
     std::string producer_id;  // uuid4(), undef if source is producer, or consumer's corresponding producer id
 
   public:
-    CallStatsRecord(uint64_t objType, uint8_t payload, std::string callId, std::string objId, std::string producerId);
+    CallStatsRecord(uint64_t objType, uint8_t payload, char payloadType, std::string callId, std::string objId, std::string producerId);
 
     bool fwriteRecord(std::FILE* fd);
     uint32_t filled() const {return type ? record.c.filled : record.p.filled;}
@@ -141,7 +145,7 @@ class CallStatsRecord
     StreamStats curr {};
 
   public:
-    CallStatsRecordCtx(uint64_t objType, uint8_t payload, std::string callId, std::string objId, std::string producerId) : record(objType, payload, callId, objId, producerId) {}
+    CallStatsRecordCtx(uint64_t objType, uint8_t payload, char payloadType, std::string callId, std::string objId, std::string producerId) : record(objType, payload, payloadType, callId, objId, producerId) {}
     void AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream); // either recv or send stream
     uint64_t LastTs() const { return last.ts; }
   };
