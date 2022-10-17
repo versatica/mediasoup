@@ -11,23 +11,54 @@ __init(i:number, bb:flatbuffers.ByteBuffer):ConsumerLayers {
   return this;
 }
 
+static getRootAsConsumerLayers(bb:flatbuffers.ByteBuffer, obj?:ConsumerLayers):ConsumerLayers {
+  return (obj || new ConsumerLayers()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+}
+
+static getSizePrefixedRootAsConsumerLayers(bb:flatbuffers.ByteBuffer, obj?:ConsumerLayers):ConsumerLayers {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new ConsumerLayers()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+}
+
 spatialLayer():number {
-  return this.bb!.readUint8(this.bb_pos);
+  const offset = this.bb!.__offset(this.bb_pos, 4);
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : 0;
 }
 
 temporalLayer():number {
-  return this.bb!.readUint8(this.bb_pos + 1);
+  const offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : 0;
 }
 
-static sizeOf():number {
-  return 2;
+static startConsumerLayers(builder:flatbuffers.Builder) {
+  builder.startObject(2);
 }
 
-static createConsumerLayers(builder:flatbuffers.Builder, spatial_layer: number, temporal_layer: number):flatbuffers.Offset {
-  builder.prep(1, 2);
-  builder.writeInt8(temporal_layer);
-  builder.writeInt8(spatial_layer);
-  return builder.offset();
+static addSpatialLayer(builder:flatbuffers.Builder, spatialLayer:number) {
+  builder.addFieldInt8(0, spatialLayer, 0);
 }
 
+static addTemporalLayer(builder:flatbuffers.Builder, temporalLayer:number) {
+  builder.addFieldInt8(1, temporalLayer, 0);
+}
+
+static endConsumerLayers(builder:flatbuffers.Builder):flatbuffers.Offset {
+  const offset = builder.endObject();
+  return offset;
+}
+
+static finishConsumerLayersBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
+  builder.finish(offset);
+}
+
+static finishSizePrefixedConsumerLayersBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
+  builder.finish(offset, undefined, true);
+}
+
+static createConsumerLayers(builder:flatbuffers.Builder, spatialLayer:number, temporalLayer:number):flatbuffers.Offset {
+  ConsumerLayers.startConsumerLayers(builder);
+  ConsumerLayers.addSpatialLayer(builder, spatialLayer);
+  ConsumerLayers.addTemporalLayer(builder, temporalLayer);
+  return ConsumerLayers.endConsumerLayers(builder);
+}
 }

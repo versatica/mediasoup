@@ -659,7 +659,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	{
 		logger.debug('consume()');
 
-		logger.error("consume()");
 		if (!producerId || typeof producerId !== 'string')
 			throw new TypeError('missing producerId');
 		else if (appData && typeof appData !== 'object')

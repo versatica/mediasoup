@@ -33,7 +33,7 @@ class ConsumeRequest {
     }
     kind() {
         const offset = this.bb.__offset(this.bb_pos, 8);
-        return offset ? this.bb.readUint8(this.bb_pos + offset) : media_kind_1.MediaKind.AUDIO;
+        return offset ? this.bb.readUint8(this.bb_pos + offset) : media_kind_1.MediaKind.ALL;
     }
     rtpParameters(obj) {
         const offset = this.bb.__offset(this.bb_pos, 10);
@@ -57,7 +57,7 @@ class ConsumeRequest {
     }
     preferredLayers(obj) {
         const offset = this.bb.__offset(this.bb_pos, 18);
-        return offset ? (obj || new consumer_layers_1.ConsumerLayers()).__init(this.bb_pos + offset, this.bb) : null;
+        return offset ? (obj || new consumer_layers_1.ConsumerLayers()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
     }
     ignoreDtx() {
         const offset = this.bb.__offset(this.bb_pos, 20);
@@ -73,7 +73,7 @@ class ConsumeRequest {
         builder.addFieldOffset(1, producerIdOffset, 0);
     }
     static addKind(builder, kind) {
-        builder.addFieldInt8(2, kind, media_kind_1.MediaKind.AUDIO);
+        builder.addFieldInt8(2, kind, media_kind_1.MediaKind.ALL);
     }
     static addRtpParameters(builder, rtpParametersOffset) {
         builder.addFieldOffset(3, rtpParametersOffset, 0);
@@ -98,7 +98,7 @@ class ConsumeRequest {
         builder.addFieldInt8(6, +paused, +false);
     }
     static addPreferredLayers(builder, preferredLayersOffset) {
-        builder.addFieldStruct(7, preferredLayersOffset, 0);
+        builder.addFieldOffset(7, preferredLayersOffset, 0);
     }
     static addIgnoreDtx(builder, ignoreDtx) {
         builder.addFieldInt8(8, +ignoreDtx, +false);

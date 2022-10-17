@@ -43,7 +43,7 @@ producerId(optionalEncoding?:any):string|Uint8Array|null {
 
 kind():MediaKind {
   const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? this.bb!.readUint8(this.bb_pos + offset) : MediaKind.AUDIO;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : MediaKind.ALL;
 }
 
 rtpParameters(obj?:RtpParameters):RtpParameters|null {
@@ -73,7 +73,7 @@ paused():boolean {
 
 preferredLayers(obj?:ConsumerLayers):ConsumerLayers|null {
   const offset = this.bb!.__offset(this.bb_pos, 18);
-  return offset ? (obj || new ConsumerLayers()).__init(this.bb_pos + offset, this.bb!) : null;
+  return offset ? (obj || new ConsumerLayers()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 ignoreDtx():boolean {
@@ -94,7 +94,7 @@ static addProducerId(builder:flatbuffers.Builder, producerIdOffset:flatbuffers.O
 }
 
 static addKind(builder:flatbuffers.Builder, kind:MediaKind) {
-  builder.addFieldInt8(2, kind, MediaKind.AUDIO);
+  builder.addFieldInt8(2, kind, MediaKind.ALL);
 }
 
 static addRtpParameters(builder:flatbuffers.Builder, rtpParametersOffset:flatbuffers.Offset) {
@@ -126,7 +126,7 @@ static addPaused(builder:flatbuffers.Builder, paused:boolean) {
 }
 
 static addPreferredLayers(builder:flatbuffers.Builder, preferredLayersOffset:flatbuffers.Offset) {
-  builder.addFieldStruct(7, preferredLayersOffset, 0);
+  builder.addFieldOffset(7, preferredLayersOffset, 0);
 }
 
 static addIgnoreDtx(builder:flatbuffers.Builder, ignoreDtx:boolean) {

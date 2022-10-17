@@ -2,9 +2,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { ConsumerLayers } from '../../f-b-s/consumer/consumer-layers';
-
-
 export class ConsumeResponse {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -38,13 +35,8 @@ score():number {
   return offset ? this.bb!.readUint8(this.bb_pos + offset) : 0;
 }
 
-preferredLayers(obj?:ConsumerLayers):ConsumerLayers|null {
-  const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? (obj || new ConsumerLayers()).__init(this.bb_pos + offset, this.bb!) : null;
-}
-
 static startConsumeResponse(builder:flatbuffers.Builder) {
-  builder.startObject(4);
+  builder.startObject(3);
 }
 
 static addPaused(builder:flatbuffers.Builder, paused:boolean) {
@@ -59,13 +51,16 @@ static addScore(builder:flatbuffers.Builder, score:number) {
   builder.addFieldInt8(2, score, 0);
 }
 
-static addPreferredLayers(builder:flatbuffers.Builder, preferredLayersOffset:flatbuffers.Offset) {
-  builder.addFieldStruct(3, preferredLayersOffset, 0);
-}
-
 static endConsumeResponse(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   return offset;
 }
 
+static createConsumeResponse(builder:flatbuffers.Builder, paused:boolean, producerPaused:boolean, score:number):flatbuffers.Offset {
+  ConsumeResponse.startConsumeResponse(builder);
+  ConsumeResponse.addPaused(builder, paused);
+  ConsumeResponse.addProducerPaused(builder, producerPaused);
+  ConsumeResponse.addScore(builder, score);
+  return ConsumeResponse.endConsumeResponse(builder);
+}
 }

@@ -85,6 +85,29 @@ switch (task)
 		break;
 	}
 
+	case 'flatc:node':
+	{
+		const flatc = 'worker/subprojects/flatbuffers-2.0.6/builddir/flatc';
+
+		const options = `--gen-object-api`
+		const command = `${flatc} --ts ${options} -o node/src/fbs `;
+
+		execute(`for file in fbs/*; do ${command} \$\{file\}; done`);
+
+		break;
+	}
+
+	case 'flatc:worker':
+	{
+		const flatc = 'worker/subprojects/flatbuffers-2.0.6/builddir/flatc';
+
+		const command = `${flatc} --cpp --cpp-field-case-style lower --reflect-names --scoped-enums -o worker/include/FBS/ `;
+
+		execute(`for file in fbs/*; do ${command} \$\{file\}; done`);
+
+		break;
+	}
+
 	case 'test:node':
 	{
 		taskReplaceVersion();

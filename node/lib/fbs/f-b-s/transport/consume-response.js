@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConsumeResponse = void 0;
 const flatbuffers = require("flatbuffers");
-const consumer_layers_1 = require("../../f-b-s/consumer/consumer-layers");
 class ConsumeResponse {
     bb = null;
     bb_pos = 0;
@@ -31,12 +30,8 @@ class ConsumeResponse {
         const offset = this.bb.__offset(this.bb_pos, 8);
         return offset ? this.bb.readUint8(this.bb_pos + offset) : 0;
     }
-    preferredLayers(obj) {
-        const offset = this.bb.__offset(this.bb_pos, 10);
-        return offset ? (obj || new consumer_layers_1.ConsumerLayers()).__init(this.bb_pos + offset, this.bb) : null;
-    }
     static startConsumeResponse(builder) {
-        builder.startObject(4);
+        builder.startObject(3);
     }
     static addPaused(builder, paused) {
         builder.addFieldInt8(0, +paused, +false);
@@ -47,12 +42,16 @@ class ConsumeResponse {
     static addScore(builder, score) {
         builder.addFieldInt8(2, score, 0);
     }
-    static addPreferredLayers(builder, preferredLayersOffset) {
-        builder.addFieldStruct(3, preferredLayersOffset, 0);
-    }
     static endConsumeResponse(builder) {
         const offset = builder.endObject();
         return offset;
+    }
+    static createConsumeResponse(builder, paused, producerPaused, score) {
+        ConsumeResponse.startConsumeResponse(builder);
+        ConsumeResponse.addPaused(builder, paused);
+        ConsumeResponse.addProducerPaused(builder, producerPaused);
+        ConsumeResponse.addScore(builder, score);
+        return ConsumeResponse.endConsumeResponse(builder);
     }
 }
 exports.ConsumeResponse = ConsumeResponse;
