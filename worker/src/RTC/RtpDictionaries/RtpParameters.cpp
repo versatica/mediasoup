@@ -202,11 +202,11 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("empty encodings");
 
 		// headerExtensions is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpParameters::VT_HEADER_EXTENSIONS))
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpParameters::VT_HEADEREXTENSIONS))
 		{
-			this->headerExtensions.reserve(data->header_extensions()->size());
+			this->headerExtensions.reserve(data->headerExtensions()->size());
 
-			for (const auto* entry : *data->header_extensions())
+			for (const auto* entry : *data->headerExtensions())
 			{
 				// This may throw due the constructor of RTC::RtpHeaderExtensionParameters.
 				this->headerExtensions.emplace_back(entry);

@@ -43,7 +43,7 @@ namespace RTC
 			  RTC::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
 
 			// ignoreDtx is set to false by default.
-			this->encodingContext->SetIgnoreDtx(data->ignore_dtx());
+			this->encodingContext->SetIgnoreDtx(data->ignoreDtx());
 		}
 
 		// NOTE: This may throw.

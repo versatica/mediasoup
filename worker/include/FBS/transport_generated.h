@@ -6,8 +6,8 @@
 
 #include "flatbuffers/flatbuffers.h"
 
-#include "consumer_generated.h"
 #include "rtpParameters_generated.h"
+#include "consumer_generated.h"
 
 namespace FBS {
 namespace Transport {
@@ -28,59 +28,59 @@ struct ConsumeRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return ConsumeRequestTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_CONSUMER_ID = 4,
-    VT_PRODUCER_ID = 6,
+    VT_CONSUMERID = 4,
+    VT_PRODUCERID = 6,
     VT_KIND = 8,
-    VT_RTP_PARAMETERS = 10,
+    VT_RTPPARAMETERS = 10,
     VT_TYPE = 12,
-    VT_CONSUMABLE_RTP_ENCODINGS = 14,
+    VT_CONSUMABLERTPENCODINGS = 14,
     VT_PAUSED = 16,
-    VT_PREFERRED_LAYERS = 18,
-    VT_IGNORE_DTX = 20
+    VT_PREFERREDLAYERS = 18,
+    VT_IGNOREDTX = 20
   };
-  const flatbuffers::String *consumer_id() const {
-    return GetPointer<const flatbuffers::String *>(VT_CONSUMER_ID);
+  const flatbuffers::String *consumerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_CONSUMERID);
   }
-  const flatbuffers::String *producer_id() const {
-    return GetPointer<const flatbuffers::String *>(VT_PRODUCER_ID);
+  const flatbuffers::String *producerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_PRODUCERID);
   }
   FBS::RtpParameters::MediaKind kind() const {
     return static_cast<FBS::RtpParameters::MediaKind>(GetField<uint8_t>(VT_KIND, 0));
   }
-  const FBS::RtpParameters::RtpParameters *rtp_parameters() const {
-    return GetPointer<const FBS::RtpParameters::RtpParameters *>(VT_RTP_PARAMETERS);
+  const FBS::RtpParameters::RtpParameters *rtpParameters() const {
+    return GetPointer<const FBS::RtpParameters::RtpParameters *>(VT_RTPPARAMETERS);
   }
   FBS::RtpParameters::Type type() const {
     return static_cast<FBS::RtpParameters::Type>(GetField<uint8_t>(VT_TYPE, 0));
   }
-  const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> *consumable_rtp_encodings() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> *>(VT_CONSUMABLE_RTP_ENCODINGS);
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> *consumableRtpEncodings() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> *>(VT_CONSUMABLERTPENCODINGS);
   }
   bool paused() const {
     return GetField<uint8_t>(VT_PAUSED, 0) != 0;
   }
-  const FBS::Consumer::ConsumerLayers *preferred_layers() const {
-    return GetStruct<const FBS::Consumer::ConsumerLayers *>(VT_PREFERRED_LAYERS);
+  const FBS::Consumer::ConsumerLayers *preferredLayers() const {
+    return GetStruct<const FBS::Consumer::ConsumerLayers *>(VT_PREFERREDLAYERS);
   }
-  bool ignore_dtx() const {
-    return GetField<uint8_t>(VT_IGNORE_DTX, 0) != 0;
+  bool ignoreDtx() const {
+    return GetField<uint8_t>(VT_IGNOREDTX, 0) != 0;
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffsetRequired(verifier, VT_CONSUMER_ID) &&
-           verifier.VerifyString(consumer_id()) &&
-           VerifyOffsetRequired(verifier, VT_PRODUCER_ID) &&
-           verifier.VerifyString(producer_id()) &&
+           VerifyOffsetRequired(verifier, VT_CONSUMERID) &&
+           verifier.VerifyString(consumerId()) &&
+           VerifyOffsetRequired(verifier, VT_PRODUCERID) &&
+           verifier.VerifyString(producerId()) &&
            VerifyField<uint8_t>(verifier, VT_KIND, 1) &&
-           VerifyOffsetRequired(verifier, VT_RTP_PARAMETERS) &&
-           verifier.VerifyTable(rtp_parameters()) &&
+           VerifyOffsetRequired(verifier, VT_RTPPARAMETERS) &&
+           verifier.VerifyTable(rtpParameters()) &&
            VerifyField<uint8_t>(verifier, VT_TYPE, 1) &&
-           VerifyOffsetRequired(verifier, VT_CONSUMABLE_RTP_ENCODINGS) &&
-           verifier.VerifyVector(consumable_rtp_encodings()) &&
-           verifier.VerifyVectorOfTables(consumable_rtp_encodings()) &&
+           VerifyOffsetRequired(verifier, VT_CONSUMABLERTPENCODINGS) &&
+           verifier.VerifyVector(consumableRtpEncodings()) &&
+           verifier.VerifyVectorOfTables(consumableRtpEncodings()) &&
            VerifyField<uint8_t>(verifier, VT_PAUSED, 1) &&
-           VerifyField<FBS::Consumer::ConsumerLayers>(verifier, VT_PREFERRED_LAYERS, 1) &&
-           VerifyField<uint8_t>(verifier, VT_IGNORE_DTX, 1) &&
+           VerifyField<FBS::Consumer::ConsumerLayers>(verifier, VT_PREFERREDLAYERS, 1) &&
+           VerifyField<uint8_t>(verifier, VT_IGNOREDTX, 1) &&
            verifier.EndTable();
   }
 };
@@ -89,32 +89,32 @@ struct ConsumeRequestBuilder {
   typedef ConsumeRequest Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_consumer_id(flatbuffers::Offset<flatbuffers::String> consumer_id) {
-    fbb_.AddOffset(ConsumeRequest::VT_CONSUMER_ID, consumer_id);
+  void add_consumerId(flatbuffers::Offset<flatbuffers::String> consumerId) {
+    fbb_.AddOffset(ConsumeRequest::VT_CONSUMERID, consumerId);
   }
-  void add_producer_id(flatbuffers::Offset<flatbuffers::String> producer_id) {
-    fbb_.AddOffset(ConsumeRequest::VT_PRODUCER_ID, producer_id);
+  void add_producerId(flatbuffers::Offset<flatbuffers::String> producerId) {
+    fbb_.AddOffset(ConsumeRequest::VT_PRODUCERID, producerId);
   }
   void add_kind(FBS::RtpParameters::MediaKind kind) {
     fbb_.AddElement<uint8_t>(ConsumeRequest::VT_KIND, static_cast<uint8_t>(kind), 0);
   }
-  void add_rtp_parameters(flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtp_parameters) {
-    fbb_.AddOffset(ConsumeRequest::VT_RTP_PARAMETERS, rtp_parameters);
+  void add_rtpParameters(flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters) {
+    fbb_.AddOffset(ConsumeRequest::VT_RTPPARAMETERS, rtpParameters);
   }
   void add_type(FBS::RtpParameters::Type type) {
     fbb_.AddElement<uint8_t>(ConsumeRequest::VT_TYPE, static_cast<uint8_t>(type), 0);
   }
-  void add_consumable_rtp_encodings(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>> consumable_rtp_encodings) {
-    fbb_.AddOffset(ConsumeRequest::VT_CONSUMABLE_RTP_ENCODINGS, consumable_rtp_encodings);
+  void add_consumableRtpEncodings(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>> consumableRtpEncodings) {
+    fbb_.AddOffset(ConsumeRequest::VT_CONSUMABLERTPENCODINGS, consumableRtpEncodings);
   }
   void add_paused(bool paused) {
     fbb_.AddElement<uint8_t>(ConsumeRequest::VT_PAUSED, static_cast<uint8_t>(paused), 0);
   }
-  void add_preferred_layers(const FBS::Consumer::ConsumerLayers *preferred_layers) {
-    fbb_.AddStruct(ConsumeRequest::VT_PREFERRED_LAYERS, preferred_layers);
+  void add_preferredLayers(const FBS::Consumer::ConsumerLayers *preferredLayers) {
+    fbb_.AddStruct(ConsumeRequest::VT_PREFERREDLAYERS, preferredLayers);
   }
-  void add_ignore_dtx(bool ignore_dtx) {
-    fbb_.AddElement<uint8_t>(ConsumeRequest::VT_IGNORE_DTX, static_cast<uint8_t>(ignore_dtx), 0);
+  void add_ignoreDtx(bool ignoreDtx) {
+    fbb_.AddElement<uint8_t>(ConsumeRequest::VT_IGNOREDTX, static_cast<uint8_t>(ignoreDtx), 0);
   }
   explicit ConsumeRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -123,32 +123,32 @@ struct ConsumeRequestBuilder {
   flatbuffers::Offset<ConsumeRequest> Finish() {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<ConsumeRequest>(end);
-    fbb_.Required(o, ConsumeRequest::VT_CONSUMER_ID);
-    fbb_.Required(o, ConsumeRequest::VT_PRODUCER_ID);
-    fbb_.Required(o, ConsumeRequest::VT_RTP_PARAMETERS);
-    fbb_.Required(o, ConsumeRequest::VT_CONSUMABLE_RTP_ENCODINGS);
+    fbb_.Required(o, ConsumeRequest::VT_CONSUMERID);
+    fbb_.Required(o, ConsumeRequest::VT_PRODUCERID);
+    fbb_.Required(o, ConsumeRequest::VT_RTPPARAMETERS);
+    fbb_.Required(o, ConsumeRequest::VT_CONSUMABLERTPENCODINGS);
     return o;
   }
 };
 
 inline flatbuffers::Offset<ConsumeRequest> CreateConsumeRequest(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> consumer_id = 0,
-    flatbuffers::Offset<flatbuffers::String> producer_id = 0,
-    FBS::RtpParameters::MediaKind kind = FBS::RtpParameters::MediaKind_AUDIO,
-    flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtp_parameters = 0,
+    flatbuffers::Offset<flatbuffers::String> consumerId = 0,
+    flatbuffers::Offset<flatbuffers::String> producerId = 0,
+    FBS::RtpParameters::MediaKind kind = FBS::RtpParameters::MediaKind_ALL,
+    flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters = 0,
     FBS::RtpParameters::Type type = FBS::RtpParameters::Type_NONE,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>> consumable_rtp_encodings = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>> consumableRtpEncodings = 0,
     bool paused = false,
-    const FBS::Consumer::ConsumerLayers *preferred_layers = nullptr,
-    bool ignore_dtx = false) {
+    const FBS::Consumer::ConsumerLayers *preferredLayers = nullptr,
+    bool ignoreDtx = false) {
   ConsumeRequestBuilder builder_(_fbb);
-  builder_.add_preferred_layers(preferred_layers);
-  builder_.add_consumable_rtp_encodings(consumable_rtp_encodings);
-  builder_.add_rtp_parameters(rtp_parameters);
-  builder_.add_producer_id(producer_id);
-  builder_.add_consumer_id(consumer_id);
-  builder_.add_ignore_dtx(ignore_dtx);
+  builder_.add_preferredLayers(preferredLayers);
+  builder_.add_consumableRtpEncodings(consumableRtpEncodings);
+  builder_.add_rtpParameters(rtpParameters);
+  builder_.add_producerId(producerId);
+  builder_.add_consumerId(consumerId);
+  builder_.add_ignoreDtx(ignoreDtx);
   builder_.add_paused(paused);
   builder_.add_type(type);
   builder_.add_kind(kind);
@@ -157,29 +157,29 @@ inline flatbuffers::Offset<ConsumeRequest> CreateConsumeRequest(
 
 inline flatbuffers::Offset<ConsumeRequest> CreateConsumeRequestDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    const char *consumer_id = nullptr,
-    const char *producer_id = nullptr,
-    FBS::RtpParameters::MediaKind kind = FBS::RtpParameters::MediaKind_AUDIO,
-    flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtp_parameters = 0,
+    const char *consumerId = nullptr,
+    const char *producerId = nullptr,
+    FBS::RtpParameters::MediaKind kind = FBS::RtpParameters::MediaKind_ALL,
+    flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters = 0,
     FBS::RtpParameters::Type type = FBS::RtpParameters::Type_NONE,
-    const std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> *consumable_rtp_encodings = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> *consumableRtpEncodings = nullptr,
     bool paused = false,
-    const FBS::Consumer::ConsumerLayers *preferred_layers = nullptr,
-    bool ignore_dtx = false) {
-  auto consumer_id__ = consumer_id ? _fbb.CreateString(consumer_id) : 0;
-  auto producer_id__ = producer_id ? _fbb.CreateString(producer_id) : 0;
-  auto consumable_rtp_encodings__ = consumable_rtp_encodings ? _fbb.CreateVector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>(*consumable_rtp_encodings) : 0;
+    const FBS::Consumer::ConsumerLayers *preferredLayers = nullptr,
+    bool ignoreDtx = false) {
+  auto consumerId__ = consumerId ? _fbb.CreateString(consumerId) : 0;
+  auto producerId__ = producerId ? _fbb.CreateString(producerId) : 0;
+  auto consumableRtpEncodings__ = consumableRtpEncodings ? _fbb.CreateVector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>(*consumableRtpEncodings) : 0;
   return FBS::Transport::CreateConsumeRequest(
       _fbb,
-      consumer_id__,
-      producer_id__,
+      consumerId__,
+      producerId__,
       kind,
-      rtp_parameters,
+      rtpParameters,
       type,
-      consumable_rtp_encodings__,
+      consumableRtpEncodings__,
       paused,
-      preferred_layers,
-      ignore_dtx);
+      preferredLayers,
+      ignoreDtx);
 }
 
 struct ConsumeResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -189,28 +189,28 @@ struct ConsumeResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_PAUSED = 4,
-    VT_PRODUCER_PAUSED = 6,
+    VT_PRODUCERPAUSED = 6,
     VT_SCORE = 8,
-    VT_PREFERRED_LAYERS = 10
+    VT_PREFERREDLAYERS = 10
   };
   bool paused() const {
     return GetField<uint8_t>(VT_PAUSED, 0) != 0;
   }
-  bool producer_paused() const {
-    return GetField<uint8_t>(VT_PRODUCER_PAUSED, 0) != 0;
+  bool producerPaused() const {
+    return GetField<uint8_t>(VT_PRODUCERPAUSED, 0) != 0;
   }
   uint8_t score() const {
     return GetField<uint8_t>(VT_SCORE, 0);
   }
-  const FBS::Consumer::ConsumerLayers *preferred_layers() const {
-    return GetStruct<const FBS::Consumer::ConsumerLayers *>(VT_PREFERRED_LAYERS);
+  const FBS::Consumer::ConsumerLayers *preferredLayers() const {
+    return GetStruct<const FBS::Consumer::ConsumerLayers *>(VT_PREFERREDLAYERS);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_PAUSED, 1) &&
-           VerifyField<uint8_t>(verifier, VT_PRODUCER_PAUSED, 1) &&
+           VerifyField<uint8_t>(verifier, VT_PRODUCERPAUSED, 1) &&
            VerifyField<uint8_t>(verifier, VT_SCORE, 1) &&
-           VerifyField<FBS::Consumer::ConsumerLayers>(verifier, VT_PREFERRED_LAYERS, 1) &&
+           VerifyField<FBS::Consumer::ConsumerLayers>(verifier, VT_PREFERREDLAYERS, 1) &&
            verifier.EndTable();
   }
 };
@@ -222,14 +222,14 @@ struct ConsumeResponseBuilder {
   void add_paused(bool paused) {
     fbb_.AddElement<uint8_t>(ConsumeResponse::VT_PAUSED, static_cast<uint8_t>(paused), 0);
   }
-  void add_producer_paused(bool producer_paused) {
-    fbb_.AddElement<uint8_t>(ConsumeResponse::VT_PRODUCER_PAUSED, static_cast<uint8_t>(producer_paused), 0);
+  void add_producerPaused(bool producerPaused) {
+    fbb_.AddElement<uint8_t>(ConsumeResponse::VT_PRODUCERPAUSED, static_cast<uint8_t>(producerPaused), 0);
   }
   void add_score(uint8_t score) {
     fbb_.AddElement<uint8_t>(ConsumeResponse::VT_SCORE, score, 0);
   }
-  void add_preferred_layers(const FBS::Consumer::ConsumerLayers *preferred_layers) {
-    fbb_.AddStruct(ConsumeResponse::VT_PREFERRED_LAYERS, preferred_layers);
+  void add_preferredLayers(const FBS::Consumer::ConsumerLayers *preferredLayers) {
+    fbb_.AddStruct(ConsumeResponse::VT_PREFERREDLAYERS, preferredLayers);
   }
   explicit ConsumeResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -245,13 +245,13 @@ struct ConsumeResponseBuilder {
 inline flatbuffers::Offset<ConsumeResponse> CreateConsumeResponse(
     flatbuffers::FlatBufferBuilder &_fbb,
     bool paused = false,
-    bool producer_paused = false,
+    bool producerPaused = false,
     uint8_t score = 0,
-    const FBS::Consumer::ConsumerLayers *preferred_layers = nullptr) {
+    const FBS::Consumer::ConsumerLayers *preferredLayers = nullptr) {
   ConsumeResponseBuilder builder_(_fbb);
-  builder_.add_preferred_layers(preferred_layers);
+  builder_.add_preferredLayers(preferredLayers);
   builder_.add_score(score);
-  builder_.add_producer_paused(producer_paused);
+  builder_.add_producerPaused(producerPaused);
   builder_.add_paused(paused);
   return builder_.Finish();
 }
@@ -276,15 +276,15 @@ inline const flatbuffers::TypeTable *ConsumeRequestTypeTable() {
     FBS::Consumer::ConsumerLayersTypeTable
   };
   static const char * const names[] = {
-    "consumer_id",
-    "producer_id",
+    "consumerId",
+    "producerId",
     "kind",
-    "rtp_parameters",
+    "rtpParameters",
     "type",
-    "consumable_rtp_encodings",
+    "consumableRtpEncodings",
     "paused",
-    "preferred_layers",
-    "ignore_dtx"
+    "preferredLayers",
+    "ignoreDtx"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 9, type_codes, type_refs, nullptr, nullptr, names
@@ -304,9 +304,9 @@ inline const flatbuffers::TypeTable *ConsumeResponseTypeTable() {
   };
   static const char * const names[] = {
     "paused",
-    "producer_paused",
+    "producerPaused",
     "score",
-    "preferred_layers"
+    "preferredLayers"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 4, type_codes, type_refs, nullptr, nullptr, names

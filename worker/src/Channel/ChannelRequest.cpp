@@ -151,7 +151,7 @@ namespace Channel
 		// MS_ERROR("%s", s.c_str());
 
 		this->_data = FBS::Request::GetRequest(msg);
-		this->handlerId = this->_data->handler_id()->str();
+		this->handlerId = this->_data->handlerId()->str();
 		this->id = this->_data->id();
 	}
 

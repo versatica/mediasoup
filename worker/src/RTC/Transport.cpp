@@ -1210,8 +1210,8 @@ binary:
 				{
 					auto body = request->_data->body_as<FBS::Transport::ConsumeRequest>();
 
-					std::string producerId = body->producer_id()->str();
-					std::string consumerId = body->consumer_id()->str();
+					std::string producerId = body->producerId()->str();
+					std::string consumerId = body->consumerId()->str();
 
 					if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
 					{

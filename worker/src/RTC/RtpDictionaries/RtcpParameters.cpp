@@ -50,7 +50,7 @@ namespace RTC
 			this->cname = data->cname()->str();
 
 		// reducedSize is optional, default value is true.
-		this->reducedSize = data->reduced_size();
+		this->reducedSize = data->reducedSize();
 	}
 
 	void RtcpParameters::FillJson(json& jsonObject) const

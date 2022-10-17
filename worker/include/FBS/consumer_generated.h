@@ -15,26 +15,26 @@ inline const flatbuffers::TypeTable *ConsumerLayersTypeTable();
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(1) ConsumerLayers FLATBUFFERS_FINAL_CLASS {
  private:
-  uint8_t spatial_layer_;
-  uint8_t temporal_layer_;
+  uint8_t spatialLayer_;
+  uint8_t temporalLayer_;
 
  public:
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
     return ConsumerLayersTypeTable();
   }
   ConsumerLayers()
-      : spatial_layer_(0),
-        temporal_layer_(0) {
+      : spatialLayer_(0),
+        temporalLayer_(0) {
   }
-  ConsumerLayers(uint8_t _spatial_layer, uint8_t _temporal_layer)
-      : spatial_layer_(flatbuffers::EndianScalar(_spatial_layer)),
-        temporal_layer_(flatbuffers::EndianScalar(_temporal_layer)) {
+  ConsumerLayers(uint8_t _spatialLayer, uint8_t _temporalLayer)
+      : spatialLayer_(flatbuffers::EndianScalar(_spatialLayer)),
+        temporalLayer_(flatbuffers::EndianScalar(_temporalLayer)) {
   }
-  uint8_t spatial_layer() const {
-    return flatbuffers::EndianScalar(spatial_layer_);
+  uint8_t spatialLayer() const {
+    return flatbuffers::EndianScalar(spatialLayer_);
   }
-  uint8_t temporal_layer() const {
-    return flatbuffers::EndianScalar(temporal_layer_);
+  uint8_t temporalLayer() const {
+    return flatbuffers::EndianScalar(temporalLayer_);
   }
 };
 FLATBUFFERS_STRUCT_END(ConsumerLayers, 2);
@@ -46,8 +46,8 @@ inline const flatbuffers::TypeTable *ConsumerLayersTypeTable() {
   };
   static const int64_t values[] = { 0, 1, 2 };
   static const char * const names[] = {
-    "spatial_layer",
-    "temporal_layer"
+    "spatialLayer",
+    "temporalLayer"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_STRUCT, 2, type_codes, nullptr, nullptr, values, names

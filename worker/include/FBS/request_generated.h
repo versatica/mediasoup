@@ -6,10 +6,10 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+#include "rtpParameters_generated.h"
 #include "consumer_generated.h"
 #include "transport_generated.h"
 #include "worker_generated.h"
-#include "rtpParameters_generated.h"
 
 namespace FBS {
 namespace Request {
@@ -74,15 +74,15 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
-    VT_HANDLER_ID = 6,
+    VT_HANDLERID = 6,
     VT_BODY_TYPE = 8,
     VT_BODY = 10
   };
   uint32_t id() const {
     return GetField<uint32_t>(VT_ID, 0);
   }
-  const flatbuffers::String *handler_id() const {
-    return GetPointer<const flatbuffers::String *>(VT_HANDLER_ID);
+  const flatbuffers::String *handlerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_HANDLERID);
   }
   FBS::Request::Body body_type() const {
     return static_cast<FBS::Request::Body>(GetField<uint8_t>(VT_BODY_TYPE, 0));
@@ -100,8 +100,8 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_ID, 4) &&
-           VerifyOffset(verifier, VT_HANDLER_ID) &&
-           verifier.VerifyString(handler_id()) &&
+           VerifyOffset(verifier, VT_HANDLERID) &&
+           verifier.VerifyString(handlerId()) &&
            VerifyField<uint8_t>(verifier, VT_BODY_TYPE, 1) &&
            VerifyOffset(verifier, VT_BODY) &&
            VerifyBody(verifier, body(), body_type()) &&
@@ -124,8 +124,8 @@ struct RequestBuilder {
   void add_id(uint32_t id) {
     fbb_.AddElement<uint32_t>(Request::VT_ID, id, 0);
   }
-  void add_handler_id(flatbuffers::Offset<flatbuffers::String> handler_id) {
-    fbb_.AddOffset(Request::VT_HANDLER_ID, handler_id);
+  void add_handlerId(flatbuffers::Offset<flatbuffers::String> handlerId) {
+    fbb_.AddOffset(Request::VT_HANDLERID, handlerId);
   }
   void add_body_type(FBS::Request::Body body_type) {
     fbb_.AddElement<uint8_t>(Request::VT_BODY_TYPE, static_cast<uint8_t>(body_type), 0);
@@ -147,12 +147,12 @@ struct RequestBuilder {
 inline flatbuffers::Offset<Request> CreateRequest(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t id = 0,
-    flatbuffers::Offset<flatbuffers::String> handler_id = 0,
+    flatbuffers::Offset<flatbuffers::String> handlerId = 0,
     FBS::Request::Body body_type = FBS::Request::Body_NONE,
     flatbuffers::Offset<void> body = 0) {
   RequestBuilder builder_(_fbb);
   builder_.add_body(body);
-  builder_.add_handler_id(handler_id);
+  builder_.add_handlerId(handlerId);
   builder_.add_id(id);
   builder_.add_body_type(body_type);
   return builder_.Finish();
@@ -161,14 +161,14 @@ inline flatbuffers::Offset<Request> CreateRequest(
 inline flatbuffers::Offset<Request> CreateRequestDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t id = 0,
-    const char *handler_id = nullptr,
+    const char *handlerId = nullptr,
     FBS::Request::Body body_type = FBS::Request::Body_NONE,
     flatbuffers::Offset<void> body = 0) {
-  auto handler_id__ = handler_id ? _fbb.CreateString(handler_id) : 0;
+  auto handlerId__ = handlerId ? _fbb.CreateString(handlerId) : 0;
   return FBS::Request::CreateRequest(
       _fbb,
       id,
-      handler_id__,
+      handlerId__,
       body_type,
       body);
 }
@@ -235,7 +235,7 @@ inline const flatbuffers::TypeTable *RequestTypeTable() {
   };
   static const char * const names[] = {
     "id",
-    "handler_id",
+    "handlerId",
     "body_type",
     "body"
   };

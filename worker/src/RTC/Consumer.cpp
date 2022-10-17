@@ -166,7 +166,7 @@ namespace RTC
 		this->kind = RTC::Media::Kind(data->kind());
 
 		// This may throw.
-		this->rtpParameters = RTC::RtpParameters(data->rtp_parameters());
+		this->rtpParameters = RTC::RtpParameters(data->rtpParameters());
 
 		if (this->rtpParameters.encodings.empty())
 			MS_THROW_TYPE_ERROR("empty rtpParameters.encodings");
@@ -180,14 +180,14 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("invalid encoding in rtpParameters (missing rtx.ssrc)");
 		}
 
-		if (data->consumable_rtp_encodings()->size() == 0)
+		if (data->consumableRtpEncodings()->size() == 0)
 			MS_THROW_TYPE_ERROR("empty consumableRtpEncodings");
 
-		this->consumableRtpEncodings.reserve(data->consumable_rtp_encodings()->size());
+		this->consumableRtpEncodings.reserve(data->consumableRtpEncodings()->size());
 
-		for (size_t i{ 0 }; i < data->consumable_rtp_encodings()->size(); ++i)
+		for (size_t i{ 0 }; i < data->consumableRtpEncodings()->size(); ++i)
 		{
-			auto* entry = data->consumable_rtp_encodings()->Get(i);
+			auto* entry = data->consumableRtpEncodings()->Get(i);
 
 			// This may throw due the constructor of RTC::RtpEncodingParameters.
 			this->consumableRtpEncodings.emplace_back(entry);

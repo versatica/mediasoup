@@ -95,13 +95,13 @@ namespace RTC
 
 		// Set MIME field.
 		// This may throw.
-		this->mimeType.SetMimeType(data->mime_type()->str());
+		this->mimeType.SetMimeType(data->mimeType()->str());
 
 		// payloadType.
-		this->payloadType = data->payload_type();
+		this->payloadType = data->payloadType();
 
 		// clockRate.
-		this->clockRate = data->clock_rate();
+		this->clockRate = data->clockRate();
 
 		// channels is optional.
 		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpCodecParameters::VT_CHANNELS))
@@ -114,11 +114,11 @@ namespace RTC
 			this->parameters.Set(data->parameters());
 
 		// rtcpFeedback is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpCodecParameters::VT_RTCP_FEEDBACK))
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpCodecParameters::VT_RTCPFEEDBACK))
 		{
-			this->rtcpFeedback.reserve(data->rtcp_feedback()->size());
+			this->rtcpFeedback.reserve(data->rtcpFeedback()->size());
 
-			for (auto* entry : *data->rtcp_feedback())
+			for (auto* entry : *data->rtcpFeedback())
 			{
 				this->rtcpFeedback.emplace_back(entry);
 			}

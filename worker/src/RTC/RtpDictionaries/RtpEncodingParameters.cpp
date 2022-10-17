@@ -129,9 +129,9 @@ namespace RTC
 			this->rid = data->rid()->str();
 
 		// codecPayloadType is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_CODEC_PAYLOAD_TYPE))
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_CODECPAYLOADTYPE))
 		{
-			this->codecPayloadType    = data->codec_payload_type();
+			this->codecPayloadType    = data->codecPayloadType();
 			this->hasCodecPayloadType = true;
 		}
 
@@ -143,18 +143,18 @@ namespace RTC
 		}
 
 		// maxBitrate is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_MAX_BITRATE))
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_MAXBITRATE))
 		{
-			this->maxBitrate = data->max_bitrate();
+			this->maxBitrate = data->maxBitrate();
 		}
 
 		// dtx is optional, defauled to false.
 		this->dtx = data->dtx();
 
 		// scalabilityMode is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_SCALABILITY_MODE))
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_SCALABILITYMODE))
 		{
-			std::string scalabilityMode = data->scalability_mode()->str();
+			std::string scalabilityMode = data->scalabilityMode()->str();
 
 			static const std::regex ScalabilityModeRegex(
 			  "^[LS]([1-9]\\d{0,1})T([1-9]\\d{0,1})(_KEY)?.*", std::regex_constants::ECMAScript);
