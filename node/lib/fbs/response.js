@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ResourceUsageT = exports.ResourceUsage = exports.DumpResponseT = exports.DumpResponse = exports.ConsumeResponseT = exports.ConsumeResponse = exports.ResponseT = exports.Response = exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
+exports.ResourceUsageT = exports.ResourceUsage = exports.DumpT = exports.Dump = exports.ConsumeResponseT = exports.ConsumeResponse = exports.ResponseT = exports.Response = exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
 var body_1 = require("./f-b-s/response/body");
 Object.defineProperty(exports, "Body", { enumerable: true, get: function () { return body_1.Body; } });
 Object.defineProperty(exports, "unionToBody", { enumerable: true, get: function () { return body_1.unionToBody; } });
@@ -11,9 +11,9 @@ Object.defineProperty(exports, "ResponseT", { enumerable: true, get: function ()
 var consume_response_1 = require("./f-b-s/transport/consume-response");
 Object.defineProperty(exports, "ConsumeResponse", { enumerable: true, get: function () { return consume_response_1.ConsumeResponse; } });
 Object.defineProperty(exports, "ConsumeResponseT", { enumerable: true, get: function () { return consume_response_1.ConsumeResponseT; } });
-var dump_response_1 = require("./f-b-s/worker/dump-response");
-Object.defineProperty(exports, "DumpResponse", { enumerable: true, get: function () { return dump_response_1.DumpResponse; } });
-Object.defineProperty(exports, "DumpResponseT", { enumerable: true, get: function () { return dump_response_1.DumpResponseT; } });
+var dump_1 = require("./f-b-s/worker/dump");
+Object.defineProperty(exports, "Dump", { enumerable: true, get: function () { return dump_1.Dump; } });
+Object.defineProperty(exports, "DumpT", { enumerable: true, get: function () { return dump_1.DumpT; } });
 var resource_usage_1 = require("./f-b-s/worker/resource-usage");
 Object.defineProperty(exports, "ResourceUsage", { enumerable: true, get: function () { return resource_usage_1.ResourceUsage; } });
 Object.defineProperty(exports, "ResourceUsageT", { enumerable: true, get: function () { return resource_usage_1.ResourceUsageT; } });

@@ -29,7 +29,7 @@ public:
 
 private:
 	void Close();
-	flatbuffers::Offset<FBS::Worker::DumpResponse> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
+	flatbuffers::Offset<FBS::Worker::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 	flatbuffers::Offset<FBS::Worker::ResourceUsage> FillBufferResourceUsage(flatbuffers::FlatBufferBuilder& builder) const;
 	void FillJson(json& jsonObject) const;
 	void FillJsonResourceUsage(json& jsonObject) const;

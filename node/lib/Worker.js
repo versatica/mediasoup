@@ -266,9 +266,9 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Send the request and wait for the response.
         const response = await this.#channel.requestBinary(request_1.Method.WORKER_DUMP);
         /* Decode the response. */
-        const dumpResponse = new response_1.DumpResponse();
-        response.body(dumpResponse);
-        return dumpResponse.unpack();
+        const dump = new response_1.Dump();
+        response.body(dump);
+        return dump.unpack();
         // / return this.parseDumpResponse(dumpResponse);
     }
     /**
@@ -280,7 +280,6 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         /* Decode the response. */
         const resourceUsage = new response_1.ResourceUsage();
         response.body(resourceUsage);
-        // logger.error(resourceUsage.unpack());
         const ru = resourceUsage.unpack();
         /* eslint-disable camelcase */
         return {
@@ -388,13 +387,13 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * flatbuffers helpers
      */
-    parseDumpResponse(dumpResponse) {
+    parseDumpResponse(dump) {
         const channelMessageHandlers = new worker_1.ChannelMessageHandlers();
-        dumpResponse.channelMessageHandlers(channelMessageHandlers);
+        dump.channelMessageHandlers(channelMessageHandlers);
         return {
-            pid: Number(dumpResponse.pid()),
-            webrtcServerIds: (0, utils_1.getArray)(dumpResponse, 'webrtcServerIds'),
-            routerIds: (0, utils_1.getArray)(dumpResponse, 'routerIds'),
+            pid: Number(dump.pid()),
+            webrtcServerIds: (0, utils_1.getArray)(dump, 'webrtcServerIds'),
+            routerIds: (0, utils_1.getArray)(dump, 'routerIds'),
             channelMessageHandlers: {
                 channelRequestHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'channelRequestHandlers'),
                 payloadChannelRequestHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'payloadchannelRequestHandlers'),

@@ -4,7 +4,7 @@ import * as flatbuffers from 'flatbuffers';
 
 import { Body, unionToBody, unionListToBody } from '../../f-b-s/response/body';
 import { ConsumeResponse, ConsumeResponseT } from '../../f-b-s/transport/consume-response';
-import { DumpResponse, DumpResponseT } from '../../f-b-s/worker/dump-response';
+import { Dump, DumpT } from '../../f-b-s/worker/dump';
 import { ResourceUsage, ResourceUsageT } from '../../f-b-s/worker/resource-usage';
 
 
@@ -119,7 +119,7 @@ constructor(
   public id: number = 0,
   public accepted: boolean = false,
   public bodyType: Body = Body.NONE,
-  public body: ConsumeResponseT|DumpResponseT|ResourceUsageT|null = null
+  public body: ConsumeResponseT|DumpT|ResourceUsageT|null = null
 ){}
 
 

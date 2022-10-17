@@ -4,7 +4,7 @@ include "worker.fbs";
 namespace FBS.Response;
 
 union Body {
-  FBS.Worker.DumpResponse,
+  FBS.Worker.Dump,
   FBS.Worker.ResourceUsage,
   FBS.Transport.ConsumeResponse,
 }

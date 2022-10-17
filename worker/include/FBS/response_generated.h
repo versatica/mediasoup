@@ -21,7 +21,7 @@ inline const flatbuffers::TypeTable *ResponseTypeTable();
 
 enum class Body : uint8_t {
   NONE = 0,
-  FBS_Worker_DumpResponse = 1,
+  FBS_Worker_Dump = 1,
   FBS_Worker_ResourceUsage = 2,
   FBS_Transport_ConsumeResponse = 3,
   MIN = NONE,
@@ -31,7 +31,7 @@ enum class Body : uint8_t {
 inline const Body (&EnumValuesBody())[4] {
   static const Body values[] = {
     Body::NONE,
-    Body::FBS_Worker_DumpResponse,
+    Body::FBS_Worker_Dump,
     Body::FBS_Worker_ResourceUsage,
     Body::FBS_Transport_ConsumeResponse
   };
@@ -41,7 +41,7 @@ inline const Body (&EnumValuesBody())[4] {
 inline const char * const *EnumNamesBody() {
   static const char * const names[5] = {
     "NONE",
-    "FBS_Worker_DumpResponse",
+    "FBS_Worker_Dump",
     "FBS_Worker_ResourceUsage",
     "FBS_Transport_ConsumeResponse",
     nullptr
@@ -59,8 +59,8 @@ template<typename T> struct BodyTraits {
   static const Body enum_value = Body::NONE;
 };
 
-template<> struct BodyTraits<FBS::Worker::DumpResponse> {
-  static const Body enum_value = Body::FBS_Worker_DumpResponse;
+template<> struct BodyTraits<FBS::Worker::Dump> {
+  static const Body enum_value = Body::FBS_Worker_Dump;
 };
 
 template<> struct BodyTraits<FBS::Worker::ResourceUsage> {
@@ -98,8 +98,8 @@ struct Response FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return GetPointer<const void *>(VT_BODY);
   }
   template<typename T> const T *body_as() const;
-  const FBS::Worker::DumpResponse *body_as_FBS_Worker_DumpResponse() const {
-    return body_type() == FBS::Response::Body::FBS_Worker_DumpResponse ? static_cast<const FBS::Worker::DumpResponse *>(body()) : nullptr;
+  const FBS::Worker::Dump *body_as_FBS_Worker_Dump() const {
+    return body_type() == FBS::Response::Body::FBS_Worker_Dump ? static_cast<const FBS::Worker::Dump *>(body()) : nullptr;
   }
   const FBS::Worker::ResourceUsage *body_as_FBS_Worker_ResourceUsage() const {
     return body_type() == FBS::Response::Body::FBS_Worker_ResourceUsage ? static_cast<const FBS::Worker::ResourceUsage *>(body()) : nullptr;
@@ -118,8 +118,8 @@ struct Response FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
 };
 
-template<> inline const FBS::Worker::DumpResponse *Response::body_as<FBS::Worker::DumpResponse>() const {
-  return body_as_FBS_Worker_DumpResponse();
+template<> inline const FBS::Worker::Dump *Response::body_as<FBS::Worker::Dump>() const {
+  return body_as_FBS_Worker_Dump();
 }
 
 template<> inline const FBS::Worker::ResourceUsage *Response::body_as<FBS::Worker::ResourceUsage>() const {
@@ -176,8 +176,8 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     case Body::NONE: {
       return true;
     }
-    case Body::FBS_Worker_DumpResponse: {
-      auto ptr = reinterpret_cast<const FBS::Worker::DumpResponse *>(obj);
+    case Body::FBS_Worker_Dump: {
+      auto ptr = reinterpret_cast<const FBS::Worker::Dump *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case Body::FBS_Worker_ResourceUsage: {
@@ -212,13 +212,13 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 2 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Worker::DumpResponseTypeTable,
+    FBS::Worker::DumpTypeTable,
     FBS::Worker::ResourceUsageTypeTable,
     FBS::Transport::ConsumeResponseTypeTable
   };
   static const char * const names[] = {
     "NONE",
-    "FBS_Worker_DumpResponse",
+    "FBS_Worker_Dump",
     "FBS_Worker_ResourceUsage",
     "FBS_Transport_ConsumeResponse"
   };

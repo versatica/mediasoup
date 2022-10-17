@@ -10,7 +10,7 @@ import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { Method } from './fbs/request';
-import { DumpResponse, ResourceUsage } from './fbs/response';
+import { Dump, ResourceUsage } from './fbs/response';
 import { ChannelMessageHandlers } from './fbs/worker';
 import { getArray } from './fbs/utils';
 
@@ -571,11 +571,11 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		);
 
 		/* Decode the response. */
-		const dumpResponse = new DumpResponse();
+		const dump = new Dump();
 
-		response.body(dumpResponse);
+		response.body(dump);
 
-		return dumpResponse.unpack();
+		return dump.unpack();
 		// / return this.parseDumpResponse(dumpResponse);
 	}
 
@@ -755,16 +755,16 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	 * flatbuffers helpers
 	 */
 
-	private parseDumpResponse(dumpResponse: DumpResponse): WorkerDump
+	private parseDumpResponse(dump: Dump): WorkerDump
 	{
 		const channelMessageHandlers = new ChannelMessageHandlers();
 
-		dumpResponse.channelMessageHandlers(channelMessageHandlers);
+		dump.channelMessageHandlers(channelMessageHandlers);
 
 		return {
-			pid                    : Number(dumpResponse.pid()),
-			webrtcServerIds        : getArray(dumpResponse, 'webrtcServerIds'),
-			routerIds              : getArray(dumpResponse, 'routerIds'),
+			pid                    : Number(dump.pid()),
+			webrtcServerIds        : getArray(dump, 'webrtcServerIds'),
+			routerIds              : getArray(dump, 'routerIds'),
 			channelMessageHandlers : {
 				channelRequestHandlers        : getArray(channelMessageHandlers, 'channelRequestHandlers'),
 				payloadChannelRequestHandlers : getArray(channelMessageHandlers, 'payloadchannelRequestHandlers'),

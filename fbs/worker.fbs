@@ -1,16 +1,13 @@
 
 namespace FBS.Worker;
 
-table DumpRequest {
-}
-
 table ChannelMessageHandlers {
   channel_request_handlers:[string];
   payloadchannel_request_handlers:[string];
   payloadchannel_notification_handlers:[string];
 }
 
-table DumpResponse {
+table Dump {
   pid:uint64;
   webrtc_server_ids:[string];
   router_ids:[string];
@@ -36,4 +33,4 @@ table ResourceUsage {
   ru_nivcsw:uint64;
 }
 
-root_type DumpResponse;
+root_type Dump;
