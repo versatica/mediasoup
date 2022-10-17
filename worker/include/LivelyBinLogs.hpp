@@ -48,10 +48,10 @@ struct CallStatsSample
 };
 
 // Record headers are aligned to 16 bytes.
-// timestamp filled payload
+// timestamp filled ssrc
 // 8         4      4
-// timestamp filled payload consumer_uuid producer_uuid
-// 8          4     4       16            16           
+// timestamp filled ssrc consumer_uuid producer_uuid
+// 8          4     4    16            16           
 struct ConsumerRecord
 {
   uint64_t        start_tm {UINT64_UNSET};                 // the record start timestamp in milliseconds
