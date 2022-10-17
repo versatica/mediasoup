@@ -199,7 +199,6 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("wrong encoding in consumableRtpEncodings (missing ssrc)");
 		}
 
-		MS_ERROR("header extension size: %zu", this->rtpParameters.headerExtensions.size());
 		// Fill RTP header extension ids and their mapped values.
 		// This may throw.
 		for (auto& exten : this->rtpParameters.headerExtensions)

@@ -64,7 +64,6 @@ export function serializeRtpParameters(
 	const codecs: number[] = [];
 	const headerExtensions: number[] = [];
 
-	console.error("serializeRtpParameters 1");
 	for (const codec of rtpParameters.codecs)
 	{
 		const mimeTypeOffset = builder.createString(codec.mimeType);
@@ -160,7 +159,6 @@ export function serializeRtpParameters(
 	}
 	const codecsOffset = FbsRtpParameters.createCodecsVector(builder, codecs);
 
-	console.error("serializeRtpParameters 2");
 	// RtpHeaderExtensionParameters.
 	for (const headerExtension of rtpParameters.headerExtensions ?? [])
 	{
@@ -178,14 +176,12 @@ export function serializeRtpParameters(
 	const headerExtensionsOffset =
 		FbsRtpParameters.createHeaderExtensionsVector(builder, headerExtensions);
 
-	console.error("serializeRtpParameters 3");
 	// RtpEncodingParameters.
 	let encodingsOffset: number | undefined;
 
 	if (rtpParameters.encodings)
 		encodingsOffset = serializeRtpEncodingParameters(builder, rtpParameters.encodings);
 
-	console.error("serializeRtpParameters 3.1");
 	// RtcpParameters.
 	let rtcpOffset: number | undefined;
 
@@ -199,7 +195,6 @@ export function serializeRtpParameters(
 		);
 	}
 
-	console.error("serializeRtpParameters 4");
 	const midOffset = builder.createString(rtpParameters.mid);
 
 	FbsRtpParameters.startRtpParameters(builder);
@@ -215,7 +210,6 @@ export function serializeRtpParameters(
 	if (rtcpOffset)
 		FbsRtpParameters.addRtcp(builder, rtcpOffset);
 
-	console.error("serializeRtpParameters 5");
 	return FbsRtpParameters.endRtpParameters(builder);
 }
 
