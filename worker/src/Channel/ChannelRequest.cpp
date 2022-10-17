@@ -16,7 +16,6 @@ namespace Channel
 	absl::flat_hash_map<std::string, ChannelRequest::MethodId> ChannelRequest::string2MethodId =
 	{
 		{ "worker.close",                                ChannelRequest::MethodId::WORKER_CLOSE                                     },
-		{ "worker.dump",                                 ChannelRequest::MethodId::WORKER_DUMP                                      },
 		{ "worker.getResourceUsage",                     ChannelRequest::MethodId::WORKER_GET_RESOURCE_USAGE                        },
 		{ "worker.updateSettings",                       ChannelRequest::MethodId::WORKER_UPDATE_SETTINGS                           },
 		{ "worker.createWebRtcServer",                   ChannelRequest::MethodId::WORKER_CREATE_WEBRTC_SERVER                      },
@@ -41,7 +40,6 @@ namespace Channel
 		{ "transport.setMaxOutgoingBitrate",             ChannelRequest::MethodId::TRANSPORT_SET_MAX_OUTGOING_BITRATE               },
 		{ "transport.restartIce",                        ChannelRequest::MethodId::TRANSPORT_RESTART_ICE                            },
 		{ "transport.produce",                           ChannelRequest::MethodId::TRANSPORT_PRODUCE                                },
-		{ "transport.consume",                           ChannelRequest::MethodId::TRANSPORT_CONSUME                                },
 		{ "transport.produceData",                       ChannelRequest::MethodId::TRANSPORT_PRODUCE_DATA                           },
 		{ "transport.consumeData",                       ChannelRequest::MethodId::TRANSPORT_CONSUME_DATA                           },
 		{ "transport.enableTraceEvent",                  ChannelRequest::MethodId::TRANSPORT_ENABLE_TRACE_EVENT                     },

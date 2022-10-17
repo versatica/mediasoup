@@ -316,17 +316,6 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			break;
 		}
 
-		case Channel::ChannelRequest::MethodId::WORKER_DUMP:
-		{
-			auto& builder = Channel::ChannelRequest::bufferBuilder;
-
-			auto dump = FillBuffer(builder);
-
-			request->Accept(builder, FBS::Response::Body::FBS_Worker_DumpResponse, dump);
-
-			break;
-		}
-
 		case Channel::ChannelRequest::MethodId::WORKER_GET_RESOURCE_USAGE:
 		{
 			json data = json::object();
