@@ -151,7 +151,11 @@ namespace Channel
 		// MS_ERROR("%s", s.c_str());
 
 		this->_data = FBS::Request::GetRequest(msg);
-		this->handlerId = this->_data->handlerId()->str();
+
+		// Handler ID is optional.
+		if (flatbuffers::IsFieldPresent(this->_data, FBS::Request::Request::VT_HANDLERID))
+			this->handlerId = this->_data->handlerId()->str();
+
 		this->id = this->_data->id();
 	}
 
