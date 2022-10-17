@@ -15,7 +15,6 @@ namespace Channel
 	// clang-format off
 	absl::flat_hash_map<std::string, ChannelRequest::MethodId> ChannelRequest::string2MethodId =
 	{
-		{ "worker.getResourceUsage",                     ChannelRequest::MethodId::WORKER_GET_RESOURCE_USAGE                        },
 		{ "worker.updateSettings",                       ChannelRequest::MethodId::WORKER_UPDATE_SETTINGS                           },
 		{ "worker.createWebRtcServer",                   ChannelRequest::MethodId::WORKER_CREATE_WEBRTC_SERVER                      },
 		{ "worker.createRouter",                         ChannelRequest::MethodId::WORKER_CREATE_ROUTER                             },
