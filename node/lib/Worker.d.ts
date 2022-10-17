@@ -49,67 +49,67 @@ export declare type WorkerResourceUsage = {
     /**
      * User CPU time used (in ms).
      */
-    ru_utime: number;
+    ru_utime: BigInt;
     /**
      * System CPU time used (in ms).
      */
-    ru_stime: number;
+    ru_stime: BigInt;
     /**
      * Maximum resident set size.
      */
-    ru_maxrss: number;
+    ru_maxrss: BigInt;
     /**
      * Integral shared memory size.
      */
-    ru_ixrss: number;
+    ru_ixrss: BigInt;
     /**
      * Integral unshared data size.
      */
-    ru_idrss: number;
+    ru_idrss: BigInt;
     /**
      * Integral unshared stack size.
      */
-    ru_isrss: number;
+    ru_isrss: BigInt;
     /**
      * Page reclaims (soft page faults).
      */
-    ru_minflt: number;
+    ru_minflt: BigInt;
     /**
      * Page faults (hard page faults).
      */
-    ru_majflt: number;
+    ru_majflt: BigInt;
     /**
      * Swaps.
      */
-    ru_nswap: number;
+    ru_nswap: BigInt;
     /**
      * Block input operations.
      */
-    ru_inblock: number;
+    ru_inblock: BigInt;
     /**
      * Block output operations.
      */
-    ru_oublock: number;
+    ru_oublock: BigInt;
     /**
      * IPC messages sent.
      */
-    ru_msgsnd: number;
+    ru_msgsnd: BigInt;
     /**
      * IPC messages received.
      */
-    ru_msgrcv: number;
+    ru_msgrcv: BigInt;
     /**
      * Signals received.
      */
-    ru_nsignals: number;
+    ru_nsignals: BigInt;
     /**
      * Voluntary context switches.
      */
-    ru_nvcsw: number;
+    ru_nvcsw: BigInt;
     /**
      * Involuntary context switches.
      */
-    ru_nivcsw: number;
+    ru_nivcsw: BigInt;
 };
 export declare type WorkerDump = {
     pid: number;

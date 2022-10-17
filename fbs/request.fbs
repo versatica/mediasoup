@@ -6,6 +6,7 @@ namespace FBS.Request;
 enum Method: uint8 {
   WORKER_CLOSE = 0,
   WORKER_DUMP,
+  WORKER_GET_RESOURCE_USAGE,
   TRANSPORT_CONSUME
 }
 

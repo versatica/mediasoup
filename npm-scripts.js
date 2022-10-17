@@ -85,6 +85,14 @@ switch (task)
 		break;
 	}
 
+	case 'flatc':
+	{
+		execute('npm run flatc:node');
+		execute('npm run flatc:worker');
+
+		break;
+	}
+
 	case 'flatc:node':
 	{
 		const flatc = 'worker/subprojects/flatbuffers-2.0.6/builddir/flatc';
@@ -93,6 +101,7 @@ switch (task)
 		const command = `${flatc} --ts ${options} -o node/src/fbs `;
 
 		execute(`for file in fbs/*; do ${command} \$\{file\}; done`);
+		execute('npm run typescript:build');
 
 		break;
 	}
@@ -104,6 +113,7 @@ switch (task)
 		const command = `${flatc} --cpp --cpp-field-case-style lower --reflect-names --scoped-enums -o worker/include/FBS/ `;
 
 		execute(`for file in fbs/*; do ${command} \$\{file\}; done`);
+		execute('npm run worker:build');
 
 		break;
 	}

@@ -75,9 +75,10 @@ namespace Channel
 	// clang-format off
 	absl::flat_hash_map<FBS::Request::Method, const char*> ChannelRequest::method2String =
 	{
-		{ FBS::Request::Method::WORKER_CLOSE,      "worker.close"      },
-		{ FBS::Request::Method::WORKER_DUMP,       "worker.dump"       },
-		{ FBS::Request::Method::TRANSPORT_CONSUME, "transport.consume" },
+		{ FBS::Request::Method::WORKER_CLOSE,              "worker.close"            },
+		{ FBS::Request::Method::WORKER_DUMP,               "worker.dump"             },
+		{ FBS::Request::Method::WORKER_GET_RESOURCE_USAGE, "worker.getResourceUsage" },
+		{ FBS::Request::Method::TRANSPORT_CONSUME,         "transport.consume"       },
 	};
 
 	// clang-format on
@@ -153,8 +154,8 @@ namespace Channel
 		MS_TRACE();
 
 		// TMP.
-		// auto s = flatbuffers::FlatBufferToString(msg, FBS::Request::RequestTypeTable());
-		// MS_ERROR("%s", s.c_str());
+		auto s = flatbuffers::FlatBufferToString(msg, FBS::Request::RequestTypeTable());
+		MS_ERROR("%s", s.c_str());
 
 		this->_data = FBS::Request::GetRequest(msg);
 

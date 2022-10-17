@@ -22,24 +22,27 @@ inline const flatbuffers::TypeTable *RequestTypeTable();
 enum class Method : uint8_t {
   WORKER_CLOSE = 0,
   WORKER_DUMP = 1,
-  TRANSPORT_CONSUME = 2,
+  WORKER_GET_RESOURCE_USAGE = 2,
+  TRANSPORT_CONSUME = 3,
   MIN = WORKER_CLOSE,
   MAX = TRANSPORT_CONSUME
 };
 
-inline const Method (&EnumValuesMethod())[3] {
+inline const Method (&EnumValuesMethod())[4] {
   static const Method values[] = {
     Method::WORKER_CLOSE,
     Method::WORKER_DUMP,
+    Method::WORKER_GET_RESOURCE_USAGE,
     Method::TRANSPORT_CONSUME
   };
   return values;
 }
 
 inline const char * const *EnumNamesMethod() {
-  static const char * const names[4] = {
+  static const char * const names[5] = {
     "WORKER_CLOSE",
     "WORKER_DUMP",
+    "WORKER_GET_RESOURCE_USAGE",
     "TRANSPORT_CONSUME",
     nullptr
   };
@@ -233,6 +236,7 @@ inline const flatbuffers::TypeTable *MethodTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_UCHAR, 0, 0 },
     { flatbuffers::ET_UCHAR, 0, 0 },
+    { flatbuffers::ET_UCHAR, 0, 0 },
     { flatbuffers::ET_UCHAR, 0, 0 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
@@ -241,10 +245,11 @@ inline const flatbuffers::TypeTable *MethodTypeTable() {
   static const char * const names[] = {
     "WORKER_CLOSE",
     "WORKER_DUMP",
+    "WORKER_GET_RESOURCE_USAGE",
     "TRANSPORT_CONSUME"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_ENUM, 3, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_ENUM, 4, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

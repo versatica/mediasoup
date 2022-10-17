@@ -2,6 +2,7 @@ import * as flatbuffers from 'flatbuffers';
 import { Body } from '../../f-b-s/response/body';
 import { ConsumeResponseT } from '../../f-b-s/transport/consume-response';
 import { DumpResponseT } from '../../f-b-s/worker/dump-response';
+import { ResourceUsageT } from '../../f-b-s/worker/resource-usage';
 export declare class Response {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
@@ -28,8 +29,8 @@ export declare class ResponseT {
     id: number;
     accepted: boolean;
     bodyType: Body;
-    body: ConsumeResponseT | DumpResponseT | null;
-    constructor(id?: number, accepted?: boolean, bodyType?: Body, body?: ConsumeResponseT | DumpResponseT | null);
+    body: ConsumeResponseT | DumpResponseT | ResourceUsageT | null;
+    constructor(id?: number, accepted?: boolean, bodyType?: Body, body?: ConsumeResponseT | DumpResponseT | ResourceUsageT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=response.d.ts.map

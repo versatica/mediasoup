@@ -18,11 +18,16 @@ struct ChannelMessageHandlersBuilder;
 struct DumpResponse;
 struct DumpResponseBuilder;
 
+struct ResourceUsage;
+struct ResourceUsageBuilder;
+
 inline const flatbuffers::TypeTable *DumpRequestTypeTable();
 
 inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable();
 
 inline const flatbuffers::TypeTable *DumpResponseTypeTable();
+
+inline const flatbuffers::TypeTable *ResourceUsageTypeTable();
 
 struct DumpRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef DumpRequestBuilder Builder;
@@ -236,6 +241,200 @@ inline flatbuffers::Offset<DumpResponse> CreateDumpResponseDirect(
       channelMessageHandlers);
 }
 
+struct ResourceUsage FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef ResourceUsageBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return ResourceUsageTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_RUUTIME = 4,
+    VT_RUSTIME = 6,
+    VT_RUMAXRSS = 8,
+    VT_RUIXRSS = 10,
+    VT_RUIDRSS = 12,
+    VT_RUISRSS = 14,
+    VT_RUMINFLT = 16,
+    VT_RUMAJFLT = 18,
+    VT_RUNSWAP = 20,
+    VT_RUINBLOCK = 22,
+    VT_RUOUBLOCK = 24,
+    VT_RUMSGSND = 26,
+    VT_RUMSGRCV = 28,
+    VT_RUNSIGNALS = 30,
+    VT_RUNVCSW = 32,
+    VT_RUNIVCSW = 34
+  };
+  uint64_t ruUtime() const {
+    return GetField<uint64_t>(VT_RUUTIME, 0);
+  }
+  uint64_t ruStime() const {
+    return GetField<uint64_t>(VT_RUSTIME, 0);
+  }
+  uint64_t ruMaxrss() const {
+    return GetField<uint64_t>(VT_RUMAXRSS, 0);
+  }
+  uint64_t ruIxrss() const {
+    return GetField<uint64_t>(VT_RUIXRSS, 0);
+  }
+  uint64_t ruIdrss() const {
+    return GetField<uint64_t>(VT_RUIDRSS, 0);
+  }
+  uint64_t ruIsrss() const {
+    return GetField<uint64_t>(VT_RUISRSS, 0);
+  }
+  uint64_t ruMinflt() const {
+    return GetField<uint64_t>(VT_RUMINFLT, 0);
+  }
+  uint64_t ruMajflt() const {
+    return GetField<uint64_t>(VT_RUMAJFLT, 0);
+  }
+  uint64_t ruNswap() const {
+    return GetField<uint64_t>(VT_RUNSWAP, 0);
+  }
+  uint64_t ruInblock() const {
+    return GetField<uint64_t>(VT_RUINBLOCK, 0);
+  }
+  uint64_t ruOublock() const {
+    return GetField<uint64_t>(VT_RUOUBLOCK, 0);
+  }
+  uint64_t ruMsgsnd() const {
+    return GetField<uint64_t>(VT_RUMSGSND, 0);
+  }
+  uint64_t ruMsgrcv() const {
+    return GetField<uint64_t>(VT_RUMSGRCV, 0);
+  }
+  uint64_t ruNsignals() const {
+    return GetField<uint64_t>(VT_RUNSIGNALS, 0);
+  }
+  uint64_t ruNvcsw() const {
+    return GetField<uint64_t>(VT_RUNVCSW, 0);
+  }
+  uint64_t ruNivcsw() const {
+    return GetField<uint64_t>(VT_RUNIVCSW, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint64_t>(verifier, VT_RUUTIME, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUSTIME, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUMAXRSS, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUIXRSS, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUIDRSS, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUISRSS, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUMINFLT, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUMAJFLT, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUNSWAP, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUINBLOCK, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUOUBLOCK, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUMSGSND, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUMSGRCV, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUNSIGNALS, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUNVCSW, 8) &&
+           VerifyField<uint64_t>(verifier, VT_RUNIVCSW, 8) &&
+           verifier.EndTable();
+  }
+};
+
+struct ResourceUsageBuilder {
+  typedef ResourceUsage Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_ruUtime(uint64_t ruUtime) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUUTIME, ruUtime, 0);
+  }
+  void add_ruStime(uint64_t ruStime) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUSTIME, ruStime, 0);
+  }
+  void add_ruMaxrss(uint64_t ruMaxrss) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUMAXRSS, ruMaxrss, 0);
+  }
+  void add_ruIxrss(uint64_t ruIxrss) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUIXRSS, ruIxrss, 0);
+  }
+  void add_ruIdrss(uint64_t ruIdrss) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUIDRSS, ruIdrss, 0);
+  }
+  void add_ruIsrss(uint64_t ruIsrss) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUISRSS, ruIsrss, 0);
+  }
+  void add_ruMinflt(uint64_t ruMinflt) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUMINFLT, ruMinflt, 0);
+  }
+  void add_ruMajflt(uint64_t ruMajflt) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUMAJFLT, ruMajflt, 0);
+  }
+  void add_ruNswap(uint64_t ruNswap) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUNSWAP, ruNswap, 0);
+  }
+  void add_ruInblock(uint64_t ruInblock) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUINBLOCK, ruInblock, 0);
+  }
+  void add_ruOublock(uint64_t ruOublock) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUOUBLOCK, ruOublock, 0);
+  }
+  void add_ruMsgsnd(uint64_t ruMsgsnd) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUMSGSND, ruMsgsnd, 0);
+  }
+  void add_ruMsgrcv(uint64_t ruMsgrcv) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUMSGRCV, ruMsgrcv, 0);
+  }
+  void add_ruNsignals(uint64_t ruNsignals) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUNSIGNALS, ruNsignals, 0);
+  }
+  void add_ruNvcsw(uint64_t ruNvcsw) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUNVCSW, ruNvcsw, 0);
+  }
+  void add_ruNivcsw(uint64_t ruNivcsw) {
+    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUNIVCSW, ruNivcsw, 0);
+  }
+  explicit ResourceUsageBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<ResourceUsage> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<ResourceUsage>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<ResourceUsage> CreateResourceUsage(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint64_t ruUtime = 0,
+    uint64_t ruStime = 0,
+    uint64_t ruMaxrss = 0,
+    uint64_t ruIxrss = 0,
+    uint64_t ruIdrss = 0,
+    uint64_t ruIsrss = 0,
+    uint64_t ruMinflt = 0,
+    uint64_t ruMajflt = 0,
+    uint64_t ruNswap = 0,
+    uint64_t ruInblock = 0,
+    uint64_t ruOublock = 0,
+    uint64_t ruMsgsnd = 0,
+    uint64_t ruMsgrcv = 0,
+    uint64_t ruNsignals = 0,
+    uint64_t ruNvcsw = 0,
+    uint64_t ruNivcsw = 0) {
+  ResourceUsageBuilder builder_(_fbb);
+  builder_.add_ruNivcsw(ruNivcsw);
+  builder_.add_ruNvcsw(ruNvcsw);
+  builder_.add_ruNsignals(ruNsignals);
+  builder_.add_ruMsgrcv(ruMsgrcv);
+  builder_.add_ruMsgsnd(ruMsgsnd);
+  builder_.add_ruOublock(ruOublock);
+  builder_.add_ruInblock(ruInblock);
+  builder_.add_ruNswap(ruNswap);
+  builder_.add_ruMajflt(ruMajflt);
+  builder_.add_ruMinflt(ruMinflt);
+  builder_.add_ruIsrss(ruIsrss);
+  builder_.add_ruIdrss(ruIdrss);
+  builder_.add_ruIxrss(ruIxrss);
+  builder_.add_ruMaxrss(ruMaxrss);
+  builder_.add_ruStime(ruStime);
+  builder_.add_ruUtime(ruUtime);
+  return builder_.Finish();
+}
+
 inline const flatbuffers::TypeTable *DumpRequestTypeTable() {
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 0, nullptr, nullptr, nullptr, nullptr, nullptr
@@ -278,6 +477,49 @@ inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 4, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *ResourceUsageTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_ULONG, 0, -1 }
+  };
+  static const char * const names[] = {
+    "ruUtime",
+    "ruStime",
+    "ruMaxrss",
+    "ruIxrss",
+    "ruIdrss",
+    "ruIsrss",
+    "ruMinflt",
+    "ruMajflt",
+    "ruNswap",
+    "ruInblock",
+    "ruOublock",
+    "ruMsgsnd",
+    "ruMsgrcv",
+    "ruNsignals",
+    "ruNvcsw",
+    "ruNivcsw"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 16, type_codes, nullptr, nullptr, nullptr, names
   };
   return &tt;
 }

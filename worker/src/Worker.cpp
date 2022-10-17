@@ -223,6 +223,66 @@ void Worker::FillJsonResourceUsage(json& jsonObject) const
 	jsonObject["ru_nivcsw"] = uvRusage.ru_nivcsw;
 }
 
+flatbuffers::Offset<FBS::Worker::ResourceUsage> Worker::FillBufferResourceUsage(flatbuffers::FlatBufferBuilder& builder) const
+{
+	MS_TRACE();
+
+	int err;
+	uv_rusage_t uvRusage; // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+	err = uv_getrusage(std::addressof(uvRusage));
+
+	if (err != 0)
+		MS_THROW_ERROR("uv_getrusagerequest() failed: %s", uv_strerror(err));
+
+
+	return FBS::Worker::CreateResourceUsage(builder,
+			// Add ru_utime (uv_timeval_t, user CPU time used, converted to ms).
+			(uvRusage.ru_utime.tv_sec * static_cast<uint64_t>(1000)) + (uvRusage.ru_utime.tv_usec / 1000),
+			// Add ru_stime (uv_timeval_t, system CPU time used, converted to ms).
+			(uvRusage.ru_stime.tv_sec * static_cast<uint64_t>(1000)) + (uvRusage.ru_stime.tv_usec / 1000),
+			// Add ru_maxrss (uint64_t, maximum resident set size).
+			uvRusage.ru_maxrss,
+
+			// Add ru_ixrss (uint64_t, integral shared memory size).
+			uvRusage.ru_ixrss,
+
+			// Add ru_idrss (uint64_t, integral unshared data size).
+			uvRusage.ru_idrss,
+
+			// Add ru_isrss (uint64_t, integral unshared stack size).
+			uvRusage.ru_isrss,
+
+			// Add ru_minflt (uint64_t, page reclaims, soft page faults).
+			uvRusage.ru_minflt,
+
+			// Add ru_majflt (uint64_t, page faults, hard page faults).
+			uvRusage.ru_majflt,
+
+			// Add ru_nswap (uint64_t, swaps).
+			uvRusage.ru_nswap,
+
+			// Add ru_inblock (uint64_t, block input operations).
+			uvRusage.ru_inblock,
+
+			// Add ru_oublock (uint64_t, block output operations).
+			uvRusage.ru_oublock,
+
+			// Add ru_msgsnd (uint64_t, IPC messages sent).
+			uvRusage.ru_msgsnd,
+
+			// Add ru_msgrcv (uint64_t, IPC messages received).
+			uvRusage.ru_msgrcv,
+
+			// Add ru_nsignals (uint64_t, signals received).
+			uvRusage.ru_nsignals,
+			// Add ru_nvcsw (uint64_t, voluntary context switches).
+			uvRusage.ru_nvcsw,
+			// Add ru_nivcsw (uint64_t, involuntary context switches).
+			uvRusage.ru_nivcsw
+	);
+}
+
 void Worker::SetNewWebRtcServerIdFromData(json& data, std::string& webRtcServerId) const
 {
 	MS_TRACE();
@@ -479,6 +539,17 @@ binary:
 			auto dump = FillBuffer(builder);
 
 			request->Accept(builder, FBS::Response::Body::FBS_Worker_DumpResponse, dump);
+
+			break;
+		}
+
+		case FBS::Request::Method::WORKER_GET_RESOURCE_USAGE:
+		{
+			auto& builder = Channel::ChannelRequest::bufferBuilder;
+
+			auto resourceUsageOffset = FillBufferResourceUsage(builder);
+
+			request->Accept(builder, FBS::Response::Body::FBS_Worker_ResourceUsage, resourceUsageOffset);
 
 			break;
 		}

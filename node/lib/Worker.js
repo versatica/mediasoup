@@ -276,7 +276,32 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async getResourceUsage() {
         logger.debug('getResourceUsage()');
-        return this.#channel.request('worker.getResourceUsage');
+        const response = await this.#channel.requestBinary(request_1.Method.WORKER_GET_RESOURCE_USAGE);
+        /* Decode the response. */
+        const resourceUsage = new response_1.ResourceUsage();
+        response.body(resourceUsage);
+        // logger.error(resourceUsage.unpack());
+        const ru = resourceUsage.unpack();
+        /* eslint-disable camelcase */
+        return {
+            ru_utime: ru.ruUtime,
+            ru_stime: ru.ruStime,
+            ru_maxrss: ru.ruMaxrss,
+            ru_ixrss: ru.ruIxrss,
+            ru_idrss: ru.ruIdrss,
+            ru_isrss: ru.ruIsrss,
+            ru_minflt: ru.ruMinflt,
+            ru_majflt: ru.ruMajflt,
+            ru_nswap: ru.ruNswap,
+            ru_inblock: ru.ruInblock,
+            ru_oublock: ru.ruOublock,
+            ru_msgsnd: ru.ruMsgsnd,
+            ru_msgrcv: ru.ruMsgrcv,
+            ru_nsignals: ru.ruNsignals,
+            ru_nvcsw: ru.ruNvcsw,
+            ru_nivcsw: ru.ruNivcsw
+        };
+        /* eslint-enable camelcase */
     }
     /**
      * Update settings.

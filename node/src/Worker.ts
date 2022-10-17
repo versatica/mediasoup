@@ -10,7 +10,7 @@ import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { Method } from './fbs/request';
-import { DumpResponse } from './fbs/response';
+import { DumpResponse, ResourceUsage } from './fbs/response';
 import { ChannelMessageHandlers } from './fbs/worker';
 import { getArray } from './fbs/utils';
 
@@ -89,82 +89,82 @@ export type WorkerResourceUsage =
 	/**
 	 * User CPU time used (in ms).
 	 */
-	ru_utime: number;
+	ru_utime: BigInt;
 
 	/**
 	 * System CPU time used (in ms).
 	 */
-	ru_stime: number;
+	ru_stime: BigInt;
 
 	/**
 	 * Maximum resident set size.
 	 */
-	ru_maxrss: number;
+	ru_maxrss: BigInt;
 
 	/**
 	 * Integral shared memory size.
 	 */
-	ru_ixrss: number;
+	ru_ixrss: BigInt;
 
 	/**
 	 * Integral unshared data size.
 	 */
-	ru_idrss: number;
+	ru_idrss: BigInt;
 
 	/**
 	 * Integral unshared stack size.
 	 */
-	ru_isrss: number;
+	ru_isrss: BigInt;
 
 	/**
 	 * Page reclaims (soft page faults).
 	 */
-	ru_minflt: number;
+	ru_minflt: BigInt;
 
 	/**
 	 * Page faults (hard page faults).
 	 */
-	ru_majflt: number;
+	ru_majflt: BigInt;
 
 	/**
 	 * Swaps.
 	 */
-	ru_nswap: number;
+	ru_nswap: BigInt;
 
 	/**
 	 * Block input operations.
 	 */
-	ru_inblock: number;
+	ru_inblock: BigInt;
 
 	/**
 	 * Block output operations.
 	 */
-	ru_oublock: number;
+	ru_oublock: BigInt;
 
 	/**
 	 * IPC messages sent.
 	 */
-	ru_msgsnd: number;
+	ru_msgsnd: BigInt;
 
 	/**
 	 * IPC messages received.
 	 */
-	ru_msgrcv: number;
+	ru_msgrcv: BigInt;
 
 	/**
 	 * Signals received.
 	 */
-	ru_nsignals: number;
+	ru_nsignals: BigInt;
 
 	/**
 	 * Voluntary context switches.
 	 */
-	ru_nvcsw: number;
+	ru_nvcsw: BigInt;
 
 	/**
 	 * Involuntary context switches.
 	 */
-	ru_nivcsw: number;
+	ru_nivcsw: BigInt;
 
 	/* eslint-enable camelcase */
 };
@@ -586,7 +586,35 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	{
 		logger.debug('getResourceUsage()');
 
-		return this.#channel.request('worker.getResourceUsage');
+		const response = await this.#channel.requestBinary(Method.WORKER_GET_RESOURCE_USAGE);
+
+		/* Decode the response. */
+		const resourceUsage = new ResourceUsage();
+
+		response.body(resourceUsage);
+
+		const ru = resourceUsage.unpack();
+
+		/* eslint-disable camelcase */
+		return {
+			ru_utime    : ru.ruUtime,
+			ru_stime    : ru.ruStime,
+			ru_maxrss   : ru.ruMaxrss,
+			ru_ixrss    : ru.ruIxrss,
+			ru_idrss    : ru.ruIdrss,
+			ru_isrss    : ru.ruIsrss,
+			ru_minflt   : ru.ruMinflt,
+			ru_majflt   : ru.ruMajflt,
+			ru_nswap    : ru.ruNswap,
+			ru_inblock  : ru.ruInblock,
+			ru_oublock  : ru.ruOublock,
+			ru_msgsnd   : ru.ruMsgsnd,
+			ru_msgrcv   : ru.ruMsgrcv,
+			ru_nsignals : ru.ruNsignals,
+			ru_nvcsw    : ru.ruNvcsw,
+			ru_nivcsw   : ru.ruNivcsw
+		};
+		/* eslint-enable camelcase */
 	}
 
 	/**

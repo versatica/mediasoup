@@ -5,6 +5,7 @@ namespace FBS.Response;
 
 union Body {
   FBS.Worker.DumpResponse,
+  FBS.Worker.ResourceUsage,
   FBS.Transport.ConsumeResponse,
 }
 

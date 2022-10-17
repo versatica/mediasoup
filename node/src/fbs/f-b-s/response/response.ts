@@ -5,6 +5,7 @@ import * as flatbuffers from 'flatbuffers';
 import { Body, unionToBody, unionListToBody } from '../../f-b-s/response/body';
 import { ConsumeResponse, ConsumeResponseT } from '../../f-b-s/transport/consume-response';
 import { DumpResponse, DumpResponseT } from '../../f-b-s/worker/dump-response';
+import { ResourceUsage, ResourceUsageT } from '../../f-b-s/worker/resource-usage';
 
 
 export class Response {
@@ -118,7 +119,7 @@ constructor(
   public id: number = 0,
   public accepted: boolean = false,
   public bodyType: Body = Body.NONE,
-  public body: ConsumeResponseT|DumpResponseT|null = null
+  public body: ConsumeResponseT|DumpResponseT|ResourceUsageT|null = null
 ){}
 
 

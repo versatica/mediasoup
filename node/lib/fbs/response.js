@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DumpResponseT = exports.DumpResponse = exports.ConsumeResponseT = exports.ConsumeResponse = exports.ResponseT = exports.Response = exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
+exports.ResourceUsageT = exports.ResourceUsage = exports.DumpResponseT = exports.DumpResponse = exports.ConsumeResponseT = exports.ConsumeResponse = exports.ResponseT = exports.Response = exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
 var body_1 = require("./f-b-s/response/body");
 Object.defineProperty(exports, "Body", { enumerable: true, get: function () { return body_1.Body; } });
 Object.defineProperty(exports, "unionToBody", { enumerable: true, get: function () { return body_1.unionToBody; } });
@@ -14,3 +14,6 @@ Object.defineProperty(exports, "ConsumeResponseT", { enumerable: true, get: func
 var dump_response_1 = require("./f-b-s/worker/dump-response");
 Object.defineProperty(exports, "DumpResponse", { enumerable: true, get: function () { return dump_response_1.DumpResponse; } });
 Object.defineProperty(exports, "DumpResponseT", { enumerable: true, get: function () { return dump_response_1.DumpResponseT; } });
+var resource_usage_1 = require("./f-b-s/worker/resource-usage");
+Object.defineProperty(exports, "ResourceUsage", { enumerable: true, get: function () { return resource_usage_1.ResourceUsage; } });
+Object.defineProperty(exports, "ResourceUsageT", { enumerable: true, get: function () { return resource_usage_1.ResourceUsageT; } });

@@ -2,21 +2,24 @@
 
 import { ConsumeResponse, ConsumeResponseT } from '../../f-b-s/transport/consume-response';
 import { DumpResponse, DumpResponseT } from '../../f-b-s/worker/dump-response';
+import { ResourceUsage, ResourceUsageT } from '../../f-b-s/worker/resource-usage';
 
 
 export enum Body{
   NONE = 0,
   FBS_Worker_DumpResponse = 1,
-  FBS_Transport_ConsumeResponse = 2
+  FBS_Worker_ResourceUsage = 2,
+  FBS_Transport_ConsumeResponse = 3
 }
 
 export function unionToBody(
   type: Body,
-  accessor: (obj:ConsumeResponse|DumpResponse) => ConsumeResponse|DumpResponse|null
-): ConsumeResponse|DumpResponse|null {
+  accessor: (obj:ConsumeResponse|DumpResponse|ResourceUsage) => ConsumeResponse|DumpResponse|ResourceUsage|null
+): ConsumeResponse|DumpResponse|ResourceUsage|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_DumpResponse': return accessor(new DumpResponse())! as DumpResponse;
+    case 'FBS_Worker_ResourceUsage': return accessor(new ResourceUsage())! as ResourceUsage;
     case 'FBS_Transport_ConsumeResponse': return accessor(new ConsumeResponse())! as ConsumeResponse;
     default: return null;
   }
@@ -24,12 +27,13 @@ export function unionToBody(
 
 export function unionListToBody(
   type: Body, 
-  accessor: (index: number, obj:ConsumeResponse|DumpResponse) => ConsumeResponse|DumpResponse|null, 
+  accessor: (index: number, obj:ConsumeResponse|DumpResponse|ResourceUsage) => ConsumeResponse|DumpResponse|ResourceUsage|null, 
   index: number
-): ConsumeResponse|DumpResponse|null {
+): ConsumeResponse|DumpResponse|ResourceUsage|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_DumpResponse': return accessor(index, new DumpResponse())! as DumpResponse;
+    case 'FBS_Worker_ResourceUsage': return accessor(index, new ResourceUsage())! as ResourceUsage;
     case 'FBS_Transport_ConsumeResponse': return accessor(index, new ConsumeResponse())! as ConsumeResponse;
     default: return null;
   }
