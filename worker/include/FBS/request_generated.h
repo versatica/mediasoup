@@ -7,7 +7,6 @@
 #include "flatbuffers/flatbuffers.h"
 
 #include "rtpParameters_generated.h"
-#include "consumer_generated.h"
 #include "transport_generated.h"
 #include "worker_generated.h"
 
@@ -19,19 +18,19 @@ struct RequestBuilder;
 
 inline const flatbuffers::TypeTable *RequestTypeTable();
 
-enum Body : uint8_t {
-  Body_NONE = 0,
-  Body_FBS_Worker_DumpRequest = 1,
-  Body_FBS_Transport_ConsumeRequest = 2,
-  Body_MIN = Body_NONE,
-  Body_MAX = Body_FBS_Transport_ConsumeRequest
+enum class Body : uint8_t {
+  NONE = 0,
+  FBS_Worker_DumpRequest = 1,
+  FBS_Transport_ConsumeRequest = 2,
+  MIN = NONE,
+  MAX = FBS_Transport_ConsumeRequest
 };
 
 inline const Body (&EnumValuesBody())[3] {
   static const Body values[] = {
-    Body_NONE,
-    Body_FBS_Worker_DumpRequest,
-    Body_FBS_Transport_ConsumeRequest
+    Body::NONE,
+    Body::FBS_Worker_DumpRequest,
+    Body::FBS_Transport_ConsumeRequest
   };
   return values;
 }
@@ -47,25 +46,25 @@ inline const char * const *EnumNamesBody() {
 }
 
 inline const char *EnumNameBody(Body e) {
-  if (flatbuffers::IsOutRange(e, Body_NONE, Body_FBS_Transport_ConsumeRequest)) return "";
+  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Transport_ConsumeRequest)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesBody()[index];
 }
 
 template<typename T> struct BodyTraits {
-  static const Body enum_value = Body_NONE;
+  static const Body enum_value = Body::NONE;
 };
 
 template<> struct BodyTraits<FBS::Worker::DumpRequest> {
-  static const Body enum_value = Body_FBS_Worker_DumpRequest;
+  static const Body enum_value = Body::FBS_Worker_DumpRequest;
 };
 
 template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
-  static const Body enum_value = Body_FBS_Transport_ConsumeRequest;
+  static const Body enum_value = Body::FBS_Transport_ConsumeRequest;
 };
 
 bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body type);
-bool VerifyBodyVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types);
+bool VerifyBodyVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<Body> *types);
 
 struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef RequestBuilder Builder;
@@ -92,10 +91,10 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   template<typename T> const T *body_as() const;
   const FBS::Worker::DumpRequest *body_as_FBS_Worker_DumpRequest() const {
-    return body_type() == FBS::Request::Body_FBS_Worker_DumpRequest ? static_cast<const FBS::Worker::DumpRequest *>(body()) : nullptr;
+    return body_type() == FBS::Request::Body::FBS_Worker_DumpRequest ? static_cast<const FBS::Worker::DumpRequest *>(body()) : nullptr;
   }
   const FBS::Transport::ConsumeRequest *body_as_FBS_Transport_ConsumeRequest() const {
-    return body_type() == FBS::Request::Body_FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
+    return body_type() == FBS::Request::Body::FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -148,7 +147,7 @@ inline flatbuffers::Offset<Request> CreateRequest(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t id = 0,
     flatbuffers::Offset<flatbuffers::String> handlerId = 0,
-    FBS::Request::Body body_type = FBS::Request::Body_NONE,
+    FBS::Request::Body body_type = FBS::Request::Body::NONE,
     flatbuffers::Offset<void> body = 0) {
   RequestBuilder builder_(_fbb);
   builder_.add_body(body);
@@ -162,7 +161,7 @@ inline flatbuffers::Offset<Request> CreateRequestDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t id = 0,
     const char *handlerId = nullptr,
-    FBS::Request::Body body_type = FBS::Request::Body_NONE,
+    FBS::Request::Body body_type = FBS::Request::Body::NONE,
     flatbuffers::Offset<void> body = 0) {
   auto handlerId__ = handlerId ? _fbb.CreateString(handlerId) : 0;
   return FBS::Request::CreateRequest(
@@ -175,14 +174,14 @@ inline flatbuffers::Offset<Request> CreateRequestDirect(
 
 inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body type) {
   switch (type) {
-    case Body_NONE: {
+    case Body::NONE: {
       return true;
     }
-    case Body_FBS_Worker_DumpRequest: {
+    case Body::FBS_Worker_DumpRequest: {
       auto ptr = reinterpret_cast<const FBS::Worker::DumpRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
-    case Body_FBS_Transport_ConsumeRequest: {
+    case Body::FBS_Transport_ConsumeRequest: {
       auto ptr = reinterpret_cast<const FBS::Transport::ConsumeRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
@@ -190,7 +189,7 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
   }
 }
 
-inline bool VerifyBodyVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types) {
+inline bool VerifyBodyVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<Body> *types) {
   if (!values || !types) return !values && !types;
   if (values->size() != types->size()) return false;
   for (flatbuffers::uoffset_t i = 0; i < values->size(); ++i) {

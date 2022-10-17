@@ -322,7 +322,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			auto dump = FillBuffer(builder);
 
-			request->Accept(builder, FBS::Response::Body_FBS_Worker_DumpResponse, dump);
+			request->Accept(builder, FBS::Response::Body::FBS_Worker_DumpResponse, dump);
 
 			break;
 		}
@@ -480,18 +480,18 @@ binary:
 
 	switch (request->_data->body_type())
 	{
-		case FBS::Request::Body::Body_FBS_Worker_DumpRequest:
+		case FBS::Request::Body::FBS_Worker_DumpRequest:
 		{
 			auto& builder = Channel::ChannelRequest::bufferBuilder;
 
 			auto dump = FillBuffer(builder);
 
-			request->Accept(builder, FBS::Response::Body_FBS_Worker_DumpResponse, dump);
+			request->Accept(builder, FBS::Response::Body::FBS_Worker_DumpResponse, dump);
 
 			break;
 		}
 
-		case FBS::Request::Body::Body_FBS_Transport_ConsumeRequest:
+		case FBS::Request::Body::FBS_Transport_ConsumeRequest:
 		{
 			try
 			{

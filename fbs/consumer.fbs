@@ -1,9 +1,9 @@
 
 namespace FBS.Consumer;
 
-// TODO: Move this into common.fbs.
-
-struct ConsumerLayers {
+table ConsumerLayers {
   spatial_layer:uint8;
   temporal_layer:uint8;
 }
+
+root_type ConsumerLayers;

@@ -127,35 +127,35 @@ namespace RTC
 
 			switch (parameter->value_type())
 			{
-				case FBS::RtpParameters::Value::Value_Boolean:
+				case FBS::RtpParameters::Value::Boolean:
 				{
 					this->mapKeyValues.emplace(key, Value((parameter->value_as_Boolean()->value() == 0) ? false : true));
 
 					break;
 				}
 
-				case FBS::RtpParameters::Value::Value_Integer:
+				case FBS::RtpParameters::Value::Integer:
 				{
 					this->mapKeyValues.emplace(key, Value(parameter->value_as_Integer()->value()));
 
 					break;
 				}
 
-				case FBS::RtpParameters::Value::Value_Double:
+				case FBS::RtpParameters::Value::Double:
 				{
 					this->mapKeyValues.emplace(key, Value(parameter->value_as_Double()->value()));
 
 					break;
 				}
 
-				case FBS::RtpParameters::Value::Value_String:
+				case FBS::RtpParameters::Value::String:
 				{
 					this->mapKeyValues.emplace(key, Value(parameter->value_as_String()->value()));
 
 					break;
 				}
 
-				case FBS::RtpParameters::Value::Value_IntegerArray:
+				case FBS::RtpParameters::Value::IntegerArray:
 				{
 					this->mapKeyValues.emplace(key, Value(parameter->value_as_IntegerArray()->value()));
 

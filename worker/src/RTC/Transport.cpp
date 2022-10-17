@@ -1206,7 +1206,7 @@ binary:
 
 		switch (request->_data->body_type())
 		{
-			case FBS::Request::Body::Body_FBS_Transport_ConsumeRequest:
+			case FBS::Request::Body::FBS_Transport_ConsumeRequest:
 				{
 					auto body = request->_data->body_as<FBS::Transport::ConsumeRequest>();
 
@@ -1296,7 +1296,7 @@ binary:
 					// TODO: Update 10 by real scores.
 					auto responseOffset = FBS::Transport::CreateConsumeResponse(request->GetBufferBuilder(), consumer->IsPaused(), consumer->IsProducerPaused(), 10);
 
-					request->Accept(request->GetBufferBuilder(), FBS::Response::Body_FBS_Transport_ConsumeResponse, responseOffset);
+					request->Accept(request->GetBufferBuilder(), FBS::Response::Body::FBS_Transport_ConsumeResponse, responseOffset);
 					// TODO.
 					/*
 					consumer->FillJsonScore(data["score"]);

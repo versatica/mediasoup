@@ -74,19 +74,19 @@ inline const flatbuffers::TypeTable *RtcpParametersTypeTable();
 
 inline const flatbuffers::TypeTable *RtpParametersTypeTable();
 
-enum MediaKind : uint8_t {
-  MediaKind_ALL = 0,
-  MediaKind_AUDIO = 1,
-  MediaKind_VIDEO = 2,
-  MediaKind_MIN = MediaKind_ALL,
-  MediaKind_MAX = MediaKind_VIDEO
+enum class MediaKind : uint8_t {
+  ALL = 0,
+  AUDIO = 1,
+  VIDEO = 2,
+  MIN = ALL,
+  MAX = VIDEO
 };
 
 inline const MediaKind (&EnumValuesMediaKind())[3] {
   static const MediaKind values[] = {
-    MediaKind_ALL,
-    MediaKind_AUDIO,
-    MediaKind_VIDEO
+    MediaKind::ALL,
+    MediaKind::AUDIO,
+    MediaKind::VIDEO
   };
   return values;
 }
@@ -102,28 +102,28 @@ inline const char * const *EnumNamesMediaKind() {
 }
 
 inline const char *EnumNameMediaKind(MediaKind e) {
-  if (flatbuffers::IsOutRange(e, MediaKind_ALL, MediaKind_VIDEO)) return "";
+  if (flatbuffers::IsOutRange(e, MediaKind::ALL, MediaKind::VIDEO)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesMediaKind()[index];
 }
 
-enum Type : uint8_t {
-  Type_NONE = 0,
-  Type_SIMPLE = 1,
-  Type_SIMULCAST = 2,
-  Type_SVC = 3,
-  Type_PIPE = 4,
-  Type_MIN = Type_NONE,
-  Type_MAX = Type_PIPE
+enum class Type : uint8_t {
+  NONE = 0,
+  SIMPLE = 1,
+  SIMULCAST = 2,
+  SVC = 3,
+  PIPE = 4,
+  MIN = NONE,
+  MAX = PIPE
 };
 
 inline const Type (&EnumValuesType())[5] {
   static const Type values[] = {
-    Type_NONE,
-    Type_SIMPLE,
-    Type_SIMULCAST,
-    Type_SVC,
-    Type_PIPE
+    Type::NONE,
+    Type::SIMPLE,
+    Type::SIMULCAST,
+    Type::SVC,
+    Type::PIPE
   };
   return values;
 }
@@ -141,30 +141,30 @@ inline const char * const *EnumNamesType() {
 }
 
 inline const char *EnumNameType(Type e) {
-  if (flatbuffers::IsOutRange(e, Type_NONE, Type_PIPE)) return "";
+  if (flatbuffers::IsOutRange(e, Type::NONE, Type::PIPE)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesType()[index];
 }
 
-enum Value : uint8_t {
-  Value_NONE = 0,
-  Value_Boolean = 1,
-  Value_Integer = 2,
-  Value_Double = 3,
-  Value_String = 4,
-  Value_IntegerArray = 5,
-  Value_MIN = Value_NONE,
-  Value_MAX = Value_IntegerArray
+enum class Value : uint8_t {
+  NONE = 0,
+  Boolean = 1,
+  Integer = 2,
+  Double = 3,
+  String = 4,
+  IntegerArray = 5,
+  MIN = NONE,
+  MAX = IntegerArray
 };
 
 inline const Value (&EnumValuesValue())[6] {
   static const Value values[] = {
-    Value_NONE,
-    Value_Boolean,
-    Value_Integer,
-    Value_Double,
-    Value_String,
-    Value_IntegerArray
+    Value::NONE,
+    Value::Boolean,
+    Value::Integer,
+    Value::Double,
+    Value::String,
+    Value::IntegerArray
   };
   return values;
 }
@@ -183,37 +183,37 @@ inline const char * const *EnumNamesValue() {
 }
 
 inline const char *EnumNameValue(Value e) {
-  if (flatbuffers::IsOutRange(e, Value_NONE, Value_IntegerArray)) return "";
+  if (flatbuffers::IsOutRange(e, Value::NONE, Value::IntegerArray)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesValue()[index];
 }
 
 template<typename T> struct ValueTraits {
-  static const Value enum_value = Value_NONE;
+  static const Value enum_value = Value::NONE;
 };
 
 template<> struct ValueTraits<FBS::RtpParameters::Boolean> {
-  static const Value enum_value = Value_Boolean;
+  static const Value enum_value = Value::Boolean;
 };
 
 template<> struct ValueTraits<FBS::RtpParameters::Integer> {
-  static const Value enum_value = Value_Integer;
+  static const Value enum_value = Value::Integer;
 };
 
 template<> struct ValueTraits<FBS::RtpParameters::Double> {
-  static const Value enum_value = Value_Double;
+  static const Value enum_value = Value::Double;
 };
 
 template<> struct ValueTraits<FBS::RtpParameters::String> {
-  static const Value enum_value = Value_String;
+  static const Value enum_value = Value::String;
 };
 
 template<> struct ValueTraits<FBS::RtpParameters::IntegerArray> {
-  static const Value enum_value = Value_IntegerArray;
+  static const Value enum_value = Value::IntegerArray;
 };
 
 bool VerifyValue(flatbuffers::Verifier &verifier, const void *obj, Value type);
-bool VerifyValueVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types);
+bool VerifyValueVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<Value> *types);
 
 struct Boolean FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef BooleanBuilder Builder;
@@ -476,19 +476,19 @@ struct Parameter FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   template<typename T> const T *value_as() const;
   const FBS::RtpParameters::Boolean *value_as_Boolean() const {
-    return value_type() == FBS::RtpParameters::Value_Boolean ? static_cast<const FBS::RtpParameters::Boolean *>(value()) : nullptr;
+    return value_type() == FBS::RtpParameters::Value::Boolean ? static_cast<const FBS::RtpParameters::Boolean *>(value()) : nullptr;
   }
   const FBS::RtpParameters::Integer *value_as_Integer() const {
-    return value_type() == FBS::RtpParameters::Value_Integer ? static_cast<const FBS::RtpParameters::Integer *>(value()) : nullptr;
+    return value_type() == FBS::RtpParameters::Value::Integer ? static_cast<const FBS::RtpParameters::Integer *>(value()) : nullptr;
   }
   const FBS::RtpParameters::Double *value_as_Double() const {
-    return value_type() == FBS::RtpParameters::Value_Double ? static_cast<const FBS::RtpParameters::Double *>(value()) : nullptr;
+    return value_type() == FBS::RtpParameters::Value::Double ? static_cast<const FBS::RtpParameters::Double *>(value()) : nullptr;
   }
   const FBS::RtpParameters::String *value_as_String() const {
-    return value_type() == FBS::RtpParameters::Value_String ? static_cast<const FBS::RtpParameters::String *>(value()) : nullptr;
+    return value_type() == FBS::RtpParameters::Value::String ? static_cast<const FBS::RtpParameters::String *>(value()) : nullptr;
   }
   const FBS::RtpParameters::IntegerArray *value_as_IntegerArray() const {
-    return value_type() == FBS::RtpParameters::Value_IntegerArray ? static_cast<const FBS::RtpParameters::IntegerArray *>(value()) : nullptr;
+    return value_type() == FBS::RtpParameters::Value::IntegerArray ? static_cast<const FBS::RtpParameters::IntegerArray *>(value()) : nullptr;
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -548,7 +548,7 @@ struct ParameterBuilder {
 inline flatbuffers::Offset<Parameter> CreateParameter(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> name = 0,
-    FBS::RtpParameters::Value value_type = FBS::RtpParameters::Value_NONE,
+    FBS::RtpParameters::Value value_type = FBS::RtpParameters::Value::NONE,
     flatbuffers::Offset<void> value = 0) {
   ParameterBuilder builder_(_fbb);
   builder_.add_value(value);
@@ -560,7 +560,7 @@ inline flatbuffers::Offset<Parameter> CreateParameter(
 inline flatbuffers::Offset<Parameter> CreateParameterDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *name = nullptr,
-    FBS::RtpParameters::Value value_type = FBS::RtpParameters::Value_NONE,
+    FBS::RtpParameters::Value value_type = FBS::RtpParameters::Value::NONE,
     flatbuffers::Offset<void> value = 0) {
   auto name__ = name ? _fbb.CreateString(name) : 0;
   return FBS::RtpParameters::CreateParameter(
@@ -1231,26 +1231,26 @@ inline flatbuffers::Offset<RtpParameters> CreateRtpParametersDirect(
 
 inline bool VerifyValue(flatbuffers::Verifier &verifier, const void *obj, Value type) {
   switch (type) {
-    case Value_NONE: {
+    case Value::NONE: {
       return true;
     }
-    case Value_Boolean: {
+    case Value::Boolean: {
       auto ptr = reinterpret_cast<const FBS::RtpParameters::Boolean *>(obj);
       return verifier.VerifyTable(ptr);
     }
-    case Value_Integer: {
+    case Value::Integer: {
       auto ptr = reinterpret_cast<const FBS::RtpParameters::Integer *>(obj);
       return verifier.VerifyTable(ptr);
     }
-    case Value_Double: {
+    case Value::Double: {
       auto ptr = reinterpret_cast<const FBS::RtpParameters::Double *>(obj);
       return verifier.VerifyTable(ptr);
     }
-    case Value_String: {
+    case Value::String: {
       auto ptr = reinterpret_cast<const FBS::RtpParameters::String *>(obj);
       return verifier.VerifyTable(ptr);
     }
-    case Value_IntegerArray: {
+    case Value::IntegerArray: {
       auto ptr = reinterpret_cast<const FBS::RtpParameters::IntegerArray *>(obj);
       return verifier.VerifyTable(ptr);
     }
@@ -1258,7 +1258,7 @@ inline bool VerifyValue(flatbuffers::Verifier &verifier, const void *obj, Value 
   }
 }
 
-inline bool VerifyValueVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types) {
+inline bool VerifyValueVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<Value> *types) {
   if (!values || !types) return !values && !types;
   if (values->size() != types->size()) return false;
   for (flatbuffers::uoffset_t i = 0; i < values->size(); ++i) {
