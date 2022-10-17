@@ -292,8 +292,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * Create a PipeTransport.
      */
-    async createPipeTransport({ listenIp, disableOriginCheck = false, port, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 268435456, sctpSendBufferSize = 268435456, enableRtx = false, enableSrtp = false, appData,
-     }) {
+    async createPipeTransport({ listenIp, disableOriginCheck = false, port, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 268435456, sctpSendBufferSize = 268435456, enableRtx = false, enableSrtp = false, appData, }) {
         logger.debug('createPipeTransport() listenIp:[%o] enableRtx:[%o] appData:[%o]', listenIp, enableRtx, appData);
         if (!listenIp)
             throw new TypeError('missing listenIp');

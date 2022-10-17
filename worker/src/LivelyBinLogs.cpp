@@ -30,7 +30,7 @@ constexpr uint8_t hexVal[256] = {
 };
 
 
-CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string callId, std::string obj, std::string producer)
+CallStatsRecord::CallStatsRecord(uint64_t type, uint32_t ssrc, std::string callId, std::string obj, std::string producer)
   : type(type), call_id(callId), object_id(obj), producer_id(producer) 
 {
   uint64_t ts = Utils::Time::currentStdEpochMs();
@@ -40,7 +40,7 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
 
   if (type) // consumer
   {
-    record.c.payload = payload;
+    record.c.ssrc = ssrc;
     std::memset(record.c.consumer_id, 0, UUID_BYTE_LEN);
     uuidToBytes(obj, record.c.consumer_id);
     
@@ -49,16 +49,16 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint8_t payload, std::string cal
 
     std::memset(record.c.samples, 0, sizeof(record.c.samples));
 
-    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): consumer start_tm=%" PRIu64 " payload=%" PRIu8 " callId=%s consumerId=%s producerId=%s", 
-      ts, payload, call_id.c_str(), object_id.c_str(), producer_id.c_str());
+    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): consumer start_tm=%" PRIu64 " ssrc=%" PRIu32 " callId=%s consumerId=%s producerId=%s", 
+      ts, ssrc, call_id.c_str(), object_id.c_str(), producer_id.c_str());
   }
   else // producer
   {
-    record.p.payload = payload;
+    record.p.ssrc = ssrc;
     std::memset(record.p.samples, 0, sizeof(record.p.samples));
 
-    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): producer start_tm=%" PRIu64 " payload=%" PRIu8 " callId=%s producerId=%s", 
-      ts, payload, call_id.c_str(), object_id.c_str());
+    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): producer start_tm=%" PRIu64 " ssrc=%" PRIu32 " callId=%s producerId=%s", 
+      ts, ssrc, call_id.c_str(), object_id.c_str());
   }
 }
 
@@ -209,6 +209,7 @@ int StatsBinLog::LogOpen()
       "binlog failed to open '%s'", this->bin_log_file_path.c_str()
     );
     ret = errno;
+    this->fd = 0;
     initialized = false;
   }
   else
@@ -236,6 +237,9 @@ void StatsBinLog::LogClose()
       "binlog closed '%s'", this->bin_log_file_path.c_str()
     );
   }
+
+  if (!this->initialized)
+    return;
 
   // Do not preserve binlogs with too little data
   if (log_start_ts == UINT64_UNSET 
@@ -281,6 +285,9 @@ int StatsBinLog::OnLogWrite(CallStatsRecordCtx* ctx)
   bool signal_set = false;
 
   uint64_t now = Utils::Time::currentStdEpochMs();
+
+  if (!this->initialized)
+    return ret;
 
   if (now - this->log_start_ts > DAY_IN_MS)
   {
@@ -422,11 +429,12 @@ void StatsBinLog::InitLog(char type, std::string id1, std::string id2)
     case 'c':
       sprintf(tmp, "/var/log/sfu/bin/current/ms_c_%s_%%llu.%s.bin", id1.c_str(), version);
       this->bin_log_name_template.assign(tmp);
-      MS_DEBUG_TAG(rtp, "consumers binlog transport id %s", id2.c_str());
+      MS_DEBUG_TAG(rtp, "consumers binlog %s [transportId: %s]", this->bin_log_name_template.c_str(), id2.c_str());
       break;
     case 'p':
       sprintf(tmp, "/var/log/sfu/bin/current/ms_p_%s_%s_%%llu.%s.bin", id1.c_str(), id2.c_str(), version);
       this->bin_log_name_template.assign(tmp);
+      MS_DEBUG_TAG(rtp, "producer binlog %s", this->bin_log_name_template.c_str());
       break;
     default:
       break;
