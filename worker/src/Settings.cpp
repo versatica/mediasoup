@@ -241,31 +241,28 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
-	switch (request->methodId)
+	switch (request->_method)
 	{
-		case Channel::ChannelRequest::MethodId::WORKER_UPDATE_SETTINGS:
+		case FBS::Request::Method::WORKER_UDATE_SETTINGS:
 		{
-			auto jsonLogLevelIt = request->data.find("logLevel");
-			auto jsonLogTagsIt  = request->data.find("logTags");
+			auto body = request->_data->body_as<FBS::Worker::UpdateableSettings>();
 
-			// Update logLevel if requested.
-			if (jsonLogLevelIt != request->data.end() && jsonLogLevelIt->is_string())
+			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateableSettings::VT_LOGLEVEL))
 			{
-				std::string logLevel = *jsonLogLevelIt;
+				auto logLevel = body->logLevel()->str();
 
 				// This may throw.
 				Settings::SetLogLevel(logLevel);
 			}
 
 			// Update logTags if requested.
-			if (jsonLogTagsIt != request->data.end() && jsonLogTagsIt->is_array())
+			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateableSettings::VT_LOGTAGS))
 			{
 				std::vector<std::string> logTags;
 
-				for (const auto& logTag : *jsonLogTagsIt)
+				for (const auto& logTag : *body->logTags())
 				{
-					if (logTag.is_string())
-						logTags.push_back(logTag);
+					logTags.push_back(logTag->str());
 				}
 
 				Settings::SetLogTags(logTags);

@@ -33,4 +33,9 @@ table ResourceUsage {
   ru_nivcsw:uint64;
 }
 
+table UpdateableSettings {
+  log_level:string;
+  log_tags:[string];
+}
+
 root_type Dump;

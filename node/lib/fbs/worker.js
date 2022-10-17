@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ResourceUsageT = exports.ResourceUsage = exports.DumpT = exports.Dump = exports.ChannelMessageHandlersT = exports.ChannelMessageHandlers = void 0;
+exports.UpdateableSettingsT = exports.UpdateableSettings = exports.ResourceUsageT = exports.ResourceUsage = exports.DumpT = exports.Dump = exports.ChannelMessageHandlersT = exports.ChannelMessageHandlers = void 0;
 var channel_message_handlers_1 = require("./f-b-s/worker/channel-message-handlers");
 Object.defineProperty(exports, "ChannelMessageHandlers", { enumerable: true, get: function () { return channel_message_handlers_1.ChannelMessageHandlers; } });
 Object.defineProperty(exports, "ChannelMessageHandlersT", { enumerable: true, get: function () { return channel_message_handlers_1.ChannelMessageHandlersT; } });
@@ -10,3 +10,6 @@ Object.defineProperty(exports, "DumpT", { enumerable: true, get: function () { r
 var resource_usage_1 = require("./f-b-s/worker/resource-usage");
 Object.defineProperty(exports, "ResourceUsage", { enumerable: true, get: function () { return resource_usage_1.ResourceUsage; } });
 Object.defineProperty(exports, "ResourceUsageT", { enumerable: true, get: function () { return resource_usage_1.ResourceUsageT; } });
+var updateable_settings_1 = require("./f-b-s/worker/updateable-settings");
+Object.defineProperty(exports, "UpdateableSettings", { enumerable: true, get: function () { return updateable_settings_1.UpdateableSettings; } });
+Object.defineProperty(exports, "UpdateableSettingsT", { enumerable: true, get: function () { return updateable_settings_1.UpdateableSettingsT; } });

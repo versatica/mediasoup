@@ -444,6 +444,13 @@ binary:
 			break;
 		}
 
+		case FBS::Request::Method::WORKER_UDATE_SETTINGS:
+		{
+			Settings::HandleRequest(request);
+
+			break;
+		}
+
 		case FBS::Request::Method::TRANSPORT_CONSUME:
 		{
 			try

@@ -9,9 +9,9 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
-import { Method } from './fbs/request';
+import { Body as RequestBody, Method } from './fbs/request';
 import { Dump, ResourceUsage } from './fbs/response';
-import { ChannelMessageHandlers } from './fbs/worker';
+import { ChannelMessageHandlers, UpdateableSettingsT } from './fbs/worker';
 import { getArray } from './fbs/utils';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
@@ -629,9 +629,17 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	{
 		logger.debug('updateSettings()');
 
-		const reqData = { logLevel, logTags };
+		// Get flatbuffer builder.
+		const builder = this.#channel.bufferBuilder;
 
-		await this.#channel.request('worker.updateSettings', undefined, reqData);
+		const updateableSettings = new UpdateableSettingsT(logLevel, logTags);
+		const updateableSettingsOffset = updateableSettings.pack(builder);
+
+		await this.#channel.requestBinary(
+			Method.WORKER_UDATE_SETTINGS,
+			RequestBody.FBS_Worker_UpdateableSettings,
+			updateableSettingsOffset
+		);
 	}
 
 	/**

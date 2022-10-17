@@ -5,6 +5,7 @@ import * as flatbuffers from 'flatbuffers';
 import { Body, unionToBody, unionListToBody } from '../../f-b-s/request/body';
 import { Method } from '../../f-b-s/request/method';
 import { ConsumeRequest, ConsumeRequestT } from '../../f-b-s/transport/consume-request';
+import { UpdateableSettings, UpdateableSettingsT } from '../../f-b-s/worker/updateable-settings';
 
 
 export class Request {
@@ -133,7 +134,7 @@ constructor(
   public method: Method = Method.WORKER_CLOSE,
   public handlerId: string|Uint8Array|null = null,
   public bodyType: Body = Body.NONE,
-  public body: ConsumeRequestT|null = null
+  public body: ConsumeRequestT|UpdateableSettingsT|null = null
 ){}
 
 

@@ -77,6 +77,7 @@ namespace Channel
 		{ FBS::Request::Method::WORKER_CLOSE,              "worker.close"            },
 		{ FBS::Request::Method::WORKER_DUMP,               "worker.dump"             },
 		{ FBS::Request::Method::WORKER_GET_RESOURCE_USAGE, "worker.getResourceUsage" },
+		{ FBS::Request::Method::WORKER_UDATE_SETTINGS,     "worker.updateSettings"   },
 		{ FBS::Request::Method::TRANSPORT_CONSUME,         "transport.consume"       },
 	};
 

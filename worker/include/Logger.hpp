@@ -189,7 +189,6 @@ public:
 #define MS_DEBUG_TAG(tag, desc, ...) \
 	do \
 	{ \
-		if (Settings::configuration.logLevel == LogLevel::LOG_DEBUG && _MS_TAG_ENABLED(tag)) \
 		{ \
 			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "D" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
 			Logger::channel->SendLog(Logger::buffer, static_cast<uint32_t>(loggerWritten)); \

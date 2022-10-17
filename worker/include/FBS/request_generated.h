@@ -6,8 +6,8 @@
 
 #include "flatbuffers/flatbuffers.h"
 
-#include "rtpParameters_generated.h"
 #include "worker_generated.h"
+#include "rtpParameters_generated.h"
 #include "transport_generated.h"
 #include "consumer_generated.h"
 
@@ -23,26 +23,29 @@ enum class Method : uint8_t {
   WORKER_CLOSE = 0,
   WORKER_DUMP = 1,
   WORKER_GET_RESOURCE_USAGE = 2,
-  TRANSPORT_CONSUME = 3,
+  WORKER_UDATE_SETTINGS = 3,
+  TRANSPORT_CONSUME = 4,
   MIN = WORKER_CLOSE,
   MAX = TRANSPORT_CONSUME
 };
 
-inline const Method (&EnumValuesMethod())[4] {
+inline const Method (&EnumValuesMethod())[5] {
   static const Method values[] = {
     Method::WORKER_CLOSE,
     Method::WORKER_DUMP,
     Method::WORKER_GET_RESOURCE_USAGE,
+    Method::WORKER_UDATE_SETTINGS,
     Method::TRANSPORT_CONSUME
   };
   return values;
 }
 
 inline const char * const *EnumNamesMethod() {
-  static const char * const names[5] = {
+  static const char * const names[6] = {
     "WORKER_CLOSE",
     "WORKER_DUMP",
     "WORKER_GET_RESOURCE_USAGE",
+    "WORKER_UDATE_SETTINGS",
     "TRANSPORT_CONSUME",
     nullptr
   };
@@ -58,29 +61,32 @@ inline const char *EnumNameMethod(Method e) {
 enum class Body : uint8_t {
   NONE = 0,
   FBS_Transport_ConsumeRequest = 1,
+  FBS_Worker_UpdateableSettings = 2,
   MIN = NONE,
-  MAX = FBS_Transport_ConsumeRequest
+  MAX = FBS_Worker_UpdateableSettings
 };
 
-inline const Body (&EnumValuesBody())[2] {
+inline const Body (&EnumValuesBody())[3] {
   static const Body values[] = {
     Body::NONE,
-    Body::FBS_Transport_ConsumeRequest
+    Body::FBS_Transport_ConsumeRequest,
+    Body::FBS_Worker_UpdateableSettings
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[3] = {
+  static const char * const names[4] = {
     "NONE",
     "FBS_Transport_ConsumeRequest",
+    "FBS_Worker_UpdateableSettings",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameBody(Body e) {
-  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Transport_ConsumeRequest)) return "";
+  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Worker_UpdateableSettings)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesBody()[index];
 }
@@ -91,6 +97,10 @@ template<typename T> struct BodyTraits {
 
 template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
   static const Body enum_value = Body::FBS_Transport_ConsumeRequest;
+};
+
+template<> struct BodyTraits<FBS::Worker::UpdateableSettings> {
+  static const Body enum_value = Body::FBS_Worker_UpdateableSettings;
 };
 
 bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body type);
@@ -127,6 +137,9 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Transport::ConsumeRequest *body_as_FBS_Transport_ConsumeRequest() const {
     return body_type() == FBS::Request::Body::FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
   }
+  const FBS::Worker::UpdateableSettings *body_as_FBS_Worker_UpdateableSettings() const {
+    return body_type() == FBS::Request::Body::FBS_Worker_UpdateableSettings ? static_cast<const FBS::Worker::UpdateableSettings *>(body()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_ID, 4) &&
@@ -142,6 +155,10 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
 
 template<> inline const FBS::Transport::ConsumeRequest *Request::body_as<FBS::Transport::ConsumeRequest>() const {
   return body_as_FBS_Transport_ConsumeRequest();
+}
+
+template<> inline const FBS::Worker::UpdateableSettings *Request::body_as<FBS::Worker::UpdateableSettings>() const {
+  return body_as_FBS_Worker_UpdateableSettings();
 }
 
 struct RequestBuilder {
@@ -216,6 +233,10 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
       auto ptr = reinterpret_cast<const FBS::Transport::ConsumeRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
+    case Body::FBS_Worker_UpdateableSettings: {
+      auto ptr = reinterpret_cast<const FBS::Worker::UpdateableSettings *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
     default: return true;
   }
 }
@@ -237,6 +258,7 @@ inline const flatbuffers::TypeTable *MethodTypeTable() {
     { flatbuffers::ET_UCHAR, 0, 0 },
     { flatbuffers::ET_UCHAR, 0, 0 },
     { flatbuffers::ET_UCHAR, 0, 0 },
+    { flatbuffers::ET_UCHAR, 0, 0 },
     { flatbuffers::ET_UCHAR, 0, 0 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
@@ -246,10 +268,11 @@ inline const flatbuffers::TypeTable *MethodTypeTable() {
     "WORKER_CLOSE",
     "WORKER_DUMP",
     "WORKER_GET_RESOURCE_USAGE",
+    "WORKER_UDATE_SETTINGS",
     "TRANSPORT_CONSUME"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_ENUM, 4, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_ENUM, 5, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }
@@ -257,17 +280,20 @@ inline const flatbuffers::TypeTable *MethodTypeTable() {
 inline const flatbuffers::TypeTable *BodyTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_SEQUENCE, 0, -1 },
-    { flatbuffers::ET_SEQUENCE, 0, 0 }
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Transport::ConsumeRequestTypeTable
+    FBS::Transport::ConsumeRequestTypeTable,
+    FBS::Worker::UpdateableSettingsTypeTable
   };
   static const char * const names[] = {
     "NONE",
-    "FBS_Transport_ConsumeRequest"
+    "FBS_Transport_ConsumeRequest",
+    "FBS_Worker_UpdateableSettings"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 2, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 3, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

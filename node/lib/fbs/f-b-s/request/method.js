@@ -7,5 +7,6 @@ var Method;
     Method[Method["WORKER_CLOSE"] = 0] = "WORKER_CLOSE";
     Method[Method["WORKER_DUMP"] = 1] = "WORKER_DUMP";
     Method[Method["WORKER_GET_RESOURCE_USAGE"] = 2] = "WORKER_GET_RESOURCE_USAGE";
-    Method[Method["TRANSPORT_CONSUME"] = 3] = "TRANSPORT_CONSUME";
+    Method[Method["WORKER_UDATE_SETTINGS"] = 3] = "WORKER_UDATE_SETTINGS";
+    Method[Method["TRANSPORT_CONSUME"] = 4] = "TRANSPORT_CONSUME";
 })(Method = exports.Method || (exports.Method = {}));

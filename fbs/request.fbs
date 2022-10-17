@@ -7,11 +7,13 @@ enum Method: uint8 {
   WORKER_CLOSE = 0,
   WORKER_DUMP,
   WORKER_GET_RESOURCE_USAGE,
+  WORKER_UDATE_SETTINGS,
   TRANSPORT_CONSUME
 }
 
 union Body {
   FBS.Transport.ConsumeRequest,
+  FBS.Worker.UpdateableSettings,
 }
 
 table Request {

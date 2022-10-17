@@ -18,11 +18,16 @@ struct DumpBuilder;
 struct ResourceUsage;
 struct ResourceUsageBuilder;
 
+struct UpdateableSettings;
+struct UpdateableSettingsBuilder;
+
 inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable();
 
 inline const flatbuffers::TypeTable *DumpTypeTable();
 
 inline const flatbuffers::TypeTable *ResourceUsageTypeTable();
+
+inline const flatbuffers::TypeTable *UpdateableSettingsTypeTable();
 
 struct ChannelMessageHandlers FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ChannelMessageHandlersBuilder Builder;
@@ -398,6 +403,75 @@ inline flatbuffers::Offset<ResourceUsage> CreateResourceUsage(
   return builder_.Finish();
 }
 
+struct UpdateableSettings FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef UpdateableSettingsBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return UpdateableSettingsTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_LOGLEVEL = 4,
+    VT_LOGTAGS = 6
+  };
+  const flatbuffers::String *logLevel() const {
+    return GetPointer<const flatbuffers::String *>(VT_LOGLEVEL);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *logTags() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_LOGTAGS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_LOGLEVEL) &&
+           verifier.VerifyString(logLevel()) &&
+           VerifyOffset(verifier, VT_LOGTAGS) &&
+           verifier.VerifyVector(logTags()) &&
+           verifier.VerifyVectorOfStrings(logTags()) &&
+           verifier.EndTable();
+  }
+};
+
+struct UpdateableSettingsBuilder {
+  typedef UpdateableSettings Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_logLevel(flatbuffers::Offset<flatbuffers::String> logLevel) {
+    fbb_.AddOffset(UpdateableSettings::VT_LOGLEVEL, logLevel);
+  }
+  void add_logTags(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> logTags) {
+    fbb_.AddOffset(UpdateableSettings::VT_LOGTAGS, logTags);
+  }
+  explicit UpdateableSettingsBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<UpdateableSettings> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<UpdateableSettings>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<UpdateableSettings> CreateUpdateableSettings(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> logLevel = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> logTags = 0) {
+  UpdateableSettingsBuilder builder_(_fbb);
+  builder_.add_logTags(logTags);
+  builder_.add_logLevel(logLevel);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<UpdateableSettings> CreateUpdateableSettingsDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *logLevel = nullptr,
+    const std::vector<flatbuffers::Offset<flatbuffers::String>> *logTags = nullptr) {
+  auto logLevel__ = logLevel ? _fbb.CreateString(logLevel) : 0;
+  auto logTags__ = logTags ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*logTags) : 0;
+  return FBS::Worker::CreateUpdateableSettings(
+      _fbb,
+      logLevel__,
+      logTags__);
+}
+
 inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_STRING, 1, -1 },
@@ -476,6 +550,21 @@ inline const flatbuffers::TypeTable *ResourceUsageTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 16, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *UpdateableSettingsTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 1, -1 }
+  };
+  static const char * const names[] = {
+    "logLevel",
+    "logTags"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
   };
   return &tt;
 }

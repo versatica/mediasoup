@@ -2,6 +2,7 @@ import * as flatbuffers from 'flatbuffers';
 import { Body } from '../../f-b-s/request/body';
 import { Method } from '../../f-b-s/request/method';
 import { ConsumeRequestT } from '../../f-b-s/transport/consume-request';
+import { UpdateableSettingsT } from '../../f-b-s/worker/updateable-settings';
 export declare class Request {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
@@ -32,8 +33,8 @@ export declare class RequestT {
     method: Method;
     handlerId: string | Uint8Array | null;
     bodyType: Body;
-    body: ConsumeRequestT | null;
-    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: ConsumeRequestT | null);
+    body: ConsumeRequestT | UpdateableSettingsT | null;
+    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: ConsumeRequestT | UpdateableSettingsT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=request.d.ts.map
