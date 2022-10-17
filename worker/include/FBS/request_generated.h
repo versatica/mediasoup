@@ -20,14 +20,16 @@ struct RequestBuilder;
 inline const flatbuffers::TypeTable *RequestTypeTable();
 
 enum class Method : uint8_t {
-  WORKER_DUMP = 0,
-  TRANSPORT_CONSUME = 1,
-  MIN = WORKER_DUMP,
+  WORKER_CLOSE = 0,
+  WORKER_DUMP = 1,
+  TRANSPORT_CONSUME = 2,
+  MIN = WORKER_CLOSE,
   MAX = TRANSPORT_CONSUME
 };
 
-inline const Method (&EnumValuesMethod())[2] {
+inline const Method (&EnumValuesMethod())[3] {
   static const Method values[] = {
+    Method::WORKER_CLOSE,
     Method::WORKER_DUMP,
     Method::TRANSPORT_CONSUME
   };
@@ -35,7 +37,8 @@ inline const Method (&EnumValuesMethod())[2] {
 }
 
 inline const char * const *EnumNamesMethod() {
-  static const char * const names[3] = {
+  static const char * const names[4] = {
+    "WORKER_CLOSE",
     "WORKER_DUMP",
     "TRANSPORT_CONSUME",
     nullptr
@@ -44,7 +47,7 @@ inline const char * const *EnumNamesMethod() {
 }
 
 inline const char *EnumNameMethod(Method e) {
-  if (flatbuffers::IsOutRange(e, Method::WORKER_DUMP, Method::TRANSPORT_CONSUME)) return "";
+  if (flatbuffers::IsOutRange(e, Method::WORKER_CLOSE, Method::TRANSPORT_CONSUME)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesMethod()[index];
 }
@@ -171,7 +174,7 @@ struct RequestBuilder {
 inline flatbuffers::Offset<Request> CreateRequest(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t id = 0,
-    FBS::Request::Method method = FBS::Request::Method::WORKER_DUMP,
+    FBS::Request::Method method = FBS::Request::Method::WORKER_CLOSE,
     flatbuffers::Offset<flatbuffers::String> handlerId = 0,
     FBS::Request::Body body_type = FBS::Request::Body::NONE,
     flatbuffers::Offset<void> body = 0) {
@@ -187,7 +190,7 @@ inline flatbuffers::Offset<Request> CreateRequest(
 inline flatbuffers::Offset<Request> CreateRequestDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t id = 0,
-    FBS::Request::Method method = FBS::Request::Method::WORKER_DUMP,
+    FBS::Request::Method method = FBS::Request::Method::WORKER_CLOSE,
     const char *handlerId = nullptr,
     FBS::Request::Body body_type = FBS::Request::Body::NONE,
     flatbuffers::Offset<void> body = 0) {
@@ -229,17 +232,19 @@ inline bool VerifyBodyVector(flatbuffers::Verifier &verifier, const flatbuffers:
 inline const flatbuffers::TypeTable *MethodTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_UCHAR, 0, 0 },
+    { flatbuffers::ET_UCHAR, 0, 0 },
     { flatbuffers::ET_UCHAR, 0, 0 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Request::MethodTypeTable
   };
   static const char * const names[] = {
+    "WORKER_CLOSE",
     "WORKER_DUMP",
     "TRANSPORT_CONSUME"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_ENUM, 2, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_ENUM, 3, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

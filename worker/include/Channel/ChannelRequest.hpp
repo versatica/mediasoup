@@ -23,7 +23,6 @@ namespace Channel
 		// TODO: Remove once JSON is removed.
 		enum class MethodId
 		{
-			WORKER_CLOSE = 1,
 			WORKER_GET_RESOURCE_USAGE,
 			WORKER_UPDATE_SETTINGS,
 			WORKER_CREATE_WEBRTC_SERVER,

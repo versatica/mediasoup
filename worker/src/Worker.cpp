@@ -304,18 +304,6 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 	switch (request->methodId)
 	{
-		case Channel::ChannelRequest::MethodId::WORKER_CLOSE:
-		{
-			if (this->closed)
-				return;
-
-			MS_DEBUG_DEV("Worker close request, stopping");
-
-			Close();
-
-			break;
-		}
-
 		case Channel::ChannelRequest::MethodId::WORKER_GET_RESOURCE_USAGE:
 		{
 			json data = json::object();
@@ -472,6 +460,18 @@ binary:
 
 	switch (request->_method)
 	{
+		case FBS::Request::Method::WORKER_CLOSE:
+		{
+			if (this->closed)
+				return;
+
+			MS_DEBUG_DEV("Worker close request, stopping");
+
+			Close();
+
+			break;
+		}
+
 		case FBS::Request::Method::WORKER_DUMP:
 		{
 			auto& builder = Channel::ChannelRequest::bufferBuilder;

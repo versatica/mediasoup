@@ -4,7 +4,8 @@ include "worker.fbs";
 namespace FBS.Request;
 
 enum Method: uint8 {
-  WORKER_DUMP = 0,
+  WORKER_CLOSE = 0,
+  WORKER_DUMP,
   TRANSPORT_CONSUME
 }
 

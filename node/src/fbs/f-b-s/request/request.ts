@@ -32,7 +32,7 @@ id():number {
 
 method():Method {
   const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.readUint8(this.bb_pos + offset) : Method.WORKER_DUMP;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : Method.WORKER_CLOSE;
 }
 
 handlerId():string|null
@@ -61,7 +61,7 @@ static addId(builder:flatbuffers.Builder, id:number) {
 }
 
 static addMethod(builder:flatbuffers.Builder, method:Method) {
-  builder.addFieldInt8(1, method, Method.WORKER_DUMP);
+  builder.addFieldInt8(1, method, Method.WORKER_CLOSE);
 }
 
 static addHandlerId(builder:flatbuffers.Builder, handlerIdOffset:flatbuffers.Offset) {
@@ -130,7 +130,7 @@ unpackTo(_o: RequestT): void {
 export class RequestT {
 constructor(
   public id: number = 0,
-  public method: Method = Method.WORKER_DUMP,
+  public method: Method = Method.WORKER_CLOSE,
   public handlerId: string|Uint8Array|null = null,
   public bodyType: Body = Body.NONE,
   public body: ConsumeRequestT|null = null
