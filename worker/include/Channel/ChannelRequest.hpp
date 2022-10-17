@@ -20,6 +20,7 @@ namespace Channel
 	class ChannelRequest
 	{
 	public:
+		// TODO: Remove once JSON is removed.
 		enum class MethodId
 		{
 			WORKER_CLOSE = 1,
@@ -81,7 +82,11 @@ namespace Channel
 			RTP_OBSERVER_REMOVE_PRODUCER
 		};
 
+	public:
+		static absl::flat_hash_map<FBS::Request::Method, const char*> method2String;
+
 	private:
+		// TODO: Remove once JSON is removed.
 		static absl::flat_hash_map<std::string, MethodId> string2MethodId;
 
 	public:

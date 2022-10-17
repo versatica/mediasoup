@@ -479,7 +479,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 binary:
 
 	MS_ERROR(
-	  "Channel request received [method:%" PRIu8 ", id:%" PRIu32 "]", request->_method, request->id);
+	  "Channel request received [method:%s, id:%" PRIu32 "]", Channel::ChannelRequest::method2String.at(request->_method), request->id);
 
 	switch (request->_method)
 	{
