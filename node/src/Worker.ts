@@ -10,7 +10,7 @@ import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { Body as RequestBody, DumpRequest } from './fbs/request';
-import { DumpResponse, DumpResponseT } from './fbs/response';
+import { DumpResponse } from './fbs/response';
 import { ChannelMessageHandlers } from './fbs/worker';
 import { getArray } from './fbs/utils';
 
