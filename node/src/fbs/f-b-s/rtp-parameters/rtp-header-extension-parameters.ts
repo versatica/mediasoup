@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class RtpHeaderExtensionParameters {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -77,5 +79,44 @@ static createRtpHeaderExtensionParameters(builder:flatbuffers.Builder, uriOffset
   RtpHeaderExtensionParameters.addEncrypt(builder, encrypt);
   RtpHeaderExtensionParameters.addParameters(builder, parametersOffset);
   return RtpHeaderExtensionParameters.endRtpHeaderExtensionParameters(builder);
+}
+
+unpack(): RtpHeaderExtensionParametersT {
+  return new RtpHeaderExtensionParametersT(
+    this.uri(),
+    this.id(),
+    this.encrypt(),
+    this.parameters()
+  );
+}
+
+
+unpackTo(_o: RtpHeaderExtensionParametersT): void {
+  _o.uri = this.uri();
+  _o.id = this.id();
+  _o.encrypt = this.encrypt();
+  _o.parameters = this.parameters();
+}
+}
+
+export class RtpHeaderExtensionParametersT {
+constructor(
+  public uri: string|Uint8Array|null = null,
+  public id: number = 0,
+  public encrypt: boolean = false,
+  public parameters: string|Uint8Array|null = null
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const uri = (this.uri !== null ? builder.createString(this.uri!) : 0);
+  const parameters = (this.parameters !== null ? builder.createString(this.parameters!) : 0);
+
+  return RtpHeaderExtensionParameters.createRtpHeaderExtensionParameters(builder,
+    uri,
+    this.id,
+    this.encrypt,
+    parameters
+  );
 }
 }

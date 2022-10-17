@@ -1,5 +1,7 @@
 import * as flatbuffers from 'flatbuffers';
 import { Body } from '../../f-b-s/request/body';
+import { ConsumeRequestT } from '../../f-b-s/transport/consume-request';
+import { DumpRequestT } from '../../f-b-s/worker/dump-request';
 export declare class Request {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
@@ -20,5 +22,15 @@ export declare class Request {
     static finishRequestBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     static finishSizePrefixedRequestBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     static createRequest(builder: flatbuffers.Builder, id: number, handlerIdOffset: flatbuffers.Offset, bodyType: Body, bodyOffset: flatbuffers.Offset): flatbuffers.Offset;
+    unpack(): RequestT;
+    unpackTo(_o: RequestT): void;
+}
+export declare class RequestT {
+    id: number;
+    handlerId: string | Uint8Array | null;
+    bodyType: Body;
+    body: ConsumeRequestT | DumpRequestT | null;
+    constructor(id?: number, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: ConsumeRequestT | DumpRequestT | null);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=request.d.ts.map

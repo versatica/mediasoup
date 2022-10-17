@@ -2,7 +2,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { ChannelMessageHandlers } from '../../f-b-s/worker/channel-message-handlers';
+import { ChannelMessageHandlers, ChannelMessageHandlersT } from '../../f-b-s/worker/channel-message-handlers';
 
 
 export class DumpResponse {
@@ -114,4 +114,45 @@ static finishSizePrefixedDumpResponseBuffer(builder:flatbuffers.Builder, offset:
   builder.finish(offset, undefined, true);
 }
 
+
+unpack(): DumpResponseT {
+  return new DumpResponseT(
+    this.pid(),
+    this.bb!.createScalarList(this.webrtcServerIds.bind(this), this.webrtcServerIdsLength()),
+    this.bb!.createScalarList(this.routerIds.bind(this), this.routerIdsLength()),
+    (this.channelMessageHandlers() !== null ? this.channelMessageHandlers()!.unpack() : null)
+  );
+}
+
+
+unpackTo(_o: DumpResponseT): void {
+  _o.pid = this.pid();
+  _o.webrtcServerIds = this.bb!.createScalarList(this.webrtcServerIds.bind(this), this.webrtcServerIdsLength());
+  _o.routerIds = this.bb!.createScalarList(this.routerIds.bind(this), this.routerIdsLength());
+  _o.channelMessageHandlers = (this.channelMessageHandlers() !== null ? this.channelMessageHandlers()!.unpack() : null);
+}
+}
+
+export class DumpResponseT {
+constructor(
+  public pid: bigint = BigInt('0'),
+  public webrtcServerIds: (string)[] = [],
+  public routerIds: (string)[] = [],
+  public channelMessageHandlers: ChannelMessageHandlersT|null = null
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const webrtcServerIds = DumpResponse.createWebrtcServerIdsVector(builder, builder.createObjectOffsetList(this.webrtcServerIds));
+  const routerIds = DumpResponse.createRouterIdsVector(builder, builder.createObjectOffsetList(this.routerIds));
+  const channelMessageHandlers = (this.channelMessageHandlers !== null ? this.channelMessageHandlers!.pack(builder) : 0);
+
+  DumpResponse.startDumpResponse(builder);
+  DumpResponse.addPid(builder, this.pid);
+  DumpResponse.addWebrtcServerIds(builder, webrtcServerIds);
+  DumpResponse.addRouterIds(builder, routerIds);
+  DumpResponse.addChannelMessageHandlers(builder, channelMessageHandlers);
+
+  return DumpResponse.endDumpResponse(builder);
+}
 }

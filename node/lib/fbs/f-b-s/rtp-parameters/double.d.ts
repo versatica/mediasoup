@@ -10,5 +10,12 @@ export declare class Double {
     static addValue(builder: flatbuffers.Builder, value: number): void;
     static endDouble(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createDouble(builder: flatbuffers.Builder, value: number): flatbuffers.Offset;
+    unpack(): DoubleT;
+    unpackTo(_o: DoubleT): void;
+}
+export declare class DoubleT {
+    value: number;
+    constructor(value?: number);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=double.d.ts.map

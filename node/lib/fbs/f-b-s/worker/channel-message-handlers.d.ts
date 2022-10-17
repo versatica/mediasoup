@@ -26,5 +26,14 @@ export declare class ChannelMessageHandlers {
     static startPayloadchannelNotificationHandlersVector(builder: flatbuffers.Builder, numElems: number): void;
     static endChannelMessageHandlers(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createChannelMessageHandlers(builder: flatbuffers.Builder, channelRequestHandlersOffset: flatbuffers.Offset, payloadchannelRequestHandlersOffset: flatbuffers.Offset, payloadchannelNotificationHandlersOffset: flatbuffers.Offset): flatbuffers.Offset;
+    unpack(): ChannelMessageHandlersT;
+    unpackTo(_o: ChannelMessageHandlersT): void;
+}
+export declare class ChannelMessageHandlersT {
+    channelRequestHandlers: (string)[];
+    payloadchannelRequestHandlers: (string)[];
+    payloadchannelNotificationHandlers: (string)[];
+    constructor(channelRequestHandlers?: (string)[], payloadchannelRequestHandlers?: (string)[], payloadchannelNotificationHandlers?: (string)[]);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=channel-message-handlers.d.ts.map

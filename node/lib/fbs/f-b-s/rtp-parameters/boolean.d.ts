@@ -10,5 +10,12 @@ export declare class Boolean {
     static addValue(builder: flatbuffers.Builder, value: number): void;
     static endBoolean(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createBoolean(builder: flatbuffers.Builder, value: number): flatbuffers.Offset;
+    unpack(): BooleanT;
+    unpackTo(_o: BooleanT): void;
+}
+export declare class BooleanT {
+    value: number;
+    constructor(value?: number);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=boolean.d.ts.map

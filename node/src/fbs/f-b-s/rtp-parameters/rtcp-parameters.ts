@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class RtcpParameters {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -64,5 +66,39 @@ static createRtcpParameters(builder:flatbuffers.Builder, cnameOffset:flatbuffers
   RtcpParameters.addReducedSize(builder, reducedSize);
   RtcpParameters.addMux(builder, mux);
   return RtcpParameters.endRtcpParameters(builder);
+}
+
+unpack(): RtcpParametersT {
+  return new RtcpParametersT(
+    this.cname(),
+    this.reducedSize(),
+    this.mux()
+  );
+}
+
+
+unpackTo(_o: RtcpParametersT): void {
+  _o.cname = this.cname();
+  _o.reducedSize = this.reducedSize();
+  _o.mux = this.mux();
+}
+}
+
+export class RtcpParametersT {
+constructor(
+  public cname: string|Uint8Array|null = null,
+  public reducedSize: boolean = true,
+  public mux: boolean = true
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const cname = (this.cname !== null ? builder.createString(this.cname!) : 0);
+
+  return RtcpParameters.createRtcpParameters(builder,
+    cname,
+    this.reducedSize,
+    this.mux
+  );
 }
 }

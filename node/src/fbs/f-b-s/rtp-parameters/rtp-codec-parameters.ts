@@ -2,8 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { Parameter } from '../../f-b-s/rtp-parameters/parameter';
-import { RtcpFeedback } from '../../f-b-s/rtp-parameters/rtcp-feedback';
+import { Parameter, ParameterT } from '../../f-b-s/rtp-parameters/parameter';
+import { RtcpFeedback, RtcpFeedbackT } from '../../f-b-s/rtp-parameters/rtcp-feedback';
 
 
 export class RtpCodecParameters {
@@ -133,5 +133,53 @@ static createRtpCodecParameters(builder:flatbuffers.Builder, mimeTypeOffset:flat
   RtpCodecParameters.addParameters(builder, parametersOffset);
   RtpCodecParameters.addRtcpFeedback(builder, rtcpFeedbackOffset);
   return RtpCodecParameters.endRtpCodecParameters(builder);
+}
+
+unpack(): RtpCodecParametersT {
+  return new RtpCodecParametersT(
+    this.mimeType(),
+    this.payloadType(),
+    this.clockRate(),
+    this.channels(),
+    this.bb!.createObjList(this.parameters.bind(this), this.parametersLength()),
+    this.bb!.createObjList(this.rtcpFeedback.bind(this), this.rtcpFeedbackLength())
+  );
+}
+
+
+unpackTo(_o: RtpCodecParametersT): void {
+  _o.mimeType = this.mimeType();
+  _o.payloadType = this.payloadType();
+  _o.clockRate = this.clockRate();
+  _o.channels = this.channels();
+  _o.parameters = this.bb!.createObjList(this.parameters.bind(this), this.parametersLength());
+  _o.rtcpFeedback = this.bb!.createObjList(this.rtcpFeedback.bind(this), this.rtcpFeedbackLength());
+}
+}
+
+export class RtpCodecParametersT {
+constructor(
+  public mimeType: string|Uint8Array|null = null,
+  public payloadType: number = 0,
+  public clockRate: number = 0,
+  public channels: number = 0,
+  public parameters: (ParameterT)[] = [],
+  public rtcpFeedback: (RtcpFeedbackT)[] = []
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const mimeType = (this.mimeType !== null ? builder.createString(this.mimeType!) : 0);
+  const parameters = RtpCodecParameters.createParametersVector(builder, builder.createObjectOffsetList(this.parameters));
+  const rtcpFeedback = RtpCodecParameters.createRtcpFeedbackVector(builder, builder.createObjectOffsetList(this.rtcpFeedback));
+
+  return RtpCodecParameters.createRtpCodecParameters(builder,
+    mimeType,
+    this.payloadType,
+    this.clockRate,
+    this.channels,
+    parameters,
+    rtcpFeedback
+  );
 }
 }

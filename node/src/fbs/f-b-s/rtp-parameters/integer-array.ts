@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class IntegerArray {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -69,5 +71,31 @@ static createIntegerArray(builder:flatbuffers.Builder, valueOffset:flatbuffers.O
   IntegerArray.startIntegerArray(builder);
   IntegerArray.addValue(builder, valueOffset);
   return IntegerArray.endIntegerArray(builder);
+}
+
+unpack(): IntegerArrayT {
+  return new IntegerArrayT(
+    this.bb!.createScalarList(this.value.bind(this), this.valueLength())
+  );
+}
+
+
+unpackTo(_o: IntegerArrayT): void {
+  _o.value = this.bb!.createScalarList(this.value.bind(this), this.valueLength());
+}
+}
+
+export class IntegerArrayT {
+constructor(
+  public value: (number)[] = []
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const value = IntegerArray.createValueVector(builder, this.value);
+
+  return IntegerArray.createIntegerArray(builder,
+    value
+  );
 }
 }

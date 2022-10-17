@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class Rtx {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -42,5 +44,29 @@ static createRtx(builder:flatbuffers.Builder, ssrc:number):flatbuffers.Offset {
   Rtx.startRtx(builder);
   Rtx.addSsrc(builder, ssrc);
   return Rtx.endRtx(builder);
+}
+
+unpack(): RtxT {
+  return new RtxT(
+    this.ssrc()
+  );
+}
+
+
+unpackTo(_o: RtxT): void {
+  _o.ssrc = this.ssrc();
+}
+}
+
+export class RtxT {
+constructor(
+  public ssrc: number = 0
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  return Rtx.createRtx(builder,
+    this.ssrc
+  );
 }
 }

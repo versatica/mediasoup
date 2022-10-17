@@ -1,5 +1,5 @@
 import * as flatbuffers from 'flatbuffers';
-import { ChannelMessageHandlers } from '../../f-b-s/worker/channel-message-handlers';
+import { ChannelMessageHandlers, ChannelMessageHandlersT } from '../../f-b-s/worker/channel-message-handlers';
 export declare class DumpResponse {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
@@ -26,5 +26,15 @@ export declare class DumpResponse {
     static endDumpResponse(builder: flatbuffers.Builder): flatbuffers.Offset;
     static finishDumpResponseBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     static finishSizePrefixedDumpResponseBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
+    unpack(): DumpResponseT;
+    unpackTo(_o: DumpResponseT): void;
+}
+export declare class DumpResponseT {
+    pid: bigint;
+    webrtcServerIds: (string)[];
+    routerIds: (string)[];
+    channelMessageHandlers: ChannelMessageHandlersT | null;
+    constructor(pid?: bigint, webrtcServerIds?: (string)[], routerIds?: (string)[], channelMessageHandlers?: ChannelMessageHandlersT | null);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=dump-response.d.ts.map

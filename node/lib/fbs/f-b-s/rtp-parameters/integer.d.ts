@@ -10,5 +10,12 @@ export declare class Integer {
     static addValue(builder: flatbuffers.Builder, value: number): void;
     static endInteger(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createInteger(builder: flatbuffers.Builder, value: number): flatbuffers.Offset;
+    unpack(): IntegerT;
+    unpackTo(_o: IntegerT): void;
+}
+export declare class IntegerT {
+    value: number;
+    constructor(value?: number);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=integer.d.ts.map

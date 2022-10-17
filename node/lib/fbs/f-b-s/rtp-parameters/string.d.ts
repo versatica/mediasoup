@@ -11,5 +11,12 @@ export declare class String {
     static addValue(builder: flatbuffers.Builder, valueOffset: flatbuffers.Offset): void;
     static endString(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createString(builder: flatbuffers.Builder, valueOffset: flatbuffers.Offset): flatbuffers.Offset;
+    unpack(): StringT;
+    unpackTo(_o: StringT): void;
+}
+export declare class StringT {
+    value: string | Uint8Array | null;
+    constructor(value?: string | Uint8Array | null);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=string.d.ts.map

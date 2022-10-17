@@ -2,10 +2,10 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { RtcpParameters } from '../../f-b-s/rtp-parameters/rtcp-parameters';
-import { RtpCodecParameters } from '../../f-b-s/rtp-parameters/rtp-codec-parameters';
-import { RtpEncodingParameters } from '../../f-b-s/rtp-parameters/rtp-encoding-parameters';
-import { RtpHeaderExtensionParameters } from '../../f-b-s/rtp-parameters/rtp-header-extension-parameters';
+import { RtcpParameters, RtcpParametersT } from '../../f-b-s/rtp-parameters/rtcp-parameters';
+import { RtpCodecParameters, RtpCodecParametersT } from '../../f-b-s/rtp-parameters/rtp-codec-parameters';
+import { RtpEncodingParameters, RtpEncodingParametersT } from '../../f-b-s/rtp-parameters/rtp-encoding-parameters';
+import { RtpHeaderExtensionParameters, RtpHeaderExtensionParametersT } from '../../f-b-s/rtp-parameters/rtp-header-extension-parameters';
 
 
 export class RtpParameters {
@@ -142,4 +142,51 @@ static finishSizePrefixedRtpParametersBuffer(builder:flatbuffers.Builder, offset
   builder.finish(offset, undefined, true);
 }
 
+
+unpack(): RtpParametersT {
+  return new RtpParametersT(
+    this.mid(),
+    this.bb!.createObjList(this.codecs.bind(this), this.codecsLength()),
+    this.bb!.createObjList(this.headerExtensions.bind(this), this.headerExtensionsLength()),
+    this.bb!.createObjList(this.encodings.bind(this), this.encodingsLength()),
+    (this.rtcp() !== null ? this.rtcp()!.unpack() : null)
+  );
+}
+
+
+unpackTo(_o: RtpParametersT): void {
+  _o.mid = this.mid();
+  _o.codecs = this.bb!.createObjList(this.codecs.bind(this), this.codecsLength());
+  _o.headerExtensions = this.bb!.createObjList(this.headerExtensions.bind(this), this.headerExtensionsLength());
+  _o.encodings = this.bb!.createObjList(this.encodings.bind(this), this.encodingsLength());
+  _o.rtcp = (this.rtcp() !== null ? this.rtcp()!.unpack() : null);
+}
+}
+
+export class RtpParametersT {
+constructor(
+  public mid: string|Uint8Array|null = null,
+  public codecs: (RtpCodecParametersT)[] = [],
+  public headerExtensions: (RtpHeaderExtensionParametersT)[] = [],
+  public encodings: (RtpEncodingParametersT)[] = [],
+  public rtcp: RtcpParametersT|null = null
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const mid = (this.mid !== null ? builder.createString(this.mid!) : 0);
+  const codecs = RtpParameters.createCodecsVector(builder, builder.createObjectOffsetList(this.codecs));
+  const headerExtensions = RtpParameters.createHeaderExtensionsVector(builder, builder.createObjectOffsetList(this.headerExtensions));
+  const encodings = RtpParameters.createEncodingsVector(builder, builder.createObjectOffsetList(this.encodings));
+  const rtcp = (this.rtcp !== null ? this.rtcp!.pack(builder) : 0);
+
+  RtpParameters.startRtpParameters(builder);
+  RtpParameters.addMid(builder, mid);
+  RtpParameters.addCodecs(builder, codecs);
+  RtpParameters.addHeaderExtensions(builder, headerExtensions);
+  RtpParameters.addEncodings(builder, encodings);
+  RtpParameters.addRtcp(builder, rtcp);
+
+  return RtpParameters.endRtpParameters(builder);
+}
 }

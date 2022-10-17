@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class DumpRequest {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -32,5 +34,21 @@ static endDumpRequest(builder:flatbuffers.Builder):flatbuffers.Offset {
 static createDumpRequest(builder:flatbuffers.Builder):flatbuffers.Offset {
   DumpRequest.startDumpRequest(builder);
   return DumpRequest.endDumpRequest(builder);
+}
+
+unpack(): DumpRequestT {
+  return new DumpRequestT();
+}
+
+
+unpackTo(_o: DumpRequestT): void {}
+}
+
+export class DumpRequestT {
+constructor(){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  return DumpRequest.createDumpRequest(builder);
 }
 }

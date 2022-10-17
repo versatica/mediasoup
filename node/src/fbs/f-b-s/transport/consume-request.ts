@@ -2,10 +2,10 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { ConsumerLayers } from '../../f-b-s/consumer/consumer-layers';
+import { ConsumerLayers, ConsumerLayersT } from '../../f-b-s/consumer/consumer-layers';
 import { MediaKind } from '../../f-b-s/rtp-parameters/media-kind';
-import { RtpEncodingParameters } from '../../f-b-s/rtp-parameters/rtp-encoding-parameters';
-import { RtpParameters } from '../../f-b-s/rtp-parameters/rtp-parameters';
+import { RtpEncodingParameters, RtpEncodingParametersT } from '../../f-b-s/rtp-parameters/rtp-encoding-parameters';
+import { RtpParameters, RtpParametersT } from '../../f-b-s/rtp-parameters/rtp-parameters';
 import { Type } from '../../f-b-s/rtp-parameters/type';
 
 
@@ -150,4 +150,67 @@ static finishSizePrefixedConsumeRequestBuffer(builder:flatbuffers.Builder, offse
   builder.finish(offset, undefined, true);
 }
 
+
+unpack(): ConsumeRequestT {
+  return new ConsumeRequestT(
+    this.consumerId(),
+    this.producerId(),
+    this.kind(),
+    (this.rtpParameters() !== null ? this.rtpParameters()!.unpack() : null),
+    this.type(),
+    this.bb!.createObjList(this.consumableRtpEncodings.bind(this), this.consumableRtpEncodingsLength()),
+    this.paused(),
+    (this.preferredLayers() !== null ? this.preferredLayers()!.unpack() : null),
+    this.ignoreDtx()
+  );
+}
+
+
+unpackTo(_o: ConsumeRequestT): void {
+  _o.consumerId = this.consumerId();
+  _o.producerId = this.producerId();
+  _o.kind = this.kind();
+  _o.rtpParameters = (this.rtpParameters() !== null ? this.rtpParameters()!.unpack() : null);
+  _o.type = this.type();
+  _o.consumableRtpEncodings = this.bb!.createObjList(this.consumableRtpEncodings.bind(this), this.consumableRtpEncodingsLength());
+  _o.paused = this.paused();
+  _o.preferredLayers = (this.preferredLayers() !== null ? this.preferredLayers()!.unpack() : null);
+  _o.ignoreDtx = this.ignoreDtx();
+}
+}
+
+export class ConsumeRequestT {
+constructor(
+  public consumerId: string|Uint8Array|null = null,
+  public producerId: string|Uint8Array|null = null,
+  public kind: MediaKind = MediaKind.ALL,
+  public rtpParameters: RtpParametersT|null = null,
+  public type: Type = Type.NONE,
+  public consumableRtpEncodings: (RtpEncodingParametersT)[] = [],
+  public paused: boolean = false,
+  public preferredLayers: ConsumerLayersT|null = null,
+  public ignoreDtx: boolean = false
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const consumerId = (this.consumerId !== null ? builder.createString(this.consumerId!) : 0);
+  const producerId = (this.producerId !== null ? builder.createString(this.producerId!) : 0);
+  const rtpParameters = (this.rtpParameters !== null ? this.rtpParameters!.pack(builder) : 0);
+  const consumableRtpEncodings = ConsumeRequest.createConsumableRtpEncodingsVector(builder, builder.createObjectOffsetList(this.consumableRtpEncodings));
+  const preferredLayers = (this.preferredLayers !== null ? this.preferredLayers!.pack(builder) : 0);
+
+  ConsumeRequest.startConsumeRequest(builder);
+  ConsumeRequest.addConsumerId(builder, consumerId);
+  ConsumeRequest.addProducerId(builder, producerId);
+  ConsumeRequest.addKind(builder, this.kind);
+  ConsumeRequest.addRtpParameters(builder, rtpParameters);
+  ConsumeRequest.addType(builder, this.type);
+  ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodings);
+  ConsumeRequest.addPaused(builder, this.paused);
+  ConsumeRequest.addPreferredLayers(builder, preferredLayers);
+  ConsumeRequest.addIgnoreDtx(builder, this.ignoreDtx);
+
+  return ConsumeRequest.endConsumeRequest(builder);
+}
 }

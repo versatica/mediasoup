@@ -18,5 +18,15 @@ export declare class RtpHeaderExtensionParameters {
     static addParameters(builder: flatbuffers.Builder, parametersOffset: flatbuffers.Offset): void;
     static endRtpHeaderExtensionParameters(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createRtpHeaderExtensionParameters(builder: flatbuffers.Builder, uriOffset: flatbuffers.Offset, id: number, encrypt: boolean, parametersOffset: flatbuffers.Offset): flatbuffers.Offset;
+    unpack(): RtpHeaderExtensionParametersT;
+    unpackTo(_o: RtpHeaderExtensionParametersT): void;
+}
+export declare class RtpHeaderExtensionParametersT {
+    uri: string | Uint8Array | null;
+    id: number;
+    encrypt: boolean;
+    parameters: string | Uint8Array | null;
+    constructor(uri?: string | Uint8Array | null, id?: number, encrypt?: boolean, parameters?: string | Uint8Array | null);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=rtp-header-extension-parameters.d.ts.map

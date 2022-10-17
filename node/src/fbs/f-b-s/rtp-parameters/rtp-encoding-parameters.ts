@@ -2,7 +2,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { Rtx } from '../../f-b-s/rtp-parameters/rtx';
+import { Rtx, RtxT } from '../../f-b-s/rtp-parameters/rtx';
 
 
 export class RtpEncodingParameters {
@@ -108,4 +108,61 @@ static endRtpEncodingParameters(builder:flatbuffers.Builder):flatbuffers.Offset 
   return offset;
 }
 
+
+unpack(): RtpEncodingParametersT {
+  return new RtpEncodingParametersT(
+    this.ssrc(),
+    this.rid(),
+    this.codecPayloadType(),
+    (this.rtx() !== null ? this.rtx()!.unpack() : null),
+    this.dtx(),
+    this.scalabilityMode(),
+    this.scaleResolutionDownBy(),
+    this.maxBitrate()
+  );
+}
+
+
+unpackTo(_o: RtpEncodingParametersT): void {
+  _o.ssrc = this.ssrc();
+  _o.rid = this.rid();
+  _o.codecPayloadType = this.codecPayloadType();
+  _o.rtx = (this.rtx() !== null ? this.rtx()!.unpack() : null);
+  _o.dtx = this.dtx();
+  _o.scalabilityMode = this.scalabilityMode();
+  _o.scaleResolutionDownBy = this.scaleResolutionDownBy();
+  _o.maxBitrate = this.maxBitrate();
+}
+}
+
+export class RtpEncodingParametersT {
+constructor(
+  public ssrc: number = 0,
+  public rid: string|Uint8Array|null = null,
+  public codecPayloadType: number = 0,
+  public rtx: RtxT|null = null,
+  public dtx: boolean = false,
+  public scalabilityMode: string|Uint8Array|null = null,
+  public scaleResolutionDownBy: number = 0,
+  public maxBitrate: number = 0
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const rid = (this.rid !== null ? builder.createString(this.rid!) : 0);
+  const rtx = (this.rtx !== null ? this.rtx!.pack(builder) : 0);
+  const scalabilityMode = (this.scalabilityMode !== null ? builder.createString(this.scalabilityMode!) : 0);
+
+  RtpEncodingParameters.startRtpEncodingParameters(builder);
+  RtpEncodingParameters.addSsrc(builder, this.ssrc);
+  RtpEncodingParameters.addRid(builder, rid);
+  RtpEncodingParameters.addCodecPayloadType(builder, this.codecPayloadType);
+  RtpEncodingParameters.addRtx(builder, rtx);
+  RtpEncodingParameters.addDtx(builder, this.dtx);
+  RtpEncodingParameters.addScalabilityMode(builder, scalabilityMode);
+  RtpEncodingParameters.addScaleResolutionDownBy(builder, this.scaleResolutionDownBy);
+  RtpEncodingParameters.addMaxBitrate(builder, this.maxBitrate);
+
+  return RtpEncodingParameters.endRtpEncodingParameters(builder);
+}
 }

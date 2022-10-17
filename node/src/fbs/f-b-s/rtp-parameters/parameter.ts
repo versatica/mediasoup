@@ -2,6 +2,11 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { Boolean, BooleanT } from '../../f-b-s/rtp-parameters/boolean';
+import { Double, DoubleT } from '../../f-b-s/rtp-parameters/double';
+import { Integer, IntegerT } from '../../f-b-s/rtp-parameters/integer';
+import { IntegerArray, IntegerArrayT } from '../../f-b-s/rtp-parameters/integer-array';
+import { String, StringT } from '../../f-b-s/rtp-parameters/string';
 import { Value, unionToValue, unionListToValue } from '../../f-b-s/rtp-parameters/value';
 
 
@@ -67,5 +72,48 @@ static createParameter(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offse
   Parameter.addValueType(builder, valueType);
   Parameter.addValue(builder, valueOffset);
   return Parameter.endParameter(builder);
+}
+
+unpack(): ParameterT {
+  return new ParameterT(
+    this.name(),
+    this.valueType(),
+    (() => {
+      let temp = unionToValue(this.valueType(), this.value.bind(this));
+      if(temp === null) { return null; }
+      return temp.unpack()
+  })()
+  );
+}
+
+
+unpackTo(_o: ParameterT): void {
+  _o.name = this.name();
+  _o.valueType = this.valueType();
+  _o.value = (() => {
+      let temp = unionToValue(this.valueType(), this.value.bind(this));
+      if(temp === null) { return null; }
+      return temp.unpack()
+  })();
+}
+}
+
+export class ParameterT {
+constructor(
+  public name: string|Uint8Array|null = null,
+  public valueType: Value = Value.NONE,
+  public value: BooleanT|DoubleT|IntegerArrayT|IntegerT|StringT|null = null
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const name = (this.name !== null ? builder.createString(this.name!) : 0);
+  const value = builder.createObjectOffset(this.value);
+
+  return Parameter.createParameter(builder,
+    name,
+    this.valueType,
+    value
+  );
 }
 }

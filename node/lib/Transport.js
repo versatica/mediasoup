@@ -361,7 +361,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async consume({ producerId, rtpCapabilities, paused = false, mid, preferredLayers, ignoreDtx = false, pipe = false, appData }) {
         logger.debug('consume()');
-        logger.error("consume()");
         if (!producerId || typeof producerId !== 'string')
             throw new TypeError('missing producerId');
         else if (appData && typeof appData !== 'object')

@@ -15,5 +15,14 @@ export declare class RtcpParameters {
     static addMux(builder: flatbuffers.Builder, mux: boolean): void;
     static endRtcpParameters(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createRtcpParameters(builder: flatbuffers.Builder, cnameOffset: flatbuffers.Offset, reducedSize: boolean, mux: boolean): flatbuffers.Offset;
+    unpack(): RtcpParametersT;
+    unpackTo(_o: RtcpParametersT): void;
+}
+export declare class RtcpParametersT {
+    cname: string | Uint8Array | null;
+    reducedSize: boolean;
+    mux: boolean;
+    constructor(cname?: string | Uint8Array | null, reducedSize?: boolean, mux?: boolean);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=rtcp-parameters.d.ts.map

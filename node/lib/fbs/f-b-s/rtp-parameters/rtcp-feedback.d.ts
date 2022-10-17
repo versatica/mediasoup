@@ -14,5 +14,13 @@ export declare class RtcpFeedback {
     static addParameter(builder: flatbuffers.Builder, parameterOffset: flatbuffers.Offset): void;
     static endRtcpFeedback(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createRtcpFeedback(builder: flatbuffers.Builder, typeOffset: flatbuffers.Offset, parameterOffset: flatbuffers.Offset): flatbuffers.Offset;
+    unpack(): RtcpFeedbackT;
+    unpackTo(_o: RtcpFeedbackT): void;
+}
+export declare class RtcpFeedbackT {
+    type: string | Uint8Array | null;
+    parameter: string | Uint8Array | null;
+    constructor(type?: string | Uint8Array | null, parameter?: string | Uint8Array | null);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=rtcp-feedback.d.ts.map

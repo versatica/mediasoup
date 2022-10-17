@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class Boolean {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -42,5 +44,29 @@ static createBoolean(builder:flatbuffers.Builder, value:number):flatbuffers.Offs
   Boolean.startBoolean(builder);
   Boolean.addValue(builder, value);
   return Boolean.endBoolean(builder);
+}
+
+unpack(): BooleanT {
+  return new BooleanT(
+    this.value()
+  );
+}
+
+
+unpackTo(_o: BooleanT): void {
+  _o.value = this.value();
+}
+}
+
+export class BooleanT {
+constructor(
+  public value: number = 0
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  return Boolean.createBoolean(builder,
+    this.value
+  );
 }
 }

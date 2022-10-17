@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class Double {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -42,5 +44,29 @@ static createDouble(builder:flatbuffers.Builder, value:number):flatbuffers.Offse
   Double.startDouble(builder);
   Double.addValue(builder, value);
   return Double.endDouble(builder);
+}
+
+unpack(): DoubleT {
+  return new DoubleT(
+    this.value()
+  );
+}
+
+
+unpackTo(_o: DoubleT): void {
+  _o.value = this.value();
+}
+}
+
+export class DoubleT {
+constructor(
+  public value: number = 0.0
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  return Double.createDouble(builder,
+    this.value
+  );
 }
 }

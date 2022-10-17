@@ -1,5 +1,5 @@
 import * as flatbuffers from 'flatbuffers';
-import { Rtx } from '../../f-b-s/rtp-parameters/rtx';
+import { Rtx, RtxT } from '../../f-b-s/rtp-parameters/rtx';
 export declare class RtpEncodingParameters {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
@@ -26,5 +26,19 @@ export declare class RtpEncodingParameters {
     static addScaleResolutionDownBy(builder: flatbuffers.Builder, scaleResolutionDownBy: number): void;
     static addMaxBitrate(builder: flatbuffers.Builder, maxBitrate: number): void;
     static endRtpEncodingParameters(builder: flatbuffers.Builder): flatbuffers.Offset;
+    unpack(): RtpEncodingParametersT;
+    unpackTo(_o: RtpEncodingParametersT): void;
+}
+export declare class RtpEncodingParametersT {
+    ssrc: number;
+    rid: string | Uint8Array | null;
+    codecPayloadType: number;
+    rtx: RtxT | null;
+    dtx: boolean;
+    scalabilityMode: string | Uint8Array | null;
+    scaleResolutionDownBy: number;
+    maxBitrate: number;
+    constructor(ssrc?: number, rid?: string | Uint8Array | null, codecPayloadType?: number, rtx?: RtxT | null, dtx?: boolean, scalabilityMode?: string | Uint8Array | null, scaleResolutionDownBy?: number, maxBitrate?: number);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=rtp-encoding-parameters.d.ts.map

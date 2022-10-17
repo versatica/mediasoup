@@ -14,5 +14,14 @@ export declare class ConsumeResponse {
     static addScore(builder: flatbuffers.Builder, score: number): void;
     static endConsumeResponse(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createConsumeResponse(builder: flatbuffers.Builder, paused: boolean, producerPaused: boolean, score: number): flatbuffers.Offset;
+    unpack(): ConsumeResponseT;
+    unpackTo(_o: ConsumeResponseT): void;
+}
+export declare class ConsumeResponseT {
+    paused: boolean;
+    producerPaused: boolean;
+    score: number;
+    constructor(paused?: boolean, producerPaused?: boolean, score?: number);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=consume-response.d.ts.map

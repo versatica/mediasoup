@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class ConsumeResponse {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -62,5 +64,37 @@ static createConsumeResponse(builder:flatbuffers.Builder, paused:boolean, produc
   ConsumeResponse.addProducerPaused(builder, producerPaused);
   ConsumeResponse.addScore(builder, score);
   return ConsumeResponse.endConsumeResponse(builder);
+}
+
+unpack(): ConsumeResponseT {
+  return new ConsumeResponseT(
+    this.paused(),
+    this.producerPaused(),
+    this.score()
+  );
+}
+
+
+unpackTo(_o: ConsumeResponseT): void {
+  _o.paused = this.paused();
+  _o.producerPaused = this.producerPaused();
+  _o.score = this.score();
+}
+}
+
+export class ConsumeResponseT {
+constructor(
+  public paused: boolean = false,
+  public producerPaused: boolean = false,
+  public score: number = 0
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  return ConsumeResponse.createConsumeResponse(builder,
+    this.paused,
+    this.producerPaused,
+    this.score
+  );
 }
 }

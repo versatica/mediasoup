@@ -3,6 +3,8 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { Body, unionToBody, unionListToBody } from '../../f-b-s/response/body';
+import { ConsumeResponse, ConsumeResponseT } from '../../f-b-s/transport/consume-response';
+import { DumpResponse, DumpResponseT } from '../../f-b-s/worker/dump-response';
 
 
 export class Response {
@@ -83,5 +85,51 @@ static createResponse(builder:flatbuffers.Builder, id:number, accepted:boolean, 
   Response.addBodyType(builder, bodyType);
   Response.addBody(builder, bodyOffset);
   return Response.endResponse(builder);
+}
+
+unpack(): ResponseT {
+  return new ResponseT(
+    this.id(),
+    this.accepted(),
+    this.bodyType(),
+    (() => {
+      let temp = unionToBody(this.bodyType(), this.body.bind(this));
+      if(temp === null) { return null; }
+      return temp.unpack()
+  })()
+  );
+}
+
+
+unpackTo(_o: ResponseT): void {
+  _o.id = this.id();
+  _o.accepted = this.accepted();
+  _o.bodyType = this.bodyType();
+  _o.body = (() => {
+      let temp = unionToBody(this.bodyType(), this.body.bind(this));
+      if(temp === null) { return null; }
+      return temp.unpack()
+  })();
+}
+}
+
+export class ResponseT {
+constructor(
+  public id: number = 0,
+  public accepted: boolean = false,
+  public bodyType: Body = Body.NONE,
+  public body: ConsumeResponseT|DumpResponseT|null = null
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const body = builder.createObjectOffset(this.body);
+
+  return Response.createResponse(builder,
+    this.id,
+    this.accepted,
+    this.bodyType,
+    body
+  );
 }
 }

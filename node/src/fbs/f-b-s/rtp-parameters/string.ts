@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class String {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -44,5 +46,31 @@ static createString(builder:flatbuffers.Builder, valueOffset:flatbuffers.Offset)
   String.startString(builder);
   String.addValue(builder, valueOffset);
   return String.endString(builder);
+}
+
+unpack(): StringT {
+  return new StringT(
+    this.value()
+  );
+}
+
+
+unpackTo(_o: StringT): void {
+  _o.value = this.value();
+}
+}
+
+export class StringT {
+constructor(
+  public value: string|Uint8Array|null = null
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const value = (this.value !== null ? builder.createString(this.value!) : 0);
+
+  return String.createString(builder,
+    value
+  );
 }
 }

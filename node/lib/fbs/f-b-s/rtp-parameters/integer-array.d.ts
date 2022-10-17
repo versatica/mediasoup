@@ -18,5 +18,12 @@ export declare class IntegerArray {
     static startValueVector(builder: flatbuffers.Builder, numElems: number): void;
     static endIntegerArray(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createIntegerArray(builder: flatbuffers.Builder, valueOffset: flatbuffers.Offset): flatbuffers.Offset;
+    unpack(): IntegerArrayT;
+    unpackTo(_o: IntegerArrayT): void;
+}
+export declare class IntegerArrayT {
+    value: (number)[];
+    constructor(value?: (number)[]);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=integer-array.d.ts.map

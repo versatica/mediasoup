@@ -8,5 +8,11 @@ export declare class DumpRequest {
     static startDumpRequest(builder: flatbuffers.Builder): void;
     static endDumpRequest(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createDumpRequest(builder: flatbuffers.Builder): flatbuffers.Offset;
+    unpack(): DumpRequestT;
+    unpackTo(_o: DumpRequestT): void;
+}
+export declare class DumpRequestT {
+    constructor();
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=dump-request.d.ts.map

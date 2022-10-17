@@ -3,6 +3,8 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { Body, unionToBody, unionListToBody } from '../../f-b-s/request/body';
+import { ConsumeRequest, ConsumeRequestT } from '../../f-b-s/transport/consume-request';
+import { DumpRequest, DumpRequestT } from '../../f-b-s/worker/dump-request';
 
 
 export class Request {
@@ -85,5 +87,52 @@ static createRequest(builder:flatbuffers.Builder, id:number, handlerIdOffset:fla
   Request.addBodyType(builder, bodyType);
   Request.addBody(builder, bodyOffset);
   return Request.endRequest(builder);
+}
+
+unpack(): RequestT {
+  return new RequestT(
+    this.id(),
+    this.handlerId(),
+    this.bodyType(),
+    (() => {
+      let temp = unionToBody(this.bodyType(), this.body.bind(this));
+      if(temp === null) { return null; }
+      return temp.unpack()
+  })()
+  );
+}
+
+
+unpackTo(_o: RequestT): void {
+  _o.id = this.id();
+  _o.handlerId = this.handlerId();
+  _o.bodyType = this.bodyType();
+  _o.body = (() => {
+      let temp = unionToBody(this.bodyType(), this.body.bind(this));
+      if(temp === null) { return null; }
+      return temp.unpack()
+  })();
+}
+}
+
+export class RequestT {
+constructor(
+  public id: number = 0,
+  public handlerId: string|Uint8Array|null = null,
+  public bodyType: Body = Body.NONE,
+  public body: ConsumeRequestT|DumpRequestT|null = null
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const handlerId = (this.handlerId !== null ? builder.createString(this.handlerId!) : 0);
+  const body = builder.createObjectOffset(this.body);
+
+  return Request.createRequest(builder,
+    this.id,
+    handlerId,
+    this.bodyType,
+    body
+  );
 }
 }

@@ -1,8 +1,8 @@
 import * as flatbuffers from 'flatbuffers';
-import { RtcpParameters } from '../../f-b-s/rtp-parameters/rtcp-parameters';
-import { RtpCodecParameters } from '../../f-b-s/rtp-parameters/rtp-codec-parameters';
-import { RtpEncodingParameters } from '../../f-b-s/rtp-parameters/rtp-encoding-parameters';
-import { RtpHeaderExtensionParameters } from '../../f-b-s/rtp-parameters/rtp-header-extension-parameters';
+import { RtcpParameters, RtcpParametersT } from '../../f-b-s/rtp-parameters/rtcp-parameters';
+import { RtpCodecParameters, RtpCodecParametersT } from '../../f-b-s/rtp-parameters/rtp-codec-parameters';
+import { RtpEncodingParameters, RtpEncodingParametersT } from '../../f-b-s/rtp-parameters/rtp-encoding-parameters';
+import { RtpHeaderExtensionParameters, RtpHeaderExtensionParametersT } from '../../f-b-s/rtp-parameters/rtp-header-extension-parameters';
 export declare class RtpParameters {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
@@ -33,5 +33,16 @@ export declare class RtpParameters {
     static endRtpParameters(builder: flatbuffers.Builder): flatbuffers.Offset;
     static finishRtpParametersBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     static finishSizePrefixedRtpParametersBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
+    unpack(): RtpParametersT;
+    unpackTo(_o: RtpParametersT): void;
+}
+export declare class RtpParametersT {
+    mid: string | Uint8Array | null;
+    codecs: (RtpCodecParametersT)[];
+    headerExtensions: (RtpHeaderExtensionParametersT)[];
+    encodings: (RtpEncodingParametersT)[];
+    rtcp: RtcpParametersT | null;
+    constructor(mid?: string | Uint8Array | null, codecs?: (RtpCodecParametersT)[], headerExtensions?: (RtpHeaderExtensionParametersT)[], encodings?: (RtpEncodingParametersT)[], rtcp?: RtcpParametersT | null);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=rtp-parameters.d.ts.map

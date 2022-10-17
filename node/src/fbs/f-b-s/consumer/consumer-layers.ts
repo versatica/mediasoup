@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class ConsumerLayers {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -60,5 +62,33 @@ static createConsumerLayers(builder:flatbuffers.Builder, spatialLayer:number, te
   ConsumerLayers.addSpatialLayer(builder, spatialLayer);
   ConsumerLayers.addTemporalLayer(builder, temporalLayer);
   return ConsumerLayers.endConsumerLayers(builder);
+}
+
+unpack(): ConsumerLayersT {
+  return new ConsumerLayersT(
+    this.spatialLayer(),
+    this.temporalLayer()
+  );
+}
+
+
+unpackTo(_o: ConsumerLayersT): void {
+  _o.spatialLayer = this.spatialLayer();
+  _o.temporalLayer = this.temporalLayer();
+}
+}
+
+export class ConsumerLayersT {
+constructor(
+  public spatialLayer: number = 0,
+  public temporalLayer: number = 0
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  return ConsumerLayers.createConsumerLayers(builder,
+    this.spatialLayer,
+    this.temporalLayer
+  );
 }
 }

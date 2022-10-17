@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class Integer {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -42,5 +44,29 @@ static createInteger(builder:flatbuffers.Builder, value:number):flatbuffers.Offs
   Integer.startInteger(builder);
   Integer.addValue(builder, value);
   return Integer.endInteger(builder);
+}
+
+unpack(): IntegerT {
+  return new IntegerT(
+    this.value()
+  );
+}
+
+
+unpackTo(_o: IntegerT): void {
+  _o.value = this.value();
+}
+}
+
+export class IntegerT {
+constructor(
+  public value: number = 0
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  return Integer.createInteger(builder,
+    this.value
+  );
 }
 }

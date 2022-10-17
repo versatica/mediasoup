@@ -10,5 +10,12 @@ export declare class Rtx {
     static addSsrc(builder: flatbuffers.Builder, ssrc: number): void;
     static endRtx(builder: flatbuffers.Builder): flatbuffers.Offset;
     static createRtx(builder: flatbuffers.Builder, ssrc: number): flatbuffers.Offset;
+    unpack(): RtxT;
+    unpackTo(_o: RtxT): void;
+}
+export declare class RtxT {
+    ssrc: number;
+    constructor(ssrc?: number);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=rtx.d.ts.map

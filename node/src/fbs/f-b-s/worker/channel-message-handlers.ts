@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+
+
 export class ChannelMessageHandlers {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
@@ -119,5 +121,41 @@ static createChannelMessageHandlers(builder:flatbuffers.Builder, channelRequestH
   ChannelMessageHandlers.addPayloadchannelRequestHandlers(builder, payloadchannelRequestHandlersOffset);
   ChannelMessageHandlers.addPayloadchannelNotificationHandlers(builder, payloadchannelNotificationHandlersOffset);
   return ChannelMessageHandlers.endChannelMessageHandlers(builder);
+}
+
+unpack(): ChannelMessageHandlersT {
+  return new ChannelMessageHandlersT(
+    this.bb!.createScalarList(this.channelRequestHandlers.bind(this), this.channelRequestHandlersLength()),
+    this.bb!.createScalarList(this.payloadchannelRequestHandlers.bind(this), this.payloadchannelRequestHandlersLength()),
+    this.bb!.createScalarList(this.payloadchannelNotificationHandlers.bind(this), this.payloadchannelNotificationHandlersLength())
+  );
+}
+
+
+unpackTo(_o: ChannelMessageHandlersT): void {
+  _o.channelRequestHandlers = this.bb!.createScalarList(this.channelRequestHandlers.bind(this), this.channelRequestHandlersLength());
+  _o.payloadchannelRequestHandlers = this.bb!.createScalarList(this.payloadchannelRequestHandlers.bind(this), this.payloadchannelRequestHandlersLength());
+  _o.payloadchannelNotificationHandlers = this.bb!.createScalarList(this.payloadchannelNotificationHandlers.bind(this), this.payloadchannelNotificationHandlersLength());
+}
+}
+
+export class ChannelMessageHandlersT {
+constructor(
+  public channelRequestHandlers: (string)[] = [],
+  public payloadchannelRequestHandlers: (string)[] = [],
+  public payloadchannelNotificationHandlers: (string)[] = []
+){}
+
+
+pack(builder:flatbuffers.Builder): flatbuffers.Offset {
+  const channelRequestHandlers = ChannelMessageHandlers.createChannelRequestHandlersVector(builder, builder.createObjectOffsetList(this.channelRequestHandlers));
+  const payloadchannelRequestHandlers = ChannelMessageHandlers.createPayloadchannelRequestHandlersVector(builder, builder.createObjectOffsetList(this.payloadchannelRequestHandlers));
+  const payloadchannelNotificationHandlers = ChannelMessageHandlers.createPayloadchannelNotificationHandlersVector(builder, builder.createObjectOffsetList(this.payloadchannelNotificationHandlers));
+
+  return ChannelMessageHandlers.createChannelMessageHandlers(builder,
+    channelRequestHandlers,
+    payloadchannelRequestHandlers,
+    payloadchannelNotificationHandlers
+  );
 }
 }

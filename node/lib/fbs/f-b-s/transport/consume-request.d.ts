@@ -1,8 +1,8 @@
 import * as flatbuffers from 'flatbuffers';
-import { ConsumerLayers } from '../../f-b-s/consumer/consumer-layers';
+import { ConsumerLayers, ConsumerLayersT } from '../../f-b-s/consumer/consumer-layers';
 import { MediaKind } from '../../f-b-s/rtp-parameters/media-kind';
-import { RtpEncodingParameters } from '../../f-b-s/rtp-parameters/rtp-encoding-parameters';
-import { RtpParameters } from '../../f-b-s/rtp-parameters/rtp-parameters';
+import { RtpEncodingParameters, RtpEncodingParametersT } from '../../f-b-s/rtp-parameters/rtp-encoding-parameters';
+import { RtpParameters, RtpParametersT } from '../../f-b-s/rtp-parameters/rtp-parameters';
 import { Type } from '../../f-b-s/rtp-parameters/type';
 export declare class ConsumeRequest {
     bb: flatbuffers.ByteBuffer | null;
@@ -37,5 +37,20 @@ export declare class ConsumeRequest {
     static endConsumeRequest(builder: flatbuffers.Builder): flatbuffers.Offset;
     static finishConsumeRequestBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     static finishSizePrefixedConsumeRequestBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
+    unpack(): ConsumeRequestT;
+    unpackTo(_o: ConsumeRequestT): void;
+}
+export declare class ConsumeRequestT {
+    consumerId: string | Uint8Array | null;
+    producerId: string | Uint8Array | null;
+    kind: MediaKind;
+    rtpParameters: RtpParametersT | null;
+    type: Type;
+    consumableRtpEncodings: (RtpEncodingParametersT)[];
+    paused: boolean;
+    preferredLayers: ConsumerLayersT | null;
+    ignoreDtx: boolean;
+    constructor(consumerId?: string | Uint8Array | null, producerId?: string | Uint8Array | null, kind?: MediaKind, rtpParameters?: RtpParametersT | null, type?: Type, consumableRtpEncodings?: (RtpEncodingParametersT)[], paused?: boolean, preferredLayers?: ConsumerLayersT | null, ignoreDtx?: boolean);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=consume-request.d.ts.map

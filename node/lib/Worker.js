@@ -272,7 +272,8 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         /* Decode the response. */
         const dumpResponse = new response_1.DumpResponse();
         response.body(dumpResponse);
-        return this.parseDumpResponse(dumpResponse);
+        return dumpResponse.unpack();
+        // / return this.parseDumpResponse(dumpResponse);
     }
     /**
      * Get mediasoup-worker process resource usage.

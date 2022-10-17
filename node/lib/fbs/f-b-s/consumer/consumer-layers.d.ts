@@ -14,5 +14,13 @@ export declare class ConsumerLayers {
     static finishConsumerLayersBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     static finishSizePrefixedConsumerLayersBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     static createConsumerLayers(builder: flatbuffers.Builder, spatialLayer: number, temporalLayer: number): flatbuffers.Offset;
+    unpack(): ConsumerLayersT;
+    unpackTo(_o: ConsumerLayersT): void;
+}
+export declare class ConsumerLayersT {
+    spatialLayer: number;
+    temporalLayer: number;
+    constructor(spatialLayer?: number, temporalLayer?: number);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=consumer-layers.d.ts.map
