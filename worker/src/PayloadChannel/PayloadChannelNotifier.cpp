@@ -31,7 +31,7 @@ namespace PayloadChannel
 		notification.append(targetId);
 		notification.append("\",\"event\":\"");
 		notification.append(event);
-		notification.append("}");
+		notification.append("\"}");
 
 		PayloadChannelNotifier::payloadChannel->Send(notification, payload, payloadLen);
 	}
