@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <cctype>   // isprint()
+#include <flatbuffers/flatbuffers.h>
 #include <iterator> // std::ostream_iterator
 #include <mutex>
 #include <nlohmann/json.hpp>
@@ -243,7 +244,7 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 
 	switch (request->_method)
 	{
-		case FBS::Request::Method::WORKER_UDATE_SETTINGS:
+		case FBS::Request::Method::WORKER_UPDATE_SETTINGS:
 		{
 			auto body = request->_data->body_as<FBS::Worker::UpdateableSettings>();
 

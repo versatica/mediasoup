@@ -29,112 +29,54 @@ namespace RTC
 
 	/* Instance methods. */
 
-	WebRtcServer::WebRtcServer(const std::string& id, json& data) : id(id)
+	WebRtcServer::WebRtcServer(const std::string& id, const flatbuffers::Vector<flatbuffers::Offset<FBS::Worker::WebRtcServerListenInfo>>* listenInfos)
 	{
 		MS_TRACE();
 
-		auto jsonListenInfosIt = data.find("listenInfos");
-
-		if (jsonListenInfosIt == data.end())
-			MS_THROW_TYPE_ERROR("missing listenInfos");
-		else if (!jsonListenInfosIt->is_array())
-			MS_THROW_TYPE_ERROR("wrong listenInfos (not an array)");
-		else if (jsonListenInfosIt->empty())
+		if (listenInfos->size() == 0)
 			MS_THROW_TYPE_ERROR("wrong listenInfos (empty array)");
-		else if (jsonListenInfosIt->size() > 8)
+		else if (listenInfos->size() > 8)
 			MS_THROW_TYPE_ERROR("wrong listenInfos (too many entries)");
-
-		std::vector<ListenInfo> listenInfos(jsonListenInfosIt->size());
-
-		for (size_t i{ 0 }; i < jsonListenInfosIt->size(); ++i)
-		{
-			auto& jsonListenInfo = (*jsonListenInfosIt)[i];
-			auto& listenInfo     = listenInfos[i];
-
-			if (!jsonListenInfo.is_object())
-				MS_THROW_TYPE_ERROR("wrong listenInfo (not an object)");
-
-			auto jsonProtocolIt = jsonListenInfo.find("protocol");
-
-			if (jsonProtocolIt == jsonListenInfo.end())
-				MS_THROW_TYPE_ERROR("missing listenInfo.protocol");
-			else if (!jsonProtocolIt->is_string())
-				MS_THROW_TYPE_ERROR("wrong listenInfo.protocol (not an string");
-
-			std::string protocolStr = jsonProtocolIt->get<std::string>();
-
-			Utils::String::ToLowerCase(protocolStr);
-
-			if (protocolStr == "udp")
-				listenInfo.protocol = RTC::TransportTuple::Protocol::UDP;
-			else if (protocolStr == "tcp")
-				listenInfo.protocol = RTC::TransportTuple::Protocol::TCP;
-			else
-				MS_THROW_TYPE_ERROR("invalid listenInfo.protocol (must be 'udp' or 'tcp'");
-
-			auto jsonIpIt = jsonListenInfo.find("ip");
-
-			if (jsonIpIt == jsonListenInfo.end())
-				MS_THROW_TYPE_ERROR("missing listenInfo.ip");
-			else if (!jsonIpIt->is_string())
-				MS_THROW_TYPE_ERROR("wrong listenInfo.ip (not an string");
-
-			listenInfo.ip.assign(jsonIpIt->get<std::string>());
-
-			// This may throw.
-			Utils::IP::NormalizeIp(listenInfo.ip);
-
-			auto jsonAnnouncedIpIt = jsonListenInfo.find("announcedIp");
-
-			if (jsonAnnouncedIpIt != jsonListenInfo.end())
-			{
-				if (!jsonAnnouncedIpIt->is_string())
-					MS_THROW_TYPE_ERROR("wrong listenInfo.announcedIp (not an string)");
-
-				listenInfo.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
-			}
-
-			uint16_t port{ 0 };
-			auto jsonPortIt = jsonListenInfo.find("port");
-
-			if (jsonPortIt != jsonListenInfo.end())
-			{
-				if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
-					MS_THROW_TYPE_ERROR("wrong port (not a positive number)");
-
-				port = jsonPortIt->get<uint16_t>();
-			}
-
-			listenInfo.port = port;
-		}
 
 		try
 		{
-			for (auto& listenInfo : listenInfos)
+			for (const auto* listenInfo: *listenInfos)
 			{
-				if (listenInfo.protocol == RTC::TransportTuple::Protocol::UDP)
+				auto ip = listenInfo->ip()->str();
+
+				// This may throw.
+				Utils::IP::NormalizeIp(ip);
+
+				std::string announcedIp;
+
+				if (flatbuffers::IsFieldPresent(listenInfo, FBS::Worker::WebRtcServerListenInfo::VT_ANNOUNCEDIP))
+				{
+					announcedIp = listenInfo->announcedIp()->str();
+				}
+
+				if (listenInfo->protocol() == FBS::Worker::TransportProtocol::UDP)
 				{
 					// This may throw.
 					RTC::UdpSocket* udpSocket;
 
-					if (listenInfo.port != 0)
-						udpSocket = new RTC::UdpSocket(this, listenInfo.ip, listenInfo.port);
+					if (listenInfo->port() != 0)
+						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port());
 					else
-						udpSocket = new RTC::UdpSocket(this, listenInfo.ip);
+						udpSocket = new RTC::UdpSocket(this, ip);
 
-					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, listenInfo.announcedIp);
+					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedIp);
 				}
-				else if (listenInfo.protocol == RTC::TransportTuple::Protocol::TCP)
+				else if (listenInfo->protocol() == FBS::Worker::TransportProtocol::TCP)
 				{
 					// This may throw.
 					RTC::TcpServer* tcpServer;
 
-					if (listenInfo.port != 0)
-						tcpServer = new RTC::TcpServer(this, this, listenInfo.ip, listenInfo.port);
+					if (listenInfo->port() != 0)
+						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port());
 					else
-						tcpServer = new RTC::TcpServer(this, this, listenInfo.ip);
+						tcpServer = new RTC::TcpServer(this, this, ip);
 
-					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, listenInfo.announcedIp);
+					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedIp);
 				}
 			}
 

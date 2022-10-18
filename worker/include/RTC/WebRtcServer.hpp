@@ -11,6 +11,7 @@
 #include "RTC/WebRtcTransport.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <flatbuffers/flatbuffers.h>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -23,15 +24,6 @@ namespace RTC
 	                     public RTC::WebRtcTransport::WebRtcTransportListener,
 	                     public Channel::ChannelSocket::RequestHandler
 	{
-	private:
-		struct ListenInfo
-		{
-			RTC::TransportTuple::Protocol protocol;
-			std::string ip;
-			std::string announcedIp;
-			uint16_t port;
-		};
-
 	private:
 		struct UdpSocketOrTcpServer
 		{
@@ -47,7 +39,7 @@ namespace RTC
 		};
 
 	public:
-		WebRtcServer(const std::string& id, json& data);
+		WebRtcServer(const std::string& id, const flatbuffers::Vector<flatbuffers::Offset<FBS::Worker::WebRtcServerListenInfo>>* listenInfos);
 		~WebRtcServer();
 
 	public:

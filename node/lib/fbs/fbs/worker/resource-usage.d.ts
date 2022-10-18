@@ -1,0 +1,66 @@
+import * as flatbuffers from 'flatbuffers';
+export declare class ResourceUsage {
+    bb: flatbuffers.ByteBuffer | null;
+    bb_pos: number;
+    __init(i: number, bb: flatbuffers.ByteBuffer): ResourceUsage;
+    static getRootAsResourceUsage(bb: flatbuffers.ByteBuffer, obj?: ResourceUsage): ResourceUsage;
+    static getSizePrefixedRootAsResourceUsage(bb: flatbuffers.ByteBuffer, obj?: ResourceUsage): ResourceUsage;
+    ruUtime(): bigint;
+    ruStime(): bigint;
+    ruMaxrss(): bigint;
+    ruIxrss(): bigint;
+    ruIdrss(): bigint;
+    ruIsrss(): bigint;
+    ruMinflt(): bigint;
+    ruMajflt(): bigint;
+    ruNswap(): bigint;
+    ruInblock(): bigint;
+    ruOublock(): bigint;
+    ruMsgsnd(): bigint;
+    ruMsgrcv(): bigint;
+    ruNsignals(): bigint;
+    ruNvcsw(): bigint;
+    ruNivcsw(): bigint;
+    static startResourceUsage(builder: flatbuffers.Builder): void;
+    static addRuUtime(builder: flatbuffers.Builder, ruUtime: bigint): void;
+    static addRuStime(builder: flatbuffers.Builder, ruStime: bigint): void;
+    static addRuMaxrss(builder: flatbuffers.Builder, ruMaxrss: bigint): void;
+    static addRuIxrss(builder: flatbuffers.Builder, ruIxrss: bigint): void;
+    static addRuIdrss(builder: flatbuffers.Builder, ruIdrss: bigint): void;
+    static addRuIsrss(builder: flatbuffers.Builder, ruIsrss: bigint): void;
+    static addRuMinflt(builder: flatbuffers.Builder, ruMinflt: bigint): void;
+    static addRuMajflt(builder: flatbuffers.Builder, ruMajflt: bigint): void;
+    static addRuNswap(builder: flatbuffers.Builder, ruNswap: bigint): void;
+    static addRuInblock(builder: flatbuffers.Builder, ruInblock: bigint): void;
+    static addRuOublock(builder: flatbuffers.Builder, ruOublock: bigint): void;
+    static addRuMsgsnd(builder: flatbuffers.Builder, ruMsgsnd: bigint): void;
+    static addRuMsgrcv(builder: flatbuffers.Builder, ruMsgrcv: bigint): void;
+    static addRuNsignals(builder: flatbuffers.Builder, ruNsignals: bigint): void;
+    static addRuNvcsw(builder: flatbuffers.Builder, ruNvcsw: bigint): void;
+    static addRuNivcsw(builder: flatbuffers.Builder, ruNivcsw: bigint): void;
+    static endResourceUsage(builder: flatbuffers.Builder): flatbuffers.Offset;
+    static createResourceUsage(builder: flatbuffers.Builder, ruUtime: bigint, ruStime: bigint, ruMaxrss: bigint, ruIxrss: bigint, ruIdrss: bigint, ruIsrss: bigint, ruMinflt: bigint, ruMajflt: bigint, ruNswap: bigint, ruInblock: bigint, ruOublock: bigint, ruMsgsnd: bigint, ruMsgrcv: bigint, ruNsignals: bigint, ruNvcsw: bigint, ruNivcsw: bigint): flatbuffers.Offset;
+    unpack(): ResourceUsageT;
+    unpackTo(_o: ResourceUsageT): void;
+}
+export declare class ResourceUsageT {
+    ruUtime: bigint;
+    ruStime: bigint;
+    ruMaxrss: bigint;
+    ruIxrss: bigint;
+    ruIdrss: bigint;
+    ruIsrss: bigint;
+    ruMinflt: bigint;
+    ruMajflt: bigint;
+    ruNswap: bigint;
+    ruInblock: bigint;
+    ruOublock: bigint;
+    ruMsgsnd: bigint;
+    ruMsgrcv: bigint;
+    ruNsignals: bigint;
+    ruNvcsw: bigint;
+    ruNivcsw: bigint;
+    constructor(ruUtime?: bigint, ruStime?: bigint, ruMaxrss?: bigint, ruIxrss?: bigint, ruIdrss?: bigint, ruIsrss?: bigint, ruMinflt?: bigint, ruMajflt?: bigint, ruNswap?: bigint, ruInblock?: bigint, ruOublock?: bigint, ruMsgsnd?: bigint, ruMsgrcv?: bigint, ruNsignals?: bigint, ruNvcsw?: bigint, ruNivcsw?: bigint);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
+}
+//# sourceMappingURL=resource-usage.d.ts.map

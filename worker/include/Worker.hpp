@@ -37,6 +37,7 @@ private:
 	RTC::WebRtcServer* GetWebRtcServerFromData(json& data) const;
 	void SetNewRouterIdFromData(json& data, std::string& routerId) const;
 	RTC::Router* GetRouterFromData(json& data) const;
+	void CheckWebRtcServer(const std::string& webRtcServerId) const;
 
 	/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 public:

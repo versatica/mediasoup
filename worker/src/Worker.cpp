@@ -252,6 +252,12 @@ RTC::Router* Worker::GetRouterFromData(json& data) const
 	return router;
 }
 
+void Worker::CheckWebRtcServer(const std::string& webRtcServerId) const
+{
+	if (this->mapWebRtcServers.find(webRtcServerId) != this->mapWebRtcServers.end())
+		MS_THROW_ERROR("a WebRtcServer with same webRtcServerId already exists");
+}
+
 inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
@@ -265,41 +271,6 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 	switch (request->methodId)
 	{
-		case Channel::ChannelRequest::MethodId::WORKER_UPDATE_SETTINGS:
-		{
-			Settings::HandleRequest(request);
-
-			break;
-		}
-
-		case Channel::ChannelRequest::MethodId::WORKER_CREATE_WEBRTC_SERVER:
-		{
-			try
-			{
-				std::string webRtcServerId;
-
-				SetNewWebRtcServerIdFromData(request->data, webRtcServerId);
-
-				auto* webRtcServer = new RTC::WebRtcServer(webRtcServerId, request->data);
-
-				this->mapWebRtcServers[webRtcServerId] = webRtcServer;
-
-				MS_DEBUG_DEV("WebRtcServer created [webRtcServerId:%s]", webRtcServerId.c_str());
-
-				request->Accept();
-			}
-			catch (const MediaSoupTypeError& error)
-			{
-				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->method.c_str());
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
-			}
-
-			break;
-		}
-
 		case Channel::ChannelRequest::MethodId::WORKER_WEBRTC_SERVER_CLOSE:
 		{
 			RTC::WebRtcServer* webRtcServer{ nullptr };
@@ -444,9 +415,39 @@ binary:
 			break;
 		}
 
-		case FBS::Request::Method::WORKER_UDATE_SETTINGS:
+		case FBS::Request::Method::WORKER_UPDATE_SETTINGS:
 		{
 			Settings::HandleRequest(request);
+
+			break;
+		}
+
+		case FBS::Request::Method::WORKER_CREATE_WEBRTC_SERVER:
+		{
+			try
+			{
+				auto body = request->_data->body_as<FBS::Worker::CreateWebRtcServerRequest>();
+
+				std::string webRtcServerId = body->webRtcServerId()->str();
+
+				CheckWebRtcServer(webRtcServerId);
+
+				auto* webRtcServer = new RTC::WebRtcServer(webRtcServerId, body->listenInfos());
+
+				this->mapWebRtcServers[webRtcServerId] = webRtcServer;
+
+				MS_DEBUG_DEV("WebRtcServer created [webRtcServerId:%s]", webRtcServerId.c_str());
+
+				request->Accept();
+			}
+			catch (const MediaSoupTypeError& error)
+			{
+				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+			}
 
 			break;
 		}

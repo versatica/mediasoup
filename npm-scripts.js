@@ -95,7 +95,7 @@ switch (task)
 
 	case 'flatc:node':
 	{
-		const flatc = 'worker/subprojects/flatbuffers-2.0.6/builddir/flatc';
+		const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
 
 		const options = `--gen-object-api`
 		const command = `${flatc} --ts ${options} -o node/src/fbs `;
@@ -108,7 +108,7 @@ switch (task)
 
 	case 'flatc:worker':
 	{
-		const flatc = 'worker/subprojects/flatbuffers-2.0.6/builddir/flatc';
+		const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
 
 		const command = `${flatc} --cpp --cpp-field-case-style lower --reflect-names --scoped-enums -o worker/include/FBS/ `;
 

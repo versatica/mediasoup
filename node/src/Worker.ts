@@ -11,7 +11,8 @@ import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { Body as RequestBody, Method } from './fbs/request';
 import { Dump, ResourceUsage } from './fbs/response';
-import { ChannelMessageHandlers, UpdateableSettingsT } from './fbs/worker';
+import { ChannelMessageHandlers, UpdateableSettingsT, CreateWebRtcServerRequestT, TransportProtocol } from './fbs/worker';
+import { WebRtcServerListenInfoT } from './fbs/f-b-s/worker/web-rtc-server-listen-info';
 import { getArray } from './fbs/utils';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
@@ -636,7 +637,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		const updateableSettingsOffset = updateableSettings.pack(builder);
 
 		await this.#channel.requestBinary(
-			Method.WORKER_UDATE_SETTINGS,
+			Method.WORKER_UPDATE_SETTINGS,
 			RequestBody.FBS_Worker_UpdateableSettings,
 			updateableSettingsOffset
 		);
@@ -656,17 +657,33 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		const reqData =
-		{
-			webRtcServerId : uuidv4(),
-			listenInfos
-		};
+		// Get flatbuffer builder.
+		const builder = this.#channel.bufferBuilder;
+		const fbsListenInfos:WebRtcServerListenInfoT[] = [];
 
-		await this.#channel.request('worker.createWebRtcServer', undefined, reqData);
+		for (const listenInfo of listenInfos)
+		{
+			fbsListenInfos.push(new WebRtcServerListenInfoT(
+				listenInfo.protocol === 'udp' ? TransportProtocol.UDP : TransportProtocol.TCP,
+				listenInfo.ip,
+				listenInfo.announcedIp,
+				listenInfo.port)
+			);
+		}
+
+		const webRtcServerId = uuidv4();
+		const createWebRtcServerRequestT = new CreateWebRtcServerRequestT(webRtcServerId, fbsListenInfos);
+		const createWebRtcServerRequestOffset = createWebRtcServerRequestT.pack(builder);
+
+		await this.#channel.requestBinary(
+			Method.WORKER_CREATE_WEBRTC_SERVER,
+			RequestBody.FBS_Worker_CreateWebRtcServerRequest,
+			createWebRtcServerRequestOffset
+		);
 
 		const webRtcServer = new WebRtcServer(
 			{
-				internal : { webRtcServerId: reqData.webRtcServerId },
+				internal : { webRtcServerId },
 				channel  : this.#channel,
 				appData
 			});

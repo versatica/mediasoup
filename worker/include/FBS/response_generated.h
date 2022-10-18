@@ -6,10 +6,15 @@
 
 #include "flatbuffers/flatbuffers.h"
 
-#include "worker_generated.h"
-#include "rtpParameters_generated.h"
+// Ensure the included flatbuffers.h is the same version as when this file was
+// generated, otherwise it may not be compatible.
+static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
+              FLATBUFFERS_VERSION_MINOR == 0 &&
+              FLATBUFFERS_VERSION_REVISION == 8,
+             "Non-compatible flatbuffers version included");
+
 #include "transport_generated.h"
-#include "consumer_generated.h"
+#include "worker_generated.h"
 
 namespace FBS {
 namespace Response {

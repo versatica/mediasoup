@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateableSettingsT = exports.UpdateableSettings = exports.ConsumeRequestT = exports.ConsumeRequest = exports.RequestT = exports.Request = exports.Method = exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
+exports.UpdateableSettingsT = exports.UpdateableSettings = exports.CreateWebRtcServerRequestT = exports.CreateWebRtcServerRequest = exports.ConsumeRequestT = exports.ConsumeRequest = exports.RequestT = exports.Request = exports.Method = exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
 var body_1 = require("./f-b-s/request/body");
 Object.defineProperty(exports, "Body", { enumerable: true, get: function () { return body_1.Body; } });
 Object.defineProperty(exports, "unionToBody", { enumerable: true, get: function () { return body_1.unionToBody; } });
@@ -13,6 +13,9 @@ Object.defineProperty(exports, "RequestT", { enumerable: true, get: function () 
 var consume_request_1 = require("./f-b-s/transport/consume-request");
 Object.defineProperty(exports, "ConsumeRequest", { enumerable: true, get: function () { return consume_request_1.ConsumeRequest; } });
 Object.defineProperty(exports, "ConsumeRequestT", { enumerable: true, get: function () { return consume_request_1.ConsumeRequestT; } });
+var create_web_rtc_server_request_1 = require("./f-b-s/worker/create-web-rtc-server-request");
+Object.defineProperty(exports, "CreateWebRtcServerRequest", { enumerable: true, get: function () { return create_web_rtc_server_request_1.CreateWebRtcServerRequest; } });
+Object.defineProperty(exports, "CreateWebRtcServerRequestT", { enumerable: true, get: function () { return create_web_rtc_server_request_1.CreateWebRtcServerRequestT; } });
 var updateable_settings_1 = require("./f-b-s/worker/updateable-settings");
 Object.defineProperty(exports, "UpdateableSettings", { enumerable: true, get: function () { return updateable_settings_1.UpdateableSettings; } });
 Object.defineProperty(exports, "UpdateableSettingsT", { enumerable: true, get: function () { return updateable_settings_1.UpdateableSettingsT; } });

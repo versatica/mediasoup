@@ -15,6 +15,7 @@ const WebRtcServer_1 = require("./WebRtcServer");
 const request_1 = require("./fbs/request");
 const response_1 = require("./fbs/response");
 const worker_1 = require("./fbs/worker");
+const web_rtc_server_listen_info_1 = require("./fbs/f-b-s/worker/web-rtc-server-listen-info");
 const utils_1 = require("./fbs/utils");
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
@@ -311,7 +312,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const builder = this.#channel.bufferBuilder;
         const updateableSettings = new worker_1.UpdateableSettingsT(logLevel, logTags);
         const updateableSettingsOffset = updateableSettings.pack(builder);
-        await this.#channel.requestBinary(request_1.Method.WORKER_UDATE_SETTINGS, request_1.Body.FBS_Worker_UpdateableSettings, updateableSettingsOffset);
+        await this.#channel.requestBinary(request_1.Method.WORKER_UPDATE_SETTINGS, request_1.Body.FBS_Worker_UpdateableSettings, updateableSettingsOffset);
     }
     /**
      * Create a WebRtcServer.
@@ -320,13 +321,18 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('createWebRtcServer()');
         if (appData && typeof appData !== 'object')
             throw new TypeError('if given, appData must be an object');
-        const reqData = {
-            webRtcServerId: (0, uuid_1.v4)(),
-            listenInfos
-        };
-        await this.#channel.request('worker.createWebRtcServer', undefined, reqData);
+        // Get flatbuffer builder.
+        const builder = this.#channel.bufferBuilder;
+        const fbsListenInfos = [];
+        for (const listenInfo of listenInfos) {
+            fbsListenInfos.push(new web_rtc_server_listen_info_1.WebRtcServerListenInfoT(listenInfo.protocol === 'udp' ? worker_1.TransportProtocol.UDP : worker_1.TransportProtocol.TCP, listenInfo.ip, listenInfo.announcedIp, listenInfo.port));
+        }
+        const webRtcServerId = (0, uuid_1.v4)();
+        const createWebRtcServerRequestT = new worker_1.CreateWebRtcServerRequestT(webRtcServerId, fbsListenInfos);
+        const createWebRtcServerRequestOffset = createWebRtcServerRequestT.pack(builder);
+        await this.#channel.requestBinary(request_1.Method.WORKER_CREATE_WEBRTC_SERVER, request_1.Body.FBS_Worker_CreateWebRtcServerRequest, createWebRtcServerRequestOffset);
         const webRtcServer = new WebRtcServer_1.WebRtcServer({
-            internal: { webRtcServerId: reqData.webRtcServerId },
+            internal: { webRtcServerId },
             channel: this.#channel,
             appData
         });
