@@ -14,7 +14,10 @@ namespace RTC
 	/* Instance methods. */
 
 	SimpleConsumer::SimpleConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, const FBS::Transport::ConsumeRequest* data)
+	  const std::string& id,
+	  const std::string& producerId,
+	  RTC::Consumer::Listener* listener,
+	  const FBS::Transport::ConsumeRequest* data)
 	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SIMPLE)
 	{
 		MS_TRACE();

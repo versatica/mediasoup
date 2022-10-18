@@ -5,12 +5,12 @@
 #include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "DepUsrSCTP.hpp"
+#include "FBS/response_generated.h"
+#include "FBS/worker_generated.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Channel/ChannelNotifier.hpp"
-#include "FBS/worker_generated.h"
-#include "FBS/response_generated.h"
 
 /* Instance methods. */
 
@@ -124,7 +124,8 @@ flatbuffers::Offset<FBS::Worker::Dump> Worker::FillBuffer(flatbuffers::FlatBuffe
 	return FBS::Worker::CreateDump(builder, Logger::pid, webRtcServers, routers, channelMessageHandlers);
 }
 
-flatbuffers::Offset<FBS::Worker::ResourceUsage> Worker::FillBufferResourceUsage(flatbuffers::FlatBufferBuilder& builder) const
+flatbuffers::Offset<FBS::Worker::ResourceUsage> Worker::FillBufferResourceUsage(
+  flatbuffers::FlatBufferBuilder& builder) const
 {
 	MS_TRACE();
 
@@ -136,52 +137,51 @@ flatbuffers::Offset<FBS::Worker::ResourceUsage> Worker::FillBufferResourceUsage(
 	if (err != 0)
 		MS_THROW_ERROR("uv_getrusagerequest() failed: %s", uv_strerror(err));
 
+	return FBS::Worker::CreateResourceUsage(
+	  builder,
+	  // Add ru_utime (uv_timeval_t, user CPU time used, converted to ms).
+	  (uvRusage.ru_utime.tv_sec * static_cast<uint64_t>(1000)) + (uvRusage.ru_utime.tv_usec / 1000),
+	  // Add ru_stime (uv_timeval_t, system CPU time used, converted to ms).
+	  (uvRusage.ru_stime.tv_sec * static_cast<uint64_t>(1000)) + (uvRusage.ru_stime.tv_usec / 1000),
+	  // Add ru_maxrss (uint64_t, maximum resident set size).
+	  uvRusage.ru_maxrss,
 
-	return FBS::Worker::CreateResourceUsage(builder,
-			// Add ru_utime (uv_timeval_t, user CPU time used, converted to ms).
-			(uvRusage.ru_utime.tv_sec * static_cast<uint64_t>(1000)) + (uvRusage.ru_utime.tv_usec / 1000),
-			// Add ru_stime (uv_timeval_t, system CPU time used, converted to ms).
-			(uvRusage.ru_stime.tv_sec * static_cast<uint64_t>(1000)) + (uvRusage.ru_stime.tv_usec / 1000),
-			// Add ru_maxrss (uint64_t, maximum resident set size).
-			uvRusage.ru_maxrss,
+	  // Add ru_ixrss (uint64_t, integral shared memory size).
+	  uvRusage.ru_ixrss,
 
-			// Add ru_ixrss (uint64_t, integral shared memory size).
-			uvRusage.ru_ixrss,
+	  // Add ru_idrss (uint64_t, integral unshared data size).
+	  uvRusage.ru_idrss,
 
-			// Add ru_idrss (uint64_t, integral unshared data size).
-			uvRusage.ru_idrss,
+	  // Add ru_isrss (uint64_t, integral unshared stack size).
+	  uvRusage.ru_isrss,
 
-			// Add ru_isrss (uint64_t, integral unshared stack size).
-			uvRusage.ru_isrss,
+	  // Add ru_minflt (uint64_t, page reclaims, soft page faults).
+	  uvRusage.ru_minflt,
 
-			// Add ru_minflt (uint64_t, page reclaims, soft page faults).
-			uvRusage.ru_minflt,
+	  // Add ru_majflt (uint64_t, page faults, hard page faults).
+	  uvRusage.ru_majflt,
 
-			// Add ru_majflt (uint64_t, page faults, hard page faults).
-			uvRusage.ru_majflt,
+	  // Add ru_nswap (uint64_t, swaps).
+	  uvRusage.ru_nswap,
 
-			// Add ru_nswap (uint64_t, swaps).
-			uvRusage.ru_nswap,
+	  // Add ru_inblock (uint64_t, block input operations).
+	  uvRusage.ru_inblock,
 
-			// Add ru_inblock (uint64_t, block input operations).
-			uvRusage.ru_inblock,
+	  // Add ru_oublock (uint64_t, block output operations).
+	  uvRusage.ru_oublock,
 
-			// Add ru_oublock (uint64_t, block output operations).
-			uvRusage.ru_oublock,
+	  // Add ru_msgsnd (uint64_t, IPC messages sent).
+	  uvRusage.ru_msgsnd,
 
-			// Add ru_msgsnd (uint64_t, IPC messages sent).
-			uvRusage.ru_msgsnd,
+	  // Add ru_msgrcv (uint64_t, IPC messages received).
+	  uvRusage.ru_msgrcv,
 
-			// Add ru_msgrcv (uint64_t, IPC messages received).
-			uvRusage.ru_msgrcv,
-
-			// Add ru_nsignals (uint64_t, signals received).
-			uvRusage.ru_nsignals,
-			// Add ru_nvcsw (uint64_t, voluntary context switches).
-			uvRusage.ru_nvcsw,
-			// Add ru_nivcsw (uint64_t, involuntary context switches).
-			uvRusage.ru_nivcsw
-	);
+	  // Add ru_nsignals (uint64_t, signals received).
+	  uvRusage.ru_nsignals,
+	  // Add ru_nvcsw (uint64_t, voluntary context switches).
+	  uvRusage.ru_nvcsw,
+	  // Add ru_nivcsw (uint64_t, involuntary context switches).
+	  uvRusage.ru_nivcsw);
 }
 
 void Worker::SetNewWebRtcServerIdFromData(json& data, std::string& webRtcServerId) const
@@ -377,7 +377,9 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 binary:
 
 	MS_ERROR(
-	  "Channel request received [method:%s, id:%" PRIu32 "]", Channel::ChannelRequest::method2String.at(request->_method), request->id);
+	  "Channel request received [method:%s, id:%" PRIu32 "]",
+	  Channel::ChannelRequest::method2String.at(request->_method),
+	  request->id);
 
 	switch (request->_method)
 	{

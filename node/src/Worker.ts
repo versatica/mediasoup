@@ -672,7 +672,8 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		}
 
 		const webRtcServerId = uuidv4();
-		const createWebRtcServerRequestT = new CreateWebRtcServerRequestT(webRtcServerId, fbsListenInfos);
+		const createWebRtcServerRequestT = new CreateWebRtcServerRequestT(
+			webRtcServerId, fbsListenInfos);
 		const createWebRtcServerRequestOffset = createWebRtcServerRequestT.pack(builder);
 
 		await this.#channel.requestBinary(

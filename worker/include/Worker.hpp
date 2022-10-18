@@ -2,6 +2,7 @@
 #define MS_WORKER_HPP
 
 #include "common.hpp"
+#include "FBS/worker_generated.h"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/PayloadChannelNotification.hpp"
@@ -11,9 +12,8 @@
 #include "RTC/WebRtcServer.hpp"
 #include "handles/SignalsHandler.hpp"
 #include <absl/container/flat_hash_map.h>
-#include <nlohmann/json.hpp>
 #include <flatbuffers/flatbuffer_builder.h>
-#include "FBS/worker_generated.h"
+#include <nlohmann/json.hpp>
 #include <string>
 
 using json = nlohmann::json;
@@ -30,7 +30,8 @@ public:
 private:
 	void Close();
 	flatbuffers::Offset<FBS::Worker::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
-	flatbuffers::Offset<FBS::Worker::ResourceUsage> FillBufferResourceUsage(flatbuffers::FlatBufferBuilder& builder) const;
+	flatbuffers::Offset<FBS::Worker::ResourceUsage> FillBufferResourceUsage(
+	  flatbuffers::FlatBufferBuilder& builder) const;
 	void FillJson(json& jsonObject) const;
 	void FillJsonResourceUsage(json& jsonObject) const;
 	void SetNewWebRtcServerIdFromData(json& data, std::string& webRtcServerId) const;

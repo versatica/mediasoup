@@ -29,7 +29,9 @@ namespace RTC
 
 	/* Instance methods. */
 
-	WebRtcServer::WebRtcServer(const std::string& id, const flatbuffers::Vector<flatbuffers::Offset<FBS::Worker::WebRtcServerListenInfo>>* listenInfos)
+	WebRtcServer::WebRtcServer(
+	  const std::string& id,
+	  const flatbuffers::Vector<flatbuffers::Offset<FBS::Worker::WebRtcServerListenInfo>>* listenInfos)
 	{
 		MS_TRACE();
 
@@ -40,7 +42,7 @@ namespace RTC
 
 		try
 		{
-			for (const auto* listenInfo: *listenInfos)
+			for (const auto* listenInfo : *listenInfos)
 			{
 				auto ip = listenInfo->ip()->str();
 
@@ -49,7 +51,8 @@ namespace RTC
 
 				std::string announcedIp;
 
-				if (flatbuffers::IsFieldPresent(listenInfo, FBS::Worker::WebRtcServerListenInfo::VT_ANNOUNCEDIP))
+				if (flatbuffers::IsFieldPresent(
+				      listenInfo, FBS::Worker::WebRtcServerListenInfo::VT_ANNOUNCEDIP))
 				{
 					announcedIp = listenInfo->announcedIp()->str();
 				}

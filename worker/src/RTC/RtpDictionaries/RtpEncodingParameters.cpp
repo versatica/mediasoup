@@ -129,7 +129,8 @@ namespace RTC
 			this->rid = data->rid()->str();
 
 		// codecPayloadType is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_CODECPAYLOADTYPE))
+		if (flatbuffers::IsFieldPresent(
+		      data, FBS::RtpParameters::RtpEncodingParameters::VT_CODECPAYLOADTYPE))
 		{
 			this->codecPayloadType    = data->codecPayloadType();
 			this->hasCodecPayloadType = true;
@@ -152,7 +153,8 @@ namespace RTC
 		this->dtx = data->dtx();
 
 		// scalabilityMode is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_SCALABILITYMODE))
+		if (flatbuffers::IsFieldPresent(
+		      data, FBS::RtpParameters::RtpEncodingParameters::VT_SCALABILITYMODE))
 		{
 			std::string scalabilityMode = data->scalabilityMode()->str();
 

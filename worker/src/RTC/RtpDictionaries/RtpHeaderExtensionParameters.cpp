@@ -53,7 +53,8 @@ namespace RTC
 			this->parameters.Set(*jsonParametersIt);
 	}
 
-	RtpHeaderExtensionParameters::RtpHeaderExtensionParameters(const FBS::RtpParameters::RtpHeaderExtensionParameters* const data)
+	RtpHeaderExtensionParameters::RtpHeaderExtensionParameters(
+	  const FBS::RtpParameters::RtpHeaderExtensionParameters* const data)
 	{
 		MS_TRACE();
 
@@ -73,10 +74,11 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("invalid id 0");
 
 		// encrypt is false by default.
-			this->encrypt = data->encrypt();
+		this->encrypt = data->encrypt();
 
 		// parameters is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpHeaderExtensionParameters::VT_PARAMETERS))
+		if (flatbuffers::IsFieldPresent(
+		      data, FBS::RtpParameters::RtpHeaderExtensionParameters::VT_PARAMETERS))
 		{
 			// TODO.
 			// this->parameters.Set(data->parameters()->str());

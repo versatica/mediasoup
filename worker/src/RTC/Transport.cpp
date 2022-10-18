@@ -2,12 +2,12 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Transport.hpp"
+#include "FBS/transport_generated.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "Channel/ChannelNotifier.hpp"
 #include "PayloadChannel/PayloadChannelNotifier.hpp"
-#include "FBS/transport_generated.h"
 #include "RTC/BweType.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -1202,132 +1202,136 @@ namespace RTC
 
 		return;
 
-binary:
+	binary:
 
 		switch (request->_data->body_type())
 		{
 			case FBS::Request::Body::FBS_Transport_ConsumeRequest:
+			{
+				auto body = request->_data->body_as<FBS::Transport::ConsumeRequest>();
+
+				std::string producerId = body->producerId()->str();
+				std::string consumerId = body->consumerId()->str();
+
+				if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
 				{
-					auto body = request->_data->body_as<FBS::Transport::ConsumeRequest>();
+					MS_THROW_ERROR("a Consumer with same consumerId already exists");
+				}
 
-					std::string producerId = body->producerId()->str();
-					std::string consumerId = body->consumerId()->str();
+				auto type = RTC::RtpParameters::Type(body->type());
 
-					if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
+				RTC::Consumer* consumer{ nullptr };
+
+				switch (type)
+				{
+					case RTC::RtpParameters::Type::NONE:
 					{
-						MS_THROW_ERROR("a Consumer with same consumerId already exists");
+						MS_THROW_TYPE_ERROR("invalid type 'none'");
+
+						break;
 					}
 
-					auto type = RTC::RtpParameters::Type(body->type());
-
-					RTC::Consumer* consumer{ nullptr };
-
-					switch (type)
+					case RTC::RtpParameters::Type::SIMPLE:
 					{
-						case RTC::RtpParameters::Type::NONE:
-							{
-								MS_THROW_TYPE_ERROR("invalid type 'none'");
+						// This may throw.
+						consumer = new RTC::SimpleConsumer(consumerId, producerId, this, body);
 
-								break;
-							}
-
-						case RTC::RtpParameters::Type::SIMPLE:
-							{
-								// This may throw.
-								consumer = new RTC::SimpleConsumer(consumerId, producerId, this, body);
-
-								break;
-							}
-
-						case RTC::RtpParameters::Type::SIMULCAST:
-							{
-								// This may throw.
-								consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, request->data);
-
-								break;
-							}
-
-						case RTC::RtpParameters::Type::SVC:
-							{
-								// This may throw.
-								consumer = new RTC::SvcConsumer(consumerId, producerId, this, request->data);
-
-								break;
-							}
-
-						case RTC::RtpParameters::Type::PIPE:
-							{
-								// This may throw.
-								consumer = new RTC::PipeConsumer(consumerId, producerId, this, request->data);
-
-								break;
-							}
+						break;
 					}
 
-					// Notify the listener.
-					// This may throw if no Producer is found.
-					try
+					case RTC::RtpParameters::Type::SIMULCAST:
 					{
-						this->listener->OnTransportNewConsumer(this, consumer, producerId);
-					}
-					catch (const MediaSoupError& error)
-					{
-						delete consumer;
+						// This may throw.
+						consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, request->data);
 
-						throw;
+						break;
 					}
 
-					// Insert into the maps.
-					this->mapConsumers[consumerId] = consumer;
-
-					for (auto ssrc : consumer->GetMediaSsrcs())
+					case RTC::RtpParameters::Type::SVC:
 					{
-						this->mapSsrcConsumer[ssrc] = consumer;
+						// This may throw.
+						consumer = new RTC::SvcConsumer(consumerId, producerId, this, request->data);
+
+						break;
 					}
 
-					for (auto ssrc : consumer->GetRtxSsrcs())
+					case RTC::RtpParameters::Type::PIPE:
 					{
-						this->mapRtxSsrcConsumer[ssrc] = consumer;
+						// This may throw.
+						consumer = new RTC::PipeConsumer(consumerId, producerId, this, request->data);
+
+						break;
 					}
+				}
 
-					MS_DEBUG_DEV(
-							"Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
+				// Notify the listener.
+				// This may throw if no Producer is found.
+				try
+				{
+					this->listener->OnTransportNewConsumer(this, consumer, producerId);
+				}
+				catch (const MediaSoupError& error)
+				{
+					delete consumer;
 
-					// TODO: Update 10 by real scores.
-					auto responseOffset = FBS::Transport::CreateConsumeResponse(request->GetBufferBuilder(), consumer->IsPaused(), consumer->IsProducerPaused(), 10);
+					throw;
+				}
 
-					request->Accept(request->GetBufferBuilder(), FBS::Response::Body::FBS_Transport_ConsumeResponse, responseOffset);
-					// TODO.
-					/*
-					consumer->FillJsonScore(data["score"]);
+				// Insert into the maps.
+				this->mapConsumers[consumerId] = consumer;
 
-					auto preferredLayers = consumer->GetPreferredLayers();
+				for (auto ssrc : consumer->GetMediaSsrcs())
+				{
+					this->mapSsrcConsumer[ssrc] = consumer;
+				}
 
-					if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
-					{
-						data["preferredLayers"]["spatialLayer"]  = preferredLayers.spatial;
-						data["preferredLayers"]["temporalLayer"] = preferredLayers.temporal;
-					}
+				for (auto ssrc : consumer->GetRtxSsrcs())
+				{
+					this->mapRtxSsrcConsumer[ssrc] = consumer;
+				}
 
-					request->Accept(data);
-					*/
+				MS_DEBUG_DEV(
+				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
 
-					// Check if Transport Congestion Control client must be created.
-					const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
-					const auto& codecs                = consumer->GetRtpParameters().codecs;
+				// TODO: Update 10 by real scores.
+				auto responseOffset = FBS::Transport::CreateConsumeResponse(
+				  request->GetBufferBuilder(), consumer->IsPaused(), consumer->IsProducerPaused(), 10);
 
-					// Set TransportCongestionControlClient.
-					if (!this->tccClient)
-					{
-						bool createTccClient{ false };
-						RTC::BweType bweType;
+				request->Accept(
+				  request->GetBufferBuilder(),
+				  FBS::Response::Body::FBS_Transport_ConsumeResponse,
+				  responseOffset);
+				// TODO.
+				/*
+				consumer->FillJsonScore(data["score"]);
 
-						// Use transport-cc if:
-						// - it's a video Consumer, and
-						// - there is transport-wide-cc-01 RTP header extension, and
-						// - there is "transport-cc" in codecs RTCP feedback.
-						//
-						// clang-format off
+				auto preferredLayers = consumer->GetPreferredLayers();
+
+				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
+				{
+				  data["preferredLayers"]["spatialLayer"]  = preferredLayers.spatial;
+				  data["preferredLayers"]["temporalLayer"] = preferredLayers.temporal;
+				}
+
+				request->Accept(data);
+				*/
+
+				// Check if Transport Congestion Control client must be created.
+				const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
+				const auto& codecs                = consumer->GetRtpParameters().codecs;
+
+				// Set TransportCongestionControlClient.
+				if (!this->tccClient)
+				{
+					bool createTccClient{ false };
+					RTC::BweType bweType;
+
+					// Use transport-cc if:
+					// - it's a video Consumer, and
+					// - there is transport-wide-cc-01 RTP header extension, and
+					// - there is "transport-cc" in codecs RTCP feedback.
+					//
+					// clang-format off
 						if (
 								consumer->GetKind() == RTC::Media::Kind::VIDEO &&
 								rtpHeaderExtensionIds.transportWideCc01 != 0u &&
@@ -1341,19 +1345,19 @@ binary:
 											});
 									})
 							 )
-							// clang-format on
-						{
-							MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with transport-cc");
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with transport-cc");
 
-							createTccClient = true;
-							bweType         = RTC::BweType::TRANSPORT_CC;
-						}
-						// Use REMB if:
-						// - it's a video Consumer, and
-						// - there is abs-send-time RTP header extension, and
-						// - there is "remb" in codecs RTCP feedback.
-						//
-						// clang-format off
+						createTccClient = true;
+						bweType         = RTC::BweType::TRANSPORT_CC;
+					}
+					// Use REMB if:
+					// - it's a video Consumer, and
+					// - there is abs-send-time RTP header extension, and
+					// - there is "remb" in codecs RTCP feedback.
+					//
+					// clang-format off
 						else if (
 								consumer->GetKind() == RTC::Media::Kind::VIDEO &&
 								rtpHeaderExtensionIds.absSendTime != 0u &&
@@ -1367,45 +1371,45 @@ binary:
 											});
 									})
 								)
-							// clang-format on
-						{
-							MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with REMB");
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with REMB");
 
-							createTccClient = true;
-							bweType         = RTC::BweType::REMB;
-						}
-
-								if (createTccClient)
-								{
-									// Tell all the Consumers that we are gonna manage their bitrate.
-									for (auto& kv : this->mapConsumers)
-									{
-										auto* consumer = kv.second;
-
-										consumer->SetExternallyManagedBitrate();
-									};
-
-									this->tccClient = new RTC::TransportCongestionControlClient(
-											this, bweType, this->initialAvailableOutgoingBitrate, this->maxOutgoingBitrate);
-
-									if (IsConnected())
-										this->tccClient->TransportConnected();
-								}
+						createTccClient = true;
+						bweType         = RTC::BweType::REMB;
 					}
 
-					// If applicable, tell the new Consumer that we are gonna manage its
-					// bitrate.
-					if (this->tccClient)
-						consumer->SetExternallyManagedBitrate();
+					if (createTccClient)
+					{
+						// Tell all the Consumers that we are gonna manage their bitrate.
+						for (auto& kv : this->mapConsumers)
+						{
+							auto* consumer = kv.second;
+
+							consumer->SetExternallyManagedBitrate();
+						};
+
+						this->tccClient = new RTC::TransportCongestionControlClient(
+						  this, bweType, this->initialAvailableOutgoingBitrate, this->maxOutgoingBitrate);
+
+						if (IsConnected())
+							this->tccClient->TransportConnected();
+					}
+				}
+
+				// If applicable, tell the new Consumer that we are gonna manage its
+				// bitrate.
+				if (this->tccClient)
+					consumer->SetExternallyManagedBitrate();
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-					// Create SenderBandwidthEstimator if:
-					// - not already created,
-					// - it's a video Consumer, and
-					// - there is transport-wide-cc-01 RTP header extension, and
-					// - there is "transport-cc" in codecs RTCP feedback.
-					//
-					// clang-format off
+				// Create SenderBandwidthEstimator if:
+				// - not already created,
+				// - it's a video Consumer, and
+				// - there is transport-wide-cc-01 RTP header extension, and
+				// - there is "transport-cc" in codecs RTCP feedback.
+				//
+				// clang-format off
 					if (
 							!this->senderBwe &&
 							consumer->GetKind() == RTC::Media::Kind::VIDEO &&
@@ -1420,41 +1424,41 @@ binary:
 										});
 								})
 						 )
-						// clang-format on
+				// clang-format on
+				{
+					MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");
+
+					// Tell all the Consumers that we are gonna manage their bitrate.
+					for (auto& kv : this->mapConsumers)
 					{
-						MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");
+						auto* consumer = kv.second;
 
-						// Tell all the Consumers that we are gonna manage their bitrate.
-						for (auto& kv : this->mapConsumers)
-						{
-							auto* consumer = kv.second;
-
-							consumer->SetExternallyManagedBitrate();
-						};
-
-						this->senderBwe =
-							new RTC::SenderBandwidthEstimator(this, this->initialAvailableOutgoingBitrate);
-
-						if (IsConnected())
-							this->senderBwe->TransportConnected();
-					}
-
-					// If applicable, tell the new Consumer that we are gonna manage its
-					// bitrate.
-					if (this->senderBwe)
 						consumer->SetExternallyManagedBitrate();
-#endif
+					};
+
+					this->senderBwe =
+					  new RTC::SenderBandwidthEstimator(this, this->initialAvailableOutgoingBitrate);
 
 					if (IsConnected())
-						consumer->TransportConnected();
-
-					break;
+						this->senderBwe->TransportConnected();
 				}
+
+				// If applicable, tell the new Consumer that we are gonna manage its
+				// bitrate.
+				if (this->senderBwe)
+					consumer->SetExternallyManagedBitrate();
+#endif
+
+				if (IsConnected())
+					consumer->TransportConnected();
+
+				break;
+			}
 
 			default:
-				{
-					MS_ERROR("unknown method");
-				}
+			{
+				MS_ERROR("unknown method");
+			}
 		}
 	}
 

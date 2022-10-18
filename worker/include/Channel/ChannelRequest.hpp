@@ -5,8 +5,8 @@
 #include "FBS/request_generated.h"
 #include "FBS/response_generated.h"
 #include <absl/container/flat_hash_map.h>
-#include <nlohmann/json.hpp>
 #include <flatbuffers/minireflect.h>
+#include <nlohmann/json.hpp>
 #include <string>
 
 using json = nlohmann::json;
@@ -99,8 +99,9 @@ namespace Channel
 			return bufferBuilder;
 		}
 		void Accept();
-		template <class Body>
-		void Accept(flatbuffers::FlatBufferBuilder& builder, FBS::Response::Body type, flatbuffers::Offset<Body>& body)
+		template<class Body>
+		void Accept(
+		  flatbuffers::FlatBufferBuilder& builder, FBS::Response::Body type, flatbuffers::Offset<Body>& body)
 		{
 			// TODO: Assert the request is not already replied.
 

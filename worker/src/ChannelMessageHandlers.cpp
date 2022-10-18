@@ -18,7 +18,8 @@ thread_local absl::flat_hash_map<std::string, PayloadChannel::PayloadChannelSock
 
 /* Class methods. */
 
-flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> ChannelMessageHandlers::FillBuffer(flatbuffers::FlatBufferBuilder& builder)
+flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> ChannelMessageHandlers::FillBuffer(
+  flatbuffers::FlatBufferBuilder& builder)
 {
 	// Add channelRequestHandlerIds.
 	std::vector<std::string> channelRequestHandlerIds;
@@ -51,9 +52,11 @@ flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> ChannelMessageHandlers:
 		payloadChannelNotificationHandlerIds.push_back(handlerId);
 	}
 
-	auto payloadChannelNotificationHandlers = builder.CreateVectorOfStrings(payloadChannelNotificationHandlerIds);
+	auto payloadChannelNotificationHandlers =
+	  builder.CreateVectorOfStrings(payloadChannelNotificationHandlerIds);
 
-	return FBS::Worker::CreateChannelMessageHandlers(builder, channelRequestHandlers, payloadChannelRequestHandlers, payloadChannelNotificationHandlers);
+	return FBS::Worker::CreateChannelMessageHandlers(
+	  builder, channelRequestHandlers, payloadChannelRequestHandlers, payloadChannelNotificationHandlers);
 }
 
 void ChannelMessageHandlers::FillJson(json& jsonObject)

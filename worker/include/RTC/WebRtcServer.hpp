@@ -39,7 +39,9 @@ namespace RTC
 		};
 
 	public:
-		WebRtcServer(const std::string& id, const flatbuffers::Vector<flatbuffers::Offset<FBS::Worker::WebRtcServerListenInfo>>* listenInfos);
+		WebRtcServer(
+		  const std::string& id,
+		  const flatbuffers::Vector<flatbuffers::Offset<FBS::Worker::WebRtcServerListenInfo>>* listenInfos);
 		~WebRtcServer();
 
 	public:

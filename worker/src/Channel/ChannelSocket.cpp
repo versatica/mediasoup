@@ -322,7 +322,7 @@ namespace Channel
 
 		return;
 
-binary:
+	binary:
 		try
 		{
 			auto* request = new Channel::ChannelRequest(this, reinterpret_cast<uint8_t*>(msg));

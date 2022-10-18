@@ -230,7 +230,8 @@ namespace RTC
 	public:
 		RtpHeaderExtensionParameters() = default;
 		explicit RtpHeaderExtensionParameters(json& data);
-		explicit RtpHeaderExtensionParameters(const FBS::RtpParameters::RtpHeaderExtensionParameters* const data);
+		explicit RtpHeaderExtensionParameters(
+		  const FBS::RtpParameters::RtpHeaderExtensionParameters* const data);
 
 		void FillJson(json& jsonObject) const;
 

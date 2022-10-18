@@ -115,9 +115,7 @@ namespace RTC
 		}
 	}
 
-	void Parameters::Set(
-		const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>>* data
-	)
+	void Parameters::Set(const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>>* data)
 	{
 		MS_TRACE();
 
@@ -129,7 +127,8 @@ namespace RTC
 			{
 				case FBS::RtpParameters::Value::Boolean:
 				{
-					this->mapKeyValues.emplace(key, Value((parameter->value_as_Boolean()->value() == 0) ? false : true));
+					this->mapKeyValues.emplace(
+					  key, Value((parameter->value_as_Boolean()->value() == 0) ? false : true));
 
 					break;
 				}

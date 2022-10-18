@@ -210,7 +210,7 @@ namespace Channel
 
 		this->_data = FBS::Request::GetRequest(msg);
 
-		this->id = this->_data->id();
+		this->id      = this->_data->id();
 		this->_method = this->_data->method();
 		// Handler ID is optional.
 		if (flatbuffers::IsFieldPresent(this->_data, FBS::Request::Request::VT_HANDLERID))
@@ -232,7 +232,8 @@ namespace Channel
 
 		auto& builder = ChannelRequest::bufferBuilder;
 
-		auto response = FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
+		auto response =
+		  FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
 
 		builder.Finish(response);
 
