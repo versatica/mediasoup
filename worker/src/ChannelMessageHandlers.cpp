@@ -4,7 +4,6 @@
 #include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-// TODO: Move needed type to FBS/channelmessagehandlers.h
 #include "FBS/worker_generated.h"
 
 /* Class variables. */
