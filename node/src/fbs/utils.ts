@@ -42,21 +42,6 @@ export function getRtpParametersType(
 	}
 }
 
-/**
- * Get array of type T from a flatbuffer arrays of T.
- */
-export function getArray<T>(holder: any, field: string): T[]
-{
-	const arr: T[] = [];
-
-	for (let idx=0; idx < holder[`${field}Length`](); ++idx)
-	{
-		arr.push(holder[field](idx));
-	}
-
-	return arr;
-}
-
 export function serializeRtpParameters(
 	builder: flatbuffers.Builder, rtpParameters: RtpParameters
 ): number

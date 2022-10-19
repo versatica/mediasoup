@@ -196,9 +196,5 @@ export declare class Worker extends EnhancedEventEmitter<WorkerEvents> {
      */
     createRouter({ mediaCodecs, appData }?: RouterOptions): Promise<Router>;
     private workerDied;
-    /**
-     * flatbuffers helpers
-     */
-    private parseDumpResponse;
 }
 //# sourceMappingURL=Worker.d.ts.map

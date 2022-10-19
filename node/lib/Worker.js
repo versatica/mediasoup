@@ -16,7 +16,6 @@ const request_generated_1 = require("./fbs/request_generated");
 const response_generated_1 = require("./fbs/response_generated");
 const worker_generated_1 = require("./fbs/worker_generated");
 const web_rtc_server_listen_info_1 = require("./fbs/fbs/worker/web-rtc-server-listen-info");
-const utils_1 = require("./fbs/utils");
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
@@ -320,7 +319,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('createWebRtcServer()');
         if (appData && typeof appData !== 'object')
             throw new TypeError('if given, appData must be an object');
-        // Get flatbuffer builder.
+        // Build the request.
         const builder = this.#channel.bufferBuilder;
         const fbsListenInfos = [];
         for (const listenInfo of listenInfos) {
@@ -394,25 +393,6 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.safeEmit('died', error);
         // Emit observer event.
         this.#observer.safeEmit('close');
-    }
-    /**
-     * flatbuffers helpers
-     */
-    // NOTE: This is a mere example of how to unpack the buffer manually.
-    // Remove.
-    parseDumpResponse(dump) {
-        const channelMessageHandlers = new worker_generated_1.ChannelMessageHandlers();
-        dump.channelMessageHandlers(channelMessageHandlers);
-        return {
-            pid: Number(dump.pid()),
-            webrtcServerIds: (0, utils_1.getArray)(dump, 'webrtcServerIds'),
-            routerIds: (0, utils_1.getArray)(dump, 'routerIds'),
-            channelMessageHandlers: {
-                channelRequestHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'channelRequestHandlers'),
-                payloadChannelRequestHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'payloadchannelRequestHandlers'),
-                payloadNotificationHandlers: (0, utils_1.getArray)(channelMessageHandlers, 'payloadchannelNotificationHandlers')
-            }
-        };
     }
 }
 exports.Worker = Worker;

@@ -11,9 +11,8 @@ import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { Body as RequestBody, Method, CreateRouterRequestT } from './fbs/request_generated';
 import { WorkerDump as FbsWorkerDump, ResourceUsage as FbsResourceUsage } from './fbs/response_generated';
-import { ChannelMessageHandlers, UpdateableSettingsT, CreateWebRtcServerRequestT, TransportProtocol } from './fbs/worker_generated';
+import { UpdateableSettingsT, CreateWebRtcServerRequestT, TransportProtocol } from './fbs/worker_generated';
 import { WebRtcServerListenInfoT } from './fbs/fbs/worker/web-rtc-server-listen-info';
-import { getArray } from './fbs/utils';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
@@ -779,29 +778,5 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		// Emit observer event.
 		this.#observer.safeEmit('close');
-	}
-
-	/**
-	 * flatbuffers helpers
-	 */
-
-	// NOTE: This is a mere example of how to unpack the buffer manually.
-	// Remove.
-	private parseDumpResponse(dump: FbsWorkerDump): WorkerDump
-	{
-		const channelMessageHandlers = new ChannelMessageHandlers();
-
-		dump.channelMessageHandlers(channelMessageHandlers);
-
-		return {
-			pid                    : Number(dump.pid()),
-			webrtcServerIds        : getArray(dump, 'webrtcServerIds'),
-			routerIds              : getArray(dump, 'routerIds'),
-			channelMessageHandlers : {
-				channelRequestHandlers        : getArray(channelMessageHandlers, 'channelRequestHandlers'),
-				payloadChannelRequestHandlers : getArray(channelMessageHandlers, 'payloadchannelRequestHandlers'),
-				payloadNotificationHandlers   : getArray(channelMessageHandlers, 'payloadchannelNotificationHandlers')
-			}
-		};
 	}
 }

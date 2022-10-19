@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.serializeRtpEncodingParameters = exports.serializeRtpParameters = exports.getArray = exports.getRtpParametersType = void 0;
+exports.serializeRtpEncodingParameters = exports.serializeRtpParameters = exports.getRtpParametersType = void 0;
 const rtp_parameters_1 = require("./fbs/rtp-parameters/rtp-parameters");
 const type_1 = require("./fbs/rtp-parameters/type");
 const rtpParameters_generated_1 = require("./rtpParameters_generated");
@@ -20,17 +20,6 @@ function getRtpParametersType(producerType, pipe) {
     }
 }
 exports.getRtpParametersType = getRtpParametersType;
-/**
- * Get array of type T from a flatbuffer arrays of T.
- */
-function getArray(holder, field) {
-    const arr = [];
-    for (let idx = 0; idx < holder[`${field}Length`](); ++idx) {
-        arr.push(holder[field](idx));
-    }
-    return arr;
-}
-exports.getArray = getArray;
 function serializeRtpParameters(builder, rtpParameters) {
     const codecs = [];
     const headerExtensions = [];

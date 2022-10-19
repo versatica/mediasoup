@@ -402,7 +402,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         /* Decode the response. */
         const consumeResponse = new response_generated_1.ConsumeResponse();
         response.body(consumeResponse);
-        logger.warn(consumeResponse.unpack());
         const status = consumeResponse.unpack();
         const data = {
             producerId,
