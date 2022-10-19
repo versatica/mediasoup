@@ -93,7 +93,8 @@ namespace RTC
 		}
 	}
 
-	flatbuffers::Offset<FBS::Consumer::ConsumerScore> SimpleConsumer::FillBufferScore(flatbuffers::FlatBufferBuilder& builder)
+	flatbuffers::Offset<FBS::Consumer::ConsumerScore> SimpleConsumer::FillBufferScore(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
@@ -104,7 +105,8 @@ namespace RTC
 		if (this->producerRtpStream)
 			producerScore = this->producerRtpStream->GetScore();
 
-		return FBS::Consumer::CreateConsumerScoreDirect(builder, this->rtpStream->GetScore(), producerScore, this->producerRtpStreamScores);
+		return FBS::Consumer::CreateConsumerScoreDirect(
+		  builder, this->rtpStream->GetScore(), producerScore, this->producerRtpStreamScores);
 	}
 
 	void SimpleConsumer::HandleRequest(Channel::ChannelRequest* request)

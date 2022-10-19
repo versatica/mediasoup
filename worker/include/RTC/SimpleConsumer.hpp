@@ -21,8 +21,9 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) const override;
-		void FillJsonScore(json& jsonObject) const override {};
-		virtual flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(flatbuffers::FlatBufferBuilder& builder) override;
+		void FillJsonScore(json& jsonObject) const override{};
+		virtual flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
+		  flatbuffers::FlatBufferBuilder& builder) override;
 		bool IsActive() const override
 		{
 			// clang-format off

@@ -1298,13 +1298,18 @@ namespace RTC
 
 				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
 				{
-					FBS::Consumer::CreateConsumerLayers(request->GetBufferBuilder(), preferredLayers.spatial, preferredLayers.temporal);
+					FBS::Consumer::CreateConsumerLayers(
+					  request->GetBufferBuilder(), preferredLayers.spatial, preferredLayers.temporal);
 				}
 
 				auto scoreOffset = consumer->FillBufferScore(request->GetBufferBuilder());
 
 				auto responseOffset = FBS::Transport::CreateConsumeResponse(
-				  request->GetBufferBuilder(), consumer->IsPaused(), consumer->IsProducerPaused(), scoreOffset, preferredLayersOffset);
+				  request->GetBufferBuilder(),
+				  consumer->IsPaused(),
+				  consumer->IsProducerPaused(),
+				  scoreOffset,
+				  preferredLayersOffset);
 
 				request->Accept(
 				  request->GetBufferBuilder(),

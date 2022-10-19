@@ -2,9 +2,9 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "ChannelMessageHandlers.hpp"
+#include "FBS/worker_generated.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "FBS/worker_generated.h"
 
 /* Class variables. */
 
@@ -48,7 +48,10 @@ flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> ChannelMessageHandlers:
 	}
 
 	return FBS::Worker::CreateChannelMessageHandlersDirect(
-	  builder, &channelRequestHandlerIds, &payloadChannelRequestHandlerIds, &payloadChannelNotificationHandlerIds);
+	  builder,
+	  &channelRequestHandlerIds,
+	  &payloadChannelRequestHandlerIds,
+	  &payloadChannelNotificationHandlerIds);
 }
 
 void ChannelMessageHandlers::FillJson(json& jsonObject)
