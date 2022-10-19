@@ -36,10 +36,11 @@ private:
 	void FillJsonResourceUsage(json& jsonObject) const;
 	void SetNewWebRtcServerIdFromData(json& data, std::string& webRtcServerId) const;
 	RTC::WebRtcServer* GetWebRtcServerFromData(json& data) const;
-	void SetNewRouterIdFromData(json& data, std::string& routerId) const;
+	void SetNewRouterId(std::string& routerId) const;
 	RTC::Router* GetRouterFromData(json& data) const;
 	RTC::WebRtcServer* GetWebRtcServer(const std::string& webRtcServerId) const;
 	void CheckNoWebRtcServer(const std::string& webRtcServerId) const;
+	void CheckNoRouter(const std::string& webRtcServerId) const;
 
 	/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 public:

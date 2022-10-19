@@ -37,6 +37,9 @@ struct CreateWebRtcServerRequestBuilder;
 struct CloseWebRtcServerRequest;
 struct CloseWebRtcServerRequestBuilder;
 
+struct CreateRouterRequest;
+struct CreateRouterRequestBuilder;
+
 inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable();
 
 inline const flatbuffers::TypeTable *WorkerDumpTypeTable();
@@ -50,6 +53,8 @@ inline const flatbuffers::TypeTable *WebRtcServerListenInfoTypeTable();
 inline const flatbuffers::TypeTable *CreateWebRtcServerRequestTypeTable();
 
 inline const flatbuffers::TypeTable *CloseWebRtcServerRequestTypeTable();
+
+inline const flatbuffers::TypeTable *CreateRouterRequestTypeTable();
 
 enum class TransportProtocol : uint8_t {
   UDP = 1,
@@ -742,6 +747,61 @@ inline flatbuffers::Offset<CloseWebRtcServerRequest> CreateCloseWebRtcServerRequ
       webRtcServerId__);
 }
 
+struct CreateRouterRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CreateRouterRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CreateRouterRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ROUTERID = 4
+  };
+  const flatbuffers::String *routerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_ROUTERID);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_ROUTERID) &&
+           verifier.VerifyString(routerId()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CreateRouterRequestBuilder {
+  typedef CreateRouterRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_routerId(flatbuffers::Offset<flatbuffers::String> routerId) {
+    fbb_.AddOffset(CreateRouterRequest::VT_ROUTERID, routerId);
+  }
+  explicit CreateRouterRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CreateRouterRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CreateRouterRequest>(end);
+    fbb_.Required(o, CreateRouterRequest::VT_ROUTERID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CreateRouterRequest> CreateCreateRouterRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> routerId = 0) {
+  CreateRouterRequestBuilder builder_(_fbb);
+  builder_.add_routerId(routerId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CreateRouterRequest> CreateCreateRouterRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *routerId = nullptr) {
+  auto routerId__ = routerId ? _fbb.CreateString(routerId) : 0;
+  return FBS::Worker::CreateCreateRouterRequest(
+      _fbb,
+      routerId__);
+}
+
 inline const flatbuffers::TypeTable *TransportProtocolTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_UCHAR, 0, 0 },
@@ -904,6 +964,19 @@ inline const flatbuffers::TypeTable *CloseWebRtcServerRequestTypeTable() {
   };
   static const char * const names[] = {
     "webRtcServerId"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CreateRouterRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "routerId"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names

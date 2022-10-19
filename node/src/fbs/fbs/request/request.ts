@@ -6,6 +6,7 @@ import { Body, unionToBody, unionListToBody } from '../../fbs/request/body';
 import { Method } from '../../fbs/request/method';
 import { ConsumeRequest, ConsumeRequestT } from '../../fbs/transport/consume-request';
 import { CloseWebRtcServerRequest, CloseWebRtcServerRequestT } from '../../fbs/worker/close-web-rtc-server-request';
+import { CreateRouterRequest, CreateRouterRequestT } from '../../fbs/worker/create-router-request';
 import { CreateWebRtcServerRequest, CreateWebRtcServerRequestT } from '../../fbs/worker/create-web-rtc-server-request';
 import { UpdateableSettings, UpdateableSettingsT } from '../../fbs/worker/updateable-settings';
 
@@ -136,7 +137,7 @@ constructor(
   public method: Method = Method.WORKER_CLOSE,
   public handlerId: string|Uint8Array|null = null,
   public bodyType: Body = Body.NONE,
-  public body: CloseWebRtcServerRequestT|ConsumeRequestT|CreateWebRtcServerRequestT|UpdateableSettingsT|null = null
+  public body: CloseWebRtcServerRequestT|ConsumeRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|UpdateableSettingsT|null = null
 ){}
 
 

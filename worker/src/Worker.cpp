@@ -180,21 +180,6 @@ flatbuffers::Offset<FBS::Worker::ResourceUsage> Worker::FillBufferResourceUsage(
 	  uvRusage.ru_nivcsw);
 }
 
-void Worker::SetNewRouterIdFromData(json& data, std::string& routerId) const
-{
-	MS_TRACE();
-
-	auto jsonRouterIdIt = data.find("routerId");
-
-	if (jsonRouterIdIt == data.end() || !jsonRouterIdIt->is_string())
-		MS_THROW_ERROR("missing routerId");
-
-	routerId.assign(jsonRouterIdIt->get<std::string>());
-
-	if (this->mapRouters.find(routerId) != this->mapRouters.end())
-		MS_THROW_ERROR("a Router with same routerId already exists");
-}
-
 RTC::Router* Worker::GetRouterFromData(json& data) const
 {
 	MS_TRACE();
@@ -220,6 +205,12 @@ void Worker::CheckNoWebRtcServer(const std::string& webRtcServerId) const
 		MS_THROW_ERROR("a WebRtcServer with same webRtcServerId already exists");
 }
 
+void Worker::CheckNoRouter(const std::string& routerId) const
+{
+	if (this->mapRouters.find(routerId) != this->mapRouters.end())
+		MS_THROW_ERROR("a Router with same routerId already exists");
+}
+
 RTC::WebRtcServer* Worker::GetWebRtcServer(const std::string& webRtcServerId) const
 {
 	auto it = this->mapWebRtcServers.find(webRtcServerId);
@@ -243,30 +234,6 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 	switch (request->methodId)
 	{
-		case Channel::ChannelRequest::MethodId::WORKER_CREATE_ROUTER:
-		{
-			std::string routerId;
-
-			try
-			{
-				SetNewRouterIdFromData(request->data, routerId);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
-			}
-
-			auto* router = new RTC::Router(routerId, this);
-
-			this->mapRouters[routerId] = router;
-
-			MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
-
-			request->Accept();
-
-			break;
-		}
-
 		case Channel::ChannelRequest::MethodId::WORKER_CLOSE_ROUTER:
 		{
 			RTC::Router* router{ nullptr };
@@ -429,6 +396,59 @@ binary:
 
 			break;
 		}
+
+		case FBS::Request::Method::WORKER_CREATE_ROUTER:
+		{
+			auto body = request->_data->body_as<FBS::Worker::CreateRouterRequest>();
+
+			auto routerId = body->routerId()->str();
+
+			try
+			{
+				CheckNoRouter(routerId);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+			}
+
+			auto* router = new RTC::Router(routerId, this);
+
+			this->mapRouters[routerId] = router;
+
+			MS_DEBUG_DEV("Router created [routerId:%s]", routerId.c_str());
+
+			request->Accept();
+
+			break;
+		}
+
+		/*
+		case Channel::ChannelRequest::MethodId::WORKER_CLOSE_ROUTER:
+		{
+			RTC::Router* router{ nullptr };
+
+			try
+			{
+				router = GetRouterFromData(request->data);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+			}
+
+			// Remove it from the map and delete it.
+			this->mapRouters.erase(router->id);
+
+			delete router;
+
+			MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
+
+			request->Accept();
+
+			break;
+		}
+		*/
 
 		case FBS::Request::Method::TRANSPORT_CONSUME:
 		{

@@ -2,6 +2,7 @@
 
 import { ConsumeRequest, ConsumeRequestT } from '../../fbs/transport/consume-request';
 import { CloseWebRtcServerRequest, CloseWebRtcServerRequestT } from '../../fbs/worker/close-web-rtc-server-request';
+import { CreateRouterRequest, CreateRouterRequestT } from '../../fbs/worker/create-router-request';
 import { CreateWebRtcServerRequest, CreateWebRtcServerRequestT } from '../../fbs/worker/create-web-rtc-server-request';
 import { UpdateableSettings, UpdateableSettingsT } from '../../fbs/worker/updateable-settings';
 
@@ -11,18 +12,20 @@ export enum Body {
   FBS_Worker_UpdateableSettings = 1,
   FBS_Worker_CreateWebRtcServerRequest = 2,
   FBS_Worker_CloseWebRtcServerRequest = 3,
-  FBS_Transport_ConsumeRequest = 4
+  FBS_Worker_CreateRouterRequest = 4,
+  FBS_Transport_ConsumeRequest = 5
 }
 
 export function unionToBody(
   type: Body,
-  accessor: (obj:CloseWebRtcServerRequest|ConsumeRequest|CreateWebRtcServerRequest|UpdateableSettings) => CloseWebRtcServerRequest|ConsumeRequest|CreateWebRtcServerRequest|UpdateableSettings|null
-): CloseWebRtcServerRequest|ConsumeRequest|CreateWebRtcServerRequest|UpdateableSettings|null {
+  accessor: (obj:CloseWebRtcServerRequest|ConsumeRequest|CreateRouterRequest|CreateWebRtcServerRequest|UpdateableSettings) => CloseWebRtcServerRequest|ConsumeRequest|CreateRouterRequest|CreateWebRtcServerRequest|UpdateableSettings|null
+): CloseWebRtcServerRequest|ConsumeRequest|CreateRouterRequest|CreateWebRtcServerRequest|UpdateableSettings|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_UpdateableSettings': return accessor(new UpdateableSettings())! as UpdateableSettings;
     case 'FBS_Worker_CreateWebRtcServerRequest': return accessor(new CreateWebRtcServerRequest())! as CreateWebRtcServerRequest;
     case 'FBS_Worker_CloseWebRtcServerRequest': return accessor(new CloseWebRtcServerRequest())! as CloseWebRtcServerRequest;
+    case 'FBS_Worker_CreateRouterRequest': return accessor(new CreateRouterRequest())! as CreateRouterRequest;
     case 'FBS_Transport_ConsumeRequest': return accessor(new ConsumeRequest())! as ConsumeRequest;
     default: return null;
   }
@@ -30,14 +33,15 @@ export function unionToBody(
 
 export function unionListToBody(
   type: Body, 
-  accessor: (index: number, obj:CloseWebRtcServerRequest|ConsumeRequest|CreateWebRtcServerRequest|UpdateableSettings) => CloseWebRtcServerRequest|ConsumeRequest|CreateWebRtcServerRequest|UpdateableSettings|null, 
+  accessor: (index: number, obj:CloseWebRtcServerRequest|ConsumeRequest|CreateRouterRequest|CreateWebRtcServerRequest|UpdateableSettings) => CloseWebRtcServerRequest|ConsumeRequest|CreateRouterRequest|CreateWebRtcServerRequest|UpdateableSettings|null, 
   index: number
-): CloseWebRtcServerRequest|ConsumeRequest|CreateWebRtcServerRequest|UpdateableSettings|null {
+): CloseWebRtcServerRequest|ConsumeRequest|CreateRouterRequest|CreateWebRtcServerRequest|UpdateableSettings|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_UpdateableSettings': return accessor(index, new UpdateableSettings())! as UpdateableSettings;
     case 'FBS_Worker_CreateWebRtcServerRequest': return accessor(index, new CreateWebRtcServerRequest())! as CreateWebRtcServerRequest;
     case 'FBS_Worker_CloseWebRtcServerRequest': return accessor(index, new CloseWebRtcServerRequest())! as CloseWebRtcServerRequest;
+    case 'FBS_Worker_CreateRouterRequest': return accessor(index, new CreateRouterRequest())! as CreateRouterRequest;
     case 'FBS_Transport_ConsumeRequest': return accessor(index, new ConsumeRequest())! as ConsumeRequest;
     default: return null;
   }

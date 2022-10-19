@@ -67,6 +67,7 @@ union Body {
   FBS.Worker.UpdateableSettings,
   FBS.Worker.CreateWebRtcServerRequest,
   FBS.Worker.CloseWebRtcServerRequest,
+  FBS.Worker.CreateRouterRequest,
   FBS.Transport.ConsumeRequest,
 }
 

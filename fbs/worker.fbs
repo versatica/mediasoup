@@ -56,4 +56,8 @@ table CloseWebRtcServerRequest {
   web_rtc_server_id:string (required);
 }
 
+table CreateRouterRequest {
+  router_id:string (required);
+}
+
 root_type WorkerDump;

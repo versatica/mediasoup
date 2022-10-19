@@ -9,7 +9,7 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
-import { Body as RequestBody, Method } from './fbs/request_generated';
+import { Body as RequestBody, Method, CreateRouterRequestT } from './fbs/request_generated';
 import { WorkerDump as FbsWorkerDump, ResourceUsage as FbsResourceUsage } from './fbs/response_generated';
 import { ChannelMessageHandlers, UpdateableSettingsT, CreateWebRtcServerRequestT, TransportProtocol } from './fbs/worker_generated';
 import { WebRtcServerListenInfoT } from './fbs/fbs/worker/web-rtc-server-listen-info';
@@ -715,16 +715,21 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		// This may throw.
 		const rtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
 
-		const reqData = { routerId: uuidv4() };
+		const routerId = uuidv4();
 
-		await this.#channel.request('worker.createRouter', undefined, reqData);
+		// Get flatbuffer builder.
+		const builder = this.#channel.bufferBuilder;
+		const createRouterRequestOffset = new CreateRouterRequestT(routerId).pack(builder);
+
+		await this.#channel.requestBinary(Method.WORKER_CREATE_ROUTER,
+			RequestBody.FBS_Worker_CreateRouterRequest, createRouterRequestOffset);
 
 		const data = { rtpCapabilities };
 		const router = new Router(
 			{
-				internal : 
+				internal :
 				{
-					routerId : reqData.routerId
+					routerId
 				},
 				data,
 				channel        : this.#channel,

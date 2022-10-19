@@ -351,12 +351,15 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             throw new TypeError('if given, appData must be an object');
         // This may throw.
         const rtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
-        const reqData = { routerId: (0, uuid_1.v4)() };
-        await this.#channel.request('worker.createRouter', undefined, reqData);
+        const routerId = (0, uuid_1.v4)();
+        // Get flatbuffer builder.
+        const builder = this.#channel.bufferBuilder;
+        const createRouterRequestOffset = new request_generated_1.CreateRouterRequestT(routerId).pack(builder);
+        await this.#channel.requestBinary(request_generated_1.Method.WORKER_CREATE_ROUTER, request_generated_1.Body.FBS_Worker_CreateRouterRequest, createRouterRequestOffset);
         const data = { rtpCapabilities };
         const router = new Router_1.Router({
             internal: {
-                routerId: reqData.routerId
+                routerId
             },
             data,
             channel: this.#channel,
