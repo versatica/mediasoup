@@ -98,30 +98,26 @@ void Worker::Close()
 flatbuffers::Offset<FBS::Worker::Dump> Worker::FillBuffer(flatbuffers::FlatBufferBuilder& builder) const
 {
 	// Add webRtcServerIds.
-	std::vector<std::string> webRtcServerIds;
+	std::vector<flatbuffers::Offset<flatbuffers::String>> webRtcServerIds;
 	for (auto& kv : this->mapWebRtcServers)
 	{
-		auto& WebRtcServerId = kv.first;
+		auto& webRtcServerId = kv.first;
 
-		webRtcServerIds.push_back(WebRtcServerId);
+		webRtcServerIds.push_back(builder.CreateString(webRtcServerId));
 	}
 
-	auto webRtcServers = builder.CreateVectorOfStrings(webRtcServerIds);
-
 	// Add routerIds.
-	std::vector<std::string> routerIds;
+	std::vector<flatbuffers::Offset<flatbuffers::String>> routerIds;
 	for (auto& kv : this->mapRouters)
 	{
 		auto& routerId = kv.first;
 
-		routerIds.push_back(routerId);
+		routerIds.push_back(builder.CreateString(routerId));
 	}
-
-	auto routers = builder.CreateVectorOfStrings(routerIds);
 
 	auto channelMessageHandlers = ChannelMessageHandlers::FillBuffer(builder);
 
-	return FBS::Worker::CreateDump(builder, Logger::pid, webRtcServers, routers, channelMessageHandlers);
+	return FBS::Worker::CreateDumpDirect(builder, Logger::pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
 }
 
 flatbuffers::Offset<FBS::Worker::ResourceUsage> Worker::FillBufferResourceUsage(

@@ -22,41 +22,34 @@ flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> ChannelMessageHandlers:
   flatbuffers::FlatBufferBuilder& builder)
 {
 	// Add channelRequestHandlerIds.
-	std::vector<std::string> channelRequestHandlerIds;
+	std::vector<flatbuffers::Offset<flatbuffers::String>> channelRequestHandlerIds;
 	for (const auto& kv : ChannelMessageHandlers::mapChannelRequestHandlers)
 	{
 		const auto& handlerId = kv.first;
 
-		channelRequestHandlerIds.push_back(handlerId);
+		channelRequestHandlerIds.push_back(builder.CreateString(handlerId));
 	}
 
-	auto channelRequestHandlers = builder.CreateVectorOfStrings(channelRequestHandlerIds);
-
 	// Add payloadChannelRequestHandlerIds.
-	std::vector<std::string> payloadChannelRequestHandlerIds;
+	std::vector<flatbuffers::Offset<flatbuffers::String>> payloadChannelRequestHandlerIds;
 	for (const auto& kv : ChannelMessageHandlers::mapPayloadChannelRequestHandlers)
 	{
 		const auto& handlerId = kv.first;
 
-		channelRequestHandlerIds.push_back(handlerId);
+		channelRequestHandlerIds.push_back(builder.CreateString(handlerId));
 	}
 
-	auto payloadChannelRequestHandlers = builder.CreateVectorOfStrings(payloadChannelRequestHandlerIds);
-
 	// Add payloadChannelNotificationHandlerIds.
-	std::vector<std::string> payloadChannelNotificationHandlerIds;
+	std::vector<flatbuffers::Offset<flatbuffers::String>> payloadChannelNotificationHandlerIds;
 	for (const auto& kv : ChannelMessageHandlers::mapPayloadChannelNotificationHandlers)
 	{
 		const auto& handlerId = kv.first;
 
-		payloadChannelNotificationHandlerIds.push_back(handlerId);
+		payloadChannelNotificationHandlerIds.push_back(builder.CreateString(handlerId));
 	}
 
-	auto payloadChannelNotificationHandlers =
-	  builder.CreateVectorOfStrings(payloadChannelNotificationHandlerIds);
-
-	return FBS::Worker::CreateChannelMessageHandlers(
-	  builder, channelRequestHandlers, payloadChannelRequestHandlers, payloadChannelNotificationHandlers);
+	return FBS::Worker::CreateChannelMessageHandlersDirect(
+	  builder, &channelRequestHandlerIds, &payloadChannelRequestHandlerIds, &payloadChannelNotificationHandlerIds);
 }
 
 void ChannelMessageHandlers::FillJson(json& jsonObject)
