@@ -13,10 +13,7 @@
 #include "handles/SignalsHandler.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <flatbuffers/flatbuffer_builder.h>
-#include <nlohmann/json.hpp>
 #include <string>
-
-using json = nlohmann::json;
 
 class Worker : public Channel::ChannelSocket::Listener,
                public PayloadChannel::PayloadChannelSocket::Listener,
@@ -32,13 +29,9 @@ private:
 	flatbuffers::Offset<FBS::Worker::WorkerDump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 	flatbuffers::Offset<FBS::Worker::ResourceUsage> FillBufferResourceUsage(
 	  flatbuffers::FlatBufferBuilder& builder) const;
-	void FillJson(json& jsonObject) const;
-	void FillJsonResourceUsage(json& jsonObject) const;
-	void SetNewWebRtcServerIdFromData(json& data, std::string& webRtcServerId) const;
-	RTC::WebRtcServer* GetWebRtcServerFromData(json& data) const;
 	void SetNewRouterId(std::string& routerId) const;
-	RTC::Router* GetRouterFromData(json& data) const;
 	RTC::WebRtcServer* GetWebRtcServer(const std::string& webRtcServerId) const;
+	RTC::Router* GetRouter(const std::string& routerId) const;
 	void CheckNoWebRtcServer(const std::string& webRtcServerId) const;
 	void CheckNoRouter(const std::string& webRtcServerId) const;
 

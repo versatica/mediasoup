@@ -12,6 +12,7 @@ const PipeTransport_1 = require("./PipeTransport");
 const DirectTransport_1 = require("./DirectTransport");
 const ActiveSpeakerObserver_1 = require("./ActiveSpeakerObserver");
 const AudioLevelObserver_1 = require("./AudioLevelObserver");
+const request_generated_1 = require("./fbs/request_generated");
 const logger = new Logger_1.Logger('Router');
 class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -102,8 +103,10 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             return;
         logger.debug('close()');
         this.#closed = true;
-        const reqData = { routerId: this.#internal.routerId };
-        this.#channel.request('worker.closeRouter', undefined, reqData)
+        // Get flatbuffer builder.
+        const builder = this.#channel.bufferBuilder;
+        const bodyOffset = new request_generated_1.CloseRouterRequestT(this.#internal.routerId).pack(builder);
+        this.#channel.requestBinary(request_generated_1.Method.WORKER_CLOSE_ROUTER, request_generated_1.Body.FBS_Worker_CloseRouterRequest, bodyOffset)
             .catch(() => { });
         // Close every Transport.
         for (const transport of this.#transports.values()) {

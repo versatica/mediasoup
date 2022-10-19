@@ -19,6 +19,7 @@ import { ActiveSpeakerObserver, ActiveSpeakerObserverOptions } from './ActiveSpe
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
+import { Body as RequestBody, Method, CloseRouterRequestT } from './fbs/request_generated';
 
 export type RouterOptions =
 {
@@ -268,9 +269,15 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#closed = true;
 
-		const reqData = { routerId: this.#internal.routerId };
+		// Get flatbuffer builder.
+		const builder = this.#channel.bufferBuilder;
+		const bodyOffset = new CloseRouterRequestT(
+			this.#internal.routerId).pack(builder);
 
-		this.#channel.request('worker.closeRouter', undefined, reqData)
+		this.#channel.requestBinary(
+			Method.WORKER_CLOSE_ROUTER,
+			RequestBody.FBS_Worker_CloseRouterRequest,
+			bodyOffset)
 			.catch(() => {});
 
 		// Close every Transport.

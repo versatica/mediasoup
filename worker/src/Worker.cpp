@@ -180,23 +180,16 @@ flatbuffers::Offset<FBS::Worker::ResourceUsage> Worker::FillBufferResourceUsage(
 	  uvRusage.ru_nivcsw);
 }
 
-RTC::Router* Worker::GetRouterFromData(json& data) const
+RTC::Router* Worker::GetRouter(const std::string& routerId) const
 {
 	MS_TRACE();
 
-	auto jsonRouterIdIt = data.find("routerId");
-
-	if (jsonRouterIdIt == data.end() || !jsonRouterIdIt->is_string())
-		MS_THROW_ERROR("missing routerId");
-
-	auto it = this->mapRouters.find(jsonRouterIdIt->get<std::string>());
+	auto it = this->mapRouters.find(routerId);
 
 	if (it == this->mapRouters.end())
 		MS_THROW_ERROR("Router not found");
 
-	RTC::Router* router = it->second;
-
-	return router;
+	return it->second;
 }
 
 void Worker::CheckNoWebRtcServer(const std::string& webRtcServerId) const
@@ -234,31 +227,6 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 	switch (request->methodId)
 	{
-		case Channel::ChannelRequest::MethodId::WORKER_CLOSE_ROUTER:
-		{
-			RTC::Router* router{ nullptr };
-
-			try
-			{
-				router = GetRouterFromData(request->data);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
-			}
-
-			// Remove it from the map and delete it.
-			this->mapRouters.erase(router->id);
-
-			delete router;
-
-			MS_DEBUG_DEV("Router closed [id:%s]", router->id.c_str());
-
-			request->Accept();
-
-			break;
-		}
-
 		// Any other request must be delivered to the corresponding Router.
 		default:
 		{
@@ -372,12 +340,12 @@ binary:
 		{
 			RTC::WebRtcServer* webRtcServer{ nullptr };
 
+			auto body = request->_data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
+
+			auto webRtcServerId = body->webRtcServerId()->str();
+
 			try
 			{
-				auto body = request->_data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
-
-				auto webRtcServerId = body->webRtcServerId()->str();
-
 				webRtcServer = GetWebRtcServer(webRtcServerId);
 			}
 			catch (const MediaSoupError& error)
@@ -423,14 +391,17 @@ binary:
 			break;
 		}
 
-		/*
-		case Channel::ChannelRequest::MethodId::WORKER_CLOSE_ROUTER:
+		case FBS::Request::Method::WORKER_CLOSE_ROUTER:
 		{
 			RTC::Router* router{ nullptr };
 
+			auto body = request->_data->body_as<FBS::Worker::CloseRouterRequest>();
+
+			auto routerId = body->routerId()->str();
+
 			try
 			{
-				router = GetRouterFromData(request->data);
+				router = GetRouter(routerId);
 			}
 			catch (const MediaSoupError& error)
 			{
@@ -448,7 +419,6 @@ binary:
 
 			break;
 		}
-		*/
 
 		case FBS::Request::Method::TRANSPORT_CONSUME:
 		{

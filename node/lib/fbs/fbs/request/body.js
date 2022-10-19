@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
 const consume_request_1 = require("../../fbs/transport/consume-request");
+const close_router_request_1 = require("../../fbs/worker/close-router-request");
 const close_web_rtc_server_request_1 = require("../../fbs/worker/close-web-rtc-server-request");
 const create_router_request_1 = require("../../fbs/worker/create-router-request");
 const create_web_rtc_server_request_1 = require("../../fbs/worker/create-web-rtc-server-request");
@@ -14,7 +15,8 @@ var Body;
     Body[Body["FBS_Worker_CreateWebRtcServerRequest"] = 2] = "FBS_Worker_CreateWebRtcServerRequest";
     Body[Body["FBS_Worker_CloseWebRtcServerRequest"] = 3] = "FBS_Worker_CloseWebRtcServerRequest";
     Body[Body["FBS_Worker_CreateRouterRequest"] = 4] = "FBS_Worker_CreateRouterRequest";
-    Body[Body["FBS_Transport_ConsumeRequest"] = 5] = "FBS_Transport_ConsumeRequest";
+    Body[Body["FBS_Worker_CloseRouterRequest"] = 5] = "FBS_Worker_CloseRouterRequest";
+    Body[Body["FBS_Transport_ConsumeRequest"] = 6] = "FBS_Transport_ConsumeRequest";
 })(Body = exports.Body || (exports.Body = {}));
 function unionToBody(type, accessor) {
     switch (Body[type]) {
@@ -23,6 +25,7 @@ function unionToBody(type, accessor) {
         case 'FBS_Worker_CreateWebRtcServerRequest': return accessor(new create_web_rtc_server_request_1.CreateWebRtcServerRequest());
         case 'FBS_Worker_CloseWebRtcServerRequest': return accessor(new close_web_rtc_server_request_1.CloseWebRtcServerRequest());
         case 'FBS_Worker_CreateRouterRequest': return accessor(new create_router_request_1.CreateRouterRequest());
+        case 'FBS_Worker_CloseRouterRequest': return accessor(new close_router_request_1.CloseRouterRequest());
         case 'FBS_Transport_ConsumeRequest': return accessor(new consume_request_1.ConsumeRequest());
         default: return null;
     }
@@ -35,6 +38,7 @@ function unionListToBody(type, accessor, index) {
         case 'FBS_Worker_CreateWebRtcServerRequest': return accessor(index, new create_web_rtc_server_request_1.CreateWebRtcServerRequest());
         case 'FBS_Worker_CloseWebRtcServerRequest': return accessor(index, new close_web_rtc_server_request_1.CloseWebRtcServerRequest());
         case 'FBS_Worker_CreateRouterRequest': return accessor(index, new create_router_request_1.CreateRouterRequest());
+        case 'FBS_Worker_CloseRouterRequest': return accessor(index, new close_router_request_1.CloseRouterRequest());
         case 'FBS_Transport_ConsumeRequest': return accessor(index, new consume_request_1.ConsumeRequest());
         default: return null;
     }
