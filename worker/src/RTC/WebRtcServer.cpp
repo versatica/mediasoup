@@ -32,6 +32,7 @@ namespace RTC
 	WebRtcServer::WebRtcServer(
 	  const std::string& id,
 	  const flatbuffers::Vector<flatbuffers::Offset<FBS::Worker::WebRtcServerListenInfo>>* listenInfos)
+	  : id(id)
 	{
 		MS_TRACE();
 
@@ -131,113 +132,84 @@ namespace RTC
 		this->webRtcTransports.clear();
 	}
 
-	void WebRtcServer::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::WebRtcServer::WebRtcServerDump> WebRtcServer::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add id.
-		jsonObject["id"] = this->id;
-
 		// Add udpSockets and tcpServers.
-		jsonObject["udpSockets"] = json::array();
-		auto jsonUdpSocketsIt    = jsonObject.find("udpSockets");
-		jsonObject["tcpServers"] = json::array();
-		auto jsonTcpServersIt    = jsonObject.find("tcpServers");
-
-		size_t udpSocketIdx{ 0 };
-		size_t tcpServerIdx{ 0 };
+		std::vector<flatbuffers::Offset<FBS::WebRtcServer::IpPort>> udpSockets;
+		std::vector<flatbuffers::Offset<FBS::WebRtcServer::IpPort>> tcpServers;
 
 		for (auto& item : this->udpSocketOrTcpServers)
 		{
 			if (item.udpSocket)
 			{
-				jsonUdpSocketsIt->emplace_back(json::value_t::object);
-
-				auto& jsonEntry = (*jsonUdpSocketsIt)[udpSocketIdx];
-
-				jsonEntry["ip"]   = item.udpSocket->GetLocalIp();
-				jsonEntry["port"] = item.udpSocket->GetLocalPort();
-
-				++udpSocketIdx;
+				udpSockets.emplace_back(FBS::WebRtcServer::CreateIpPortDirect(
+				  builder, item.udpSocket->GetLocalIp().c_str(), item.udpSocket->GetLocalPort()));
 			}
 			else if (item.tcpServer)
 			{
-				jsonTcpServersIt->emplace_back(json::value_t::object);
-
-				auto& jsonEntry = (*jsonTcpServersIt)[tcpServerIdx];
-
-				jsonEntry["ip"]   = item.tcpServer->GetLocalIp();
-				jsonEntry["port"] = item.tcpServer->GetLocalPort();
-
-				++tcpServerIdx;
+				tcpServers.emplace_back(FBS::WebRtcServer::CreateIpPortDirect(
+				  builder, item.tcpServer->GetLocalIp().c_str(), item.tcpServer->GetLocalPort()));
 			}
 		}
 
 		// Add webRtcTransportIds.
-		jsonObject["webRtcTransportIds"] = json::array();
-		auto jsonWebRtcTransportIdsIt    = jsonObject.find("webRtcTransportIds");
+		std::vector<flatbuffers::Offset<flatbuffers::String>> webRtcTransportIds;
 
 		for (auto* webRtcTransport : this->webRtcTransports)
 		{
-			jsonWebRtcTransportIdsIt->emplace_back(webRtcTransport->id);
+			webRtcTransportIds.emplace_back(builder.CreateString(webRtcTransport->id));
 		}
 
-		size_t idx;
-
 		// Add localIceUsernameFragments.
-		jsonObject["localIceUsernameFragments"] = json::array();
-		auto jsonLocalIceUsernamesIt            = jsonObject.find("localIceUsernameFragments");
+		std::vector<flatbuffers::Offset<FBS::WebRtcServer::IceUserNameFragment>> localIceUsernameFragments;
 
-		idx = 0;
 		for (auto& kv : this->mapLocalIceUsernameFragmentWebRtcTransport)
 		{
 			const auto& localIceUsernameFragment = kv.first;
 			const auto* webRtcTransport          = kv.second;
 
-			jsonLocalIceUsernamesIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonLocalIceUsernamesIt)[idx];
-
-			jsonEntry["localIceUsernameFragment"] = localIceUsernameFragment;
-			jsonEntry["webRtcTransportId"]        = webRtcTransport->id;
-
-			++idx;
+			localIceUsernameFragments.emplace_back(FBS::WebRtcServer::CreateIceUserNameFragmentDirect(
+			  builder, localIceUsernameFragment.c_str(), webRtcTransport->id.c_str()));
 		}
 
 		// Add tupleHashes.
-		jsonObject["tupleHashes"] = json::array();
-		auto jsonTupleHashesIt    = jsonObject.find("tupleHashes");
+		std::vector<flatbuffers::Offset<FBS::WebRtcServer::TupleHash>> tupleHashes;
 
-		idx = 0;
 		for (auto& kv : this->mapTupleWebRtcTransport)
 		{
 			const auto& tupleHash       = kv.first;
 			const auto* webRtcTransport = kv.second;
 
-			jsonTupleHashesIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonTupleHashesIt)[idx];
-
-			jsonEntry["tupleHash"]         = tupleHash;
-			jsonEntry["webRtcTransportId"] = webRtcTransport->id;
-
-			++idx;
+			tupleHashes.emplace_back(
+			  FBS::WebRtcServer::CreateTupleHashDirect(builder, tupleHash, webRtcTransport->id.c_str()));
 		}
+
+		return FBS::WebRtcServer::CreateWebRtcServerDumpDirect(
+		  builder,
+		  this->id.c_str(),
+		  &udpSockets,
+		  &tcpServers,
+		  &webRtcTransportIds,
+		  &localIceUsernameFragments,
+		  &tupleHashes);
 	}
 
 	void WebRtcServer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->_method)
 		{
-			case Channel::ChannelRequest::MethodId::WEBRTC_SERVER_DUMP:
+			case FBS::Request::Method::WEBRTC_SERVER_DUMP:
 			{
-				json data = json::object();
+				auto& builder = Channel::ChannelRequest::bufferBuilder;
 
-				FillJson(data);
+				auto dumpOffset = FillBuffer(builder);
 
-				request->Accept(data);
+				request->Accept(builder, FBS::Response::Body::FBS_WebRtcServer_WebRtcServerDump, dumpOffset);
 
 				break;
 			}

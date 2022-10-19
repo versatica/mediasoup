@@ -10,9 +10,9 @@ const Producer_1 = require("./Producer");
 const Consumer_1 = require("./Consumer");
 const DataProducer_1 = require("./DataProducer");
 const DataConsumer_1 = require("./DataConsumer");
-const request_1 = require("./fbs/request");
-const response_1 = require("./fbs/response");
-const transport_1 = require("./fbs/transport");
+const request_generated_1 = require("./fbs/request_generated");
+const response_generated_1 = require("./fbs/response_generated");
+const transport_generated_1 = require("./fbs/transport_generated");
 const utils_1 = require("./fbs/utils");
 const logger = new Logger_1.Logger('Transport');
 class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
@@ -398,9 +398,9 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             ignoreDtx,
             pipe
         });
-        const response = await this.channel.requestBinary(request_1.Method.TRANSPORT_CONSUME, request_1.Body.FBS_Transport_ConsumeRequest, consumeRequestOffset, this.internal.transportId);
+        const response = await this.channel.requestBinary(request_generated_1.Method.TRANSPORT_CONSUME, request_generated_1.Body.FBS_Transport_ConsumeRequest, consumeRequestOffset, this.internal.transportId);
         /* Decode the response. */
-        const consumeResponse = new response_1.ConsumeResponse();
+        const consumeResponse = new response_generated_1.ConsumeResponse();
         response.body(consumeResponse);
         const status = this.parseConsumeResponse(consumeResponse);
         const data = {
@@ -600,22 +600,22 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         }
         if (preferredLayers) {
             // NOTE: Add the maximum possible temporae layer if not provided.
-            transport_1.ConsumerLayers.createConsumerLayers(builder, preferredLayers.spatialLayer, preferredLayers.temporalLayer ?? 255);
+            transport_generated_1.ConsumerLayers.createConsumerLayers(builder, preferredLayers.spatialLayer, preferredLayers.temporalLayer ?? 255);
         }
         // Create Consume Request.
-        request_1.ConsumeRequest.startConsumeRequest(builder);
-        request_1.ConsumeRequest.addConsumerId(builder, consumerIdOffset);
-        request_1.ConsumeRequest.addProducerId(builder, producerIdOffset);
-        request_1.ConsumeRequest.addKind(builder, producer.kind === 'audio' ? transport_1.MediaKind.AUDIO : transport_1.MediaKind.VIDEO);
-        request_1.ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
-        request_1.ConsumeRequest.addType(builder, (0, utils_1.getRtpParametersType)(producer.type, pipe));
+        request_generated_1.ConsumeRequest.startConsumeRequest(builder);
+        request_generated_1.ConsumeRequest.addConsumerId(builder, consumerIdOffset);
+        request_generated_1.ConsumeRequest.addProducerId(builder, producerIdOffset);
+        request_generated_1.ConsumeRequest.addKind(builder, producer.kind === 'audio' ? transport_generated_1.MediaKind.AUDIO : transport_generated_1.MediaKind.VIDEO);
+        request_generated_1.ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
+        request_generated_1.ConsumeRequest.addType(builder, (0, utils_1.getRtpParametersType)(producer.type, pipe));
         if (consumableRtpEncodingsOffset)
-            request_1.ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
-        request_1.ConsumeRequest.addPaused(builder, paused);
+            request_generated_1.ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
+        request_generated_1.ConsumeRequest.addPaused(builder, paused);
         if (preferredLayersOffset)
-            request_1.ConsumeRequest.addPreferredLayers(builder, preferredLayersOffset);
-        request_1.ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
-        return request_1.ConsumeRequest.endConsumeRequest(builder);
+            request_generated_1.ConsumeRequest.addPreferredLayers(builder, preferredLayersOffset);
+        request_generated_1.ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
+        return request_generated_1.ConsumeRequest.endConsumeRequest(builder);
     }
     parseConsumeResponse(consumeResponse) {
         // const preferredLayers = new FbsConsumerLayers();

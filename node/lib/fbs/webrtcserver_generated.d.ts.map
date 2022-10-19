@@ -1,0 +1,1 @@
+{"version":3,"file":"webrtcserver_generated.d.ts","sourceRoot":"","sources":["../../src/fbs/webrtcserver_generated.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,mBAAmB,EAAE,oBAAoB,EAAE,MAAM,6CAA6C,CAAC;AACxG,OAAO,EAAE,MAAM,EAAE,OAAO,EAAE,MAAM,8BAA8B,CAAC;AAC/D,OAAO,EAAE,SAAS,EAAE,UAAU,EAAE,MAAM,iCAAiC,CAAC;AACxE,OAAO,EAAE,gBAAgB,EAAE,iBAAiB,EAAE,MAAM,0CAA0C,CAAC"}

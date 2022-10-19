@@ -12,10 +12,10 @@ const Channel_1 = require("./Channel");
 const PayloadChannel_1 = require("./PayloadChannel");
 const Router_1 = require("./Router");
 const WebRtcServer_1 = require("./WebRtcServer");
-const request_1 = require("./fbs/request");
-const response_1 = require("./fbs/response");
-const worker_1 = require("./fbs/worker");
-const web_rtc_server_listen_info_1 = require("./fbs/f-b-s/worker/web-rtc-server-listen-info");
+const request_generated_1 = require("./fbs/request_generated");
+const response_generated_1 = require("./fbs/response_generated");
+const worker_generated_1 = require("./fbs/worker_generated");
+const web_rtc_server_listen_info_1 = require("./fbs/fbs/worker/web-rtc-server-listen-info");
 const utils_1 = require("./fbs/utils");
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
@@ -265,9 +265,9 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async dump() {
         logger.debug('dump()');
         // Send the request and wait for the response.
-        const response = await this.#channel.requestBinary(request_1.Method.WORKER_DUMP);
+        const response = await this.#channel.requestBinary(request_generated_1.Method.WORKER_DUMP);
         /* Decode the response. */
-        const dump = new response_1.Dump();
+        const dump = new response_generated_1.Dump();
         response.body(dump);
         return dump.unpack();
         // / return this.parseDumpResponse(dumpResponse);
@@ -277,9 +277,9 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async getResourceUsage() {
         logger.debug('getResourceUsage()');
-        const response = await this.#channel.requestBinary(request_1.Method.WORKER_GET_RESOURCE_USAGE);
+        const response = await this.#channel.requestBinary(request_generated_1.Method.WORKER_GET_RESOURCE_USAGE);
         /* Decode the response. */
-        const resourceUsage = new response_1.ResourceUsage();
+        const resourceUsage = new response_generated_1.ResourceUsage();
         response.body(resourceUsage);
         const ru = resourceUsage.unpack();
         /* eslint-disable camelcase */
@@ -310,9 +310,9 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('updateSettings()');
         // Get flatbuffer builder.
         const builder = this.#channel.bufferBuilder;
-        const updateableSettings = new worker_1.UpdateableSettingsT(logLevel, logTags);
+        const updateableSettings = new worker_generated_1.UpdateableSettingsT(logLevel, logTags);
         const updateableSettingsOffset = updateableSettings.pack(builder);
-        await this.#channel.requestBinary(request_1.Method.WORKER_UPDATE_SETTINGS, request_1.Body.FBS_Worker_UpdateableSettings, updateableSettingsOffset);
+        await this.#channel.requestBinary(request_generated_1.Method.WORKER_UPDATE_SETTINGS, request_generated_1.Body.FBS_Worker_UpdateableSettings, updateableSettingsOffset);
     }
     /**
      * Create a WebRtcServer.
@@ -325,12 +325,12 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const builder = this.#channel.bufferBuilder;
         const fbsListenInfos = [];
         for (const listenInfo of listenInfos) {
-            fbsListenInfos.push(new web_rtc_server_listen_info_1.WebRtcServerListenInfoT(listenInfo.protocol === 'udp' ? worker_1.TransportProtocol.UDP : worker_1.TransportProtocol.TCP, listenInfo.ip, listenInfo.announcedIp, listenInfo.port));
+            fbsListenInfos.push(new web_rtc_server_listen_info_1.WebRtcServerListenInfoT(listenInfo.protocol === 'udp' ? worker_generated_1.TransportProtocol.UDP : worker_generated_1.TransportProtocol.TCP, listenInfo.ip, listenInfo.announcedIp, listenInfo.port));
         }
         const webRtcServerId = (0, uuid_1.v4)();
-        const createWebRtcServerRequestT = new worker_1.CreateWebRtcServerRequestT(webRtcServerId, fbsListenInfos);
+        const createWebRtcServerRequestT = new worker_generated_1.CreateWebRtcServerRequestT(webRtcServerId, fbsListenInfos);
         const createWebRtcServerRequestOffset = createWebRtcServerRequestT.pack(builder);
-        await this.#channel.requestBinary(request_1.Method.WORKER_CREATE_WEBRTC_SERVER, request_1.Body.FBS_Worker_CreateWebRtcServerRequest, createWebRtcServerRequestOffset);
+        await this.#channel.requestBinary(request_generated_1.Method.WORKER_CREATE_WEBRTC_SERVER, request_generated_1.Body.FBS_Worker_CreateWebRtcServerRequest, createWebRtcServerRequestOffset);
         const webRtcServer = new WebRtcServer_1.WebRtcServer({
             internal: { webRtcServerId },
             channel: this.#channel,
@@ -397,7 +397,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * flatbuffers helpers
      */
     parseDumpResponse(dump) {
-        const channelMessageHandlers = new worker_1.ChannelMessageHandlers();
+        const channelMessageHandlers = new worker_generated_1.ChannelMessageHandlers();
         dump.channelMessageHandlers(channelMessageHandlers);
         return {
             pid: Number(dump.pid()),

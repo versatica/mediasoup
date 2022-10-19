@@ -1,7 +1,7 @@
 import * as flatbuffers from 'flatbuffers';
 import { RtpEncodingParameters, RtpParameters } from '../RtpParameters';
 import { ProducerType } from '../Producer';
-import { Type as FbsRtpParametersType } from './f-b-s/rtp-parameters/type';
+import { Type as FbsRtpParametersType } from './fbs/rtp-parameters/type';
 export declare function getRtpParametersType(producerType: ProducerType, pipe: boolean): FbsRtpParametersType;
 /**
  * Get array of type T from a flatbuffer arrays of T.

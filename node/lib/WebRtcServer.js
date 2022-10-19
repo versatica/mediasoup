@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebRtcServer = void 0;
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
+const request_generated_1 = require("./fbs/request_generated");
+const webrtcserver_generated_1 = require("./fbs/webrtcserver_generated");
 const logger = new Logger_1.Logger('WebRtcServer');
 class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -108,7 +110,11 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('webRtcServer.dump', this.#internal.webRtcServerId);
+        const response = await this.#channel.requestBinary(request_generated_1.Method.WEBRTC_SERVER_DUMP, undefined, undefined, this.#internal.webRtcServerId);
+        /* Decode the response. */
+        const dump = new webrtcserver_generated_1.WebRtcServerDump();
+        response.body(dump);
+        return dump.unpack();
     }
     /**
      * @private

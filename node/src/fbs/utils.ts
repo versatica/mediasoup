@@ -1,8 +1,8 @@
 import * as flatbuffers from 'flatbuffers';
 import { RtpEncodingParameters, RtpParameters } from '../RtpParameters';
 import { ProducerType } from '../Producer';
-import { RtpParameters as FbsRtpParameters } from './f-b-s/rtp-parameters/rtp-parameters';
-import { Type as FbsRtpParametersType } from './f-b-s/rtp-parameters/type';
+import { RtpParameters as FbsRtpParameters } from './fbs/rtp-parameters/rtp-parameters';
+import { Type as FbsRtpParametersType } from './fbs/rtp-parameters/type';
 import {
 	Double as FbsDouble,
 	Integer as FbsInteger,
@@ -15,7 +15,7 @@ import {
 	RtpHeaderExtensionParameters as FbsRtpHeaderExtensionParameters,
 	Rtx as FbsRtx,
 	Value as FbsValue
-} from './rtpParameters';
+} from './rtpParameters_generated';
 
 export function getRtpParametersType(
 	producerType: ProducerType, pipe: boolean

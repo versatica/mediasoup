@@ -1,4 +1,5 @@
 include "transport.fbs";
+include "webrtcserver.fbs";
 include "worker.fbs";
 
 namespace FBS.Response;
@@ -6,6 +7,7 @@ namespace FBS.Response;
 union Body {
   FBS.Worker.Dump,
   FBS.Worker.ResourceUsage,
+  FBS.WebRtcServer.WebRtcServerDump,
   FBS.Transport.ConsumeResponse,
 }
 

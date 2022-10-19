@@ -1,7 +1,7 @@
 import * as flatbuffers from 'flatbuffers';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import { Response } from './fbs/f-b-s/response/response';
-import { Body as RequestBody, Method } from './fbs/request';
+import { Response } from './fbs/fbs/response/response';
+import { Body as RequestBody, Method } from './fbs/request_generated';
 export declare class Channel extends EnhancedEventEmitter {
     #private;
     /**

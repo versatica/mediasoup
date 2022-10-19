@@ -1,0 +1,28 @@
+
+namespace FBS.WebRtcServer;
+
+table IpPort {
+  ip:string (required);
+  port:uint16;
+}
+
+table IceUserNameFragment {
+  local_ice_username_fragment:string (required);
+  web_rtc_transport_id:string (required);
+}
+
+table TupleHash {
+  local_ice_username_fragment:uint64;
+  web_rtc_transport_id:string (required);
+}
+
+table WebRtcServerDump {
+  id:string (required);
+  udp_sockets:[IpPort];
+  tcp_servers:[IpPort];
+  web_rtc_transport_ids:[string];
+  local_ice_username_fragments:[IceUserNameFragment];
+  tuple_hashes:[TupleHash];
+}
+
+root_type WebRtcServerDump;

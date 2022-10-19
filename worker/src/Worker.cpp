@@ -479,9 +479,30 @@ binary:
 			return;
 		}
 
+		// Any other request must be delivered to the corresponding Router.
 		default:
 		{
-			MS_ERROR("unknown method");
+			try
+			{
+				auto* handler = ChannelMessageHandlers::GetChannelRequestHandler(request->handlerId);
+
+				if (handler == nullptr)
+				{
+					MS_THROW_ERROR("Channel request handler with ID %s not found", request->handlerId.c_str());
+				}
+
+				handler->HandleRequest(request);
+			}
+			catch (const MediaSoupTypeError& error)
+			{
+				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+			}
+
+			break;
 		}
 	}
 }

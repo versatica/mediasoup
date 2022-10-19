@@ -12,7 +12,6 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <flatbuffers/flatbuffers.h>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
@@ -45,7 +44,8 @@ namespace RTC
 		~WebRtcServer();
 
 	public:
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::WebRtcServer::WebRtcServerDump> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		std::vector<RTC::IceCandidate> GetIceCandidates(
 		  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp);
 

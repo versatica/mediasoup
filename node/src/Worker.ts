@@ -9,10 +9,10 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
-import { Body as RequestBody, Method } from './fbs/request';
-import { Dump, ResourceUsage } from './fbs/response';
-import { ChannelMessageHandlers, UpdateableSettingsT, CreateWebRtcServerRequestT, TransportProtocol } from './fbs/worker';
-import { WebRtcServerListenInfoT } from './fbs/f-b-s/worker/web-rtc-server-listen-info';
+import { Body as RequestBody, Method } from './fbs/request_generated';
+import { Dump, ResourceUsage } from './fbs/response_generated';
+import { ChannelMessageHandlers, UpdateableSettingsT, CreateWebRtcServerRequestT, TransportProtocol } from './fbs/worker_generated';
+import { WebRtcServerListenInfoT } from './fbs/fbs/worker/web-rtc-server-listen-info';
 import { getArray } from './fbs/utils';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';

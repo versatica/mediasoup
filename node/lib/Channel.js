@@ -6,9 +6,9 @@ const flatbuffers = require("flatbuffers");
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const errors_1 = require("./errors");
-const request_1 = require("./fbs/f-b-s/request/request");
-const response_1 = require("./fbs/f-b-s/response/response");
-const request_2 = require("./fbs/request");
+const request_1 = require("./fbs/fbs/request/request");
+const response_1 = require("./fbs/fbs/response/response");
+const request_generated_1 = require("./fbs/request_generated");
 const littleEndian = os.endianness() == 'LE';
 const logger = new Logger_1.Logger('Channel');
 // Binary length for a 4194304 bytes payload.
@@ -196,7 +196,7 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             requestOffset = request_1.Request.createRequest(this.#bufferBuilder, id, method, handlerIdOffset, bodyType, bodyOffset);
         }
         else {
-            requestOffset = request_1.Request.createRequest(this.#bufferBuilder, id, method, handlerIdOffset, request_2.Body.NONE, 0);
+            requestOffset = request_1.Request.createRequest(this.#bufferBuilder, id, method, handlerIdOffset, request_generated_1.Body.NONE, 0);
         }
         this.#bufferBuilder.finish(requestOffset);
         const buffer = this.#bufferBuilder.asUint8Array();

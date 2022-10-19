@@ -24,9 +24,9 @@ import {
 } from './DataConsumer';
 import { RtpCapabilities, RtpParameters } from './RtpParameters';
 import { SctpStreamParameters } from './SctpParameters';
-import { Body as RequestBody, ConsumeRequest, Method } from './fbs/request';
-import { ConsumeResponse } from './fbs/response';
-import { MediaKind as FbsMediaKind, ConsumerLayers as FbsConsumerLayers } from './fbs/transport';
+import { Body as RequestBody, ConsumeRequest, Method } from './fbs/request_generated';
+import { ConsumeResponse } from './fbs/response_generated';
+import { MediaKind as FbsMediaKind, ConsumerLayers as FbsConsumerLayers } from './fbs/transport_generated';
 import { getRtpParametersType, serializeRtpParameters, serializeRtpEncodingParameters } from './fbs/utils';
 
 export interface TransportListenIp

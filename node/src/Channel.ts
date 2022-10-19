@@ -4,9 +4,9 @@ import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
-import { Request } from './fbs/f-b-s/request/request';
-import { Response } from './fbs/f-b-s/response/response';
-import { Body as RequestBody, Method } from './fbs/request';
+import { Request } from './fbs/fbs/request/request';
+import { Response } from './fbs/fbs/response/response';
+import { Body as RequestBody, Method } from './fbs/request_generated';
 
 const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('Channel');
