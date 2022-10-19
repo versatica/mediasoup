@@ -1029,7 +1029,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		pipe: boolean;
 	}): number
 	{
-		// Get flatbuffer builder.
+		// Build the request.
 		const builder = this.channel.bufferBuilder;
 
 		const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);

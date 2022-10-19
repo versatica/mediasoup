@@ -577,7 +577,6 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		response.body(dump);
 
 		return dump.unpack();
-		// / return this.parseDumpResponse(dumpResponse);
 	}
 
 	/**
@@ -630,7 +629,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	{
 		logger.debug('updateSettings()');
 
-		// Get flatbuffer builder.
+		// Build the request.
 		const builder = this.#channel.bufferBuilder;
 
 		const updateableSettings = new UpdateableSettingsT(logLevel, logTags);
@@ -786,6 +785,8 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	 * flatbuffers helpers
 	 */
 
+	// NOTE: This is a mere example of how to unpack the buffer manually.
+	// Remove.
 	private parseDumpResponse(dump: FbsWorkerDump): WorkerDump
 	{
 		const channelMessageHandlers = new ChannelMessageHandlers();

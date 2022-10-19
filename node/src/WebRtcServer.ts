@@ -170,7 +170,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 
 		this.#closed = true;
 
-		// Get flatbuffer builder.
+		// Build the request.
 		const builder = this.#channel.bufferBuilder;
 		const bodyOffset = new CloseWebRtcServerRequestT(
 			this.#internal.webRtcServerId).pack(builder);
