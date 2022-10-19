@@ -34,7 +34,7 @@ union Value {
 }
 
 table Parameter {
-  name: string;
+  name: string (required);
   value: Value;
 }
 

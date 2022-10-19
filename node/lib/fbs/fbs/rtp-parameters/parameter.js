@@ -45,6 +45,7 @@ class Parameter {
     }
     static endParameter(builder) {
         const offset = builder.endObject();
+        builder.requiredField(offset, 4); // name
         return offset;
     }
     static createParameter(builder, nameOffset, valueType, valueOffset) {

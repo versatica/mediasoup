@@ -499,7 +499,7 @@ struct Parameter FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_NAME) &&
+           VerifyOffsetRequired(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyField<uint8_t>(verifier, VT_VALUE_TYPE, 1) &&
            VerifyOffset(verifier, VT_VALUE) &&
@@ -548,6 +548,7 @@ struct ParameterBuilder {
   flatbuffers::Offset<Parameter> Finish() {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<Parameter>(end);
+    fbb_.Required(o, Parameter::VT_NAME);
     return o;
   }
 };

@@ -200,6 +200,7 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         }
         this.#bufferBuilder.finish(requestOffset);
         const buffer = this.#bufferBuilder.asUint8Array();
+        // Clear the buffer builder so it's reused for the next request.
         this.#bufferBuilder.clear();
         if (buffer.byteLength > MESSAGE_MAX_LEN)
             throw new Error('Channel request too big');
@@ -210,6 +211,7 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         return new Promise((pResolve, pReject) => {
             const sent = {
                 id: id,
+                // TODO: Use the Request.Method type when JSON is removed.
                 method: '',
                 resolve: (data2) => {
                     if (!this.#sents.delete(id))
