@@ -1,4 +1,5 @@
 export { ConsumerLayers, ConsumerLayersT } from './fbs/consumer/consumer-layers';
+export { ConsumerScore, ConsumerScoreT } from './fbs/consumer/consumer-score';
 export { MediaKind } from './fbs/rtp-parameters/media-kind';
 export { RtpEncodingParameters, RtpEncodingParametersT } from './fbs/rtp-parameters/rtp-encoding-parameters';
 export { RtpParameters, RtpParametersT } from './fbs/rtp-parameters/rtp-parameters';

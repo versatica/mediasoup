@@ -270,7 +270,6 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const dump = new response_generated_1.WorkerDump();
         response.body(dump);
         return dump.unpack();
-        // / return this.parseDumpResponse(dumpResponse);
     }
     /**
      * Get mediasoup-worker process resource usage.
@@ -308,7 +307,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async updateSettings({ logLevel, logTags } = {}) {
         logger.debug('updateSettings()');
-        // Get flatbuffer builder.
+        // Build the request.
         const builder = this.#channel.bufferBuilder;
         const updateableSettings = new worker_generated_1.UpdateableSettingsT(logLevel, logTags);
         const updateableSettingsOffset = updateableSettings.pack(builder);
@@ -399,6 +398,8 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     /**
      * flatbuffers helpers
      */
+    // NOTE: This is a mere example of how to unpack the buffer manually.
+    // Remove.
     parseDumpResponse(dump) {
         const channelMessageHandlers = new worker_generated_1.ChannelMessageHandlers();
         dump.channelMessageHandlers(channelMessageHandlers);

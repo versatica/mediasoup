@@ -201,7 +201,6 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      * flatbuffers helpers
      */
     private createConsumeRequest;
-    private parseConsumeResponse;
 }
 export {};
 //# sourceMappingURL=Transport.d.ts.map

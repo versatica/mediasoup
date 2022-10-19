@@ -18,8 +18,8 @@ table ConsumeRequest {
 table ConsumeResponse {
   paused:bool;
   producer_paused:bool;
-  score:uint8;
-  // preferred_layers:FBS.Consumer.ConsumerLayers;
+  score:FBS.Consumer.ConsumerScore;
+  preferred_layers:FBS.Consumer.ConsumerLayers;
 }
 
 root_type ConsumeRequest;

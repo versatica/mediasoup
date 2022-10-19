@@ -198,7 +198,8 @@ struct ConsumeResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_PAUSED = 4,
     VT_PRODUCERPAUSED = 6,
-    VT_SCORE = 8
+    VT_SCORE = 8,
+    VT_PREFERREDLAYERS = 10
   };
   bool paused() const {
     return GetField<uint8_t>(VT_PAUSED, 0) != 0;
@@ -206,14 +207,20 @@ struct ConsumeResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   bool producerPaused() const {
     return GetField<uint8_t>(VT_PRODUCERPAUSED, 0) != 0;
   }
-  uint8_t score() const {
-    return GetField<uint8_t>(VT_SCORE, 0);
+  const FBS::Consumer::ConsumerScore *score() const {
+    return GetPointer<const FBS::Consumer::ConsumerScore *>(VT_SCORE);
+  }
+  const FBS::Consumer::ConsumerLayers *preferredLayers() const {
+    return GetPointer<const FBS::Consumer::ConsumerLayers *>(VT_PREFERREDLAYERS);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_PAUSED, 1) &&
            VerifyField<uint8_t>(verifier, VT_PRODUCERPAUSED, 1) &&
-           VerifyField<uint8_t>(verifier, VT_SCORE, 1) &&
+           VerifyOffset(verifier, VT_SCORE) &&
+           verifier.VerifyTable(score()) &&
+           VerifyOffset(verifier, VT_PREFERREDLAYERS) &&
+           verifier.VerifyTable(preferredLayers()) &&
            verifier.EndTable();
   }
 };
@@ -228,8 +235,11 @@ struct ConsumeResponseBuilder {
   void add_producerPaused(bool producerPaused) {
     fbb_.AddElement<uint8_t>(ConsumeResponse::VT_PRODUCERPAUSED, static_cast<uint8_t>(producerPaused), 0);
   }
-  void add_score(uint8_t score) {
-    fbb_.AddElement<uint8_t>(ConsumeResponse::VT_SCORE, score, 0);
+  void add_score(flatbuffers::Offset<FBS::Consumer::ConsumerScore> score) {
+    fbb_.AddOffset(ConsumeResponse::VT_SCORE, score);
+  }
+  void add_preferredLayers(flatbuffers::Offset<FBS::Consumer::ConsumerLayers> preferredLayers) {
+    fbb_.AddOffset(ConsumeResponse::VT_PREFERREDLAYERS, preferredLayers);
   }
   explicit ConsumeResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -246,8 +256,10 @@ inline flatbuffers::Offset<ConsumeResponse> CreateConsumeResponse(
     flatbuffers::FlatBufferBuilder &_fbb,
     bool paused = false,
     bool producerPaused = false,
-    uint8_t score = 0) {
+    flatbuffers::Offset<FBS::Consumer::ConsumerScore> score = 0,
+    flatbuffers::Offset<FBS::Consumer::ConsumerLayers> preferredLayers = 0) {
   ConsumeResponseBuilder builder_(_fbb);
+  builder_.add_preferredLayers(preferredLayers);
   builder_.add_score(score);
   builder_.add_producerPaused(producerPaused);
   builder_.add_paused(paused);
@@ -294,15 +306,21 @@ inline const flatbuffers::TypeTable *ConsumeResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_BOOL, 0, -1 },
     { flatbuffers::ET_BOOL, 0, -1 },
-    { flatbuffers::ET_UCHAR, 0, -1 }
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Consumer::ConsumerScoreTypeTable,
+    FBS::Consumer::ConsumerLayersTypeTable
   };
   static const char * const names[] = {
     "paused",
     "producerPaused",
-    "score"
+    "score",
+    "preferredLayers"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 3, type_codes, nullptr, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 4, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

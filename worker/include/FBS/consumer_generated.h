@@ -19,7 +19,12 @@ namespace Consumer {
 struct ConsumerLayers;
 struct ConsumerLayersBuilder;
 
+struct ConsumerScore;
+struct ConsumerScoreBuilder;
+
 inline const flatbuffers::TypeTable *ConsumerLayersTypeTable();
+
+inline const flatbuffers::TypeTable *ConsumerScoreTypeTable();
 
 struct ConsumerLayers FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ConsumerLayersBuilder Builder;
@@ -75,6 +80,84 @@ inline flatbuffers::Offset<ConsumerLayers> CreateConsumerLayers(
   return builder_.Finish();
 }
 
+struct ConsumerScore FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef ConsumerScoreBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return ConsumerScoreTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_SCORE = 4,
+    VT_PRODUCERSCORE = 6,
+    VT_PRODUCERSCORES = 8
+  };
+  uint8_t score() const {
+    return GetField<uint8_t>(VT_SCORE, 0);
+  }
+  uint8_t producerScore() const {
+    return GetField<uint8_t>(VT_PRODUCERSCORE, 0);
+  }
+  const flatbuffers::Vector<uint8_t> *producerScores() const {
+    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_PRODUCERSCORES);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_SCORE, 1) &&
+           VerifyField<uint8_t>(verifier, VT_PRODUCERSCORE, 1) &&
+           VerifyOffset(verifier, VT_PRODUCERSCORES) &&
+           verifier.VerifyVector(producerScores()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ConsumerScoreBuilder {
+  typedef ConsumerScore Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_score(uint8_t score) {
+    fbb_.AddElement<uint8_t>(ConsumerScore::VT_SCORE, score, 0);
+  }
+  void add_producerScore(uint8_t producerScore) {
+    fbb_.AddElement<uint8_t>(ConsumerScore::VT_PRODUCERSCORE, producerScore, 0);
+  }
+  void add_producerScores(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> producerScores) {
+    fbb_.AddOffset(ConsumerScore::VT_PRODUCERSCORES, producerScores);
+  }
+  explicit ConsumerScoreBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<ConsumerScore> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<ConsumerScore>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<ConsumerScore> CreateConsumerScore(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint8_t score = 0,
+    uint8_t producerScore = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> producerScores = 0) {
+  ConsumerScoreBuilder builder_(_fbb);
+  builder_.add_producerScores(producerScores);
+  builder_.add_producerScore(producerScore);
+  builder_.add_score(score);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<ConsumerScore> CreateConsumerScoreDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint8_t score = 0,
+    uint8_t producerScore = 0,
+    const std::vector<uint8_t> *producerScores = nullptr) {
+  auto producerScores__ = producerScores ? _fbb.CreateVector<uint8_t>(*producerScores) : 0;
+  return FBS::Consumer::CreateConsumerScore(
+      _fbb,
+      score,
+      producerScore,
+      producerScores__);
+}
+
 inline const flatbuffers::TypeTable *ConsumerLayersTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_UCHAR, 0, -1 },
@@ -86,6 +169,23 @@ inline const flatbuffers::TypeTable *ConsumerLayersTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *ConsumerScoreTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UCHAR, 0, -1 },
+    { flatbuffers::ET_UCHAR, 0, -1 },
+    { flatbuffers::ET_UCHAR, 1, -1 }
+  };
+  static const char * const names[] = {
+    "score",
+    "producerScore",
+    "producerScores"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 3, type_codes, nullptr, nullptr, nullptr, names
   };
   return &tt;
 }

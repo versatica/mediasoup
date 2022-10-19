@@ -402,7 +402,8 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         /* Decode the response. */
         const consumeResponse = new response_generated_1.ConsumeResponse();
         response.body(consumeResponse);
-        const status = this.parseConsumeResponse(consumeResponse);
+        logger.warn(consumeResponse.unpack());
+        const status = consumeResponse.unpack();
         const data = {
             producerId,
             kind: producer.kind,
@@ -420,8 +421,8 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             appData,
             paused: status.paused,
             producerPaused: status.producerPaused,
-            score: status.score,
-            preferredLayers: status.preferredLayers
+            score: status.score ?? undefined,
+            preferredLayers: status.preferredLayers ?? undefined
         });
         this.consumers.set(consumer.id, consumer);
         consumer.on('@close', () => this.consumers.delete(consumer.id));
@@ -588,7 +589,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * flatbuffers helpers
      */
     createConsumeRequest({ producer, consumerId, rtpParameters, paused, preferredLayers, ignoreDtx, pipe }) {
-        // Get flatbuffer builder.
+        // Build the request.
         const builder = this.channel.bufferBuilder;
         const rtpParametersOffset = (0, utils_1.serializeRtpParameters)(builder, rtpParameters);
         const consumerIdOffset = builder.createString(consumerId);
@@ -616,26 +617,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             request_generated_1.ConsumeRequest.addPreferredLayers(builder, preferredLayersOffset);
         request_generated_1.ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
         return request_generated_1.ConsumeRequest.endConsumeRequest(builder);
-    }
-    parseConsumeResponse(consumeResponse) {
-        // const preferredLayers = new FbsConsumerLayers();
-        // consumeResponse.preferredLayers(preferredLayers);
-        return {
-            paused: consumeResponse.paused(),
-            producerPaused: consumeResponse.producerPaused(),
-            score: {
-                score: 10,
-                producerScore: 10,
-                producerScores: [10]
-            }
-            /*
-             * TODO: Missing in server side.
-            preferredLayers : {
-                spatialLayer  : preferredLayers.spatialLayer(),
-                temporalLayer : preferredLayers.temporalLayer()
-            }
-            */
-        };
     }
 }
 exports.Transport = Transport;

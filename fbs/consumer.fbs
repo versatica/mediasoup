@@ -6,4 +6,10 @@ table ConsumerLayers {
   temporal_layer:uint8;
 }
 
+table ConsumerScore {
+  score:uint8;
+  producer_score:uint8;
+  producer_scores:[uint8];
+}
+
 root_type ConsumerLayers;

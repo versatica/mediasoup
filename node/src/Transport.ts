@@ -11,7 +11,7 @@ import { PlainTransportData } from './PlainTransport';
 import { PipeTransportData } from './PipeTransport';
 import { DirectTransportData } from './DirectTransport';
 import { Producer, ProducerOptions } from './Producer';
-import { Consumer, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType } from './Consumer';
+import { Consumer, ConsumerLayers, ConsumerOptions, ConsumerType } from './Consumer';
 import {
 	DataProducer,
 	DataProducerOptions,
@@ -724,7 +724,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		response.body(consumeResponse);
 
-		const status = this.parseConsumeResponse(consumeResponse);
+		const status = consumeResponse.unpack();
 
 		const data =
 		{
@@ -747,8 +747,8 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 				appData,
 				paused          : status.paused,
 				producerPaused  : status.producerPaused,
-				score           : status.score,
-				preferredLayers : status.preferredLayers
+				score           : status.score ?? undefined,
+				preferredLayers : status.preferredLayers ?? undefined
 			});
 
 		this.consumers.set(consumer.id, consumer);
@@ -1076,35 +1076,5 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
 
 		return ConsumeRequest.endConsumeRequest(builder);
-	}
-
-	private parseConsumeResponse(consumeResponse: ConsumeResponse):
-	{
-		paused : boolean;
-		producerPaused : boolean;
-		score : ConsumerScore;
-		preferredLayers? : ConsumerLayers;
-	}
-	{
-		// const preferredLayers = new FbsConsumerLayers();
-
-		// consumeResponse.preferredLayers(preferredLayers);
-
-		return {
-			paused         : consumeResponse.paused(),
-			producerPaused : consumeResponse.producerPaused(),
-			score          : {
-				score          : 10,
-				producerScore  : 10,
-				producerScores : [ 10 ]
-			}
-			/*
-			 * TODO: Missing in server side.
-			preferredLayers : {
-				spatialLayer  : preferredLayers.spatialLayer(),
-				temporalLayer : preferredLayers.temporalLayer()
-			}
-			*/
-		};
 	}
 }

@@ -74,7 +74,7 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             return;
         logger.debug('close()');
         this.#closed = true;
-        // Get flatbuffer builder.
+        // Build the request.
         const builder = this.#channel.bufferBuilder;
         const bodyOffset = new request_generated_1.CloseWebRtcServerRequestT(this.#internal.webRtcServerId).pack(builder);
         this.#channel.requestBinary(request_generated_1.Method.WORKER_WEBRTC_SERVER_CLOSE, request_generated_1.Body.FBS_Worker_CloseWebRtcServerRequest, bodyOffset)

@@ -1293,28 +1293,23 @@ namespace RTC
 				MS_DEBUG_DEV(
 				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
 
-				// TODO: Update 10 by real scores.
+				flatbuffers::Offset<FBS::Consumer::ConsumerLayers> preferredLayersOffset;
+				auto preferredLayers = consumer->GetPreferredLayers();
+
+				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
+				{
+					FBS::Consumer::CreateConsumerLayers(request->GetBufferBuilder(), preferredLayers.spatial, preferredLayers.temporal);
+				}
+
+				auto scoreOffset = consumer->FillBufferScore(request->GetBufferBuilder());
+
 				auto responseOffset = FBS::Transport::CreateConsumeResponse(
-				  request->GetBufferBuilder(), consumer->IsPaused(), consumer->IsProducerPaused(), 10);
+				  request->GetBufferBuilder(), consumer->IsPaused(), consumer->IsProducerPaused(), scoreOffset, preferredLayersOffset);
 
 				request->Accept(
 				  request->GetBufferBuilder(),
 				  FBS::Response::Body::FBS_Transport_ConsumeResponse,
 				  responseOffset);
-				// TODO.
-				/*
-				consumer->FillJsonScore(data["score"]);
-
-				auto preferredLayers = consumer->GetPreferredLayers();
-
-				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
-				{
-				  data["preferredLayers"]["spatialLayer"]  = preferredLayers.spatial;
-				  data["preferredLayers"]["temporalLayer"] = preferredLayers.temporal;
-				}
-
-				request->Accept(data);
-				*/
 
 				// Check if Transport Congestion Control client must be created.
 				const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
