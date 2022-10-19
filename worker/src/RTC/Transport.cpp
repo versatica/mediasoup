@@ -1204,9 +1204,9 @@ namespace RTC
 
 	binary:
 
-		switch (request->_data->body_type())
+		switch (request->_method)
 		{
-			case FBS::Request::Body::FBS_Transport_ConsumeRequest:
+			case FBS::Request::Method::TRANSPORT_CONSUME:
 			{
 				auto body = request->_data->body_as<FBS::Transport::ConsumeRequest>();
 

@@ -227,7 +227,6 @@ namespace Channel
 		this->replied = true;
 
 		auto& builder = ChannelRequest::bufferBuilder;
-
 		auto response =
 		  FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
 

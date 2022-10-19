@@ -422,6 +422,7 @@ binary:
 			break;
 		}
 
+		// TODO: Move to Transport.cpp when ready.
 		case FBS::Request::Method::TRANSPORT_CONSUME:
 		{
 			try
