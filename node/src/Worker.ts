@@ -656,7 +656,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		// Get flatbuffer builder.
+		// Build the request.
 		const builder = this.#channel.bufferBuilder;
 		const fbsListenInfos:WebRtcServerListenInfoT[] = [];
 
