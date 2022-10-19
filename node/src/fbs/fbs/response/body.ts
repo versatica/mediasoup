@@ -2,13 +2,13 @@
 
 import { ConsumeResponse, ConsumeResponseT } from '../../fbs/transport/consume-response';
 import { WebRtcServerDump, WebRtcServerDumpT } from '../../fbs/web-rtc-server/web-rtc-server-dump';
-import { Dump, DumpT } from '../../fbs/worker/dump';
 import { ResourceUsage, ResourceUsageT } from '../../fbs/worker/resource-usage';
+import { WorkerDump, WorkerDumpT } from '../../fbs/worker/worker-dump';
 
 
 export enum Body {
   NONE = 0,
-  FBS_Worker_Dump = 1,
+  FBS_Worker_WorkerDump = 1,
   FBS_Worker_ResourceUsage = 2,
   FBS_WebRtcServer_WebRtcServerDump = 3,
   FBS_Transport_ConsumeResponse = 4
@@ -16,11 +16,11 @@ export enum Body {
 
 export function unionToBody(
   type: Body,
-  accessor: (obj:ConsumeResponse|Dump|ResourceUsage|WebRtcServerDump) => ConsumeResponse|Dump|ResourceUsage|WebRtcServerDump|null
-): ConsumeResponse|Dump|ResourceUsage|WebRtcServerDump|null {
+  accessor: (obj:ConsumeResponse|ResourceUsage|WebRtcServerDump|WorkerDump) => ConsumeResponse|ResourceUsage|WebRtcServerDump|WorkerDump|null
+): ConsumeResponse|ResourceUsage|WebRtcServerDump|WorkerDump|null {
   switch(Body[type]) {
     case 'NONE': return null; 
-    case 'FBS_Worker_Dump': return accessor(new Dump())! as Dump;
+    case 'FBS_Worker_WorkerDump': return accessor(new WorkerDump())! as WorkerDump;
     case 'FBS_Worker_ResourceUsage': return accessor(new ResourceUsage())! as ResourceUsage;
     case 'FBS_WebRtcServer_WebRtcServerDump': return accessor(new WebRtcServerDump())! as WebRtcServerDump;
     case 'FBS_Transport_ConsumeResponse': return accessor(new ConsumeResponse())! as ConsumeResponse;
@@ -30,12 +30,12 @@ export function unionToBody(
 
 export function unionListToBody(
   type: Body, 
-  accessor: (index: number, obj:ConsumeResponse|Dump|ResourceUsage|WebRtcServerDump) => ConsumeResponse|Dump|ResourceUsage|WebRtcServerDump|null, 
+  accessor: (index: number, obj:ConsumeResponse|ResourceUsage|WebRtcServerDump|WorkerDump) => ConsumeResponse|ResourceUsage|WebRtcServerDump|WorkerDump|null, 
   index: number
-): ConsumeResponse|Dump|ResourceUsage|WebRtcServerDump|null {
+): ConsumeResponse|ResourceUsage|WebRtcServerDump|WorkerDump|null {
   switch(Body[type]) {
     case 'NONE': return null; 
-    case 'FBS_Worker_Dump': return accessor(index, new Dump())! as Dump;
+    case 'FBS_Worker_WorkerDump': return accessor(index, new WorkerDump())! as WorkerDump;
     case 'FBS_Worker_ResourceUsage': return accessor(index, new ResourceUsage())! as ResourceUsage;
     case 'FBS_WebRtcServer_WebRtcServerDump': return accessor(index, new WebRtcServerDump())! as WebRtcServerDump;
     case 'FBS_Transport_ConsumeResponse': return accessor(index, new ConsumeResponse())! as ConsumeResponse;

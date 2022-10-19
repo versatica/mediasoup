@@ -7,7 +7,7 @@ table ChannelMessageHandlers {
   payloadchannel_notification_handlers:[string];
 }
 
-table Dump {
+table WorkerDump {
   pid:uint64;
   webrtc_server_ids:[string];
   router_ids:[string];
@@ -52,4 +52,4 @@ table CreateWebRtcServerRequest {
   listen_infos:[WebRtcServerListenInfo];
 }
 
-root_type Dump;
+root_type WorkerDump;

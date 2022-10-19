@@ -95,7 +95,7 @@ void Worker::Close()
 	this->payloadChannel->Close();
 }
 
-flatbuffers::Offset<FBS::Worker::Dump> Worker::FillBuffer(flatbuffers::FlatBufferBuilder& builder) const
+flatbuffers::Offset<FBS::Worker::WorkerDump> Worker::FillBuffer(flatbuffers::FlatBufferBuilder& builder) const
 {
 	// Add webRtcServerIds.
 	std::vector<flatbuffers::Offset<flatbuffers::String>> webRtcServerIds;
@@ -117,7 +117,7 @@ flatbuffers::Offset<FBS::Worker::Dump> Worker::FillBuffer(flatbuffers::FlatBuffe
 
 	auto channelMessageHandlers = ChannelMessageHandlers::FillBuffer(builder);
 
-	return FBS::Worker::CreateDumpDirect(builder, Logger::pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
+	return FBS::Worker::CreateWorkerDumpDirect(builder, Logger::pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
 }
 
 flatbuffers::Offset<FBS::Worker::ResourceUsage> Worker::FillBufferResourceUsage(
@@ -397,7 +397,7 @@ binary:
 
 			auto dumpOffset = FillBuffer(builder);
 
-			request->Accept(builder, FBS::Response::Body::FBS_Worker_Dump, dumpOffset);
+			request->Accept(builder, FBS::Response::Body::FBS_Worker_WorkerDump, dumpOffset);
 
 			break;
 		}

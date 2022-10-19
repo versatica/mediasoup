@@ -10,7 +10,7 @@ import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { Body as RequestBody, Method } from './fbs/request_generated';
-import { Dump, ResourceUsage } from './fbs/response_generated';
+import { WorkerDump as FbsWorkerDump, ResourceUsage as FbsResourceUsage } from './fbs/response_generated';
 import { ChannelMessageHandlers, UpdateableSettingsT, CreateWebRtcServerRequestT, TransportProtocol } from './fbs/worker_generated';
 import { WebRtcServerListenInfoT } from './fbs/fbs/worker/web-rtc-server-listen-info';
 import { getArray } from './fbs/utils';
@@ -572,7 +572,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		);
 
 		/* Decode the response. */
-		const dump = new Dump();
+		const dump = new FbsWorkerDump();
 
 		response.body(dump);
 
@@ -590,7 +590,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		const response = await this.#channel.requestBinary(Method.WORKER_GET_RESOURCE_USAGE);
 
 		/* Decode the response. */
-		const resourceUsage = new ResourceUsage();
+		const resourceUsage = new FbsResourceUsage();
 
 		response.body(resourceUsage);
 
@@ -781,7 +781,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	 * flatbuffers helpers
 	 */
 
-	private parseDumpResponse(dump: Dump): WorkerDump
+	private parseDumpResponse(dump: FbsWorkerDump): WorkerDump
 	{
 		const channelMessageHandlers = new ChannelMessageHandlers();
 

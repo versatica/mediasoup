@@ -267,7 +267,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Send the request and wait for the response.
         const response = await this.#channel.requestBinary(request_generated_1.Method.WORKER_DUMP);
         /* Decode the response. */
-        const dump = new response_generated_1.Dump();
+        const dump = new response_generated_1.WorkerDump();
         response.body(dump);
         return dump.unpack();
         // / return this.parseDumpResponse(dumpResponse);

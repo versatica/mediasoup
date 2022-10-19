@@ -19,8 +19,8 @@ namespace Worker {
 struct ChannelMessageHandlers;
 struct ChannelMessageHandlersBuilder;
 
-struct Dump;
-struct DumpBuilder;
+struct WorkerDump;
+struct WorkerDumpBuilder;
 
 struct ResourceUsage;
 struct ResourceUsageBuilder;
@@ -36,7 +36,7 @@ struct CreateWebRtcServerRequestBuilder;
 
 inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable();
 
-inline const flatbuffers::TypeTable *DumpTypeTable();
+inline const flatbuffers::TypeTable *WorkerDumpTypeTable();
 
 inline const flatbuffers::TypeTable *ResourceUsageTypeTable();
 
@@ -161,10 +161,10 @@ inline flatbuffers::Offset<ChannelMessageHandlers> CreateChannelMessageHandlersD
       payloadchannelNotificationHandlers__);
 }
 
-struct Dump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef DumpBuilder Builder;
+struct WorkerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef WorkerDumpBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return DumpTypeTable();
+    return WorkerDumpTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_PID = 4,
@@ -199,40 +199,40 @@ struct Dump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
 };
 
-struct DumpBuilder {
-  typedef Dump Table;
+struct WorkerDumpBuilder {
+  typedef WorkerDump Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_pid(uint64_t pid) {
-    fbb_.AddElement<uint64_t>(Dump::VT_PID, pid, 0);
+    fbb_.AddElement<uint64_t>(WorkerDump::VT_PID, pid, 0);
   }
   void add_webrtcServerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webrtcServerIds) {
-    fbb_.AddOffset(Dump::VT_WEBRTCSERVERIDS, webrtcServerIds);
+    fbb_.AddOffset(WorkerDump::VT_WEBRTCSERVERIDS, webrtcServerIds);
   }
   void add_routerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> routerIds) {
-    fbb_.AddOffset(Dump::VT_ROUTERIDS, routerIds);
+    fbb_.AddOffset(WorkerDump::VT_ROUTERIDS, routerIds);
   }
   void add_channelMessageHandlers(flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers) {
-    fbb_.AddOffset(Dump::VT_CHANNELMESSAGEHANDLERS, channelMessageHandlers);
+    fbb_.AddOffset(WorkerDump::VT_CHANNELMESSAGEHANDLERS, channelMessageHandlers);
   }
-  explicit DumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit WorkerDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<Dump> Finish() {
+  flatbuffers::Offset<WorkerDump> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Dump>(end);
+    auto o = flatbuffers::Offset<WorkerDump>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<Dump> CreateDump(
+inline flatbuffers::Offset<WorkerDump> CreateWorkerDump(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint64_t pid = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webrtcServerIds = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> routerIds = 0,
     flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers = 0) {
-  DumpBuilder builder_(_fbb);
+  WorkerDumpBuilder builder_(_fbb);
   builder_.add_pid(pid);
   builder_.add_channelMessageHandlers(channelMessageHandlers);
   builder_.add_routerIds(routerIds);
@@ -240,7 +240,7 @@ inline flatbuffers::Offset<Dump> CreateDump(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<Dump> CreateDumpDirect(
+inline flatbuffers::Offset<WorkerDump> CreateWorkerDumpDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint64_t pid = 0,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *webrtcServerIds = nullptr,
@@ -248,7 +248,7 @@ inline flatbuffers::Offset<Dump> CreateDumpDirect(
     flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers = 0) {
   auto webrtcServerIds__ = webrtcServerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*webrtcServerIds) : 0;
   auto routerIds__ = routerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*routerIds) : 0;
-  return FBS::Worker::CreateDump(
+  return FBS::Worker::CreateWorkerDump(
       _fbb,
       pid,
       webrtcServerIds__,
@@ -717,7 +717,7 @@ inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable() {
   return &tt;
 }
 
-inline const flatbuffers::TypeTable *DumpTypeTable() {
+inline const flatbuffers::TypeTable *WorkerDumpTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_ULONG, 0, -1 },
     { flatbuffers::ET_STRING, 1, -1 },
@@ -837,33 +837,33 @@ inline const flatbuffers::TypeTable *CreateWebRtcServerRequestTypeTable() {
   return &tt;
 }
 
-inline const FBS::Worker::Dump *GetDump(const void *buf) {
-  return flatbuffers::GetRoot<FBS::Worker::Dump>(buf);
+inline const FBS::Worker::WorkerDump *GetWorkerDump(const void *buf) {
+  return flatbuffers::GetRoot<FBS::Worker::WorkerDump>(buf);
 }
 
-inline const FBS::Worker::Dump *GetSizePrefixedDump(const void *buf) {
-  return flatbuffers::GetSizePrefixedRoot<FBS::Worker::Dump>(buf);
+inline const FBS::Worker::WorkerDump *GetSizePrefixedWorkerDump(const void *buf) {
+  return flatbuffers::GetSizePrefixedRoot<FBS::Worker::WorkerDump>(buf);
 }
 
-inline bool VerifyDumpBuffer(
+inline bool VerifyWorkerDumpBuffer(
     flatbuffers::Verifier &verifier) {
-  return verifier.VerifyBuffer<FBS::Worker::Dump>(nullptr);
+  return verifier.VerifyBuffer<FBS::Worker::WorkerDump>(nullptr);
 }
 
-inline bool VerifySizePrefixedDumpBuffer(
+inline bool VerifySizePrefixedWorkerDumpBuffer(
     flatbuffers::Verifier &verifier) {
-  return verifier.VerifySizePrefixedBuffer<FBS::Worker::Dump>(nullptr);
+  return verifier.VerifySizePrefixedBuffer<FBS::Worker::WorkerDump>(nullptr);
 }
 
-inline void FinishDumpBuffer(
+inline void FinishWorkerDumpBuffer(
     flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::Worker::Dump> root) {
+    flatbuffers::Offset<FBS::Worker::WorkerDump> root) {
   fbb.Finish(root);
 }
 
-inline void FinishSizePrefixedDumpBuffer(
+inline void FinishSizePrefixedWorkerDumpBuffer(
     flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::Worker::Dump> root) {
+    flatbuffers::Offset<FBS::Worker::WorkerDump> root) {
   fbb.FinishSizePrefixed(root);
 }
 
