@@ -339,6 +339,7 @@ export class Channel extends EnhancedEventEmitter
 			const sent: Sent =
 			{
 				id      : id,
+				// TODO: Use the Request.Method type when JSON is removed.
 				method  : '',
 				resolve : (data2) =>
 				{
