@@ -180,40 +180,6 @@ flatbuffers::Offset<FBS::Worker::ResourceUsage> Worker::FillBufferResourceUsage(
 	  uvRusage.ru_nivcsw);
 }
 
-void Worker::SetNewWebRtcServerIdFromData(json& data, std::string& webRtcServerId) const
-{
-	MS_TRACE();
-
-	auto jsonWebRtcServerIdIt = data.find("webRtcServerId");
-
-	if (jsonWebRtcServerIdIt == data.end() || !jsonWebRtcServerIdIt->is_string())
-		MS_THROW_ERROR("missing webRtcServerId");
-
-	webRtcServerId.assign(jsonWebRtcServerIdIt->get<std::string>());
-
-	if (this->mapWebRtcServers.find(webRtcServerId) != this->mapWebRtcServers.end())
-		MS_THROW_ERROR("a WebRtcServer with same webRtcServerId already exists");
-}
-
-RTC::WebRtcServer* Worker::GetWebRtcServerFromData(json& data) const
-{
-	MS_TRACE();
-
-	auto jsonWebRtcServerIdIt = data.find("webRtcServerId");
-
-	if (jsonWebRtcServerIdIt == data.end() || !jsonWebRtcServerIdIt->is_string())
-		MS_THROW_ERROR("missing handlerId.webRtcServerId");
-
-	auto it = this->mapWebRtcServers.find(jsonWebRtcServerIdIt->get<std::string>());
-
-	if (it == this->mapWebRtcServers.end())
-		MS_THROW_ERROR("WebRtcServer not found");
-
-	RTC::WebRtcServer* webRtcServer = it->second;
-
-	return webRtcServer;
-}
-
 void Worker::SetNewRouterIdFromData(json& data, std::string& routerId) const
 {
 	MS_TRACE();
@@ -248,10 +214,20 @@ RTC::Router* Worker::GetRouterFromData(json& data) const
 	return router;
 }
 
-void Worker::CheckWebRtcServer(const std::string& webRtcServerId) const
+void Worker::CheckNoWebRtcServer(const std::string& webRtcServerId) const
 {
 	if (this->mapWebRtcServers.find(webRtcServerId) != this->mapWebRtcServers.end())
 		MS_THROW_ERROR("a WebRtcServer with same webRtcServerId already exists");
+}
+
+RTC::WebRtcServer* Worker::GetWebRtcServer(const std::string& webRtcServerId) const
+{
+	auto it = this->mapWebRtcServers.find(webRtcServerId);
+
+	if (it == this->mapWebRtcServers.end())
+		MS_THROW_ERROR("WebRtcServer not found");
+
+	return it->second;
 }
 
 inline void Worker::HandleRequest(Channel::ChannelRequest* request)
@@ -267,31 +243,6 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 	switch (request->methodId)
 	{
-		case Channel::ChannelRequest::MethodId::WORKER_WEBRTC_SERVER_CLOSE:
-		{
-			RTC::WebRtcServer* webRtcServer{ nullptr };
-
-			try
-			{
-				webRtcServer = GetWebRtcServerFromData(request->data);
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
-			}
-
-			// Remove it from the map and delete it.
-			this->mapWebRtcServers.erase(webRtcServer->id);
-
-			delete webRtcServer;
-
-			MS_DEBUG_DEV("WebRtcServer closed [id:%s]", webRtcServer->id.c_str());
-
-			request->Accept();
-
-			break;
-		}
-
 		case Channel::ChannelRequest::MethodId::WORKER_CREATE_ROUTER:
 		{
 			std::string routerId;
@@ -428,7 +379,7 @@ binary:
 
 				std::string webRtcServerId = body->webRtcServerId()->str();
 
-				CheckWebRtcServer(webRtcServerId);
+				CheckNoWebRtcServer(webRtcServerId);
 
 				auto* webRtcServer = new RTC::WebRtcServer(webRtcServerId, body->listenInfos());
 
@@ -446,6 +397,35 @@ binary:
 			{
 				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
 			}
+
+			break;
+		}
+
+		case FBS::Request::Method::WORKER_WEBRTC_SERVER_CLOSE:
+		{
+			RTC::WebRtcServer* webRtcServer{ nullptr };
+
+			try
+			{
+				auto body = request->_data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
+
+				auto webRtcServerId = body->webRtcServerId()->str();
+
+				webRtcServer = GetWebRtcServer(webRtcServerId);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+			}
+
+			// Remove it from the map and delete it.
+			this->mapWebRtcServers.erase(webRtcServer->id);
+
+			delete webRtcServer;
+
+			MS_DEBUG_DEV("WebRtcServer closed [id:%s]", webRtcServer->id.c_str());
+
+			request->Accept();
 
 			break;
 		}

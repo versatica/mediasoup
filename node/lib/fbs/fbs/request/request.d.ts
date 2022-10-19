@@ -2,6 +2,7 @@ import * as flatbuffers from 'flatbuffers';
 import { Body } from '../../fbs/request/body';
 import { Method } from '../../fbs/request/method';
 import { ConsumeRequestT } from '../../fbs/transport/consume-request';
+import { CloseWebRtcServerRequestT } from '../../fbs/worker/close-web-rtc-server-request';
 import { CreateWebRtcServerRequestT } from '../../fbs/worker/create-web-rtc-server-request';
 import { UpdateableSettingsT } from '../../fbs/worker/updateable-settings';
 export declare class Request {
@@ -34,8 +35,8 @@ export declare class RequestT {
     method: Method;
     handlerId: string | Uint8Array | null;
     bodyType: Body;
-    body: ConsumeRequestT | CreateWebRtcServerRequestT | UpdateableSettingsT | null;
-    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: ConsumeRequestT | CreateWebRtcServerRequestT | UpdateableSettingsT | null);
+    body: CloseWebRtcServerRequestT | ConsumeRequestT | CreateWebRtcServerRequestT | UpdateableSettingsT | null;
+    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: CloseWebRtcServerRequestT | ConsumeRequestT | CreateWebRtcServerRequestT | UpdateableSettingsT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=request.d.ts.map

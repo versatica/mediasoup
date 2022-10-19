@@ -66,6 +66,7 @@ enum Method: uint8 {
 union Body {
   FBS.Worker.UpdateableSettings,
   FBS.Worker.CreateWebRtcServerRequest,
+  FBS.Worker.CloseWebRtcServerRequest,
   FBS.Transport.ConsumeRequest,
 }
 

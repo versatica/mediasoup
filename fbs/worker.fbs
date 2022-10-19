@@ -48,8 +48,12 @@ table WebRtcServerListenInfo {
 }
 
 table CreateWebRtcServerRequest {
-  web_rtc_server_id:string;
+  web_rtc_server_id:string (required);
   listen_infos:[WebRtcServerListenInfo];
+}
+
+table CloseWebRtcServerRequest {
+  web_rtc_server_id:string (required);
 }
 
 root_type WorkerDump;

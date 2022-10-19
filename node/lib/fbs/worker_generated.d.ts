@@ -1,4 +1,5 @@
 export { ChannelMessageHandlers, ChannelMessageHandlersT } from './fbs/worker/channel-message-handlers';
+export { CloseWebRtcServerRequest, CloseWebRtcServerRequestT } from './fbs/worker/close-web-rtc-server-request';
 export { CreateWebRtcServerRequest, CreateWebRtcServerRequestT } from './fbs/worker/create-web-rtc-server-request';
 export { ResourceUsage, ResourceUsageT } from './fbs/worker/resource-usage';
 export { TransportProtocol } from './fbs/worker/transport-protocol';

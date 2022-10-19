@@ -34,6 +34,9 @@ struct WebRtcServerListenInfoBuilder;
 struct CreateWebRtcServerRequest;
 struct CreateWebRtcServerRequestBuilder;
 
+struct CloseWebRtcServerRequest;
+struct CloseWebRtcServerRequestBuilder;
+
 inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable();
 
 inline const flatbuffers::TypeTable *WorkerDumpTypeTable();
@@ -45,6 +48,8 @@ inline const flatbuffers::TypeTable *UpdateableSettingsTypeTable();
 inline const flatbuffers::TypeTable *WebRtcServerListenInfoTypeTable();
 
 inline const flatbuffers::TypeTable *CreateWebRtcServerRequestTypeTable();
+
+inline const flatbuffers::TypeTable *CloseWebRtcServerRequestTypeTable();
 
 enum class TransportProtocol : uint8_t {
   UDP = 1,
@@ -629,7 +634,7 @@ struct CreateWebRtcServerRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_WEBRTCSERVERID) &&
+           VerifyOffsetRequired(verifier, VT_WEBRTCSERVERID) &&
            verifier.VerifyString(webRtcServerId()) &&
            VerifyOffset(verifier, VT_LISTENINFOS) &&
            verifier.VerifyVector(listenInfos()) &&
@@ -655,6 +660,7 @@ struct CreateWebRtcServerRequestBuilder {
   flatbuffers::Offset<CreateWebRtcServerRequest> Finish() {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<CreateWebRtcServerRequest>(end);
+    fbb_.Required(o, CreateWebRtcServerRequest::VT_WEBRTCSERVERID);
     return o;
   }
 };
@@ -679,6 +685,61 @@ inline flatbuffers::Offset<CreateWebRtcServerRequest> CreateCreateWebRtcServerRe
       _fbb,
       webRtcServerId__,
       listenInfos__);
+}
+
+struct CloseWebRtcServerRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CloseWebRtcServerRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CloseWebRtcServerRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_WEBRTCSERVERID = 4
+  };
+  const flatbuffers::String *webRtcServerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_WEBRTCSERVERID);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_WEBRTCSERVERID) &&
+           verifier.VerifyString(webRtcServerId()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CloseWebRtcServerRequestBuilder {
+  typedef CloseWebRtcServerRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_webRtcServerId(flatbuffers::Offset<flatbuffers::String> webRtcServerId) {
+    fbb_.AddOffset(CloseWebRtcServerRequest::VT_WEBRTCSERVERID, webRtcServerId);
+  }
+  explicit CloseWebRtcServerRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CloseWebRtcServerRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CloseWebRtcServerRequest>(end);
+    fbb_.Required(o, CloseWebRtcServerRequest::VT_WEBRTCSERVERID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CloseWebRtcServerRequest> CreateCloseWebRtcServerRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> webRtcServerId = 0) {
+  CloseWebRtcServerRequestBuilder builder_(_fbb);
+  builder_.add_webRtcServerId(webRtcServerId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CloseWebRtcServerRequest> CreateCloseWebRtcServerRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *webRtcServerId = nullptr) {
+  auto webRtcServerId__ = webRtcServerId ? _fbb.CreateString(webRtcServerId) : 0;
+  return FBS::Worker::CreateCloseWebRtcServerRequest(
+      _fbb,
+      webRtcServerId__);
 }
 
 inline const flatbuffers::TypeTable *TransportProtocolTypeTable() {
@@ -833,6 +894,19 @@ inline const flatbuffers::TypeTable *CreateWebRtcServerRequestTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CloseWebRtcServerRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "webRtcServerId"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
   };
   return &tt;
 }

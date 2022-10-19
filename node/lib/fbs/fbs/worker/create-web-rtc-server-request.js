@@ -52,6 +52,7 @@ class CreateWebRtcServerRequest {
     }
     static endCreateWebRtcServerRequest(builder) {
         const offset = builder.endObject();
+        builder.requiredField(offset, 4); // web_rtc_server_id
         return offset;
     }
     static createCreateWebRtcServerRequest(builder, webRtcServerIdOffset, listenInfosOffset) {

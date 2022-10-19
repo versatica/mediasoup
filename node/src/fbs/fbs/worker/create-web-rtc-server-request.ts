@@ -66,6 +66,7 @@ static startListenInfosVector(builder:flatbuffers.Builder, numElems:number) {
 
 static endCreateWebRtcServerRequest(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
+  builder.requiredField(offset, 4) // web_rtc_server_id
   return offset;
 }
 
