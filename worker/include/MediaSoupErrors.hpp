@@ -22,7 +22,6 @@ class MediaSoupTypeError : public MediaSoupError
 public:
 	explicit MediaSoupTypeError(const char* description) : MediaSoupError(description)
 	{
-		assert(false);
 	}
 };
 
