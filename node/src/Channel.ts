@@ -238,14 +238,14 @@ export class Channel extends EnhancedEventEmitter
 	 */
 	async request(method: string, handlerId?: string, data?: any): Promise<any>
 	{
+		if (this.#closed)
+			throw new InvalidStateError('Channel closed');
+
 		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
 
 		const id = this.#nextId;
 
 		logger.debug('request() [method:%s, id:%s]', method, id);
-
-		if (this.#closed)
-			throw new InvalidStateError('Channel closed');
 
 		const request = `r${id}:${method}:${handlerId}:${JSON.stringify(data)}`;
 
@@ -294,14 +294,14 @@ export class Channel extends EnhancedEventEmitter
 		bodyOffset?: number,
 		handlerId?: string): Promise<Response>
 	{
+		if (this.#closed)
+			throw new InvalidStateError('Channel closed');
+
 		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
 
 		const id = this.#nextId;
 
 		logger.error('request() [method:%s, id:%s]', id);
-
-		if (this.#closed)
-			throw new InvalidStateError('Channel closed');
 
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
 
@@ -321,6 +321,9 @@ export class Channel extends EnhancedEventEmitter
 		this.#bufferBuilder.finish(requestOffset);
 
 		const buffer = this.#bufferBuilder.asUint8Array();
+
+		// Clear the buffer builder so it's reused for the next request.
+		this.#bufferBuilder.clear();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');
@@ -429,7 +432,6 @@ export class Channel extends EnhancedEventEmitter
 	private processBuffer(data: Buffer): void
 	{
 		const buffer = new flatbuffers.ByteBuffer(new Uint8Array(data));
-
 		const msg = Response.getRootAsResponse(buffer);
 
 		// If a response, retrieve its associated request.

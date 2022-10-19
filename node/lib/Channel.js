@@ -151,11 +151,11 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * @private
      */
     async request(method, handlerId, data) {
+        if (this.#closed)
+            throw new errors_1.InvalidStateError('Channel closed');
         this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
         const id = this.#nextId;
         logger.debug('request() [method:%s, id:%s]', method, id);
-        if (this.#closed)
-            throw new errors_1.InvalidStateError('Channel closed');
         const request = `r${id}:${method}:${handlerId}:${JSON.stringify(data)}`;
         if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
             throw new Error('Channel request too big');
@@ -185,11 +185,11 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         });
     }
     async requestBinary(method, bodyType, bodyOffset, handlerId) {
+        if (this.#closed)
+            throw new errors_1.InvalidStateError('Channel closed');
         this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
         const id = this.#nextId;
         logger.error('request() [method:%s, id:%s]', id);
-        if (this.#closed)
-            throw new errors_1.InvalidStateError('Channel closed');
         const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
         let requestOffset;
         if (bodyType && bodyOffset) {
@@ -200,6 +200,7 @@ class Channel extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         }
         this.#bufferBuilder.finish(requestOffset);
         const buffer = this.#bufferBuilder.asUint8Array();
+        this.#bufferBuilder.clear();
         if (buffer.byteLength > MESSAGE_MAX_LEN)
             throw new Error('Channel request too big');
         // This may throw if closed or remote side ended.

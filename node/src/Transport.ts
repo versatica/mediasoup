@@ -1031,7 +1031,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	{
 		// Build the request.
 		const builder = this.channel.bufferBuilder;
-
 		const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
 		const consumerIdOffset = builder.createString(consumerId);
 		const producerIdOffset = builder.createString(producer.id);
