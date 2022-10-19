@@ -30,7 +30,7 @@ constexpr uint8_t hexVal[256] = {
 };
 
 
-CallStatsRecord::CallStatsRecord(uint64_t type, uint16_t ssrc, char payloadType, std::string callId, std::string obj, std::string producer)
+CallStatsRecord::CallStatsRecord(uint64_t type, uint16_t ssrc, uint8_t payload, char content, std::string callId, std::string obj, std::string producer)
   : type(type), call_id(callId), object_id(obj), producer_id(producer)
 {
   uint64_t ts = Utils::Time::currentStdEpochMs();
@@ -41,7 +41,8 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint16_t ssrc, char payloadType,
   if (type) // consumer
   {
     record.c.ssrc = ssrc;
-    record.c.payload_type = payloadType;
+    record.c.payload = payload;
+    record.c.content = content;
     std::memset(record.c.consumer_id, 0, UUID_BYTE_LEN);
     uuidToBytes(obj, record.c.consumer_id);
     
@@ -50,17 +51,18 @@ CallStatsRecord::CallStatsRecord(uint64_t type, uint16_t ssrc, char payloadType,
 
     std::memset(record.c.samples, 0, sizeof(record.c.samples));
 
-    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): consumer start_tm=%" PRIu64 " ssrc=%" PRIu16 " type=%c callId=%s consumerId=%s producerId=%s", 
-      ts, ssrc, payloadType, call_id.c_str(), object_id.c_str(), producer_id.c_str());
+    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): consumer start_tm=%" PRIu64 " ssrc=%" PRIu16 " payload=%" PRIu8 " type=%c callId=%s consumerId=%s producerId=%s", 
+      ts, ssrc, payload, content, call_id.c_str(), object_id.c_str(), producer_id.c_str());
   }
   else // producer
   {
     record.p.ssrc = ssrc;
-    record.p.payload_type = payloadType;
+    record.p.payload = payload;
+    record.p.content = content;
     std::memset(record.p.samples, 0, sizeof(record.p.samples));
 
-    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): producer start_tm=%" PRIu64 " ssrc=%" PRIu16 " type=%c callId=%s producerId=%s", 
-      ts, ssrc, payloadType, call_id.c_str(), object_id.c_str());
+    MS_DEBUG_TAG(rtp, "CallStatsRecord ctor(): producer start_tm=%" PRIu64 " ssrc=%" PRIu16 " payload=%" PRIu8 " type=%c callId=%s producerId=%s", 
+      ts, ssrc, payload, content, call_id.c_str(), object_id.c_str());
   }
 }
 
