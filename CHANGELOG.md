@@ -1,8 +1,9 @@
 # Changelog
 
 
-### NEXT
+### 3.10.10
 
+* Fix the JSON serialization for the payload channel `rtp` event (PR #926 by @mhammo).
 * Update NPM deps.
 
 
