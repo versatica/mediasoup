@@ -6,7 +6,7 @@
 #include "RTC/RtpStream.hpp"
 
 #define BINLOG_MIN_TIMESPAN   20000
-#define BINLOG_FORMAT_VERSION "0242ac"
+#define BINLOG_FORMAT_VERSION "e9735e"
 
 // CALL_STATS_BIN_LOG_RECORDS_NUM * sizeof(CallStatsSample) should be
 // dividible by 16 b/c of alignment concerns;
@@ -19,6 +19,7 @@
 #define CALL_STATS_BIN_LOG_RECORDS_NUM 8
 #define CALL_STATS_BIN_LOG_SAMPLING    2000
 
+#define UINT16_UNSET                   ((uint16_t)-1)
 #define UINT32_UNSET                   ((uint32_t)-1)
 #define UINT64_UNSET                   ((uint64_t)-1)
 #define ZERO_UUID "00000000-0000-0000-0000-000000000000"
@@ -55,8 +56,8 @@ struct CallStatsSample
 struct ConsumerRecord
 {
   uint64_t        start_tm {UINT64_UNSET};                 // the record start timestamp in milliseconds
-  uint32_t        filled {UINT32_UNSET};                   // number of filled records in the array below
-  uint16_t        ssrc {0};                                // ssrc as in original RTP stream
+  uint16_t        filled {UINT16_UNSET};                   // number of filled records in the array below
+  uint32_t        ssrc {UINT32_UNSET};                     // ssrc as in original RTP stream
   uint8_t         payload {0};                             // payload id as in original RTP stream
   uint8_t         content;                                 // 'a' or 'v'
   uint8_t         consumer_id [UUID_BYTE_LEN];             // 
@@ -67,8 +68,8 @@ struct ConsumerRecord
 struct ProducerRecord
 {
   uint64_t        start_tm {UINT64_UNSET};                 // the record start timestamp in milliseconds
-  uint32_t        filled {UINT32_UNSET};                   // number of filled records in the array below
-  uint16_t        ssrc {0};                                // ssrc as in original RTP stream
+  uint16_t        filled {UINT16_UNSET};                   // number of filled records in the array below
+  uint32_t        ssrc {UINT32_UNSET};                     // ssrc as in original RTP stream
   uint8_t         payload {0};                             // payload id as in original RTP stream
   uint8_t         content;                                 // 'a' or 'v'
   CallStatsSample samples[CALL_STATS_BIN_LOG_RECORDS_NUM]; // collection of data samples

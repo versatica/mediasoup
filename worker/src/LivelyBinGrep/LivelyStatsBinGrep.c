@@ -18,7 +18,7 @@
 //#include <regex.h>
 
 // These defines should match LivelyBinLogs.hpp values
-#define BINLOG_FORMAT_VERSION "0242ac"
+#define BINLOG_FORMAT_VERSION "e9735e"
 
 #define CALL_STATS_BIN_LOG_RECORDS_NUM 8 
 #define CALL_STATS_BIN_LOG_SAMPLING    2000
@@ -57,8 +57,8 @@ typedef struct {
 
 typedef struct {
   uint64_t       start_tm;                    // the record start timestamp in milliseconds
-  uint32_t       filled;                      // number of filled records in the array below
-  uint16_t       ssrc;                        // ssrc as in original RTP stream
+  uint16_t       filled;                      // number of filled records in the array below
+  uint32_t       ssrc;                        // ssrc as in original RTP stream
   uint8_t        payload;                     // payload id as in original RTP stream
   uint8_t        content;                     // 'a' or 'v'
   char           consumer_id [UUID_BYTE_LEN]; // 
@@ -67,8 +67,8 @@ typedef struct {
 
 typedef struct {
   uint64_t       start_tm;                    // the record start timestamp in milliseconds
-  uint32_t       filled;                      // number of filled records in the array below
-  uint16_t       ssrc;                        // ssrc as in original RTP stream
+  uint16_t       filled;                      // number of filled records in the array below
+  uint32_t       ssrc;                        // ssrc as in original RTP stream
   uint8_t        payload;                     // payload id as in original RTP stream
   uint8_t        content;                     // 'a' or 'v'
 } stats_producer_record_header_t;
