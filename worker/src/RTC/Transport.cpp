@@ -627,7 +627,8 @@ namespace RTC
 		  sctpAssociation,
 		  &traceEventTypes);
 
-		return FBS::Transport::CreateTransportDump(builder, FBS::Transport::TransportDumpData::BaseTransportDump, baseTransportDump.Union());
+		return FBS::Transport::CreateTransportDump(
+		  builder, FBS::Transport::TransportDumpData::BaseTransportDump, baseTransportDump.Union());
 	}
 
 	void Transport::FillJsonStats(json& jsonArray)
