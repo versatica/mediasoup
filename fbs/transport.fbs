@@ -139,5 +139,3 @@ table WebRtcTransportDump {
   ice_selected_tuple:IceSelectedTuple;
   dtls_parameters:DtlsParameters (required);
 }
-
-root_type ConsumeRequest;

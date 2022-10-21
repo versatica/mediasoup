@@ -199,7 +199,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		// TMP.
+		// TMP: For debugging.
 		auto s = flatbuffers::FlatBufferToString(msg, FBS::Request::RequestTypeTable());
 		MS_ERROR("%s", s.c_str());
 

@@ -54,12 +54,6 @@ class Response {
         const offset = builder.endObject();
         return offset;
     }
-    static finishResponseBuffer(builder, offset) {
-        builder.finish(offset);
-    }
-    static finishSizePrefixedResponseBuffer(builder, offset) {
-        builder.finish(offset, undefined, true);
-    }
     static createResponse(builder, id, accepted, bodyType, bodyOffset) {
         Response.startResponse(builder);
         Response.addId(builder, id);

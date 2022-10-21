@@ -134,14 +134,6 @@ static endRtpParameters(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static finishRtpParametersBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset);
-}
-
-static finishSizePrefixedRtpParametersBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset, undefined, true);
-}
-
 
 unpack(): RtpParametersT {
   return new RtpParametersT(

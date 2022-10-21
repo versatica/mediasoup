@@ -24,5 +24,3 @@ table WebRtcServerDump {
   local_ice_username_fragments:[IceUserNameFragment];
   tuple_hashes:[TupleHash];
 }
-
-root_type WebRtcServerDump;

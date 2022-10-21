@@ -141,12 +141,6 @@ class WebRtcServerDump {
         builder.requiredField(offset, 4); // id
         return offset;
     }
-    static finishWebRtcServerDumpBuffer(builder, offset) {
-        builder.finish(offset);
-    }
-    static finishSizePrefixedWebRtcServerDumpBuffer(builder, offset) {
-        builder.finish(offset, undefined, true);
-    }
     static createWebRtcServerDump(builder, idOffset, udpSocketsOffset, tcpServersOffset, webRtcTransportIdsOffset, localIceUsernameFragmentsOffset, tupleHashesOffset) {
         WebRtcServerDump.startWebRtcServerDump(builder);
         WebRtcServerDump.addId(builder, idOffset);

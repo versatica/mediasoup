@@ -443,36 +443,6 @@ inline const flatbuffers::TypeTable *WebRtcServerDumpTypeTable() {
   return &tt;
 }
 
-inline const FBS::WebRtcServer::WebRtcServerDump *GetWebRtcServerDump(const void *buf) {
-  return flatbuffers::GetRoot<FBS::WebRtcServer::WebRtcServerDump>(buf);
-}
-
-inline const FBS::WebRtcServer::WebRtcServerDump *GetSizePrefixedWebRtcServerDump(const void *buf) {
-  return flatbuffers::GetSizePrefixedRoot<FBS::WebRtcServer::WebRtcServerDump>(buf);
-}
-
-inline bool VerifyWebRtcServerDumpBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifyBuffer<FBS::WebRtcServer::WebRtcServerDump>(nullptr);
-}
-
-inline bool VerifySizePrefixedWebRtcServerDumpBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifySizePrefixedBuffer<FBS::WebRtcServer::WebRtcServerDump>(nullptr);
-}
-
-inline void FinishWebRtcServerDumpBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::WebRtcServer::WebRtcServerDump> root) {
-  fbb.Finish(root);
-}
-
-inline void FinishSizePrefixedWebRtcServerDumpBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::WebRtcServer::WebRtcServerDump> root) {
-  fbb.FinishSizePrefixed(root);
-}
-
 }  // namespace WebRtcServer
 }  // namespace FBS
 

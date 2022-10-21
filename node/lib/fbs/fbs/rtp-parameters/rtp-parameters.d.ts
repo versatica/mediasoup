@@ -31,8 +31,6 @@ export declare class RtpParameters {
     static startEncodingsVector(builder: flatbuffers.Builder, numElems: number): void;
     static addRtcp(builder: flatbuffers.Builder, rtcpOffset: flatbuffers.Offset): void;
     static endRtpParameters(builder: flatbuffers.Builder): flatbuffers.Offset;
-    static finishRtpParametersBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
-    static finishSizePrefixedRtpParametersBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     unpack(): RtpParametersT;
     unpackTo(_o: RtpParametersT): void;
 }

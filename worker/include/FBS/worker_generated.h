@@ -1057,36 +1057,6 @@ inline const flatbuffers::TypeTable *CloseRouterRequestTypeTable() {
   return &tt;
 }
 
-inline const FBS::Worker::WorkerDump *GetWorkerDump(const void *buf) {
-  return flatbuffers::GetRoot<FBS::Worker::WorkerDump>(buf);
-}
-
-inline const FBS::Worker::WorkerDump *GetSizePrefixedWorkerDump(const void *buf) {
-  return flatbuffers::GetSizePrefixedRoot<FBS::Worker::WorkerDump>(buf);
-}
-
-inline bool VerifyWorkerDumpBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifyBuffer<FBS::Worker::WorkerDump>(nullptr);
-}
-
-inline bool VerifySizePrefixedWorkerDumpBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifySizePrefixedBuffer<FBS::Worker::WorkerDump>(nullptr);
-}
-
-inline void FinishWorkerDumpBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::Worker::WorkerDump> root) {
-  fbb.Finish(root);
-}
-
-inline void FinishSizePrefixedWorkerDumpBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::Worker::WorkerDump> root) {
-  fbb.FinishSizePrefixed(root);
-}
-
 }  // namespace Worker
 }  // namespace FBS
 

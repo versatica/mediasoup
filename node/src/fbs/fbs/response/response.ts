@@ -73,14 +73,6 @@ static endResponse(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static finishResponseBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset);
-}
-
-static finishSizePrefixedResponseBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset, undefined, true);
-}
-
 static createResponse(builder:flatbuffers.Builder, id:number, accepted:boolean, bodyType:Body, bodyOffset:flatbuffers.Offset):flatbuffers.Offset {
   Response.startResponse(builder);
   Response.addId(builder, id);

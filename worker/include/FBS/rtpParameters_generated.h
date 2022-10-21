@@ -1585,36 +1585,6 @@ inline const flatbuffers::TypeTable *RtpParametersTypeTable() {
   return &tt;
 }
 
-inline const FBS::RtpParameters::RtpParameters *GetRtpParameters(const void *buf) {
-  return flatbuffers::GetRoot<FBS::RtpParameters::RtpParameters>(buf);
-}
-
-inline const FBS::RtpParameters::RtpParameters *GetSizePrefixedRtpParameters(const void *buf) {
-  return flatbuffers::GetSizePrefixedRoot<FBS::RtpParameters::RtpParameters>(buf);
-}
-
-inline bool VerifyRtpParametersBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifyBuffer<FBS::RtpParameters::RtpParameters>(nullptr);
-}
-
-inline bool VerifySizePrefixedRtpParametersBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifySizePrefixedBuffer<FBS::RtpParameters::RtpParameters>(nullptr);
-}
-
-inline void FinishRtpParametersBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::RtpParameters::RtpParameters> root) {
-  fbb.Finish(root);
-}
-
-inline void FinishSizePrefixedRtpParametersBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::RtpParameters::RtpParameters> root) {
-  fbb.FinishSizePrefixed(root);
-}
-
 }  // namespace RtpParameters
 }  // namespace FBS
 

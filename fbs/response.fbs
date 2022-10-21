@@ -17,5 +17,3 @@ table Response {
   accepted:bool;
   body:Body;
 }
-
-root_type Response;

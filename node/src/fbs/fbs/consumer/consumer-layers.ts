@@ -49,14 +49,6 @@ static endConsumerLayers(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static finishConsumerLayersBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset);
-}
-
-static finishSizePrefixedConsumerLayersBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset, undefined, true);
-}
-
 static createConsumerLayers(builder:flatbuffers.Builder, spatialLayer:number, temporalLayer:number):flatbuffers.Offset {
   ConsumerLayers.startConsumerLayers(builder);
   ConsumerLayers.addSpatialLayer(builder, spatialLayer);

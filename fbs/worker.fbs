@@ -63,5 +63,3 @@ table CreateRouterRequest {
 table CloseRouterRequest {
   router_id:string (required);
 }
-
-root_type WorkerDump;

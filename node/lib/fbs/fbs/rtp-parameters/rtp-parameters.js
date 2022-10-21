@@ -107,12 +107,6 @@ class RtpParameters {
         builder.requiredField(offset, 6); // codecs
         return offset;
     }
-    static finishRtpParametersBuffer(builder, offset) {
-        builder.finish(offset);
-    }
-    static finishSizePrefixedRtpParametersBuffer(builder, offset) {
-        builder.finish(offset, undefined, true);
-    }
     unpack() {
         return new RtpParametersT(this.mid(), this.bb.createObjList(this.codecs.bind(this), this.codecsLength()), this.bb.createObjList(this.headerExtensions.bind(this), this.headerExtensionsLength()), this.bb.createObjList(this.encodings.bind(this), this.encodingsLength()), (this.rtcp() !== null ? this.rtcp().unpack() : null));
     }

@@ -11,5 +11,3 @@ table ConsumerScore {
   producer_score:uint8;
   producer_scores:[uint8];
 }
-
-root_type ConsumerLayers;

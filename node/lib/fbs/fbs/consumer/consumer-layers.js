@@ -39,12 +39,6 @@ class ConsumerLayers {
         const offset = builder.endObject();
         return offset;
     }
-    static finishConsumerLayersBuffer(builder, offset) {
-        builder.finish(offset);
-    }
-    static finishSizePrefixedConsumerLayersBuffer(builder, offset) {
-        builder.finish(offset, undefined, true);
-    }
     static createConsumerLayers(builder, spatialLayer, temporalLayer) {
         ConsumerLayers.startConsumerLayers(builder);
         ConsumerLayers.addSpatialLayer(builder, spatialLayer);

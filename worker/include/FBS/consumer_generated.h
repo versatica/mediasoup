@@ -190,36 +190,6 @@ inline const flatbuffers::TypeTable *ConsumerScoreTypeTable() {
   return &tt;
 }
 
-inline const FBS::Consumer::ConsumerLayers *GetConsumerLayers(const void *buf) {
-  return flatbuffers::GetRoot<FBS::Consumer::ConsumerLayers>(buf);
-}
-
-inline const FBS::Consumer::ConsumerLayers *GetSizePrefixedConsumerLayers(const void *buf) {
-  return flatbuffers::GetSizePrefixedRoot<FBS::Consumer::ConsumerLayers>(buf);
-}
-
-inline bool VerifyConsumerLayersBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifyBuffer<FBS::Consumer::ConsumerLayers>(nullptr);
-}
-
-inline bool VerifySizePrefixedConsumerLayersBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifySizePrefixedBuffer<FBS::Consumer::ConsumerLayers>(nullptr);
-}
-
-inline void FinishConsumerLayersBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::Consumer::ConsumerLayers> root) {
-  fbb.Finish(root);
-}
-
-inline void FinishSizePrefixedConsumerLayersBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::Consumer::ConsumerLayers> root) {
-  fbb.FinishSizePrefixed(root);
-}
-
 }  // namespace Consumer
 }  // namespace FBS
 

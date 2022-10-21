@@ -298,36 +298,6 @@ inline const flatbuffers::TypeTable *ResponseTypeTable() {
   return &tt;
 }
 
-inline const FBS::Response::Response *GetResponse(const void *buf) {
-  return flatbuffers::GetRoot<FBS::Response::Response>(buf);
-}
-
-inline const FBS::Response::Response *GetSizePrefixedResponse(const void *buf) {
-  return flatbuffers::GetSizePrefixedRoot<FBS::Response::Response>(buf);
-}
-
-inline bool VerifyResponseBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifyBuffer<FBS::Response::Response>(nullptr);
-}
-
-inline bool VerifySizePrefixedResponseBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifySizePrefixedBuffer<FBS::Response::Response>(nullptr);
-}
-
-inline void FinishResponseBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::Response::Response> root) {
-  fbb.Finish(root);
-}
-
-inline void FinishSizePrefixedResponseBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::Response::Response> root) {
-  fbb.FinishSizePrefixed(root);
-}
-
 }  // namespace Response
 }  // namespace FBS
 

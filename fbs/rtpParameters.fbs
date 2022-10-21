@@ -87,5 +87,3 @@ table RtpParameters {
   encodings:[RtpEncodingParameters];
   rtcp:RtcpParameters;
 }
-
-root_type RtpParameters;

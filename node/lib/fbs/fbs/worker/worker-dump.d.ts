@@ -24,8 +24,6 @@ export declare class WorkerDump {
     static startRouterIdsVector(builder: flatbuffers.Builder, numElems: number): void;
     static addChannelMessageHandlers(builder: flatbuffers.Builder, channelMessageHandlersOffset: flatbuffers.Offset): void;
     static endWorkerDump(builder: flatbuffers.Builder): flatbuffers.Offset;
-    static finishWorkerDumpBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
-    static finishSizePrefixedWorkerDumpBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     unpack(): WorkerDumpT;
     unpackTo(_o: WorkerDumpT): void;
 }

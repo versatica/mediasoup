@@ -111,12 +111,6 @@ class ConsumeRequest {
         builder.requiredField(offset, 14); // consumable_rtp_encodings
         return offset;
     }
-    static finishConsumeRequestBuffer(builder, offset) {
-        builder.finish(offset);
-    }
-    static finishSizePrefixedConsumeRequestBuffer(builder, offset) {
-        builder.finish(offset, undefined, true);
-    }
     unpack() {
         return new ConsumeRequestT(this.consumerId(), this.producerId(), this.kind(), (this.rtpParameters() !== null ? this.rtpParameters().unpack() : null), this.type(), this.bb.createObjList(this.consumableRtpEncodings.bind(this), this.consumableRtpEncodingsLength()), this.paused(), (this.preferredLayers() !== null ? this.preferredLayers().unpack() : null), this.ignoreDtx());
     }

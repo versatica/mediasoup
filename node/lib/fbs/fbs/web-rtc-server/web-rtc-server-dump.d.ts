@@ -39,8 +39,6 @@ export declare class WebRtcServerDump {
     static createTupleHashesVector(builder: flatbuffers.Builder, data: flatbuffers.Offset[]): flatbuffers.Offset;
     static startTupleHashesVector(builder: flatbuffers.Builder, numElems: number): void;
     static endWebRtcServerDump(builder: flatbuffers.Builder): flatbuffers.Offset;
-    static finishWebRtcServerDumpBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
-    static finishSizePrefixedWebRtcServerDumpBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     static createWebRtcServerDump(builder: flatbuffers.Builder, idOffset: flatbuffers.Offset, udpSocketsOffset: flatbuffers.Offset, tcpServersOffset: flatbuffers.Offset, webRtcTransportIdsOffset: flatbuffers.Offset, localIceUsernameFragmentsOffset: flatbuffers.Offset, tupleHashesOffset: flatbuffers.Offset): flatbuffers.Offset;
     unpack(): WebRtcServerDumpT;
     unpackTo(_o: WebRtcServerDumpT): void;

@@ -178,14 +178,6 @@ static endWebRtcServerDump(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static finishWebRtcServerDumpBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset);
-}
-
-static finishSizePrefixedWebRtcServerDumpBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset, undefined, true);
-}
-
 static createWebRtcServerDump(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, udpSocketsOffset:flatbuffers.Offset, tcpServersOffset:flatbuffers.Offset, webRtcTransportIdsOffset:flatbuffers.Offset, localIceUsernameFragmentsOffset:flatbuffers.Offset, tupleHashesOffset:flatbuffers.Offset):flatbuffers.Offset {
   WebRtcServerDump.startWebRtcServerDump(builder);
   WebRtcServerDump.addId(builder, idOffset);

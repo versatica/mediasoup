@@ -11,8 +11,6 @@ export declare class ConsumerLayers {
     static addSpatialLayer(builder: flatbuffers.Builder, spatialLayer: number): void;
     static addTemporalLayer(builder: flatbuffers.Builder, temporalLayer: number): void;
     static endConsumerLayers(builder: flatbuffers.Builder): flatbuffers.Offset;
-    static finishConsumerLayersBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
-    static finishSizePrefixedConsumerLayersBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     static createConsumerLayers(builder: flatbuffers.Builder, spatialLayer: number, temporalLayer: number): flatbuffers.Offset;
     unpack(): ConsumerLayersT;
     unpackTo(_o: ConsumerLayersT): void;

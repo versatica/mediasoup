@@ -2359,36 +2359,6 @@ inline const flatbuffers::TypeTable *WebRtcTransportDumpTypeTable() {
   return &tt;
 }
 
-inline const FBS::Transport::ConsumeRequest *GetConsumeRequest(const void *buf) {
-  return flatbuffers::GetRoot<FBS::Transport::ConsumeRequest>(buf);
-}
-
-inline const FBS::Transport::ConsumeRequest *GetSizePrefixedConsumeRequest(const void *buf) {
-  return flatbuffers::GetSizePrefixedRoot<FBS::Transport::ConsumeRequest>(buf);
-}
-
-inline bool VerifyConsumeRequestBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifyBuffer<FBS::Transport::ConsumeRequest>(nullptr);
-}
-
-inline bool VerifySizePrefixedConsumeRequestBuffer(
-    flatbuffers::Verifier &verifier) {
-  return verifier.VerifySizePrefixedBuffer<FBS::Transport::ConsumeRequest>(nullptr);
-}
-
-inline void FinishConsumeRequestBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::Transport::ConsumeRequest> root) {
-  fbb.Finish(root);
-}
-
-inline void FinishSizePrefixedConsumeRequestBuffer(
-    flatbuffers::FlatBufferBuilder &fbb,
-    flatbuffers::Offset<FBS::Transport::ConsumeRequest> root) {
-  fbb.FinishSizePrefixed(root);
-}
-
 }  // namespace Transport
 }  // namespace FBS
 

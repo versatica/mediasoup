@@ -35,8 +35,6 @@ export declare class ConsumeRequest {
     static addPreferredLayers(builder: flatbuffers.Builder, preferredLayersOffset: flatbuffers.Offset): void;
     static addIgnoreDtx(builder: flatbuffers.Builder, ignoreDtx: boolean): void;
     static endConsumeRequest(builder: flatbuffers.Builder): flatbuffers.Offset;
-    static finishConsumeRequestBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
-    static finishSizePrefixedConsumeRequestBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     unpack(): ConsumeRequestT;
     unpackTo(_o: ConsumeRequestT): void;
 }

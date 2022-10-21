@@ -21,8 +21,6 @@ export declare class Response {
     static addBodyType(builder: flatbuffers.Builder, bodyType: Body): void;
     static addBody(builder: flatbuffers.Builder, bodyOffset: flatbuffers.Offset): void;
     static endResponse(builder: flatbuffers.Builder): flatbuffers.Offset;
-    static finishResponseBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
-    static finishSizePrefixedResponseBuffer(builder: flatbuffers.Builder, offset: flatbuffers.Offset): void;
     static createResponse(builder: flatbuffers.Builder, id: number, accepted: boolean, bodyType: Body, bodyOffset: flatbuffers.Offset): flatbuffers.Offset;
     unpack(): ResponseT;
     unpackTo(_o: ResponseT): void;

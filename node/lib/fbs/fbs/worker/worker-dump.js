@@ -82,12 +82,6 @@ class WorkerDump {
         const offset = builder.endObject();
         return offset;
     }
-    static finishWorkerDumpBuffer(builder, offset) {
-        builder.finish(offset);
-    }
-    static finishSizePrefixedWorkerDumpBuffer(builder, offset) {
-        builder.finish(offset, undefined, true);
-    }
     unpack() {
         return new WorkerDumpT(this.pid(), this.bb.createScalarList(this.webrtcServerIds.bind(this), this.webrtcServerIdsLength()), this.bb.createScalarList(this.routerIds.bind(this), this.routerIdsLength()), (this.channelMessageHandlers() !== null ? this.channelMessageHandlers().unpack() : null));
     }

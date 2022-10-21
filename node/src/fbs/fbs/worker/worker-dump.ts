@@ -106,14 +106,6 @@ static endWorkerDump(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static finishWorkerDumpBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset);
-}
-
-static finishSizePrefixedWorkerDumpBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset, undefined, true);
-}
-
 
 unpack(): WorkerDumpT {
   return new WorkerDumpT(
