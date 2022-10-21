@@ -12,8 +12,9 @@ namespace RTC
 		~DirectTransport() override;
 
 	public:
-		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;
+		virtual flatbuffers::Offset<FBS::Transport::TransportDump> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const override;
 
 	private:
 		bool IsConnected() const override;

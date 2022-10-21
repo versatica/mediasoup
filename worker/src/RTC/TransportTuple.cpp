@@ -49,7 +49,7 @@ namespace RTC
 		}
 	}
 
-	flatbuffers::Offset<FBS::Transport::IceSelectedTuple> TransportTuple::FillBuffer(
+	flatbuffers::Offset<FBS::Transport::Tuple> TransportTuple::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -81,7 +81,7 @@ namespace RTC
 				break;
 		}
 
-		return FBS::Transport::CreateIceSelectedTupleDirect(
+		return FBS::Transport::CreateTupleDirect(
 		  builder, localIp.c_str(), localPort, remoteIp.c_str(), remotePort, protocol.c_str());
 	}
 

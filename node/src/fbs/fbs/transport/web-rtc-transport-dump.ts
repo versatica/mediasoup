@@ -5,8 +5,8 @@ import * as flatbuffers from 'flatbuffers';
 import { DtlsParameters, DtlsParametersT } from '../../fbs/transport/dtls-parameters';
 import { IceCandidate, IceCandidateT } from '../../fbs/transport/ice-candidate';
 import { IceParameters, IceParametersT } from '../../fbs/transport/ice-parameters';
-import { IceSelectedTuple, IceSelectedTupleT } from '../../fbs/transport/ice-selected-tuple';
 import { TransportDump, TransportDumpT } from '../../fbs/transport/transport-dump';
+import { Tuple, TupleT } from '../../fbs/transport/tuple';
 
 
 export class WebRtcTransportDump {
@@ -61,9 +61,9 @@ iceState(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-iceSelectedTuple(obj?:IceSelectedTuple):IceSelectedTuple|null {
+iceSelectedTuple(obj?:Tuple):Tuple|null {
   const offset = this.bb!.__offset(this.bb_pos, 14);
-  return offset ? (obj || new IceSelectedTuple()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new Tuple()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 dtlsParameters(obj?:DtlsParameters):DtlsParameters|null {
@@ -158,7 +158,7 @@ constructor(
   public iceParameters: IceParametersT|null = null,
   public iceCandidates: (IceCandidateT)[] = [],
   public iceState: string|Uint8Array|null = null,
-  public iceSelectedTuple: IceSelectedTupleT|null = null,
+  public iceSelectedTuple: TupleT|null = null,
   public dtlsParameters: DtlsParametersT|null = null
 ){}
 

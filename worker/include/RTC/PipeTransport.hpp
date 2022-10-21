@@ -27,8 +27,9 @@ namespace RTC
 		~PipeTransport() override;
 
 	public:
-		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;
+		virtual flatbuffers::Offset<FBS::Transport::TransportDump> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const override;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:

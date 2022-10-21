@@ -339,118 +339,6 @@ namespace RTC
 			this->webRtcTransportListener->OnWebRtcTransportClosed(this);
 	}
 
-	void WebRtcTransport::FillJson(json& jsonObject) const
-	{
-		MS_TRACE();
-
-		// Call the parent method.
-		RTC::Transport::FillJson(jsonObject);
-
-		// Add iceRole (we are always "controlled").
-		jsonObject["iceRole"] = "controlled";
-
-		// Add iceParameters.
-		jsonObject["iceParameters"] = json::object();
-		auto jsonIceParametersIt    = jsonObject.find("iceParameters");
-
-		(*jsonIceParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
-		(*jsonIceParametersIt)["password"]         = this->iceServer->GetPassword();
-		(*jsonIceParametersIt)["iceLite"]          = true;
-
-		// Add iceCandidates.
-		jsonObject["iceCandidates"] = json::array();
-		auto jsonIceCandidatesIt    = jsonObject.find("iceCandidates");
-
-		for (size_t i{ 0 }; i < this->iceCandidates.size(); ++i)
-		{
-			jsonIceCandidatesIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry    = (*jsonIceCandidatesIt)[i];
-			auto& iceCandidate = this->iceCandidates[i];
-
-			iceCandidate.FillJson(jsonEntry);
-		}
-
-		// Add iceState.
-		switch (this->iceServer->GetState())
-		{
-			case RTC::IceServer::IceState::NEW:
-				jsonObject["iceState"] = "new";
-				break;
-			case RTC::IceServer::IceState::CONNECTED:
-				jsonObject["iceState"] = "connected";
-				break;
-			case RTC::IceServer::IceState::COMPLETED:
-				jsonObject["iceState"] = "completed";
-				break;
-			case RTC::IceServer::IceState::DISCONNECTED:
-				jsonObject["iceState"] = "disconnected";
-				break;
-		}
-
-		// Add iceSelectedTuple.
-		if (this->iceServer->GetSelectedTuple())
-			this->iceServer->GetSelectedTuple()->FillJson(jsonObject["iceSelectedTuple"]);
-
-		// Add dtlsParameters.
-		jsonObject["dtlsParameters"] = json::object();
-		auto jsonDtlsParametersIt    = jsonObject.find("dtlsParameters");
-
-		// Add dtlsParameters.fingerprints.
-		(*jsonDtlsParametersIt)["fingerprints"] = json::array();
-		auto jsonDtlsParametersFingerprintsIt   = jsonDtlsParametersIt->find("fingerprints");
-		auto& fingerprints                      = this->dtlsTransport->GetLocalFingerprints();
-
-		for (size_t i{ 0 }; i < fingerprints.size(); ++i)
-		{
-			jsonDtlsParametersFingerprintsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry   = (*jsonDtlsParametersFingerprintsIt)[i];
-			auto& fingerprint = fingerprints[i];
-
-			jsonEntry["algorithm"] =
-			  RTC::DtlsTransport::GetFingerprintAlgorithmString(fingerprint.algorithm);
-			jsonEntry["value"] = fingerprint.value;
-		}
-
-		// Add dtlsParameters.role.
-		switch (this->dtlsRole)
-		{
-			case RTC::DtlsTransport::Role::NONE:
-				(*jsonDtlsParametersIt)["role"] = "none";
-				break;
-			case RTC::DtlsTransport::Role::AUTO:
-				(*jsonDtlsParametersIt)["role"] = "auto";
-				break;
-			case RTC::DtlsTransport::Role::CLIENT:
-				(*jsonDtlsParametersIt)["role"] = "client";
-				break;
-			case RTC::DtlsTransport::Role::SERVER:
-				(*jsonDtlsParametersIt)["role"] = "server";
-				break;
-		}
-
-		// Add dtlsState.
-		switch (this->dtlsTransport->GetState())
-		{
-			case RTC::DtlsTransport::DtlsState::NEW:
-				jsonObject["dtlsState"] = "new";
-				break;
-			case RTC::DtlsTransport::DtlsState::CONNECTING:
-				jsonObject["dtlsState"] = "connecting";
-				break;
-			case RTC::DtlsTransport::DtlsState::CONNECTED:
-				jsonObject["dtlsState"] = "connected";
-				break;
-			case RTC::DtlsTransport::DtlsState::FAILED:
-				jsonObject["dtlsState"] = "failed";
-				break;
-			case RTC::DtlsTransport::DtlsState::CLOSED:
-				jsonObject["dtlsState"] = "closed";
-				break;
-		}
-	}
-
 	flatbuffers::Offset<FBS::Transport::TransportDump> WebRtcTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
@@ -490,7 +378,7 @@ namespace RTC
 		}
 
 		// Add iceSelectedTuple.
-		flatbuffers::Offset<FBS::Transport::IceSelectedTuple> iceSelectedTuple;
+		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
 
 		if (this->iceServer->GetSelectedTuple())
 			iceSelectedTuple = this->iceServer->GetSelectedTuple()->FillBuffer(builder);

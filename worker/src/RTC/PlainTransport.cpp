@@ -229,70 +229,73 @@ namespace RTC
 		this->srtpRecvSession = nullptr;
 	}
 
-	void PlainTransport::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::Transport::TransportDump> PlainTransport::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Call the parent method.
-		RTC::Transport::FillJson(jsonObject);
-
-		// Add rtcpMux.
-		jsonObject["rtcpMux"] = this->rtcpMux;
-
-		// Add comedia.
-		jsonObject["comedia"] = this->comedia;
-
 		// Add tuple.
+		flatbuffers::Offset<FBS::Transport::Tuple> tuple;
+
 		if (this->tuple)
 		{
-			this->tuple->FillJson(jsonObject["tuple"]);
+			tuple = this->tuple->FillBuffer(builder);
 		}
 		else
 		{
-			jsonObject["tuple"] = json::object();
-			auto jsonTupleIt    = jsonObject.find("tuple");
+			std::string localIp;
 
 			if (this->listenIp.announcedIp.empty())
-				(*jsonTupleIt)["localIp"] = this->udpSocket->GetLocalIp();
+				localIp = this->udpSocket->GetLocalIp();
 			else
-				(*jsonTupleIt)["localIp"] = this->listenIp.announcedIp;
+				localIp = this->listenIp.announcedIp;
 
-			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
-			(*jsonTupleIt)["protocol"]  = "udp";
+			tuple = FBS::Transport::CreateTupleDirect(
+			  builder, localIp.c_str(), this->udpSocket->GetLocalPort(), "", 0, "udp");
 		}
 
 		// Add rtcpTuple.
+		flatbuffers::Offset<FBS::Transport::Tuple> rtcpTuple;
+
 		if (!this->rtcpMux)
 		{
 			if (this->rtcpTuple)
 			{
-				this->rtcpTuple->FillJson(jsonObject["rtcpTuple"]);
+				rtcpTuple = this->rtcpTuple->FillBuffer(builder);
 			}
 			else
 			{
-				jsonObject["rtcpTuple"] = json::object();
-				auto jsonRtcpTupleIt    = jsonObject.find("rtcpTuple");
+				std::string localIp;
 
 				if (this->listenIp.announcedIp.empty())
-					(*jsonRtcpTupleIt)["localIp"] = this->rtcpUdpSocket->GetLocalIp();
+					localIp = this->rtcpUdpSocket->GetLocalIp();
 				else
-					(*jsonRtcpTupleIt)["localIp"] = this->listenIp.announcedIp;
+					localIp = this->listenIp.announcedIp;
 
-				(*jsonRtcpTupleIt)["localPort"] = this->rtcpUdpSocket->GetLocalPort();
-				(*jsonRtcpTupleIt)["protocol"]  = "udp";
+				tuple = FBS::Transport::CreateTupleDirect(
+				  builder, localIp.c_str(), this->rtcpUdpSocket->GetLocalPort(), "", 0, "udp");
 			}
 		}
 
 		// Add srtpParameters.
+		flatbuffers::Offset<FBS::Transport::SrtpParameters> srtpParameters;
+
 		if (HasSrtp())
 		{
-			jsonObject["srtpParameters"] = json::object();
-			auto jsonSrtpParametersIt    = jsonObject.find("srtpParameters");
-
-			(*jsonSrtpParametersIt)["cryptoSuite"] =
-			  PlainTransport::srtpCryptoSuite2String[this->srtpCryptoSuite];
-			(*jsonSrtpParametersIt)["keyBase64"] = this->srtpKeyBase64;
+			srtpParameters = FBS::Transport::CreateSrtpParametersDirect(
+			  builder,
+			  PlainTransport::srtpCryptoSuite2String[this->srtpCryptoSuite].c_str(),
+			  this->srtpKeyBase64.c_str());
 		}
+
+		// Add base transport dump.
+		auto base = Transport::FillBuffer(builder);
+
+		auto plainTransportDump = FBS::Transport::CreatePlainTransportDump(
+		  builder, base, this->rtcpMux, this->comedia, tuple, rtcpTuple, srtpParameters);
+
+		return FBS::Transport::CreateTransportDump(
+		  builder, FBS::Transport::TransportDumpData::PlainTransportDump, plainTransportDump.Union());
 	}
 
 	void PlainTransport::FillJsonStats(json& jsonArray)

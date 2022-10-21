@@ -32,12 +32,16 @@ namespace RTC
 		ChannelMessageHandlers::UnregisterHandler(this->id);
 	}
 
-	void DirectTransport::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::Transport::TransportDump> DirectTransport::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
-		MS_TRACE();
+		// Add base transport dump.
+		auto base = Transport::FillBuffer(builder);
 
-		// Call the parent method.
-		RTC::Transport::FillJson(jsonObject);
+		auto directTransportDump = FBS::Transport::CreateDirectTransportDump(builder, base);
+
+		return FBS::Transport::CreateTransportDump(
+		  builder, FBS::Transport::TransportDumpData::DirectTransportDump, directTransportDump.Union());
 	}
 
 	void DirectTransport::FillJsonStats(json& jsonArray)

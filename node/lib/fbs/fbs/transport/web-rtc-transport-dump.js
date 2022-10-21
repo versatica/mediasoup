@@ -6,8 +6,8 @@ const flatbuffers = require("flatbuffers");
 const dtls_parameters_1 = require("../../fbs/transport/dtls-parameters");
 const ice_candidate_1 = require("../../fbs/transport/ice-candidate");
 const ice_parameters_1 = require("../../fbs/transport/ice-parameters");
-const ice_selected_tuple_1 = require("../../fbs/transport/ice-selected-tuple");
 const transport_dump_1 = require("../../fbs/transport/transport-dump");
+const tuple_1 = require("../../fbs/transport/tuple");
 class WebRtcTransportDump {
     bb = null;
     bb_pos = 0;
@@ -49,7 +49,7 @@ class WebRtcTransportDump {
     }
     iceSelectedTuple(obj) {
         const offset = this.bb.__offset(this.bb_pos, 14);
-        return offset ? (obj || new ice_selected_tuple_1.IceSelectedTuple()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+        return offset ? (obj || new tuple_1.Tuple()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
     }
     dtlsParameters(obj) {
         const offset = this.bb.__offset(this.bb_pos, 16);

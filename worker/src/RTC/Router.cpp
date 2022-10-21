@@ -205,7 +205,7 @@ namespace RTC
 
 				json data = json::object();
 
-				webRtcTransport->FillJson(data);
+				// webRtcTransport->FillJson(data);
 
 				request->Accept(data);
 
@@ -292,7 +292,7 @@ namespace RTC
 
 				json data = json::object();
 
-				webRtcTransport->FillJson(data);
+				// webRtcTransport->FillJson(data);
 
 				request->Accept(data);
 
@@ -315,7 +315,7 @@ namespace RTC
 
 				json data = json::object();
 
-				plainTransport->FillJson(data);
+				// plainTransport->FillJson(data);
 
 				request->Accept(data);
 
@@ -338,7 +338,7 @@ namespace RTC
 
 				json data = json::object();
 
-				pipeTransport->FillJson(data);
+				// pipeTransport->FillJson(data);
 
 				request->Accept(data);
 
@@ -361,7 +361,7 @@ namespace RTC
 
 				json data = json::object();
 
-				directTransport->FillJson(data);
+				// directTransport->FillJson(data);
 
 				request->Accept(data);
 

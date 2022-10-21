@@ -66,8 +66,7 @@ namespace RTC
 		}
 
 		void FillJson(json& jsonObject) const;
-		flatbuffers::Offset<FBS::Transport::IceSelectedTuple> FillBuffer(
-		  flatbuffers::FlatBufferBuilder& builder) const;
+		flatbuffers::Offset<FBS::Transport::Tuple> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
 		void Dump() const;
 

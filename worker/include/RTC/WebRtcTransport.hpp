@@ -59,7 +59,6 @@ namespace RTC
 		~WebRtcTransport() override;
 
 	public:
-		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;
 		flatbuffers::Offset<FBS::Transport::TransportDump> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const override;

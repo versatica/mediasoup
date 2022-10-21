@@ -126,7 +126,6 @@ namespace RTC
 		void CloseProducersAndConsumers();
 		void ListenServerClosed();
 		// Subclasses must also invoke the parent Close().
-		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray);
 		virtual flatbuffers::Offset<FBS::Transport::TransportDump> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;

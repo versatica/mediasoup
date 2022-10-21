@@ -72,6 +72,9 @@ table SctpAssociation {
 
 union TransportDumpData {
   BaseTransportDump,
+  DirectTransportDump,
+  PipeTransportDump,
+  PlainTransportDump,
   WebRtcTransportDump,
 }
 
@@ -95,6 +98,8 @@ table BaseTransportDump {
   trace_event_types:[string];
 }
 
+/* WebRtcTransport */
+
 table IceParameters {
  username_fragment:string (required);
  password:string (required);
@@ -111,7 +116,7 @@ table IceCandidate {
   tcp_type:string;
 }
 
-table IceSelectedTuple {
+table Tuple {
   local_ip:string (required);
   local_port:uint16;
   remote_ip:string (required);
@@ -136,6 +141,37 @@ table WebRtcTransportDump {
   ice_parameters:IceParameters (required);
   ice_candidates:[IceCandidate] (required);
   ice_state:string (required);
-  ice_selected_tuple:IceSelectedTuple;
+  ice_selected_tuple:Tuple;
   dtls_parameters:DtlsParameters (required);
+}
+
+/* PlainTransport */
+
+table SrtpParameters {
+  crypto_suite:string (required);
+  key_base64:string (required);
+}
+
+table PlainTransportDump {
+  base:TransportDump (required);
+  rtc_mux:bool;
+  comedia:bool;
+  tuple:Tuple;
+  rtcp_tuple:Tuple;
+  srtp_parameters:SrtpParameters;
+}
+
+/* DirectTransort */
+
+table DirectTransportDump {
+  base:TransportDump (required);
+}
+
+/* PipeTransort */
+
+table PipeTransportDump {
+  base:TransportDump (required);
+  tuple:Tuple (required);
+  rtx:bool;
+  srtp_parameters:SrtpParameters;
 }

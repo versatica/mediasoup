@@ -132,44 +132,48 @@ namespace RTC
 		this->srtpRecvSession = nullptr;
 	}
 
-	void PipeTransport::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::Transport::TransportDump> PipeTransport::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Call the parent method.
-		RTC::Transport::FillJson(jsonObject);
-
 		// Add tuple.
+		flatbuffers::Offset<FBS::Transport::Tuple> tuple;
+
 		if (this->tuple)
 		{
-			this->tuple->FillJson(jsonObject["tuple"]);
+			tuple = this->tuple->FillBuffer(builder);
 		}
 		else
 		{
-			jsonObject["tuple"] = json::object();
-			auto jsonTupleIt    = jsonObject.find("tuple");
+			std::string localIp;
 
 			if (this->listenIp.announcedIp.empty())
-				(*jsonTupleIt)["localIp"] = this->udpSocket->GetLocalIp();
+				localIp = this->udpSocket->GetLocalIp();
 			else
-				(*jsonTupleIt)["localIp"] = this->listenIp.announcedIp;
+				localIp = this->listenIp.announcedIp;
 
-			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
-			(*jsonTupleIt)["protocol"]  = "udp";
+			tuple = FBS::Transport::CreateTupleDirect(
+			  builder, localIp.c_str(), this->udpSocket->GetLocalPort(), "", 0, "udp");
 		}
-
-		// Add rtx.
-		jsonObject["rtx"] = this->rtx;
 
 		// Add srtpParameters.
+		flatbuffers::Offset<FBS::Transport::SrtpParameters> srtpParameters;
+
 		if (HasSrtp())
 		{
-			jsonObject["srtpParameters"] = json::object();
-			auto jsonSrtpParametersIt    = jsonObject.find("srtpParameters");
-
-			(*jsonSrtpParametersIt)["cryptoSuite"] = PipeTransport::srtpCryptoSuiteString;
-			(*jsonSrtpParametersIt)["keyBase64"]   = this->srtpKeyBase64;
+			srtpParameters = FBS::Transport::CreateSrtpParametersDirect(
+			  builder, PipeTransport::srtpCryptoSuiteString.c_str(), this->srtpKeyBase64.c_str());
 		}
+
+		// Add base transport dump.
+		auto base = Transport::FillBuffer(builder);
+
+		auto pipeTransportDump =
+		  FBS::Transport::CreatePipeTransportDump(builder, base, tuple, this->rtx, srtpParameters);
+
+		return FBS::Transport::CreateTransportDump(
+		  builder, FBS::Transport::TransportDumpData::PipeTransportDump, pipeTransportDump.Union());
 	}
 
 	void PipeTransport::FillJsonStats(json& jsonArray)

@@ -3,6 +3,9 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { BaseTransportDump, BaseTransportDumpT } from '../../fbs/transport/base-transport-dump';
+import { DirectTransportDump, DirectTransportDumpT } from '../../fbs/transport/direct-transport-dump';
+import { PipeTransportDump, PipeTransportDumpT } from '../../fbs/transport/pipe-transport-dump';
+import { PlainTransportDump, PlainTransportDumpT } from '../../fbs/transport/plain-transport-dump';
 import { TransportDumpData, unionToTransportDumpData, unionListToTransportDumpData } from '../../fbs/transport/transport-dump-data';
 import { WebRtcTransportDump, WebRtcTransportDumpT } from '../../fbs/transport/web-rtc-transport-dump';
 
@@ -84,7 +87,7 @@ unpackTo(_o: TransportDumpT): void {
 export class TransportDumpT {
 constructor(
   public dataType: TransportDumpData = TransportDumpData.NONE,
-  public data: BaseTransportDumpT|WebRtcTransportDumpT|null = null
+  public data: BaseTransportDumpT|DirectTransportDumpT|PipeTransportDumpT|PlainTransportDumpT|WebRtcTransportDumpT|null = null
 ){}
 
 
