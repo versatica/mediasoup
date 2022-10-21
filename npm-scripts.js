@@ -97,7 +97,7 @@ switch (task)
 	{
 		const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
 
-		const options = '--gen-object-api';
+		const options = '--gen-object-api --gen-all';
 		const command = `${flatc} --ts ${options} -o node/src/fbs `;
 
 		execute(`for file in fbs/*; do ${command} \$\{file\}; done`);
