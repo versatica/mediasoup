@@ -2,9 +2,11 @@
 #define MS_RTC_TRANSPORT_TUPLE_HPP
 
 #include "common.hpp"
+#include "FBS/transport_generated.h"
 #include "Utils.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
+#include <flatbuffers/flatbuffers.h>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -64,6 +66,8 @@ namespace RTC
 		}
 
 		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::Transport::IceSelectedTuple> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 		void Dump() const;
 

@@ -470,6 +470,164 @@ namespace RTC
 		jsonObject["traceEventTypes"] = traceEventTypesStream.str();
 	}
 
+	flatbuffers::Offset<FBS::Transport::BaseTransportDump> Transport::FillBaseBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
+	{
+		MS_TRACE();
+
+		// Add producerIds.
+		std::vector<flatbuffers::Offset<flatbuffers::String>> producerIds;
+
+		for (const auto& kv : this->mapProducers)
+		{
+			const auto& producerId = kv.first;
+
+			producerIds.emplace_back(builder.CreateString(producerId));
+		}
+
+		// Add consumerIds.
+		std::vector<flatbuffers::Offset<flatbuffers::String>> consumerIds;
+
+		for (const auto& kv : this->mapConsumers)
+		{
+			const auto& consumerId = kv.first;
+
+			consumerIds.emplace_back(builder.CreateString(consumerId));
+		}
+
+		// Add mapSsrcConsumerId.
+		std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> mapSsrcConsumerId;
+
+		for (const auto& kv : this->mapSsrcConsumer)
+		{
+			auto ssrc      = kv.first;
+			auto* consumer = kv.second;
+
+			mapSsrcConsumerId.emplace_back(
+			  FBS::Transport::CreateUint32StringDirect(builder, ssrc, consumer->id.c_str()));
+		}
+
+		// Add mapRtxSsrcConsumerId.
+		std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> mapRtxSsrcConsumerId;
+
+		for (const auto& kv : this->mapRtxSsrcConsumer)
+		{
+			auto ssrc      = kv.first;
+			auto* consumer = kv.second;
+
+			mapRtxSsrcConsumerId.emplace_back(
+			  FBS::Transport::CreateUint32StringDirect(builder, ssrc, consumer->id.c_str()));
+		}
+
+		// Add dataProducerIds.
+		std::vector<flatbuffers::Offset<flatbuffers::String>> dataProducerIds;
+
+		for (const auto& kv : this->mapDataProducers)
+		{
+			const auto& dataProducerId = kv.first;
+
+			dataProducerIds.emplace_back(builder.CreateString(dataProducerId));
+		}
+
+		// Add dataConsumerIds.
+		std::vector<flatbuffers::Offset<flatbuffers::String>> dataConsumerIds;
+
+		for (const auto& kv : this->mapDataConsumers)
+		{
+			const auto& dataConsumerId = kv.first;
+
+			dataConsumerIds.emplace_back(builder.CreateString(dataConsumerId));
+		}
+
+		// Add headerExtensionIds.
+		std::vector<flatbuffers::Offset<FBS::Transport::StringUint8>> recvRtpHeaderExtensions;
+
+		if (this->recvRtpHeaderExtensionIds.mid != 0u)
+			recvRtpHeaderExtensions.emplace_back(FBS::Transport::CreateStringUint8Direct(
+			  builder, "mid", this->recvRtpHeaderExtensionIds.mid));
+
+		if (this->recvRtpHeaderExtensionIds.rid != 0u)
+			recvRtpHeaderExtensions.emplace_back(FBS::Transport::CreateStringUint8Direct(
+			  builder, "rid", this->recvRtpHeaderExtensionIds.rid));
+
+		if (this->recvRtpHeaderExtensionIds.rrid != 0u)
+			recvRtpHeaderExtensions.emplace_back(FBS::Transport::CreateStringUint8Direct(
+			  builder, "rrid", this->recvRtpHeaderExtensionIds.rrid));
+
+		if (this->recvRtpHeaderExtensionIds.absSendTime != 0u)
+			recvRtpHeaderExtensions.emplace_back(FBS::Transport::CreateStringUint8Direct(
+			  builder, "absSendTime", this->recvRtpHeaderExtensionIds.absSendTime));
+
+		if (this->recvRtpHeaderExtensionIds.transportWideCc01 != 0u)
+			recvRtpHeaderExtensions.emplace_back(FBS::Transport::CreateStringUint8Direct(
+			  builder, "transportWideCc01", this->recvRtpHeaderExtensionIds.transportWideCc01));
+
+		auto rtpListenerOffset = this->rtpListener.FillBuffer(builder);
+
+		// Add maxMessageSize.
+		// jsonObject["maxMessageSize"] = this->maxMessageSize;
+
+		flatbuffers::Offset<FBS::Transport::SctpAssociation> sctpAssociation;
+
+		if (this->sctpAssociation)
+		{
+			// Add sctpParameters.
+			auto sctpParametersOffset = this->sctpAssociation->FillBuffer(builder);
+
+			// Add sctpState.
+			std::string sctpState;
+
+			switch (this->sctpAssociation->GetState())
+			{
+				case RTC::SctpAssociation::SctpState::NEW:
+					sctpState = "new";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTING:
+					sctpState = "connecting";
+					break;
+				case RTC::SctpAssociation::SctpState::CONNECTED:
+					sctpState = "connected";
+					break;
+				case RTC::SctpAssociation::SctpState::FAILED:
+					sctpState = "failed";
+					break;
+				case RTC::SctpAssociation::SctpState::CLOSED:
+					sctpState = "closed";
+					break;
+			}
+
+			// Add sctpListener.
+			auto sctpListenerOffset = this->sctpListener.FillBuffer(builder);
+
+			sctpAssociation = FBS::Transport::CreateSctpAssociationDirect(
+			  builder, sctpParametersOffset, sctpState.c_str(), sctpListenerOffset);
+		}
+
+		// Add traceEventTypes.
+		std::vector<flatbuffers::Offset<flatbuffers::String>> traceEventTypes;
+
+		if (this->traceEventTypes.probation)
+			traceEventTypes.emplace_back(builder.CreateString("probation"));
+		if (this->traceEventTypes.bwe)
+			traceEventTypes.emplace_back(builder.CreateString("bwe"));
+
+		return FBS::Transport::CreateBaseTransportDumpDirect(
+		  builder,
+		  this->id.c_str(),
+		  this->direct,
+		  &producerIds,
+		  &consumerIds,
+		  &mapSsrcConsumerId,
+		  &mapRtxSsrcConsumerId,
+		  &dataProducerIds,
+		  &dataConsumerIds,
+		  &recvRtpHeaderExtensions,
+		  rtpListenerOffset,
+		  this->maxMessageSize,
+		  sctpAssociation,
+		  &traceEventTypes);
+	}
+
 	void Transport::FillJsonStats(json& jsonArray)
 	{
 		MS_TRACE();
@@ -1206,6 +1364,623 @@ namespace RTC
 
 		switch (request->_method)
 		{
+			case FBS::Request::Method::TRANSPORT_DUMP:
+			{
+				auto& builder = Channel::ChannelRequest::bufferBuilder;
+
+				auto dumpOffset = FillBuffer(builder);
+
+				request->Accept(builder, FBS::Response::Body::FBS_Worker_WorkerDump, dumpOffset);
+
+				break;
+			}
+
+				// case Channel::ChannelRequest::MethodId::TRANSPORT_GET_STATS:
+				//{
+				//	json data = json::array();
+
+				//	FillJsonStats(data);
+
+				//	request->Accept(data);
+
+				//	break;
+				//}
+
+				// case Channel::ChannelRequest::MethodId::TRANSPORT_SET_MAX_INCOMING_BITRATE:
+				//{
+				//	auto jsonBitrateIt = request->data.find("bitrate");
+
+				//	// clang-format off
+				//	if (
+				//		jsonBitrateIt == request->data.end() ||
+				//		!Utils::Json::IsPositiveInteger(*jsonBitrateIt)
+				//	)
+				//	// clang-format on
+				//	{
+				//		MS_THROW_TYPE_ERROR("missing bitrate");
+				//	}
+
+				//	this->maxIncomingBitrate = jsonBitrateIt->get<uint32_t>();
+
+				//	MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIu32, this->maxIncomingBitrate);
+
+				//	request->Accept();
+
+				//	if (this->tccServer)
+				//		this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+
+				//	break;
+				//}
+
+				// case Channel::ChannelRequest::MethodId::TRANSPORT_SET_MAX_OUTGOING_BITRATE:
+				//{
+				//	auto jsonBitrateIt = request->data.find("bitrate");
+
+				//	// clang-format off
+				//	if (
+				//		jsonBitrateIt == request->data.end() ||
+				//		!Utils::Json::IsPositiveInteger(*jsonBitrateIt)
+				//	)
+				//	// clang-format on
+				//	{
+				//		MS_THROW_TYPE_ERROR("missing bitrate");
+				//	}
+
+				//	uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
+
+				//	if (bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
+				//	{
+				//		MS_THROW_TYPE_ERROR(
+				//		  "bitrate must be >= %" PRIu32 " bps",
+				// RTC::TransportCongestionControlMinOutgoingBitrate);
+				//	}
+
+				//	if (this->tccClient)
+				//	{
+				//		// NOTE: This may throw so don't update things before calling this
+				//		// method.
+				//		this->tccClient->SetMaxOutgoingBitrate(bitrate);
+				//		this->maxOutgoingBitrate = bitrate;
+
+				//		MS_DEBUG_TAG(bwe, "maximum outgoing bitrate set to %" PRIu32, this->maxOutgoingBitrate);
+
+				//		ComputeOutgoingDesiredBitrate();
+				//	}
+				//	else
+				//	{
+				//		this->maxOutgoingBitrate = bitrate;
+				//	}
+
+				//	request->Accept();
+
+				//	break;
+				//}
+
+				// case Channel::ChannelRequest::MethodId::TRANSPORT_PRODUCE:
+				//{
+				//	std::string producerId;
+
+				//	// This may throw.
+				//	SetNewProducerIdFromData(request->data, producerId);
+
+				//	// This may throw.
+				//	auto* producer = new RTC::Producer(producerId, this, request->data);
+
+				//	// Insert the Producer into the RtpListener.
+				//	// This may throw. If so, delete the Producer and throw.
+				//	try
+				//	{
+				//		this->rtpListener.AddProducer(producer);
+				//	}
+				//	catch (const MediaSoupError& error)
+				//	{
+				//		delete producer;
+
+				//		throw;
+				//	}
+
+				//	// Notify the listener.
+				//	// This may throw if a Producer with same id already exists.
+				//	try
+				//	{
+				//		this->listener->OnTransportNewProducer(this, producer);
+				//	}
+				//	catch (const MediaSoupError& error)
+				//	{
+				//		this->rtpListener.RemoveProducer(producer);
+
+				//		delete producer;
+
+				//		throw;
+				//	}
+
+				//	// Insert into the map.
+				//	this->mapProducers[producerId] = producer;
+
+				//	MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
+
+				//	// Take the transport related RTP header extensions of the Producer and
+				//	// add them to the Transport.
+				//	// NOTE: Producer::GetRtpHeaderExtensionIds() returns the original
+				//	// header extension ids of the Producer (and not their mapped values).
+				//	const auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+
+				//	if (producerRtpHeaderExtensionIds.mid != 0u)
+				//	{
+				//		this->recvRtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
+				//	}
+
+				//	if (producerRtpHeaderExtensionIds.rid != 0u)
+				//	{
+				//		this->recvRtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
+				//	}
+
+				//	if (producerRtpHeaderExtensionIds.rrid != 0u)
+				//	{
+				//		this->recvRtpHeaderExtensionIds.rrid = producerRtpHeaderExtensionIds.rrid;
+				//	}
+
+				//	if (producerRtpHeaderExtensionIds.absSendTime != 0u)
+				//	{
+				//		this->recvRtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
+				//	}
+
+				//	if (producerRtpHeaderExtensionIds.transportWideCc01 != 0u)
+				//	{
+				//		this->recvRtpHeaderExtensionIds.transportWideCc01 =
+				//		  producerRtpHeaderExtensionIds.transportWideCc01;
+				//	}
+
+				//	// Create status response.
+				//	json data = json::object();
+
+				//	data["type"] = RTC::RtpParameters::GetTypeString(producer->GetType());
+
+				//	request->Accept(data);
+
+				//	// Check if TransportCongestionControlServer or REMB server must be
+				//	// created.
+				//	const auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+				//	const auto& codecs                = producer->GetRtpParameters().codecs;
+
+				//	// Set TransportCongestionControlServer.
+				//	if (!this->tccServer)
+				//	{
+				//		bool createTccServer{ false };
+				//		RTC::BweType bweType;
+
+				//		// Use transport-cc if:
+				//		// - there is transport-wide-cc-01 RTP header extension, and
+				//		// - there is "transport-cc" in codecs RTCP feedback.
+				//		//
+				//		// clang-format off
+				//		if (
+				//			rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+				//			std::any_of(
+				//				codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+				//				{
+				//					return std::any_of(
+				//						codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const
+				// RTC::RtcpFeedback& fb)
+				//						{
+				//							return fb.type == "transport-cc";
+				//						});
+				//				})
+				//		)
+				//		// clang-format on
+				//		{
+				//			MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
+
+				//			createTccServer = true;
+				//			bweType         = RTC::BweType::TRANSPORT_CC;
+				//		}
+				//		// Use REMB if:
+				//		// - there is abs-send-time RTP header extension, and
+				//		// - there is "remb" in codecs RTCP feedback.
+				//		//
+				//		// clang-format off
+				//		else if (
+				//			rtpHeaderExtensionIds.absSendTime != 0u &&
+				//			std::any_of(
+				//				codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+				//				{
+				//					return std::any_of(
+				//						codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const
+				// RTC::RtcpFeedback& fb)
+				//						{
+				//							return fb.type == "goog-remb";
+				//						});
+				//				})
+				//		)
+				//		// clang-format on
+				//		{
+				//			MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
+
+				//			createTccServer = true;
+				//			bweType         = RTC::BweType::REMB;
+				//		}
+
+				//		if (createTccServer)
+				//		{
+				//			this->tccServer = new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize);
+
+				//			if (this->maxIncomingBitrate != 0u)
+				//				this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+
+				//			if (IsConnected())
+				//				this->tccServer->TransportConnected();
+				//		}
+				//	}
+
+				//	break;
+				//}
+
+				// case Channel::ChannelRequest::MethodId::TRANSPORT_PRODUCE_DATA:
+				//{
+				//	// Early check. The Transport must support SCTP or be direct.
+				//	if (!this->sctpAssociation && !this->direct)
+				//	{
+				//		MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
+				//	}
+
+				//	std::string dataProducerId;
+
+				//	// This may throw.
+				//	SetNewDataProducerIdFromData(request->data, dataProducerId);
+
+				//	// This may throw.
+				//	auto* dataProducer =
+				//	  new RTC::DataProducer(dataProducerId, this->maxMessageSize, this, request->data);
+
+				//	// Verify the type of the DataProducer.
+				//	switch (dataProducer->GetType())
+				//	{
+				//		case RTC::DataProducer::Type::SCTP:
+				//		{
+				//			if (!this->sctpAssociation)
+				//			{
+				//				delete dataProducer;
+
+				//				MS_THROW_TYPE_ERROR(
+				//				  "cannot create a DataProducer of type 'sctp', SCTP not enabled in this Transport");
+				//				;
+				//			}
+
+				//			break;
+				//		}
+
+				//		case RTC::DataProducer::Type::DIRECT:
+				//		{
+				//			if (!this->direct)
+				//			{
+				//				delete dataProducer;
+
+				//				MS_THROW_TYPE_ERROR(
+				//				  "cannot create a DataProducer of type 'direct', not a direct Transport");
+				//				;
+				//			}
+
+				//			break;
+				//		}
+				//	}
+
+				//	if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+				//	{
+				//		// Insert the DataProducer into the SctpListener.
+				//		// This may throw. If so, delete the DataProducer and throw.
+				//		try
+				//		{
+				//			this->sctpListener.AddDataProducer(dataProducer);
+				//		}
+				//		catch (const MediaSoupError& error)
+				//		{
+				//			delete dataProducer;
+
+				//			throw;
+				//		}
+				//	}
+
+				//	// Notify the listener.
+				//	// This may throw if a DataProducer with same id already exists.
+				//	try
+				//	{
+				//		this->listener->OnTransportNewDataProducer(this, dataProducer);
+				//	}
+				//	catch (const MediaSoupError& error)
+				//	{
+				//		if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+				//		{
+				//			this->sctpListener.RemoveDataProducer(dataProducer);
+				//		}
+
+				//		delete dataProducer;
+
+				//		throw;
+				//	}
+
+				//	// Insert into the map.
+				//	this->mapDataProducers[dataProducerId] = dataProducer;
+
+				//	MS_DEBUG_DEV("DataProducer created [dataProducerId:%s]", dataProducerId.c_str());
+
+				//	json data = json::object();
+
+				//	dataProducer->FillJson(data);
+
+				//	request->Accept(data);
+
+				//	break;
+				//}
+
+				// case Channel::ChannelRequest::MethodId::TRANSPORT_CONSUME_DATA:
+				//{
+				//	// Early check. The Transport must support SCTP or be direct.
+				//	if (!this->sctpAssociation && !this->direct)
+				//	{
+				//		MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
+				//	}
+
+				//	auto jsonDataProducerIdIt = request->data.find("dataProducerId");
+
+				//	if (jsonDataProducerIdIt == request->data.end() || !jsonDataProducerIdIt->is_string())
+				//	{
+				//		MS_THROW_ERROR("missing dataProducerId");
+				//	}
+
+				//	std::string dataProducerId = jsonDataProducerIdIt->get<std::string>();
+				//	std::string dataConsumerId;
+
+				//	// This may throw.
+				//	SetNewDataConsumerIdFromData(request->data, dataConsumerId);
+
+				//	// This may throw.
+				//	auto* dataConsumer = new RTC::DataConsumer(
+				//	  dataConsumerId, dataProducerId, this->sctpAssociation, this, request->data,
+				// this->maxMessageSize);
+
+				//	// Verify the type of the DataConsumer.
+				//	switch (dataConsumer->GetType())
+				//	{
+				//		case RTC::DataConsumer::Type::SCTP:
+				//		{
+				//			if (!this->sctpAssociation)
+				//			{
+				//				delete dataConsumer;
+
+				//				MS_THROW_TYPE_ERROR(
+				//				  "cannot create a DataConsumer of type 'sctp', SCTP not enabled in this Transport");
+				//				;
+				//			}
+
+				//			break;
+				//		}
+
+				//		case RTC::DataConsumer::Type::DIRECT:
+				//		{
+				//			if (!this->direct)
+				//			{
+				//				delete dataConsumer;
+
+				//				MS_THROW_TYPE_ERROR(
+				//				  "cannot create a DataConsumer of type 'direct', not a direct Transport");
+				//				;
+				//			}
+
+				//			break;
+				//		}
+				//	}
+
+				//	// Notify the listener.
+				//	// This may throw if no DataProducer is found.
+				//	try
+				//	{
+				//		this->listener->OnTransportNewDataConsumer(this, dataConsumer, dataProducerId);
+				//	}
+				//	catch (const MediaSoupError& error)
+				//	{
+				//		delete dataConsumer;
+
+				//		throw;
+				//	}
+
+				//	// Insert into the maps.
+				//	this->mapDataConsumers[dataConsumerId] = dataConsumer;
+
+				//	MS_DEBUG_DEV(
+				//	  "DataConsumer created [dataConsumerId:%s, dataProducerId:%s]",
+				//	  dataConsumerId.c_str(),
+				//	  dataProducerId.c_str());
+
+				//	json data = json::object();
+
+				//	dataConsumer->FillJson(data);
+
+				//	request->Accept(data);
+
+				//	if (IsConnected())
+				//		dataConsumer->TransportConnected();
+
+				//	if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+				//	{
+				//		if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
+				//		{
+				//			dataConsumer->SctpAssociationConnected();
+				//		}
+
+				//		// Tell to the SCTP association.
+				//		this->sctpAssociation->HandleDataConsumer(dataConsumer);
+				//	}
+
+				//	break;
+				//}
+
+				// case Channel::ChannelRequest::MethodId::TRANSPORT_ENABLE_TRACE_EVENT:
+				//{
+				//	auto jsonTypesIt = request->data.find("types");
+
+				//	// Disable all if no entries.
+				//	if (jsonTypesIt == request->data.end() || !jsonTypesIt->is_array())
+				//		MS_THROW_TYPE_ERROR("wrong types (not an array)");
+
+				//	// Reset traceEventTypes.
+				//	struct TraceEventTypes newTraceEventTypes;
+
+				//	for (const auto& type : *jsonTypesIt)
+				//	{
+				//		if (!type.is_string())
+				//			MS_THROW_TYPE_ERROR("wrong type (not a string)");
+
+				//		std::string typeStr = type.get<std::string>();
+
+				//		if (typeStr == "probation")
+				//			newTraceEventTypes.probation = true;
+				//		if (typeStr == "bwe")
+				//			newTraceEventTypes.bwe = true;
+				//	}
+
+				//	this->traceEventTypes = newTraceEventTypes;
+
+				//	request->Accept();
+
+				//	break;
+				//}
+
+				// case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE_PRODUCER:
+				//{
+				//	// This may throw.
+				//	RTC::Producer* producer = GetProducerFromData(request->data);
+
+				//	// Remove it from the RtpListener.
+				//	this->rtpListener.RemoveProducer(producer);
+
+				//	// Remove it from the map.
+				//	this->mapProducers.erase(producer->id);
+
+				//	// Tell the child class to clear associated SSRCs.
+				//	for (const auto& kv : producer->GetRtpStreams())
+				//	{
+				//		auto* rtpStream = kv.first;
+
+				//		RecvStreamClosed(rtpStream->GetSsrc());
+
+				//		if (rtpStream->HasRtx())
+				//			RecvStreamClosed(rtpStream->GetRtxSsrc());
+				//	}
+
+				//	// Notify the listener.
+				//	this->listener->OnTransportProducerClosed(this, producer);
+
+				//	MS_DEBUG_DEV("Producer closed [producerId:%s]", producer->id.c_str());
+
+				//	// Delete it.
+				//	delete producer;
+
+				//	request->Accept();
+
+				//	break;
+				//}
+
+				// case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE_CONSUMER:
+				//{
+				//	// This may throw.
+				//	RTC::Consumer* consumer = GetConsumerFromData(request->data);
+
+				//	// Remove it from the maps.
+				//	this->mapConsumers.erase(consumer->id);
+
+				//	for (auto ssrc : consumer->GetMediaSsrcs())
+				//	{
+				//		this->mapSsrcConsumer.erase(ssrc);
+
+				//		// Tell the child class to clear associated SSRCs.
+				//		SendStreamClosed(ssrc);
+				//	}
+
+				//	for (auto ssrc : consumer->GetRtxSsrcs())
+				//	{
+				//		this->mapRtxSsrcConsumer.erase(ssrc);
+
+				//		// Tell the child class to clear associated SSRCs.
+				//		SendStreamClosed(ssrc);
+				//	}
+
+				//	// Notify the listener.
+				//	this->listener->OnTransportConsumerClosed(this, consumer);
+
+				//	MS_DEBUG_DEV("Consumer closed [consumerId:%s]", consumer->id.c_str());
+
+				//	// Delete it.
+				//	delete consumer;
+
+				//	request->Accept();
+
+				//	// This may be the latest active Consumer with BWE. If so we have to stop probation.
+				//	if (this->tccClient)
+				//		ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
+
+				//	break;
+				//}
+
+				// case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE_DATA_PRODUCER:
+				//{
+				//	// This may throw.
+				//	RTC::DataProducer* dataProducer = GetDataProducerFromData(request->data);
+
+				//	if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+				//	{
+				//		// Remove it from the SctpListener.
+				//		this->sctpListener.RemoveDataProducer(dataProducer);
+				//	}
+
+				//	// Remove it from the map.
+				//	this->mapDataProducers.erase(dataProducer->id);
+
+				//	// Notify the listener.
+				//	this->listener->OnTransportDataProducerClosed(this, dataProducer);
+
+				//	MS_DEBUG_DEV("DataProducer closed [dataProducerId:%s]", dataProducer->id.c_str());
+
+				//	if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+				//	{
+				//		// Tell the SctpAssociation so it can reset the SCTP stream.
+				//		this->sctpAssociation->DataProducerClosed(dataProducer);
+				//	}
+
+				//	// Delete it.
+				//	delete dataProducer;
+
+				//	request->Accept();
+
+				//	break;
+				//}
+
+				// case Channel::ChannelRequest::MethodId::TRANSPORT_CLOSE_DATA_CONSUMER:
+				//{
+				//	// This may throw.
+				//	RTC::DataConsumer* dataConsumer = GetDataConsumerFromData(request->data);
+
+				//	// Remove it from the maps.
+				//	this->mapDataConsumers.erase(dataConsumer->id);
+
+				//	// Notify the listener.
+				//	this->listener->OnTransportDataConsumerClosed(this, dataConsumer);
+
+				//	MS_DEBUG_DEV("DataConsumer closed [dataConsumerId:%s]", dataConsumer->id.c_str());
+
+				//	if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+				//	{
+				//		// Tell the SctpAssociation so it can reset the SCTP stream.
+				//		this->sctpAssociation->DataConsumerClosed(dataConsumer);
+				//	}
+
+				//	// Delete it.
+				//	delete dataConsumer;
+
+				//	request->Accept();
+
+				//	break;
+				//}
+
 			case FBS::Request::Method::TRANSPORT_CONSUME:
 			{
 				auto body = request->_data->body_as<FBS::Transport::ConsumeRequest>();

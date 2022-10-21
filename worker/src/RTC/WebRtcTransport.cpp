@@ -451,6 +451,124 @@ namespace RTC
 		}
 	}
 
+	flatbuffers::Offset<FBS::Transport::TransportDump> WebRtcTransport::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
+	{
+		MS_TRACE();
+
+		// Add iceParameters.
+		auto iceParameters = FBS::Transport::CreateIceParametersDirect(
+		  builder,
+		  this->iceServer->GetUsernameFragment().c_str(),
+		  this->iceServer->GetPassword().c_str(),
+		  true);
+
+		std::vector<flatbuffers::Offset<FBS::Transport::IceCandidate>> iceCandidates;
+
+		for (const auto& iceCandidate : this->iceCandidates)
+		{
+			iceCandidates.emplace_back(iceCandidate.FillBuffer(builder));
+		}
+
+		// Add iceState.
+		std::string iceState;
+
+		switch (this->iceServer->GetState())
+		{
+			case RTC::IceServer::IceState::NEW:
+				iceState = "new";
+				break;
+			case RTC::IceServer::IceState::CONNECTED:
+				iceState = "connected";
+				break;
+			case RTC::IceServer::IceState::COMPLETED:
+				iceState = "completed";
+				break;
+			case RTC::IceServer::IceState::DISCONNECTED:
+				iceState = "disconnected";
+				break;
+		}
+
+		// Add iceSelectedTuple.
+		flatbuffers::Offset<FBS::Transport::IceSelectedTuple> iceSelectedTuple;
+
+		if (this->iceServer->GetSelectedTuple())
+			iceSelectedTuple = this->iceServer->GetSelectedTuple()->FillBuffer(builder);
+
+		// Add dtlsParameters.fingerprints.
+		std::vector<flatbuffers::Offset<FBS::Transport::Fingerprint>> fingerprints;
+
+		for (const auto& fingerprint : this->dtlsTransport->GetLocalFingerprints())
+		{
+			auto& algorithm = RTC::DtlsTransport::GetFingerprintAlgorithmString(fingerprint.algorithm);
+			auto& value     = fingerprint.value;
+
+			fingerprints.emplace_back(
+			  FBS::Transport::CreateFingerprintDirect(builder, algorithm.c_str(), value.c_str()));
+		}
+
+		// Add dtlsParameters.role.
+		std::string dtlsRole;
+
+		switch (this->dtlsRole)
+		{
+			case RTC::DtlsTransport::Role::NONE:
+				dtlsRole = "none";
+				break;
+			case RTC::DtlsTransport::Role::AUTO:
+				dtlsRole = "auto";
+				break;
+			case RTC::DtlsTransport::Role::CLIENT:
+				dtlsRole = "client";
+				break;
+			case RTC::DtlsTransport::Role::SERVER:
+				dtlsRole = "server";
+				break;
+		}
+
+		// Add dtlsState.
+		std::string dtlsState;
+
+		switch (this->dtlsTransport->GetState())
+		{
+			case RTC::DtlsTransport::DtlsState::NEW:
+				dtlsState = "new";
+				break;
+			case RTC::DtlsTransport::DtlsState::CONNECTING:
+				dtlsState = "connecting";
+				break;
+			case RTC::DtlsTransport::DtlsState::CONNECTED:
+				dtlsState = "connected";
+				break;
+			case RTC::DtlsTransport::DtlsState::FAILED:
+				dtlsState = "failed";
+				break;
+			case RTC::DtlsTransport::DtlsState::CLOSED:
+				dtlsState = "closed";
+				break;
+		}
+
+		// Add base transport dump.
+		auto base = Transport::FillBaseBuffer(builder);
+		// Add dtlsParameters.
+		auto dtlsParameters = FBS::Transport::CreateDtlsParametersDirect(
+		  builder, &fingerprints, dtlsRole.c_str(), dtlsState.c_str());
+
+		auto webRtcTransportDump = FBS::Transport::CreateWebRtcTransportDumpDirect(
+		  builder,
+		  base,
+		  // iceRole (we are always "controlled").
+		  "controlled",
+		  iceParameters,
+		  &iceCandidates,
+		  iceState.c_str(),
+		  iceSelectedTuple,
+		  dtlsParameters);
+
+		return FBS::Transport::CreateTransportDump(
+		  builder, FBS::Transport::TransportDumpData::WebRtcTransportDump, webRtcTransportDump.Union());
+	}
+
 	void WebRtcTransport::FillJsonStats(json& jsonArray)
 	{
 		MS_TRACE();

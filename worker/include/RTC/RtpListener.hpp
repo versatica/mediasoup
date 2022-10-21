@@ -16,6 +16,8 @@ namespace RTC
 	{
 	public:
 		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::Transport::RtpListener> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		void AddProducer(RTC::Producer* producer);
 		void RemoveProducer(RTC::Producer* producer);
 		RTC::Producer* GetProducer(const RTC::RtpPacket* packet);

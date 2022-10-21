@@ -2,8 +2,10 @@
 #define MS_RTC_ICE_CANDIDATE_HPP
 
 #include "common.hpp"
+#include "FBS/transport_generated.h"
 #include "RTC/TcpServer.hpp"
 #include "RTC/UdpSocket.hpp"
+#include <flatbuffers/flatbuffers.h>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -60,6 +62,8 @@ namespace RTC
 		}
 
 		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::Transport::IceCandidate> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	private:
 		// Others.

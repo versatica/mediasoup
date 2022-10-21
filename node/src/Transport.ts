@@ -26,7 +26,7 @@ import { RtpCapabilities, RtpParameters } from './RtpParameters';
 import { SctpStreamParameters } from './SctpParameters';
 import { Body as RequestBody, ConsumeRequest, Method } from './fbs/request_generated';
 import { ConsumeResponse } from './fbs/response_generated';
-import { MediaKind as FbsMediaKind, ConsumerLayers as FbsConsumerLayers } from './fbs/transport_generated';
+import { MediaKind as FbsMediaKind, ConsumerLayers as FbsConsumerLayers, TransportDump as FbsTransportDump } from './fbs/transport_generated';
 import { getRtpParametersType, serializeRtpParameters, serializeRtpEncodingParameters } from './fbs/utils';
 
 export interface TransportListenIp
@@ -469,7 +469,19 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	{
 		logger.debug('dump()');
 
-		return this.channel.request('transport.dump', this.internal.transportId);
+		const response = await this.channel.requestBinary(
+			Method.TRANSPORT_DUMP,
+			undefined,
+			undefined,
+			this.internal.transportId
+		);
+
+		/* Decode the response. */
+		const dump = new FbsTransportDump();
+
+		response.body(dump);
+
+		return dump.unpack().data;
 	}
 
 	/**

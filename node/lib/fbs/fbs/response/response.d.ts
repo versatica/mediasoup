@@ -1,6 +1,7 @@
 import * as flatbuffers from 'flatbuffers';
 import { Body } from '../../fbs/response/body';
 import { ConsumeResponseT } from '../../fbs/transport/consume-response';
+import { TransportDumpT } from '../../fbs/transport/transport-dump';
 import { WebRtcServerDumpT } from '../../fbs/web-rtc-server/web-rtc-server-dump';
 import { ResourceUsageT } from '../../fbs/worker/resource-usage';
 import { WorkerDumpT } from '../../fbs/worker/worker-dump';
@@ -30,8 +31,8 @@ export declare class ResponseT {
     id: number;
     accepted: boolean;
     bodyType: Body;
-    body: ConsumeResponseT | ResourceUsageT | WebRtcServerDumpT | WorkerDumpT | null;
-    constructor(id?: number, accepted?: boolean, bodyType?: Body, body?: ConsumeResponseT | ResourceUsageT | WebRtcServerDumpT | WorkerDumpT | null);
+    body: ConsumeResponseT | ResourceUsageT | TransportDumpT | WebRtcServerDumpT | WorkerDumpT | null;
+    constructor(id?: number, accepted?: boolean, bodyType?: Body, body?: ConsumeResponseT | ResourceUsageT | TransportDumpT | WebRtcServerDumpT | WorkerDumpT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=response.d.ts.map

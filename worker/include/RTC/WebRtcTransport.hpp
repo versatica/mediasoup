@@ -61,6 +61,8 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) override;
+		flatbuffers::Offset<FBS::Transport::TransportDump> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const override;
 		void ProcessStunPacketFromWebRtcServer(RTC::TransportTuple* tuple, RTC::StunPacket* packet);
 		void ProcessNonStunPacketFromWebRtcServer(
 		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len);

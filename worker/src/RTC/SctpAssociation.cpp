@@ -367,6 +367,29 @@ namespace RTC
 		jsonObject["isDataChannel"] = this->isDataChannel;
 	}
 
+	flatbuffers::Offset<FBS::Transport::SctpParameters> SctpAssociation::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
+	{
+		MS_TRACE();
+
+		return FBS::Transport::CreateSctpParameters(
+		  builder,
+		  // Add port (always 5000).
+		  5000,
+		  // Add OS.
+		  this->os,
+		  // Add MIS.
+		  this->mis,
+		  // Add maxMessageSize.
+		  this->maxSctpMessageSize,
+		  // Add sendBufferSize.
+		  this->sctpSendBufferSize,
+		  // Add sctpBufferedAmountLowThreshold.
+		  this->sctpBufferedAmount,
+		  // Add isDataChannel.
+		  this->isDataChannel);
+	}
+
 	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();

@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
 const consume_response_1 = require("../../fbs/transport/consume-response");
+const transport_dump_1 = require("../../fbs/transport/transport-dump");
 const web_rtc_server_dump_1 = require("../../fbs/web-rtc-server/web-rtc-server-dump");
 const resource_usage_1 = require("../../fbs/worker/resource-usage");
 const worker_dump_1 = require("../../fbs/worker/worker-dump");
@@ -12,7 +13,8 @@ var Body;
     Body[Body["FBS_Worker_WorkerDump"] = 1] = "FBS_Worker_WorkerDump";
     Body[Body["FBS_Worker_ResourceUsage"] = 2] = "FBS_Worker_ResourceUsage";
     Body[Body["FBS_WebRtcServer_WebRtcServerDump"] = 3] = "FBS_WebRtcServer_WebRtcServerDump";
-    Body[Body["FBS_Transport_ConsumeResponse"] = 4] = "FBS_Transport_ConsumeResponse";
+    Body[Body["FBS_Transport_TransportDump"] = 4] = "FBS_Transport_TransportDump";
+    Body[Body["FBS_Transport_ConsumeResponse"] = 5] = "FBS_Transport_ConsumeResponse";
 })(Body = exports.Body || (exports.Body = {}));
 function unionToBody(type, accessor) {
     switch (Body[type]) {
@@ -20,6 +22,7 @@ function unionToBody(type, accessor) {
         case 'FBS_Worker_WorkerDump': return accessor(new worker_dump_1.WorkerDump());
         case 'FBS_Worker_ResourceUsage': return accessor(new resource_usage_1.ResourceUsage());
         case 'FBS_WebRtcServer_WebRtcServerDump': return accessor(new web_rtc_server_dump_1.WebRtcServerDump());
+        case 'FBS_Transport_TransportDump': return accessor(new transport_dump_1.TransportDump());
         case 'FBS_Transport_ConsumeResponse': return accessor(new consume_response_1.ConsumeResponse());
         default: return null;
     }
@@ -31,6 +34,7 @@ function unionListToBody(type, accessor, index) {
         case 'FBS_Worker_WorkerDump': return accessor(index, new worker_dump_1.WorkerDump());
         case 'FBS_Worker_ResourceUsage': return accessor(index, new resource_usage_1.ResourceUsage());
         case 'FBS_WebRtcServer_WebRtcServerDump': return accessor(index, new web_rtc_server_dump_1.WebRtcServerDump());
+        case 'FBS_Transport_TransportDump': return accessor(index, new transport_dump_1.TransportDump());
         case 'FBS_Transport_ConsumeResponse': return accessor(index, new consume_response_1.ConsumeResponse());
         default: return null;
     }

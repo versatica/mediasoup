@@ -240,7 +240,11 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.channel.request('transport.dump', this.internal.transportId);
+        const response = await this.channel.requestBinary(request_generated_1.Method.TRANSPORT_DUMP, undefined, undefined, this.internal.transportId);
+        /* Decode the response. */
+        const dump = new transport_generated_1.TransportDump();
+        response.body(dump);
+        return dump.unpack().data;
     }
     /**
      * Get Transport stats.

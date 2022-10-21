@@ -50,6 +50,50 @@ namespace RTC
 		}
 	}
 
+	flatbuffers::Offset<FBS::Transport::RtpListener> RtpListener::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
+	{
+		MS_TRACE();
+
+		// Add ssrcTable.
+		std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> ssrcTable;
+
+		for (auto& kv : this->ssrcTable)
+		{
+			auto ssrc      = kv.first;
+			auto* producer = kv.second;
+
+			ssrcTable.emplace_back(
+			  FBS::Transport::CreateUint32StringDirect(builder, ssrc, producer->id.c_str()));
+		}
+
+		// Add midTable.
+		std::vector<flatbuffers::Offset<FBS::Transport::StringString>> midTable;
+
+		for (auto& kv : this->midTable)
+		{
+			auto& mid      = kv.first;
+			auto* producer = kv.second;
+
+			midTable.emplace_back(
+			  FBS::Transport::CreateStringStringDirect(builder, mid.c_str(), producer->id.c_str()));
+		}
+
+		// Add ridTable.
+		std::vector<flatbuffers::Offset<FBS::Transport::StringString>> ridTable;
+
+		for (auto& kv : this->ridTable)
+		{
+			auto& rid      = kv.first;
+			auto* producer = kv.second;
+
+			ridTable.emplace_back(
+			  FBS::Transport::CreateStringStringDirect(builder, rid.c_str(), producer->id.c_str()));
+		}
+
+		return FBS::Transport::CreateRtpListenerDirect(builder, &ssrcTable, &midTable, &ridTable);
+	}
+
 	void RtpListener::AddProducer(RTC::Producer* producer)
 	{
 		MS_TRACE();

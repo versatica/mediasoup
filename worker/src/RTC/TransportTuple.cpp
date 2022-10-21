@@ -49,6 +49,42 @@ namespace RTC
 		}
 	}
 
+	flatbuffers::Offset<FBS::Transport::IceSelectedTuple> TransportTuple::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
+	{
+		MS_TRACE();
+
+		int family;
+		std::string localIp;
+		uint16_t localPort;
+
+		Utils::IP::GetAddressInfo(GetLocalAddress(), family, localIp, localPort);
+
+		localIp = this->localAnnouncedIp.empty() ? localIp : this->localAnnouncedIp;
+
+		std::string remoteIp;
+		uint16_t remotePort;
+
+		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, remoteIp, remotePort);
+
+		std::string protocol;
+
+		// Add protocol.
+		switch (GetProtocol())
+		{
+			case Protocol::UDP:
+				protocol = "udp";
+				break;
+
+			case Protocol::TCP:
+				protocol = "tcp";
+				break;
+		}
+
+		return FBS::Transport::CreateIceSelectedTupleDirect(
+		  builder, localIp.c_str(), localPort, remoteIp.c_str(), remotePort, protocol.c_str());
+	}
+
 	void TransportTuple::Dump() const
 	{
 		MS_TRACE();

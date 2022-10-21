@@ -14,6 +14,8 @@ namespace RTC
 	{
 	public:
 		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::Transport::SctpListener> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		void AddDataProducer(RTC::DataProducer* dataProducer);
 		void RemoveDataProducer(RTC::DataProducer* dataProducer);
 		RTC::DataProducer* GetDataProducer(uint16_t streamId);

@@ -8,6 +8,7 @@ union Body {
   FBS.Worker.WorkerDump,
   FBS.Worker.ResourceUsage,
   FBS.WebRtcServer.WebRtcServerDump,
+  FBS.Transport.TransportDump,
   FBS.Transport.ConsumeResponse,
 }
 

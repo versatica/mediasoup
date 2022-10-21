@@ -25,9 +25,130 @@ struct ConsumeRequestBuilder;
 struct ConsumeResponse;
 struct ConsumeResponseBuilder;
 
+struct StringString;
+struct StringStringBuilder;
+
+struct StringUint8;
+struct StringUint8Builder;
+
+struct Uint16String;
+struct Uint16StringBuilder;
+
+struct Uint32String;
+struct Uint32StringBuilder;
+
+struct RtpListener;
+struct RtpListenerBuilder;
+
+struct SctpListener;
+struct SctpListenerBuilder;
+
+struct SctpParameters;
+struct SctpParametersBuilder;
+
+struct SctpAssociation;
+struct SctpAssociationBuilder;
+
+struct TransportDump;
+struct TransportDumpBuilder;
+
+struct BaseTransportDump;
+struct BaseTransportDumpBuilder;
+
+struct IceParameters;
+struct IceParametersBuilder;
+
+struct IceCandidate;
+struct IceCandidateBuilder;
+
+struct IceSelectedTuple;
+struct IceSelectedTupleBuilder;
+
+struct Fingerprint;
+struct FingerprintBuilder;
+
+struct DtlsParameters;
+struct DtlsParametersBuilder;
+
+struct WebRtcTransportDump;
+struct WebRtcTransportDumpBuilder;
+
 inline const flatbuffers::TypeTable *ConsumeRequestTypeTable();
 
 inline const flatbuffers::TypeTable *ConsumeResponseTypeTable();
+
+inline const flatbuffers::TypeTable *StringStringTypeTable();
+
+inline const flatbuffers::TypeTable *StringUint8TypeTable();
+
+inline const flatbuffers::TypeTable *Uint16StringTypeTable();
+
+inline const flatbuffers::TypeTable *Uint32StringTypeTable();
+
+inline const flatbuffers::TypeTable *RtpListenerTypeTable();
+
+inline const flatbuffers::TypeTable *SctpListenerTypeTable();
+
+inline const flatbuffers::TypeTable *SctpParametersTypeTable();
+
+inline const flatbuffers::TypeTable *SctpAssociationTypeTable();
+
+inline const flatbuffers::TypeTable *TransportDumpTypeTable();
+
+inline const flatbuffers::TypeTable *BaseTransportDumpTypeTable();
+
+inline const flatbuffers::TypeTable *IceParametersTypeTable();
+
+inline const flatbuffers::TypeTable *IceCandidateTypeTable();
+
+inline const flatbuffers::TypeTable *IceSelectedTupleTypeTable();
+
+inline const flatbuffers::TypeTable *FingerprintTypeTable();
+
+inline const flatbuffers::TypeTable *DtlsParametersTypeTable();
+
+inline const flatbuffers::TypeTable *WebRtcTransportDumpTypeTable();
+
+enum class TransportDumpData : uint8_t {
+  NONE = 0,
+  WebRtcTransportDump = 1,
+  MIN = NONE,
+  MAX = WebRtcTransportDump
+};
+
+inline const TransportDumpData (&EnumValuesTransportDumpData())[2] {
+  static const TransportDumpData values[] = {
+    TransportDumpData::NONE,
+    TransportDumpData::WebRtcTransportDump
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesTransportDumpData() {
+  static const char * const names[3] = {
+    "NONE",
+    "WebRtcTransportDump",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameTransportDumpData(TransportDumpData e) {
+  if (flatbuffers::IsOutRange(e, TransportDumpData::NONE, TransportDumpData::WebRtcTransportDump)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesTransportDumpData()[index];
+}
+
+template<typename T> struct TransportDumpDataTraits {
+  static const TransportDumpData enum_value = TransportDumpData::NONE;
+};
+
+template<> struct TransportDumpDataTraits<FBS::Transport::WebRtcTransportDump> {
+  static const TransportDumpData enum_value = TransportDumpData::WebRtcTransportDump;
+};
+
+bool VerifyTransportDumpData(flatbuffers::Verifier &verifier, const void *obj, TransportDumpData type);
+bool VerifyTransportDumpDataVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<TransportDumpData> *types);
 
 struct ConsumeRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ConsumeRequestBuilder Builder;
@@ -266,6 +387,1564 @@ inline flatbuffers::Offset<ConsumeResponse> CreateConsumeResponse(
   return builder_.Finish();
 }
 
+struct StringString FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef StringStringBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return StringStringTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_KEY = 4,
+    VT_VALUE = 6
+  };
+  const flatbuffers::String *key() const {
+    return GetPointer<const flatbuffers::String *>(VT_KEY);
+  }
+  const flatbuffers::String *value() const {
+    return GetPointer<const flatbuffers::String *>(VT_VALUE);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_KEY) &&
+           verifier.VerifyString(key()) &&
+           VerifyOffsetRequired(verifier, VT_VALUE) &&
+           verifier.VerifyString(value()) &&
+           verifier.EndTable();
+  }
+};
+
+struct StringStringBuilder {
+  typedef StringString Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_key(flatbuffers::Offset<flatbuffers::String> key) {
+    fbb_.AddOffset(StringString::VT_KEY, key);
+  }
+  void add_value(flatbuffers::Offset<flatbuffers::String> value) {
+    fbb_.AddOffset(StringString::VT_VALUE, value);
+  }
+  explicit StringStringBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<StringString> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<StringString>(end);
+    fbb_.Required(o, StringString::VT_KEY);
+    fbb_.Required(o, StringString::VT_VALUE);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<StringString> CreateStringString(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> key = 0,
+    flatbuffers::Offset<flatbuffers::String> value = 0) {
+  StringStringBuilder builder_(_fbb);
+  builder_.add_value(value);
+  builder_.add_key(key);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<StringString> CreateStringStringDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *key = nullptr,
+    const char *value = nullptr) {
+  auto key__ = key ? _fbb.CreateString(key) : 0;
+  auto value__ = value ? _fbb.CreateString(value) : 0;
+  return FBS::Transport::CreateStringString(
+      _fbb,
+      key__,
+      value__);
+}
+
+struct StringUint8 FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef StringUint8Builder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return StringUint8TypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_KEY = 4,
+    VT_VALUE = 6
+  };
+  const flatbuffers::String *key() const {
+    return GetPointer<const flatbuffers::String *>(VT_KEY);
+  }
+  uint8_t value() const {
+    return GetField<uint8_t>(VT_VALUE, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_KEY) &&
+           verifier.VerifyString(key()) &&
+           VerifyField<uint8_t>(verifier, VT_VALUE, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct StringUint8Builder {
+  typedef StringUint8 Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_key(flatbuffers::Offset<flatbuffers::String> key) {
+    fbb_.AddOffset(StringUint8::VT_KEY, key);
+  }
+  void add_value(uint8_t value) {
+    fbb_.AddElement<uint8_t>(StringUint8::VT_VALUE, value, 0);
+  }
+  explicit StringUint8Builder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<StringUint8> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<StringUint8>(end);
+    fbb_.Required(o, StringUint8::VT_KEY);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<StringUint8> CreateStringUint8(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> key = 0,
+    uint8_t value = 0) {
+  StringUint8Builder builder_(_fbb);
+  builder_.add_key(key);
+  builder_.add_value(value);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<StringUint8> CreateStringUint8Direct(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *key = nullptr,
+    uint8_t value = 0) {
+  auto key__ = key ? _fbb.CreateString(key) : 0;
+  return FBS::Transport::CreateStringUint8(
+      _fbb,
+      key__,
+      value);
+}
+
+struct Uint16String FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef Uint16StringBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return Uint16StringTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_KEY = 4,
+    VT_VALUE = 6
+  };
+  uint16_t key() const {
+    return GetField<uint16_t>(VT_KEY, 0);
+  }
+  const flatbuffers::String *value() const {
+    return GetPointer<const flatbuffers::String *>(VT_VALUE);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint16_t>(verifier, VT_KEY, 2) &&
+           VerifyOffsetRequired(verifier, VT_VALUE) &&
+           verifier.VerifyString(value()) &&
+           verifier.EndTable();
+  }
+};
+
+struct Uint16StringBuilder {
+  typedef Uint16String Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_key(uint16_t key) {
+    fbb_.AddElement<uint16_t>(Uint16String::VT_KEY, key, 0);
+  }
+  void add_value(flatbuffers::Offset<flatbuffers::String> value) {
+    fbb_.AddOffset(Uint16String::VT_VALUE, value);
+  }
+  explicit Uint16StringBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<Uint16String> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<Uint16String>(end);
+    fbb_.Required(o, Uint16String::VT_VALUE);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<Uint16String> CreateUint16String(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint16_t key = 0,
+    flatbuffers::Offset<flatbuffers::String> value = 0) {
+  Uint16StringBuilder builder_(_fbb);
+  builder_.add_value(value);
+  builder_.add_key(key);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<Uint16String> CreateUint16StringDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint16_t key = 0,
+    const char *value = nullptr) {
+  auto value__ = value ? _fbb.CreateString(value) : 0;
+  return FBS::Transport::CreateUint16String(
+      _fbb,
+      key,
+      value__);
+}
+
+struct Uint32String FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef Uint32StringBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return Uint32StringTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_KEY = 4,
+    VT_VALUE = 6
+  };
+  uint32_t key() const {
+    return GetField<uint32_t>(VT_KEY, 0);
+  }
+  const flatbuffers::String *value() const {
+    return GetPointer<const flatbuffers::String *>(VT_VALUE);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_KEY, 4) &&
+           VerifyOffsetRequired(verifier, VT_VALUE) &&
+           verifier.VerifyString(value()) &&
+           verifier.EndTable();
+  }
+};
+
+struct Uint32StringBuilder {
+  typedef Uint32String Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_key(uint32_t key) {
+    fbb_.AddElement<uint32_t>(Uint32String::VT_KEY, key, 0);
+  }
+  void add_value(flatbuffers::Offset<flatbuffers::String> value) {
+    fbb_.AddOffset(Uint32String::VT_VALUE, value);
+  }
+  explicit Uint32StringBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<Uint32String> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<Uint32String>(end);
+    fbb_.Required(o, Uint32String::VT_VALUE);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<Uint32String> CreateUint32String(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t key = 0,
+    flatbuffers::Offset<flatbuffers::String> value = 0) {
+  Uint32StringBuilder builder_(_fbb);
+  builder_.add_value(value);
+  builder_.add_key(key);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<Uint32String> CreateUint32StringDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t key = 0,
+    const char *value = nullptr) {
+  auto value__ = value ? _fbb.CreateString(value) : 0;
+  return FBS::Transport::CreateUint32String(
+      _fbb,
+      key,
+      value__);
+}
+
+struct RtpListener FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef RtpListenerBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return RtpListenerTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_SSRCTABLE = 4,
+    VT_MIDTABLE = 6,
+    VT_RIDTABLE = 8
+  };
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *ssrcTable() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *>(VT_SSRCTABLE);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>> *midTable() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>> *>(VT_MIDTABLE);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>> *ridTable() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>> *>(VT_RIDTABLE);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_SSRCTABLE) &&
+           verifier.VerifyVector(ssrcTable()) &&
+           verifier.VerifyVectorOfTables(ssrcTable()) &&
+           VerifyOffsetRequired(verifier, VT_MIDTABLE) &&
+           verifier.VerifyVector(midTable()) &&
+           verifier.VerifyVectorOfTables(midTable()) &&
+           VerifyOffsetRequired(verifier, VT_RIDTABLE) &&
+           verifier.VerifyVector(ridTable()) &&
+           verifier.VerifyVectorOfTables(ridTable()) &&
+           verifier.EndTable();
+  }
+};
+
+struct RtpListenerBuilder {
+  typedef RtpListener Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_ssrcTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> ssrcTable) {
+    fbb_.AddOffset(RtpListener::VT_SSRCTABLE, ssrcTable);
+  }
+  void add_midTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>>> midTable) {
+    fbb_.AddOffset(RtpListener::VT_MIDTABLE, midTable);
+  }
+  void add_ridTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>>> ridTable) {
+    fbb_.AddOffset(RtpListener::VT_RIDTABLE, ridTable);
+  }
+  explicit RtpListenerBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<RtpListener> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<RtpListener>(end);
+    fbb_.Required(o, RtpListener::VT_SSRCTABLE);
+    fbb_.Required(o, RtpListener::VT_MIDTABLE);
+    fbb_.Required(o, RtpListener::VT_RIDTABLE);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<RtpListener> CreateRtpListener(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> ssrcTable = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>>> midTable = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>>> ridTable = 0) {
+  RtpListenerBuilder builder_(_fbb);
+  builder_.add_ridTable(ridTable);
+  builder_.add_midTable(midTable);
+  builder_.add_ssrcTable(ssrcTable);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<RtpListener> CreateRtpListenerDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *ssrcTable = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::Transport::StringString>> *midTable = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::Transport::StringString>> *ridTable = nullptr) {
+  auto ssrcTable__ = ssrcTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::Uint32String>>(*ssrcTable) : 0;
+  auto midTable__ = midTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::StringString>>(*midTable) : 0;
+  auto ridTable__ = ridTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::StringString>>(*ridTable) : 0;
+  return FBS::Transport::CreateRtpListener(
+      _fbb,
+      ssrcTable__,
+      midTable__,
+      ridTable__);
+}
+
+struct SctpListener FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SctpListenerBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SctpListenerTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_STREAMIDTABLE = 4
+  };
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint16String>> *streamIdTable() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint16String>> *>(VT_STREAMIDTABLE);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_STREAMIDTABLE) &&
+           verifier.VerifyVector(streamIdTable()) &&
+           verifier.VerifyVectorOfTables(streamIdTable()) &&
+           verifier.EndTable();
+  }
+};
+
+struct SctpListenerBuilder {
+  typedef SctpListener Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_streamIdTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint16String>>> streamIdTable) {
+    fbb_.AddOffset(SctpListener::VT_STREAMIDTABLE, streamIdTable);
+  }
+  explicit SctpListenerBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SctpListener> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SctpListener>(end);
+    fbb_.Required(o, SctpListener::VT_STREAMIDTABLE);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SctpListener> CreateSctpListener(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint16String>>> streamIdTable = 0) {
+  SctpListenerBuilder builder_(_fbb);
+  builder_.add_streamIdTable(streamIdTable);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<SctpListener> CreateSctpListenerDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<flatbuffers::Offset<FBS::Transport::Uint16String>> *streamIdTable = nullptr) {
+  auto streamIdTable__ = streamIdTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::Uint16String>>(*streamIdTable) : 0;
+  return FBS::Transport::CreateSctpListener(
+      _fbb,
+      streamIdTable__);
+}
+
+struct SctpParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SctpParametersBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SctpParametersTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PORT = 4,
+    VT_OS = 6,
+    VT_MIS = 8,
+    VT_MAXMESSAGESIZE = 10,
+    VT_SENDBUFFERSIZE = 12,
+    VT_SCTPBUFFEREDAMOUNT = 14,
+    VT_ISDATACHANNEL = 16
+  };
+  uint16_t port() const {
+    return GetField<uint16_t>(VT_PORT, 5000);
+  }
+  uint16_t OS() const {
+    return GetField<uint16_t>(VT_OS, 0);
+  }
+  uint16_t MIS() const {
+    return GetField<uint16_t>(VT_MIS, 0);
+  }
+  uint32_t maxMessageSize() const {
+    return GetField<uint32_t>(VT_MAXMESSAGESIZE, 0);
+  }
+  uint32_t sendBufferSize() const {
+    return GetField<uint32_t>(VT_SENDBUFFERSIZE, 0);
+  }
+  uint32_t sctpBufferedAmount() const {
+    return GetField<uint32_t>(VT_SCTPBUFFEREDAMOUNT, 0);
+  }
+  bool isDataChannel() const {
+    return GetField<uint8_t>(VT_ISDATACHANNEL, 0) != 0;
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint16_t>(verifier, VT_PORT, 2) &&
+           VerifyField<uint16_t>(verifier, VT_OS, 2) &&
+           VerifyField<uint16_t>(verifier, VT_MIS, 2) &&
+           VerifyField<uint32_t>(verifier, VT_MAXMESSAGESIZE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_SENDBUFFERSIZE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_SCTPBUFFEREDAMOUNT, 4) &&
+           VerifyField<uint8_t>(verifier, VT_ISDATACHANNEL, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct SctpParametersBuilder {
+  typedef SctpParameters Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_port(uint16_t port) {
+    fbb_.AddElement<uint16_t>(SctpParameters::VT_PORT, port, 5000);
+  }
+  void add_OS(uint16_t OS) {
+    fbb_.AddElement<uint16_t>(SctpParameters::VT_OS, OS, 0);
+  }
+  void add_MIS(uint16_t MIS) {
+    fbb_.AddElement<uint16_t>(SctpParameters::VT_MIS, MIS, 0);
+  }
+  void add_maxMessageSize(uint32_t maxMessageSize) {
+    fbb_.AddElement<uint32_t>(SctpParameters::VT_MAXMESSAGESIZE, maxMessageSize, 0);
+  }
+  void add_sendBufferSize(uint32_t sendBufferSize) {
+    fbb_.AddElement<uint32_t>(SctpParameters::VT_SENDBUFFERSIZE, sendBufferSize, 0);
+  }
+  void add_sctpBufferedAmount(uint32_t sctpBufferedAmount) {
+    fbb_.AddElement<uint32_t>(SctpParameters::VT_SCTPBUFFEREDAMOUNT, sctpBufferedAmount, 0);
+  }
+  void add_isDataChannel(bool isDataChannel) {
+    fbb_.AddElement<uint8_t>(SctpParameters::VT_ISDATACHANNEL, static_cast<uint8_t>(isDataChannel), 0);
+  }
+  explicit SctpParametersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SctpParameters> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SctpParameters>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SctpParameters> CreateSctpParameters(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint16_t port = 5000,
+    uint16_t OS = 0,
+    uint16_t MIS = 0,
+    uint32_t maxMessageSize = 0,
+    uint32_t sendBufferSize = 0,
+    uint32_t sctpBufferedAmount = 0,
+    bool isDataChannel = false) {
+  SctpParametersBuilder builder_(_fbb);
+  builder_.add_sctpBufferedAmount(sctpBufferedAmount);
+  builder_.add_sendBufferSize(sendBufferSize);
+  builder_.add_maxMessageSize(maxMessageSize);
+  builder_.add_MIS(MIS);
+  builder_.add_OS(OS);
+  builder_.add_port(port);
+  builder_.add_isDataChannel(isDataChannel);
+  return builder_.Finish();
+}
+
+struct SctpAssociation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SctpAssociationBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SctpAssociationTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_SCTPPARAMETERS = 4,
+    VT_STCPSTATE = 6,
+    VT_STCPLISTENER = 8
+  };
+  const FBS::Transport::SctpParameters *sctpParameters() const {
+    return GetPointer<const FBS::Transport::SctpParameters *>(VT_SCTPPARAMETERS);
+  }
+  const flatbuffers::String *stcpState() const {
+    return GetPointer<const flatbuffers::String *>(VT_STCPSTATE);
+  }
+  const FBS::Transport::SctpListener *stcpListener() const {
+    return GetPointer<const FBS::Transport::SctpListener *>(VT_STCPLISTENER);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_SCTPPARAMETERS) &&
+           verifier.VerifyTable(sctpParameters()) &&
+           VerifyOffsetRequired(verifier, VT_STCPSTATE) &&
+           verifier.VerifyString(stcpState()) &&
+           VerifyOffsetRequired(verifier, VT_STCPLISTENER) &&
+           verifier.VerifyTable(stcpListener()) &&
+           verifier.EndTable();
+  }
+};
+
+struct SctpAssociationBuilder {
+  typedef SctpAssociation Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_sctpParameters(flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters) {
+    fbb_.AddOffset(SctpAssociation::VT_SCTPPARAMETERS, sctpParameters);
+  }
+  void add_stcpState(flatbuffers::Offset<flatbuffers::String> stcpState) {
+    fbb_.AddOffset(SctpAssociation::VT_STCPSTATE, stcpState);
+  }
+  void add_stcpListener(flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener) {
+    fbb_.AddOffset(SctpAssociation::VT_STCPLISTENER, stcpListener);
+  }
+  explicit SctpAssociationBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SctpAssociation> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SctpAssociation>(end);
+    fbb_.Required(o, SctpAssociation::VT_SCTPPARAMETERS);
+    fbb_.Required(o, SctpAssociation::VT_STCPSTATE);
+    fbb_.Required(o, SctpAssociation::VT_STCPLISTENER);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SctpAssociation> CreateSctpAssociation(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters = 0,
+    flatbuffers::Offset<flatbuffers::String> stcpState = 0,
+    flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener = 0) {
+  SctpAssociationBuilder builder_(_fbb);
+  builder_.add_stcpListener(stcpListener);
+  builder_.add_stcpState(stcpState);
+  builder_.add_sctpParameters(sctpParameters);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<SctpAssociation> CreateSctpAssociationDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters = 0,
+    const char *stcpState = nullptr,
+    flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener = 0) {
+  auto stcpState__ = stcpState ? _fbb.CreateString(stcpState) : 0;
+  return FBS::Transport::CreateSctpAssociation(
+      _fbb,
+      sctpParameters,
+      stcpState__,
+      stcpListener);
+}
+
+struct TransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef TransportDumpBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return TransportDumpTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_DATA_TYPE = 4,
+    VT_DATA = 6
+  };
+  FBS::Transport::TransportDumpData data_type() const {
+    return static_cast<FBS::Transport::TransportDumpData>(GetField<uint8_t>(VT_DATA_TYPE, 0));
+  }
+  const void *data() const {
+    return GetPointer<const void *>(VT_DATA);
+  }
+  template<typename T> const T *data_as() const;
+  const FBS::Transport::WebRtcTransportDump *data_as_WebRtcTransportDump() const {
+    return data_type() == FBS::Transport::TransportDumpData::WebRtcTransportDump ? static_cast<const FBS::Transport::WebRtcTransportDump *>(data()) : nullptr;
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_DATA_TYPE, 1) &&
+           VerifyOffset(verifier, VT_DATA) &&
+           VerifyTransportDumpData(verifier, data(), data_type()) &&
+           verifier.EndTable();
+  }
+};
+
+template<> inline const FBS::Transport::WebRtcTransportDump *TransportDump::data_as<FBS::Transport::WebRtcTransportDump>() const {
+  return data_as_WebRtcTransportDump();
+}
+
+struct TransportDumpBuilder {
+  typedef TransportDump Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_data_type(FBS::Transport::TransportDumpData data_type) {
+    fbb_.AddElement<uint8_t>(TransportDump::VT_DATA_TYPE, static_cast<uint8_t>(data_type), 0);
+  }
+  void add_data(flatbuffers::Offset<void> data) {
+    fbb_.AddOffset(TransportDump::VT_DATA, data);
+  }
+  explicit TransportDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<TransportDump> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<TransportDump>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<TransportDump> CreateTransportDump(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    FBS::Transport::TransportDumpData data_type = FBS::Transport::TransportDumpData::NONE,
+    flatbuffers::Offset<void> data = 0) {
+  TransportDumpBuilder builder_(_fbb);
+  builder_.add_data(data);
+  builder_.add_data_type(data_type);
+  return builder_.Finish();
+}
+
+struct BaseTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef BaseTransportDumpBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return BaseTransportDumpTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_DIRECT = 6,
+    VT_PRODUCERIDS = 8,
+    VT_CONSUMERIDS = 10,
+    VT_MAPSSRCCONSUMERID = 12,
+    VT_MAPRTXSSRCCONSUMERID = 14,
+    VT_DATAPRODUCERIDS = 16,
+    VT_DATACONSUMERIDS = 18,
+    VT_RECVRTPHEADEREXTENSIONS = 20,
+    VT_RTPLISTENER = 22,
+    VT_MAXMESSAGESIZE = 24,
+    VT_SCTPASSOCIATION = 26,
+    VT_TRACEEVENTTYPES = 28
+  };
+  const flatbuffers::String *id() const {
+    return GetPointer<const flatbuffers::String *>(VT_ID);
+  }
+  bool direct() const {
+    return GetField<uint8_t>(VT_DIRECT, 0) != 0;
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *producerIds() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_PRODUCERIDS);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *consumerIds() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_CONSUMERIDS);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *mapSsrcConsumerId() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *>(VT_MAPSSRCCONSUMERID);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *mapRtxSsrcConsumerId() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *>(VT_MAPRTXSSRCCONSUMERID);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *dataProducerIds() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_DATAPRODUCERIDS);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *dataConsumerIds() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_DATACONSUMERIDS);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringUint8>> *recvRtpHeaderExtensions() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringUint8>> *>(VT_RECVRTPHEADEREXTENSIONS);
+  }
+  const FBS::Transport::RtpListener *rtpListener() const {
+    return GetPointer<const FBS::Transport::RtpListener *>(VT_RTPLISTENER);
+  }
+  uint32_t maxMessageSize() const {
+    return GetField<uint32_t>(VT_MAXMESSAGESIZE, 0);
+  }
+  const FBS::Transport::SctpAssociation *sctpAssociation() const {
+    return GetPointer<const FBS::Transport::SctpAssociation *>(VT_SCTPASSOCIATION);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *traceEventTypes() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_TRACEEVENTTYPES);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyField<uint8_t>(verifier, VT_DIRECT, 1) &&
+           VerifyOffset(verifier, VT_PRODUCERIDS) &&
+           verifier.VerifyVector(producerIds()) &&
+           verifier.VerifyVectorOfStrings(producerIds()) &&
+           VerifyOffset(verifier, VT_CONSUMERIDS) &&
+           verifier.VerifyVector(consumerIds()) &&
+           verifier.VerifyVectorOfStrings(consumerIds()) &&
+           VerifyOffset(verifier, VT_MAPSSRCCONSUMERID) &&
+           verifier.VerifyVector(mapSsrcConsumerId()) &&
+           verifier.VerifyVectorOfTables(mapSsrcConsumerId()) &&
+           VerifyOffset(verifier, VT_MAPRTXSSRCCONSUMERID) &&
+           verifier.VerifyVector(mapRtxSsrcConsumerId()) &&
+           verifier.VerifyVectorOfTables(mapRtxSsrcConsumerId()) &&
+           VerifyOffset(verifier, VT_DATAPRODUCERIDS) &&
+           verifier.VerifyVector(dataProducerIds()) &&
+           verifier.VerifyVectorOfStrings(dataProducerIds()) &&
+           VerifyOffset(verifier, VT_DATACONSUMERIDS) &&
+           verifier.VerifyVector(dataConsumerIds()) &&
+           verifier.VerifyVectorOfStrings(dataConsumerIds()) &&
+           VerifyOffset(verifier, VT_RECVRTPHEADEREXTENSIONS) &&
+           verifier.VerifyVector(recvRtpHeaderExtensions()) &&
+           verifier.VerifyVectorOfTables(recvRtpHeaderExtensions()) &&
+           VerifyOffset(verifier, VT_RTPLISTENER) &&
+           verifier.VerifyTable(rtpListener()) &&
+           VerifyField<uint32_t>(verifier, VT_MAXMESSAGESIZE, 4) &&
+           VerifyOffset(verifier, VT_SCTPASSOCIATION) &&
+           verifier.VerifyTable(sctpAssociation()) &&
+           VerifyOffset(verifier, VT_TRACEEVENTTYPES) &&
+           verifier.VerifyVector(traceEventTypes()) &&
+           verifier.VerifyVectorOfStrings(traceEventTypes()) &&
+           verifier.EndTable();
+  }
+};
+
+struct BaseTransportDumpBuilder {
+  typedef BaseTransportDump Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+    fbb_.AddOffset(BaseTransportDump::VT_ID, id);
+  }
+  void add_direct(bool direct) {
+    fbb_.AddElement<uint8_t>(BaseTransportDump::VT_DIRECT, static_cast<uint8_t>(direct), 0);
+  }
+  void add_producerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> producerIds) {
+    fbb_.AddOffset(BaseTransportDump::VT_PRODUCERIDS, producerIds);
+  }
+  void add_consumerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> consumerIds) {
+    fbb_.AddOffset(BaseTransportDump::VT_CONSUMERIDS, consumerIds);
+  }
+  void add_mapSsrcConsumerId(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> mapSsrcConsumerId) {
+    fbb_.AddOffset(BaseTransportDump::VT_MAPSSRCCONSUMERID, mapSsrcConsumerId);
+  }
+  void add_mapRtxSsrcConsumerId(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> mapRtxSsrcConsumerId) {
+    fbb_.AddOffset(BaseTransportDump::VT_MAPRTXSSRCCONSUMERID, mapRtxSsrcConsumerId);
+  }
+  void add_dataProducerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> dataProducerIds) {
+    fbb_.AddOffset(BaseTransportDump::VT_DATAPRODUCERIDS, dataProducerIds);
+  }
+  void add_dataConsumerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> dataConsumerIds) {
+    fbb_.AddOffset(BaseTransportDump::VT_DATACONSUMERIDS, dataConsumerIds);
+  }
+  void add_recvRtpHeaderExtensions(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringUint8>>> recvRtpHeaderExtensions) {
+    fbb_.AddOffset(BaseTransportDump::VT_RECVRTPHEADEREXTENSIONS, recvRtpHeaderExtensions);
+  }
+  void add_rtpListener(flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener) {
+    fbb_.AddOffset(BaseTransportDump::VT_RTPLISTENER, rtpListener);
+  }
+  void add_maxMessageSize(uint32_t maxMessageSize) {
+    fbb_.AddElement<uint32_t>(BaseTransportDump::VT_MAXMESSAGESIZE, maxMessageSize, 0);
+  }
+  void add_sctpAssociation(flatbuffers::Offset<FBS::Transport::SctpAssociation> sctpAssociation) {
+    fbb_.AddOffset(BaseTransportDump::VT_SCTPASSOCIATION, sctpAssociation);
+  }
+  void add_traceEventTypes(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> traceEventTypes) {
+    fbb_.AddOffset(BaseTransportDump::VT_TRACEEVENTTYPES, traceEventTypes);
+  }
+  explicit BaseTransportDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<BaseTransportDump> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<BaseTransportDump>(end);
+    fbb_.Required(o, BaseTransportDump::VT_ID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDump(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> id = 0,
+    bool direct = false,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> producerIds = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> consumerIds = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> mapSsrcConsumerId = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> mapRtxSsrcConsumerId = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> dataProducerIds = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> dataConsumerIds = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringUint8>>> recvRtpHeaderExtensions = 0,
+    flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener = 0,
+    uint32_t maxMessageSize = 0,
+    flatbuffers::Offset<FBS::Transport::SctpAssociation> sctpAssociation = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> traceEventTypes = 0) {
+  BaseTransportDumpBuilder builder_(_fbb);
+  builder_.add_traceEventTypes(traceEventTypes);
+  builder_.add_sctpAssociation(sctpAssociation);
+  builder_.add_maxMessageSize(maxMessageSize);
+  builder_.add_rtpListener(rtpListener);
+  builder_.add_recvRtpHeaderExtensions(recvRtpHeaderExtensions);
+  builder_.add_dataConsumerIds(dataConsumerIds);
+  builder_.add_dataProducerIds(dataProducerIds);
+  builder_.add_mapRtxSsrcConsumerId(mapRtxSsrcConsumerId);
+  builder_.add_mapSsrcConsumerId(mapSsrcConsumerId);
+  builder_.add_consumerIds(consumerIds);
+  builder_.add_producerIds(producerIds);
+  builder_.add_id(id);
+  builder_.add_direct(direct);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDumpDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    bool direct = false,
+    const std::vector<flatbuffers::Offset<flatbuffers::String>> *producerIds = nullptr,
+    const std::vector<flatbuffers::Offset<flatbuffers::String>> *consumerIds = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *mapSsrcConsumerId = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *mapRtxSsrcConsumerId = nullptr,
+    const std::vector<flatbuffers::Offset<flatbuffers::String>> *dataProducerIds = nullptr,
+    const std::vector<flatbuffers::Offset<flatbuffers::String>> *dataConsumerIds = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::Transport::StringUint8>> *recvRtpHeaderExtensions = nullptr,
+    flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener = 0,
+    uint32_t maxMessageSize = 0,
+    flatbuffers::Offset<FBS::Transport::SctpAssociation> sctpAssociation = 0,
+    const std::vector<flatbuffers::Offset<flatbuffers::String>> *traceEventTypes = nullptr) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto producerIds__ = producerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*producerIds) : 0;
+  auto consumerIds__ = consumerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*consumerIds) : 0;
+  auto mapSsrcConsumerId__ = mapSsrcConsumerId ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::Uint32String>>(*mapSsrcConsumerId) : 0;
+  auto mapRtxSsrcConsumerId__ = mapRtxSsrcConsumerId ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::Uint32String>>(*mapRtxSsrcConsumerId) : 0;
+  auto dataProducerIds__ = dataProducerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*dataProducerIds) : 0;
+  auto dataConsumerIds__ = dataConsumerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*dataConsumerIds) : 0;
+  auto recvRtpHeaderExtensions__ = recvRtpHeaderExtensions ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::StringUint8>>(*recvRtpHeaderExtensions) : 0;
+  auto traceEventTypes__ = traceEventTypes ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*traceEventTypes) : 0;
+  return FBS::Transport::CreateBaseTransportDump(
+      _fbb,
+      id__,
+      direct,
+      producerIds__,
+      consumerIds__,
+      mapSsrcConsumerId__,
+      mapRtxSsrcConsumerId__,
+      dataProducerIds__,
+      dataConsumerIds__,
+      recvRtpHeaderExtensions__,
+      rtpListener,
+      maxMessageSize,
+      sctpAssociation,
+      traceEventTypes__);
+}
+
+struct IceParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef IceParametersBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return IceParametersTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_USERNAMEFRAGMENT = 4,
+    VT_PASSWORD = 6,
+    VT_ICELITE = 8
+  };
+  const flatbuffers::String *usernameFragment() const {
+    return GetPointer<const flatbuffers::String *>(VT_USERNAMEFRAGMENT);
+  }
+  const flatbuffers::String *password() const {
+    return GetPointer<const flatbuffers::String *>(VT_PASSWORD);
+  }
+  bool iceLite() const {
+    return GetField<uint8_t>(VT_ICELITE, 1) != 0;
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_USERNAMEFRAGMENT) &&
+           verifier.VerifyString(usernameFragment()) &&
+           VerifyOffsetRequired(verifier, VT_PASSWORD) &&
+           verifier.VerifyString(password()) &&
+           VerifyField<uint8_t>(verifier, VT_ICELITE, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct IceParametersBuilder {
+  typedef IceParameters Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_usernameFragment(flatbuffers::Offset<flatbuffers::String> usernameFragment) {
+    fbb_.AddOffset(IceParameters::VT_USERNAMEFRAGMENT, usernameFragment);
+  }
+  void add_password(flatbuffers::Offset<flatbuffers::String> password) {
+    fbb_.AddOffset(IceParameters::VT_PASSWORD, password);
+  }
+  void add_iceLite(bool iceLite) {
+    fbb_.AddElement<uint8_t>(IceParameters::VT_ICELITE, static_cast<uint8_t>(iceLite), 1);
+  }
+  explicit IceParametersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<IceParameters> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<IceParameters>(end);
+    fbb_.Required(o, IceParameters::VT_USERNAMEFRAGMENT);
+    fbb_.Required(o, IceParameters::VT_PASSWORD);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<IceParameters> CreateIceParameters(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> usernameFragment = 0,
+    flatbuffers::Offset<flatbuffers::String> password = 0,
+    bool iceLite = true) {
+  IceParametersBuilder builder_(_fbb);
+  builder_.add_password(password);
+  builder_.add_usernameFragment(usernameFragment);
+  builder_.add_iceLite(iceLite);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<IceParameters> CreateIceParametersDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *usernameFragment = nullptr,
+    const char *password = nullptr,
+    bool iceLite = true) {
+  auto usernameFragment__ = usernameFragment ? _fbb.CreateString(usernameFragment) : 0;
+  auto password__ = password ? _fbb.CreateString(password) : 0;
+  return FBS::Transport::CreateIceParameters(
+      _fbb,
+      usernameFragment__,
+      password__,
+      iceLite);
+}
+
+struct IceCandidate FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef IceCandidateBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return IceCandidateTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_FOUNDATION = 4,
+    VT_PRIORITY = 6,
+    VT_IP = 8,
+    VT_PROTOCOL = 10,
+    VT_PORT = 12,
+    VT_TYPE = 14,
+    VT_TCPTYPE = 16
+  };
+  const flatbuffers::String *foundation() const {
+    return GetPointer<const flatbuffers::String *>(VT_FOUNDATION);
+  }
+  uint32_t priority() const {
+    return GetField<uint32_t>(VT_PRIORITY, 0);
+  }
+  const flatbuffers::String *ip() const {
+    return GetPointer<const flatbuffers::String *>(VT_IP);
+  }
+  const flatbuffers::String *protocol() const {
+    return GetPointer<const flatbuffers::String *>(VT_PROTOCOL);
+  }
+  uint16_t port() const {
+    return GetField<uint16_t>(VT_PORT, 0);
+  }
+  const flatbuffers::String *type() const {
+    return GetPointer<const flatbuffers::String *>(VT_TYPE);
+  }
+  const flatbuffers::String *tcpType() const {
+    return GetPointer<const flatbuffers::String *>(VT_TCPTYPE);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_FOUNDATION) &&
+           verifier.VerifyString(foundation()) &&
+           VerifyField<uint32_t>(verifier, VT_PRIORITY, 4) &&
+           VerifyOffsetRequired(verifier, VT_IP) &&
+           verifier.VerifyString(ip()) &&
+           VerifyOffsetRequired(verifier, VT_PROTOCOL) &&
+           verifier.VerifyString(protocol()) &&
+           VerifyField<uint16_t>(verifier, VT_PORT, 2) &&
+           VerifyOffset(verifier, VT_TYPE) &&
+           verifier.VerifyString(type()) &&
+           VerifyOffset(verifier, VT_TCPTYPE) &&
+           verifier.VerifyString(tcpType()) &&
+           verifier.EndTable();
+  }
+};
+
+struct IceCandidateBuilder {
+  typedef IceCandidate Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_foundation(flatbuffers::Offset<flatbuffers::String> foundation) {
+    fbb_.AddOffset(IceCandidate::VT_FOUNDATION, foundation);
+  }
+  void add_priority(uint32_t priority) {
+    fbb_.AddElement<uint32_t>(IceCandidate::VT_PRIORITY, priority, 0);
+  }
+  void add_ip(flatbuffers::Offset<flatbuffers::String> ip) {
+    fbb_.AddOffset(IceCandidate::VT_IP, ip);
+  }
+  void add_protocol(flatbuffers::Offset<flatbuffers::String> protocol) {
+    fbb_.AddOffset(IceCandidate::VT_PROTOCOL, protocol);
+  }
+  void add_port(uint16_t port) {
+    fbb_.AddElement<uint16_t>(IceCandidate::VT_PORT, port, 0);
+  }
+  void add_type(flatbuffers::Offset<flatbuffers::String> type) {
+    fbb_.AddOffset(IceCandidate::VT_TYPE, type);
+  }
+  void add_tcpType(flatbuffers::Offset<flatbuffers::String> tcpType) {
+    fbb_.AddOffset(IceCandidate::VT_TCPTYPE, tcpType);
+  }
+  explicit IceCandidateBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<IceCandidate> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<IceCandidate>(end);
+    fbb_.Required(o, IceCandidate::VT_FOUNDATION);
+    fbb_.Required(o, IceCandidate::VT_IP);
+    fbb_.Required(o, IceCandidate::VT_PROTOCOL);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<IceCandidate> CreateIceCandidate(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> foundation = 0,
+    uint32_t priority = 0,
+    flatbuffers::Offset<flatbuffers::String> ip = 0,
+    flatbuffers::Offset<flatbuffers::String> protocol = 0,
+    uint16_t port = 0,
+    flatbuffers::Offset<flatbuffers::String> type = 0,
+    flatbuffers::Offset<flatbuffers::String> tcpType = 0) {
+  IceCandidateBuilder builder_(_fbb);
+  builder_.add_tcpType(tcpType);
+  builder_.add_type(type);
+  builder_.add_protocol(protocol);
+  builder_.add_ip(ip);
+  builder_.add_priority(priority);
+  builder_.add_foundation(foundation);
+  builder_.add_port(port);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<IceCandidate> CreateIceCandidateDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *foundation = nullptr,
+    uint32_t priority = 0,
+    const char *ip = nullptr,
+    const char *protocol = nullptr,
+    uint16_t port = 0,
+    const char *type = nullptr,
+    const char *tcpType = nullptr) {
+  auto foundation__ = foundation ? _fbb.CreateString(foundation) : 0;
+  auto ip__ = ip ? _fbb.CreateString(ip) : 0;
+  auto protocol__ = protocol ? _fbb.CreateString(protocol) : 0;
+  auto type__ = type ? _fbb.CreateString(type) : 0;
+  auto tcpType__ = tcpType ? _fbb.CreateString(tcpType) : 0;
+  return FBS::Transport::CreateIceCandidate(
+      _fbb,
+      foundation__,
+      priority,
+      ip__,
+      protocol__,
+      port,
+      type__,
+      tcpType__);
+}
+
+struct IceSelectedTuple FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef IceSelectedTupleBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return IceSelectedTupleTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_LOCALIP = 4,
+    VT_LOCALPORT = 6,
+    VT_REMOTEIP = 8,
+    VT_REMOTEPORT = 10,
+    VT_PROTOCOL = 12
+  };
+  const flatbuffers::String *localIp() const {
+    return GetPointer<const flatbuffers::String *>(VT_LOCALIP);
+  }
+  uint16_t localPort() const {
+    return GetField<uint16_t>(VT_LOCALPORT, 0);
+  }
+  const flatbuffers::String *remoteIp() const {
+    return GetPointer<const flatbuffers::String *>(VT_REMOTEIP);
+  }
+  uint16_t remotePort() const {
+    return GetField<uint16_t>(VT_REMOTEPORT, 0);
+  }
+  const flatbuffers::String *protocol() const {
+    return GetPointer<const flatbuffers::String *>(VT_PROTOCOL);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_LOCALIP) &&
+           verifier.VerifyString(localIp()) &&
+           VerifyField<uint16_t>(verifier, VT_LOCALPORT, 2) &&
+           VerifyOffsetRequired(verifier, VT_REMOTEIP) &&
+           verifier.VerifyString(remoteIp()) &&
+           VerifyField<uint16_t>(verifier, VT_REMOTEPORT, 2) &&
+           VerifyOffsetRequired(verifier, VT_PROTOCOL) &&
+           verifier.VerifyString(protocol()) &&
+           verifier.EndTable();
+  }
+};
+
+struct IceSelectedTupleBuilder {
+  typedef IceSelectedTuple Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_localIp(flatbuffers::Offset<flatbuffers::String> localIp) {
+    fbb_.AddOffset(IceSelectedTuple::VT_LOCALIP, localIp);
+  }
+  void add_localPort(uint16_t localPort) {
+    fbb_.AddElement<uint16_t>(IceSelectedTuple::VT_LOCALPORT, localPort, 0);
+  }
+  void add_remoteIp(flatbuffers::Offset<flatbuffers::String> remoteIp) {
+    fbb_.AddOffset(IceSelectedTuple::VT_REMOTEIP, remoteIp);
+  }
+  void add_remotePort(uint16_t remotePort) {
+    fbb_.AddElement<uint16_t>(IceSelectedTuple::VT_REMOTEPORT, remotePort, 0);
+  }
+  void add_protocol(flatbuffers::Offset<flatbuffers::String> protocol) {
+    fbb_.AddOffset(IceSelectedTuple::VT_PROTOCOL, protocol);
+  }
+  explicit IceSelectedTupleBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<IceSelectedTuple> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<IceSelectedTuple>(end);
+    fbb_.Required(o, IceSelectedTuple::VT_LOCALIP);
+    fbb_.Required(o, IceSelectedTuple::VT_REMOTEIP);
+    fbb_.Required(o, IceSelectedTuple::VT_PROTOCOL);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<IceSelectedTuple> CreateIceSelectedTuple(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> localIp = 0,
+    uint16_t localPort = 0,
+    flatbuffers::Offset<flatbuffers::String> remoteIp = 0,
+    uint16_t remotePort = 0,
+    flatbuffers::Offset<flatbuffers::String> protocol = 0) {
+  IceSelectedTupleBuilder builder_(_fbb);
+  builder_.add_protocol(protocol);
+  builder_.add_remoteIp(remoteIp);
+  builder_.add_localIp(localIp);
+  builder_.add_remotePort(remotePort);
+  builder_.add_localPort(localPort);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<IceSelectedTuple> CreateIceSelectedTupleDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *localIp = nullptr,
+    uint16_t localPort = 0,
+    const char *remoteIp = nullptr,
+    uint16_t remotePort = 0,
+    const char *protocol = nullptr) {
+  auto localIp__ = localIp ? _fbb.CreateString(localIp) : 0;
+  auto remoteIp__ = remoteIp ? _fbb.CreateString(remoteIp) : 0;
+  auto protocol__ = protocol ? _fbb.CreateString(protocol) : 0;
+  return FBS::Transport::CreateIceSelectedTuple(
+      _fbb,
+      localIp__,
+      localPort,
+      remoteIp__,
+      remotePort,
+      protocol__);
+}
+
+struct Fingerprint FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef FingerprintBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return FingerprintTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ALGORITHM = 4,
+    VT_VALUE = 6
+  };
+  const flatbuffers::String *algorithm() const {
+    return GetPointer<const flatbuffers::String *>(VT_ALGORITHM);
+  }
+  const flatbuffers::String *value() const {
+    return GetPointer<const flatbuffers::String *>(VT_VALUE);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_ALGORITHM) &&
+           verifier.VerifyString(algorithm()) &&
+           VerifyOffsetRequired(verifier, VT_VALUE) &&
+           verifier.VerifyString(value()) &&
+           verifier.EndTable();
+  }
+};
+
+struct FingerprintBuilder {
+  typedef Fingerprint Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_algorithm(flatbuffers::Offset<flatbuffers::String> algorithm) {
+    fbb_.AddOffset(Fingerprint::VT_ALGORITHM, algorithm);
+  }
+  void add_value(flatbuffers::Offset<flatbuffers::String> value) {
+    fbb_.AddOffset(Fingerprint::VT_VALUE, value);
+  }
+  explicit FingerprintBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<Fingerprint> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<Fingerprint>(end);
+    fbb_.Required(o, Fingerprint::VT_ALGORITHM);
+    fbb_.Required(o, Fingerprint::VT_VALUE);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<Fingerprint> CreateFingerprint(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> algorithm = 0,
+    flatbuffers::Offset<flatbuffers::String> value = 0) {
+  FingerprintBuilder builder_(_fbb);
+  builder_.add_value(value);
+  builder_.add_algorithm(algorithm);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<Fingerprint> CreateFingerprintDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *algorithm = nullptr,
+    const char *value = nullptr) {
+  auto algorithm__ = algorithm ? _fbb.CreateString(algorithm) : 0;
+  auto value__ = value ? _fbb.CreateString(value) : 0;
+  return FBS::Transport::CreateFingerprint(
+      _fbb,
+      algorithm__,
+      value__);
+}
+
+struct DtlsParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef DtlsParametersBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return DtlsParametersTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_FINGERPRINT = 4,
+    VT_ROLE = 6,
+    VT_DTLSSTATE = 8
+  };
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>> *fingerprint() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>> *>(VT_FINGERPRINT);
+  }
+  const flatbuffers::String *role() const {
+    return GetPointer<const flatbuffers::String *>(VT_ROLE);
+  }
+  const flatbuffers::String *dtlsState() const {
+    return GetPointer<const flatbuffers::String *>(VT_DTLSSTATE);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_FINGERPRINT) &&
+           verifier.VerifyVector(fingerprint()) &&
+           verifier.VerifyVectorOfTables(fingerprint()) &&
+           VerifyOffsetRequired(verifier, VT_ROLE) &&
+           verifier.VerifyString(role()) &&
+           VerifyOffsetRequired(verifier, VT_DTLSSTATE) &&
+           verifier.VerifyString(dtlsState()) &&
+           verifier.EndTable();
+  }
+};
+
+struct DtlsParametersBuilder {
+  typedef DtlsParameters Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_fingerprint(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>>> fingerprint) {
+    fbb_.AddOffset(DtlsParameters::VT_FINGERPRINT, fingerprint);
+  }
+  void add_role(flatbuffers::Offset<flatbuffers::String> role) {
+    fbb_.AddOffset(DtlsParameters::VT_ROLE, role);
+  }
+  void add_dtlsState(flatbuffers::Offset<flatbuffers::String> dtlsState) {
+    fbb_.AddOffset(DtlsParameters::VT_DTLSSTATE, dtlsState);
+  }
+  explicit DtlsParametersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<DtlsParameters> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<DtlsParameters>(end);
+    fbb_.Required(o, DtlsParameters::VT_FINGERPRINT);
+    fbb_.Required(o, DtlsParameters::VT_ROLE);
+    fbb_.Required(o, DtlsParameters::VT_DTLSSTATE);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<DtlsParameters> CreateDtlsParameters(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>>> fingerprint = 0,
+    flatbuffers::Offset<flatbuffers::String> role = 0,
+    flatbuffers::Offset<flatbuffers::String> dtlsState = 0) {
+  DtlsParametersBuilder builder_(_fbb);
+  builder_.add_dtlsState(dtlsState);
+  builder_.add_role(role);
+  builder_.add_fingerprint(fingerprint);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<DtlsParameters> CreateDtlsParametersDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<flatbuffers::Offset<FBS::Transport::Fingerprint>> *fingerprint = nullptr,
+    const char *role = nullptr,
+    const char *dtlsState = nullptr) {
+  auto fingerprint__ = fingerprint ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::Fingerprint>>(*fingerprint) : 0;
+  auto role__ = role ? _fbb.CreateString(role) : 0;
+  auto dtlsState__ = dtlsState ? _fbb.CreateString(dtlsState) : 0;
+  return FBS::Transport::CreateDtlsParameters(
+      _fbb,
+      fingerprint__,
+      role__,
+      dtlsState__);
+}
+
+struct WebRtcTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef WebRtcTransportDumpBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return WebRtcTransportDumpTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BASE = 4,
+    VT_ICEROLE = 6,
+    VT_ICEPARAMETERS = 8,
+    VT_ICECANDIDATES = 10,
+    VT_ICESTATE = 12,
+    VT_ICESELECTEDTUPLE = 14,
+    VT_DTLSPARAMETERS = 16
+  };
+  const FBS::Transport::BaseTransportDump *base() const {
+    return GetPointer<const FBS::Transport::BaseTransportDump *>(VT_BASE);
+  }
+  const flatbuffers::String *iceRole() const {
+    return GetPointer<const flatbuffers::String *>(VT_ICEROLE);
+  }
+  const FBS::Transport::IceParameters *iceParameters() const {
+    return GetPointer<const FBS::Transport::IceParameters *>(VT_ICEPARAMETERS);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::IceCandidate>> *iceCandidates() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::IceCandidate>> *>(VT_ICECANDIDATES);
+  }
+  const flatbuffers::String *iceState() const {
+    return GetPointer<const flatbuffers::String *>(VT_ICESTATE);
+  }
+  const FBS::Transport::IceSelectedTuple *iceSelectedTuple() const {
+    return GetPointer<const FBS::Transport::IceSelectedTuple *>(VT_ICESELECTEDTUPLE);
+  }
+  const FBS::Transport::DtlsParameters *dtlsParameters() const {
+    return GetPointer<const FBS::Transport::DtlsParameters *>(VT_DTLSPARAMETERS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_BASE) &&
+           verifier.VerifyTable(base()) &&
+           VerifyOffsetRequired(verifier, VT_ICEROLE) &&
+           verifier.VerifyString(iceRole()) &&
+           VerifyOffsetRequired(verifier, VT_ICEPARAMETERS) &&
+           verifier.VerifyTable(iceParameters()) &&
+           VerifyOffsetRequired(verifier, VT_ICECANDIDATES) &&
+           verifier.VerifyVector(iceCandidates()) &&
+           verifier.VerifyVectorOfTables(iceCandidates()) &&
+           VerifyOffsetRequired(verifier, VT_ICESTATE) &&
+           verifier.VerifyString(iceState()) &&
+           VerifyOffset(verifier, VT_ICESELECTEDTUPLE) &&
+           verifier.VerifyTable(iceSelectedTuple()) &&
+           VerifyOffsetRequired(verifier, VT_DTLSPARAMETERS) &&
+           verifier.VerifyTable(dtlsParameters()) &&
+           verifier.EndTable();
+  }
+};
+
+struct WebRtcTransportDumpBuilder {
+  typedef WebRtcTransportDump Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_base(flatbuffers::Offset<FBS::Transport::BaseTransportDump> base) {
+    fbb_.AddOffset(WebRtcTransportDump::VT_BASE, base);
+  }
+  void add_iceRole(flatbuffers::Offset<flatbuffers::String> iceRole) {
+    fbb_.AddOffset(WebRtcTransportDump::VT_ICEROLE, iceRole);
+  }
+  void add_iceParameters(flatbuffers::Offset<FBS::Transport::IceParameters> iceParameters) {
+    fbb_.AddOffset(WebRtcTransportDump::VT_ICEPARAMETERS, iceParameters);
+  }
+  void add_iceCandidates(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::IceCandidate>>> iceCandidates) {
+    fbb_.AddOffset(WebRtcTransportDump::VT_ICECANDIDATES, iceCandidates);
+  }
+  void add_iceState(flatbuffers::Offset<flatbuffers::String> iceState) {
+    fbb_.AddOffset(WebRtcTransportDump::VT_ICESTATE, iceState);
+  }
+  void add_iceSelectedTuple(flatbuffers::Offset<FBS::Transport::IceSelectedTuple> iceSelectedTuple) {
+    fbb_.AddOffset(WebRtcTransportDump::VT_ICESELECTEDTUPLE, iceSelectedTuple);
+  }
+  void add_dtlsParameters(flatbuffers::Offset<FBS::Transport::DtlsParameters> dtlsParameters) {
+    fbb_.AddOffset(WebRtcTransportDump::VT_DTLSPARAMETERS, dtlsParameters);
+  }
+  explicit WebRtcTransportDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<WebRtcTransportDump> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<WebRtcTransportDump>(end);
+    fbb_.Required(o, WebRtcTransportDump::VT_BASE);
+    fbb_.Required(o, WebRtcTransportDump::VT_ICEROLE);
+    fbb_.Required(o, WebRtcTransportDump::VT_ICEPARAMETERS);
+    fbb_.Required(o, WebRtcTransportDump::VT_ICECANDIDATES);
+    fbb_.Required(o, WebRtcTransportDump::VT_ICESTATE);
+    fbb_.Required(o, WebRtcTransportDump::VT_DTLSPARAMETERS);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<WebRtcTransportDump> CreateWebRtcTransportDump(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Transport::BaseTransportDump> base = 0,
+    flatbuffers::Offset<flatbuffers::String> iceRole = 0,
+    flatbuffers::Offset<FBS::Transport::IceParameters> iceParameters = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::IceCandidate>>> iceCandidates = 0,
+    flatbuffers::Offset<flatbuffers::String> iceState = 0,
+    flatbuffers::Offset<FBS::Transport::IceSelectedTuple> iceSelectedTuple = 0,
+    flatbuffers::Offset<FBS::Transport::DtlsParameters> dtlsParameters = 0) {
+  WebRtcTransportDumpBuilder builder_(_fbb);
+  builder_.add_dtlsParameters(dtlsParameters);
+  builder_.add_iceSelectedTuple(iceSelectedTuple);
+  builder_.add_iceState(iceState);
+  builder_.add_iceCandidates(iceCandidates);
+  builder_.add_iceParameters(iceParameters);
+  builder_.add_iceRole(iceRole);
+  builder_.add_base(base);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<WebRtcTransportDump> CreateWebRtcTransportDumpDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Transport::BaseTransportDump> base = 0,
+    const char *iceRole = nullptr,
+    flatbuffers::Offset<FBS::Transport::IceParameters> iceParameters = 0,
+    const std::vector<flatbuffers::Offset<FBS::Transport::IceCandidate>> *iceCandidates = nullptr,
+    const char *iceState = nullptr,
+    flatbuffers::Offset<FBS::Transport::IceSelectedTuple> iceSelectedTuple = 0,
+    flatbuffers::Offset<FBS::Transport::DtlsParameters> dtlsParameters = 0) {
+  auto iceRole__ = iceRole ? _fbb.CreateString(iceRole) : 0;
+  auto iceCandidates__ = iceCandidates ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::IceCandidate>>(*iceCandidates) : 0;
+  auto iceState__ = iceState ? _fbb.CreateString(iceState) : 0;
+  return FBS::Transport::CreateWebRtcTransportDump(
+      _fbb,
+      base,
+      iceRole__,
+      iceParameters,
+      iceCandidates__,
+      iceState__,
+      iceSelectedTuple,
+      dtlsParameters);
+}
+
+inline bool VerifyTransportDumpData(flatbuffers::Verifier &verifier, const void *obj, TransportDumpData type) {
+  switch (type) {
+    case TransportDumpData::NONE: {
+      return true;
+    }
+    case TransportDumpData::WebRtcTransportDump: {
+      auto ptr = reinterpret_cast<const FBS::Transport::WebRtcTransportDump *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    default: return true;
+  }
+}
+
+inline bool VerifyTransportDumpDataVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<TransportDumpData> *types) {
+  if (!values || !types) return !values && !types;
+  if (values->size() != types->size()) return false;
+  for (flatbuffers::uoffset_t i = 0; i < values->size(); ++i) {
+    if (!VerifyTransportDumpData(
+        verifier,  values->Get(i), types->GetEnum<TransportDumpData>(i))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+inline const flatbuffers::TypeTable *TransportDumpDataTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Transport::WebRtcTransportDumpTypeTable
+  };
+  static const char * const names[] = {
+    "NONE",
+    "WebRtcTransportDump"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_UNION, 2, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
 inline const flatbuffers::TypeTable *ConsumeRequestTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_STRING, 0, -1 },
@@ -321,6 +2000,340 @@ inline const flatbuffers::TypeTable *ConsumeResponseTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 4, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *StringStringTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "key",
+    "value"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *StringUint8TypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_UCHAR, 0, -1 }
+  };
+  static const char * const names[] = {
+    "key",
+    "value"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *Uint16StringTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "key",
+    "value"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *Uint32StringTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "key",
+    "value"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *RtpListenerTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 1, 0 },
+    { flatbuffers::ET_SEQUENCE, 1, 1 },
+    { flatbuffers::ET_SEQUENCE, 1, 1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Transport::Uint32StringTypeTable,
+    FBS::Transport::StringStringTypeTable
+  };
+  static const char * const names[] = {
+    "ssrcTable",
+    "midTable",
+    "ridTable"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 3, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SctpListenerTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 1, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Transport::Uint16StringTypeTable
+  };
+  static const char * const names[] = {
+    "streamIdTable"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SctpParametersTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 }
+  };
+  static const char * const names[] = {
+    "port",
+    "OS",
+    "MIS",
+    "maxMessageSize",
+    "sendBufferSize",
+    "sctpBufferedAmount",
+    "isDataChannel"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 7, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SctpAssociationTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Transport::SctpParametersTypeTable,
+    FBS::Transport::SctpListenerTypeTable
+  };
+  static const char * const names[] = {
+    "sctpParameters",
+    "stcpState",
+    "stcpListener"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 3, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *TransportDumpTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UTYPE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Transport::TransportDumpDataTypeTable
+  };
+  static const char * const names[] = {
+    "data_type",
+    "data"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *BaseTransportDumpTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_STRING, 1, -1 },
+    { flatbuffers::ET_STRING, 1, -1 },
+    { flatbuffers::ET_SEQUENCE, 1, 0 },
+    { flatbuffers::ET_SEQUENCE, 1, 0 },
+    { flatbuffers::ET_STRING, 1, -1 },
+    { flatbuffers::ET_STRING, 1, -1 },
+    { flatbuffers::ET_SEQUENCE, 1, 1 },
+    { flatbuffers::ET_SEQUENCE, 0, 2 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 3 },
+    { flatbuffers::ET_STRING, 1, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Transport::Uint32StringTypeTable,
+    FBS::Transport::StringUint8TypeTable,
+    FBS::Transport::RtpListenerTypeTable,
+    FBS::Transport::SctpAssociationTypeTable
+  };
+  static const char * const names[] = {
+    "id",
+    "direct",
+    "producerIds",
+    "consumerIds",
+    "mapSsrcConsumerId",
+    "mapRtxSsrcConsumerId",
+    "dataProducerIds",
+    "dataConsumerIds",
+    "recvRtpHeaderExtensions",
+    "rtpListener",
+    "maxMessageSize",
+    "sctpAssociation",
+    "traceEventTypes"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 13, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *IceParametersTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 }
+  };
+  static const char * const names[] = {
+    "usernameFragment",
+    "password",
+    "iceLite"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 3, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *IceCandidateTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "foundation",
+    "priority",
+    "ip",
+    "protocol",
+    "port",
+    "type",
+    "tcpType"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 7, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *IceSelectedTupleTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "localIp",
+    "localPort",
+    "remoteIp",
+    "remotePort",
+    "protocol"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 5, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *FingerprintTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "algorithm",
+    "value"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *DtlsParametersTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 1, 0 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Transport::FingerprintTypeTable
+  };
+  static const char * const names[] = {
+    "fingerprint",
+    "role",
+    "dtlsState"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 3, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *WebRtcTransportDumpTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 },
+    { flatbuffers::ET_SEQUENCE, 1, 2 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 3 },
+    { flatbuffers::ET_SEQUENCE, 0, 4 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Transport::BaseTransportDumpTypeTable,
+    FBS::Transport::IceParametersTypeTable,
+    FBS::Transport::IceCandidateTypeTable,
+    FBS::Transport::IceSelectedTupleTypeTable,
+    FBS::Transport::DtlsParametersTypeTable
+  };
+  static const char * const names[] = {
+    "base",
+    "iceRole",
+    "iceParameters",
+    "iceCandidates",
+    "iceState",
+    "iceSelectedTuple",
+    "dtlsParameters"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 7, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

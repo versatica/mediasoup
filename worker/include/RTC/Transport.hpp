@@ -128,6 +128,14 @@ namespace RTC
 		// Subclasses must also invoke the parent Close().
 		virtual void FillJson(json& jsonObject) const;
 		virtual void FillJsonStats(json& jsonArray);
+		// TODO: Make it pure virtual when all child clases have it implemented.
+		virtual flatbuffers::Offset<FBS::Transport::TransportDump> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const
+		{
+			return 0;
+		};
+		flatbuffers::Offset<FBS::Transport::BaseTransportDump> FillBaseBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
