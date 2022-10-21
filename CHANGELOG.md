@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.10.11
+
+* RTCP: Fix trailing space needed by srtp_protect_rtcp() (PR #929).
+
+
 ### 3.10.10
 
 * Fix the JSON serialization for the payload channel `rtp` event (PR #926 by @mhammo).
