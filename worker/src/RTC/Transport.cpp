@@ -470,7 +470,7 @@ namespace RTC
 		jsonObject["traceEventTypes"] = traceEventTypesStream.str();
 	}
 
-	flatbuffers::Offset<FBS::Transport::BaseTransportDump> Transport::FillBaseBuffer(
+	flatbuffers::Offset<FBS::Transport::TransportDump> Transport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -611,7 +611,7 @@ namespace RTC
 		if (this->traceEventTypes.bwe)
 			traceEventTypes.emplace_back(builder.CreateString("bwe"));
 
-		return FBS::Transport::CreateBaseTransportDumpDirect(
+		auto baseTransportDump = FBS::Transport::CreateBaseTransportDumpDirect(
 		  builder,
 		  this->id.c_str(),
 		  this->direct,
@@ -626,6 +626,8 @@ namespace RTC
 		  this->maxMessageSize,
 		  sctpAssociation,
 		  &traceEventTypes);
+
+		return FBS::Transport::CreateTransportDump(builder, FBS::Transport::TransportDumpData::BaseTransportDump, baseTransportDump.Union());
 	}
 
 	void Transport::FillJsonStats(json& jsonArray)

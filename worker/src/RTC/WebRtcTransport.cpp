@@ -549,7 +549,7 @@ namespace RTC
 		}
 
 		// Add base transport dump.
-		auto base = Transport::FillBaseBuffer(builder);
+		auto base = Transport::FillBuffer(builder);
 		// Add dtlsParameters.
 		auto dtlsParameters = FBS::Transport::CreateDtlsParametersDirect(
 		  builder, &fingerprints, dtlsRole.c_str(), dtlsState.c_str());

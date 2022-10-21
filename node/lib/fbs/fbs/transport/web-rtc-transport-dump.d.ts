@@ -1,16 +1,16 @@
 import * as flatbuffers from 'flatbuffers';
-import { BaseTransportDump, BaseTransportDumpT } from '../../fbs/transport/base-transport-dump';
 import { DtlsParameters, DtlsParametersT } from '../../fbs/transport/dtls-parameters';
 import { IceCandidate, IceCandidateT } from '../../fbs/transport/ice-candidate';
 import { IceParameters, IceParametersT } from '../../fbs/transport/ice-parameters';
 import { IceSelectedTuple, IceSelectedTupleT } from '../../fbs/transport/ice-selected-tuple';
+import { TransportDump, TransportDumpT } from '../../fbs/transport/transport-dump';
 export declare class WebRtcTransportDump {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
     __init(i: number, bb: flatbuffers.ByteBuffer): WebRtcTransportDump;
     static getRootAsWebRtcTransportDump(bb: flatbuffers.ByteBuffer, obj?: WebRtcTransportDump): WebRtcTransportDump;
     static getSizePrefixedRootAsWebRtcTransportDump(bb: flatbuffers.ByteBuffer, obj?: WebRtcTransportDump): WebRtcTransportDump;
-    base(obj?: BaseTransportDump): BaseTransportDump | null;
+    base(obj?: TransportDump): TransportDump | null;
     iceRole(): string | null;
     iceRole(optionalEncoding: flatbuffers.Encoding): string | Uint8Array | null;
     iceParameters(obj?: IceParameters): IceParameters | null;
@@ -35,14 +35,14 @@ export declare class WebRtcTransportDump {
     unpackTo(_o: WebRtcTransportDumpT): void;
 }
 export declare class WebRtcTransportDumpT {
-    base: BaseTransportDumpT | null;
+    base: TransportDumpT | null;
     iceRole: string | Uint8Array | null;
     iceParameters: IceParametersT | null;
     iceCandidates: (IceCandidateT)[];
     iceState: string | Uint8Array | null;
     iceSelectedTuple: IceSelectedTupleT | null;
     dtlsParameters: DtlsParametersT | null;
-    constructor(base?: BaseTransportDumpT | null, iceRole?: string | Uint8Array | null, iceParameters?: IceParametersT | null, iceCandidates?: (IceCandidateT)[], iceState?: string | Uint8Array | null, iceSelectedTuple?: IceSelectedTupleT | null, dtlsParameters?: DtlsParametersT | null);
+    constructor(base?: TransportDumpT | null, iceRole?: string | Uint8Array | null, iceParameters?: IceParametersT | null, iceCandidates?: (IceCandidateT)[], iceState?: string | Uint8Array | null, iceSelectedTuple?: IceSelectedTupleT | null, dtlsParameters?: DtlsParametersT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=web-rtc-transport-dump.d.ts.map

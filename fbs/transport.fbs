@@ -70,8 +70,8 @@ table SctpAssociation {
 
 }
 
-// Should be called transport dump
 union TransportDumpData {
+  BaseTransportDump,
   WebRtcTransportDump,
 }
 
@@ -131,7 +131,7 @@ table DtlsParameters {
 }
 
 table WebRtcTransportDump {
-  base:BaseTransportDump (required);
+  base:TransportDump (required);
   ice_role:string(required);
   ice_parameters:IceParameters (required);
   ice_candidates:[IceCandidate] (required);

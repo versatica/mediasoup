@@ -2,11 +2,11 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { BaseTransportDump, BaseTransportDumpT } from '../../fbs/transport/base-transport-dump';
 import { DtlsParameters, DtlsParametersT } from '../../fbs/transport/dtls-parameters';
 import { IceCandidate, IceCandidateT } from '../../fbs/transport/ice-candidate';
 import { IceParameters, IceParametersT } from '../../fbs/transport/ice-parameters';
 import { IceSelectedTuple, IceSelectedTupleT } from '../../fbs/transport/ice-selected-tuple';
+import { TransportDump, TransportDumpT } from '../../fbs/transport/transport-dump';
 
 
 export class WebRtcTransportDump {
@@ -27,9 +27,9 @@ static getSizePrefixedRootAsWebRtcTransportDump(bb:flatbuffers.ByteBuffer, obj?:
   return (obj || new WebRtcTransportDump()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-base(obj?:BaseTransportDump):BaseTransportDump|null {
+base(obj?:TransportDump):TransportDump|null {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new BaseTransportDump()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new TransportDump()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 iceRole():string|null
@@ -153,7 +153,7 @@ unpackTo(_o: WebRtcTransportDumpT): void {
 
 export class WebRtcTransportDumpT {
 constructor(
-  public base: BaseTransportDumpT|null = null,
+  public base: TransportDumpT|null = null,
   public iceRole: string|Uint8Array|null = null,
   public iceParameters: IceParametersT|null = null,
   public iceCandidates: (IceCandidateT)[] = [],

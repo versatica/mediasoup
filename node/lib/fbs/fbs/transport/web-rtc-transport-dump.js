@@ -3,11 +3,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebRtcTransportDumpT = exports.WebRtcTransportDump = void 0;
 const flatbuffers = require("flatbuffers");
-const base_transport_dump_1 = require("../../fbs/transport/base-transport-dump");
 const dtls_parameters_1 = require("../../fbs/transport/dtls-parameters");
 const ice_candidate_1 = require("../../fbs/transport/ice-candidate");
 const ice_parameters_1 = require("../../fbs/transport/ice-parameters");
 const ice_selected_tuple_1 = require("../../fbs/transport/ice-selected-tuple");
+const transport_dump_1 = require("../../fbs/transport/transport-dump");
 class WebRtcTransportDump {
     bb = null;
     bb_pos = 0;
@@ -25,7 +25,7 @@ class WebRtcTransportDump {
     }
     base(obj) {
         const offset = this.bb.__offset(this.bb_pos, 4);
-        return offset ? (obj || new base_transport_dump_1.BaseTransportDump()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+        return offset ? (obj || new transport_dump_1.TransportDump()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
     }
     iceRole(optionalEncoding) {
         const offset = this.bb.__offset(this.bb_pos, 6);

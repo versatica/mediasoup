@@ -111,22 +111,25 @@ inline const flatbuffers::TypeTable *WebRtcTransportDumpTypeTable();
 
 enum class TransportDumpData : uint8_t {
   NONE = 0,
-  WebRtcTransportDump = 1,
+  BaseTransportDump = 1,
+  WebRtcTransportDump = 2,
   MIN = NONE,
   MAX = WebRtcTransportDump
 };
 
-inline const TransportDumpData (&EnumValuesTransportDumpData())[2] {
+inline const TransportDumpData (&EnumValuesTransportDumpData())[3] {
   static const TransportDumpData values[] = {
     TransportDumpData::NONE,
+    TransportDumpData::BaseTransportDump,
     TransportDumpData::WebRtcTransportDump
   };
   return values;
 }
 
 inline const char * const *EnumNamesTransportDumpData() {
-  static const char * const names[3] = {
+  static const char * const names[4] = {
     "NONE",
+    "BaseTransportDump",
     "WebRtcTransportDump",
     nullptr
   };
@@ -141,6 +144,10 @@ inline const char *EnumNameTransportDumpData(TransportDumpData e) {
 
 template<typename T> struct TransportDumpDataTraits {
   static const TransportDumpData enum_value = TransportDumpData::NONE;
+};
+
+template<> struct TransportDumpDataTraits<FBS::Transport::BaseTransportDump> {
+  static const TransportDumpData enum_value = TransportDumpData::BaseTransportDump;
 };
 
 template<> struct TransportDumpDataTraits<FBS::Transport::WebRtcTransportDump> {
@@ -1005,6 +1012,9 @@ struct TransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return GetPointer<const void *>(VT_DATA);
   }
   template<typename T> const T *data_as() const;
+  const FBS::Transport::BaseTransportDump *data_as_BaseTransportDump() const {
+    return data_type() == FBS::Transport::TransportDumpData::BaseTransportDump ? static_cast<const FBS::Transport::BaseTransportDump *>(data()) : nullptr;
+  }
   const FBS::Transport::WebRtcTransportDump *data_as_WebRtcTransportDump() const {
     return data_type() == FBS::Transport::TransportDumpData::WebRtcTransportDump ? static_cast<const FBS::Transport::WebRtcTransportDump *>(data()) : nullptr;
   }
@@ -1016,6 +1026,10 @@ struct TransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.EndTable();
   }
 };
+
+template<> inline const FBS::Transport::BaseTransportDump *TransportDump::data_as<FBS::Transport::BaseTransportDump>() const {
+  return data_as_BaseTransportDump();
+}
 
 template<> inline const FBS::Transport::WebRtcTransportDump *TransportDump::data_as<FBS::Transport::WebRtcTransportDump>() const {
   return data_as_WebRtcTransportDump();
@@ -1775,8 +1789,8 @@ struct WebRtcTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table 
     VT_ICESELECTEDTUPLE = 14,
     VT_DTLSPARAMETERS = 16
   };
-  const FBS::Transport::BaseTransportDump *base() const {
-    return GetPointer<const FBS::Transport::BaseTransportDump *>(VT_BASE);
+  const FBS::Transport::TransportDump *base() const {
+    return GetPointer<const FBS::Transport::TransportDump *>(VT_BASE);
   }
   const flatbuffers::String *iceRole() const {
     return GetPointer<const flatbuffers::String *>(VT_ICEROLE);
@@ -1821,7 +1835,7 @@ struct WebRtcTransportDumpBuilder {
   typedef WebRtcTransportDump Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_base(flatbuffers::Offset<FBS::Transport::BaseTransportDump> base) {
+  void add_base(flatbuffers::Offset<FBS::Transport::TransportDump> base) {
     fbb_.AddOffset(WebRtcTransportDump::VT_BASE, base);
   }
   void add_iceRole(flatbuffers::Offset<flatbuffers::String> iceRole) {
@@ -1861,7 +1875,7 @@ struct WebRtcTransportDumpBuilder {
 
 inline flatbuffers::Offset<WebRtcTransportDump> CreateWebRtcTransportDump(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<FBS::Transport::BaseTransportDump> base = 0,
+    flatbuffers::Offset<FBS::Transport::TransportDump> base = 0,
     flatbuffers::Offset<flatbuffers::String> iceRole = 0,
     flatbuffers::Offset<FBS::Transport::IceParameters> iceParameters = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::IceCandidate>>> iceCandidates = 0,
@@ -1881,7 +1895,7 @@ inline flatbuffers::Offset<WebRtcTransportDump> CreateWebRtcTransportDump(
 
 inline flatbuffers::Offset<WebRtcTransportDump> CreateWebRtcTransportDumpDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<FBS::Transport::BaseTransportDump> base = 0,
+    flatbuffers::Offset<FBS::Transport::TransportDump> base = 0,
     const char *iceRole = nullptr,
     flatbuffers::Offset<FBS::Transport::IceParameters> iceParameters = 0,
     const std::vector<flatbuffers::Offset<FBS::Transport::IceCandidate>> *iceCandidates = nullptr,
@@ -1907,6 +1921,10 @@ inline bool VerifyTransportDumpData(flatbuffers::Verifier &verifier, const void 
     case TransportDumpData::NONE: {
       return true;
     }
+    case TransportDumpData::BaseTransportDump: {
+      auto ptr = reinterpret_cast<const FBS::Transport::BaseTransportDump *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
     case TransportDumpData::WebRtcTransportDump: {
       auto ptr = reinterpret_cast<const FBS::Transport::WebRtcTransportDump *>(obj);
       return verifier.VerifyTable(ptr);
@@ -1930,17 +1948,20 @@ inline bool VerifyTransportDumpDataVector(flatbuffers::Verifier &verifier, const
 inline const flatbuffers::TypeTable *TransportDumpDataTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_SEQUENCE, 0, -1 },
-    { flatbuffers::ET_SEQUENCE, 0, 0 }
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Transport::BaseTransportDumpTypeTable,
     FBS::Transport::WebRtcTransportDumpTypeTable
   };
   static const char * const names[] = {
     "NONE",
+    "BaseTransportDump",
     "WebRtcTransportDump"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 2, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 3, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }
@@ -2317,7 +2338,7 @@ inline const flatbuffers::TypeTable *WebRtcTransportDumpTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 4 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Transport::BaseTransportDumpTypeTable,
+    FBS::Transport::TransportDumpTypeTable,
     FBS::Transport::IceParametersTypeTable,
     FBS::Transport::IceCandidateTypeTable,
     FBS::Transport::IceSelectedTupleTypeTable,

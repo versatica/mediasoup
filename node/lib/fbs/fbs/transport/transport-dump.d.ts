@@ -1,4 +1,5 @@
 import * as flatbuffers from 'flatbuffers';
+import { BaseTransportDumpT } from '../../fbs/transport/base-transport-dump';
 import { TransportDumpData } from '../../fbs/transport/transport-dump-data';
 import { WebRtcTransportDumpT } from '../../fbs/transport/web-rtc-transport-dump';
 export declare class TransportDump {
@@ -19,8 +20,8 @@ export declare class TransportDump {
 }
 export declare class TransportDumpT {
     dataType: TransportDumpData;
-    data: WebRtcTransportDumpT | null;
-    constructor(dataType?: TransportDumpData, data?: WebRtcTransportDumpT | null);
+    data: BaseTransportDumpT | WebRtcTransportDumpT | null;
+    constructor(dataType?: TransportDumpData, data?: BaseTransportDumpT | WebRtcTransportDumpT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=transport-dump.d.ts.map
