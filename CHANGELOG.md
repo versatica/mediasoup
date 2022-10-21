@@ -3,7 +3,7 @@
 
 ### 3.10.11
 
-* Fix trailing space needed by srtp_protect_rtcp.
+* RTCP: Fix trailing space needed by srtp_protect_rtcp() (PR #929).
 
 
 ### 3.10.10
