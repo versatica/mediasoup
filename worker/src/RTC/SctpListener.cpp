@@ -34,7 +34,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Add streamIdTable.
-		std::vector<flatbuffers::Offset<FBS::Transport::Uint16String>> streamIdTable;
+		std::vector<flatbuffers::Offset<FBS::Common::Uint16String>> streamIdTable;
 
 		for (const auto& kv : this->streamIdTable)
 		{
@@ -42,7 +42,7 @@ namespace RTC
 			auto* dataProducer = kv.second;
 
 			streamIdTable.emplace_back(
-			  FBS::Transport::CreateUint16StringDirect(builder, streamId, dataProducer->id.c_str()));
+			  FBS::Common::CreateUint16StringDirect(builder, streamId, dataProducer->id.c_str()));
 		}
 
 		return FBS::Transport::CreateSctpListenerDirect(builder, &streamIdTable);

@@ -2,10 +2,10 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { StringUint8, StringUint8T } from '../../fbs/common/string-uint8';
+import { Uint32String, Uint32StringT } from '../../fbs/common/uint32string';
 import { RtpListener, RtpListenerT } from '../../fbs/transport/rtp-listener';
 import { SctpAssociation, SctpAssociationT } from '../../fbs/transport/sctp-association';
-import { StringUint8, StringUint8T } from '../../fbs/transport/string-uint8';
-import { Uint32String, Uint32StringT } from '../../fbs/transport/uint32string';
 
 
 export class BaseTransportDump {

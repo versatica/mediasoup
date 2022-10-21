@@ -56,7 +56,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Add ssrcTable.
-		std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> ssrcTable;
+		std::vector<flatbuffers::Offset<FBS::Common::Uint32String>> ssrcTable;
 
 		for (auto& kv : this->ssrcTable)
 		{
@@ -64,11 +64,11 @@ namespace RTC
 			auto* producer = kv.second;
 
 			ssrcTable.emplace_back(
-			  FBS::Transport::CreateUint32StringDirect(builder, ssrc, producer->id.c_str()));
+			  FBS::Common::CreateUint32StringDirect(builder, ssrc, producer->id.c_str()));
 		}
 
 		// Add midTable.
-		std::vector<flatbuffers::Offset<FBS::Transport::StringString>> midTable;
+		std::vector<flatbuffers::Offset<FBS::Common::StringString>> midTable;
 
 		for (auto& kv : this->midTable)
 		{
@@ -76,11 +76,11 @@ namespace RTC
 			auto* producer = kv.second;
 
 			midTable.emplace_back(
-			  FBS::Transport::CreateStringStringDirect(builder, mid.c_str(), producer->id.c_str()));
+			  FBS::Common::CreateStringStringDirect(builder, mid.c_str(), producer->id.c_str()));
 		}
 
 		// Add ridTable.
-		std::vector<flatbuffers::Offset<FBS::Transport::StringString>> ridTable;
+		std::vector<flatbuffers::Offset<FBS::Common::StringString>> ridTable;
 
 		for (auto& kv : this->ridTable)
 		{
@@ -88,7 +88,7 @@ namespace RTC
 			auto* producer = kv.second;
 
 			ridTable.emplace_back(
-			  FBS::Transport::CreateStringStringDirect(builder, rid.c_str(), producer->id.c_str()));
+			  FBS::Common::CreateStringStringDirect(builder, rid.c_str(), producer->id.c_str()));
 		}
 
 		return FBS::Transport::CreateRtpListenerDirect(builder, &ssrcTable, &midTable, &ridTable);

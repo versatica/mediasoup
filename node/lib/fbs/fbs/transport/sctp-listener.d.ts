@@ -1,5 +1,5 @@
 import * as flatbuffers from 'flatbuffers';
-import { Uint16String, Uint16StringT } from '../../fbs/transport/uint16string';
+import { Uint16String, Uint16StringT } from '../../fbs/common/uint16string';
 export declare class SctpListener {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;

@@ -3,6 +3,7 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { Body, unionToBody, unionListToBody } from '../../fbs/response/body';
+import { RouterDump, RouterDumpT } from '../../fbs/router/router-dump';
 import { ConsumeResponse, ConsumeResponseT } from '../../fbs/transport/consume-response';
 import { TransportDump, TransportDumpT } from '../../fbs/transport/transport-dump';
 import { WebRtcServerDump, WebRtcServerDumpT } from '../../fbs/web-rtc-server/web-rtc-server-dump';
@@ -113,7 +114,7 @@ constructor(
   public id: number = 0,
   public accepted: boolean = false,
   public bodyType: Body = Body.NONE,
-  public body: ConsumeResponseT|ResourceUsageT|TransportDumpT|WebRtcServerDumpT|WorkerDumpT|null = null
+  public body: ConsumeResponseT|ResourceUsageT|RouterDumpT|TransportDumpT|WebRtcServerDumpT|WorkerDumpT|null = null
 ){}
 
 

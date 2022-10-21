@@ -2,8 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { StringString, StringStringT } from '../../fbs/transport/string-string';
-import { Uint32String, Uint32StringT } from '../../fbs/transport/uint32string';
+import { StringString, StringStringT } from '../../fbs/common/string-string';
+import { Uint32String, Uint32StringT } from '../../fbs/common/uint32string';
 
 
 export class RtpListener {

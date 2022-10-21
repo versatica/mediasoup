@@ -13,6 +13,7 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
               FLATBUFFERS_VERSION_REVISION == 8,
              "Non-compatible flatbuffers version included");
 
+#include "common_generated.h"
 #include "consumer_generated.h"
 #include "rtpParameters_generated.h"
 
@@ -24,18 +25,6 @@ struct ConsumeRequestBuilder;
 
 struct ConsumeResponse;
 struct ConsumeResponseBuilder;
-
-struct StringString;
-struct StringStringBuilder;
-
-struct StringUint8;
-struct StringUint8Builder;
-
-struct Uint16String;
-struct Uint16StringBuilder;
-
-struct Uint32String;
-struct Uint32StringBuilder;
 
 struct RtpListener;
 struct RtpListenerBuilder;
@@ -88,14 +77,6 @@ struct PipeTransportDumpBuilder;
 inline const flatbuffers::TypeTable *ConsumeRequestTypeTable();
 
 inline const flatbuffers::TypeTable *ConsumeResponseTypeTable();
-
-inline const flatbuffers::TypeTable *StringStringTypeTable();
-
-inline const flatbuffers::TypeTable *StringUint8TypeTable();
-
-inline const flatbuffers::TypeTable *Uint16StringTypeTable();
-
-inline const flatbuffers::TypeTable *Uint32StringTypeTable();
 
 inline const flatbuffers::TypeTable *RtpListenerTypeTable();
 
@@ -435,277 +416,6 @@ inline flatbuffers::Offset<ConsumeResponse> CreateConsumeResponse(
   return builder_.Finish();
 }
 
-struct StringString FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef StringStringBuilder Builder;
-  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return StringStringTypeTable();
-  }
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_KEY = 4,
-    VT_VALUE = 6
-  };
-  const flatbuffers::String *key() const {
-    return GetPointer<const flatbuffers::String *>(VT_KEY);
-  }
-  const flatbuffers::String *value() const {
-    return GetPointer<const flatbuffers::String *>(VT_VALUE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffsetRequired(verifier, VT_KEY) &&
-           verifier.VerifyString(key()) &&
-           VerifyOffsetRequired(verifier, VT_VALUE) &&
-           verifier.VerifyString(value()) &&
-           verifier.EndTable();
-  }
-};
-
-struct StringStringBuilder {
-  typedef StringString Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_key(flatbuffers::Offset<flatbuffers::String> key) {
-    fbb_.AddOffset(StringString::VT_KEY, key);
-  }
-  void add_value(flatbuffers::Offset<flatbuffers::String> value) {
-    fbb_.AddOffset(StringString::VT_VALUE, value);
-  }
-  explicit StringStringBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<StringString> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<StringString>(end);
-    fbb_.Required(o, StringString::VT_KEY);
-    fbb_.Required(o, StringString::VT_VALUE);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<StringString> CreateStringString(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> key = 0,
-    flatbuffers::Offset<flatbuffers::String> value = 0) {
-  StringStringBuilder builder_(_fbb);
-  builder_.add_value(value);
-  builder_.add_key(key);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<StringString> CreateStringStringDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const char *key = nullptr,
-    const char *value = nullptr) {
-  auto key__ = key ? _fbb.CreateString(key) : 0;
-  auto value__ = value ? _fbb.CreateString(value) : 0;
-  return FBS::Transport::CreateStringString(
-      _fbb,
-      key__,
-      value__);
-}
-
-struct StringUint8 FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef StringUint8Builder Builder;
-  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return StringUint8TypeTable();
-  }
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_KEY = 4,
-    VT_VALUE = 6
-  };
-  const flatbuffers::String *key() const {
-    return GetPointer<const flatbuffers::String *>(VT_KEY);
-  }
-  uint8_t value() const {
-    return GetField<uint8_t>(VT_VALUE, 0);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffsetRequired(verifier, VT_KEY) &&
-           verifier.VerifyString(key()) &&
-           VerifyField<uint8_t>(verifier, VT_VALUE, 1) &&
-           verifier.EndTable();
-  }
-};
-
-struct StringUint8Builder {
-  typedef StringUint8 Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_key(flatbuffers::Offset<flatbuffers::String> key) {
-    fbb_.AddOffset(StringUint8::VT_KEY, key);
-  }
-  void add_value(uint8_t value) {
-    fbb_.AddElement<uint8_t>(StringUint8::VT_VALUE, value, 0);
-  }
-  explicit StringUint8Builder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<StringUint8> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<StringUint8>(end);
-    fbb_.Required(o, StringUint8::VT_KEY);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<StringUint8> CreateStringUint8(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> key = 0,
-    uint8_t value = 0) {
-  StringUint8Builder builder_(_fbb);
-  builder_.add_key(key);
-  builder_.add_value(value);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<StringUint8> CreateStringUint8Direct(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    const char *key = nullptr,
-    uint8_t value = 0) {
-  auto key__ = key ? _fbb.CreateString(key) : 0;
-  return FBS::Transport::CreateStringUint8(
-      _fbb,
-      key__,
-      value);
-}
-
-struct Uint16String FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Uint16StringBuilder Builder;
-  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return Uint16StringTypeTable();
-  }
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_KEY = 4,
-    VT_VALUE = 6
-  };
-  uint16_t key() const {
-    return GetField<uint16_t>(VT_KEY, 0);
-  }
-  const flatbuffers::String *value() const {
-    return GetPointer<const flatbuffers::String *>(VT_VALUE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyField<uint16_t>(verifier, VT_KEY, 2) &&
-           VerifyOffsetRequired(verifier, VT_VALUE) &&
-           verifier.VerifyString(value()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Uint16StringBuilder {
-  typedef Uint16String Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_key(uint16_t key) {
-    fbb_.AddElement<uint16_t>(Uint16String::VT_KEY, key, 0);
-  }
-  void add_value(flatbuffers::Offset<flatbuffers::String> value) {
-    fbb_.AddOffset(Uint16String::VT_VALUE, value);
-  }
-  explicit Uint16StringBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<Uint16String> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Uint16String>(end);
-    fbb_.Required(o, Uint16String::VT_VALUE);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<Uint16String> CreateUint16String(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    uint16_t key = 0,
-    flatbuffers::Offset<flatbuffers::String> value = 0) {
-  Uint16StringBuilder builder_(_fbb);
-  builder_.add_value(value);
-  builder_.add_key(key);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<Uint16String> CreateUint16StringDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    uint16_t key = 0,
-    const char *value = nullptr) {
-  auto value__ = value ? _fbb.CreateString(value) : 0;
-  return FBS::Transport::CreateUint16String(
-      _fbb,
-      key,
-      value__);
-}
-
-struct Uint32String FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef Uint32StringBuilder Builder;
-  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return Uint32StringTypeTable();
-  }
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_KEY = 4,
-    VT_VALUE = 6
-  };
-  uint32_t key() const {
-    return GetField<uint32_t>(VT_KEY, 0);
-  }
-  const flatbuffers::String *value() const {
-    return GetPointer<const flatbuffers::String *>(VT_VALUE);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyField<uint32_t>(verifier, VT_KEY, 4) &&
-           VerifyOffsetRequired(verifier, VT_VALUE) &&
-           verifier.VerifyString(value()) &&
-           verifier.EndTable();
-  }
-};
-
-struct Uint32StringBuilder {
-  typedef Uint32String Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_key(uint32_t key) {
-    fbb_.AddElement<uint32_t>(Uint32String::VT_KEY, key, 0);
-  }
-  void add_value(flatbuffers::Offset<flatbuffers::String> value) {
-    fbb_.AddOffset(Uint32String::VT_VALUE, value);
-  }
-  explicit Uint32StringBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<Uint32String> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<Uint32String>(end);
-    fbb_.Required(o, Uint32String::VT_VALUE);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<Uint32String> CreateUint32String(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    uint32_t key = 0,
-    flatbuffers::Offset<flatbuffers::String> value = 0) {
-  Uint32StringBuilder builder_(_fbb);
-  builder_.add_value(value);
-  builder_.add_key(key);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<Uint32String> CreateUint32StringDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    uint32_t key = 0,
-    const char *value = nullptr) {
-  auto value__ = value ? _fbb.CreateString(value) : 0;
-  return FBS::Transport::CreateUint32String(
-      _fbb,
-      key,
-      value__);
-}
-
 struct RtpListener FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef RtpListenerBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
@@ -716,14 +426,14 @@ struct RtpListener FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_MIDTABLE = 6,
     VT_RIDTABLE = 8
   };
-  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *ssrcTable() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *>(VT_SSRCTABLE);
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>> *ssrcTable() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>> *>(VT_SSRCTABLE);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>> *midTable() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>> *>(VT_MIDTABLE);
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringString>> *midTable() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringString>> *>(VT_MIDTABLE);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>> *ridTable() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>> *>(VT_RIDTABLE);
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringString>> *ridTable() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringString>> *>(VT_RIDTABLE);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -744,13 +454,13 @@ struct RtpListenerBuilder {
   typedef RtpListener Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_ssrcTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> ssrcTable) {
+  void add_ssrcTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>>> ssrcTable) {
     fbb_.AddOffset(RtpListener::VT_SSRCTABLE, ssrcTable);
   }
-  void add_midTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>>> midTable) {
+  void add_midTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringString>>> midTable) {
     fbb_.AddOffset(RtpListener::VT_MIDTABLE, midTable);
   }
-  void add_ridTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>>> ridTable) {
+  void add_ridTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringString>>> ridTable) {
     fbb_.AddOffset(RtpListener::VT_RIDTABLE, ridTable);
   }
   explicit RtpListenerBuilder(flatbuffers::FlatBufferBuilder &_fbb)
@@ -769,9 +479,9 @@ struct RtpListenerBuilder {
 
 inline flatbuffers::Offset<RtpListener> CreateRtpListener(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> ssrcTable = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>>> midTable = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringString>>> ridTable = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>>> ssrcTable = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringString>>> midTable = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringString>>> ridTable = 0) {
   RtpListenerBuilder builder_(_fbb);
   builder_.add_ridTable(ridTable);
   builder_.add_midTable(midTable);
@@ -781,12 +491,12 @@ inline flatbuffers::Offset<RtpListener> CreateRtpListener(
 
 inline flatbuffers::Offset<RtpListener> CreateRtpListenerDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *ssrcTable = nullptr,
-    const std::vector<flatbuffers::Offset<FBS::Transport::StringString>> *midTable = nullptr,
-    const std::vector<flatbuffers::Offset<FBS::Transport::StringString>> *ridTable = nullptr) {
-  auto ssrcTable__ = ssrcTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::Uint32String>>(*ssrcTable) : 0;
-  auto midTable__ = midTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::StringString>>(*midTable) : 0;
-  auto ridTable__ = ridTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::StringString>>(*ridTable) : 0;
+    const std::vector<flatbuffers::Offset<FBS::Common::Uint32String>> *ssrcTable = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::Common::StringString>> *midTable = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::Common::StringString>> *ridTable = nullptr) {
+  auto ssrcTable__ = ssrcTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::Uint32String>>(*ssrcTable) : 0;
+  auto midTable__ = midTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::StringString>>(*midTable) : 0;
+  auto ridTable__ = ridTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::StringString>>(*ridTable) : 0;
   return FBS::Transport::CreateRtpListener(
       _fbb,
       ssrcTable__,
@@ -802,8 +512,8 @@ struct SctpListener FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_STREAMIDTABLE = 4
   };
-  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint16String>> *streamIdTable() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint16String>> *>(VT_STREAMIDTABLE);
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint16String>> *streamIdTable() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint16String>> *>(VT_STREAMIDTABLE);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -818,7 +528,7 @@ struct SctpListenerBuilder {
   typedef SctpListener Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_streamIdTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint16String>>> streamIdTable) {
+  void add_streamIdTable(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint16String>>> streamIdTable) {
     fbb_.AddOffset(SctpListener::VT_STREAMIDTABLE, streamIdTable);
   }
   explicit SctpListenerBuilder(flatbuffers::FlatBufferBuilder &_fbb)
@@ -835,7 +545,7 @@ struct SctpListenerBuilder {
 
 inline flatbuffers::Offset<SctpListener> CreateSctpListener(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint16String>>> streamIdTable = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint16String>>> streamIdTable = 0) {
   SctpListenerBuilder builder_(_fbb);
   builder_.add_streamIdTable(streamIdTable);
   return builder_.Finish();
@@ -843,8 +553,8 @@ inline flatbuffers::Offset<SctpListener> CreateSctpListener(
 
 inline flatbuffers::Offset<SctpListener> CreateSctpListenerDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<flatbuffers::Offset<FBS::Transport::Uint16String>> *streamIdTable = nullptr) {
-  auto streamIdTable__ = streamIdTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::Uint16String>>(*streamIdTable) : 0;
+    const std::vector<flatbuffers::Offset<FBS::Common::Uint16String>> *streamIdTable = nullptr) {
+  auto streamIdTable__ = streamIdTable ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::Uint16String>>(*streamIdTable) : 0;
   return FBS::Transport::CreateSctpListener(
       _fbb,
       streamIdTable__);
@@ -1160,11 +870,11 @@ struct BaseTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *consumerIds() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_CONSUMERIDS);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *mapSsrcConsumerId() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *>(VT_MAPSSRCCONSUMERID);
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>> *mapSsrcConsumerId() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>> *>(VT_MAPSSRCCONSUMERID);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *mapRtxSsrcConsumerId() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *>(VT_MAPRTXSSRCCONSUMERID);
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>> *mapRtxSsrcConsumerId() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>> *>(VT_MAPRTXSSRCCONSUMERID);
   }
   const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *dataProducerIds() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_DATAPRODUCERIDS);
@@ -1172,8 +882,8 @@ struct BaseTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *dataConsumerIds() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_DATACONSUMERIDS);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringUint8>> *recvRtpHeaderExtensions() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringUint8>> *>(VT_RECVRTPHEADEREXTENSIONS);
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringUint8>> *recvRtpHeaderExtensions() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringUint8>> *>(VT_RECVRTPHEADEREXTENSIONS);
   }
   const FBS::Transport::RtpListener *rtpListener() const {
     return GetPointer<const FBS::Transport::RtpListener *>(VT_RTPLISTENER);
@@ -1241,10 +951,10 @@ struct BaseTransportDumpBuilder {
   void add_consumerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> consumerIds) {
     fbb_.AddOffset(BaseTransportDump::VT_CONSUMERIDS, consumerIds);
   }
-  void add_mapSsrcConsumerId(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> mapSsrcConsumerId) {
+  void add_mapSsrcConsumerId(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>>> mapSsrcConsumerId) {
     fbb_.AddOffset(BaseTransportDump::VT_MAPSSRCCONSUMERID, mapSsrcConsumerId);
   }
-  void add_mapRtxSsrcConsumerId(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> mapRtxSsrcConsumerId) {
+  void add_mapRtxSsrcConsumerId(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>>> mapRtxSsrcConsumerId) {
     fbb_.AddOffset(BaseTransportDump::VT_MAPRTXSSRCCONSUMERID, mapRtxSsrcConsumerId);
   }
   void add_dataProducerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> dataProducerIds) {
@@ -1253,7 +963,7 @@ struct BaseTransportDumpBuilder {
   void add_dataConsumerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> dataConsumerIds) {
     fbb_.AddOffset(BaseTransportDump::VT_DATACONSUMERIDS, dataConsumerIds);
   }
-  void add_recvRtpHeaderExtensions(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringUint8>>> recvRtpHeaderExtensions) {
+  void add_recvRtpHeaderExtensions(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringUint8>>> recvRtpHeaderExtensions) {
     fbb_.AddOffset(BaseTransportDump::VT_RECVRTPHEADEREXTENSIONS, recvRtpHeaderExtensions);
   }
   void add_rtpListener(flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener) {
@@ -1286,11 +996,11 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDump(
     bool direct = false,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> producerIds = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> consumerIds = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> mapSsrcConsumerId = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Uint32String>>> mapRtxSsrcConsumerId = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>>> mapSsrcConsumerId = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::Uint32String>>> mapRtxSsrcConsumerId = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> dataProducerIds = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> dataConsumerIds = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::StringUint8>>> recvRtpHeaderExtensions = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringUint8>>> recvRtpHeaderExtensions = 0,
     flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener = 0,
     uint32_t maxMessageSize = 0,
     flatbuffers::Offset<FBS::Transport::SctpAssociation> sctpAssociation = 0,
@@ -1318,11 +1028,11 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDumpDirect(
     bool direct = false,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *producerIds = nullptr,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *consumerIds = nullptr,
-    const std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *mapSsrcConsumerId = nullptr,
-    const std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> *mapRtxSsrcConsumerId = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::Common::Uint32String>> *mapSsrcConsumerId = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::Common::Uint32String>> *mapRtxSsrcConsumerId = nullptr,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *dataProducerIds = nullptr,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *dataConsumerIds = nullptr,
-    const std::vector<flatbuffers::Offset<FBS::Transport::StringUint8>> *recvRtpHeaderExtensions = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::Common::StringUint8>> *recvRtpHeaderExtensions = nullptr,
     flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener = 0,
     uint32_t maxMessageSize = 0,
     flatbuffers::Offset<FBS::Transport::SctpAssociation> sctpAssociation = 0,
@@ -1330,11 +1040,11 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDumpDirect(
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto producerIds__ = producerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*producerIds) : 0;
   auto consumerIds__ = consumerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*consumerIds) : 0;
-  auto mapSsrcConsumerId__ = mapSsrcConsumerId ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::Uint32String>>(*mapSsrcConsumerId) : 0;
-  auto mapRtxSsrcConsumerId__ = mapRtxSsrcConsumerId ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::Uint32String>>(*mapRtxSsrcConsumerId) : 0;
+  auto mapSsrcConsumerId__ = mapSsrcConsumerId ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::Uint32String>>(*mapSsrcConsumerId) : 0;
+  auto mapRtxSsrcConsumerId__ = mapRtxSsrcConsumerId ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::Uint32String>>(*mapRtxSsrcConsumerId) : 0;
   auto dataProducerIds__ = dataProducerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*dataProducerIds) : 0;
   auto dataConsumerIds__ = dataConsumerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*dataConsumerIds) : 0;
-  auto recvRtpHeaderExtensions__ = recvRtpHeaderExtensions ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::StringUint8>>(*recvRtpHeaderExtensions) : 0;
+  auto recvRtpHeaderExtensions__ = recvRtpHeaderExtensions ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::StringUint8>>(*recvRtpHeaderExtensions) : 0;
   auto traceEventTypes__ = traceEventTypes ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*traceEventTypes) : 0;
   return FBS::Transport::CreateBaseTransportDump(
       _fbb,
@@ -2402,66 +2112,6 @@ inline const flatbuffers::TypeTable *ConsumeResponseTypeTable() {
   return &tt;
 }
 
-inline const flatbuffers::TypeTable *StringStringTypeTable() {
-  static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_STRING, 0, -1 },
-    { flatbuffers::ET_STRING, 0, -1 }
-  };
-  static const char * const names[] = {
-    "key",
-    "value"
-  };
-  static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
-  };
-  return &tt;
-}
-
-inline const flatbuffers::TypeTable *StringUint8TypeTable() {
-  static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_STRING, 0, -1 },
-    { flatbuffers::ET_UCHAR, 0, -1 }
-  };
-  static const char * const names[] = {
-    "key",
-    "value"
-  };
-  static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
-  };
-  return &tt;
-}
-
-inline const flatbuffers::TypeTable *Uint16StringTypeTable() {
-  static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_USHORT, 0, -1 },
-    { flatbuffers::ET_STRING, 0, -1 }
-  };
-  static const char * const names[] = {
-    "key",
-    "value"
-  };
-  static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
-  };
-  return &tt;
-}
-
-inline const flatbuffers::TypeTable *Uint32StringTypeTable() {
-  static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_UINT, 0, -1 },
-    { flatbuffers::ET_STRING, 0, -1 }
-  };
-  static const char * const names[] = {
-    "key",
-    "value"
-  };
-  static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
-  };
-  return &tt;
-}
-
 inline const flatbuffers::TypeTable *RtpListenerTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_SEQUENCE, 1, 0 },
@@ -2469,8 +2119,8 @@ inline const flatbuffers::TypeTable *RtpListenerTypeTable() {
     { flatbuffers::ET_SEQUENCE, 1, 1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Transport::Uint32StringTypeTable,
-    FBS::Transport::StringStringTypeTable
+    FBS::Common::Uint32StringTypeTable,
+    FBS::Common::StringStringTypeTable
   };
   static const char * const names[] = {
     "ssrcTable",
@@ -2488,7 +2138,7 @@ inline const flatbuffers::TypeTable *SctpListenerTypeTable() {
     { flatbuffers::ET_SEQUENCE, 1, 0 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Transport::Uint16StringTypeTable
+    FBS::Common::Uint16StringTypeTable
   };
   static const char * const names[] = {
     "streamIdTable"
@@ -2580,8 +2230,8 @@ inline const flatbuffers::TypeTable *BaseTransportDumpTypeTable() {
     { flatbuffers::ET_STRING, 1, -1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Transport::Uint32StringTypeTable,
-    FBS::Transport::StringUint8TypeTable,
+    FBS::Common::Uint32StringTypeTable,
+    FBS::Common::StringUint8TypeTable,
     FBS::Transport::RtpListenerTypeTable,
     FBS::Transport::SctpAssociationTypeTable
   };

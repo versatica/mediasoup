@@ -3,10 +3,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseTransportDumpT = exports.BaseTransportDump = void 0;
 const flatbuffers = require("flatbuffers");
+const string_uint8_1 = require("../../fbs/common/string-uint8");
+const uint32string_1 = require("../../fbs/common/uint32string");
 const rtp_listener_1 = require("../../fbs/transport/rtp-listener");
 const sctp_association_1 = require("../../fbs/transport/sctp-association");
-const string_uint8_1 = require("../../fbs/transport/string-uint8");
-const uint32string_1 = require("../../fbs/transport/uint32string");
 class BaseTransportDump {
     bb = null;
     bb_pos = 0;

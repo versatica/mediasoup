@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SctpListenerT = exports.SctpListener = void 0;
 const flatbuffers = require("flatbuffers");
-const uint16string_1 = require("../../fbs/transport/uint16string");
+const uint16string_1 = require("../../fbs/common/uint16string");
 class SctpListener {
     bb = null;
     bb_pos = 0;

@@ -1,3 +1,4 @@
+include "common.fbs";
 include "consumer.fbs";
 include "rtpParameters.fbs";
 
@@ -22,34 +23,14 @@ table ConsumeResponse {
   preferred_layers:FBS.Consumer.ConsumerLayers;
 }
 
-table StringString {
-  key:string(required);
-  value:string(required);
-}
-
-table StringUint8 {
-  key:string(required);
-  value:uint8;
-}
-
-table Uint16String {
-  key:uint16;
-  value:string(required);
-}
-
-table Uint32String {
-  key:uint32;
-  value:string(required);
-}
-
 table RtpListener {
-  ssrc_table:[Uint32String] (required);
-  mid_table:[StringString] (required);
-  rid_table:[StringString] (required);
+  ssrc_table:[FBS.Common.Uint32String] (required);
+  mid_table:[FBS.Common.StringString] (required);
+  rid_table:[FBS.Common.StringString] (required);
 }
 
 table SctpListener {
-  stream_id_table:[Uint16String] (required);
+  stream_id_table:[FBS.Common.Uint16String] (required);
 }
 
 table SctpParameters {
@@ -87,11 +68,11 @@ table BaseTransportDump {
   direct:bool=false;
   producer_ids:[string];
   consumer_ids:[string];
-  map_ssrc_consumer_id:[Uint32String];
-  map_rtx_ssrc_consumer_id:[Uint32String];
+  map_ssrc_consumer_id:[FBS.Common.Uint32String];
+  map_rtx_ssrc_consumer_id:[FBS.Common.Uint32String];
   data_producer_ids:[string];
   data_consumer_ids:[string];
-  recv_rtp_header_extensions:[StringUint8];
+  recv_rtp_header_extensions:[FBS.Common.StringUint8];
   rtp_listener:RtpListener;
   max_message_size:uint32;
   sctp_association:SctpAssociation;

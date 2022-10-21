@@ -1,3 +1,8 @@
+export { StringString, StringStringT } from './fbs/common/string-string';
+export { StringStringArray, StringStringArrayT } from './fbs/common/string-string-array';
+export { StringUint8, StringUint8T } from './fbs/common/string-uint8';
+export { Uint16String, Uint16StringT } from './fbs/common/uint16string';
+export { Uint32String, Uint32StringT } from './fbs/common/uint32string';
 export { ConsumerLayers, ConsumerLayersT } from './fbs/consumer/consumer-layers';
 export { ConsumerScore, ConsumerScoreT } from './fbs/consumer/consumer-score';
 export { Boolean, BooleanT } from './fbs/rtp-parameters/boolean';
@@ -31,12 +36,8 @@ export { SctpAssociation, SctpAssociationT } from './fbs/transport/sctp-associat
 export { SctpListener, SctpListenerT } from './fbs/transport/sctp-listener';
 export { SctpParameters, SctpParametersT } from './fbs/transport/sctp-parameters';
 export { SrtpParameters, SrtpParametersT } from './fbs/transport/srtp-parameters';
-export { StringString, StringStringT } from './fbs/transport/string-string';
-export { StringUint8, StringUint8T } from './fbs/transport/string-uint8';
 export { TransportDump, TransportDumpT } from './fbs/transport/transport-dump';
 export { TransportDumpData, unionToTransportDumpData, unionListToTransportDumpData } from './fbs/transport/transport-dump-data';
 export { Tuple, TupleT } from './fbs/transport/tuple';
-export { Uint16String, Uint16StringT } from './fbs/transport/uint16string';
-export { Uint32String, Uint32StringT } from './fbs/transport/uint32string';
 export { WebRtcTransportDump, WebRtcTransportDumpT } from './fbs/transport/web-rtc-transport-dump';
 //# sourceMappingURL=transport_generated.d.ts.map

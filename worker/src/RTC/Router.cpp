@@ -175,6 +175,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+	// TODO: Remove when every request is ported to flatbuffers.
+		if (request->_data)
+			goto binary;
+
 		switch (request->methodId)
 		{
 			case Channel::ChannelRequest::MethodId::ROUTER_DUMP:
@@ -460,6 +464,34 @@ namespace RTC
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
 			}
 		}
+
+	return;
+
+binary:
+
+	MS_ERROR(
+			"Channel request received [method:%s, id:%" PRIu32 "]",
+			Channel::ChannelRequest::method2String.at(request->_method),
+			request->id);
+
+	switch (request->_method)
+	{
+		case FBS::Request::Method::ROUTER_DUMP:
+			{
+				auto& builder = Channel::ChannelRequest::bufferBuilder;
+
+				auto dumpOffset = FillBuffer(builder);
+
+				request->Accept(builder, FBS::Response::Body::FBS_Worker_WorkerDump, dumpOffset);
+
+				break;
+			}
+
+		default:
+			{
+				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			}
+	}
 	}
 
 	void Router::SetNewTransportIdFromData(json& data, std::string& transportId) const

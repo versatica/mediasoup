@@ -3,8 +3,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RtpListenerT = exports.RtpListener = void 0;
 const flatbuffers = require("flatbuffers");
-const string_string_1 = require("../../fbs/transport/string-string");
-const uint32string_1 = require("../../fbs/transport/uint32string");
+const string_string_1 = require("../../fbs/common/string-string");
+const uint32string_1 = require("../../fbs/common/uint32string");
 class RtpListener {
     bb = null;
     bb_pos = 0;
