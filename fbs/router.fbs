@@ -1,0 +1,14 @@
+include "common.fbs";
+
+namespace FBS.Router;
+
+table RouterDump {
+  id:string (required);
+  transport_ids:[string];
+  rtp_observer_ids:[string];
+  map_producer_id_consumer_ids:[FBS.Common.StringStringArray];
+  map_consumer_id_producer_id:[FBS.Common.StringString];
+  map_producer_id_observer_ids:[FBS.Common.StringStringArray];
+  map_data_producer_id_data_consumer_ids:[FBS.Common.StringStringArray];
+  map_data_consumer_id_data_producer_id:[FBS.Common.StringString];
+}

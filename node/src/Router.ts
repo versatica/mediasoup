@@ -20,6 +20,7 @@ import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObser
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 import { Body as RequestBody, Method, CloseRouterRequestT } from './fbs/request_generated';
+import { WorkerDump as FbsRouterDump } from './fbs/worker_generated';
 
 export type RouterOptions =
 {
@@ -353,7 +354,17 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('router.dump', this.#internal.routerId);
+		// Send the request and wait for the response.
+		const response = await this.#channel.requestBinary(
+			Method.ROUTER_DUMP
+		);
+
+		/* Decode the response. */
+		const dump = new FbsRouterDump();
+
+		response.body(dump);
+
+		return dump.unpack();
 	}
 
 	/**

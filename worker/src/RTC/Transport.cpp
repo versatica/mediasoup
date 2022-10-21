@@ -342,7 +342,7 @@ namespace RTC
 		}
 
 		// Add mapSsrcConsumerId.
-		std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> mapSsrcConsumerId;
+		std::vector<flatbuffers::Offset<FBS::Common::Uint32String>> mapSsrcConsumerId;
 
 		for (const auto& kv : this->mapSsrcConsumer)
 		{
@@ -350,11 +350,11 @@ namespace RTC
 			auto* consumer = kv.second;
 
 			mapSsrcConsumerId.emplace_back(
-			  FBS::Transport::CreateUint32StringDirect(builder, ssrc, consumer->id.c_str()));
+			  FBS::Common::CreateUint32StringDirect(builder, ssrc, consumer->id.c_str()));
 		}
 
 		// Add mapRtxSsrcConsumerId.
-		std::vector<flatbuffers::Offset<FBS::Transport::Uint32String>> mapRtxSsrcConsumerId;
+		std::vector<flatbuffers::Offset<FBS::Common::Uint32String>> mapRtxSsrcConsumerId;
 
 		for (const auto& kv : this->mapRtxSsrcConsumer)
 		{
@@ -362,7 +362,7 @@ namespace RTC
 			auto* consumer = kv.second;
 
 			mapRtxSsrcConsumerId.emplace_back(
-			  FBS::Transport::CreateUint32StringDirect(builder, ssrc, consumer->id.c_str()));
+			  FBS::Common::CreateUint32StringDirect(builder, ssrc, consumer->id.c_str()));
 		}
 
 		// Add dataProducerIds.
@@ -386,26 +386,26 @@ namespace RTC
 		}
 
 		// Add headerExtensionIds.
-		std::vector<flatbuffers::Offset<FBS::Transport::StringUint8>> recvRtpHeaderExtensions;
+		std::vector<flatbuffers::Offset<FBS::Common::StringUint8>> recvRtpHeaderExtensions;
 
 		if (this->recvRtpHeaderExtensionIds.mid != 0u)
-			recvRtpHeaderExtensions.emplace_back(FBS::Transport::CreateStringUint8Direct(
-			  builder, "mid", this->recvRtpHeaderExtensionIds.mid));
+			recvRtpHeaderExtensions.emplace_back(
+			  FBS::Common::CreateStringUint8Direct(builder, "mid", this->recvRtpHeaderExtensionIds.mid));
 
 		if (this->recvRtpHeaderExtensionIds.rid != 0u)
-			recvRtpHeaderExtensions.emplace_back(FBS::Transport::CreateStringUint8Direct(
-			  builder, "rid", this->recvRtpHeaderExtensionIds.rid));
+			recvRtpHeaderExtensions.emplace_back(
+			  FBS::Common::CreateStringUint8Direct(builder, "rid", this->recvRtpHeaderExtensionIds.rid));
 
 		if (this->recvRtpHeaderExtensionIds.rrid != 0u)
-			recvRtpHeaderExtensions.emplace_back(FBS::Transport::CreateStringUint8Direct(
+			recvRtpHeaderExtensions.emplace_back(FBS::Common::CreateStringUint8Direct(
 			  builder, "rrid", this->recvRtpHeaderExtensionIds.rrid));
 
 		if (this->recvRtpHeaderExtensionIds.absSendTime != 0u)
-			recvRtpHeaderExtensions.emplace_back(FBS::Transport::CreateStringUint8Direct(
+			recvRtpHeaderExtensions.emplace_back(FBS::Common::CreateStringUint8Direct(
 			  builder, "absSendTime", this->recvRtpHeaderExtensionIds.absSendTime));
 
 		if (this->recvRtpHeaderExtensionIds.transportWideCc01 != 0u)
-			recvRtpHeaderExtensions.emplace_back(FBS::Transport::CreateStringUint8Direct(
+			recvRtpHeaderExtensions.emplace_back(FBS::Common::CreateStringUint8Direct(
 			  builder, "transportWideCc01", this->recvRtpHeaderExtensionIds.transportWideCc01));
 
 		auto rtpListenerOffset = this->rtpListener.FillBuffer(builder);

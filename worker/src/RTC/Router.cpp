@@ -171,11 +171,127 @@ namespace RTC
 		}
 	}
 
+	flatbuffers::Offset<FBS::Router::RouterDump> Router::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
+	{
+		MS_TRACE();
+
+		// Add transportIds.
+		std::vector<flatbuffers::Offset<flatbuffers::String>> transportIds;
+		for (auto& kv : this->mapTransports)
+		{
+			auto& transportId = kv.first;
+
+			transportIds.push_back(builder.CreateString(transportId));
+		}
+
+		// Add rtpObserverIds.
+		std::vector<flatbuffers::Offset<flatbuffers::String>> rtpObserverIds;
+		for (auto& kv : this->mapRtpObservers)
+		{
+			auto& rtpObserverId = kv.first;
+
+			rtpObserverIds.push_back(builder.CreateString(rtpObserverId));
+		}
+
+		// Add mapProducerIdConsumerIds.
+		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapProducerIdConsumerIds;
+
+		for (const auto& kv : this->mapProducerConsumers)
+		{
+			auto* producer        = kv.first;
+			const auto& consumers = kv.second;
+
+			std::vector<flatbuffers::Offset<flatbuffers::String>> consumerIds;
+
+			for (auto* consumer : consumers)
+			{
+				consumerIds.emplace_back(builder.CreateString(consumer->id));
+			}
+
+			mapProducerIdConsumerIds.emplace_back(
+			  FBS::Common::CreateStringStringArrayDirect(builder, producer->id.c_str(), &consumerIds));
+		}
+
+		// Add mapConsumerIdProducerId.
+		std::vector<flatbuffers::Offset<FBS::Common::StringString>> mapConsumerIdProducerId;
+
+		for (const auto& kv : this->mapConsumerProducer)
+		{
+			auto* consumer = kv.first;
+			auto* producer = kv.second;
+
+			mapConsumerIdProducerId.emplace_back(
+			  FBS::Common::CreateStringStringDirect(builder, consumer->id.c_str(), producer->id.c_str()));
+		}
+
+		// Add mapProducerIdObserverIds.
+		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapProducerIdObserverIds;
+
+		for (const auto& kv : this->mapProducerRtpObservers)
+		{
+			auto* producer           = kv.first;
+			const auto& rtpObservers = kv.second;
+
+			std::vector<flatbuffers::Offset<flatbuffers::String>> observerIds;
+
+			for (auto* rtpObserver : rtpObservers)
+			{
+				observerIds.emplace_back(builder.CreateString(rtpObserver->id));
+			}
+
+			mapProducerIdObserverIds.emplace_back(
+			  FBS::Common::CreateStringStringArrayDirect(builder, producer->id.c_str(), &observerIds));
+		}
+
+		// Add mapDataProducerIdDataConsumerIds.
+		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapDataProducerIdDataConsumerIds;
+
+		for (const auto& kv : this->mapDataProducerDataConsumers)
+		{
+			auto* dataProducer        = kv.first;
+			const auto& dataConsumers = kv.second;
+
+			std::vector<flatbuffers::Offset<flatbuffers::String>> dataConsumerIds;
+
+			for (auto* dataConsumer : dataConsumers)
+			{
+				dataConsumerIds.emplace_back(builder.CreateString(dataConsumer->id));
+			}
+
+			mapProducerIdConsumerIds.emplace_back(FBS::Common::CreateStringStringArrayDirect(
+			  builder, dataProducer->id.c_str(), &dataConsumerIds));
+		}
+
+		// Add mapDataConsumerIdDataProducerId.
+		std::vector<flatbuffers::Offset<FBS::Common::StringString>> mapDataConsumerIdDataProducerId;
+
+		for (const auto& kv : this->mapDataConsumerDataProducer)
+		{
+			auto* dataConsumer = kv.first;
+			auto* dataProducer = kv.second;
+
+			mapConsumerIdProducerId.emplace_back(FBS::Common::CreateStringStringDirect(
+			  builder, dataConsumer->id.c_str(), dataProducer->id.c_str()));
+		}
+
+		return FBS::Router::CreateRouterDumpDirect(
+		  builder,
+		  this->id.c_str(),
+		  &transportIds,
+		  &rtpObserverIds,
+		  &mapProducerIdConsumerIds,
+		  &mapConsumerIdProducerId,
+		  &mapProducerIdObserverIds,
+		  &mapDataProducerIdDataConsumerIds,
+		  &mapDataConsumerIdDataProducerId);
+	}
+
 	void Router::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
-	// TODO: Remove when every request is ported to flatbuffers.
+		// TODO: Remove when every request is ported to flatbuffers.
 		if (request->_data)
 			goto binary;
 
@@ -465,18 +581,18 @@ namespace RTC
 			}
 		}
 
-	return;
+		return;
 
-binary:
+	binary:
 
-	MS_ERROR(
-			"Channel request received [method:%s, id:%" PRIu32 "]",
-			Channel::ChannelRequest::method2String.at(request->_method),
-			request->id);
+		MS_ERROR(
+		  "Channel request received [method:%s, id:%" PRIu32 "]",
+		  Channel::ChannelRequest::method2String.at(request->_method),
+		  request->id);
 
-	switch (request->_method)
-	{
-		case FBS::Request::Method::ROUTER_DUMP:
+		switch (request->_method)
+		{
+			case FBS::Request::Method::ROUTER_DUMP:
 			{
 				auto& builder = Channel::ChannelRequest::bufferBuilder;
 
@@ -487,11 +603,11 @@ binary:
 				break;
 			}
 
-		default:
+			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
 			}
-	}
+		}
 	}
 
 	void Router::SetNewTransportIdFromData(json& data, std::string& transportId) const
