@@ -281,22 +281,18 @@ binary:
 
 		case FBS::Request::Method::WORKER_DUMP:
 		{
-			auto& builder = Channel::ChannelRequest::bufferBuilder;
+			auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-			auto dumpOffset = FillBuffer(builder);
-
-			request->Accept(builder, FBS::Response::Body::FBS_Worker_WorkerDump, dumpOffset);
+			request->Accept(FBS::Response::Body::FBS_Worker_WorkerDump, dumpOffset);
 
 			break;
 		}
 
 		case FBS::Request::Method::WORKER_GET_RESOURCE_USAGE:
 		{
-			auto& builder = Channel::ChannelRequest::bufferBuilder;
+			auto resourceUsageOffset = FillBufferResourceUsage(request->GetBufferBuilder());
 
-			auto resourceUsageOffset = FillBufferResourceUsage(builder);
-
-			request->Accept(builder, FBS::Response::Body::FBS_Worker_ResourceUsage, resourceUsageOffset);
+			request->Accept(FBS::Response::Body::FBS_Worker_ResourceUsage, resourceUsageOffset);
 
 			break;
 		}

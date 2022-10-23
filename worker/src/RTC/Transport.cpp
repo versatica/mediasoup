@@ -1289,11 +1289,9 @@ namespace RTC
 		{
 			case FBS::Request::Method::TRANSPORT_DUMP:
 			{
-				auto& builder = Channel::ChannelRequest::bufferBuilder;
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				auto dumpOffset = FillBuffer(builder);
-
-				request->Accept(builder, FBS::Response::Body::FBS_Transport_TransportDump, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_Transport_TransportDump, dumpOffset);
 
 				break;
 			}
@@ -2011,7 +2009,6 @@ namespace RTC
 				  preferredLayersOffset);
 
 				request->Accept(
-				  request->GetBufferBuilder(),
 				  FBS::Response::Body::FBS_Transport_ConsumeResponse,
 				  responseOffset);
 

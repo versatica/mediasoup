@@ -594,11 +594,9 @@ namespace RTC
 		{
 			case FBS::Request::Method::ROUTER_DUMP:
 			{
-				auto& builder = Channel::ChannelRequest::bufferBuilder;
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				auto dumpOffset = FillBuffer(builder);
-
-				request->Accept(builder, FBS::Response::Body::FBS_Worker_WorkerDump, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_Worker_WorkerDump, dumpOffset);
 
 				break;
 			}
@@ -620,11 +618,9 @@ namespace RTC
 
 				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
 
-				auto& builder = Channel::ChannelRequest::bufferBuilder;
+				auto dumpOffset = webRtcTransport->FillBuffer(request->GetBufferBuilder());
 
-				auto dumpOffset = webRtcTransport->FillBuffer(builder);
-
-				request->Accept(builder, FBS::Response::Body::FBS_Transport_TransportDump, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_Transport_TransportDump, dumpOffset);
 
 				break;
 			}
@@ -658,17 +654,12 @@ namespace RTC
 				// Insert into the map.
 				this->mapTransports[transportId] = webRtcTransport;
 
-				// TODO: REMOVE.
-				MS_ERROR(
-				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
 				MS_DEBUG_DEV(
 				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
 
-				auto& builder = Channel::ChannelRequest::bufferBuilder;
+				auto dumpOffset = webRtcTransport->FillBuffer(request->GetBufferBuilder());
 
-				auto dumpOffset = webRtcTransport->FillBuffer(builder);
-
-				request->Accept(builder, FBS::Response::Body::FBS_Transport_TransportDump, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_Transport_TransportDump, dumpOffset);
 
 				break;
 			}

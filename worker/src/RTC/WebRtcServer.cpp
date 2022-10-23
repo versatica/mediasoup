@@ -205,11 +205,9 @@ namespace RTC
 		{
 			case FBS::Request::Method::WEBRTC_SERVER_DUMP:
 			{
-				auto& builder = Channel::ChannelRequest::bufferBuilder;
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				auto dumpOffset = FillBuffer(builder);
-
-				request->Accept(builder, FBS::Response::Body::FBS_WebRtcServer_WebRtcServerDump, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_WebRtcServer_WebRtcServerDump, dumpOffset);
 
 				break;
 			}
