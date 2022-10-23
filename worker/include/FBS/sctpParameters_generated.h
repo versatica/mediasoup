@@ -30,10 +30,10 @@ struct NumSctpStreams FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_OS = 4,
     VT_MIS = 6
   };
-  uint32_t OS() const {
+  uint32_t os() const {
     return GetField<uint32_t>(VT_OS, 0);
   }
-  uint32_t MIS() const {
+  uint32_t mis() const {
     return GetField<uint32_t>(VT_MIS, 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
@@ -48,11 +48,11 @@ struct NumSctpStreamsBuilder {
   typedef NumSctpStreams Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_OS(uint32_t OS) {
-    fbb_.AddElement<uint32_t>(NumSctpStreams::VT_OS, OS, 0);
+  void add_os(uint32_t os) {
+    fbb_.AddElement<uint32_t>(NumSctpStreams::VT_OS, os, 0);
   }
-  void add_MIS(uint32_t MIS) {
-    fbb_.AddElement<uint32_t>(NumSctpStreams::VT_MIS, MIS, 0);
+  void add_mis(uint32_t mis) {
+    fbb_.AddElement<uint32_t>(NumSctpStreams::VT_MIS, mis, 0);
   }
   explicit NumSctpStreamsBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -67,11 +67,11 @@ struct NumSctpStreamsBuilder {
 
 inline flatbuffers::Offset<NumSctpStreams> CreateNumSctpStreams(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint32_t OS = 0,
-    uint32_t MIS = 0) {
+    uint32_t os = 0,
+    uint32_t mis = 0) {
   NumSctpStreamsBuilder builder_(_fbb);
-  builder_.add_MIS(MIS);
-  builder_.add_OS(OS);
+  builder_.add_mis(mis);
+  builder_.add_os(os);
   return builder_.Finish();
 }
 
@@ -81,8 +81,8 @@ inline const flatbuffers::TypeTable *NumSctpStreamsTypeTable() {
     { flatbuffers::ET_UINT, 0, -1 }
   };
   static const char * const names[] = {
-    "OS",
-    "MIS"
+    "os",
+    "mis"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names

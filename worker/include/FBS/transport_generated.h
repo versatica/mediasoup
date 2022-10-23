@@ -676,10 +676,10 @@ struct SctpParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   uint16_t port() const {
     return GetField<uint16_t>(VT_PORT, 5000);
   }
-  uint16_t OS() const {
+  uint16_t os() const {
     return GetField<uint16_t>(VT_OS, 0);
   }
-  uint16_t MIS() const {
+  uint16_t mis() const {
     return GetField<uint16_t>(VT_MIS, 0);
   }
   uint32_t maxMessageSize() const {
@@ -714,11 +714,11 @@ struct SctpParametersBuilder {
   void add_port(uint16_t port) {
     fbb_.AddElement<uint16_t>(SctpParameters::VT_PORT, port, 5000);
   }
-  void add_OS(uint16_t OS) {
-    fbb_.AddElement<uint16_t>(SctpParameters::VT_OS, OS, 0);
+  void add_os(uint16_t os) {
+    fbb_.AddElement<uint16_t>(SctpParameters::VT_OS, os, 0);
   }
-  void add_MIS(uint16_t MIS) {
-    fbb_.AddElement<uint16_t>(SctpParameters::VT_MIS, MIS, 0);
+  void add_mis(uint16_t mis) {
+    fbb_.AddElement<uint16_t>(SctpParameters::VT_MIS, mis, 0);
   }
   void add_maxMessageSize(uint32_t maxMessageSize) {
     fbb_.AddElement<uint32_t>(SctpParameters::VT_MAXMESSAGESIZE, maxMessageSize, 0);
@@ -746,8 +746,8 @@ struct SctpParametersBuilder {
 inline flatbuffers::Offset<SctpParameters> CreateSctpParameters(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint16_t port = 5000,
-    uint16_t OS = 0,
-    uint16_t MIS = 0,
+    uint16_t os = 0,
+    uint16_t mis = 0,
     uint32_t maxMessageSize = 0,
     uint32_t sendBufferSize = 0,
     uint32_t sctpBufferedAmount = 0,
@@ -756,8 +756,8 @@ inline flatbuffers::Offset<SctpParameters> CreateSctpParameters(
   builder_.add_sctpBufferedAmount(sctpBufferedAmount);
   builder_.add_sendBufferSize(sendBufferSize);
   builder_.add_maxMessageSize(maxMessageSize);
-  builder_.add_MIS(MIS);
-  builder_.add_OS(OS);
+  builder_.add_mis(mis);
+  builder_.add_os(os);
   builder_.add_port(port);
   builder_.add_isDataChannel(isDataChannel);
   return builder_.Finish();
@@ -2238,8 +2238,8 @@ inline const flatbuffers::TypeTable *SctpParametersTypeTable() {
   };
   static const char * const names[] = {
     "port",
-    "OS",
-    "MIS",
+    "os",
+    "mis",
     "maxMessageSize",
     "sendBufferSize",
     "sctpBufferedAmount",

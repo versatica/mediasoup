@@ -2,7 +2,7 @@
 namespace FBS.SctpParameters;
 
 table NumSctpStreams {
-  OS:uint32;
-  MIS:uint32;
+  os:uint32;
+  mis:uint32;
 }
 
