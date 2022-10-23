@@ -1,0 +1,8 @@
+
+namespace FBS.SctpParameters;
+
+table NumSctpStreams {
+  OS:uint32;
+  MIS:uint32;
+}
+

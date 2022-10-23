@@ -639,7 +639,7 @@ namespace RTC
 				CheckNoTransport(transportId);
 
 				auto* options = body->options();
-				auto* listenInfo = options->listen_as<FBS::Router::WebRtcTransportListenServer>();
+				auto* listenInfo = options->listen_as<FBS::WebRtcTransport::WebRtcTransportListenServer>();
 
 				auto webRtcServerId = listenInfo->webRtcServerId()->str();
 

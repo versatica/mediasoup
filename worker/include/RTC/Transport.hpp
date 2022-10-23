@@ -121,7 +121,7 @@ namespace RTC
 	public:
 		Transport(const std::string& id, Listener* listener, json& data);
 		Transport(const std::string& id, RTC::Transport::Listener* listener,
-		  const FBS::Router::WebRtcTransportOptions* webRtcTransportOptions);
+		  const FBS::WebRtcTransport::WebRtcTransportOptions* webRtcTransportOptions);
 		virtual ~Transport();
 
 	public:

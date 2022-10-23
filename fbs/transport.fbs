@@ -4,6 +4,13 @@ include "rtpParameters.fbs";
 
 namespace FBS.Transport;
 
+enum TransportProtocol: uint8 { UDP = 1, TCP }
+
+table TransportListenIp {
+  ip:string (required);
+  announced_ip:string;
+}
+
 table ConsumeRequest {
   consumer_id:string (required);
   producer_id:string (required);
@@ -42,13 +49,6 @@ table SctpParameters {
   send_buffer_size:uint32;
   sctp_buffered_amount:uint32;
   is_data_channel:bool;
-}
-
-table SctpAssociation {
-  sctp_parameters:SctpParameters (required);
-  stcp_state:string (required);
-  stcp_listener: SctpListener (required);
-
 }
 
 union TransportDumpData {

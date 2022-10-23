@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateWebRtcTransportRequestT = exports.CreateWebRtcTransportRequest = void 0;
 const flatbuffers = require("flatbuffers");
-const web_rtc_transport_options_1 = require("../../fbs/router/web-rtc-transport-options");
+const web_rtc_transport_options_1 = require("../../fbs/web-rtc-transport/web-rtc-transport-options");
 class CreateWebRtcTransportRequest {
     bb = null;
     bb_pos = 0;

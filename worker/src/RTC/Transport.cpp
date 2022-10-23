@@ -178,7 +178,7 @@ namespace RTC
 	}
 
 	Transport::Transport(const std::string& id, RTC::Transport::Listener* listener,
-		  const FBS::Router::WebRtcTransportOptions* options)
+		  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
 	  : id(id), listener(listener), recvRtxTransmission(1000u), sendRtxTransmission(1000u),
 	    sendProbationTransmission(100u)
 	{
@@ -225,14 +225,14 @@ namespace RTC
 			}
 
 			// numSctpStreams is mandatory.
-			if (!flatbuffers::IsFieldPresent(options, FBS::Router::WebRtcTransportOptions::VT_NUMSCTPSTREAMS)
+			if (!flatbuffers::IsFieldPresent(options, FBS::WebRtcTransport::WebRtcTransportOptions::VT_NUMSCTPSTREAMS)
 			)
 			{
 				MS_THROW_TYPE_ERROR("numSctpStreams missing");
 			}
 
 			// maxSctpMessageSize is mandatory.
-			if (!flatbuffers::IsFieldPresent(options, FBS::Router::WebRtcTransportOptions::VT_MAXSCTPMESSAGESIZE))
+			if (!flatbuffers::IsFieldPresent(options, FBS::WebRtcTransport::WebRtcTransportOptions::VT_MAXSCTPMESSAGESIZE))
 			{
 				MS_THROW_TYPE_ERROR("maxSctpMessageSize missing");
 			}
@@ -242,7 +242,7 @@ namespace RTC
 			size_t sctpSendBufferSize;
 
 			// sctpSendBufferSize is optional.
-			if (flatbuffers::IsFieldPresent(options, FBS::Router::WebRtcTransportOptions::VT_SCTPSENDBUFFERSIZE))
+			if (flatbuffers::IsFieldPresent(options, FBS::WebRtcTransport::WebRtcTransportOptions::VT_SCTPSENDBUFFERSIZE))
 			{
 				if (options->sctpSendBufferSize() > MaxSctpSendBufferSize)
 				{

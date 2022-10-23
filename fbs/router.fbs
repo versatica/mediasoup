@@ -1,4 +1,6 @@
 include "common.fbs";
+include "transport.fbs";
+include "webRtcTransport.fbs";
 
 namespace FBS.Router;
 
@@ -13,47 +15,9 @@ table RouterDump {
   map_data_consumer_id_data_producer_id:[FBS.Common.StringString];
 }
 
-table TransportListenIp {
-  ip:string (required);
-  announced_ip:string;
-}
-
-table NumSctpStreams {
-  OS:uint32;
-  MIS:uint32;
-}
-
-table WebRtcTransportListenIndividual {
-  listen_ips:[TransportListenIp] (required);
-  port:uint16;
-}
-
-table WebRtcTransportListenServer {
-  web_rtc_server_id:string (required);
-}
-
-union WebRtcTransportListen {
-  WebRtcTransportListenIndividual,
-  WebRtcTransportListenServer,
-}
-
-table WebRtcTransportOptions {
-  listen:WebRtcTransportListen (required);
-  enable_udp:bool = true;
-  enable_tcp:bool = false;
-  prefer_udp:bool = false;
-  prefer_tcp:bool = false;
-  initial_available_outgoing_bitrate:uint32;
-  enable_sctp:bool;
-  num_sctp_streams:NumSctpStreams (required);
-  max_sctp_message_size:uint32;
-  sctp_send_buffer_size:uint32;
-  is_data_channel:bool = false;
-}
-
 table CreateWebRtcTransportRequest {
   transport_id:string (required);
-  options:WebRtcTransportOptions;
+  options:FBS.WebRtcTransport.WebRtcTransportOptions;
   // TODO: direct missing!! Check it for DirectTransport.
 }
 

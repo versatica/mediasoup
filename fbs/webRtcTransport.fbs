@@ -1,0 +1,33 @@
+include "transport.fbs";
+include "sctpParameters.fbs";
+
+namespace FBS.WebRtcTransport;
+
+table WebRtcTransportListenIndividual {
+  listen_ips:[FBS.Transport.TransportListenIp] (required);
+  port:uint16;
+}
+
+table WebRtcTransportListenServer {
+  web_rtc_server_id:string (required);
+}
+
+union WebRtcTransportListen {
+  WebRtcTransportListenIndividual,
+  WebRtcTransportListenServer,
+}
+
+table WebRtcTransportOptions {
+  listen:WebRtcTransportListen (required);
+  enable_udp:bool = true;
+  enable_tcp:bool = false;
+  prefer_udp:bool = false;
+  prefer_tcp:bool = false;
+  initial_available_outgoing_bitrate:uint32;
+  enable_sctp:bool;
+  num_sctp_streams:FBS.SctpParameters.NumSctpStreams (required);
+  max_sctp_message_size:uint32;
+  sctp_send_buffer_size:uint32;
+  is_data_channel:bool = false;
+}
+

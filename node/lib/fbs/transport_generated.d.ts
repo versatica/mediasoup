@@ -32,12 +32,12 @@ export { IceParameters, IceParametersT } from './fbs/transport/ice-parameters';
 export { PipeTransportDump, PipeTransportDumpT } from './fbs/transport/pipe-transport-dump';
 export { PlainTransportDump, PlainTransportDumpT } from './fbs/transport/plain-transport-dump';
 export { RtpListener, RtpListenerT } from './fbs/transport/rtp-listener';
-export { SctpAssociation, SctpAssociationT } from './fbs/transport/sctp-association';
 export { SctpListener, SctpListenerT } from './fbs/transport/sctp-listener';
 export { SctpParameters, SctpParametersT } from './fbs/transport/sctp-parameters';
 export { SrtpParameters, SrtpParametersT } from './fbs/transport/srtp-parameters';
 export { TransportDump, TransportDumpT } from './fbs/transport/transport-dump';
 export { TransportDumpData, unionToTransportDumpData, unionListToTransportDumpData } from './fbs/transport/transport-dump-data';
+export { TransportListenIp, TransportListenIpT } from './fbs/transport/transport-listen-ip';
 export { Tuple, TupleT } from './fbs/transport/tuple';
 export { WebRtcTransportDump, WebRtcTransportDumpT } from './fbs/transport/web-rtc-transport-dump';
 //# sourceMappingURL=transport_generated.d.ts.map

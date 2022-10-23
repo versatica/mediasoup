@@ -20,6 +20,9 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
 namespace FBS {
 namespace Transport {
 
+struct TransportListenIp;
+struct TransportListenIpBuilder;
+
 struct ConsumeRequest;
 struct ConsumeRequestBuilder;
 
@@ -34,9 +37,6 @@ struct SctpListenerBuilder;
 
 struct SctpParameters;
 struct SctpParametersBuilder;
-
-struct SctpAssociation;
-struct SctpAssociationBuilder;
 
 struct TransportDump;
 struct TransportDumpBuilder;
@@ -74,6 +74,8 @@ struct DirectTransportDumpBuilder;
 struct PipeTransportDump;
 struct PipeTransportDumpBuilder;
 
+inline const flatbuffers::TypeTable *TransportListenIpTypeTable();
+
 inline const flatbuffers::TypeTable *ConsumeRequestTypeTable();
 
 inline const flatbuffers::TypeTable *ConsumeResponseTypeTable();
@@ -83,8 +85,6 @@ inline const flatbuffers::TypeTable *RtpListenerTypeTable();
 inline const flatbuffers::TypeTable *SctpListenerTypeTable();
 
 inline const flatbuffers::TypeTable *SctpParametersTypeTable();
-
-inline const flatbuffers::TypeTable *SctpAssociationTypeTable();
 
 inline const flatbuffers::TypeTable *TransportDumpTypeTable();
 
@@ -109,6 +109,36 @@ inline const flatbuffers::TypeTable *PlainTransportDumpTypeTable();
 inline const flatbuffers::TypeTable *DirectTransportDumpTypeTable();
 
 inline const flatbuffers::TypeTable *PipeTransportDumpTypeTable();
+
+enum class TransportProtocol : uint8_t {
+  UDP = 1,
+  TCP = 2,
+  MIN = UDP,
+  MAX = TCP
+};
+
+inline const TransportProtocol (&EnumValuesTransportProtocol())[2] {
+  static const TransportProtocol values[] = {
+    TransportProtocol::UDP,
+    TransportProtocol::TCP
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesTransportProtocol() {
+  static const char * const names[3] = {
+    "UDP",
+    "TCP",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameTransportProtocol(TransportProtocol e) {
+  if (flatbuffers::IsOutRange(e, TransportProtocol::UDP, TransportProtocol::TCP)) return "";
+  const size_t index = static_cast<size_t>(e) - static_cast<size_t>(TransportProtocol::UDP);
+  return EnumNamesTransportProtocol()[index];
+}
 
 enum class TransportDumpData : uint8_t {
   NONE = 0,
@@ -178,6 +208,75 @@ template<> struct TransportDumpDataTraits<FBS::Transport::WebRtcTransportDump> {
 
 bool VerifyTransportDumpData(flatbuffers::Verifier &verifier, const void *obj, TransportDumpData type);
 bool VerifyTransportDumpDataVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<TransportDumpData> *types);
+
+struct TransportListenIp FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef TransportListenIpBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return TransportListenIpTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_IP = 4,
+    VT_ANNOUNCEDIP = 6
+  };
+  const flatbuffers::String *ip() const {
+    return GetPointer<const flatbuffers::String *>(VT_IP);
+  }
+  const flatbuffers::String *announcedIp() const {
+    return GetPointer<const flatbuffers::String *>(VT_ANNOUNCEDIP);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_IP) &&
+           verifier.VerifyString(ip()) &&
+           VerifyOffset(verifier, VT_ANNOUNCEDIP) &&
+           verifier.VerifyString(announcedIp()) &&
+           verifier.EndTable();
+  }
+};
+
+struct TransportListenIpBuilder {
+  typedef TransportListenIp Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_ip(flatbuffers::Offset<flatbuffers::String> ip) {
+    fbb_.AddOffset(TransportListenIp::VT_IP, ip);
+  }
+  void add_announcedIp(flatbuffers::Offset<flatbuffers::String> announcedIp) {
+    fbb_.AddOffset(TransportListenIp::VT_ANNOUNCEDIP, announcedIp);
+  }
+  explicit TransportListenIpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<TransportListenIp> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<TransportListenIp>(end);
+    fbb_.Required(o, TransportListenIp::VT_IP);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<TransportListenIp> CreateTransportListenIp(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> ip = 0,
+    flatbuffers::Offset<flatbuffers::String> announcedIp = 0) {
+  TransportListenIpBuilder builder_(_fbb);
+  builder_.add_announcedIp(announcedIp);
+  builder_.add_ip(ip);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<TransportListenIp> CreateTransportListenIpDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *ip = nullptr,
+    const char *announcedIp = nullptr) {
+  auto ip__ = ip ? _fbb.CreateString(ip) : 0;
+  auto announcedIp__ = announcedIp ? _fbb.CreateString(announcedIp) : 0;
+  return FBS::Transport::CreateTransportListenIp(
+      _fbb,
+      ip__,
+      announcedIp__);
+}
 
 struct ConsumeRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ConsumeRequestBuilder Builder;
@@ -662,89 +761,6 @@ inline flatbuffers::Offset<SctpParameters> CreateSctpParameters(
   builder_.add_port(port);
   builder_.add_isDataChannel(isDataChannel);
   return builder_.Finish();
-}
-
-struct SctpAssociation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef SctpAssociationBuilder Builder;
-  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return SctpAssociationTypeTable();
-  }
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_SCTPPARAMETERS = 4,
-    VT_STCPSTATE = 6,
-    VT_STCPLISTENER = 8
-  };
-  const FBS::Transport::SctpParameters *sctpParameters() const {
-    return GetPointer<const FBS::Transport::SctpParameters *>(VT_SCTPPARAMETERS);
-  }
-  const flatbuffers::String *stcpState() const {
-    return GetPointer<const flatbuffers::String *>(VT_STCPSTATE);
-  }
-  const FBS::Transport::SctpListener *stcpListener() const {
-    return GetPointer<const FBS::Transport::SctpListener *>(VT_STCPLISTENER);
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyOffsetRequired(verifier, VT_SCTPPARAMETERS) &&
-           verifier.VerifyTable(sctpParameters()) &&
-           VerifyOffsetRequired(verifier, VT_STCPSTATE) &&
-           verifier.VerifyString(stcpState()) &&
-           VerifyOffsetRequired(verifier, VT_STCPLISTENER) &&
-           verifier.VerifyTable(stcpListener()) &&
-           verifier.EndTable();
-  }
-};
-
-struct SctpAssociationBuilder {
-  typedef SctpAssociation Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_sctpParameters(flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters) {
-    fbb_.AddOffset(SctpAssociation::VT_SCTPPARAMETERS, sctpParameters);
-  }
-  void add_stcpState(flatbuffers::Offset<flatbuffers::String> stcpState) {
-    fbb_.AddOffset(SctpAssociation::VT_STCPSTATE, stcpState);
-  }
-  void add_stcpListener(flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener) {
-    fbb_.AddOffset(SctpAssociation::VT_STCPLISTENER, stcpListener);
-  }
-  explicit SctpAssociationBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<SctpAssociation> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<SctpAssociation>(end);
-    fbb_.Required(o, SctpAssociation::VT_SCTPPARAMETERS);
-    fbb_.Required(o, SctpAssociation::VT_STCPSTATE);
-    fbb_.Required(o, SctpAssociation::VT_STCPLISTENER);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<SctpAssociation> CreateSctpAssociation(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters = 0,
-    flatbuffers::Offset<flatbuffers::String> stcpState = 0,
-    flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener = 0) {
-  SctpAssociationBuilder builder_(_fbb);
-  builder_.add_stcpListener(stcpListener);
-  builder_.add_stcpState(stcpState);
-  builder_.add_sctpParameters(sctpParameters);
-  return builder_.Finish();
-}
-
-inline flatbuffers::Offset<SctpAssociation> CreateSctpAssociationDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters = 0,
-    const char *stcpState = nullptr,
-    flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener = 0) {
-  auto stcpState__ = stcpState ? _fbb.CreateString(stcpState) : 0;
-  return FBS::Transport::CreateSctpAssociation(
-      _fbb,
-      sctpParameters,
-      stcpState__,
-      stcpListener);
 }
 
 struct TransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -2050,6 +2066,25 @@ inline bool VerifyTransportDumpDataVector(flatbuffers::Verifier &verifier, const
   return true;
 }
 
+inline const flatbuffers::TypeTable *TransportProtocolTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UCHAR, 0, 0 },
+    { flatbuffers::ET_UCHAR, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Transport::TransportProtocolTypeTable
+  };
+  static const int64_t values[] = { 1, 2 };
+  static const char * const names[] = {
+    "UDP",
+    "TCP"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_ENUM, 2, type_codes, type_refs, nullptr, values, names
+  };
+  return &tt;
+}
+
 inline const flatbuffers::TypeTable *TransportDumpDataTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_SEQUENCE, 0, -1 },
@@ -2076,6 +2111,21 @@ inline const flatbuffers::TypeTable *TransportDumpDataTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_UNION, 6, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *TransportListenIpTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "ip",
+    "announcedIp"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
   };
   return &tt;
 }
@@ -2197,27 +2247,6 @@ inline const flatbuffers::TypeTable *SctpParametersTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 7, type_codes, nullptr, nullptr, nullptr, names
-  };
-  return &tt;
-}
-
-inline const flatbuffers::TypeTable *SctpAssociationTypeTable() {
-  static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_SEQUENCE, 0, 0 },
-    { flatbuffers::ET_STRING, 0, -1 },
-    { flatbuffers::ET_SEQUENCE, 0, 1 }
-  };
-  static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Transport::SctpParametersTypeTable,
-    FBS::Transport::SctpListenerTypeTable
-  };
-  static const char * const names[] = {
-    "sctpParameters",
-    "stcpState",
-    "stcpListener"
-  };
-  static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 3, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

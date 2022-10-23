@@ -1,3 +1,4 @@
+include "webRtcServer.fbs";
 
 namespace FBS.Worker;
 
@@ -38,18 +39,9 @@ table UpdateableSettings {
   log_tags:[string];
 }
 
-enum TransportProtocol: uint8 { UDP = 1, TCP }
-
-table WebRtcServerListenInfo {
-  protocol:TransportProtocol=UDP;
-  ip:string (required);
-  announced_ip:string;
-  port:uint16 = 0;
-}
-
 table CreateWebRtcServerRequest {
   web_rtc_server_id:string (required);
-  listen_infos:[WebRtcServerListenInfo];
+  listen_infos:[FBS.WebRtcServer.WebRtcServerListenInfo];
 }
 
 table CloseWebRtcServerRequest {

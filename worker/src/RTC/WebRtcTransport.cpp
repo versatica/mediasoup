@@ -245,12 +245,12 @@ namespace RTC
 	}
 
 	WebRtcTransport::WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener,
-			const FBS::Router::WebRtcTransportOptions* options)
+			const FBS::WebRtcTransport::WebRtcTransportOptions* options)
 	  : RTC::Transport::Transport(id, listener, options)
 	{
 		MS_TRACE();
 
-		auto* listenInfo = options->listen_as<FBS::Router::WebRtcTransportListenIndividual>();
+		auto* listenInfo = options->listen_as<FBS::WebRtcTransport::WebRtcTransportListenIndividual>();
 		auto* listenIps = listenInfo->listenIps();
 
 		try
@@ -433,7 +433,7 @@ namespace RTC
 	  RTC::Transport::Listener* listener,
 	  WebRtcTransportListener* webRtcTransportListener,
 	  std::vector<RTC::IceCandidate>& iceCandidates,
-	  const FBS::Router::WebRtcTransportOptions* options)
+	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
 	  : RTC::Transport::Transport(id, listener, options),
 	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
 	{

@@ -1,5 +1,5 @@
 import * as flatbuffers from 'flatbuffers';
-import { WebRtcTransportOptions, WebRtcTransportOptionsT } from '../../fbs/router/web-rtc-transport-options';
+import { WebRtcTransportOptions, WebRtcTransportOptionsT } from '../../fbs/web-rtc-transport/web-rtc-transport-options';
 export declare class CreateWebRtcTransportRequest {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;

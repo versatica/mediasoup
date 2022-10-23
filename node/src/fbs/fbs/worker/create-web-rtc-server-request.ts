@@ -2,7 +2,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { WebRtcServerListenInfo, WebRtcServerListenInfoT } from '../../fbs/worker/web-rtc-server-listen-info';
+import { WebRtcServerListenInfo, WebRtcServerListenInfoT } from '../../fbs/web-rtc-server/web-rtc-server-listen-info';
 
 
 export class CreateWebRtcServerRequest {

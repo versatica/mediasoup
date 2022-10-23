@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateWebRtcServerRequestT = exports.CreateWebRtcServerRequest = void 0;
 const flatbuffers = require("flatbuffers");
-const web_rtc_server_listen_info_1 = require("../../fbs/worker/web-rtc-server-listen-info");
+const web_rtc_server_listen_info_1 = require("../../fbs/web-rtc-server/web-rtc-server-listen-info");
 class CreateWebRtcServerRequest {
     bb = null;
     bb_pos = 0;

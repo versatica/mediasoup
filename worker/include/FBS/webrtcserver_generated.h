@@ -13,8 +13,13 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
               FLATBUFFERS_VERSION_REVISION == 8,
              "Non-compatible flatbuffers version included");
 
+#include "transport_generated.h"
+
 namespace FBS {
 namespace WebRtcServer {
+
+struct WebRtcServerListenInfo;
+struct WebRtcServerListenInfoBuilder;
 
 struct IpPort;
 struct IpPortBuilder;
@@ -28,6 +33,8 @@ struct TupleHashBuilder;
 struct WebRtcServerDump;
 struct WebRtcServerDumpBuilder;
 
+inline const flatbuffers::TypeTable *WebRtcServerListenInfoTypeTable();
+
 inline const flatbuffers::TypeTable *IpPortTypeTable();
 
 inline const flatbuffers::TypeTable *IceUserNameFragmentTypeTable();
@@ -35,6 +42,99 @@ inline const flatbuffers::TypeTable *IceUserNameFragmentTypeTable();
 inline const flatbuffers::TypeTable *TupleHashTypeTable();
 
 inline const flatbuffers::TypeTable *WebRtcServerDumpTypeTable();
+
+struct WebRtcServerListenInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef WebRtcServerListenInfoBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return WebRtcServerListenInfoTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PROTOCOL = 4,
+    VT_IP = 6,
+    VT_ANNOUNCEDIP = 8,
+    VT_PORT = 10
+  };
+  FBS::Transport::TransportProtocol protocol() const {
+    return static_cast<FBS::Transport::TransportProtocol>(GetField<uint8_t>(VT_PROTOCOL, 1));
+  }
+  const flatbuffers::String *ip() const {
+    return GetPointer<const flatbuffers::String *>(VT_IP);
+  }
+  const flatbuffers::String *announcedIp() const {
+    return GetPointer<const flatbuffers::String *>(VT_ANNOUNCEDIP);
+  }
+  uint16_t port() const {
+    return GetField<uint16_t>(VT_PORT, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_PROTOCOL, 1) &&
+           VerifyOffsetRequired(verifier, VT_IP) &&
+           verifier.VerifyString(ip()) &&
+           VerifyOffset(verifier, VT_ANNOUNCEDIP) &&
+           verifier.VerifyString(announcedIp()) &&
+           VerifyField<uint16_t>(verifier, VT_PORT, 2) &&
+           verifier.EndTable();
+  }
+};
+
+struct WebRtcServerListenInfoBuilder {
+  typedef WebRtcServerListenInfo Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_protocol(FBS::Transport::TransportProtocol protocol) {
+    fbb_.AddElement<uint8_t>(WebRtcServerListenInfo::VT_PROTOCOL, static_cast<uint8_t>(protocol), 1);
+  }
+  void add_ip(flatbuffers::Offset<flatbuffers::String> ip) {
+    fbb_.AddOffset(WebRtcServerListenInfo::VT_IP, ip);
+  }
+  void add_announcedIp(flatbuffers::Offset<flatbuffers::String> announcedIp) {
+    fbb_.AddOffset(WebRtcServerListenInfo::VT_ANNOUNCEDIP, announcedIp);
+  }
+  void add_port(uint16_t port) {
+    fbb_.AddElement<uint16_t>(WebRtcServerListenInfo::VT_PORT, port, 0);
+  }
+  explicit WebRtcServerListenInfoBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<WebRtcServerListenInfo> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<WebRtcServerListenInfo>(end);
+    fbb_.Required(o, WebRtcServerListenInfo::VT_IP);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<WebRtcServerListenInfo> CreateWebRtcServerListenInfo(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    FBS::Transport::TransportProtocol protocol = FBS::Transport::TransportProtocol::UDP,
+    flatbuffers::Offset<flatbuffers::String> ip = 0,
+    flatbuffers::Offset<flatbuffers::String> announcedIp = 0,
+    uint16_t port = 0) {
+  WebRtcServerListenInfoBuilder builder_(_fbb);
+  builder_.add_announcedIp(announcedIp);
+  builder_.add_ip(ip);
+  builder_.add_port(port);
+  builder_.add_protocol(protocol);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<WebRtcServerListenInfo> CreateWebRtcServerListenInfoDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    FBS::Transport::TransportProtocol protocol = FBS::Transport::TransportProtocol::UDP,
+    const char *ip = nullptr,
+    const char *announcedIp = nullptr,
+    uint16_t port = 0) {
+  auto ip__ = ip ? _fbb.CreateString(ip) : 0;
+  auto announcedIp__ = announcedIp ? _fbb.CreateString(announcedIp) : 0;
+  return FBS::WebRtcServer::CreateWebRtcServerListenInfo(
+      _fbb,
+      protocol,
+      ip__,
+      announcedIp__,
+      port);
+}
 
 struct IpPort FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef IpPortBuilder Builder;
@@ -368,6 +468,28 @@ inline flatbuffers::Offset<WebRtcServerDump> CreateWebRtcServerDumpDirect(
       webRtcTransportIds__,
       localIceUsernameFragments__,
       tupleHashes__);
+}
+
+inline const flatbuffers::TypeTable *WebRtcServerListenInfoTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UCHAR, 0, 0 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_USHORT, 0, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Transport::TransportProtocolTypeTable
+  };
+  static const char * const names[] = {
+    "protocol",
+    "ip",
+    "announcedIp",
+    "port"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 4, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
 }
 
 inline const flatbuffers::TypeTable *IpPortTypeTable() {

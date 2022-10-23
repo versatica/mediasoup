@@ -15,7 +15,7 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
 
 #include "router_generated.h"
 #include "transport_generated.h"
-#include "webrtcserver_generated.h"
+#include "webRtcServer_generated.h"
 #include "worker_generated.h"
 
 namespace FBS {

@@ -1,6 +1,6 @@
 include "router.fbs";
 include "transport.fbs";
-include "webrtcserver.fbs";
+include "webRtcServer.fbs";
 include "worker.fbs";
 
 namespace FBS.Response;

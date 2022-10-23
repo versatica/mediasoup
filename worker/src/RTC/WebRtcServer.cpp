@@ -31,7 +31,7 @@ namespace RTC
 
 	WebRtcServer::WebRtcServer(
 	  const std::string& id,
-	  const flatbuffers::Vector<flatbuffers::Offset<FBS::Worker::WebRtcServerListenInfo>>* listenInfos)
+	  const flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::WebRtcServerListenInfo>>* listenInfos)
 	  : id(id)
 	{
 		MS_TRACE();
@@ -53,12 +53,12 @@ namespace RTC
 				std::string announcedIp;
 
 				if (flatbuffers::IsFieldPresent(
-				      listenInfo, FBS::Worker::WebRtcServerListenInfo::VT_ANNOUNCEDIP))
+				      listenInfo, FBS::WebRtcServer::WebRtcServerListenInfo::VT_ANNOUNCEDIP))
 				{
 					announcedIp = listenInfo->announcedIp()->str();
 				}
 
-				if (listenInfo->protocol() == FBS::Worker::TransportProtocol::UDP)
+				if (listenInfo->protocol() == FBS::Transport::TransportProtocol::UDP)
 				{
 					// This may throw.
 					RTC::UdpSocket* udpSocket;
@@ -70,7 +70,7 @@ namespace RTC
 
 					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedIp);
 				}
-				else if (listenInfo->protocol() == FBS::Worker::TransportProtocol::TCP)
+				else if (listenInfo->protocol() == FBS::Transport::TransportProtocol::TCP)
 				{
 					// This may throw.
 					RTC::TcpServer* tcpServer;
