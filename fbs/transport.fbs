@@ -75,7 +75,9 @@ table BaseTransportDump {
   recv_rtp_header_extensions:[FBS.Common.StringUint8];
   rtp_listener:RtpListener;
   max_message_size:uint32;
-  sctp_association:SctpAssociation;
+  sctp_parameters:SctpParameters;
+  stcp_state:string;
+  stcp_listener: SctpListener;
   trace_event_types:[string];
 }
 
@@ -111,9 +113,8 @@ table Fingerprint {
 }
 
 table DtlsParameters {
-  fingerprint:[Fingerprint] (required);
+  fingerprints:[Fingerprint] (required);
   role:string (required);
-  dtls_state:string (required);
 }
 
 table WebRtcTransportDump {
@@ -124,6 +125,7 @@ table WebRtcTransportDump {
   ice_state:string (required);
   ice_selected_tuple:Tuple;
   dtls_parameters:DtlsParameters (required);
+  dtls_state:string (required);
 }
 
 /* PlainTransport */

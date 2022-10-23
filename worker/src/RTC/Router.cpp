@@ -603,6 +603,76 @@ namespace RTC
 				break;
 			}
 
+			case FBS::Request::Method::ROUTER_CREATE_WEBRTC_TRANSPORT:
+			{
+				auto body = request->_data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
+
+				auto transportId = body->transportId()->str();
+
+				// This may throw.
+				CheckNoTransport(transportId);
+
+				// This may throw.
+				auto* webRtcTransport = new RTC::WebRtcTransport(transportId, this, body->options());
+
+				// Insert into the map.
+				this->mapTransports[transportId] = webRtcTransport;
+
+				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
+
+				auto& builder = Channel::ChannelRequest::bufferBuilder;
+
+				auto dumpOffset = webRtcTransport->FillBuffer(builder);
+
+				request->Accept(builder, FBS::Response::Body::FBS_Transport_TransportDump, dumpOffset);
+
+				break;
+			}
+
+			case FBS::Request::Method::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
+			{
+				auto body = request->_data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
+
+				auto transportId = body->transportId()->str();
+
+				// This may throw.
+				CheckNoTransport(transportId);
+
+				auto* options = body->options();
+				auto* listenInfo = options->listen_as<FBS::Router::WebRtcTransportListenServer>();
+
+				auto webRtcServerId = listenInfo->webRtcServerId()->str();
+
+				auto* webRtcServer = this->listener->OnRouterNeedWebRtcServer(this, webRtcServerId);
+
+				if (!webRtcServer)
+					MS_THROW_ERROR("wrong webRtcServerId (no associated WebRtcServer found)");
+
+				auto iceCandidates =
+				  webRtcServer->GetIceCandidates(options->enableUdp(), options->enableTcp(), options->preferUdp(), options->preferTcp());
+
+				// This may throw.
+				auto* webRtcTransport =
+				  new RTC::WebRtcTransport(transportId, this, webRtcServer, iceCandidates, options);
+
+				// Insert into the map.
+				this->mapTransports[transportId] = webRtcTransport;
+
+				// TODO: REMOVE.
+				MS_ERROR(
+				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
+				MS_DEBUG_DEV(
+				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
+
+				auto& builder = Channel::ChannelRequest::bufferBuilder;
+
+				auto dumpOffset = webRtcTransport->FillBuffer(builder);
+
+				request->Accept(builder, FBS::Response::Body::FBS_Transport_TransportDump, dumpOffset);
+
+				break;
+			}
+
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
@@ -627,6 +697,12 @@ namespace RTC
 		{
 			MS_THROW_ERROR("a Transport with same transportId already exists");
 		}
+	}
+
+	void Router::CheckNoTransport(const std::string& transportId) const
+	{
+		if (this->mapTransports.find(transportId) != this->mapTransports.end())
+			MS_THROW_ERROR("a Transport with same transportId already exists");
 	}
 
 	RTC::Transport* Router::GetTransportFromData(json& data) const

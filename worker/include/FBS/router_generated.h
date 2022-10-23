@@ -21,7 +21,85 @@ namespace Router {
 struct RouterDump;
 struct RouterDumpBuilder;
 
+struct TransportListenIp;
+struct TransportListenIpBuilder;
+
+struct NumSctpStreams;
+struct NumSctpStreamsBuilder;
+
+struct WebRtcTransportListenIndividual;
+struct WebRtcTransportListenIndividualBuilder;
+
+struct WebRtcTransportListenServer;
+struct WebRtcTransportListenServerBuilder;
+
+struct WebRtcTransportOptions;
+struct WebRtcTransportOptionsBuilder;
+
+struct CreateWebRtcTransportRequest;
+struct CreateWebRtcTransportRequestBuilder;
+
 inline const flatbuffers::TypeTable *RouterDumpTypeTable();
+
+inline const flatbuffers::TypeTable *TransportListenIpTypeTable();
+
+inline const flatbuffers::TypeTable *NumSctpStreamsTypeTable();
+
+inline const flatbuffers::TypeTable *WebRtcTransportListenIndividualTypeTable();
+
+inline const flatbuffers::TypeTable *WebRtcTransportListenServerTypeTable();
+
+inline const flatbuffers::TypeTable *WebRtcTransportOptionsTypeTable();
+
+inline const flatbuffers::TypeTable *CreateWebRtcTransportRequestTypeTable();
+
+enum class WebRtcTransportListen : uint8_t {
+  NONE = 0,
+  WebRtcTransportListenIndividual = 1,
+  WebRtcTransportListenServer = 2,
+  MIN = NONE,
+  MAX = WebRtcTransportListenServer
+};
+
+inline const WebRtcTransportListen (&EnumValuesWebRtcTransportListen())[3] {
+  static const WebRtcTransportListen values[] = {
+    WebRtcTransportListen::NONE,
+    WebRtcTransportListen::WebRtcTransportListenIndividual,
+    WebRtcTransportListen::WebRtcTransportListenServer
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesWebRtcTransportListen() {
+  static const char * const names[4] = {
+    "NONE",
+    "WebRtcTransportListenIndividual",
+    "WebRtcTransportListenServer",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameWebRtcTransportListen(WebRtcTransportListen e) {
+  if (flatbuffers::IsOutRange(e, WebRtcTransportListen::NONE, WebRtcTransportListen::WebRtcTransportListenServer)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesWebRtcTransportListen()[index];
+}
+
+template<typename T> struct WebRtcTransportListenTraits {
+  static const WebRtcTransportListen enum_value = WebRtcTransportListen::NONE;
+};
+
+template<> struct WebRtcTransportListenTraits<FBS::Router::WebRtcTransportListenIndividual> {
+  static const WebRtcTransportListen enum_value = WebRtcTransportListen::WebRtcTransportListenIndividual;
+};
+
+template<> struct WebRtcTransportListenTraits<FBS::Router::WebRtcTransportListenServer> {
+  static const WebRtcTransportListen enum_value = WebRtcTransportListen::WebRtcTransportListenServer;
+};
+
+bool VerifyWebRtcTransportListen(flatbuffers::Verifier &verifier, const void *obj, WebRtcTransportListen type);
+bool VerifyWebRtcTransportListenVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<WebRtcTransportListen> *types);
 
 struct RouterDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef RouterDumpBuilder Builder;
@@ -183,6 +261,543 @@ inline flatbuffers::Offset<RouterDump> CreateRouterDumpDirect(
       mapDataConsumerIdDataProducerId__);
 }
 
+struct TransportListenIp FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef TransportListenIpBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return TransportListenIpTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_IP = 4,
+    VT_ANNOUNCEDIP = 6
+  };
+  const flatbuffers::String *ip() const {
+    return GetPointer<const flatbuffers::String *>(VT_IP);
+  }
+  const flatbuffers::String *announcedIp() const {
+    return GetPointer<const flatbuffers::String *>(VT_ANNOUNCEDIP);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_IP) &&
+           verifier.VerifyString(ip()) &&
+           VerifyOffset(verifier, VT_ANNOUNCEDIP) &&
+           verifier.VerifyString(announcedIp()) &&
+           verifier.EndTable();
+  }
+};
+
+struct TransportListenIpBuilder {
+  typedef TransportListenIp Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_ip(flatbuffers::Offset<flatbuffers::String> ip) {
+    fbb_.AddOffset(TransportListenIp::VT_IP, ip);
+  }
+  void add_announcedIp(flatbuffers::Offset<flatbuffers::String> announcedIp) {
+    fbb_.AddOffset(TransportListenIp::VT_ANNOUNCEDIP, announcedIp);
+  }
+  explicit TransportListenIpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<TransportListenIp> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<TransportListenIp>(end);
+    fbb_.Required(o, TransportListenIp::VT_IP);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<TransportListenIp> CreateTransportListenIp(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> ip = 0,
+    flatbuffers::Offset<flatbuffers::String> announcedIp = 0) {
+  TransportListenIpBuilder builder_(_fbb);
+  builder_.add_announcedIp(announcedIp);
+  builder_.add_ip(ip);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<TransportListenIp> CreateTransportListenIpDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *ip = nullptr,
+    const char *announcedIp = nullptr) {
+  auto ip__ = ip ? _fbb.CreateString(ip) : 0;
+  auto announcedIp__ = announcedIp ? _fbb.CreateString(announcedIp) : 0;
+  return FBS::Router::CreateTransportListenIp(
+      _fbb,
+      ip__,
+      announcedIp__);
+}
+
+struct NumSctpStreams FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef NumSctpStreamsBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return NumSctpStreamsTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_OS = 4,
+    VT_MIS = 6
+  };
+  uint32_t OS() const {
+    return GetField<uint32_t>(VT_OS, 0);
+  }
+  uint32_t MIS() const {
+    return GetField<uint32_t>(VT_MIS, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_OS, 4) &&
+           VerifyField<uint32_t>(verifier, VT_MIS, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct NumSctpStreamsBuilder {
+  typedef NumSctpStreams Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_OS(uint32_t OS) {
+    fbb_.AddElement<uint32_t>(NumSctpStreams::VT_OS, OS, 0);
+  }
+  void add_MIS(uint32_t MIS) {
+    fbb_.AddElement<uint32_t>(NumSctpStreams::VT_MIS, MIS, 0);
+  }
+  explicit NumSctpStreamsBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<NumSctpStreams> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<NumSctpStreams>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<NumSctpStreams> CreateNumSctpStreams(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t OS = 0,
+    uint32_t MIS = 0) {
+  NumSctpStreamsBuilder builder_(_fbb);
+  builder_.add_MIS(MIS);
+  builder_.add_OS(OS);
+  return builder_.Finish();
+}
+
+struct WebRtcTransportListenIndividual FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef WebRtcTransportListenIndividualBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return WebRtcTransportListenIndividualTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_LISTENIPS = 4,
+    VT_PORT = 6
+  };
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Router::TransportListenIp>> *listenIps() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Router::TransportListenIp>> *>(VT_LISTENIPS);
+  }
+  uint16_t port() const {
+    return GetField<uint16_t>(VT_PORT, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_LISTENIPS) &&
+           verifier.VerifyVector(listenIps()) &&
+           verifier.VerifyVectorOfTables(listenIps()) &&
+           VerifyField<uint16_t>(verifier, VT_PORT, 2) &&
+           verifier.EndTable();
+  }
+};
+
+struct WebRtcTransportListenIndividualBuilder {
+  typedef WebRtcTransportListenIndividual Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_listenIps(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Router::TransportListenIp>>> listenIps) {
+    fbb_.AddOffset(WebRtcTransportListenIndividual::VT_LISTENIPS, listenIps);
+  }
+  void add_port(uint16_t port) {
+    fbb_.AddElement<uint16_t>(WebRtcTransportListenIndividual::VT_PORT, port, 0);
+  }
+  explicit WebRtcTransportListenIndividualBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<WebRtcTransportListenIndividual> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<WebRtcTransportListenIndividual>(end);
+    fbb_.Required(o, WebRtcTransportListenIndividual::VT_LISTENIPS);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<WebRtcTransportListenIndividual> CreateWebRtcTransportListenIndividual(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Router::TransportListenIp>>> listenIps = 0,
+    uint16_t port = 0) {
+  WebRtcTransportListenIndividualBuilder builder_(_fbb);
+  builder_.add_listenIps(listenIps);
+  builder_.add_port(port);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<WebRtcTransportListenIndividual> CreateWebRtcTransportListenIndividualDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<flatbuffers::Offset<FBS::Router::TransportListenIp>> *listenIps = nullptr,
+    uint16_t port = 0) {
+  auto listenIps__ = listenIps ? _fbb.CreateVector<flatbuffers::Offset<FBS::Router::TransportListenIp>>(*listenIps) : 0;
+  return FBS::Router::CreateWebRtcTransportListenIndividual(
+      _fbb,
+      listenIps__,
+      port);
+}
+
+struct WebRtcTransportListenServer FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef WebRtcTransportListenServerBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return WebRtcTransportListenServerTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_WEBRTCSERVERID = 4
+  };
+  const flatbuffers::String *webRtcServerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_WEBRTCSERVERID);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_WEBRTCSERVERID) &&
+           verifier.VerifyString(webRtcServerId()) &&
+           verifier.EndTable();
+  }
+};
+
+struct WebRtcTransportListenServerBuilder {
+  typedef WebRtcTransportListenServer Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_webRtcServerId(flatbuffers::Offset<flatbuffers::String> webRtcServerId) {
+    fbb_.AddOffset(WebRtcTransportListenServer::VT_WEBRTCSERVERID, webRtcServerId);
+  }
+  explicit WebRtcTransportListenServerBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<WebRtcTransportListenServer> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<WebRtcTransportListenServer>(end);
+    fbb_.Required(o, WebRtcTransportListenServer::VT_WEBRTCSERVERID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<WebRtcTransportListenServer> CreateWebRtcTransportListenServer(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> webRtcServerId = 0) {
+  WebRtcTransportListenServerBuilder builder_(_fbb);
+  builder_.add_webRtcServerId(webRtcServerId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<WebRtcTransportListenServer> CreateWebRtcTransportListenServerDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *webRtcServerId = nullptr) {
+  auto webRtcServerId__ = webRtcServerId ? _fbb.CreateString(webRtcServerId) : 0;
+  return FBS::Router::CreateWebRtcTransportListenServer(
+      _fbb,
+      webRtcServerId__);
+}
+
+struct WebRtcTransportOptions FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef WebRtcTransportOptionsBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return WebRtcTransportOptionsTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_LISTEN_TYPE = 4,
+    VT_LISTEN = 6,
+    VT_ENABLEUDP = 8,
+    VT_ENABLETCP = 10,
+    VT_PREFERUDP = 12,
+    VT_PREFERTCP = 14,
+    VT_INITIALAVAILABLEOUTGOINGBITRATE = 16,
+    VT_ENABLESCTP = 18,
+    VT_NUMSCTPSTREAMS = 20,
+    VT_MAXSCTPMESSAGESIZE = 22,
+    VT_SCTPSENDBUFFERSIZE = 24,
+    VT_ISDATACHANNEL = 26
+  };
+  FBS::Router::WebRtcTransportListen listen_type() const {
+    return static_cast<FBS::Router::WebRtcTransportListen>(GetField<uint8_t>(VT_LISTEN_TYPE, 0));
+  }
+  const void *listen() const {
+    return GetPointer<const void *>(VT_LISTEN);
+  }
+  template<typename T> const T *listen_as() const;
+  const FBS::Router::WebRtcTransportListenIndividual *listen_as_WebRtcTransportListenIndividual() const {
+    return listen_type() == FBS::Router::WebRtcTransportListen::WebRtcTransportListenIndividual ? static_cast<const FBS::Router::WebRtcTransportListenIndividual *>(listen()) : nullptr;
+  }
+  const FBS::Router::WebRtcTransportListenServer *listen_as_WebRtcTransportListenServer() const {
+    return listen_type() == FBS::Router::WebRtcTransportListen::WebRtcTransportListenServer ? static_cast<const FBS::Router::WebRtcTransportListenServer *>(listen()) : nullptr;
+  }
+  bool enableUdp() const {
+    return GetField<uint8_t>(VT_ENABLEUDP, 1) != 0;
+  }
+  bool enableTcp() const {
+    return GetField<uint8_t>(VT_ENABLETCP, 0) != 0;
+  }
+  bool preferUdp() const {
+    return GetField<uint8_t>(VT_PREFERUDP, 0) != 0;
+  }
+  bool preferTcp() const {
+    return GetField<uint8_t>(VT_PREFERTCP, 0) != 0;
+  }
+  uint32_t initialAvailableOutgoingBitrate() const {
+    return GetField<uint32_t>(VT_INITIALAVAILABLEOUTGOINGBITRATE, 0);
+  }
+  bool enableSctp() const {
+    return GetField<uint8_t>(VT_ENABLESCTP, 0) != 0;
+  }
+  const FBS::Router::NumSctpStreams *numSctpStreams() const {
+    return GetPointer<const FBS::Router::NumSctpStreams *>(VT_NUMSCTPSTREAMS);
+  }
+  uint32_t maxSctpMessageSize() const {
+    return GetField<uint32_t>(VT_MAXSCTPMESSAGESIZE, 0);
+  }
+  uint32_t sctpSendBufferSize() const {
+    return GetField<uint32_t>(VT_SCTPSENDBUFFERSIZE, 0);
+  }
+  bool isDataChannel() const {
+    return GetField<uint8_t>(VT_ISDATACHANNEL, 0) != 0;
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_LISTEN_TYPE, 1) &&
+           VerifyOffsetRequired(verifier, VT_LISTEN) &&
+           VerifyWebRtcTransportListen(verifier, listen(), listen_type()) &&
+           VerifyField<uint8_t>(verifier, VT_ENABLEUDP, 1) &&
+           VerifyField<uint8_t>(verifier, VT_ENABLETCP, 1) &&
+           VerifyField<uint8_t>(verifier, VT_PREFERUDP, 1) &&
+           VerifyField<uint8_t>(verifier, VT_PREFERTCP, 1) &&
+           VerifyField<uint32_t>(verifier, VT_INITIALAVAILABLEOUTGOINGBITRATE, 4) &&
+           VerifyField<uint8_t>(verifier, VT_ENABLESCTP, 1) &&
+           VerifyOffsetRequired(verifier, VT_NUMSCTPSTREAMS) &&
+           verifier.VerifyTable(numSctpStreams()) &&
+           VerifyField<uint32_t>(verifier, VT_MAXSCTPMESSAGESIZE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_SCTPSENDBUFFERSIZE, 4) &&
+           VerifyField<uint8_t>(verifier, VT_ISDATACHANNEL, 1) &&
+           verifier.EndTable();
+  }
+};
+
+template<> inline const FBS::Router::WebRtcTransportListenIndividual *WebRtcTransportOptions::listen_as<FBS::Router::WebRtcTransportListenIndividual>() const {
+  return listen_as_WebRtcTransportListenIndividual();
+}
+
+template<> inline const FBS::Router::WebRtcTransportListenServer *WebRtcTransportOptions::listen_as<FBS::Router::WebRtcTransportListenServer>() const {
+  return listen_as_WebRtcTransportListenServer();
+}
+
+struct WebRtcTransportOptionsBuilder {
+  typedef WebRtcTransportOptions Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_listen_type(FBS::Router::WebRtcTransportListen listen_type) {
+    fbb_.AddElement<uint8_t>(WebRtcTransportOptions::VT_LISTEN_TYPE, static_cast<uint8_t>(listen_type), 0);
+  }
+  void add_listen(flatbuffers::Offset<void> listen) {
+    fbb_.AddOffset(WebRtcTransportOptions::VT_LISTEN, listen);
+  }
+  void add_enableUdp(bool enableUdp) {
+    fbb_.AddElement<uint8_t>(WebRtcTransportOptions::VT_ENABLEUDP, static_cast<uint8_t>(enableUdp), 1);
+  }
+  void add_enableTcp(bool enableTcp) {
+    fbb_.AddElement<uint8_t>(WebRtcTransportOptions::VT_ENABLETCP, static_cast<uint8_t>(enableTcp), 0);
+  }
+  void add_preferUdp(bool preferUdp) {
+    fbb_.AddElement<uint8_t>(WebRtcTransportOptions::VT_PREFERUDP, static_cast<uint8_t>(preferUdp), 0);
+  }
+  void add_preferTcp(bool preferTcp) {
+    fbb_.AddElement<uint8_t>(WebRtcTransportOptions::VT_PREFERTCP, static_cast<uint8_t>(preferTcp), 0);
+  }
+  void add_initialAvailableOutgoingBitrate(uint32_t initialAvailableOutgoingBitrate) {
+    fbb_.AddElement<uint32_t>(WebRtcTransportOptions::VT_INITIALAVAILABLEOUTGOINGBITRATE, initialAvailableOutgoingBitrate, 0);
+  }
+  void add_enableSctp(bool enableSctp) {
+    fbb_.AddElement<uint8_t>(WebRtcTransportOptions::VT_ENABLESCTP, static_cast<uint8_t>(enableSctp), 0);
+  }
+  void add_numSctpStreams(flatbuffers::Offset<FBS::Router::NumSctpStreams> numSctpStreams) {
+    fbb_.AddOffset(WebRtcTransportOptions::VT_NUMSCTPSTREAMS, numSctpStreams);
+  }
+  void add_maxSctpMessageSize(uint32_t maxSctpMessageSize) {
+    fbb_.AddElement<uint32_t>(WebRtcTransportOptions::VT_MAXSCTPMESSAGESIZE, maxSctpMessageSize, 0);
+  }
+  void add_sctpSendBufferSize(uint32_t sctpSendBufferSize) {
+    fbb_.AddElement<uint32_t>(WebRtcTransportOptions::VT_SCTPSENDBUFFERSIZE, sctpSendBufferSize, 0);
+  }
+  void add_isDataChannel(bool isDataChannel) {
+    fbb_.AddElement<uint8_t>(WebRtcTransportOptions::VT_ISDATACHANNEL, static_cast<uint8_t>(isDataChannel), 0);
+  }
+  explicit WebRtcTransportOptionsBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<WebRtcTransportOptions> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<WebRtcTransportOptions>(end);
+    fbb_.Required(o, WebRtcTransportOptions::VT_LISTEN);
+    fbb_.Required(o, WebRtcTransportOptions::VT_NUMSCTPSTREAMS);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<WebRtcTransportOptions> CreateWebRtcTransportOptions(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    FBS::Router::WebRtcTransportListen listen_type = FBS::Router::WebRtcTransportListen::NONE,
+    flatbuffers::Offset<void> listen = 0,
+    bool enableUdp = true,
+    bool enableTcp = false,
+    bool preferUdp = false,
+    bool preferTcp = false,
+    uint32_t initialAvailableOutgoingBitrate = 0,
+    bool enableSctp = false,
+    flatbuffers::Offset<FBS::Router::NumSctpStreams> numSctpStreams = 0,
+    uint32_t maxSctpMessageSize = 0,
+    uint32_t sctpSendBufferSize = 0,
+    bool isDataChannel = false) {
+  WebRtcTransportOptionsBuilder builder_(_fbb);
+  builder_.add_sctpSendBufferSize(sctpSendBufferSize);
+  builder_.add_maxSctpMessageSize(maxSctpMessageSize);
+  builder_.add_numSctpStreams(numSctpStreams);
+  builder_.add_initialAvailableOutgoingBitrate(initialAvailableOutgoingBitrate);
+  builder_.add_listen(listen);
+  builder_.add_isDataChannel(isDataChannel);
+  builder_.add_enableSctp(enableSctp);
+  builder_.add_preferTcp(preferTcp);
+  builder_.add_preferUdp(preferUdp);
+  builder_.add_enableTcp(enableTcp);
+  builder_.add_enableUdp(enableUdp);
+  builder_.add_listen_type(listen_type);
+  return builder_.Finish();
+}
+
+struct CreateWebRtcTransportRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CreateWebRtcTransportRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CreateWebRtcTransportRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TRANSPORTID = 4,
+    VT_OPTIONS = 6
+  };
+  const flatbuffers::String *transportId() const {
+    return GetPointer<const flatbuffers::String *>(VT_TRANSPORTID);
+  }
+  const FBS::Router::WebRtcTransportOptions *options() const {
+    return GetPointer<const FBS::Router::WebRtcTransportOptions *>(VT_OPTIONS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_TRANSPORTID) &&
+           verifier.VerifyString(transportId()) &&
+           VerifyOffset(verifier, VT_OPTIONS) &&
+           verifier.VerifyTable(options()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CreateWebRtcTransportRequestBuilder {
+  typedef CreateWebRtcTransportRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_transportId(flatbuffers::Offset<flatbuffers::String> transportId) {
+    fbb_.AddOffset(CreateWebRtcTransportRequest::VT_TRANSPORTID, transportId);
+  }
+  void add_options(flatbuffers::Offset<FBS::Router::WebRtcTransportOptions> options) {
+    fbb_.AddOffset(CreateWebRtcTransportRequest::VT_OPTIONS, options);
+  }
+  explicit CreateWebRtcTransportRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CreateWebRtcTransportRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CreateWebRtcTransportRequest>(end);
+    fbb_.Required(o, CreateWebRtcTransportRequest::VT_TRANSPORTID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CreateWebRtcTransportRequest> CreateCreateWebRtcTransportRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> transportId = 0,
+    flatbuffers::Offset<FBS::Router::WebRtcTransportOptions> options = 0) {
+  CreateWebRtcTransportRequestBuilder builder_(_fbb);
+  builder_.add_options(options);
+  builder_.add_transportId(transportId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CreateWebRtcTransportRequest> CreateCreateWebRtcTransportRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *transportId = nullptr,
+    flatbuffers::Offset<FBS::Router::WebRtcTransportOptions> options = 0) {
+  auto transportId__ = transportId ? _fbb.CreateString(transportId) : 0;
+  return FBS::Router::CreateCreateWebRtcTransportRequest(
+      _fbb,
+      transportId__,
+      options);
+}
+
+inline bool VerifyWebRtcTransportListen(flatbuffers::Verifier &verifier, const void *obj, WebRtcTransportListen type) {
+  switch (type) {
+    case WebRtcTransportListen::NONE: {
+      return true;
+    }
+    case WebRtcTransportListen::WebRtcTransportListenIndividual: {
+      auto ptr = reinterpret_cast<const FBS::Router::WebRtcTransportListenIndividual *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case WebRtcTransportListen::WebRtcTransportListenServer: {
+      auto ptr = reinterpret_cast<const FBS::Router::WebRtcTransportListenServer *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    default: return true;
+  }
+}
+
+inline bool VerifyWebRtcTransportListenVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<WebRtcTransportListen> *types) {
+  if (!values || !types) return !values && !types;
+  if (values->size() != types->size()) return false;
+  for (flatbuffers::uoffset_t i = 0; i < values->size(); ++i) {
+    if (!VerifyWebRtcTransportListen(
+        verifier,  values->Get(i), types->GetEnum<WebRtcTransportListen>(i))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+inline const flatbuffers::TypeTable *WebRtcTransportListenTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Router::WebRtcTransportListenIndividualTypeTable,
+    FBS::Router::WebRtcTransportListenServerTypeTable
+  };
+  static const char * const names[] = {
+    "NONE",
+    "WebRtcTransportListenIndividual",
+    "WebRtcTransportListenServer"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_UNION, 3, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
 inline const flatbuffers::TypeTable *RouterDumpTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_STRING, 0, -1 },
@@ -210,6 +825,124 @@ inline const flatbuffers::TypeTable *RouterDumpTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 8, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *TransportListenIpTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "ip",
+    "announcedIp"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *NumSctpStreamsTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 }
+  };
+  static const char * const names[] = {
+    "OS",
+    "MIS"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *WebRtcTransportListenIndividualTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 1, 0 },
+    { flatbuffers::ET_USHORT, 0, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Router::TransportListenIpTypeTable
+  };
+  static const char * const names[] = {
+    "listenIps",
+    "port"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *WebRtcTransportListenServerTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "webRtcServerId"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *WebRtcTransportOptionsTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UTYPE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Router::WebRtcTransportListenTypeTable,
+    FBS::Router::NumSctpStreamsTypeTable
+  };
+  static const char * const names[] = {
+    "listen_type",
+    "listen",
+    "enableUdp",
+    "enableTcp",
+    "preferUdp",
+    "preferTcp",
+    "initialAvailableOutgoingBitrate",
+    "enableSctp",
+    "numSctpStreams",
+    "maxSctpMessageSize",
+    "sctpSendBufferSize",
+    "isDataChannel"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 12, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CreateWebRtcTransportRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Router::WebRtcTransportOptionsTypeTable
+  };
+  static const char * const names[] = {
+    "transportId",
+    "options"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

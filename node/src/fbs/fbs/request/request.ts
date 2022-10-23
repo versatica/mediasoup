@@ -4,6 +4,7 @@ import * as flatbuffers from 'flatbuffers';
 
 import { Body, unionToBody, unionListToBody } from '../../fbs/request/body';
 import { Method } from '../../fbs/request/method';
+import { CreateWebRtcTransportRequest, CreateWebRtcTransportRequestT } from '../../fbs/router/create-web-rtc-transport-request';
 import { ConsumeRequest, ConsumeRequestT } from '../../fbs/transport/consume-request';
 import { CloseRouterRequest, CloseRouterRequestT } from '../../fbs/worker/close-router-request';
 import { CloseWebRtcServerRequest, CloseWebRtcServerRequestT } from '../../fbs/worker/close-web-rtc-server-request';
@@ -138,7 +139,7 @@ constructor(
   public method: Method = Method.WORKER_CLOSE,
   public handlerId: string|Uint8Array|null = null,
   public bodyType: Body = Body.NONE,
-  public body: CloseRouterRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|UpdateableSettingsT|null = null
+  public body: CloseRouterRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|UpdateableSettingsT|null = null
 ){}
 
 

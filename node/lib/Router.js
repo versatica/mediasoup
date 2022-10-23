@@ -13,6 +13,9 @@ const DirectTransport_1 = require("./DirectTransport");
 const ActiveSpeakerObserver_1 = require("./ActiveSpeakerObserver");
 const AudioLevelObserver_1 = require("./AudioLevelObserver");
 const request_generated_1 = require("./fbs/request_generated");
+const worker_generated_1 = require("./fbs/worker_generated");
+const router_generated_1 = require("./fbs/router_generated");
+const transport_generated_1 = require("./fbs/transport_generated");
 const logger = new Logger_1.Logger('Router');
 class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -159,7 +162,12 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('router.dump', this.#internal.routerId);
+        // Send the request and wait for the response.
+        const response = await this.#channel.requestBinary(request_generated_1.Method.ROUTER_DUMP);
+        /* Decode the response. */
+        const dump = new worker_generated_1.WorkerDump();
+        response.body(dump);
+        return dump.unpack();
     }
     /**
      * Create a WebRtcTransport.
@@ -186,31 +194,51 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 }
             });
         }
-        const reqData = {
-            transportId: (0, uuid_1.v4)(),
-            webRtcServerId: webRtcServer ? webRtcServer.id : undefined,
-            listenIps,
-            port,
-            enableUdp,
-            enableTcp,
-            preferUdp,
-            preferTcp,
-            initialAvailableOutgoingBitrate,
-            enableSctp,
-            numSctpStreams,
-            maxSctpMessageSize,
-            sctpSendBufferSize,
-            isDataChannel: true
+        const transportId = (0, uuid_1.v4)();
+        /* Build Request */
+        const builder = this.#channel.bufferBuilder;
+        let webRtcTransportListenServer;
+        let webRtcTransportListenIndividual;
+        if (webRtcServer) {
+            webRtcTransportListenServer = new router_generated_1.WebRtcTransportListenServerT(webRtcServer.id);
+        }
+        else {
+            const transportListenIps = [];
+            for (const listenIp of listenIps) {
+                const transportListenIp = new router_generated_1.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
+                transportListenIps.push(transportListenIp);
+            }
+            webRtcTransportListenIndividual =
+                new router_generated_1.WebRtcTransportListenIndividualT(transportListenIps, port);
+        }
+        const webRtcTransportOptions = new router_generated_1.WebRtcTransportOptionsT(webRtcServer ?
+            router_generated_1.WebRtcTransportListen.WebRtcTransportListenServer :
+            router_generated_1.WebRtcTransportListen.WebRtcTransportListenIndividual, webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, new router_generated_1.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS), maxSctpMessageSize, sctpSendBufferSize, true /* isDataChannel */);
+        const createWebRtcTransportOffset = new router_generated_1.CreateWebRtcTransportRequestT(transportId, webRtcTransportOptions).pack(builder);
+        const response = webRtcServer
+            ? await this.#channel.requestBinary(request_generated_1.Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER, request_generated_1.Body.FBS_Router_CreateWebRtcTransportRequest, createWebRtcTransportOffset, this.#internal.routerId)
+            : await this.#channel.requestBinary(request_generated_1.Method.ROUTER_CREATE_WEBRTC_TRANSPORT, request_generated_1.Body.FBS_Router_CreateWebRtcTransportRequest, createWebRtcTransportOffset, this.#internal.routerId);
+        /* Decode the response. */
+        const dump = new transport_generated_1.TransportDump();
+        response.body(dump);
+        const data = dump.unpack();
+        const webRtcTransportDump = data.data;
+        const baseTransportDump = webRtcTransportDump.base.data;
+        const webRtcTransportData = {
+            ...webRtcTransportDump,
+            ...baseTransportDump
         };
-        const data = webRtcServer
-            ? await this.#channel.request('router.createWebRtcTransportWithServer', this.#internal.routerId, reqData)
-            : await this.#channel.request('router.createWebRtcTransport', this.#internal.routerId, reqData);
+        /* Fix case for sctpParameters OS and MIS. */
+        // @ts-ignore.
+        webRtcTransportData.sctpParameters.OS = webRtcTransportData.sctpParameters.os ?? 0;
+        // @ts-ignore.
+        webRtcTransportData.sctpParameters.MIS = webRtcTransportData.sctpParameters.mis ?? '';
         const transport = new WebRtcTransport_1.WebRtcTransport({
             internal: {
                 ...this.#internal,
-                transportId: reqData.transportId
+                transportId: transportId
             },
-            data,
+            data: webRtcTransportData,
             channel: this.#channel,
             payloadChannel: this.#payloadChannel,
             appData,

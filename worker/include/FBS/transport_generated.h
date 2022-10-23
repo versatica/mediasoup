@@ -855,8 +855,10 @@ struct BaseTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_RECVRTPHEADEREXTENSIONS = 20,
     VT_RTPLISTENER = 22,
     VT_MAXMESSAGESIZE = 24,
-    VT_SCTPASSOCIATION = 26,
-    VT_TRACEEVENTTYPES = 28
+    VT_SCTPPARAMETERS = 26,
+    VT_STCPSTATE = 28,
+    VT_STCPLISTENER = 30,
+    VT_TRACEEVENTTYPES = 32
   };
   const flatbuffers::String *id() const {
     return GetPointer<const flatbuffers::String *>(VT_ID);
@@ -891,8 +893,14 @@ struct BaseTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   uint32_t maxMessageSize() const {
     return GetField<uint32_t>(VT_MAXMESSAGESIZE, 0);
   }
-  const FBS::Transport::SctpAssociation *sctpAssociation() const {
-    return GetPointer<const FBS::Transport::SctpAssociation *>(VT_SCTPASSOCIATION);
+  const FBS::Transport::SctpParameters *sctpParameters() const {
+    return GetPointer<const FBS::Transport::SctpParameters *>(VT_SCTPPARAMETERS);
+  }
+  const flatbuffers::String *stcpState() const {
+    return GetPointer<const flatbuffers::String *>(VT_STCPSTATE);
+  }
+  const FBS::Transport::SctpListener *stcpListener() const {
+    return GetPointer<const FBS::Transport::SctpListener *>(VT_STCPLISTENER);
   }
   const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *traceEventTypes() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_TRACEEVENTTYPES);
@@ -926,8 +934,12 @@ struct BaseTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffset(verifier, VT_RTPLISTENER) &&
            verifier.VerifyTable(rtpListener()) &&
            VerifyField<uint32_t>(verifier, VT_MAXMESSAGESIZE, 4) &&
-           VerifyOffset(verifier, VT_SCTPASSOCIATION) &&
-           verifier.VerifyTable(sctpAssociation()) &&
+           VerifyOffset(verifier, VT_SCTPPARAMETERS) &&
+           verifier.VerifyTable(sctpParameters()) &&
+           VerifyOffset(verifier, VT_STCPSTATE) &&
+           verifier.VerifyString(stcpState()) &&
+           VerifyOffset(verifier, VT_STCPLISTENER) &&
+           verifier.VerifyTable(stcpListener()) &&
            VerifyOffset(verifier, VT_TRACEEVENTTYPES) &&
            verifier.VerifyVector(traceEventTypes()) &&
            verifier.VerifyVectorOfStrings(traceEventTypes()) &&
@@ -972,8 +984,14 @@ struct BaseTransportDumpBuilder {
   void add_maxMessageSize(uint32_t maxMessageSize) {
     fbb_.AddElement<uint32_t>(BaseTransportDump::VT_MAXMESSAGESIZE, maxMessageSize, 0);
   }
-  void add_sctpAssociation(flatbuffers::Offset<FBS::Transport::SctpAssociation> sctpAssociation) {
-    fbb_.AddOffset(BaseTransportDump::VT_SCTPASSOCIATION, sctpAssociation);
+  void add_sctpParameters(flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters) {
+    fbb_.AddOffset(BaseTransportDump::VT_SCTPPARAMETERS, sctpParameters);
+  }
+  void add_stcpState(flatbuffers::Offset<flatbuffers::String> stcpState) {
+    fbb_.AddOffset(BaseTransportDump::VT_STCPSTATE, stcpState);
+  }
+  void add_stcpListener(flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener) {
+    fbb_.AddOffset(BaseTransportDump::VT_STCPLISTENER, stcpListener);
   }
   void add_traceEventTypes(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> traceEventTypes) {
     fbb_.AddOffset(BaseTransportDump::VT_TRACEEVENTTYPES, traceEventTypes);
@@ -1003,11 +1021,15 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDump(
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringUint8>>> recvRtpHeaderExtensions = 0,
     flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener = 0,
     uint32_t maxMessageSize = 0,
-    flatbuffers::Offset<FBS::Transport::SctpAssociation> sctpAssociation = 0,
+    flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters = 0,
+    flatbuffers::Offset<flatbuffers::String> stcpState = 0,
+    flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> traceEventTypes = 0) {
   BaseTransportDumpBuilder builder_(_fbb);
   builder_.add_traceEventTypes(traceEventTypes);
-  builder_.add_sctpAssociation(sctpAssociation);
+  builder_.add_stcpListener(stcpListener);
+  builder_.add_stcpState(stcpState);
+  builder_.add_sctpParameters(sctpParameters);
   builder_.add_maxMessageSize(maxMessageSize);
   builder_.add_rtpListener(rtpListener);
   builder_.add_recvRtpHeaderExtensions(recvRtpHeaderExtensions);
@@ -1035,7 +1057,9 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDumpDirect(
     const std::vector<flatbuffers::Offset<FBS::Common::StringUint8>> *recvRtpHeaderExtensions = nullptr,
     flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener = 0,
     uint32_t maxMessageSize = 0,
-    flatbuffers::Offset<FBS::Transport::SctpAssociation> sctpAssociation = 0,
+    flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters = 0,
+    const char *stcpState = nullptr,
+    flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener = 0,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *traceEventTypes = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto producerIds__ = producerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*producerIds) : 0;
@@ -1045,6 +1069,7 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDumpDirect(
   auto dataProducerIds__ = dataProducerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*dataProducerIds) : 0;
   auto dataConsumerIds__ = dataConsumerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*dataConsumerIds) : 0;
   auto recvRtpHeaderExtensions__ = recvRtpHeaderExtensions ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::StringUint8>>(*recvRtpHeaderExtensions) : 0;
+  auto stcpState__ = stcpState ? _fbb.CreateString(stcpState) : 0;
   auto traceEventTypes__ = traceEventTypes ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*traceEventTypes) : 0;
   return FBS::Transport::CreateBaseTransportDump(
       _fbb,
@@ -1059,7 +1084,9 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDumpDirect(
       recvRtpHeaderExtensions__,
       rtpListener,
       maxMessageSize,
-      sctpAssociation,
+      sctpParameters,
+      stcpState__,
+      stcpListener,
       traceEventTypes__);
 }
 
@@ -1467,28 +1494,22 @@ struct DtlsParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return DtlsParametersTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_FINGERPRINT = 4,
-    VT_ROLE = 6,
-    VT_DTLSSTATE = 8
+    VT_FINGERPRINTS = 4,
+    VT_ROLE = 6
   };
-  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>> *fingerprint() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>> *>(VT_FINGERPRINT);
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>> *fingerprints() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>> *>(VT_FINGERPRINTS);
   }
   const flatbuffers::String *role() const {
     return GetPointer<const flatbuffers::String *>(VT_ROLE);
   }
-  const flatbuffers::String *dtlsState() const {
-    return GetPointer<const flatbuffers::String *>(VT_DTLSSTATE);
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffsetRequired(verifier, VT_FINGERPRINT) &&
-           verifier.VerifyVector(fingerprint()) &&
-           verifier.VerifyVectorOfTables(fingerprint()) &&
+           VerifyOffsetRequired(verifier, VT_FINGERPRINTS) &&
+           verifier.VerifyVector(fingerprints()) &&
+           verifier.VerifyVectorOfTables(fingerprints()) &&
            VerifyOffsetRequired(verifier, VT_ROLE) &&
            verifier.VerifyString(role()) &&
-           VerifyOffsetRequired(verifier, VT_DTLSSTATE) &&
-           verifier.VerifyString(dtlsState()) &&
            verifier.EndTable();
   }
 };
@@ -1497,14 +1518,11 @@ struct DtlsParametersBuilder {
   typedef DtlsParameters Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_fingerprint(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>>> fingerprint) {
-    fbb_.AddOffset(DtlsParameters::VT_FINGERPRINT, fingerprint);
+  void add_fingerprints(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>>> fingerprints) {
+    fbb_.AddOffset(DtlsParameters::VT_FINGERPRINTS, fingerprints);
   }
   void add_role(flatbuffers::Offset<flatbuffers::String> role) {
     fbb_.AddOffset(DtlsParameters::VT_ROLE, role);
-  }
-  void add_dtlsState(flatbuffers::Offset<flatbuffers::String> dtlsState) {
-    fbb_.AddOffset(DtlsParameters::VT_DTLSSTATE, dtlsState);
   }
   explicit DtlsParametersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1513,38 +1531,32 @@ struct DtlsParametersBuilder {
   flatbuffers::Offset<DtlsParameters> Finish() {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<DtlsParameters>(end);
-    fbb_.Required(o, DtlsParameters::VT_FINGERPRINT);
+    fbb_.Required(o, DtlsParameters::VT_FINGERPRINTS);
     fbb_.Required(o, DtlsParameters::VT_ROLE);
-    fbb_.Required(o, DtlsParameters::VT_DTLSSTATE);
     return o;
   }
 };
 
 inline flatbuffers::Offset<DtlsParameters> CreateDtlsParameters(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>>> fingerprint = 0,
-    flatbuffers::Offset<flatbuffers::String> role = 0,
-    flatbuffers::Offset<flatbuffers::String> dtlsState = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::Fingerprint>>> fingerprints = 0,
+    flatbuffers::Offset<flatbuffers::String> role = 0) {
   DtlsParametersBuilder builder_(_fbb);
-  builder_.add_dtlsState(dtlsState);
   builder_.add_role(role);
-  builder_.add_fingerprint(fingerprint);
+  builder_.add_fingerprints(fingerprints);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<DtlsParameters> CreateDtlsParametersDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<flatbuffers::Offset<FBS::Transport::Fingerprint>> *fingerprint = nullptr,
-    const char *role = nullptr,
-    const char *dtlsState = nullptr) {
-  auto fingerprint__ = fingerprint ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::Fingerprint>>(*fingerprint) : 0;
+    const std::vector<flatbuffers::Offset<FBS::Transport::Fingerprint>> *fingerprints = nullptr,
+    const char *role = nullptr) {
+  auto fingerprints__ = fingerprints ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::Fingerprint>>(*fingerprints) : 0;
   auto role__ = role ? _fbb.CreateString(role) : 0;
-  auto dtlsState__ = dtlsState ? _fbb.CreateString(dtlsState) : 0;
   return FBS::Transport::CreateDtlsParameters(
       _fbb,
-      fingerprint__,
-      role__,
-      dtlsState__);
+      fingerprints__,
+      role__);
 }
 
 struct WebRtcTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -1559,7 +1571,8 @@ struct WebRtcTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table 
     VT_ICECANDIDATES = 10,
     VT_ICESTATE = 12,
     VT_ICESELECTEDTUPLE = 14,
-    VT_DTLSPARAMETERS = 16
+    VT_DTLSPARAMETERS = 16,
+    VT_DTLSSTATE = 18
   };
   const FBS::Transport::TransportDump *base() const {
     return GetPointer<const FBS::Transport::TransportDump *>(VT_BASE);
@@ -1582,6 +1595,9 @@ struct WebRtcTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table 
   const FBS::Transport::DtlsParameters *dtlsParameters() const {
     return GetPointer<const FBS::Transport::DtlsParameters *>(VT_DTLSPARAMETERS);
   }
+  const flatbuffers::String *dtlsState() const {
+    return GetPointer<const flatbuffers::String *>(VT_DTLSSTATE);
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffsetRequired(verifier, VT_BASE) &&
@@ -1599,6 +1615,8 @@ struct WebRtcTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table 
            verifier.VerifyTable(iceSelectedTuple()) &&
            VerifyOffsetRequired(verifier, VT_DTLSPARAMETERS) &&
            verifier.VerifyTable(dtlsParameters()) &&
+           VerifyOffsetRequired(verifier, VT_DTLSSTATE) &&
+           verifier.VerifyString(dtlsState()) &&
            verifier.EndTable();
   }
 };
@@ -1628,6 +1646,9 @@ struct WebRtcTransportDumpBuilder {
   void add_dtlsParameters(flatbuffers::Offset<FBS::Transport::DtlsParameters> dtlsParameters) {
     fbb_.AddOffset(WebRtcTransportDump::VT_DTLSPARAMETERS, dtlsParameters);
   }
+  void add_dtlsState(flatbuffers::Offset<flatbuffers::String> dtlsState) {
+    fbb_.AddOffset(WebRtcTransportDump::VT_DTLSSTATE, dtlsState);
+  }
   explicit WebRtcTransportDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -1641,6 +1662,7 @@ struct WebRtcTransportDumpBuilder {
     fbb_.Required(o, WebRtcTransportDump::VT_ICECANDIDATES);
     fbb_.Required(o, WebRtcTransportDump::VT_ICESTATE);
     fbb_.Required(o, WebRtcTransportDump::VT_DTLSPARAMETERS);
+    fbb_.Required(o, WebRtcTransportDump::VT_DTLSSTATE);
     return o;
   }
 };
@@ -1653,8 +1675,10 @@ inline flatbuffers::Offset<WebRtcTransportDump> CreateWebRtcTransportDump(
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::IceCandidate>>> iceCandidates = 0,
     flatbuffers::Offset<flatbuffers::String> iceState = 0,
     flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple = 0,
-    flatbuffers::Offset<FBS::Transport::DtlsParameters> dtlsParameters = 0) {
+    flatbuffers::Offset<FBS::Transport::DtlsParameters> dtlsParameters = 0,
+    flatbuffers::Offset<flatbuffers::String> dtlsState = 0) {
   WebRtcTransportDumpBuilder builder_(_fbb);
+  builder_.add_dtlsState(dtlsState);
   builder_.add_dtlsParameters(dtlsParameters);
   builder_.add_iceSelectedTuple(iceSelectedTuple);
   builder_.add_iceState(iceState);
@@ -1673,10 +1697,12 @@ inline flatbuffers::Offset<WebRtcTransportDump> CreateWebRtcTransportDumpDirect(
     const std::vector<flatbuffers::Offset<FBS::Transport::IceCandidate>> *iceCandidates = nullptr,
     const char *iceState = nullptr,
     flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple = 0,
-    flatbuffers::Offset<FBS::Transport::DtlsParameters> dtlsParameters = 0) {
+    flatbuffers::Offset<FBS::Transport::DtlsParameters> dtlsParameters = 0,
+    const char *dtlsState = nullptr) {
   auto iceRole__ = iceRole ? _fbb.CreateString(iceRole) : 0;
   auto iceCandidates__ = iceCandidates ? _fbb.CreateVector<flatbuffers::Offset<FBS::Transport::IceCandidate>>(*iceCandidates) : 0;
   auto iceState__ = iceState ? _fbb.CreateString(iceState) : 0;
+  auto dtlsState__ = dtlsState ? _fbb.CreateString(dtlsState) : 0;
   return FBS::Transport::CreateWebRtcTransportDump(
       _fbb,
       base,
@@ -1685,7 +1711,8 @@ inline flatbuffers::Offset<WebRtcTransportDump> CreateWebRtcTransportDumpDirect(
       iceCandidates__,
       iceState__,
       iceSelectedTuple,
-      dtlsParameters);
+      dtlsParameters,
+      dtlsState__);
 }
 
 struct SrtpParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -2227,13 +2254,16 @@ inline const flatbuffers::TypeTable *BaseTransportDumpTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 2 },
     { flatbuffers::ET_UINT, 0, -1 },
     { flatbuffers::ET_SEQUENCE, 0, 3 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 4 },
     { flatbuffers::ET_STRING, 1, -1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Common::Uint32StringTypeTable,
     FBS::Common::StringUint8TypeTable,
     FBS::Transport::RtpListenerTypeTable,
-    FBS::Transport::SctpAssociationTypeTable
+    FBS::Transport::SctpParametersTypeTable,
+    FBS::Transport::SctpListenerTypeTable
   };
   static const char * const names[] = {
     "id",
@@ -2247,11 +2277,13 @@ inline const flatbuffers::TypeTable *BaseTransportDumpTypeTable() {
     "recvRtpHeaderExtensions",
     "rtpListener",
     "maxMessageSize",
-    "sctpAssociation",
+    "sctpParameters",
+    "stcpState",
+    "stcpListener",
     "traceEventTypes"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 13, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 15, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }
@@ -2337,19 +2369,17 @@ inline const flatbuffers::TypeTable *FingerprintTypeTable() {
 inline const flatbuffers::TypeTable *DtlsParametersTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_SEQUENCE, 1, 0 },
-    { flatbuffers::ET_STRING, 0, -1 },
     { flatbuffers::ET_STRING, 0, -1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Transport::FingerprintTypeTable
   };
   static const char * const names[] = {
-    "fingerprint",
-    "role",
-    "dtlsState"
+    "fingerprints",
+    "role"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 3, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }
@@ -2362,7 +2392,8 @@ inline const flatbuffers::TypeTable *WebRtcTransportDumpTypeTable() {
     { flatbuffers::ET_SEQUENCE, 1, 2 },
     { flatbuffers::ET_STRING, 0, -1 },
     { flatbuffers::ET_SEQUENCE, 0, 3 },
-    { flatbuffers::ET_SEQUENCE, 0, 4 }
+    { flatbuffers::ET_SEQUENCE, 0, 4 },
+    { flatbuffers::ET_STRING, 0, -1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Transport::TransportDumpTypeTable,
@@ -2378,10 +2409,11 @@ inline const flatbuffers::TypeTable *WebRtcTransportDumpTypeTable() {
     "iceCandidates",
     "iceState",
     "iceSelectedTuple",
-    "dtlsParameters"
+    "dtlsParameters",
+    "dtlsState"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 7, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 8, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

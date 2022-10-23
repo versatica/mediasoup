@@ -7,7 +7,14 @@ export { ConsumerLayers, ConsumerLayersT } from './fbs/consumer/consumer-layers'
 export { ConsumerScore, ConsumerScoreT } from './fbs/consumer/consumer-score';
 export { Body, unionToBody, unionListToBody } from './fbs/response/body';
 export { Response, ResponseT } from './fbs/response/response';
+export { CreateWebRtcTransportRequest, CreateWebRtcTransportRequestT } from './fbs/router/create-web-rtc-transport-request';
+export { NumSctpStreams, NumSctpStreamsT } from './fbs/router/num-sctp-streams';
 export { RouterDump, RouterDumpT } from './fbs/router/router-dump';
+export { TransportListenIp, TransportListenIpT } from './fbs/router/transport-listen-ip';
+export { WebRtcTransportListen, unionToWebRtcTransportListen, unionListToWebRtcTransportListen } from './fbs/router/web-rtc-transport-listen';
+export { WebRtcTransportListenIndividual, WebRtcTransportListenIndividualT } from './fbs/router/web-rtc-transport-listen-individual';
+export { WebRtcTransportListenServer, WebRtcTransportListenServerT } from './fbs/router/web-rtc-transport-listen-server';
+export { WebRtcTransportOptions, WebRtcTransportOptionsT } from './fbs/router/web-rtc-transport-options';
 export { Boolean, BooleanT } from './fbs/rtp-parameters/boolean';
 export { Double, DoubleT } from './fbs/rtp-parameters/double';
 export { Integer, IntegerT } from './fbs/rtp-parameters/integer';

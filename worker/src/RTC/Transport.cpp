@@ -177,6 +177,94 @@ namespace RTC
 		this->rtcpTimer = new Timer(this);
 	}
 
+	Transport::Transport(const std::string& id, RTC::Transport::Listener* listener,
+		  const FBS::Router::WebRtcTransportOptions* options)
+	  : id(id), listener(listener), recvRtxTransmission(1000u), sendRtxTransmission(1000u),
+	    sendProbationTransmission(100u)
+	{
+		MS_TRACE();
+
+		/*
+		auto jsonDirectIt = data.find("direct");
+
+		// clang-format off
+		if (
+			jsonDirectIt != data.end() &&
+			jsonDirectIt->is_boolean() &&
+			jsonDirectIt->get<bool>()
+		)
+		// clang-format on
+		{
+			this->direct = true;
+
+			auto jsonMaxMessageSizeIt = data.find("maxMessageSize");
+
+			// maxMessageSize is mandatory for direct Transports.
+			// clang-format off
+			if (
+				jsonMaxMessageSizeIt == data.end() ||
+				!Utils::Json::IsPositiveInteger(*jsonMaxMessageSizeIt)
+			)
+			// clang-format on
+			{
+				MS_THROW_TYPE_ERROR("wrong maxMessageSize (not a number)");
+			}
+
+			this->maxMessageSize = jsonMaxMessageSizeIt->get<size_t>();
+		}
+		*/
+
+
+		this->initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
+
+		if (options->enableSctp())
+		{
+			if (this->direct)
+			{
+				MS_THROW_TYPE_ERROR("cannot enable SCTP in a direct Transport");
+			}
+
+			// numSctpStreams is mandatory.
+			if (!flatbuffers::IsFieldPresent(options, FBS::Router::WebRtcTransportOptions::VT_NUMSCTPSTREAMS)
+			)
+			{
+				MS_THROW_TYPE_ERROR("numSctpStreams missing");
+			}
+
+			// maxSctpMessageSize is mandatory.
+			if (!flatbuffers::IsFieldPresent(options, FBS::Router::WebRtcTransportOptions::VT_MAXSCTPMESSAGESIZE))
+			{
+				MS_THROW_TYPE_ERROR("maxSctpMessageSize missing");
+			}
+
+			this->maxMessageSize = options->maxSctpMessageSize();
+
+			size_t sctpSendBufferSize;
+
+			// sctpSendBufferSize is optional.
+			if (flatbuffers::IsFieldPresent(options, FBS::Router::WebRtcTransportOptions::VT_SCTPSENDBUFFERSIZE))
+			{
+				if (options->sctpSendBufferSize() > MaxSctpSendBufferSize)
+				{
+					MS_THROW_TYPE_ERROR("wrong sctpSendBufferSize (maximum value exceeded)");
+				}
+
+				sctpSendBufferSize = options->sctpSendBufferSize();
+			}
+			else
+			{
+				sctpSendBufferSize = DefaultSctpSendBufferSize;
+			}
+
+			// This may throw.
+			this->sctpAssociation = new RTC::SctpAssociation(
+			  this, options->numSctpStreams()->OS(), options->numSctpStreams()->MIS(), this->maxMessageSize, sctpSendBufferSize, options->isDataChannel());
+		}
+
+		// Create the RTCP timer.
+		this->rtcpTimer = new Timer(this);
+	}
+
 	Transport::~Transport()
 	{
 		MS_TRACE();
@@ -410,18 +498,17 @@ namespace RTC
 
 		auto rtpListenerOffset = this->rtpListener.FillBuffer(builder);
 
-		// Add maxMessageSize.
-		// jsonObject["maxMessageSize"] = this->maxMessageSize;
-
-		flatbuffers::Offset<FBS::Transport::SctpAssociation> sctpAssociation;
+		// Add sctpParameters.
+		flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters;
+		// Add sctpState.
+		std::string sctpState;
+		// Add sctpListener.
+		flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener;
 
 		if (this->sctpAssociation)
 		{
 			// Add sctpParameters.
-			auto sctpParametersOffset = this->sctpAssociation->FillBuffer(builder);
-
-			// Add sctpState.
-			std::string sctpState;
+			sctpParameters= this->sctpAssociation->FillBuffer(builder);
 
 			switch (this->sctpAssociation->GetState())
 			{
@@ -442,11 +529,7 @@ namespace RTC
 					break;
 			}
 
-			// Add sctpListener.
-			auto sctpListenerOffset = this->sctpListener.FillBuffer(builder);
-
-			sctpAssociation = FBS::Transport::CreateSctpAssociationDirect(
-			  builder, sctpParametersOffset, sctpState.c_str(), sctpListenerOffset);
+			sctpListener = this->sctpListener.FillBuffer(builder);
 		}
 
 		// Add traceEventTypes.
@@ -470,7 +553,9 @@ namespace RTC
 		  &recvRtpHeaderExtensions,
 		  rtpListenerOffset,
 		  this->maxMessageSize,
-		  sctpAssociation,
+		  sctpParameters,
+			sctpState.c_str(),
+			sctpListener,
 		  &traceEventTypes);
 
 		return FBS::Transport::CreateTransportDump(
@@ -1208,7 +1293,7 @@ namespace RTC
 
 				auto dumpOffset = FillBuffer(builder);
 
-				request->Accept(builder, FBS::Response::Body::FBS_Worker_WorkerDump, dumpOffset);
+				request->Accept(builder, FBS::Response::Body::FBS_Transport_TransportDump, dumpOffset);
 
 				break;
 			}
@@ -1826,6 +1911,7 @@ namespace RTC
 				std::string producerId = body->producerId()->str();
 				std::string consumerId = body->consumerId()->str();
 
+				// TODO: use CheckNoConsumer(consumerId) instead.
 				if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
 				{
 					MS_THROW_ERROR("a Consumer with same consumerId already exists");

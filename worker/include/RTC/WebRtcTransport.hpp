@@ -56,6 +56,14 @@ namespace RTC
 		  WebRtcTransportListener* webRtcTransportListener,
 		  std::vector<RTC::IceCandidate>& iceCandidates,
 		  json& data);
+		WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener,
+		  const FBS::Router::WebRtcTransportOptions* options);
+		WebRtcTransport(
+		  const std::string& id,
+		  RTC::Transport::Listener* listener,
+		  WebRtcTransportListener* webRtcTransportListener,
+		  std::vector<RTC::IceCandidate>& iceCandidates,
+		  const FBS::Router::WebRtcTransportOptions* options);
 		~WebRtcTransport() override;
 
 	public:

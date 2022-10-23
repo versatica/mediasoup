@@ -1,3 +1,4 @@
+include "router.fbs";
 include "transport.fbs";
 include "worker.fbs";
 
@@ -64,12 +65,13 @@ enum Method: uint8 {
 }
 
 union Body {
+  FBS.Router.CreateWebRtcTransportRequest,
+  FBS.Transport.ConsumeRequest,
   FBS.Worker.UpdateableSettings,
   FBS.Worker.CreateWebRtcServerRequest,
   FBS.Worker.CloseWebRtcServerRequest,
   FBS.Worker.CreateRouterRequest,
   FBS.Worker.CloseRouterRequest,
-  FBS.Transport.ConsumeRequest,
 }
 
 table Request {

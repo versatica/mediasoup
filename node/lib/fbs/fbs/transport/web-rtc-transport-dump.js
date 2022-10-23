@@ -55,8 +55,12 @@ class WebRtcTransportDump {
         const offset = this.bb.__offset(this.bb_pos, 16);
         return offset ? (obj || new dtls_parameters_1.DtlsParameters()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
     }
+    dtlsState(optionalEncoding) {
+        const offset = this.bb.__offset(this.bb_pos, 18);
+        return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+    }
     static startWebRtcTransportDump(builder) {
-        builder.startObject(7);
+        builder.startObject(8);
     }
     static addBase(builder, baseOffset) {
         builder.addFieldOffset(0, baseOffset, 0);
@@ -89,6 +93,9 @@ class WebRtcTransportDump {
     static addDtlsParameters(builder, dtlsParametersOffset) {
         builder.addFieldOffset(6, dtlsParametersOffset, 0);
     }
+    static addDtlsState(builder, dtlsStateOffset) {
+        builder.addFieldOffset(7, dtlsStateOffset, 0);
+    }
     static endWebRtcTransportDump(builder) {
         const offset = builder.endObject();
         builder.requiredField(offset, 4); // base
@@ -97,10 +104,11 @@ class WebRtcTransportDump {
         builder.requiredField(offset, 10); // ice_candidates
         builder.requiredField(offset, 12); // ice_state
         builder.requiredField(offset, 16); // dtls_parameters
+        builder.requiredField(offset, 18); // dtls_state
         return offset;
     }
     unpack() {
-        return new WebRtcTransportDumpT((this.base() !== null ? this.base().unpack() : null), this.iceRole(), (this.iceParameters() !== null ? this.iceParameters().unpack() : null), this.bb.createObjList(this.iceCandidates.bind(this), this.iceCandidatesLength()), this.iceState(), (this.iceSelectedTuple() !== null ? this.iceSelectedTuple().unpack() : null), (this.dtlsParameters() !== null ? this.dtlsParameters().unpack() : null));
+        return new WebRtcTransportDumpT((this.base() !== null ? this.base().unpack() : null), this.iceRole(), (this.iceParameters() !== null ? this.iceParameters().unpack() : null), this.bb.createObjList(this.iceCandidates.bind(this), this.iceCandidatesLength()), this.iceState(), (this.iceSelectedTuple() !== null ? this.iceSelectedTuple().unpack() : null), (this.dtlsParameters() !== null ? this.dtlsParameters().unpack() : null), this.dtlsState());
     }
     unpackTo(_o) {
         _o.base = (this.base() !== null ? this.base().unpack() : null);
@@ -110,6 +118,7 @@ class WebRtcTransportDump {
         _o.iceState = this.iceState();
         _o.iceSelectedTuple = (this.iceSelectedTuple() !== null ? this.iceSelectedTuple().unpack() : null);
         _o.dtlsParameters = (this.dtlsParameters() !== null ? this.dtlsParameters().unpack() : null);
+        _o.dtlsState = this.dtlsState();
     }
 }
 exports.WebRtcTransportDump = WebRtcTransportDump;
@@ -121,7 +130,8 @@ class WebRtcTransportDumpT {
     iceState;
     iceSelectedTuple;
     dtlsParameters;
-    constructor(base = null, iceRole = null, iceParameters = null, iceCandidates = [], iceState = null, iceSelectedTuple = null, dtlsParameters = null) {
+    dtlsState;
+    constructor(base = null, iceRole = null, iceParameters = null, iceCandidates = [], iceState = null, iceSelectedTuple = null, dtlsParameters = null, dtlsState = null) {
         this.base = base;
         this.iceRole = iceRole;
         this.iceParameters = iceParameters;
@@ -129,6 +139,7 @@ class WebRtcTransportDumpT {
         this.iceState = iceState;
         this.iceSelectedTuple = iceSelectedTuple;
         this.dtlsParameters = dtlsParameters;
+        this.dtlsState = dtlsState;
     }
     pack(builder) {
         const base = (this.base !== null ? this.base.pack(builder) : 0);
@@ -138,6 +149,7 @@ class WebRtcTransportDumpT {
         const iceState = (this.iceState !== null ? builder.createString(this.iceState) : 0);
         const iceSelectedTuple = (this.iceSelectedTuple !== null ? this.iceSelectedTuple.pack(builder) : 0);
         const dtlsParameters = (this.dtlsParameters !== null ? this.dtlsParameters.pack(builder) : 0);
+        const dtlsState = (this.dtlsState !== null ? builder.createString(this.dtlsState) : 0);
         WebRtcTransportDump.startWebRtcTransportDump(builder);
         WebRtcTransportDump.addBase(builder, base);
         WebRtcTransportDump.addIceRole(builder, iceRole);
@@ -146,6 +158,7 @@ class WebRtcTransportDumpT {
         WebRtcTransportDump.addIceState(builder, iceState);
         WebRtcTransportDump.addIceSelectedTuple(builder, iceSelectedTuple);
         WebRtcTransportDump.addDtlsParameters(builder, dtlsParameters);
+        WebRtcTransportDump.addDtlsState(builder, dtlsState);
         return WebRtcTransportDump.endWebRtcTransportDump(builder);
     }
 }

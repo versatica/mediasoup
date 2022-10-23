@@ -6,7 +6,7 @@ import { InvalidStateError } from './errors';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Transport, TransportListenIp } from './Transport';
-import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
+import { WebRtcTransport, WebRtcTransportOptions, WebRtcTransportData } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions } from './PipeTransport';
 import { DirectTransport, DirectTransportOptions } from './DirectTransport';
@@ -21,6 +21,8 @@ import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 import { Body as RequestBody, Method, CloseRouterRequestT } from './fbs/request_generated';
 import { WorkerDump as FbsRouterDump } from './fbs/worker_generated';
+import { CreateWebRtcTransportRequestT, NumSctpStreamsT, TransportListenIpT, WebRtcTransportOptionsT, WebRtcTransportListen, WebRtcTransportListenIndividualT, WebRtcTransportListenServerT } from './fbs/router_generated';
+import { BaseTransportDumpT, TransportDump, WebRtcTransportDumpT } from './fbs/transport_generated';
 
 export type RouterOptions =
 {
@@ -417,36 +419,98 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			});
 		}
 
-		const reqData =
+		const transportId = uuidv4();
+
+		/* Build Request. */
+		const builder = this.#channel.bufferBuilder;
+
+		let webRtcTransportListenServer: WebRtcTransportListenServerT | undefined;
+		let webRtcTransportListenIndividual: WebRtcTransportListenIndividualT | undefined;
+
+		if (webRtcServer)
 		{
-			transportId    : uuidv4(),
-			webRtcServerId : webRtcServer ? webRtcServer.id : undefined,
-			listenIps,
-			port,
+			webRtcTransportListenServer = new WebRtcTransportListenServerT(webRtcServer.id);
+		}
+		else
+		{
+			const transportListenIps: TransportListenIpT[] = [];
+
+			for (const listenIp of listenIps as any[])
+			{
+				const transportListenIp =
+					new TransportListenIpT(listenIp.ip, listenIp.announcedIp);
+
+				transportListenIps.push(transportListenIp);
+			}
+
+			webRtcTransportListenIndividual =
+				new WebRtcTransportListenIndividualT(transportListenIps, port);
+		}
+
+		const webRtcTransportOptions = new WebRtcTransportOptionsT(
+			webRtcServer ?
+				WebRtcTransportListen.WebRtcTransportListenServer :
+				WebRtcTransportListen.WebRtcTransportListenIndividual,
+			webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual,
 			enableUdp,
 			enableTcp,
 			preferUdp,
 			preferTcp,
 			initialAvailableOutgoingBitrate,
 			enableSctp,
-			numSctpStreams,
+			new NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS),
 			maxSctpMessageSize,
 			sctpSendBufferSize,
-			isDataChannel  : true
-		};
+			true /* isDataChannel */
+		);
 
-		const data = webRtcServer
-			? await this.#channel.request('router.createWebRtcTransportWithServer', this.#internal.routerId, reqData)
-			: await this.#channel.request('router.createWebRtcTransport', this.#internal.routerId, reqData);
+		const createWebRtcTransportOffset = new CreateWebRtcTransportRequestT(
+			transportId, webRtcTransportOptions
+		).pack(builder);
+
+		const response = webRtcServer
+			? await this.#channel.requestBinary(
+				Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER,
+				RequestBody.FBS_Router_CreateWebRtcTransportRequest,
+				createWebRtcTransportOffset,
+				this.#internal.routerId)
+			: await this.#channel.requestBinary(
+				Method.ROUTER_CREATE_WEBRTC_TRANSPORT,
+				RequestBody.FBS_Router_CreateWebRtcTransportRequest,
+				createWebRtcTransportOffset,
+				this.#internal.routerId);
+
+		/* Decode the response. */
+		const dump = new TransportDump();
+
+		response.body(dump);
+
+		const data = dump.unpack();
+
+		/* Fixup data into WebRtcTransportData. */
+
+		const webRtcTransportDump = data.data as WebRtcTransportDumpT;
+		const baseTransportDump = (webRtcTransportDump.base!.data as BaseTransportDumpT);
+
+		const webRtcTransportData = {
+			...webRtcTransportDump,
+			...baseTransportDump
+		} as unknown as WebRtcTransportData;
+
+		/* Fix case for sctpParameters OS and MIS. */
+		// @ts-ignore.
+		webRtcTransportData.sctpParameters!.OS = webRtcTransportData.sctpParameters!.os ?? 0;
+		// @ts-ignore.
+		webRtcTransportData.sctpParameters!.MIS = webRtcTransportData.sctpParameters!.mis ?? '';
 
 		const transport = new WebRtcTransport(
 			{
 				internal :
 				{
 					...this.#internal,
-					transportId : reqData.transportId
+					transportId : transportId
 				},
-				data,
+				data                     : webRtcTransportData,
 				channel                  : this.#channel,
 				payloadChannel           : this.#payloadChannel,
 				appData,

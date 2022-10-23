@@ -6,7 +6,8 @@ const flatbuffers = require("flatbuffers");
 const string_uint8_1 = require("../../fbs/common/string-uint8");
 const uint32string_1 = require("../../fbs/common/uint32string");
 const rtp_listener_1 = require("../../fbs/transport/rtp-listener");
-const sctp_association_1 = require("../../fbs/transport/sctp-association");
+const sctp_listener_1 = require("../../fbs/transport/sctp-listener");
+const sctp_parameters_1 = require("../../fbs/transport/sctp-parameters");
 class BaseTransportDump {
     bb = null;
     bb_pos = 0;
@@ -94,20 +95,28 @@ class BaseTransportDump {
         const offset = this.bb.__offset(this.bb_pos, 24);
         return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
     }
-    sctpAssociation(obj) {
+    sctpParameters(obj) {
         const offset = this.bb.__offset(this.bb_pos, 26);
-        return offset ? (obj || new sctp_association_1.SctpAssociation()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+        return offset ? (obj || new sctp_parameters_1.SctpParameters()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+    }
+    stcpState(optionalEncoding) {
+        const offset = this.bb.__offset(this.bb_pos, 28);
+        return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+    }
+    stcpListener(obj) {
+        const offset = this.bb.__offset(this.bb_pos, 30);
+        return offset ? (obj || new sctp_listener_1.SctpListener()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
     }
     traceEventTypes(index, optionalEncoding) {
-        const offset = this.bb.__offset(this.bb_pos, 28);
+        const offset = this.bb.__offset(this.bb_pos, 32);
         return offset ? this.bb.__string(this.bb.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
     }
     traceEventTypesLength() {
-        const offset = this.bb.__offset(this.bb_pos, 28);
+        const offset = this.bb.__offset(this.bb_pos, 32);
         return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
     }
     static startBaseTransportDump(builder) {
-        builder.startObject(13);
+        builder.startObject(15);
     }
     static addId(builder, idOffset) {
         builder.addFieldOffset(0, idOffset, 0);
@@ -212,11 +221,17 @@ class BaseTransportDump {
     static addMaxMessageSize(builder, maxMessageSize) {
         builder.addFieldInt32(10, maxMessageSize, 0);
     }
-    static addSctpAssociation(builder, sctpAssociationOffset) {
-        builder.addFieldOffset(11, sctpAssociationOffset, 0);
+    static addSctpParameters(builder, sctpParametersOffset) {
+        builder.addFieldOffset(11, sctpParametersOffset, 0);
+    }
+    static addStcpState(builder, stcpStateOffset) {
+        builder.addFieldOffset(12, stcpStateOffset, 0);
+    }
+    static addStcpListener(builder, stcpListenerOffset) {
+        builder.addFieldOffset(13, stcpListenerOffset, 0);
     }
     static addTraceEventTypes(builder, traceEventTypesOffset) {
-        builder.addFieldOffset(12, traceEventTypesOffset, 0);
+        builder.addFieldOffset(14, traceEventTypesOffset, 0);
     }
     static createTraceEventTypesVector(builder, data) {
         builder.startVector(4, data.length, 4);
@@ -234,7 +249,7 @@ class BaseTransportDump {
         return offset;
     }
     unpack() {
-        return new BaseTransportDumpT(this.id(), this.direct(), this.bb.createScalarList(this.producerIds.bind(this), this.producerIdsLength()), this.bb.createScalarList(this.consumerIds.bind(this), this.consumerIdsLength()), this.bb.createObjList(this.mapSsrcConsumerId.bind(this), this.mapSsrcConsumerIdLength()), this.bb.createObjList(this.mapRtxSsrcConsumerId.bind(this), this.mapRtxSsrcConsumerIdLength()), this.bb.createScalarList(this.dataProducerIds.bind(this), this.dataProducerIdsLength()), this.bb.createScalarList(this.dataConsumerIds.bind(this), this.dataConsumerIdsLength()), this.bb.createObjList(this.recvRtpHeaderExtensions.bind(this), this.recvRtpHeaderExtensionsLength()), (this.rtpListener() !== null ? this.rtpListener().unpack() : null), this.maxMessageSize(), (this.sctpAssociation() !== null ? this.sctpAssociation().unpack() : null), this.bb.createScalarList(this.traceEventTypes.bind(this), this.traceEventTypesLength()));
+        return new BaseTransportDumpT(this.id(), this.direct(), this.bb.createScalarList(this.producerIds.bind(this), this.producerIdsLength()), this.bb.createScalarList(this.consumerIds.bind(this), this.consumerIdsLength()), this.bb.createObjList(this.mapSsrcConsumerId.bind(this), this.mapSsrcConsumerIdLength()), this.bb.createObjList(this.mapRtxSsrcConsumerId.bind(this), this.mapRtxSsrcConsumerIdLength()), this.bb.createScalarList(this.dataProducerIds.bind(this), this.dataProducerIdsLength()), this.bb.createScalarList(this.dataConsumerIds.bind(this), this.dataConsumerIdsLength()), this.bb.createObjList(this.recvRtpHeaderExtensions.bind(this), this.recvRtpHeaderExtensionsLength()), (this.rtpListener() !== null ? this.rtpListener().unpack() : null), this.maxMessageSize(), (this.sctpParameters() !== null ? this.sctpParameters().unpack() : null), this.stcpState(), (this.stcpListener() !== null ? this.stcpListener().unpack() : null), this.bb.createScalarList(this.traceEventTypes.bind(this), this.traceEventTypesLength()));
     }
     unpackTo(_o) {
         _o.id = this.id();
@@ -248,7 +263,9 @@ class BaseTransportDump {
         _o.recvRtpHeaderExtensions = this.bb.createObjList(this.recvRtpHeaderExtensions.bind(this), this.recvRtpHeaderExtensionsLength());
         _o.rtpListener = (this.rtpListener() !== null ? this.rtpListener().unpack() : null);
         _o.maxMessageSize = this.maxMessageSize();
-        _o.sctpAssociation = (this.sctpAssociation() !== null ? this.sctpAssociation().unpack() : null);
+        _o.sctpParameters = (this.sctpParameters() !== null ? this.sctpParameters().unpack() : null);
+        _o.stcpState = this.stcpState();
+        _o.stcpListener = (this.stcpListener() !== null ? this.stcpListener().unpack() : null);
         _o.traceEventTypes = this.bb.createScalarList(this.traceEventTypes.bind(this), this.traceEventTypesLength());
     }
 }
@@ -265,9 +282,11 @@ class BaseTransportDumpT {
     recvRtpHeaderExtensions;
     rtpListener;
     maxMessageSize;
-    sctpAssociation;
+    sctpParameters;
+    stcpState;
+    stcpListener;
     traceEventTypes;
-    constructor(id = null, direct = false, producerIds = [], consumerIds = [], mapSsrcConsumerId = [], mapRtxSsrcConsumerId = [], dataProducerIds = [], dataConsumerIds = [], recvRtpHeaderExtensions = [], rtpListener = null, maxMessageSize = 0, sctpAssociation = null, traceEventTypes = []) {
+    constructor(id = null, direct = false, producerIds = [], consumerIds = [], mapSsrcConsumerId = [], mapRtxSsrcConsumerId = [], dataProducerIds = [], dataConsumerIds = [], recvRtpHeaderExtensions = [], rtpListener = null, maxMessageSize = 0, sctpParameters = null, stcpState = null, stcpListener = null, traceEventTypes = []) {
         this.id = id;
         this.direct = direct;
         this.producerIds = producerIds;
@@ -279,7 +298,9 @@ class BaseTransportDumpT {
         this.recvRtpHeaderExtensions = recvRtpHeaderExtensions;
         this.rtpListener = rtpListener;
         this.maxMessageSize = maxMessageSize;
-        this.sctpAssociation = sctpAssociation;
+        this.sctpParameters = sctpParameters;
+        this.stcpState = stcpState;
+        this.stcpListener = stcpListener;
         this.traceEventTypes = traceEventTypes;
     }
     pack(builder) {
@@ -292,7 +313,9 @@ class BaseTransportDumpT {
         const dataConsumerIds = BaseTransportDump.createDataConsumerIdsVector(builder, builder.createObjectOffsetList(this.dataConsumerIds));
         const recvRtpHeaderExtensions = BaseTransportDump.createRecvRtpHeaderExtensionsVector(builder, builder.createObjectOffsetList(this.recvRtpHeaderExtensions));
         const rtpListener = (this.rtpListener !== null ? this.rtpListener.pack(builder) : 0);
-        const sctpAssociation = (this.sctpAssociation !== null ? this.sctpAssociation.pack(builder) : 0);
+        const sctpParameters = (this.sctpParameters !== null ? this.sctpParameters.pack(builder) : 0);
+        const stcpState = (this.stcpState !== null ? builder.createString(this.stcpState) : 0);
+        const stcpListener = (this.stcpListener !== null ? this.stcpListener.pack(builder) : 0);
         const traceEventTypes = BaseTransportDump.createTraceEventTypesVector(builder, builder.createObjectOffsetList(this.traceEventTypes));
         BaseTransportDump.startBaseTransportDump(builder);
         BaseTransportDump.addId(builder, id);
@@ -306,7 +329,9 @@ class BaseTransportDumpT {
         BaseTransportDump.addRecvRtpHeaderExtensions(builder, recvRtpHeaderExtensions);
         BaseTransportDump.addRtpListener(builder, rtpListener);
         BaseTransportDump.addMaxMessageSize(builder, this.maxMessageSize);
-        BaseTransportDump.addSctpAssociation(builder, sctpAssociation);
+        BaseTransportDump.addSctpParameters(builder, sctpParameters);
+        BaseTransportDump.addStcpState(builder, stcpState);
+        BaseTransportDump.addStcpListener(builder, stcpListener);
         BaseTransportDump.addTraceEventTypes(builder, traceEventTypes);
         return BaseTransportDump.endBaseTransportDump(builder);
     }

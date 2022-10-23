@@ -244,6 +244,135 @@ namespace RTC
 		}
 	}
 
+	WebRtcTransport::WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener,
+			const FBS::Router::WebRtcTransportOptions* options)
+	  : RTC::Transport::Transport(id, listener, options)
+	{
+		MS_TRACE();
+
+		auto* listenInfo = options->listen_as<FBS::Router::WebRtcTransportListenIndividual>();
+		auto* listenIps = listenInfo->listenIps();
+
+		try
+		{
+			uint16_t iceLocalPreferenceDecrement{ 0 };
+
+			if (options->enableUdp() && options->enableTcp())
+				this->iceCandidates.reserve(2 * listenIps->size());
+			else
+				this->iceCandidates.reserve(listenIps->size());
+
+			for (const auto* listenIp : *listenIps)
+			{
+				auto ip = listenIp->ip()->str();
+
+				// This may throw.
+				Utils::IP::NormalizeIp(ip);
+
+				if (options->enableUdp())
+				{
+					uint16_t iceLocalPreference =
+					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
+
+					if (options->preferUdp())
+						iceLocalPreference += 1000;
+
+					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
+
+					// This may throw.
+					RTC::UdpSocket* udpSocket;
+					if (listenInfo->port() != 0)
+						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port());
+					else
+						udpSocket = new RTC::UdpSocket(this, ip);
+
+					auto announcedIp = listenIp->announcedIp()->str();
+
+					this->udpSockets[udpSocket] = announcedIp;
+
+					if (listenIp->announcedIp()->size() == 0)
+						this->iceCandidates.emplace_back(udpSocket, icePriority);
+					else
+						this->iceCandidates.emplace_back(udpSocket, icePriority, announcedIp);
+				}
+
+				if (options->enableTcp())
+				{
+					uint16_t iceLocalPreference =
+					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
+
+					if (options->preferTcp())
+						iceLocalPreference += 1000;
+
+					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
+
+					// This may throw.
+					RTC::TcpServer* tcpServer;
+					if (listenInfo->port() != 0)
+						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port());
+					else
+						tcpServer = new RTC::TcpServer(this, this, ip);
+
+					auto announcedIp = listenIp->announcedIp()->str();
+
+					this->tcpServers[tcpServer] = announcedIp;
+
+					if (listenIp->announcedIp()->size() == 0)
+						this->iceCandidates.emplace_back(tcpServer, icePriority);
+					else
+						this->iceCandidates.emplace_back(tcpServer, icePriority, announcedIp);
+				}
+
+				// Decrement initial ICE local preference for next IP.
+				iceLocalPreferenceDecrement += 100;
+			}
+
+			// Create a ICE server.
+			this->iceServer = new RTC::IceServer(
+			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
+
+			// Create a DTLS transport.
+			this->dtlsTransport = new RTC::DtlsTransport(this);
+
+			// NOTE: This may throw.
+			ChannelMessageHandlers::RegisterHandler(
+			  this->id,
+			  /*channelRequestHandler*/ this,
+			  /*payloadChannelRequestHandler*/ this,
+			  /*payloadChannelNotificationHandler*/ this);
+		}
+		catch (const MediaSoupError& error)
+		{
+			// Must delete everything since the destructor won't be called.
+
+			delete this->dtlsTransport;
+			this->dtlsTransport = nullptr;
+
+			delete this->iceServer;
+			this->iceServer = nullptr;
+
+			for (auto& kv : this->udpSockets)
+			{
+				auto* udpSocket = kv.first;
+
+				delete udpSocket;
+			}
+			this->udpSockets.clear();
+
+			for (auto& kv : this->tcpServers)
+			{
+				auto* tcpServer = kv.first;
+
+				delete tcpServer;
+			}
+			this->tcpServers.clear();
+
+			this->iceCandidates.clear();
+
+			throw;
+		}
+	}
+
 	/**
 	 * This constructor is used when the WebRtcTransport uses a WebRtcServer.
 	 */
@@ -254,6 +383,58 @@ namespace RTC
 	  std::vector<RTC::IceCandidate>& iceCandidates,
 	  json& data)
 	  : RTC::Transport::Transport(id, listener, data),
+	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
+	{
+		MS_TRACE();
+
+		try
+		{
+			if (iceCandidates.empty())
+				MS_THROW_TYPE_ERROR("empty iceCandidates");
+
+			// Create a ICE server.
+			this->iceServer = new RTC::IceServer(
+			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
+
+			// Create a DTLS transport.
+			this->dtlsTransport = new RTC::DtlsTransport(this);
+
+			// Notify the webRtcTransportListener.
+			this->webRtcTransportListener->OnWebRtcTransportCreated(this);
+
+			// NOTE: This may throw.
+			ChannelMessageHandlers::RegisterHandler(
+			  this->id,
+			  /*channelRequestHandler*/ this,
+			  /*payloadChannelRequestHandler*/ this,
+			  /*payloadChannelNotificationHandler*/ this);
+		}
+		catch (const MediaSoupError& error)
+		{
+			// Must delete everything since the destructor won't be called.
+
+			delete this->dtlsTransport;
+			this->dtlsTransport = nullptr;
+
+			delete this->iceServer;
+			this->iceServer = nullptr;
+
+			this->iceCandidates.clear();
+
+			throw;
+		}
+	}
+
+	/**
+	 * This constructor is used when the WebRtcTransport uses a WebRtcServer.
+	 */
+	WebRtcTransport::WebRtcTransport(
+	  const std::string& id,
+	  RTC::Transport::Listener* listener,
+	  WebRtcTransportListener* webRtcTransportListener,
+	  std::vector<RTC::IceCandidate>& iceCandidates,
+	  const FBS::Router::WebRtcTransportOptions* options)
+	  : RTC::Transport::Transport(id, listener, options),
 	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
 	{
 		MS_TRACE();
@@ -440,7 +621,7 @@ namespace RTC
 		auto base = Transport::FillBuffer(builder);
 		// Add dtlsParameters.
 		auto dtlsParameters = FBS::Transport::CreateDtlsParametersDirect(
-		  builder, &fingerprints, dtlsRole.c_str(), dtlsState.c_str());
+		  builder, &fingerprints, dtlsRole.c_str());
 
 		auto webRtcTransportDump = FBS::Transport::CreateWebRtcTransportDumpDirect(
 		  builder,
@@ -451,7 +632,8 @@ namespace RTC
 		  &iceCandidates,
 		  iceState.c_str(),
 		  iceSelectedTuple,
-		  dtlsParameters);
+		  dtlsParameters,
+			dtlsState.c_str());
 
 		return FBS::Transport::CreateTransportDump(
 		  builder, FBS::Transport::TransportDumpData::WebRtcTransportDump, webRtcTransportDump.Union());

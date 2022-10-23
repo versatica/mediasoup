@@ -5,7 +5,8 @@ import * as flatbuffers from 'flatbuffers';
 import { StringUint8, StringUint8T } from '../../fbs/common/string-uint8';
 import { Uint32String, Uint32StringT } from '../../fbs/common/uint32string';
 import { RtpListener, RtpListenerT } from '../../fbs/transport/rtp-listener';
-import { SctpAssociation, SctpAssociationT } from '../../fbs/transport/sctp-association';
+import { SctpListener, SctpListenerT } from '../../fbs/transport/sctp-listener';
+import { SctpParameters, SctpParametersT } from '../../fbs/transport/sctp-parameters';
 
 
 export class BaseTransportDump {
@@ -126,25 +127,37 @@ maxMessageSize():number {
   return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
 }
 
-sctpAssociation(obj?:SctpAssociation):SctpAssociation|null {
+sctpParameters(obj?:SctpParameters):SctpParameters|null {
   const offset = this.bb!.__offset(this.bb_pos, 26);
-  return offset ? (obj || new SctpAssociation()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new SctpParameters()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+}
+
+stcpState():string|null
+stcpState(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
+stcpState(optionalEncoding?:any):string|Uint8Array|null {
+  const offset = this.bb!.__offset(this.bb_pos, 28);
+  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+}
+
+stcpListener(obj?:SctpListener):SctpListener|null {
+  const offset = this.bb!.__offset(this.bb_pos, 30);
+  return offset ? (obj || new SctpListener()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 traceEventTypes(index: number):string
 traceEventTypes(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
 traceEventTypes(index: number,optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 28);
+  const offset = this.bb!.__offset(this.bb_pos, 32);
   return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
 }
 
 traceEventTypesLength():number {
-  const offset = this.bb!.__offset(this.bb_pos, 28);
+  const offset = this.bb!.__offset(this.bb_pos, 32);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 static startBaseTransportDump(builder:flatbuffers.Builder) {
-  builder.startObject(13);
+  builder.startObject(15);
 }
 
 static addId(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset) {
@@ -275,12 +288,20 @@ static addMaxMessageSize(builder:flatbuffers.Builder, maxMessageSize:number) {
   builder.addFieldInt32(10, maxMessageSize, 0);
 }
 
-static addSctpAssociation(builder:flatbuffers.Builder, sctpAssociationOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(11, sctpAssociationOffset, 0);
+static addSctpParameters(builder:flatbuffers.Builder, sctpParametersOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(11, sctpParametersOffset, 0);
+}
+
+static addStcpState(builder:flatbuffers.Builder, stcpStateOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(12, stcpStateOffset, 0);
+}
+
+static addStcpListener(builder:flatbuffers.Builder, stcpListenerOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(13, stcpListenerOffset, 0);
 }
 
 static addTraceEventTypes(builder:flatbuffers.Builder, traceEventTypesOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(12, traceEventTypesOffset, 0);
+  builder.addFieldOffset(14, traceEventTypesOffset, 0);
 }
 
 static createTraceEventTypesVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
@@ -315,7 +336,9 @@ unpack(): BaseTransportDumpT {
     this.bb!.createObjList(this.recvRtpHeaderExtensions.bind(this), this.recvRtpHeaderExtensionsLength()),
     (this.rtpListener() !== null ? this.rtpListener()!.unpack() : null),
     this.maxMessageSize(),
-    (this.sctpAssociation() !== null ? this.sctpAssociation()!.unpack() : null),
+    (this.sctpParameters() !== null ? this.sctpParameters()!.unpack() : null),
+    this.stcpState(),
+    (this.stcpListener() !== null ? this.stcpListener()!.unpack() : null),
     this.bb!.createScalarList(this.traceEventTypes.bind(this), this.traceEventTypesLength())
   );
 }
@@ -333,7 +356,9 @@ unpackTo(_o: BaseTransportDumpT): void {
   _o.recvRtpHeaderExtensions = this.bb!.createObjList(this.recvRtpHeaderExtensions.bind(this), this.recvRtpHeaderExtensionsLength());
   _o.rtpListener = (this.rtpListener() !== null ? this.rtpListener()!.unpack() : null);
   _o.maxMessageSize = this.maxMessageSize();
-  _o.sctpAssociation = (this.sctpAssociation() !== null ? this.sctpAssociation()!.unpack() : null);
+  _o.sctpParameters = (this.sctpParameters() !== null ? this.sctpParameters()!.unpack() : null);
+  _o.stcpState = this.stcpState();
+  _o.stcpListener = (this.stcpListener() !== null ? this.stcpListener()!.unpack() : null);
   _o.traceEventTypes = this.bb!.createScalarList(this.traceEventTypes.bind(this), this.traceEventTypesLength());
 }
 }
@@ -351,7 +376,9 @@ constructor(
   public recvRtpHeaderExtensions: (StringUint8T)[] = [],
   public rtpListener: RtpListenerT|null = null,
   public maxMessageSize: number = 0,
-  public sctpAssociation: SctpAssociationT|null = null,
+  public sctpParameters: SctpParametersT|null = null,
+  public stcpState: string|Uint8Array|null = null,
+  public stcpListener: SctpListenerT|null = null,
   public traceEventTypes: (string)[] = []
 ){}
 
@@ -366,7 +393,9 @@ pack(builder:flatbuffers.Builder): flatbuffers.Offset {
   const dataConsumerIds = BaseTransportDump.createDataConsumerIdsVector(builder, builder.createObjectOffsetList(this.dataConsumerIds));
   const recvRtpHeaderExtensions = BaseTransportDump.createRecvRtpHeaderExtensionsVector(builder, builder.createObjectOffsetList(this.recvRtpHeaderExtensions));
   const rtpListener = (this.rtpListener !== null ? this.rtpListener!.pack(builder) : 0);
-  const sctpAssociation = (this.sctpAssociation !== null ? this.sctpAssociation!.pack(builder) : 0);
+  const sctpParameters = (this.sctpParameters !== null ? this.sctpParameters!.pack(builder) : 0);
+  const stcpState = (this.stcpState !== null ? builder.createString(this.stcpState!) : 0);
+  const stcpListener = (this.stcpListener !== null ? this.stcpListener!.pack(builder) : 0);
   const traceEventTypes = BaseTransportDump.createTraceEventTypesVector(builder, builder.createObjectOffsetList(this.traceEventTypes));
 
   BaseTransportDump.startBaseTransportDump(builder);
@@ -381,7 +410,9 @@ pack(builder:flatbuffers.Builder): flatbuffers.Offset {
   BaseTransportDump.addRecvRtpHeaderExtensions(builder, recvRtpHeaderExtensions);
   BaseTransportDump.addRtpListener(builder, rtpListener);
   BaseTransportDump.addMaxMessageSize(builder, this.maxMessageSize);
-  BaseTransportDump.addSctpAssociation(builder, sctpAssociation);
+  BaseTransportDump.addSctpParameters(builder, sctpParameters);
+  BaseTransportDump.addStcpState(builder, stcpState);
+  BaseTransportDump.addStcpListener(builder, stcpListener);
   BaseTransportDump.addTraceEventTypes(builder, traceEventTypes);
 
   return BaseTransportDump.endBaseTransportDump(builder);

@@ -19,11 +19,11 @@ class DtlsParameters {
         bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
         return (obj || new DtlsParameters()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
     }
-    fingerprint(index, obj) {
+    fingerprints(index, obj) {
         const offset = this.bb.__offset(this.bb_pos, 4);
         return offset ? (obj || new fingerprint_1.Fingerprint()).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
     }
-    fingerprintLength() {
+    fingerprintsLength() {
         const offset = this.bb.__offset(this.bb_pos, 4);
         return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
     }
@@ -31,70 +31,57 @@ class DtlsParameters {
         const offset = this.bb.__offset(this.bb_pos, 6);
         return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
     }
-    dtlsState(optionalEncoding) {
-        const offset = this.bb.__offset(this.bb_pos, 8);
-        return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
-    }
     static startDtlsParameters(builder) {
-        builder.startObject(3);
+        builder.startObject(2);
     }
-    static addFingerprint(builder, fingerprintOffset) {
-        builder.addFieldOffset(0, fingerprintOffset, 0);
+    static addFingerprints(builder, fingerprintsOffset) {
+        builder.addFieldOffset(0, fingerprintsOffset, 0);
     }
-    static createFingerprintVector(builder, data) {
+    static createFingerprintsVector(builder, data) {
         builder.startVector(4, data.length, 4);
         for (let i = data.length - 1; i >= 0; i--) {
             builder.addOffset(data[i]);
         }
         return builder.endVector();
     }
-    static startFingerprintVector(builder, numElems) {
+    static startFingerprintsVector(builder, numElems) {
         builder.startVector(4, numElems, 4);
     }
     static addRole(builder, roleOffset) {
         builder.addFieldOffset(1, roleOffset, 0);
     }
-    static addDtlsState(builder, dtlsStateOffset) {
-        builder.addFieldOffset(2, dtlsStateOffset, 0);
-    }
     static endDtlsParameters(builder) {
         const offset = builder.endObject();
-        builder.requiredField(offset, 4); // fingerprint
+        builder.requiredField(offset, 4); // fingerprints
         builder.requiredField(offset, 6); // role
-        builder.requiredField(offset, 8); // dtls_state
         return offset;
     }
-    static createDtlsParameters(builder, fingerprintOffset, roleOffset, dtlsStateOffset) {
+    static createDtlsParameters(builder, fingerprintsOffset, roleOffset) {
         DtlsParameters.startDtlsParameters(builder);
-        DtlsParameters.addFingerprint(builder, fingerprintOffset);
+        DtlsParameters.addFingerprints(builder, fingerprintsOffset);
         DtlsParameters.addRole(builder, roleOffset);
-        DtlsParameters.addDtlsState(builder, dtlsStateOffset);
         return DtlsParameters.endDtlsParameters(builder);
     }
     unpack() {
-        return new DtlsParametersT(this.bb.createObjList(this.fingerprint.bind(this), this.fingerprintLength()), this.role(), this.dtlsState());
+        return new DtlsParametersT(this.bb.createObjList(this.fingerprints.bind(this), this.fingerprintsLength()), this.role());
     }
     unpackTo(_o) {
-        _o.fingerprint = this.bb.createObjList(this.fingerprint.bind(this), this.fingerprintLength());
+        _o.fingerprints = this.bb.createObjList(this.fingerprints.bind(this), this.fingerprintsLength());
         _o.role = this.role();
-        _o.dtlsState = this.dtlsState();
     }
 }
 exports.DtlsParameters = DtlsParameters;
 class DtlsParametersT {
-    fingerprint;
+    fingerprints;
     role;
-    dtlsState;
-    constructor(fingerprint = [], role = null, dtlsState = null) {
-        this.fingerprint = fingerprint;
+    constructor(fingerprints = [], role = null) {
+        this.fingerprints = fingerprints;
         this.role = role;
-        this.dtlsState = dtlsState;
     }
     pack(builder) {
-        const fingerprint = DtlsParameters.createFingerprintVector(builder, builder.createObjectOffsetList(this.fingerprint));
+        const fingerprints = DtlsParameters.createFingerprintsVector(builder, builder.createObjectOffsetList(this.fingerprints));
         const role = (this.role !== null ? builder.createString(this.role) : 0);
-        const dtlsState = (this.dtlsState !== null ? builder.createString(this.dtlsState) : 0);
-        return DtlsParameters.createDtlsParameters(builder, fingerprint, role, dtlsState);
+        return DtlsParameters.createDtlsParameters(builder, fingerprints, role);
     }
 }
 exports.DtlsParametersT = DtlsParametersT;

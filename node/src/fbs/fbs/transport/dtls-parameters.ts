@@ -23,12 +23,12 @@ static getSizePrefixedRootAsDtlsParameters(bb:flatbuffers.ByteBuffer, obj?:DtlsP
   return (obj || new DtlsParameters()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-fingerprint(index: number, obj?:Fingerprint):Fingerprint|null {
+fingerprints(index: number, obj?:Fingerprint):Fingerprint|null {
   const offset = this.bb!.__offset(this.bb_pos, 4);
   return offset ? (obj || new Fingerprint()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 }
 
-fingerprintLength():number {
+fingerprintsLength():number {
   const offset = this.bb!.__offset(this.bb_pos, 4);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
@@ -40,22 +40,15 @@ role(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-dtlsState():string|null
-dtlsState(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-dtlsState(optionalEncoding?:any):string|Uint8Array|null {
-  const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
-}
-
 static startDtlsParameters(builder:flatbuffers.Builder) {
-  builder.startObject(3);
+  builder.startObject(2);
 }
 
-static addFingerprint(builder:flatbuffers.Builder, fingerprintOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(0, fingerprintOffset, 0);
+static addFingerprints(builder:flatbuffers.Builder, fingerprintsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(0, fingerprintsOffset, 0);
 }
 
-static createFingerprintVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+static createFingerprintsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
   builder.startVector(4, data.length, 4);
   for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]!);
@@ -63,7 +56,7 @@ static createFingerprintVector(builder:flatbuffers.Builder, data:flatbuffers.Off
   return builder.endVector();
 }
 
-static startFingerprintVector(builder:flatbuffers.Builder, numElems:number) {
+static startFingerprintsVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 
@@ -71,59 +64,48 @@ static addRole(builder:flatbuffers.Builder, roleOffset:flatbuffers.Offset) {
   builder.addFieldOffset(1, roleOffset, 0);
 }
 
-static addDtlsState(builder:flatbuffers.Builder, dtlsStateOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, dtlsStateOffset, 0);
-}
-
 static endDtlsParameters(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
-  builder.requiredField(offset, 4) // fingerprint
+  builder.requiredField(offset, 4) // fingerprints
   builder.requiredField(offset, 6) // role
-  builder.requiredField(offset, 8) // dtls_state
   return offset;
 }
 
-static createDtlsParameters(builder:flatbuffers.Builder, fingerprintOffset:flatbuffers.Offset, roleOffset:flatbuffers.Offset, dtlsStateOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createDtlsParameters(builder:flatbuffers.Builder, fingerprintsOffset:flatbuffers.Offset, roleOffset:flatbuffers.Offset):flatbuffers.Offset {
   DtlsParameters.startDtlsParameters(builder);
-  DtlsParameters.addFingerprint(builder, fingerprintOffset);
+  DtlsParameters.addFingerprints(builder, fingerprintsOffset);
   DtlsParameters.addRole(builder, roleOffset);
-  DtlsParameters.addDtlsState(builder, dtlsStateOffset);
   return DtlsParameters.endDtlsParameters(builder);
 }
 
 unpack(): DtlsParametersT {
   return new DtlsParametersT(
-    this.bb!.createObjList(this.fingerprint.bind(this), this.fingerprintLength()),
-    this.role(),
-    this.dtlsState()
+    this.bb!.createObjList(this.fingerprints.bind(this), this.fingerprintsLength()),
+    this.role()
   );
 }
 
 
 unpackTo(_o: DtlsParametersT): void {
-  _o.fingerprint = this.bb!.createObjList(this.fingerprint.bind(this), this.fingerprintLength());
+  _o.fingerprints = this.bb!.createObjList(this.fingerprints.bind(this), this.fingerprintsLength());
   _o.role = this.role();
-  _o.dtlsState = this.dtlsState();
 }
 }
 
 export class DtlsParametersT {
 constructor(
-  public fingerprint: (FingerprintT)[] = [],
-  public role: string|Uint8Array|null = null,
-  public dtlsState: string|Uint8Array|null = null
+  public fingerprints: (FingerprintT)[] = [],
+  public role: string|Uint8Array|null = null
 ){}
 
 
 pack(builder:flatbuffers.Builder): flatbuffers.Offset {
-  const fingerprint = DtlsParameters.createFingerprintVector(builder, builder.createObjectOffsetList(this.fingerprint));
+  const fingerprints = DtlsParameters.createFingerprintsVector(builder, builder.createObjectOffsetList(this.fingerprints));
   const role = (this.role !== null ? builder.createString(this.role!) : 0);
-  const dtlsState = (this.dtlsState !== null ? builder.createString(this.dtlsState!) : 0);
 
   return DtlsParameters.createDtlsParameters(builder,
-    fingerprint,
-    role,
-    dtlsState
+    fingerprints,
+    role
   );
 }
 }

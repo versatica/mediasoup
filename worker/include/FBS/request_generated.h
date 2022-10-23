@@ -13,6 +13,7 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
               FLATBUFFERS_VERSION_REVISION == 8,
              "Non-compatible flatbuffers version included");
 
+#include "router_generated.h"
 #include "transport_generated.h"
 #include "worker_generated.h"
 
@@ -221,51 +222,62 @@ inline const char *EnumNameMethod(Method e) {
 
 enum class Body : uint8_t {
   NONE = 0,
-  FBS_Worker_UpdateableSettings = 1,
-  FBS_Worker_CreateWebRtcServerRequest = 2,
-  FBS_Worker_CloseWebRtcServerRequest = 3,
-  FBS_Worker_CreateRouterRequest = 4,
-  FBS_Worker_CloseRouterRequest = 5,
-  FBS_Transport_ConsumeRequest = 6,
+  FBS_Router_CreateWebRtcTransportRequest = 1,
+  FBS_Transport_ConsumeRequest = 2,
+  FBS_Worker_UpdateableSettings = 3,
+  FBS_Worker_CreateWebRtcServerRequest = 4,
+  FBS_Worker_CloseWebRtcServerRequest = 5,
+  FBS_Worker_CreateRouterRequest = 6,
+  FBS_Worker_CloseRouterRequest = 7,
   MIN = NONE,
-  MAX = FBS_Transport_ConsumeRequest
+  MAX = FBS_Worker_CloseRouterRequest
 };
 
-inline const Body (&EnumValuesBody())[7] {
+inline const Body (&EnumValuesBody())[8] {
   static const Body values[] = {
     Body::NONE,
+    Body::FBS_Router_CreateWebRtcTransportRequest,
+    Body::FBS_Transport_ConsumeRequest,
     Body::FBS_Worker_UpdateableSettings,
     Body::FBS_Worker_CreateWebRtcServerRequest,
     Body::FBS_Worker_CloseWebRtcServerRequest,
     Body::FBS_Worker_CreateRouterRequest,
-    Body::FBS_Worker_CloseRouterRequest,
-    Body::FBS_Transport_ConsumeRequest
+    Body::FBS_Worker_CloseRouterRequest
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[8] = {
+  static const char * const names[9] = {
     "NONE",
+    "FBS_Router_CreateWebRtcTransportRequest",
+    "FBS_Transport_ConsumeRequest",
     "FBS_Worker_UpdateableSettings",
     "FBS_Worker_CreateWebRtcServerRequest",
     "FBS_Worker_CloseWebRtcServerRequest",
     "FBS_Worker_CreateRouterRequest",
     "FBS_Worker_CloseRouterRequest",
-    "FBS_Transport_ConsumeRequest",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameBody(Body e) {
-  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Transport_ConsumeRequest)) return "";
+  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Worker_CloseRouterRequest)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesBody()[index];
 }
 
 template<typename T> struct BodyTraits {
   static const Body enum_value = Body::NONE;
+};
+
+template<> struct BodyTraits<FBS::Router::CreateWebRtcTransportRequest> {
+  static const Body enum_value = Body::FBS_Router_CreateWebRtcTransportRequest;
+};
+
+template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
+  static const Body enum_value = Body::FBS_Transport_ConsumeRequest;
 };
 
 template<> struct BodyTraits<FBS::Worker::UpdateableSettings> {
@@ -286,10 +298,6 @@ template<> struct BodyTraits<FBS::Worker::CreateRouterRequest> {
 
 template<> struct BodyTraits<FBS::Worker::CloseRouterRequest> {
   static const Body enum_value = Body::FBS_Worker_CloseRouterRequest;
-};
-
-template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
-  static const Body enum_value = Body::FBS_Transport_ConsumeRequest;
 };
 
 bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body type);
@@ -323,6 +331,12 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return GetPointer<const void *>(VT_BODY);
   }
   template<typename T> const T *body_as() const;
+  const FBS::Router::CreateWebRtcTransportRequest *body_as_FBS_Router_CreateWebRtcTransportRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Router_CreateWebRtcTransportRequest ? static_cast<const FBS::Router::CreateWebRtcTransportRequest *>(body()) : nullptr;
+  }
+  const FBS::Transport::ConsumeRequest *body_as_FBS_Transport_ConsumeRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
+  }
   const FBS::Worker::UpdateableSettings *body_as_FBS_Worker_UpdateableSettings() const {
     return body_type() == FBS::Request::Body::FBS_Worker_UpdateableSettings ? static_cast<const FBS::Worker::UpdateableSettings *>(body()) : nullptr;
   }
@@ -338,9 +352,6 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Worker::CloseRouterRequest *body_as_FBS_Worker_CloseRouterRequest() const {
     return body_type() == FBS::Request::Body::FBS_Worker_CloseRouterRequest ? static_cast<const FBS::Worker::CloseRouterRequest *>(body()) : nullptr;
   }
-  const FBS::Transport::ConsumeRequest *body_as_FBS_Transport_ConsumeRequest() const {
-    return body_type() == FBS::Request::Body::FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_ID, 4) &&
@@ -353,6 +364,14 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.EndTable();
   }
 };
+
+template<> inline const FBS::Router::CreateWebRtcTransportRequest *Request::body_as<FBS::Router::CreateWebRtcTransportRequest>() const {
+  return body_as_FBS_Router_CreateWebRtcTransportRequest();
+}
+
+template<> inline const FBS::Transport::ConsumeRequest *Request::body_as<FBS::Transport::ConsumeRequest>() const {
+  return body_as_FBS_Transport_ConsumeRequest();
+}
 
 template<> inline const FBS::Worker::UpdateableSettings *Request::body_as<FBS::Worker::UpdateableSettings>() const {
   return body_as_FBS_Worker_UpdateableSettings();
@@ -372,10 +391,6 @@ template<> inline const FBS::Worker::CreateRouterRequest *Request::body_as<FBS::
 
 template<> inline const FBS::Worker::CloseRouterRequest *Request::body_as<FBS::Worker::CloseRouterRequest>() const {
   return body_as_FBS_Worker_CloseRouterRequest();
-}
-
-template<> inline const FBS::Transport::ConsumeRequest *Request::body_as<FBS::Transport::ConsumeRequest>() const {
-  return body_as_FBS_Transport_ConsumeRequest();
 }
 
 struct RequestBuilder {
@@ -446,6 +461,14 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     case Body::NONE: {
       return true;
     }
+    case Body::FBS_Router_CreateWebRtcTransportRequest: {
+      auto ptr = reinterpret_cast<const FBS::Router::CreateWebRtcTransportRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Transport_ConsumeRequest: {
+      auto ptr = reinterpret_cast<const FBS::Transport::ConsumeRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
     case Body::FBS_Worker_UpdateableSettings: {
       auto ptr = reinterpret_cast<const FBS::Worker::UpdateableSettings *>(obj);
       return verifier.VerifyTable(ptr);
@@ -464,10 +487,6 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     }
     case Body::FBS_Worker_CloseRouterRequest: {
       auto ptr = reinterpret_cast<const FBS::Worker::CloseRouterRequest *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    case Body::FBS_Transport_ConsumeRequest: {
-      auto ptr = reinterpret_cast<const FBS::Transport::ConsumeRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;
@@ -622,27 +641,30 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 2 },
     { flatbuffers::ET_SEQUENCE, 0, 3 },
     { flatbuffers::ET_SEQUENCE, 0, 4 },
-    { flatbuffers::ET_SEQUENCE, 0, 5 }
+    { flatbuffers::ET_SEQUENCE, 0, 5 },
+    { flatbuffers::ET_SEQUENCE, 0, 6 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Router::CreateWebRtcTransportRequestTypeTable,
+    FBS::Transport::ConsumeRequestTypeTable,
     FBS::Worker::UpdateableSettingsTypeTable,
     FBS::Worker::CreateWebRtcServerRequestTypeTable,
     FBS::Worker::CloseWebRtcServerRequestTypeTable,
     FBS::Worker::CreateRouterRequestTypeTable,
-    FBS::Worker::CloseRouterRequestTypeTable,
-    FBS::Transport::ConsumeRequestTypeTable
+    FBS::Worker::CloseRouterRequestTypeTable
   };
   static const char * const names[] = {
     "NONE",
+    "FBS_Router_CreateWebRtcTransportRequest",
+    "FBS_Transport_ConsumeRequest",
     "FBS_Worker_UpdateableSettings",
     "FBS_Worker_CreateWebRtcServerRequest",
     "FBS_Worker_CloseWebRtcServerRequest",
     "FBS_Worker_CreateRouterRequest",
-    "FBS_Worker_CloseRouterRequest",
-    "FBS_Transport_ConsumeRequest"
+    "FBS_Worker_CloseRouterRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 7, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 8, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }
