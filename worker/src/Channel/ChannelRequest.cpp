@@ -15,9 +15,6 @@ namespace Channel
 	// clang-format off
 	absl::flat_hash_map<std::string, ChannelRequest::MethodId> ChannelRequest::string2MethodId =
 	{
-		{ "router.dump",                                 ChannelRequest::MethodId::ROUTER_DUMP                                      },
-		{ "router.createWebRtcTransport",                ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT                   },
-		{ "router.createWebRtcTransportWithServer",      ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER       },
 		{ "router.createPlainTransport",                 ChannelRequest::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT                    },
 		{ "router.createPipeTransport",                  ChannelRequest::MethodId::ROUTER_CREATE_PIPE_TRANSPORT                     },
 		{ "router.createDirectTransport",                ChannelRequest::MethodId::ROUTER_CREATE_DIRECT_TRANSPORT                   },
@@ -25,7 +22,6 @@ namespace Channel
 		{ "router.createActiveSpeakerObserver",          ChannelRequest::MethodId::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER            },
 		{ "router.createAudioLevelObserver",             ChannelRequest::MethodId::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER               },
 		{ "router.closeRtpObserver",                     ChannelRequest::MethodId::ROUTER_CLOSE_RTP_OBSERVER                        },
-		{ "transport.dump",                              ChannelRequest::MethodId::TRANSPORT_DUMP                                   },
 		{ "transport.getStats",                          ChannelRequest::MethodId::TRANSPORT_GET_STATS                              },
 		{ "transport.connect",                           ChannelRequest::MethodId::TRANSPORT_CONNECT                                },
 		{ "transport.setMaxIncomingBitrate",             ChannelRequest::MethodId::TRANSPORT_SET_MAX_INCOMING_BITRATE               },

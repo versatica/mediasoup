@@ -426,8 +426,10 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 		const builder = this.#channel.bufferBuilder;
 
-		let webRtcTransportListenServer: FbsRouter.WebRtcTransportListenServerT | undefined;
-		let webRtcTransportListenIndividual: FbsRouter.WebRtcTransportListenIndividualT | undefined;
+		let webRtcTransportListenServer:
+			FbsRouter.WebRtcTransportListenServerT | undefined;
+		let webRtcTransportListenIndividual:
+			FbsRouter.WebRtcTransportListenIndividualT | undefined;
 
 		if (webRtcServer)
 		{
@@ -471,17 +473,14 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			transportId, webRtcTransportOptions
 		).pack(builder);
 
-		const response = webRtcServer
-			? await this.#channel.requestBinary(
-				Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER,
-				RequestBody.FBS_Router_CreateWebRtcTransportRequest,
-				createWebRtcTransportOffset,
-				this.#internal.routerId)
-			: await this.#channel.requestBinary(
-				Method.ROUTER_CREATE_WEBRTC_TRANSPORT,
-				RequestBody.FBS_Router_CreateWebRtcTransportRequest,
-				createWebRtcTransportOffset,
-				this.#internal.routerId);
+		const response = await this.#channel.requestBinary(
+			webRtcServer
+				? Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER
+				: Method.ROUTER_CREATE_WEBRTC_TRANSPORT,
+			RequestBody.FBS_Router_CreateWebRtcTransportRequest,
+			createWebRtcTransportOffset,
+			this.#internal.routerId
+		);
 
 		/* Decode the response. */
 		const dump = new TransportDump();

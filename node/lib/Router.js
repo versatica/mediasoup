@@ -215,9 +215,9 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             FbsRouter.WebRtcTransportListen.WebRtcTransportListenServer :
             FbsRouter.WebRtcTransportListen.WebRtcTransportListenIndividual, webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, new FbsRouter.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS), maxSctpMessageSize, sctpSendBufferSize, true /* isDataChannel */);
         const createWebRtcTransportOffset = new FbsRouter.CreateWebRtcTransportRequestT(transportId, webRtcTransportOptions).pack(builder);
-        const response = webRtcServer
-            ? await this.#channel.requestBinary(request_generated_1.Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER, request_generated_1.Body.FBS_Router_CreateWebRtcTransportRequest, createWebRtcTransportOffset, this.#internal.routerId)
-            : await this.#channel.requestBinary(request_generated_1.Method.ROUTER_CREATE_WEBRTC_TRANSPORT, request_generated_1.Body.FBS_Router_CreateWebRtcTransportRequest, createWebRtcTransportOffset, this.#internal.routerId);
+        const response = await this.#channel.requestBinary(webRtcServer
+            ? request_generated_1.Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER
+            : request_generated_1.Method.ROUTER_CREATE_WEBRTC_TRANSPORT, request_generated_1.Body.FBS_Router_CreateWebRtcTransportRequest, createWebRtcTransportOffset, this.#internal.routerId);
         /* Decode the response. */
         const dump = new transport_generated_1.TransportDump();
         response.body(dump);
