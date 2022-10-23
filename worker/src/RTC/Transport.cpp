@@ -177,8 +177,10 @@ namespace RTC
 		this->rtcpTimer = new Timer(this);
 	}
 
-	Transport::Transport(const std::string& id, RTC::Transport::Listener* listener,
-		  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
+	Transport::Transport(
+	  const std::string& id,
+	  RTC::Transport::Listener* listener,
+	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
 	  : id(id), listener(listener), recvRtxTransmission(1000u), sendRtxTransmission(1000u),
 	    sendProbationTransmission(100u)
 	{
@@ -189,31 +191,30 @@ namespace RTC
 
 		// clang-format off
 		if (
-			jsonDirectIt != data.end() &&
-			jsonDirectIt->is_boolean() &&
-			jsonDirectIt->get<bool>()
+		  jsonDirectIt != data.end() &&
+		  jsonDirectIt->is_boolean() &&
+		  jsonDirectIt->get<bool>()
 		)
 		// clang-format on
 		{
-			this->direct = true;
+		  this->direct = true;
 
-			auto jsonMaxMessageSizeIt = data.find("maxMessageSize");
+		  auto jsonMaxMessageSizeIt = data.find("maxMessageSize");
 
-			// maxMessageSize is mandatory for direct Transports.
-			// clang-format off
-			if (
-				jsonMaxMessageSizeIt == data.end() ||
-				!Utils::Json::IsPositiveInteger(*jsonMaxMessageSizeIt)
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong maxMessageSize (not a number)");
-			}
+		  // maxMessageSize is mandatory for direct Transports.
+		  // clang-format off
+		  if (
+		    jsonMaxMessageSizeIt == data.end() ||
+		    !Utils::Json::IsPositiveInteger(*jsonMaxMessageSizeIt)
+		  )
+		  // clang-format on
+		  {
+		    MS_THROW_TYPE_ERROR("wrong maxMessageSize (not a number)");
+		  }
 
-			this->maxMessageSize = jsonMaxMessageSizeIt->get<size_t>();
+		  this->maxMessageSize = jsonMaxMessageSizeIt->get<size_t>();
 		}
 		*/
-
 
 		this->initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
 
@@ -225,14 +226,15 @@ namespace RTC
 			}
 
 			// numSctpStreams is mandatory.
-			if (!flatbuffers::IsFieldPresent(options, FBS::WebRtcTransport::WebRtcTransportOptions::VT_NUMSCTPSTREAMS)
-			)
+			if (!flatbuffers::IsFieldPresent(
+			      options, FBS::WebRtcTransport::WebRtcTransportOptions::VT_NUMSCTPSTREAMS))
 			{
 				MS_THROW_TYPE_ERROR("numSctpStreams missing");
 			}
 
 			// maxSctpMessageSize is mandatory.
-			if (!flatbuffers::IsFieldPresent(options, FBS::WebRtcTransport::WebRtcTransportOptions::VT_MAXSCTPMESSAGESIZE))
+			if (!flatbuffers::IsFieldPresent(
+			      options, FBS::WebRtcTransport::WebRtcTransportOptions::VT_MAXSCTPMESSAGESIZE))
 			{
 				MS_THROW_TYPE_ERROR("maxSctpMessageSize missing");
 			}
@@ -242,7 +244,8 @@ namespace RTC
 			size_t sctpSendBufferSize;
 
 			// sctpSendBufferSize is optional.
-			if (flatbuffers::IsFieldPresent(options, FBS::WebRtcTransport::WebRtcTransportOptions::VT_SCTPSENDBUFFERSIZE))
+			if (flatbuffers::IsFieldPresent(
+			      options, FBS::WebRtcTransport::WebRtcTransportOptions::VT_SCTPSENDBUFFERSIZE))
 			{
 				if (options->sctpSendBufferSize() > MaxSctpSendBufferSize)
 				{
@@ -258,7 +261,12 @@ namespace RTC
 
 			// This may throw.
 			this->sctpAssociation = new RTC::SctpAssociation(
-			  this, options->numSctpStreams()->os(), options->numSctpStreams()->mis(), this->maxMessageSize, sctpSendBufferSize, options->isDataChannel());
+			  this,
+			  options->numSctpStreams()->os(),
+			  options->numSctpStreams()->mis(),
+			  this->maxMessageSize,
+			  sctpSendBufferSize,
+			  options->isDataChannel());
 		}
 
 		// Create the RTCP timer.
@@ -508,7 +516,7 @@ namespace RTC
 		if (this->sctpAssociation)
 		{
 			// Add sctpParameters.
-			sctpParameters= this->sctpAssociation->FillBuffer(builder);
+			sctpParameters = this->sctpAssociation->FillBuffer(builder);
 
 			switch (this->sctpAssociation->GetState())
 			{
@@ -554,8 +562,8 @@ namespace RTC
 		  rtpListenerOffset,
 		  this->maxMessageSize,
 		  sctpParameters,
-			sctpState.c_str(),
-			sctpListener,
+		  sctpState.c_str(),
+		  sctpListener,
 		  &traceEventTypes);
 
 		return FBS::Transport::CreateTransportDump(
@@ -2008,9 +2016,7 @@ namespace RTC
 				  scoreOffset,
 				  preferredLayersOffset);
 
-				request->Accept(
-				  FBS::Response::Body::FBS_Transport_ConsumeResponse,
-				  responseOffset);
+				request->Accept(FBS::Response::Body::FBS_Transport_ConsumeResponse, responseOffset);
 
 				// Check if Transport Congestion Control client must be created.
 				const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();

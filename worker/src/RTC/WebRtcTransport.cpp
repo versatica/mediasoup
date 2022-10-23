@@ -244,14 +244,16 @@ namespace RTC
 		}
 	}
 
-	WebRtcTransport::WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener,
-			const FBS::WebRtcTransport::WebRtcTransportOptions* options)
+	WebRtcTransport::WebRtcTransport(
+	  const std::string& id,
+	  RTC::Transport::Listener* listener,
+	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
 	  : RTC::Transport::Transport(id, listener, options)
 	{
 		MS_TRACE();
 
 		auto* listenInfo = options->listen_as<FBS::WebRtcTransport::WebRtcTransportListenIndividual>();
-		auto* listenIps = listenInfo->listenIps();
+		auto* listenIps  = listenInfo->listenIps();
 
 		try
 		{
@@ -620,8 +622,8 @@ namespace RTC
 		// Add base transport dump.
 		auto base = Transport::FillBuffer(builder);
 		// Add dtlsParameters.
-		auto dtlsParameters = FBS::Transport::CreateDtlsParametersDirect(
-		  builder, &fingerprints, dtlsRole.c_str());
+		auto dtlsParameters =
+		  FBS::Transport::CreateDtlsParametersDirect(builder, &fingerprints, dtlsRole.c_str());
 
 		auto webRtcTransportDump = FBS::Transport::CreateWebRtcTransportDumpDirect(
 		  builder,
@@ -633,7 +635,7 @@ namespace RTC
 		  iceState.c_str(),
 		  iceSelectedTuple,
 		  dtlsParameters,
-			dtlsState.c_str());
+		  dtlsState.c_str());
 
 		return FBS::Transport::CreateTransportDump(
 		  builder, FBS::Transport::TransportDumpData::WebRtcTransportDump, webRtcTransportDump.Union());

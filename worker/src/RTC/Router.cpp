@@ -634,7 +634,7 @@ namespace RTC
 				// This may throw.
 				CheckNoTransport(transportId);
 
-				auto* options = body->options();
+				auto* options    = body->options();
 				auto* listenInfo = options->listen_as<FBS::WebRtcTransport::WebRtcTransportListenServer>();
 
 				auto webRtcServerId = listenInfo->webRtcServerId()->str();
@@ -644,8 +644,8 @@ namespace RTC
 				if (!webRtcServer)
 					MS_THROW_ERROR("wrong webRtcServerId (no associated WebRtcServer found)");
 
-				auto iceCandidates =
-				  webRtcServer->GetIceCandidates(options->enableUdp(), options->enableTcp(), options->preferUdp(), options->preferTcp());
+				auto iceCandidates = webRtcServer->GetIceCandidates(
+				  options->enableUdp(), options->enableTcp(), options->preferUdp(), options->preferTcp());
 
 				// This may throw.
 				auto* webRtcTransport =
