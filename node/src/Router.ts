@@ -20,8 +20,7 @@ import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObser
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 import { Body as RequestBody, Method, CloseRouterRequestT } from './fbs/request_generated';
-import { WorkerDump as FbsRouterDump } from './fbs/worker_generated';
-import { CreateWebRtcTransportRequestT, NumSctpStreamsT, TransportListenIpT, WebRtcTransportOptionsT, WebRtcTransportListen, WebRtcTransportListenIndividualT, WebRtcTransportListenServerT } from './fbs/router_generated';
+import * as FbsRouter from './fbs/router_generated';
 import { BaseTransportDumpT, TransportDump, WebRtcTransportDumpT } from './fbs/transport_generated';
 
 export type RouterOptions =
@@ -358,11 +357,14 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		// Send the request and wait for the response.
 		const response = await this.#channel.requestBinary(
-			Method.ROUTER_DUMP
+			Method.ROUTER_DUMP,
+			undefined,
+			undefined,
+			this.#internal.routerId
 		);
 
 		/* Decode the response. */
-		const dump = new FbsRouterDump();
+		const dump = new FbsRouter.RouterDump();
 
 		response.body(dump);
 
@@ -424,33 +426,34 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 		const builder = this.#channel.bufferBuilder;
 
-		let webRtcTransportListenServer: WebRtcTransportListenServerT | undefined;
-		let webRtcTransportListenIndividual: WebRtcTransportListenIndividualT | undefined;
+		let webRtcTransportListenServer: FbsRouter.WebRtcTransportListenServerT | undefined;
+		let webRtcTransportListenIndividual: FbsRouter.WebRtcTransportListenIndividualT | undefined;
 
 		if (webRtcServer)
 		{
-			webRtcTransportListenServer = new WebRtcTransportListenServerT(webRtcServer.id);
+			webRtcTransportListenServer =
+				new FbsRouter.WebRtcTransportListenServerT(webRtcServer.id);
 		}
 		else
 		{
-			const transportListenIps: TransportListenIpT[] = [];
+			const transportListenIps: FbsRouter.TransportListenIpT[] = [];
 
 			for (const listenIp of listenIps as any[])
 			{
 				const transportListenIp =
-					new TransportListenIpT(listenIp.ip, listenIp.announcedIp);
+					new FbsRouter.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
 
 				transportListenIps.push(transportListenIp);
 			}
 
 			webRtcTransportListenIndividual =
-				new WebRtcTransportListenIndividualT(transportListenIps, port);
+				new FbsRouter.WebRtcTransportListenIndividualT(transportListenIps, port);
 		}
 
-		const webRtcTransportOptions = new WebRtcTransportOptionsT(
+		const webRtcTransportOptions = new FbsRouter.WebRtcTransportOptionsT(
 			webRtcServer ?
-				WebRtcTransportListen.WebRtcTransportListenServer :
-				WebRtcTransportListen.WebRtcTransportListenIndividual,
+				FbsRouter.WebRtcTransportListen.WebRtcTransportListenServer :
+				FbsRouter.WebRtcTransportListen.WebRtcTransportListenIndividual,
 			webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual,
 			enableUdp,
 			enableTcp,
@@ -458,13 +461,13 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			preferTcp,
 			initialAvailableOutgoingBitrate,
 			enableSctp,
-			new NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS),
+			new FbsRouter.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS),
 			maxSctpMessageSize,
 			sctpSendBufferSize,
 			true /* isDataChannel */
 		);
 
-		const createWebRtcTransportOffset = new CreateWebRtcTransportRequestT(
+		const createWebRtcTransportOffset = new FbsRouter.CreateWebRtcTransportRequestT(
 			transportId, webRtcTransportOptions
 		).pack(builder);
 

@@ -13,8 +13,7 @@ const DirectTransport_1 = require("./DirectTransport");
 const ActiveSpeakerObserver_1 = require("./ActiveSpeakerObserver");
 const AudioLevelObserver_1 = require("./AudioLevelObserver");
 const request_generated_1 = require("./fbs/request_generated");
-const worker_generated_1 = require("./fbs/worker_generated");
-const router_generated_1 = require("./fbs/router_generated");
+const FbsRouter = require("./fbs/router_generated");
 const transport_generated_1 = require("./fbs/transport_generated");
 const logger = new Logger_1.Logger('Router');
 class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
@@ -163,9 +162,9 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async dump() {
         logger.debug('dump()');
         // Send the request and wait for the response.
-        const response = await this.#channel.requestBinary(request_generated_1.Method.ROUTER_DUMP);
+        const response = await this.#channel.requestBinary(request_generated_1.Method.ROUTER_DUMP, undefined, undefined, this.#internal.routerId);
         /* Decode the response. */
-        const dump = new worker_generated_1.WorkerDump();
+        const dump = new FbsRouter.RouterDump();
         response.body(dump);
         return dump.unpack();
     }
@@ -195,26 +194,27 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             });
         }
         const transportId = (0, uuid_1.v4)();
-        /* Build Request */
+        /* Build Request. */
         const builder = this.#channel.bufferBuilder;
         let webRtcTransportListenServer;
         let webRtcTransportListenIndividual;
         if (webRtcServer) {
-            webRtcTransportListenServer = new router_generated_1.WebRtcTransportListenServerT(webRtcServer.id);
+            webRtcTransportListenServer =
+                new FbsRouter.WebRtcTransportListenServerT(webRtcServer.id);
         }
         else {
             const transportListenIps = [];
             for (const listenIp of listenIps) {
-                const transportListenIp = new router_generated_1.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
+                const transportListenIp = new FbsRouter.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
                 transportListenIps.push(transportListenIp);
             }
             webRtcTransportListenIndividual =
-                new router_generated_1.WebRtcTransportListenIndividualT(transportListenIps, port);
+                new FbsRouter.WebRtcTransportListenIndividualT(transportListenIps, port);
         }
-        const webRtcTransportOptions = new router_generated_1.WebRtcTransportOptionsT(webRtcServer ?
-            router_generated_1.WebRtcTransportListen.WebRtcTransportListenServer :
-            router_generated_1.WebRtcTransportListen.WebRtcTransportListenIndividual, webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, new router_generated_1.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS), maxSctpMessageSize, sctpSendBufferSize, true /* isDataChannel */);
-        const createWebRtcTransportOffset = new router_generated_1.CreateWebRtcTransportRequestT(transportId, webRtcTransportOptions).pack(builder);
+        const webRtcTransportOptions = new FbsRouter.WebRtcTransportOptionsT(webRtcServer ?
+            FbsRouter.WebRtcTransportListen.WebRtcTransportListenServer :
+            FbsRouter.WebRtcTransportListen.WebRtcTransportListenIndividual, webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual, enableUdp, enableTcp, preferUdp, preferTcp, initialAvailableOutgoingBitrate, enableSctp, new FbsRouter.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS), maxSctpMessageSize, sctpSendBufferSize, true /* isDataChannel */);
+        const createWebRtcTransportOffset = new FbsRouter.CreateWebRtcTransportRequestT(transportId, webRtcTransportOptions).pack(builder);
         const response = webRtcServer
             ? await this.#channel.requestBinary(request_generated_1.Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER, request_generated_1.Body.FBS_Router_CreateWebRtcTransportRequest, createWebRtcTransportOffset, this.#internal.routerId)
             : await this.#channel.requestBinary(request_generated_1.Method.ROUTER_CREATE_WEBRTC_TRANSPORT, request_generated_1.Body.FBS_Router_CreateWebRtcTransportRequest, createWebRtcTransportOffset, this.#internal.routerId);
@@ -222,6 +222,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const dump = new transport_generated_1.TransportDump();
         response.body(dump);
         const data = dump.unpack();
+        /* Fixup data into WebRtcTransportData. */
         const webRtcTransportDump = data.data;
         const baseTransportDump = webRtcTransportDump.base.data;
         const webRtcTransportData = {
