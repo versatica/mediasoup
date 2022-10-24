@@ -228,6 +228,17 @@ dependencies = [
   libwebrtc_dep,
 ]
 
+test_dependencies = [
+  abseil_cpp_proj.get_variable('absl_container_dep'),
+  openssl_proj.get_variable('openssl_dep'),
+  nlohmann_json_proj.get_variable('nlohmann_json_dep'),
+  libuv_proj.get_variable('libuv_dep'),
+  libsrtp2_proj.get_variable('libsrtp2_dep'),
+  usrsctp_proj.get_variable('usrsctp_dep'),
+  flatbuffers_proj.get_variable('flatbuffers_dep'),
+  libwebrtc_test_dep,
+]
+
 link_whole = [
   abseil_cpp_proj.get_variable('absl_container_lib'),
   openssl_proj.get_variable('libcrypto_lib'),
@@ -284,7 +295,7 @@ mediasoup_worker_test = executable(
   build_by_default: false,
   install: true,
   install_tag: 'mediasoup-worker-test',
-  dependencies: dependencies + [
+  dependencies: test_dependencies + [
     catch2_proj.get_variable('catch2_dep'),
   ],
   sources: common_sources + [
