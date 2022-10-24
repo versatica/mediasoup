@@ -1,3 +1,4 @@
+import * as FbsSctpParameters from './fbs/sctpParameters_generated';
 export declare type SctpCapabilities = {
     numStreams: NumSctpStreams;
 };
@@ -79,4 +80,14 @@ export declare type SctpStreamParameters = {
      */
     maxRetransmits?: number;
 };
+export declare type SctpParametersDump = {
+    port: number;
+    OS: number;
+    MIS: number;
+    maxMessageSize: number;
+    sendBufferSize: number;
+    sctpBufferedAmount: number;
+    isDataChannel: boolean;
+};
+export declare function parseSctpParametersDump(binary: FbsSctpParameters.SctpParameters): SctpParametersDump;
 //# sourceMappingURL=SctpParameters.d.ts.map

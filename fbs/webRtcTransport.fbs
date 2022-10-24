@@ -18,16 +18,11 @@ union WebRtcTransportListen {
 }
 
 table WebRtcTransportOptions {
+  base:FBS.Transport.BaseTransportOptions;
   listen:WebRtcTransportListen (required);
   enable_udp:bool = true;
   enable_tcp:bool = false;
   prefer_udp:bool = false;
   prefer_tcp:bool = false;
-  initial_available_outgoing_bitrate:uint32;
-  enable_sctp:bool;
-  num_sctp_streams:FBS.SctpParameters.NumSctpStreams (required);
-  max_sctp_message_size:uint32;
-  sctp_send_buffer_size:uint32;
-  is_data_channel:bool = false;
 }
 

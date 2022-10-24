@@ -24,6 +24,10 @@ namespace RTC
 
 	public:
 		PlainTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
+		PlainTransport(
+		  const std::string& id,
+		  RTC::Transport::Listener* listener,
+		  const FBS::PlainTransport::PlainTransportOptions* options);
 		~PlainTransport() override;
 
 	public:

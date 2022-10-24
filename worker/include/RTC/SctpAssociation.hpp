@@ -82,7 +82,7 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const;
-		flatbuffers::Offset<FBS::Transport::SctpParameters> FillBuffer(
+		flatbuffers::Offset<FBS::SctpParameters::SctpParameters> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 		void TransportConnected();
 		SctpState GetState() const

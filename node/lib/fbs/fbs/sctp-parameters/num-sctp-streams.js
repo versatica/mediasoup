@@ -20,20 +20,20 @@ class NumSctpStreams {
     }
     os() {
         const offset = this.bb.__offset(this.bb_pos, 4);
-        return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
+        return offset ? this.bb.readUint32(this.bb_pos + offset) : 1024;
     }
     mis() {
         const offset = this.bb.__offset(this.bb_pos, 6);
-        return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
+        return offset ? this.bb.readUint32(this.bb_pos + offset) : 1024;
     }
     static startNumSctpStreams(builder) {
         builder.startObject(2);
     }
     static addOs(builder, os) {
-        builder.addFieldInt32(0, os, 0);
+        builder.addFieldInt32(0, os, 1024);
     }
     static addMis(builder, mis) {
-        builder.addFieldInt32(1, mis, 0);
+        builder.addFieldInt32(1, mis, 1024);
     }
     static endNumSctpStreams(builder) {
         const offset = builder.endObject();
@@ -57,7 +57,7 @@ exports.NumSctpStreams = NumSctpStreams;
 class NumSctpStreamsT {
     os;
     mis;
-    constructor(os = 0, mis = 0) {
+    constructor(os = 1024, mis = 1024) {
         this.os = os;
         this.mis = mis;
     }

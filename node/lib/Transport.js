@@ -1,19 +1,24 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Transport = void 0;
+exports.parseBaseTransportDump = exports.parseRtpListenerDump = exports.Transport = void 0;
 const uuid_1 = require("uuid");
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const utils = require("./utils");
 const ortc = require("./ortc");
+const WebRtcTransport_1 = require("./WebRtcTransport");
 const Producer_1 = require("./Producer");
 const Consumer_1 = require("./Consumer");
 const DataProducer_1 = require("./DataProducer");
 const DataConsumer_1 = require("./DataConsumer");
+const RtpParameters_1 = require("./RtpParameters");
+const SctpParameters_1 = require("./SctpParameters");
 const request_generated_1 = require("./fbs/request_generated");
 const response_generated_1 = require("./fbs/response_generated");
-const transport_generated_1 = require("./fbs/transport_generated");
+const media_kind_1 = require("./fbs/fbs/rtp-parameters/media-kind");
+const consumer_generated_1 = require("./fbs/consumer_generated");
 const utils_1 = require("./fbs/utils");
+const FbsTransport = require("./fbs/transport_generated");
 const logger = new Logger_1.Logger('Transport');
 class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -242,9 +247,12 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('dump()');
         const response = await this.channel.requestBinary(request_generated_1.Method.TRANSPORT_DUMP, undefined, undefined, this.internal.transportId);
         /* Decode the response. */
-        const dump = new transport_generated_1.TransportDump();
+        const dump = new FbsTransport.TransportDump();
         response.body(dump);
-        return dump.unpack().data;
+        // TODO: Fix: Consider all transport types.
+        const transportDump = new FbsTransport.WebRtcTransportDump();
+        dump.data(transportDump);
+        return (0, WebRtcTransport_1.parseWebRtcTransportDump)(transportDump);
     }
     /**
      * Get Transport stats.
@@ -594,23 +602,23 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     createConsumeRequest({ producer, consumerId, rtpParameters, paused, preferredLayers, ignoreDtx, pipe }) {
         // Build the request.
         const builder = this.channel.bufferBuilder;
-        const rtpParametersOffset = (0, utils_1.serializeRtpParameters)(builder, rtpParameters);
+        const rtpParametersOffset = (0, RtpParameters_1.serializeRtpParameters)(builder, rtpParameters);
         const consumerIdOffset = builder.createString(consumerId);
         const producerIdOffset = builder.createString(producer.id);
         let consumableRtpEncodingsOffset;
         let preferredLayersOffset;
         if (producer.consumableRtpParameters.encodings) {
-            consumableRtpEncodingsOffset = (0, utils_1.serializeRtpEncodingParameters)(builder, producer.consumableRtpParameters.encodings);
+            consumableRtpEncodingsOffset = (0, RtpParameters_1.serializeRtpEncodingParameters)(builder, producer.consumableRtpParameters.encodings);
         }
         if (preferredLayers) {
             // NOTE: Add the maximum possible temporae layer if not provided.
-            transport_generated_1.ConsumerLayers.createConsumerLayers(builder, preferredLayers.spatialLayer, preferredLayers.temporalLayer ?? 255);
+            consumer_generated_1.ConsumerLayers.createConsumerLayers(builder, preferredLayers.spatialLayer, preferredLayers.temporalLayer ?? 255);
         }
         // Create Consume Request.
         request_generated_1.ConsumeRequest.startConsumeRequest(builder);
         request_generated_1.ConsumeRequest.addConsumerId(builder, consumerIdOffset);
         request_generated_1.ConsumeRequest.addProducerId(builder, producerIdOffset);
-        request_generated_1.ConsumeRequest.addKind(builder, producer.kind === 'audio' ? transport_generated_1.MediaKind.AUDIO : transport_generated_1.MediaKind.VIDEO);
+        request_generated_1.ConsumeRequest.addKind(builder, producer.kind === 'audio' ? media_kind_1.MediaKind.AUDIO : media_kind_1.MediaKind.VIDEO);
         request_generated_1.ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
         request_generated_1.ConsumeRequest.addType(builder, (0, utils_1.getRtpParametersType)(producer.type, pipe));
         if (consumableRtpEncodingsOffset)
@@ -623,3 +631,59 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
 }
 exports.Transport = Transport;
+function parseRtpListenerDump(binary) {
+    // Retrieve ssrcTable.
+    const ssrcTable = (0, utils_1.parseMapUint32String)(binary, 'ssrcTable');
+    // Retrieve midTable.
+    const midTable = (0, utils_1.parseMapUint32String)(binary, 'midTable');
+    // Retrieve ridTable.
+    const ridTable = (0, utils_1.parseMapUint32String)(binary, 'ridTable');
+    return {
+        ssrcTable,
+        midTable,
+        ridTable
+    };
+}
+exports.parseRtpListenerDump = parseRtpListenerDump;
+function parseBaseTransportDump(binary) {
+    // Retrieve producerIds.
+    const producerIds = (0, utils_1.parseVector)(binary, 'producerIds');
+    // Retrieve consumerIds.
+    const consumerIds = (0, utils_1.parseVector)(binary, 'consumerIds');
+    // Retrieve map SSRC consumerId.
+    const mapSsrcConsumerId = (0, utils_1.parseMapUint32String)(binary, 'mapSsrcConsumerId');
+    // Retrieve map RTX SSRC consumerId.
+    const mapRtxSsrcConsumerId = (0, utils_1.parseMapUint32String)(binary, 'mapRtxSsrcConsumerId');
+    // Retrieve dataProducerIds.
+    const dataProducerIds = (0, utils_1.parseVector)(binary, 'dataProducerIds');
+    // Retrieve dataConsumerIds.
+    const dataConsumerIds = (0, utils_1.parseVector)(binary, 'dataConsumerIds');
+    // Retrieve recvRtpHeaderExtesions.
+    const recvRtpHeaderExtensions = (0, utils_1.parseMapStringUint8)(binary, 'recvRtpHeaderExtensions');
+    // Retrieve RtpListener.
+    const rtpListener = parseRtpListenerDump(binary.rtpListener());
+    // Retrieve SctpParameters.
+    const fbsSctpParameters = binary.sctpParameters();
+    let sctpParameters;
+    if (fbsSctpParameters) {
+        sctpParameters = (0, SctpParameters_1.parseSctpParametersDump)(fbsSctpParameters);
+    }
+    return {
+        id: binary.id(),
+        direct: binary.direct(),
+        producerIds: producerIds,
+        consumerIds: consumerIds,
+        mapSsrcConsumerId: mapSsrcConsumerId,
+        mapRtxSsrcConsumerId: mapRtxSsrcConsumerId,
+        dataProducerIds: dataProducerIds,
+        dataConsumerIds: dataConsumerIds,
+        recvRtpHeaderExtensions: recvRtpHeaderExtensions,
+        // TODO: maxMessageSize.
+        rtpListener: rtpListener,
+        sctpParameters: sctpParameters,
+        sctpState: binary.stcpState()
+        // TODO: sctpListener.
+        // TODO: traceEventTypes.
+    };
+}
+exports.parseBaseTransportDump = parseBaseTransportDump;

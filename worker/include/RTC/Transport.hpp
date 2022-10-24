@@ -123,7 +123,7 @@ namespace RTC
 		Transport(
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
-		  const FBS::WebRtcTransport::WebRtcTransportOptions* webRtcTransportOptions);
+		  const FBS::Transport::BaseTransportOptions* webRtcTransportOptions);
 		virtual ~Transport();
 
 	public:

@@ -248,7 +248,7 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
-	  : RTC::Transport::Transport(id, listener, options)
+	  : RTC::Transport::Transport(id, listener, options->base())
 	{
 		MS_TRACE();
 
@@ -436,7 +436,7 @@ namespace RTC
 	  WebRtcTransportListener* webRtcTransportListener,
 	  std::vector<RTC::IceCandidate>& iceCandidates,
 	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
-	  : RTC::Transport::Transport(id, listener, options),
+	  : RTC::Transport::Transport(id, listener, options->base()),
 	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
 	{
 		MS_TRACE();

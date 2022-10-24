@@ -11,6 +11,8 @@ import { Consumer, ConsumerOptions } from './Consumer';
 import { DataProducer, DataProducerOptions } from './DataProducer';
 import { DataConsumer, DataConsumerOptions } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
+import { SctpParameters } from './SctpParameters';
+import * as FbsTransport from './fbs/transport_generated';
 export interface TransportListenIp {
     /**
      * Listening IPv4 or IPv6.
@@ -202,5 +204,26 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      */
     private createConsumeRequest;
 }
+declare type RtpListenerDump = {
+    ssrcTable: Record<number, string>;
+    midTable: Record<number, string>;
+    ridTable: Record<number, string>;
+};
+export declare type BaseTransportDump = {
+    id: string;
+    direct: boolean;
+    producerIds: string[];
+    consumerIds: string[];
+    mapSsrcConsumerId: Record<number, string>;
+    mapRtxSsrcConsumerId: Record<number, string>;
+    recvRtpHeaderExtensions: Record<string, number>;
+    rtpListener: RtpListenerDump;
+    dataProducerIds: string[];
+    dataConsumerIds: string[];
+    sctpParameters?: SctpParameters;
+    sctpState?: SctpState;
+};
+export declare function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump;
+export declare function parseBaseTransportDump(binary: FbsTransport.BaseTransportDump): BaseTransportDump;
 export {};
 //# sourceMappingURL=Transport.d.ts.map

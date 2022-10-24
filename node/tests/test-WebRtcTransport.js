@@ -60,7 +60,7 @@ beforeEach(async () =>
 
 afterEach(() => transport.close());
 
-test('router.createWebRtcTransport() succeeds', async () =>
+test.only('router.createWebRtcTransport() succeeds', async () =>
 {
 	await expect(router.dump())
 		.resolves

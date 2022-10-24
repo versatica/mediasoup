@@ -24,12 +24,12 @@ static getSizePrefixedRootAsNumSctpStreams(bb:flatbuffers.ByteBuffer, obj?:NumSc
 
 os():number {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 1024;
 }
 
 mis():number {
   const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 1024;
 }
 
 static startNumSctpStreams(builder:flatbuffers.Builder) {
@@ -37,11 +37,11 @@ static startNumSctpStreams(builder:flatbuffers.Builder) {
 }
 
 static addOs(builder:flatbuffers.Builder, os:number) {
-  builder.addFieldInt32(0, os, 0);
+  builder.addFieldInt32(0, os, 1024);
 }
 
 static addMis(builder:flatbuffers.Builder, mis:number) {
-  builder.addFieldInt32(1, mis, 0);
+  builder.addFieldInt32(1, mis, 1024);
 }
 
 static endNumSctpStreams(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -72,8 +72,8 @@ unpackTo(_o: NumSctpStreamsT): void {
 
 export class NumSctpStreamsT {
 constructor(
-  public os: number = 0,
-  public mis: number = 0
+  public os: number = 1024,
+  public mis: number = 1024
 ){}
 
 

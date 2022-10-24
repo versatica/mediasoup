@@ -211,19 +211,17 @@ struct WebRtcTransportOptions FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tab
     return WebRtcTransportOptionsTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_LISTEN_TYPE = 4,
-    VT_LISTEN = 6,
-    VT_ENABLEUDP = 8,
-    VT_ENABLETCP = 10,
-    VT_PREFERUDP = 12,
-    VT_PREFERTCP = 14,
-    VT_INITIALAVAILABLEOUTGOINGBITRATE = 16,
-    VT_ENABLESCTP = 18,
-    VT_NUMSCTPSTREAMS = 20,
-    VT_MAXSCTPMESSAGESIZE = 22,
-    VT_SCTPSENDBUFFERSIZE = 24,
-    VT_ISDATACHANNEL = 26
+    VT_BASE = 4,
+    VT_LISTEN_TYPE = 6,
+    VT_LISTEN = 8,
+    VT_ENABLEUDP = 10,
+    VT_ENABLETCP = 12,
+    VT_PREFERUDP = 14,
+    VT_PREFERTCP = 16
   };
+  const FBS::Transport::BaseTransportOptions *base() const {
+    return GetPointer<const FBS::Transport::BaseTransportOptions *>(VT_BASE);
+  }
   FBS::WebRtcTransport::WebRtcTransportListen listen_type() const {
     return static_cast<FBS::WebRtcTransport::WebRtcTransportListen>(GetField<uint8_t>(VT_LISTEN_TYPE, 0));
   }
@@ -249,26 +247,10 @@ struct WebRtcTransportOptions FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tab
   bool preferTcp() const {
     return GetField<uint8_t>(VT_PREFERTCP, 0) != 0;
   }
-  uint32_t initialAvailableOutgoingBitrate() const {
-    return GetField<uint32_t>(VT_INITIALAVAILABLEOUTGOINGBITRATE, 0);
-  }
-  bool enableSctp() const {
-    return GetField<uint8_t>(VT_ENABLESCTP, 0) != 0;
-  }
-  const FBS::SctpParameters::NumSctpStreams *numSctpStreams() const {
-    return GetPointer<const FBS::SctpParameters::NumSctpStreams *>(VT_NUMSCTPSTREAMS);
-  }
-  uint32_t maxSctpMessageSize() const {
-    return GetField<uint32_t>(VT_MAXSCTPMESSAGESIZE, 0);
-  }
-  uint32_t sctpSendBufferSize() const {
-    return GetField<uint32_t>(VT_SCTPSENDBUFFERSIZE, 0);
-  }
-  bool isDataChannel() const {
-    return GetField<uint8_t>(VT_ISDATACHANNEL, 0) != 0;
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_BASE) &&
+           verifier.VerifyTable(base()) &&
            VerifyField<uint8_t>(verifier, VT_LISTEN_TYPE, 1) &&
            VerifyOffsetRequired(verifier, VT_LISTEN) &&
            VerifyWebRtcTransportListen(verifier, listen(), listen_type()) &&
@@ -276,13 +258,6 @@ struct WebRtcTransportOptions FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tab
            VerifyField<uint8_t>(verifier, VT_ENABLETCP, 1) &&
            VerifyField<uint8_t>(verifier, VT_PREFERUDP, 1) &&
            VerifyField<uint8_t>(verifier, VT_PREFERTCP, 1) &&
-           VerifyField<uint32_t>(verifier, VT_INITIALAVAILABLEOUTGOINGBITRATE, 4) &&
-           VerifyField<uint8_t>(verifier, VT_ENABLESCTP, 1) &&
-           VerifyOffsetRequired(verifier, VT_NUMSCTPSTREAMS) &&
-           verifier.VerifyTable(numSctpStreams()) &&
-           VerifyField<uint32_t>(verifier, VT_MAXSCTPMESSAGESIZE, 4) &&
-           VerifyField<uint32_t>(verifier, VT_SCTPSENDBUFFERSIZE, 4) &&
-           VerifyField<uint8_t>(verifier, VT_ISDATACHANNEL, 1) &&
            verifier.EndTable();
   }
 };
@@ -299,6 +274,9 @@ struct WebRtcTransportOptionsBuilder {
   typedef WebRtcTransportOptions Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
+  void add_base(flatbuffers::Offset<FBS::Transport::BaseTransportOptions> base) {
+    fbb_.AddOffset(WebRtcTransportOptions::VT_BASE, base);
+  }
   void add_listen_type(FBS::WebRtcTransport::WebRtcTransportListen listen_type) {
     fbb_.AddElement<uint8_t>(WebRtcTransportOptions::VT_LISTEN_TYPE, static_cast<uint8_t>(listen_type), 0);
   }
@@ -317,24 +295,6 @@ struct WebRtcTransportOptionsBuilder {
   void add_preferTcp(bool preferTcp) {
     fbb_.AddElement<uint8_t>(WebRtcTransportOptions::VT_PREFERTCP, static_cast<uint8_t>(preferTcp), 0);
   }
-  void add_initialAvailableOutgoingBitrate(uint32_t initialAvailableOutgoingBitrate) {
-    fbb_.AddElement<uint32_t>(WebRtcTransportOptions::VT_INITIALAVAILABLEOUTGOINGBITRATE, initialAvailableOutgoingBitrate, 0);
-  }
-  void add_enableSctp(bool enableSctp) {
-    fbb_.AddElement<uint8_t>(WebRtcTransportOptions::VT_ENABLESCTP, static_cast<uint8_t>(enableSctp), 0);
-  }
-  void add_numSctpStreams(flatbuffers::Offset<FBS::SctpParameters::NumSctpStreams> numSctpStreams) {
-    fbb_.AddOffset(WebRtcTransportOptions::VT_NUMSCTPSTREAMS, numSctpStreams);
-  }
-  void add_maxSctpMessageSize(uint32_t maxSctpMessageSize) {
-    fbb_.AddElement<uint32_t>(WebRtcTransportOptions::VT_MAXSCTPMESSAGESIZE, maxSctpMessageSize, 0);
-  }
-  void add_sctpSendBufferSize(uint32_t sctpSendBufferSize) {
-    fbb_.AddElement<uint32_t>(WebRtcTransportOptions::VT_SCTPSENDBUFFERSIZE, sctpSendBufferSize, 0);
-  }
-  void add_isDataChannel(bool isDataChannel) {
-    fbb_.AddElement<uint8_t>(WebRtcTransportOptions::VT_ISDATACHANNEL, static_cast<uint8_t>(isDataChannel), 0);
-  }
   explicit WebRtcTransportOptionsBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -343,33 +303,22 @@ struct WebRtcTransportOptionsBuilder {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<WebRtcTransportOptions>(end);
     fbb_.Required(o, WebRtcTransportOptions::VT_LISTEN);
-    fbb_.Required(o, WebRtcTransportOptions::VT_NUMSCTPSTREAMS);
     return o;
   }
 };
 
 inline flatbuffers::Offset<WebRtcTransportOptions> CreateWebRtcTransportOptions(
     flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Transport::BaseTransportOptions> base = 0,
     FBS::WebRtcTransport::WebRtcTransportListen listen_type = FBS::WebRtcTransport::WebRtcTransportListen::NONE,
     flatbuffers::Offset<void> listen = 0,
     bool enableUdp = true,
     bool enableTcp = false,
     bool preferUdp = false,
-    bool preferTcp = false,
-    uint32_t initialAvailableOutgoingBitrate = 0,
-    bool enableSctp = false,
-    flatbuffers::Offset<FBS::SctpParameters::NumSctpStreams> numSctpStreams = 0,
-    uint32_t maxSctpMessageSize = 0,
-    uint32_t sctpSendBufferSize = 0,
-    bool isDataChannel = false) {
+    bool preferTcp = false) {
   WebRtcTransportOptionsBuilder builder_(_fbb);
-  builder_.add_sctpSendBufferSize(sctpSendBufferSize);
-  builder_.add_maxSctpMessageSize(maxSctpMessageSize);
-  builder_.add_numSctpStreams(numSctpStreams);
-  builder_.add_initialAvailableOutgoingBitrate(initialAvailableOutgoingBitrate);
   builder_.add_listen(listen);
-  builder_.add_isDataChannel(isDataChannel);
-  builder_.add_enableSctp(enableSctp);
+  builder_.add_base(base);
   builder_.add_preferTcp(preferTcp);
   builder_.add_preferUdp(preferUdp);
   builder_.add_enableTcp(enableTcp);
@@ -461,39 +410,29 @@ inline const flatbuffers::TypeTable *WebRtcTransportListenServerTypeTable() {
 
 inline const flatbuffers::TypeTable *WebRtcTransportOptionsTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_UTYPE, 0, 0 },
     { flatbuffers::ET_SEQUENCE, 0, 0 },
-    { flatbuffers::ET_BOOL, 0, -1 },
-    { flatbuffers::ET_BOOL, 0, -1 },
-    { flatbuffers::ET_BOOL, 0, -1 },
-    { flatbuffers::ET_BOOL, 0, -1 },
-    { flatbuffers::ET_UINT, 0, -1 },
-    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_UTYPE, 0, 1 },
     { flatbuffers::ET_SEQUENCE, 0, 1 },
-    { flatbuffers::ET_UINT, 0, -1 },
-    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
     { flatbuffers::ET_BOOL, 0, -1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::WebRtcTransport::WebRtcTransportListenTypeTable,
-    FBS::SctpParameters::NumSctpStreamsTypeTable
+    FBS::Transport::BaseTransportOptionsTypeTable,
+    FBS::WebRtcTransport::WebRtcTransportListenTypeTable
   };
   static const char * const names[] = {
+    "base",
     "listen_type",
     "listen",
     "enableUdp",
     "enableTcp",
     "preferUdp",
-    "preferTcp",
-    "initialAvailableOutgoingBitrate",
-    "enableSctp",
-    "numSctpStreams",
-    "maxSctpMessageSize",
-    "sctpSendBufferSize",
-    "isDataChannel"
+    "preferTcp"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 12, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 7, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

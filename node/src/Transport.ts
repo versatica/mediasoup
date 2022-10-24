@@ -6,7 +6,7 @@ import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { RouterInternal } from './Router';
-import { WebRtcTransportData } from './WebRtcTransport';
+import { WebRtcTransportData, parseWebRtcTransportDump } from './WebRtcTransport';
 import { PlainTransportData } from './PlainTransport';
 import { PipeTransportData } from './PipeTransport';
 import { DirectTransportData } from './DirectTransport';
@@ -22,12 +22,14 @@ import {
 	DataConsumerOptions,
 	DataConsumerType
 } from './DataConsumer';
-import { RtpCapabilities, RtpParameters } from './RtpParameters';
-import { SctpStreamParameters } from './SctpParameters';
+import { RtpCapabilities, RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
+import { parseSctpParametersDump, SctpParameters, SctpStreamParameters } from './SctpParameters';
 import { Body as RequestBody, ConsumeRequest, Method } from './fbs/request_generated';
 import { ConsumeResponse } from './fbs/response_generated';
-import { MediaKind as FbsMediaKind, ConsumerLayers as FbsConsumerLayers, TransportDump as FbsTransportDump } from './fbs/transport_generated';
-import { getRtpParametersType, serializeRtpParameters, serializeRtpEncodingParameters } from './fbs/utils';
+import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
+import { ConsumerLayers as FbsConsumerLayers } from './fbs/consumer_generated';
+import { getRtpParametersType, parseMapStringUint8, parseMapUint32String, parseVector } from './fbs/utils';
+import * as FbsTransport from './fbs/transport_generated';
 
 export interface TransportListenIp
 {
@@ -477,11 +479,16 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		);
 
 		/* Decode the response. */
-		const dump = new FbsTransportDump();
+		const dump = new FbsTransport.TransportDump();
 
 		response.body(dump);
 
-		return dump.unpack().data;
+		// TODO: Fix: Consider all transport types.
+		const transportDump = new FbsTransport.WebRtcTransportDump();
+
+		dump.data(transportDump);
+
+		return parseWebRtcTransportDump(transportDump);
 	}
 
 	/**
@@ -1088,4 +1095,90 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		return ConsumeRequest.endConsumeRequest(builder);
 	}
+}
+
+type RtpListenerDump = {
+  ssrcTable : Record<number, string>;
+  midTable : Record<number, string>;
+  ridTable : Record<number, string>;
+};
+
+export type BaseTransportDump = {
+	id : string;
+	direct : boolean;
+	producerIds : string[];
+	consumerIds : string[];
+	mapSsrcConsumerId : Record<number, string>;
+	mapRtxSsrcConsumerId : Record<number, string>;
+	recvRtpHeaderExtensions : Record<string, number>;
+	rtpListener: RtpListenerDump;
+	dataProducerIds : string[];
+	dataConsumerIds : string[];
+	sctpParameters? : SctpParameters;
+	sctpState? : SctpState;
+};
+
+export function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump
+{
+	// Retrieve ssrcTable.
+	const ssrcTable = parseMapUint32String(binary, 'ssrcTable');
+	// Retrieve midTable.
+	const midTable = parseMapUint32String(binary, 'midTable');
+	// Retrieve ridTable.
+	const ridTable = parseMapUint32String(binary, 'ridTable');
+
+	return {
+		ssrcTable,
+		midTable,
+		ridTable
+	};
+}
+
+export function parseBaseTransportDump(
+	binary: FbsTransport.BaseTransportDump
+): BaseTransportDump
+{
+	// Retrieve producerIds.
+	const producerIds = parseVector<string>(binary, 'producerIds');
+	// Retrieve consumerIds.
+	const consumerIds = parseVector<string>(binary, 'consumerIds');
+	// Retrieve map SSRC consumerId.
+	const mapSsrcConsumerId = parseMapUint32String(binary, 'mapSsrcConsumerId');
+	// Retrieve map RTX SSRC consumerId.
+	const mapRtxSsrcConsumerId = parseMapUint32String(binary, 'mapRtxSsrcConsumerId');
+	// Retrieve dataProducerIds.
+	const dataProducerIds = parseVector<string>(binary, 'dataProducerIds');
+	// Retrieve dataConsumerIds.
+	const dataConsumerIds = parseVector<string>(binary, 'dataConsumerIds');
+	// Retrieve recvRtpHeaderExtesions.
+	const recvRtpHeaderExtensions = parseMapStringUint8(binary, 'recvRtpHeaderExtensions');
+	// Retrieve RtpListener.
+	const rtpListener = parseRtpListenerDump(binary.rtpListener()!);
+
+	// Retrieve SctpParameters.
+	const fbsSctpParameters = binary.sctpParameters();
+	let sctpParameters: SctpParameters | undefined;
+
+	if (fbsSctpParameters)
+	{
+		sctpParameters = parseSctpParametersDump(fbsSctpParameters);
+	}
+
+	return {
+		id                      : binary.id()!,
+		direct                  : binary.direct(),
+		producerIds             : producerIds,
+		consumerIds             : consumerIds,
+		mapSsrcConsumerId       : mapSsrcConsumerId,
+		mapRtxSsrcConsumerId    : mapRtxSsrcConsumerId,
+		dataProducerIds         : dataProducerIds,
+		dataConsumerIds         : dataConsumerIds,
+		recvRtpHeaderExtensions : recvRtpHeaderExtensions,
+		// TODO: maxMessageSize.
+		rtpListener             : rtpListener,
+		sctpParameters          : sctpParameters,
+		sctpState               : binary.stcpState() as SctpState
+		// TODO: sctpListener.
+		// TODO: traceEventTypes.
+	};
 }

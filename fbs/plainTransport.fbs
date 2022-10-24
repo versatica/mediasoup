@@ -1,0 +1,15 @@
+include "transport.fbs";
+include "sctpParameters.fbs";
+
+namespace FBS.PlainTransport;
+
+table PlainTransportOptions {
+  base:FBS.Transport.BaseTransportOptions;
+  listen_ip:FBS.Transport.TransportListenIp (required);
+  port:uint16;
+  rtcp_mux:bool;
+  comedia:bool;
+  enable_srtp:bool;
+  srtp_crypto_suite:string;
+}
+

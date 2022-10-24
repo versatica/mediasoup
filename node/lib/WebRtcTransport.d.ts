@@ -1,6 +1,7 @@
-import { Transport, TransportListenIp, TransportProtocol, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
+import { BaseTransportDump, Transport, TransportListenIp, TransportProtocol, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import * as FbsRouter from './fbs/router_generated';
 import { Either } from './utils';
 export declare type WebRtcTransportListenIndividual = {
     /**
@@ -236,5 +237,19 @@ export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, We
     restartIce(): Promise<IceParameters>;
     private handleWorkerNotifications;
 }
+export declare function parseIceCandidate(binary: FbsRouter.IceCandidate): IceCandidate;
+export declare function parseIceParameters(binary: FbsRouter.IceParameters): IceParameters;
+export declare function parseDtlsParameters(binary: FbsRouter.DtlsParameters): DtlsParameters;
+export declare type WebRtcTransportDump = BaseTransportDump & {
+    iceRole: 'controlled';
+    iceParameters: IceParameters;
+    iceCandidates: IceCandidate[];
+    iceState: IceState;
+    iceSelectedTuple?: TransportTuple;
+    dtlsParameters: DtlsParameters;
+    dtlsState: DtlsState;
+    dtlsRemoteCert?: string;
+};
+export declare function parseWebRtcTransportDump(binary: FbsRouter.WebRtcTransportDump): WebRtcTransportDump;
 export {};
 //# sourceMappingURL=WebRtcTransport.d.ts.map

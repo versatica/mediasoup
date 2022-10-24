@@ -1,3 +1,5 @@
+import * as FbsSctpParameters from './fbs/sctpParameters_generated';
+
 export type SctpCapabilities =
 {
   numStreams: NumSctpStreams;
@@ -93,3 +95,29 @@ export type SctpStreamParameters =
 	 */
 	maxRetransmits?: number;
 };
+
+export type SctpParametersDump =
+{
+	port : number;
+	OS : number;
+	MIS : number;
+	maxMessageSize : number;
+	sendBufferSize : number;
+	sctpBufferedAmount : number;
+	isDataChannel : boolean;
+};
+
+export function parseSctpParametersDump(
+	binary: FbsSctpParameters.SctpParameters
+): SctpParametersDump
+{
+	return {
+		port               : binary.port(),
+		OS                 : binary.os(),
+		MIS                : binary.mis(),
+		maxMessageSize     : binary.maxMessageSize(),
+		sendBufferSize     : binary.sendBufferSize(),
+		sctpBufferedAmount : binary.sctpBufferedAmount(),
+		isDataChannel      : binary.isDataChannel()
+	};
+}

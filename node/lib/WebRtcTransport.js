@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WebRtcTransport = void 0;
+exports.parseWebRtcTransportDump = exports.parseDtlsParameters = exports.parseIceParameters = exports.parseIceCandidate = exports.WebRtcTransport = void 0;
 const Logger_1 = require("./Logger");
 const Transport_1 = require("./Transport");
+const FbsRouter = require("./fbs/router_generated");
 const logger = new Logger_1.Logger('WebRtcTransport');
 class WebRtcTransport extends Transport_1.Transport {
     // WebRtcTransport data.
@@ -225,3 +226,67 @@ class WebRtcTransport extends Transport_1.Transport {
     }
 }
 exports.WebRtcTransport = WebRtcTransport;
+function parseIceCandidate(binary) {
+    return {
+        foundation: binary.foundation(),
+        priority: binary.priority(),
+        ip: binary.ip(),
+        protocol: binary.protocol(),
+        port: binary.port(),
+        type: 'host',
+        tcpType: binary.tcpType() === 'passive' ? 'passive' : undefined
+    };
+}
+exports.parseIceCandidate = parseIceCandidate;
+function parseIceParameters(binary) {
+    return {
+        usernameFragment: binary.usernameFragment(),
+        password: binary.password(),
+        iceLite: binary.iceLite()
+    };
+}
+exports.parseIceParameters = parseIceParameters;
+function parseDtlsParameters(binary) {
+    const fingerprints = [];
+    for (let i = 0; i < binary.fingerprintsLength(); ++i) {
+        const fbsFingerprint = binary.fingerprints(i);
+        const fingerPrint = {
+            algorithm: fbsFingerprint.algorithm(),
+            value: fbsFingerprint.value()
+        };
+        fingerprints.push(fingerPrint);
+    }
+    return {
+        fingerprints: fingerprints,
+        role: binary.role()
+    };
+}
+exports.parseDtlsParameters = parseDtlsParameters;
+function parseWebRtcTransportDump(binary) {
+    // Retrieve BaseTransportDump.
+    const fbsBaseTransportDump = new FbsRouter.BaseTransportDump();
+    binary.base().data(fbsBaseTransportDump);
+    const baseTransportDump = (0, Transport_1.parseBaseTransportDump)(fbsBaseTransportDump);
+    // Retrieve ICE candidates.
+    const iceCandidates = [];
+    for (let i = 0; i < binary.iceCandidatesLength(); ++i) {
+        const fbsIceCandidate = binary.iceCandidates(i);
+        iceCandidates.push(parseIceCandidate(fbsIceCandidate));
+    }
+    // Retrieve ICE parameters.
+    const iceParameters = parseIceParameters(binary.iceParameters());
+    // Retrieve DTLS parameters.
+    const dtlsParameters = parseDtlsParameters(binary.dtlsParameters());
+    const dump = { ...baseTransportDump,
+        sctpParameters: baseTransportDump.sctpParameters,
+        sctpState: baseTransportDump.sctpState,
+        iceRole: 'controlled',
+        iceParameters: iceParameters,
+        iceCandidates: iceCandidates,
+        iceState: binary.iceState(),
+        dtlsParameters: dtlsParameters,
+        dtlsState: binary.dtlsState()
+    };
+    return dump;
+}
+exports.parseWebRtcTransportDump = parseWebRtcTransportDump;

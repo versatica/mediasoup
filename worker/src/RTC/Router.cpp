@@ -628,7 +628,6 @@ namespace RTC
 			case FBS::Request::Method::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
 			{
 				auto body = request->_data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
-
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -658,6 +657,28 @@ namespace RTC
 				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
 
 				auto dumpOffset = webRtcTransport->FillBuffer(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_Transport_TransportDump, dumpOffset);
+
+				break;
+			}
+
+			case FBS::Request::Method::ROUTER_CREATE_PLAIN_TRANSPORT:
+			{
+				auto body = request->_data->body_as<FBS::Router::CreatePlainTransportRequest>();
+				auto transportId = body->transportId()->str();
+
+				// This may throw.
+				CheckNoTransport(transportId);
+
+				auto* plainTransport = new RTC::PlainTransport(transportId, this, body->options());
+
+				// Insert into the map.
+				this->mapTransports[transportId] = plainTransport;
+
+				MS_DEBUG_DEV("PlainTransport created [transportId:%s]", transportId.c_str());
+
+				auto dumpOffset = plainTransport->FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::FBS_Transport_TransportDump, dumpOffset);
 

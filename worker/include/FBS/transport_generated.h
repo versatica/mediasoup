@@ -16,6 +16,7 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
 #include "common_generated.h"
 #include "consumer_generated.h"
 #include "rtpParameters_generated.h"
+#include "sctpParameters_generated.h"
 
 namespace FBS {
 namespace Transport {
@@ -34,9 +35,6 @@ struct RtpListenerBuilder;
 
 struct SctpListener;
 struct SctpListenerBuilder;
-
-struct SctpParameters;
-struct SctpParametersBuilder;
 
 struct TransportDump;
 struct TransportDumpBuilder;
@@ -74,6 +72,9 @@ struct DirectTransportDumpBuilder;
 struct PipeTransportDump;
 struct PipeTransportDumpBuilder;
 
+struct BaseTransportOptions;
+struct BaseTransportOptionsBuilder;
+
 inline const flatbuffers::TypeTable *TransportListenIpTypeTable();
 
 inline const flatbuffers::TypeTable *ConsumeRequestTypeTable();
@@ -83,8 +84,6 @@ inline const flatbuffers::TypeTable *ConsumeResponseTypeTable();
 inline const flatbuffers::TypeTable *RtpListenerTypeTable();
 
 inline const flatbuffers::TypeTable *SctpListenerTypeTable();
-
-inline const flatbuffers::TypeTable *SctpParametersTypeTable();
 
 inline const flatbuffers::TypeTable *TransportDumpTypeTable();
 
@@ -109,6 +108,8 @@ inline const flatbuffers::TypeTable *PlainTransportDumpTypeTable();
 inline const flatbuffers::TypeTable *DirectTransportDumpTypeTable();
 
 inline const flatbuffers::TypeTable *PipeTransportDumpTypeTable();
+
+inline const flatbuffers::TypeTable *BaseTransportOptionsTypeTable();
 
 enum class TransportProtocol : uint8_t {
   UDP = 1,
@@ -659,110 +660,6 @@ inline flatbuffers::Offset<SctpListener> CreateSctpListenerDirect(
       streamIdTable__);
 }
 
-struct SctpParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef SctpParametersBuilder Builder;
-  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return SctpParametersTypeTable();
-  }
-  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_PORT = 4,
-    VT_OS = 6,
-    VT_MIS = 8,
-    VT_MAXMESSAGESIZE = 10,
-    VT_SENDBUFFERSIZE = 12,
-    VT_SCTPBUFFEREDAMOUNT = 14,
-    VT_ISDATACHANNEL = 16
-  };
-  uint16_t port() const {
-    return GetField<uint16_t>(VT_PORT, 5000);
-  }
-  uint16_t os() const {
-    return GetField<uint16_t>(VT_OS, 0);
-  }
-  uint16_t mis() const {
-    return GetField<uint16_t>(VT_MIS, 0);
-  }
-  uint32_t maxMessageSize() const {
-    return GetField<uint32_t>(VT_MAXMESSAGESIZE, 0);
-  }
-  uint32_t sendBufferSize() const {
-    return GetField<uint32_t>(VT_SENDBUFFERSIZE, 0);
-  }
-  uint32_t sctpBufferedAmount() const {
-    return GetField<uint32_t>(VT_SCTPBUFFEREDAMOUNT, 0);
-  }
-  bool isDataChannel() const {
-    return GetField<uint8_t>(VT_ISDATACHANNEL, 0) != 0;
-  }
-  bool Verify(flatbuffers::Verifier &verifier) const {
-    return VerifyTableStart(verifier) &&
-           VerifyField<uint16_t>(verifier, VT_PORT, 2) &&
-           VerifyField<uint16_t>(verifier, VT_OS, 2) &&
-           VerifyField<uint16_t>(verifier, VT_MIS, 2) &&
-           VerifyField<uint32_t>(verifier, VT_MAXMESSAGESIZE, 4) &&
-           VerifyField<uint32_t>(verifier, VT_SENDBUFFERSIZE, 4) &&
-           VerifyField<uint32_t>(verifier, VT_SCTPBUFFEREDAMOUNT, 4) &&
-           VerifyField<uint8_t>(verifier, VT_ISDATACHANNEL, 1) &&
-           verifier.EndTable();
-  }
-};
-
-struct SctpParametersBuilder {
-  typedef SctpParameters Table;
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_port(uint16_t port) {
-    fbb_.AddElement<uint16_t>(SctpParameters::VT_PORT, port, 5000);
-  }
-  void add_os(uint16_t os) {
-    fbb_.AddElement<uint16_t>(SctpParameters::VT_OS, os, 0);
-  }
-  void add_mis(uint16_t mis) {
-    fbb_.AddElement<uint16_t>(SctpParameters::VT_MIS, mis, 0);
-  }
-  void add_maxMessageSize(uint32_t maxMessageSize) {
-    fbb_.AddElement<uint32_t>(SctpParameters::VT_MAXMESSAGESIZE, maxMessageSize, 0);
-  }
-  void add_sendBufferSize(uint32_t sendBufferSize) {
-    fbb_.AddElement<uint32_t>(SctpParameters::VT_SENDBUFFERSIZE, sendBufferSize, 0);
-  }
-  void add_sctpBufferedAmount(uint32_t sctpBufferedAmount) {
-    fbb_.AddElement<uint32_t>(SctpParameters::VT_SCTPBUFFEREDAMOUNT, sctpBufferedAmount, 0);
-  }
-  void add_isDataChannel(bool isDataChannel) {
-    fbb_.AddElement<uint8_t>(SctpParameters::VT_ISDATACHANNEL, static_cast<uint8_t>(isDataChannel), 0);
-  }
-  explicit SctpParametersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
-        : fbb_(_fbb) {
-    start_ = fbb_.StartTable();
-  }
-  flatbuffers::Offset<SctpParameters> Finish() {
-    const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<SctpParameters>(end);
-    return o;
-  }
-};
-
-inline flatbuffers::Offset<SctpParameters> CreateSctpParameters(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    uint16_t port = 5000,
-    uint16_t os = 0,
-    uint16_t mis = 0,
-    uint32_t maxMessageSize = 0,
-    uint32_t sendBufferSize = 0,
-    uint32_t sctpBufferedAmount = 0,
-    bool isDataChannel = false) {
-  SctpParametersBuilder builder_(_fbb);
-  builder_.add_sctpBufferedAmount(sctpBufferedAmount);
-  builder_.add_sendBufferSize(sendBufferSize);
-  builder_.add_maxMessageSize(maxMessageSize);
-  builder_.add_mis(mis);
-  builder_.add_os(os);
-  builder_.add_port(port);
-  builder_.add_isDataChannel(isDataChannel);
-  return builder_.Finish();
-}
-
 struct TransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef TransportDumpBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
@@ -909,8 +806,8 @@ struct BaseTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   uint32_t maxMessageSize() const {
     return GetField<uint32_t>(VT_MAXMESSAGESIZE, 0);
   }
-  const FBS::Transport::SctpParameters *sctpParameters() const {
-    return GetPointer<const FBS::Transport::SctpParameters *>(VT_SCTPPARAMETERS);
+  const FBS::SctpParameters::SctpParameters *sctpParameters() const {
+    return GetPointer<const FBS::SctpParameters::SctpParameters *>(VT_SCTPPARAMETERS);
   }
   const flatbuffers::String *stcpState() const {
     return GetPointer<const flatbuffers::String *>(VT_STCPSTATE);
@@ -1000,7 +897,7 @@ struct BaseTransportDumpBuilder {
   void add_maxMessageSize(uint32_t maxMessageSize) {
     fbb_.AddElement<uint32_t>(BaseTransportDump::VT_MAXMESSAGESIZE, maxMessageSize, 0);
   }
-  void add_sctpParameters(flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters) {
+  void add_sctpParameters(flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters) {
     fbb_.AddOffset(BaseTransportDump::VT_SCTPPARAMETERS, sctpParameters);
   }
   void add_stcpState(flatbuffers::Offset<flatbuffers::String> stcpState) {
@@ -1037,7 +934,7 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDump(
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringUint8>>> recvRtpHeaderExtensions = 0,
     flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener = 0,
     uint32_t maxMessageSize = 0,
-    flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters = 0,
+    flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters = 0,
     flatbuffers::Offset<flatbuffers::String> stcpState = 0,
     flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> traceEventTypes = 0) {
@@ -1073,7 +970,7 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDumpDirect(
     const std::vector<flatbuffers::Offset<FBS::Common::StringUint8>> *recvRtpHeaderExtensions = nullptr,
     flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener = 0,
     uint32_t maxMessageSize = 0,
-    flatbuffers::Offset<FBS::Transport::SctpParameters> sctpParameters = 0,
+    flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters = 0,
     const char *stcpState = nullptr,
     flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener = 0,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *traceEventTypes = nullptr) {
@@ -2025,6 +1922,121 @@ inline flatbuffers::Offset<PipeTransportDump> CreatePipeTransportDump(
   return builder_.Finish();
 }
 
+struct BaseTransportOptions FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef BaseTransportOptionsBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return BaseTransportOptionsTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_DIRECT = 4,
+    VT_MAXMESSAGESIZE = 6,
+    VT_INITIALAVAILABLEOUTGOINGBITRATE = 8,
+    VT_ENABLESCTP = 10,
+    VT_NUMSCTPSTREAMS = 12,
+    VT_MAXSCTPMESSAGESIZE = 14,
+    VT_SCTPSENDBUFFERSIZE = 16,
+    VT_ISDATACHANNEL = 18
+  };
+  bool direct() const {
+    return GetField<uint8_t>(VT_DIRECT, 0) != 0;
+  }
+  uint32_t maxMessageSize() const {
+    return GetField<uint32_t>(VT_MAXMESSAGESIZE, 0);
+  }
+  uint32_t initialAvailableOutgoingBitrate() const {
+    return GetField<uint32_t>(VT_INITIALAVAILABLEOUTGOINGBITRATE, 0);
+  }
+  bool enableSctp() const {
+    return GetField<uint8_t>(VT_ENABLESCTP, 0) != 0;
+  }
+  const FBS::SctpParameters::NumSctpStreams *numSctpStreams() const {
+    return GetPointer<const FBS::SctpParameters::NumSctpStreams *>(VT_NUMSCTPSTREAMS);
+  }
+  uint32_t maxSctpMessageSize() const {
+    return GetField<uint32_t>(VT_MAXSCTPMESSAGESIZE, 0);
+  }
+  uint32_t sctpSendBufferSize() const {
+    return GetField<uint32_t>(VT_SCTPSENDBUFFERSIZE, 0);
+  }
+  bool isDataChannel() const {
+    return GetField<uint8_t>(VT_ISDATACHANNEL, 0) != 0;
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_DIRECT, 1) &&
+           VerifyField<uint32_t>(verifier, VT_MAXMESSAGESIZE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_INITIALAVAILABLEOUTGOINGBITRATE, 4) &&
+           VerifyField<uint8_t>(verifier, VT_ENABLESCTP, 1) &&
+           VerifyOffset(verifier, VT_NUMSCTPSTREAMS) &&
+           verifier.VerifyTable(numSctpStreams()) &&
+           VerifyField<uint32_t>(verifier, VT_MAXSCTPMESSAGESIZE, 4) &&
+           VerifyField<uint32_t>(verifier, VT_SCTPSENDBUFFERSIZE, 4) &&
+           VerifyField<uint8_t>(verifier, VT_ISDATACHANNEL, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct BaseTransportOptionsBuilder {
+  typedef BaseTransportOptions Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_direct(bool direct) {
+    fbb_.AddElement<uint8_t>(BaseTransportOptions::VT_DIRECT, static_cast<uint8_t>(direct), 0);
+  }
+  void add_maxMessageSize(uint32_t maxMessageSize) {
+    fbb_.AddElement<uint32_t>(BaseTransportOptions::VT_MAXMESSAGESIZE, maxMessageSize, 0);
+  }
+  void add_initialAvailableOutgoingBitrate(uint32_t initialAvailableOutgoingBitrate) {
+    fbb_.AddElement<uint32_t>(BaseTransportOptions::VT_INITIALAVAILABLEOUTGOINGBITRATE, initialAvailableOutgoingBitrate, 0);
+  }
+  void add_enableSctp(bool enableSctp) {
+    fbb_.AddElement<uint8_t>(BaseTransportOptions::VT_ENABLESCTP, static_cast<uint8_t>(enableSctp), 0);
+  }
+  void add_numSctpStreams(flatbuffers::Offset<FBS::SctpParameters::NumSctpStreams> numSctpStreams) {
+    fbb_.AddOffset(BaseTransportOptions::VT_NUMSCTPSTREAMS, numSctpStreams);
+  }
+  void add_maxSctpMessageSize(uint32_t maxSctpMessageSize) {
+    fbb_.AddElement<uint32_t>(BaseTransportOptions::VT_MAXSCTPMESSAGESIZE, maxSctpMessageSize, 0);
+  }
+  void add_sctpSendBufferSize(uint32_t sctpSendBufferSize) {
+    fbb_.AddElement<uint32_t>(BaseTransportOptions::VT_SCTPSENDBUFFERSIZE, sctpSendBufferSize, 0);
+  }
+  void add_isDataChannel(bool isDataChannel) {
+    fbb_.AddElement<uint8_t>(BaseTransportOptions::VT_ISDATACHANNEL, static_cast<uint8_t>(isDataChannel), 0);
+  }
+  explicit BaseTransportOptionsBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<BaseTransportOptions> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<BaseTransportOptions>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<BaseTransportOptions> CreateBaseTransportOptions(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    bool direct = false,
+    uint32_t maxMessageSize = 0,
+    uint32_t initialAvailableOutgoingBitrate = 0,
+    bool enableSctp = false,
+    flatbuffers::Offset<FBS::SctpParameters::NumSctpStreams> numSctpStreams = 0,
+    uint32_t maxSctpMessageSize = 0,
+    uint32_t sctpSendBufferSize = 0,
+    bool isDataChannel = false) {
+  BaseTransportOptionsBuilder builder_(_fbb);
+  builder_.add_sctpSendBufferSize(sctpSendBufferSize);
+  builder_.add_maxSctpMessageSize(maxSctpMessageSize);
+  builder_.add_numSctpStreams(numSctpStreams);
+  builder_.add_initialAvailableOutgoingBitrate(initialAvailableOutgoingBitrate);
+  builder_.add_maxMessageSize(maxMessageSize);
+  builder_.add_isDataChannel(isDataChannel);
+  builder_.add_enableSctp(enableSctp);
+  builder_.add_direct(direct);
+  return builder_.Finish();
+}
+
 inline bool VerifyTransportDumpData(flatbuffers::Verifier &verifier, const void *obj, TransportDumpData type) {
   switch (type) {
     case TransportDumpData::NONE: {
@@ -2226,31 +2238,6 @@ inline const flatbuffers::TypeTable *SctpListenerTypeTable() {
   return &tt;
 }
 
-inline const flatbuffers::TypeTable *SctpParametersTypeTable() {
-  static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_USHORT, 0, -1 },
-    { flatbuffers::ET_USHORT, 0, -1 },
-    { flatbuffers::ET_USHORT, 0, -1 },
-    { flatbuffers::ET_UINT, 0, -1 },
-    { flatbuffers::ET_UINT, 0, -1 },
-    { flatbuffers::ET_UINT, 0, -1 },
-    { flatbuffers::ET_BOOL, 0, -1 }
-  };
-  static const char * const names[] = {
-    "port",
-    "os",
-    "mis",
-    "maxMessageSize",
-    "sendBufferSize",
-    "sctpBufferedAmount",
-    "isDataChannel"
-  };
-  static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 7, type_codes, nullptr, nullptr, nullptr, names
-  };
-  return &tt;
-}
-
 inline const flatbuffers::TypeTable *TransportDumpTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_UTYPE, 0, 0 },
@@ -2291,7 +2278,7 @@ inline const flatbuffers::TypeTable *BaseTransportDumpTypeTable() {
     FBS::Common::Uint32StringTypeTable,
     FBS::Common::StringUint8TypeTable,
     FBS::Transport::RtpListenerTypeTable,
-    FBS::Transport::SctpParametersTypeTable,
+    FBS::SctpParameters::SctpParametersTypeTable,
     FBS::Transport::SctpListenerTypeTable
   };
   static const char * const names[] = {
@@ -2526,6 +2513,36 @@ inline const flatbuffers::TypeTable *PipeTransportDumpTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 4, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *BaseTransportOptionsTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::SctpParameters::NumSctpStreamsTypeTable
+  };
+  static const char * const names[] = {
+    "direct",
+    "maxMessageSize",
+    "initialAvailableOutgoingBitrate",
+    "enableSctp",
+    "numSctpStreams",
+    "maxSctpMessageSize",
+    "sctpSendBufferSize",
+    "isDataChannel"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 8, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

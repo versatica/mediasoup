@@ -1,5 +1,7 @@
 import { Logger } from './Logger';
 import {
+	parseBaseTransportDump,
+	BaseTransportDump,
 	Transport,
 	TransportListenIp,
 	TransportProtocol,
@@ -12,6 +14,7 @@ import {
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import * as FbsRouter from './fbs/router_generated';
 import { Either } from './utils';
 
 export type WebRtcTransportListenIndividual =
@@ -514,4 +517,98 @@ export class WebRtcTransport extends
 			}
 		});
 	}
+}
+
+export function parseIceCandidate(binary: FbsRouter.IceCandidate): IceCandidate
+{
+	return {
+		foundation : binary.foundation()!,
+		priority   : binary.priority(),
+		ip         : binary.ip()!,
+		protocol   : binary.protocol() as TransportProtocol,
+		port       : binary.port(),
+		type       : 'host',
+		tcpType    : binary.tcpType() === 'passive' ? 'passive' : undefined
+	};
+}
+
+export function parseIceParameters(binary: FbsRouter.IceParameters): IceParameters
+{
+	return {
+		usernameFragment : binary.usernameFragment()!,
+		password         : binary.password()!,
+		iceLite          : binary.iceLite()
+	};
+}
+
+export function parseDtlsParameters(binary: FbsRouter.DtlsParameters): DtlsParameters
+{
+	const fingerprints: DtlsFingerprint[] = [];
+
+	for (let i=0; i<binary.fingerprintsLength(); ++i)
+	{
+		const fbsFingerprint = binary.fingerprints(i)!;
+		const fingerPrint : DtlsFingerprint = {
+			algorithm : fbsFingerprint.algorithm()!,
+			value     : fbsFingerprint.value()!
+		};
+
+		fingerprints.push(fingerPrint);
+	}
+
+	return {
+		fingerprints : fingerprints,
+		role         : binary.role()! as DtlsRole
+	};
+}
+
+export type WebRtcTransportDump = BaseTransportDump &
+{
+	iceRole: 'controlled';
+	iceParameters: IceParameters;
+	iceCandidates: IceCandidate[];
+	iceState: IceState;
+	iceSelectedTuple?: TransportTuple;
+	dtlsParameters: DtlsParameters;
+	dtlsState: DtlsState;
+	dtlsRemoteCert?: string;
+};
+
+export function parseWebRtcTransportDump(
+	binary: FbsRouter.WebRtcTransportDump
+): WebRtcTransportDump
+{
+	// Retrieve BaseTransportDump.
+	const fbsBaseTransportDump = new FbsRouter.BaseTransportDump();
+
+	binary.base()!.data(fbsBaseTransportDump);
+	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
+
+	// Retrieve ICE candidates.
+	const iceCandidates: IceCandidate[] = [];
+
+	for (let i=0; i<binary.iceCandidatesLength(); ++i)
+	{
+		const fbsIceCandidate = binary.iceCandidates(i)!;
+
+		iceCandidates.push(parseIceCandidate(fbsIceCandidate));
+	}
+
+	// Retrieve ICE parameters.
+	const iceParameters = parseIceParameters(binary.iceParameters()!);
+	// Retrieve DTLS parameters.
+	const dtlsParameters = parseDtlsParameters(binary.dtlsParameters()!);
+
+	const dump: WebRtcTransportDump = { ...baseTransportDump,
+		sctpParameters : baseTransportDump.sctpParameters,
+		sctpState      : baseTransportDump.sctpState,
+		iceRole        : 'controlled',
+		iceParameters  : iceParameters,
+		iceCandidates  : iceCandidates,
+		iceState       : binary.iceState() as IceState,
+		dtlsParameters : dtlsParameters,
+		dtlsState      : binary.dtlsState() as DtlsState
+	};
+
+	return dump;
 }

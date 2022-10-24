@@ -1,5 +1,7 @@
 include "common.fbs";
 include "transport.fbs";
+include "pipeTransport.fbs";
+include "plainTransport.fbs";
 include "webRtcTransport.fbs";
 
 namespace FBS.Router;
@@ -15,9 +17,18 @@ table RouterDump {
   map_data_consumer_id_data_producer_id:[FBS.Common.StringString];
 }
 
+table CreatePipeTransportRequest {
+  transport_id:string (required);
+  options:FBS.PipeTransport.PipeTransportOptions;
+}
+
+table CreatePlainTransportRequest {
+  transport_id:string (required);
+  options:FBS.PlainTransport.PlainTransportOptions;
+}
+
 table CreateWebRtcTransportRequest {
   transport_id:string (required);
   options:FBS.WebRtcTransport.WebRtcTransportOptions;
-  // TODO: direct missing!! Check it for DirectTransport.
 }
 

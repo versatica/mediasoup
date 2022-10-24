@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebRtcTransportOptionsT = exports.WebRtcTransportOptions = void 0;
 const flatbuffers = require("flatbuffers");
-const num_sctp_streams_1 = require("../../fbs/sctp-parameters/num-sctp-streams");
+const base_transport_options_1 = require("../../fbs/transport/base-transport-options");
 const web_rtc_transport_listen_1 = require("../../fbs/web-rtc-transport/web-rtc-transport-listen");
 class WebRtcTransportOptions {
     bb = null;
@@ -20,109 +20,85 @@ class WebRtcTransportOptions {
         bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
         return (obj || new WebRtcTransportOptions()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
     }
-    listenType() {
+    base(obj) {
         const offset = this.bb.__offset(this.bb_pos, 4);
+        return offset ? (obj || new base_transport_options_1.BaseTransportOptions()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+    }
+    listenType() {
+        const offset = this.bb.__offset(this.bb_pos, 6);
         return offset ? this.bb.readUint8(this.bb_pos + offset) : web_rtc_transport_listen_1.WebRtcTransportListen.NONE;
     }
     listen(obj) {
-        const offset = this.bb.__offset(this.bb_pos, 6);
+        const offset = this.bb.__offset(this.bb_pos, 8);
         return offset ? this.bb.__union(obj, this.bb_pos + offset) : null;
     }
     enableUdp() {
-        const offset = this.bb.__offset(this.bb_pos, 8);
+        const offset = this.bb.__offset(this.bb_pos, 10);
         return offset ? !!this.bb.readInt8(this.bb_pos + offset) : true;
     }
     enableTcp() {
-        const offset = this.bb.__offset(this.bb_pos, 10);
-        return offset ? !!this.bb.readInt8(this.bb_pos + offset) : false;
-    }
-    preferUdp() {
         const offset = this.bb.__offset(this.bb_pos, 12);
         return offset ? !!this.bb.readInt8(this.bb_pos + offset) : false;
     }
-    preferTcp() {
+    preferUdp() {
         const offset = this.bb.__offset(this.bb_pos, 14);
         return offset ? !!this.bb.readInt8(this.bb_pos + offset) : false;
     }
-    initialAvailableOutgoingBitrate() {
+    preferTcp() {
         const offset = this.bb.__offset(this.bb_pos, 16);
-        return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
-    }
-    enableSctp() {
-        const offset = this.bb.__offset(this.bb_pos, 18);
-        return offset ? !!this.bb.readInt8(this.bb_pos + offset) : false;
-    }
-    numSctpStreams(obj) {
-        const offset = this.bb.__offset(this.bb_pos, 20);
-        return offset ? (obj || new num_sctp_streams_1.NumSctpStreams()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
-    }
-    maxSctpMessageSize() {
-        const offset = this.bb.__offset(this.bb_pos, 22);
-        return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
-    }
-    sctpSendBufferSize() {
-        const offset = this.bb.__offset(this.bb_pos, 24);
-        return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
-    }
-    isDataChannel() {
-        const offset = this.bb.__offset(this.bb_pos, 26);
         return offset ? !!this.bb.readInt8(this.bb_pos + offset) : false;
     }
     static startWebRtcTransportOptions(builder) {
-        builder.startObject(12);
+        builder.startObject(7);
+    }
+    static addBase(builder, baseOffset) {
+        builder.addFieldOffset(0, baseOffset, 0);
     }
     static addListenType(builder, listenType) {
-        builder.addFieldInt8(0, listenType, web_rtc_transport_listen_1.WebRtcTransportListen.NONE);
+        builder.addFieldInt8(1, listenType, web_rtc_transport_listen_1.WebRtcTransportListen.NONE);
     }
     static addListen(builder, listenOffset) {
-        builder.addFieldOffset(1, listenOffset, 0);
+        builder.addFieldOffset(2, listenOffset, 0);
     }
     static addEnableUdp(builder, enableUdp) {
-        builder.addFieldInt8(2, +enableUdp, +true);
+        builder.addFieldInt8(3, +enableUdp, +true);
     }
     static addEnableTcp(builder, enableTcp) {
-        builder.addFieldInt8(3, +enableTcp, +false);
+        builder.addFieldInt8(4, +enableTcp, +false);
     }
     static addPreferUdp(builder, preferUdp) {
-        builder.addFieldInt8(4, +preferUdp, +false);
+        builder.addFieldInt8(5, +preferUdp, +false);
     }
     static addPreferTcp(builder, preferTcp) {
-        builder.addFieldInt8(5, +preferTcp, +false);
-    }
-    static addInitialAvailableOutgoingBitrate(builder, initialAvailableOutgoingBitrate) {
-        builder.addFieldInt32(6, initialAvailableOutgoingBitrate, 0);
-    }
-    static addEnableSctp(builder, enableSctp) {
-        builder.addFieldInt8(7, +enableSctp, +false);
-    }
-    static addNumSctpStreams(builder, numSctpStreamsOffset) {
-        builder.addFieldOffset(8, numSctpStreamsOffset, 0);
-    }
-    static addMaxSctpMessageSize(builder, maxSctpMessageSize) {
-        builder.addFieldInt32(9, maxSctpMessageSize, 0);
-    }
-    static addSctpSendBufferSize(builder, sctpSendBufferSize) {
-        builder.addFieldInt32(10, sctpSendBufferSize, 0);
-    }
-    static addIsDataChannel(builder, isDataChannel) {
-        builder.addFieldInt8(11, +isDataChannel, +false);
+        builder.addFieldInt8(6, +preferTcp, +false);
     }
     static endWebRtcTransportOptions(builder) {
         const offset = builder.endObject();
-        builder.requiredField(offset, 6); // listen
-        builder.requiredField(offset, 20); // num_sctp_streams
+        builder.requiredField(offset, 8); // listen
         return offset;
     }
+    static createWebRtcTransportOptions(builder, baseOffset, listenType, listenOffset, enableUdp, enableTcp, preferUdp, preferTcp) {
+        WebRtcTransportOptions.startWebRtcTransportOptions(builder);
+        WebRtcTransportOptions.addBase(builder, baseOffset);
+        WebRtcTransportOptions.addListenType(builder, listenType);
+        WebRtcTransportOptions.addListen(builder, listenOffset);
+        WebRtcTransportOptions.addEnableUdp(builder, enableUdp);
+        WebRtcTransportOptions.addEnableTcp(builder, enableTcp);
+        WebRtcTransportOptions.addPreferUdp(builder, preferUdp);
+        WebRtcTransportOptions.addPreferTcp(builder, preferTcp);
+        return WebRtcTransportOptions.endWebRtcTransportOptions(builder);
+    }
     unpack() {
-        return new WebRtcTransportOptionsT(this.listenType(), (() => {
+        return new WebRtcTransportOptionsT((this.base() !== null ? this.base().unpack() : null), this.listenType(), (() => {
             let temp = (0, web_rtc_transport_listen_1.unionToWebRtcTransportListen)(this.listenType(), this.listen.bind(this));
             if (temp === null) {
                 return null;
             }
             return temp.unpack();
-        })(), this.enableUdp(), this.enableTcp(), this.preferUdp(), this.preferTcp(), this.initialAvailableOutgoingBitrate(), this.enableSctp(), (this.numSctpStreams() !== null ? this.numSctpStreams().unpack() : null), this.maxSctpMessageSize(), this.sctpSendBufferSize(), this.isDataChannel());
+        })(), this.enableUdp(), this.enableTcp(), this.preferUdp(), this.preferTcp());
     }
     unpackTo(_o) {
+        _o.base = (this.base() !== null ? this.base().unpack() : null);
         _o.listenType = this.listenType();
         _o.listen = (() => {
             let temp = (0, web_rtc_transport_listen_1.unionToWebRtcTransportListen)(this.listenType(), this.listen.bind(this));
@@ -135,59 +111,30 @@ class WebRtcTransportOptions {
         _o.enableTcp = this.enableTcp();
         _o.preferUdp = this.preferUdp();
         _o.preferTcp = this.preferTcp();
-        _o.initialAvailableOutgoingBitrate = this.initialAvailableOutgoingBitrate();
-        _o.enableSctp = this.enableSctp();
-        _o.numSctpStreams = (this.numSctpStreams() !== null ? this.numSctpStreams().unpack() : null);
-        _o.maxSctpMessageSize = this.maxSctpMessageSize();
-        _o.sctpSendBufferSize = this.sctpSendBufferSize();
-        _o.isDataChannel = this.isDataChannel();
     }
 }
 exports.WebRtcTransportOptions = WebRtcTransportOptions;
 class WebRtcTransportOptionsT {
+    base;
     listenType;
     listen;
     enableUdp;
     enableTcp;
     preferUdp;
     preferTcp;
-    initialAvailableOutgoingBitrate;
-    enableSctp;
-    numSctpStreams;
-    maxSctpMessageSize;
-    sctpSendBufferSize;
-    isDataChannel;
-    constructor(listenType = web_rtc_transport_listen_1.WebRtcTransportListen.NONE, listen = null, enableUdp = true, enableTcp = false, preferUdp = false, preferTcp = false, initialAvailableOutgoingBitrate = 0, enableSctp = false, numSctpStreams = null, maxSctpMessageSize = 0, sctpSendBufferSize = 0, isDataChannel = false) {
+    constructor(base = null, listenType = web_rtc_transport_listen_1.WebRtcTransportListen.NONE, listen = null, enableUdp = true, enableTcp = false, preferUdp = false, preferTcp = false) {
+        this.base = base;
         this.listenType = listenType;
         this.listen = listen;
         this.enableUdp = enableUdp;
         this.enableTcp = enableTcp;
         this.preferUdp = preferUdp;
         this.preferTcp = preferTcp;
-        this.initialAvailableOutgoingBitrate = initialAvailableOutgoingBitrate;
-        this.enableSctp = enableSctp;
-        this.numSctpStreams = numSctpStreams;
-        this.maxSctpMessageSize = maxSctpMessageSize;
-        this.sctpSendBufferSize = sctpSendBufferSize;
-        this.isDataChannel = isDataChannel;
     }
     pack(builder) {
+        const base = (this.base !== null ? this.base.pack(builder) : 0);
         const listen = builder.createObjectOffset(this.listen);
-        const numSctpStreams = (this.numSctpStreams !== null ? this.numSctpStreams.pack(builder) : 0);
-        WebRtcTransportOptions.startWebRtcTransportOptions(builder);
-        WebRtcTransportOptions.addListenType(builder, this.listenType);
-        WebRtcTransportOptions.addListen(builder, listen);
-        WebRtcTransportOptions.addEnableUdp(builder, this.enableUdp);
-        WebRtcTransportOptions.addEnableTcp(builder, this.enableTcp);
-        WebRtcTransportOptions.addPreferUdp(builder, this.preferUdp);
-        WebRtcTransportOptions.addPreferTcp(builder, this.preferTcp);
-        WebRtcTransportOptions.addInitialAvailableOutgoingBitrate(builder, this.initialAvailableOutgoingBitrate);
-        WebRtcTransportOptions.addEnableSctp(builder, this.enableSctp);
-        WebRtcTransportOptions.addNumSctpStreams(builder, numSctpStreams);
-        WebRtcTransportOptions.addMaxSctpMessageSize(builder, this.maxSctpMessageSize);
-        WebRtcTransportOptions.addSctpSendBufferSize(builder, this.sctpSendBufferSize);
-        WebRtcTransportOptions.addIsDataChannel(builder, this.isDataChannel);
-        return WebRtcTransportOptions.endWebRtcTransportOptions(builder);
+        return WebRtcTransportOptions.createWebRtcTransportOptions(builder, base, this.listenType, listen, this.enableUdp, this.enableTcp, this.preferUdp, this.preferTcp);
     }
 }
 exports.WebRtcTransportOptionsT = WebRtcTransportOptionsT;

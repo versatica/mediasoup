@@ -4,9 +4,9 @@ import * as flatbuffers from 'flatbuffers';
 
 import { StringUint8, StringUint8T } from '../../fbs/common/string-uint8';
 import { Uint32String, Uint32StringT } from '../../fbs/common/uint32string';
+import { SctpParameters, SctpParametersT } from '../../fbs/sctp-parameters/sctp-parameters';
 import { RtpListener, RtpListenerT } from '../../fbs/transport/rtp-listener';
 import { SctpListener, SctpListenerT } from '../../fbs/transport/sctp-listener';
-import { SctpParameters, SctpParametersT } from '../../fbs/transport/sctp-parameters';
 
 
 export class BaseTransportDump {

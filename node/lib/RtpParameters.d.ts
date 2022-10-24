@@ -1,3 +1,4 @@
+import * as flatbuffers from 'flatbuffers';
 /**
  * The RTP capabilities define what mediasoup or an endpoint can receive at
  * media level.
@@ -299,4 +300,6 @@ export declare type RtcpParameters = {
      */
     mux?: boolean;
 };
+export declare function serializeRtpParameters(builder: flatbuffers.Builder, rtpParameters: RtpParameters): number;
+export declare function serializeRtpEncodingParameters(builder: flatbuffers.Builder, rtpEncodingParameters: RtpEncodingParameters[]): number;
 //# sourceMappingURL=RtpParameters.d.ts.map

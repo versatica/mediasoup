@@ -5,9 +5,9 @@ exports.BaseTransportDumpT = exports.BaseTransportDump = void 0;
 const flatbuffers = require("flatbuffers");
 const string_uint8_1 = require("../../fbs/common/string-uint8");
 const uint32string_1 = require("../../fbs/common/uint32string");
+const sctp_parameters_1 = require("../../fbs/sctp-parameters/sctp-parameters");
 const rtp_listener_1 = require("../../fbs/transport/rtp-listener");
 const sctp_listener_1 = require("../../fbs/transport/sctp-listener");
-const sctp_parameters_1 = require("../../fbs/transport/sctp-parameters");
 class BaseTransportDump {
     bb = null;
     bb_pos = 0;

@@ -204,6 +204,106 @@ namespace RTC
 		}
 	}
 
+	PlainTransport::PlainTransport(
+			const std::string& id,
+			RTC::Transport::Listener* listener,
+			const FBS::PlainTransport::PlainTransportOptions* options)
+	  : RTC::Transport::Transport(id, listener, options->base())
+	{
+		MS_TRACE();
+
+		this->listenIp.ip.assign(options->listenIp()->ip()->str());
+
+		// This may throw.
+		Utils::IP::NormalizeIp(this->listenIp.ip);
+
+		this->listenIp.announcedIp.assign(options->listenIp()->announcedIp()->str());
+
+		this->rtcpMux = options->rtcpMux();
+		this->comedia = options->comedia();
+
+		if (options->enableSrtp())
+		{
+			if (!flatbuffers::IsFieldPresent(options, FBS::PlainTransport::PlainTransportOptions::VT_SRTPCRYPTOSUITE))
+				MS_THROW_TYPE_ERROR("missing srtpCryptoSuite)");
+
+			// Ensure it's a crypto suite supported by us.
+			auto it =
+			  PlainTransport::string2SrtpCryptoSuite.find(options->srtpCryptoSuite()->str());
+
+			if (it == PlainTransport::string2SrtpCryptoSuite.end())
+				MS_THROW_TYPE_ERROR("invalid/unsupported srtpCryptoSuite");
+
+			// NOTE: The SRTP crypto suite may change later on connect().
+			this->srtpCryptoSuite = it->second;
+
+			switch (this->srtpCryptoSuite)
+			{
+				case RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
+				{
+					this->srtpMasterLength = SrtpAesGcm256MasterLength;
+
+					break;
+				}
+
+				case RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM:
+				{
+					this->srtpMasterLength = SrtpAesGcm128MasterLength;
+
+					break;
+				}
+
+				case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
+				case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
+				{
+					this->srtpMasterLength = SrtpMasterLength;
+
+					break;
+				}
+
+				default:
+				{
+					MS_ABORT("unknown SRTP crypto suite");
+				}
+			}
+
+			this->srtpKey       = Utils::Crypto::GetRandomString(this->srtpMasterLength);
+			this->srtpKeyBase64 = Utils::String::Base64Encode(this->srtpKey);
+		}
+
+		try
+		{
+			// This may throw.
+			if (options->port() != 0)
+				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip, options->port());
+			else
+				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
+
+			if (!this->rtcpMux)
+			{
+				// This may throw.
+				this->rtcpUdpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
+			}
+
+			// NOTE: This may throw.
+			ChannelMessageHandlers::RegisterHandler(
+			  this->id,
+			  /*channelRequestHandler*/ this,
+			  /*payloadChannelRequestHandler*/ this,
+			  /*payloadChannelNotificationHandler*/ this);
+		}
+		catch (const MediaSoupError& error)
+		{
+			delete this->udpSocket;
+			this->udpSocket = nullptr;
+
+			delete this->rtcpUdpSocket;
+			this->rtcpUdpSocket = nullptr;
+
+			throw;
+		}
+	}
+
 	PlainTransport::~PlainTransport()
 	{
 		MS_TRACE();

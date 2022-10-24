@@ -66,6 +66,8 @@ enum Method: uint8 {
 
 union Body {
   FBS.Router.CreateWebRtcTransportRequest,
+  FBS.Router.CreatePlainTransportRequest,
+  FBS.Router.CreatePipeTransportRequest,
   FBS.Transport.ConsumeRequest,
   FBS.Worker.UpdateableSettings,
   FBS.Worker.CreateWebRtcServerRequest,
