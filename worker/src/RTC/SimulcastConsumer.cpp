@@ -453,7 +453,7 @@ namespace RTC
 			// This can be null.
 			auto* producerRtpStream = this->producerRtpStreams.at(spatialLayer);
 
-			// Producer stream does not exist or it's not good. Ignore.
+			// Producer stream does not exist. Ignore.
 			if (!producerRtpStream)
 				continue;
 
