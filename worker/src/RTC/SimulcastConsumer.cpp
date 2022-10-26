@@ -453,7 +453,7 @@ namespace RTC
 			// This can be null.
 			auto* producerRtpStream = this->producerRtpStreams.at(spatialLayer);
 
-			// Producer stream does not exist or it's not good. Ignore.
+			// Producer stream does not exist. Ignore.
 			if (!producerRtpStream)
 				continue;
 
@@ -627,7 +627,7 @@ namespace RTC
 		auto nowMs = DepLibUV::GetTimeMs();
 		uint32_t desiredBitrate{ 0u };
 
-		for (size_t sIdx{ this->producerRtpStreams.size() - 1 }; sIdx >= 0; --sIdx)
+		for (auto sIdx{ static_cast<int16_t>(this->producerRtpStreams.size() - 1) }; sIdx >= 0; --sIdx)
 		{
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
 

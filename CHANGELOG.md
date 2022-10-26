@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* Fix worker crash due to `std::out_of_range` exception (PR #933).
+
+
 ### 3.10.11
 
 * RTCP: Fix trailing space needed by srtp_protect_rtcp() (PR #929).
