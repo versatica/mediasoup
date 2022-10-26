@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* Transport: remove duplicate call to method (PR #931)
+* Transport: Remove duplicate call to method (PR #931).
 
 
 ### 3.10.12
