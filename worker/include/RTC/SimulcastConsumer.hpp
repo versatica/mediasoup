@@ -36,7 +36,6 @@ namespace RTC
 			// clang-format off
 			return (
 				RTC::Consumer::IsActive() &&
-				this->producerRtpStreams.size() > 0 &&
 				std::any_of(
 					this->producerRtpStreams.begin(),
 					this->producerRtpStreams.end(),
