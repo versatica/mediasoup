@@ -3,7 +3,11 @@
 
 ### NEXT
 
+
+### 3.10.12
+
 * Fix worker crash due to `std::out_of_range` exception (PR #933).
+* Update NPM deps.
 
 
 ### 3.10.11
