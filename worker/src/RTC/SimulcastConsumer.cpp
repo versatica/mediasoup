@@ -627,7 +627,7 @@ namespace RTC
 		auto nowMs = DepLibUV::GetTimeMs();
 		uint32_t desiredBitrate{ 0u };
 
-		for (size_t sIdx{ this->producerRtpStreams.size() - 1 }; sIdx >= 0; --sIdx)
+		for (int16_t sIdx{ static_cast<int16_t>(this->producerRtpStreams.size() - 1) }; sIdx >= 0; --sIdx)
 		{
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
 
