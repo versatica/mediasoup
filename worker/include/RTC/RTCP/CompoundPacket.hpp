@@ -17,11 +17,14 @@ namespace RTC
 		class CompoundPacket
 		{
 		public:
-			// Maximum size for a CompundPacket, leaving free space for encryption.
-			// SRTP_MAX_TRAILER_LEN+4 is the maximum number of octects that will be
-			// added to an RTCP packet by srtp_protect_rtcp().
-			// srtp.h: SRTP_MAX_TRAILER_LEN (SRTP_MAX_TAG_LEN + SRTP_MAX_MKI_LEN)
-			constexpr static size_t MaxSize{ RTC::MtuSize - 148u };
+			// Maximum size for a CompundPacket.
+			// * IPv4|Ipv6 header size: 20|40 bytes. IPv6 considered.
+			// * UDP|TCP header size:   8|20  bytes. TCP considered.
+			// * SRTP Encryption: 148 bytes.
+			//    SRTP_MAX_TRAILER_LEN+4 is the maximum number of octects that will be
+			//    added to an RTCP packet by srtp_protect_rtcp().
+			//    srtp.h: SRTP_MAX_TRAILER_LEN (SRTP_MAX_TAG_LEN + SRTP_MAX_MKI_LEN)
+			constexpr static size_t MaxSize{ RTC::MtuSize - 40u - 20u - 148u };
 
 		public:
 			CompoundPacket() = default;
