@@ -4,6 +4,7 @@
 ### NEXT
 
 * Transport: Remove duplicate call to method (PR #931).
+* RTCP: Adjust maximum compound packet size (PR #934).
 
 
 ### 3.10.12
