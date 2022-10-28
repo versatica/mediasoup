@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PipeTransportDumpT = exports.PipeTransportDump = void 0;
 const flatbuffers = require("flatbuffers");
 const srtp_parameters_1 = require("../../fbs/transport/srtp-parameters");
-const transport_dump_1 = require("../../fbs/transport/transport-dump");
+const transport_dump_response_1 = require("../../fbs/transport/transport-dump-response");
 const tuple_1 = require("../../fbs/transport/tuple");
 class PipeTransportDump {
     bb = null;
@@ -23,7 +23,7 @@ class PipeTransportDump {
     }
     base(obj) {
         const offset = this.bb.__offset(this.bb_pos, 4);
-        return offset ? (obj || new transport_dump_1.TransportDump()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+        return offset ? (obj || new transport_dump_response_1.TransportDumpResponse()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
     }
     tuple(obj) {
         const offset = this.bb.__offset(this.bb_pos, 6);

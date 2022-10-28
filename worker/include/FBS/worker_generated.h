@@ -21,14 +21,14 @@ namespace Worker {
 struct ChannelMessageHandlers;
 struct ChannelMessageHandlersBuilder;
 
-struct WorkerDump;
-struct WorkerDumpBuilder;
+struct WorkerDumpResponse;
+struct WorkerDumpResponseBuilder;
 
-struct ResourceUsage;
-struct ResourceUsageBuilder;
+struct ResourceUsageResponse;
+struct ResourceUsageResponseBuilder;
 
-struct UpdateableSettings;
-struct UpdateableSettingsBuilder;
+struct UpdateSettingsRequest;
+struct UpdateSettingsRequestBuilder;
 
 struct CreateWebRtcServerRequest;
 struct CreateWebRtcServerRequestBuilder;
@@ -44,11 +44,11 @@ struct CloseRouterRequestBuilder;
 
 inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable();
 
-inline const flatbuffers::TypeTable *WorkerDumpTypeTable();
+inline const flatbuffers::TypeTable *WorkerDumpResponseTypeTable();
 
-inline const flatbuffers::TypeTable *ResourceUsageTypeTable();
+inline const flatbuffers::TypeTable *ResourceUsageResponseTypeTable();
 
-inline const flatbuffers::TypeTable *UpdateableSettingsTypeTable();
+inline const flatbuffers::TypeTable *UpdateSettingsRequestTypeTable();
 
 inline const flatbuffers::TypeTable *CreateWebRtcServerRequestTypeTable();
 
@@ -143,10 +143,10 @@ inline flatbuffers::Offset<ChannelMessageHandlers> CreateChannelMessageHandlersD
       payloadchannelNotificationHandlers__);
 }
 
-struct WorkerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef WorkerDumpBuilder Builder;
+struct WorkerDumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef WorkerDumpResponseBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return WorkerDumpTypeTable();
+    return WorkerDumpResponseTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_PID = 4,
@@ -181,40 +181,40 @@ struct WorkerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
 };
 
-struct WorkerDumpBuilder {
-  typedef WorkerDump Table;
+struct WorkerDumpResponseBuilder {
+  typedef WorkerDumpResponse Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_pid(uint64_t pid) {
-    fbb_.AddElement<uint64_t>(WorkerDump::VT_PID, pid, 0);
+    fbb_.AddElement<uint64_t>(WorkerDumpResponse::VT_PID, pid, 0);
   }
   void add_webrtcServerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webrtcServerIds) {
-    fbb_.AddOffset(WorkerDump::VT_WEBRTCSERVERIDS, webrtcServerIds);
+    fbb_.AddOffset(WorkerDumpResponse::VT_WEBRTCSERVERIDS, webrtcServerIds);
   }
   void add_routerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> routerIds) {
-    fbb_.AddOffset(WorkerDump::VT_ROUTERIDS, routerIds);
+    fbb_.AddOffset(WorkerDumpResponse::VT_ROUTERIDS, routerIds);
   }
   void add_channelMessageHandlers(flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers) {
-    fbb_.AddOffset(WorkerDump::VT_CHANNELMESSAGEHANDLERS, channelMessageHandlers);
+    fbb_.AddOffset(WorkerDumpResponse::VT_CHANNELMESSAGEHANDLERS, channelMessageHandlers);
   }
-  explicit WorkerDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit WorkerDumpResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<WorkerDump> Finish() {
+  flatbuffers::Offset<WorkerDumpResponse> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<WorkerDump>(end);
+    auto o = flatbuffers::Offset<WorkerDumpResponse>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<WorkerDump> CreateWorkerDump(
+inline flatbuffers::Offset<WorkerDumpResponse> CreateWorkerDumpResponse(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint64_t pid = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webrtcServerIds = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> routerIds = 0,
     flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers = 0) {
-  WorkerDumpBuilder builder_(_fbb);
+  WorkerDumpResponseBuilder builder_(_fbb);
   builder_.add_pid(pid);
   builder_.add_channelMessageHandlers(channelMessageHandlers);
   builder_.add_routerIds(routerIds);
@@ -222,7 +222,7 @@ inline flatbuffers::Offset<WorkerDump> CreateWorkerDump(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<WorkerDump> CreateWorkerDumpDirect(
+inline flatbuffers::Offset<WorkerDumpResponse> CreateWorkerDumpResponseDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint64_t pid = 0,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *webrtcServerIds = nullptr,
@@ -230,7 +230,7 @@ inline flatbuffers::Offset<WorkerDump> CreateWorkerDumpDirect(
     flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers = 0) {
   auto webrtcServerIds__ = webrtcServerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*webrtcServerIds) : 0;
   auto routerIds__ = routerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*routerIds) : 0;
-  return FBS::Worker::CreateWorkerDump(
+  return FBS::Worker::CreateWorkerDumpResponse(
       _fbb,
       pid,
       webrtcServerIds__,
@@ -238,10 +238,10 @@ inline flatbuffers::Offset<WorkerDump> CreateWorkerDumpDirect(
       channelMessageHandlers);
 }
 
-struct ResourceUsage FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef ResourceUsageBuilder Builder;
+struct ResourceUsageResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef ResourceUsageResponseBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return ResourceUsageTypeTable();
+    return ResourceUsageResponseTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_RUUTIME = 4,
@@ -331,70 +331,70 @@ struct ResourceUsage FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
 };
 
-struct ResourceUsageBuilder {
-  typedef ResourceUsage Table;
+struct ResourceUsageResponseBuilder {
+  typedef ResourceUsageResponse Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_ruUtime(uint64_t ruUtime) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUUTIME, ruUtime, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUUTIME, ruUtime, 0);
   }
   void add_ruStime(uint64_t ruStime) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUSTIME, ruStime, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUSTIME, ruStime, 0);
   }
   void add_ruMaxrss(uint64_t ruMaxrss) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUMAXRSS, ruMaxrss, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUMAXRSS, ruMaxrss, 0);
   }
   void add_ruIxrss(uint64_t ruIxrss) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUIXRSS, ruIxrss, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUIXRSS, ruIxrss, 0);
   }
   void add_ruIdrss(uint64_t ruIdrss) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUIDRSS, ruIdrss, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUIDRSS, ruIdrss, 0);
   }
   void add_ruIsrss(uint64_t ruIsrss) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUISRSS, ruIsrss, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUISRSS, ruIsrss, 0);
   }
   void add_ruMinflt(uint64_t ruMinflt) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUMINFLT, ruMinflt, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUMINFLT, ruMinflt, 0);
   }
   void add_ruMajflt(uint64_t ruMajflt) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUMAJFLT, ruMajflt, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUMAJFLT, ruMajflt, 0);
   }
   void add_ruNswap(uint64_t ruNswap) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUNSWAP, ruNswap, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUNSWAP, ruNswap, 0);
   }
   void add_ruInblock(uint64_t ruInblock) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUINBLOCK, ruInblock, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUINBLOCK, ruInblock, 0);
   }
   void add_ruOublock(uint64_t ruOublock) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUOUBLOCK, ruOublock, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUOUBLOCK, ruOublock, 0);
   }
   void add_ruMsgsnd(uint64_t ruMsgsnd) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUMSGSND, ruMsgsnd, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUMSGSND, ruMsgsnd, 0);
   }
   void add_ruMsgrcv(uint64_t ruMsgrcv) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUMSGRCV, ruMsgrcv, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUMSGRCV, ruMsgrcv, 0);
   }
   void add_ruNsignals(uint64_t ruNsignals) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUNSIGNALS, ruNsignals, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUNSIGNALS, ruNsignals, 0);
   }
   void add_ruNvcsw(uint64_t ruNvcsw) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUNVCSW, ruNvcsw, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUNVCSW, ruNvcsw, 0);
   }
   void add_ruNivcsw(uint64_t ruNivcsw) {
-    fbb_.AddElement<uint64_t>(ResourceUsage::VT_RUNIVCSW, ruNivcsw, 0);
+    fbb_.AddElement<uint64_t>(ResourceUsageResponse::VT_RUNIVCSW, ruNivcsw, 0);
   }
-  explicit ResourceUsageBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit ResourceUsageResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<ResourceUsage> Finish() {
+  flatbuffers::Offset<ResourceUsageResponse> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<ResourceUsage>(end);
+    auto o = flatbuffers::Offset<ResourceUsageResponse>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<ResourceUsage> CreateResourceUsage(
+inline flatbuffers::Offset<ResourceUsageResponse> CreateResourceUsageResponse(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint64_t ruUtime = 0,
     uint64_t ruStime = 0,
@@ -412,7 +412,7 @@ inline flatbuffers::Offset<ResourceUsage> CreateResourceUsage(
     uint64_t ruNsignals = 0,
     uint64_t ruNvcsw = 0,
     uint64_t ruNivcsw = 0) {
-  ResourceUsageBuilder builder_(_fbb);
+  ResourceUsageResponseBuilder builder_(_fbb);
   builder_.add_ruNivcsw(ruNivcsw);
   builder_.add_ruNvcsw(ruNvcsw);
   builder_.add_ruNsignals(ruNsignals);
@@ -432,10 +432,10 @@ inline flatbuffers::Offset<ResourceUsage> CreateResourceUsage(
   return builder_.Finish();
 }
 
-struct UpdateableSettings FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef UpdateableSettingsBuilder Builder;
+struct UpdateSettingsRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef UpdateSettingsRequestBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return UpdateableSettingsTypeTable();
+    return UpdateSettingsRequestTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_LOGLEVEL = 4,
@@ -458,44 +458,44 @@ struct UpdateableSettings FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
 };
 
-struct UpdateableSettingsBuilder {
-  typedef UpdateableSettings Table;
+struct UpdateSettingsRequestBuilder {
+  typedef UpdateSettingsRequest Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_logLevel(flatbuffers::Offset<flatbuffers::String> logLevel) {
-    fbb_.AddOffset(UpdateableSettings::VT_LOGLEVEL, logLevel);
+    fbb_.AddOffset(UpdateSettingsRequest::VT_LOGLEVEL, logLevel);
   }
   void add_logTags(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> logTags) {
-    fbb_.AddOffset(UpdateableSettings::VT_LOGTAGS, logTags);
+    fbb_.AddOffset(UpdateSettingsRequest::VT_LOGTAGS, logTags);
   }
-  explicit UpdateableSettingsBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit UpdateSettingsRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<UpdateableSettings> Finish() {
+  flatbuffers::Offset<UpdateSettingsRequest> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<UpdateableSettings>(end);
+    auto o = flatbuffers::Offset<UpdateSettingsRequest>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<UpdateableSettings> CreateUpdateableSettings(
+inline flatbuffers::Offset<UpdateSettingsRequest> CreateUpdateSettingsRequest(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> logLevel = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> logTags = 0) {
-  UpdateableSettingsBuilder builder_(_fbb);
+  UpdateSettingsRequestBuilder builder_(_fbb);
   builder_.add_logTags(logTags);
   builder_.add_logLevel(logLevel);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<UpdateableSettings> CreateUpdateableSettingsDirect(
+inline flatbuffers::Offset<UpdateSettingsRequest> CreateUpdateSettingsRequestDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *logLevel = nullptr,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *logTags = nullptr) {
   auto logLevel__ = logLevel ? _fbb.CreateString(logLevel) : 0;
   auto logTags__ = logTags ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*logTags) : 0;
-  return FBS::Worker::CreateUpdateableSettings(
+  return FBS::Worker::CreateUpdateSettingsRequest(
       _fbb,
       logLevel__,
       logTags__);
@@ -753,7 +753,7 @@ inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable() {
   return &tt;
 }
 
-inline const flatbuffers::TypeTable *WorkerDumpTypeTable() {
+inline const flatbuffers::TypeTable *WorkerDumpResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_ULONG, 0, -1 },
     { flatbuffers::ET_STRING, 1, -1 },
@@ -775,7 +775,7 @@ inline const flatbuffers::TypeTable *WorkerDumpTypeTable() {
   return &tt;
 }
 
-inline const flatbuffers::TypeTable *ResourceUsageTypeTable() {
+inline const flatbuffers::TypeTable *ResourceUsageResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_ULONG, 0, -1 },
     { flatbuffers::ET_ULONG, 0, -1 },
@@ -818,7 +818,7 @@ inline const flatbuffers::TypeTable *ResourceUsageTypeTable() {
   return &tt;
 }
 
-inline const flatbuffers::TypeTable *UpdateableSettingsTypeTable() {
+inline const flatbuffers::TypeTable *UpdateSettingsRequestTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_STRING, 0, -1 },
     { flatbuffers::ET_STRING, 1, -1 }

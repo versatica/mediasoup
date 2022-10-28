@@ -1,11 +1,11 @@
 import * as flatbuffers from 'flatbuffers';
 import { Body } from '../../fbs/response/body';
-import { RouterDumpT } from '../../fbs/router/router-dump';
+import { RouterDumpResponseT } from '../../fbs/router/router-dump-response';
 import { ConsumeResponseT } from '../../fbs/transport/consume-response';
-import { TransportDumpT } from '../../fbs/transport/transport-dump';
-import { WebRtcServerDumpT } from '../../fbs/web-rtc-server/web-rtc-server-dump';
-import { ResourceUsageT } from '../../fbs/worker/resource-usage';
-import { WorkerDumpT } from '../../fbs/worker/worker-dump';
+import { TransportDumpResponseT } from '../../fbs/transport/transport-dump-response';
+import { WebRtcServerDumpResponseT } from '../../fbs/web-rtc-server/web-rtc-server-dump-response';
+import { ResourceUsageResponseT } from '../../fbs/worker/resource-usage-response';
+import { WorkerDumpResponseT } from '../../fbs/worker/worker-dump-response';
 export declare class Response {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
@@ -30,8 +30,8 @@ export declare class ResponseT {
     id: number;
     accepted: boolean;
     bodyType: Body;
-    body: ConsumeResponseT | ResourceUsageT | RouterDumpT | TransportDumpT | WebRtcServerDumpT | WorkerDumpT | null;
-    constructor(id?: number, accepted?: boolean, bodyType?: Body, body?: ConsumeResponseT | ResourceUsageT | RouterDumpT | TransportDumpT | WebRtcServerDumpT | WorkerDumpT | null);
+    body: ConsumeResponseT | ResourceUsageResponseT | RouterDumpResponseT | TransportDumpResponseT | WebRtcServerDumpResponseT | WorkerDumpResponseT | null;
+    constructor(id?: number, accepted?: boolean, bodyType?: Body, body?: ConsumeResponseT | ResourceUsageResponseT | RouterDumpResponseT | TransportDumpResponseT | WebRtcServerDumpResponseT | WorkerDumpResponseT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=response.d.ts.map

@@ -1,6 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
 import { SrtpParameters, SrtpParametersT } from '../../fbs/transport/srtp-parameters';
-import { TransportDump, TransportDumpT } from '../../fbs/transport/transport-dump';
+import { TransportDumpResponse, TransportDumpResponseT } from '../../fbs/transport/transport-dump-response';
 import { Tuple, TupleT } from '../../fbs/transport/tuple';
 export declare class PipeTransportDump {
     bb: flatbuffers.ByteBuffer | null;
@@ -8,7 +8,7 @@ export declare class PipeTransportDump {
     __init(i: number, bb: flatbuffers.ByteBuffer): PipeTransportDump;
     static getRootAsPipeTransportDump(bb: flatbuffers.ByteBuffer, obj?: PipeTransportDump): PipeTransportDump;
     static getSizePrefixedRootAsPipeTransportDump(bb: flatbuffers.ByteBuffer, obj?: PipeTransportDump): PipeTransportDump;
-    base(obj?: TransportDump): TransportDump | null;
+    base(obj?: TransportDumpResponse): TransportDumpResponse | null;
     tuple(obj?: Tuple): Tuple | null;
     rtx(): boolean;
     srtpParameters(obj?: SrtpParameters): SrtpParameters | null;
@@ -22,11 +22,11 @@ export declare class PipeTransportDump {
     unpackTo(_o: PipeTransportDumpT): void;
 }
 export declare class PipeTransportDumpT {
-    base: TransportDumpT | null;
+    base: TransportDumpResponseT | null;
     tuple: TupleT | null;
     rtx: boolean;
     srtpParameters: SrtpParametersT | null;
-    constructor(base?: TransportDumpT | null, tuple?: TupleT | null, rtx?: boolean, srtpParameters?: SrtpParametersT | null);
+    constructor(base?: TransportDumpResponseT | null, tuple?: TupleT | null, rtx?: boolean, srtpParameters?: SrtpParametersT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=pipe-transport-dump.d.ts.map

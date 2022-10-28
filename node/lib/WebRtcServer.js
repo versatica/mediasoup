@@ -114,7 +114,7 @@ class WebRtcServer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('dump()');
         const response = await this.#channel.requestBinary(request_generated_1.Method.WEBRTC_SERVER_DUMP, undefined, undefined, this.#internal.webRtcServerId);
         /* Decode the response. */
-        const dump = new webrtcserver_generated_1.WebRtcServerDump();
+        const dump = new webrtcserver_generated_1.WebRtcServerDumpResponse();
         response.body(dump);
         return dump.unpack();
     }

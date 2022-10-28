@@ -9,7 +9,7 @@ import { CloseRouterRequestT } from '../../fbs/worker/close-router-request';
 import { CloseWebRtcServerRequestT } from '../../fbs/worker/close-web-rtc-server-request';
 import { CreateRouterRequestT } from '../../fbs/worker/create-router-request';
 import { CreateWebRtcServerRequestT } from '../../fbs/worker/create-web-rtc-server-request';
-import { UpdateableSettingsT } from '../../fbs/worker/updateable-settings';
+import { UpdateSettingsRequestT } from '../../fbs/worker/update-settings-request';
 export declare class Request {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
@@ -40,8 +40,8 @@ export declare class RequestT {
     method: Method;
     handlerId: string | Uint8Array | null;
     bodyType: Body;
-    body: CloseRouterRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | UpdateableSettingsT | null;
-    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: CloseRouterRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | UpdateableSettingsT | null);
+    body: CloseRouterRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | UpdateSettingsRequestT | null;
+    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: CloseRouterRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | UpdateSettingsRequestT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=request.d.ts.map

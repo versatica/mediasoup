@@ -10,8 +10,8 @@ import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { Body as RequestBody, Method, CreateRouterRequestT } from './fbs/request_generated';
-import { WorkerDump as FbsWorkerDump, ResourceUsage as FbsResourceUsage } from './fbs/response_generated';
-import { UpdateableSettingsT, CreateWebRtcServerRequestT, TransportProtocol } from './fbs/worker_generated';
+import { WorkerDumpResponse as FbsWorkerDumpResponse, ResourceUsageResponse as FbsResourceUsageResponse } from './fbs/response_generated';
+import { UpdateSettingsRequestT, CreateWebRtcServerRequestT, TransportProtocol } from './fbs/worker_generated';
 import { WebRtcServerListenInfoT } from './fbs/fbs/worker/web-rtc-server-listen-info';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
@@ -571,7 +571,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		);
 
 		/* Decode the response. */
-		const dump = new FbsWorkerDump();
+		const dump = new FbsWorkerDumpResponse();
 
 		response.body(dump);
 
@@ -588,7 +588,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		const response = await this.#channel.requestBinary(Method.WORKER_GET_RESOURCE_USAGE);
 
 		/* Decode the response. */
-		const resourceUsage = new FbsResourceUsage();
+		const resourceUsage = new FbsResourceUsageResponse();
 
 		response.body(resourceUsage);
 
@@ -631,13 +631,13 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		// Build the request.
 		const builder = this.#channel.bufferBuilder;
 
-		const updateableSettings = new UpdateableSettingsT(logLevel, logTags);
-		const updateableSettingsOffset = updateableSettings.pack(builder);
+		const updateaSettingsRequest = new UpdateSettingsRequestT(logLevel, logTags);
+		const updateaSettingsRequestOffset = updateaSettingsRequest.pack(builder);
 
 		await this.#channel.requestBinary(
 			Method.WORKER_UPDATE_SETTINGS,
-			RequestBody.FBS_Worker_UpdateableSettings,
-			updateableSettingsOffset
+			RequestBody.FBS_Worker_UpdateSettingsRequest,
+			updateaSettingsRequestOffset 
 		);
 	}
 

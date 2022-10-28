@@ -364,7 +364,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		);
 
 		/* Decode the response. */
-		const dump = new FbsRouter.RouterDump();
+		const dump = new FbsRouter.RouterDumpResponse();
 
 		response.body(dump);
 
@@ -496,7 +496,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Decode the response. */
 
-		const dump = new FbsTransport.TransportDump();
+		const dump = new FbsTransport.TransportDumpResponse();
 
 		response.body(dump);
 
@@ -635,7 +635,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Decode the response. */
 
-		const dump = new FbsTransport.TransportDump();
+		const dump = new FbsTransport.TransportDumpResponse();
 
 		response.body(dump);
 
@@ -761,7 +761,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Decode the response. */
 
-		const dump = new FbsTransport.TransportDump();
+		const dump = new FbsTransport.TransportDumpResponse();
 
 		response.body(dump);
 

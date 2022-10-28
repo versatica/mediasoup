@@ -4,7 +4,7 @@ import { Channel } from './Channel';
 import { TransportProtocol } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';
 import { Body as RequestBody, Method, CloseWebRtcServerRequestT } from './fbs/request_generated';
-import { WebRtcServerDump } from './fbs/webrtcserver_generated';
+import { WebRtcServerDumpResponse } from './fbs/webrtcserver_generated';
 
 export interface WebRtcServerListenInfo
 {
@@ -232,7 +232,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 			Method.WEBRTC_SERVER_DUMP, undefined, undefined, this.#internal.webRtcServerId);
 
 		/* Decode the response. */
-		const dump = new WebRtcServerDump();
+		const dump = new WebRtcServerDumpResponse();
 
 		response.body(dump);
 

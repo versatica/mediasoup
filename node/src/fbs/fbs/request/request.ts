@@ -12,7 +12,7 @@ import { CloseRouterRequest, CloseRouterRequestT } from '../../fbs/worker/close-
 import { CloseWebRtcServerRequest, CloseWebRtcServerRequestT } from '../../fbs/worker/close-web-rtc-server-request';
 import { CreateRouterRequest, CreateRouterRequestT } from '../../fbs/worker/create-router-request';
 import { CreateWebRtcServerRequest, CreateWebRtcServerRequestT } from '../../fbs/worker/create-web-rtc-server-request';
-import { UpdateableSettings, UpdateableSettingsT } from '../../fbs/worker/updateable-settings';
+import { UpdateSettingsRequest, UpdateSettingsRequestT } from '../../fbs/worker/update-settings-request';
 
 
 export class Request {
@@ -141,7 +141,7 @@ constructor(
   public method: Method = Method.WORKER_CLOSE,
   public handlerId: string|Uint8Array|null = null,
   public bodyType: Body = Body.NONE,
-  public body: CloseRouterRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|UpdateableSettingsT|null = null
+  public body: CloseRouterRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|UpdateSettingsRequestT|null = null
 ){}
 
 

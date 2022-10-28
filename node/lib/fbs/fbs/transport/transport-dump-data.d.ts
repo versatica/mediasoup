@@ -1,14 +1,14 @@
-import { PlainTransportDump } from '../../fbs/plain-transport/plain-transport-dump';
 import { BaseTransportDump } from '../../fbs/transport/base-transport-dump';
 import { DirectTransportDump } from '../../fbs/transport/direct-transport-dump';
 import { PipeTransportDump } from '../../fbs/transport/pipe-transport-dump';
+import { PlainTransportDump } from '../../fbs/transport/plain-transport-dump';
 import { WebRtcTransportDump } from '../../fbs/transport/web-rtc-transport-dump';
 export declare enum TransportDumpData {
     NONE = 0,
     BaseTransportDump = 1,
     DirectTransportDump = 2,
     PipeTransportDump = 3,
-    FBS_PlainTransport_PlainTransportDump = 4,
+    PlainTransportDump = 4,
     WebRtcTransportDump = 5
 }
 export declare function unionToTransportDumpData(type: TransportDumpData, accessor: (obj: BaseTransportDump | DirectTransportDump | PipeTransportDump | PlainTransportDump | WebRtcTransportDump) => BaseTransportDump | DirectTransportDump | PipeTransportDump | PlainTransportDump | WebRtcTransportDump | null): BaseTransportDump | DirectTransportDump | PipeTransportDump | PlainTransportDump | WebRtcTransportDump | null;

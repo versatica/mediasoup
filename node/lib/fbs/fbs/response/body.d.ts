@@ -1,18 +1,18 @@
-import { RouterDump } from '../../fbs/router/router-dump';
+import { RouterDumpResponse } from '../../fbs/router/router-dump-response';
 import { ConsumeResponse } from '../../fbs/transport/consume-response';
-import { TransportDump } from '../../fbs/transport/transport-dump';
-import { WebRtcServerDump } from '../../fbs/web-rtc-server/web-rtc-server-dump';
-import { ResourceUsage } from '../../fbs/worker/resource-usage';
-import { WorkerDump } from '../../fbs/worker/worker-dump';
+import { TransportDumpResponse } from '../../fbs/transport/transport-dump-response';
+import { WebRtcServerDumpResponse } from '../../fbs/web-rtc-server/web-rtc-server-dump-response';
+import { ResourceUsageResponse } from '../../fbs/worker/resource-usage-response';
+import { WorkerDumpResponse } from '../../fbs/worker/worker-dump-response';
 export declare enum Body {
     NONE = 0,
-    FBS_Router_RouterDump = 1,
-    FBS_Transport_TransportDump = 2,
-    FBS_Transport_ConsumeResponse = 3,
-    FBS_WebRtcServer_WebRtcServerDump = 4,
-    FBS_Worker_WorkerDump = 5,
-    FBS_Worker_ResourceUsage = 6
+    FBS_Worker_WorkerDumpResponse = 1,
+    FBS_Worker_ResourceUsageResponse = 2,
+    FBS_WebRtcServer_WebRtcServerDumpResponse = 3,
+    FBS_Router_RouterDumpResponse = 4,
+    FBS_Transport_TransportDumpResponse = 5,
+    FBS_Transport_ConsumeResponse = 6
 }
-export declare function unionToBody(type: Body, accessor: (obj: ConsumeResponse | ResourceUsage | RouterDump | TransportDump | WebRtcServerDump | WorkerDump) => ConsumeResponse | ResourceUsage | RouterDump | TransportDump | WebRtcServerDump | WorkerDump | null): ConsumeResponse | ResourceUsage | RouterDump | TransportDump | WebRtcServerDump | WorkerDump | null;
-export declare function unionListToBody(type: Body, accessor: (index: number, obj: ConsumeResponse | ResourceUsage | RouterDump | TransportDump | WebRtcServerDump | WorkerDump) => ConsumeResponse | ResourceUsage | RouterDump | TransportDump | WebRtcServerDump | WorkerDump | null, index: number): ConsumeResponse | ResourceUsage | RouterDump | TransportDump | WebRtcServerDump | WorkerDump | null;
+export declare function unionToBody(type: Body, accessor: (obj: ConsumeResponse | ResourceUsageResponse | RouterDumpResponse | TransportDumpResponse | WebRtcServerDumpResponse | WorkerDumpResponse) => ConsumeResponse | ResourceUsageResponse | RouterDumpResponse | TransportDumpResponse | WebRtcServerDumpResponse | WorkerDumpResponse | null): ConsumeResponse | ResourceUsageResponse | RouterDumpResponse | TransportDumpResponse | WebRtcServerDumpResponse | WorkerDumpResponse | null;
+export declare function unionListToBody(type: Body, accessor: (index: number, obj: ConsumeResponse | ResourceUsageResponse | RouterDumpResponse | TransportDumpResponse | WebRtcServerDumpResponse | WorkerDumpResponse) => ConsumeResponse | ResourceUsageResponse | RouterDumpResponse | TransportDumpResponse | WebRtcServerDumpResponse | WorkerDumpResponse | null, index: number): ConsumeResponse | ResourceUsageResponse | RouterDumpResponse | TransportDumpResponse | WebRtcServerDumpResponse | WorkerDumpResponse | null;
 //# sourceMappingURL=body.d.ts.map

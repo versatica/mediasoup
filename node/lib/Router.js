@@ -164,7 +164,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Send the request and wait for the response.
         const response = await this.#channel.requestBinary(FbsRequest.Method.ROUTER_DUMP, undefined, undefined, this.#internal.routerId);
         /* Decode the response. */
-        const dump = new FbsRouter.RouterDump();
+        const dump = new FbsRouter.RouterDumpResponse();
         response.body(dump);
         return dump.unpack();
     }
@@ -223,7 +223,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             ? FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER
             : FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT, FbsRequest.Body.FBS_Router_CreateWebRtcTransportRequest, createWebRtcTransportOffset, this.#internal.routerId);
         /* Decode the response. */
-        const dump = new FbsTransport.TransportDump();
+        const dump = new FbsTransport.TransportDumpResponse();
         response.body(dump);
         // const data = dump.unpack();
         const transportDump = new FbsRouter.WebRtcTransportDump();
@@ -286,7 +286,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const createPlainTransportOffset = new FbsRouter.CreatePlainTransportRequestT(transportId, plainTransportOptions).pack(builder);
         const response = await this.#channel.requestBinary(FbsRequest.Method.ROUTER_CREATE_PLAIN_TRANSPORT, FbsRequest.Body.FBS_Router_CreatePlainTransportRequest, createPlainTransportOffset, this.#internal.routerId);
         /* Decode the response. */
-        const dump = new FbsTransport.TransportDump();
+        const dump = new FbsTransport.TransportDumpResponse();
         response.body(dump);
         const data = dump.unpack();
         const transport = new PlainTransport_1.PlainTransport({
@@ -344,7 +344,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const createPipeTransportOffset = new FbsRouter.CreatePipeTransportRequestT(transportId, pipeTransportOptions).pack(builder);
         const response = await this.#channel.requestBinary(FbsRequest.Method.ROUTER_CREATE_PIPE_TRANSPORT, FbsRequest.Body.FBS_Router_CreatePipeTransportRequest, createPipeTransportOffset, this.#internal.routerId);
         /* Decode the response. */
-        const dump = new FbsTransport.TransportDump();
+        const dump = new FbsTransport.TransportDumpResponse();
         response.body(dump);
         const data = dump.unpack();
         const transport = new PipeTransport_1.PipeTransport({

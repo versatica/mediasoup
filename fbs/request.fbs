@@ -69,7 +69,7 @@ union Body {
   FBS.Router.CreatePlainTransportRequest,
   FBS.Router.CreatePipeTransportRequest,
   FBS.Transport.ConsumeRequest,
-  FBS.Worker.UpdateableSettings,
+  FBS.Worker.UpdateSettingsRequest,
   FBS.Worker.CreateWebRtcServerRequest,
   FBS.Worker.CloseWebRtcServerRequest,
   FBS.Worker.CreateRouterRequest,

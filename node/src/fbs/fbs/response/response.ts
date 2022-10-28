@@ -3,12 +3,12 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { Body, unionToBody, unionListToBody } from '../../fbs/response/body';
-import { RouterDump, RouterDumpT } from '../../fbs/router/router-dump';
+import { RouterDumpResponse, RouterDumpResponseT } from '../../fbs/router/router-dump-response';
 import { ConsumeResponse, ConsumeResponseT } from '../../fbs/transport/consume-response';
-import { TransportDump, TransportDumpT } from '../../fbs/transport/transport-dump';
-import { WebRtcServerDump, WebRtcServerDumpT } from '../../fbs/web-rtc-server/web-rtc-server-dump';
-import { ResourceUsage, ResourceUsageT } from '../../fbs/worker/resource-usage';
-import { WorkerDump, WorkerDumpT } from '../../fbs/worker/worker-dump';
+import { TransportDumpResponse, TransportDumpResponseT } from '../../fbs/transport/transport-dump-response';
+import { WebRtcServerDumpResponse, WebRtcServerDumpResponseT } from '../../fbs/web-rtc-server/web-rtc-server-dump-response';
+import { ResourceUsageResponse, ResourceUsageResponseT } from '../../fbs/worker/resource-usage-response';
+import { WorkerDumpResponse, WorkerDumpResponseT } from '../../fbs/worker/worker-dump-response';
 
 
 export class Response {
@@ -114,7 +114,7 @@ constructor(
   public id: number = 0,
   public accepted: boolean = false,
   public bodyType: Body = Body.NONE,
-  public body: ConsumeResponseT|ResourceUsageT|RouterDumpT|TransportDumpT|WebRtcServerDumpT|WorkerDumpT|null = null
+  public body: ConsumeResponseT|ResourceUsageResponseT|RouterDumpResponseT|TransportDumpResponseT|WebRtcServerDumpResponseT|WorkerDumpResponseT|null = null
 ){}
 
 

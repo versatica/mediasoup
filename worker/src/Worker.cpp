@@ -95,7 +95,7 @@ void Worker::Close()
 	this->payloadChannel->Close();
 }
 
-flatbuffers::Offset<FBS::Worker::WorkerDump> Worker::FillBuffer(
+flatbuffers::Offset<FBS::Worker::WorkerDumpResponse> Worker::FillBuffer(
   flatbuffers::FlatBufferBuilder& builder) const
 {
 	// Add webRtcServerIds.
@@ -118,11 +118,11 @@ flatbuffers::Offset<FBS::Worker::WorkerDump> Worker::FillBuffer(
 
 	auto channelMessageHandlers = ChannelMessageHandlers::FillBuffer(builder);
 
-	return FBS::Worker::CreateWorkerDumpDirect(
+	return FBS::Worker::CreateWorkerDumpResponseDirect(
 	  builder, Logger::pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
 }
 
-flatbuffers::Offset<FBS::Worker::ResourceUsage> Worker::FillBufferResourceUsage(
+flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResourceUsage(
   flatbuffers::FlatBufferBuilder& builder) const
 {
 	MS_TRACE();
@@ -135,7 +135,7 @@ flatbuffers::Offset<FBS::Worker::ResourceUsage> Worker::FillBufferResourceUsage(
 	if (err != 0)
 		MS_THROW_ERROR("uv_getrusagerequest() failed: %s", uv_strerror(err));
 
-	return FBS::Worker::CreateResourceUsage(
+	return FBS::Worker::CreateResourceUsageResponse(
 	  builder,
 	  // Add ru_utime (uv_timeval_t, user CPU time used, converted to ms).
 	  (uvRusage.ru_utime.tv_sec * static_cast<uint64_t>(1000)) + (uvRusage.ru_utime.tv_usec / 1000),
@@ -283,7 +283,7 @@ binary:
 		{
 			auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-			request->Accept(FBS::Response::Body::FBS_Worker_WorkerDump, dumpOffset);
+			request->Accept(FBS::Response::Body::FBS_Worker_WorkerDumpResponse, dumpOffset);
 
 			break;
 		}
@@ -292,7 +292,7 @@ binary:
 		{
 			auto resourceUsageOffset = FillBufferResourceUsage(request->GetBufferBuilder());
 
-			request->Accept(FBS::Response::Body::FBS_Worker_ResourceUsage, resourceUsageOffset);
+			request->Accept(FBS::Response::Body::FBS_Worker_ResourceUsageResponse, resourceUsageOffset);
 
 			break;
 		}

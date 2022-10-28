@@ -246,9 +246,9 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 	{
 		case FBS::Request::Method::WORKER_UPDATE_SETTINGS:
 		{
-			auto body = request->_data->body_as<FBS::Worker::UpdateableSettings>();
+			auto body = request->_data->body_as<FBS::Worker::UpdateSettingsRequest>();
 
-			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateableSettings::VT_LOGLEVEL))
+			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateSettingsRequest::VT_LOGLEVEL))
 			{
 				auto logLevel = body->logLevel()->str();
 
@@ -257,7 +257,7 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 			}
 
 			// Update logTags if requested.
-			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateableSettings::VT_LOGTAGS))
+			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateSettingsRequest::VT_LOGTAGS))
 			{
 				std::vector<std::string> logTags;
 

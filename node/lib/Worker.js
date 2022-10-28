@@ -266,7 +266,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Send the request and wait for the response.
         const response = await this.#channel.requestBinary(request_generated_1.Method.WORKER_DUMP);
         /* Decode the response. */
-        const dump = new response_generated_1.WorkerDump();
+        const dump = new response_generated_1.WorkerDumpResponse();
         response.body(dump);
         return dump.unpack();
     }
@@ -277,7 +277,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('getResourceUsage()');
         const response = await this.#channel.requestBinary(request_generated_1.Method.WORKER_GET_RESOURCE_USAGE);
         /* Decode the response. */
-        const resourceUsage = new response_generated_1.ResourceUsage();
+        const resourceUsage = new response_generated_1.ResourceUsageResponse();
         response.body(resourceUsage);
         const ru = resourceUsage.unpack();
         /* eslint-disable camelcase */
@@ -308,9 +308,9 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('updateSettings()');
         // Build the request.
         const builder = this.#channel.bufferBuilder;
-        const updateableSettings = new worker_generated_1.UpdateableSettingsT(logLevel, logTags);
-        const updateableSettingsOffset = updateableSettings.pack(builder);
-        await this.#channel.requestBinary(request_generated_1.Method.WORKER_UPDATE_SETTINGS, request_generated_1.Body.FBS_Worker_UpdateableSettings, updateableSettingsOffset);
+        const updateaSettingsRequest = new worker_generated_1.UpdateSettingsRequestT(logLevel, logTags);
+        const updateaSettingsRequestOffset = updateaSettingsRequest.pack(builder);
+        await this.#channel.requestBinary(request_generated_1.Method.WORKER_UPDATE_SETTINGS, request_generated_1.Body.FBS_Worker_UpdateSettingsRequest, updateaSettingsRequestOffset);
     }
     /**
      * Create a WebRtcServer.

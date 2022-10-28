@@ -1,8 +1,8 @@
 import * as flatbuffers from 'flatbuffers';
-import { PlainTransportDumpT } from '../../fbs/plain-transport/plain-transport-dump';
 import { BaseTransportDumpT } from '../../fbs/transport/base-transport-dump';
 import { DirectTransportDumpT } from '../../fbs/transport/direct-transport-dump';
 import { PipeTransportDumpT } from '../../fbs/transport/pipe-transport-dump';
+import { PlainTransportDumpT } from '../../fbs/transport/plain-transport-dump';
 import { TransportDumpData } from '../../fbs/transport/transport-dump-data';
 import { WebRtcTransportDumpT } from '../../fbs/transport/web-rtc-transport-dump';
 export declare class TransportDump {

@@ -479,7 +479,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		);
 
 		/* Decode the response. */
-		const dump = new FbsTransport.TransportDump();
+		const dump = new FbsTransport.TransportDumpResponse();
 
 		response.body(dump);
 

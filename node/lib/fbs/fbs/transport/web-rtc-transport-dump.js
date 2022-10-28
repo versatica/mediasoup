@@ -6,7 +6,7 @@ const flatbuffers = require("flatbuffers");
 const dtls_parameters_1 = require("../../fbs/transport/dtls-parameters");
 const ice_candidate_1 = require("../../fbs/transport/ice-candidate");
 const ice_parameters_1 = require("../../fbs/transport/ice-parameters");
-const transport_dump_1 = require("../../fbs/transport/transport-dump");
+const transport_dump_response_1 = require("../../fbs/transport/transport-dump-response");
 const tuple_1 = require("../../fbs/transport/tuple");
 class WebRtcTransportDump {
     bb = null;
@@ -25,7 +25,7 @@ class WebRtcTransportDump {
     }
     base(obj) {
         const offset = this.bb.__offset(this.bb_pos, 4);
-        return offset ? (obj || new transport_dump_1.TransportDump()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+        return offset ? (obj || new transport_dump_response_1.TransportDumpResponse()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
     }
     iceRole(optionalEncoding) {
         const offset = this.bb.__offset(this.bb_pos, 6);

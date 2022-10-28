@@ -132,7 +132,7 @@ namespace RTC
 		this->webRtcTransports.clear();
 	}
 
-	flatbuffers::Offset<FBS::WebRtcServer::WebRtcServerDump> WebRtcServer::FillBuffer(
+	flatbuffers::Offset<FBS::WebRtcServer::WebRtcServerDumpResponse> WebRtcServer::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -187,7 +187,7 @@ namespace RTC
 			  FBS::WebRtcServer::CreateTupleHashDirect(builder, tupleHash, webRtcTransport->id.c_str()));
 		}
 
-		return FBS::WebRtcServer::CreateWebRtcServerDumpDirect(
+		return FBS::WebRtcServer::CreateWebRtcServerDumpResponseDirect(
 		  builder,
 		  this->id.c_str(),
 		  &udpSockets,
@@ -207,7 +207,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_WebRtcServer_WebRtcServerDump, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_WebRtcServer_WebRtcServerDumpResponse, dumpOffset);
 
 				break;
 			}

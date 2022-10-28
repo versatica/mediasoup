@@ -30,8 +30,8 @@ struct IceUserNameFragmentBuilder;
 struct TupleHash;
 struct TupleHashBuilder;
 
-struct WebRtcServerDump;
-struct WebRtcServerDumpBuilder;
+struct WebRtcServerDumpResponse;
+struct WebRtcServerDumpResponseBuilder;
 
 inline const flatbuffers::TypeTable *WebRtcServerListenInfoTypeTable();
 
@@ -41,7 +41,7 @@ inline const flatbuffers::TypeTable *IceUserNameFragmentTypeTable();
 
 inline const flatbuffers::TypeTable *TupleHashTypeTable();
 
-inline const flatbuffers::TypeTable *WebRtcServerDumpTypeTable();
+inline const flatbuffers::TypeTable *WebRtcServerDumpResponseTypeTable();
 
 struct WebRtcServerListenInfo FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef WebRtcServerListenInfoBuilder Builder;
@@ -340,10 +340,10 @@ inline flatbuffers::Offset<TupleHash> CreateTupleHashDirect(
       webRtcTransportId__);
 }
 
-struct WebRtcServerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef WebRtcServerDumpBuilder Builder;
+struct WebRtcServerDumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef WebRtcServerDumpResponseBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return WebRtcServerDumpTypeTable();
+    return WebRtcServerDumpResponseTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -394,41 +394,41 @@ struct WebRtcServerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
 };
 
-struct WebRtcServerDumpBuilder {
-  typedef WebRtcServerDump Table;
+struct WebRtcServerDumpResponseBuilder {
+  typedef WebRtcServerDumpResponse Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_id(flatbuffers::Offset<flatbuffers::String> id) {
-    fbb_.AddOffset(WebRtcServerDump::VT_ID, id);
+    fbb_.AddOffset(WebRtcServerDumpResponse::VT_ID, id);
   }
   void add_udpSockets(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::IpPort>>> udpSockets) {
-    fbb_.AddOffset(WebRtcServerDump::VT_UDPSOCKETS, udpSockets);
+    fbb_.AddOffset(WebRtcServerDumpResponse::VT_UDPSOCKETS, udpSockets);
   }
   void add_tcpServers(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::IpPort>>> tcpServers) {
-    fbb_.AddOffset(WebRtcServerDump::VT_TCPSERVERS, tcpServers);
+    fbb_.AddOffset(WebRtcServerDumpResponse::VT_TCPSERVERS, tcpServers);
   }
   void add_webRtcTransportIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webRtcTransportIds) {
-    fbb_.AddOffset(WebRtcServerDump::VT_WEBRTCTRANSPORTIDS, webRtcTransportIds);
+    fbb_.AddOffset(WebRtcServerDumpResponse::VT_WEBRTCTRANSPORTIDS, webRtcTransportIds);
   }
   void add_localIceUsernameFragments(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::IceUserNameFragment>>> localIceUsernameFragments) {
-    fbb_.AddOffset(WebRtcServerDump::VT_LOCALICEUSERNAMEFRAGMENTS, localIceUsernameFragments);
+    fbb_.AddOffset(WebRtcServerDumpResponse::VT_LOCALICEUSERNAMEFRAGMENTS, localIceUsernameFragments);
   }
   void add_tupleHashes(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::TupleHash>>> tupleHashes) {
-    fbb_.AddOffset(WebRtcServerDump::VT_TUPLEHASHES, tupleHashes);
+    fbb_.AddOffset(WebRtcServerDumpResponse::VT_TUPLEHASHES, tupleHashes);
   }
-  explicit WebRtcServerDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit WebRtcServerDumpResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<WebRtcServerDump> Finish() {
+  flatbuffers::Offset<WebRtcServerDumpResponse> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<WebRtcServerDump>(end);
-    fbb_.Required(o, WebRtcServerDump::VT_ID);
+    auto o = flatbuffers::Offset<WebRtcServerDumpResponse>(end);
+    fbb_.Required(o, WebRtcServerDumpResponse::VT_ID);
     return o;
   }
 };
 
-inline flatbuffers::Offset<WebRtcServerDump> CreateWebRtcServerDump(
+inline flatbuffers::Offset<WebRtcServerDumpResponse> CreateWebRtcServerDumpResponse(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> id = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::IpPort>>> udpSockets = 0,
@@ -436,7 +436,7 @@ inline flatbuffers::Offset<WebRtcServerDump> CreateWebRtcServerDump(
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webRtcTransportIds = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::IceUserNameFragment>>> localIceUsernameFragments = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::TupleHash>>> tupleHashes = 0) {
-  WebRtcServerDumpBuilder builder_(_fbb);
+  WebRtcServerDumpResponseBuilder builder_(_fbb);
   builder_.add_tupleHashes(tupleHashes);
   builder_.add_localIceUsernameFragments(localIceUsernameFragments);
   builder_.add_webRtcTransportIds(webRtcTransportIds);
@@ -446,7 +446,7 @@ inline flatbuffers::Offset<WebRtcServerDump> CreateWebRtcServerDump(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<WebRtcServerDump> CreateWebRtcServerDumpDirect(
+inline flatbuffers::Offset<WebRtcServerDumpResponse> CreateWebRtcServerDumpResponseDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<flatbuffers::Offset<FBS::WebRtcServer::IpPort>> *udpSockets = nullptr,
@@ -460,7 +460,7 @@ inline flatbuffers::Offset<WebRtcServerDump> CreateWebRtcServerDumpDirect(
   auto webRtcTransportIds__ = webRtcTransportIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*webRtcTransportIds) : 0;
   auto localIceUsernameFragments__ = localIceUsernameFragments ? _fbb.CreateVector<flatbuffers::Offset<FBS::WebRtcServer::IceUserNameFragment>>(*localIceUsernameFragments) : 0;
   auto tupleHashes__ = tupleHashes ? _fbb.CreateVector<flatbuffers::Offset<FBS::WebRtcServer::TupleHash>>(*tupleHashes) : 0;
-  return FBS::WebRtcServer::CreateWebRtcServerDump(
+  return FBS::WebRtcServer::CreateWebRtcServerDumpResponse(
       _fbb,
       id__,
       udpSockets__,
@@ -537,7 +537,7 @@ inline const flatbuffers::TypeTable *TupleHashTypeTable() {
   return &tt;
 }
 
-inline const flatbuffers::TypeTable *WebRtcServerDumpTypeTable() {
+inline const flatbuffers::TypeTable *WebRtcServerDumpResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_STRING, 0, -1 },
     { flatbuffers::ET_SEQUENCE, 1, 0 },

@@ -28,25 +28,25 @@ inline const flatbuffers::TypeTable *ResponseTypeTable();
 
 enum class Body : uint8_t {
   NONE = 0,
-  FBS_Router_RouterDump = 1,
-  FBS_Transport_TransportDump = 2,
-  FBS_Transport_ConsumeResponse = 3,
-  FBS_WebRtcServer_WebRtcServerDump = 4,
-  FBS_Worker_WorkerDump = 5,
-  FBS_Worker_ResourceUsage = 6,
+  FBS_Worker_WorkerDumpResponse = 1,
+  FBS_Worker_ResourceUsageResponse = 2,
+  FBS_WebRtcServer_WebRtcServerDumpResponse = 3,
+  FBS_Router_RouterDumpResponse = 4,
+  FBS_Transport_TransportDumpResponse = 5,
+  FBS_Transport_ConsumeResponse = 6,
   MIN = NONE,
-  MAX = FBS_Worker_ResourceUsage
+  MAX = FBS_Transport_ConsumeResponse
 };
 
 inline const Body (&EnumValuesBody())[7] {
   static const Body values[] = {
     Body::NONE,
-    Body::FBS_Router_RouterDump,
-    Body::FBS_Transport_TransportDump,
-    Body::FBS_Transport_ConsumeResponse,
-    Body::FBS_WebRtcServer_WebRtcServerDump,
-    Body::FBS_Worker_WorkerDump,
-    Body::FBS_Worker_ResourceUsage
+    Body::FBS_Worker_WorkerDumpResponse,
+    Body::FBS_Worker_ResourceUsageResponse,
+    Body::FBS_WebRtcServer_WebRtcServerDumpResponse,
+    Body::FBS_Router_RouterDumpResponse,
+    Body::FBS_Transport_TransportDumpResponse,
+    Body::FBS_Transport_ConsumeResponse
   };
   return values;
 }
@@ -54,19 +54,19 @@ inline const Body (&EnumValuesBody())[7] {
 inline const char * const *EnumNamesBody() {
   static const char * const names[8] = {
     "NONE",
-    "FBS_Router_RouterDump",
-    "FBS_Transport_TransportDump",
+    "FBS_Worker_WorkerDumpResponse",
+    "FBS_Worker_ResourceUsageResponse",
+    "FBS_WebRtcServer_WebRtcServerDumpResponse",
+    "FBS_Router_RouterDumpResponse",
+    "FBS_Transport_TransportDumpResponse",
     "FBS_Transport_ConsumeResponse",
-    "FBS_WebRtcServer_WebRtcServerDump",
-    "FBS_Worker_WorkerDump",
-    "FBS_Worker_ResourceUsage",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameBody(Body e) {
-  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Worker_ResourceUsage)) return "";
+  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Transport_ConsumeResponse)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesBody()[index];
 }
@@ -75,28 +75,28 @@ template<typename T> struct BodyTraits {
   static const Body enum_value = Body::NONE;
 };
 
-template<> struct BodyTraits<FBS::Router::RouterDump> {
-  static const Body enum_value = Body::FBS_Router_RouterDump;
+template<> struct BodyTraits<FBS::Worker::WorkerDumpResponse> {
+  static const Body enum_value = Body::FBS_Worker_WorkerDumpResponse;
 };
 
-template<> struct BodyTraits<FBS::Transport::TransportDump> {
-  static const Body enum_value = Body::FBS_Transport_TransportDump;
+template<> struct BodyTraits<FBS::Worker::ResourceUsageResponse> {
+  static const Body enum_value = Body::FBS_Worker_ResourceUsageResponse;
+};
+
+template<> struct BodyTraits<FBS::WebRtcServer::WebRtcServerDumpResponse> {
+  static const Body enum_value = Body::FBS_WebRtcServer_WebRtcServerDumpResponse;
+};
+
+template<> struct BodyTraits<FBS::Router::RouterDumpResponse> {
+  static const Body enum_value = Body::FBS_Router_RouterDumpResponse;
+};
+
+template<> struct BodyTraits<FBS::Transport::TransportDumpResponse> {
+  static const Body enum_value = Body::FBS_Transport_TransportDumpResponse;
 };
 
 template<> struct BodyTraits<FBS::Transport::ConsumeResponse> {
   static const Body enum_value = Body::FBS_Transport_ConsumeResponse;
-};
-
-template<> struct BodyTraits<FBS::WebRtcServer::WebRtcServerDump> {
-  static const Body enum_value = Body::FBS_WebRtcServer_WebRtcServerDump;
-};
-
-template<> struct BodyTraits<FBS::Worker::WorkerDump> {
-  static const Body enum_value = Body::FBS_Worker_WorkerDump;
-};
-
-template<> struct BodyTraits<FBS::Worker::ResourceUsage> {
-  static const Body enum_value = Body::FBS_Worker_ResourceUsage;
 };
 
 bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body type);
@@ -126,23 +126,23 @@ struct Response FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     return GetPointer<const void *>(VT_BODY);
   }
   template<typename T> const T *body_as() const;
-  const FBS::Router::RouterDump *body_as_FBS_Router_RouterDump() const {
-    return body_type() == FBS::Response::Body::FBS_Router_RouterDump ? static_cast<const FBS::Router::RouterDump *>(body()) : nullptr;
+  const FBS::Worker::WorkerDumpResponse *body_as_FBS_Worker_WorkerDumpResponse() const {
+    return body_type() == FBS::Response::Body::FBS_Worker_WorkerDumpResponse ? static_cast<const FBS::Worker::WorkerDumpResponse *>(body()) : nullptr;
   }
-  const FBS::Transport::TransportDump *body_as_FBS_Transport_TransportDump() const {
-    return body_type() == FBS::Response::Body::FBS_Transport_TransportDump ? static_cast<const FBS::Transport::TransportDump *>(body()) : nullptr;
+  const FBS::Worker::ResourceUsageResponse *body_as_FBS_Worker_ResourceUsageResponse() const {
+    return body_type() == FBS::Response::Body::FBS_Worker_ResourceUsageResponse ? static_cast<const FBS::Worker::ResourceUsageResponse *>(body()) : nullptr;
+  }
+  const FBS::WebRtcServer::WebRtcServerDumpResponse *body_as_FBS_WebRtcServer_WebRtcServerDumpResponse() const {
+    return body_type() == FBS::Response::Body::FBS_WebRtcServer_WebRtcServerDumpResponse ? static_cast<const FBS::WebRtcServer::WebRtcServerDumpResponse *>(body()) : nullptr;
+  }
+  const FBS::Router::RouterDumpResponse *body_as_FBS_Router_RouterDumpResponse() const {
+    return body_type() == FBS::Response::Body::FBS_Router_RouterDumpResponse ? static_cast<const FBS::Router::RouterDumpResponse *>(body()) : nullptr;
+  }
+  const FBS::Transport::TransportDumpResponse *body_as_FBS_Transport_TransportDumpResponse() const {
+    return body_type() == FBS::Response::Body::FBS_Transport_TransportDumpResponse ? static_cast<const FBS::Transport::TransportDumpResponse *>(body()) : nullptr;
   }
   const FBS::Transport::ConsumeResponse *body_as_FBS_Transport_ConsumeResponse() const {
     return body_type() == FBS::Response::Body::FBS_Transport_ConsumeResponse ? static_cast<const FBS::Transport::ConsumeResponse *>(body()) : nullptr;
-  }
-  const FBS::WebRtcServer::WebRtcServerDump *body_as_FBS_WebRtcServer_WebRtcServerDump() const {
-    return body_type() == FBS::Response::Body::FBS_WebRtcServer_WebRtcServerDump ? static_cast<const FBS::WebRtcServer::WebRtcServerDump *>(body()) : nullptr;
-  }
-  const FBS::Worker::WorkerDump *body_as_FBS_Worker_WorkerDump() const {
-    return body_type() == FBS::Response::Body::FBS_Worker_WorkerDump ? static_cast<const FBS::Worker::WorkerDump *>(body()) : nullptr;
-  }
-  const FBS::Worker::ResourceUsage *body_as_FBS_Worker_ResourceUsage() const {
-    return body_type() == FBS::Response::Body::FBS_Worker_ResourceUsage ? static_cast<const FBS::Worker::ResourceUsage *>(body()) : nullptr;
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -155,28 +155,28 @@ struct Response FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
 };
 
-template<> inline const FBS::Router::RouterDump *Response::body_as<FBS::Router::RouterDump>() const {
-  return body_as_FBS_Router_RouterDump();
+template<> inline const FBS::Worker::WorkerDumpResponse *Response::body_as<FBS::Worker::WorkerDumpResponse>() const {
+  return body_as_FBS_Worker_WorkerDumpResponse();
 }
 
-template<> inline const FBS::Transport::TransportDump *Response::body_as<FBS::Transport::TransportDump>() const {
-  return body_as_FBS_Transport_TransportDump();
+template<> inline const FBS::Worker::ResourceUsageResponse *Response::body_as<FBS::Worker::ResourceUsageResponse>() const {
+  return body_as_FBS_Worker_ResourceUsageResponse();
+}
+
+template<> inline const FBS::WebRtcServer::WebRtcServerDumpResponse *Response::body_as<FBS::WebRtcServer::WebRtcServerDumpResponse>() const {
+  return body_as_FBS_WebRtcServer_WebRtcServerDumpResponse();
+}
+
+template<> inline const FBS::Router::RouterDumpResponse *Response::body_as<FBS::Router::RouterDumpResponse>() const {
+  return body_as_FBS_Router_RouterDumpResponse();
+}
+
+template<> inline const FBS::Transport::TransportDumpResponse *Response::body_as<FBS::Transport::TransportDumpResponse>() const {
+  return body_as_FBS_Transport_TransportDumpResponse();
 }
 
 template<> inline const FBS::Transport::ConsumeResponse *Response::body_as<FBS::Transport::ConsumeResponse>() const {
   return body_as_FBS_Transport_ConsumeResponse();
-}
-
-template<> inline const FBS::WebRtcServer::WebRtcServerDump *Response::body_as<FBS::WebRtcServer::WebRtcServerDump>() const {
-  return body_as_FBS_WebRtcServer_WebRtcServerDump();
-}
-
-template<> inline const FBS::Worker::WorkerDump *Response::body_as<FBS::Worker::WorkerDump>() const {
-  return body_as_FBS_Worker_WorkerDump();
-}
-
-template<> inline const FBS::Worker::ResourceUsage *Response::body_as<FBS::Worker::ResourceUsage>() const {
-  return body_as_FBS_Worker_ResourceUsage();
 }
 
 struct ResponseBuilder {
@@ -225,28 +225,28 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     case Body::NONE: {
       return true;
     }
-    case Body::FBS_Router_RouterDump: {
-      auto ptr = reinterpret_cast<const FBS::Router::RouterDump *>(obj);
+    case Body::FBS_Worker_WorkerDumpResponse: {
+      auto ptr = reinterpret_cast<const FBS::Worker::WorkerDumpResponse *>(obj);
       return verifier.VerifyTable(ptr);
     }
-    case Body::FBS_Transport_TransportDump: {
-      auto ptr = reinterpret_cast<const FBS::Transport::TransportDump *>(obj);
+    case Body::FBS_Worker_ResourceUsageResponse: {
+      auto ptr = reinterpret_cast<const FBS::Worker::ResourceUsageResponse *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_WebRtcServer_WebRtcServerDumpResponse: {
+      auto ptr = reinterpret_cast<const FBS::WebRtcServer::WebRtcServerDumpResponse *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Router_RouterDumpResponse: {
+      auto ptr = reinterpret_cast<const FBS::Router::RouterDumpResponse *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Transport_TransportDumpResponse: {
+      auto ptr = reinterpret_cast<const FBS::Transport::TransportDumpResponse *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case Body::FBS_Transport_ConsumeResponse: {
       auto ptr = reinterpret_cast<const FBS::Transport::ConsumeResponse *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    case Body::FBS_WebRtcServer_WebRtcServerDump: {
-      auto ptr = reinterpret_cast<const FBS::WebRtcServer::WebRtcServerDump *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    case Body::FBS_Worker_WorkerDump: {
-      auto ptr = reinterpret_cast<const FBS::Worker::WorkerDump *>(obj);
-      return verifier.VerifyTable(ptr);
-    }
-    case Body::FBS_Worker_ResourceUsage: {
-      auto ptr = reinterpret_cast<const FBS::Worker::ResourceUsage *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;
@@ -276,21 +276,21 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 5 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Router::RouterDumpTypeTable,
-    FBS::Transport::TransportDumpTypeTable,
-    FBS::Transport::ConsumeResponseTypeTable,
-    FBS::WebRtcServer::WebRtcServerDumpTypeTable,
-    FBS::Worker::WorkerDumpTypeTable,
-    FBS::Worker::ResourceUsageTypeTable
+    FBS::Worker::WorkerDumpResponseTypeTable,
+    FBS::Worker::ResourceUsageResponseTypeTable,
+    FBS::WebRtcServer::WebRtcServerDumpResponseTypeTable,
+    FBS::Router::RouterDumpResponseTypeTable,
+    FBS::Transport::TransportDumpResponseTypeTable,
+    FBS::Transport::ConsumeResponseTypeTable
   };
   static const char * const names[] = {
     "NONE",
-    "FBS_Router_RouterDump",
-    "FBS_Transport_TransportDump",
-    "FBS_Transport_ConsumeResponse",
-    "FBS_WebRtcServer_WebRtcServerDump",
-    "FBS_Worker_WorkerDump",
-    "FBS_Worker_ResourceUsage"
+    "FBS_Worker_WorkerDumpResponse",
+    "FBS_Worker_ResourceUsageResponse",
+    "FBS_WebRtcServer_WebRtcServerDumpResponse",
+    "FBS_Router_RouterDumpResponse",
+    "FBS_Transport_TransportDumpResponse",
+    "FBS_Transport_ConsumeResponse"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_UNION, 7, type_codes, type_refs, nullptr, nullptr, names

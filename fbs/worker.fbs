@@ -8,14 +8,14 @@ table ChannelMessageHandlers {
   payloadchannel_notification_handlers:[string];
 }
 
-table WorkerDump {
+table WorkerDumpResponse {
   pid:uint64;
   webrtc_server_ids:[string];
   router_ids:[string];
   channel_message_handlers:ChannelMessageHandlers;
 }
 
-table ResourceUsage {
+table ResourceUsageResponse {
   ru_utime:uint64;
   ru_stime:uint64;
   ru_maxrss:uint64;
@@ -34,7 +34,7 @@ table ResourceUsage {
   ru_nivcsw:uint64;
 }
 
-table UpdateableSettings {
+table UpdateSettingsRequest {
   log_level:string;
   log_tags:[string];
 }

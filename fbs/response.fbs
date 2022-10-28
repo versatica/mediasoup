@@ -6,12 +6,12 @@ include "worker.fbs";
 namespace FBS.Response;
 
 union Body {
-  FBS.Router.RouterDump,
-  FBS.Transport.TransportDump,
+  FBS.Worker.WorkerDumpResponse,
+  FBS.Worker.ResourceUsageResponse,
+  FBS.WebRtcServer.WebRtcServerDumpResponse,
+  FBS.Router.RouterDumpResponse,
+  FBS.Transport.TransportDumpResponse,
   FBS.Transport.ConsumeResponse,
-  FBS.WebRtcServer.WebRtcServerDump,
-  FBS.Worker.WorkerDump,
-  FBS.Worker.ResourceUsage,
 }
 
 table Response {

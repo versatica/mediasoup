@@ -26,8 +26,8 @@ public:
 
 private:
 	void Close();
-	flatbuffers::Offset<FBS::Worker::WorkerDump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
-	flatbuffers::Offset<FBS::Worker::ResourceUsage> FillBufferResourceUsage(
+	flatbuffers::Offset<FBS::Worker::WorkerDumpResponse> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
+	flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> FillBufferResourceUsage(
 	  flatbuffers::FlatBufferBuilder& builder) const;
 	void SetNewRouterId(std::string& routerId) const;
 	RTC::WebRtcServer* GetWebRtcServer(const std::string& webRtcServerId) const;

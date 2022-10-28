@@ -49,7 +49,7 @@ union TransportDumpData {
   WebRtcTransportDump,
 }
 
-table TransportDump {
+table TransportDumpResponse {
   data:TransportDumpData;
 }
 
@@ -108,7 +108,7 @@ table DtlsParameters {
 }
 
 table WebRtcTransportDump {
-  base:TransportDump (required);
+  base:TransportDumpResponse (required);
   ice_role:string(required);
   ice_parameters:IceParameters (required);
   ice_candidates:[IceCandidate] (required);
@@ -126,7 +126,7 @@ table SrtpParameters {
 }
 
 table PlainTransportDump {
-  base:TransportDump (required);
+  base:TransportDumpResponse (required);
   rtc_mux:bool;
   comedia:bool;
   tuple:Tuple;
@@ -137,13 +137,13 @@ table PlainTransportDump {
 /* DirectTransort */
 
 table DirectTransportDump {
-  base:TransportDump (required);
+  base:TransportDumpResponse (required);
 }
 
 /* PipeTransort */
 
 table PipeTransportDump {
-  base:TransportDump (required);
+  base:TransportDumpResponse (required);
   tuple:Tuple (required);
   rtx:bool;
   srtp_parameters:SrtpParameters;
