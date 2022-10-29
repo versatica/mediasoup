@@ -5,6 +5,7 @@
 
 * Transport: Remove duplicate call to method (PR #931).
 * RTCP: Adjust maximum compound packet size (PR #934).
+* Fix `bufferedAmount` type to be a number again (PR #936).
 
 
 ### 3.10.12
