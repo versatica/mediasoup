@@ -502,7 +502,7 @@ namespace RTC
 			if (!ctx)
 				continue;
 
-			ctx->AddStatsRecord(&binLog, rtpStream);
+			ctx->AddStatsRecord(&binLog, rtpStream, !IsPaused());
 		}
 	}
 

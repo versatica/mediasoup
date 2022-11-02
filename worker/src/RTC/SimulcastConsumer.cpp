@@ -214,7 +214,7 @@ namespace RTC
 		if (!ctx)
 			return;
 
-		ctx->AddStatsRecord(log, rtpStream);
+		ctx->AddStatsRecord(log, rtpStream, IsActive());
 	}
 
 	void SimulcastConsumer::HandleRequest(Channel::ChannelRequest* request)

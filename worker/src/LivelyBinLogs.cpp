@@ -127,7 +127,7 @@ void CallStatsRecord::resetSamples(uint64_t ts)
   set_start_tm(ts);
 }
 
-void CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
+bool CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
 {
   MS_ASSERT(filled() >= 0 && filled() < CALL_STATS_BIN_LOG_RECORDS_NUM, 
             "Cannot have %" PRIu32 " samples in record, quitting...", filled());
@@ -155,11 +155,33 @@ void CallStatsRecord::addSample(StreamStats& last, StreamStats& curr)
   s[idx].max_pts = curr.maxPacketTs;
 
   set_filled(idx + 1);
+
+  return s[idx].packets_count; // if non-zero, tell caller to reset idle stats flag
 }
+
+bool CallStatsRecord::isPktCountZero() const
+{
+  if (filled() < CALL_STATS_BIN_LOG_RECORDS_NUM)
+  { 
+    return false; // can be true only for full collection of samples
+  }
+
+  for (auto i = 0; i < filled(); i++)
+  {
+    CallStatsSample s = type ? record.c.samples[i] : record.p.samples[0];
+    if (s.packets_count)
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 
 /////////////////////////
 //
-void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream)
+void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream, bool isActive)
 {
   // Write data if record is full, then continue collecting samples
   if (record.filled() == CALL_STATS_BIN_LOG_RECORDS_NUM)
@@ -167,6 +189,19 @@ void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream
     if (nullptr != log)
     {
       log->OnLogWrite(this);
+    }
+
+    // Write a warning into ms.log when encountering series of zero incoming pkts in stats
+    if (record.isPktCountZero())
+    {
+      if (warnIdleStats) // did not warn yet, and all samples in a record have 0 incoming pkts
+      {
+        MS_WARN_TAG(rtp, "Zero pkts in stats record: callid=%s %s id=%s ssrc=%"PRIu32" start_tm=%"PRIu64" state=%s", record.call_id.c_str(), record.type ? "consumer": "producer", record.object_id.c_str(), record.ssrc(), record.start_tm(), isActive ? "active" : "inactive");
+        warnIdleStats = false; // only write one warning for this series of 0s; allow to write it again after number of pkts > 0
+      }
+    }
+    else {
+      warnIdleStats = true;
     }
 
     // Wipe the data off and set record's start timestamp into the last sample's
@@ -194,7 +229,8 @@ void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream
                     curr.packetsRetransmitted, curr.packetsRepaired, curr.nackCount,
                     curr.nackPacketCount, curr.kfCount, curr.rtt, curr.maxPacketTs);
 
-  record.addSample(last, curr);
+  warnIdleStats = record.addSample(last, curr); // if packets count > 0, then write a warning next time we see a record with empty stats
+
   this->last = this->curr;
 }
 

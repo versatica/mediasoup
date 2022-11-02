@@ -18,7 +18,7 @@
 //#include <regex.h>
 
 // These defines should match LivelyBinLogs.hpp values
-#define BINLOG_FORMAT_VERSION "e9735e"
+#define BINLOG_FORMAT_VERSION "c1b125"
 
 #define CALL_STATS_BIN_LOG_RECORDS_NUM 8 
 #define CALL_STATS_BIN_LOG_SAMPLING    2000
@@ -57,18 +57,18 @@ typedef struct {
 
 typedef struct {
   uint64_t       start_tm;                    // the record start timestamp in milliseconds
-  uint16_t       filled;                      // number of filled records in the array below
-  uint32_t       ssrc;                        // ssrc as in original RTP stream
-  uint8_t        payload;                     // payload id as in original RTP stream
-  uint8_t        content;                     // 'a' or 'v'
+  uint32_t        ssrc;                     // ssrc as in original RTP stream
+  uint16_t        filled;                   // number of filled records in the array below
+  uint8_t         payload;                             // payload id as in original RTP stream
+  uint8_t         content;                                 // 'a' or 'v'
   char           consumer_id [UUID_BYTE_LEN]; // 
   char           producer_id [UUID_BYTE_LEN]; // 
 } stats_consumer_record_header_t;
 
 typedef struct {
   uint64_t       start_tm;                    // the record start timestamp in milliseconds
-  uint16_t       filled;                      // number of filled records in the array below
   uint32_t       ssrc;                        // ssrc as in original RTP stream
+  uint16_t       filled;                      // number of filled records in the array below
   uint8_t        payload;                     // payload id as in original RTP stream
   uint8_t        content;                     // 'a' or 'v'
 } stats_producer_record_header_t;
@@ -88,9 +88,9 @@ static const char *header[][3] = {
   {"producer_id                         ", "Producer ID", "ID of a consumer's producer or empty field"}, 
   {"start_ts",  "Start Time",            "The statime of the epoch (HH:MM:SS,sss)"},
   {"type",     "Stream Type",           "0 - producer, 1 - consumer"},
-  {"ssrc",  "Ssrc",                    "16 bits of SSRC as in original RTP stream"},
   {"pay",  "Payload Id",                  "Payload Id as in original RTP stream"},
   {"content",  "Content",               "Content type: audio or video"},
+  {"ssrc",  "Ssrc",                    "32 bits of SSRC as in original RTP stream"},
   {"pkt ",  "Packets Count",         "Packets received or sent during epoch"},
   {"lost ", "Packets Lost",          "Packets lost during epoch"},
   {"disc ", "Packets Discarded",     "Packets discarded during epoch"},
@@ -503,13 +503,13 @@ load_test_pfiles(ms_binlog_config *conf)
 
 int
 time_alignment(
-    uint64_t record_tm,
-    uint16_t            sample_dur,
-    uint16_t            time_align,
+    uint64_t       record_tm,
+    uint16_t       sample_dur,
+    uint16_t       time_align,
 		stats_sample_t *sample_in,
-    uint64_t            *sample_ts,
+    uint64_t       *sample_ts,
 		stats_sample_t *sample_out,
-		int out_len)
+		int            out_len)
 {
 	stats_sample_t sample;
 	int                 i;
@@ -644,7 +644,7 @@ format_output(FILE* fd, ms_binlog_config *conf)
   uint64_t                       rec_start_tm;
   stats_sample_t                 *sample;
   char                           *samples_pos;
-  uint16_t                       ssrc;
+  uint32_t                       ssrc;
   uint8_t                        payload;
   char                           content;
 
@@ -695,14 +695,14 @@ format_output(FILE* fd, ms_binlog_config *conf)
         rec_c = (stats_consumer_record_header_t*)first_c;
         filled = rec_c->filled;
         rec_start_tm = rec_c->start_tm;
-        //printf("\nRecord payload=%d ssrc=%"PRIu16" content=%c filled=%d\n", rec_c->payload, rec_c->ssrc, rec_c->content, filled);
+        //printf("\nRecord sizeof()=%zu payload=%d ssrc=%"PRIu32" content=%c filled=%d\n", rec_c->payload, rec_c->ssrc, rec_c->content, filled);
       }
       else
       {
         rec_p = (stats_producer_record_header_t*)first_p;
         filled = rec_p->filled;
         rec_start_tm = rec_p->start_tm;
-        //printf("\nRecord payload=%d ssrc=%"PRIu16" content=%c filled=%d\n", rec_p->payload, rec_p->ssrc, rec_p->content, filled);
+        //printf("\nRecord sizeof()=%zu payload=%d ssrc=%"PRIu32" content=%c filled=%d\n", rec_p->payload, rec_p->ssrc, rec_p->content, filled);
       }
       if (filled > CALL_STATS_BIN_LOG_RECORDS_NUM)
         continue;
@@ -770,19 +770,19 @@ format_output(FILE* fd, ms_binlog_config *conf)
           fprintf(stdout, 
             "%s\t%s\t%s"
             "\t%"PRIu64
-            "\t%c\t%"PRIu16"\t%"PRIu8"\t%c\t%"PRIu16
+            "\t%c\t%"PRIu8"\t%c\t%"PRIu32"\t%"PRIu16
             "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
             "\t%"PRIu16"\t%"PRIu16"\t%"PRIu16
             "\t%"PRIu16"\t%"PRIu16"\t%"PRIu32"\t%"PRIu32"\n",
             call_id, object_id, producer_id,
             sample_ts[i],
-            conf->type, ssrc, payload, content, sample[i].packets_count,
+            conf->type, payload, content, ssrc, sample[i].packets_count,
             sample[i].packets_lost, sample[i].packets_discarded, sample[i].packets_retransmitted,
             sample[i].packets_repaired, sample[i].nack_count, sample[i].nack_pkt_count,
             sample[i].kf_count, sample[i].rtt, sample[i].max_pts, sample[i].bytes_count);
         }
       }
-      if(conf->type == 'c') // TODO: see that ptr does not go over a read buffer
+      if(conf->type == 'c')
       {
         first_c += CONSUMER_RECORD_LEN;
       }

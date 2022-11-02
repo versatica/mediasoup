@@ -99,7 +99,7 @@ namespace RTC
 			if (!ctx)
 				continue;
 
-			ctx->AddStatsRecord(log, rtpStream);
+			ctx->AddStatsRecord(log, rtpStream, IsActive());
 		}
 	}
 

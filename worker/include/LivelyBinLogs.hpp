@@ -6,7 +6,7 @@
 #include "RTC/RtpStream.hpp"
 
 #define BINLOG_MIN_TIMESPAN   20000
-#define BINLOG_FORMAT_VERSION "e9735e"
+#define BINLOG_FORMAT_VERSION "c1b125"
 
 // CALL_STATS_BIN_LOG_RECORDS_NUM * sizeof(CallStatsSample) should be
 // dividible by 16 b/c of alignment concerns;
@@ -56,8 +56,8 @@ struct CallStatsSample
 struct ConsumerRecord
 {
   uint64_t        start_tm {UINT64_UNSET};                 // the record start timestamp in milliseconds
-  uint16_t        filled {UINT16_UNSET};                   // number of filled records in the array below
   uint32_t        ssrc {UINT32_UNSET};                     // ssrc as in original RTP stream
+  uint16_t        filled {UINT16_UNSET};                   // number of filled records in the array below
   uint8_t         payload {0};                             // payload id as in original RTP stream
   uint8_t         content;                                 // 'a' or 'v'
   uint8_t         consumer_id [UUID_BYTE_LEN];             // 
@@ -68,8 +68,8 @@ struct ConsumerRecord
 struct ProducerRecord
 {
   uint64_t        start_tm {UINT64_UNSET};                 // the record start timestamp in milliseconds
-  uint16_t        filled {UINT16_UNSET};                   // number of filled records in the array below
   uint32_t        ssrc {UINT32_UNSET};                     // ssrc as in original RTP stream
+  uint16_t        filled {UINT16_UNSET};                   // number of filled records in the array below
   uint8_t         payload {0};                             // payload id as in original RTP stream
   uint8_t         content;                                 // 'a' or 'v'
   CallStatsSample samples[CALL_STATS_BIN_LOG_RECORDS_NUM]; // collection of data samples
@@ -87,6 +87,7 @@ class CallStatsRecord
     CallStatsRecord(uint64_t objType, uint16_t ssrc, uint8_t payload, char content, std::string callId, std::string objId, std::string producerId);
 
     bool fwriteRecord(std::FILE* fd);
+    
     uint32_t filled() const {return type ? record.c.filled : record.p.filled;}
     void set_filled(uint32_t n)
     {
@@ -95,6 +96,7 @@ class CallStatsRecord
       else
         record.p.filled = n; 
     }
+
     uint64_t start_tm() const {return type ? record.c.start_tm : record.p.start_tm;}
     void set_start_tm(uint64_t t)
     {
@@ -104,8 +106,12 @@ class CallStatsRecord
         record.p.start_tm = t;
     }
     
+    uint32_t ssrc() const {return type ? record.c.ssrc : record.p.ssrc;}
+
     void resetSamples(uint64_t nowMs);
-    void addSample(StreamStats& last, StreamStats& curr);    
+    bool addSample(StreamStats& last, StreamStats& curr);    
+
+    bool isPktCountZero() const;
 
   private:
     // Binary data record
@@ -145,9 +151,11 @@ class CallStatsRecord
     StreamStats last {}; // before very first sample is recorded, ts is unset, then it will always be set into some valid time
     StreamStats curr {};
 
+    bool warnIdleStats {true}; // if true we can write a warning once into ms.log if all samples in record have zero packets count
+
   public:
     CallStatsRecordCtx(uint64_t objType, uint32_t ssrc, uint8_t payload, char content, std::string callId, std::string objId, std::string producerId) : record(objType, ssrc, payload, content, callId, objId, producerId) {}
-    void AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream); // either recv or send stream
+    void AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream, bool isActive); // either recv or send stream
     uint64_t LastTs() const { return last.ts; }
   };
 

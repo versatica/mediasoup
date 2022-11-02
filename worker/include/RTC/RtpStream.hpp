@@ -23,7 +23,7 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class RtpStream
+	class  RtpStream
 	{
 	protected:
 		class Listener
