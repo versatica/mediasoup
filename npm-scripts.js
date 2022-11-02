@@ -98,8 +98,10 @@ switch (task)
 		const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
 
 		const options = '--gen-object-api --gen-all';
-		const command = `${flatc} --ts ${options} -o node/src/fbs `;
+		const out     = "node/src/fbs";
+		const command = `${flatc} --ts ${options} -o ${out} `;
 
+		execute(`rm -rf ${out}`);
 		execute(`for file in fbs/*; do ${command} \$\{file\}; done`);
 		execute('npm run typescript:build');
 
@@ -111,8 +113,10 @@ switch (task)
 		const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
 
 		const options = '--cpp-field-case-style lower --reflect-names --scoped-enums';
-		const command = `${flatc} --cpp ${options} -o worker/include/FBS/ `;
+		const out     = "worker/include/FBS/";
+		const command = `${flatc} --cpp ${options} -o ${out} `;
 
+		execute(`rm -rf ${out}`);
 		execute(`for file in fbs/*; do ${command} \$\{file\}; done`);
 		execute('npm run worker:build');
 

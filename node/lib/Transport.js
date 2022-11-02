@@ -17,7 +17,6 @@ const request_generated_1 = require("./fbs/request_generated");
 const response_generated_1 = require("./fbs/response_generated");
 const media_kind_1 = require("./fbs/fbs/rtp-parameters/media-kind");
 const consumer_generated_1 = require("./fbs/consumer_generated");
-const utils_1 = require("./fbs/utils");
 const FbsTransport = require("./fbs/transport_generated");
 const logger = new Logger_1.Logger('Transport');
 class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
@@ -620,7 +619,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         request_generated_1.ConsumeRequest.addProducerId(builder, producerIdOffset);
         request_generated_1.ConsumeRequest.addKind(builder, producer.kind === 'audio' ? media_kind_1.MediaKind.AUDIO : media_kind_1.MediaKind.VIDEO);
         request_generated_1.ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
-        request_generated_1.ConsumeRequest.addType(builder, (0, utils_1.getRtpParametersType)(producer.type, pipe));
+        request_generated_1.ConsumeRequest.addType(builder, utils.getRtpParametersType(producer.type, pipe));
         if (consumableRtpEncodingsOffset)
             request_generated_1.ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
         request_generated_1.ConsumeRequest.addPaused(builder, paused);
@@ -633,11 +632,11 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
 exports.Transport = Transport;
 function parseRtpListenerDump(binary) {
     // Retrieve ssrcTable.
-    const ssrcTable = (0, utils_1.parseUint32StringVector)(binary, 'ssrcTable');
+    const ssrcTable = utils.parseUint32StringVector(binary, 'ssrcTable');
     // Retrieve midTable.
-    const midTable = (0, utils_1.parseUint32StringVector)(binary, 'midTable');
+    const midTable = utils.parseUint32StringVector(binary, 'midTable');
     // Retrieve ridTable.
-    const ridTable = (0, utils_1.parseUint32StringVector)(binary, 'ridTable');
+    const ridTable = utils.parseUint32StringVector(binary, 'ridTable');
     return {
         ssrcTable,
         midTable,
@@ -647,19 +646,19 @@ function parseRtpListenerDump(binary) {
 exports.parseRtpListenerDump = parseRtpListenerDump;
 function parseBaseTransportDump(binary) {
     // Retrieve producerIds.
-    const producerIds = (0, utils_1.parseVector)(binary, 'producerIds');
+    const producerIds = utils.parseVector(binary, 'producerIds');
     // Retrieve consumerIds.
-    const consumerIds = (0, utils_1.parseVector)(binary, 'consumerIds');
+    const consumerIds = utils.parseVector(binary, 'consumerIds');
     // Retrieve map SSRC consumerId.
-    const mapSsrcConsumerId = (0, utils_1.parseUint32StringVector)(binary, 'mapSsrcConsumerId');
+    const mapSsrcConsumerId = utils.parseUint32StringVector(binary, 'mapSsrcConsumerId');
     // Retrieve map RTX SSRC consumerId.
-    const mapRtxSsrcConsumerId = (0, utils_1.parseUint32StringVector)(binary, 'mapRtxSsrcConsumerId');
+    const mapRtxSsrcConsumerId = utils.parseUint32StringVector(binary, 'mapRtxSsrcConsumerId');
     // Retrieve dataProducerIds.
-    const dataProducerIds = (0, utils_1.parseVector)(binary, 'dataProducerIds');
+    const dataProducerIds = utils.parseVector(binary, 'dataProducerIds');
     // Retrieve dataConsumerIds.
-    const dataConsumerIds = (0, utils_1.parseVector)(binary, 'dataConsumerIds');
+    const dataConsumerIds = utils.parseVector(binary, 'dataConsumerIds');
     // Retrieve recvRtpHeaderExtesions.
-    const recvRtpHeaderExtensions = (0, utils_1.parseStringUint8Vector)(binary, 'recvRtpHeaderExtensions');
+    const recvRtpHeaderExtensions = utils.parseStringUint8Vector(binary, 'recvRtpHeaderExtensions');
     // Retrieve RtpListener.
     const rtpListener = parseRtpListenerDump(binary.rtpListener());
     // Retrieve SctpParameters.

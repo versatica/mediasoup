@@ -172,11 +172,10 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Create a WebRtcTransport.
      */
     async createWebRtcTransport({ webRtcServer, listenIps, port, enableUdp = true, enableTcp = false, preferUdp = false, preferTcp = false, initialAvailableOutgoingBitrate = 600000, enableSctp = false, numSctpStreams = { OS: 1024, MIS: 1024 }, maxSctpMessageSize = 262144, sctpSendBufferSize = 262144, appData }) {
-        logger.error('createWebRtcTransport()');
-        console.error(`numSctpStreams: ${numSctpStreams}`);
         if (!webRtcServer && !Array.isArray(listenIps))
             throw new TypeError('missing webRtcServer and listenIps (one of them is mandatory)');
-        else if (numSctpStreams && (typeof numSctpStreams.OS !== 'number' || typeof numSctpStreams.MIS !== 'number'))
+        else if (numSctpStreams &&
+            (typeof numSctpStreams.OS !== 'number' || typeof numSctpStreams.MIS !== 'number'))
             throw new TypeError('if given, numSctpStreams must contain OS and MID');
         else if (appData && typeof appData !== 'object')
             throw new TypeError('if given, appData must be an object');
