@@ -12,7 +12,7 @@ import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { Body as RequestBody, Method, CreateRouterRequestT } from './fbs/request_generated';
 import { WorkerDumpResponse as FbsWorkerDumpResponse, ResourceUsageResponse as FbsResourceUsageResponse } from './fbs/response_generated';
 import { UpdateSettingsRequestT, CreateWebRtcServerRequestT, TransportProtocol } from './fbs/worker_generated';
-import { WebRtcServerListenInfoT } from './fbs/fbs/worker/web-rtc-server-listen-info';
+import { WebRtcServerListenInfoT } from './fbs/worker_generated';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 

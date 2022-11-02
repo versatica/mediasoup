@@ -15,7 +15,7 @@ const WebRtcServer_1 = require("./WebRtcServer");
 const request_generated_1 = require("./fbs/request_generated");
 const response_generated_1 = require("./fbs/response_generated");
 const worker_generated_1 = require("./fbs/worker_generated");
-const web_rtc_server_listen_info_1 = require("./fbs/fbs/worker/web-rtc-server-listen-info");
+const worker_generated_2 = require("./fbs/worker_generated");
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
@@ -323,7 +323,7 @@ class Worker extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const builder = this.#channel.bufferBuilder;
         const fbsListenInfos = [];
         for (const listenInfo of listenInfos) {
-            fbsListenInfos.push(new web_rtc_server_listen_info_1.WebRtcServerListenInfoT(listenInfo.protocol === 'udp' ? worker_generated_1.TransportProtocol.UDP : worker_generated_1.TransportProtocol.TCP, listenInfo.ip, listenInfo.announcedIp, listenInfo.port));
+            fbsListenInfos.push(new worker_generated_2.WebRtcServerListenInfoT(listenInfo.protocol === 'udp' ? worker_generated_1.TransportProtocol.UDP : worker_generated_1.TransportProtocol.TCP, listenInfo.ip, listenInfo.announcedIp, listenInfo.port));
         }
         const webRtcServerId = (0, uuid_1.v4)();
         const createWebRtcServerRequestT = new worker_generated_1.CreateWebRtcServerRequestT(webRtcServerId, fbsListenInfos);
