@@ -60,7 +60,7 @@ beforeEach(async () =>
 
 afterEach(() => transport.close());
 
-test.only('router.createWebRtcTransport() succeeds', async () =>
+test('router.createWebRtcTransport() succeeds', async () =>
 {
 	await expect(router.dump())
 		.resolves
@@ -163,7 +163,7 @@ test.only('router.createWebRtcTransport() succeeds', async () =>
 	expect(data1.dtlsState).toBe(transport1.dtlsState);
 	expect(data1.sctpParameters).toEqual(transport1.sctpParameters);
 	expect(data1.sctpState).toBe(transport1.sctpState);
-	expect(data1.recvRtpHeaderExtensions).toBeType('object');
+	expect(data1.recvRtpHeaderExtensions).toBeType('array');
 	expect(data1.rtpListener).toBeType('object');
 
 	transport1.close();

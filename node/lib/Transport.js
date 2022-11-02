@@ -633,11 +633,11 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
 exports.Transport = Transport;
 function parseRtpListenerDump(binary) {
     // Retrieve ssrcTable.
-    const ssrcTable = (0, utils_1.parseMapUint32String)(binary, 'ssrcTable');
+    const ssrcTable = (0, utils_1.parseUint32StringVector)(binary, 'ssrcTable');
     // Retrieve midTable.
-    const midTable = (0, utils_1.parseMapUint32String)(binary, 'midTable');
+    const midTable = (0, utils_1.parseUint32StringVector)(binary, 'midTable');
     // Retrieve ridTable.
-    const ridTable = (0, utils_1.parseMapUint32String)(binary, 'ridTable');
+    const ridTable = (0, utils_1.parseUint32StringVector)(binary, 'ridTable');
     return {
         ssrcTable,
         midTable,
@@ -651,15 +651,15 @@ function parseBaseTransportDump(binary) {
     // Retrieve consumerIds.
     const consumerIds = (0, utils_1.parseVector)(binary, 'consumerIds');
     // Retrieve map SSRC consumerId.
-    const mapSsrcConsumerId = (0, utils_1.parseMapUint32String)(binary, 'mapSsrcConsumerId');
+    const mapSsrcConsumerId = (0, utils_1.parseUint32StringVector)(binary, 'mapSsrcConsumerId');
     // Retrieve map RTX SSRC consumerId.
-    const mapRtxSsrcConsumerId = (0, utils_1.parseMapUint32String)(binary, 'mapRtxSsrcConsumerId');
+    const mapRtxSsrcConsumerId = (0, utils_1.parseUint32StringVector)(binary, 'mapRtxSsrcConsumerId');
     // Retrieve dataProducerIds.
     const dataProducerIds = (0, utils_1.parseVector)(binary, 'dataProducerIds');
     // Retrieve dataConsumerIds.
     const dataConsumerIds = (0, utils_1.parseVector)(binary, 'dataConsumerIds');
     // Retrieve recvRtpHeaderExtesions.
-    const recvRtpHeaderExtensions = (0, utils_1.parseMapStringUint8)(binary, 'recvRtpHeaderExtensions');
+    const recvRtpHeaderExtensions = (0, utils_1.parseStringUint8Vector)(binary, 'recvRtpHeaderExtensions');
     // Retrieve RtpListener.
     const rtpListener = parseRtpListenerDump(binary.rtpListener());
     // Retrieve SctpParameters.

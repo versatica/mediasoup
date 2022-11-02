@@ -28,7 +28,7 @@ import { Body as RequestBody, ConsumeRequest, Method } from './fbs/request_gener
 import { ConsumeResponse } from './fbs/response_generated';
 import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
 import { ConsumerLayers as FbsConsumerLayers } from './fbs/consumer_generated';
-import { getRtpParametersType, parseMapStringUint8, parseMapUint32String, parseVector } from './fbs/utils';
+import { getRtpParametersType, parseStringUint8Vector, parseUint32StringVector, parseVector } from './fbs/utils';
 import * as FbsTransport from './fbs/transport_generated';
 
 export interface TransportListenIp
@@ -1098,9 +1098,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 }
 
 type RtpListenerDump = {
-  ssrcTable : Record<number, string>;
-  midTable : Record<number, string>;
-  ridTable : Record<number, string>;
+	ssrcTable : {key: number; value: string}[];
+	midTable : {key: number; value: string}[];
+	ridTable : {key: number; value: string}[];
 };
 
 export type BaseTransportDump = {
@@ -1108,9 +1108,9 @@ export type BaseTransportDump = {
 	direct : boolean;
 	producerIds : string[];
 	consumerIds : string[];
-	mapSsrcConsumerId : Record<number, string>;
-	mapRtxSsrcConsumerId : Record<number, string>;
-	recvRtpHeaderExtensions : Record<string, number>;
+	mapSsrcConsumerId : { key: number; value: string }[];
+	mapRtxSsrcConsumerId : { key: number; value: string }[];
+	recvRtpHeaderExtensions : { key: string; value: number }[];
 	rtpListener: RtpListenerDump;
 	dataProducerIds : string[];
 	dataConsumerIds : string[];
@@ -1121,11 +1121,11 @@ export type BaseTransportDump = {
 export function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump
 {
 	// Retrieve ssrcTable.
-	const ssrcTable = parseMapUint32String(binary, 'ssrcTable');
+	const ssrcTable = parseUint32StringVector(binary, 'ssrcTable');
 	// Retrieve midTable.
-	const midTable = parseMapUint32String(binary, 'midTable');
+	const midTable = parseUint32StringVector(binary, 'midTable');
 	// Retrieve ridTable.
-	const ridTable = parseMapUint32String(binary, 'ridTable');
+	const ridTable = parseUint32StringVector(binary, 'ridTable');
 
 	return {
 		ssrcTable,
@@ -1143,15 +1143,15 @@ export function parseBaseTransportDump(
 	// Retrieve consumerIds.
 	const consumerIds = parseVector<string>(binary, 'consumerIds');
 	// Retrieve map SSRC consumerId.
-	const mapSsrcConsumerId = parseMapUint32String(binary, 'mapSsrcConsumerId');
+	const mapSsrcConsumerId = parseUint32StringVector(binary, 'mapSsrcConsumerId');
 	// Retrieve map RTX SSRC consumerId.
-	const mapRtxSsrcConsumerId = parseMapUint32String(binary, 'mapRtxSsrcConsumerId');
+	const mapRtxSsrcConsumerId = parseUint32StringVector(binary, 'mapRtxSsrcConsumerId');
 	// Retrieve dataProducerIds.
 	const dataProducerIds = parseVector<string>(binary, 'dataProducerIds');
 	// Retrieve dataConsumerIds.
 	const dataConsumerIds = parseVector<string>(binary, 'dataConsumerIds');
 	// Retrieve recvRtpHeaderExtesions.
-	const recvRtpHeaderExtensions = parseMapStringUint8(binary, 'recvRtpHeaderExtensions');
+	const recvRtpHeaderExtensions = parseStringUint8Vector(binary, 'recvRtpHeaderExtensions');
 	// Retrieve RtpListener.
 	const rtpListener = parseRtpListenerDump(binary.rtpListener()!);
 

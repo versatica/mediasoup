@@ -6,11 +6,17 @@ export declare function getRtpParametersType(producerType: ProducerType, pipe: b
  */
 export declare function parseVector<Type>(binary: any, methodName: string): Type[];
 /**
- * Parse an array of StringUint8 into the corresponding object.
+ * Parse an vector of StringUint8 into the corresponding array.
  */
-export declare function parseMapStringUint8(binary: any, methodName: string): Record<string, number>;
+export declare function parseStringUint8Vector(binary: any, methodName: string): {
+    key: string;
+    value: number;
+}[];
 /**
- * Parse an array of Uint32String into the corresponding object.
+ * Parse a vector of Uint32String into the corresponding array.
  */
-export declare function parseMapUint32String(binary: any, methodName: string): Record<number, string>;
+export declare function parseUint32StringVector(binary: any, methodName: string): {
+    key: number;
+    value: string;
+}[];
 //# sourceMappingURL=utils.d.ts.map

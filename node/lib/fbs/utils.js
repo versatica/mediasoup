@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseMapUint32String = exports.parseMapStringUint8 = exports.parseVector = exports.getRtpParametersType = void 0;
+exports.parseUint32StringVector = exports.parseStringUint8Vector = exports.parseVector = exports.getRtpParametersType = void 0;
 const type_1 = require("./fbs/rtp-parameters/type");
 function getRtpParametersType(producerType, pipe) {
     if (pipe) {
@@ -29,26 +29,26 @@ function parseVector(binary, methodName) {
 }
 exports.parseVector = parseVector;
 /**
- * Parse an array of StringUint8 into the corresponding object.
+ * Parse an vector of StringUint8 into the corresponding array.
  */
-function parseMapStringUint8(binary, methodName) {
-    const map = {};
+function parseStringUint8Vector(binary, methodName) {
+    const array = [];
     for (let i = 0; i < binary[`${methodName}Length`](); ++i) {
         const kv = binary[methodName](i);
-        map[kv.key()] = kv.value();
+        array.push({ key: kv.key(), value: kv.value() });
     }
-    return map;
+    return array;
 }
-exports.parseMapStringUint8 = parseMapStringUint8;
+exports.parseStringUint8Vector = parseStringUint8Vector;
 /**
- * Parse an array of Uint32String into the corresponding object.
+ * Parse a vector of Uint32String into the corresponding array.
  */
-function parseMapUint32String(binary, methodName) {
-    const map = {};
+function parseUint32StringVector(binary, methodName) {
+    const array = [];
     for (let i = 0; i < binary[`${methodName}Length`](); ++i) {
         const kv = binary[methodName](i);
-        map[kv.key()] = kv.value();
+        array.push({ key: kv.key(), value: kv.value() });
     }
-    return map;
+    return array;
 }
-exports.parseMapUint32String = parseMapUint32String;
+exports.parseUint32StringVector = parseUint32StringVector;

@@ -40,39 +40,39 @@ export function parseVector<Type>(binary: any, methodName: string): Type[]
 }
 
 /**
- * Parse an array of StringUint8 into the corresponding object.
+ * Parse an vector of StringUint8 into the corresponding array.
  */
-export function parseMapStringUint8(
+export function parseStringUint8Vector(
 	binary: any, methodName: string
-): Record<string, number>
+): {key: string; value: number}[]
 {
-	const map: Record<string, number> = {};
+	const array: {key: string; value: number}[] = [];
 
 	for (let i=0; i<binary[`${methodName}Length`](); ++i)
 	{
 		const kv = binary[methodName](i)!;
 
-		map[kv.key()] = kv.value()!;
+		array.push({ key: kv.key(), value: kv.value() });
 	}
 
-	return map;
+	return array;
 }
 
 /**
- * Parse an array of Uint32String into the corresponding object.
+ * Parse a vector of Uint32String into the corresponding array.
  */
-export function parseMapUint32String(
+export function parseUint32StringVector(
 	binary: any, methodName: string
-): Record<number, string>
+): { key: number; value: string }[]
 {
-	const map: Record<number, string> = {};
+	const array: { key: number; value: string }[] = [];
 
 	for (let i=0; i<binary[`${methodName}Length`](); ++i)
 	{
 		const kv = binary[methodName](i)!;
 
-		map[kv.key()] = kv.value()!;
+		array.push({ key: kv.key(), value: kv.value() });
 	}
 
-	return map;
+	return array;
 }

@@ -368,8 +368,6 @@ export type RtcpParameters =
 	mux?: boolean;
 };
 
-
-// TODO: Move to RtpParameters.ts.
 export function serializeRtpParameters(
 	builder: flatbuffers.Builder, rtpParameters: RtpParameters
 ): number

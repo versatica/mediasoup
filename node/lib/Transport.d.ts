@@ -205,18 +205,36 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
     private createConsumeRequest;
 }
 declare type RtpListenerDump = {
-    ssrcTable: Record<number, string>;
-    midTable: Record<number, string>;
-    ridTable: Record<number, string>;
+    ssrcTable: {
+        key: number;
+        value: string;
+    }[];
+    midTable: {
+        key: number;
+        value: string;
+    }[];
+    ridTable: {
+        key: number;
+        value: string;
+    }[];
 };
 export declare type BaseTransportDump = {
     id: string;
     direct: boolean;
     producerIds: string[];
     consumerIds: string[];
-    mapSsrcConsumerId: Record<number, string>;
-    mapRtxSsrcConsumerId: Record<number, string>;
-    recvRtpHeaderExtensions: Record<string, number>;
+    mapSsrcConsumerId: {
+        key: number;
+        value: string;
+    }[];
+    mapRtxSsrcConsumerId: {
+        key: number;
+        value: string;
+    }[];
+    recvRtpHeaderExtensions: {
+        key: string;
+        value: number;
+    }[];
     rtpListener: RtpListenerDump;
     dataProducerIds: string[];
     dataConsumerIds: string[];
