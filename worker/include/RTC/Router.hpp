@@ -44,7 +44,8 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const;
-		flatbuffers::Offset<FBS::Router::RouterDumpResponse> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
+		flatbuffers::Offset<FBS::Router::RouterDumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:

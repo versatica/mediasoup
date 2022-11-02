@@ -627,7 +627,7 @@ namespace RTC
 
 			case FBS::Request::Method::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
 			{
-				auto body = request->_data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
+				auto body        = request->_data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -665,7 +665,7 @@ namespace RTC
 
 			case FBS::Request::Method::ROUTER_CREATE_PLAIN_TRANSPORT:
 			{
-				auto body = request->_data->body_as<FBS::Router::CreatePlainTransportRequest>();
+				auto body        = request->_data->body_as<FBS::Router::CreatePlainTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.

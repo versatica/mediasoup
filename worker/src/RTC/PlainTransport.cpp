@@ -205,9 +205,9 @@ namespace RTC
 	}
 
 	PlainTransport::PlainTransport(
-			const std::string& id,
-			RTC::Transport::Listener* listener,
-			const FBS::PlainTransport::PlainTransportOptions* options)
+	  const std::string& id,
+	  RTC::Transport::Listener* listener,
+	  const FBS::PlainTransport::PlainTransportOptions* options)
 	  : RTC::Transport::Transport(id, listener, options->base())
 	{
 		MS_TRACE();
@@ -224,12 +224,12 @@ namespace RTC
 
 		if (options->enableSrtp())
 		{
-			if (!flatbuffers::IsFieldPresent(options, FBS::PlainTransport::PlainTransportOptions::VT_SRTPCRYPTOSUITE))
+			if (!flatbuffers::IsFieldPresent(
+			      options, FBS::PlainTransport::PlainTransportOptions::VT_SRTPCRYPTOSUITE))
 				MS_THROW_TYPE_ERROR("missing srtpCryptoSuite)");
 
 			// Ensure it's a crypto suite supported by us.
-			auto it =
-			  PlainTransport::string2SrtpCryptoSuite.find(options->srtpCryptoSuite()->str());
+			auto it = PlainTransport::string2SrtpCryptoSuite.find(options->srtpCryptoSuite()->str());
 
 			if (it == PlainTransport::string2SrtpCryptoSuite.end())
 				MS_THROW_TYPE_ERROR("invalid/unsupported srtpCryptoSuite");
