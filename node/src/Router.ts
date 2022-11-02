@@ -392,10 +392,14 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		}: WebRtcTransportOptions
 	): Promise<WebRtcTransport>
 	{
-		logger.debug('createWebRtcTransport()');
-
 		if (!webRtcServer && !Array.isArray(listenIps))
 			throw new TypeError('missing webRtcServer and listenIps (one of them is mandatory)');
+		else if (
+			numSctpStreams &&
+			(typeof numSctpStreams.OS !== 'number' || typeof numSctpStreams.MIS !== 'number')
+		)
+			throw new TypeError('if given, numSctpStreams must contain OS and MID');
+
 		else if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 

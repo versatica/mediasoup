@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.serializeRtpEncodingParameters = exports.serializeRtpParameters = void 0;
 const rtpParameters_generated_1 = require("./fbs/rtpParameters_generated");
-// TODO: Move to RtpParameters.ts.
 function serializeRtpParameters(builder, rtpParameters) {
     const codecs = [];
     const headerExtensions = [];

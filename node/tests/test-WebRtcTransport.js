@@ -174,7 +174,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 		.toBeType('object');
 }, 2000);
 
-test('router.createWebRtcTransport() with wrong arguments rejects with TypeError', async () =>
+test.only('router.createWebRtcTransport() with wrong arguments rejects with TypeError', async () =>
 {
 	await expect(router.createWebRtcTransport({}))
 		.rejects
