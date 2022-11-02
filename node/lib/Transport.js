@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseBaseTransportDump = exports.parseRtpListenerDump = exports.Transport = void 0;
+exports.parseBaseTransportDump = exports.parseSctpListenerDump = exports.parseRtpListenerDump = exports.Transport = void 0;
 const uuid_1 = require("uuid");
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
@@ -644,6 +644,14 @@ function parseRtpListenerDump(binary) {
     };
 }
 exports.parseRtpListenerDump = parseRtpListenerDump;
+function parseSctpListenerDump(binary) {
+    // Retrieve streamIdTable.
+    const streamIdTable = utils.parseUint32StringVector(binary, 'streamIdTable');
+    return {
+        streamIdTable
+    };
+}
+exports.parseSctpListenerDump = parseSctpListenerDump;
 function parseBaseTransportDump(binary) {
     // Retrieve producerIds.
     const producerIds = utils.parseVector(binary, 'producerIds');
@@ -667,6 +675,12 @@ function parseBaseTransportDump(binary) {
     if (fbsSctpParameters) {
         sctpParameters = (0, SctpParameters_1.parseSctpParametersDump)(fbsSctpParameters);
     }
+    // Retrieve sctpState.
+    const sctpState = binary.sctpState() === '' ? undefined : binary.sctpState();
+    // Retrive sctpListener.
+    const sctpListener = binary.sctpListener() ?
+        parseSctpListenerDump(binary.sctpListener()) :
+        undefined;
     // Retrieve traceEventTypes.
     const traceEventTypes = utils.parseVector(binary, 'traceEventTypes');
     return {
@@ -679,11 +693,11 @@ function parseBaseTransportDump(binary) {
         dataProducerIds: dataProducerIds,
         dataConsumerIds: dataConsumerIds,
         recvRtpHeaderExtensions: recvRtpHeaderExtensions,
-        // TODO: maxMessageSize.
         rtpListener: rtpListener,
+        maxMessageSize: binary.maxMessageSize(),
         sctpParameters: sctpParameters,
-        sctpState: binary.stcpState(),
-        // TODO: sctpListener.
+        sctpState: sctpState,
+        sctpListener: sctpListener,
         traceEventTypes: traceEventTypes
     };
 }

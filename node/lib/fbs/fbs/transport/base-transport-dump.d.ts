@@ -34,9 +34,9 @@ export declare class BaseTransportDump {
     rtpListener(obj?: RtpListener): RtpListener | null;
     maxMessageSize(): number;
     sctpParameters(obj?: SctpParameters): SctpParameters | null;
-    stcpState(): string | null;
-    stcpState(optionalEncoding: flatbuffers.Encoding): string | Uint8Array | null;
-    stcpListener(obj?: SctpListener): SctpListener | null;
+    sctpState(): string | null;
+    sctpState(optionalEncoding: flatbuffers.Encoding): string | Uint8Array | null;
+    sctpListener(obj?: SctpListener): SctpListener | null;
     traceEventTypes(index: number): string;
     traceEventTypes(index: number, optionalEncoding: flatbuffers.Encoding): string | Uint8Array;
     traceEventTypesLength(): number;
@@ -67,8 +67,8 @@ export declare class BaseTransportDump {
     static addRtpListener(builder: flatbuffers.Builder, rtpListenerOffset: flatbuffers.Offset): void;
     static addMaxMessageSize(builder: flatbuffers.Builder, maxMessageSize: number): void;
     static addSctpParameters(builder: flatbuffers.Builder, sctpParametersOffset: flatbuffers.Offset): void;
-    static addStcpState(builder: flatbuffers.Builder, stcpStateOffset: flatbuffers.Offset): void;
-    static addStcpListener(builder: flatbuffers.Builder, stcpListenerOffset: flatbuffers.Offset): void;
+    static addSctpState(builder: flatbuffers.Builder, sctpStateOffset: flatbuffers.Offset): void;
+    static addSctpListener(builder: flatbuffers.Builder, sctpListenerOffset: flatbuffers.Offset): void;
     static addTraceEventTypes(builder: flatbuffers.Builder, traceEventTypesOffset: flatbuffers.Offset): void;
     static createTraceEventTypesVector(builder: flatbuffers.Builder, data: flatbuffers.Offset[]): flatbuffers.Offset;
     static startTraceEventTypesVector(builder: flatbuffers.Builder, numElems: number): void;
@@ -89,10 +89,10 @@ export declare class BaseTransportDumpT {
     rtpListener: RtpListenerT | null;
     maxMessageSize: number;
     sctpParameters: SctpParametersT | null;
-    stcpState: string | Uint8Array | null;
-    stcpListener: SctpListenerT | null;
+    sctpState: string | Uint8Array | null;
+    sctpListener: SctpListenerT | null;
     traceEventTypes: (string)[];
-    constructor(id?: string | Uint8Array | null, direct?: boolean, producerIds?: (string)[], consumerIds?: (string)[], mapSsrcConsumerId?: (Uint32StringT)[], mapRtxSsrcConsumerId?: (Uint32StringT)[], dataProducerIds?: (string)[], dataConsumerIds?: (string)[], recvRtpHeaderExtensions?: (StringUint8T)[], rtpListener?: RtpListenerT | null, maxMessageSize?: number, sctpParameters?: SctpParametersT | null, stcpState?: string | Uint8Array | null, stcpListener?: SctpListenerT | null, traceEventTypes?: (string)[]);
+    constructor(id?: string | Uint8Array | null, direct?: boolean, producerIds?: (string)[], consumerIds?: (string)[], mapSsrcConsumerId?: (Uint32StringT)[], mapRtxSsrcConsumerId?: (Uint32StringT)[], dataProducerIds?: (string)[], dataConsumerIds?: (string)[], recvRtpHeaderExtensions?: (StringUint8T)[], rtpListener?: RtpListenerT | null, maxMessageSize?: number, sctpParameters?: SctpParametersT | null, sctpState?: string | Uint8Array | null, sctpListener?: SctpListenerT | null, traceEventTypes?: (string)[]);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=base-transport-dump.d.ts.map

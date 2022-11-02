@@ -366,7 +366,7 @@ test('webRtcTransport.restartIce() succeeds', async () =>
 	expect(transport.iceParameters.password).not.toBe(previousIcePassword);
 }, 2000);
 
-test.only('transport.enableTraceEvent() succeed', async () =>
+test('transport.enableTraceEvent() succeed', async () =>
 {
 	await transport.enableTraceEvent([ 'foo', 'probation' ]);
 	await expect(transport.dump())

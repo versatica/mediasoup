@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseUint32StringVector = exports.parseStringUint8Vector = exports.parseVector = exports.getRtpParametersType = exports.generateRandomNumber = exports.clone = void 0;
+exports.parseUint32StringVector = exports.parseUint16StringVector = exports.parseStringUint8Vector = exports.parseVector = exports.getRtpParametersType = exports.generateRandomNumber = exports.clone = void 0;
 const crypto_1 = require("crypto");
 const type_1 = require("./fbs/fbs/rtp-parameters/type");
 /**
@@ -60,6 +60,18 @@ function parseStringUint8Vector(binary, methodName) {
     return array;
 }
 exports.parseStringUint8Vector = parseStringUint8Vector;
+/**
+ * Parse flatbuffers of Uint16String into the corresponding array.
+ */
+function parseUint16StringVector(binary, methodName) {
+    const array = [];
+    for (let i = 0; i < binary[`${methodName}Length`](); ++i) {
+        const kv = binary[methodName](i);
+        array.push({ key: kv.key(), value: kv.value() });
+    }
+    return array;
+}
+exports.parseUint16StringVector = parseUint16StringVector;
 /**
  * Parse flatbuffers of Uint32String into the corresponding array.
  */

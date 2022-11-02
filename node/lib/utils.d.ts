@@ -30,6 +30,13 @@ export declare function parseStringUint8Vector(binary: any, methodName: string):
     value: number;
 }[];
 /**
+ * Parse flatbuffers of Uint16String into the corresponding array.
+ */
+export declare function parseUint16StringVector(binary: any, methodName: string): {
+    key: number;
+    value: string;
+}[];
+/**
  * Parse flatbuffers of Uint32String into the corresponding array.
  */
 export declare function parseUint32StringVector(binary: any, methodName: string): {

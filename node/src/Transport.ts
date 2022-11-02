@@ -1102,6 +1102,10 @@ type RtpListenerDump = {
 	ridTable : {key: number; value: string}[];
 };
 
+type SctpListenerDump = {
+	streamIdTable : {key: number; value: string}[];
+};
+
 export type BaseTransportDump = {
 	id : string;
 	direct : boolean;
@@ -1111,10 +1115,12 @@ export type BaseTransportDump = {
 	mapRtxSsrcConsumerId : { key: number; value: string }[];
 	recvRtpHeaderExtensions : { key: string; value: number }[];
 	rtpListener: RtpListenerDump;
+	maxMessageSize: number;
 	dataProducerIds : string[];
 	dataConsumerIds : string[];
 	sctpParameters? : SctpParameters;
 	sctpState? : SctpState;
+	sctpListener?: SctpListenerDump;
 	traceEventTypes? : string[];
 };
 
@@ -1131,6 +1137,16 @@ export function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListe
 		ssrcTable,
 		midTable,
 		ridTable
+	};
+}
+
+export function parseSctpListenerDump(binary: FbsTransport.SctpListener): SctpListenerDump
+{
+	// Retrieve streamIdTable.
+	const streamIdTable = utils.parseUint32StringVector(binary, 'streamIdTable');
+
+	return {
+		streamIdTable
 	};
 }
 
@@ -1164,6 +1180,14 @@ export function parseBaseTransportDump(
 		sctpParameters = parseSctpParametersDump(fbsSctpParameters);
 	}
 
+	// Retrieve sctpState.
+	const sctpState = binary.sctpState() === '' ? undefined : binary.sctpState() as SctpState;
+
+	// Retrive sctpListener.
+	const sctpListener = binary.sctpListener() ?
+		parseSctpListenerDump(binary.sctpListener()!) :
+		undefined;
+
 	// Retrieve traceEventTypes.
 	const traceEventTypes = utils.parseVector<string>(binary, 'traceEventTypes');
 
@@ -1177,11 +1201,11 @@ export function parseBaseTransportDump(
 		dataProducerIds         : dataProducerIds,
 		dataConsumerIds         : dataConsumerIds,
 		recvRtpHeaderExtensions : recvRtpHeaderExtensions,
-		// TODO: maxMessageSize.
 		rtpListener             : rtpListener,
+		maxMessageSize          : binary.maxMessageSize(),
 		sctpParameters          : sctpParameters,
-		sctpState               : binary.stcpState() as SctpState,
-		// TODO: sctpListener.
+		sctpState               : sctpState,
+		sctpListener            : sctpListener,
 		traceEventTypes         : traceEventTypes
 	};
 }

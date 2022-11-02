@@ -218,6 +218,12 @@ declare type RtpListenerDump = {
         value: string;
     }[];
 };
+declare type SctpListenerDump = {
+    streamIdTable: {
+        key: number;
+        value: string;
+    }[];
+};
 export declare type BaseTransportDump = {
     id: string;
     direct: boolean;
@@ -236,13 +242,16 @@ export declare type BaseTransportDump = {
         value: number;
     }[];
     rtpListener: RtpListenerDump;
+    maxMessageSize: number;
     dataProducerIds: string[];
     dataConsumerIds: string[];
     sctpParameters?: SctpParameters;
     sctpState?: SctpState;
+    sctpListener?: SctpListenerDump;
     traceEventTypes?: string[];
 };
 export declare function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump;
+export declare function parseSctpListenerDump(binary: FbsTransport.SctpListener): SctpListenerDump;
 export declare function parseBaseTransportDump(binary: FbsTransport.BaseTransportDump): BaseTransportDump;
 export {};
 //# sourceMappingURL=Transport.d.ts.map

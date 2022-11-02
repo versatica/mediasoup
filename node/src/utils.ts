@@ -90,6 +90,25 @@ export function parseStringUint8Vector(
 }
 
 /**
+ * Parse flatbuffers of Uint16String into the corresponding array.
+ */
+export function parseUint16StringVector(
+	binary: any, methodName: string
+): { key: number; value: string }[]
+{
+	const array: { key: number; value: string }[] = [];
+
+	for (let i=0; i<binary[`${methodName}Length`](); ++i)
+	{
+		const kv = binary[methodName](i)!;
+
+		array.push({ key: kv.key(), value: kv.value() });
+	}
+
+	return array;
+}
+
+/**
  * Parse flatbuffers of Uint32String into the corresponding array.
  */
 export function parseUint32StringVector(

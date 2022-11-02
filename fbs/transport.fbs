@@ -56,19 +56,19 @@ table TransportDumpResponse {
 table BaseTransportDump {
   id:string (required);
   direct:bool=false;
-  producer_ids:[string];
-  consumer_ids:[string];
-  map_ssrc_consumer_id:[FBS.Common.Uint32String];
-  map_rtx_ssrc_consumer_id:[FBS.Common.Uint32String];
-  data_producer_ids:[string];
-  data_consumer_ids:[string];
-  recv_rtp_header_extensions:[FBS.Common.StringUint8];
-  rtp_listener:RtpListener;
+  producer_ids:[string] (required);
+  consumer_ids:[string] (required);
+  map_ssrc_consumer_id:[FBS.Common.Uint32String] (required);
+  map_rtx_ssrc_consumer_id:[FBS.Common.Uint32String] (required);
+  data_producer_ids:[string] (required);
+  data_consumer_ids:[string] (required);
+  recv_rtp_header_extensions:[FBS.Common.StringUint8] (required);
+  rtp_listener:RtpListener (required);
   max_message_size:uint32;
   sctp_parameters:FBS.SctpParameters.SctpParameters;
-  stcp_state:string;
-  stcp_listener: SctpListener;
-  trace_event_types:[string];
+  sctp_state:string;
+  sctp_listener: SctpListener;
+  trace_event_types:[string] (required);
 }
 
 /* WebRtcTransport */

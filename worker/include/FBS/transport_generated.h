@@ -769,8 +769,8 @@ struct BaseTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_RTPLISTENER = 22,
     VT_MAXMESSAGESIZE = 24,
     VT_SCTPPARAMETERS = 26,
-    VT_STCPSTATE = 28,
-    VT_STCPLISTENER = 30,
+    VT_SCTPSTATE = 28,
+    VT_SCTPLISTENER = 30,
     VT_TRACEEVENTTYPES = 32
   };
   const flatbuffers::String *id() const {
@@ -809,11 +809,11 @@ struct BaseTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::SctpParameters::SctpParameters *sctpParameters() const {
     return GetPointer<const FBS::SctpParameters::SctpParameters *>(VT_SCTPPARAMETERS);
   }
-  const flatbuffers::String *stcpState() const {
-    return GetPointer<const flatbuffers::String *>(VT_STCPSTATE);
+  const flatbuffers::String *sctpState() const {
+    return GetPointer<const flatbuffers::String *>(VT_SCTPSTATE);
   }
-  const FBS::Transport::SctpListener *stcpListener() const {
-    return GetPointer<const FBS::Transport::SctpListener *>(VT_STCPLISTENER);
+  const FBS::Transport::SctpListener *sctpListener() const {
+    return GetPointer<const FBS::Transport::SctpListener *>(VT_SCTPLISTENER);
   }
   const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *traceEventTypes() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_TRACEEVENTTYPES);
@@ -823,37 +823,37 @@ struct BaseTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffsetRequired(verifier, VT_ID) &&
            verifier.VerifyString(id()) &&
            VerifyField<uint8_t>(verifier, VT_DIRECT, 1) &&
-           VerifyOffset(verifier, VT_PRODUCERIDS) &&
+           VerifyOffsetRequired(verifier, VT_PRODUCERIDS) &&
            verifier.VerifyVector(producerIds()) &&
            verifier.VerifyVectorOfStrings(producerIds()) &&
-           VerifyOffset(verifier, VT_CONSUMERIDS) &&
+           VerifyOffsetRequired(verifier, VT_CONSUMERIDS) &&
            verifier.VerifyVector(consumerIds()) &&
            verifier.VerifyVectorOfStrings(consumerIds()) &&
-           VerifyOffset(verifier, VT_MAPSSRCCONSUMERID) &&
+           VerifyOffsetRequired(verifier, VT_MAPSSRCCONSUMERID) &&
            verifier.VerifyVector(mapSsrcConsumerId()) &&
            verifier.VerifyVectorOfTables(mapSsrcConsumerId()) &&
-           VerifyOffset(verifier, VT_MAPRTXSSRCCONSUMERID) &&
+           VerifyOffsetRequired(verifier, VT_MAPRTXSSRCCONSUMERID) &&
            verifier.VerifyVector(mapRtxSsrcConsumerId()) &&
            verifier.VerifyVectorOfTables(mapRtxSsrcConsumerId()) &&
-           VerifyOffset(verifier, VT_DATAPRODUCERIDS) &&
+           VerifyOffsetRequired(verifier, VT_DATAPRODUCERIDS) &&
            verifier.VerifyVector(dataProducerIds()) &&
            verifier.VerifyVectorOfStrings(dataProducerIds()) &&
-           VerifyOffset(verifier, VT_DATACONSUMERIDS) &&
+           VerifyOffsetRequired(verifier, VT_DATACONSUMERIDS) &&
            verifier.VerifyVector(dataConsumerIds()) &&
            verifier.VerifyVectorOfStrings(dataConsumerIds()) &&
-           VerifyOffset(verifier, VT_RECVRTPHEADEREXTENSIONS) &&
+           VerifyOffsetRequired(verifier, VT_RECVRTPHEADEREXTENSIONS) &&
            verifier.VerifyVector(recvRtpHeaderExtensions()) &&
            verifier.VerifyVectorOfTables(recvRtpHeaderExtensions()) &&
-           VerifyOffset(verifier, VT_RTPLISTENER) &&
+           VerifyOffsetRequired(verifier, VT_RTPLISTENER) &&
            verifier.VerifyTable(rtpListener()) &&
            VerifyField<uint32_t>(verifier, VT_MAXMESSAGESIZE, 4) &&
            VerifyOffset(verifier, VT_SCTPPARAMETERS) &&
            verifier.VerifyTable(sctpParameters()) &&
-           VerifyOffset(verifier, VT_STCPSTATE) &&
-           verifier.VerifyString(stcpState()) &&
-           VerifyOffset(verifier, VT_STCPLISTENER) &&
-           verifier.VerifyTable(stcpListener()) &&
-           VerifyOffset(verifier, VT_TRACEEVENTTYPES) &&
+           VerifyOffset(verifier, VT_SCTPSTATE) &&
+           verifier.VerifyString(sctpState()) &&
+           VerifyOffset(verifier, VT_SCTPLISTENER) &&
+           verifier.VerifyTable(sctpListener()) &&
+           VerifyOffsetRequired(verifier, VT_TRACEEVENTTYPES) &&
            verifier.VerifyVector(traceEventTypes()) &&
            verifier.VerifyVectorOfStrings(traceEventTypes()) &&
            verifier.EndTable();
@@ -900,11 +900,11 @@ struct BaseTransportDumpBuilder {
   void add_sctpParameters(flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters) {
     fbb_.AddOffset(BaseTransportDump::VT_SCTPPARAMETERS, sctpParameters);
   }
-  void add_stcpState(flatbuffers::Offset<flatbuffers::String> stcpState) {
-    fbb_.AddOffset(BaseTransportDump::VT_STCPSTATE, stcpState);
+  void add_sctpState(flatbuffers::Offset<flatbuffers::String> sctpState) {
+    fbb_.AddOffset(BaseTransportDump::VT_SCTPSTATE, sctpState);
   }
-  void add_stcpListener(flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener) {
-    fbb_.AddOffset(BaseTransportDump::VT_STCPLISTENER, stcpListener);
+  void add_sctpListener(flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener) {
+    fbb_.AddOffset(BaseTransportDump::VT_SCTPLISTENER, sctpListener);
   }
   void add_traceEventTypes(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> traceEventTypes) {
     fbb_.AddOffset(BaseTransportDump::VT_TRACEEVENTTYPES, traceEventTypes);
@@ -917,6 +917,15 @@ struct BaseTransportDumpBuilder {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<BaseTransportDump>(end);
     fbb_.Required(o, BaseTransportDump::VT_ID);
+    fbb_.Required(o, BaseTransportDump::VT_PRODUCERIDS);
+    fbb_.Required(o, BaseTransportDump::VT_CONSUMERIDS);
+    fbb_.Required(o, BaseTransportDump::VT_MAPSSRCCONSUMERID);
+    fbb_.Required(o, BaseTransportDump::VT_MAPRTXSSRCCONSUMERID);
+    fbb_.Required(o, BaseTransportDump::VT_DATAPRODUCERIDS);
+    fbb_.Required(o, BaseTransportDump::VT_DATACONSUMERIDS);
+    fbb_.Required(o, BaseTransportDump::VT_RECVRTPHEADEREXTENSIONS);
+    fbb_.Required(o, BaseTransportDump::VT_RTPLISTENER);
+    fbb_.Required(o, BaseTransportDump::VT_TRACEEVENTTYPES);
     return o;
   }
 };
@@ -935,13 +944,13 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDump(
     flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener = 0,
     uint32_t maxMessageSize = 0,
     flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters = 0,
-    flatbuffers::Offset<flatbuffers::String> stcpState = 0,
-    flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener = 0,
+    flatbuffers::Offset<flatbuffers::String> sctpState = 0,
+    flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> traceEventTypes = 0) {
   BaseTransportDumpBuilder builder_(_fbb);
   builder_.add_traceEventTypes(traceEventTypes);
-  builder_.add_stcpListener(stcpListener);
-  builder_.add_stcpState(stcpState);
+  builder_.add_sctpListener(sctpListener);
+  builder_.add_sctpState(sctpState);
   builder_.add_sctpParameters(sctpParameters);
   builder_.add_maxMessageSize(maxMessageSize);
   builder_.add_rtpListener(rtpListener);
@@ -971,8 +980,8 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDumpDirect(
     flatbuffers::Offset<FBS::Transport::RtpListener> rtpListener = 0,
     uint32_t maxMessageSize = 0,
     flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters = 0,
-    const char *stcpState = nullptr,
-    flatbuffers::Offset<FBS::Transport::SctpListener> stcpListener = 0,
+    const char *sctpState = nullptr,
+    flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener = 0,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *traceEventTypes = nullptr) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto producerIds__ = producerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*producerIds) : 0;
@@ -982,7 +991,7 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDumpDirect(
   auto dataProducerIds__ = dataProducerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*dataProducerIds) : 0;
   auto dataConsumerIds__ = dataConsumerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*dataConsumerIds) : 0;
   auto recvRtpHeaderExtensions__ = recvRtpHeaderExtensions ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::StringUint8>>(*recvRtpHeaderExtensions) : 0;
-  auto stcpState__ = stcpState ? _fbb.CreateString(stcpState) : 0;
+  auto sctpState__ = sctpState ? _fbb.CreateString(sctpState) : 0;
   auto traceEventTypes__ = traceEventTypes ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*traceEventTypes) : 0;
   return FBS::Transport::CreateBaseTransportDump(
       _fbb,
@@ -998,8 +1007,8 @@ inline flatbuffers::Offset<BaseTransportDump> CreateBaseTransportDumpDirect(
       rtpListener,
       maxMessageSize,
       sctpParameters,
-      stcpState__,
-      stcpListener,
+      sctpState__,
+      sctpListener,
       traceEventTypes__);
 }
 
@@ -2294,8 +2303,8 @@ inline const flatbuffers::TypeTable *BaseTransportDumpTypeTable() {
     "rtpListener",
     "maxMessageSize",
     "sctpParameters",
-    "stcpState",
-    "stcpListener",
+    "sctpState",
+    "sctpListener",
     "traceEventTypes"
   };
   static const flatbuffers::TypeTable tt = {
