@@ -240,6 +240,7 @@ export declare type BaseTransportDump = {
     dataConsumerIds: string[];
     sctpParameters?: SctpParameters;
     sctpState?: SctpState;
+    traceEventTypes?: string[];
 };
 export declare function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump;
 export declare function parseBaseTransportDump(binary: FbsTransport.BaseTransportDump): BaseTransportDump;

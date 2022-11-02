@@ -366,27 +366,27 @@ test('webRtcTransport.restartIce() succeeds', async () =>
 	expect(transport.iceParameters.password).not.toBe(previousIcePassword);
 }, 2000);
 
-test('transport.enableTraceEvent() succeed', async () =>
+test.only('transport.enableTraceEvent() succeed', async () =>
 {
 	await transport.enableTraceEvent([ 'foo', 'probation' ]);
 	await expect(transport.dump())
 		.resolves
-		.toMatchObject({ traceEventTypes: 'probation' });
+		.toMatchObject({ traceEventTypes: [ 'probation' ] });
 
 	await transport.enableTraceEvent([]);
 	await expect(transport.dump())
 		.resolves
-		.toMatchObject({ traceEventTypes: '' });
+		.toMatchObject({ traceEventTypes: [] });
 
 	await transport.enableTraceEvent([ 'probation', 'FOO', 'bwe', 'BAR' ]);
 	await expect(transport.dump())
 		.resolves
-		.toMatchObject({ traceEventTypes: 'probation,bwe' });
+		.toMatchObject({ traceEventTypes: [ 'probation', 'bwe' ] });
 
 	await transport.enableTraceEvent();
 	await expect(transport.dump())
 		.resolves
-		.toMatchObject({ traceEventTypes: '' });
+		.toMatchObject({ traceEventTypes: [] });
 }, 2000);
 
 test('transport.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>

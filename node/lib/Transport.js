@@ -667,6 +667,8 @@ function parseBaseTransportDump(binary) {
     if (fbsSctpParameters) {
         sctpParameters = (0, SctpParameters_1.parseSctpParametersDump)(fbsSctpParameters);
     }
+    // Retrieve traceEventTypes.
+    const traceEventTypes = utils.parseVector(binary, 'traceEventTypes');
     return {
         id: binary.id(),
         direct: binary.direct(),
@@ -680,9 +682,9 @@ function parseBaseTransportDump(binary) {
         // TODO: maxMessageSize.
         rtpListener: rtpListener,
         sctpParameters: sctpParameters,
-        sctpState: binary.stcpState()
+        sctpState: binary.stcpState(),
         // TODO: sctpListener.
-        // TODO: traceEventTypes.
+        traceEventTypes: traceEventTypes
     };
 }
 exports.parseBaseTransportDump = parseBaseTransportDump;

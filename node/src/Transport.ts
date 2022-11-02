@@ -1115,6 +1115,7 @@ export type BaseTransportDump = {
 	dataConsumerIds : string[];
 	sctpParameters? : SctpParameters;
 	sctpState? : SctpState;
+	traceEventTypes? : string[];
 };
 
 export function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump
@@ -1163,6 +1164,9 @@ export function parseBaseTransportDump(
 		sctpParameters = parseSctpParametersDump(fbsSctpParameters);
 	}
 
+	// Retrieve traceEventTypes.
+	const traceEventTypes = utils.parseVector<string>(binary, 'traceEventTypes');
+
 	return {
 		id                      : binary.id()!,
 		direct                  : binary.direct(),
@@ -1176,8 +1180,8 @@ export function parseBaseTransportDump(
 		// TODO: maxMessageSize.
 		rtpListener             : rtpListener,
 		sctpParameters          : sctpParameters,
-		sctpState               : binary.stcpState() as SctpState
+		sctpState               : binary.stcpState() as SctpState,
 		// TODO: sctpListener.
-		// TODO: traceEventTypes.
+		traceEventTypes         : traceEventTypes
 	};
 }
