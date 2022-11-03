@@ -69,7 +69,7 @@ endif
 	clean-pip \
 	clean-subprojects \
 	clean-all \
-	update-subproject \
+	update-wrap-file \
 	mediasoup-worker \
 	libmediasoup-worker \
 	xcode \
@@ -184,9 +184,9 @@ clean-subprojects: meson-ninja
 clean-all: clean-subprojects
 	$(RM) -rf $(MEDIASOUP_OUT_DIR)
 
-# Update a subproject. Usage example:
-# make update-subproject SUBPROJECT=openssl
-update-subproject: meson-ninja
+# Update the wrap file of a subproject. Usage example:
+# make update-wrap-file SUBPROJECT=openssl
+update-wrap-file: meson-ninja
 	$(MESON) subprojects update --reset $(SUBPROJECT)
 
 mediasoup-worker: setup
