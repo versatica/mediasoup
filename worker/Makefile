@@ -7,11 +7,11 @@ PYTHON ?= $(shell command -v python3 2> /dev/null || echo python)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh || echo 4)
 MEDIASOUP_OUT_DIR ?= $(shell pwd)/out
-# Controls build types, `Release` and `Debug` are presets optimized for those use cases.
-# Other build types are possible too, but they are not presets and will require `MESON_ARGS` use to customize build
-# configuration.
-# Check the meaning of useful macros in the `worker/include/Logger.hpp` header file if you want to enable tracing or
-# other debug information.
+# Controls build types, `Release` and `Debug` are presets optimized for those
+# use cases. Other build types are possible too, but they are not presets and
+# will require `MESON_ARGS` use to customize build configuration.
+# Check the meaning of useful macros in the `worker/include/Logger.hpp` header
+# file if you want to enable tracing or other debug information.
 MEDIASOUP_BUILDTYPE ?= Release
 GULP = ./scripts/node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov
@@ -21,11 +21,13 @@ INSTALL_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 BUILD_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)/build
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_VERSION ?= 0.61.5
-# `MESON_ARGS` can be used to provide extra configuration parameters to Meson, such as adding defines or changing
-# optimization options. For instance, use `MESON_ARGS="-Dms_log_trace=true -Dms_log_file_line=true" npm i` to compile worker with
-# tracing and enabled.
+# `MESON_ARGS` can be used to provide extra configuration parameters to Meson,
+# such as adding defines or changing optimization options. For instance, use
+# `MESON_ARGS="-Dms_log_trace=true -Dms_log_file_line=true" npm i` to compile
+# worker with tracing and enabled.
 #
-# NOTE: On Windows make sure to add `--vsenv` or have MSVS environment already active if you override this parameter.
+# NOTE: On Windows make sure to add `--vsenv` or have MSVS environment already
+# active if you override this parameter.
 MESON_ARGS ?= ""
 # Workaround for NixOS and Guix that don't work with pre-built binaries, see:
 # https://github.com/NixOS/nixpkgs/issues/142383.
@@ -43,7 +45,8 @@ endif
 
 # Instruct Python where to look for modules it needs, such that `meson` actually
 # runs from installed location.
-# For some reason on Windows adding `:${PYTHONPATH}` breaks things.
+#
+# NOTE: For some reason on Windows adding `:${PYTHONPATH}` breaks things.
 ifeq ($(OS),Windows_NT)
 	export PYTHONPATH := $(PIP_DIR)
 else
@@ -58,18 +61,35 @@ endif
 endif
 
 .PHONY:	\
-	default meson-ninja setup clean clean-pip clean-subprojects clean-all mediasoup-worker xcode lint format test tidy \
-	fuzzer fuzzer-run-all docker-build docker-run libmediasoup-worker
+	default \
+	meson-ninja \
+	setup \
+	clean \
+	clean-build \
+	clean-pip \
+	clean-subprojects \
+	clean-all \
+	update-wrap-file \
+	mediasoup-worker \
+	libmediasoup-worker \
+	xcode \
+	lint \
+	format \
+	test \
+	tidy \
+	fuzzer \
+	fuzzer-run-all \
+	docker-build \
+	docker-run
 
 default: mediasoup-worker
 
 meson-ninja:
 ifeq ($(wildcard $(PIP_DIR)),)
-	# Updated pip and setuptools are needed for meson
+	# Updated pip and setuptools are needed for meson.
 	# `--system` is not present everywhere and is only needed as workaround for
-	# Debian-specific issue (copied from
-	# https://github.com/gluster/gstatus/pull/33), fallback to command without
-	# `--system` if the first one fails.
+	# Debian-specific issue (copied from https://github.com/gluster/gstatus/pull/33),
+	# fallback to command without `--system` if the first one fails.
 	$(PYTHON) -m pip install --system --target=$(PIP_DIR) pip setuptools || \
 		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools || \
 		echo "Installation failed, likely because PIP is unavailable, if you are on Debian/Ubuntu or derivative please install the python3-pip package"
@@ -164,11 +184,20 @@ clean-subprojects: meson-ninja
 clean-all: clean-subprojects
 	$(RM) -rf $(MEDIASOUP_OUT_DIR)
 
+# Update the wrap file of a subproject. Usage example:
+# make update-wrap-file SUBPROJECT=openssl
+update-wrap-file: meson-ninja
+	$(MESON) subprojects update --reset $(SUBPROJECT)
+
 mediasoup-worker: setup
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker
 endif
+
+libmediasoup-worker: setup
+	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) libmediasoup-worker
+	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags libmediasoup-worker
 
 xcode: setup
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode
@@ -222,7 +251,3 @@ docker-run:
 		--cap-add SYS_PTRACE \
 		-v $(shell pwd)/../:/mediasoup \
 		mediasoup/docker:latest
-
-libmediasoup-worker: setup
-	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) libmediasoup-worker
-	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags libmediasoup-worker
