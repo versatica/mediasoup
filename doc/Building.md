@@ -62,7 +62,7 @@ Same as `npm run test:node` but it also opens a browser window with JavaScript c
 The `worker` folder contains a `Makefile` for the mediasoup-worker C++ subproject. It includes the following tasks:
 
 
-### `make`
+### `make` or `make mediasoup-worker`
 
 Builds the `mediasoup-worker` binary at `worker/out/Release/`.
 
@@ -116,6 +116,16 @@ Cleans subprojects downloaded with Meson.
 ### `make clean-all`
 
 Cleans built objects and binaries, `meson` and `ninja` installed in local prefix with pip and all subprojects downloaded with Meson.
+
+
+### `make update-subproject`
+
+Update a subproject with Meson. Usage example:
+
+```bash
+$ cd worker
+$ make update-subproject SUBPROJECT=openssl
+```
 
 
 ### `make xcode`
