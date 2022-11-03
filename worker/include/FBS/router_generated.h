@@ -22,8 +22,8 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
 namespace FBS {
 namespace Router {
 
-struct RouterDumpResponse;
-struct RouterDumpResponseBuilder;
+struct DumpResponse;
+struct DumpResponseBuilder;
 
 struct CreatePipeTransportRequest;
 struct CreatePipeTransportRequestBuilder;
@@ -34,7 +34,7 @@ struct CreatePlainTransportRequestBuilder;
 struct CreateWebRtcTransportRequest;
 struct CreateWebRtcTransportRequestBuilder;
 
-inline const flatbuffers::TypeTable *RouterDumpResponseTypeTable();
+inline const flatbuffers::TypeTable *DumpResponseTypeTable();
 
 inline const flatbuffers::TypeTable *CreatePipeTransportRequestTypeTable();
 
@@ -42,10 +42,10 @@ inline const flatbuffers::TypeTable *CreatePlainTransportRequestTypeTable();
 
 inline const flatbuffers::TypeTable *CreateWebRtcTransportRequestTypeTable();
 
-struct RouterDumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef RouterDumpResponseBuilder Builder;
+struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef DumpResponseBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return RouterDumpResponseTypeTable();
+    return DumpResponseTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_ID = 4,
@@ -110,47 +110,47 @@ struct RouterDumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
 };
 
-struct RouterDumpResponseBuilder {
-  typedef RouterDumpResponse Table;
+struct DumpResponseBuilder {
+  typedef DumpResponse Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_id(flatbuffers::Offset<flatbuffers::String> id) {
-    fbb_.AddOffset(RouterDumpResponse::VT_ID, id);
+    fbb_.AddOffset(DumpResponse::VT_ID, id);
   }
   void add_transportIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> transportIds) {
-    fbb_.AddOffset(RouterDumpResponse::VT_TRANSPORTIDS, transportIds);
+    fbb_.AddOffset(DumpResponse::VT_TRANSPORTIDS, transportIds);
   }
   void add_rtpObserverIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> rtpObserverIds) {
-    fbb_.AddOffset(RouterDumpResponse::VT_RTPOBSERVERIDS, rtpObserverIds);
+    fbb_.AddOffset(DumpResponse::VT_RTPOBSERVERIDS, rtpObserverIds);
   }
   void add_mapProducerIdConsumerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringStringArray>>> mapProducerIdConsumerIds) {
-    fbb_.AddOffset(RouterDumpResponse::VT_MAPPRODUCERIDCONSUMERIDS, mapProducerIdConsumerIds);
+    fbb_.AddOffset(DumpResponse::VT_MAPPRODUCERIDCONSUMERIDS, mapProducerIdConsumerIds);
   }
   void add_mapConsumerIdProducerId(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringString>>> mapConsumerIdProducerId) {
-    fbb_.AddOffset(RouterDumpResponse::VT_MAPCONSUMERIDPRODUCERID, mapConsumerIdProducerId);
+    fbb_.AddOffset(DumpResponse::VT_MAPCONSUMERIDPRODUCERID, mapConsumerIdProducerId);
   }
   void add_mapProducerIdObserverIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringStringArray>>> mapProducerIdObserverIds) {
-    fbb_.AddOffset(RouterDumpResponse::VT_MAPPRODUCERIDOBSERVERIDS, mapProducerIdObserverIds);
+    fbb_.AddOffset(DumpResponse::VT_MAPPRODUCERIDOBSERVERIDS, mapProducerIdObserverIds);
   }
   void add_mapDataProducerIdDataConsumerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringStringArray>>> mapDataProducerIdDataConsumerIds) {
-    fbb_.AddOffset(RouterDumpResponse::VT_MAPDATAPRODUCERIDDATACONSUMERIDS, mapDataProducerIdDataConsumerIds);
+    fbb_.AddOffset(DumpResponse::VT_MAPDATAPRODUCERIDDATACONSUMERIDS, mapDataProducerIdDataConsumerIds);
   }
   void add_mapDataConsumerIdDataProducerId(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringString>>> mapDataConsumerIdDataProducerId) {
-    fbb_.AddOffset(RouterDumpResponse::VT_MAPDATACONSUMERIDDATAPRODUCERID, mapDataConsumerIdDataProducerId);
+    fbb_.AddOffset(DumpResponse::VT_MAPDATACONSUMERIDDATAPRODUCERID, mapDataConsumerIdDataProducerId);
   }
-  explicit RouterDumpResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit DumpResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<RouterDumpResponse> Finish() {
+  flatbuffers::Offset<DumpResponse> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<RouterDumpResponse>(end);
-    fbb_.Required(o, RouterDumpResponse::VT_ID);
+    auto o = flatbuffers::Offset<DumpResponse>(end);
+    fbb_.Required(o, DumpResponse::VT_ID);
     return o;
   }
 };
 
-inline flatbuffers::Offset<RouterDumpResponse> CreateRouterDumpResponse(
+inline flatbuffers::Offset<DumpResponse> CreateDumpResponse(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> id = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> transportIds = 0,
@@ -160,7 +160,7 @@ inline flatbuffers::Offset<RouterDumpResponse> CreateRouterDumpResponse(
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringStringArray>>> mapProducerIdObserverIds = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringStringArray>>> mapDataProducerIdDataConsumerIds = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Common::StringString>>> mapDataConsumerIdDataProducerId = 0) {
-  RouterDumpResponseBuilder builder_(_fbb);
+  DumpResponseBuilder builder_(_fbb);
   builder_.add_mapDataConsumerIdDataProducerId(mapDataConsumerIdDataProducerId);
   builder_.add_mapDataProducerIdDataConsumerIds(mapDataProducerIdDataConsumerIds);
   builder_.add_mapProducerIdObserverIds(mapProducerIdObserverIds);
@@ -172,7 +172,7 @@ inline flatbuffers::Offset<RouterDumpResponse> CreateRouterDumpResponse(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<RouterDumpResponse> CreateRouterDumpResponseDirect(
+inline flatbuffers::Offset<DumpResponse> CreateDumpResponseDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *id = nullptr,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *transportIds = nullptr,
@@ -190,7 +190,7 @@ inline flatbuffers::Offset<RouterDumpResponse> CreateRouterDumpResponseDirect(
   auto mapProducerIdObserverIds__ = mapProducerIdObserverIds ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::StringStringArray>>(*mapProducerIdObserverIds) : 0;
   auto mapDataProducerIdDataConsumerIds__ = mapDataProducerIdDataConsumerIds ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::StringStringArray>>(*mapDataProducerIdDataConsumerIds) : 0;
   auto mapDataConsumerIdDataProducerId__ = mapDataConsumerIdDataProducerId ? _fbb.CreateVector<flatbuffers::Offset<FBS::Common::StringString>>(*mapDataConsumerIdDataProducerId) : 0;
-  return FBS::Router::CreateRouterDumpResponse(
+  return FBS::Router::CreateDumpResponse(
       _fbb,
       id__,
       transportIds__,
@@ -406,7 +406,7 @@ inline flatbuffers::Offset<CreateWebRtcTransportRequest> CreateCreateWebRtcTrans
       options);
 }
 
-inline const flatbuffers::TypeTable *RouterDumpResponseTypeTable() {
+inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_STRING, 0, -1 },
     { flatbuffers::ET_STRING, 1, -1 },

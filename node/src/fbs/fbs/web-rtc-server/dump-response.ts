@@ -7,22 +7,22 @@ import { IpPort, IpPortT } from '../../fbs/web-rtc-server/ip-port';
 import { TupleHash, TupleHashT } from '../../fbs/web-rtc-server/tuple-hash';
 
 
-export class WebRtcServerDumpResponse {
+export class DumpResponse {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
-  __init(i:number, bb:flatbuffers.ByteBuffer):WebRtcServerDumpResponse {
+  __init(i:number, bb:flatbuffers.ByteBuffer):DumpResponse {
   this.bb_pos = i;
   this.bb = bb;
   return this;
 }
 
-static getRootAsWebRtcServerDumpResponse(bb:flatbuffers.ByteBuffer, obj?:WebRtcServerDumpResponse):WebRtcServerDumpResponse {
-  return (obj || new WebRtcServerDumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+static getRootAsDumpResponse(bb:flatbuffers.ByteBuffer, obj?:DumpResponse):DumpResponse {
+  return (obj || new DumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-static getSizePrefixedRootAsWebRtcServerDumpResponse(bb:flatbuffers.ByteBuffer, obj?:WebRtcServerDumpResponse):WebRtcServerDumpResponse {
+static getSizePrefixedRootAsDumpResponse(bb:flatbuffers.ByteBuffer, obj?:DumpResponse):DumpResponse {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
-  return (obj || new WebRtcServerDumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+  return (obj || new DumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
 id():string|null
@@ -84,7 +84,7 @@ tupleHashesLength():number {
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-static startWebRtcServerDumpResponse(builder:flatbuffers.Builder) {
+static startDumpResponse(builder:flatbuffers.Builder) {
   builder.startObject(6);
 }
 
@@ -172,25 +172,25 @@ static startTupleHashesVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 
-static endWebRtcServerDumpResponse(builder:flatbuffers.Builder):flatbuffers.Offset {
+static endDumpResponse(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   builder.requiredField(offset, 4) // id
   return offset;
 }
 
-static createWebRtcServerDumpResponse(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, udpSocketsOffset:flatbuffers.Offset, tcpServersOffset:flatbuffers.Offset, webRtcTransportIdsOffset:flatbuffers.Offset, localIceUsernameFragmentsOffset:flatbuffers.Offset, tupleHashesOffset:flatbuffers.Offset):flatbuffers.Offset {
-  WebRtcServerDumpResponse.startWebRtcServerDumpResponse(builder);
-  WebRtcServerDumpResponse.addId(builder, idOffset);
-  WebRtcServerDumpResponse.addUdpSockets(builder, udpSocketsOffset);
-  WebRtcServerDumpResponse.addTcpServers(builder, tcpServersOffset);
-  WebRtcServerDumpResponse.addWebRtcTransportIds(builder, webRtcTransportIdsOffset);
-  WebRtcServerDumpResponse.addLocalIceUsernameFragments(builder, localIceUsernameFragmentsOffset);
-  WebRtcServerDumpResponse.addTupleHashes(builder, tupleHashesOffset);
-  return WebRtcServerDumpResponse.endWebRtcServerDumpResponse(builder);
+static createDumpResponse(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, udpSocketsOffset:flatbuffers.Offset, tcpServersOffset:flatbuffers.Offset, webRtcTransportIdsOffset:flatbuffers.Offset, localIceUsernameFragmentsOffset:flatbuffers.Offset, tupleHashesOffset:flatbuffers.Offset):flatbuffers.Offset {
+  DumpResponse.startDumpResponse(builder);
+  DumpResponse.addId(builder, idOffset);
+  DumpResponse.addUdpSockets(builder, udpSocketsOffset);
+  DumpResponse.addTcpServers(builder, tcpServersOffset);
+  DumpResponse.addWebRtcTransportIds(builder, webRtcTransportIdsOffset);
+  DumpResponse.addLocalIceUsernameFragments(builder, localIceUsernameFragmentsOffset);
+  DumpResponse.addTupleHashes(builder, tupleHashesOffset);
+  return DumpResponse.endDumpResponse(builder);
 }
 
-unpack(): WebRtcServerDumpResponseT {
-  return new WebRtcServerDumpResponseT(
+unpack(): DumpResponseT {
+  return new DumpResponseT(
     this.id(),
     this.bb!.createObjList(this.udpSockets.bind(this), this.udpSocketsLength()),
     this.bb!.createObjList(this.tcpServers.bind(this), this.tcpServersLength()),
@@ -201,7 +201,7 @@ unpack(): WebRtcServerDumpResponseT {
 }
 
 
-unpackTo(_o: WebRtcServerDumpResponseT): void {
+unpackTo(_o: DumpResponseT): void {
   _o.id = this.id();
   _o.udpSockets = this.bb!.createObjList(this.udpSockets.bind(this), this.udpSocketsLength());
   _o.tcpServers = this.bb!.createObjList(this.tcpServers.bind(this), this.tcpServersLength());
@@ -211,7 +211,7 @@ unpackTo(_o: WebRtcServerDumpResponseT): void {
 }
 }
 
-export class WebRtcServerDumpResponseT {
+export class DumpResponseT {
 constructor(
   public id: string|Uint8Array|null = null,
   public udpSockets: (IpPortT)[] = [],
@@ -224,13 +224,13 @@ constructor(
 
 pack(builder:flatbuffers.Builder): flatbuffers.Offset {
   const id = (this.id !== null ? builder.createString(this.id!) : 0);
-  const udpSockets = WebRtcServerDumpResponse.createUdpSocketsVector(builder, builder.createObjectOffsetList(this.udpSockets));
-  const tcpServers = WebRtcServerDumpResponse.createTcpServersVector(builder, builder.createObjectOffsetList(this.tcpServers));
-  const webRtcTransportIds = WebRtcServerDumpResponse.createWebRtcTransportIdsVector(builder, builder.createObjectOffsetList(this.webRtcTransportIds));
-  const localIceUsernameFragments = WebRtcServerDumpResponse.createLocalIceUsernameFragmentsVector(builder, builder.createObjectOffsetList(this.localIceUsernameFragments));
-  const tupleHashes = WebRtcServerDumpResponse.createTupleHashesVector(builder, builder.createObjectOffsetList(this.tupleHashes));
+  const udpSockets = DumpResponse.createUdpSocketsVector(builder, builder.createObjectOffsetList(this.udpSockets));
+  const tcpServers = DumpResponse.createTcpServersVector(builder, builder.createObjectOffsetList(this.tcpServers));
+  const webRtcTransportIds = DumpResponse.createWebRtcTransportIdsVector(builder, builder.createObjectOffsetList(this.webRtcTransportIds));
+  const localIceUsernameFragments = DumpResponse.createLocalIceUsernameFragmentsVector(builder, builder.createObjectOffsetList(this.localIceUsernameFragments));
+  const tupleHashes = DumpResponse.createTupleHashesVector(builder, builder.createObjectOffsetList(this.tupleHashes));
 
-  return WebRtcServerDumpResponse.createWebRtcServerDumpResponse(builder,
+  return DumpResponse.createDumpResponse(builder,
     id,
     udpSockets,
     tcpServers,

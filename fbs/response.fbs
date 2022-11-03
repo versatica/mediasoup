@@ -6,11 +6,11 @@ include "worker.fbs";
 namespace FBS.Response;
 
 union Body {
-  FBS.Worker.WorkerDumpResponse,
+  FBS.Worker.DumpResponse,
   FBS.Worker.ResourceUsageResponse,
-  FBS.WebRtcServer.WebRtcServerDumpResponse,
-  FBS.Router.RouterDumpResponse,
-  FBS.Transport.TransportDumpResponse,
+  FBS.WebRtcServer.DumpResponse,
+  FBS.Router.DumpResponse,
+  FBS.Transport.DumpResponse,
   FBS.Transport.ConsumeResponse,
 }
 

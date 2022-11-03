@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseWebRtcTransportDump = exports.parseDtlsParameters = exports.parseIceParameters = exports.parseIceCandidate = exports.WebRtcTransport = void 0;
 const Logger_1 = require("./Logger");
 const Transport_1 = require("./Transport");
-const FbsRouter = require("./fbs/router_generated");
+const FbsTransport = require("./fbs/transport_generated");
 const logger = new Logger_1.Logger('WebRtcTransport');
 class WebRtcTransport extends Transport_1.Transport {
     // WebRtcTransport data.
@@ -264,7 +264,7 @@ function parseDtlsParameters(binary) {
 exports.parseDtlsParameters = parseDtlsParameters;
 function parseWebRtcTransportDump(binary) {
     // Retrieve BaseTransportDump.
-    const fbsBaseTransportDump = new FbsRouter.BaseTransportDump();
+    const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
     binary.base().data(fbsBaseTransportDump);
     const baseTransportDump = (0, Transport_1.parseBaseTransportDump)(fbsBaseTransportDump);
     // Retrieve ICE candidates.

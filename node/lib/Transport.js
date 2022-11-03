@@ -246,7 +246,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('dump()');
         const response = await this.channel.requestBinary(request_generated_1.Method.TRANSPORT_DUMP, undefined, undefined, this.internal.transportId);
         /* Decode the response. */
-        const dump = new FbsTransport.TransportDumpResponse();
+        const dump = new FbsTransport.DumpResponse();
         response.body(dump);
         // TODO: Fix: Consider all transport types.
         const transportDump = new FbsTransport.WebRtcTransportDump();

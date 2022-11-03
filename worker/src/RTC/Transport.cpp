@@ -412,7 +412,7 @@ namespace RTC
 		this->listener->OnTransportListenServerClosed(this);
 	}
 
-	flatbuffers::Offset<FBS::Transport::TransportDumpResponse> Transport::FillBuffer(
+	flatbuffers::Offset<FBS::Transport::DumpResponse> Transport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -566,7 +566,7 @@ namespace RTC
 		  sctpListener,
 		  &traceEventTypes);
 
-		return FBS::Transport::CreateTransportDumpResponse(
+		return FBS::Transport::CreateDumpResponse(
 		  builder, FBS::Transport::TransportDumpData::BaseTransportDump, baseTransportDump.Union());
 	}
 
@@ -1299,7 +1299,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_Transport_TransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_Transport_DumpResponse, dumpOffset);
 
 				break;
 			}

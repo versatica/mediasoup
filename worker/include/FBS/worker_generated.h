@@ -21,8 +21,8 @@ namespace Worker {
 struct ChannelMessageHandlers;
 struct ChannelMessageHandlersBuilder;
 
-struct WorkerDumpResponse;
-struct WorkerDumpResponseBuilder;
+struct DumpResponse;
+struct DumpResponseBuilder;
 
 struct ResourceUsageResponse;
 struct ResourceUsageResponseBuilder;
@@ -44,7 +44,7 @@ struct CloseRouterRequestBuilder;
 
 inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable();
 
-inline const flatbuffers::TypeTable *WorkerDumpResponseTypeTable();
+inline const flatbuffers::TypeTable *DumpResponseTypeTable();
 
 inline const flatbuffers::TypeTable *ResourceUsageResponseTypeTable();
 
@@ -143,10 +143,10 @@ inline flatbuffers::Offset<ChannelMessageHandlers> CreateChannelMessageHandlersD
       payloadchannelNotificationHandlers__);
 }
 
-struct WorkerDumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef WorkerDumpResponseBuilder Builder;
+struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef DumpResponseBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return WorkerDumpResponseTypeTable();
+    return DumpResponseTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_PID = 4,
@@ -181,40 +181,40 @@ struct WorkerDumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
 };
 
-struct WorkerDumpResponseBuilder {
-  typedef WorkerDumpResponse Table;
+struct DumpResponseBuilder {
+  typedef DumpResponse Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_pid(uint64_t pid) {
-    fbb_.AddElement<uint64_t>(WorkerDumpResponse::VT_PID, pid, 0);
+    fbb_.AddElement<uint64_t>(DumpResponse::VT_PID, pid, 0);
   }
   void add_webrtcServerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webrtcServerIds) {
-    fbb_.AddOffset(WorkerDumpResponse::VT_WEBRTCSERVERIDS, webrtcServerIds);
+    fbb_.AddOffset(DumpResponse::VT_WEBRTCSERVERIDS, webrtcServerIds);
   }
   void add_routerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> routerIds) {
-    fbb_.AddOffset(WorkerDumpResponse::VT_ROUTERIDS, routerIds);
+    fbb_.AddOffset(DumpResponse::VT_ROUTERIDS, routerIds);
   }
   void add_channelMessageHandlers(flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers) {
-    fbb_.AddOffset(WorkerDumpResponse::VT_CHANNELMESSAGEHANDLERS, channelMessageHandlers);
+    fbb_.AddOffset(DumpResponse::VT_CHANNELMESSAGEHANDLERS, channelMessageHandlers);
   }
-  explicit WorkerDumpResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit DumpResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<WorkerDumpResponse> Finish() {
+  flatbuffers::Offset<DumpResponse> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<WorkerDumpResponse>(end);
+    auto o = flatbuffers::Offset<DumpResponse>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<WorkerDumpResponse> CreateWorkerDumpResponse(
+inline flatbuffers::Offset<DumpResponse> CreateDumpResponse(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint64_t pid = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webrtcServerIds = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> routerIds = 0,
     flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers = 0) {
-  WorkerDumpResponseBuilder builder_(_fbb);
+  DumpResponseBuilder builder_(_fbb);
   builder_.add_pid(pid);
   builder_.add_channelMessageHandlers(channelMessageHandlers);
   builder_.add_routerIds(routerIds);
@@ -222,7 +222,7 @@ inline flatbuffers::Offset<WorkerDumpResponse> CreateWorkerDumpResponse(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<WorkerDumpResponse> CreateWorkerDumpResponseDirect(
+inline flatbuffers::Offset<DumpResponse> CreateDumpResponseDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     uint64_t pid = 0,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *webrtcServerIds = nullptr,
@@ -230,7 +230,7 @@ inline flatbuffers::Offset<WorkerDumpResponse> CreateWorkerDumpResponseDirect(
     flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers = 0) {
   auto webrtcServerIds__ = webrtcServerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*webrtcServerIds) : 0;
   auto routerIds__ = routerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*routerIds) : 0;
-  return FBS::Worker::CreateWorkerDumpResponse(
+  return FBS::Worker::CreateDumpResponse(
       _fbb,
       pid,
       webrtcServerIds__,
@@ -753,7 +753,7 @@ inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable() {
   return &tt;
 }
 
-inline const flatbuffers::TypeTable *WorkerDumpResponseTypeTable() {
+inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_ULONG, 0, -1 },
     { flatbuffers::ET_STRING, 1, -1 },

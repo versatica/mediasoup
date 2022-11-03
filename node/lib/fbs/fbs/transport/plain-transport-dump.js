@@ -3,8 +3,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlainTransportDumpT = exports.PlainTransportDump = void 0;
 const flatbuffers = require("flatbuffers");
+const dump_response_1 = require("../../fbs/transport/dump-response");
 const srtp_parameters_1 = require("../../fbs/transport/srtp-parameters");
-const transport_dump_response_1 = require("../../fbs/transport/transport-dump-response");
 const tuple_1 = require("../../fbs/transport/tuple");
 class PlainTransportDump {
     bb = null;
@@ -23,7 +23,7 @@ class PlainTransportDump {
     }
     base(obj) {
         const offset = this.bb.__offset(this.bb_pos, 4);
-        return offset ? (obj || new transport_dump_response_1.TransportDumpResponse()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+        return offset ? (obj || new dump_response_1.DumpResponse()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
     }
     rtcMux() {
         const offset = this.bb.__offset(this.bb_pos, 6);

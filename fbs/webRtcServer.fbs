@@ -24,7 +24,7 @@ table TupleHash {
   web_rtc_transport_id:string (required);
 }
 
-table WebRtcServerDumpResponse {
+table DumpResponse {
   id:string (required);
   udp_sockets:[IpPort];
   tcp_servers:[IpPort];

@@ -8,7 +8,7 @@ table ChannelMessageHandlers {
   payloadchannel_notification_handlers:[string];
 }
 
-table WorkerDumpResponse {
+table DumpResponse {
   pid:uint64;
   webrtc_server_ids:[string];
   router_ids:[string];

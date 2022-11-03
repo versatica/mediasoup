@@ -14,7 +14,9 @@ const ActiveSpeakerObserver_1 = require("./ActiveSpeakerObserver");
 const AudioLevelObserver_1 = require("./AudioLevelObserver");
 const FbsRequest = require("./fbs/request_generated");
 const FbsRouter = require("./fbs/router_generated");
+const FbsWebRtcTransport = require("./fbs/webRtcTransport_generated");
 const FbsTransport = require("./fbs/transport_generated");
+const FbsSctpParameters = require("./fbs/sctpParameters_generated");
 const logger = new Logger_1.Logger('Router');
 class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -164,7 +166,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Send the request and wait for the response.
         const response = await this.#channel.requestBinary(FbsRequest.Method.ROUTER_DUMP, undefined, undefined, this.#internal.routerId);
         /* Decode the response. */
-        const dump = new FbsRouter.RouterDumpResponse();
+        const dump = new FbsRouter.DumpResponse();
         response.body(dump);
         return dump.unpack();
     }
@@ -205,30 +207,30 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         let webRtcTransportListenIndividual;
         if (webRtcServer) {
             webRtcTransportListenServer =
-                new FbsRouter.WebRtcTransportListenServerT(webRtcServer.id);
+                new FbsWebRtcTransport.WebRtcTransportListenServerT(webRtcServer.id);
         }
         else {
             const transportListenIps = [];
             for (const listenIp of listenIps) {
-                const transportListenIp = new FbsRouter.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
+                const transportListenIp = new FbsTransport.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
                 transportListenIps.push(transportListenIp);
             }
             webRtcTransportListenIndividual =
-                new FbsRouter.WebRtcTransportListenIndividualT(transportListenIps, port);
+                new FbsWebRtcTransport.WebRtcTransportListenIndividualT(transportListenIps, port);
         }
-        const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(undefined /* direct */, undefined /* maxMessageSize */, initialAvailableOutgoingBitrate, enableSctp, new FbsRouter.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS), maxSctpMessageSize, sctpSendBufferSize, true /* isDataChannel */);
+        const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(undefined /* direct */, undefined /* maxMessageSize */, initialAvailableOutgoingBitrate, enableSctp, new FbsSctpParameters.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS), maxSctpMessageSize, sctpSendBufferSize, true /* isDataChannel */);
         const webRtcTransportOptions = new FbsRouter.WebRtcTransportOptionsT(baseTransportOptions, webRtcServer ?
-            FbsRouter.WebRtcTransportListen.WebRtcTransportListenServer :
-            FbsRouter.WebRtcTransportListen.WebRtcTransportListenIndividual, webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual, enableUdp, enableTcp, preferUdp, preferTcp);
+            FbsWebRtcTransport.WebRtcTransportListen.WebRtcTransportListenServer :
+            FbsWebRtcTransport.WebRtcTransportListen.WebRtcTransportListenIndividual, webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual, enableUdp, enableTcp, preferUdp, preferTcp);
         const createWebRtcTransportOffset = new FbsRouter.CreateWebRtcTransportRequestT(transportId, webRtcTransportOptions).pack(builder);
         const response = await this.#channel.requestBinary(webRtcServer
             ? FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER
             : FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT, FbsRequest.Body.FBS_Router_CreateWebRtcTransportRequest, createWebRtcTransportOffset, this.#internal.routerId);
         /* Decode the response. */
-        const dump = new FbsTransport.TransportDumpResponse();
+        const dump = new FbsTransport.DumpResponse();
         response.body(dump);
         // const data = dump.unpack();
-        const transportDump = new FbsRouter.WebRtcTransportDump();
+        const transportDump = new FbsTransport.WebRtcTransportDump();
         dump.data(transportDump);
         const webRtcTransportData = (0, WebRtcTransport_1.parseWebRtcTransportDump)(transportDump);
         const transport = new WebRtcTransport_1.WebRtcTransport({
@@ -282,13 +284,13 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const transportId = (0, uuid_1.v4)();
         /* Build Request. */
         const builder = this.#channel.bufferBuilder;
-        const transportListenIp = new FbsRouter.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
-        const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(undefined /* direct */, undefined /* maxMessageSize */, undefined /* initialAvailableOutgoingBitrate */, enableSctp, new FbsRouter.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS), maxSctpMessageSize, sctpSendBufferSize, false /* isDataChannel */);
+        const transportListenIp = new FbsTransport.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
+        const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(undefined /* direct */, undefined /* maxMessageSize */, undefined /* initialAvailableOutgoingBitrate */, enableSctp, new FbsSctpParameters.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS), maxSctpMessageSize, sctpSendBufferSize, false /* isDataChannel */);
         const plainTransportOptions = new FbsRouter.PlainTransportOptionsT(baseTransportOptions, transportListenIp, port, rtcpMux, comedia, enableSrtp, srtpCryptoSuite);
         const createPlainTransportOffset = new FbsRouter.CreatePlainTransportRequestT(transportId, plainTransportOptions).pack(builder);
         const response = await this.#channel.requestBinary(FbsRequest.Method.ROUTER_CREATE_PLAIN_TRANSPORT, FbsRequest.Body.FBS_Router_CreatePlainTransportRequest, createPlainTransportOffset, this.#internal.routerId);
         /* Decode the response. */
-        const dump = new FbsTransport.TransportDumpResponse();
+        const dump = new FbsTransport.DumpResponse();
         response.body(dump);
         const data = dump.unpack();
         const transport = new PlainTransport_1.PlainTransport({
@@ -340,13 +342,13 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const transportId = (0, uuid_1.v4)();
         /* Build Request. */
         const builder = this.#channel.bufferBuilder;
-        const transportListenIp = new FbsRouter.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
-        const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(undefined /* direct */, undefined /* maxMessageSize */, undefined /* initialAvailableOutgoingBitrate */, enableSctp, new FbsRouter.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS), maxSctpMessageSize, sctpSendBufferSize, false /* isDataChannel */);
+        const transportListenIp = new FbsTransport.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
+        const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(undefined /* direct */, undefined /* maxMessageSize */, undefined /* initialAvailableOutgoingBitrate */, enableSctp, new FbsSctpParameters.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS), maxSctpMessageSize, sctpSendBufferSize, false /* isDataChannel */);
         const pipeTransportOptions = new FbsRouter.PipeTransportOptionsT(baseTransportOptions, transportListenIp, port, enableRtx, enableSrtp);
         const createPipeTransportOffset = new FbsRouter.CreatePipeTransportRequestT(transportId, pipeTransportOptions).pack(builder);
         const response = await this.#channel.requestBinary(FbsRequest.Method.ROUTER_CREATE_PIPE_TRANSPORT, FbsRequest.Body.FBS_Router_CreatePipeTransportRequest, createPipeTransportOffset, this.#internal.routerId);
         /* Decode the response. */
-        const dump = new FbsTransport.TransportDumpResponse();
+        const dump = new FbsTransport.DumpResponse();
         response.body(dump);
         const data = dump.unpack();
         const transport = new PipeTransport_1.PipeTransport({

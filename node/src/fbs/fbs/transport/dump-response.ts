@@ -10,22 +10,22 @@ import { TransportDumpData, unionToTransportDumpData, unionListToTransportDumpDa
 import { WebRtcTransportDump, WebRtcTransportDumpT } from '../../fbs/transport/web-rtc-transport-dump';
 
 
-export class TransportDumpResponse {
+export class DumpResponse {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
-  __init(i:number, bb:flatbuffers.ByteBuffer):TransportDumpResponse {
+  __init(i:number, bb:flatbuffers.ByteBuffer):DumpResponse {
   this.bb_pos = i;
   this.bb = bb;
   return this;
 }
 
-static getRootAsTransportDumpResponse(bb:flatbuffers.ByteBuffer, obj?:TransportDumpResponse):TransportDumpResponse {
-  return (obj || new TransportDumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+static getRootAsDumpResponse(bb:flatbuffers.ByteBuffer, obj?:DumpResponse):DumpResponse {
+  return (obj || new DumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-static getSizePrefixedRootAsTransportDumpResponse(bb:flatbuffers.ByteBuffer, obj?:TransportDumpResponse):TransportDumpResponse {
+static getSizePrefixedRootAsDumpResponse(bb:flatbuffers.ByteBuffer, obj?:DumpResponse):DumpResponse {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
-  return (obj || new TransportDumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+  return (obj || new DumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
 dataType():TransportDumpData {
@@ -38,7 +38,7 @@ data<T extends flatbuffers.Table>(obj:any):any|null {
   return offset ? this.bb!.__union(obj, this.bb_pos + offset) : null;
 }
 
-static startTransportDumpResponse(builder:flatbuffers.Builder) {
+static startDumpResponse(builder:flatbuffers.Builder) {
   builder.startObject(2);
 }
 
@@ -50,20 +50,20 @@ static addData(builder:flatbuffers.Builder, dataOffset:flatbuffers.Offset) {
   builder.addFieldOffset(1, dataOffset, 0);
 }
 
-static endTransportDumpResponse(builder:flatbuffers.Builder):flatbuffers.Offset {
+static endDumpResponse(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   return offset;
 }
 
-static createTransportDumpResponse(builder:flatbuffers.Builder, dataType:TransportDumpData, dataOffset:flatbuffers.Offset):flatbuffers.Offset {
-  TransportDumpResponse.startTransportDumpResponse(builder);
-  TransportDumpResponse.addDataType(builder, dataType);
-  TransportDumpResponse.addData(builder, dataOffset);
-  return TransportDumpResponse.endTransportDumpResponse(builder);
+static createDumpResponse(builder:flatbuffers.Builder, dataType:TransportDumpData, dataOffset:flatbuffers.Offset):flatbuffers.Offset {
+  DumpResponse.startDumpResponse(builder);
+  DumpResponse.addDataType(builder, dataType);
+  DumpResponse.addData(builder, dataOffset);
+  return DumpResponse.endDumpResponse(builder);
 }
 
-unpack(): TransportDumpResponseT {
-  return new TransportDumpResponseT(
+unpack(): DumpResponseT {
+  return new DumpResponseT(
     this.dataType(),
     (() => {
       let temp = unionToTransportDumpData(this.dataType(), this.data.bind(this));
@@ -74,7 +74,7 @@ unpack(): TransportDumpResponseT {
 }
 
 
-unpackTo(_o: TransportDumpResponseT): void {
+unpackTo(_o: DumpResponseT): void {
   _o.dataType = this.dataType();
   _o.data = (() => {
       let temp = unionToTransportDumpData(this.dataType(), this.data.bind(this));
@@ -84,7 +84,7 @@ unpackTo(_o: TransportDumpResponseT): void {
 }
 }
 
-export class TransportDumpResponseT {
+export class DumpResponseT {
 constructor(
   public dataType: TransportDumpData = TransportDumpData.NONE,
   public data: BaseTransportDumpT|DirectTransportDumpT|PipeTransportDumpT|PlainTransportDumpT|WebRtcTransportDumpT|null = null
@@ -94,7 +94,7 @@ constructor(
 pack(builder:flatbuffers.Builder): flatbuffers.Offset {
   const data = builder.createObjectOffset(this.data);
 
-  return TransportDumpResponse.createTransportDumpResponse(builder,
+  return DumpResponse.createDumpResponse(builder,
     this.dataType,
     data
   );

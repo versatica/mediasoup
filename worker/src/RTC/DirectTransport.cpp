@@ -32,7 +32,7 @@ namespace RTC
 		ChannelMessageHandlers::UnregisterHandler(this->id);
 	}
 
-	flatbuffers::Offset<FBS::Transport::TransportDumpResponse> DirectTransport::FillBuffer(
+	flatbuffers::Offset<FBS::Transport::DumpResponse> DirectTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		// Add base transport dump.
@@ -40,7 +40,7 @@ namespace RTC
 
 		auto directTransportDump = FBS::Transport::CreateDirectTransportDump(builder, base);
 
-		return FBS::Transport::CreateTransportDumpResponse(
+		return FBS::Transport::CreateDumpResponse(
 		  builder, FBS::Transport::TransportDumpData::DirectTransportDump, directTransportDump.Union());
 	}
 

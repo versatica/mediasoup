@@ -9,10 +9,10 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
-import { Body as RequestBody, Method, CreateRouterRequestT } from './fbs/request_generated';
-import { WorkerDumpResponse as FbsWorkerDumpResponse, ResourceUsageResponse as FbsResourceUsageResponse } from './fbs/response_generated';
-import { UpdateSettingsRequestT, CreateWebRtcServerRequestT, TransportProtocol } from './fbs/worker_generated';
-import { WebRtcServerListenInfoT } from './fbs/worker_generated';
+import * as FbsRequest from './fbs/request_generated';
+import * as FbsWorker from './fbs/worker_generated';
+import * as FbsWebRtcServer from './fbs/webRtcServer_generated';
+import { TransportProtocol as FbsTransportProtocol } from './fbs/fbs/transport/transport-protocol';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
@@ -567,11 +567,11 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		// Send the request and wait for the response.
 		const response = await this.#channel.requestBinary(
-			Method.WORKER_DUMP
+			FbsRequest.Method.WORKER_DUMP
 		);
 
 		/* Decode the response. */
-		const dump = new FbsWorkerDumpResponse();
+		const dump = new FbsWorker.DumpResponse();
 
 		response.body(dump);
 
@@ -585,10 +585,12 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	{
 		logger.debug('getResourceUsage()');
 
-		const response = await this.#channel.requestBinary(Method.WORKER_GET_RESOURCE_USAGE);
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.WORKER_GET_RESOURCE_USAGE
+		);
 
 		/* Decode the response. */
-		const resourceUsage = new FbsResourceUsageResponse();
+		const resourceUsage = new FbsWorker.ResourceUsageResponse();
 
 		response.body(resourceUsage);
 
@@ -631,13 +633,14 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		// Build the request.
 		const builder = this.#channel.bufferBuilder;
 
-		const updateaSettingsRequest = new UpdateSettingsRequestT(logLevel, logTags);
+		const updateaSettingsRequest =
+			new FbsWorker.UpdateSettingsRequestT(logLevel, logTags);
 		const updateaSettingsRequestOffset = updateaSettingsRequest.pack(builder);
 
 		await this.#channel.requestBinary(
-			Method.WORKER_UPDATE_SETTINGS,
-			RequestBody.FBS_Worker_UpdateSettingsRequest,
-			updateaSettingsRequestOffset 
+			FbsRequest.Method.WORKER_UPDATE_SETTINGS,
+			FbsRequest.Body.FBS_Worker_UpdateSettingsRequest,
+			updateaSettingsRequestOffset
 		);
 	}
 
@@ -657,12 +660,12 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		// Build the request.
 		const builder = this.#channel.bufferBuilder;
-		const fbsListenInfos:WebRtcServerListenInfoT[] = [];
+		const fbsListenInfos:FbsWebRtcServer.WebRtcServerListenInfoT[] = [];
 
 		for (const listenInfo of listenInfos)
 		{
-			fbsListenInfos.push(new WebRtcServerListenInfoT(
-				listenInfo.protocol === 'udp' ? TransportProtocol.UDP : TransportProtocol.TCP,
+			fbsListenInfos.push(new FbsWebRtcServer.WebRtcServerListenInfoT(
+				listenInfo.protocol === 'udp' ? FbsTransportProtocol.UDP : FbsTransportProtocol.TCP,
 				listenInfo.ip,
 				listenInfo.announcedIp,
 				listenInfo.port)
@@ -670,13 +673,13 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		}
 
 		const webRtcServerId = uuidv4();
-		const createWebRtcServerRequestT = new CreateWebRtcServerRequestT(
+		const createWebRtcServerRequestT = new FbsRequest.CreateWebRtcServerRequestT(
 			webRtcServerId, fbsListenInfos);
 		const createWebRtcServerRequestOffset = createWebRtcServerRequestT.pack(builder);
 
 		await this.#channel.requestBinary(
-			Method.WORKER_CREATE_WEBRTC_SERVER,
-			RequestBody.FBS_Worker_CreateWebRtcServerRequest,
+			FbsRequest.Method.WORKER_CREATE_WEBRTC_SERVER,
+			FbsRequest.Body.FBS_Worker_CreateWebRtcServerRequest,
 			createWebRtcServerRequestOffset
 		);
 
@@ -717,10 +720,11 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		// Get flatbuffer builder.
 		const builder = this.#channel.bufferBuilder;
-		const createRouterRequestOffset = new CreateRouterRequestT(routerId).pack(builder);
+		const createRouterRequestOffset =
+			new FbsRequest.CreateRouterRequestT(routerId).pack(builder);
 
-		await this.#channel.requestBinary(Method.WORKER_CREATE_ROUTER,
-			RequestBody.FBS_Worker_CreateRouterRequest, createRouterRequestOffset);
+		await this.#channel.requestBinary(FbsRequest.Method.WORKER_CREATE_ROUTER,
+			FbsRequest.Body.FBS_Worker_CreateRouterRequest, createRouterRequestOffset);
 
 		const data = { rtpCapabilities };
 		const router = new Router(

@@ -6,7 +6,7 @@ include "webRtcTransport.fbs";
 
 namespace FBS.Router;
 
-table RouterDumpResponse {
+table DumpResponse {
   id:string (required);
   transport_ids:[string];
   rtp_observer_ids:[string];

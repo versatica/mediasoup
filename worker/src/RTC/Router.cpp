@@ -171,7 +171,7 @@ namespace RTC
 		}
 	}
 
-	flatbuffers::Offset<FBS::Router::RouterDumpResponse> Router::FillBuffer(
+	flatbuffers::Offset<FBS::Router::DumpResponse> Router::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -275,7 +275,7 @@ namespace RTC
 			  builder, dataConsumer->id.c_str(), dataProducer->id.c_str()));
 		}
 
-		return FBS::Router::CreateRouterDumpResponseDirect(
+		return FBS::Router::CreateDumpResponseDirect(
 		  builder,
 		  this->id.c_str(),
 		  &transportIds,
@@ -596,7 +596,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_Worker_WorkerDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_Worker_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -620,7 +620,7 @@ namespace RTC
 
 				auto dumpOffset = webRtcTransport->FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_Transport_TransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_Transport_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -658,7 +658,7 @@ namespace RTC
 
 				auto dumpOffset = webRtcTransport->FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_Transport_TransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_Transport_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -680,7 +680,7 @@ namespace RTC
 
 				auto dumpOffset = plainTransport->FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_Transport_TransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_Transport_DumpResponse, dumpOffset);
 
 				break;
 			}

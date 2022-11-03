@@ -13,7 +13,7 @@ namespace RTC
 
 	public:
 		void FillJsonStats(json& jsonArray) override;
-		virtual flatbuffers::Offset<FBS::Transport::TransportDumpResponse> FillBuffer(
+		virtual flatbuffers::Offset<FBS::Transport::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const override;
 
 	private:

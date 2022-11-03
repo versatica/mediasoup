@@ -45,7 +45,7 @@ namespace RTC
 		~WebRtcServer();
 
 	public:
-		flatbuffers::Offset<FBS::WebRtcServer::WebRtcServerDumpResponse> FillBuffer(
+		flatbuffers::Offset<FBS::WebRtcServer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 		std::vector<RTC::IceCandidate> GetIceCandidates(
 		  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp);

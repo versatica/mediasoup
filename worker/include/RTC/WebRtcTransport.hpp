@@ -70,7 +70,7 @@ namespace RTC
 
 	public:
 		void FillJsonStats(json& jsonArray) override;
-		flatbuffers::Offset<FBS::Transport::TransportDumpResponse> FillBuffer(
+		flatbuffers::Offset<FBS::Transport::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const override;
 		void ProcessStunPacketFromWebRtcServer(RTC::TransportTuple* tuple, RTC::StunPacket* packet);
 		void ProcessNonStunPacketFromWebRtcServer(

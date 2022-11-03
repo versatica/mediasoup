@@ -2,7 +2,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { TransportDumpResponse, TransportDumpResponseT } from '../../fbs/transport/transport-dump-response';
+import { DumpResponse, DumpResponseT } from '../../fbs/transport/dump-response';
 
 
 export class DirectTransportDump {
@@ -23,9 +23,9 @@ static getSizePrefixedRootAsDirectTransportDump(bb:flatbuffers.ByteBuffer, obj?:
   return (obj || new DirectTransportDump()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-base(obj?:TransportDumpResponse):TransportDumpResponse|null {
+base(obj?:DumpResponse):DumpResponse|null {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new TransportDumpResponse()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new DumpResponse()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startDirectTransportDump(builder:flatbuffers.Builder) {
@@ -62,7 +62,7 @@ unpackTo(_o: DirectTransportDumpT): void {
 
 export class DirectTransportDumpT {
 constructor(
-  public base: TransportDumpResponseT|null = null
+  public base: DumpResponseT|null = null
 ){}
 
 

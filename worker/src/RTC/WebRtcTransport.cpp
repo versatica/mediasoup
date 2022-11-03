@@ -522,7 +522,7 @@ namespace RTC
 			this->webRtcTransportListener->OnWebRtcTransportClosed(this);
 	}
 
-	flatbuffers::Offset<FBS::Transport::TransportDumpResponse> WebRtcTransport::FillBuffer(
+	flatbuffers::Offset<FBS::Transport::DumpResponse> WebRtcTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -637,7 +637,7 @@ namespace RTC
 		  dtlsParameters,
 		  dtlsState.c_str());
 
-		return FBS::Transport::CreateTransportDumpResponse(
+		return FBS::Transport::CreateDumpResponse(
 		  builder, FBS::Transport::TransportDumpData::WebRtcTransportDump, webRtcTransportDump.Union());
 	}
 

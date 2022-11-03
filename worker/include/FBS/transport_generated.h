@@ -36,8 +36,8 @@ struct RtpListenerBuilder;
 struct SctpListener;
 struct SctpListenerBuilder;
 
-struct TransportDumpResponse;
-struct TransportDumpResponseBuilder;
+struct DumpResponse;
+struct DumpResponseBuilder;
 
 struct BaseTransportDump;
 struct BaseTransportDumpBuilder;
@@ -85,7 +85,7 @@ inline const flatbuffers::TypeTable *RtpListenerTypeTable();
 
 inline const flatbuffers::TypeTable *SctpListenerTypeTable();
 
-inline const flatbuffers::TypeTable *TransportDumpResponseTypeTable();
+inline const flatbuffers::TypeTable *DumpResponseTypeTable();
 
 inline const flatbuffers::TypeTable *BaseTransportDumpTypeTable();
 
@@ -660,10 +660,10 @@ inline flatbuffers::Offset<SctpListener> CreateSctpListenerDirect(
       streamIdTable__);
 }
 
-struct TransportDumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef TransportDumpResponseBuilder Builder;
+struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef DumpResponseBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return TransportDumpResponseTypeTable();
+    return DumpResponseTypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_DATA_TYPE = 4,
@@ -700,52 +700,52 @@ struct TransportDumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tabl
   }
 };
 
-template<> inline const FBS::Transport::BaseTransportDump *TransportDumpResponse::data_as<FBS::Transport::BaseTransportDump>() const {
+template<> inline const FBS::Transport::BaseTransportDump *DumpResponse::data_as<FBS::Transport::BaseTransportDump>() const {
   return data_as_BaseTransportDump();
 }
 
-template<> inline const FBS::Transport::DirectTransportDump *TransportDumpResponse::data_as<FBS::Transport::DirectTransportDump>() const {
+template<> inline const FBS::Transport::DirectTransportDump *DumpResponse::data_as<FBS::Transport::DirectTransportDump>() const {
   return data_as_DirectTransportDump();
 }
 
-template<> inline const FBS::Transport::PipeTransportDump *TransportDumpResponse::data_as<FBS::Transport::PipeTransportDump>() const {
+template<> inline const FBS::Transport::PipeTransportDump *DumpResponse::data_as<FBS::Transport::PipeTransportDump>() const {
   return data_as_PipeTransportDump();
 }
 
-template<> inline const FBS::Transport::PlainTransportDump *TransportDumpResponse::data_as<FBS::Transport::PlainTransportDump>() const {
+template<> inline const FBS::Transport::PlainTransportDump *DumpResponse::data_as<FBS::Transport::PlainTransportDump>() const {
   return data_as_PlainTransportDump();
 }
 
-template<> inline const FBS::Transport::WebRtcTransportDump *TransportDumpResponse::data_as<FBS::Transport::WebRtcTransportDump>() const {
+template<> inline const FBS::Transport::WebRtcTransportDump *DumpResponse::data_as<FBS::Transport::WebRtcTransportDump>() const {
   return data_as_WebRtcTransportDump();
 }
 
-struct TransportDumpResponseBuilder {
-  typedef TransportDumpResponse Table;
+struct DumpResponseBuilder {
+  typedef DumpResponse Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_data_type(FBS::Transport::TransportDumpData data_type) {
-    fbb_.AddElement<uint8_t>(TransportDumpResponse::VT_DATA_TYPE, static_cast<uint8_t>(data_type), 0);
+    fbb_.AddElement<uint8_t>(DumpResponse::VT_DATA_TYPE, static_cast<uint8_t>(data_type), 0);
   }
   void add_data(flatbuffers::Offset<void> data) {
-    fbb_.AddOffset(TransportDumpResponse::VT_DATA, data);
+    fbb_.AddOffset(DumpResponse::VT_DATA, data);
   }
-  explicit TransportDumpResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit DumpResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<TransportDumpResponse> Finish() {
+  flatbuffers::Offset<DumpResponse> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<TransportDumpResponse>(end);
+    auto o = flatbuffers::Offset<DumpResponse>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<TransportDumpResponse> CreateTransportDumpResponse(
+inline flatbuffers::Offset<DumpResponse> CreateDumpResponse(
     flatbuffers::FlatBufferBuilder &_fbb,
     FBS::Transport::TransportDumpData data_type = FBS::Transport::TransportDumpData::NONE,
     flatbuffers::Offset<void> data = 0) {
-  TransportDumpResponseBuilder builder_(_fbb);
+  DumpResponseBuilder builder_(_fbb);
   builder_.add_data(data);
   builder_.add_data_type(data_type);
   return builder_.Finish();
@@ -1496,8 +1496,8 @@ struct WebRtcTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table 
     VT_DTLSPARAMETERS = 16,
     VT_DTLSSTATE = 18
   };
-  const FBS::Transport::TransportDumpResponse *base() const {
-    return GetPointer<const FBS::Transport::TransportDumpResponse *>(VT_BASE);
+  const FBS::Transport::DumpResponse *base() const {
+    return GetPointer<const FBS::Transport::DumpResponse *>(VT_BASE);
   }
   const flatbuffers::String *iceRole() const {
     return GetPointer<const flatbuffers::String *>(VT_ICEROLE);
@@ -1547,7 +1547,7 @@ struct WebRtcTransportDumpBuilder {
   typedef WebRtcTransportDump Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_base(flatbuffers::Offset<FBS::Transport::TransportDumpResponse> base) {
+  void add_base(flatbuffers::Offset<FBS::Transport::DumpResponse> base) {
     fbb_.AddOffset(WebRtcTransportDump::VT_BASE, base);
   }
   void add_iceRole(flatbuffers::Offset<flatbuffers::String> iceRole) {
@@ -1591,7 +1591,7 @@ struct WebRtcTransportDumpBuilder {
 
 inline flatbuffers::Offset<WebRtcTransportDump> CreateWebRtcTransportDump(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<FBS::Transport::TransportDumpResponse> base = 0,
+    flatbuffers::Offset<FBS::Transport::DumpResponse> base = 0,
     flatbuffers::Offset<flatbuffers::String> iceRole = 0,
     flatbuffers::Offset<FBS::Transport::IceParameters> iceParameters = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::IceCandidate>>> iceCandidates = 0,
@@ -1613,7 +1613,7 @@ inline flatbuffers::Offset<WebRtcTransportDump> CreateWebRtcTransportDump(
 
 inline flatbuffers::Offset<WebRtcTransportDump> CreateWebRtcTransportDumpDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<FBS::Transport::TransportDumpResponse> base = 0,
+    flatbuffers::Offset<FBS::Transport::DumpResponse> base = 0,
     const char *iceRole = nullptr,
     flatbuffers::Offset<FBS::Transport::IceParameters> iceParameters = 0,
     const std::vector<flatbuffers::Offset<FBS::Transport::IceCandidate>> *iceCandidates = nullptr,
@@ -1720,8 +1720,8 @@ struct PlainTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_RTCPTUPLE = 12,
     VT_SRTPPARAMETERS = 14
   };
-  const FBS::Transport::TransportDumpResponse *base() const {
-    return GetPointer<const FBS::Transport::TransportDumpResponse *>(VT_BASE);
+  const FBS::Transport::DumpResponse *base() const {
+    return GetPointer<const FBS::Transport::DumpResponse *>(VT_BASE);
   }
   bool rtcMux() const {
     return GetField<uint8_t>(VT_RTCMUX, 0) != 0;
@@ -1758,7 +1758,7 @@ struct PlainTransportDumpBuilder {
   typedef PlainTransportDump Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_base(flatbuffers::Offset<FBS::Transport::TransportDumpResponse> base) {
+  void add_base(flatbuffers::Offset<FBS::Transport::DumpResponse> base) {
     fbb_.AddOffset(PlainTransportDump::VT_BASE, base);
   }
   void add_rtcMux(bool rtcMux) {
@@ -1790,7 +1790,7 @@ struct PlainTransportDumpBuilder {
 
 inline flatbuffers::Offset<PlainTransportDump> CreatePlainTransportDump(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<FBS::Transport::TransportDumpResponse> base = 0,
+    flatbuffers::Offset<FBS::Transport::DumpResponse> base = 0,
     bool rtcMux = false,
     bool comedia = false,
     flatbuffers::Offset<FBS::Transport::Tuple> tuple = 0,
@@ -1814,8 +1814,8 @@ struct DirectTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table 
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_BASE = 4
   };
-  const FBS::Transport::TransportDumpResponse *base() const {
-    return GetPointer<const FBS::Transport::TransportDumpResponse *>(VT_BASE);
+  const FBS::Transport::DumpResponse *base() const {
+    return GetPointer<const FBS::Transport::DumpResponse *>(VT_BASE);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1829,7 +1829,7 @@ struct DirectTransportDumpBuilder {
   typedef DirectTransportDump Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_base(flatbuffers::Offset<FBS::Transport::TransportDumpResponse> base) {
+  void add_base(flatbuffers::Offset<FBS::Transport::DumpResponse> base) {
     fbb_.AddOffset(DirectTransportDump::VT_BASE, base);
   }
   explicit DirectTransportDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
@@ -1846,7 +1846,7 @@ struct DirectTransportDumpBuilder {
 
 inline flatbuffers::Offset<DirectTransportDump> CreateDirectTransportDump(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<FBS::Transport::TransportDumpResponse> base = 0) {
+    flatbuffers::Offset<FBS::Transport::DumpResponse> base = 0) {
   DirectTransportDumpBuilder builder_(_fbb);
   builder_.add_base(base);
   return builder_.Finish();
@@ -1863,8 +1863,8 @@ struct PipeTransportDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_RTX = 8,
     VT_SRTPPARAMETERS = 10
   };
-  const FBS::Transport::TransportDumpResponse *base() const {
-    return GetPointer<const FBS::Transport::TransportDumpResponse *>(VT_BASE);
+  const FBS::Transport::DumpResponse *base() const {
+    return GetPointer<const FBS::Transport::DumpResponse *>(VT_BASE);
   }
   const FBS::Transport::Tuple *tuple() const {
     return GetPointer<const FBS::Transport::Tuple *>(VT_TUPLE);
@@ -1892,7 +1892,7 @@ struct PipeTransportDumpBuilder {
   typedef PipeTransportDump Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_base(flatbuffers::Offset<FBS::Transport::TransportDumpResponse> base) {
+  void add_base(flatbuffers::Offset<FBS::Transport::DumpResponse> base) {
     fbb_.AddOffset(PipeTransportDump::VT_BASE, base);
   }
   void add_tuple(flatbuffers::Offset<FBS::Transport::Tuple> tuple) {
@@ -1919,7 +1919,7 @@ struct PipeTransportDumpBuilder {
 
 inline flatbuffers::Offset<PipeTransportDump> CreatePipeTransportDump(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<FBS::Transport::TransportDumpResponse> base = 0,
+    flatbuffers::Offset<FBS::Transport::DumpResponse> base = 0,
     flatbuffers::Offset<FBS::Transport::Tuple> tuple = 0,
     bool rtx = false,
     flatbuffers::Offset<FBS::Transport::SrtpParameters> srtpParameters = 0) {
@@ -2247,7 +2247,7 @@ inline const flatbuffers::TypeTable *SctpListenerTypeTable() {
   return &tt;
 }
 
-inline const flatbuffers::TypeTable *TransportDumpResponseTypeTable() {
+inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_UTYPE, 0, 0 },
     { flatbuffers::ET_SEQUENCE, 0, 0 }
@@ -2421,7 +2421,7 @@ inline const flatbuffers::TypeTable *WebRtcTransportDumpTypeTable() {
     { flatbuffers::ET_STRING, 0, -1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Transport::TransportDumpResponseTypeTable,
+    FBS::Transport::DumpResponseTypeTable,
     FBS::Transport::IceParametersTypeTable,
     FBS::Transport::IceCandidateTypeTable,
     FBS::Transport::TupleTypeTable,
@@ -2468,7 +2468,7 @@ inline const flatbuffers::TypeTable *PlainTransportDumpTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 2 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Transport::TransportDumpResponseTypeTable,
+    FBS::Transport::DumpResponseTypeTable,
     FBS::Transport::TupleTypeTable,
     FBS::Transport::SrtpParametersTypeTable
   };
@@ -2491,7 +2491,7 @@ inline const flatbuffers::TypeTable *DirectTransportDumpTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 0 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Transport::TransportDumpResponseTypeTable
+    FBS::Transport::DumpResponseTypeTable
   };
   static const char * const names[] = {
     "base"
@@ -2510,7 +2510,7 @@ inline const flatbuffers::TypeTable *PipeTransportDumpTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 2 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Transport::TransportDumpResponseTypeTable,
+    FBS::Transport::DumpResponseTypeTable,
     FBS::Transport::TupleTypeTable,
     FBS::Transport::SrtpParametersTypeTable
   };

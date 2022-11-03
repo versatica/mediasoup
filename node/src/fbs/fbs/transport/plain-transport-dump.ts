@@ -2,8 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { DumpResponse, DumpResponseT } from '../../fbs/transport/dump-response';
 import { SrtpParameters, SrtpParametersT } from '../../fbs/transport/srtp-parameters';
-import { TransportDumpResponse, TransportDumpResponseT } from '../../fbs/transport/transport-dump-response';
 import { Tuple, TupleT } from '../../fbs/transport/tuple';
 
 
@@ -25,9 +25,9 @@ static getSizePrefixedRootAsPlainTransportDump(bb:flatbuffers.ByteBuffer, obj?:P
   return (obj || new PlainTransportDump()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-base(obj?:TransportDumpResponse):TransportDumpResponse|null {
+base(obj?:DumpResponse):DumpResponse|null {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new TransportDumpResponse()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new DumpResponse()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 rtcMux():boolean {
@@ -114,7 +114,7 @@ unpackTo(_o: PlainTransportDumpT): void {
 
 export class PlainTransportDumpT {
 constructor(
-  public base: TransportDumpResponseT|null = null,
+  public base: DumpResponseT|null = null,
   public rtcMux: boolean = false,
   public comedia: boolean = false,
   public tuple: TupleT|null = null,

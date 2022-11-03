@@ -329,7 +329,7 @@ namespace RTC
 		this->srtpRecvSession = nullptr;
 	}
 
-	flatbuffers::Offset<FBS::Transport::TransportDumpResponse> PlainTransport::FillBuffer(
+	flatbuffers::Offset<FBS::Transport::DumpResponse> PlainTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -394,7 +394,7 @@ namespace RTC
 		auto plainTransportDump = FBS::Transport::CreatePlainTransportDump(
 		  builder, base, this->rtcpMux, this->comedia, tuple, rtcpTuple, srtpParameters);
 
-		return FBS::Transport::CreateTransportDumpResponse(
+		return FBS::Transport::CreateDumpResponse(
 		  builder, FBS::Transport::TransportDumpData::PlainTransportDump, plainTransportDump.Union());
 	}
 

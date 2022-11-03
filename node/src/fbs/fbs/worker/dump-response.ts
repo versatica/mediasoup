@@ -5,22 +5,22 @@ import * as flatbuffers from 'flatbuffers';
 import { ChannelMessageHandlers, ChannelMessageHandlersT } from '../../fbs/worker/channel-message-handlers';
 
 
-export class WorkerDumpResponse {
+export class DumpResponse {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
-  __init(i:number, bb:flatbuffers.ByteBuffer):WorkerDumpResponse {
+  __init(i:number, bb:flatbuffers.ByteBuffer):DumpResponse {
   this.bb_pos = i;
   this.bb = bb;
   return this;
 }
 
-static getRootAsWorkerDumpResponse(bb:flatbuffers.ByteBuffer, obj?:WorkerDumpResponse):WorkerDumpResponse {
-  return (obj || new WorkerDumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+static getRootAsDumpResponse(bb:flatbuffers.ByteBuffer, obj?:DumpResponse):DumpResponse {
+  return (obj || new DumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-static getSizePrefixedRootAsWorkerDumpResponse(bb:flatbuffers.ByteBuffer, obj?:WorkerDumpResponse):WorkerDumpResponse {
+static getSizePrefixedRootAsDumpResponse(bb:flatbuffers.ByteBuffer, obj?:DumpResponse):DumpResponse {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
-  return (obj || new WorkerDumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+  return (obj || new DumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
 pid():bigint {
@@ -57,7 +57,7 @@ channelMessageHandlers(obj?:ChannelMessageHandlers):ChannelMessageHandlers|null 
   return offset ? (obj || new ChannelMessageHandlers()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-static startWorkerDumpResponse(builder:flatbuffers.Builder) {
+static startDumpResponse(builder:flatbuffers.Builder) {
   builder.startObject(4);
 }
 
@@ -101,14 +101,14 @@ static addChannelMessageHandlers(builder:flatbuffers.Builder, channelMessageHand
   builder.addFieldOffset(3, channelMessageHandlersOffset, 0);
 }
 
-static endWorkerDumpResponse(builder:flatbuffers.Builder):flatbuffers.Offset {
+static endDumpResponse(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   return offset;
 }
 
 
-unpack(): WorkerDumpResponseT {
-  return new WorkerDumpResponseT(
+unpack(): DumpResponseT {
+  return new DumpResponseT(
     this.pid(),
     this.bb!.createScalarList(this.webrtcServerIds.bind(this), this.webrtcServerIdsLength()),
     this.bb!.createScalarList(this.routerIds.bind(this), this.routerIdsLength()),
@@ -117,7 +117,7 @@ unpack(): WorkerDumpResponseT {
 }
 
 
-unpackTo(_o: WorkerDumpResponseT): void {
+unpackTo(_o: DumpResponseT): void {
   _o.pid = this.pid();
   _o.webrtcServerIds = this.bb!.createScalarList(this.webrtcServerIds.bind(this), this.webrtcServerIdsLength());
   _o.routerIds = this.bb!.createScalarList(this.routerIds.bind(this), this.routerIdsLength());
@@ -125,7 +125,7 @@ unpackTo(_o: WorkerDumpResponseT): void {
 }
 }
 
-export class WorkerDumpResponseT {
+export class DumpResponseT {
 constructor(
   public pid: bigint = BigInt('0'),
   public webrtcServerIds: (string)[] = [],
@@ -135,16 +135,16 @@ constructor(
 
 
 pack(builder:flatbuffers.Builder): flatbuffers.Offset {
-  const webrtcServerIds = WorkerDumpResponse.createWebrtcServerIdsVector(builder, builder.createObjectOffsetList(this.webrtcServerIds));
-  const routerIds = WorkerDumpResponse.createRouterIdsVector(builder, builder.createObjectOffsetList(this.routerIds));
+  const webrtcServerIds = DumpResponse.createWebrtcServerIdsVector(builder, builder.createObjectOffsetList(this.webrtcServerIds));
+  const routerIds = DumpResponse.createRouterIdsVector(builder, builder.createObjectOffsetList(this.routerIds));
   const channelMessageHandlers = (this.channelMessageHandlers !== null ? this.channelMessageHandlers!.pack(builder) : 0);
 
-  WorkerDumpResponse.startWorkerDumpResponse(builder);
-  WorkerDumpResponse.addPid(builder, this.pid);
-  WorkerDumpResponse.addWebrtcServerIds(builder, webrtcServerIds);
-  WorkerDumpResponse.addRouterIds(builder, routerIds);
-  WorkerDumpResponse.addChannelMessageHandlers(builder, channelMessageHandlers);
+  DumpResponse.startDumpResponse(builder);
+  DumpResponse.addPid(builder, this.pid);
+  DumpResponse.addWebrtcServerIds(builder, webrtcServerIds);
+  DumpResponse.addRouterIds(builder, routerIds);
+  DumpResponse.addChannelMessageHandlers(builder, channelMessageHandlers);
 
-  return WorkerDumpResponse.endWorkerDumpResponse(builder);
+  return DumpResponse.endDumpResponse(builder);
 }
 }

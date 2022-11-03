@@ -6,22 +6,22 @@ import { StringString, StringStringT } from '../../fbs/common/string-string';
 import { StringStringArray, StringStringArrayT } from '../../fbs/common/string-string-array';
 
 
-export class RouterDumpResponse {
+export class DumpResponse {
   bb: flatbuffers.ByteBuffer|null = null;
   bb_pos = 0;
-  __init(i:number, bb:flatbuffers.ByteBuffer):RouterDumpResponse {
+  __init(i:number, bb:flatbuffers.ByteBuffer):DumpResponse {
   this.bb_pos = i;
   this.bb = bb;
   return this;
 }
 
-static getRootAsRouterDumpResponse(bb:flatbuffers.ByteBuffer, obj?:RouterDumpResponse):RouterDumpResponse {
-  return (obj || new RouterDumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+static getRootAsDumpResponse(bb:flatbuffers.ByteBuffer, obj?:DumpResponse):DumpResponse {
+  return (obj || new DumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-static getSizePrefixedRootAsRouterDumpResponse(bb:flatbuffers.ByteBuffer, obj?:RouterDumpResponse):RouterDumpResponse {
+static getSizePrefixedRootAsDumpResponse(bb:flatbuffers.ByteBuffer, obj?:DumpResponse):DumpResponse {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
-  return (obj || new RouterDumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+  return (obj || new DumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
 id():string|null
@@ -105,7 +105,7 @@ mapDataConsumerIdDataProducerIdLength():number {
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-static startRouterDumpResponse(builder:flatbuffers.Builder) {
+static startDumpResponse(builder:flatbuffers.Builder) {
   builder.startObject(8);
 }
 
@@ -225,27 +225,27 @@ static startMapDataConsumerIdDataProducerIdVector(builder:flatbuffers.Builder, n
   builder.startVector(4, numElems, 4);
 }
 
-static endRouterDumpResponse(builder:flatbuffers.Builder):flatbuffers.Offset {
+static endDumpResponse(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   builder.requiredField(offset, 4) // id
   return offset;
 }
 
-static createRouterDumpResponse(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, transportIdsOffset:flatbuffers.Offset, rtpObserverIdsOffset:flatbuffers.Offset, mapProducerIdConsumerIdsOffset:flatbuffers.Offset, mapConsumerIdProducerIdOffset:flatbuffers.Offset, mapProducerIdObserverIdsOffset:flatbuffers.Offset, mapDataProducerIdDataConsumerIdsOffset:flatbuffers.Offset, mapDataConsumerIdDataProducerIdOffset:flatbuffers.Offset):flatbuffers.Offset {
-  RouterDumpResponse.startRouterDumpResponse(builder);
-  RouterDumpResponse.addId(builder, idOffset);
-  RouterDumpResponse.addTransportIds(builder, transportIdsOffset);
-  RouterDumpResponse.addRtpObserverIds(builder, rtpObserverIdsOffset);
-  RouterDumpResponse.addMapProducerIdConsumerIds(builder, mapProducerIdConsumerIdsOffset);
-  RouterDumpResponse.addMapConsumerIdProducerId(builder, mapConsumerIdProducerIdOffset);
-  RouterDumpResponse.addMapProducerIdObserverIds(builder, mapProducerIdObserverIdsOffset);
-  RouterDumpResponse.addMapDataProducerIdDataConsumerIds(builder, mapDataProducerIdDataConsumerIdsOffset);
-  RouterDumpResponse.addMapDataConsumerIdDataProducerId(builder, mapDataConsumerIdDataProducerIdOffset);
-  return RouterDumpResponse.endRouterDumpResponse(builder);
+static createDumpResponse(builder:flatbuffers.Builder, idOffset:flatbuffers.Offset, transportIdsOffset:flatbuffers.Offset, rtpObserverIdsOffset:flatbuffers.Offset, mapProducerIdConsumerIdsOffset:flatbuffers.Offset, mapConsumerIdProducerIdOffset:flatbuffers.Offset, mapProducerIdObserverIdsOffset:flatbuffers.Offset, mapDataProducerIdDataConsumerIdsOffset:flatbuffers.Offset, mapDataConsumerIdDataProducerIdOffset:flatbuffers.Offset):flatbuffers.Offset {
+  DumpResponse.startDumpResponse(builder);
+  DumpResponse.addId(builder, idOffset);
+  DumpResponse.addTransportIds(builder, transportIdsOffset);
+  DumpResponse.addRtpObserverIds(builder, rtpObserverIdsOffset);
+  DumpResponse.addMapProducerIdConsumerIds(builder, mapProducerIdConsumerIdsOffset);
+  DumpResponse.addMapConsumerIdProducerId(builder, mapConsumerIdProducerIdOffset);
+  DumpResponse.addMapProducerIdObserverIds(builder, mapProducerIdObserverIdsOffset);
+  DumpResponse.addMapDataProducerIdDataConsumerIds(builder, mapDataProducerIdDataConsumerIdsOffset);
+  DumpResponse.addMapDataConsumerIdDataProducerId(builder, mapDataConsumerIdDataProducerIdOffset);
+  return DumpResponse.endDumpResponse(builder);
 }
 
-unpack(): RouterDumpResponseT {
-  return new RouterDumpResponseT(
+unpack(): DumpResponseT {
+  return new DumpResponseT(
     this.id(),
     this.bb!.createScalarList(this.transportIds.bind(this), this.transportIdsLength()),
     this.bb!.createScalarList(this.rtpObserverIds.bind(this), this.rtpObserverIdsLength()),
@@ -258,7 +258,7 @@ unpack(): RouterDumpResponseT {
 }
 
 
-unpackTo(_o: RouterDumpResponseT): void {
+unpackTo(_o: DumpResponseT): void {
   _o.id = this.id();
   _o.transportIds = this.bb!.createScalarList(this.transportIds.bind(this), this.transportIdsLength());
   _o.rtpObserverIds = this.bb!.createScalarList(this.rtpObserverIds.bind(this), this.rtpObserverIdsLength());
@@ -270,7 +270,7 @@ unpackTo(_o: RouterDumpResponseT): void {
 }
 }
 
-export class RouterDumpResponseT {
+export class DumpResponseT {
 constructor(
   public id: string|Uint8Array|null = null,
   public transportIds: (string)[] = [],
@@ -285,15 +285,15 @@ constructor(
 
 pack(builder:flatbuffers.Builder): flatbuffers.Offset {
   const id = (this.id !== null ? builder.createString(this.id!) : 0);
-  const transportIds = RouterDumpResponse.createTransportIdsVector(builder, builder.createObjectOffsetList(this.transportIds));
-  const rtpObserverIds = RouterDumpResponse.createRtpObserverIdsVector(builder, builder.createObjectOffsetList(this.rtpObserverIds));
-  const mapProducerIdConsumerIds = RouterDumpResponse.createMapProducerIdConsumerIdsVector(builder, builder.createObjectOffsetList(this.mapProducerIdConsumerIds));
-  const mapConsumerIdProducerId = RouterDumpResponse.createMapConsumerIdProducerIdVector(builder, builder.createObjectOffsetList(this.mapConsumerIdProducerId));
-  const mapProducerIdObserverIds = RouterDumpResponse.createMapProducerIdObserverIdsVector(builder, builder.createObjectOffsetList(this.mapProducerIdObserverIds));
-  const mapDataProducerIdDataConsumerIds = RouterDumpResponse.createMapDataProducerIdDataConsumerIdsVector(builder, builder.createObjectOffsetList(this.mapDataProducerIdDataConsumerIds));
-  const mapDataConsumerIdDataProducerId = RouterDumpResponse.createMapDataConsumerIdDataProducerIdVector(builder, builder.createObjectOffsetList(this.mapDataConsumerIdDataProducerId));
+  const transportIds = DumpResponse.createTransportIdsVector(builder, builder.createObjectOffsetList(this.transportIds));
+  const rtpObserverIds = DumpResponse.createRtpObserverIdsVector(builder, builder.createObjectOffsetList(this.rtpObserverIds));
+  const mapProducerIdConsumerIds = DumpResponse.createMapProducerIdConsumerIdsVector(builder, builder.createObjectOffsetList(this.mapProducerIdConsumerIds));
+  const mapConsumerIdProducerId = DumpResponse.createMapConsumerIdProducerIdVector(builder, builder.createObjectOffsetList(this.mapConsumerIdProducerId));
+  const mapProducerIdObserverIds = DumpResponse.createMapProducerIdObserverIdsVector(builder, builder.createObjectOffsetList(this.mapProducerIdObserverIds));
+  const mapDataProducerIdDataConsumerIds = DumpResponse.createMapDataProducerIdDataConsumerIdsVector(builder, builder.createObjectOffsetList(this.mapDataProducerIdDataConsumerIds));
+  const mapDataConsumerIdDataProducerId = DumpResponse.createMapDataConsumerIdDataProducerIdVector(builder, builder.createObjectOffsetList(this.mapDataConsumerIdDataProducerId));
 
-  return RouterDumpResponse.createRouterDumpResponse(builder,
+  return DumpResponse.createDumpResponse(builder,
     id,
     transportIds,
     rtpObserverIds,

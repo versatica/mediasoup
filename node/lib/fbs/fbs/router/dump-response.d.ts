@@ -1,12 +1,12 @@
 import * as flatbuffers from 'flatbuffers';
 import { StringString, StringStringT } from '../../fbs/common/string-string';
 import { StringStringArray, StringStringArrayT } from '../../fbs/common/string-string-array';
-export declare class RouterDumpResponse {
+export declare class DumpResponse {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
-    __init(i: number, bb: flatbuffers.ByteBuffer): RouterDumpResponse;
-    static getRootAsRouterDumpResponse(bb: flatbuffers.ByteBuffer, obj?: RouterDumpResponse): RouterDumpResponse;
-    static getSizePrefixedRootAsRouterDumpResponse(bb: flatbuffers.ByteBuffer, obj?: RouterDumpResponse): RouterDumpResponse;
+    __init(i: number, bb: flatbuffers.ByteBuffer): DumpResponse;
+    static getRootAsDumpResponse(bb: flatbuffers.ByteBuffer, obj?: DumpResponse): DumpResponse;
+    static getSizePrefixedRootAsDumpResponse(bb: flatbuffers.ByteBuffer, obj?: DumpResponse): DumpResponse;
     id(): string | null;
     id(optionalEncoding: flatbuffers.Encoding): string | Uint8Array | null;
     transportIds(index: number): string;
@@ -25,7 +25,7 @@ export declare class RouterDumpResponse {
     mapDataProducerIdDataConsumerIdsLength(): number;
     mapDataConsumerIdDataProducerId(index: number, obj?: StringString): StringString | null;
     mapDataConsumerIdDataProducerIdLength(): number;
-    static startRouterDumpResponse(builder: flatbuffers.Builder): void;
+    static startDumpResponse(builder: flatbuffers.Builder): void;
     static addId(builder: flatbuffers.Builder, idOffset: flatbuffers.Offset): void;
     static addTransportIds(builder: flatbuffers.Builder, transportIdsOffset: flatbuffers.Offset): void;
     static createTransportIdsVector(builder: flatbuffers.Builder, data: flatbuffers.Offset[]): flatbuffers.Offset;
@@ -48,12 +48,12 @@ export declare class RouterDumpResponse {
     static addMapDataConsumerIdDataProducerId(builder: flatbuffers.Builder, mapDataConsumerIdDataProducerIdOffset: flatbuffers.Offset): void;
     static createMapDataConsumerIdDataProducerIdVector(builder: flatbuffers.Builder, data: flatbuffers.Offset[]): flatbuffers.Offset;
     static startMapDataConsumerIdDataProducerIdVector(builder: flatbuffers.Builder, numElems: number): void;
-    static endRouterDumpResponse(builder: flatbuffers.Builder): flatbuffers.Offset;
-    static createRouterDumpResponse(builder: flatbuffers.Builder, idOffset: flatbuffers.Offset, transportIdsOffset: flatbuffers.Offset, rtpObserverIdsOffset: flatbuffers.Offset, mapProducerIdConsumerIdsOffset: flatbuffers.Offset, mapConsumerIdProducerIdOffset: flatbuffers.Offset, mapProducerIdObserverIdsOffset: flatbuffers.Offset, mapDataProducerIdDataConsumerIdsOffset: flatbuffers.Offset, mapDataConsumerIdDataProducerIdOffset: flatbuffers.Offset): flatbuffers.Offset;
-    unpack(): RouterDumpResponseT;
-    unpackTo(_o: RouterDumpResponseT): void;
+    static endDumpResponse(builder: flatbuffers.Builder): flatbuffers.Offset;
+    static createDumpResponse(builder: flatbuffers.Builder, idOffset: flatbuffers.Offset, transportIdsOffset: flatbuffers.Offset, rtpObserverIdsOffset: flatbuffers.Offset, mapProducerIdConsumerIdsOffset: flatbuffers.Offset, mapConsumerIdProducerIdOffset: flatbuffers.Offset, mapProducerIdObserverIdsOffset: flatbuffers.Offset, mapDataProducerIdDataConsumerIdsOffset: flatbuffers.Offset, mapDataConsumerIdDataProducerIdOffset: flatbuffers.Offset): flatbuffers.Offset;
+    unpack(): DumpResponseT;
+    unpackTo(_o: DumpResponseT): void;
 }
-export declare class RouterDumpResponseT {
+export declare class DumpResponseT {
     id: string | Uint8Array | null;
     transportIds: (string)[];
     rtpObserverIds: (string)[];
@@ -65,4 +65,4 @@ export declare class RouterDumpResponseT {
     constructor(id?: string | Uint8Array | null, transportIds?: (string)[], rtpObserverIds?: (string)[], mapProducerIdConsumerIds?: (StringStringArrayT)[], mapConsumerIdProducerId?: (StringStringT)[], mapProducerIdObserverIds?: (StringStringArrayT)[], mapDataProducerIdDataConsumerIds?: (StringStringArrayT)[], mapDataConsumerIdDataProducerId?: (StringStringT)[]);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
-//# sourceMappingURL=router-dump-response.d.ts.map
+//# sourceMappingURL=dump-response.d.ts.map

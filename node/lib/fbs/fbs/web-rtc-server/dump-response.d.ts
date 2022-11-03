@@ -2,12 +2,12 @@ import * as flatbuffers from 'flatbuffers';
 import { IceUserNameFragment, IceUserNameFragmentT } from '../../fbs/web-rtc-server/ice-user-name-fragment';
 import { IpPort, IpPortT } from '../../fbs/web-rtc-server/ip-port';
 import { TupleHash, TupleHashT } from '../../fbs/web-rtc-server/tuple-hash';
-export declare class WebRtcServerDumpResponse {
+export declare class DumpResponse {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
-    __init(i: number, bb: flatbuffers.ByteBuffer): WebRtcServerDumpResponse;
-    static getRootAsWebRtcServerDumpResponse(bb: flatbuffers.ByteBuffer, obj?: WebRtcServerDumpResponse): WebRtcServerDumpResponse;
-    static getSizePrefixedRootAsWebRtcServerDumpResponse(bb: flatbuffers.ByteBuffer, obj?: WebRtcServerDumpResponse): WebRtcServerDumpResponse;
+    __init(i: number, bb: flatbuffers.ByteBuffer): DumpResponse;
+    static getRootAsDumpResponse(bb: flatbuffers.ByteBuffer, obj?: DumpResponse): DumpResponse;
+    static getSizePrefixedRootAsDumpResponse(bb: flatbuffers.ByteBuffer, obj?: DumpResponse): DumpResponse;
     id(): string | null;
     id(optionalEncoding: flatbuffers.Encoding): string | Uint8Array | null;
     udpSockets(index: number, obj?: IpPort): IpPort | null;
@@ -21,7 +21,7 @@ export declare class WebRtcServerDumpResponse {
     localIceUsernameFragmentsLength(): number;
     tupleHashes(index: number, obj?: TupleHash): TupleHash | null;
     tupleHashesLength(): number;
-    static startWebRtcServerDumpResponse(builder: flatbuffers.Builder): void;
+    static startDumpResponse(builder: flatbuffers.Builder): void;
     static addId(builder: flatbuffers.Builder, idOffset: flatbuffers.Offset): void;
     static addUdpSockets(builder: flatbuffers.Builder, udpSocketsOffset: flatbuffers.Offset): void;
     static createUdpSocketsVector(builder: flatbuffers.Builder, data: flatbuffers.Offset[]): flatbuffers.Offset;
@@ -38,12 +38,12 @@ export declare class WebRtcServerDumpResponse {
     static addTupleHashes(builder: flatbuffers.Builder, tupleHashesOffset: flatbuffers.Offset): void;
     static createTupleHashesVector(builder: flatbuffers.Builder, data: flatbuffers.Offset[]): flatbuffers.Offset;
     static startTupleHashesVector(builder: flatbuffers.Builder, numElems: number): void;
-    static endWebRtcServerDumpResponse(builder: flatbuffers.Builder): flatbuffers.Offset;
-    static createWebRtcServerDumpResponse(builder: flatbuffers.Builder, idOffset: flatbuffers.Offset, udpSocketsOffset: flatbuffers.Offset, tcpServersOffset: flatbuffers.Offset, webRtcTransportIdsOffset: flatbuffers.Offset, localIceUsernameFragmentsOffset: flatbuffers.Offset, tupleHashesOffset: flatbuffers.Offset): flatbuffers.Offset;
-    unpack(): WebRtcServerDumpResponseT;
-    unpackTo(_o: WebRtcServerDumpResponseT): void;
+    static endDumpResponse(builder: flatbuffers.Builder): flatbuffers.Offset;
+    static createDumpResponse(builder: flatbuffers.Builder, idOffset: flatbuffers.Offset, udpSocketsOffset: flatbuffers.Offset, tcpServersOffset: flatbuffers.Offset, webRtcTransportIdsOffset: flatbuffers.Offset, localIceUsernameFragmentsOffset: flatbuffers.Offset, tupleHashesOffset: flatbuffers.Offset): flatbuffers.Offset;
+    unpack(): DumpResponseT;
+    unpackTo(_o: DumpResponseT): void;
 }
-export declare class WebRtcServerDumpResponseT {
+export declare class DumpResponseT {
     id: string | Uint8Array | null;
     udpSockets: (IpPortT)[];
     tcpServers: (IpPortT)[];
@@ -53,4 +53,4 @@ export declare class WebRtcServerDumpResponseT {
     constructor(id?: string | Uint8Array | null, udpSockets?: (IpPortT)[], tcpServers?: (IpPortT)[], webRtcTransportIds?: (string)[], localIceUsernameFragments?: (IceUserNameFragmentT)[], tupleHashes?: (TupleHashT)[]);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
-//# sourceMappingURL=web-rtc-server-dump-response.d.ts.map
+//# sourceMappingURL=dump-response.d.ts.map

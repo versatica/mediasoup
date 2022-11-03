@@ -14,7 +14,7 @@ import {
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import * as FbsRouter from './fbs/router_generated';
+import * as FbsTransport from './fbs/transport_generated';
 import { Either } from './utils';
 
 export type WebRtcTransportListenIndividual =
@@ -519,7 +519,7 @@ export class WebRtcTransport extends
 	}
 }
 
-export function parseIceCandidate(binary: FbsRouter.IceCandidate): IceCandidate
+export function parseIceCandidate(binary: FbsTransport.IceCandidate): IceCandidate
 {
 	return {
 		foundation : binary.foundation()!,
@@ -532,7 +532,7 @@ export function parseIceCandidate(binary: FbsRouter.IceCandidate): IceCandidate
 	};
 }
 
-export function parseIceParameters(binary: FbsRouter.IceParameters): IceParameters
+export function parseIceParameters(binary: FbsTransport.IceParameters): IceParameters
 {
 	return {
 		usernameFragment : binary.usernameFragment()!,
@@ -541,7 +541,7 @@ export function parseIceParameters(binary: FbsRouter.IceParameters): IceParamete
 	};
 }
 
-export function parseDtlsParameters(binary: FbsRouter.DtlsParameters): DtlsParameters
+export function parseDtlsParameters(binary: FbsTransport.DtlsParameters): DtlsParameters
 {
 	const fingerprints: DtlsFingerprint[] = [];
 
@@ -575,11 +575,11 @@ export type WebRtcTransportDump = BaseTransportDump &
 };
 
 export function parseWebRtcTransportDump(
-	binary: FbsRouter.WebRtcTransportDump
+	binary: FbsTransport.WebRtcTransportDump
 ): WebRtcTransportDump
 {
 	// Retrieve BaseTransportDump.
-	const fbsBaseTransportDump = new FbsRouter.BaseTransportDump();
+	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
 
 	binary.base()!.data(fbsBaseTransportDump);
 	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
