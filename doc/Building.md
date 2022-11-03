@@ -118,13 +118,13 @@ Cleans subprojects downloaded with Meson.
 Cleans built objects and binaries, `meson` and `ninja` installed in local prefix with pip and all subprojects downloaded with Meson.
 
 
-### `make update-subproject`
+### `make update-wrap-file`
 
-Update a subproject with Meson. Usage example:
+Update the wrap file of a subproject with Meson. Usage example:
 
 ```bash
 $ cd worker
-$ make update-subproject SUBPROJECT=openssl
+$ make update-wrap-file SUBPROJECT=openssl
 ```
 
 
