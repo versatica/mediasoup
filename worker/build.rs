@@ -2,7 +2,7 @@ use std::env;
 use std::process::Command;
 
 fn main() {
-    if std::env::var("DOCS_RS").is_ok() {
+    if env::var("DOCS_RS").is_ok() {
         // Skip everything when building docs on docs.rs
         return;
     }
@@ -60,7 +60,7 @@ fn main() {
     #[cfg(target_os = "macos")]
     {
         let path = Command::new("xcrun")
-            .args(&["--show-sdk-path"])
+            .arg("--show-sdk-path")
             .output()
             .expect("Failed to start")
             .stdout;
