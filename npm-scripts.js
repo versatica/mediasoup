@@ -98,7 +98,7 @@ switch (task)
 		const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
 
 		const options = '--gen-object-api';
-		const out     = "node/src/fbs";
+		const out = 'node/src/fbs';
 		const command = `${flatc} --ts ${options} -o ${out} `;
 
 		execute(`rm -rf ${out}`);
@@ -113,7 +113,7 @@ switch (task)
 		const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
 
 		const options = '--cpp-field-case-style lower --reflect-names --scoped-enums';
-		const out     = "worker/include/FBS/";
+		const out = 'worker/include/FBS/';
 		const command = `${flatc} --cpp ${options} -o ${out} `;
 
 		execute(`rm -rf ${out}`);

@@ -26,8 +26,7 @@ public:
 
 private:
 	void Close();
-	flatbuffers::Offset<FBS::Worker::DumpResponse> FillBuffer(
-	  flatbuffers::FlatBufferBuilder& builder) const;
+	flatbuffers::Offset<FBS::Worker::DumpResponse> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 	flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> FillBufferResourceUsage(
 	  flatbuffers::FlatBufferBuilder& builder) const;
 	void SetNewRouterId(std::string& routerId) const;
