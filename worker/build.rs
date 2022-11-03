@@ -84,7 +84,7 @@ fn main() {
     if !Command::new("make")
         .arg("libmediasoup-worker")
         .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
-        .env("MEDIASOUP_BUILDTYPE", &build_type)
+        .env("MEDIASOUP_BUILDTYPE", build_type)
         // Force forward slashes on Windows too, otherwise Meson thinks path is not absolute 🤷
         .env("INSTALL_DIR", &out_dir.replace('\\', "/"))
         .spawn()
