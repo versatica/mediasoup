@@ -54,8 +54,13 @@ namespace RTC
 			size_t nextLevelIndex{ 0u };
 		};
 
-		struct ProducerSpeaker
+		class ProducerSpeaker
 		{
+		public:
+			ProducerSpeaker(RTC::Producer* producer);
+			~ProducerSpeaker();
+
+		public:
 			RTC::Producer* producer;
 			Speaker* speaker;
 		};
@@ -90,8 +95,8 @@ namespace RTC
 		std::string dominantId;
 		Timer* periodicTimer{ nullptr };
 		uint16_t interval{ 300u };
-		// Map of ProducerSpeakers indexed by Producer id.
-		absl::flat_hash_map<std::string, struct ProducerSpeaker> mapProducerSpeakers;
+		// Map of ProducerSpeakers indeed by Producer id.
+		absl::flat_hash_map<std::string, ProducerSpeaker*> mapProducerSpeakers;
 		uint64_t lastLevelIdleTime{ 0u };
 	};
 } // namespace RTC

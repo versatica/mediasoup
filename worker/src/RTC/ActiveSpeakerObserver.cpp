@@ -141,8 +141,8 @@ namespace RTC
 		// its parent Router are directly closed.
 		for (auto& kv : this->mapProducerSpeakers)
 		{
-			auto& producerSpeaker = kv.second;
-			delete producerSpeaker.speaker;
+			auto* producerSpeaker = kv.second;
+			delete producerSpeaker;
 		}
 		this->mapProducerSpeakers.clear();
 	}
@@ -157,11 +157,7 @@ namespace RTC
 		if (this->mapProducerSpeakers.find(producer->id) != this->mapProducerSpeakers.end())
 			MS_THROW_ERROR("Producer already in map");
 
-		auto& producerSpeaker = this->mapProducerSpeakers[producer->id];
-
-		producerSpeaker.producer        = producer;
-		producerSpeaker.speaker         = new Speaker();
-		producerSpeaker.speaker->paused = producer->IsPaused();
+		this->mapProducerSpeakers[producer->id] = new ProducerSpeaker(producer);
 	}
 
 	void ActiveSpeakerObserver::RemoveProducer(RTC::Producer* producer)
@@ -175,10 +171,9 @@ namespace RTC
 			return;
 		}
 
-		auto& producerSpeaker = it->second;
+		auto* producerSpeaker = it->second;
 
-		delete producerSpeaker.speaker;
-		producerSpeaker.speaker = nullptr;
+		delete producerSpeaker;
 
 		this->mapProducerSpeakers.erase(producer->id);
 
@@ -190,20 +185,6 @@ namespace RTC
 		}
 	}
 
-	void ActiveSpeakerObserver::ProducerResumed(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		auto it = this->mapProducerSpeakers.find(producer->id);
-
-		if (it != this->mapProducerSpeakers.end())
-		{
-			auto& producerSpeaker = it->second;
-
-			producerSpeaker.speaker->paused = false;
-		}
-	}
-
 	void ActiveSpeakerObserver::ProducerPaused(RTC::Producer* producer)
 	{
 		MS_TRACE();
@@ -212,9 +193,23 @@ namespace RTC
 
 		if (it != this->mapProducerSpeakers.end())
 		{
-			auto& producerSpeaker = it->second;
+			auto* producerSpeaker = it->second;
 
-			producerSpeaker.speaker->paused = true;
+			producerSpeaker->speaker->paused = true;
+		}
+	}
+
+	void ActiveSpeakerObserver::ProducerResumed(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		auto it = this->mapProducerSpeakers.find(producer->id);
+
+		if (it != this->mapProducerSpeakers.end())
+		{
+			auto* producerSpeaker = it->second;
+
+			producerSpeaker->speaker->paused = false;
 		}
 	}
 
@@ -236,10 +231,10 @@ namespace RTC
 
 		if (it != this->mapProducerSpeakers.end())
 		{
-			auto& producerSpeaker = it->second;
+			auto* producerSpeaker = it->second;
 			uint64_t now          = DepLibUV::GetTimeMs();
 
-			producerSpeaker.speaker->LevelChanged(volume, now);
+			producerSpeaker->speaker->LevelChanged(volume, now);
 		}
 	}
 
@@ -303,19 +298,21 @@ namespace RTC
 		else if (speakerCount == 1)
 		{
 			auto it               = this->mapProducerSpeakers.begin();
-			auto& producerSpeaker = it->second;
-			newDominantId         = producerSpeaker.producer->id;
+			auto* producerSpeaker = it->second;
+			newDominantId         = producerSpeaker->producer->id;
 		}
 		else
 		{
-			Speaker* dominantSpeaker =
-			  (this->dominantId.empty()) ? nullptr : this->mapProducerSpeakers[this->dominantId].speaker;
+			Speaker* dominantSpeaker = (this->dominantId.empty())
+			                             ? nullptr
+			                             : this->mapProducerSpeakers.at(this->dominantId)->speaker;
 
 			if (dominantSpeaker == nullptr)
 			{
-				auto it         = this->mapProducerSpeakers.begin();
-				newDominantId   = it->first;
-				dominantSpeaker = it->second.speaker;
+				auto it               = this->mapProducerSpeakers.begin();
+				newDominantId         = it->first;
+				auto* producerSpeaker = it->second;
+				dominantSpeaker       = producerSpeaker->speaker;
 			}
 			else
 			{
@@ -327,9 +324,9 @@ namespace RTC
 
 			for (auto& kv : this->mapProducerSpeakers)
 			{
-				auto& producerSpeaker = kv.second;
-				auto* speaker         = producerSpeaker.speaker;
-				auto& id              = producerSpeaker.producer->id;
+				auto* producerSpeaker = kv.second;
+				auto* speaker         = producerSpeaker->speaker;
+				auto& id              = producerSpeaker->producer->id;
 
 				if (id == this->dominantId || speaker->paused)
 				{
@@ -373,9 +370,9 @@ namespace RTC
 
 		for (auto& kv : this->mapProducerSpeakers)
 		{
-			auto& producerSpeaker = kv.second;
-			auto* speaker         = producerSpeaker.speaker;
-			auto& id              = producerSpeaker.producer->id;
+			auto* producerSpeaker = kv.second;
+			auto* speaker         = producerSpeaker->speaker;
+			auto& id              = producerSpeaker->producer->id;
 			uint64_t idle         = now - speaker->lastLevelChangeTime;
 
 			if (SpeakerIdleTimeout < idle && (this->dominantId.empty() || id != this->dominantId))
@@ -387,6 +384,22 @@ namespace RTC
 				speaker->LevelTimedOut(now);
 			}
 		}
+	}
+
+	ActiveSpeakerObserver::ProducerSpeaker::ProducerSpeaker(RTC::Producer* producer)
+	  : producer(producer)
+	{
+		MS_TRACE();
+
+		this->speaker         = new Speaker();
+		this->speaker->paused = producer->IsPaused();
+	}
+
+	ActiveSpeakerObserver::ProducerSpeaker::~ProducerSpeaker()
+	{
+		MS_TRACE();
+
+		delete this->speaker;
 	}
 
 	ActiveSpeakerObserver::Speaker::Speaker()
