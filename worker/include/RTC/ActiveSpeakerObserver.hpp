@@ -57,7 +57,7 @@ namespace RTC
 		class ProducerSpeaker
 		{
 		public:
-			ProducerSpeaker(RTC::Producer* producer);
+			explicit ProducerSpeaker(RTC::Producer* producer);
 			~ProducerSpeaker();
 
 		public:
