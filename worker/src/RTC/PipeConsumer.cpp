@@ -205,7 +205,7 @@ namespace RTC
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
 		// in the corresponding Producer.
-		if (this->supportedCodecPayloadTypes.find(payloadType) == this->supportedCodecPayloadTypes.end())
+		if (!this->supportedCodecPayloadTypes[payloadType])
 		{
 			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
@@ -289,14 +289,9 @@ namespace RTC
 		packet->SetSequenceNumber(origSeq);
 	}
 
-	void PipeConsumer::GetRtcp(
-	  RTC::RTCP::CompoundPacket* packet, RTC::RtpStreamSend* rtpStream, uint64_t nowMs)
+	bool PipeConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(
-		  std::find(this->rtpStreams.begin(), this->rtpStreams.end(), rtpStream) != this->rtpStreams.end(),
-		  "RTP stream does exist");
 
 		// Special condition for PipeConsumer since this method will be called in a loop for
 		// each stream in this PipeConsumer.
@@ -307,32 +302,44 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			return;
+			return true;
 		}
 
-		auto* report = rtpStream->GetRtcpSenderReport(nowMs);
+		std::vector<RTCP::SenderReport*> senderReports;
+		std::vector<RTCP::SdesChunk*> sdesChunks;
+		std::vector<RTCP::DelaySinceLastRr*> xrReports;
 
-		if (!report)
-			return;
-
-		packet->AddSenderReport(report);
-
-		// Build SDES chunk for this sender.
-		auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
-
-		packet->AddSdesChunk(sdesChunk);
-
-		auto* dlrr = rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
-
-		if (dlrr)
+		for (auto* rtpStream : this->rtpStreams)
 		{
-			auto* report = new RTC::RTCP::DelaySinceLastRr();
+			auto* report = rtpStream->GetRtcpSenderReport(nowMs);
 
-			report->AddSsrcInfo(dlrr);
-			packet->AddDelaySinceLastRr(report);
+			if (!report)
+				continue;
+
+			senderReports.push_back(report);
+
+			// Build SDES chunk for this sender.
+			auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
+			sdesChunks.push_back(sdesChunk);
+
+			auto* dlrr = rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
+
+			if (dlrr)
+			{
+				auto* report = new RTC::RTCP::DelaySinceLastRr();
+				report->AddSsrcInfo(dlrr);
+
+				xrReports.push_back(report);
+			}
 		}
+
+		// RTCP Compound packet buffer cannot hold the data.
+		if (!packet->Add(senderReports, sdesChunks, xrReports))
+			return false;
 
 		this->lastRtcpSentTime = nowMs;
+
+		return true;
 	}
 
 	void PipeConsumer::NeedWorstRemoteFractionLost(uint32_t /*mappedSsrc*/, uint8_t& worstRemoteFractionLost)

@@ -702,7 +702,7 @@ namespace RTC
 		}
 	}
 
-	bool DtlsTransport::SetRemoteFingerprint(Fingerprint fingerprint)
+	bool DtlsTransport::SetRemoteFingerprint(const Fingerprint& fingerprint)
 	{
 		MS_TRACE();
 

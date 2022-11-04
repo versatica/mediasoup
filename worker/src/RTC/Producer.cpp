@@ -825,38 +825,46 @@ namespace RTC
 		rtpStream->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo);
 	}
 
-	void Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
+	bool Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
 	{
 		MS_TRACE();
 
 		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
-			return;
+			return true;
+
+		std::vector<RTCP::ReceiverReport*> receiverReports;
+		RTCP::ReceiverReferenceTime* receiverReferenceTimeReport{ nullptr };
 
 		for (auto& kv : this->mapSsrcRtpStream)
 		{
 			auto* rtpStream = kv.second;
 			auto* report    = rtpStream->GetRtcpReceiverReport();
 
-			packet->AddReceiverReport(report);
+			receiverReports.push_back(report);
 
 			auto* rtxReport = rtpStream->GetRtxRtcpReceiverReport();
 
 			if (rtxReport)
-				packet->AddReceiverReport(rtxReport);
+				receiverReports.push_back(rtxReport);
 		}
 
 		// Add a receiver reference time report if no present in the packet.
 		if (!packet->HasReceiverReferenceTime())
 		{
-			auto ntp     = Utils::Time::TimeMs2Ntp(nowMs);
-			auto* report = new RTC::RTCP::ReceiverReferenceTime();
+			auto ntp                    = Utils::Time::TimeMs2Ntp(nowMs);
+			receiverReferenceTimeReport = new RTC::RTCP::ReceiverReferenceTime();
 
-			report->SetNtpSec(ntp.seconds);
-			report->SetNtpFrac(ntp.fractions);
-			packet->AddReceiverReferenceTime(report);
+			receiverReferenceTimeReport->SetNtpSec(ntp.seconds);
+			receiverReferenceTimeReport->SetNtpFrac(ntp.fractions);
 		}
 
+		// RTCP Compound packet buffer cannot hold the data.
+		if (!packet->Add(receiverReports, receiverReferenceTimeReport))
+			return false;
+
 		this->lastRtcpSentTime = nowMs;
+
+		return true;
 	}
 
 	void Producer::RequestKeyFrame(uint32_t mappedSsrc)
@@ -1303,6 +1311,21 @@ namespace RTC
 				bufferPtr += extenLen;
 			}
 
+			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time.
+			extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.absCaptureTime, extenLen);
+
+			if (extenValue)
+			{
+				std::memcpy(bufferPtr, extenValue, extenLen);
+
+				extensions.emplace_back(
+				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
+				  extenLen,
+				  bufferPtr);
+
+				bufferPtr += extenLen;
+			}
+
 			if (this->kind == RTC::Media::Kind::AUDIO)
 			{
 				// Proxy urn:ietf:params:rtp-hdrext:ssrc-audio-level.
@@ -1324,6 +1347,7 @@ namespace RTC
 			else if (this->kind == RTC::Media::Kind::VIDEO)
 			{
 				// Add http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time.
+				// NOTE: This is for REMB.
 				{
 					extenLen = 3u;
 
@@ -1339,6 +1363,7 @@ namespace RTC
 				}
 
 				// Add http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01.
+				// NOTE: We don't include it in outbound audio packets for now.
 				{
 					extenLen = 2u;
 
@@ -1408,21 +1433,6 @@ namespace RTC
 
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TOFFSET), extenLen, bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-
-				// Proxy http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time.
-				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.absCaptureTime, extenLen);
-
-				if (extenValue)
-				{
-					std::memcpy(bufferPtr, extenValue, extenLen);
-
-					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
-					  extenLen,
-					  bufferPtr);
 
 					// Not needed since this is the latest added extension.
 					// bufferPtr += extenLen;

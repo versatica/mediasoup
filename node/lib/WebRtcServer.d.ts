@@ -19,7 +19,7 @@ export interface WebRtcServerListenInfo {
     /**
      * Listening port.
      */
-    port: number;
+    port?: number;
 }
 export declare type WebRtcServerOptions = {
     /**

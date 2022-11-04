@@ -31,7 +31,7 @@ namespace TestBye
 	{
 		REQUIRE(packet->GetReason() == reason);
 
-		ByePacket::Iterator it = packet->Begin();
+		auto it = packet->Begin();
 
 		REQUIRE(*it == ssrc1);
 

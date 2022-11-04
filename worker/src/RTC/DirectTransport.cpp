@@ -163,6 +163,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		packet->Serialize(RTC::RTCP::Buffer);
+
 		const uint8_t* data = packet->GetData();
 		size_t len          = packet->GetSize();
 

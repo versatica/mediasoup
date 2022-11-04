@@ -43,7 +43,7 @@ void Fuzzer::RTC::RtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	packet->SetSsrc(params.ssrc);
 
 	std::string mid;
-	::RTC::RtpStreamSend* stream = new ::RTC::RtpStreamSend(&testRtpStreamListener, params, mid);
+	auto* stream = new ::RTC::RtpStreamSend(&testRtpStreamListener, params, mid);
 
 	while (len >= 4u)
 	{

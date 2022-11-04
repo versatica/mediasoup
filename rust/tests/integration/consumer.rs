@@ -593,10 +593,11 @@ fn consume_succeeds() {
             }
         }
 
+        let video_pipe_consumer;
         {
             assert!(router.can_consume(&video_producer.id(), &consumer_device_capabilities));
 
-            let video_pipe_consumer = transport_2
+            video_pipe_consumer = transport_2
                 .consume({
                     let mut options = ConsumerOptions::new(
                         video_producer.id(),

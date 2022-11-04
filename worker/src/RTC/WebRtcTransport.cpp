@@ -918,6 +918,8 @@ namespace RTC
 		if (!IsConnected())
 			return;
 
+		packet->Serialize(RTC::RTCP::Buffer);
+
 		const uint8_t* data = packet->GetData();
 		auto intLen         = static_cast<int>(packet->GetSize());
 
@@ -1278,7 +1280,9 @@ namespace RTC
 
 		// If this is a TCP tuple, close its underlaying TCP connection.
 		if (tuple->GetProtocol() == RTC::TransportTuple::Protocol::TCP && !tuple->IsClosed())
+		{
 			tuple->Close();
+		}
 	}
 
 	inline void WebRtcTransport::OnIceServerSelectedTuple(

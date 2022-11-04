@@ -489,7 +489,7 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 if (producer.closed)
                     throw new errors_1.InvalidStateError('original Producer closed');
                 // Ensure that producer.paused has not changed in the meanwhile and, if
-                // so, sych the pipeProducer.
+                // so, sync the pipeProducer.
                 if (pipeProducer.paused !== producer.paused) {
                     if (producer.paused)
                         await pipeProducer.pause();

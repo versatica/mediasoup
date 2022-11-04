@@ -154,6 +154,8 @@ namespace RTC
 		class SdesPacket : public Packet
 		{
 		public:
+			static size_t MaxChunksPerPacket;
+
 			using Iterator = std::vector<SdesChunk*>::iterator;
 
 		public:
@@ -178,6 +180,13 @@ namespace RTC
 			{
 				this->chunks.push_back(chunk);
 			}
+			void RemoveChunk(SdesChunk* chunk)
+			{
+				auto it = std::find(this->chunks.begin(), this->chunks.end(), chunk);
+
+				if (it != this->chunks.end())
+					this->chunks.erase(it);
+			}
 			Iterator Begin()
 			{
 				return this->chunks.begin();
@@ -197,7 +206,10 @@ namespace RTC
 			}
 			size_t GetSize() const override
 			{
-				size_t size = Packet::CommonHeaderSize;
+				// A serialized packet can contain a maximum of 31 chunks.
+				// If number of chunks exceeds 31 then the required number of packets
+				// will be serialized which will take the size calculated below.
+				size_t size = Packet::CommonHeaderSize * ((this->GetCount() / MaxChunksPerPacket) + 1);
 
 				for (auto* chunk : this->chunks)
 				{

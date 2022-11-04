@@ -15,11 +15,10 @@ struct data
 
 void validate(RateCalculator& rate, uint64_t timeBase, std::vector<data>& input)
 {
-	for (auto it = input.begin(); it != input.end(); ++it)
+	for (auto& item : input)
 	{
-		auto& item = *it;
-
 		rate.Update(item.size, timeBase + item.offset);
+
 		REQUIRE(rate.GetRate(timeBase + item.offset) == item.rate);
 	}
 }

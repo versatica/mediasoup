@@ -324,7 +324,7 @@ namespace RTC
 			return true;
 		}
 
-		bool UpdateMid(const std::string& mid);
+		void UpdateMid(const std::string& mid);
 
 		bool ReadRid(std::string& rid) const
 		{

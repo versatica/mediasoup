@@ -25,7 +25,7 @@ export interface WebRtcServerListenInfo
 	/**
 	 * Listening port.
 	 */
-	port: number;
+	port?: number;
 }
 
 export type WebRtcServerOptions =

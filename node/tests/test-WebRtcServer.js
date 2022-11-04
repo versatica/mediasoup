@@ -91,6 +91,81 @@ test('worker.createWebRtcServer() succeeds', async () =>
 	expect(worker.webRtcServersForTesting.size).toBe(0);
 }, 2000);
 
+test('worker.createWebRtcServer() without specifying port succeeds', async () =>
+{
+	worker = await createWorker();
+
+	const onObserverNewWebRtcServer = jest.fn();
+
+	worker.observer.once('newwebrtcserver', onObserverNewWebRtcServer);
+
+	const webRtcServer = await worker.createWebRtcServer(
+		{
+			listenInfos :
+			[
+				{
+					protocol : 'udp',
+					ip       : '127.0.0.1'
+				},
+				{
+					protocol    : 'tcp',
+					ip          : '127.0.0.1',
+					announcedIp : '1.2.3.4'
+				}
+			],
+			appData : { foo: 123 }
+		});
+
+	expect(onObserverNewWebRtcServer).toHaveBeenCalledTimes(1);
+	expect(onObserverNewWebRtcServer).toHaveBeenCalledWith(webRtcServer);
+	expect(webRtcServer.id).toBeType('string');
+	expect(webRtcServer.closed).toBe(false);
+	expect(webRtcServer.appData).toEqual({ foo: 123 });
+
+	await expect(worker.dump())
+		.resolves
+		.toEqual(
+			{
+				pid                    : worker.pid,
+				webRtcServerIds        : [ webRtcServer.id ],
+				routerIds              : [],
+				channelMessageHandlers :
+				{
+					channelRequestHandlers             : [ webRtcServer.id ],
+					payloadChannelRequestHandlers      : [],
+					payloadChannelNotificationHandlers : []
+				}
+			});
+
+	await expect(webRtcServer.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id         : webRtcServer.id,
+				udpSockets :
+				[
+					{ ip: '127.0.0.1', port: expect.any(Number) }
+				],
+				tcpServers :
+				[
+					{ ip: '127.0.0.1', port: expect.any(Number) }
+				],
+				webRtcTransportIds        : [],
+				localIceUsernameFragments : [],
+				tupleHashes               : []
+			});
+
+	// Private API.
+	expect(worker.webRtcServersForTesting.size).toBe(1);
+
+	worker.close();
+
+	expect(webRtcServer.closed).toBe(true);
+
+	// Private API.
+	expect(worker.webRtcServersForTesting.size).toBe(0);
+}, 2000);
+
 test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', async () =>
 {
 	worker = await createWorker();

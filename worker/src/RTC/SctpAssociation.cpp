@@ -392,7 +392,7 @@ namespace RTC
 
 		const auto& parameters = dataConsumer->GetSctpStreamParameters();
 
-		// Fill stcp_sendv_spa.
+		// Fill sctp_sendv_spa.
 		struct sctp_sendv_spa spa; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		std::memset(&spa, 0, sizeof(spa));

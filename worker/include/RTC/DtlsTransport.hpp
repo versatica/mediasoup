@@ -161,7 +161,7 @@ namespace RTC
 		{
 			return DtlsTransport::localFingerprints;
 		}
-		bool SetRemoteFingerprint(Fingerprint fingerprint);
+		bool SetRemoteFingerprint(const Fingerprint& fingerprint);
 		void ProcessDtlsData(const uint8_t* data, size_t len);
 		DtlsState GetState() const
 		{

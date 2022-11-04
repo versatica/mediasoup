@@ -67,7 +67,7 @@ fn create_webrtc_server_succeeds() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                     },
-                    port: port1,
+                    port: Some(port1),
                 });
                 let listen_infos = listen_infos.insert(WebRtcServerListenInfo {
                     protocol: Protocol::Tcp,
@@ -75,7 +75,7 @@ fn create_webrtc_server_succeeds() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: Some(IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4))),
                     },
-                    port: port2,
+                    port: Some(port2),
                 });
                 let mut webrtc_server_options = WebRtcServerOptions::new(listen_infos);
 
@@ -133,6 +133,83 @@ fn create_webrtc_server_succeeds() {
 }
 
 #[test]
+fn create_webrtc_server_without_specifying_port_succeeds() {
+    future::block_on(async move {
+        let (worker1, _worker2) = init().await;
+
+        let new_webrtc_server_count = Arc::new(AtomicUsize::new(0));
+
+        worker1
+            .on_new_webrtc_server({
+                let new_webrtc_server_count = Arc::clone(&new_webrtc_server_count);
+
+                move |_webrtc_server| {
+                    new_webrtc_server_count.fetch_add(1, Ordering::SeqCst);
+                }
+            })
+            .detach();
+
+        #[derive(Debug, PartialEq)]
+        struct CustomAppData {
+            foo: u32,
+        }
+
+        let webrtc_server = worker1
+            .create_webrtc_server({
+                let listen_infos = WebRtcServerListenInfos::new(WebRtcServerListenInfo {
+                    protocol: Protocol::Udp,
+                    listen_ip: ListenIp {
+                        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                        announced_ip: None,
+                    },
+                    port: None,
+                });
+                let listen_infos = listen_infos.insert(WebRtcServerListenInfo {
+                    protocol: Protocol::Tcp,
+                    listen_ip: ListenIp {
+                        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                        announced_ip: Some(IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4))),
+                    },
+                    port: None,
+                });
+                let mut webrtc_server_options = WebRtcServerOptions::new(listen_infos);
+
+                webrtc_server_options.app_data = AppData::new(CustomAppData { foo: 123 });
+
+                webrtc_server_options
+            })
+            .await
+            .expect("Failed to create router");
+
+        assert_eq!(new_webrtc_server_count.load(Ordering::SeqCst), 1);
+        assert!(!webrtc_server.closed());
+        assert_eq!(
+            webrtc_server.app_data().downcast_ref::<CustomAppData>(),
+            Some(&CustomAppData { foo: 123 }),
+        );
+
+        let worker_dump = worker1.dump().await.expect("Failed to dump worker");
+
+        assert_eq!(worker_dump.router_ids, vec![]);
+        assert_eq!(worker_dump.webrtc_server_ids, vec![webrtc_server.id()]);
+
+        let dump = webrtc_server
+            .dump()
+            .await
+            .expect("Failed to dump WebRTC server");
+
+        assert_eq!(dump.id, webrtc_server.id());
+
+        assert_eq!(dump.udp_sockets[0].ip, IpAddr::V4(Ipv4Addr::LOCALHOST));
+        assert_eq!(dump.tcp_servers[0].ip, IpAddr::V4(Ipv4Addr::LOCALHOST));
+
+        assert_eq!(dump.webrtc_transport_ids, HashedSet::default());
+        assert_eq!(dump.local_ice_username_fragments, vec![]);
+        assert_eq!(dump.tuple_hashes, vec![]);
+    });
+}
+
+#[test]
 fn unavailable_infos_fails() {
     future::block_on(async move {
         let (worker1, worker2) = init().await;
@@ -166,7 +243,7 @@ fn unavailable_infos_fails() {
                             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                             announced_ip: None,
                         },
-                        port: port1,
+                        port: Some(port1),
                     });
                     let listen_infos = listen_infos.insert(WebRtcServerListenInfo {
                         protocol: Protocol::Udp,
@@ -174,7 +251,7 @@ fn unavailable_infos_fails() {
                             ip: IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4)),
                             announced_ip: None,
                         },
-                        port: port2,
+                        port: Some(port2),
                     });
 
                     WebRtcServerOptions::new(listen_infos)
@@ -197,7 +274,7 @@ fn unavailable_infos_fails() {
                             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                             announced_ip: None,
                         },
-                        port: port1,
+                        port: Some(port1),
                     });
                     let listen_infos = listen_infos.insert(WebRtcServerListenInfo {
                         protocol: Protocol::Udp,
@@ -205,7 +282,7 @@ fn unavailable_infos_fails() {
                             ip: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
                             announced_ip: Some(IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4))),
                         },
-                        port: port1,
+                        port: Some(port1),
                     });
 
                     WebRtcServerOptions::new(listen_infos)
@@ -228,7 +305,7 @@ fn unavailable_infos_fails() {
                             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                             announced_ip: None,
                         },
-                        port: port1,
+                        port: Some(port1),
                     },
                 )))
                 .await
@@ -242,7 +319,7 @@ fn unavailable_infos_fails() {
                             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                             announced_ip: None,
                         },
-                        port: port1,
+                        port: Some(port1),
                     },
                 )))
                 .await;
@@ -270,7 +347,7 @@ fn close_event() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                     },
-                    port,
+                    port: Some(port),
                 },
             )))
             .await

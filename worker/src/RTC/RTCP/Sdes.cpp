@@ -179,6 +179,10 @@ namespace RTC
 			MS_DUMP("</SdesChunk>");
 		}
 
+		/* Static Class members */
+
+		size_t SdesPacket::MaxChunksPerPacket = 31;
+
 		/* Class methods. */
 
 		SdesPacket* SdesPacket::Parse(const uint8_t* data, size_t len)
@@ -215,11 +219,34 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t offset = Packet::Serialize(buffer);
+			size_t offset   = 0;
+			size_t length   = 0;
+			uint8_t* header = { nullptr };
 
-			for (auto* chunk : this->chunks)
+			for (size_t i = 0; i < this->GetCount(); i++)
 			{
-				offset += chunk->Serialize(buffer + offset);
+				// Create a new SDES packet header for each 31 chunks.
+				if (i % MaxChunksPerPacket == 0)
+				{
+					// Reference current common header.
+					header = buffer + offset;
+					offset += Packet::Serialize(buffer + offset);
+
+					length = Packet::CommonHeaderSize;
+				}
+
+				// Serialize the next chunk.
+				auto chunkSize = chunks[i]->Serialize(buffer + offset);
+
+				offset += chunkSize;
+				length += chunkSize;
+
+				// Adjust the header count field.
+				reinterpret_cast<Packet::CommonHeader*>(header)->count =
+				  static_cast<uint8_t>((i % MaxChunksPerPacket) + 1);
+
+				// Adjust the header length field.
+				reinterpret_cast<Packet::CommonHeader*>(header)->length = uint16_t{ htons((length / 4) - 1) };
 			}
 
 			return offset;

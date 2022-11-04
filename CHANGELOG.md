@@ -1,13 +1,58 @@
 # Changelog
 
 
-### Next
+### NEXT
+
+* Transport: Remove duplicate call to method (PR #931).
+* RTCP: Adjust maximum compound packet size (PR #934).
+* Fix `bufferedAmount` type to be a number again (PR #936).
+
+
+### 3.10.12
+
+* Fix worker crash due to `std::out_of_range` exception (PR #933).
+* Update NPM deps.
+
+
+### 3.10.11
+
+* RTCP: Fix trailing space needed by srtp_protect_rtcp() (PR #929).
+
+
+### 3.10.10
+
+* Fix the JSON serialization for the payload channel `rtp` event (PR #926 by @mhammo).
+* Update NPM deps.
+
+
+### 3.10.9
+
+* RTCP enhancements (PR #914).
+
+
+### 3.10.8
+
+* `Consumer`: use a bitset instead of a set for supported payload types (PR #919).
+* RtpPacket: optimize UpdateMid() (PR #920).
+* Little optimizations and modernization (PR #916).
+* Fix SIGSEGV at `RTC::WebRtcTransport::OnIceServerTupleRemoved()` (PR #915, credits to @ybybwdwd).
+* `WebRtcServer`: Make `port` optional (if not given, a random available port from the `Worker` port range is used) (PR #908 by @satoren).
+
+
+### 3.10.7
+
+* Forward `abs-capture-time` RTP extension also for audio packets (PR #911).
+* Update NPM deps.
+
+
+### 3.10.6
 
 * Node: Define TypeScript types for `internal` and `data` objects (PR #891).
 * `Channel` and `PayloadChannel`: Refactor `internal` with a single `handlerId` (PR #889).
 * `Channel` and `PayloadChannel`: Optimize message format and JSON generation (PR #893).
 * New C++ `ChannelMessageHandlers` class (PR #894).
 * Fix Rust support after recent changes (PR #898).
+* Modify `FeedbackRtpTransport` and tests to be compliant with latest libwebrtc code, make reference time to be unsigned (PR #899 by @penguinol and @sarumjanuch). 
 * Update NPM deps.
 
 

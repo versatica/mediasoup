@@ -781,6 +781,8 @@ namespace RTC
 		if (!IsConnected())
 			return;
 
+		packet->Serialize(RTC::RTCP::Buffer);
+
 		const uint8_t* data = packet->GetData();
 		auto intLen         = static_cast<int>(packet->GetSize());
 
