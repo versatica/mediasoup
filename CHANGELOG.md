@@ -9,7 +9,7 @@
 * `ActiveSpeakerObserver`: Fix 'dominantspeaker' event by having a single `Producer` as argument rather than an array with a single `Producer` into it (PR #941).
 * `ActiveSpeakerObserver`: Fix memory leak (PR #942).
 * Update NPM deps.
-* `SctpAssociation`: fix memory violation (PR #943).
+* `SctpAssociation`: Fix memory violation (PR #943).
 
 
 ### 3.10.12
