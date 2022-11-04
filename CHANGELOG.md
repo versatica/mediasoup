@@ -3,6 +3,11 @@
 
 ### NEXT
 
+* ...
+
+
+### 3.11.0
+
 * `Transport`: Remove duplicate call to method (PR #931).
 * RTCP: Adjust maximum compound packet size (PR #934).
 * `DataConsumer`: Fix `bufferedAmount` type to be a number again (PR #936).
