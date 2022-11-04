@@ -6,6 +6,7 @@
 * Transport: Remove duplicate call to method (PR #931).
 * RTCP: Adjust maximum compound packet size (PR #934).
 * Fix `bufferedAmount` type to be a number again (PR #936).
+* `ActiveSpeakerObserver`: Fix 'dominantspeaker' event by having a single `Producer` as argument rather than an array with a `Producer` into it (PR #941).
 * `ActiveSpeakerObserver`: Fix memory leak (PR #942).
 
 
