@@ -109,7 +109,7 @@ table DtlsParameters {
 
 table WebRtcTransportDump {
   base:DumpResponse (required);
-  ice_role:string(required);
+  ice_role:string (required);
   ice_parameters:IceParameters (required);
   ice_candidates:[IceCandidate] (required);
   ice_state:string (required);

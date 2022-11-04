@@ -4,23 +4,23 @@ namespace FBS.Common;
 /* Common custom types */
 
 table StringString {
-  key:string(required);
-  value:string(required);
+  key:string (required);
+  value:string (required);
 }
 
 table StringUint8 {
-  key:string(required);
+  key:string (required);
   value:uint8;
 }
 
 table Uint16String {
   key:uint16;
-  value:string(required);
+  value:string (required);
 }
 
 table Uint32String {
   key:uint32;
-  value:string(required);
+  value:string (required);
 }
 
 table StringStringArray {
