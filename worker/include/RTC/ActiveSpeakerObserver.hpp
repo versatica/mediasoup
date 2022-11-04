@@ -9,10 +9,9 @@
 #include <vector>
 
 // Implementation of Dominant Speaker Identification for Multipoint
-// Videoconferencing by Ilana Volfin and Israel Cohen. This
-// implementation uses the RTP Audio Level extension from RFC-6464
-// for the input signal.
-// This has been ported from DominantSpeakerIdentification.java in Jitsi.
+// Videoconferencing by Ilana Volfin and Israel Cohen. This implementation uses
+// the RTP Audio Level extension from RFC-6464 for the input signal. This has
+// been ported from DominantSpeakerIdentification.java in Jitsi:
 // https://github.com/jitsi/jitsi-utils/blob/master/src/main/java/org/jitsi/utils/dsi/DominantSpeakerIdentification.java
 namespace RTC
 {
@@ -24,7 +23,7 @@ namespace RTC
 		public:
 			Speaker();
 			void EvalActivityScores();
-			double GetActivityScore(int32_t interval);
+			double GetActivityScore(uint8_t interval);
 			void LevelChanged(uint32_t level, uint64_t now);
 			void LevelTimedOut(uint64_t now);
 
@@ -39,20 +38,20 @@ namespace RTC
 
 		public:
 			bool paused{ false };
-			double immediateActivityScore;
-			double mediumActivityScore;
-			double longActivityScore;
+			double immediateActivityScore{ 0 };
+			double mediumActivityScore{ 0 };
+			double longActivityScore{ 0 };
 			uint64_t lastLevelChangeTime{ 0 };
 
 		private:
-			uint8_t minLevel;
-			uint8_t nextMinLevel;
-			uint32_t nextMinLevelWindowLen{ 0 };
+			uint8_t minLevel{ 0u };
+			uint8_t nextMinLevel{ 0u };
+			uint32_t nextMinLevelWindowLen{ 0u };
 			std::vector<uint8_t> immediates;
 			std::vector<uint8_t> mediums;
 			std::vector<uint8_t> longs;
 			std::vector<uint8_t> levels;
-			size_t nextLevelIndex;
+			size_t nextLevelIndex{ 0u };
 		};
 
 		struct ProducerSpeaker
@@ -60,6 +59,9 @@ namespace RTC
 			RTC::Producer* producer;
 			Speaker* speaker;
 		};
+
+	private:
+		static const size_t RelativeSpeachActivitiesLen{ 3u };
 
 	public:
 		ActiveSpeakerObserver(const std::string& id, RTC::RtpObserver::Listener* listener, json& data);
@@ -84,13 +86,13 @@ namespace RTC
 		void OnTimer(Timer* timer) override;
 
 	private:
-		static constexpr int relativeSpeachActivitiesLen{ 3 };
-		double relativeSpeachActivities[relativeSpeachActivitiesLen];
-		std::string dominantId{ "" };
+		double relativeSpeachActivities[RelativeSpeachActivitiesLen];
+		std::string dominantId;
 		Timer* periodicTimer{ nullptr };
 		uint16_t interval{ 300u };
-		absl::flat_hash_map<std::string, struct ProducerSpeaker> mapProducerSpeaker;
-		uint64_t lastLevelIdleTime{ 0 };
+		// Map of ProducerSpeakers indeed by Producer id.
+		absl::flat_hash_map<std::string, struct ProducerSpeaker> mapProducerSpeakers;
+		uint64_t lastLevelIdleTime{ 0u };
 	};
 } // namespace RTC
 
