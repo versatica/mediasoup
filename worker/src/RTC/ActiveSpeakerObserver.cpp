@@ -10,26 +10,28 @@
 
 namespace RTC
 {
-	constexpr uint32_t C1{ 3 };
-	constexpr uint32_t C2{ 2 };
-	constexpr uint32_t C3{ 0 };
-	constexpr uint32_t N1{ 13 };
-	constexpr uint32_t N2{ 5 };
-	constexpr uint32_t N3{ 10 };
-	constexpr uint32_t LongCount{ 1 };
-	constexpr uint32_t LevelIdleTimeout{ 40 };
-	constexpr uint64_t SpeakerIdleTimeout{ 60 * 60 * 1000 };
-	constexpr uint32_t LongThreashold{ 4 };
-	constexpr uint32_t MaxLevel{ 127 };
-	constexpr uint32_t MinLevel{ 0 };
-	constexpr uint32_t MinLevelWindowLen{ 15 * 1000 / 20 };
-	constexpr uint32_t MediumThreshold{ 7 };
-	constexpr uint32_t SubunitLengthN1{ (MaxLevel - MinLevel + N1 - 1) / N1 };
-	constexpr uint32_t ImmediateBuffLen{ LongCount * N3 * N2 };
-	constexpr uint32_t MediumsBuffLen{ LongCount * N3 };
-	constexpr uint32_t LongsBuffLen{ LongCount };
-	constexpr uint32_t LevelsBuffLen{ LongCount * N3 * N2 };
-	constexpr double MinActivityScore{ 0.0000000001 };
+	/* Static. */
+
+	static constexpr uint32_t C1{ 3u };
+	static constexpr uint32_t C2{ 2u };
+	static constexpr uint32_t C3{ 0u };
+	static constexpr uint32_t N1{ 13u };
+	static constexpr uint32_t N2{ 5u };
+	static constexpr uint32_t N3{ 10u };
+	static constexpr uint32_t LongCount{ 1u };
+	static constexpr uint32_t LevelIdleTimeout{ 40u };
+	static constexpr uint64_t SpeakerIdleTimeout{ 60 * 60 * 1000 };
+	static constexpr uint32_t LongThreashold{ 4u };
+	static constexpr uint32_t MaxLevel{ 127u };
+	static constexpr uint32_t MinLevel{ 0u };
+	static constexpr uint32_t MinLevelWindowLen{ 15 * 1000 / 20 };
+	static constexpr uint32_t MediumThreshold{ 7u };
+	static constexpr uint32_t SubunitLengthN1{ (MaxLevel - MinLevel + N1 - 1) / N1 };
+	static constexpr uint32_t ImmediateBuffLen{ LongCount * N3 * N2 };
+	static constexpr uint32_t MediumsBuffLen{ LongCount * N3 };
+	static constexpr uint32_t LongsBuffLen{ LongCount };
+	static constexpr uint32_t LevelsBuffLen{ LongCount * N3 * N2 };
+	static constexpr double MinActivityScore{ 0.0000000001 };
 
 	inline int64_t BinomialCoefficient(int32_t n, int32_t r)
 	{
@@ -40,7 +42,8 @@ namespace RTC
 			r = m;
 		}
 
-		int64_t t = 1;
+		int64_t t{ 1 };
+
 		for (int64_t i = n, j = 1; i > r; i--, ++j)
 		{
 			t = t * i / j;
@@ -69,11 +72,11 @@ namespace RTC
 		uint32_t littleLen       = littles.size();
 		uint32_t bigLen          = bigs.size();
 		uint32_t littleLenPerBig = littleLen / bigLen;
-		bool changed             = false;
+		bool changed{ false };
 
-		for (uint32_t b = 0, l = 0; b < bigLen; b++)
+		for (uint32_t b = 0u, l = 0u; b < bigLen; ++b)
 		{
-			uint8_t sum = 0;
+			uint8_t sum{ 0u };
 
 			for (uint32_t lEnd = l + littleLenPerBig; l < lEnd; ++l)
 			{
@@ -132,6 +135,16 @@ namespace RTC
 		ChannelMessageHandlers::UnregisterHandler(this->id);
 
 		delete this->periodicTimer;
+
+		// Must clear all entries in this->mapProducerSpeakers since RemoveProducer()
+		// won't be called for each existing Producer if the ActiveSpeakerObserver or
+		// its parent Router are directly closed.
+		for (auto& kv : this->mapProducerSpeakers)
+		{
+			auto* producerSpeaker = kv.second;
+			delete producerSpeaker;
+		}
+		this->mapProducerSpeakers.clear();
 	}
 
 	void ActiveSpeakerObserver::AddProducer(RTC::Producer* producer)
@@ -141,50 +154,34 @@ namespace RTC
 		if (producer->GetKind() != RTC::Media::Kind::AUDIO)
 			MS_THROW_TYPE_ERROR("not an audio Producer");
 
-		if (this->mapProducerSpeaker.find(producer->id) != this->mapProducerSpeaker.end())
+		if (this->mapProducerSpeakers.find(producer->id) != this->mapProducerSpeakers.end())
 			MS_THROW_ERROR("Producer already in map");
 
-		this->mapProducerSpeaker[producer->id].producer = producer;
-		this->mapProducerSpeaker[producer->id].speaker  = new Speaker();
+		this->mapProducerSpeakers[producer->id] = new ProducerSpeaker(producer);
 	}
 
 	void ActiveSpeakerObserver::RemoveProducer(RTC::Producer* producer)
 	{
 		MS_TRACE();
 
-		auto it = this->mapProducerSpeaker.find(producer->id);
+		auto it = this->mapProducerSpeakers.find(producer->id);
 
-		if (it == this->mapProducerSpeaker.end())
+		if (it == this->mapProducerSpeakers.end())
 		{
 			return;
 		}
 
-		if (it->second.speaker != nullptr)
-		{
-			delete it->second.speaker;
-			it->second.speaker = nullptr;
-		}
+		auto* producerSpeaker = it->second;
 
-		this->mapProducerSpeaker.erase(producer->id);
+		delete producerSpeaker;
+
+		this->mapProducerSpeakers.erase(producer->id);
 
 		if (producer->id == this->dominantId)
 		{
 			this->dominantId.erase();
+
 			Update();
-		}
-	}
-
-	void ActiveSpeakerObserver::ProducerResumed(RTC::Producer* producer)
-	{
-		MS_TRACE();
-
-		auto it = this->mapProducerSpeaker.find(producer->id);
-
-		if (it != this->mapProducerSpeaker.end())
-		{
-			auto& rtpObserver = it->second;
-
-			rtpObserver.speaker->paused = false;
 		}
 	}
 
@@ -192,13 +189,27 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapProducerSpeaker.find(producer->id);
+		auto it = this->mapProducerSpeakers.find(producer->id);
 
-		if (it != this->mapProducerSpeaker.end())
+		if (it != this->mapProducerSpeakers.end())
 		{
-			auto& rtpObserver = it->second;
+			auto* producerSpeaker = it->second;
 
-			rtpObserver.speaker->paused = true;
+			producerSpeaker->speaker->paused = true;
+		}
+	}
+
+	void ActiveSpeakerObserver::ProducerResumed(RTC::Producer* producer)
+	{
+		MS_TRACE();
+
+		auto it = this->mapProducerSpeakers.find(producer->id);
+
+		if (it != this->mapProducerSpeakers.end())
+		{
+			auto* producerSpeaker = it->second;
+
+			producerSpeaker->speaker->paused = false;
 		}
 	}
 
@@ -216,14 +227,14 @@ namespace RTC
 			return;
 		uint8_t volume = 127 - level;
 
-		auto it = this->mapProducerSpeaker.find(producer->id);
+		auto it = this->mapProducerSpeakers.find(producer->id);
 
-		if (it != this->mapProducerSpeaker.end())
+		if (it != this->mapProducerSpeakers.end())
 		{
-			auto& rtpObserver = it->second;
-			uint64_t now      = DepLibUV::GetTimeMs();
+			auto* producerSpeaker = it->second;
+			uint64_t now          = DepLibUV::GetTimeMs();
 
-			rtpObserver.speaker->LevelChanged(volume, now);
+			producerSpeaker->speaker->LevelChanged(volume, now);
 		}
 	}
 
@@ -260,10 +271,11 @@ namespace RTC
 			{
 				TimeoutIdleLevels(now);
 			}
+
 			this->lastLevelIdleTime = now;
 		}
 
-		if (!this->mapProducerSpeaker.empty() && CalculateActiveSpeaker())
+		if (!this->mapProducerSpeakers.empty() && CalculateActiveSpeaker())
 		{
 			json data          = json::object();
 			data["producerId"] = this->dominantId;
@@ -277,7 +289,7 @@ namespace RTC
 		MS_TRACE();
 
 		std::string newDominantId;
-		int32_t speakerCount = this->mapProducerSpeaker.size();
+		int32_t speakerCount = this->mapProducerSpeakers.size();
 
 		if (speakerCount == 0)
 		{
@@ -285,20 +297,22 @@ namespace RTC
 		}
 		else if (speakerCount == 1)
 		{
-			auto it = this->mapProducerSpeaker.begin();
-
-			newDominantId = it->second.producer->id;
+			auto it               = this->mapProducerSpeakers.begin();
+			auto* producerSpeaker = it->second;
+			newDominantId         = producerSpeaker->producer->id;
 		}
 		else
 		{
-			Speaker* dominantSpeaker =
-			  (this->dominantId.empty()) ? nullptr : this->mapProducerSpeaker[this->dominantId].speaker;
+			Speaker* dominantSpeaker = (this->dominantId.empty())
+			                             ? nullptr
+			                             : this->mapProducerSpeakers.at(this->dominantId)->speaker;
 
 			if (dominantSpeaker == nullptr)
 			{
-				auto item       = this->mapProducerSpeaker.begin();
-				newDominantId   = item->first;
-				dominantSpeaker = item->second.speaker;
+				auto it               = this->mapProducerSpeakers.begin();
+				newDominantId         = it->first;
+				auto* producerSpeaker = it->second;
+				dominantSpeaker       = producerSpeaker->speaker;
 			}
 			else
 			{
@@ -308,10 +322,11 @@ namespace RTC
 			dominantSpeaker->EvalActivityScores();
 			double newDominantC2 = C2;
 
-			for (const auto& it : this->mapProducerSpeaker)
+			for (auto& kv : this->mapProducerSpeakers)
 			{
-				Speaker* speaker      = it.second.speaker;
-				const std::string& id = it.second.producer->id;
+				auto* producerSpeaker = kv.second;
+				auto* speaker         = producerSpeaker->speaker;
+				auto& id              = producerSpeaker->producer->id;
 
 				if (id == this->dominantId || speaker->paused)
 				{
@@ -320,7 +335,8 @@ namespace RTC
 
 				speaker->EvalActivityScores();
 
-				for (int interval = 0; interval < this->relativeSpeachActivitiesLen; ++interval)
+				for (uint8_t interval = 0u; interval < ActiveSpeakerObserver::RelativeSpeachActivitiesLen;
+				     ++interval)
 				{
 					this->relativeSpeachActivities[interval] = std::log(
 					  speaker->GetActivityScore(interval) / dominantSpeaker->GetActivityScore(interval));
@@ -329,6 +345,7 @@ namespace RTC
 				double c1 = this->relativeSpeachActivities[0];
 				double c2 = this->relativeSpeachActivities[1];
 				double c3 = this->relativeSpeachActivities[2];
+
 				if ((c1 > C1) && (c2 > C2) && (c3 > C3) && (c2 > newDominantC2))
 				{
 					newDominantC2 = c2;
@@ -351,10 +368,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (const auto& it : this->mapProducerSpeaker)
+		for (auto& kv : this->mapProducerSpeakers)
 		{
-			Speaker* speaker      = it.second.speaker;
-			const std::string& id = it.second.producer->id;
+			auto* producerSpeaker = kv.second;
+			auto* speaker         = producerSpeaker->speaker;
+			auto& id              = producerSpeaker->producer->id;
 			uint64_t idle         = now - speaker->lastLevelChangeTime;
 
 			if (SpeakerIdleTimeout < idle && (this->dominantId.empty() || id != this->dominantId))
@@ -366,6 +384,22 @@ namespace RTC
 				speaker->LevelTimedOut(now);
 			}
 		}
+	}
+
+	ActiveSpeakerObserver::ProducerSpeaker::ProducerSpeaker(RTC::Producer* producer)
+	  : producer(producer)
+	{
+		MS_TRACE();
+
+		this->speaker         = new Speaker();
+		this->speaker->paused = producer->IsPaused();
+	}
+
+	ActiveSpeakerObserver::ProducerSpeaker::~ProducerSpeaker()
+	{
+		MS_TRACE();
+
+		delete this->speaker;
 	}
 
 	ActiveSpeakerObserver::Speaker::Speaker()
@@ -397,17 +431,17 @@ namespace RTC
 		}
 	}
 
-	double ActiveSpeakerObserver::Speaker::GetActivityScore(int32_t interval)
+	double ActiveSpeakerObserver::Speaker::GetActivityScore(uint8_t interval)
 	{
 		MS_TRACE();
 
 		switch (interval)
 		{
-			case 0:
+			case 0u:
 				return this->immediateActivityScore;
-			case 1:
+			case 1u:
 				return this->mediumActivityScore;
-			case 2:
+			case 2u:
 				return this->longActivityScore;
 			default:
 				MS_ABORT("interval is invalid");
@@ -424,7 +458,7 @@ namespace RTC
 
 			this->lastLevelChangeTime = now;
 
-			int8_t b = 0;
+			int8_t b{ 0 };
 
 			if (level < MinLevel)
 			{
@@ -439,12 +473,13 @@ namespace RTC
 				b = level;
 			}
 
-			// The algorithm expect to have an update every 20 milliseconds. If the producer is paused,
-			// using a different packetization time or using DTX we need to update more than one sample
-			// when receiving an audio packet.
+			// The algorithm expect to have an update every 20 milliseconds. If the
+			// Producer is paused, using a different packetization time or using DTX
+			// we need to update more than one sample when receiving an audio packet.
 			uint32_t intervalsUpdated =
 			  std::min(std::max(static_cast<uint32_t>(elapsed / 20), 1U), LevelsBuffLen);
-			for (uint32_t i = 0; i < intervalsUpdated; i++)
+
+			for (uint32_t i{ 0u }; i < intervalsUpdated; ++i)
 			{
 				this->levels[this->nextLevelIndex] = b;
 				this->nextLevelIndex               = (this->nextLevelIndex + 1) % LevelsBuffLen;
@@ -558,6 +593,7 @@ namespace RTC
 				{
 					this->nextMinLevel = level;
 				}
+
 				this->nextMinLevelWindowLen++;
 
 				if (this->nextMinLevelWindowLen >= MinLevelWindowLen)
@@ -573,8 +609,7 @@ namespace RTC
 						newMinLevel = MaxLevel;
 					}
 
-					this->minLevel = static_cast<int8_t>(newMinLevel);
-
+					this->minLevel              = static_cast<int8_t>(newMinLevel);
 					this->nextMinLevel          = MinLevel;
 					this->nextMinLevelWindowLen = 0;
 				}
