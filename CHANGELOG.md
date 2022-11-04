@@ -11,6 +11,7 @@
 * Fix some libwebrtc issues (PR #944).
 * Tests: Normalize hexadecimal data representation (PR #945).
 * Update NPM deps.
+* `SctpAssociation`: Fix memory violation (PR #943).
 
 
 ### 3.10.12
