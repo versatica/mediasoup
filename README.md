@@ -7,6 +7,7 @@
 [![][github-actions-shield-mediasoup-node]][github-actions-mediasoup-node]
 [![][github-actions-shield-mediasoup-worker]][github-actions-mediasoup-worker]
 [![][github-actions-shield-mediasoup-rust]][github-actions-mediasoup-rust]
+[![][codeql-shield-mediasoup]][codeql-mediasoup]
 [![][opencollective-shield-mediasoup]][opencollective-mediasoup]
 
 
@@ -75,6 +76,11 @@ Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](ht
 * José Luis Millán [[github](https://github.com/jmillan/)]
 
 
+## Social
+
+* Twitter: [@mediasoup_sfu](https://twitter.com/mediasoup_sfu)
+
+
 ## Sponsor
 
 You can support mediasoup by [sponsoring][sponsor] it. Thanks!
@@ -100,6 +106,8 @@ You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 [github-actions-mediasoup-worker]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker.yaml
 [github-actions-shield-mediasoup-rust]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-rust.yaml/badge.svg
 [github-actions-mediasoup-rust]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-rust.yaml
+[codeql-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yml/badge.svg
+[codeql-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yml
 [opencollective-shield-mediasoup]: https://img.shields.io/opencollective/all/mediasoup.svg
 [opencollective-mediasoup]: https://opencollective.com/mediasoup/
 [sponsor]: https://mediasoup.org/sponsor/
