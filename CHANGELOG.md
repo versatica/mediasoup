@@ -8,6 +8,7 @@
 * `DataConsumer`: Fix `bufferedAmount` type to be a number again (PR #936).
 * `ActiveSpeakerObserver`: Fix 'dominantspeaker' event by having a single `Producer` as argument rather than an array with a single `Producer` into it (PR #941).
 * `ActiveSpeakerObserver`: Fix memory leak (PR #942).
+* Fix some libwebrtc issues (PR #944).
 * Tests: Normalize hexadecimal data representation (PR #945).
 * Update NPM deps.
 
@@ -20,7 +21,7 @@
 
 ### 3.10.11
 
-* RTCP: Fix trailing space needed by srtp_protect_rtcp() (PR #929).
+* RTCP: Fix trailing space needed by `srtp_protect_rtcp()` (PR #929).
 
 
 ### 3.10.10
