@@ -95,7 +95,7 @@ namespace RTC
 		std::string dominantId;
 		Timer* periodicTimer{ nullptr };
 		uint16_t interval{ 300u };
-		// Map of ProducerSpeakers indeed by Producer id.
+		// Map of ProducerSpeakers indexed by Producer id.
 		absl::flat_hash_map<std::string, ProducerSpeaker*> mapProducerSpeakers;
 		uint64_t lastLevelIdleTime{ 0u };
 	};
