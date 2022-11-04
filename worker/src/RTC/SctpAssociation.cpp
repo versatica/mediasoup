@@ -772,7 +772,7 @@ namespace RTC
 							static const size_t BufferSize{ 1024 };
 							thread_local static char buffer[BufferSize];
 
-							uint32_t len = notification->sn_header.sn_length;
+							uint32_t len = notification->sn_assoc_change.sac_length - sizeof(sctp_assoc_change);
 
 							for (uint32_t i{ 0 }; i < len; ++i)
 							{
@@ -840,7 +840,7 @@ namespace RTC
 							static const size_t BufferSize{ 1024 };
 							thread_local static char buffer[BufferSize];
 
-							uint32_t len = notification->sn_header.sn_length;
+							uint32_t len = notification->sn_assoc_change.sac_length - sizeof(sctp_assoc_change);
 
 							for (uint32_t i{ 0 }; i < len; ++i)
 							{
