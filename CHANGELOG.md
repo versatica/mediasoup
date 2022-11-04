@@ -3,10 +3,13 @@
 
 ### NEXT
 
-* Transport: Remove duplicate call to method (PR #931).
+* `Transport`: Remove duplicate call to method (PR #931).
 * RTCP: Adjust maximum compound packet size (PR #934).
-* Fix `bufferedAmount` type to be a number again (PR #936).
-* SctpAssociation: fix memory violation (PR #943).
+* `DataConsumer`: Fix `bufferedAmount` type to be a number again (PR #936).
+* `ActiveSpeakerObserver`: Fix 'dominantspeaker' event by having a single `Producer` as argument rather than an array with a single `Producer` into it (PR #941).
+* `ActiveSpeakerObserver`: Fix memory leak (PR #942).
+* Update NPM deps.
+* `SctpAssociation`: fix memory violation (PR #943).
 
 
 ### 3.10.12

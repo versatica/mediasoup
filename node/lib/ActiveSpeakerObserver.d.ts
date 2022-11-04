@@ -15,14 +15,10 @@ export interface ActiveSpeakerObserverActivity {
     producer: Producer;
 }
 export declare type ActiveSpeakerObserverEvents = RtpObserverEvents & {
-    dominantspeaker: [{
-        producer: Producer;
-    }];
+    dominantspeaker: [Producer];
 };
 export declare type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents & {
-    dominantspeaker: [{
-        producer: Producer;
-    }];
+    dominantspeaker: [Producer];
 };
 declare type RtpObserverObserverConstructorOptions = RtpObserverConstructorOptions;
 export declare class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEvents> {
