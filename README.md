@@ -106,8 +106,8 @@ You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 [github-actions-mediasoup-worker]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker.yaml
 [github-actions-shield-mediasoup-rust]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-rust.yaml/badge.svg
 [github-actions-mediasoup-rust]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-rust.yaml
-[codeql-shield-mediasoup]: https://github.com/versatica/mediasoup/workflows/CodeQL/badge.svg
-[codeql-mediasoup]: https://npmjs.org/package/mediasoup
+[codeql-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yml/badge.svg
+[codeql-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yml
 [opencollective-shield-mediasoup]: https://img.shields.io/opencollective/all/mediasoup.svg
 [opencollective-mediasoup]: https://opencollective.com/mediasoup/
 [sponsor]: https://mediasoup.org/sponsor/
