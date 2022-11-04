@@ -466,7 +466,7 @@ namespace RTC
 			uint32_t intervalsUpdated =
 			  std::min(std::max(static_cast<uint32_t>(elapsed / 20), 1U), LevelsBuffLen);
 
-			for (uint32_t i = 0; i < intervalsUpdated; ++i)
+			for (uint32_t i{ 0u }; i < intervalsUpdated; ++i)
 			{
 				this->levels[this->nextLevelIndex] = b;
 				this->nextLevelIndex               = (this->nextLevelIndex + 1) % LevelsBuffLen;
