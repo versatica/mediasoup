@@ -11,7 +11,6 @@
 * Fix some libwebrtc issues (PR #944).
 * Tests: Normalize hexadecimal data representation (PR #945).
 * Update NPM deps.
-* foo.
 
 
 ### 3.10.12
