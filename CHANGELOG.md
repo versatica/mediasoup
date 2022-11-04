@@ -9,6 +9,7 @@
 * `ActiveSpeakerObserver`: Fix 'dominantspeaker' event by having a single `Producer` as argument rather than an array with a single `Producer` into it (PR #941).
 * `ActiveSpeakerObserver`: Fix memory leak (PR #942).
 * Fix some libwebrtc issues (PR #944).
+* Tests: Normalize hexadecimal data representation (PR #945).
 * Update NPM deps.
 
 
