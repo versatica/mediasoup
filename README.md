@@ -78,7 +78,7 @@ Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](ht
 
 ## Social
 
-* [Twitter @mediasoup_sfu](https://twitter.com/mediasoup_sfu)
+* Twitter: [@mediasoup_sfu](https://twitter.com/mediasoup_sfu)
 
 
 ## Sponsor
