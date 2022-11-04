@@ -127,6 +127,7 @@ namespace RTC
 		  "packet's computed size does not match received size");
 
 		auto* rtpPacket = RtpPacket::Allocator::Pool.allocate(1);
+
 		RtpPacket::AllocatorTraits::construct(
 		  RtpPacket::Allocator::Pool,
 		  rtpPacket,
@@ -662,6 +663,7 @@ namespace RTC
 		MS_TRACE();
 
 		auto* buffer = RtpPacket::BufferAllocator::Pool.allocate(1);
+
 		RtpPacket::BufferAllocatorTraits::construct(RtpPacket::BufferAllocator::Pool, buffer);
 
 		auto* ptr = const_cast<uint8_t*>(buffer->data());
