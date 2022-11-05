@@ -32,6 +32,11 @@ MESON_ARGS ?= ""
 # Workaround for NixOS and Guix that don't work with pre-built binaries, see:
 # https://github.com/NixOS/nixpkgs/issues/142383.
 PIP_BUILD_BINARIES = $(shell [ -f /etc/NIXOS -o -d /etc/guix ] && echo "--no-binary :all:")
+# Let's use a specific version of ninja to avoid version 1.11.1 due to a bug in
+# Meson:
+# https://mediasoup.discourse.group/t/partly-solved-could-not-detect-ninja-v1-8-2-or-newer/
+# https://github.com/ninja-build/ninja/issues/2211
+NINJA_VERSION ?= 1.10.2.4
 
 # Disable `*.pyc` files creation.
 export PYTHONDONTWRITEBYTECODE = 1
@@ -95,7 +100,7 @@ ifeq ($(wildcard $(PIP_DIR)),)
 		echo "Installation failed, likely because PIP is unavailable, if you are on Debian/Ubuntu or derivative please install the python3-pip package"
 	# Install `meson` and `ninja` using `pip` into custom location, so we don't
 	# depend on system-wide installation.
-	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) $(PIP_BUILD_BINARIES) meson==$(MESON_VERSION) ninja
+	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) $(PIP_BUILD_BINARIES) meson==$(MESON_VERSION) ninja==$(NINJA_VERSION)
 endif
 
 setup: meson-ninja
