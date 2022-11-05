@@ -34,7 +34,6 @@ MESON_ARGS ?= ""
 PIP_BUILD_BINARIES = $(shell [ -f /etc/NIXOS -o -d /etc/guix ] && echo "--no-binary :all:")
 # Let's use a specific version of ninja to avoid issues like this one:
 # https://mediasoup.discourse.group/t/partly-solved-could-not-detect-ninja-v1-8-2-or-newer/
-# https://mediasoup.discourse.group/t/partly-solved-could-not-detect-ninja-v1-8-2-or-newer/
 NINJA_VERSION ?= 1.10.2.4
 
 # Disable `*.pyc` files creation.
