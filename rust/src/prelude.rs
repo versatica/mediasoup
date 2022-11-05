@@ -40,7 +40,8 @@ pub use crate::webrtc_transport::{
 };
 
 pub use crate::active_speaker_observer::{
-    ActiveSpeakerObserver, ActiveSpeakerObserverOptions, WeakActiveSpeakerObserver,
+    ActiveSpeakerObserver, ActiveSpeakerObserverDominantSpeaker, ActiveSpeakerObserverOptions,
+    WeakActiveSpeakerObserver,
 };
 pub use crate::audio_level_observer::{
     AudioLevelObserver, AudioLevelObserverOptions, AudioLevelObserverVolume, WeakAudioLevelObserver,

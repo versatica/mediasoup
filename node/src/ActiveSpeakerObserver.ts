@@ -8,7 +8,7 @@ import {
 } from './RtpObserver';
 import { Producer } from './Producer';
 
-export interface ActiveSpeakerObserverOptions 
+export type ActiveSpeakerObserverOptions =
 {
 	interval?: number;
 
@@ -16,24 +16,24 @@ export interface ActiveSpeakerObserverOptions
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
-}
+};
 
-export interface ActiveSpeakerObserverActivity 
+export type ActiveSpeakerObserverDominantSpeaker =
 {
 	/**
-	 * The producer instance.
+	 * The audio Producer instance.
 	 */
 	producer: Producer;
-}
+};
 
 export type ActiveSpeakerObserverEvents = RtpObserverEvents &
 {
-	dominantspeaker: [Producer];
+	dominantspeaker: [ActiveSpeakerObserverDominantSpeaker];
 };
 
 export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents &
 {
-	dominantspeaker: [Producer];
+	dominantspeaker: [ActiveSpeakerObserverDominantSpeaker];
 };
 
 type RtpObserverObserverConstructorOptions = RtpObserverConstructorOptions;
@@ -73,8 +73,13 @@ export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEven
 					if (!producer)
 						break;
 
-					this.safeEmit('dominantspeaker', producer);
-					this.observer.safeEmit('dominantspeaker', producer);
+					const dominantSpeaker: ActiveSpeakerObserverDominantSpeaker =
+					{
+						producer
+					};
+
+					this.safeEmit('dominantspeaker', dominantSpeaker);
+					this.observer.safeEmit('dominantspeaker', dominantSpeaker);
 
 					break;
 				}

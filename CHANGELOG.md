@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* ...
+* `ActiveSpeakerObserver`: Revert 'dominantspeaker' event changes in PR #941 to avoid breaking changes (PR #947).
 
 
 ### 3.11.0

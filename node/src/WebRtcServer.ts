@@ -4,7 +4,7 @@ import { Channel } from './Channel';
 import { TransportProtocol } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';
 
-export interface WebRtcServerListenInfo
+export type WebRtcServerListenInfo =
 {
 	/**
 	 * Network protocol.
@@ -26,7 +26,7 @@ export interface WebRtcServerListenInfo
 	 * Listening port.
 	 */
 	port?: number;
-}
+};
 
 export type WebRtcServerOptions =
 {
