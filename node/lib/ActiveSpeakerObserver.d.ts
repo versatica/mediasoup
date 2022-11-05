@@ -1,24 +1,24 @@
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { RtpObserver, RtpObserverEvents, RtpObserverObserverEvents, RtpObserverConstructorOptions } from './RtpObserver';
 import { Producer } from './Producer';
-export interface ActiveSpeakerObserverOptions {
+export declare type ActiveSpeakerObserverOptions = {
     interval?: number;
     /**
      * Custom application data.
      */
     appData?: Record<string, unknown>;
-}
-export interface ActiveSpeakerObserverActivity {
+};
+export declare type ActiveSpeakerObserverDominantSpeaker = {
     /**
-     * The producer instance.
+     * The audio Producer instance.
      */
     producer: Producer;
-}
+};
 export declare type ActiveSpeakerObserverEvents = RtpObserverEvents & {
-    dominantspeaker: [Producer];
+    dominantspeaker: [ActiveSpeakerObserverDominantSpeaker];
 };
 export declare type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents & {
-    dominantspeaker: [Producer];
+    dominantspeaker: [ActiveSpeakerObserverDominantSpeaker];
 };
 declare type RtpObserverObserverConstructorOptions = RtpObserverConstructorOptions;
 export declare class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEvents> {

@@ -2,7 +2,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { TransportProtocol } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';
-export interface WebRtcServerListenInfo {
+export declare type WebRtcServerListenInfo = {
     /**
      * Network protocol.
      */
@@ -20,7 +20,7 @@ export interface WebRtcServerListenInfo {
      * Listening port.
      */
     port?: number;
-}
+};
 export declare type WebRtcServerOptions = {
     /**
      * Listen infos.

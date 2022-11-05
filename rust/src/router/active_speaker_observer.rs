@@ -40,10 +40,20 @@ impl Default for ActiveSpeakerObserverOptions {
     }
 }
 
+/// Represents dominant speaker.
+#[derive(Debug, Clone)]
+pub struct ActiveSpeakerObserverDominantSpeaker {
+    /// The audio producer instance.
+    pub producer: Producer,
+}
+
 #[derive(Default)]
 #[allow(clippy::type_complexity)]
 struct Handlers {
-    dominant_speaker: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
+    dominant_speaker: Bag<
+        Arc<dyn Fn(&ActiveSpeakerObserverDominantSpeaker) + Send + Sync>,
+        ActiveSpeakerObserverDominantSpeaker,
+    >,
     pause: Bag<Arc<dyn Fn() + Send + Sync>>,
     resume: Bag<Arc<dyn Fn() + Send + Sync>>,
     add_producer: Bag<Arc<dyn Fn(&Producer) + Send + Sync>, Producer>,
@@ -290,7 +300,10 @@ impl ActiveSpeakerObserver {
                             let DominantSpeakerNotification { producer_id } = dominant_speaker;
                             match router.get_producer(&producer_id) {
                                 Some(producer) => {
-                                    handlers.dominant_speaker.call_simple(&producer);
+                                    let dominant_speaker =
+                                        ActiveSpeakerObserverDominantSpeaker { producer };
+
+                                    handlers.dominant_speaker.call_simple(&dominant_speaker);
                                 }
                                 None => {
                                     error!(
@@ -339,7 +352,9 @@ impl ActiveSpeakerObserver {
     }
 
     /// Callback is called at most every interval (see [`ActiveSpeakerObserverOptions`]).
-    pub fn on_dominant_speaker<F: Fn(&Producer) + Send + Sync + 'static>(
+    pub fn on_dominant_speaker<
+        F: Fn(&ActiveSpeakerObserverDominantSpeaker) + Send + Sync + 'static,
+    >(
         &self,
         callback: F,
     ) -> HandlerId {

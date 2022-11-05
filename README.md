@@ -74,6 +74,7 @@ Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](ht
 
 * Iñaki Baz Castillo [[website](https://inakibaz.me)|[github](https://github.com/ibc/)]
 * José Luis Millán [[github](https://github.com/jmillan/)]
+* Nazar Mokynskyi [[github](https://github.com/nazar-pc/)]
 
 
 ## Social

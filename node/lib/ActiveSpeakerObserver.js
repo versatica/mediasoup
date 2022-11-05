@@ -26,8 +26,11 @@ class ActiveSpeakerObserver extends RtpObserver_1.RtpObserver {
                         const producer = this.getProducerById(data.producerId);
                         if (!producer)
                             break;
-                        this.safeEmit('dominantspeaker', producer);
-                        this.observer.safeEmit('dominantspeaker', producer);
+                        const dominantSpeaker = {
+                            producer
+                        };
+                        this.safeEmit('dominantspeaker', dominantSpeaker);
+                        this.observer.safeEmit('dominantspeaker', dominantSpeaker);
                         break;
                     }
                 default:
