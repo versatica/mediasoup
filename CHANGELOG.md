@@ -1,9 +1,9 @@
 # Changelog
 
 
-### NEXT
+### 3.11.2
 
-* Meson: Pin `ninja` version to 1.10.2.4 to avoid segfault in Linux using `ninja` latest version 1.11.1 (PR #).
+* Meson: Pin `ninja` version to 1.10.2.4 to avoid segfault in Linux using `ninja` latest version 1.11.1 due to a bug in Meson (PR #948).
 
 
 ### 3.11.1
