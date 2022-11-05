@@ -218,6 +218,7 @@ function installMsysMake()
 	if (res.status !== 0)
 	{
 		res = spawnSync('where', [ 'python.exe' ]);
+
 		if (res.status !== 0)
 		{
 			// eslint-disable-next-line no-console
