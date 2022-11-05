@@ -222,7 +222,7 @@ function installMsysMake()
 		if (res.status !== 0)
 		{
 			// eslint-disable-next-line no-console
-			console.error('Cannot find Python executable');
+			console.error('`npm-scripts.js [ERROR] cannot find Python executable');
 
 			process.exit(1);
 		}
