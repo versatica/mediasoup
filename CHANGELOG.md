@@ -1,7 +1,7 @@
 # Changelog
 
 
-### NEXT
+### 3.11.1
 
 * `ActiveSpeakerObserver`: Revert 'dominantspeaker' event changes in PR #941 to avoid breaking changes (PR #947).
 
