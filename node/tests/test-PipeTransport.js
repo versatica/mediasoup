@@ -473,6 +473,17 @@ test('router.pipeToRouter() fails if both Routers belong to the same Worker', as
 		.rejects
 		.toThrow(Error);
 
+	// TODO: Temporal code to show an unexpected error.
+	{
+		// This is ok.
+		expect(videoProducer.closed).toBe(false);
+
+		// However these will fail since the handler Id does not exist in the worker.
+		// This is impossible and must be a bug.
+		await videoProducer.resume();
+		await videoProducer.pause();
+	}
+
 	router1bis.close();
 }, 2000);
 
