@@ -63,51 +63,56 @@ void ChannelMessageHandlers::RegisterHandler(
 {
 	MS_TRACE();
 
-	try
+	if (channelRequestHandler != nullptr)
 	{
-		if (channelRequestHandler != nullptr)
+		if (
+		  ChannelMessageHandlers::mapChannelRequestHandlers.find(id) !=
+		  ChannelMessageHandlers::mapChannelRequestHandlers.end())
 		{
-			if (
-			  ChannelMessageHandlers::mapChannelRequestHandlers.find(id) !=
-			  ChannelMessageHandlers::mapChannelRequestHandlers.end())
-			{
-				MS_THROW_ERROR("Channel request handler with ID %s already exists", id.c_str());
-			}
-
-			ChannelMessageHandlers::mapChannelRequestHandlers[id] = channelRequestHandler;
+			MS_THROW_ERROR("Channel request handler with ID %s already exists", id.c_str());
 		}
 
-		if (payloadChannelRequestHandler != nullptr)
-		{
-			if (
-			  ChannelMessageHandlers::mapPayloadChannelRequestHandlers.find(id) !=
-			  ChannelMessageHandlers::mapPayloadChannelRequestHandlers.end())
-			{
-				MS_THROW_ERROR("PayloadChannel request handler with ID %s already exists", id.c_str());
-			}
-
-			ChannelMessageHandlers::mapPayloadChannelRequestHandlers[id] = payloadChannelRequestHandler;
-		}
-
-		if (payloadChannelNotificationHandler != nullptr)
-		{
-			if (
-			  ChannelMessageHandlers::mapPayloadChannelNotificationHandlers.find(id) !=
-			  ChannelMessageHandlers::mapPayloadChannelNotificationHandlers.end())
-			{
-				MS_THROW_ERROR("PayloadChannel notification handler with ID %s already exists", id.c_str());
-			}
-
-			ChannelMessageHandlers::mapPayloadChannelNotificationHandlers[id] =
-			  payloadChannelNotificationHandler;
-		}
+		ChannelMessageHandlers::mapChannelRequestHandlers[id] = channelRequestHandler;
 	}
-	catch (const MediaSoupError& error)
-	{
-		// In case of error unregister everything.
-		ChannelMessageHandlers::UnregisterHandler(id);
 
-		throw;
+	if (payloadChannelRequestHandler != nullptr)
+	{
+		if (
+		  ChannelMessageHandlers::mapPayloadChannelRequestHandlers.find(id) !=
+		  ChannelMessageHandlers::mapPayloadChannelRequestHandlers.end())
+		{
+			if (channelRequestHandler != nullptr)
+			{
+				ChannelMessageHandlers::mapChannelRequestHandlers.erase(id);
+			}
+
+			MS_THROW_ERROR("PayloadChannel request handler with ID %s already exists", id.c_str());
+		}
+
+		ChannelMessageHandlers::mapPayloadChannelRequestHandlers[id] = payloadChannelRequestHandler;
+	}
+
+	if (payloadChannelNotificationHandler != nullptr)
+	{
+		if (
+		  ChannelMessageHandlers::mapPayloadChannelNotificationHandlers.find(id) !=
+		  ChannelMessageHandlers::mapPayloadChannelNotificationHandlers.end())
+		{
+			if (channelRequestHandler != nullptr)
+			{
+				ChannelMessageHandlers::mapChannelRequestHandlers.erase(id);
+			}
+
+			if (payloadChannelRequestHandler != nullptr)
+			{
+				ChannelMessageHandlers::mapPayloadChannelRequestHandlers.erase(id);
+			}
+
+			MS_THROW_ERROR("PayloadChannel notification handler with ID %s already exists", id.c_str());
+		}
+
+		ChannelMessageHandlers::mapPayloadChannelNotificationHandlers[id] =
+		  payloadChannelNotificationHandler;
 	}
 }
 
