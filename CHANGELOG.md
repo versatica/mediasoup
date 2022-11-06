@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* `ChannelMessageHandlers`: Make `RegisterHandler()` not remove the existing handler if another one with same `id` is given (PR #952).
+
+
 ### 3.11.2
 
 * Fix installation issue in Linux due to a bug in ninja latest version 1.11.1 (PR #948).
