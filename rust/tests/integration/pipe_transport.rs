@@ -4,7 +4,6 @@ use mediasoup::data_consumer::{DataConsumerOptions, DataConsumerType};
 use mediasoup::data_producer::{DataProducerOptions, DataProducerType};
 use mediasoup::data_structures::{AppData, ListenIp};
 use mediasoup::pipe_transport::{PipeTransportOptions, PipeTransportRemoteParameters};
-use mediasoup::transport::ProduceError;
 use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{
@@ -19,6 +18,7 @@ use mediasoup::rtp_parameters::{
 };
 use mediasoup::sctp_parameters::SctpStreamParameters;
 use mediasoup::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
+use mediasoup::transport::ProduceError;
 use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
@@ -575,20 +575,14 @@ fn pipe_to_router_fails_if_both_routers_belong_to_the_same_worker() {
             )
             .await;
 
-        // TODO: Remove. It prints the following:
-        // Err(ProduceFailed(Request(Response { reason: "Channel request handler with ID d91991e8-fcbe-4069-8660-668cb94dc6dd already exists [method:transport.produce]" })))
-        println!("{:?}", result);
-
-        let producer_id = video_producer.id();
-
-        assert!(matches!(
-            result,
-            // TODO: Need a proper error. ProduceError::AlreadyExists is not the right
-            // one since the error is not produced by the Rust Transport but by the
-            // C++ Worker which realizes that a Producer with same id already exists
-            // in the Worker. So no idea what to do here.
-            Err(PipeProducerToRouterError::ProduceFailed(ProduceError::AlreadyExists(producer_id)))
-        ));
+        if let Err(PipeProducerToRouterError::ProduceFailed(ProduceError::Request(
+            RequestError::Response { reason },
+        ))) = result
+        {
+            assert!(reason.contains("already exists [method:transport.produce]"));
+        } else {
+            panic!("Unexpected result: {:?}", result);
+        }
     });
 }
 
