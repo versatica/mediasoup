@@ -4,6 +4,7 @@ use mediasoup::data_consumer::{DataConsumerOptions, DataConsumerType};
 use mediasoup::data_producer::{DataProducerOptions, DataProducerType};
 use mediasoup::data_structures::{AppData, ListenIp};
 use mediasoup::pipe_transport::{PipeTransportOptions, PipeTransportRemoteParameters};
+use mediasoup::transport::ProduceError;
 use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{
@@ -549,6 +550,45 @@ fn pipe_to_router_succeeds_with_video() {
             ],
         );
         assert!(pipe_producer.paused());
+    });
+}
+
+#[test]
+fn pipe_to_router_fails_if_both_routers_belong_to_the_same_worker() {
+    future::block_on(async move {
+        let (worker1, _worker2, router1, _router2, transport1, _transport2) = init().await;
+
+        let router1bis = worker1
+            .create_router(RouterOptions::new(media_codecs()))
+            .await
+            .expect("Failed to create router");
+
+        let video_producer = transport1
+            .produce(video_producer_options())
+            .await
+            .expect("Failed to produce video");
+
+        let result = router1
+            .pipe_producer_to_router(
+                video_producer.id(),
+                PipeToRouterOptions::new(router1bis.clone()),
+            )
+            .await;
+
+        // TODO: Remove. It prints the following:
+        // Err(ProduceFailed(Request(Response { reason: "Channel request handler with ID d91991e8-fcbe-4069-8660-668cb94dc6dd already exists [method:transport.produce]" })))
+        println!("{:?}", result);
+
+        let producer_id = video_producer.id();
+
+        assert!(matches!(
+            result,
+            // TODO: Need a proper error. ProduceError::AlreadyExists is not the right
+            // one since the error is not produced by the Rust Transport but by the
+            // C++ Worker which realizes that a Producer with same id already exists
+            // in the Worker. So no idea what to do here.
+            Err(PipeProducerToRouterError::ProduceFailed(ProduceError::AlreadyExists(producer_id)))
+        ));
     });
 }
 
