@@ -14,6 +14,7 @@ import {
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import { Either, parseVector } from './utils';
 
@@ -386,6 +387,32 @@ export class WebRtcTransport extends
 	}
 
 	/**
+	 * Dump Transport.
+	 */
+	async dump(): Promise<any>
+	{
+		logger.debug('dump()');
+
+		const response = await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_DUMP,
+			undefined,
+			undefined,
+			this.internal.transportId
+		);
+
+		/* Decode the response. */
+		const dump = new FbsTransport.DumpResponse();
+
+		response.body(dump);
+
+		const transportDump = new FbsTransport.WebRtcTransportDump();
+
+		dump.data(transportDump);
+
+		return parseWebRtcTransportDump(transportDump);
+	}
+
+	/**
 	 * Get WebRtcTransport stats.
 	 *
 	 * @override
@@ -562,7 +589,7 @@ export function parseDtlsParameters(binary: FbsTransport.DtlsParameters): DtlsPa
 	};
 }
 
-export type WebRtcTransportDump = BaseTransportDump &
+type WebRtcTransportDump = BaseTransportDump &
 {
 	iceRole: 'controlled';
 	iceParameters: IceParameters;
@@ -591,7 +618,8 @@ export function parseWebRtcTransportDump(
 	// Retrieve DTLS parameters.
 	const dtlsParameters = parseDtlsParameters(binary.dtlsParameters()!);
 
-	const dump: WebRtcTransportDump = { ...baseTransportDump,
+	return {
+		...baseTransportDump,
 		sctpParameters : baseTransportDump.sctpParameters,
 		sctpState      : baseTransportDump.sctpState,
 		iceRole        : 'controlled',
@@ -601,6 +629,4 @@ export function parseWebRtcTransportDump(
 		dtlsParameters : dtlsParameters,
 		dtlsState      : binary.dtlsState() as DtlsState
 	};
-
-	return dump;
 }

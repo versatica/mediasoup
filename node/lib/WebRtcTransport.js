@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseWebRtcTransportDump = exports.parseDtlsParameters = exports.parseIceParameters = exports.parseIceCandidate = exports.WebRtcTransport = void 0;
 const Logger_1 = require("./Logger");
 const Transport_1 = require("./Transport");
+const FbsRequest = require("./fbs/request_generated");
 const FbsTransport = require("./fbs/transport_generated");
 const utils_1 = require("./utils");
 const logger = new Logger_1.Logger('WebRtcTransport');
@@ -136,6 +137,19 @@ class WebRtcTransport extends Transport_1.Transport {
         if (this.#data.sctpState)
             this.#data.sctpState = 'closed';
         super.listenServerClosed();
+    }
+    /**
+     * Dump Transport.
+     */
+    async dump() {
+        logger.debug('dump()');
+        const response = await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_DUMP, undefined, undefined, this.internal.transportId);
+        /* Decode the response. */
+        const dump = new FbsTransport.DumpResponse();
+        response.body(dump);
+        const transportDump = new FbsTransport.WebRtcTransportDump();
+        dump.data(transportDump);
+        return parseWebRtcTransportDump(transportDump);
     }
     /**
      * Get WebRtcTransport stats.
@@ -274,7 +288,8 @@ function parseWebRtcTransportDump(binary) {
     const iceParameters = parseIceParameters(binary.iceParameters());
     // Retrieve DTLS parameters.
     const dtlsParameters = parseDtlsParameters(binary.dtlsParameters());
-    const dump = { ...baseTransportDump,
+    return {
+        ...baseTransportDump,
         sctpParameters: baseTransportDump.sctpParameters,
         sctpState: baseTransportDump.sctpState,
         iceRole: 'controlled',
@@ -284,6 +299,5 @@ function parseWebRtcTransportDump(binary) {
         dtlsParameters: dtlsParameters,
         dtlsState: binary.dtlsState()
     };
-    return dump;
 }
 exports.parseWebRtcTransportDump = parseWebRtcTransportDump;

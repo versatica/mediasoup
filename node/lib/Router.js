@@ -229,7 +229,6 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         /* Decode the response. */
         const dump = new FbsTransport.DumpResponse();
         response.body(dump);
-        // const data = dump.unpack();
         const transportDump = new FbsTransport.WebRtcTransportDump();
         dump.data(transportDump);
         const webRtcTransportData = (0, WebRtcTransport_1.parseWebRtcTransportDump)(transportDump);
@@ -292,13 +291,15 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         /* Decode the response. */
         const dump = new FbsTransport.DumpResponse();
         response.body(dump);
-        const data = dump.unpack();
+        const transportDump = new FbsTransport.PlainTransportDump();
+        dump.data(transportDump);
+        const plainTransportData = (0, PlainTransport_1.parsePlainTransportDump)(transportDump);
         const transport = new PlainTransport_1.PlainTransport({
             internal: {
                 ...this.#internal,
                 transportId: transportId
             },
-            data,
+            data: plainTransportData,
             channel: this.#channel,
             payloadChannel: this.#payloadChannel,
             appData,

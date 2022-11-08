@@ -1,23 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseBaseTransportDump = exports.parseSctpListenerDump = exports.parseRtpListenerDump = exports.Transport = void 0;
+exports.parseBaseTransportDump = exports.parseSctpListenerDump = exports.parseRtpListenerDump = exports.parseTuple = exports.Transport = void 0;
 const uuid_1 = require("uuid");
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const utils = require("./utils");
 const ortc = require("./ortc");
-const WebRtcTransport_1 = require("./WebRtcTransport");
 const Producer_1 = require("./Producer");
 const Consumer_1 = require("./Consumer");
 const DataProducer_1 = require("./DataProducer");
 const DataConsumer_1 = require("./DataConsumer");
 const RtpParameters_1 = require("./RtpParameters");
 const SctpParameters_1 = require("./SctpParameters");
-const request_generated_1 = require("./fbs/request_generated");
-const response_generated_1 = require("./fbs/response_generated");
+const FbsRequest = require("./fbs/request_generated");
+const FbsResponse = require("./fbs/response_generated");
 const media_kind_1 = require("./fbs/fbs/rtp-parameters/media-kind");
-const consumer_generated_1 = require("./fbs/consumer_generated");
-const FbsTransport = require("./fbs/transport_generated");
+const FbsConsumer = require("./fbs/consumer_generated");
 const logger = new Logger_1.Logger('Transport');
 class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -240,20 +238,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#observer.safeEmit('close');
     }
     /**
-     * Dump Transport.
-     */
-    async dump() {
-        logger.debug('dump()');
-        const response = await this.channel.requestBinary(request_generated_1.Method.TRANSPORT_DUMP, undefined, undefined, this.internal.transportId);
-        /* Decode the response. */
-        const dump = new FbsTransport.DumpResponse();
-        response.body(dump);
-        // TODO: Fix: Consider all transport types.
-        const transportDump = new FbsTransport.WebRtcTransportDump();
-        dump.data(transportDump);
-        return (0, WebRtcTransport_1.parseWebRtcTransportDump)(transportDump);
-    }
-    /**
      * Get Transport stats.
      *
      * @abstract
@@ -409,9 +393,9 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             ignoreDtx,
             pipe
         });
-        const response = await this.channel.requestBinary(request_generated_1.Method.TRANSPORT_CONSUME, request_generated_1.Body.FBS_Transport_ConsumeRequest, consumeRequestOffset, this.internal.transportId);
+        const response = await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_CONSUME, FbsRequest.Body.FBS_Transport_ConsumeRequest, consumeRequestOffset, this.internal.transportId);
         /* Decode the response. */
-        const consumeResponse = new response_generated_1.ConsumeResponse();
+        const consumeResponse = new FbsResponse.ConsumeResponse();
         response.body(consumeResponse);
         const status = consumeResponse.unpack();
         const data = {
@@ -611,25 +595,36 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         }
         if (preferredLayers) {
             // NOTE: Add the maximum possible temporae layer if not provided.
-            consumer_generated_1.ConsumerLayers.createConsumerLayers(builder, preferredLayers.spatialLayer, preferredLayers.temporalLayer ?? 255);
+            FbsConsumer.ConsumerLayers.createConsumerLayers(builder, preferredLayers.spatialLayer, preferredLayers.temporalLayer ?? 255);
         }
+        const ConsumeRequest = FbsRequest.ConsumeRequest;
         // Create Consume Request.
-        request_generated_1.ConsumeRequest.startConsumeRequest(builder);
-        request_generated_1.ConsumeRequest.addConsumerId(builder, consumerIdOffset);
-        request_generated_1.ConsumeRequest.addProducerId(builder, producerIdOffset);
-        request_generated_1.ConsumeRequest.addKind(builder, producer.kind === 'audio' ? media_kind_1.MediaKind.AUDIO : media_kind_1.MediaKind.VIDEO);
-        request_generated_1.ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
-        request_generated_1.ConsumeRequest.addType(builder, utils.getRtpParametersType(producer.type, pipe));
+        ConsumeRequest.startConsumeRequest(builder);
+        ConsumeRequest.addConsumerId(builder, consumerIdOffset);
+        ConsumeRequest.addProducerId(builder, producerIdOffset);
+        ConsumeRequest.addKind(builder, producer.kind === 'audio' ? media_kind_1.MediaKind.AUDIO : media_kind_1.MediaKind.VIDEO);
+        ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
+        ConsumeRequest.addType(builder, utils.getRtpParametersType(producer.type, pipe));
         if (consumableRtpEncodingsOffset)
-            request_generated_1.ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
-        request_generated_1.ConsumeRequest.addPaused(builder, paused);
+            ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
+        ConsumeRequest.addPaused(builder, paused);
         if (preferredLayersOffset)
-            request_generated_1.ConsumeRequest.addPreferredLayers(builder, preferredLayersOffset);
-        request_generated_1.ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
-        return request_generated_1.ConsumeRequest.endConsumeRequest(builder);
+            ConsumeRequest.addPreferredLayers(builder, preferredLayersOffset);
+        ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
+        return ConsumeRequest.endConsumeRequest(builder);
     }
 }
 exports.Transport = Transport;
+function parseTuple(binary) {
+    return {
+        localIp: binary.localIp(),
+        localPort: binary.localPort(),
+        remoteIp: binary.remoteIp() ?? undefined,
+        remotePort: binary.remotePort(),
+        protocol: binary.protocol()
+    };
+}
+exports.parseTuple = parseTuple;
 function parseRtpListenerDump(binary) {
     // Retrieve ssrcTable.
     const ssrcTable = utils.parseUint32StringVector(binary, 'ssrcTable');

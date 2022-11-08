@@ -1,8 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PlainTransport = void 0;
+exports.parsePlainTransportDump = exports.PlainTransport = void 0;
 const Logger_1 = require("./Logger");
 const Transport_1 = require("./Transport");
+const SrtpParameters_1 = require("./SrtpParameters");
+const FbsRequest = require("./fbs/request_generated");
+const FbsTransport = require("./fbs/transport_generated");
 const logger = new Logger_1.Logger('PlainTransport');
 class PlainTransport extends Transport_1.Transport {
     // PlainTransport data.
@@ -82,6 +85,19 @@ class PlainTransport extends Transport_1.Transport {
         super.routerClosed();
     }
     /**
+     * Dump Transport.
+     */
+    async dump() {
+        logger.debug('dump()');
+        const response = await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_DUMP, undefined, undefined, this.internal.transportId);
+        /* Decode the response. */
+        const dump = new FbsTransport.DumpResponse();
+        response.body(dump);
+        const transportDump = new FbsTransport.PlainTransportDump();
+        dump.data(transportDump);
+        return parsePlainTransportDump(transportDump);
+    }
+    /**
      * Get PlainTransport stats.
      *
      * @override
@@ -153,3 +169,30 @@ class PlainTransport extends Transport_1.Transport {
     }
 }
 exports.PlainTransport = PlainTransport;
+function parsePlainTransportDump(binary) {
+    // Retrieve BaseTransportDump.
+    const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
+    binary.base().data(fbsBaseTransportDump);
+    const baseTransportDump = (0, Transport_1.parseBaseTransportDump)(fbsBaseTransportDump);
+    // Retrieve RTP Tuple.
+    const tuple = (0, Transport_1.parseTuple)(binary.tuple());
+    // Retrieve RTCP Tuple.
+    let rtcpTuple;
+    if (binary.rtcpTuple()) {
+        rtcpTuple = (0, Transport_1.parseTuple)(binary.rtcpTuple());
+    }
+    // Retrieve SRTP Parameters.
+    let srtpParameters;
+    if (binary.srtpParameters()) {
+        srtpParameters = (0, SrtpParameters_1.parseSrtpParameters)(binary.srtpParameters());
+    }
+    return {
+        ...baseTransportDump,
+        rtcMux: binary.rtcMux(),
+        comedia: binary.comedia(),
+        tuple: tuple,
+        rtcpTuple: rtcpTuple,
+        srtpParameters: srtpParameters
+    };
+}
+exports.parsePlainTransportDump = parsePlainTransportDump;

@@ -218,6 +218,10 @@ export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, We
      */
     webRtcServerClosed(): void;
     /**
+     * Dump Transport.
+     */
+    dump(): Promise<any>;
+    /**
      * Get WebRtcTransport stats.
      *
      * @override
@@ -240,7 +244,7 @@ export declare class WebRtcTransport extends Transport<WebRtcTransportEvents, We
 export declare function parseIceCandidate(binary: FbsTransport.IceCandidate): IceCandidate;
 export declare function parseIceParameters(binary: FbsTransport.IceParameters): IceParameters;
 export declare function parseDtlsParameters(binary: FbsTransport.DtlsParameters): DtlsParameters;
-export declare type WebRtcTransportDump = BaseTransportDump & {
+declare type WebRtcTransportDump = BaseTransportDump & {
     iceRole: 'controlled';
     iceParameters: IceParameters;
     iceCandidates: IceCandidate[];

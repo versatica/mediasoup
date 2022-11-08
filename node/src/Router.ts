@@ -7,7 +7,7 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Transport, TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions, parseWebRtcTransportDump } from './WebRtcTransport';
-import { PlainTransport, PlainTransportOptions, PlainTransportData } from './PlainTransport';
+import { PlainTransport, PlainTransportOptions, parsePlainTransportDump } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions, PipeTransportData } from './PipeTransport';
 import { DirectTransport, DirectTransportOptions } from './DirectTransport';
 import { Producer } from './Producer';
@@ -506,8 +506,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		response.body(dump);
 
-		// const data = dump.unpack();
-
 		const transportDump = new FbsTransport.WebRtcTransportDump();
 
 		dump.data(transportDump);
@@ -645,7 +643,11 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		response.body(dump);
 
-		const data = dump.unpack() as unknown as PlainTransportData;
+		const transportDump = new FbsTransport.PlainTransportDump();
+
+		dump.data(transportDump);
+
+		const plainTransportData = parsePlainTransportDump(transportDump);
 
 		const transport = new PlainTransport(
 			{
@@ -654,7 +656,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 					...this.#internal,
 					transportId : transportId
 				},
-				data,
+				data                     : plainTransportData,
 				channel                  : this.#channel,
 				payloadChannel           : this.#payloadChannel,
 				appData,

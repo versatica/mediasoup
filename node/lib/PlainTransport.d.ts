@@ -1,6 +1,7 @@
-import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
+import { BaseTransportDump, Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
+import * as FbsTransport from './fbs/transport_generated';
 export declare type PlainTransportOptions = {
     /**
      * Listening IP address.
@@ -144,6 +145,10 @@ export declare class PlainTransport extends Transport<PlainTransportEvents, Plai
      */
     routerClosed(): void;
     /**
+     * Dump Transport.
+     */
+    dump(): Promise<any>;
+    /**
      * Get PlainTransport stats.
      *
      * @override
@@ -162,5 +167,13 @@ export declare class PlainTransport extends Transport<PlainTransportEvents, Plai
     }): Promise<void>;
     private handleWorkerNotifications;
 }
+declare type PlainTransportDump = BaseTransportDump & {
+    rtcMux: boolean;
+    comedia: boolean;
+    tuple: TransportTuple;
+    rtcpTuple?: TransportTuple;
+    srtpParameters?: SrtpParameters;
+};
+export declare function parsePlainTransportDump(binary: FbsTransport.PlainTransportDump): PlainTransportDump;
 export {};
 //# sourceMappingURL=PlainTransport.d.ts.map

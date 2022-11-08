@@ -6,7 +6,7 @@ import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { RouterInternal } from './Router';
-import { WebRtcTransportData, parseWebRtcTransportDump } from './WebRtcTransport';
+import { WebRtcTransportData } from './WebRtcTransport';
 import { PlainTransportData } from './PlainTransport';
 import { PipeTransportData } from './PipeTransport';
 import { DirectTransportData } from './DirectTransport';
@@ -24,10 +24,10 @@ import {
 } from './DataConsumer';
 import { RtpCapabilities, RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
 import { parseSctpParametersDump, SctpParameters, SctpStreamParameters } from './SctpParameters';
-import { Body as RequestBody, ConsumeRequest, Method } from './fbs/request_generated';
-import { ConsumeResponse } from './fbs/response_generated';
+import * as FbsRequest from './fbs/request_generated';
+import * as FbsResponse from './fbs/response_generated';
 import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
-import { ConsumerLayers as FbsConsumerLayers } from './fbs/consumer_generated';
+import * as FbsConsumer from './fbs/consumer_generated';
 import * as FbsTransport from './fbs/transport_generated';
 
 export interface TransportListenIp
@@ -464,33 +464,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	}
 
 	/**
-	 * Dump Transport.
-	 */
-	async dump(): Promise<any>
-	{
-		logger.debug('dump()');
-
-		const response = await this.channel.requestBinary(
-			Method.TRANSPORT_DUMP,
-			undefined,
-			undefined,
-			this.internal.transportId
-		);
-
-		/* Decode the response. */
-		const dump = new FbsTransport.DumpResponse();
-
-		response.body(dump);
-
-		// TODO: Fix: Consider all transport types.
-		const transportDump = new FbsTransport.WebRtcTransportDump();
-
-		dump.data(transportDump);
-
-		return parseWebRtcTransportDump(transportDump);
-	}
-
-	/**
 	 * Get Transport stats.
 	 *
 	 * @abstract
@@ -731,14 +704,14 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		});
 
 		const response = await this.channel.requestBinary(
-			Method.TRANSPORT_CONSUME,
-			RequestBody.FBS_Transport_ConsumeRequest,
+			FbsRequest.Method.TRANSPORT_CONSUME,
+			FbsRequest.Body.FBS_Transport_ConsumeRequest,
 			consumeRequestOffset,
 			this.internal.transportId
 		);
 
 		/* Decode the response. */
-		const consumeResponse = new ConsumeResponse();
+		const consumeResponse = new FbsResponse.ConsumeResponse();
 
 		response.body(consumeResponse);
 
@@ -1065,10 +1038,12 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		if (preferredLayers)
 		{
 			// NOTE: Add the maximum possible temporae layer if not provided.
-			FbsConsumerLayers.createConsumerLayers(
+			FbsConsumer.ConsumerLayers.createConsumerLayers(
 				builder, preferredLayers.spatialLayer, preferredLayers.temporalLayer ?? 255
 			);
 		}
+
+		const ConsumeRequest = FbsRequest.ConsumeRequest;
 
 		// Create Consume Request.
 		ConsumeRequest.startConsumeRequest(builder);
@@ -1123,6 +1098,17 @@ export type BaseTransportDump = {
 	sctpListener?: SctpListenerDump;
 	traceEventTypes? : string[];
 };
+
+export function parseTuple(binary: FbsTransport.Tuple): TransportTuple
+{
+	return {
+		localIp    : binary.localIp()!,
+		localPort  : binary.localPort(),
+		remoteIp   : binary.remoteIp() ?? undefined,
+		remotePort : binary.remotePort(),
+		protocol   : binary.protocol()! as TransportProtocol
+	};
+}
 
 export function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump
 {

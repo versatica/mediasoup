@@ -372,7 +372,7 @@ namespace RTC
 				else
 					localIp = this->listenIp.announcedIp;
 
-				tuple = FBS::Transport::CreateTupleDirect(
+				rtcpTuple = FBS::Transport::CreateTupleDirect(
 				  builder, localIp.c_str(), this->rtcpUdpSocket->GetLocalPort(), "", 0, "udp");
 			}
 		}

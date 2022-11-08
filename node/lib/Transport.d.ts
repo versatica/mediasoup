@@ -153,10 +153,6 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      */
     listenServerClosed(): void;
     /**
-     * Dump Transport.
-     */
-    dump(): Promise<any>;
-    /**
      * Get Transport stats.
      *
      * @abstract
@@ -250,6 +246,7 @@ export declare type BaseTransportDump = {
     sctpListener?: SctpListenerDump;
     traceEventTypes?: string[];
 };
+export declare function parseTuple(binary: FbsTransport.Tuple): TransportTuple;
 export declare function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump;
 export declare function parseSctpListenerDump(binary: FbsTransport.SctpListener): SctpListenerDump;
 export declare function parseBaseTransportDump(binary: FbsTransport.BaseTransportDump): BaseTransportDump;
