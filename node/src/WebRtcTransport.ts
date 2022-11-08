@@ -15,7 +15,7 @@ import {
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import * as FbsTransport from './fbs/transport_generated';
-import { Either } from './utils';
+import { Either, parseVector } from './utils';
 
 export type WebRtcTransportListenIndividual =
 {
@@ -585,15 +585,7 @@ export function parseWebRtcTransportDump(
 	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
 
 	// Retrieve ICE candidates.
-	const iceCandidates: IceCandidate[] = [];
-
-	for (let i=0; i<binary.iceCandidatesLength(); ++i)
-	{
-		const fbsIceCandidate = binary.iceCandidates(i)!;
-
-		iceCandidates.push(parseIceCandidate(fbsIceCandidate));
-	}
-
+	const iceCandidates = parseVector<IceCandidate>(binary, 'iceCandidates', parseIceCandidate);
 	// Retrieve ICE parameters.
 	const iceParameters = parseIceParameters(binary.iceParameters()!);
 	// Retrieve DTLS parameters.

@@ -41,10 +41,16 @@ exports.getRtpParametersType = getRtpParametersType;
 /**
  * Parse flatbuffers vector into an array of the given type.
  */
-function parseVector(binary, methodName) {
+function parseVector(binary, methodName, parseFn) {
     const array = [];
-    for (let i = 0; i < binary[`${methodName}Length`](); ++i)
-        array.push(binary[methodName](i));
+    for (let i = 0; i < binary[`${methodName}Length`](); ++i) {
+        if (parseFn) {
+            array.push(parseFn(binary[methodName](i)));
+        }
+        else {
+            array.push(binary[methodName](i));
+        }
+    }
     return array;
 }
 exports.parseVector = parseVector;

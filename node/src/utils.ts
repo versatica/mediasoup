@@ -60,12 +60,23 @@ export function getRtpParametersType(
 /**
  * Parse flatbuffers vector into an array of the given type.
  */
-export function parseVector<Type>(binary: any, methodName: string): Type[]
+export function parseVector<Type>(
+	binary: any, methodName: string, parseFn?: (binary2: any) => Type
+): Type[]
 {
 	const array: Type[] = [];
 
 	for (let i=0; i<binary[`${methodName}Length`](); ++i)
-		array.push(binary[methodName](i));
+	{
+		if (parseFn)
+		{
+			array.push(parseFn(binary[methodName](i)));
+		}
+		else
+		{
+			array.push(binary[methodName](i));
+		}
+	}
 
 	return array;
 }

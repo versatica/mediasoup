@@ -21,7 +21,7 @@ export declare function getRtpParametersType(producerType: ProducerType, pipe: b
 /**
  * Parse flatbuffers vector into an array of the given type.
  */
-export declare function parseVector<Type>(binary: any, methodName: string): Type[];
+export declare function parseVector<Type>(binary: any, methodName: string, parseFn?: (binary2: any) => Type): Type[];
 /**
  * Parse flatbuffers vector of StringUint8 into the corresponding array.
  */

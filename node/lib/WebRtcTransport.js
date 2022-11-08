@@ -4,6 +4,7 @@ exports.parseWebRtcTransportDump = exports.parseDtlsParameters = exports.parseIc
 const Logger_1 = require("./Logger");
 const Transport_1 = require("./Transport");
 const FbsTransport = require("./fbs/transport_generated");
+const utils_1 = require("./utils");
 const logger = new Logger_1.Logger('WebRtcTransport');
 class WebRtcTransport extends Transport_1.Transport {
     // WebRtcTransport data.
@@ -268,11 +269,7 @@ function parseWebRtcTransportDump(binary) {
     binary.base().data(fbsBaseTransportDump);
     const baseTransportDump = (0, Transport_1.parseBaseTransportDump)(fbsBaseTransportDump);
     // Retrieve ICE candidates.
-    const iceCandidates = [];
-    for (let i = 0; i < binary.iceCandidatesLength(); ++i) {
-        const fbsIceCandidate = binary.iceCandidates(i);
-        iceCandidates.push(parseIceCandidate(fbsIceCandidate));
-    }
+    const iceCandidates = (0, utils_1.parseVector)(binary, 'iceCandidates', parseIceCandidate);
     // Retrieve ICE parameters.
     const iceParameters = parseIceParameters(binary.iceParameters());
     // Retrieve DTLS parameters.
