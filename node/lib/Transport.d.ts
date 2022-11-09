@@ -153,6 +153,10 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
      */
     listenServerClosed(): void;
     /**
+     * Dump Transport.
+     */
+    dump(): Promise<any>;
+    /**
      * Get Transport stats.
      *
      * @abstract

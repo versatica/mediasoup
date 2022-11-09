@@ -238,6 +238,12 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#observer.safeEmit('close');
     }
     /**
+     * Dump Transport.
+     */
+    async dump() {
+        // Implemented in child classes.
+    }
+    /**
      * Get Transport stats.
      *
      * @abstract

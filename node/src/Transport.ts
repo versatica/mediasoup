@@ -464,6 +464,17 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	}
 
 	/**
+	 * Dump Transport.
+	 *
+	 * @abstract
+	 */
+	async dump(): Promise<any>
+	{
+		// Should not happen.
+		throw new Error('method not implemented in the subclass');
+	}
+
+	/**
 	 * Get Transport stats.
 	 *
 	 * @abstract
