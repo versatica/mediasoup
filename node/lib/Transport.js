@@ -239,9 +239,12 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
     /**
      * Dump Transport.
+     *
+     * @abstract
      */
     async dump() {
-        // Implemented in child classes.
+        // Should not happen.
+        throw new Error('method not implemented in the subclass');
     }
     /**
      * Get Transport stats.

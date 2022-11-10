@@ -23,65 +23,23 @@ namespace RTC
 	/* Instance methods. */
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-	PipeTransport::PipeTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener, data)
+	PipeTransport::PipeTransport(
+		  const std::string& id,
+		  RTC::Transport::Listener* listener,
+		  const FBS::PipeTransport::PipeTransportOptions* options)
+	  : RTC::Transport::Transport(id, listener, options->base())
 	{
 		MS_TRACE();
 
-		auto jsonListenIpIt = data.find("listenIp");
-
-		if (jsonListenIpIt == data.end())
-			MS_THROW_TYPE_ERROR("missing listenIp");
-		else if (!jsonListenIpIt->is_object())
-			MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
-
-		auto jsonIpIt = jsonListenIpIt->find("ip");
-
-		if (jsonIpIt == jsonListenIpIt->end())
-			MS_THROW_TYPE_ERROR("missing listenIp.ip");
-		else if (!jsonIpIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string)");
-
-		this->listenIp.ip.assign(jsonIpIt->get<std::string>());
+		this->listenIp.ip.assign(options->listenIp()->ip()->str());
 
 		// This may throw.
 		Utils::IP::NormalizeIp(this->listenIp.ip);
 
-		auto jsonAnnouncedIpIt = jsonListenIpIt->find("announcedIp");
+		this->listenIp.announcedIp.assign(options->listenIp()->announcedIp()->str());
+		this->rtx = options->enableRtx();
 
-		if (jsonAnnouncedIpIt != jsonListenIpIt->end())
-		{
-			if (!jsonAnnouncedIpIt->is_string())
-				MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string");
-
-			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
-		}
-
-		uint16_t port{ 0 };
-		auto jsonPortIt = data.find("port");
-
-		if (jsonPortIt != data.end())
-		{
-			if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
-				MS_THROW_TYPE_ERROR("wrong port (not a positive number)");
-
-			port = jsonPortIt->get<uint16_t>();
-		}
-
-		auto jsonEnableRtxIt = data.find("enableRtx");
-
-		if (jsonEnableRtxIt != data.end() && jsonEnableRtxIt->is_boolean())
-			this->rtx = jsonEnableRtxIt->get<bool>();
-
-		auto jsonEnableSrtpIt = data.find("enableSrtp");
-
-		// clang-format off
-		if (
-			jsonEnableSrtpIt != data.end() &&
-			jsonEnableSrtpIt->is_boolean() &&
-			jsonEnableSrtpIt->get<bool>()
-		)
-		// clang-format on
+		if (options->enableSrtp())
 		{
 			this->srtpKey       = Utils::Crypto::GetRandomString(PipeTransport::srtpMasterLength);
 			this->srtpKeyBase64 = Utils::String::Base64Encode(this->srtpKey);
@@ -90,8 +48,8 @@ namespace RTC
 		try
 		{
 			// This may throw.
-			if (port != 0)
-				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip, port);
+			if (options->port() != 0)
+				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip, options->port());
 			else
 				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
 

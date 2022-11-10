@@ -22,7 +22,7 @@ namespace RTC
 	/* Instance methods. */
 
 	SimulcastConsumer::SimulcastConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
+	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, const FBS::Transport::ConsumeRequest* data)
 	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SIMULCAST)
 	{
 		MS_TRACE();
@@ -39,8 +39,6 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("encoding.spatialLayers does not match number of consumableRtpEncodings");
 		}
 
-		auto jsonPreferredLayersIt = data.find("preferredLayers");
-
 		// Fill mapMappedSsrcSpatialLayer.
 		for (size_t idx{ 0u }; idx < this->consumableRtpEncodings.size(); ++idx)
 		{
@@ -50,35 +48,15 @@ namespace RTC
 		}
 
 		// Set preferredLayers (if given).
-		if (jsonPreferredLayersIt != data.end() && jsonPreferredLayersIt->is_object())
+		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeRequest::VT_PREFERREDLAYERS))
 		{
-			auto jsonSpatialLayerIt  = jsonPreferredLayersIt->find("spatialLayer");
-			auto jsonTemporalLayerIt = jsonPreferredLayersIt->find("temporalLayer");
-
-			// clang-format off
-			if (
-				jsonSpatialLayerIt == jsonPreferredLayersIt->end() ||
-				!Utils::Json::IsPositiveInteger(*jsonSpatialLayerIt)
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("missing preferredLayers.spatialLayer");
-			}
-
-			this->preferredSpatialLayer = jsonSpatialLayerIt->get<int16_t>();
+			this->preferredSpatialLayer = data->preferredLayers()->spatialLayer();
 
 			if (this->preferredSpatialLayer > encoding.spatialLayers - 1)
 				this->preferredSpatialLayer = encoding.spatialLayers - 1;
 
-			// clang-format off
-			if (
-				jsonTemporalLayerIt != jsonPreferredLayersIt->end() &&
-				Utils::Json::IsPositiveInteger(*jsonTemporalLayerIt)
-			)
-			// clang-format on
+			if (flatbuffers::IsFieldPresent(data->preferredLayers(), FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
 			{
-				this->preferredTemporalLayer = jsonTemporalLayerIt->get<int16_t>();
-
 				if (this->preferredTemporalLayer > encoding.temporalLayers - 1)
 					this->preferredTemporalLayer = encoding.temporalLayers - 1;
 			}
@@ -185,7 +163,8 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::FillJsonScore(json& jsonObject) const
+	flatbuffers::Offset<FBS::Consumer::ConsumerScore> SimulcastConsumer::FillBufferScore(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
@@ -193,14 +172,15 @@ namespace RTC
 
 		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
-		jsonObject["score"] = this->rtpStream->GetScore();
+		uint8_t producerScore{ 0 };
 
 		if (producerCurrentRtpStream)
-			jsonObject["producerScore"] = producerCurrentRtpStream->GetScore();
+			producerScore = producerCurrentRtpStream->GetScore();
 		else
-			jsonObject["producerScore"] = 0;
+			producerScore = 0;
 
-		jsonObject["producerScores"] = *this->producerRtpStreamScores;
+		return FBS::Consumer::CreateConsumerScoreDirect(
+		  builder, this->rtpStream->GetScore(), producerScore, this->producerRtpStreamScores);
 	}
 
 	void SimulcastConsumer::HandleRequest(Channel::ChannelRequest* request)

@@ -14,7 +14,7 @@ namespace RTC
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
-		  json& data);
+		  const FBS::Transport::ConsumeRequest* data);
 		~PipeConsumer() override;
 
 	public:

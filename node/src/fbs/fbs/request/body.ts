@@ -13,15 +13,15 @@ import { UpdateSettingsRequest, UpdateSettingsRequestT } from '../../fbs/worker/
 
 export enum Body {
   NONE = 0,
-  FBS_Router_CreateWebRtcTransportRequest = 1,
-  FBS_Router_CreatePlainTransportRequest = 2,
-  FBS_Router_CreatePipeTransportRequest = 3,
-  FBS_Transport_ConsumeRequest = 4,
-  FBS_Worker_UpdateSettingsRequest = 5,
-  FBS_Worker_CreateWebRtcServerRequest = 6,
-  FBS_Worker_CloseWebRtcServerRequest = 7,
-  FBS_Worker_CreateRouterRequest = 8,
-  FBS_Worker_CloseRouterRequest = 9
+  FBS_Worker_UpdateSettingsRequest = 1,
+  FBS_Worker_CreateWebRtcServerRequest = 2,
+  FBS_Worker_CloseWebRtcServerRequest = 3,
+  FBS_Worker_CreateRouterRequest = 4,
+  FBS_Worker_CloseRouterRequest = 5,
+  FBS_Router_CreateWebRtcTransportRequest = 6,
+  FBS_Router_CreatePlainTransportRequest = 7,
+  FBS_Router_CreatePipeTransportRequest = 8,
+  FBS_Transport_ConsumeRequest = 9
 }
 
 export function unionToBody(
@@ -30,15 +30,15 @@ export function unionToBody(
 ): CloseRouterRequest|CloseWebRtcServerRequest|ConsumeRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|UpdateSettingsRequest|null {
   switch(Body[type]) {
     case 'NONE': return null; 
-    case 'FBS_Router_CreateWebRtcTransportRequest': return accessor(new CreateWebRtcTransportRequest())! as CreateWebRtcTransportRequest;
-    case 'FBS_Router_CreatePlainTransportRequest': return accessor(new CreatePlainTransportRequest())! as CreatePlainTransportRequest;
-    case 'FBS_Router_CreatePipeTransportRequest': return accessor(new CreatePipeTransportRequest())! as CreatePipeTransportRequest;
-    case 'FBS_Transport_ConsumeRequest': return accessor(new ConsumeRequest())! as ConsumeRequest;
     case 'FBS_Worker_UpdateSettingsRequest': return accessor(new UpdateSettingsRequest())! as UpdateSettingsRequest;
     case 'FBS_Worker_CreateWebRtcServerRequest': return accessor(new CreateWebRtcServerRequest())! as CreateWebRtcServerRequest;
     case 'FBS_Worker_CloseWebRtcServerRequest': return accessor(new CloseWebRtcServerRequest())! as CloseWebRtcServerRequest;
     case 'FBS_Worker_CreateRouterRequest': return accessor(new CreateRouterRequest())! as CreateRouterRequest;
     case 'FBS_Worker_CloseRouterRequest': return accessor(new CloseRouterRequest())! as CloseRouterRequest;
+    case 'FBS_Router_CreateWebRtcTransportRequest': return accessor(new CreateWebRtcTransportRequest())! as CreateWebRtcTransportRequest;
+    case 'FBS_Router_CreatePlainTransportRequest': return accessor(new CreatePlainTransportRequest())! as CreatePlainTransportRequest;
+    case 'FBS_Router_CreatePipeTransportRequest': return accessor(new CreatePipeTransportRequest())! as CreatePipeTransportRequest;
+    case 'FBS_Transport_ConsumeRequest': return accessor(new ConsumeRequest())! as ConsumeRequest;
     default: return null;
   }
 }
@@ -50,15 +50,15 @@ export function unionListToBody(
 ): CloseRouterRequest|CloseWebRtcServerRequest|ConsumeRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|UpdateSettingsRequest|null {
   switch(Body[type]) {
     case 'NONE': return null; 
-    case 'FBS_Router_CreateWebRtcTransportRequest': return accessor(index, new CreateWebRtcTransportRequest())! as CreateWebRtcTransportRequest;
-    case 'FBS_Router_CreatePlainTransportRequest': return accessor(index, new CreatePlainTransportRequest())! as CreatePlainTransportRequest;
-    case 'FBS_Router_CreatePipeTransportRequest': return accessor(index, new CreatePipeTransportRequest())! as CreatePipeTransportRequest;
-    case 'FBS_Transport_ConsumeRequest': return accessor(index, new ConsumeRequest())! as ConsumeRequest;
     case 'FBS_Worker_UpdateSettingsRequest': return accessor(index, new UpdateSettingsRequest())! as UpdateSettingsRequest;
     case 'FBS_Worker_CreateWebRtcServerRequest': return accessor(index, new CreateWebRtcServerRequest())! as CreateWebRtcServerRequest;
     case 'FBS_Worker_CloseWebRtcServerRequest': return accessor(index, new CloseWebRtcServerRequest())! as CloseWebRtcServerRequest;
     case 'FBS_Worker_CreateRouterRequest': return accessor(index, new CreateRouterRequest())! as CreateRouterRequest;
     case 'FBS_Worker_CloseRouterRequest': return accessor(index, new CloseRouterRequest())! as CloseRouterRequest;
+    case 'FBS_Router_CreateWebRtcTransportRequest': return accessor(index, new CreateWebRtcTransportRequest())! as CreateWebRtcTransportRequest;
+    case 'FBS_Router_CreatePlainTransportRequest': return accessor(index, new CreatePlainTransportRequest())! as CreatePlainTransportRequest;
+    case 'FBS_Router_CreatePipeTransportRequest': return accessor(index, new CreatePipeTransportRequest())! as CreatePipeTransportRequest;
+    case 'FBS_Transport_ConsumeRequest': return accessor(index, new ConsumeRequest())! as ConsumeRequest;
     default: return null;
   }
 }

@@ -1,7 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
+import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import * as ortc from './ortc';
 import {
+	BaseTransportDump,
+	parseTuple,
+	parseBaseTransportDump,
 	Transport,
 	TransportListenIp,
 	TransportTuple,
@@ -12,8 +16,14 @@ import {
 	SctpState
 } from './Transport';
 import { Consumer, ConsumerType } from './Consumer';
+import { Producer } from './Producer';
+import { RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import { SrtpParameters } from './SrtpParameters';
+import { parseSrtpParameters, SrtpParameters } from './SrtpParameters';
+import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
+import * as FbsRequest from './fbs/request_generated';
+import * as FbsResponse from './fbs/response_generated';
+import * as FbsTransport from './fbs/transport_generated';
 
 export type PipeTransportOptions =
 {
@@ -295,18 +305,28 @@ export class PipeTransport
 		const rtpParameters = ortc.getPipeConsumerRtpParameters(
 			producer.consumableRtpParameters, this.#data.rtx);
 
-		const reqData =
-		{
-			consumerId             : uuidv4(),
-			producerId,
-			kind                   : producer.kind,
-			rtpParameters,
-			type                   : 'pipe',
-			consumableRtpEncodings : producer.consumableRtpParameters.encodings
-		};
+		const consumerId = uuidv4();
 
-		const status =
-			await this.channel.request('transport.consume', this.internal.transportId, reqData);
+		const consumeRequestOffset = createConsumeRequest({
+			builder : this.channel.bufferBuilder,
+			consumerId,
+			producer,
+			rtpParameters
+		});
+
+		const response = await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_CONSUME,
+			FbsRequest.Body.FBS_Transport_ConsumeRequest,
+			consumeRequestOffset,
+			this.internal.transportId
+		);
+
+		/* Decode the response. */
+		const consumeResponse = new FbsResponse.ConsumeResponse();
+
+		response.body(consumeResponse);
+
+		const status = consumeResponse.unpack();
 
 		const data =
 		{
@@ -321,7 +341,7 @@ export class PipeTransport
 				internal :
 				{
 					...this.internal,
-					consumerId : reqData.consumerId
+					consumerId
 				},
 				data,
 				channel        : this.channel,
@@ -381,3 +401,86 @@ export class PipeTransport
 		});
 	}
 }
+
+/*
+ * flatbuffers helpers
+ */
+
+function createConsumeRequest({
+	builder,
+	consumerId,
+	producer,
+	rtpParameters
+} : {
+	builder: flatbuffers.Builder;
+	consumerId: string;
+	producer: Producer;
+	rtpParameters: RtpParameters;
+}): number
+{
+	// Build the request.
+	const producerIdOffset = builder.createString(producer.id);
+	const consumerIdOffset = builder.createString(consumerId);
+	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
+	let consumableRtpEncodingsOffset: number | undefined;
+
+	if (producer.consumableRtpParameters.encodings)
+	{
+		consumableRtpEncodingsOffset = serializeRtpEncodingParameters(
+			builder, producer.consumableRtpParameters.encodings
+		);
+	}
+
+	const ConsumeRequest = FbsRequest.ConsumeRequest;
+
+	// Create Consume Request.
+	ConsumeRequest.startConsumeRequest(builder);
+	ConsumeRequest.addConsumerId(builder, consumerIdOffset);
+	ConsumeRequest.addProducerId(builder, producerIdOffset);
+	ConsumeRequest.addKind(
+		builder, producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
+	ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
+	ConsumeRequest.addType(builder, FbsTransport.Type.PIPE);
+
+	if (consumableRtpEncodingsOffset)
+		ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
+
+	return ConsumeRequest.endConsumeRequest(builder);
+}
+
+type PipeTransportDump = BaseTransportDump &
+{
+	tuple: TransportTuple;
+	rtx: boolean;
+	srtpParameters?: SrtpParameters;
+};
+
+export function parsePipeTransportDump(
+	binary: FbsTransport.PipeTransportDump
+): PipeTransportDump
+{
+	// Retrieve BaseTransportDump.
+	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
+
+	binary.base()!.data(fbsBaseTransportDump);
+	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
+
+	// Retrieve RTP Tuple.
+	const tuple = parseTuple(binary.tuple()!);
+
+	// Retrieve RT	// Retrieve SRTP Parameters.
+	let srtpParameters: SrtpParameters | undefined;
+
+	if (binary.srtpParameters())
+	{
+		srtpParameters = parseSrtpParameters(binary.srtpParameters()!);
+	}
+
+	return {
+		...baseTransportDump,
+		tuple          : tuple,
+		rtx            : binary.rtx(),
+		srtpParameters : srtpParameters
+	};
+}
+

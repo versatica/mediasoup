@@ -154,6 +154,8 @@ export declare class Transport<Events extends TransportEvents = TransportEvents,
     listenServerClosed(): void;
     /**
      * Dump Transport.
+     *
+     * @abstract
      */
     dump(): Promise<any>;
     /**

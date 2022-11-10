@@ -26,7 +26,7 @@ namespace RTC
 		auto jsonKindIt = data.find("kind");
 
 		if (jsonKindIt == data.end() || !jsonKindIt->is_string())
-			MS_THROW_TYPE_ERROR("missing kind");
+			MS_THROW_TYPE_ERROR("missing Consumer kind");
 
 		// This may throw.
 		this->kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());

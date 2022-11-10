@@ -23,7 +23,10 @@ namespace RTC
 		static size_t srtpMasterLength;
 
 	public:
-		PipeTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
+		PipeTransport(
+		  const std::string& id,
+		  RTC::Transport::Listener* listener,
+		  const FBS::PipeTransport::PipeTransportOptions* options);
 		~PipeTransport() override;
 
 	public:

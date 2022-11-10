@@ -14,28 +14,28 @@ const update_settings_request_1 = require("../../fbs/worker/update-settings-requ
 var Body;
 (function (Body) {
     Body[Body["NONE"] = 0] = "NONE";
-    Body[Body["FBS_Router_CreateWebRtcTransportRequest"] = 1] = "FBS_Router_CreateWebRtcTransportRequest";
-    Body[Body["FBS_Router_CreatePlainTransportRequest"] = 2] = "FBS_Router_CreatePlainTransportRequest";
-    Body[Body["FBS_Router_CreatePipeTransportRequest"] = 3] = "FBS_Router_CreatePipeTransportRequest";
-    Body[Body["FBS_Transport_ConsumeRequest"] = 4] = "FBS_Transport_ConsumeRequest";
-    Body[Body["FBS_Worker_UpdateSettingsRequest"] = 5] = "FBS_Worker_UpdateSettingsRequest";
-    Body[Body["FBS_Worker_CreateWebRtcServerRequest"] = 6] = "FBS_Worker_CreateWebRtcServerRequest";
-    Body[Body["FBS_Worker_CloseWebRtcServerRequest"] = 7] = "FBS_Worker_CloseWebRtcServerRequest";
-    Body[Body["FBS_Worker_CreateRouterRequest"] = 8] = "FBS_Worker_CreateRouterRequest";
-    Body[Body["FBS_Worker_CloseRouterRequest"] = 9] = "FBS_Worker_CloseRouterRequest";
+    Body[Body["FBS_Worker_UpdateSettingsRequest"] = 1] = "FBS_Worker_UpdateSettingsRequest";
+    Body[Body["FBS_Worker_CreateWebRtcServerRequest"] = 2] = "FBS_Worker_CreateWebRtcServerRequest";
+    Body[Body["FBS_Worker_CloseWebRtcServerRequest"] = 3] = "FBS_Worker_CloseWebRtcServerRequest";
+    Body[Body["FBS_Worker_CreateRouterRequest"] = 4] = "FBS_Worker_CreateRouterRequest";
+    Body[Body["FBS_Worker_CloseRouterRequest"] = 5] = "FBS_Worker_CloseRouterRequest";
+    Body[Body["FBS_Router_CreateWebRtcTransportRequest"] = 6] = "FBS_Router_CreateWebRtcTransportRequest";
+    Body[Body["FBS_Router_CreatePlainTransportRequest"] = 7] = "FBS_Router_CreatePlainTransportRequest";
+    Body[Body["FBS_Router_CreatePipeTransportRequest"] = 8] = "FBS_Router_CreatePipeTransportRequest";
+    Body[Body["FBS_Transport_ConsumeRequest"] = 9] = "FBS_Transport_ConsumeRequest";
 })(Body = exports.Body || (exports.Body = {}));
 function unionToBody(type, accessor) {
     switch (Body[type]) {
         case 'NONE': return null;
-        case 'FBS_Router_CreateWebRtcTransportRequest': return accessor(new create_web_rtc_transport_request_1.CreateWebRtcTransportRequest());
-        case 'FBS_Router_CreatePlainTransportRequest': return accessor(new create_plain_transport_request_1.CreatePlainTransportRequest());
-        case 'FBS_Router_CreatePipeTransportRequest': return accessor(new create_pipe_transport_request_1.CreatePipeTransportRequest());
-        case 'FBS_Transport_ConsumeRequest': return accessor(new consume_request_1.ConsumeRequest());
         case 'FBS_Worker_UpdateSettingsRequest': return accessor(new update_settings_request_1.UpdateSettingsRequest());
         case 'FBS_Worker_CreateWebRtcServerRequest': return accessor(new create_web_rtc_server_request_1.CreateWebRtcServerRequest());
         case 'FBS_Worker_CloseWebRtcServerRequest': return accessor(new close_web_rtc_server_request_1.CloseWebRtcServerRequest());
         case 'FBS_Worker_CreateRouterRequest': return accessor(new create_router_request_1.CreateRouterRequest());
         case 'FBS_Worker_CloseRouterRequest': return accessor(new close_router_request_1.CloseRouterRequest());
+        case 'FBS_Router_CreateWebRtcTransportRequest': return accessor(new create_web_rtc_transport_request_1.CreateWebRtcTransportRequest());
+        case 'FBS_Router_CreatePlainTransportRequest': return accessor(new create_plain_transport_request_1.CreatePlainTransportRequest());
+        case 'FBS_Router_CreatePipeTransportRequest': return accessor(new create_pipe_transport_request_1.CreatePipeTransportRequest());
+        case 'FBS_Transport_ConsumeRequest': return accessor(new consume_request_1.ConsumeRequest());
         default: return null;
     }
 }
@@ -43,15 +43,15 @@ exports.unionToBody = unionToBody;
 function unionListToBody(type, accessor, index) {
     switch (Body[type]) {
         case 'NONE': return null;
-        case 'FBS_Router_CreateWebRtcTransportRequest': return accessor(index, new create_web_rtc_transport_request_1.CreateWebRtcTransportRequest());
-        case 'FBS_Router_CreatePlainTransportRequest': return accessor(index, new create_plain_transport_request_1.CreatePlainTransportRequest());
-        case 'FBS_Router_CreatePipeTransportRequest': return accessor(index, new create_pipe_transport_request_1.CreatePipeTransportRequest());
-        case 'FBS_Transport_ConsumeRequest': return accessor(index, new consume_request_1.ConsumeRequest());
         case 'FBS_Worker_UpdateSettingsRequest': return accessor(index, new update_settings_request_1.UpdateSettingsRequest());
         case 'FBS_Worker_CreateWebRtcServerRequest': return accessor(index, new create_web_rtc_server_request_1.CreateWebRtcServerRequest());
         case 'FBS_Worker_CloseWebRtcServerRequest': return accessor(index, new close_web_rtc_server_request_1.CloseWebRtcServerRequest());
         case 'FBS_Worker_CreateRouterRequest': return accessor(index, new create_router_request_1.CreateRouterRequest());
         case 'FBS_Worker_CloseRouterRequest': return accessor(index, new close_router_request_1.CloseRouterRequest());
+        case 'FBS_Router_CreateWebRtcTransportRequest': return accessor(index, new create_web_rtc_transport_request_1.CreateWebRtcTransportRequest());
+        case 'FBS_Router_CreatePlainTransportRequest': return accessor(index, new create_plain_transport_request_1.CreatePlainTransportRequest());
+        case 'FBS_Router_CreatePipeTransportRequest': return accessor(index, new create_pipe_transport_request_1.CreatePipeTransportRequest());
+        case 'FBS_Transport_ConsumeRequest': return accessor(index, new consume_request_1.ConsumeRequest());
         default: return null;
     }
 }

@@ -301,7 +301,7 @@ export class Channel extends EnhancedEventEmitter
 
 		const id = this.#nextId;
 
-		logger.error('request() [method:%s, id:%s]', id);
+		logger.warn('requestBinary() [method:%s, id:%s]', method, id);
 
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
 
@@ -321,6 +321,11 @@ export class Channel extends EnhancedEventEmitter
 		this.#bufferBuilder.finish(requestOffset);
 
 		const buffer = this.#bufferBuilder.asUint8Array();
+
+		// TODO: DEV. Remove.
+		// const req = Request.getRootAsRequest(new flatbuffers.ByteBuffer(buffer));
+
+		// logger.warn(JSON.stringify(req.unpack(), undefined, 2));
 
 		// Clear the buffer builder so it's reused for the next request.
 		this.#bufferBuilder.clear();

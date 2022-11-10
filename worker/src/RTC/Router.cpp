@@ -388,23 +388,22 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_PIPE_TRANSPORT:
 			{
-				std::string transportId;
+				auto body        = request->_data->body_as<FBS::Router::CreatePipeTransportRequest>();
+				auto transportId = body->transportId()->str();
 
-				// This may throw
-				SetNewTransportIdFromData(request->data, transportId);
+				// This may throw.
+				CheckNoTransport(transportId);
 
-				auto* pipeTransport = new RTC::PipeTransport(transportId, this, request->data);
+				auto* pipeTransport = new RTC::PipeTransport(transportId, this, body->options());
 
 				// Insert into the map.
 				this->mapTransports[transportId] = pipeTransport;
 
 				MS_DEBUG_DEV("PipeTransport created [transportId:%s]", transportId.c_str());
 
-				json data = json::object();
+				auto dumpOffset = pipeTransport->FillBuffer(request->GetBufferBuilder());
 
-				// pipeTransport->FillJson(data);
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_Transport_DumpResponse, dumpOffset);
 
 				break;
 			}

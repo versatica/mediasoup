@@ -38,7 +38,7 @@ namespace RTC
 
 		if (jsonKindIt == data.end() || !jsonKindIt->is_string())
 		{
-			MS_THROW_TYPE_ERROR("missing kind");
+			MS_THROW_TYPE_ERROR("missing Producer kind");
 		}
 
 		// This may throw.

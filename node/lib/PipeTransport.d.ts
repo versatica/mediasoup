@@ -1,7 +1,8 @@
-import { Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
+import { BaseTransportDump, Transport, TransportListenIp, TransportTuple, TransportEvents, TransportObserverEvents, TransportConstructorOptions, SctpState } from './Transport';
 import { Consumer } from './Consumer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters } from './SrtpParameters';
+import * as FbsTransport from './fbs/transport_generated';
 export declare type PipeTransportOptions = {
     /**
      * Listening IP address.
@@ -156,5 +157,11 @@ export declare class PipeTransport extends Transport<PipeTransportEvents, PipeTr
     consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>;
     private handleWorkerNotifications;
 }
+declare type PipeTransportDump = BaseTransportDump & {
+    tuple: TransportTuple;
+    rtx: boolean;
+    srtpParameters?: SrtpParameters;
+};
+export declare function parsePipeTransportDump(binary: FbsTransport.PipeTransportDump): PipeTransportDump;
 export {};
 //# sourceMappingURL=PipeTransport.d.ts.map

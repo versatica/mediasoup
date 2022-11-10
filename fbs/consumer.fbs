@@ -3,6 +3,7 @@ namespace FBS.Consumer;
 
 table ConsumerLayers {
   spatial_layer:uint8;
+  // TODO: Make it optional, otherwise its value is 0 by default.
   temporal_layer:uint8;
 }
 

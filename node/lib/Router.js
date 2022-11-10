@@ -351,13 +351,15 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         /* Decode the response. */
         const dump = new FbsTransport.DumpResponse();
         response.body(dump);
-        const data = dump.unpack();
+        const transportDump = new FbsTransport.PipeTransportDump();
+        dump.data(transportDump);
+        const plainTransportData = (0, PipeTransport_1.parsePipeTransportDump)(transportDump);
         const transport = new PipeTransport_1.PipeTransport({
             internal: {
                 ...this.#internal,
                 transportId
             },
-            data,
+            data: plainTransportData,
             channel: this.#channel,
             payloadChannel: this.#payloadChannel,
             appData,

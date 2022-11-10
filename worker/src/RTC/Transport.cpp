@@ -960,7 +960,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMULCAST:
 					{
 						// This may throw.
-						consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, request->data);
+						consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, body);
 
 						break;
 					}
@@ -976,7 +976,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::PIPE:
 					{
 						// This may throw.
-						consumer = new RTC::PipeConsumer(consumerId, producerId, this, request->data);
+						consumer = new RTC::PipeConsumer(consumerId, producerId, this, body);
 
 						break;
 					}
