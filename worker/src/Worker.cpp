@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Worker.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
@@ -23,8 +22,11 @@ Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannel
 	// Set us as PayloadChannel's listener.
 	this->payloadChannel->SetListener(this);
 
-	// Set the signals handler.
+	// Set the SignalHandler.
 	this->signalsHandler = new SignalsHandler(this);
+
+	// Set up the ChannelMessageRegistrator.
+	this->channelMessageRegistrator = new ChannelMessageRegistrator();
 
 #ifdef MS_EXECUTABLE
 	{
@@ -64,6 +66,9 @@ void Worker::Close()
 
 	// Delete the SignalsHandler.
 	delete this->signalsHandler;
+
+	// Delete the ChannelMessageRegistrator.
+	delete this->channelMessageRegistrator;
 
 	// Delete all Routers.
 	for (auto& kv : this->mapRouters)
