@@ -95,7 +95,7 @@ extern "C" int mediasoup_worker_run(
 	}
 	catch (const MediaSoupError& error)
 	{
-		MS_ERROR_STD("error creating the RTC Channel: %s", error.what());
+		MS_ERROR_STD("error creating the PayloadChannel: %s", error.what());
 
 		channel->Close();
 		DepLibUV::RunLoop();
