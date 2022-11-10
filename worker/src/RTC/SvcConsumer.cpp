@@ -2,12 +2,10 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SvcConsumer.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
 #include "RTC/Codecs/Tools.hpp"
 
 namespace RTC
@@ -20,8 +18,12 @@ namespace RTC
 	/* Instance methods. */
 
 	SvcConsumer::SvcConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SVC)
+	  Globals* globals,
+	  const std::string& id,
+	  const std::string& producerId,
+	  RTC::Consumer::Listener* listener,
+	  json& data)
+	  : RTC::Consumer::Consumer(globals, id, producerId, listener, data, RTC::RtpParameters::Type::SVC)
 	{
 		MS_TRACE();
 
@@ -105,7 +107,7 @@ namespace RTC
 		CreateRtpStream();
 
 		// NOTE: This may throw.
-		ChannelMessageHandlers::RegisterHandler(
+		this->globals->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -116,7 +118,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->rtpStream;
 	}
@@ -1076,7 +1078,7 @@ namespace RTC
 
 		FillJsonScore(data);
 
-		Channel::ChannelNotifier::Emit(this->id, "score", data);
+		this->globals->channelNotifier->Emit(this->id, "score", data);
 	}
 
 	inline void SvcConsumer::EmitLayersChange() const
@@ -1101,7 +1103,7 @@ namespace RTC
 			data = nullptr;
 		}
 
-		Channel::ChannelNotifier::Emit(this->id, "layerschange", data);
+		this->globals->channelNotifier->Emit(this->id, "layerschange", data);
 	}
 
 	inline void SvcConsumer::OnRtpStreamScore(

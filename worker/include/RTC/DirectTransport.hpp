@@ -1,6 +1,7 @@
 #ifndef MS_RTC_DIRECT_TRANSPORT_HPP
 #define MS_RTC_DIRECT_TRANSPORT_HPP
 
+#include "Globals.hpp"
 #include "RTC/Transport.hpp"
 
 namespace RTC
@@ -8,7 +9,8 @@ namespace RTC
 	class DirectTransport : public RTC::Transport
 	{
 	public:
-		DirectTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
+		DirectTransport(
+		  Globals* globals, const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~DirectTransport() override;
 
 	public:

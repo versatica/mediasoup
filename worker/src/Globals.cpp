@@ -17,4 +17,8 @@ Globals::Globals(
 Globals::~Globals()
 {
 	MS_TRACE();
+
+	delete this->channelMessageRegistrator;
+	delete this->channelNotifier;
+	delete this->payloadChannelNotifier;
 }

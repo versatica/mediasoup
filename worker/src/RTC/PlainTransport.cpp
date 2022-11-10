@@ -2,11 +2,9 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/PlainTransport.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
 
 namespace RTC
 {
@@ -47,8 +45,8 @@ namespace RTC
 	/* Instance methods. */
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-	PlainTransport::PlainTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener, data)
+	PlainTransport::PlainTransport(Globals* globals, const std::string& id, RTC::Transport::Listener* listener, json& data)
+	  : RTC::Transport::Transport(globals, id, listener, data)
 	{
 		MS_TRACE();
 
@@ -186,7 +184,7 @@ namespace RTC
 			}
 
 			// NOTE: This may throw.
-			ChannelMessageHandlers::RegisterHandler(
+			this->globals->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*payloadChannelRequestHandler*/ this,
@@ -208,7 +206,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->udpSocket;
 		this->udpSocket = nullptr;
@@ -943,7 +941,7 @@ namespace RTC
 
 				this->tuple->FillJson(data["tuple"]);
 
-				Channel::ChannelNotifier::Emit(this->id, "tuple", data);
+				this->globals->channelNotifier->Emit(this->id, "tuple", data);
 
 				RTC::Transport::Connected();
 			}
@@ -1010,7 +1008,7 @@ namespace RTC
 
 				this->tuple->FillJson(data["tuple"]);
 
-				Channel::ChannelNotifier::Emit(this->id, "tuple", data);
+				this->globals->channelNotifier->Emit(this->id, "tuple", data);
 
 				RTC::Transport::Connected();
 			}
@@ -1038,7 +1036,7 @@ namespace RTC
 
 			this->rtcpTuple->FillJson(data["rtcpTuple"]);
 
-			Channel::ChannelNotifier::Emit(this->id, "rtcptuple", data);
+			this->globals->channelNotifier->Emit(this->id, "rtcptuple", data);
 		}
 		// If RTCP-mux verify that the packet's tuple matches our RTP tuple.
 		else if (this->rtcpMux && !this->tuple->Compare(tuple))
@@ -1100,7 +1098,7 @@ namespace RTC
 
 				this->tuple->FillJson(data["tuple"]);
 
-				Channel::ChannelNotifier::Emit(this->id, "tuple", data);
+				this->globals->channelNotifier->Emit(this->id, "tuple", data);
 
 				RTC::Transport::Connected();
 			}

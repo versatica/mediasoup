@@ -2,6 +2,7 @@
 #define MS_RTC_DATA_PRODUCER_HPP
 
 #include "common.hpp"
+#include "Globals.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/PayloadChannelSocket.hpp"
@@ -36,7 +37,11 @@ namespace RTC
 
 	public:
 		DataProducer(
-		  const std::string& id, size_t maxMessageSize, RTC::DataProducer::Listener* listener, json& data);
+		  Globals* globals,
+		  const std::string& id,
+		  size_t maxMessageSize,
+		  RTC::DataProducer::Listener* listener,
+		  json& data);
 		virtual ~DataProducer();
 
 	public:
@@ -66,6 +71,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
+		Globals* globals{ nullptr };
 		size_t maxMessageSize{ 0u };
 		RTC::DataProducer::Listener* listener{ nullptr };
 		// Others.

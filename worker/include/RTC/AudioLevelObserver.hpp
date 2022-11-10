@@ -1,6 +1,7 @@
 #ifndef MS_RTC_AUDIO_LEVEL_OBSERVER_HPP
 #define MS_RTC_AUDIO_LEVEL_OBSERVER_HPP
 
+#include "Globals.hpp"
 #include "RTC/RtpObserver.hpp"
 #include "handles/Timer.hpp"
 #include <absl/container/flat_hash_map.h>
@@ -20,7 +21,8 @@ namespace RTC
 		};
 
 	public:
-		AudioLevelObserver(const std::string& id, RTC::RtpObserver::Listener* listener, json& data);
+		AudioLevelObserver(
+		  Globals* globals, const std::string& id, RTC::RtpObserver::Listener* listener, json& data);
 		~AudioLevelObserver() override;
 
 	public:

@@ -1,6 +1,7 @@
 #ifndef MS_RTC_WEBRTC_SERVER_HPP
 #define MS_RTC_WEBRTC_SERVER_HPP
 
+#include "Globals.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/StunPacket.hpp"
@@ -47,7 +48,7 @@ namespace RTC
 		};
 
 	public:
-		WebRtcServer(const std::string& id, json& data);
+		WebRtcServer(Globals* globals, const std::string& id, json& data);
 		~WebRtcServer();
 
 	public:
@@ -97,6 +98,8 @@ namespace RTC
 		const std::string id;
 
 	private:
+		// Passed by argument.
+		Globals* globals{ nullptr };
 		// Vector of UdpSockets and TcpServers in the user given order.
 		std::vector<UdpSocketOrTcpServer> udpSocketOrTcpServers;
 		// Set of WebRtcTransports.

@@ -2,7 +2,7 @@
 #define MS_WORKER_HPP
 
 #include "common.hpp"
-#include "ChannelMessageRegistrator.hpp"
+#include "Globals.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/PayloadChannelNotification.hpp"
@@ -69,7 +69,7 @@ private:
 	PayloadChannel::PayloadChannelSocket* payloadChannel{ nullptr };
 	// Allocated by this.
 	SignalsHandler* signalsHandler{ nullptr };
-	ChannelMessageRegistrator* channelMessageRegistrator{ nullptr };
+	Globals* globals{ nullptr };
 	absl::flat_hash_map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
 	absl::flat_hash_map<std::string, RTC::Router*> mapRouters;
 	// Others.

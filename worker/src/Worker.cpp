@@ -2,12 +2,14 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Worker.hpp"
+#include "ChannelMessageRegistrator.hpp"
 #include "DepLibUV.hpp"
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Channel/ChannelNotifier.hpp"
+#include "PayloadChannel/PayloadChannelNotifier.hpp"
 
 /* Instance methods. */
 
@@ -25,8 +27,11 @@ Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannel
 	// Set the SignalHandler.
 	this->signalsHandler = new SignalsHandler(this);
 
-	// Set up the ChannelMessageRegistrator.
-	this->channelMessageRegistrator = new ChannelMessageRegistrator();
+	// Set up the Globals singleton.
+	this->globals = new Globals(
+	  /*channelMessageRegistrator*/ new ChannelMessageRegistrator(),
+	  /*channelNotifier*/ new Channel::ChannelNotifier(this->channel),
+	  /*payloadChannelNotifier*/ new PayloadChannel::PayloadChannelNotifier(this->payloadChannel));
 
 #ifdef MS_EXECUTABLE
 	{
@@ -40,7 +45,7 @@ Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannel
 	DepUsrSCTP::CreateChecker();
 
 	// Tell the Node process that we are running.
-	Channel::ChannelNotifier::Emit(Logger::pid, "running");
+	this->globals->channelNotifier->Emit(Logger::pid, "running");
 
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();
@@ -67,8 +72,8 @@ void Worker::Close()
 	// Delete the SignalsHandler.
 	delete this->signalsHandler;
 
-	// Delete the ChannelMessageRegistrator.
-	delete this->channelMessageRegistrator;
+	// Delete the Globals singleton.
+	delete this->globals;
 
 	// Delete all Routers.
 	for (auto& kv : this->mapRouters)
@@ -131,7 +136,7 @@ void Worker::FillJson(json& jsonObject) const
 	jsonObject["channelMessageHandlers"] = json::object();
 	auto jsonChannelMessageHandlersIt    = jsonObject.find("channelMessageHandlers");
 
-	ChannelMessageHandlers::FillJson(*jsonChannelMessageHandlersIt);
+	this->globals->channelMessageRegistrator->FillJson(*jsonChannelMessageHandlersIt);
 }
 
 void Worker::FillJsonResourceUsage(json& jsonObject) const
@@ -323,7 +328,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 				SetNewWebRtcServerIdFromData(request->data, webRtcServerId);
 
-				auto* webRtcServer = new RTC::WebRtcServer(webRtcServerId, request->data);
+				auto* webRtcServer = new RTC::WebRtcServer(this->globals, webRtcServerId, request->data);
 
 				this->mapWebRtcServers[webRtcServerId] = webRtcServer;
 
@@ -381,7 +386,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
 			}
 
-			auto* router = new RTC::Router(routerId, this);
+			auto* router = new RTC::Router(this->globals, routerId, this);
 
 			this->mapRouters[routerId] = router;
 
@@ -422,7 +427,8 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			try
 			{
-				auto* handler = ChannelMessageHandlers::GetChannelRequestHandler(request->handlerId);
+				auto* handler =
+				  this->globals->channelMessageRegistrator->GetChannelRequestHandler(request->handlerId);
 
 				if (handler == nullptr)
 				{
@@ -470,7 +476,8 @@ inline void Worker::HandleRequest(PayloadChannel::PayloadChannelRequest* request
 
 	try
 	{
-		auto* handler = ChannelMessageHandlers::GetPayloadChannelRequestHandler(request->handlerId);
+		auto* handler =
+		  this->globals->channelMessageRegistrator->GetPayloadChannelRequestHandler(request->handlerId);
 
 		if (handler == nullptr)
 		{
@@ -498,8 +505,8 @@ inline void Worker::HandleNotification(PayloadChannel::PayloadChannelNotificatio
 
 	try
 	{
-		auto* handler =
-		  ChannelMessageHandlers::GetPayloadChannelNotificationHandler(notification->handlerId);
+		auto* handler = this->globals->channelMessageRegistrator->GetPayloadChannelNotificationHandler(
+		  notification->handlerId);
 
 		if (handler == nullptr)
 		{

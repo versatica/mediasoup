@@ -4,6 +4,7 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "Globals.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/PayloadChannelNotification.hpp"
@@ -119,7 +120,7 @@ namespace RTC
 		};
 
 	public:
-		Transport(const std::string& id, Listener* listener, json& data);
+		Transport(Globals* globals, const std::string& id, Listener* listener, json& data);
 		virtual ~Transport();
 
 	public:
@@ -290,6 +291,7 @@ namespace RTC
 		const std::string id;
 
 	protected:
+		Globals* globals{ nullptr };
 		size_t maxMessageSize{ 262144u };
 		// Allocated by this.
 		RTC::SctpAssociation* sctpAssociation{ nullptr };

@@ -123,7 +123,8 @@ void ChannelMessageRegistrator::UnregisterHandler(const std::string& id)
 	this->mapPayloadChannelNotificationHandlers.erase(id);
 }
 
-Channel::ChannelSocket::RequestHandler* this->GetChannelRequestHandler(const std::string& id)
+Channel::ChannelSocket::RequestHandler* ChannelMessageRegistrator::GetChannelRequestHandler(
+  const std::string& id)
 {
 	MS_TRACE();
 

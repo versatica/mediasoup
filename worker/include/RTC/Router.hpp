@@ -2,6 +2,7 @@
 #define MS_RTC_ROUTER_HPP
 
 #include "common.hpp"
+#include "Globals.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
@@ -39,7 +40,7 @@ namespace RTC
 		};
 
 	public:
-		explicit Router(const std::string& id, Listener* listener);
+		explicit Router(Globals* globals, const std::string& id, Listener* listener);
 		virtual ~Router();
 
 	public:
@@ -111,9 +112,11 @@ namespace RTC
 	public:
 		// Passed by argument.
 		const std::string id;
-		Listener* listener{ nullptr };
 
 	private:
+		// Passed by argument.
+		Globals* globals{ nullptr };
+		Listener* listener{ nullptr };
 		// Allocated by this.
 		absl::flat_hash_map<std::string, RTC::Transport*> mapTransports;
 		absl::flat_hash_map<std::string, RTC::RtpObserver*> mapRtpObservers;

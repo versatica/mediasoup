@@ -9,8 +9,8 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpObserver::RtpObserver(const std::string& id, RTC::RtpObserver::Listener* listener)
-	  : id(id), listener(listener)
+	RtpObserver::RtpObserver(Globals* globals, const std::string& id, RTC::RtpObserver::Listener* listener)
+	  : id(id), globals(globals), listener(listener)
 	{
 		MS_TRACE();
 	}

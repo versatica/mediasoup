@@ -1,6 +1,7 @@
 #ifndef MS_RTC_SVC_CONSUMER_HPP
 #define MS_RTC_SVC_CONSUMER_HPP
 
+#include "Globals.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
@@ -13,6 +14,7 @@ namespace RTC
 	{
 	public:
 		SvcConsumer(
+		  Globals* globals,
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,

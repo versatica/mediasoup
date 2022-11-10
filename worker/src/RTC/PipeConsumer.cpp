@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/PipeConsumer.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -13,8 +12,12 @@ namespace RTC
 	/* Instance methods. */
 
 	PipeConsumer::PipeConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
+	  Globals* globals,
+	  const std::string& id,
+	  const std::string& producerId,
+	  RTC::Consumer::Listener* listener,
+	  json& data)
+	  : RTC::Consumer::Consumer(globals, id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
 	{
 		MS_TRACE();
 
@@ -31,7 +34,7 @@ namespace RTC
 		CreateRtpStreams();
 
 		// NOTE: This may throw.
-		ChannelMessageHandlers::RegisterHandler(
+		this->globals->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -42,7 +45,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		for (auto* rtpStream : this->rtpStreams)
 		{

@@ -1,11 +1,9 @@
 #define MS_CLASS "RTC::ActiveSpeakerObserver"
 
 #include "RTC/ActiveSpeakerObserver.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -97,8 +95,8 @@ namespace RTC
 	}
 
 	ActiveSpeakerObserver::ActiveSpeakerObserver(
-	  const std::string& id, RTC::RtpObserver::Listener* listener, json& data)
-	  : RTC::RtpObserver(id, listener)
+	  Globals* globals, const std::string& id, RTC::RtpObserver::Listener* listener, json& data)
+	  : RTC::RtpObserver(globals, id, listener)
 	{
 		MS_TRACE();
 
@@ -121,7 +119,7 @@ namespace RTC
 		this->periodicTimer->Start(interval, interval);
 
 		// NOTE: This may throw.
-		ChannelMessageHandlers::RegisterHandler(
+		this->globals->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -132,7 +130,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->periodicTimer;
 
@@ -280,7 +278,7 @@ namespace RTC
 			json data          = json::object();
 			data["producerId"] = this->dominantId;
 
-			Channel::ChannelNotifier::Emit(this->id, "dominantspeaker", data);
+			this->globals->channelNotifier->Emit(this->id, "dominantspeaker", data);
 		}
 	}
 

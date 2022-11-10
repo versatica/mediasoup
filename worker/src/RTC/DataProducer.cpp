@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataProducer.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -14,8 +13,12 @@ namespace RTC
 	/* Instance methods. */
 
 	DataProducer::DataProducer(
-	  const std::string& id, size_t maxMessageSize, RTC::DataProducer::Listener* listener, json& data)
-	  : id(id), maxMessageSize(maxMessageSize), listener(listener)
+	  Globals* globals,
+	  const std::string& id,
+	  size_t maxMessageSize,
+	  RTC::DataProducer::Listener* listener,
+	  json& data)
+	  : id(id), globals(globals), maxMessageSize(maxMessageSize), listener(listener)
 	{
 		MS_TRACE();
 
@@ -59,7 +62,7 @@ namespace RTC
 			this->protocol = jsonProtocolIt->get<std::string>();
 
 		// NOTE: This may throw.
-		ChannelMessageHandlers::RegisterHandler(
+		this->globals->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -70,7 +73,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
 	}
 
 	void DataProducer::FillJson(json& jsonObject) const

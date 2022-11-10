@@ -2,6 +2,7 @@
 #define MS_RTC_PRODUCER_HPP
 
 #include "common.hpp"
+#include "Globals.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/PayloadChannelSocket.hpp"
@@ -92,7 +93,7 @@ namespace RTC
 		};
 
 	public:
-		Producer(const std::string& id, RTC::Producer::Listener* listener, json& data);
+		Producer(Globals* globals, const std::string& id, RTC::Producer::Listener* listener, json& data);
 		virtual ~Producer();
 
 	public:
@@ -172,6 +173,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
+		Globals* globals{ nullptr };
 		RTC::Producer::Listener* listener{ nullptr };
 		// Allocated by this.
 		absl::flat_hash_map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;

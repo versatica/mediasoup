@@ -2,12 +2,10 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataConsumer.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
 #include "RTC/SctpAssociation.hpp"
 #include <stdexcept>
 
@@ -16,14 +14,15 @@ namespace RTC
 	/* Instance methods. */
 
 	DataConsumer::DataConsumer(
+	  Globals* globals,
 	  const std::string& id,
 	  const std::string& dataProducerId,
 	  RTC::SctpAssociation* sctpAssociation,
 	  RTC::DataConsumer::Listener* listener,
 	  json& data,
 	  size_t maxMessageSize)
-	  : id(id), dataProducerId(dataProducerId), sctpAssociation(sctpAssociation), listener(listener),
-	    maxMessageSize(maxMessageSize)
+	  : id(id), dataProducerId(dataProducerId), globals(globals), sctpAssociation(sctpAssociation),
+	    listener(listener), maxMessageSize(maxMessageSize)
 	{
 		MS_TRACE();
 
@@ -67,7 +66,7 @@ namespace RTC
 			this->protocol = jsonProtocolIt->get<std::string>();
 
 		// NOTE: This may throw.
-		ChannelMessageHandlers::RegisterHandler(
+		this->globals->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ this,
@@ -78,7 +77,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
 	}
 
 	void DataConsumer::FillJson(json& jsonObject) const
@@ -355,7 +354,7 @@ namespace RTC
 			data.append(std::to_string(this->bufferedAmount));
 			data.append("}");
 
-			Channel::ChannelNotifier::Emit(this->id, "bufferedamountlow", data);
+			this->globals->channelNotifier->Emit(this->id, "bufferedamountlow", data);
 		}
 	}
 
@@ -369,7 +368,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer closed [dataConsumerId:%s]", this->id.c_str());
 
-		Channel::ChannelNotifier::Emit(this->id, "dataproducerclose");
+		this->globals->channelNotifier->Emit(this->id, "dataproducerclose");
 
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}

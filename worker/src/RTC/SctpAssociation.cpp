@@ -5,7 +5,6 @@
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Channel/ChannelNotifier.hpp"
 #include <cstdlib> // std::malloc(), std::free()
 #include <cstring> // std::memset(), std::memcpy()
 #include <string>
@@ -109,13 +108,14 @@ namespace RTC
 	/* Instance methods. */
 
 	SctpAssociation::SctpAssociation(
+	  Globals* globals,
 	  Listener* listener,
 	  uint16_t os,
 	  uint16_t mis,
 	  size_t maxSctpMessageSize,
 	  size_t sctpSendBufferSize,
 	  bool isDataChannel)
-	  : listener(listener), os(os), mis(mis), maxSctpMessageSize(maxSctpMessageSize),
+	  : globals(globals), listener(listener), os(os), mis(mis), maxSctpMessageSize(maxSctpMessageSize),
 	    sctpSendBufferSize(sctpSendBufferSize), isDataChannel(isDataChannel)
 	{
 		MS_TRACE();
@@ -470,7 +470,7 @@ namespace RTC
 
 			if (sctpSendBufferFull)
 			{
-				Channel::ChannelNotifier::Emit(dataConsumer->id, "sctpsendbufferfull");
+				this->globals->channelNotifier->Emit(dataConsumer->id, "sctpsendbufferfull");
 			}
 		}
 		else if (cb)

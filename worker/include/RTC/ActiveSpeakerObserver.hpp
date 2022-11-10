@@ -1,6 +1,7 @@
 #ifndef MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 #define MS_RTC_ACTIVE_SPEAKER_OBSERVER_HPP
 
+#include "Globals.hpp"
 #include "RTC/RtpObserver.hpp"
 #include "handles/Timer.hpp"
 #include <absl/container/flat_hash_map.h>
@@ -69,7 +70,8 @@ namespace RTC
 		static const size_t RelativeSpeachActivitiesLen{ 3u };
 
 	public:
-		ActiveSpeakerObserver(const std::string& id, RTC::RtpObserver::Listener* listener, json& data);
+		ActiveSpeakerObserver(
+		  Globals* globals, const std::string& id, RTC::RtpObserver::Listener* listener, json& data);
 		~ActiveSpeakerObserver() override;
 
 	public:

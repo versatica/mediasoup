@@ -2,23 +2,22 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DirectTransport.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "PayloadChannel/PayloadChannelNotifier.hpp"
 
 namespace RTC
 {
 	/* Instance methods. */
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-	DirectTransport::DirectTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener, data)
+	DirectTransport::DirectTransport(
+	  Globals* globals, const std::string& id, RTC::Transport::Listener* listener, json& data)
+	  : RTC::Transport::Transport(globals, id, listener, data)
 	{
 		MS_TRACE();
 
 		// NOTE: This may throw.
-		ChannelMessageHandlers::RegisterHandler(
+		this->globals->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ this,
@@ -29,7 +28,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
 	}
 
 	void DirectTransport::FillJson(json& jsonObject) const
@@ -126,7 +125,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::PayloadChannelNotifier::Emit(consumer->id, "rtp", data, len);
+		this->globals->payloadChannelNotifier->Emit(consumer->id, "rtp", data, len);
 
 		if (cb)
 		{
@@ -146,7 +145,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::PayloadChannelNotifier::Emit(this->id, "rtcp", data, len);
+		this->globals->payloadChannelNotifier->Emit(this->id, "rtcp", data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -162,7 +161,7 @@ namespace RTC
 		size_t len          = packet->GetSize();
 
 		// Notify the Node DirectTransport.
-		PayloadChannel::PayloadChannelNotifier::Emit(this->id, "rtcp", data, len);
+		this->globals->payloadChannelNotifier->Emit(this->id, "rtcp", data, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -178,7 +177,7 @@ namespace RTC
 
 		data["ppid"] = ppid;
 
-		PayloadChannel::PayloadChannelNotifier::Emit(dataConsumer->id, "message", data, msg, len);
+		this->globals->payloadChannelNotifier->Emit(dataConsumer->id, "message", data, msg, len);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);

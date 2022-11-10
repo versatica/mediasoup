@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_PACKET_OBSERVER_HPP
 
 #include "common.hpp"
+#include "Globals.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RtpPacket.hpp"
 #include <string>
@@ -25,7 +26,7 @@ namespace RTC
 		};
 
 	public:
-		RtpObserver(const std::string& id, RTC::RtpObserver::Listener* listener);
+		RtpObserver(Globals* globals, const std::string& id, RTC::RtpObserver::Listener* listener);
 		virtual ~RtpObserver();
 
 	public:
@@ -55,9 +56,14 @@ namespace RTC
 	public:
 		// Passed by argument.
 		const std::string id;
-		RTC::RtpObserver::Listener* listener{ nullptr };
+
+	protected:
+		// Passed by argument.
+		Globals* globals{ nullptr };
 
 	private:
+		// Passed by argument.
+		RTC::RtpObserver::Listener* listener{ nullptr };
 		// Others.
 		bool paused{ false };
 	};

@@ -1,6 +1,7 @@
 #ifndef MS_RTC_SIMPLE_CONSUMER_HPP
 #define MS_RTC_SIMPLE_CONSUMER_HPP
 
+#include "Globals.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
@@ -11,6 +12,7 @@ namespace RTC
 	{
 	public:
 		SimpleConsumer(
+		  Globals* globals,
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
