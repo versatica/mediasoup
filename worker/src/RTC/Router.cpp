@@ -291,308 +291,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO: Remove when every request is ported to flatbuffers.
-		if (request->_data)
-			goto binary;
-
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::ROUTER_DUMP:
-			{
-				json data = json::object();
-
-				FillJson(data);
-
-				request->Accept(data);
-
-				break;
-			}
-
-			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT:
-			{
-				std::string transportId;
-
-				// This may throw.
-				SetNewTransportIdFromData(request->data, transportId);
-
-				// This may throw.
-				auto* webRtcTransport = new RTC::WebRtcTransport(transportId, this, request->data);
-
-				// Insert into the map.
-				this->mapTransports[transportId] = webRtcTransport;
-
-				MS_DEBUG_DEV("WebRtcTransport created [transportId:%s]", transportId.c_str());
-
-				json data = json::object();
-
-				// webRtcTransport->FillJson(data);
-
-				request->Accept(data);
-
-				break;
-			}
-
-			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
-			{
-				std::string transportId;
-
-				// This may throw.
-				SetNewTransportIdFromData(request->data, transportId);
-
-				auto jsonWebRtcServerIdIt = request->data.find("webRtcServerId");
-
-				if (jsonWebRtcServerIdIt == request->data.end() || !jsonWebRtcServerIdIt->is_string())
-				{
-					MS_THROW_TYPE_ERROR("missing webRtcServerId");
-				}
-
-				std::string webRtcServerId = jsonWebRtcServerIdIt->get<std::string>();
-
-				auto* webRtcServer = this->listener->OnRouterNeedWebRtcServer(this, webRtcServerId);
-
-				if (!webRtcServer)
-					MS_THROW_ERROR("wrong webRtcServerId (no associated WebRtcServer found)");
-
-				bool enableUdp{ true };
-				auto jsonEnableUdpIt = request->data.find("enableUdp");
-
-				if (jsonEnableUdpIt != request->data.end())
-				{
-					if (!jsonEnableUdpIt->is_boolean())
-						MS_THROW_TYPE_ERROR("wrong enableUdp (not a boolean)");
-
-					enableUdp = jsonEnableUdpIt->get<bool>();
-				}
-
-				bool enableTcp{ false };
-				auto jsonEnableTcpIt = request->data.find("enableTcp");
-
-				if (jsonEnableTcpIt != request->data.end())
-				{
-					if (!jsonEnableTcpIt->is_boolean())
-						MS_THROW_TYPE_ERROR("wrong enableTcp (not a boolean)");
-
-					enableTcp = jsonEnableTcpIt->get<bool>();
-				}
-
-				bool preferUdp{ false };
-				auto jsonPreferUdpIt = request->data.find("preferUdp");
-
-				if (jsonPreferUdpIt != request->data.end())
-				{
-					if (!jsonPreferUdpIt->is_boolean())
-						MS_THROW_TYPE_ERROR("wrong preferUdp (not a boolean)");
-
-					preferUdp = jsonPreferUdpIt->get<bool>();
-				}
-
-				bool preferTcp{ false };
-				auto jsonPreferTcpIt = request->data.find("preferTcp");
-
-				if (jsonPreferTcpIt != request->data.end())
-				{
-					if (!jsonPreferTcpIt->is_boolean())
-						MS_THROW_TYPE_ERROR("wrong preferTcp (not a boolean)");
-
-					preferTcp = jsonPreferTcpIt->get<bool>();
-				}
-
-				auto iceCandidates =
-				  webRtcServer->GetIceCandidates(enableUdp, enableTcp, preferUdp, preferTcp);
-
-				// This may throw.
-				auto* webRtcTransport =
-				  new RTC::WebRtcTransport(transportId, this, webRtcServer, iceCandidates, request->data);
-
-				// Insert into the map.
-				this->mapTransports[transportId] = webRtcTransport;
-
-				MS_DEBUG_DEV(
-				  "WebRtcTransport with WebRtcServer created [transportId:%s]", transportId.c_str());
-
-				json data = json::object();
-
-				// webRtcTransport->FillJson(data);
-
-				request->Accept(data);
-
-				break;
-			}
-
-			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT:
-			{
-				std::string transportId;
-
-				// This may throw
-				SetNewTransportIdFromData(request->data, transportId);
-
-				auto* plainTransport = new RTC::PlainTransport(transportId, this, request->data);
-
-				// Insert into the map.
-				this->mapTransports[transportId] = plainTransport;
-
-				MS_DEBUG_DEV("PlainTransport created [transportId:%s]", transportId.c_str());
-
-				json data = json::object();
-
-				// plainTransport->FillJson(data);
-
-				request->Accept(data);
-
-				break;
-			}
-
-			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_PIPE_TRANSPORT:
-			{
-				std::string transportId;
-
-				// This may throw
-				SetNewTransportIdFromData(request->data, transportId);
-
-				auto* pipeTransport = new RTC::PipeTransport(transportId, this, request->data);
-
-				// Insert into the map.
-				this->mapTransports[transportId] = pipeTransport;
-
-				MS_DEBUG_DEV("PipeTransport created [transportId:%s]", transportId.c_str());
-
-				json data = json::object();
-
-				// pipeTransport->FillJson(data);
-
-				request->Accept(data);
-
-				break;
-			}
-
-			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_DIRECT_TRANSPORT:
-			{
-				std::string transportId;
-
-				// This may throw
-				SetNewTransportIdFromData(request->data, transportId);
-
-				auto* directTransport = new RTC::DirectTransport(transportId, this, request->data);
-
-				// Insert into the map.
-				this->mapTransports[transportId] = directTransport;
-
-				MS_DEBUG_DEV("DirectTransport created [transportId:%s]", transportId.c_str());
-
-				json data = json::object();
-
-				// directTransport->FillJson(data);
-
-				request->Accept(data);
-
-				break;
-			}
-
-			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER:
-			{
-				std::string rtpObserverId;
-
-				// This may throw.
-				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
-
-				auto* activeSpeakerObserver =
-				  new RTC::ActiveSpeakerObserver(rtpObserverId, this, request->data);
-
-				// Insert into the map.
-				this->mapRtpObservers[rtpObserverId] = activeSpeakerObserver;
-
-				MS_DEBUG_DEV("ActiveSpeakerObserver created [rtpObserverId:%s]", rtpObserverId.c_str());
-
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::ChannelRequest::MethodId::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER:
-			{
-				std::string rtpObserverId;
-
-				// This may throw
-				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
-
-				auto* audioLevelObserver = new RTC::AudioLevelObserver(rtpObserverId, this, request->data);
-
-				// Insert into the map.
-				this->mapRtpObservers[rtpObserverId] = audioLevelObserver;
-
-				MS_DEBUG_DEV("AudioLevelObserver created [rtpObserverId:%s]", rtpObserverId.c_str());
-
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::ChannelRequest::MethodId::ROUTER_CLOSE_TRANSPORT:
-			{
-				// This may throw.
-				RTC::Transport* transport = GetTransportFromData(request->data);
-
-				// Tell the Transport to close all its Producers and Consumers so it will
-				// notify us about their closures.
-				transport->CloseProducersAndConsumers();
-
-				// Remove it from the map.
-				this->mapTransports.erase(transport->id);
-
-				MS_DEBUG_DEV("Transport closed [transportId:%s]", transport->id.c_str());
-
-				// Delete it.
-				delete transport;
-
-				request->Accept();
-
-				break;
-			}
-
-			case Channel::ChannelRequest::MethodId::ROUTER_CLOSE_RTP_OBSERVER:
-			{
-				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverFromData(request->data);
-
-				// Remove it from the map.
-				this->mapRtpObservers.erase(rtpObserver->id);
-
-				// Iterate all entries in mapProducerRtpObservers and remove the closed one.
-				for (auto& kv : this->mapProducerRtpObservers)
-				{
-					auto& rtpObservers = kv.second;
-
-					rtpObservers.erase(rtpObserver);
-				}
-
-				MS_DEBUG_DEV("RtpObserver closed [rtpObserverId:%s]", rtpObserver->id.c_str());
-
-				// Delete it.
-				delete rtpObserver;
-
-				request->Accept();
-
-				break;
-			}
-
-			default:
-			{
-				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
-			}
-		}
-
-		return;
-
-	binary:
-
-		MS_ERROR(
-		  "Channel request received [method:%s, id:%" PRIu32 "]",
-		  Channel::ChannelRequest::method2String.at(request->_method),
-		  request->id);
-
-		switch (request->_method)
-		{
-			case FBS::Request::Method::ROUTER_DUMP:
+			case Channel::ChannelRequest::Method::ROUTER_DUMP:
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
@@ -601,7 +302,7 @@ namespace RTC
 				break;
 			}
 
-			case FBS::Request::Method::ROUTER_CREATE_WEBRTC_TRANSPORT:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTC_TRANSPORT:
 			{
 				auto body = request->_data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
 
@@ -625,7 +326,7 @@ namespace RTC
 				break;
 			}
 
-			case FBS::Request::Method::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
 			{
 				auto body        = request->_data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
 				auto transportId = body->transportId()->str();
@@ -663,7 +364,7 @@ namespace RTC
 				break;
 			}
 
-			case FBS::Request::Method::ROUTER_CREATE_PLAIN_TRANSPORT:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_PLAIN_TRANSPORT:
 			{
 				auto body        = request->_data->body_as<FBS::Router::CreatePlainTransportRequest>();
 				auto transportId = body->transportId()->str();
@@ -685,11 +386,146 @@ namespace RTC
 				break;
 			}
 
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_PIPE_TRANSPORT:
+			{
+				std::string transportId;
+
+				// This may throw
+				SetNewTransportIdFromData(request->data, transportId);
+
+				auto* pipeTransport = new RTC::PipeTransport(transportId, this, request->data);
+
+				// Insert into the map.
+				this->mapTransports[transportId] = pipeTransport;
+
+				MS_DEBUG_DEV("PipeTransport created [transportId:%s]", transportId.c_str());
+
+				json data = json::object();
+
+				// pipeTransport->FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_DIRECT_TRANSPORT:
+			{
+				std::string transportId;
+
+				// This may throw
+				SetNewTransportIdFromData(request->data, transportId);
+
+				auto* directTransport = new RTC::DirectTransport(transportId, this, request->data);
+
+				// Insert into the map.
+				this->mapTransports[transportId] = directTransport;
+
+				MS_DEBUG_DEV("DirectTransport created [transportId:%s]", transportId.c_str());
+
+				json data = json::object();
+
+				// directTransport->FillJson(data);
+
+				request->Accept(data);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER:
+			{
+				std::string rtpObserverId;
+
+				// This may throw.
+				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
+
+				auto* activeSpeakerObserver =
+				  new RTC::ActiveSpeakerObserver(rtpObserverId, this, request->data);
+
+				// Insert into the map.
+				this->mapRtpObservers[rtpObserverId] = activeSpeakerObserver;
+
+				MS_DEBUG_DEV("ActiveSpeakerObserver created [rtpObserverId:%s]", rtpObserverId.c_str());
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER:
+			{
+				std::string rtpObserverId;
+
+				// This may throw
+				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
+
+				auto* audioLevelObserver = new RTC::AudioLevelObserver(rtpObserverId, this, request->data);
+
+				// Insert into the map.
+				this->mapRtpObservers[rtpObserverId] = audioLevelObserver;
+
+				MS_DEBUG_DEV("AudioLevelObserver created [rtpObserverId:%s]", rtpObserverId.c_str());
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::ROUTER_CLOSE_TRANSPORT:
+			{
+				// This may throw.
+				RTC::Transport* transport = GetTransportFromData(request->data);
+
+				// Tell the Transport to close all its Producers and Consumers so it will
+				// notify us about their closures.
+				transport->CloseProducersAndConsumers();
+
+				// Remove it from the map.
+				this->mapTransports.erase(transport->id);
+
+				MS_DEBUG_DEV("Transport closed [transportId:%s]", transport->id.c_str());
+
+				// Delete it.
+				delete transport;
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::ROUTER_CLOSE_RTP_OBSERVER:
+			{
+				// This may throw.
+				RTC::RtpObserver* rtpObserver = GetRtpObserverFromData(request->data);
+
+				// Remove it from the map.
+				this->mapRtpObservers.erase(rtpObserver->id);
+
+				// Iterate all entries in mapProducerRtpObservers and remove the closed one.
+				for (auto& kv : this->mapProducerRtpObservers)
+				{
+					auto& rtpObservers = kv.second;
+
+					rtpObservers.erase(rtpObserver);
+				}
+
+				MS_DEBUG_DEV("RtpObserver closed [rtpObserverId:%s]", rtpObserver->id.c_str());
+
+				// Delete it.
+				delete rtpObserver;
+
+				request->Accept();
+
+				break;
+			}
+
 			default:
 			{
-				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+				MS_THROW_ERROR("unknown method '%s'", Channel::ChannelRequest::method2String[request->method]);
 			}
 		}
+
+		return;
 	}
 
 	void Router::SetNewTransportIdFromData(json& data, std::string& transportId) const

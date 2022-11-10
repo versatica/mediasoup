@@ -143,9 +143,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_DUMP:
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_DUMP:
 			{
 				json data = json::object();
 
@@ -156,7 +156,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_GET_STATS:
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_GET_STATS:
 			{
 				json data = json::array();
 
@@ -167,7 +167,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
 			{
 				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
@@ -189,7 +189,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
 			{
 				if (this->GetType() != DataConsumer::Type::SCTP)
 				{
@@ -226,7 +226,7 @@ namespace RTC
 
 			default:
 			{
-				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+				MS_THROW_ERROR("unknown method '%s'", request->methodStr.c_str());
 			}
 		}
 	}

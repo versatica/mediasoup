@@ -242,9 +242,9 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
-	switch (request->_method)
+	switch (request->method)
 	{
-		case FBS::Request::Method::WORKER_UPDATE_SETTINGS:
+		case Channel::ChannelRequest::Method::WORKER_UPDATE_SETTINGS:
 		{
 			auto body = request->_data->body_as<FBS::Worker::UpdateSettingsRequest>();
 
@@ -279,7 +279,7 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 
 		default:
 		{
-			MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			MS_THROW_ERROR("unknown method '%s'", request->methodStr.c_str());
 		}
 	}
 }

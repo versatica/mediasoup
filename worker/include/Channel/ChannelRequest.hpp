@@ -20,64 +20,14 @@ namespace Channel
 	class ChannelRequest
 	{
 	public:
-		// TODO: Remove once JSON is removed.
-		enum class MethodId
-		{
-			ROUTER_DUMP,
-			ROUTER_CREATE_WEBRTC_TRANSPORT,
-			ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER,
-			ROUTER_CREATE_PLAIN_TRANSPORT,
-			ROUTER_CREATE_PIPE_TRANSPORT,
-			ROUTER_CREATE_DIRECT_TRANSPORT,
-			ROUTER_CLOSE_TRANSPORT,
-			ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER,
-			ROUTER_CREATE_AUDIO_LEVEL_OBSERVER,
-			ROUTER_CLOSE_RTP_OBSERVER,
-			TRANSPORT_DUMP,
-			TRANSPORT_GET_STATS,
-			TRANSPORT_CONNECT,
-			TRANSPORT_SET_MAX_INCOMING_BITRATE,
-			TRANSPORT_SET_MAX_OUTGOING_BITRATE,
-			TRANSPORT_RESTART_ICE,
-			TRANSPORT_PRODUCE,
-			TRANSPORT_PRODUCE_DATA,
-			TRANSPORT_CONSUME_DATA,
-			TRANSPORT_ENABLE_TRACE_EVENT,
-			TRANSPORT_CLOSE_PRODUCER,
-			PRODUCER_DUMP,
-			PRODUCER_GET_STATS,
-			PRODUCER_PAUSE,
-			PRODUCER_RESUME,
-			PRODUCER_ENABLE_TRACE_EVENT,
-			TRANSPORT_CLOSE_CONSUMER,
-			CONSUMER_DUMP,
-			CONSUMER_GET_STATS,
-			CONSUMER_PAUSE,
-			CONSUMER_RESUME,
-			CONSUMER_SET_PREFERRED_LAYERS,
-			CONSUMER_SET_PRIORITY,
-			CONSUMER_REQUEST_KEY_FRAME,
-			CONSUMER_ENABLE_TRACE_EVENT,
-			TRANSPORT_CLOSE_DATA_PRODUCER,
-			DATA_PRODUCER_DUMP,
-			DATA_PRODUCER_GET_STATS,
-			TRANSPORT_CLOSE_DATA_CONSUMER,
-			DATA_CONSUMER_DUMP,
-			DATA_CONSUMER_GET_STATS,
-			DATA_CONSUMER_GET_BUFFERED_AMOUNT,
-			DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
-			RTP_OBSERVER_PAUSE,
-			RTP_OBSERVER_RESUME,
-			RTP_OBSERVER_ADD_PRODUCER,
-			RTP_OBSERVER_REMOVE_PRODUCER
-		};
+		using Method = FBS::Request::Method;
 
 	public:
 		static absl::flat_hash_map<FBS::Request::Method, const char*> method2String;
 
 	private:
 		// TODO: Remove once JSON is removed.
-		static absl::flat_hash_map<std::string, MethodId> string2MethodId;
+		static absl::flat_hash_map<std::string, FBS::Request::Method> string2Method;
 
 	public:
 		static flatbuffers::FlatBufferBuilder bufferBuilder;
@@ -119,10 +69,8 @@ namespace Channel
 		// Passed by argument.
 		Channel::ChannelSocket* channel{ nullptr };
 		uint32_t id{ 0u };
-		std::string method;
-		// TODO: Rename to `method` once JSON is removed.
-		FBS::Request::Method _method;
-		MethodId methodId;
+		std::string methodStr;
+		Method method;
 		std::string handlerId;
 		json data;
 		// TODO: Rename to `data` once JSON is removed.

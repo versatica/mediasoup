@@ -186,9 +186,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::CONSUMER_REQUEST_KEY_FRAME:
+			case Channel::ChannelRequest::Method::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())
 					RequestKeyFrame();
@@ -198,7 +198,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
+			case Channel::ChannelRequest::Method::CONSUMER_SET_PREFERRED_LAYERS:
 			{
 				auto previousPreferredSpatialLayer  = this->preferredSpatialLayer;
 				auto previousPreferredTemporalLayer = this->preferredTemporalLayer;

@@ -704,9 +704,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::Method::TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->connectCalled)
@@ -836,7 +836,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::TRANSPORT_RESTART_ICE:
+			case Channel::ChannelRequest::Method::TRANSPORT_RESTART_ICE:
 			{
 				std::string usernameFragment = Utils::Crypto::GetRandomString(32);
 				std::string password         = Utils::Crypto::GetRandomString(32);

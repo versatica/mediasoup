@@ -201,9 +201,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (request->_method)
+		switch (request->method)
 		{
-			case FBS::Request::Method::WEBRTC_SERVER_DUMP:
+			case Channel::ChannelRequest::Method::WEBRTC_SERVER_DUMP:
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
@@ -214,7 +214,7 @@ namespace RTC
 
 			default:
 			{
-				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+				MS_THROW_ERROR("unknown method '%s'", request->methodStr.c_str());
 			}
 		}
 	}

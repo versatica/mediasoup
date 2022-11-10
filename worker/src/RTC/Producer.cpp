@@ -482,9 +482,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::PRODUCER_DUMP:
+			case Channel::ChannelRequest::Method::PRODUCER_DUMP:
 			{
 				json data = json::object();
 
@@ -495,7 +495,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::PRODUCER_GET_STATS:
+			case Channel::ChannelRequest::Method::PRODUCER_GET_STATS:
 			{
 				json data = json::array();
 
@@ -506,7 +506,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::PRODUCER_PAUSE:
+			case Channel::ChannelRequest::Method::PRODUCER_PAUSE:
 			{
 				if (this->paused)
 				{
@@ -534,7 +534,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::PRODUCER_RESUME:
+			case Channel::ChannelRequest::Method::PRODUCER_RESUME:
 			{
 				if (!this->paused)
 				{
@@ -575,7 +575,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::PRODUCER_ENABLE_TRACE_EVENT:
+			case Channel::ChannelRequest::Method::PRODUCER_ENABLE_TRACE_EVENT:
 			{
 				auto jsonTypesIt = request->data.find("types");
 
@@ -614,7 +614,7 @@ namespace RTC
 
 			default:
 			{
-				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+				MS_THROW_ERROR("unknown method '%s'", request->methodStr.c_str());
 			}
 		}
 	}

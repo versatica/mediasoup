@@ -445,9 +445,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::Method::TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->connectCalled)

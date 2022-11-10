@@ -221,53 +221,12 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 	MS_TRACE();
 
 	// TODO: Remove when every request is ported to flatbuffers.
-	if (request->_data)
-		goto binary;
-
 	MS_ERROR(
-	  "Channel request received [method:%s, id:%" PRIu32 "]", request->method.c_str(), request->id);
+	  "Channel request received [method:%s, id:%" PRIu32 "]", request->methodStr.c_str(), request->id);
 
-	switch (request->methodId)
+	switch (request->method)
 	{
-		// Any other request must be delivered to the corresponding Router.
-		default:
-		{
-			try
-			{
-				auto* handler = ChannelMessageHandlers::GetChannelRequestHandler(request->handlerId);
-
-				if (handler == nullptr)
-				{
-					MS_THROW_ERROR("Channel request handler with ID %s not found", request->handlerId.c_str());
-				}
-
-				handler->HandleRequest(request);
-			}
-			catch (const MediaSoupTypeError& error)
-			{
-				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->method.c_str());
-			}
-			catch (const MediaSoupError& error)
-			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
-			}
-
-			break;
-		}
-	}
-
-	return;
-
-binary:
-
-	MS_ERROR(
-	  "Channel request received [method:%s, id:%" PRIu32 "]",
-	  Channel::ChannelRequest::method2String.at(request->_method),
-	  request->id);
-
-	switch (request->_method)
-	{
-		case FBS::Request::Method::WORKER_CLOSE:
+		case Channel::ChannelRequest::Method::WORKER_CLOSE:
 		{
 			if (this->closed)
 				return;
@@ -279,7 +238,7 @@ binary:
 			break;
 		}
 
-		case FBS::Request::Method::WORKER_DUMP:
+		case Channel::ChannelRequest::Method::WORKER_DUMP:
 		{
 			auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
@@ -288,7 +247,7 @@ binary:
 			break;
 		}
 
-		case FBS::Request::Method::WORKER_GET_RESOURCE_USAGE:
+		case Channel::ChannelRequest::Method::WORKER_GET_RESOURCE_USAGE:
 		{
 			auto resourceUsageOffset = FillBufferResourceUsage(request->GetBufferBuilder());
 
@@ -297,14 +256,14 @@ binary:
 			break;
 		}
 
-		case FBS::Request::Method::WORKER_UPDATE_SETTINGS:
+		case Channel::ChannelRequest::Method::WORKER_UPDATE_SETTINGS:
 		{
 			Settings::HandleRequest(request);
 
 			break;
 		}
 
-		case FBS::Request::Method::WORKER_CREATE_WEBRTC_SERVER:
+		case Channel::ChannelRequest::Method::WORKER_CREATE_WEBRTC_SERVER:
 		{
 			try
 			{
@@ -324,17 +283,17 @@ binary:
 			}
 			catch (const MediaSoupTypeError& error)
 			{
-				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
 			}
 
 			break;
 		}
 
-		case FBS::Request::Method::WORKER_WEBRTC_SERVER_CLOSE:
+		case Channel::ChannelRequest::Method::WORKER_WEBRTC_SERVER_CLOSE:
 		{
 			RTC::WebRtcServer* webRtcServer{ nullptr };
 
@@ -348,7 +307,7 @@ binary:
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
 			}
 
 			// Remove it from the map and delete it.
@@ -363,7 +322,7 @@ binary:
 			break;
 		}
 
-		case FBS::Request::Method::WORKER_CREATE_ROUTER:
+		case Channel::ChannelRequest::Method::WORKER_CREATE_ROUTER:
 		{
 			auto body = request->_data->body_as<FBS::Worker::CreateRouterRequest>();
 
@@ -375,7 +334,7 @@ binary:
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
 			}
 
 			auto* router = new RTC::Router(routerId, this);
@@ -389,7 +348,7 @@ binary:
 			break;
 		}
 
-		case FBS::Request::Method::WORKER_CLOSE_ROUTER:
+		case Channel::ChannelRequest::Method::WORKER_CLOSE_ROUTER:
 		{
 			RTC::Router* router{ nullptr };
 
@@ -403,7 +362,7 @@ binary:
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
 			}
 
 			// Remove it from the map and delete it.
@@ -434,11 +393,11 @@ binary:
 			}
 			catch (const MediaSoupTypeError& error)
 			{
-				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
 			}
 
 			break;
@@ -466,7 +425,7 @@ inline void Worker::HandleRequest(PayloadChannel::PayloadChannelRequest* request
 
 	MS_DEBUG_DEV(
 	  "PayloadChannel request received [method:%s, id:%" PRIu32 "]",
-	  request->method.c_str(),
+	  request->methodStr.c_str(),
 	  request->id);
 
 	try

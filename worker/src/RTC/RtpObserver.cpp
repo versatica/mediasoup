@@ -24,9 +24,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_PAUSE:
+			case Channel::ChannelRequest::Method::RTP_OBSERVER_PAUSE:
 			{
 				this->Pause();
 
@@ -35,7 +35,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_RESUME:
+			case Channel::ChannelRequest::Method::RTP_OBSERVER_RESUME:
 			{
 				this->Resume();
 
@@ -44,7 +44,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_ADD_PRODUCER:
+			case Channel::ChannelRequest::Method::RTP_OBSERVER_ADD_PRODUCER:
 			{
 				// This may throw.
 				auto producerId         = GetProducerIdFromData(request->data);
@@ -59,7 +59,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::RTP_OBSERVER_REMOVE_PRODUCER:
+			case Channel::ChannelRequest::Method::RTP_OBSERVER_REMOVE_PRODUCER:
 			{
 				// This may throw.
 				auto producerId         = GetProducerIdFromData(request->data);
@@ -77,7 +77,7 @@ namespace RTC
 
 			default:
 			{
-				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+				MS_THROW_ERROR("unknown method '%s'", request->methodStr.c_str());
 			}
 		}
 	}

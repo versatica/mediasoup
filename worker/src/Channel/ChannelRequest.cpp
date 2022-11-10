@@ -12,52 +12,53 @@ namespace Channel
 {
 	/* Class variables. */
 
+	// TODO: Remove once JSON is removed.
 	// clang-format off
-	absl::flat_hash_map<std::string, ChannelRequest::MethodId> ChannelRequest::string2MethodId =
+	absl::flat_hash_map<std::string, FBS::Request::Method> ChannelRequest::string2Method =
 	{
-		{ "router.createPlainTransport",                 ChannelRequest::MethodId::ROUTER_CREATE_PLAIN_TRANSPORT                    },
-		{ "router.createPipeTransport",                  ChannelRequest::MethodId::ROUTER_CREATE_PIPE_TRANSPORT                     },
-		{ "router.createDirectTransport",                ChannelRequest::MethodId::ROUTER_CREATE_DIRECT_TRANSPORT                   },
-		{ "router.closeTransport",                       ChannelRequest::MethodId::ROUTER_CLOSE_TRANSPORT                           },
-		{ "router.createActiveSpeakerObserver",          ChannelRequest::MethodId::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER            },
-		{ "router.createAudioLevelObserver",             ChannelRequest::MethodId::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER               },
-		{ "router.closeRtpObserver",                     ChannelRequest::MethodId::ROUTER_CLOSE_RTP_OBSERVER                        },
-		{ "transport.getStats",                          ChannelRequest::MethodId::TRANSPORT_GET_STATS                              },
-		{ "transport.connect",                           ChannelRequest::MethodId::TRANSPORT_CONNECT                                },
-		{ "transport.setMaxIncomingBitrate",             ChannelRequest::MethodId::TRANSPORT_SET_MAX_INCOMING_BITRATE               },
-		{ "transport.setMaxOutgoingBitrate",             ChannelRequest::MethodId::TRANSPORT_SET_MAX_OUTGOING_BITRATE               },
-		{ "transport.restartIce",                        ChannelRequest::MethodId::TRANSPORT_RESTART_ICE                            },
-		{ "transport.produce",                           ChannelRequest::MethodId::TRANSPORT_PRODUCE                                },
-		{ "transport.produceData",                       ChannelRequest::MethodId::TRANSPORT_PRODUCE_DATA                           },
-		{ "transport.consumeData",                       ChannelRequest::MethodId::TRANSPORT_CONSUME_DATA                           },
-		{ "transport.enableTraceEvent",                  ChannelRequest::MethodId::TRANSPORT_ENABLE_TRACE_EVENT                     },
-		{ "transport.closeProducer",                     ChannelRequest::MethodId::TRANSPORT_CLOSE_PRODUCER                         },
-		{ "transport.closeConsumer",                     ChannelRequest::MethodId::TRANSPORT_CLOSE_CONSUMER                         },
-		{ "transport.closeDataProducer",                 ChannelRequest::MethodId::TRANSPORT_CLOSE_DATA_PRODUCER                    },
-		{ "transport.closeDataConsumer",                 ChannelRequest::MethodId::TRANSPORT_CLOSE_DATA_CONSUMER                    },
-		{ "producer.dump",                               ChannelRequest::MethodId::PRODUCER_DUMP                                    },
-		{ "producer.getStats",                           ChannelRequest::MethodId::PRODUCER_GET_STATS                               },
-		{ "producer.pause",                              ChannelRequest::MethodId::PRODUCER_PAUSE                                   },
-		{ "producer.resume" ,                            ChannelRequest::MethodId::PRODUCER_RESUME                                  },
-		{ "producer.enableTraceEvent",                   ChannelRequest::MethodId::PRODUCER_ENABLE_TRACE_EVENT                      },
-		{ "consumer.dump",                               ChannelRequest::MethodId::CONSUMER_DUMP                                    },
-		{ "consumer.getStats",                           ChannelRequest::MethodId::CONSUMER_GET_STATS                               },
-		{ "consumer.pause",                              ChannelRequest::MethodId::CONSUMER_PAUSE                                   },
-		{ "consumer.resume",                             ChannelRequest::MethodId::CONSUMER_RESUME                                  },
-		{ "consumer.setPreferredLayers",                 ChannelRequest::MethodId::CONSUMER_SET_PREFERRED_LAYERS                    },
-		{ "consumer.setPriority",                        ChannelRequest::MethodId::CONSUMER_SET_PRIORITY                            },
-		{ "consumer.requestKeyFrame",                    ChannelRequest::MethodId::CONSUMER_REQUEST_KEY_FRAME                       },
-		{ "consumer.enableTraceEvent",                   ChannelRequest::MethodId::CONSUMER_ENABLE_TRACE_EVENT                      },
-		{ "dataProducer.dump",                           ChannelRequest::MethodId::DATA_PRODUCER_DUMP                               },
-		{ "dataProducer.getStats",                       ChannelRequest::MethodId::DATA_PRODUCER_GET_STATS                          },
-		{ "dataConsumer.dump",                           ChannelRequest::MethodId::DATA_CONSUMER_DUMP                               },
-		{ "dataConsumer.getStats",                       ChannelRequest::MethodId::DATA_CONSUMER_GET_STATS                          },
-		{ "dataConsumer.getBufferedAmount",              ChannelRequest::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT                },
-		{ "dataConsumer.setBufferedAmountLowThreshold",  ChannelRequest::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD  },
-		{ "rtpObserver.pause",                           ChannelRequest::MethodId::RTP_OBSERVER_PAUSE                               },
-		{ "rtpObserver.resume",                          ChannelRequest::MethodId::RTP_OBSERVER_RESUME                              },
-		{ "rtpObserver.addProducer",                     ChannelRequest::MethodId::RTP_OBSERVER_ADD_PRODUCER                        },
-		{ "rtpObserver.removeProducer",                  ChannelRequest::MethodId::RTP_OBSERVER_REMOVE_PRODUCER                     }
+		{ "router.createPlainTransport",                 FBS::Request::Method::ROUTER_CREATE_PLAIN_TRANSPORT                    },
+		{ "router.createPipeTransport",                  FBS::Request::Method::ROUTER_CREATE_PIPE_TRANSPORT                     },
+		{ "router.createDirectTransport",                FBS::Request::Method::ROUTER_CREATE_DIRECT_TRANSPORT                   },
+		{ "router.closeTransport",                       FBS::Request::Method::ROUTER_CLOSE_TRANSPORT                           },
+		{ "router.createActiveSpeakerObserver",          FBS::Request::Method::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER            },
+		{ "router.createAudioLevelObserver",             FBS::Request::Method::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER               },
+		{ "router.closeRtpObserver",                     FBS::Request::Method::ROUTER_CLOSE_RTP_OBSERVER                        },
+		{ "transport.getStats",                          FBS::Request::Method::TRANSPORT_GET_STATS                              },
+		{ "transport.connect",                           FBS::Request::Method::TRANSPORT_CONNECT                                },
+		{ "transport.setMaxIncomingBitrate",             FBS::Request::Method::TRANSPORT_SET_MAX_INCOMING_BITRATE               },
+		{ "transport.setMaxOutgoingBitrate",             FBS::Request::Method::TRANSPORT_SET_MAX_OUTGOING_BITRATE               },
+		{ "transport.restartIce",                        FBS::Request::Method::TRANSPORT_RESTART_ICE                            },
+		{ "transport.produce",                           FBS::Request::Method::TRANSPORT_PRODUCE                                },
+		{ "transport.produceData",                       FBS::Request::Method::TRANSPORT_PRODUCE_DATA                           },
+		{ "transport.consumeData",                       FBS::Request::Method::TRANSPORT_CONSUME_DATA                           },
+		{ "transport.enableTraceEvent",                  FBS::Request::Method::TRANSPORT_ENABLE_TRACE_EVENT                     },
+		{ "transport.closeProducer",                     FBS::Request::Method::TRANSPORT_CLOSE_PRODUCER                         },
+		{ "transport.closeConsumer",                     FBS::Request::Method::TRANSPORT_CLOSE_CONSUMER                         },
+		{ "transport.closeDataProducer",                 FBS::Request::Method::TRANSPORT_CLOSE_DATA_PRODUCER                    },
+		{ "transport.closeDataConsumer",                 FBS::Request::Method::TRANSPORT_CLOSE_DATA_CONSUMER                    },
+		{ "producer.dump",                               FBS::Request::Method::PRODUCER_DUMP                                    },
+		{ "producer.getStats",                           FBS::Request::Method::PRODUCER_GET_STATS                               },
+		{ "producer.pause",                              FBS::Request::Method::PRODUCER_PAUSE                                   },
+		{ "producer.resume" ,                            FBS::Request::Method::PRODUCER_RESUME                                  },
+		{ "producer.enableTraceEvent",                   FBS::Request::Method::PRODUCER_ENABLE_TRACE_EVENT                      },
+		{ "consumer.dump",                               FBS::Request::Method::CONSUMER_DUMP                                    },
+		{ "consumer.getStats",                           FBS::Request::Method::CONSUMER_GET_STATS                               },
+		{ "consumer.pause",                              FBS::Request::Method::CONSUMER_PAUSE                                   },
+		{ "consumer.resume",                             FBS::Request::Method::CONSUMER_RESUME                                  },
+		{ "consumer.setPreferredLayers",                 FBS::Request::Method::CONSUMER_SET_PREFERRED_LAYERS                    },
+		{ "consumer.setPriority",                        FBS::Request::Method::CONSUMER_SET_PRIORITY                            },
+		{ "consumer.requestKeyFrame",                    FBS::Request::Method::CONSUMER_REQUEST_KEY_FRAME                       },
+		{ "consumer.enableTraceEvent",                   FBS::Request::Method::CONSUMER_ENABLE_TRACE_EVENT                      },
+		{ "dataProducer.dump",                           FBS::Request::Method::DATA_PRODUCER_DUMP                               },
+		{ "dataProducer.getStats",                       FBS::Request::Method::DATA_PRODUCER_GET_STATS                          },
+		{ "dataConsumer.dump",                           FBS::Request::Method::DATA_CONSUMER_DUMP                               },
+		{ "dataConsumer.getStats",                       FBS::Request::Method::DATA_CONSUMER_GET_STATS                          },
+		{ "dataConsumer.getBufferedAmount",              FBS::Request::Method::DATA_CONSUMER_GET_BUFFERED_AMOUNT                },
+		{ "dataConsumer.setBufferedAmountLowThreshold",  FBS::Request::Method::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD  },
+		{ "rtpObserver.pause",                           FBS::Request::Method::RTP_OBSERVER_PAUSE                               },
+		{ "rtpObserver.resume",                          FBS::Request::Method::RTP_OBSERVER_RESUME                              },
+		{ "rtpObserver.addProducer",                     FBS::Request::Method::RTP_OBSERVER_ADD_PRODUCER                        },
+		{ "rtpObserver.removeProducer",                  FBS::Request::Method::RTP_OBSERVER_REMOVE_PRODUCER                     }
 	};
 	// clang-format on
 
@@ -144,19 +145,21 @@ namespace Channel
 		if (info.size() < 2)
 			MS_THROW_ERROR("too few arguments");
 
-		this->id     = std::stoul(info[0]);
-		this->method = info[1];
+		this->id = std::stoul(info[0]);
 
-		auto methodIdIt = ChannelRequest::string2MethodId.find(this->method);
+		auto method = info[1];
 
-		if (methodIdIt == ChannelRequest::string2MethodId.end())
+		auto methodIdIt = ChannelRequest::string2Method.find(method);
+
+		if (methodIdIt == ChannelRequest::string2Method.end())
 		{
 			Error("unknown method");
 
-			MS_THROW_ERROR("unknown method '%s'", this->method.c_str());
+			MS_THROW_ERROR("unknown method '%s'", methodStr.c_str());
 		}
 
-		this->methodId = methodIdIt->second;
+		this->methodStr = method;
+		this->method    = methodIdIt->second;
 
 		if (info.size() > 2)
 		{
@@ -201,8 +204,9 @@ namespace Channel
 
 		this->_data = FBS::Request::GetRequest(msg);
 
-		this->id      = this->_data->id();
-		this->_method = this->_data->method();
+		this->id        = this->_data->id();
+		this->method    = this->_data->method();
+		this->methodStr = method2String[this->method];
 
 		// Handler ID is optional.
 		if (flatbuffers::IsFieldPresent(this->_data, FBS::Request::Request::VT_HANDLERID))
