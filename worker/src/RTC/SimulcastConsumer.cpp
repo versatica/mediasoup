@@ -22,7 +22,10 @@ namespace RTC
 	/* Instance methods. */
 
 	SimulcastConsumer::SimulcastConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, const FBS::Transport::ConsumeRequest* data)
+	  const std::string& id,
+	  const std::string& producerId,
+	  RTC::Consumer::Listener* listener,
+	  const FBS::Transport::ConsumeRequest* data)
 	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SIMULCAST)
 	{
 		MS_TRACE();
@@ -55,7 +58,8 @@ namespace RTC
 			if (this->preferredSpatialLayer > encoding.spatialLayers - 1)
 				this->preferredSpatialLayer = encoding.spatialLayers - 1;
 
-			if (flatbuffers::IsFieldPresent(data->preferredLayers(), FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
+			if (flatbuffers::IsFieldPresent(
+			      data->preferredLayers(), FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
 			{
 				if (this->preferredTemporalLayer > encoding.temporalLayers - 1)
 					this->preferredTemporalLayer = encoding.temporalLayers - 1;

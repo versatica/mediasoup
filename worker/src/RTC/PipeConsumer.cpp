@@ -13,7 +13,10 @@ namespace RTC
 	/* Instance methods. */
 
 	PipeConsumer::PipeConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, const FBS::Transport::ConsumeRequest* data)
+	  const std::string& id,
+	  const std::string& producerId,
+	  RTC::Consumer::Listener* listener,
+	  const FBS::Transport::ConsumeRequest* data)
 	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
 	{
 		MS_TRACE();

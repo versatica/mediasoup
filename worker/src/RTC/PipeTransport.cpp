@@ -24,9 +24,9 @@ namespace RTC
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	PipeTransport::PipeTransport(
-		  const std::string& id,
-		  RTC::Transport::Listener* listener,
-		  const FBS::PipeTransport::PipeTransportOptions* options)
+	  const std::string& id,
+	  RTC::Transport::Listener* listener,
+	  const FBS::PipeTransport::PipeTransportOptions* options)
 	  : RTC::Transport::Transport(id, listener, options->base())
 	{
 		MS_TRACE();
