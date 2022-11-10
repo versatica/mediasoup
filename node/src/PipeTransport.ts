@@ -468,7 +468,7 @@ export function parsePipeTransportDump(
 	// Retrieve RTP Tuple.
 	const tuple = parseTuple(binary.tuple()!);
 
-	// Retrieve RT	// Retrieve SRTP Parameters.
+	// Retrieve SRTP Parameters.
 	let srtpParameters: SrtpParameters | undefined;
 
 	if (binary.srtpParameters())
