@@ -189,6 +189,9 @@ function execute(command, exitOnError = true)
 	}
 	catch (error)
 	{
-		process.exit(1);
+		if (exitOnError)
+		{
+			process.exit(1);
+		}
 	}
 }
