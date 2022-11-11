@@ -118,6 +118,8 @@ switch (task)
 
 	case 'postinstall':
 	{
+		execute('node npm-scripts.js typescript:build');
+
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
 			execute('node npm-scripts.js worker:build');

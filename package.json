@@ -73,6 +73,7 @@
     "debug": "^4.3.4",
     "h264-profile-level-id": "^1.0.1",
     "supports-color": "^9.2.3",
+    "typescript": "^4.8.4",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
@@ -87,7 +88,6 @@
     "open-cli": "^7.1.0",
     "pick-port": "^1.0.1",
     "sctp": "^1.0.0",
-    "tsc-watch": "^5.0.3",
-    "typescript": "^4.8.4"
+    "tsc-watch": "^5.0.3"
   }
 }

@@ -4,6 +4,7 @@
 
 ## Node.
 /node_modules/
+/node/lib/
 
 ## Rust.
 /Cargo.lock
