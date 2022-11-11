@@ -299,15 +299,14 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		/* Build Request. */
 
 		const builder = this.channel.bufferBuilder;
-
-		const closeTransportOffset = new FbsRouter.CloseTransportRequestT(
+		const requestOffset = new FbsRouter.CloseTransportRequestT(
 			this.internal.transportId
 		).pack(builder);
 
 		this.channel.requestBinary(
 			FbsRequest.Method.ROUTER_CLOSE_TRANSPORT,
 			FbsRequest.Body.FBS_Router_CloseTransportRequest,
-			closeTransportOffset,
+			requestOffset,
 			this.internal.routerId
 		).catch(() => {});
 
@@ -518,15 +517,14 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		/* Build Request. */
 
 		const builder = this.channel.bufferBuilder;
-
-		const setMaxIncomingBitrateOffset = new FbsTransport.SetMaxIncomingBitrateRequestT(
+		const requestOffset = new FbsTransport.SetMaxIncomingBitrateRequestT(
 			bitrate
 		).pack(builder);
 
 		await this.channel.requestBinary(
 			FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE,
 			FbsRequest.Body.FBS_Transport_SetMaxIncomingBitrateRequest,
-			setMaxIncomingBitrateOffset,
+			requestOffset,
 			this.internal.routerId
 		);
 	}
@@ -541,15 +539,14 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		/* Build Request. */
 
 		const builder = this.channel.bufferBuilder;
-
-		const setMaxOutgoingBitrateOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
+		const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
 			bitrate
 		).pack(builder);
 
 		await this.channel.requestBinary(
 			FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE,
 			FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest,
-			setMaxOutgoingBitrateOffset,
+			requestOffset,
 			this.internal.routerId
 		);
 	}
@@ -1005,15 +1002,14 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		/* Build Request. */
 
 		const builder = this.channel.bufferBuilder;
-
-		const enableTraceEventOffset = new FbsTransport.EnableTraceEventRequestT(
+		const requestOffset = new FbsTransport.EnableTraceEventRequestT(
 			types
 		).pack(builder);
 
 		await this.channel.requestBinary(
 			FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT,
 			FbsRequest.Body.FBS_Transport_EnableTraceEventRequest,
-			enableTraceEventOffset,
+			requestOffset,
 			this.internal.routerId
 		);
 	}

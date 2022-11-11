@@ -248,15 +248,14 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-
-		const closeDataConsumerOffset = new FbsTransport.CloseDataConsumerRequestT(
+		const requestOffset = new FbsTransport.CloseDataConsumerRequestT(
 			this.#internal.dataConsumerId
 		).pack(builder);
 
 		this.#channel.requestBinary(
 			FbsRequest.Method.TRANSPORT_CLOSE_DATA_CONSUMER,
 			FbsRequest.Body.FBS_Transport_CloseDataConsumerRequest,
-			closeDataConsumerOffset,
+			requestOffset,
 			this.#internal.transportId
 		).catch(() => {});
 

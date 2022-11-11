@@ -361,15 +361,14 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-
-		const closeProducerOffset = new FbsTransport.CloseProducerRequestT(
+		const requestOffset = new FbsTransport.CloseProducerRequestT(
 			this.#internal.producerId
 		).pack(builder);
 
 		this.#channel.requestBinary(
 			FbsRequest.Method.TRANSPORT_CLOSE_PRODUCER,
 			FbsRequest.Body.FBS_Transport_CloseProducerRequest,
-			closeProducerOffset,
+			requestOffset,
 			this.#internal.transportId
 		).catch(() => {});
 

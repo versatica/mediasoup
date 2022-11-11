@@ -107,8 +107,8 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
         /* Build Request. */
         const builder = this.#channel.bufferBuilder;
-        const closeDataConsumerOffset = new FbsTransport.CloseDataConsumerRequestT(this.#internal.dataConsumerId).pack(builder);
-        this.#channel.requestBinary(FbsRequest.Method.TRANSPORT_CLOSE_DATA_CONSUMER, FbsRequest.Body.FBS_Transport_CloseDataConsumerRequest, closeDataConsumerOffset, this.#internal.transportId).catch(() => { });
+        const requestOffset = new FbsTransport.CloseDataConsumerRequestT(this.#internal.dataConsumerId).pack(builder);
+        this.#channel.requestBinary(FbsRequest.Method.TRANSPORT_CLOSE_DATA_CONSUMER, FbsRequest.Body.FBS_Transport_CloseDataConsumerRequest, requestOffset, this.#internal.transportId).catch(() => { });
         this.emit('@close');
         // Emit observer event.
         this.#observer.safeEmit('close');

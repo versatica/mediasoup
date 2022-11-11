@@ -436,15 +436,14 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-
-		const closeConsumerOffset = new FbsTransport.CloseConsumerRequestT(
+		const requestOffset = new FbsTransport.CloseConsumerRequestT(
 			this.#internal.consumerId
 		).pack(builder);
 
 		this.#channel.requestBinary(
 			FbsRequest.Method.TRANSPORT_CLOSE_CONSUMER,
 			FbsRequest.Body.FBS_Transport_CloseConsumerRequest,
-			closeConsumerOffset,
+			requestOffset,
 			this.#internal.transportId
 		).catch(() => {});
 

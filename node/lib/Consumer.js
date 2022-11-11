@@ -160,8 +160,8 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
         /* Build Request. */
         const builder = this.#channel.bufferBuilder;
-        const closeConsumerOffset = new FbsTransport.CloseConsumerRequestT(this.#internal.consumerId).pack(builder);
-        this.#channel.requestBinary(FbsRequest.Method.TRANSPORT_CLOSE_CONSUMER, FbsRequest.Body.FBS_Transport_CloseConsumerRequest, closeConsumerOffset, this.#internal.transportId).catch(() => { });
+        const requestOffset = new FbsTransport.CloseConsumerRequestT(this.#internal.consumerId).pack(builder);
+        this.#channel.requestBinary(FbsRequest.Method.TRANSPORT_CLOSE_CONSUMER, FbsRequest.Body.FBS_Transport_CloseConsumerRequest, requestOffset, this.#internal.transportId).catch(() => { });
         this.emit('@close');
         // Emit observer event.
         this.#observer.safeEmit('close');

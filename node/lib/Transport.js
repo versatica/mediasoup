@@ -122,8 +122,8 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.payloadChannel.removeAllListeners(this.internal.transportId);
         /* Build Request. */
         const builder = this.channel.bufferBuilder;
-        const closeTransportOffset = new FbsRouter.CloseTransportRequestT(this.internal.transportId).pack(builder);
-        this.channel.requestBinary(FbsRequest.Method.ROUTER_CLOSE_TRANSPORT, FbsRequest.Body.FBS_Router_CloseTransportRequest, closeTransportOffset, this.internal.routerId).catch(() => { });
+        const requestOffset = new FbsRouter.CloseTransportRequestT(this.internal.transportId).pack(builder);
+        this.channel.requestBinary(FbsRequest.Method.ROUTER_CLOSE_TRANSPORT, FbsRequest.Body.FBS_Router_CloseTransportRequest, requestOffset, this.internal.routerId).catch(() => { });
         // Close every Producer.
         for (const producer of this.#producers.values()) {
             producer.transportClosed();
@@ -275,8 +275,8 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('setMaxIncomingBitrate() [bitrate:%s]', bitrate);
         /* Build Request. */
         const builder = this.channel.bufferBuilder;
-        const setMaxIncomingBitrateOffset = new FbsTransport.SetMaxIncomingBitrateRequestT(bitrate).pack(builder);
-        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE, FbsRequest.Body.FBS_Transport_SetMaxIncomingBitrateRequest, setMaxIncomingBitrateOffset, this.internal.routerId);
+        const requestOffset = new FbsTransport.SetMaxIncomingBitrateRequestT(bitrate).pack(builder);
+        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE, FbsRequest.Body.FBS_Transport_SetMaxIncomingBitrateRequest, requestOffset, this.internal.routerId);
     }
     /**
      * Set maximum outgoing bitrate for sending media.
@@ -285,8 +285,8 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('setMaxOutgoingBitrate() [bitrate:%s]', bitrate);
         /* Build Request. */
         const builder = this.channel.bufferBuilder;
-        const setMaxOutgoingBitrateOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(bitrate).pack(builder);
-        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE, FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest, setMaxOutgoingBitrateOffset, this.internal.routerId);
+        const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(bitrate).pack(builder);
+        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE, FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest, requestOffset, this.internal.routerId);
     }
     /**
      * Create a Producer.
@@ -576,8 +576,8 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         logger.debug('pause()');
         /* Build Request. */
         const builder = this.channel.bufferBuilder;
-        const enableTraceEventOffset = new FbsTransport.EnableTraceEventRequestT(types).pack(builder);
-        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT, FbsRequest.Body.FBS_Transport_EnableTraceEventRequest, enableTraceEventOffset, this.internal.routerId);
+        const requestOffset = new FbsTransport.EnableTraceEventRequestT(types).pack(builder);
+        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT, FbsRequest.Body.FBS_Transport_EnableTraceEventRequest, requestOffset, this.internal.routerId);
     }
     getNextSctpStreamId() {
         if (!this.#data.sctpParameters ||

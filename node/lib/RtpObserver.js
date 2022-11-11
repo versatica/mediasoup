@@ -85,8 +85,8 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
         /* Build Request. */
         const builder = this.channel.bufferBuilder;
-        const closeTransportOffset = new FbsRouter.CloseRtpObserverRequestT(this.internal.rtpObserverId).pack(builder);
-        this.channel.requestBinary(FbsRequest.Method.ROUTER_CLOSE_RTP_OBSERVER, FbsRequest.Body.FBS_Router_CloseRtpObserverRequest, closeTransportOffset, this.internal.routerId).catch(() => { });
+        const requestOffset = new FbsRouter.CloseRtpObserverRequestT(this.internal.rtpObserverId).pack(builder);
+        this.channel.requestBinary(FbsRequest.Method.ROUTER_CLOSE_RTP_OBSERVER, FbsRequest.Body.FBS_Router_CloseRtpObserverRequest, requestOffset, this.internal.routerId).catch(() => { });
         this.emit('@close');
         // Emit observer event.
         this.#observer.safeEmit('close');

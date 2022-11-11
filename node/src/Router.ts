@@ -276,13 +276,13 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		// Get flatbuffer builder.
 		const builder = this.#channel.bufferBuilder;
-		const bodyOffset = new FbsRequest.CloseRouterRequestT(
+		const requestOffset = new FbsRequest.CloseRouterRequestT(
 			this.#internal.routerId).pack(builder);
 
 		this.#channel.requestBinary(
 			FbsRequest.Method.WORKER_CLOSE_ROUTER,
 			FbsRequest.Body.FBS_Worker_CloseRouterRequest,
-			bodyOffset)
+			requestOffset)
 			.catch(() => {});
 
 		// Close every Transport.
@@ -488,7 +488,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			preferTcp
 		);
 
-		const createWebRtcTransportOffset = new FbsRouter.CreateWebRtcTransportRequestT(
+		const requestOffset = new FbsRouter.CreateWebRtcTransportRequestT(
 			transportId, webRtcTransportOptions
 		).pack(builder);
 
@@ -497,7 +497,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 				? FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER
 				: FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT,
 			FbsRequest.Body.FBS_Router_CreateWebRtcTransportRequest,
-			createWebRtcTransportOffset,
+			requestOffset,
 			this.#internal.routerId
 		);
 
@@ -602,7 +602,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-
 		const transportListenIp =
 			new FbsTransport.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
 
@@ -627,14 +626,14 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			srtpCryptoSuite
 		);
 
-		const createPlainTransportOffset = new FbsRouter.CreatePlainTransportRequestT(
+		const requestOffset = new FbsRouter.CreatePlainTransportRequestT(
 			transportId, plainTransportOptions
 		).pack(builder);
 
 		const response = await this.#channel.requestBinary(
 			FbsRequest.Method.ROUTER_CREATE_PLAIN_TRANSPORT,
 			FbsRequest.Body.FBS_Router_CreatePlainTransportRequest,
-			createPlainTransportOffset,
+			requestOffset,
 			this.#internal.routerId
 		);
 
@@ -734,7 +733,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-
 		const transportListenIp =
 			new FbsTransport.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
 
@@ -757,14 +755,14 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			enableSrtp
 		);
 
-		const createPipeTransportOffset = new FbsRouter.CreatePipeTransportRequestT(
+		const requestOffset = new FbsRouter.CreatePipeTransportRequestT(
 			transportId, pipeTransportOptions
 		).pack(builder);
 
 		const response = await this.#channel.requestBinary(
 			FbsRequest.Method.ROUTER_CREATE_PIPE_TRANSPORT,
 			FbsRequest.Body.FBS_Router_CreatePipeTransportRequest,
-			createPipeTransportOffset,
+			requestOffset,
 			this.#internal.routerId
 		);
 
@@ -843,7 +841,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-
 		const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(
 			true /* direct */,
 			maxMessageSize,
@@ -859,14 +856,14 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			baseTransportOptions
 		);
 
-		const createDirectTransportOffset = new FbsRouter.CreateDirectTransportRequestT(
+		const requestOffset = new FbsRouter.CreateDirectTransportRequestT(
 			transportId, directTransportOptions
 		).pack(builder);
 
 		const response = await this.#channel.requestBinary(
 			FbsRequest.Method.ROUTER_CREATE_DIRECT_TRANSPORT,
 			FbsRequest.Body.FBS_Router_CreateDirectTransportRequest,
-			createDirectTransportOffset,
+			requestOffset,
 			this.#internal.routerId
 		);
 
@@ -1231,12 +1228,11 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-
 		const activeRtpObserverOptions = new FbsRouter.ActiveSpeakerObserverOptionsT(
 			interval
 		);
 
-		const createActiveSpeakerObserverOffset =
+		const requestOffset =
 			new FbsRouter.CreateActiveSpeakerObserverRequestT(
 				rtpObserverId,
 				activeRtpObserverOptions
@@ -1245,7 +1241,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		await this.#channel.requestBinary(
 			FbsRequest.Method.ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER,
 			FbsRequest.Body.FBS_Router_CreateActiveSpeakerObserverRequest,
-			createActiveSpeakerObserverOffset,
+			requestOffset,
 			this.#internal.routerId
 		);
 
@@ -1304,14 +1300,13 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-
 		const audioLevelObserverOptions = new FbsRouter.AudioLevelObserverOptionsT(
 			maxEntries,
 			threshold,
 			interval
 		);
 
-		const createAudioLevelObserverOffset = new FbsRouter.CreateAudioLevelObserverRequestT(
+		const requestOffset = new FbsRouter.CreateAudioLevelObserverRequestT(
 			rtpObserverId,
 			audioLevelObserverOptions
 		).pack(builder);
@@ -1319,7 +1314,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		await this.#channel.requestBinary(
 			FbsRequest.Method.ROUTER_CREATE_AUDIO_LEVEL_OBSERVER,
 			FbsRequest.Body.FBS_Router_CreateAudioLevelObserverRequest,
-			createAudioLevelObserverOffset,
+			requestOffset,
 			this.#internal.routerId
 		);
 

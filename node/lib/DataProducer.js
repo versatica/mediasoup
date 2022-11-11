@@ -101,8 +101,8 @@ class DataProducer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
         /* Build Request. */
         const builder = this.#channel.bufferBuilder;
-        const closeDataProducerOffset = new FbsTransport.CloseDataProducerRequestT(this.#internal.dataProducerId).pack(builder);
-        this.#channel.requestBinary(FbsRequest.Method.TRANSPORT_CLOSE_DATA_PRODUCER, FbsRequest.Body.FBS_Transport_CloseDataProducerRequest, closeDataProducerOffset, this.#internal.transportId).catch(() => { });
+        const requestOffset = new FbsTransport.CloseDataProducerRequestT(this.#internal.dataProducerId).pack(builder);
+        this.#channel.requestBinary(FbsRequest.Method.TRANSPORT_CLOSE_DATA_PRODUCER, FbsRequest.Body.FBS_Transport_CloseDataProducerRequest, requestOffset, this.#internal.transportId).catch(() => { });
         this.emit('@close');
         // Emit observer event.
         this.#observer.safeEmit('close');

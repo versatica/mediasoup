@@ -127,8 +127,8 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         this.#payloadChannel.removeAllListeners(this.#internal.producerId);
         /* Build Request. */
         const builder = this.#channel.bufferBuilder;
-        const closeProducerOffset = new FbsTransport.CloseProducerRequestT(this.#internal.producerId).pack(builder);
-        this.#channel.requestBinary(FbsRequest.Method.TRANSPORT_CLOSE_PRODUCER, FbsRequest.Body.FBS_Transport_CloseProducerRequest, closeProducerOffset, this.#internal.transportId).catch(() => { });
+        const requestOffset = new FbsTransport.CloseProducerRequestT(this.#internal.producerId).pack(builder);
+        this.#channel.requestBinary(FbsRequest.Method.TRANSPORT_CLOSE_PRODUCER, FbsRequest.Body.FBS_Transport_CloseProducerRequest, requestOffset, this.#internal.transportId).catch(() => { });
         this.emit('@close');
         // Emit observer event.
         this.#observer.safeEmit('close');

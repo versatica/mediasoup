@@ -166,15 +166,14 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		/* Build Request. */
 
 		const builder = this.channel.bufferBuilder;
-
-		const closeTransportOffset = new FbsRouter.CloseRtpObserverRequestT(
+		const requestOffset = new FbsRouter.CloseRtpObserverRequestT(
 			this.internal.rtpObserverId
 		).pack(builder);
 
 		this.channel.requestBinary(
 			FbsRequest.Method.ROUTER_CLOSE_RTP_OBSERVER,
 			FbsRequest.Body.FBS_Router_CloseRtpObserverRequest,
-			closeTransportOffset,
+			requestOffset,
 			this.internal.routerId
 		).catch(() => {});
 
