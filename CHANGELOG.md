@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* Node: Compile TypeScript code on `postinstall` (PR #).
+* Node: Compile TypeScript code on `postinstall` (PR #954).
 
 
 ### 3.11.3
