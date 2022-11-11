@@ -4,6 +4,8 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { SctpStreamParameters } from './SctpParameters';
+import * as FbsTransport from './fbs/transport_generated';
+import * as FbsRequest from './fbs/request_generated';
 
 export type DataConsumerOptions =
 {
@@ -243,10 +245,20 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#channel.removeAllListeners(this.#internal.dataConsumerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
 
-		const reqData = { dataConsumerId: this.#internal.dataConsumerId };
+		/* Build Request. */
 
-		this.#channel.request('transport.closeDataConsumer', this.#internal.transportId, reqData)
-			.catch(() => {});
+		const builder = this.#channel.bufferBuilder;
+
+		const closeDataConsumerOffset = new FbsTransport.CloseDataConsumerRequestT(
+			this.#internal.dataConsumerId
+		).pack(builder);
+
+		this.#channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_CLOSE_DATA_CONSUMER,
+			FbsRequest.Body.FBS_Transport_CloseDataConsumerRequest,
+			closeDataConsumerOffset,
+			this.#internal.transportId
+		).catch(() => {});
 
 		this.emit('@close');
 

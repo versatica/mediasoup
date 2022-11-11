@@ -14,6 +14,10 @@ export { NumSctpStreams, NumSctpStreamsT } from './fbs/sctp-parameters/num-sctp-
 export { SctpParameters, SctpParametersT } from './fbs/sctp-parameters/sctp-parameters';
 export { BaseTransportDump, BaseTransportDumpT } from './fbs/transport/base-transport-dump';
 export { BaseTransportOptions, BaseTransportOptionsT } from './fbs/transport/base-transport-options';
+export { CloseConsumerRequest, CloseConsumerRequestT } from './fbs/transport/close-consumer-request';
+export { CloseDataConsumerRequest, CloseDataConsumerRequestT } from './fbs/transport/close-data-consumer-request';
+export { CloseDataProducerRequest, CloseDataProducerRequestT } from './fbs/transport/close-data-producer-request';
+export { CloseProducerRequest, CloseProducerRequestT } from './fbs/transport/close-producer-request';
 export { ConsumeRequest, ConsumeRequestT } from './fbs/transport/consume-request';
 export { ConsumeResponse, ConsumeResponseT } from './fbs/transport/consume-response';
 export { DirectTransportDump, DirectTransportDumpT } from './fbs/transport/direct-transport-dump';

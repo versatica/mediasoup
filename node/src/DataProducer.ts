@@ -4,6 +4,8 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { SctpStreamParameters } from './SctpParameters';
+import * as FbsTransport from './fbs/transport_generated';
+import * as FbsRequest from './fbs/request_generated';
 
 export type DataProducerOptions =
 {
@@ -220,10 +222,20 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#channel.removeAllListeners(this.#internal.dataProducerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
 
-		const reqData = { dataProducerId: this.#internal.dataProducerId };
+		/* Build Request. */
 
-		this.#channel.request('transport.closeDataProducer', this.#internal.transportId, reqData)
-			.catch(() => {});
+		const builder = this.#channel.bufferBuilder;
+
+		const closeDataProducerOffset = new FbsTransport.CloseDataProducerRequestT(
+			this.#internal.dataProducerId
+		).pack(builder);
+
+		this.#channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_CLOSE_DATA_PRODUCER,
+			FbsRequest.Body.FBS_Transport_CloseDataProducerRequest,
+			closeDataProducerOffset,
+			this.#internal.transportId
+		).catch(() => {});
 
 		this.emit('@close');
 

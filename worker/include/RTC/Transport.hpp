@@ -162,15 +162,15 @@ namespace RTC
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
 		void SetNewProducerIdFromData(json& data, std::string& producerId) const;
-		RTC::Producer* GetProducerFromData(json& data) const;
+		RTC::Producer* GetProducerById(const std::string& producerId) const;
 		void SetNewConsumerIdFromData(json& data, std::string& consumerId) const;
-		RTC::Consumer* GetConsumerFromData(json& data) const;
+		RTC::Consumer* GetConsumerById(const std::string& consumerId) const;
 		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
 		RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const;
 		void SetNewDataProducerIdFromData(json& data, std::string& dataProducerId) const;
-		RTC::DataProducer* GetDataProducerFromData(json& data) const;
+		RTC::DataProducer* GetDataProducerById(const std::string& dataProducerId) const;
 		void SetNewDataConsumerIdFromData(json& data, std::string& dataConsumerId) const;
-		RTC::DataConsumer* GetDataConsumerFromData(json& data) const;
+		RTC::DataConsumer* GetDataConsumerById(const std::string& dataConsumerId) const;
 
 	private:
 		virtual bool IsConnected() const = 0;

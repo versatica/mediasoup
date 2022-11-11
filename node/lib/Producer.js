@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Producer = void 0;
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
+const FbsTransport = require("./fbs/transport_generated");
+const FbsRequest = require("./fbs/request_generated");
 const logger = new Logger_1.Logger('Producer');
 class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -123,9 +125,10 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.#channel.removeAllListeners(this.#internal.producerId);
         this.#payloadChannel.removeAllListeners(this.#internal.producerId);
-        const reqData = { producerId: this.#internal.producerId };
-        this.#channel.request('transport.closeProducer', this.#internal.transportId, reqData)
-            .catch(() => { });
+        /* Build Request. */
+        const builder = this.#channel.bufferBuilder;
+        const closeProducerOffset = new FbsTransport.CloseProducerRequestT(this.#internal.producerId).pack(builder);
+        this.#channel.requestBinary(FbsRequest.Method.TRANSPORT_CLOSE_PRODUCER, FbsRequest.Body.FBS_Transport_CloseProducerRequest, closeProducerOffset, this.#internal.transportId).catch(() => { });
         this.emit('@close');
         // Emit observer event.
         this.#observer.safeEmit('close');

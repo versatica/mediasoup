@@ -10,6 +10,10 @@ const create_direct_transport_request_1 = require("../../fbs/router/create-direc
 const create_pipe_transport_request_1 = require("../../fbs/router/create-pipe-transport-request");
 const create_plain_transport_request_1 = require("../../fbs/router/create-plain-transport-request");
 const create_web_rtc_transport_request_1 = require("../../fbs/router/create-web-rtc-transport-request");
+const close_consumer_request_1 = require("../../fbs/transport/close-consumer-request");
+const close_data_consumer_request_1 = require("../../fbs/transport/close-data-consumer-request");
+const close_data_producer_request_1 = require("../../fbs/transport/close-data-producer-request");
+const close_producer_request_1 = require("../../fbs/transport/close-producer-request");
 const consume_request_1 = require("../../fbs/transport/consume-request");
 const enable_trace_event_request_1 = require("../../fbs/transport/enable-trace-event-request");
 const set_max_incoming_bitrate_request_1 = require("../../fbs/transport/set-max-incoming-bitrate-request");
@@ -39,6 +43,10 @@ var Body;
     Body[Body["FBS_Transport_SetMaxOutgoingBitrateRequest"] = 15] = "FBS_Transport_SetMaxOutgoingBitrateRequest";
     Body[Body["FBS_Transport_ConsumeRequest"] = 16] = "FBS_Transport_ConsumeRequest";
     Body[Body["FBS_Transport_EnableTraceEventRequest"] = 17] = "FBS_Transport_EnableTraceEventRequest";
+    Body[Body["FBS_Transport_CloseProducerRequest"] = 18] = "FBS_Transport_CloseProducerRequest";
+    Body[Body["FBS_Transport_CloseConsumerRequest"] = 19] = "FBS_Transport_CloseConsumerRequest";
+    Body[Body["FBS_Transport_CloseDataProducerRequest"] = 20] = "FBS_Transport_CloseDataProducerRequest";
+    Body[Body["FBS_Transport_CloseDataConsumerRequest"] = 21] = "FBS_Transport_CloseDataConsumerRequest";
 })(Body = exports.Body || (exports.Body = {}));
 function unionToBody(type, accessor) {
     switch (Body[type]) {
@@ -60,6 +68,10 @@ function unionToBody(type, accessor) {
         case 'FBS_Transport_SetMaxOutgoingBitrateRequest': return accessor(new set_max_outgoing_bitrate_request_1.SetMaxOutgoingBitrateRequest());
         case 'FBS_Transport_ConsumeRequest': return accessor(new consume_request_1.ConsumeRequest());
         case 'FBS_Transport_EnableTraceEventRequest': return accessor(new enable_trace_event_request_1.EnableTraceEventRequest());
+        case 'FBS_Transport_CloseProducerRequest': return accessor(new close_producer_request_1.CloseProducerRequest());
+        case 'FBS_Transport_CloseConsumerRequest': return accessor(new close_consumer_request_1.CloseConsumerRequest());
+        case 'FBS_Transport_CloseDataProducerRequest': return accessor(new close_data_producer_request_1.CloseDataProducerRequest());
+        case 'FBS_Transport_CloseDataConsumerRequest': return accessor(new close_data_consumer_request_1.CloseDataConsumerRequest());
         default: return null;
     }
 }
@@ -84,6 +96,10 @@ function unionListToBody(type, accessor, index) {
         case 'FBS_Transport_SetMaxOutgoingBitrateRequest': return accessor(index, new set_max_outgoing_bitrate_request_1.SetMaxOutgoingBitrateRequest());
         case 'FBS_Transport_ConsumeRequest': return accessor(index, new consume_request_1.ConsumeRequest());
         case 'FBS_Transport_EnableTraceEventRequest': return accessor(index, new enable_trace_event_request_1.EnableTraceEventRequest());
+        case 'FBS_Transport_CloseProducerRequest': return accessor(index, new close_producer_request_1.CloseProducerRequest());
+        case 'FBS_Transport_CloseConsumerRequest': return accessor(index, new close_consumer_request_1.CloseConsumerRequest());
+        case 'FBS_Transport_CloseDataProducerRequest': return accessor(index, new close_data_producer_request_1.CloseDataProducerRequest());
+        case 'FBS_Transport_CloseDataConsumerRequest': return accessor(index, new close_data_consumer_request_1.CloseDataConsumerRequest());
         default: return null;
     }
 }

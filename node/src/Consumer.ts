@@ -9,6 +9,8 @@ import {
 	RtpCapabilities,
 	RtpParameters
 } from './RtpParameters';
+import * as FbsTransport from './fbs/transport_generated';
+import * as FbsRequest from './fbs/request_generated';
 
 export type ConsumerOptions =
 {
@@ -431,10 +433,20 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		this.#channel.removeAllListeners(this.#internal.consumerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
 
-		const reqData = { consumerId: this.#internal.consumerId };
+		/* Build Request. */
 
-		this.#channel.request('transport.closeConsumer', this.#internal.transportId, reqData)
-			.catch(() => {});
+		const builder = this.#channel.bufferBuilder;
+
+		const closeConsumerOffset = new FbsTransport.CloseConsumerRequestT(
+			this.#internal.consumerId
+		).pack(builder);
+
+		this.#channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_CLOSE_CONSUMER,
+			FbsRequest.Body.FBS_Transport_CloseConsumerRequest,
+			closeConsumerOffset,
+			this.#internal.transportId
+		).catch(() => {});
 
 		this.emit('@close');
 

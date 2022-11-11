@@ -4,6 +4,8 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters } from './RtpParameters';
+import * as FbsTransport from './fbs/transport_generated';
+import * as FbsRequest from './fbs/request_generated';
 
 export type ProducerOptions =
 {
@@ -356,10 +358,20 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		this.#channel.removeAllListeners(this.#internal.producerId);
 		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
 
-		const reqData = { producerId: this.#internal.producerId };
+		/* Build Request. */
 
-		this.#channel.request('transport.closeProducer', this.#internal.transportId, reqData)
-			.catch(() => {});
+		const builder = this.#channel.bufferBuilder;
+
+		const closeProducerOffset = new FbsTransport.CloseProducerRequestT(
+			this.#internal.producerId
+		).pack(builder);
+
+		this.#channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_CLOSE_PRODUCER,
+			FbsRequest.Body.FBS_Transport_CloseProducerRequest,
+			closeProducerOffset,
+			this.#internal.transportId
+		).catch(() => {});
 
 		this.emit('@close');
 

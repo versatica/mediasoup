@@ -239,11 +239,15 @@ enum class Body : uint8_t {
   FBS_Transport_SetMaxOutgoingBitrateRequest = 15,
   FBS_Transport_ConsumeRequest = 16,
   FBS_Transport_EnableTraceEventRequest = 17,
+  FBS_Transport_CloseProducerRequest = 18,
+  FBS_Transport_CloseConsumerRequest = 19,
+  FBS_Transport_CloseDataProducerRequest = 20,
+  FBS_Transport_CloseDataConsumerRequest = 21,
   MIN = NONE,
-  MAX = FBS_Transport_EnableTraceEventRequest
+  MAX = FBS_Transport_CloseDataConsumerRequest
 };
 
-inline const Body (&EnumValuesBody())[18] {
+inline const Body (&EnumValuesBody())[22] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_UpdateSettingsRequest,
@@ -262,13 +266,17 @@ inline const Body (&EnumValuesBody())[18] {
     Body::FBS_Transport_SetMaxIncomingBitrateRequest,
     Body::FBS_Transport_SetMaxOutgoingBitrateRequest,
     Body::FBS_Transport_ConsumeRequest,
-    Body::FBS_Transport_EnableTraceEventRequest
+    Body::FBS_Transport_EnableTraceEventRequest,
+    Body::FBS_Transport_CloseProducerRequest,
+    Body::FBS_Transport_CloseConsumerRequest,
+    Body::FBS_Transport_CloseDataProducerRequest,
+    Body::FBS_Transport_CloseDataConsumerRequest
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[19] = {
+  static const char * const names[23] = {
     "NONE",
     "FBS_Worker_UpdateSettingsRequest",
     "FBS_Worker_CreateWebRtcServerRequest",
@@ -287,13 +295,17 @@ inline const char * const *EnumNamesBody() {
     "FBS_Transport_SetMaxOutgoingBitrateRequest",
     "FBS_Transport_ConsumeRequest",
     "FBS_Transport_EnableTraceEventRequest",
+    "FBS_Transport_CloseProducerRequest",
+    "FBS_Transport_CloseConsumerRequest",
+    "FBS_Transport_CloseDataProducerRequest",
+    "FBS_Transport_CloseDataConsumerRequest",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameBody(Body e) {
-  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Transport_EnableTraceEventRequest)) return "";
+  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Transport_CloseDataConsumerRequest)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesBody()[index];
 }
@@ -368,6 +380,22 @@ template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
 
 template<> struct BodyTraits<FBS::Transport::EnableTraceEventRequest> {
   static const Body enum_value = Body::FBS_Transport_EnableTraceEventRequest;
+};
+
+template<> struct BodyTraits<FBS::Transport::CloseProducerRequest> {
+  static const Body enum_value = Body::FBS_Transport_CloseProducerRequest;
+};
+
+template<> struct BodyTraits<FBS::Transport::CloseConsumerRequest> {
+  static const Body enum_value = Body::FBS_Transport_CloseConsumerRequest;
+};
+
+template<> struct BodyTraits<FBS::Transport::CloseDataProducerRequest> {
+  static const Body enum_value = Body::FBS_Transport_CloseDataProducerRequest;
+};
+
+template<> struct BodyTraits<FBS::Transport::CloseDataConsumerRequest> {
+  static const Body enum_value = Body::FBS_Transport_CloseDataConsumerRequest;
 };
 
 bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body type);
@@ -452,6 +480,18 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Transport::EnableTraceEventRequest *body_as_FBS_Transport_EnableTraceEventRequest() const {
     return body_type() == FBS::Request::Body::FBS_Transport_EnableTraceEventRequest ? static_cast<const FBS::Transport::EnableTraceEventRequest *>(body()) : nullptr;
   }
+  const FBS::Transport::CloseProducerRequest *body_as_FBS_Transport_CloseProducerRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Transport_CloseProducerRequest ? static_cast<const FBS::Transport::CloseProducerRequest *>(body()) : nullptr;
+  }
+  const FBS::Transport::CloseConsumerRequest *body_as_FBS_Transport_CloseConsumerRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Transport_CloseConsumerRequest ? static_cast<const FBS::Transport::CloseConsumerRequest *>(body()) : nullptr;
+  }
+  const FBS::Transport::CloseDataProducerRequest *body_as_FBS_Transport_CloseDataProducerRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Transport_CloseDataProducerRequest ? static_cast<const FBS::Transport::CloseDataProducerRequest *>(body()) : nullptr;
+  }
+  const FBS::Transport::CloseDataConsumerRequest *body_as_FBS_Transport_CloseDataConsumerRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Transport_CloseDataConsumerRequest ? static_cast<const FBS::Transport::CloseDataConsumerRequest *>(body()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_ID, 4) &&
@@ -531,6 +571,22 @@ template<> inline const FBS::Transport::ConsumeRequest *Request::body_as<FBS::Tr
 
 template<> inline const FBS::Transport::EnableTraceEventRequest *Request::body_as<FBS::Transport::EnableTraceEventRequest>() const {
   return body_as_FBS_Transport_EnableTraceEventRequest();
+}
+
+template<> inline const FBS::Transport::CloseProducerRequest *Request::body_as<FBS::Transport::CloseProducerRequest>() const {
+  return body_as_FBS_Transport_CloseProducerRequest();
+}
+
+template<> inline const FBS::Transport::CloseConsumerRequest *Request::body_as<FBS::Transport::CloseConsumerRequest>() const {
+  return body_as_FBS_Transport_CloseConsumerRequest();
+}
+
+template<> inline const FBS::Transport::CloseDataProducerRequest *Request::body_as<FBS::Transport::CloseDataProducerRequest>() const {
+  return body_as_FBS_Transport_CloseDataProducerRequest();
+}
+
+template<> inline const FBS::Transport::CloseDataConsumerRequest *Request::body_as<FBS::Transport::CloseDataConsumerRequest>() const {
+  return body_as_FBS_Transport_CloseDataConsumerRequest();
 }
 
 struct RequestBuilder {
@@ -667,6 +723,22 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     }
     case Body::FBS_Transport_EnableTraceEventRequest: {
       auto ptr = reinterpret_cast<const FBS::Transport::EnableTraceEventRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Transport_CloseProducerRequest: {
+      auto ptr = reinterpret_cast<const FBS::Transport::CloseProducerRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Transport_CloseConsumerRequest: {
+      auto ptr = reinterpret_cast<const FBS::Transport::CloseConsumerRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Transport_CloseDataProducerRequest: {
+      auto ptr = reinterpret_cast<const FBS::Transport::CloseDataProducerRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Transport_CloseDataConsumerRequest: {
+      auto ptr = reinterpret_cast<const FBS::Transport::CloseDataConsumerRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;
@@ -832,7 +904,11 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 13 },
     { flatbuffers::ET_SEQUENCE, 0, 14 },
     { flatbuffers::ET_SEQUENCE, 0, 15 },
-    { flatbuffers::ET_SEQUENCE, 0, 16 }
+    { flatbuffers::ET_SEQUENCE, 0, 16 },
+    { flatbuffers::ET_SEQUENCE, 0, 17 },
+    { flatbuffers::ET_SEQUENCE, 0, 18 },
+    { flatbuffers::ET_SEQUENCE, 0, 19 },
+    { flatbuffers::ET_SEQUENCE, 0, 20 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::UpdateSettingsRequestTypeTable,
@@ -851,7 +927,11 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Transport::SetMaxIncomingBitrateRequestTypeTable,
     FBS::Transport::SetMaxOutgoingBitrateRequestTypeTable,
     FBS::Transport::ConsumeRequestTypeTable,
-    FBS::Transport::EnableTraceEventRequestTypeTable
+    FBS::Transport::EnableTraceEventRequestTypeTable,
+    FBS::Transport::CloseProducerRequestTypeTable,
+    FBS::Transport::CloseConsumerRequestTypeTable,
+    FBS::Transport::CloseDataProducerRequestTypeTable,
+    FBS::Transport::CloseDataConsumerRequestTypeTable
   };
   static const char * const names[] = {
     "NONE",
@@ -871,10 +951,14 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Transport_SetMaxIncomingBitrateRequest",
     "FBS_Transport_SetMaxOutgoingBitrateRequest",
     "FBS_Transport_ConsumeRequest",
-    "FBS_Transport_EnableTraceEventRequest"
+    "FBS_Transport_EnableTraceEventRequest",
+    "FBS_Transport_CloseProducerRequest",
+    "FBS_Transport_CloseConsumerRequest",
+    "FBS_Transport_CloseDataProducerRequest",
+    "FBS_Transport_CloseDataConsumerRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 18, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 22, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

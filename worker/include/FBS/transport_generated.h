@@ -84,6 +84,18 @@ struct SetMaxOutgoingBitrateRequestBuilder;
 struct EnableTraceEventRequest;
 struct EnableTraceEventRequestBuilder;
 
+struct CloseProducerRequest;
+struct CloseProducerRequestBuilder;
+
+struct CloseConsumerRequest;
+struct CloseConsumerRequestBuilder;
+
+struct CloseDataProducerRequest;
+struct CloseDataProducerRequestBuilder;
+
+struct CloseDataConsumerRequest;
+struct CloseDataConsumerRequestBuilder;
+
 inline const flatbuffers::TypeTable *TransportListenIpTypeTable();
 
 inline const flatbuffers::TypeTable *ConsumeRequestTypeTable();
@@ -125,6 +137,14 @@ inline const flatbuffers::TypeTable *SetMaxIncomingBitrateRequestTypeTable();
 inline const flatbuffers::TypeTable *SetMaxOutgoingBitrateRequestTypeTable();
 
 inline const flatbuffers::TypeTable *EnableTraceEventRequestTypeTable();
+
+inline const flatbuffers::TypeTable *CloseProducerRequestTypeTable();
+
+inline const flatbuffers::TypeTable *CloseConsumerRequestTypeTable();
+
+inline const flatbuffers::TypeTable *CloseDataProducerRequestTypeTable();
+
+inline const flatbuffers::TypeTable *CloseDataConsumerRequestTypeTable();
 
 enum class TransportProtocol : uint8_t {
   UDP = 1,
@@ -2205,6 +2225,226 @@ inline flatbuffers::Offset<EnableTraceEventRequest> CreateEnableTraceEventReques
       events__);
 }
 
+struct CloseProducerRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CloseProducerRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CloseProducerRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PRODUCERID = 4
+  };
+  const flatbuffers::String *producerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_PRODUCERID);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_PRODUCERID) &&
+           verifier.VerifyString(producerId()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CloseProducerRequestBuilder {
+  typedef CloseProducerRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_producerId(flatbuffers::Offset<flatbuffers::String> producerId) {
+    fbb_.AddOffset(CloseProducerRequest::VT_PRODUCERID, producerId);
+  }
+  explicit CloseProducerRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CloseProducerRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CloseProducerRequest>(end);
+    fbb_.Required(o, CloseProducerRequest::VT_PRODUCERID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CloseProducerRequest> CreateCloseProducerRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> producerId = 0) {
+  CloseProducerRequestBuilder builder_(_fbb);
+  builder_.add_producerId(producerId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CloseProducerRequest> CreateCloseProducerRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *producerId = nullptr) {
+  auto producerId__ = producerId ? _fbb.CreateString(producerId) : 0;
+  return FBS::Transport::CreateCloseProducerRequest(
+      _fbb,
+      producerId__);
+}
+
+struct CloseConsumerRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CloseConsumerRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CloseConsumerRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_CONSUMERID = 4
+  };
+  const flatbuffers::String *consumerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_CONSUMERID);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_CONSUMERID) &&
+           verifier.VerifyString(consumerId()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CloseConsumerRequestBuilder {
+  typedef CloseConsumerRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_consumerId(flatbuffers::Offset<flatbuffers::String> consumerId) {
+    fbb_.AddOffset(CloseConsumerRequest::VT_CONSUMERID, consumerId);
+  }
+  explicit CloseConsumerRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CloseConsumerRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CloseConsumerRequest>(end);
+    fbb_.Required(o, CloseConsumerRequest::VT_CONSUMERID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CloseConsumerRequest> CreateCloseConsumerRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> consumerId = 0) {
+  CloseConsumerRequestBuilder builder_(_fbb);
+  builder_.add_consumerId(consumerId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CloseConsumerRequest> CreateCloseConsumerRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *consumerId = nullptr) {
+  auto consumerId__ = consumerId ? _fbb.CreateString(consumerId) : 0;
+  return FBS::Transport::CreateCloseConsumerRequest(
+      _fbb,
+      consumerId__);
+}
+
+struct CloseDataProducerRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CloseDataProducerRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CloseDataProducerRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_DATAPRODUCERID = 4
+  };
+  const flatbuffers::String *dataProducerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_DATAPRODUCERID);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_DATAPRODUCERID) &&
+           verifier.VerifyString(dataProducerId()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CloseDataProducerRequestBuilder {
+  typedef CloseDataProducerRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_dataProducerId(flatbuffers::Offset<flatbuffers::String> dataProducerId) {
+    fbb_.AddOffset(CloseDataProducerRequest::VT_DATAPRODUCERID, dataProducerId);
+  }
+  explicit CloseDataProducerRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CloseDataProducerRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CloseDataProducerRequest>(end);
+    fbb_.Required(o, CloseDataProducerRequest::VT_DATAPRODUCERID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CloseDataProducerRequest> CreateCloseDataProducerRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> dataProducerId = 0) {
+  CloseDataProducerRequestBuilder builder_(_fbb);
+  builder_.add_dataProducerId(dataProducerId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CloseDataProducerRequest> CreateCloseDataProducerRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *dataProducerId = nullptr) {
+  auto dataProducerId__ = dataProducerId ? _fbb.CreateString(dataProducerId) : 0;
+  return FBS::Transport::CreateCloseDataProducerRequest(
+      _fbb,
+      dataProducerId__);
+}
+
+struct CloseDataConsumerRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CloseDataConsumerRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CloseDataConsumerRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_DATACONSUMERID = 4
+  };
+  const flatbuffers::String *dataConsumerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_DATACONSUMERID);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_DATACONSUMERID) &&
+           verifier.VerifyString(dataConsumerId()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CloseDataConsumerRequestBuilder {
+  typedef CloseDataConsumerRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_dataConsumerId(flatbuffers::Offset<flatbuffers::String> dataConsumerId) {
+    fbb_.AddOffset(CloseDataConsumerRequest::VT_DATACONSUMERID, dataConsumerId);
+  }
+  explicit CloseDataConsumerRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CloseDataConsumerRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CloseDataConsumerRequest>(end);
+    fbb_.Required(o, CloseDataConsumerRequest::VT_DATACONSUMERID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CloseDataConsumerRequest> CreateCloseDataConsumerRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> dataConsumerId = 0) {
+  CloseDataConsumerRequestBuilder builder_(_fbb);
+  builder_.add_dataConsumerId(dataConsumerId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CloseDataConsumerRequest> CreateCloseDataConsumerRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *dataConsumerId = nullptr) {
+  auto dataConsumerId__ = dataConsumerId ? _fbb.CreateString(dataConsumerId) : 0;
+  return FBS::Transport::CreateCloseDataConsumerRequest(
+      _fbb,
+      dataConsumerId__);
+}
+
 inline bool VerifyTransportDumpData(flatbuffers::Verifier &verifier, const void *obj, TransportDumpData type) {
   switch (type) {
     case TransportDumpData::NONE: {
@@ -2747,6 +2987,58 @@ inline const flatbuffers::TypeTable *EnableTraceEventRequestTypeTable() {
   };
   static const char * const names[] = {
     "events"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CloseProducerRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "producerId"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CloseConsumerRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "consumerId"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CloseDataProducerRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "dataProducerId"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CloseDataConsumerRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "dataConsumerId"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names

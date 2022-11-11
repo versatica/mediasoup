@@ -1352,8 +1352,10 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_PRODUCER:
 			{
+				auto body = request->_data->body_as<FBS::Transport::CloseProducerRequest>();
+
 				// This may throw.
-				RTC::Producer* producer = GetProducerFromData(request->data);
+				RTC::Producer* producer = GetProducerById(body->producerId()->str());
 
 				// Remove it from the RtpListener.
 				this->rtpListener.RemoveProducer(producer);
@@ -1387,8 +1389,10 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_CONSUMER:
 			{
+				auto body = request->_data->body_as<FBS::Transport::CloseConsumerRequest>();
+
 				// This may throw.
-				RTC::Consumer* consumer = GetConsumerFromData(request->data);
+				RTC::Consumer* consumer = GetConsumerById(body->consumerId()->str());
 
 				// Remove it from the maps.
 				this->mapConsumers.erase(consumer->id);
@@ -1428,8 +1432,10 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATA_PRODUCER:
 			{
+				auto body = request->_data->body_as<FBS::Transport::CloseDataProducerRequest>();
+
 				// This may throw.
-				RTC::DataProducer* dataProducer = GetDataProducerFromData(request->data);
+				RTC::DataProducer* dataProducer = GetDataProducerById(body->dataProducerId()->str());
 
 				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
 				{
@@ -1461,8 +1467,10 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATA_CONSUMER:
 			{
+				auto body = request->_data->body_as<FBS::Transport::CloseDataConsumerRequest>();
+
 				// This may throw.
-				RTC::DataConsumer* dataConsumer = GetDataConsumerFromData(request->data);
+				RTC::DataConsumer* dataConsumer = GetDataConsumerById(body->dataConsumerId()->str());
 
 				// Remove it from the maps.
 				this->mapDataConsumers.erase(dataConsumer->id);
@@ -1723,25 +1731,16 @@ namespace RTC
 		}
 	}
 
-	RTC::Producer* Transport::GetProducerFromData(json& data) const
+	RTC::Producer* Transport::GetProducerById(const std::string& producerId) const
 	{
 		MS_TRACE();
 
-		auto jsonProducerIdIt = data.find("producerId");
-
-		if (jsonProducerIdIt == data.end() || !jsonProducerIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing producerId");
-		}
-
-		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
+		auto it = this->mapProducers.find(producerId);
 
 		if (it == this->mapProducers.end())
 			MS_THROW_ERROR("Producer not found");
 
-		RTC::Producer* producer = it->second;
-
-		return producer;
+		return it->second;
 	}
 
 	void Transport::SetNewConsumerIdFromData(json& data, std::string& consumerId) const
@@ -1763,25 +1762,16 @@ namespace RTC
 		}
 	}
 
-	RTC::Consumer* Transport::GetConsumerFromData(json& data) const
+	RTC::Consumer* Transport::GetConsumerById(const std::string& consumerId) const
 	{
 		MS_TRACE();
 
-		auto jsonConsumerIdIt = data.find("consumerId");
-
-		if (jsonConsumerIdIt == data.end() || !jsonConsumerIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing consumerId");
-		}
-
-		auto it = this->mapConsumers.find(jsonConsumerIdIt->get<std::string>());
+		auto it = this->mapConsumers.find(consumerId);
 
 		if (it == this->mapConsumers.end())
 			MS_THROW_ERROR("Consumer not found");
 
-		RTC::Consumer* consumer = it->second;
-
-		return consumer;
+		return it->second;
 	}
 
 	inline RTC::Consumer* Transport::GetConsumerByMediaSsrc(uint32_t ssrc) const
@@ -1831,25 +1821,16 @@ namespace RTC
 		}
 	}
 
-	RTC::DataProducer* Transport::GetDataProducerFromData(json& data) const
+	RTC::DataProducer* Transport::GetDataProducerById(const std::string& dataProducerId) const
 	{
 		MS_TRACE();
 
-		auto jsonDataProducerIdIt = data.find("dataProducerId");
-
-		if (jsonDataProducerIdIt == data.end() || !jsonDataProducerIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing dataProducerId");
-		}
-
-		auto it = this->mapDataProducers.find(jsonDataProducerIdIt->get<std::string>());
+		auto it = this->mapDataProducers.find(dataProducerId);
 
 		if (it == this->mapDataProducers.end())
 			MS_THROW_ERROR("DataProducer not found");
 
-		RTC::DataProducer* dataProducer = it->second;
-
-		return dataProducer;
+		return it->second;
 	}
 
 	void Transport::SetNewDataConsumerIdFromData(json& data, std::string& dataConsumerId) const
@@ -1871,25 +1852,16 @@ namespace RTC
 		}
 	}
 
-	RTC::DataConsumer* Transport::GetDataConsumerFromData(json& data) const
+	RTC::DataConsumer* Transport::GetDataConsumerById(const std::string& dataConsumerId) const
 	{
 		MS_TRACE();
 
-		auto jsonDataConsumerIdIt = data.find("dataConsumerId");
-
-		if (jsonDataConsumerIdIt == data.end() || !jsonDataConsumerIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing dataConsumerId");
-		}
-
-		auto it = this->mapDataConsumers.find(jsonDataConsumerIdIt->get<std::string>());
+		auto it = this->mapDataConsumers.find(dataConsumerId);
 
 		if (it == this->mapDataConsumers.end())
 			MS_THROW_ERROR("DataConsumer not found");
 
-		RTC::DataConsumer* dataConsumer = it->second;
-
-		return dataConsumer;
+		return it->second;
 	}
 
 	void Transport::HandleRtcpPacket(RTC::RTCP::Packet* packet)

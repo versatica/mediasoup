@@ -82,6 +82,10 @@ union Body {
   FBS.Transport.SetMaxOutgoingBitrateRequest,
   FBS.Transport.ConsumeRequest,
   FBS.Transport.EnableTraceEventRequest,
+  FBS.Transport.CloseProducerRequest,
+  FBS.Transport.CloseConsumerRequest,
+  FBS.Transport.CloseDataProducerRequest,
+  FBS.Transport.CloseDataConsumerRequest,
 }
 
 table Request {
