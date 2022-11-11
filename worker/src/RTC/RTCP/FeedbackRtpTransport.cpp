@@ -455,7 +455,7 @@ namespace RTC
 				size_t representedPackets{ 0u };
 
 				// Fill statuses vector.
-				for (uint8_t i{ 0u }; i < missingPackets && this->context.statuses.size() < 7; ++i)
+				for (uint16_t i{ 0u }; i < missingPackets && this->context.statuses.size() < 7; ++i)
 				{
 					this->context.statuses.emplace_back(Status::NotReceived);
 					representedPackets++;

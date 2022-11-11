@@ -1044,7 +1044,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 					throw new InvalidStateError('original Producer closed');
 
 				// Ensure that producer.paused has not changed in the meanwhile and, if
-				// so, sych the pipeProducer.
+				// so, sync the pipeProducer.
 				if (pipeProducer.paused !== producer.paused)
 				{
 					if (producer.paused)

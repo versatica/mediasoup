@@ -209,10 +209,10 @@ namespace RTC
 				// Trigger 'bufferedamountlow' now.
 				if (this->bufferedAmount <= this->bufferedAmountLowThreshold)
 				{
-					std::string data(R"({"bufferedAmount":")");
+					std::string data(R"({"bufferedAmount":)");
 
 					data.append(std::to_string(this->bufferedAmount));
-					data.append("\"}");
+					data.append("}");
 				}
 				// Force the trigger of 'bufferedamountlow' once there is less or same
 				// buffered data than the given threshold.
@@ -350,10 +350,10 @@ namespace RTC
 			this->forceTriggerBufferedAmountLow = false;
 
 			// Notify the Node DataConsumer.
-			std::string data(R"({"bufferedAmount":")");
+			std::string data(R"({"bufferedAmount":)");
 
 			data.append(std::to_string(this->bufferedAmount));
-			data.append("\"}");
+			data.append("}");
 
 			Channel::ChannelNotifier::Emit(this->id, "bufferedamountlow", data);
 		}

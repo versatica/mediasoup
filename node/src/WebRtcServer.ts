@@ -6,7 +6,7 @@ import { WebRtcTransport } from './WebRtcTransport';
 import { Body as RequestBody, Method, CloseWebRtcServerRequestT } from './fbs/request_generated';
 import * as FbsWebRtcServer from './fbs/webrtcserver_generated';
 
-export interface WebRtcServerListenInfo
+export type WebRtcServerListenInfo =
 {
 	/**
 	 * Network protocol.
@@ -28,7 +28,7 @@ export interface WebRtcServerListenInfo
 	 * Listening port.
 	 */
 	port?: number;
-}
+};
 
 export type WebRtcServerOptions =
 {

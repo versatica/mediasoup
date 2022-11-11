@@ -119,9 +119,9 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 	// clang-format off
 	uint8_t buffer[] =
 	{
-		0b10000000, 0b00000001, 0, 1,
-		0, 0, 0, 4,
-		0, 0, 0, 5
+		0x80, 0x01, 0x00, 0x01,
+		0x00, 0x00, 0x00, 0x04,
+		0x00, 0x00, 0x00, 0x05
 	};
 	// clang-format on
 

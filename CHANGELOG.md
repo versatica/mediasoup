@@ -1,16 +1,61 @@
 # Changelog
 
 
-### Next
+### 3.11.3
 
-* Rtcp enhancements (#914)
+* `ChannelMessageHandlers`: Make `RegisterHandler()` not remove the existing handler if another one with same `id` is given (PR #952).
+
+
+### 3.11.2
+
+* Fix installation issue in Linux due to a bug in ninja latest version 1.11.1 (PR #948).
+
+
+### 3.11.1
+
+* `ActiveSpeakerObserver`: Revert 'dominantspeaker' event changes in PR #941 to avoid breaking changes (PR #947).
+
+
+### 3.11.0
+
+* `Transport`: Remove duplicate call to method (PR #931).
+* RTCP: Adjust maximum compound packet size (PR #934).
+* `DataConsumer`: Fix `bufferedAmount` type to be a number again (PR #936).
+* `ActiveSpeakerObserver`: Fix 'dominantspeaker' event by having a single `Producer` as argument rather than an array with a single `Producer` into it (PR #941).
+* `ActiveSpeakerObserver`: Fix memory leak (PR #942).
+* Fix some libwebrtc issues (PR #944).
+* Tests: Normalize hexadecimal data representation (PR #945).
+* Update NPM deps.
+* `SctpAssociation`: Fix memory violation (PR #943).
+
+
+### 3.10.12
+
+* Fix worker crash due to `std::out_of_range` exception (PR #933).
+* Update NPM deps.
+
+
+### 3.10.11
+
+* RTCP: Fix trailing space needed by `srtp_protect_rtcp()` (PR #929).
+
+
+### 3.10.10
+
+* Fix the JSON serialization for the payload channel `rtp` event (PR #926 by @mhammo).
+* Update NPM deps.
+
+
+### 3.10.9
+
+* RTCP enhancements (PR #914).
 
 
 ### 3.10.8
 
-* `Consumer`: use a bitset instead of a set for supported payload types (#919).
-* RtpPacket: optimize UpdateMid() (#920).
-* Little optimizations and modernization (#916).
+* `Consumer`: use a bitset instead of a set for supported payload types (PR #919).
+* RtpPacket: optimize UpdateMid() (PR #920).
+* Little optimizations and modernization (PR #916).
 * Fix SIGSEGV at `RTC::WebRtcTransport::OnIceServerTupleRemoved()` (PR #915, credits to @ybybwdwd).
 * `WebRtcServer`: Make `port` optional (if not given, a random available port from the `Worker` port range is used) (PR #908 by @satoren).
 

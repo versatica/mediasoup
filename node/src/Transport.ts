@@ -30,7 +30,7 @@ import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
 import * as FbsConsumer from './fbs/consumer_generated';
 import * as FbsTransport from './fbs/transport_generated';
 
-export interface TransportListenIp
+export type TransportListenIp =
 {
 	/**
 	 * Listening IPv4 or IPv6.
@@ -42,21 +42,21 @@ export interface TransportListenIp
 	 * private IP).
 	 */
 	announcedIp?: string;
-}
+};
 
 /**
  * Transport protocol.
  */
 export type TransportProtocol = 'udp' | 'tcp';
 
-export interface TransportTuple
+export type TransportTuple =
 {
 	localIp: string;
 	localPort: number;
 	remoteIp?: string;
 	remotePort?: number;
 	protocol: TransportProtocol;
-}
+};
 
 /**
  * Valid types for 'trace' event.
@@ -66,7 +66,7 @@ export type TransportTraceEventType = 'probation' | 'bwe';
 /**
  * 'trace' event data.
  */
-export interface TransportTraceEventData
+export type TransportTraceEventData =
 {
 	/**
 	 * Trace type.
@@ -87,7 +87,7 @@ export interface TransportTraceEventData
 	 * Per type information.
 	 */
 	info: any;
-}
+};
 
 export type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 

@@ -461,6 +461,21 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeProducer.paused).toBe(true);
 }, 2000);
 
+test('router.pipeToRouter() fails if both Routers belong to the same Worker', async () =>
+{
+	const router1bis = await worker1.createRouter({ mediaCodecs });
+
+	await expect(router1.pipeToRouter(
+		{
+			producerId : videoProducer.id,
+			router     : router1bis
+		}))
+		.rejects
+		.toThrow(Error);
+
+	router1bis.close();
+}, 2000);
+
 test('router.createPipeTransport() with enableRtx succeeds', async () =>
 {
 	const pipeTransport = await router1.createPipeTransport(

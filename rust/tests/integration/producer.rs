@@ -218,146 +218,149 @@ async fn init() -> (Worker, Router, WebRtcTransport, WebRtcTransport) {
 }
 
 #[test]
-fn produce_succeeds() {
+fn produce_succeeds_1() {
     future::block_on(async move {
-        let (_worker, router, transport_1, transport_2) = init().await;
+        let (_worker, router, transport_1, _transport_2) = init().await;
 
-        {
-            let new_producers_count = Arc::new(AtomicUsize::new(0));
+        let new_producers_count = Arc::new(AtomicUsize::new(0));
 
-            transport_1
-                .on_new_producer({
-                    let new_producers_count = Arc::clone(&new_producers_count);
+        transport_1
+            .on_new_producer({
+                let new_producers_count = Arc::clone(&new_producers_count);
 
-                    Arc::new(move |_producer| {
-                        new_producers_count.fetch_add(1, Ordering::SeqCst);
-                    })
+                Arc::new(move |_producer| {
+                    new_producers_count.fetch_add(1, Ordering::SeqCst);
                 })
-                .detach();
+            })
+            .detach();
 
-            let audio_producer = transport_1
-                .produce(audio_producer_options())
-                .await
-                .expect("Failed to produce audio");
+        let audio_producer = transport_1
+            .produce(audio_producer_options())
+            .await
+            .expect("Failed to produce audio");
 
-            assert_eq!(new_producers_count.load(Ordering::SeqCst), 1);
-            assert!(!audio_producer.closed());
-            assert_eq!(audio_producer.kind(), MediaKind::Audio);
-            assert_eq!(audio_producer.r#type(), ProducerType::Simple);
-            assert!(!audio_producer.paused());
-            assert_eq!(audio_producer.score(), vec![]);
-            assert_eq!(
-                audio_producer
-                    .app_data()
-                    .downcast_ref::<ProducerAppData>()
-                    .unwrap()
-                    .foo,
-                1
-            );
-            assert_eq!(
-                audio_producer
-                    .app_data()
-                    .downcast_ref::<ProducerAppData>()
-                    .unwrap()
-                    .bar,
-                "2"
-            );
+        assert_eq!(new_producers_count.load(Ordering::SeqCst), 1);
+        assert!(!audio_producer.closed());
+        assert_eq!(audio_producer.kind(), MediaKind::Audio);
+        assert_eq!(audio_producer.r#type(), ProducerType::Simple);
+        assert!(!audio_producer.paused());
+        assert_eq!(audio_producer.score(), vec![]);
+        assert_eq!(
+            audio_producer
+                .app_data()
+                .downcast_ref::<ProducerAppData>()
+                .unwrap()
+                .foo,
+            1
+        );
+        assert_eq!(
+            audio_producer
+                .app_data()
+                .downcast_ref::<ProducerAppData>()
+                .unwrap()
+                .bar,
+            "2"
+        );
 
-            let router_dump = router.dump().await.expect("Failed to get router dump");
+        let router_dump = router.dump().await.expect("Failed to get router dump");
 
-            assert_eq!(router_dump.map_producer_id_consumer_ids, {
-                let mut map = HashedMap::default();
-                map.insert(audio_producer.id(), HashedSet::default());
-                map
-            });
-            assert_eq!(
-                router_dump.map_consumer_id_producer_id,
-                HashedMap::default()
-            );
+        assert_eq!(router_dump.map_producer_id_consumer_ids, {
+            let mut map = HashedMap::default();
+            map.insert(audio_producer.id(), HashedSet::default());
+            map
+        });
+        assert_eq!(
+            router_dump.map_consumer_id_producer_id,
+            HashedMap::default()
+        );
 
-            let transport_1_dump = transport_1
-                .dump()
-                .await
-                .expect("Failed to get transport 1 dump");
+        let transport_1_dump = transport_1
+            .dump()
+            .await
+            .expect("Failed to get transport 1 dump");
 
-            assert_eq!(transport_1_dump.producer_ids, vec![audio_producer.id()]);
-            assert_eq!(transport_1_dump.consumer_ids, vec![]);
+        assert_eq!(transport_1_dump.producer_ids, vec![audio_producer.id()]);
+        assert_eq!(transport_1_dump.consumer_ids, vec![]);
 
-            let (mut tx, rx) = async_oneshot::oneshot::<()>();
-            transport_1
-                .on_close(Box::new(move || {
-                    let _ = tx.send(());
-                }))
-                .detach();
+        let (mut tx, rx) = async_oneshot::oneshot::<()>();
+        transport_1
+            .on_close(Box::new(move || {
+                let _ = tx.send(());
+            }))
+            .detach();
 
-            drop(audio_producer);
-            drop(transport_1);
+        drop(audio_producer);
+        drop(transport_1);
 
-            // This means producer was definitely dropped
-            rx.await.expect("Failed to receive transport close event");
-        }
+        // This means producer was definitely dropped
+        rx.await.expect("Failed to receive transport close event");
+    });
+}
 
-        {
-            let new_producers_count = Arc::new(AtomicUsize::new(0));
+#[test]
+fn produce_succeeds_2() {
+    future::block_on(async move {
+        let (_worker, router, _transport_1, transport_2) = init().await;
 
-            transport_2
-                .on_new_producer({
-                    let new_producers_count = Arc::clone(&new_producers_count);
+        let new_producers_count = Arc::new(AtomicUsize::new(0));
 
-                    Arc::new(move |_producer| {
-                        new_producers_count.fetch_add(1, Ordering::SeqCst);
-                    })
+        transport_2
+            .on_new_producer({
+                let new_producers_count = Arc::clone(&new_producers_count);
+
+                Arc::new(move |_producer| {
+                    new_producers_count.fetch_add(1, Ordering::SeqCst);
                 })
-                .detach();
+            })
+            .detach();
 
-            let video_producer = transport_2
-                .produce(video_producer_options())
-                .await
-                .expect("Failed to produce video");
+        let video_producer = transport_2
+            .produce(video_producer_options())
+            .await
+            .expect("Failed to produce video");
 
-            assert_eq!(new_producers_count.load(Ordering::SeqCst), 1);
-            assert!(!video_producer.closed());
-            assert_eq!(video_producer.kind(), MediaKind::Video);
-            assert_eq!(video_producer.r#type(), ProducerType::Simulcast);
-            assert!(!video_producer.paused());
-            assert_eq!(video_producer.score(), vec![]);
-            assert_eq!(
-                video_producer
-                    .app_data()
-                    .downcast_ref::<ProducerAppData>()
-                    .unwrap()
-                    .foo,
-                1
-            );
-            assert_eq!(
-                video_producer
-                    .app_data()
-                    .downcast_ref::<ProducerAppData>()
-                    .unwrap()
-                    .bar,
-                "2"
-            );
+        assert_eq!(new_producers_count.load(Ordering::SeqCst), 1);
+        assert!(!video_producer.closed());
+        assert_eq!(video_producer.kind(), MediaKind::Video);
+        assert_eq!(video_producer.r#type(), ProducerType::Simulcast);
+        assert!(!video_producer.paused());
+        assert_eq!(video_producer.score(), vec![]);
+        assert_eq!(
+            video_producer
+                .app_data()
+                .downcast_ref::<ProducerAppData>()
+                .unwrap()
+                .foo,
+            1
+        );
+        assert_eq!(
+            video_producer
+                .app_data()
+                .downcast_ref::<ProducerAppData>()
+                .unwrap()
+                .bar,
+            "2"
+        );
 
-            let router_dump = router.dump().await.expect("Failed to get router dump");
+        let router_dump = router.dump().await.expect("Failed to get router dump");
 
-            assert_eq!(router_dump.map_producer_id_consumer_ids, {
-                let mut map = HashedMap::default();
-                map.insert(video_producer.id(), HashedSet::default());
-                map
-            });
-            assert_eq!(
-                router_dump.map_consumer_id_producer_id,
-                HashedMap::default()
-            );
+        assert_eq!(router_dump.map_producer_id_consumer_ids, {
+            let mut map = HashedMap::default();
+            map.insert(video_producer.id(), HashedSet::default());
+            map
+        });
+        assert_eq!(
+            router_dump.map_consumer_id_producer_id,
+            HashedMap::default()
+        );
 
-            let transport_2_dump = transport_2
-                .dump()
-                .await
-                .expect("Failed to get transport 2 dump");
+        let transport_2_dump = transport_2
+            .dump()
+            .await
+            .expect("Failed to get transport 2 dump");
 
-            assert_eq!(transport_2_dump.producer_ids, vec![video_producer.id()]);
-            assert_eq!(transport_2_dump.consumer_ids, vec![]);
-        }
+        assert_eq!(transport_2_dump.producer_ids, vec![video_producer.id()]);
+        assert_eq!(transport_2_dump.consumer_ids, vec![]);
     });
 }
 

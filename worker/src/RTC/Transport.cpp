@@ -2343,33 +2343,39 @@ namespace RTC
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
+			auto rtcpAdded = consumer->GetRtcp(packet.get(), nowMs);
 
-			// Send the RTCP compound packet if it's full.
-			if (!consumer->GetRtcp(packet.get(), nowMs))
+			// RTCP data couldn't be added because the Compound packet is full.
+			// Send the RTCP compound packet and request for RTCP again.
+			if (!rtcpAdded)
 			{
 				SendRtcpCompoundPacket(packet.get());
 
 				// Create a new compount packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
-			}
 
-			consumer->GetRtcp(packet.get(), nowMs);
+				// Retrieve the RTCP again.
+				consumer->GetRtcp(packet.get(), nowMs);
+			}
 		}
 
 		for (auto& kv : this->mapProducers)
 		{
 			auto* producer = kv.second;
+			auto rtcpAdded = producer->GetRtcp(packet.get(), nowMs);
 
-			// Send the RTCP compound packet if it's full.
-			if (!producer->GetRtcp(packet.get(), nowMs))
+			// RTCP data couldn't be added because the Compound packet is full.
+			// Send the RTCP compound packet and request for RTCP again.
+			if (!rtcpAdded)
 			{
 				SendRtcpCompoundPacket(packet.get());
 
 				// Create a new compount packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
-			}
 
-			producer->GetRtcp(packet.get(), nowMs);
+				// Retrieve the RTCP again.
+				producer->GetRtcp(packet.get(), nowMs);
+			}
 		}
 
 		// Send the RTCP compound packet if there is any sender or receiver report.

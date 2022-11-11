@@ -11,9 +11,7 @@ import { Consumer, ConsumerOptions } from './Consumer';
 import { DataProducer, DataProducerOptions } from './DataProducer';
 import { DataConsumer, DataConsumerOptions } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
-import { SctpParameters } from './SctpParameters';
-import * as FbsTransport from './fbs/transport_generated';
-export interface TransportListenIp {
+export declare type TransportListenIp = {
     /**
      * Listening IPv4 or IPv6.
      */
@@ -23,18 +21,18 @@ export interface TransportListenIp {
      * private IP).
      */
     announcedIp?: string;
-}
+};
 /**
  * Transport protocol.
  */
 export declare type TransportProtocol = 'udp' | 'tcp';
-export interface TransportTuple {
+export declare type TransportTuple = {
     localIp: string;
     localPort: number;
     remoteIp?: string;
     remotePort?: number;
     protocol: TransportProtocol;
-}
+};
 /**
  * Valid types for 'trace' event.
  */
@@ -42,7 +40,7 @@ export declare type TransportTraceEventType = 'probation' | 'bwe';
 /**
  * 'trace' event data.
  */
-export interface TransportTraceEventData {
+export declare type TransportTraceEventData = {
     /**
      * Trace type.
      */
@@ -59,7 +57,7 @@ export interface TransportTraceEventData {
      * Per type information.
      */
     info: any;
-}
+};
 export declare type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 export declare type TransportEvents = {
     routerclose: [];
