@@ -367,7 +367,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CLOSE_TRANSPORT:
 			{
-				auto body = request->_data->body_as<FBS::Router::CloseTransportRequest>();
+				auto body        = request->_data->body_as<FBS::Router::CloseTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -392,7 +392,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CLOSE_RTP_OBSERVER:
 			{
-				auto body = request->_data->body_as<FBS::Router::CloseRtpObserverRequest>();
+				auto body          = request->_data->body_as<FBS::Router::CloseRtpObserverRequest>();
 				auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.

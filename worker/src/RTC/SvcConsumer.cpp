@@ -20,7 +20,10 @@ namespace RTC
 	/* Instance methods. */
 
 	SvcConsumer::SvcConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
+	  const std::string& id,
+	  const std::string& producerId,
+	  RTC::Consumer::Listener* listener,
+	  const FBS::Transport::ConsumeRequest* data)
 	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SVC)
 	{
 		MS_TRACE();
@@ -35,38 +38,17 @@ namespace RTC
 		if (encoding.spatialLayers < 2u && encoding.temporalLayers < 2u)
 			MS_THROW_TYPE_ERROR("invalid number of layers");
 
-		auto jsonPreferredLayersIt = data.find("preferredLayers");
-
 		// Set preferredLayers (if given).
-		if (jsonPreferredLayersIt != data.end() && jsonPreferredLayersIt->is_object())
+		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeRequest::VT_PREFERREDLAYERS))
 		{
-			auto jsonSpatialLayerIt  = jsonPreferredLayersIt->find("spatialLayer");
-			auto jsonTemporalLayerIt = jsonPreferredLayersIt->find("temporalLayer");
-
-			// clang-format off
-			if (
-				jsonSpatialLayerIt == jsonPreferredLayersIt->end() ||
-				!Utils::Json::IsPositiveInteger(*jsonSpatialLayerIt)
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("missing preferredLayers.spatialLayer");
-			}
-
-			this->preferredSpatialLayer = jsonSpatialLayerIt->get<int16_t>();
+			this->preferredSpatialLayer = data->preferredLayers()->spatialLayer();
 
 			if (this->preferredSpatialLayer > encoding.spatialLayers - 1)
 				this->preferredSpatialLayer = encoding.spatialLayers - 1;
 
-			// clang-format off
-			if (
-				jsonTemporalLayerIt != jsonPreferredLayersIt->end() &&
-				Utils::Json::IsPositiveInteger(*jsonTemporalLayerIt)
-			)
-			// clang-format on
+			if (flatbuffers::IsFieldPresent(
+			      data->preferredLayers(), FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
 			{
-				this->preferredTemporalLayer = jsonTemporalLayerIt->get<int16_t>();
-
 				if (this->preferredTemporalLayer > encoding.temporalLayers - 1)
 					this->preferredTemporalLayer = encoding.temporalLayers - 1;
 			}

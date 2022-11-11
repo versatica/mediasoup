@@ -946,7 +946,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SVC:
 					{
 						// This may throw.
-						consumer = new RTC::SvcConsumer(consumerId, producerId, this, request->data);
+						consumer = new RTC::SvcConsumer(consumerId, producerId, this, body);
 
 						break;
 					}
