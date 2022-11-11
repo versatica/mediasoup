@@ -452,7 +452,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER:
 			{
-				auto body        = request->_data->body_as<FBS::Router::CreateAudioLevelObserverRequest>();
+				auto body = request->_data->body_as<FBS::Router::CreateAudioLevelObserverRequest>();
 				auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.

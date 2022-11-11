@@ -16,15 +16,16 @@ namespace RTC
 	/* Instance methods. */
 
 	AudioLevelObserver::AudioLevelObserver(
-	  const std::string& id, RTC::RtpObserver::Listener* listener,
+	  const std::string& id,
+	  RTC::RtpObserver::Listener* listener,
 	  const FBS::Router::AudioLevelObserverOptions* options)
 	  : RTC::RtpObserver(id, listener)
 	{
 		MS_TRACE();
 
 		this->maxEntries = options->maxEntries();
-		this->threshold = options->threshold();
-		this->interval = options->interval();
+		this->threshold  = options->threshold();
+		this->interval   = options->interval();
 
 		if (this->threshold > 0)
 			MS_THROW_TYPE_ERROR("invalid threshold value %" PRIi8, this->threshold);

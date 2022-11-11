@@ -20,7 +20,9 @@ namespace RTC
 		};
 
 	public:
-		AudioLevelObserver(const std::string& id, RTC::RtpObserver::Listener* listener,
+		AudioLevelObserver(
+		  const std::string& id,
+		  RTC::RtpObserver::Listener* listener,
 		  const FBS::Router::AudioLevelObserverOptions* options);
 		~AudioLevelObserver() override;
 
