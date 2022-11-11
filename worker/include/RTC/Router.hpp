@@ -15,11 +15,8 @@
 #include "RTC/Transport.hpp"
 #include "RTC/WebRtcServer.hpp"
 #include <absl/container/flat_hash_map.h>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_set>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -43,7 +40,6 @@ namespace RTC
 		virtual ~Router();
 
 	public:
-		void FillJson(json& jsonObject) const;
 		flatbuffers::Offset<FBS::Router::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 

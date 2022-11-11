@@ -63,114 +63,6 @@ namespace RTC
 		this->mapDataProducers.clear();
 	}
 
-	void Router::FillJson(json& jsonObject) const
-	{
-		MS_TRACE();
-
-		// Add id.
-		jsonObject["id"] = this->id;
-
-		// Add transportIds.
-		jsonObject["transportIds"] = json::array();
-		auto jsonTransportIdsIt    = jsonObject.find("transportIds");
-
-		for (const auto& kv : this->mapTransports)
-		{
-			const auto& transportId = kv.first;
-
-			jsonTransportIdsIt->emplace_back(transportId);
-		}
-
-		// Add rtpObserverIds.
-		jsonObject["rtpObserverIds"] = json::array();
-		auto jsonRtpObserverIdsIt    = jsonObject.find("rtpObserverIds");
-
-		for (const auto& kv : this->mapRtpObservers)
-		{
-			const auto& rtpObserverId = kv.first;
-
-			jsonRtpObserverIdsIt->emplace_back(rtpObserverId);
-		}
-
-		// Add mapProducerIdConsumerIds.
-		jsonObject["mapProducerIdConsumerIds"] = json::object();
-		auto jsonMapProducerConsumersIt        = jsonObject.find("mapProducerIdConsumerIds");
-
-		for (const auto& kv : this->mapProducerConsumers)
-		{
-			auto* producer        = kv.first;
-			const auto& consumers = kv.second;
-
-			(*jsonMapProducerConsumersIt)[producer->id] = json::array();
-			auto jsonProducerIdIt                       = jsonMapProducerConsumersIt->find(producer->id);
-
-			for (auto* consumer : consumers)
-			{
-				jsonProducerIdIt->emplace_back(consumer->id);
-			}
-		}
-
-		// Add mapConsumerIdProducerId.
-		jsonObject["mapConsumerIdProducerId"] = json::object();
-		auto jsonMapConsumerProducerIt        = jsonObject.find("mapConsumerIdProducerId");
-
-		for (const auto& kv : this->mapConsumerProducer)
-		{
-			auto* consumer = kv.first;
-			auto* producer = kv.second;
-
-			(*jsonMapConsumerProducerIt)[consumer->id] = producer->id;
-		}
-
-		// Add mapProducerIdObserverIds.
-		jsonObject["mapProducerIdObserverIds"] = json::object();
-		auto jsonMapProducerRtpObserversIt     = jsonObject.find("mapProducerIdObserverIds");
-
-		for (const auto& kv : this->mapProducerRtpObservers)
-		{
-			auto* producer           = kv.first;
-			const auto& rtpObservers = kv.second;
-
-			(*jsonMapProducerRtpObserversIt)[producer->id] = json::array();
-			auto jsonProducerIdIt = jsonMapProducerRtpObserversIt->find(producer->id);
-
-			for (auto* rtpObserver : rtpObservers)
-			{
-				jsonProducerIdIt->emplace_back(rtpObserver->id);
-			}
-		}
-
-		// Add mapDataProducerIdDataConsumerIds.
-		jsonObject["mapDataProducerIdDataConsumerIds"] = json::object();
-		auto jsonMapDataProducerDataConsumersIt = jsonObject.find("mapDataProducerIdDataConsumerIds");
-
-		for (const auto& kv : this->mapDataProducerDataConsumers)
-		{
-			auto* dataProducer        = kv.first;
-			const auto& dataConsumers = kv.second;
-
-			(*jsonMapDataProducerDataConsumersIt)[dataProducer->id] = json::array();
-			auto jsonDataProducerIdIt = jsonMapDataProducerDataConsumersIt->find(dataProducer->id);
-
-			for (auto* dataConsumer : dataConsumers)
-			{
-				jsonDataProducerIdIt->emplace_back(dataConsumer->id);
-			}
-		}
-
-		// Add mapDataConsumerIdDataProducerId.
-		jsonObject["mapDataConsumerIdDataProducerId"] = json::object();
-		auto jsonMapDataConsumerDataProducerIt = jsonObject.find("mapDataConsumerIdDataProducerId");
-
-		for (const auto& kv : this->mapDataConsumerDataProducer)
-		{
-			auto* dataConsumer = kv.first;
-			auto* dataProducer = kv.second;
-
-			(*jsonMapDataConsumerDataProducerIt)[dataConsumer->id] = dataProducer->id;
-		}
-	}
-
 	flatbuffers::Offset<FBS::Router::DumpResponse> Router::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
@@ -178,6 +70,7 @@ namespace RTC
 
 		// Add transportIds.
 		std::vector<flatbuffers::Offset<flatbuffers::String>> transportIds;
+
 		for (auto& kv : this->mapTransports)
 		{
 			auto& transportId = kv.first;
@@ -187,6 +80,7 @@ namespace RTC
 
 		// Add rtpObserverIds.
 		std::vector<flatbuffers::Offset<flatbuffers::String>> rtpObserverIds;
+
 		for (auto& kv : this->mapRtpObservers)
 		{
 			auto& rtpObserverId = kv.first;
