@@ -97,19 +97,14 @@ namespace RTC
 	}
 
 	ActiveSpeakerObserver::ActiveSpeakerObserver(
-	  const std::string& id, RTC::RtpObserver::Listener* listener, json& data)
+	  const std::string& id,
+	  RTC::RtpObserver::Listener* listener,
+	  const FBS::Router::ActiveSpeakerObserverOptions* options)
 	  : RTC::RtpObserver(id, listener)
 	{
 		MS_TRACE();
 
-		auto jsonIntervalIt = data.find("interval");
-
-		if (jsonIntervalIt == data.end() || !jsonIntervalIt->is_number())
-		{
-			MS_THROW_TYPE_ERROR("missing interval");
-		}
-
-		this->interval = jsonIntervalIt->get<int16_t>();
+		this->interval = options->interval();
 
 		if (this->interval < 100)
 			this->interval = 100;

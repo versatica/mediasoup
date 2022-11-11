@@ -432,13 +432,14 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER:
 			{
-				std::string rtpObserverId;
+				auto body = request->_data->body_as<FBS::Router::CreateActiveSpeakerObserverRequest>();
+				auto rtpObserverId = body->activeSpeakerObserverId()->str();
 
 				// This may throw.
-				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
+				CheckNoRtpObserver(rtpObserverId);
 
 				auto* activeSpeakerObserver =
-				  new RTC::ActiveSpeakerObserver(rtpObserverId, this, request->data);
+				  new RTC::ActiveSpeakerObserver(rtpObserverId, this, body->options());
 
 				// Insert into the map.
 				this->mapRtpObservers[rtpObserverId] = activeSpeakerObserver;
@@ -527,25 +528,6 @@ namespace RTC
 		return;
 	}
 
-	void Router::SetNewTransportIdFromData(json& data, std::string& transportId) const
-	{
-		MS_TRACE();
-
-		auto jsonTransportIdIt = data.find("transportId");
-
-		if (jsonTransportIdIt == data.end() || !jsonTransportIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing transportId");
-		}
-
-		transportId.assign(jsonTransportIdIt->get<std::string>());
-
-		if (this->mapTransports.find(transportId) != this->mapTransports.end())
-		{
-			MS_THROW_ERROR("a Transport with same transportId already exists");
-		}
-	}
-
 	void Router::CheckNoTransport(const std::string& transportId) const
 	{
 		if (this->mapTransports.find(transportId) != this->mapTransports.end())
@@ -577,25 +559,6 @@ namespace RTC
 		RTC::Transport* transport = it->second;
 
 		return transport;
-	}
-
-	void Router::SetNewRtpObserverIdFromData(json& data, std::string& rtpObserverId) const
-	{
-		MS_TRACE();
-
-		auto jsonRtpObserverIdIt = data.find("rtpObserverId");
-
-		if (jsonRtpObserverIdIt == data.end() || !jsonRtpObserverIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing rtpObserverId");
-		}
-
-		rtpObserverId.assign(jsonRtpObserverIdIt->get<std::string>());
-
-		if (this->mapRtpObservers.find(rtpObserverId) != this->mapRtpObservers.end())
-		{
-			MS_THROW_ERROR("an RtpObserver with same rtpObserverId already exists");
-		}
 	}
 
 	RTC::RtpObserver* Router::GetRtpObserverFromData(json& data) const

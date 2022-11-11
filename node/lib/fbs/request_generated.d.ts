@@ -1,6 +1,7 @@
 export { Body, unionToBody, unionListToBody } from './fbs/request/body';
 export { Method } from './fbs/request/method';
 export { Request, RequestT } from './fbs/request/request';
+export { CreateActiveSpeakerObserverRequest, CreateActiveSpeakerObserverRequestT } from './fbs/router/create-active-speaker-observer-request';
 export { CreateAudioLevelObserverRequest, CreateAudioLevelObserverRequestT } from './fbs/router/create-audio-level-observer-request';
 export { CreateDirectTransportRequest, CreateDirectTransportRequestT } from './fbs/router/create-direct-transport-request';
 export { CreatePipeTransportRequest, CreatePipeTransportRequestT } from './fbs/router/create-pipe-transport-request';

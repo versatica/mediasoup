@@ -1221,23 +1221,40 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	{
 		logger.debug('createActiveSpeakerObserver()');
 
+		if (typeof interval !== 'number')
+			throw new TypeError('if given, interval must be an number');
 		if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
-		
-		const reqData =
-		{
-			rtpObserverId : uuidv4(),
-			interval
-		};
 
-		await this.#channel.request('router.createActiveSpeakerObserver', this.#internal.routerId, reqData);
+		const	rtpObserverId = uuidv4();
+
+		/* Build Request. */
+
+		const builder = this.#channel.bufferBuilder;
+
+		const activeRtpObserverOptions = new FbsRouter.ActiveSpeakerObserverOptionsT(
+			interval
+		);
+
+		const createActiveSpeakerObserverOffset =
+			new FbsRouter.CreateActiveSpeakerObserverRequestT(
+				rtpObserverId,
+				activeRtpObserverOptions
+			).pack(builder);
+
+		await this.#channel.requestBinary(
+			FbsRequest.Method.ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER,
+			FbsRequest.Body.FBS_Router_CreateActiveSpeakerObserverRequest,
+			createActiveSpeakerObserverOffset,
+			this.#internal.routerId
+		);
 
 		const activeSpeakerObserver = new ActiveSpeakerObserver(
 			{
 				internal :
 				{
 					...this.#internal,
-					rtpObserverId : reqData.rtpObserverId
+					rtpObserverId : rtpObserverId
 				},
 				channel         : this.#channel,
 				payloadChannel  : this.#payloadChannel,
@@ -1282,7 +1299,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		if (appData && typeof appData !== 'object')
 			throw new TypeError('if given, appData must be an object');
 
-		const	rtpObserverId = uuidv4();
+		const rtpObserverId = uuidv4();
 
 		/* Build Request. */
 

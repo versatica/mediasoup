@@ -52,9 +52,7 @@ namespace RTC
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	private:
-		void SetNewTransportIdFromData(json& data, std::string& transportId) const;
 		RTC::Transport* GetTransportFromData(json& data) const;
-		void SetNewRtpObserverIdFromData(json& data, std::string& rtpObserverId) const;
 		RTC::RtpObserver* GetRtpObserverFromData(json& data) const;
 		void CheckNoTransport(const std::string& transportId) const;
 		void CheckNoRtpObserver(const std::string& rtpObserverId) const;

@@ -69,7 +69,10 @@ namespace RTC
 		static const size_t RelativeSpeachActivitiesLen{ 3u };
 
 	public:
-		ActiveSpeakerObserver(const std::string& id, RTC::RtpObserver::Listener* listener, json& data);
+		ActiveSpeakerObserver(
+		  const std::string& id,
+		  RTC::RtpObserver::Listener* listener,
+		  const FBS::Router::ActiveSpeakerObserverOptions* options);
 		~ActiveSpeakerObserver() override;
 
 	public:

@@ -44,6 +44,12 @@ struct AudioLevelObserverOptionsBuilder;
 struct CreateAudioLevelObserverRequest;
 struct CreateAudioLevelObserverRequestBuilder;
 
+struct ActiveSpeakerObserverOptions;
+struct ActiveSpeakerObserverOptionsBuilder;
+
+struct CreateActiveSpeakerObserverRequest;
+struct CreateActiveSpeakerObserverRequestBuilder;
+
 inline const flatbuffers::TypeTable *DumpResponseTypeTable();
 
 inline const flatbuffers::TypeTable *CreatePipeTransportRequestTypeTable();
@@ -57,6 +63,10 @@ inline const flatbuffers::TypeTable *CreateDirectTransportRequestTypeTable();
 inline const flatbuffers::TypeTable *AudioLevelObserverOptionsTypeTable();
 
 inline const flatbuffers::TypeTable *CreateAudioLevelObserverRequestTypeTable();
+
+inline const flatbuffers::TypeTable *ActiveSpeakerObserverOptionsTypeTable();
+
+inline const flatbuffers::TypeTable *CreateActiveSpeakerObserverRequestTypeTable();
 
 struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef DumpResponseBuilder Builder;
@@ -627,6 +637,119 @@ inline flatbuffers::Offset<CreateAudioLevelObserverRequest> CreateCreateAudioLev
       options);
 }
 
+struct ActiveSpeakerObserverOptions FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef ActiveSpeakerObserverOptionsBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return ActiveSpeakerObserverOptionsTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_INTERVAL = 4
+  };
+  uint16_t interval() const {
+    return GetField<uint16_t>(VT_INTERVAL, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint16_t>(verifier, VT_INTERVAL, 2) &&
+           verifier.EndTable();
+  }
+};
+
+struct ActiveSpeakerObserverOptionsBuilder {
+  typedef ActiveSpeakerObserverOptions Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_interval(uint16_t interval) {
+    fbb_.AddElement<uint16_t>(ActiveSpeakerObserverOptions::VT_INTERVAL, interval, 0);
+  }
+  explicit ActiveSpeakerObserverOptionsBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<ActiveSpeakerObserverOptions> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<ActiveSpeakerObserverOptions>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<ActiveSpeakerObserverOptions> CreateActiveSpeakerObserverOptions(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint16_t interval = 0) {
+  ActiveSpeakerObserverOptionsBuilder builder_(_fbb);
+  builder_.add_interval(interval);
+  return builder_.Finish();
+}
+
+struct CreateActiveSpeakerObserverRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CreateActiveSpeakerObserverRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CreateActiveSpeakerObserverRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ACTIVESPEAKEROBSERVERID = 4,
+    VT_OPTIONS = 6
+  };
+  const flatbuffers::String *activeSpeakerObserverId() const {
+    return GetPointer<const flatbuffers::String *>(VT_ACTIVESPEAKEROBSERVERID);
+  }
+  const FBS::Router::ActiveSpeakerObserverOptions *options() const {
+    return GetPointer<const FBS::Router::ActiveSpeakerObserverOptions *>(VT_OPTIONS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_ACTIVESPEAKEROBSERVERID) &&
+           verifier.VerifyString(activeSpeakerObserverId()) &&
+           VerifyOffsetRequired(verifier, VT_OPTIONS) &&
+           verifier.VerifyTable(options()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CreateActiveSpeakerObserverRequestBuilder {
+  typedef CreateActiveSpeakerObserverRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_activeSpeakerObserverId(flatbuffers::Offset<flatbuffers::String> activeSpeakerObserverId) {
+    fbb_.AddOffset(CreateActiveSpeakerObserverRequest::VT_ACTIVESPEAKEROBSERVERID, activeSpeakerObserverId);
+  }
+  void add_options(flatbuffers::Offset<FBS::Router::ActiveSpeakerObserverOptions> options) {
+    fbb_.AddOffset(CreateActiveSpeakerObserverRequest::VT_OPTIONS, options);
+  }
+  explicit CreateActiveSpeakerObserverRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CreateActiveSpeakerObserverRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CreateActiveSpeakerObserverRequest>(end);
+    fbb_.Required(o, CreateActiveSpeakerObserverRequest::VT_ACTIVESPEAKEROBSERVERID);
+    fbb_.Required(o, CreateActiveSpeakerObserverRequest::VT_OPTIONS);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CreateActiveSpeakerObserverRequest> CreateCreateActiveSpeakerObserverRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> activeSpeakerObserverId = 0,
+    flatbuffers::Offset<FBS::Router::ActiveSpeakerObserverOptions> options = 0) {
+  CreateActiveSpeakerObserverRequestBuilder builder_(_fbb);
+  builder_.add_options(options);
+  builder_.add_activeSpeakerObserverId(activeSpeakerObserverId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CreateActiveSpeakerObserverRequest> CreateCreateActiveSpeakerObserverRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *activeSpeakerObserverId = nullptr,
+    flatbuffers::Offset<FBS::Router::ActiveSpeakerObserverOptions> options = 0) {
+  auto activeSpeakerObserverId__ = activeSpeakerObserverId ? _fbb.CreateString(activeSpeakerObserverId) : 0;
+  return FBS::Router::CreateCreateActiveSpeakerObserverRequest(
+      _fbb,
+      activeSpeakerObserverId__,
+      options);
+}
+
 inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_STRING, 0, -1 },
@@ -757,6 +880,37 @@ inline const flatbuffers::TypeTable *CreateAudioLevelObserverRequestTypeTable() 
   };
   static const char * const names[] = {
     "rtpObserverId",
+    "options"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *ActiveSpeakerObserverOptionsTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_USHORT, 0, -1 }
+  };
+  static const char * const names[] = {
+    "interval"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CreateActiveSpeakerObserverRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Router::ActiveSpeakerObserverOptionsTypeTable
+  };
+  static const char * const names[] = {
+    "activeSpeakerObserverId",
     "options"
   };
   static const flatbuffers::TypeTable tt = {

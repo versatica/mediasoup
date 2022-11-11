@@ -48,3 +48,12 @@ table CreateAudioLevelObserverRequest {
   rtp_observer_id:string (required);
   options:AudioLevelObserverOptions (required);
 }
+
+table ActiveSpeakerObserverOptions {
+  interval:uint16;
+}
+
+table CreateActiveSpeakerObserverRequest {
+  active_speaker_observer_id:string (required);
+  options:ActiveSpeakerObserverOptions (required);
+}
