@@ -54,7 +54,7 @@ namespace Channel
 		{ FBS::Request::Method::WORKER_CLOSE,                                    "worker.close"                               },
 		{ FBS::Request::Method::WORKER_DUMP,                                     "worker.dump"                                },
 		{ FBS::Request::Method::WORKER_GET_RESOURCE_USAGE,                       "worker.getResourceUsage"                    },
-		{ FBS::Request::Method::WORKER_UPDATE_SETTINGS,                           "worker.updateSettings"                      },
+		{ FBS::Request::Method::WORKER_UPDATE_SETTINGS,                          "worker.updateSettings"                      },
 		{ FBS::Request::Method::WORKER_CREATE_WEBRTC_SERVER,                     "worker.createWebRtcServer"                  },
 		{ FBS::Request::Method::WORKER_CREATE_ROUTER,                            "worker.createRouter"                        },
 		{ FBS::Request::Method::WORKER_WEBRTC_SERVER_CLOSE,                      "worker.closeWebRtcServer"                   },
