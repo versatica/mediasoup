@@ -1,6 +1,7 @@
 import * as flatbuffers from 'flatbuffers';
 import { Body } from '../../fbs/request/body';
 import { Method } from '../../fbs/request/method';
+import { CreateAudioLevelObserverRequestT } from '../../fbs/router/create-audio-level-observer-request';
 import { CreateDirectTransportRequestT } from '../../fbs/router/create-direct-transport-request';
 import { CreatePipeTransportRequestT } from '../../fbs/router/create-pipe-transport-request';
 import { CreatePlainTransportRequestT } from '../../fbs/router/create-plain-transport-request';
@@ -41,8 +42,8 @@ export declare class RequestT {
     method: Method;
     handlerId: string | Uint8Array | null;
     bodyType: Body;
-    body: CloseRouterRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | UpdateSettingsRequestT | null;
-    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: CloseRouterRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | UpdateSettingsRequestT | null);
+    body: CloseRouterRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateAudioLevelObserverRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | UpdateSettingsRequestT | null;
+    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: CloseRouterRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateAudioLevelObserverRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | UpdateSettingsRequestT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=request.d.ts.map

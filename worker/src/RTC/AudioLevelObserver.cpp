@@ -16,44 +16,15 @@ namespace RTC
 	/* Instance methods. */
 
 	AudioLevelObserver::AudioLevelObserver(
-	  const std::string& id, RTC::RtpObserver::Listener* listener, json& data)
+	  const std::string& id, RTC::RtpObserver::Listener* listener,
+	  const FBS::Router::AudioLevelObserverOptions* options)
 	  : RTC::RtpObserver(id, listener)
 	{
 		MS_TRACE();
 
-		auto jsonMaxEntriesIt = data.find("maxEntries");
-
-		// clang-format off
-		if (
-			jsonMaxEntriesIt == data.end() ||
-			!Utils::Json::IsPositiveInteger(*jsonMaxEntriesIt)
-		)
-		// clang-format on
-		{
-			MS_THROW_TYPE_ERROR("missing maxEntries");
-		}
-
-		this->maxEntries = jsonMaxEntriesIt->get<uint16_t>();
-
-		if (this->maxEntries < 1)
-			MS_THROW_TYPE_ERROR("invalid maxEntries value %" PRIu16, this->maxEntries);
-
-		auto jsonThresholdIt = data.find("threshold");
-
-		if (jsonThresholdIt == data.end() || !jsonThresholdIt->is_number())
-			MS_THROW_TYPE_ERROR("missing threshold");
-
-		this->threshold = jsonThresholdIt->get<int8_t>();
-
-		if (this->threshold < -127 || this->threshold > 0)
-			MS_THROW_TYPE_ERROR("invalid threshold value %" PRIi8, this->threshold);
-
-		auto jsonIntervalIt = data.find("interval");
-
-		if (jsonIntervalIt == data.end() || !jsonIntervalIt->is_number())
-			MS_THROW_TYPE_ERROR("missing interval");
-
-		this->interval = jsonIntervalIt->get<uint16_t>();
+		this->maxEntries = options->maxEntries();
+		this->threshold = options->threshold();
+		this->interval = options->interval();
 
 		if (this->interval < 250)
 			this->interval = 250;

@@ -39,6 +39,7 @@ class CreatePipeTransportRequest {
     static endCreatePipeTransportRequest(builder) {
         const offset = builder.endObject();
         builder.requiredField(offset, 4); // transport_id
+        builder.requiredField(offset, 6); // options
         return offset;
     }
     unpack() {

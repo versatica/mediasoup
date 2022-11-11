@@ -20,21 +20,31 @@ table DumpResponse {
 
 table CreatePipeTransportRequest {
   transport_id:string (required);
-  options:FBS.PipeTransport.PipeTransportOptions;
+  options:FBS.PipeTransport.PipeTransportOptions (required);
 }
 
 table CreatePlainTransportRequest {
   transport_id:string (required);
-  options:FBS.PlainTransport.PlainTransportOptions;
+  options:FBS.PlainTransport.PlainTransportOptions (required);
 }
 
 table CreateWebRtcTransportRequest {
   transport_id:string (required);
-  options:FBS.WebRtcTransport.WebRtcTransportOptions;
+  options:FBS.WebRtcTransport.WebRtcTransportOptions (required);
 }
-
 
 table CreateDirectTransportRequest {
   transport_id:string (required);
-  options:FBS.DirectTransport.DirectTransportOptions;
+  options:FBS.DirectTransport.DirectTransportOptions (required);
+}
+
+table AudioLevelObserverOptions {
+  max_entries:uint16;
+  threshold:int8;
+  interval:uint16;
+}
+
+table CreateAudioLevelObserverRequest {
+  rtp_observer_id:string (required);
+  options:AudioLevelObserverOptions (required);
 }

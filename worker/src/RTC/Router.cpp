@@ -452,12 +452,13 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER:
 			{
-				std::string rtpObserverId;
+				auto body        = request->_data->body_as<FBS::Router::CreateAudioLevelObserverRequest>();
+				auto rtpObserverId = body->rtpObserverId()->str();
 
-				// This may throw
-				SetNewRtpObserverIdFromData(request->data, rtpObserverId);
+				// This may throw.
+				CheckNoRtpObserver(rtpObserverId);
 
-				auto* audioLevelObserver = new RTC::AudioLevelObserver(rtpObserverId, this, request->data);
+				auto* audioLevelObserver = new RTC::AudioLevelObserver(rtpObserverId, this, body->options());
 
 				// Insert into the map.
 				this->mapRtpObservers[rtpObserverId] = audioLevelObserver;
@@ -548,7 +549,13 @@ namespace RTC
 	void Router::CheckNoTransport(const std::string& transportId) const
 	{
 		if (this->mapTransports.find(transportId) != this->mapTransports.end())
-			MS_THROW_ERROR("a Transport with same transportId already exists");
+			MS_THROW_ERROR("a Transport with same id already exists");
+	}
+
+	void Router::CheckNoRtpObserver(const std::string& rtpObserverId) const
+	{
+		if (this->mapRtpObservers.find(rtpObserverId) != this->mapRtpObservers.end())
+			MS_THROW_ERROR("an RtpObserver with same id already exists");
 	}
 
 	RTC::Transport* Router::GetTransportFromData(json& data) const

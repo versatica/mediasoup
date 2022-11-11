@@ -38,6 +38,12 @@ struct CreateWebRtcTransportRequestBuilder;
 struct CreateDirectTransportRequest;
 struct CreateDirectTransportRequestBuilder;
 
+struct AudioLevelObserverOptions;
+struct AudioLevelObserverOptionsBuilder;
+
+struct CreateAudioLevelObserverRequest;
+struct CreateAudioLevelObserverRequestBuilder;
+
 inline const flatbuffers::TypeTable *DumpResponseTypeTable();
 
 inline const flatbuffers::TypeTable *CreatePipeTransportRequestTypeTable();
@@ -47,6 +53,10 @@ inline const flatbuffers::TypeTable *CreatePlainTransportRequestTypeTable();
 inline const flatbuffers::TypeTable *CreateWebRtcTransportRequestTypeTable();
 
 inline const flatbuffers::TypeTable *CreateDirectTransportRequestTypeTable();
+
+inline const flatbuffers::TypeTable *AudioLevelObserverOptionsTypeTable();
+
+inline const flatbuffers::TypeTable *CreateAudioLevelObserverRequestTypeTable();
 
 struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef DumpResponseBuilder Builder;
@@ -227,7 +237,7 @@ struct CreatePipeTransportRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers:
     return VerifyTableStart(verifier) &&
            VerifyOffsetRequired(verifier, VT_TRANSPORTID) &&
            verifier.VerifyString(transportId()) &&
-           VerifyOffset(verifier, VT_OPTIONS) &&
+           VerifyOffsetRequired(verifier, VT_OPTIONS) &&
            verifier.VerifyTable(options()) &&
            verifier.EndTable();
   }
@@ -251,6 +261,7 @@ struct CreatePipeTransportRequestBuilder {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<CreatePipeTransportRequest>(end);
     fbb_.Required(o, CreatePipeTransportRequest::VT_TRANSPORTID);
+    fbb_.Required(o, CreatePipeTransportRequest::VT_OPTIONS);
     return o;
   }
 };
@@ -295,7 +306,7 @@ struct CreatePlainTransportRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers
     return VerifyTableStart(verifier) &&
            VerifyOffsetRequired(verifier, VT_TRANSPORTID) &&
            verifier.VerifyString(transportId()) &&
-           VerifyOffset(verifier, VT_OPTIONS) &&
+           VerifyOffsetRequired(verifier, VT_OPTIONS) &&
            verifier.VerifyTable(options()) &&
            verifier.EndTable();
   }
@@ -319,6 +330,7 @@ struct CreatePlainTransportRequestBuilder {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<CreatePlainTransportRequest>(end);
     fbb_.Required(o, CreatePlainTransportRequest::VT_TRANSPORTID);
+    fbb_.Required(o, CreatePlainTransportRequest::VT_OPTIONS);
     return o;
   }
 };
@@ -363,7 +375,7 @@ struct CreateWebRtcTransportRequest FLATBUFFERS_FINAL_CLASS : private flatbuffer
     return VerifyTableStart(verifier) &&
            VerifyOffsetRequired(verifier, VT_TRANSPORTID) &&
            verifier.VerifyString(transportId()) &&
-           VerifyOffset(verifier, VT_OPTIONS) &&
+           VerifyOffsetRequired(verifier, VT_OPTIONS) &&
            verifier.VerifyTable(options()) &&
            verifier.EndTable();
   }
@@ -387,6 +399,7 @@ struct CreateWebRtcTransportRequestBuilder {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<CreateWebRtcTransportRequest>(end);
     fbb_.Required(o, CreateWebRtcTransportRequest::VT_TRANSPORTID);
+    fbb_.Required(o, CreateWebRtcTransportRequest::VT_OPTIONS);
     return o;
   }
 };
@@ -431,7 +444,7 @@ struct CreateDirectTransportRequest FLATBUFFERS_FINAL_CLASS : private flatbuffer
     return VerifyTableStart(verifier) &&
            VerifyOffsetRequired(verifier, VT_TRANSPORTID) &&
            verifier.VerifyString(transportId()) &&
-           VerifyOffset(verifier, VT_OPTIONS) &&
+           VerifyOffsetRequired(verifier, VT_OPTIONS) &&
            verifier.VerifyTable(options()) &&
            verifier.EndTable();
   }
@@ -455,6 +468,7 @@ struct CreateDirectTransportRequestBuilder {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<CreateDirectTransportRequest>(end);
     fbb_.Required(o, CreateDirectTransportRequest::VT_TRANSPORTID);
+    fbb_.Required(o, CreateDirectTransportRequest::VT_OPTIONS);
     return o;
   }
 };
@@ -477,6 +491,139 @@ inline flatbuffers::Offset<CreateDirectTransportRequest> CreateCreateDirectTrans
   return FBS::Router::CreateCreateDirectTransportRequest(
       _fbb,
       transportId__,
+      options);
+}
+
+struct AudioLevelObserverOptions FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef AudioLevelObserverOptionsBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return AudioLevelObserverOptionsTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MAXENTRIES = 4,
+    VT_THRESHOLD = 6,
+    VT_INTERVAL = 8
+  };
+  uint16_t maxEntries() const {
+    return GetField<uint16_t>(VT_MAXENTRIES, 0);
+  }
+  int8_t threshold() const {
+    return GetField<int8_t>(VT_THRESHOLD, 0);
+  }
+  uint16_t interval() const {
+    return GetField<uint16_t>(VT_INTERVAL, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint16_t>(verifier, VT_MAXENTRIES, 2) &&
+           VerifyField<int8_t>(verifier, VT_THRESHOLD, 1) &&
+           VerifyField<uint16_t>(verifier, VT_INTERVAL, 2) &&
+           verifier.EndTable();
+  }
+};
+
+struct AudioLevelObserverOptionsBuilder {
+  typedef AudioLevelObserverOptions Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_maxEntries(uint16_t maxEntries) {
+    fbb_.AddElement<uint16_t>(AudioLevelObserverOptions::VT_MAXENTRIES, maxEntries, 0);
+  }
+  void add_threshold(int8_t threshold) {
+    fbb_.AddElement<int8_t>(AudioLevelObserverOptions::VT_THRESHOLD, threshold, 0);
+  }
+  void add_interval(uint16_t interval) {
+    fbb_.AddElement<uint16_t>(AudioLevelObserverOptions::VT_INTERVAL, interval, 0);
+  }
+  explicit AudioLevelObserverOptionsBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<AudioLevelObserverOptions> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<AudioLevelObserverOptions>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<AudioLevelObserverOptions> CreateAudioLevelObserverOptions(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint16_t maxEntries = 0,
+    int8_t threshold = 0,
+    uint16_t interval = 0) {
+  AudioLevelObserverOptionsBuilder builder_(_fbb);
+  builder_.add_interval(interval);
+  builder_.add_maxEntries(maxEntries);
+  builder_.add_threshold(threshold);
+  return builder_.Finish();
+}
+
+struct CreateAudioLevelObserverRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CreateAudioLevelObserverRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CreateAudioLevelObserverRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_RTPOBSERVERID = 4,
+    VT_OPTIONS = 6
+  };
+  const flatbuffers::String *rtpObserverId() const {
+    return GetPointer<const flatbuffers::String *>(VT_RTPOBSERVERID);
+  }
+  const FBS::Router::AudioLevelObserverOptions *options() const {
+    return GetPointer<const FBS::Router::AudioLevelObserverOptions *>(VT_OPTIONS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_RTPOBSERVERID) &&
+           verifier.VerifyString(rtpObserverId()) &&
+           VerifyOffsetRequired(verifier, VT_OPTIONS) &&
+           verifier.VerifyTable(options()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CreateAudioLevelObserverRequestBuilder {
+  typedef CreateAudioLevelObserverRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_rtpObserverId(flatbuffers::Offset<flatbuffers::String> rtpObserverId) {
+    fbb_.AddOffset(CreateAudioLevelObserverRequest::VT_RTPOBSERVERID, rtpObserverId);
+  }
+  void add_options(flatbuffers::Offset<FBS::Router::AudioLevelObserverOptions> options) {
+    fbb_.AddOffset(CreateAudioLevelObserverRequest::VT_OPTIONS, options);
+  }
+  explicit CreateAudioLevelObserverRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CreateAudioLevelObserverRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CreateAudioLevelObserverRequest>(end);
+    fbb_.Required(o, CreateAudioLevelObserverRequest::VT_RTPOBSERVERID);
+    fbb_.Required(o, CreateAudioLevelObserverRequest::VT_OPTIONS);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CreateAudioLevelObserverRequest> CreateCreateAudioLevelObserverRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> rtpObserverId = 0,
+    flatbuffers::Offset<FBS::Router::AudioLevelObserverOptions> options = 0) {
+  CreateAudioLevelObserverRequestBuilder builder_(_fbb);
+  builder_.add_options(options);
+  builder_.add_rtpObserverId(rtpObserverId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CreateAudioLevelObserverRequest> CreateCreateAudioLevelObserverRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *rtpObserverId = nullptr,
+    flatbuffers::Offset<FBS::Router::AudioLevelObserverOptions> options = 0) {
+  auto rtpObserverId__ = rtpObserverId ? _fbb.CreateString(rtpObserverId) : 0;
+  return FBS::Router::CreateCreateAudioLevelObserverRequest(
+      _fbb,
+      rtpObserverId__,
       options);
 }
 
@@ -575,6 +722,41 @@ inline const flatbuffers::TypeTable *CreateDirectTransportRequestTypeTable() {
   };
   static const char * const names[] = {
     "transportId",
+    "options"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *AudioLevelObserverOptionsTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_CHAR, 0, -1 },
+    { flatbuffers::ET_USHORT, 0, -1 }
+  };
+  static const char * const names[] = {
+    "maxEntries",
+    "threshold",
+    "interval"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 3, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CreateAudioLevelObserverRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Router::AudioLevelObserverOptionsTypeTable
+  };
+  static const char * const names[] = {
+    "rtpObserverId",
     "options"
   };
   static const flatbuffers::TypeTable tt = {

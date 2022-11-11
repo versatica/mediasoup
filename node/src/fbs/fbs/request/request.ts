@@ -4,6 +4,7 @@ import * as flatbuffers from 'flatbuffers';
 
 import { Body, unionToBody, unionListToBody } from '../../fbs/request/body';
 import { Method } from '../../fbs/request/method';
+import { CreateAudioLevelObserverRequest, CreateAudioLevelObserverRequestT } from '../../fbs/router/create-audio-level-observer-request';
 import { CreateDirectTransportRequest, CreateDirectTransportRequestT } from '../../fbs/router/create-direct-transport-request';
 import { CreatePipeTransportRequest, CreatePipeTransportRequestT } from '../../fbs/router/create-pipe-transport-request';
 import { CreatePlainTransportRequest, CreatePlainTransportRequestT } from '../../fbs/router/create-plain-transport-request';
@@ -142,7 +143,7 @@ constructor(
   public method: Method = Method.WORKER_CLOSE,
   public handlerId: string|Uint8Array|null = null,
   public bodyType: Body = Body.NONE,
-  public body: CloseRouterRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateDirectTransportRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|UpdateSettingsRequestT|null = null
+  public body: CloseRouterRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateAudioLevelObserverRequestT|CreateDirectTransportRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|UpdateSettingsRequestT|null = null
 ){}
 
 

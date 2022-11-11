@@ -57,6 +57,7 @@ namespace RTC
 		void SetNewRtpObserverIdFromData(json& data, std::string& rtpObserverId) const;
 		RTC::RtpObserver* GetRtpObserverFromData(json& data) const;
 		void CheckNoTransport(const std::string& transportId) const;
+		void CheckNoRtpObserver(const std::string& rtpObserverId) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
