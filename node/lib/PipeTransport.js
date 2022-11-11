@@ -216,7 +216,7 @@ function parsePipeTransportDump(binary) {
     const baseTransportDump = (0, Transport_1.parseBaseTransportDump)(fbsBaseTransportDump);
     // Retrieve RTP Tuple.
     const tuple = (0, Transport_1.parseTuple)(binary.tuple());
-    // Retrieve RT	// Retrieve SRTP Parameters.
+    // Retrieve SRTP Parameters.
     let srtpParameters;
     if (binary.srtpParameters()) {
         srtpParameters = (0, SrtpParameters_1.parseSrtpParameters)(binary.srtpParameters());

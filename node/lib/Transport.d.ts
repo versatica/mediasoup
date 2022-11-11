@@ -11,6 +11,8 @@ import { Consumer, ConsumerOptions } from './Consumer';
 import { DataProducer, DataProducerOptions } from './DataProducer';
 import { DataConsumer, DataConsumerOptions } from './DataConsumer';
 import { RtpCapabilities } from './RtpParameters';
+import { SctpParameters } from './SctpParameters';
+import * as FbsTransport from './fbs/transport_generated';
 export declare type TransportListenIp = {
     /**
      * Listening IPv4 or IPv6.
