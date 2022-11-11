@@ -11,6 +11,8 @@ const create_pipe_transport_request_1 = require("../../fbs/router/create-pipe-tr
 const create_plain_transport_request_1 = require("../../fbs/router/create-plain-transport-request");
 const create_web_rtc_transport_request_1 = require("../../fbs/router/create-web-rtc-transport-request");
 const consume_request_1 = require("../../fbs/transport/consume-request");
+const set_max_incoming_bitrate_request_1 = require("../../fbs/transport/set-max-incoming-bitrate-request");
+const set_max_outgoing_bitrate_request_1 = require("../../fbs/transport/set-max-outgoing-bitrate-request");
 const close_router_request_1 = require("../../fbs/worker/close-router-request");
 const close_web_rtc_server_request_1 = require("../../fbs/worker/close-web-rtc-server-request");
 const create_router_request_1 = require("../../fbs/worker/create-router-request");
@@ -32,7 +34,9 @@ var Body;
     Body[Body["FBS_Router_CreateAudioLevelObserverRequest"] = 11] = "FBS_Router_CreateAudioLevelObserverRequest";
     Body[Body["FBS_Router_CloseTransportRequest"] = 12] = "FBS_Router_CloseTransportRequest";
     Body[Body["FBS_Router_CloseRtpObserverRequest"] = 13] = "FBS_Router_CloseRtpObserverRequest";
-    Body[Body["FBS_Transport_ConsumeRequest"] = 14] = "FBS_Transport_ConsumeRequest";
+    Body[Body["FBS_Transport_SetMaxIncomingBitrateRequest"] = 14] = "FBS_Transport_SetMaxIncomingBitrateRequest";
+    Body[Body["FBS_Transport_SetMaxOutgoingBitrateRequest"] = 15] = "FBS_Transport_SetMaxOutgoingBitrateRequest";
+    Body[Body["FBS_Transport_ConsumeRequest"] = 16] = "FBS_Transport_ConsumeRequest";
 })(Body = exports.Body || (exports.Body = {}));
 function unionToBody(type, accessor) {
     switch (Body[type]) {
@@ -50,6 +54,8 @@ function unionToBody(type, accessor) {
         case 'FBS_Router_CreateAudioLevelObserverRequest': return accessor(new create_audio_level_observer_request_1.CreateAudioLevelObserverRequest());
         case 'FBS_Router_CloseTransportRequest': return accessor(new close_transport_request_1.CloseTransportRequest());
         case 'FBS_Router_CloseRtpObserverRequest': return accessor(new close_rtp_observer_request_1.CloseRtpObserverRequest());
+        case 'FBS_Transport_SetMaxIncomingBitrateRequest': return accessor(new set_max_incoming_bitrate_request_1.SetMaxIncomingBitrateRequest());
+        case 'FBS_Transport_SetMaxOutgoingBitrateRequest': return accessor(new set_max_outgoing_bitrate_request_1.SetMaxOutgoingBitrateRequest());
         case 'FBS_Transport_ConsumeRequest': return accessor(new consume_request_1.ConsumeRequest());
         default: return null;
     }
@@ -71,6 +77,8 @@ function unionListToBody(type, accessor, index) {
         case 'FBS_Router_CreateAudioLevelObserverRequest': return accessor(index, new create_audio_level_observer_request_1.CreateAudioLevelObserverRequest());
         case 'FBS_Router_CloseTransportRequest': return accessor(index, new close_transport_request_1.CloseTransportRequest());
         case 'FBS_Router_CloseRtpObserverRequest': return accessor(index, new close_rtp_observer_request_1.CloseRtpObserverRequest());
+        case 'FBS_Transport_SetMaxIncomingBitrateRequest': return accessor(index, new set_max_incoming_bitrate_request_1.SetMaxIncomingBitrateRequest());
+        case 'FBS_Transport_SetMaxOutgoingBitrateRequest': return accessor(index, new set_max_outgoing_bitrate_request_1.SetMaxOutgoingBitrateRequest());
         case 'FBS_Transport_ConsumeRequest': return accessor(index, new consume_request_1.ConsumeRequest());
         default: return null;
     }

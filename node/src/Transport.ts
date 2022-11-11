@@ -515,10 +515,20 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	{
 		logger.debug('setMaxIncomingBitrate() [bitrate:%s]', bitrate);
 
-		const reqData = { bitrate };
+		/* Build Request. */
 
-		await this.channel.request(
-			'transport.setMaxIncomingBitrate', this.internal.transportId, reqData);
+		const builder = this.channel.bufferBuilder;
+
+		const setMaxIncomingBitrateOffset = new FbsTransport.SetMaxIncomingBitrateRequestT(
+			bitrate
+		).pack(builder);
+
+		await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE,
+			FbsRequest.Body.FBS_Transport_SetMaxIncomingBitrateRequest,
+			setMaxIncomingBitrateOffset,
+			this.internal.routerId
+		);
 	}
 
 	/**
@@ -528,10 +538,20 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	{
 		logger.debug('setMaxOutgoingBitrate() [bitrate:%s]', bitrate);
 
-		const reqData = { bitrate };
+		/* Build Request. */
 
-		await this.channel.request(
-			'transport.setMaxOutgoingBitrate', this.internal.transportId, reqData);
+		const builder = this.channel.bufferBuilder;
+
+		const setMaxOutgoingBitrateOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
+			bitrate
+		).pack(builder);
+
+		await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE,
+			FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest,
+			setMaxOutgoingBitrateOffset,
+			this.internal.routerId
+		);
 	}
 
 	/**

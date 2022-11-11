@@ -10,6 +10,8 @@ import { CreatePipeTransportRequestT } from '../../fbs/router/create-pipe-transp
 import { CreatePlainTransportRequestT } from '../../fbs/router/create-plain-transport-request';
 import { CreateWebRtcTransportRequestT } from '../../fbs/router/create-web-rtc-transport-request';
 import { ConsumeRequestT } from '../../fbs/transport/consume-request';
+import { SetMaxIncomingBitrateRequestT } from '../../fbs/transport/set-max-incoming-bitrate-request';
+import { SetMaxOutgoingBitrateRequestT } from '../../fbs/transport/set-max-outgoing-bitrate-request';
 import { CloseRouterRequestT } from '../../fbs/worker/close-router-request';
 import { CloseWebRtcServerRequestT } from '../../fbs/worker/close-web-rtc-server-request';
 import { CreateRouterRequestT } from '../../fbs/worker/create-router-request';
@@ -45,8 +47,8 @@ export declare class RequestT {
     method: Method;
     handlerId: string | Uint8Array | null;
     bodyType: Body;
-    body: CloseRouterRequestT | CloseRtpObserverRequestT | CloseTransportRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateActiveSpeakerObserverRequestT | CreateAudioLevelObserverRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | UpdateSettingsRequestT | null;
-    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: CloseRouterRequestT | CloseRtpObserverRequestT | CloseTransportRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateActiveSpeakerObserverRequestT | CreateAudioLevelObserverRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | UpdateSettingsRequestT | null);
+    body: CloseRouterRequestT | CloseRtpObserverRequestT | CloseTransportRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateActiveSpeakerObserverRequestT | CreateAudioLevelObserverRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | SetMaxIncomingBitrateRequestT | SetMaxOutgoingBitrateRequestT | UpdateSettingsRequestT | null;
+    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: CloseRouterRequestT | CloseRtpObserverRequestT | CloseTransportRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateActiveSpeakerObserverRequestT | CreateAudioLevelObserverRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | SetMaxIncomingBitrateRequestT | SetMaxOutgoingBitrateRequestT | UpdateSettingsRequestT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=request.d.ts.map

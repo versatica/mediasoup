@@ -24,6 +24,8 @@ export { PipeTransportDump, PipeTransportDumpT } from './fbs/transport/pipe-tran
 export { PlainTransportDump, PlainTransportDumpT } from './fbs/transport/plain-transport-dump';
 export { RtpListener, RtpListenerT } from './fbs/transport/rtp-listener';
 export { SctpListener, SctpListenerT } from './fbs/transport/sctp-listener';
+export { SetMaxIncomingBitrateRequest, SetMaxIncomingBitrateRequestT } from './fbs/transport/set-max-incoming-bitrate-request';
+export { SetMaxOutgoingBitrateRequest, SetMaxOutgoingBitrateRequestT } from './fbs/transport/set-max-outgoing-bitrate-request';
 export { SrtpParameters, SrtpParametersT } from './fbs/transport/srtp-parameters';
 export { TransportDumpData, unionToTransportDumpData, unionListToTransportDumpData } from './fbs/transport/transport-dump-data';
 export { TransportListenIp, TransportListenIpT } from './fbs/transport/transport-listen-ip';

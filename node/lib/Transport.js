@@ -16,6 +16,7 @@ const FbsRequest = require("./fbs/request_generated");
 const FbsResponse = require("./fbs/response_generated");
 const media_kind_1 = require("./fbs/fbs/rtp-parameters/media-kind");
 const FbsConsumer = require("./fbs/consumer_generated");
+const FbsTransport = require("./fbs/transport_generated");
 const FbsRouter = require("./fbs/router_generated");
 const logger = new Logger_1.Logger('Transport');
 class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
@@ -272,16 +273,20 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async setMaxIncomingBitrate(bitrate) {
         logger.debug('setMaxIncomingBitrate() [bitrate:%s]', bitrate);
-        const reqData = { bitrate };
-        await this.channel.request('transport.setMaxIncomingBitrate', this.internal.transportId, reqData);
+        /* Build Request. */
+        const builder = this.channel.bufferBuilder;
+        const setMaxIncomingBitrateOffset = new FbsTransport.SetMaxIncomingBitrateRequestT(bitrate).pack(builder);
+        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE, FbsRequest.Body.FBS_Transport_SetMaxIncomingBitrateRequest, setMaxIncomingBitrateOffset, this.internal.routerId);
     }
     /**
      * Set maximum outgoing bitrate for sending media.
      */
     async setMaxOutgoingBitrate(bitrate) {
         logger.debug('setMaxOutgoingBitrate() [bitrate:%s]', bitrate);
-        const reqData = { bitrate };
-        await this.channel.request('transport.setMaxOutgoingBitrate', this.internal.transportId, reqData);
+        /* Build Request. */
+        const builder = this.channel.bufferBuilder;
+        const setMaxOutgoingBitrateOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(bitrate).pack(builder);
+        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE, FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest, setMaxOutgoingBitrateOffset, this.internal.routerId);
     }
     /**
      * Create a Producer.

@@ -18,8 +18,6 @@ namespace Channel
 	{
 		{ "transport.getStats",                          FBS::Request::Method::TRANSPORT_GET_STATS                              },
 		{ "transport.connect",                           FBS::Request::Method::TRANSPORT_CONNECT                                },
-		{ "transport.setMaxIncomingBitrate",             FBS::Request::Method::TRANSPORT_SET_MAX_INCOMING_BITRATE               },
-		{ "transport.setMaxOutgoingBitrate",             FBS::Request::Method::TRANSPORT_SET_MAX_OUTGOING_BITRATE               },
 		{ "transport.restartIce",                        FBS::Request::Method::TRANSPORT_RESTART_ICE                            },
 		{ "transport.produce",                           FBS::Request::Method::TRANSPORT_PRODUCE                                },
 		{ "transport.produceData",                       FBS::Request::Method::TRANSPORT_PRODUCE_DATA                           },

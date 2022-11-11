@@ -75,6 +75,12 @@ struct PipeTransportDumpBuilder;
 struct BaseTransportOptions;
 struct BaseTransportOptionsBuilder;
 
+struct SetMaxIncomingBitrateRequest;
+struct SetMaxIncomingBitrateRequestBuilder;
+
+struct SetMaxOutgoingBitrateRequest;
+struct SetMaxOutgoingBitrateRequestBuilder;
+
 inline const flatbuffers::TypeTable *TransportListenIpTypeTable();
 
 inline const flatbuffers::TypeTable *ConsumeRequestTypeTable();
@@ -110,6 +116,10 @@ inline const flatbuffers::TypeTable *DirectTransportDumpTypeTable();
 inline const flatbuffers::TypeTable *PipeTransportDumpTypeTable();
 
 inline const flatbuffers::TypeTable *BaseTransportOptionsTypeTable();
+
+inline const flatbuffers::TypeTable *SetMaxIncomingBitrateRequestTypeTable();
+
+inline const flatbuffers::TypeTable *SetMaxOutgoingBitrateRequestTypeTable();
 
 enum class TransportProtocol : uint8_t {
   UDP = 1,
@@ -2046,6 +2056,94 @@ inline flatbuffers::Offset<BaseTransportOptions> CreateBaseTransportOptions(
   return builder_.Finish();
 }
 
+struct SetMaxIncomingBitrateRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SetMaxIncomingBitrateRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SetMaxIncomingBitrateRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MAXINCOMINGBITRATE = 4
+  };
+  uint32_t maxIncomingBitrate() const {
+    return GetField<uint32_t>(VT_MAXINCOMINGBITRATE, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_MAXINCOMINGBITRATE, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct SetMaxIncomingBitrateRequestBuilder {
+  typedef SetMaxIncomingBitrateRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_maxIncomingBitrate(uint32_t maxIncomingBitrate) {
+    fbb_.AddElement<uint32_t>(SetMaxIncomingBitrateRequest::VT_MAXINCOMINGBITRATE, maxIncomingBitrate, 0);
+  }
+  explicit SetMaxIncomingBitrateRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SetMaxIncomingBitrateRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SetMaxIncomingBitrateRequest>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SetMaxIncomingBitrateRequest> CreateSetMaxIncomingBitrateRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t maxIncomingBitrate = 0) {
+  SetMaxIncomingBitrateRequestBuilder builder_(_fbb);
+  builder_.add_maxIncomingBitrate(maxIncomingBitrate);
+  return builder_.Finish();
+}
+
+struct SetMaxOutgoingBitrateRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SetMaxOutgoingBitrateRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SetMaxOutgoingBitrateRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MAXOUTGOINGBITRATE = 4
+  };
+  uint32_t maxOutgoingBitrate() const {
+    return GetField<uint32_t>(VT_MAXOUTGOINGBITRATE, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_MAXOUTGOINGBITRATE, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct SetMaxOutgoingBitrateRequestBuilder {
+  typedef SetMaxOutgoingBitrateRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_maxOutgoingBitrate(uint32_t maxOutgoingBitrate) {
+    fbb_.AddElement<uint32_t>(SetMaxOutgoingBitrateRequest::VT_MAXOUTGOINGBITRATE, maxOutgoingBitrate, 0);
+  }
+  explicit SetMaxOutgoingBitrateRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SetMaxOutgoingBitrateRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SetMaxOutgoingBitrateRequest>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SetMaxOutgoingBitrateRequest> CreateSetMaxOutgoingBitrateRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t maxOutgoingBitrate = 0) {
+  SetMaxOutgoingBitrateRequestBuilder builder_(_fbb);
+  builder_.add_maxOutgoingBitrate(maxOutgoingBitrate);
+  return builder_.Finish();
+}
+
 inline bool VerifyTransportDumpData(flatbuffers::Verifier &verifier, const void *obj, TransportDumpData type) {
   switch (type) {
     case TransportDumpData::NONE: {
@@ -2552,6 +2650,32 @@ inline const flatbuffers::TypeTable *BaseTransportOptionsTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 8, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SetMaxIncomingBitrateRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UINT, 0, -1 }
+  };
+  static const char * const names[] = {
+    "maxIncomingBitrate"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SetMaxOutgoingBitrateRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UINT, 0, -1 }
+  };
+  static const char * const names[] = {
+    "maxOutgoingBitrate"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
   };
   return &tt;
 }

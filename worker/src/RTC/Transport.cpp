@@ -677,19 +677,9 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_SET_MAX_INCOMING_BITRATE:
 			{
-				auto jsonBitrateIt = request->data.find("bitrate");
+				auto body = request->_data->body_as<FBS::Transport::SetMaxIncomingBitrateRequest>();
 
-				// clang-format off
-				if (
-					jsonBitrateIt == request->data.end() ||
-					!Utils::Json::IsPositiveInteger(*jsonBitrateIt)
-				)
-				// clang-format on
-				{
-					MS_THROW_TYPE_ERROR("missing bitrate");
-				}
-
-				this->maxIncomingBitrate = jsonBitrateIt->get<uint32_t>();
+				this->maxIncomingBitrate = body->maxIncomingBitrate();
 
 				MS_DEBUG_TAG(bwe, "maximum incoming bitrate set to %" PRIu32, this->maxIncomingBitrate);
 
@@ -703,19 +693,9 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_SET_MAX_OUTGOING_BITRATE:
 			{
-				auto jsonBitrateIt = request->data.find("bitrate");
+				auto body = request->_data->body_as<FBS::Transport::SetMaxOutgoingBitrateRequest>();
 
-				// clang-format off
-				if (
-					jsonBitrateIt == request->data.end() ||
-					!Utils::Json::IsPositiveInteger(*jsonBitrateIt)
-				)
-				// clang-format on
-				{
-					MS_THROW_TYPE_ERROR("missing bitrate");
-				}
-
-				uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
+				uint32_t bitrate = body->maxOutgoingBitrate();
 
 				if (bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
 				{

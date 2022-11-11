@@ -235,12 +235,14 @@ enum class Body : uint8_t {
   FBS_Router_CreateAudioLevelObserverRequest = 11,
   FBS_Router_CloseTransportRequest = 12,
   FBS_Router_CloseRtpObserverRequest = 13,
-  FBS_Transport_ConsumeRequest = 14,
+  FBS_Transport_SetMaxIncomingBitrateRequest = 14,
+  FBS_Transport_SetMaxOutgoingBitrateRequest = 15,
+  FBS_Transport_ConsumeRequest = 16,
   MIN = NONE,
   MAX = FBS_Transport_ConsumeRequest
 };
 
-inline const Body (&EnumValuesBody())[15] {
+inline const Body (&EnumValuesBody())[17] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_UpdateSettingsRequest,
@@ -256,13 +258,15 @@ inline const Body (&EnumValuesBody())[15] {
     Body::FBS_Router_CreateAudioLevelObserverRequest,
     Body::FBS_Router_CloseTransportRequest,
     Body::FBS_Router_CloseRtpObserverRequest,
+    Body::FBS_Transport_SetMaxIncomingBitrateRequest,
+    Body::FBS_Transport_SetMaxOutgoingBitrateRequest,
     Body::FBS_Transport_ConsumeRequest
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[16] = {
+  static const char * const names[18] = {
     "NONE",
     "FBS_Worker_UpdateSettingsRequest",
     "FBS_Worker_CreateWebRtcServerRequest",
@@ -277,6 +281,8 @@ inline const char * const *EnumNamesBody() {
     "FBS_Router_CreateAudioLevelObserverRequest",
     "FBS_Router_CloseTransportRequest",
     "FBS_Router_CloseRtpObserverRequest",
+    "FBS_Transport_SetMaxIncomingBitrateRequest",
+    "FBS_Transport_SetMaxOutgoingBitrateRequest",
     "FBS_Transport_ConsumeRequest",
     nullptr
   };
@@ -343,6 +349,14 @@ template<> struct BodyTraits<FBS::Router::CloseTransportRequest> {
 
 template<> struct BodyTraits<FBS::Router::CloseRtpObserverRequest> {
   static const Body enum_value = Body::FBS_Router_CloseRtpObserverRequest;
+};
+
+template<> struct BodyTraits<FBS::Transport::SetMaxIncomingBitrateRequest> {
+  static const Body enum_value = Body::FBS_Transport_SetMaxIncomingBitrateRequest;
+};
+
+template<> struct BodyTraits<FBS::Transport::SetMaxOutgoingBitrateRequest> {
+  static const Body enum_value = Body::FBS_Transport_SetMaxOutgoingBitrateRequest;
 };
 
 template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
@@ -419,6 +433,12 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Router::CloseRtpObserverRequest *body_as_FBS_Router_CloseRtpObserverRequest() const {
     return body_type() == FBS::Request::Body::FBS_Router_CloseRtpObserverRequest ? static_cast<const FBS::Router::CloseRtpObserverRequest *>(body()) : nullptr;
   }
+  const FBS::Transport::SetMaxIncomingBitrateRequest *body_as_FBS_Transport_SetMaxIncomingBitrateRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Transport_SetMaxIncomingBitrateRequest ? static_cast<const FBS::Transport::SetMaxIncomingBitrateRequest *>(body()) : nullptr;
+  }
+  const FBS::Transport::SetMaxOutgoingBitrateRequest *body_as_FBS_Transport_SetMaxOutgoingBitrateRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Transport_SetMaxOutgoingBitrateRequest ? static_cast<const FBS::Transport::SetMaxOutgoingBitrateRequest *>(body()) : nullptr;
+  }
   const FBS::Transport::ConsumeRequest *body_as_FBS_Transport_ConsumeRequest() const {
     return body_type() == FBS::Request::Body::FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
   }
@@ -485,6 +505,14 @@ template<> inline const FBS::Router::CloseTransportRequest *Request::body_as<FBS
 
 template<> inline const FBS::Router::CloseRtpObserverRequest *Request::body_as<FBS::Router::CloseRtpObserverRequest>() const {
   return body_as_FBS_Router_CloseRtpObserverRequest();
+}
+
+template<> inline const FBS::Transport::SetMaxIncomingBitrateRequest *Request::body_as<FBS::Transport::SetMaxIncomingBitrateRequest>() const {
+  return body_as_FBS_Transport_SetMaxIncomingBitrateRequest();
+}
+
+template<> inline const FBS::Transport::SetMaxOutgoingBitrateRequest *Request::body_as<FBS::Transport::SetMaxOutgoingBitrateRequest>() const {
+  return body_as_FBS_Transport_SetMaxOutgoingBitrateRequest();
 }
 
 template<> inline const FBS::Transport::ConsumeRequest *Request::body_as<FBS::Transport::ConsumeRequest>() const {
@@ -609,6 +637,14 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     }
     case Body::FBS_Router_CloseRtpObserverRequest: {
       auto ptr = reinterpret_cast<const FBS::Router::CloseRtpObserverRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Transport_SetMaxIncomingBitrateRequest: {
+      auto ptr = reinterpret_cast<const FBS::Transport::SetMaxIncomingBitrateRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Transport_SetMaxOutgoingBitrateRequest: {
+      auto ptr = reinterpret_cast<const FBS::Transport::SetMaxOutgoingBitrateRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case Body::FBS_Transport_ConsumeRequest: {
@@ -775,7 +811,9 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 10 },
     { flatbuffers::ET_SEQUENCE, 0, 11 },
     { flatbuffers::ET_SEQUENCE, 0, 12 },
-    { flatbuffers::ET_SEQUENCE, 0, 13 }
+    { flatbuffers::ET_SEQUENCE, 0, 13 },
+    { flatbuffers::ET_SEQUENCE, 0, 14 },
+    { flatbuffers::ET_SEQUENCE, 0, 15 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::UpdateSettingsRequestTypeTable,
@@ -791,6 +829,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Router::CreateAudioLevelObserverRequestTypeTable,
     FBS::Router::CloseTransportRequestTypeTable,
     FBS::Router::CloseRtpObserverRequestTypeTable,
+    FBS::Transport::SetMaxIncomingBitrateRequestTypeTable,
+    FBS::Transport::SetMaxOutgoingBitrateRequestTypeTable,
     FBS::Transport::ConsumeRequestTypeTable
   };
   static const char * const names[] = {
@@ -808,10 +848,12 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Router_CreateAudioLevelObserverRequest",
     "FBS_Router_CloseTransportRequest",
     "FBS_Router_CloseRtpObserverRequest",
+    "FBS_Transport_SetMaxIncomingBitrateRequest",
+    "FBS_Transport_SetMaxOutgoingBitrateRequest",
     "FBS_Transport_ConsumeRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 15, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 17, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

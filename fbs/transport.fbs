@@ -161,3 +161,11 @@ table BaseTransportOptions {
   sctp_send_buffer_size:uint32;
   is_data_channel:bool = false;
 }
+
+table SetMaxIncomingBitrateRequest {
+  max_incoming_bitrate:uint32;
+}
+
+table SetMaxOutgoingBitrateRequest {
+  max_outgoing_bitrate:uint32;
+}
