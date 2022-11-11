@@ -27,7 +27,7 @@ switch (task)
 		}
 		else
 		{
-			execute('rmdir /s /q "node/lib"', /*exitOnError*/ false);
+			execute('rmdir /s /q "node/lib"', /* exitOnError */ false);
 		}
 
 		execute('tsc --project node');
@@ -46,7 +46,7 @@ switch (task)
 		}
 		else
 		{
-			execute('rmdir /s /q "node/lib"', /*exitOnError*/ false);
+			execute('rmdir /s /q "node/lib"', /* exitOnError */ false);
 		}
 
 		const watch = new TscWatchClient();
