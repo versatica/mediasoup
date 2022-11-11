@@ -77,6 +77,7 @@ union Body {
   FBS.Router.CreateActiveSpeakerObserverRequest,
   FBS.Router.CreateAudioLevelObserverRequest,
   FBS.Router.CloseTransportRequest,
+  FBS.Router.CloseRtpObserverRequest,
   FBS.Transport.ConsumeRequest,
 }
 

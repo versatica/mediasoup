@@ -53,6 +53,9 @@ struct CreateActiveSpeakerObserverRequestBuilder;
 struct CloseTransportRequest;
 struct CloseTransportRequestBuilder;
 
+struct CloseRtpObserverRequest;
+struct CloseRtpObserverRequestBuilder;
+
 inline const flatbuffers::TypeTable *DumpResponseTypeTable();
 
 inline const flatbuffers::TypeTable *CreatePipeTransportRequestTypeTable();
@@ -72,6 +75,8 @@ inline const flatbuffers::TypeTable *ActiveSpeakerObserverOptionsTypeTable();
 inline const flatbuffers::TypeTable *CreateActiveSpeakerObserverRequestTypeTable();
 
 inline const flatbuffers::TypeTable *CloseTransportRequestTypeTable();
+
+inline const flatbuffers::TypeTable *CloseRtpObserverRequestTypeTable();
 
 struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef DumpResponseBuilder Builder;
@@ -810,6 +815,61 @@ inline flatbuffers::Offset<CloseTransportRequest> CreateCloseTransportRequestDir
       transportId__);
 }
 
+struct CloseRtpObserverRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CloseRtpObserverRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CloseRtpObserverRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_RTPOBSERVERID = 4
+  };
+  const flatbuffers::String *rtpObserverId() const {
+    return GetPointer<const flatbuffers::String *>(VT_RTPOBSERVERID);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_RTPOBSERVERID) &&
+           verifier.VerifyString(rtpObserverId()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CloseRtpObserverRequestBuilder {
+  typedef CloseRtpObserverRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_rtpObserverId(flatbuffers::Offset<flatbuffers::String> rtpObserverId) {
+    fbb_.AddOffset(CloseRtpObserverRequest::VT_RTPOBSERVERID, rtpObserverId);
+  }
+  explicit CloseRtpObserverRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CloseRtpObserverRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CloseRtpObserverRequest>(end);
+    fbb_.Required(o, CloseRtpObserverRequest::VT_RTPOBSERVERID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CloseRtpObserverRequest> CreateCloseRtpObserverRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> rtpObserverId = 0) {
+  CloseRtpObserverRequestBuilder builder_(_fbb);
+  builder_.add_rtpObserverId(rtpObserverId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CloseRtpObserverRequest> CreateCloseRtpObserverRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *rtpObserverId = nullptr) {
+  auto rtpObserverId__ = rtpObserverId ? _fbb.CreateString(rtpObserverId) : 0;
+  return FBS::Router::CreateCloseRtpObserverRequest(
+      _fbb,
+      rtpObserverId__);
+}
+
 inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_STRING, 0, -1 },
@@ -985,6 +1045,19 @@ inline const flatbuffers::TypeTable *CloseTransportRequestTypeTable() {
   };
   static const char * const names[] = {
     "transportId"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CloseRtpObserverRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "rtpObserverId"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names

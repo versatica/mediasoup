@@ -54,7 +54,7 @@ test('router.createAudioLevelObserver() succeeds', async () =>
 			});
 }, 2000);
 
-test.only('router.createAudioLevelObserver() with wrong arguments rejects with TypeError', async () =>
+test('router.createAudioLevelObserver() with wrong arguments rejects with TypeError', async () =>
 {
 	await expect(router.createAudioLevelObserver({ maxEntries: 0 }))
 		.rejects

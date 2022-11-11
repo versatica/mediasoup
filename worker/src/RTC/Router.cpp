@@ -498,8 +498,11 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CLOSE_RTP_OBSERVER:
 			{
+				auto body = request->_data->body_as<FBS::Router::CloseRtpObserverRequest>();
+				auto rtpObserverId = body->rtpObserverId()->str();
+
 				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverFromData(request->data);
+				RTC::RtpObserver* rtpObserver = GetRtpObserverById(rtpObserverId);
 
 				// Remove it from the map.
 				this->mapRtpObservers.erase(rtpObserver->id);
@@ -555,25 +558,16 @@ namespace RTC
 		return it->second;
 	}
 
-	RTC::RtpObserver* Router::GetRtpObserverFromData(json& data) const
+	RTC::RtpObserver* Router::GetRtpObserverById(const std::string& rtpObserverId) const
 	{
 		MS_TRACE();
 
-		auto jsonRtpObserverIdIt = data.find("rtpObserverId");
+		auto it = this->mapRtpObservers.find(rtpObserverId);
 
-		if (jsonRtpObserverIdIt == data.end() || !jsonRtpObserverIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing rtpObserverId");
-		}
-
-		auto it = this->mapRtpObservers.find(jsonRtpObserverIdIt->get<std::string>());
-
-		if (it == this->mapRtpObservers.end())
+		if (this->mapRtpObservers.find(rtpObserverId) == this->mapRtpObservers.end())
 			MS_THROW_ERROR("RtpObserver not found");
 
-		RTC::RtpObserver* rtpObserver = it->second;
-
-		return rtpObserver;
+		return it->second;
 	}
 
 	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)

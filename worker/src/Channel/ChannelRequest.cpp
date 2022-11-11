@@ -16,7 +16,6 @@ namespace Channel
 	// clang-format off
 	absl::flat_hash_map<std::string, FBS::Request::Method> ChannelRequest::string2Method =
 	{
-		{ "router.closeRtpObserver",                     FBS::Request::Method::ROUTER_CLOSE_RTP_OBSERVER                        },
 		{ "transport.getStats",                          FBS::Request::Method::TRANSPORT_GET_STATS                              },
 		{ "transport.connect",                           FBS::Request::Method::TRANSPORT_CONNECT                                },
 		{ "transport.setMaxIncomingBitrate",             FBS::Request::Method::TRANSPORT_SET_MAX_INCOMING_BITRATE               },

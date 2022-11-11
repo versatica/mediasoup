@@ -53,7 +53,7 @@ namespace RTC
 
 	private:
 		RTC::Transport* GetTransportById(const std::string& transportId) const;
-		RTC::RtpObserver* GetRtpObserverFromData(json& data) const;
+		RTC::RtpObserver* GetRtpObserverById(const std::string& rtpObserverId) const;
 		void CheckNoTransport(const std::string& transportId) const;
 		void CheckNoRtpObserver(const std::string& rtpObserverId) const;
 

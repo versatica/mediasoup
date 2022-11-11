@@ -4,6 +4,8 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { RouterInternal } from './Router';
 import { Producer } from './Producer';
+import * as FbsRequest from './fbs/request_generated';
+import * as FbsRouter from './fbs/router_generated';
 
 export type RtpObserverEvents =
 {
@@ -161,10 +163,20 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		this.channel.removeAllListeners(this.internal.rtpObserverId);
 		this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
 
-		const reqData = { rtpObserverId: this.internal.rtpObserverId };
+		/* Build Request. */
 
-		this.channel.request('router.closeRtpObserver', this.internal.routerId, reqData)
-			.catch(() => {});
+		const builder = this.channel.bufferBuilder;
+
+		const closeTransportOffset = new FbsRouter.CloseRtpObserverRequestT(
+			this.internal.rtpObserverId
+		).pack(builder);
+
+		this.channel.requestBinary(
+			FbsRequest.Method.ROUTER_CLOSE_RTP_OBSERVER,
+			FbsRequest.Body.FBS_Router_CloseRtpObserverRequest,
+			closeTransportOffset,
+			this.internal.routerId
+		).catch(() => {});
 
 		this.emit('@close');
 

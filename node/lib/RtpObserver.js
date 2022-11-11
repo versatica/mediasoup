@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RtpObserver = void 0;
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
+const FbsRequest = require("./fbs/request_generated");
+const FbsRouter = require("./fbs/router_generated");
 const logger = new Logger_1.Logger('RtpObserver');
 class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -81,9 +83,10 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.channel.removeAllListeners(this.internal.rtpObserverId);
         this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
-        const reqData = { rtpObserverId: this.internal.rtpObserverId };
-        this.channel.request('router.closeRtpObserver', this.internal.routerId, reqData)
-            .catch(() => { });
+        /* Build Request. */
+        const builder = this.channel.bufferBuilder;
+        const closeTransportOffset = new FbsRouter.CloseRtpObserverRequestT(this.internal.rtpObserverId).pack(builder);
+        this.channel.requestBinary(FbsRequest.Method.ROUTER_CLOSE_RTP_OBSERVER, FbsRequest.Body.FBS_Router_CloseRtpObserverRequest, closeTransportOffset, this.internal.routerId).catch(() => { });
         this.emit('@close');
         // Emit observer event.
         this.#observer.safeEmit('close');
