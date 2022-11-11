@@ -81,6 +81,9 @@ struct SetMaxIncomingBitrateRequestBuilder;
 struct SetMaxOutgoingBitrateRequest;
 struct SetMaxOutgoingBitrateRequestBuilder;
 
+struct EnableTraceEventRequest;
+struct EnableTraceEventRequestBuilder;
+
 inline const flatbuffers::TypeTable *TransportListenIpTypeTable();
 
 inline const flatbuffers::TypeTable *ConsumeRequestTypeTable();
@@ -120,6 +123,8 @@ inline const flatbuffers::TypeTable *BaseTransportOptionsTypeTable();
 inline const flatbuffers::TypeTable *SetMaxIncomingBitrateRequestTypeTable();
 
 inline const flatbuffers::TypeTable *SetMaxOutgoingBitrateRequestTypeTable();
+
+inline const flatbuffers::TypeTable *EnableTraceEventRequestTypeTable();
 
 enum class TransportProtocol : uint8_t {
   UDP = 1,
@@ -2144,6 +2149,62 @@ inline flatbuffers::Offset<SetMaxOutgoingBitrateRequest> CreateSetMaxOutgoingBit
   return builder_.Finish();
 }
 
+struct EnableTraceEventRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef EnableTraceEventRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return EnableTraceEventRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_EVENTS = 4
+  };
+  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *events() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_EVENTS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_EVENTS) &&
+           verifier.VerifyVector(events()) &&
+           verifier.VerifyVectorOfStrings(events()) &&
+           verifier.EndTable();
+  }
+};
+
+struct EnableTraceEventRequestBuilder {
+  typedef EnableTraceEventRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_events(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> events) {
+    fbb_.AddOffset(EnableTraceEventRequest::VT_EVENTS, events);
+  }
+  explicit EnableTraceEventRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<EnableTraceEventRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<EnableTraceEventRequest>(end);
+    fbb_.Required(o, EnableTraceEventRequest::VT_EVENTS);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<EnableTraceEventRequest> CreateEnableTraceEventRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> events = 0) {
+  EnableTraceEventRequestBuilder builder_(_fbb);
+  builder_.add_events(events);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<EnableTraceEventRequest> CreateEnableTraceEventRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<flatbuffers::Offset<flatbuffers::String>> *events = nullptr) {
+  auto events__ = events ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*events) : 0;
+  return FBS::Transport::CreateEnableTraceEventRequest(
+      _fbb,
+      events__);
+}
+
 inline bool VerifyTransportDumpData(flatbuffers::Verifier &verifier, const void *obj, TransportDumpData type) {
   switch (type) {
     case TransportDumpData::NONE: {
@@ -2673,6 +2734,19 @@ inline const flatbuffers::TypeTable *SetMaxOutgoingBitrateRequestTypeTable() {
   };
   static const char * const names[] = {
     "maxOutgoingBitrate"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *EnableTraceEventRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 1, -1 }
+  };
+  static const char * const names[] = {
+    "events"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names

@@ -17,6 +17,7 @@ export { ConsumeResponse, ConsumeResponseT } from './fbs/transport/consume-respo
 export { DirectTransportDump, DirectTransportDumpT } from './fbs/transport/direct-transport-dump';
 export { DtlsParameters, DtlsParametersT } from './fbs/transport/dtls-parameters';
 export { DumpResponse, DumpResponseT } from './fbs/transport/dump-response';
+export { EnableTraceEventRequest, EnableTraceEventRequestT } from './fbs/transport/enable-trace-event-request';
 export { Fingerprint, FingerprintT } from './fbs/transport/fingerprint';
 export { IceCandidate, IceCandidateT } from './fbs/transport/ice-candidate';
 export { IceParameters, IceParametersT } from './fbs/transport/ice-parameters';

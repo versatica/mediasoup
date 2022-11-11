@@ -574,8 +574,10 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async enableTraceEvent(types = []) {
         logger.debug('pause()');
-        const reqData = { types };
-        await this.channel.request('transport.enableTraceEvent', this.internal.transportId, reqData);
+        /* Build Request. */
+        const builder = this.channel.bufferBuilder;
+        const enableTraceEventOffset = new FbsTransport.EnableTraceEventRequestT(types).pack(builder);
+        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT, FbsRequest.Body.FBS_Transport_EnableTraceEventRequest, enableTraceEventOffset, this.internal.routerId);
     }
     getNextSctpStreamId() {
         if (!this.#data.sctpParameters ||

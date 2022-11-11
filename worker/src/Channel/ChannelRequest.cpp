@@ -22,7 +22,6 @@ namespace Channel
 		{ "transport.produce",                           FBS::Request::Method::TRANSPORT_PRODUCE                                },
 		{ "transport.produceData",                       FBS::Request::Method::TRANSPORT_PRODUCE_DATA                           },
 		{ "transport.consumeData",                       FBS::Request::Method::TRANSPORT_CONSUME_DATA                           },
-		{ "transport.enableTraceEvent",                  FBS::Request::Method::TRANSPORT_ENABLE_TRACE_EVENT                     },
 		{ "transport.closeProducer",                     FBS::Request::Method::TRANSPORT_CLOSE_PRODUCER                         },
 		{ "transport.closeConsumer",                     FBS::Request::Method::TRANSPORT_CLOSE_CONSUMER                         },
 		{ "transport.closeDataProducer",                 FBS::Request::Method::TRANSPORT_CLOSE_DATA_PRODUCER                    },

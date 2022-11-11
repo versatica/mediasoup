@@ -238,11 +238,12 @@ enum class Body : uint8_t {
   FBS_Transport_SetMaxIncomingBitrateRequest = 14,
   FBS_Transport_SetMaxOutgoingBitrateRequest = 15,
   FBS_Transport_ConsumeRequest = 16,
+  FBS_Transport_EnableTraceEventRequest = 17,
   MIN = NONE,
-  MAX = FBS_Transport_ConsumeRequest
+  MAX = FBS_Transport_EnableTraceEventRequest
 };
 
-inline const Body (&EnumValuesBody())[17] {
+inline const Body (&EnumValuesBody())[18] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_UpdateSettingsRequest,
@@ -260,13 +261,14 @@ inline const Body (&EnumValuesBody())[17] {
     Body::FBS_Router_CloseRtpObserverRequest,
     Body::FBS_Transport_SetMaxIncomingBitrateRequest,
     Body::FBS_Transport_SetMaxOutgoingBitrateRequest,
-    Body::FBS_Transport_ConsumeRequest
+    Body::FBS_Transport_ConsumeRequest,
+    Body::FBS_Transport_EnableTraceEventRequest
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[18] = {
+  static const char * const names[19] = {
     "NONE",
     "FBS_Worker_UpdateSettingsRequest",
     "FBS_Worker_CreateWebRtcServerRequest",
@@ -284,13 +286,14 @@ inline const char * const *EnumNamesBody() {
     "FBS_Transport_SetMaxIncomingBitrateRequest",
     "FBS_Transport_SetMaxOutgoingBitrateRequest",
     "FBS_Transport_ConsumeRequest",
+    "FBS_Transport_EnableTraceEventRequest",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameBody(Body e) {
-  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Transport_ConsumeRequest)) return "";
+  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Transport_EnableTraceEventRequest)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesBody()[index];
 }
@@ -361,6 +364,10 @@ template<> struct BodyTraits<FBS::Transport::SetMaxOutgoingBitrateRequest> {
 
 template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
   static const Body enum_value = Body::FBS_Transport_ConsumeRequest;
+};
+
+template<> struct BodyTraits<FBS::Transport::EnableTraceEventRequest> {
+  static const Body enum_value = Body::FBS_Transport_EnableTraceEventRequest;
 };
 
 bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body type);
@@ -442,6 +449,9 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Transport::ConsumeRequest *body_as_FBS_Transport_ConsumeRequest() const {
     return body_type() == FBS::Request::Body::FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
   }
+  const FBS::Transport::EnableTraceEventRequest *body_as_FBS_Transport_EnableTraceEventRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Transport_EnableTraceEventRequest ? static_cast<const FBS::Transport::EnableTraceEventRequest *>(body()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_ID, 4) &&
@@ -517,6 +527,10 @@ template<> inline const FBS::Transport::SetMaxOutgoingBitrateRequest *Request::b
 
 template<> inline const FBS::Transport::ConsumeRequest *Request::body_as<FBS::Transport::ConsumeRequest>() const {
   return body_as_FBS_Transport_ConsumeRequest();
+}
+
+template<> inline const FBS::Transport::EnableTraceEventRequest *Request::body_as<FBS::Transport::EnableTraceEventRequest>() const {
+  return body_as_FBS_Transport_EnableTraceEventRequest();
 }
 
 struct RequestBuilder {
@@ -649,6 +663,10 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     }
     case Body::FBS_Transport_ConsumeRequest: {
       auto ptr = reinterpret_cast<const FBS::Transport::ConsumeRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Transport_EnableTraceEventRequest: {
+      auto ptr = reinterpret_cast<const FBS::Transport::EnableTraceEventRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;
@@ -813,7 +831,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 12 },
     { flatbuffers::ET_SEQUENCE, 0, 13 },
     { flatbuffers::ET_SEQUENCE, 0, 14 },
-    { flatbuffers::ET_SEQUENCE, 0, 15 }
+    { flatbuffers::ET_SEQUENCE, 0, 15 },
+    { flatbuffers::ET_SEQUENCE, 0, 16 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::UpdateSettingsRequestTypeTable,
@@ -831,7 +850,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Router::CloseRtpObserverRequestTypeTable,
     FBS::Transport::SetMaxIncomingBitrateRequestTypeTable,
     FBS::Transport::SetMaxOutgoingBitrateRequestTypeTable,
-    FBS::Transport::ConsumeRequestTypeTable
+    FBS::Transport::ConsumeRequestTypeTable,
+    FBS::Transport::EnableTraceEventRequestTypeTable
   };
   static const char * const names[] = {
     "NONE",
@@ -850,10 +870,11 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Router_CloseRtpObserverRequest",
     "FBS_Transport_SetMaxIncomingBitrateRequest",
     "FBS_Transport_SetMaxOutgoingBitrateRequest",
-    "FBS_Transport_ConsumeRequest"
+    "FBS_Transport_ConsumeRequest",
+    "FBS_Transport_EnableTraceEventRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 17, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 18, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

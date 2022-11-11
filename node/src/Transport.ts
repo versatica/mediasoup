@@ -1002,10 +1002,20 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	{
 		logger.debug('pause()');
 
-		const reqData = { types };
+		/* Build Request. */
 
-		await this.channel.request(
-			'transport.enableTraceEvent', this.internal.transportId, reqData);
+		const builder = this.channel.bufferBuilder;
+
+		const enableTraceEventOffset = new FbsTransport.EnableTraceEventRequestT(
+			types
+		).pack(builder);
+
+		await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT,
+			FbsRequest.Body.FBS_Transport_EnableTraceEventRequest,
+			enableTraceEventOffset,
+			this.internal.routerId
+		);
 	}
 
 	private getNextSctpStreamId(): number

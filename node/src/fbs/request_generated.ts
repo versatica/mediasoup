@@ -12,6 +12,7 @@ export { CreatePipeTransportRequest, CreatePipeTransportRequestT } from './fbs/r
 export { CreatePlainTransportRequest, CreatePlainTransportRequestT } from './fbs/router/create-plain-transport-request';
 export { CreateWebRtcTransportRequest, CreateWebRtcTransportRequestT } from './fbs/router/create-web-rtc-transport-request';
 export { ConsumeRequest, ConsumeRequestT } from './fbs/transport/consume-request';
+export { EnableTraceEventRequest, EnableTraceEventRequestT } from './fbs/transport/enable-trace-event-request';
 export { SetMaxIncomingBitrateRequest, SetMaxIncomingBitrateRequestT } from './fbs/transport/set-max-incoming-bitrate-request';
 export { SetMaxOutgoingBitrateRequest, SetMaxOutgoingBitrateRequestT } from './fbs/transport/set-max-outgoing-bitrate-request';
 export { CloseRouterRequest, CloseRouterRequestT } from './fbs/worker/close-router-request';

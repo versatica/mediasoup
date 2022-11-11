@@ -1328,21 +1328,14 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_ENABLE_TRACE_EVENT:
 			{
-				auto jsonTypesIt = request->data.find("types");
-
-				// Disable all if no entries.
-				if (jsonTypesIt == request->data.end() || !jsonTypesIt->is_array())
-					MS_THROW_TYPE_ERROR("wrong types (not an array)");
+				auto body = request->_data->body_as<FBS::Transport::EnableTraceEventRequest>();
 
 				// Reset traceEventTypes.
 				struct TraceEventTypes newTraceEventTypes;
 
-				for (const auto& type : *jsonTypesIt)
+				for (const auto& type : *body->events())
 				{
-					if (!type.is_string())
-						MS_THROW_TYPE_ERROR("wrong type (not a string)");
-
-					std::string typeStr = type.get<std::string>();
+					std::string typeStr = type->str();
 
 					if (typeStr == "probation")
 						newTraceEventTypes.probation = true;

@@ -169,3 +169,7 @@ table SetMaxIncomingBitrateRequest {
 table SetMaxOutgoingBitrateRequest {
   max_outgoing_bitrate:uint32;
 }
+
+table EnableTraceEventRequest {
+  events:[string] (required);
+}
