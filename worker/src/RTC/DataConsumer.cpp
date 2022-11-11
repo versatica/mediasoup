@@ -358,6 +358,13 @@ namespace RTC
 		}
 	}
 
+	void DataConsumer::SctpAssociationSendBufferFull()
+	{
+		MS_TRACE();
+
+		this->globals->channelNotifier->Emit(this->id, "sctpsendbufferfull");
+	}
+
 	// The caller (Router) is supposed to proceed with the deletion of this DataConsumer
 	// right after calling this method. Otherwise ugly things may happen.
 	void DataConsumer::DataProducerClosed()

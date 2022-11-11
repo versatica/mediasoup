@@ -83,6 +83,7 @@ namespace RTC
 		void SctpAssociationConnected();
 		void SctpAssociationClosed();
 		void SctpAssociationBufferedAmount(uint32_t bufferedAmount);
+		void SctpAssociationSendBufferFull();
 		void DataProducerClosed();
 		void SendMessage(uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* = nullptr);
 

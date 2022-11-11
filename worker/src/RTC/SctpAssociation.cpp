@@ -108,14 +108,13 @@ namespace RTC
 	/* Instance methods. */
 
 	SctpAssociation::SctpAssociation(
-	  Globals* globals,
 	  Listener* listener,
 	  uint16_t os,
 	  uint16_t mis,
 	  size_t maxSctpMessageSize,
 	  size_t sctpSendBufferSize,
 	  bool isDataChannel)
-	  : globals(globals), listener(listener), os(os), mis(mis), maxSctpMessageSize(maxSctpMessageSize),
+	  : listener(listener), os(os), mis(mis), maxSctpMessageSize(maxSctpMessageSize),
 	    sctpSendBufferSize(sctpSendBufferSize), isDataChannel(isDataChannel)
 	{
 		MS_TRACE();
@@ -470,7 +469,7 @@ namespace RTC
 
 			if (sctpSendBufferFull)
 			{
-				this->globals->channelNotifier->Emit(dataConsumer->id, "sctpsendbufferfull");
+				dataConsumer->SctpAssociationSendBufferFull();
 			}
 		}
 		else if (cb)

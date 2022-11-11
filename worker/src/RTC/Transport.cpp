@@ -167,7 +167,7 @@ namespace RTC
 
 			// This may throw.
 			this->sctpAssociation = new RTC::SctpAssociation(
-			  this->globals, this, os, mis, this->maxMessageSize, sctpSendBufferSize, isDataChannel);
+			  this, os, mis, this->maxMessageSize, sctpSendBufferSize, isDataChannel);
 		}
 
 		// Create the RTCP timer.

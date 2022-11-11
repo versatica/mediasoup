@@ -2,7 +2,6 @@
 #define MS_RTC_SCTP_ASSOCIATION_HPP
 
 #include "common.hpp"
-#include "Globals.hpp"
 #include "Utils.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -73,7 +72,6 @@ namespace RTC
 
 	public:
 		SctpAssociation(
-		  Globals* globals,
 		  Listener* listener,
 		  uint16_t os,
 		  uint16_t mis,
@@ -121,7 +119,6 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Globals* globals{ nullptr };
 		Listener* listener{ nullptr };
 		uint16_t os{ 1024u };
 		uint16_t mis{ 1024u };
