@@ -233,12 +233,13 @@ enum class Body : uint8_t {
   FBS_Router_CreateDirectTransportRequest = 9,
   FBS_Router_CreateActiveSpeakerObserverRequest = 10,
   FBS_Router_CreateAudioLevelObserverRequest = 11,
-  FBS_Transport_ConsumeRequest = 12,
+  FBS_Router_CloseTransportRequest = 12,
+  FBS_Transport_ConsumeRequest = 13,
   MIN = NONE,
   MAX = FBS_Transport_ConsumeRequest
 };
 
-inline const Body (&EnumValuesBody())[13] {
+inline const Body (&EnumValuesBody())[14] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_UpdateSettingsRequest,
@@ -252,13 +253,14 @@ inline const Body (&EnumValuesBody())[13] {
     Body::FBS_Router_CreateDirectTransportRequest,
     Body::FBS_Router_CreateActiveSpeakerObserverRequest,
     Body::FBS_Router_CreateAudioLevelObserverRequest,
+    Body::FBS_Router_CloseTransportRequest,
     Body::FBS_Transport_ConsumeRequest
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[14] = {
+  static const char * const names[15] = {
     "NONE",
     "FBS_Worker_UpdateSettingsRequest",
     "FBS_Worker_CreateWebRtcServerRequest",
@@ -271,6 +273,7 @@ inline const char * const *EnumNamesBody() {
     "FBS_Router_CreateDirectTransportRequest",
     "FBS_Router_CreateActiveSpeakerObserverRequest",
     "FBS_Router_CreateAudioLevelObserverRequest",
+    "FBS_Router_CloseTransportRequest",
     "FBS_Transport_ConsumeRequest",
     nullptr
   };
@@ -329,6 +332,10 @@ template<> struct BodyTraits<FBS::Router::CreateActiveSpeakerObserverRequest> {
 
 template<> struct BodyTraits<FBS::Router::CreateAudioLevelObserverRequest> {
   static const Body enum_value = Body::FBS_Router_CreateAudioLevelObserverRequest;
+};
+
+template<> struct BodyTraits<FBS::Router::CloseTransportRequest> {
+  static const Body enum_value = Body::FBS_Router_CloseTransportRequest;
 };
 
 template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
@@ -399,6 +406,9 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Router::CreateAudioLevelObserverRequest *body_as_FBS_Router_CreateAudioLevelObserverRequest() const {
     return body_type() == FBS::Request::Body::FBS_Router_CreateAudioLevelObserverRequest ? static_cast<const FBS::Router::CreateAudioLevelObserverRequest *>(body()) : nullptr;
   }
+  const FBS::Router::CloseTransportRequest *body_as_FBS_Router_CloseTransportRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Router_CloseTransportRequest ? static_cast<const FBS::Router::CloseTransportRequest *>(body()) : nullptr;
+  }
   const FBS::Transport::ConsumeRequest *body_as_FBS_Transport_ConsumeRequest() const {
     return body_type() == FBS::Request::Body::FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
   }
@@ -457,6 +467,10 @@ template<> inline const FBS::Router::CreateActiveSpeakerObserverRequest *Request
 
 template<> inline const FBS::Router::CreateAudioLevelObserverRequest *Request::body_as<FBS::Router::CreateAudioLevelObserverRequest>() const {
   return body_as_FBS_Router_CreateAudioLevelObserverRequest();
+}
+
+template<> inline const FBS::Router::CloseTransportRequest *Request::body_as<FBS::Router::CloseTransportRequest>() const {
+  return body_as_FBS_Router_CloseTransportRequest();
 }
 
 template<> inline const FBS::Transport::ConsumeRequest *Request::body_as<FBS::Transport::ConsumeRequest>() const {
@@ -573,6 +587,10 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     }
     case Body::FBS_Router_CreateAudioLevelObserverRequest: {
       auto ptr = reinterpret_cast<const FBS::Router::CreateAudioLevelObserverRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Router_CloseTransportRequest: {
+      auto ptr = reinterpret_cast<const FBS::Router::CloseTransportRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case Body::FBS_Transport_ConsumeRequest: {
@@ -737,7 +755,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 8 },
     { flatbuffers::ET_SEQUENCE, 0, 9 },
     { flatbuffers::ET_SEQUENCE, 0, 10 },
-    { flatbuffers::ET_SEQUENCE, 0, 11 }
+    { flatbuffers::ET_SEQUENCE, 0, 11 },
+    { flatbuffers::ET_SEQUENCE, 0, 12 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::UpdateSettingsRequestTypeTable,
@@ -751,6 +770,7 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Router::CreateDirectTransportRequestTypeTable,
     FBS::Router::CreateActiveSpeakerObserverRequestTypeTable,
     FBS::Router::CreateAudioLevelObserverRequestTypeTable,
+    FBS::Router::CloseTransportRequestTypeTable,
     FBS::Transport::ConsumeRequestTypeTable
   };
   static const char * const names[] = {
@@ -766,10 +786,11 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Router_CreateDirectTransportRequest",
     "FBS_Router_CreateActiveSpeakerObserverRequest",
     "FBS_Router_CreateAudioLevelObserverRequest",
+    "FBS_Router_CloseTransportRequest",
     "FBS_Transport_ConsumeRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 13, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 14, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

@@ -16,9 +16,6 @@ namespace Channel
 	// clang-format off
 	absl::flat_hash_map<std::string, FBS::Request::Method> ChannelRequest::string2Method =
 	{
-		{ "router.closeTransport",                       FBS::Request::Method::ROUTER_CLOSE_TRANSPORT                           },
-		{ "router.createActiveSpeakerObserver",          FBS::Request::Method::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER            },
-		{ "router.createAudioLevelObserver",             FBS::Request::Method::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER               },
 		{ "router.closeRtpObserver",                     FBS::Request::Method::ROUTER_CLOSE_RTP_OBSERVER                        },
 		{ "transport.getStats",                          FBS::Request::Method::TRANSPORT_GET_STATS                              },
 		{ "transport.connect",                           FBS::Request::Method::TRANSPORT_CONNECT                                },

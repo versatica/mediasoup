@@ -16,6 +16,7 @@ const FbsRequest = require("./fbs/request_generated");
 const FbsResponse = require("./fbs/response_generated");
 const media_kind_1 = require("./fbs/fbs/rtp-parameters/media-kind");
 const FbsConsumer = require("./fbs/consumer_generated");
+const FbsRouter = require("./fbs/router_generated");
 const logger = new Logger_1.Logger('Transport');
 class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -118,9 +119,10 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         // Remove notification subscriptions.
         this.channel.removeAllListeners(this.internal.transportId);
         this.payloadChannel.removeAllListeners(this.internal.transportId);
-        const reqData = { transportId: this.internal.transportId };
-        this.channel.request('router.closeTransport', this.internal.routerId, reqData)
-            .catch(() => { });
+        /* Build Request. */
+        const builder = this.channel.bufferBuilder;
+        const closeTransportOffset = new FbsRouter.CloseTransportRequestT(this.internal.transportId).pack(builder);
+        this.channel.requestBinary(FbsRequest.Method.ROUTER_CLOSE_TRANSPORT, FbsRequest.Body.FBS_Router_CloseTransportRequest, closeTransportOffset, this.internal.routerId).catch(() => { });
         // Close every Producer.
         for (const producer of this.#producers.values()) {
             producer.transportClosed();

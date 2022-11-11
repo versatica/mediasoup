@@ -50,6 +50,9 @@ struct ActiveSpeakerObserverOptionsBuilder;
 struct CreateActiveSpeakerObserverRequest;
 struct CreateActiveSpeakerObserverRequestBuilder;
 
+struct CloseTransportRequest;
+struct CloseTransportRequestBuilder;
+
 inline const flatbuffers::TypeTable *DumpResponseTypeTable();
 
 inline const flatbuffers::TypeTable *CreatePipeTransportRequestTypeTable();
@@ -67,6 +70,8 @@ inline const flatbuffers::TypeTable *CreateAudioLevelObserverRequestTypeTable();
 inline const flatbuffers::TypeTable *ActiveSpeakerObserverOptionsTypeTable();
 
 inline const flatbuffers::TypeTable *CreateActiveSpeakerObserverRequestTypeTable();
+
+inline const flatbuffers::TypeTable *CloseTransportRequestTypeTable();
 
 struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef DumpResponseBuilder Builder;
@@ -750,6 +755,61 @@ inline flatbuffers::Offset<CreateActiveSpeakerObserverRequest> CreateCreateActiv
       options);
 }
 
+struct CloseTransportRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CloseTransportRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CloseTransportRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TRANSPORTID = 4
+  };
+  const flatbuffers::String *transportId() const {
+    return GetPointer<const flatbuffers::String *>(VT_TRANSPORTID);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_TRANSPORTID) &&
+           verifier.VerifyString(transportId()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CloseTransportRequestBuilder {
+  typedef CloseTransportRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_transportId(flatbuffers::Offset<flatbuffers::String> transportId) {
+    fbb_.AddOffset(CloseTransportRequest::VT_TRANSPORTID, transportId);
+  }
+  explicit CloseTransportRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CloseTransportRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CloseTransportRequest>(end);
+    fbb_.Required(o, CloseTransportRequest::VT_TRANSPORTID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CloseTransportRequest> CreateCloseTransportRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> transportId = 0) {
+  CloseTransportRequestBuilder builder_(_fbb);
+  builder_.add_transportId(transportId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CloseTransportRequest> CreateCloseTransportRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *transportId = nullptr) {
+  auto transportId__ = transportId ? _fbb.CreateString(transportId) : 0;
+  return FBS::Router::CreateCloseTransportRequest(
+      _fbb,
+      transportId__);
+}
+
 inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_STRING, 0, -1 },
@@ -915,6 +975,19 @@ inline const flatbuffers::TypeTable *CreateActiveSpeakerObserverRequestTypeTable
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CloseTransportRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const char * const names[] = {
+    "transportId"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
   };
   return &tt;
 }

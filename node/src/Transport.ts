@@ -29,6 +29,7 @@ import * as FbsResponse from './fbs/response_generated';
 import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
 import * as FbsConsumer from './fbs/consumer_generated';
 import * as FbsTransport from './fbs/transport_generated';
+import * as FbsRouter from './fbs/router_generated';
 
 export type TransportListenIp =
 {
@@ -295,10 +296,20 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		this.channel.removeAllListeners(this.internal.transportId);
 		this.payloadChannel.removeAllListeners(this.internal.transportId);
 
-		const reqData = { transportId: this.internal.transportId };
+		/* Build Request. */
 
-		this.channel.request('router.closeTransport', this.internal.routerId, reqData)
-			.catch(() => {});
+		const builder = this.channel.bufferBuilder;
+
+		const closeTransportOffset = new FbsRouter.CloseTransportRequestT(
+			this.internal.transportId
+		).pack(builder);
+
+		this.channel.requestBinary(
+			FbsRequest.Method.ROUTER_CLOSE_TRANSPORT,
+			FbsRequest.Body.FBS_Router_CloseTransportRequest,
+			closeTransportOffset,
+			this.internal.routerId
+		).catch(() => {});
 
 		// Close every Producer.
 		for (const producer of this.#producers.values())

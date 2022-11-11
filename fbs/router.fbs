@@ -57,3 +57,7 @@ table CreateActiveSpeakerObserverRequest {
   active_speaker_observer_id:string (required);
   options:ActiveSpeakerObserverOptions (required);
 }
+
+table CloseTransportRequest {
+  transport_id:string (required);
+}

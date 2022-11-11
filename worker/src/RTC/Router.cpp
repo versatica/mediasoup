@@ -473,8 +473,11 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CLOSE_TRANSPORT:
 			{
+				auto body = request->_data->body_as<FBS::Router::CloseTransportRequest>();
+				auto transportId = body->transportId()->str();
+
 				// This may throw.
-				RTC::Transport* transport = GetTransportFromData(request->data);
+				RTC::Transport* transport = GetTransportById(transportId);
 
 				// Tell the Transport to close all its Producers and Consumers so it will
 				// notify us about their closures.
@@ -540,25 +543,16 @@ namespace RTC
 			MS_THROW_ERROR("an RtpObserver with same id already exists");
 	}
 
-	RTC::Transport* Router::GetTransportFromData(json& data) const
+	RTC::Transport* Router::GetTransportById(const std::string& transportId) const
 	{
 		MS_TRACE();
 
-		auto jsonTransportIdIt = data.find("transportId");
+		auto it = this->mapTransports.find(transportId);
 
-		if (jsonTransportIdIt == data.end() || !jsonTransportIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing transportId");
-		}
-
-		auto it = this->mapTransports.find(jsonTransportIdIt->get<std::string>());
-
-		if (it == this->mapTransports.end())
+		if (this->mapTransports.find(transportId) == this->mapTransports.end())
 			MS_THROW_ERROR("Transport not found");
 
-		RTC::Transport* transport = it->second;
-
-		return transport;
+		return it->second;
 	}
 
 	RTC::RtpObserver* Router::GetRtpObserverFromData(json& data) const
