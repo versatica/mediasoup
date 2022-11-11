@@ -8,7 +8,7 @@
 
 ## Rust.
 /Cargo.lock
-/rust/examples-frontend/*/node_modules
+/rust/examples-frontend/*/node_modules/
 /rust/examples-frontend/*/package-lock.json
 
 ## Worker.
@@ -19,7 +19,7 @@
 /worker/**/Release/
 /worker/.vs/
 # clang-fuzzer stuff is too big.
-/worker/deps/clang-fuzzer
+/worker/deps/clang-fuzzer/
 # Ignore all fuzzer generated test inputs.
 /worker/fuzzer/new-corpus/*
 !/worker/fuzzer/new-corpus/.placeholder
