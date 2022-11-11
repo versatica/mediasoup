@@ -26,6 +26,9 @@ namespace RTC
 		this->threshold = options->threshold();
 		this->interval = options->interval();
 
+		if (this->threshold > 0)
+			MS_THROW_TYPE_ERROR("invalid threshold value %" PRIi8, this->threshold);
+
 		if (this->interval < 250)
 			this->interval = 250;
 		else if (this->interval > 5000)
