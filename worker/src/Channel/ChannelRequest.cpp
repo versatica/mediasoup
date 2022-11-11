@@ -23,7 +23,6 @@ namespace Channel
 		{ "transport.restartIce",                        FBS::Request::Method::TRANSPORT_RESTART_ICE                            },
 		{ "transport.produce",                           FBS::Request::Method::TRANSPORT_PRODUCE                                },
 		{ "transport.produceData",                       FBS::Request::Method::TRANSPORT_PRODUCE_DATA                           },
-		{ "transport.consume",                           FBS::Request::Method::TRANSPORT_CONSUME                                },
 		{ "transport.consumeData",                       FBS::Request::Method::TRANSPORT_CONSUME_DATA                           },
 		{ "transport.enableTraceEvent",                  FBS::Request::Method::TRANSPORT_ENABLE_TRACE_EVENT                     },
 		{ "transport.closeProducer",                     FBS::Request::Method::TRANSPORT_CLOSE_PRODUCER                         },
