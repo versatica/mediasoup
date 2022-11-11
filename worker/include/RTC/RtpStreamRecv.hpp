@@ -63,7 +63,18 @@ namespace RTC
 			nackPacketCount = this->nackPacketCount;
 			kfCount = this->pliCount + this->firCount;
 			rtt = this->rtt;
-			maxPacketTs = this->maxPacketTs;
+
+			// convert RTP time to unix timestamp
+			// in ms using the RTCP sender report
+			uint32_t clock_rate = this->GetClockRate();
+			if (!clock_rate) {
+				maxPacketTs = 0xFFFFFFFF;
+			} else {
+				int delta_rtp = ((int)this->maxPacketTs - (int)this->lastSenderReportTs);
+				delta_rtp = delta_rtp * 1000 / (int)clock_rate;
+
+				maxPacketTs = (uint32_t)((int)this->lastSenderReportNtpMs + delta_rtp);
+			}
 		}
 
 		void FillJsonStats(json& jsonObject) override;

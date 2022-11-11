@@ -349,7 +349,7 @@ namespace RTC
 		}
 
 		// Get the RTX packet sequence number for logging purposes.
-		auto rtxSeq = packet->GetSequenceNumber();
+		// auto rtxSeq = packet->GetSequenceNumber();
 
 		// Get the original RTP packet.
 		if (!packet->RtxDecode(this->params.payloadType, this->params.ssrc))

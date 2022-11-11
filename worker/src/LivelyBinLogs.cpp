@@ -166,7 +166,7 @@ bool CallStatsRecord::isPktCountZero() const
     return false; // can be true only for full collection of samples
   }
 
-  for (auto i = 0; i < filled(); i++)
+  for (uint32_t i = 0; i < filled(); i++)
   {
     CallStatsSample s = type ? record.c.samples[i] : record.p.samples[0];
     if (s.packets_count)
@@ -196,7 +196,13 @@ void CallStatsRecordCtx::AddStatsRecord(StatsBinLog* log, RTC::RtpStream* stream
     {
       if (warnIdleStats) // did not warn yet, and all samples in a record have 0 incoming pkts
       {
-        MS_WARN_TAG(rtp, "Zero pkts in stats record: callid=%s %s id=%s ssrc=%"PRIu32" start_tm=%"PRIu64" state=%s", record.call_id.c_str(), record.type ? "consumer": "producer", record.object_id.c_str(), record.ssrc(), record.start_tm(), isActive ? "active" : "inactive");
+        MS_WARN_TAG(rtp,
+        		"Zero pkts in stats record: callid=%s %s id=%s ssrc=%" PRIu32
+				" start_tm=%" PRIu64" state=%s", record.call_id.c_str(),
+				(record.type ? "consumer": "producer"),
+				record.object_id.c_str(), record.ssrc(), record.start_tm(),
+				(isActive ? "active" : "inactive"));
+
         warnIdleStats = false; // only write one warning for this series of 0s; allow to write it again after number of pkts > 0
       }
     }

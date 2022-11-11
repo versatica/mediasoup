@@ -104,8 +104,10 @@ namespace RTC
 		this->appData = lively.ToStr();
 		MS_DEBUG_TAG(rtp, "Transport ctor [transportId: %s] [data: %s]", lively.id.c_str(), data.dump().c_str());
 
-		if (hasCallId)
+		if (hasCallId) {
+			MS_DEBUG_TAG(rtp, "XXXXX creating consumer bin log. lively=%s", lively.ToStr().c_str());
 			this->consumersBinLog.InitLog('c', lively.callId, lively.id); // initialize consumers bin log here, it is shared btw all consumers
+		}
 		else
 			MS_WARN_TAG(rtp, "Missing callId, cannot init consumers binlog [transportId: %s] [data: %s]", lively.id.c_str(), data.dump().c_str());
 

@@ -64,6 +64,8 @@ namespace RTC
 			MS_WARN_TAG(rtp, "Missing callId, cannot init producer binlog [id: %s] [data: %s]", lively.id.c_str(), data.dump().c_str());
 		else
 		{
+			MS_DEBUG_TAG(rtp, "XXXXX creating producer bin log. lively=%s", lively.ToStr().c_str());
+
 			this->binLog.InitLog('p', lively.callId, lively.id);
 		}
 		

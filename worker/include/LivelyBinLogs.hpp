@@ -6,7 +6,7 @@
 #include "RTC/RtpStream.hpp"
 
 #define BINLOG_MIN_TIMESPAN   20000
-#define BINLOG_FORMAT_VERSION "c1b125"
+#define BINLOG_FORMAT_VERSION "c1b126"
 
 // CALL_STATS_BIN_LOG_RECORDS_NUM * sizeof(CallStatsSample) should be
 // dividible by 16 b/c of alignment concerns;
@@ -16,7 +16,7 @@
 // sizeof(CallStatsSample)== 28 bytes, CALL_STATS_BIN_LOG_RECORDS_NUM should be divisible by 4.
 // Alternative is to increase it to 32 at a cost of wasting 4 bytes per data record.
 
-#define CALL_STATS_BIN_LOG_RECORDS_NUM 8
+#define CALL_STATS_BIN_LOG_RECORDS_NUM 4
 #define CALL_STATS_BIN_LOG_SAMPLING    2000
 
 #define UINT16_UNSET                   ((uint16_t)-1)
