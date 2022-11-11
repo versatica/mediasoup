@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* `Worker`: Add Globals singleton (PR #953).
+
+
 ### 3.11.3
 
 * `ChannelMessageHandlers`: Make `RegisterHandler()` not remove the existing handler if another one with same `id` is given (PR #952).
