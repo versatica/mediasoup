@@ -27,7 +27,7 @@ switch (task)
 		}
 		else
 		{
-			execute('rmdir /s /q "node/lib"');
+			execute('rmdir /s /q "node/lib"', /*exitOnError*/ false);
 		}
 
 		execute('tsc --project node');
@@ -46,7 +46,7 @@ switch (task)
 		}
 		else
 		{
-			execute('rmdir /s /q "node/lib"');
+			execute('rmdir /s /q "node/lib"', /*exitOnError*/ false);
 		}
 
 		const watch = new TscWatchClient();
@@ -178,7 +178,7 @@ function taskReplaceVersion()
 	}
 }
 
-function execute(command)
+function execute(command, exitOnError = true)
 {
 	// eslint-disable-next-line no-console
 	console.log(`npm-scripts.js [INFO] executing command: ${command}`);
