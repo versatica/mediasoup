@@ -14,6 +14,7 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
              "Non-compatible flatbuffers version included");
 
 #include "common_generated.h"
+#include "directTransport_generated.h"
 #include "pipeTransport_generated.h"
 #include "plainTransport_generated.h"
 #include "transport_generated.h"
@@ -34,6 +35,9 @@ struct CreatePlainTransportRequestBuilder;
 struct CreateWebRtcTransportRequest;
 struct CreateWebRtcTransportRequestBuilder;
 
+struct CreateDirectTransportRequest;
+struct CreateDirectTransportRequestBuilder;
+
 inline const flatbuffers::TypeTable *DumpResponseTypeTable();
 
 inline const flatbuffers::TypeTable *CreatePipeTransportRequestTypeTable();
@@ -41,6 +45,8 @@ inline const flatbuffers::TypeTable *CreatePipeTransportRequestTypeTable();
 inline const flatbuffers::TypeTable *CreatePlainTransportRequestTypeTable();
 
 inline const flatbuffers::TypeTable *CreateWebRtcTransportRequestTypeTable();
+
+inline const flatbuffers::TypeTable *CreateDirectTransportRequestTypeTable();
 
 struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef DumpResponseBuilder Builder;
@@ -406,6 +412,74 @@ inline flatbuffers::Offset<CreateWebRtcTransportRequest> CreateCreateWebRtcTrans
       options);
 }
 
+struct CreateDirectTransportRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CreateDirectTransportRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CreateDirectTransportRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TRANSPORTID = 4,
+    VT_OPTIONS = 6
+  };
+  const flatbuffers::String *transportId() const {
+    return GetPointer<const flatbuffers::String *>(VT_TRANSPORTID);
+  }
+  const FBS::DirectTransport::DirectTransportOptions *options() const {
+    return GetPointer<const FBS::DirectTransport::DirectTransportOptions *>(VT_OPTIONS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_TRANSPORTID) &&
+           verifier.VerifyString(transportId()) &&
+           VerifyOffset(verifier, VT_OPTIONS) &&
+           verifier.VerifyTable(options()) &&
+           verifier.EndTable();
+  }
+};
+
+struct CreateDirectTransportRequestBuilder {
+  typedef CreateDirectTransportRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_transportId(flatbuffers::Offset<flatbuffers::String> transportId) {
+    fbb_.AddOffset(CreateDirectTransportRequest::VT_TRANSPORTID, transportId);
+  }
+  void add_options(flatbuffers::Offset<FBS::DirectTransport::DirectTransportOptions> options) {
+    fbb_.AddOffset(CreateDirectTransportRequest::VT_OPTIONS, options);
+  }
+  explicit CreateDirectTransportRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CreateDirectTransportRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CreateDirectTransportRequest>(end);
+    fbb_.Required(o, CreateDirectTransportRequest::VT_TRANSPORTID);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CreateDirectTransportRequest> CreateCreateDirectTransportRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> transportId = 0,
+    flatbuffers::Offset<FBS::DirectTransport::DirectTransportOptions> options = 0) {
+  CreateDirectTransportRequestBuilder builder_(_fbb);
+  builder_.add_options(options);
+  builder_.add_transportId(transportId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<CreateDirectTransportRequest> CreateCreateDirectTransportRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *transportId = nullptr,
+    flatbuffers::Offset<FBS::DirectTransport::DirectTransportOptions> options = 0) {
+  auto transportId__ = transportId ? _fbb.CreateString(transportId) : 0;
+  return FBS::Router::CreateCreateDirectTransportRequest(
+      _fbb,
+      transportId__,
+      options);
+}
+
 inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_STRING, 0, -1 },
@@ -480,6 +554,24 @@ inline const flatbuffers::TypeTable *CreateWebRtcTransportRequestTypeTable() {
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::WebRtcTransport::WebRtcTransportOptionsTypeTable
+  };
+  static const char * const names[] = {
+    "transportId",
+    "options"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CreateDirectTransportRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::DirectTransport::DirectTransportOptionsTypeTable
   };
   static const char * const names[] = {
     "transportId",

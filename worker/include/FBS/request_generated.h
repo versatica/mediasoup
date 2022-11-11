@@ -230,12 +230,13 @@ enum class Body : uint8_t {
   FBS_Router_CreateWebRtcTransportRequest = 6,
   FBS_Router_CreatePlainTransportRequest = 7,
   FBS_Router_CreatePipeTransportRequest = 8,
-  FBS_Transport_ConsumeRequest = 9,
+  FBS_Router_CreateDirectTransportRequest = 9,
+  FBS_Transport_ConsumeRequest = 10,
   MIN = NONE,
   MAX = FBS_Transport_ConsumeRequest
 };
 
-inline const Body (&EnumValuesBody())[10] {
+inline const Body (&EnumValuesBody())[11] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_UpdateSettingsRequest,
@@ -246,13 +247,14 @@ inline const Body (&EnumValuesBody())[10] {
     Body::FBS_Router_CreateWebRtcTransportRequest,
     Body::FBS_Router_CreatePlainTransportRequest,
     Body::FBS_Router_CreatePipeTransportRequest,
+    Body::FBS_Router_CreateDirectTransportRequest,
     Body::FBS_Transport_ConsumeRequest
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[11] = {
+  static const char * const names[12] = {
     "NONE",
     "FBS_Worker_UpdateSettingsRequest",
     "FBS_Worker_CreateWebRtcServerRequest",
@@ -262,6 +264,7 @@ inline const char * const *EnumNamesBody() {
     "FBS_Router_CreateWebRtcTransportRequest",
     "FBS_Router_CreatePlainTransportRequest",
     "FBS_Router_CreatePipeTransportRequest",
+    "FBS_Router_CreateDirectTransportRequest",
     "FBS_Transport_ConsumeRequest",
     nullptr
   };
@@ -308,6 +311,10 @@ template<> struct BodyTraits<FBS::Router::CreatePlainTransportRequest> {
 
 template<> struct BodyTraits<FBS::Router::CreatePipeTransportRequest> {
   static const Body enum_value = Body::FBS_Router_CreatePipeTransportRequest;
+};
+
+template<> struct BodyTraits<FBS::Router::CreateDirectTransportRequest> {
+  static const Body enum_value = Body::FBS_Router_CreateDirectTransportRequest;
 };
 
 template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
@@ -369,6 +376,9 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Router::CreatePipeTransportRequest *body_as_FBS_Router_CreatePipeTransportRequest() const {
     return body_type() == FBS::Request::Body::FBS_Router_CreatePipeTransportRequest ? static_cast<const FBS::Router::CreatePipeTransportRequest *>(body()) : nullptr;
   }
+  const FBS::Router::CreateDirectTransportRequest *body_as_FBS_Router_CreateDirectTransportRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Router_CreateDirectTransportRequest ? static_cast<const FBS::Router::CreateDirectTransportRequest *>(body()) : nullptr;
+  }
   const FBS::Transport::ConsumeRequest *body_as_FBS_Transport_ConsumeRequest() const {
     return body_type() == FBS::Request::Body::FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
   }
@@ -415,6 +425,10 @@ template<> inline const FBS::Router::CreatePlainTransportRequest *Request::body_
 
 template<> inline const FBS::Router::CreatePipeTransportRequest *Request::body_as<FBS::Router::CreatePipeTransportRequest>() const {
   return body_as_FBS_Router_CreatePipeTransportRequest();
+}
+
+template<> inline const FBS::Router::CreateDirectTransportRequest *Request::body_as<FBS::Router::CreateDirectTransportRequest>() const {
+  return body_as_FBS_Router_CreateDirectTransportRequest();
 }
 
 template<> inline const FBS::Transport::ConsumeRequest *Request::body_as<FBS::Transport::ConsumeRequest>() const {
@@ -519,6 +533,10 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     }
     case Body::FBS_Router_CreatePipeTransportRequest: {
       auto ptr = reinterpret_cast<const FBS::Router::CreatePipeTransportRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Router_CreateDirectTransportRequest: {
+      auto ptr = reinterpret_cast<const FBS::Router::CreateDirectTransportRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case Body::FBS_Transport_ConsumeRequest: {
@@ -680,7 +698,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 5 },
     { flatbuffers::ET_SEQUENCE, 0, 6 },
     { flatbuffers::ET_SEQUENCE, 0, 7 },
-    { flatbuffers::ET_SEQUENCE, 0, 8 }
+    { flatbuffers::ET_SEQUENCE, 0, 8 },
+    { flatbuffers::ET_SEQUENCE, 0, 9 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::UpdateSettingsRequestTypeTable,
@@ -691,6 +710,7 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Router::CreateWebRtcTransportRequestTypeTable,
     FBS::Router::CreatePlainTransportRequestTypeTable,
     FBS::Router::CreatePipeTransportRequestTypeTable,
+    FBS::Router::CreateDirectTransportRequestTypeTable,
     FBS::Transport::ConsumeRequestTypeTable
   };
   static const char * const names[] = {
@@ -703,10 +723,11 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Router_CreateWebRtcTransportRequest",
     "FBS_Router_CreatePlainTransportRequest",
     "FBS_Router_CreatePipeTransportRequest",
+    "FBS_Router_CreateDirectTransportRequest",
     "FBS_Transport_ConsumeRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 10, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 11, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

@@ -1,9 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DirectTransport = void 0;
+exports.parseDirectTransportDump = exports.DirectTransport = void 0;
 const Logger_1 = require("./Logger");
 const errors_1 = require("./errors");
 const Transport_1 = require("./Transport");
+const FbsTransport = require("./fbs/transport_generated");
+const FbsRequest = require("./fbs/request_generated");
 const logger = new Logger_1.Logger('DirectTransport');
 class DirectTransport extends Transport_1.Transport {
     // DirectTransport data.
@@ -40,6 +42,19 @@ class DirectTransport extends Transport_1.Transport {
         if (this.closed)
             return;
         super.routerClosed();
+    }
+    /**
+     * Dump Transport.
+     */
+    async dump() {
+        logger.debug('dump()');
+        const response = await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_DUMP, undefined, undefined, this.internal.transportId);
+        /* Decode the response. */
+        const dump = new FbsTransport.DumpResponse();
+        response.body(dump);
+        const transportDump = new FbsTransport.DirectTransportDump();
+        dump.data(transportDump);
+        return parseDirectTransportDump(transportDump);
     }
     /**
      * Get DirectTransport stats.
@@ -117,3 +132,10 @@ class DirectTransport extends Transport_1.Transport {
     }
 }
 exports.DirectTransport = DirectTransport;
+function parseDirectTransportDump(binary) {
+    // Retrieve BaseTransportDump.
+    const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
+    binary.base().data(fbsBaseTransportDump);
+    return (0, Transport_1.parseBaseTransportDump)(fbsBaseTransportDump);
+}
+exports.parseDirectTransportDump = parseDirectTransportDump;

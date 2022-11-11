@@ -186,35 +186,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		/*
-		auto jsonDirectIt = data.find("direct");
-
-		// clang-format off
-		if (
-		  jsonDirectIt != data.end() &&
-		  jsonDirectIt->is_boolean() &&
-		  jsonDirectIt->get<bool>()
-		)
-		// clang-format on
+		if (options->direct())
 		{
-		  this->direct = true;
+			this->direct         = true;
+			this->maxMessageSize = options->maxMessageSize();
 
-		  auto jsonMaxMessageSizeIt = data.find("maxMessageSize");
-
-		  // maxMessageSize is mandatory for direct Transports.
-		  // clang-format off
-		  if (
-		    jsonMaxMessageSizeIt == data.end() ||
-		    !Utils::Json::IsPositiveInteger(*jsonMaxMessageSizeIt)
-		  )
-		  // clang-format on
-		  {
-		    MS_THROW_TYPE_ERROR("wrong maxMessageSize (not a number)");
-		  }
-
-		  this->maxMessageSize = jsonMaxMessageSizeIt->get<size_t>();
+			MS_ERROR("MaxMessageSize: %zu", this->maxMessageSize);
 		}
-		*/
 
 		this->initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
 

@@ -8,7 +8,10 @@ namespace RTC
 	class DirectTransport : public RTC::Transport
 	{
 	public:
-		DirectTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
+		DirectTransport(
+		  const std::string& id,
+		  RTC::Transport::Listener* listener,
+		  const FBS::DirectTransport::DirectTransportOptions* options);
 		~DirectTransport() override;
 
 	public:

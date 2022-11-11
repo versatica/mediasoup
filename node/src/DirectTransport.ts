@@ -1,6 +1,8 @@
 import { Logger } from './Logger';
 import { UnsupportedError } from './errors';
 import {
+	BaseTransportDump,
+	parseBaseTransportDump,
 	Transport,
 	TransportTraceEventData,
 	TransportEvents,
@@ -8,6 +10,8 @@ import {
 	TransportConstructorOptions
 } from './Transport';
 import { SctpParameters } from './SctpParameters';
+import * as FbsTransport from './fbs/transport_generated';
+import * as FbsRequest from './fbs/request_generated';
 
 export type DirectTransportOptions =
 {
@@ -121,6 +125,32 @@ export class DirectTransport extends
 	}
 
 	/**
+	 * Dump Transport.
+	 */
+	async dump(): Promise<any>
+	{
+		logger.debug('dump()');
+
+		const response = await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_DUMP,
+			undefined,
+			undefined,
+			this.internal.transportId
+		);
+
+		/* Decode the response. */
+		const dump = new FbsTransport.DumpResponse();
+
+		response.body(dump);
+
+		const transportDump = new FbsTransport.DirectTransportDump();
+
+		dump.data(transportDump);
+
+		return parseDirectTransportDump(transportDump);
+	}
+
+	/**
 	 * Get DirectTransport stats.
 	 *
 	 * @override
@@ -226,4 +256,16 @@ export class DirectTransport extends
 				}
 			});
 	}
+}
+
+export function parseDirectTransportDump(
+	binary: FbsTransport.DirectTransportDump
+): BaseTransportDump
+{
+	// Retrieve BaseTransportDump.
+	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
+
+	binary.base()!.data(fbsBaseTransportDump);
+
+	return parseBaseTransportDump(fbsBaseTransportDump);
 }

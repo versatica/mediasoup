@@ -410,23 +410,22 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_DIRECT_TRANSPORT:
 			{
-				std::string transportId;
+				auto body        = request->_data->body_as<FBS::Router::CreateDirectTransportRequest>();
+				auto transportId = body->transportId()->str();
 
-				// This may throw
-				SetNewTransportIdFromData(request->data, transportId);
+				// This may throw.
+				CheckNoTransport(transportId);
 
-				auto* directTransport = new RTC::DirectTransport(transportId, this, request->data);
+				auto* directTransport = new RTC::DirectTransport(transportId, this, body->options());
 
 				// Insert into the map.
 				this->mapTransports[transportId] = directTransport;
 
 				MS_DEBUG_DEV("DirectTransport created [transportId:%s]", transportId.c_str());
 
-				json data = json::object();
+				auto dumpOffset = directTransport->FillBuffer(request->GetBufferBuilder());
 
-				// directTransport->FillJson(data);
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_Transport_DumpResponse, dumpOffset);
 
 				break;
 			}

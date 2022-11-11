@@ -73,6 +73,7 @@ union Body {
   FBS.Router.CreateWebRtcTransportRequest,
   FBS.Router.CreatePlainTransportRequest,
   FBS.Router.CreatePipeTransportRequest,
+  FBS.Router.CreateDirectTransportRequest,
   FBS.Transport.ConsumeRequest,
 }
 

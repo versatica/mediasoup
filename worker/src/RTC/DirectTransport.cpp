@@ -12,8 +12,11 @@ namespace RTC
 	/* Instance methods. */
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-	DirectTransport::DirectTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener, data)
+	DirectTransport::DirectTransport(
+	  const std::string& id,
+	  RTC::Transport::Listener* listener,
+	  const FBS::DirectTransport::DirectTransportOptions* options)
+	  : RTC::Transport::Transport(id, listener, options->base())
 	{
 		MS_TRACE();
 

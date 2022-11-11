@@ -385,18 +385,29 @@ class Router extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         maxMessageSize: 262144
     }) {
         logger.debug('createDirectTransport()');
-        const reqData = {
-            transportId: (0, uuid_1.v4)(),
-            direct: true,
-            maxMessageSize
-        };
-        const data = await this.#channel.request('router.createDirectTransport', this.#internal.routerId, reqData);
+        if (typeof maxMessageSize !== 'number' || maxMessageSize < 0)
+            throw new TypeError('if given, maxMessageSize must be a positive number');
+        else if (appData && typeof appData !== 'object')
+            throw new TypeError('if given, appData must be an object');
+        const transportId = (0, uuid_1.v4)();
+        /* Build Request. */
+        const builder = this.#channel.bufferBuilder;
+        const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(true /* direct */, maxMessageSize, undefined /* initialAvailableOutgoingBitrate */, undefined /* enableSctp */, undefined /* numSctpStreams */, undefined /* maxSctpMessageSize */, undefined /* sctpSendBufferSize */, undefined /* isDataChannel */);
+        const directTransportOptions = new FbsRouter.DirectTransportOptionsT(baseTransportOptions);
+        const createDirectTransportOffset = new FbsRouter.CreateDirectTransportRequestT(transportId, directTransportOptions).pack(builder);
+        const response = await this.#channel.requestBinary(FbsRequest.Method.ROUTER_CREATE_DIRECT_TRANSPORT, FbsRequest.Body.FBS_Router_CreateDirectTransportRequest, createDirectTransportOffset, this.#internal.routerId);
+        /* Decode the response. */
+        const dump = new FbsTransport.DumpResponse();
+        response.body(dump);
+        const transportDump = new FbsTransport.DirectTransportDump();
+        dump.data(transportDump);
+        const directTransportData = (0, DirectTransport_1.parseDirectTransportDump)(transportDump);
         const transport = new DirectTransport_1.DirectTransport({
             internal: {
                 ...this.#internal,
-                transportId: reqData.transportId
+                transportId: transportId
             },
-            data,
+            data: directTransportData,
             channel: this.#channel,
             payloadChannel: this.#payloadChannel,
             appData,

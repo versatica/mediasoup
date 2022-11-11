@@ -1,6 +1,7 @@
 /// <reference types="node" />
-import { Transport, TransportEvents, TransportObserverEvents, TransportConstructorOptions } from './Transport';
+import { BaseTransportDump, Transport, TransportEvents, TransportObserverEvents, TransportConstructorOptions } from './Transport';
 import { SctpParameters } from './SctpParameters';
+import * as FbsTransport from './fbs/transport_generated';
 export declare type DirectTransportOptions = {
     /**
      * Maximum allowed size for direct messages sent from DataProducers.
@@ -66,6 +67,10 @@ export declare class DirectTransport extends Transport<DirectTransportEvents, Di
      */
     routerClosed(): void;
     /**
+     * Dump Transport.
+     */
+    dump(): Promise<any>;
+    /**
      * Get DirectTransport stats.
      *
      * @override
@@ -91,5 +96,6 @@ export declare class DirectTransport extends Transport<DirectTransportEvents, Di
     sendRtcp(rtcpPacket: Buffer): void;
     private handleWorkerNotifications;
 }
+export declare function parseDirectTransportDump(binary: FbsTransport.DirectTransportDump): BaseTransportDump;
 export {};
 //# sourceMappingURL=DirectTransport.d.ts.map

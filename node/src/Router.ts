@@ -9,7 +9,7 @@ import { Transport, TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions, parseWebRtcTransportDump } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions, parsePlainTransportDump } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions, parsePipeTransportDump } from './PipeTransport';
-import { DirectTransport, DirectTransportOptions } from './DirectTransport';
+import { DirectTransport, DirectTransportOptions, parseDirectTransportDump } from './DirectTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
@@ -24,6 +24,7 @@ import * as FbsRouter from './fbs/router_generated';
 import * as FbsWebRtcTransport from './fbs/webRtcTransport_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsSctpParameters from './fbs/sctpParameters_generated';
+import * as FbsCommon from './fbs/common_generated';
 
 export type RouterOptions =
 {
@@ -832,24 +833,63 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	{
 		logger.debug('createDirectTransport()');
 
-		const reqData =
-		{
-			transportId : uuidv4(),
-			direct      : true,
-			maxMessageSize
-		};
+		if (typeof maxMessageSize !== 'number' || maxMessageSize < 0)
+			throw new TypeError('if given, maxMessageSize must be a positive number');
+		else if (appData && typeof appData !== 'object')
+			throw new TypeError('if given, appData must be an object');
 
-		const data =
-			await this.#channel.request('router.createDirectTransport', this.#internal.routerId, reqData);
+		const transportId = uuidv4();
+
+		/* Build Request. */
+
+		const builder = this.#channel.bufferBuilder;
+
+		const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(
+			true /* direct */,
+			maxMessageSize,
+			undefined /* initialAvailableOutgoingBitrate */,
+			undefined /* enableSctp */,
+			undefined /* numSctpStreams */,
+			undefined /* maxSctpMessageSize */,
+			undefined /* sctpSendBufferSize */,
+			undefined /* isDataChannel */
+		);
+
+		const directTransportOptions = new FbsRouter.DirectTransportOptionsT(
+			baseTransportOptions
+		);
+
+		const createDirectTransportOffset = new FbsRouter.CreateDirectTransportRequestT(
+			transportId, directTransportOptions
+		).pack(builder);
+
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.ROUTER_CREATE_DIRECT_TRANSPORT,
+			FbsRequest.Body.FBS_Router_CreateDirectTransportRequest,
+			createDirectTransportOffset,
+			this.#internal.routerId
+		);
+
+		/* Decode the response. */
+
+		const dump = new FbsTransport.DumpResponse();
+
+		response.body(dump);
+
+		const transportDump = new FbsTransport.DirectTransportDump();
+
+		dump.data(transportDump);
+
+		const directTransportData = parseDirectTransportDump(transportDump);
 
 		const transport = new DirectTransport(
 			{
 				internal :
 				{
 					...this.#internal,
-					transportId : reqData.transportId
+					transportId : transportId
 				},
-				data,
+				data                     : directTransportData,
 				channel                  : this.#channel,
 				payloadChannel           : this.#payloadChannel,
 				appData,

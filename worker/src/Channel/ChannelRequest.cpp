@@ -16,9 +16,6 @@ namespace Channel
 	// clang-format off
 	absl::flat_hash_map<std::string, FBS::Request::Method> ChannelRequest::string2Method =
 	{
-		{ "router.createPlainTransport",                 FBS::Request::Method::ROUTER_CREATE_PLAIN_TRANSPORT                    },
-		{ "router.createPipeTransport",                  FBS::Request::Method::ROUTER_CREATE_PIPE_TRANSPORT                     },
-		{ "router.createDirectTransport",                FBS::Request::Method::ROUTER_CREATE_DIRECT_TRANSPORT                   },
 		{ "router.closeTransport",                       FBS::Request::Method::ROUTER_CLOSE_TRANSPORT                           },
 		{ "router.createActiveSpeakerObserver",          FBS::Request::Method::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER            },
 		{ "router.createAudioLevelObserver",             FBS::Request::Method::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER               },
@@ -200,9 +197,9 @@ namespace Channel
 		MS_TRACE();
 
 		// TMP: For debugging.
-		// auto s = flatbuffers::FlatBufferToString(msg, FBS::Request::RequestTypeTable());
+		auto s = flatbuffers::FlatBufferToString(msg, FBS::Request::RequestTypeTable());
 		// TODO: Fails when consuming from a PIPE transport.
-		// MS_ERROR("%s", s.c_str());
+		MS_ERROR("%s", s.c_str());
 
 		this->_data = FBS::Request::GetRequest(msg);
 

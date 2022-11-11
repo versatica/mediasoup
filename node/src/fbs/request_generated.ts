@@ -3,6 +3,7 @@
 export { Body, unionToBody, unionListToBody } from './fbs/request/body';
 export { Method } from './fbs/request/method';
 export { Request, RequestT } from './fbs/request/request';
+export { CreateDirectTransportRequest, CreateDirectTransportRequestT } from './fbs/router/create-direct-transport-request';
 export { CreatePipeTransportRequest, CreatePipeTransportRequestT } from './fbs/router/create-pipe-transport-request';
 export { CreatePlainTransportRequest, CreatePlainTransportRequestT } from './fbs/router/create-plain-transport-request';
 export { CreateWebRtcTransportRequest, CreateWebRtcTransportRequestT } from './fbs/router/create-web-rtc-transport-request';
