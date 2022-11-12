@@ -276,7 +276,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         /* Build Request. */
         const builder = this.channel.bufferBuilder;
         const requestOffset = new FbsTransport.SetMaxIncomingBitrateRequestT(bitrate).pack(builder);
-        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE, FbsRequest.Body.FBS_Transport_SetMaxIncomingBitrateRequest, requestOffset, this.internal.routerId);
+        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE, FbsRequest.Body.FBS_Transport_SetMaxIncomingBitrateRequest, requestOffset, this.internal.transportId);
     }
     /**
      * Set maximum outgoing bitrate for sending media.
@@ -286,7 +286,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         /* Build Request. */
         const builder = this.channel.bufferBuilder;
         const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(bitrate).pack(builder);
-        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE, FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest, requestOffset, this.internal.routerId);
+        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE, FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest, requestOffset, this.internal.transportId);
     }
     /**
      * Create a Producer.
@@ -573,11 +573,18 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Enable 'trace' event.
      */
     async enableTraceEvent(types = []) {
-        logger.debug('pause()');
+        logger.error('enableTraceEvent() 1');
+        if (!Array.isArray(types))
+            throw new TypeError('types must be an array');
+        if (types.find((type) => typeof type !== 'string'))
+            throw new TypeError('every type must be a string');
+        logger.error('enableTraceEvent() 2');
         /* Build Request. */
         const builder = this.channel.bufferBuilder;
         const requestOffset = new FbsTransport.EnableTraceEventRequestT(types).pack(builder);
-        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT, FbsRequest.Body.FBS_Transport_EnableTraceEventRequest, requestOffset, this.internal.routerId);
+        logger.error('enableTraceEvent() 3');
+        await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT, FbsRequest.Body.FBS_Transport_EnableTraceEventRequest, requestOffset, this.internal.transportId);
+        logger.error('enableTraceEvent() 4');
     }
     getNextSctpStreamId() {
         if (!this.#data.sctpParameters ||

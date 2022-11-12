@@ -997,7 +997,12 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	 */
 	async enableTraceEvent(types: TransportTraceEventType[] = []): Promise<void>
 	{
-		logger.debug('pause()');
+		logger.debug('enableTraceEvent()');
+
+		if (!Array.isArray(types))
+			throw new TypeError('types must be an array');
+		if (types.find((type) => typeof type !== 'string'))
+			throw new TypeError('every type must be a string');
 
 		/* Build Request. */
 
