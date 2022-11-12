@@ -525,7 +525,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE,
 			FbsRequest.Body.FBS_Transport_SetMaxIncomingBitrateRequest,
 			requestOffset,
-			this.internal.routerId
+			this.internal.transportId
 		);
 	}
 
@@ -547,7 +547,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE,
 			FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest,
 			requestOffset,
-			this.internal.routerId
+			this.internal.transportId
 		);
 	}
 
@@ -1010,7 +1010,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT,
 			FbsRequest.Body.FBS_Transport_EnableTraceEventRequest,
 			requestOffset,
-			this.internal.routerId
+			this.internal.transportId
 		);
 	}
 
