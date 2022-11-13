@@ -10,6 +10,8 @@ const create_direct_transport_request_1 = require("../../fbs/router/create-direc
 const create_pipe_transport_request_1 = require("../../fbs/router/create-pipe-transport-request");
 const create_plain_transport_request_1 = require("../../fbs/router/create-plain-transport-request");
 const create_web_rtc_transport_request_1 = require("../../fbs/router/create-web-rtc-transport-request");
+const add_producer_request_1 = require("../../fbs/rtp-observer/add-producer-request");
+const remove_producer_request_1 = require("../../fbs/rtp-observer/remove-producer-request");
 const close_consumer_request_1 = require("../../fbs/transport/close-consumer-request");
 const close_data_consumer_request_1 = require("../../fbs/transport/close-data-consumer-request");
 const close_data_producer_request_1 = require("../../fbs/transport/close-data-producer-request");
@@ -49,6 +51,8 @@ var Body;
     Body[Body["FBS_Transport_CloseConsumerRequest"] = 20] = "FBS_Transport_CloseConsumerRequest";
     Body[Body["FBS_Transport_CloseDataProducerRequest"] = 21] = "FBS_Transport_CloseDataProducerRequest";
     Body[Body["FBS_Transport_CloseDataConsumerRequest"] = 22] = "FBS_Transport_CloseDataConsumerRequest";
+    Body[Body["FBS_RtpObserver_AddProducerRequest"] = 23] = "FBS_RtpObserver_AddProducerRequest";
+    Body[Body["FBS_RtpObserver_RemoveProducerRequest"] = 24] = "FBS_RtpObserver_RemoveProducerRequest";
 })(Body = exports.Body || (exports.Body = {}));
 function unionToBody(type, accessor) {
     switch (Body[type]) {
@@ -75,6 +79,8 @@ function unionToBody(type, accessor) {
         case 'FBS_Transport_CloseConsumerRequest': return accessor(new close_consumer_request_1.CloseConsumerRequest());
         case 'FBS_Transport_CloseDataProducerRequest': return accessor(new close_data_producer_request_1.CloseDataProducerRequest());
         case 'FBS_Transport_CloseDataConsumerRequest': return accessor(new close_data_consumer_request_1.CloseDataConsumerRequest());
+        case 'FBS_RtpObserver_AddProducerRequest': return accessor(new add_producer_request_1.AddProducerRequest());
+        case 'FBS_RtpObserver_RemoveProducerRequest': return accessor(new remove_producer_request_1.RemoveProducerRequest());
         default: return null;
     }
 }
@@ -104,6 +110,8 @@ function unionListToBody(type, accessor, index) {
         case 'FBS_Transport_CloseConsumerRequest': return accessor(index, new close_consumer_request_1.CloseConsumerRequest());
         case 'FBS_Transport_CloseDataProducerRequest': return accessor(index, new close_data_producer_request_1.CloseDataProducerRequest());
         case 'FBS_Transport_CloseDataConsumerRequest': return accessor(index, new close_data_consumer_request_1.CloseDataConsumerRequest());
+        case 'FBS_RtpObserver_AddProducerRequest': return accessor(index, new add_producer_request_1.AddProducerRequest());
+        case 'FBS_RtpObserver_RemoveProducerRequest': return accessor(index, new remove_producer_request_1.RemoveProducerRequest());
         default: return null;
     }
 }

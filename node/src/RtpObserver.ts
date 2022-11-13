@@ -6,6 +6,7 @@ import { RouterInternal } from './Router';
 import { Producer } from './Producer';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsRouter from './fbs/router_generated';
+import * as FbsRtpObserver from './fbs/rtpObserver_generated';
 
 export type RtpObserverEvents =
 {
@@ -265,9 +266,17 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		if (!producer)
 			throw Error(`Producer with id "${producerId}" not found`);
 
-		const reqData = { producerId };
+		const builder = this.channel.bufferBuilder;
+		const requestOffset = new FbsRtpObserver.AddProducerRequestT(
+			producerId
+		).pack(builder);
 
-		await this.channel.request('rtpObserver.addProducer', this.internal.rtpObserverId, reqData);
+		await this.channel.requestBinary(
+			FbsRequest.Method.RTP_OBSERVER_ADD_PRODUCER,
+			FbsRequest.Body.FBS_RtpObserver_AddProducerRequest,
+			requestOffset,
+			this.internal.rtpObserverId
+		);
 
 		// Emit observer event.
 		this.#observer.safeEmit('addproducer', producer);
@@ -285,9 +294,17 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		if (!producer)
 			throw Error(`Producer with id "${producerId}" not found`);
 
-		const reqData = { producerId };
+		const builder = this.channel.bufferBuilder;
+		const requestOffset = new FbsRtpObserver.RemoveProducerRequestT(
+			producerId
+		).pack(builder);
 
-		await this.channel.request('rtpObserver.removeProducer', this.internal.rtpObserverId, reqData);
+		await this.channel.requestBinary(
+			FbsRequest.Method.RTP_OBSERVER_REMOVE_PRODUCER,
+			FbsRequest.Body.FBS_RtpObserver_RemoveProducerRequest,
+			requestOffset,
+			this.internal.rtpObserverId
+		);
 
 		// Emit observer event.
 		this.#observer.safeEmit('removeproducer', producer);

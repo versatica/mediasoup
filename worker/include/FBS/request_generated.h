@@ -14,6 +14,7 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
              "Non-compatible flatbuffers version included");
 
 #include "router_generated.h"
+#include "rtpObserver_generated.h"
 #include "transport_generated.h"
 #include "worker_generated.h"
 
@@ -244,11 +245,13 @@ enum class Body : uint8_t {
   FBS_Transport_CloseConsumerRequest = 20,
   FBS_Transport_CloseDataProducerRequest = 21,
   FBS_Transport_CloseDataConsumerRequest = 22,
+  FBS_RtpObserver_AddProducerRequest = 23,
+  FBS_RtpObserver_RemoveProducerRequest = 24,
   MIN = NONE,
-  MAX = FBS_Transport_CloseDataConsumerRequest
+  MAX = FBS_RtpObserver_RemoveProducerRequest
 };
 
-inline const Body (&EnumValuesBody())[23] {
+inline const Body (&EnumValuesBody())[25] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_UpdateSettingsRequest,
@@ -272,13 +275,15 @@ inline const Body (&EnumValuesBody())[23] {
     Body::FBS_Transport_CloseProducerRequest,
     Body::FBS_Transport_CloseConsumerRequest,
     Body::FBS_Transport_CloseDataProducerRequest,
-    Body::FBS_Transport_CloseDataConsumerRequest
+    Body::FBS_Transport_CloseDataConsumerRequest,
+    Body::FBS_RtpObserver_AddProducerRequest,
+    Body::FBS_RtpObserver_RemoveProducerRequest
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[24] = {
+  static const char * const names[26] = {
     "NONE",
     "FBS_Worker_UpdateSettingsRequest",
     "FBS_Worker_CreateWebRtcServerRequest",
@@ -302,13 +307,15 @@ inline const char * const *EnumNamesBody() {
     "FBS_Transport_CloseConsumerRequest",
     "FBS_Transport_CloseDataProducerRequest",
     "FBS_Transport_CloseDataConsumerRequest",
+    "FBS_RtpObserver_AddProducerRequest",
+    "FBS_RtpObserver_RemoveProducerRequest",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameBody(Body e) {
-  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Transport_CloseDataConsumerRequest)) return "";
+  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_RtpObserver_RemoveProducerRequest)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesBody()[index];
 }
@@ -403,6 +410,14 @@ template<> struct BodyTraits<FBS::Transport::CloseDataProducerRequest> {
 
 template<> struct BodyTraits<FBS::Transport::CloseDataConsumerRequest> {
   static const Body enum_value = Body::FBS_Transport_CloseDataConsumerRequest;
+};
+
+template<> struct BodyTraits<FBS::RtpObserver::AddProducerRequest> {
+  static const Body enum_value = Body::FBS_RtpObserver_AddProducerRequest;
+};
+
+template<> struct BodyTraits<FBS::RtpObserver::RemoveProducerRequest> {
+  static const Body enum_value = Body::FBS_RtpObserver_RemoveProducerRequest;
 };
 
 bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body type);
@@ -501,6 +516,12 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   const FBS::Transport::CloseDataConsumerRequest *body_as_FBS_Transport_CloseDataConsumerRequest() const {
     return body_type() == FBS::Request::Body::FBS_Transport_CloseDataConsumerRequest ? static_cast<const FBS::Transport::CloseDataConsumerRequest *>(body()) : nullptr;
+  }
+  const FBS::RtpObserver::AddProducerRequest *body_as_FBS_RtpObserver_AddProducerRequest() const {
+    return body_type() == FBS::Request::Body::FBS_RtpObserver_AddProducerRequest ? static_cast<const FBS::RtpObserver::AddProducerRequest *>(body()) : nullptr;
+  }
+  const FBS::RtpObserver::RemoveProducerRequest *body_as_FBS_RtpObserver_RemoveProducerRequest() const {
+    return body_type() == FBS::Request::Body::FBS_RtpObserver_RemoveProducerRequest ? static_cast<const FBS::RtpObserver::RemoveProducerRequest *>(body()) : nullptr;
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -601,6 +622,14 @@ template<> inline const FBS::Transport::CloseDataProducerRequest *Request::body_
 
 template<> inline const FBS::Transport::CloseDataConsumerRequest *Request::body_as<FBS::Transport::CloseDataConsumerRequest>() const {
   return body_as_FBS_Transport_CloseDataConsumerRequest();
+}
+
+template<> inline const FBS::RtpObserver::AddProducerRequest *Request::body_as<FBS::RtpObserver::AddProducerRequest>() const {
+  return body_as_FBS_RtpObserver_AddProducerRequest();
+}
+
+template<> inline const FBS::RtpObserver::RemoveProducerRequest *Request::body_as<FBS::RtpObserver::RemoveProducerRequest>() const {
+  return body_as_FBS_RtpObserver_RemoveProducerRequest();
 }
 
 struct RequestBuilder {
@@ -757,6 +786,14 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     }
     case Body::FBS_Transport_CloseDataConsumerRequest: {
       auto ptr = reinterpret_cast<const FBS::Transport::CloseDataConsumerRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_RtpObserver_AddProducerRequest: {
+      auto ptr = reinterpret_cast<const FBS::RtpObserver::AddProducerRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_RtpObserver_RemoveProducerRequest: {
+      auto ptr = reinterpret_cast<const FBS::RtpObserver::RemoveProducerRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;
@@ -927,7 +964,9 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 18 },
     { flatbuffers::ET_SEQUENCE, 0, 19 },
     { flatbuffers::ET_SEQUENCE, 0, 20 },
-    { flatbuffers::ET_SEQUENCE, 0, 21 }
+    { flatbuffers::ET_SEQUENCE, 0, 21 },
+    { flatbuffers::ET_SEQUENCE, 0, 22 },
+    { flatbuffers::ET_SEQUENCE, 0, 23 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::UpdateSettingsRequestTypeTable,
@@ -951,7 +990,9 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Transport::CloseProducerRequestTypeTable,
     FBS::Transport::CloseConsumerRequestTypeTable,
     FBS::Transport::CloseDataProducerRequestTypeTable,
-    FBS::Transport::CloseDataConsumerRequestTypeTable
+    FBS::Transport::CloseDataConsumerRequestTypeTable,
+    FBS::RtpObserver::AddProducerRequestTypeTable,
+    FBS::RtpObserver::RemoveProducerRequestTypeTable
   };
   static const char * const names[] = {
     "NONE",
@@ -976,10 +1017,12 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Transport_CloseProducerRequest",
     "FBS_Transport_CloseConsumerRequest",
     "FBS_Transport_CloseDataProducerRequest",
-    "FBS_Transport_CloseDataConsumerRequest"
+    "FBS_Transport_CloseDataConsumerRequest",
+    "FBS_RtpObserver_AddProducerRequest",
+    "FBS_RtpObserver_RemoveProducerRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 23, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 25, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

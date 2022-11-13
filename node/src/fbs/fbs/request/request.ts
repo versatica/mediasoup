@@ -12,6 +12,8 @@ import { CreateDirectTransportRequest, CreateDirectTransportRequestT } from '../
 import { CreatePipeTransportRequest, CreatePipeTransportRequestT } from '../../fbs/router/create-pipe-transport-request';
 import { CreatePlainTransportRequest, CreatePlainTransportRequestT } from '../../fbs/router/create-plain-transport-request';
 import { CreateWebRtcTransportRequest, CreateWebRtcTransportRequestT } from '../../fbs/router/create-web-rtc-transport-request';
+import { AddProducerRequest, AddProducerRequestT } from '../../fbs/rtp-observer/add-producer-request';
+import { RemoveProducerRequest, RemoveProducerRequestT } from '../../fbs/rtp-observer/remove-producer-request';
 import { CloseConsumerRequest, CloseConsumerRequestT } from '../../fbs/transport/close-consumer-request';
 import { CloseDataConsumerRequest, CloseDataConsumerRequestT } from '../../fbs/transport/close-data-consumer-request';
 import { CloseDataProducerRequest, CloseDataProducerRequestT } from '../../fbs/transport/close-data-producer-request';
@@ -154,7 +156,7 @@ constructor(
   public method: Method = Method.WORKER_CLOSE,
   public handlerId: string|Uint8Array|null = null,
   public bodyType: Body = Body.NONE,
-  public body: CloseConsumerRequestT|CloseDataConsumerRequestT|CloseDataProducerRequestT|CloseProducerRequestT|CloseRouterRequestT|CloseRtpObserverRequestT|CloseTransportRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateActiveSpeakerObserverRequestT|CreateAudioLevelObserverRequestT|CreateDirectTransportRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|EnableTraceEventRequestT|ProduceRequestT|SetMaxIncomingBitrateRequestT|SetMaxOutgoingBitrateRequestT|UpdateSettingsRequestT|null = null
+  public body: AddProducerRequestT|CloseConsumerRequestT|CloseDataConsumerRequestT|CloseDataProducerRequestT|CloseProducerRequestT|CloseRouterRequestT|CloseRtpObserverRequestT|CloseTransportRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateActiveSpeakerObserverRequestT|CreateAudioLevelObserverRequestT|CreateDirectTransportRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|EnableTraceEventRequestT|ProduceRequestT|RemoveProducerRequestT|SetMaxIncomingBitrateRequestT|SetMaxOutgoingBitrateRequestT|UpdateSettingsRequestT|null = null
 ){}
 
 

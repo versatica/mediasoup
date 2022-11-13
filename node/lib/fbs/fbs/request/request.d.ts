@@ -9,6 +9,8 @@ import { CreateDirectTransportRequestT } from '../../fbs/router/create-direct-tr
 import { CreatePipeTransportRequestT } from '../../fbs/router/create-pipe-transport-request';
 import { CreatePlainTransportRequestT } from '../../fbs/router/create-plain-transport-request';
 import { CreateWebRtcTransportRequestT } from '../../fbs/router/create-web-rtc-transport-request';
+import { AddProducerRequestT } from '../../fbs/rtp-observer/add-producer-request';
+import { RemoveProducerRequestT } from '../../fbs/rtp-observer/remove-producer-request';
 import { CloseConsumerRequestT } from '../../fbs/transport/close-consumer-request';
 import { CloseDataConsumerRequestT } from '../../fbs/transport/close-data-consumer-request';
 import { CloseDataProducerRequestT } from '../../fbs/transport/close-data-producer-request';
@@ -53,8 +55,8 @@ export declare class RequestT {
     method: Method;
     handlerId: string | Uint8Array | null;
     bodyType: Body;
-    body: CloseConsumerRequestT | CloseDataConsumerRequestT | CloseDataProducerRequestT | CloseProducerRequestT | CloseRouterRequestT | CloseRtpObserverRequestT | CloseTransportRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateActiveSpeakerObserverRequestT | CreateAudioLevelObserverRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | EnableTraceEventRequestT | ProduceRequestT | SetMaxIncomingBitrateRequestT | SetMaxOutgoingBitrateRequestT | UpdateSettingsRequestT | null;
-    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: CloseConsumerRequestT | CloseDataConsumerRequestT | CloseDataProducerRequestT | CloseProducerRequestT | CloseRouterRequestT | CloseRtpObserverRequestT | CloseTransportRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateActiveSpeakerObserverRequestT | CreateAudioLevelObserverRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | EnableTraceEventRequestT | ProduceRequestT | SetMaxIncomingBitrateRequestT | SetMaxOutgoingBitrateRequestT | UpdateSettingsRequestT | null);
+    body: AddProducerRequestT | CloseConsumerRequestT | CloseDataConsumerRequestT | CloseDataProducerRequestT | CloseProducerRequestT | CloseRouterRequestT | CloseRtpObserverRequestT | CloseTransportRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateActiveSpeakerObserverRequestT | CreateAudioLevelObserverRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | EnableTraceEventRequestT | ProduceRequestT | RemoveProducerRequestT | SetMaxIncomingBitrateRequestT | SetMaxOutgoingBitrateRequestT | UpdateSettingsRequestT | null;
+    constructor(id?: number, method?: Method, handlerId?: string | Uint8Array | null, bodyType?: Body, body?: AddProducerRequestT | CloseConsumerRequestT | CloseDataConsumerRequestT | CloseDataProducerRequestT | CloseProducerRequestT | CloseRouterRequestT | CloseRtpObserverRequestT | CloseTransportRequestT | CloseWebRtcServerRequestT | ConsumeRequestT | CreateActiveSpeakerObserverRequestT | CreateAudioLevelObserverRequestT | CreateDirectTransportRequestT | CreatePipeTransportRequestT | CreatePlainTransportRequestT | CreateRouterRequestT | CreateWebRtcServerRequestT | CreateWebRtcTransportRequestT | EnableTraceEventRequestT | ProduceRequestT | RemoveProducerRequestT | SetMaxIncomingBitrateRequestT | SetMaxOutgoingBitrateRequestT | UpdateSettingsRequestT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=request.d.ts.map

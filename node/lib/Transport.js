@@ -329,7 +329,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const rtpMapping = ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities);
         // This may throw.
         const consumableRtpParameters = ortc.getConsumableRtpParameters(kind, rtpParameters, routerRtpCapabilities, rtpMapping);
-        logger.warn('rtpMapping: ', JSON.stringify(rtpMapping, undefined, 2));
         const producerId = (0, uuid_1.v4)();
         const builder = this.channel.bufferBuilder;
         const requestOffset = createProduceRequest({
@@ -613,7 +612,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * flatbuffers helpers
      */
     createConsumeRequest({ producer, consumerId, rtpParameters, paused, preferredLayers, ignoreDtx, pipe }) {
-        // Build the request.
         const builder = this.channel.bufferBuilder;
         const rtpParametersOffset = (0, RtpParameters_1.serializeRtpParameters)(builder, rtpParameters);
         const consumerIdOffset = builder.createString(consumerId);
@@ -728,7 +726,6 @@ function parseBaseTransportDump(binary) {
 }
 exports.parseBaseTransportDump = parseBaseTransportDump;
 function createProduceRequest({ builder, producerId, kind, rtpParameters, rtpMapping, keyFrameRequestDelay, paused }) {
-    // Build the request.
     const producerIdOffset = builder.createString(producerId);
     const rtpParametersOffset = (0, RtpParameters_1.serializeRtpParameters)(builder, rtpParameters);
     const rtpMappingOffset = ortc.serializeRtpMapping(builder, rtpMapping);

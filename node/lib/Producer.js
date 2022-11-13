@@ -170,7 +170,7 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async pause() {
         logger.debug('pause()');
         const wasPaused = this.#paused;
-        await this.#channel.request('producer.pause', this.#internal.producerId);
+        await this.#channel.requestBinary(FbsRequest.Method.PRODUCER_PAUSE, undefined, undefined, this.#internal.producerId);
         this.#paused = true;
         // Emit observer event.
         if (!wasPaused)
@@ -182,7 +182,7 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async resume() {
         logger.debug('resume()');
         const wasPaused = this.#paused;
-        await this.#channel.request('producer.resume', this.#internal.producerId);
+        await this.#channel.requestBinary(FbsRequest.Method.PRODUCER_RESUME, undefined, undefined, this.#internal.producerId);
         this.#paused = false;
         // Emit observer event.
         if (wasPaused)

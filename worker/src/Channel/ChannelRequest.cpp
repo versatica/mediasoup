@@ -35,8 +35,6 @@ namespace Channel
 		{ "dataConsumer.getStats",                       FBS::Request::Method::DATA_CONSUMER_GET_STATS                          },
 		{ "dataConsumer.getBufferedAmount",              FBS::Request::Method::DATA_CONSUMER_GET_BUFFERED_AMOUNT                },
 		{ "dataConsumer.setBufferedAmountLowThreshold",  FBS::Request::Method::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD  },
-		{ "rtpObserver.addProducer",                     FBS::Request::Method::RTP_OBSERVER_ADD_PRODUCER                        },
-		{ "rtpObserver.removeProducer",                  FBS::Request::Method::RTP_OBSERVER_REMOVE_PRODUCER                     }
 	};
 	// clang-format on
 

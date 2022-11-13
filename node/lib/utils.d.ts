@@ -15,11 +15,11 @@ declare type Only<T, U> = {
 };
 export declare type Either<T, U> = Only<T, U> | Only<U, T>;
 /**
- * Get the flatbuffers RtpParameters type of a given Producer.
+ * Get the flatbuffers RtpParameters type for a given Producer.
  */
 export declare function getRtpParametersType(producerType: ProducerType, pipe: boolean): FbsRtpParametersType;
 /**
- * Get the flatbuffers Producer type of a given RtpParameter type.
+ * Get the flatbuffers Producer type for a given RtpParameter type.
  */
 export declare function getProducerType(rtpParameterType: FbsRtpParametersType): ProducerType;
 /**

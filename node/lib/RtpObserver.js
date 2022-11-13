@@ -5,6 +5,7 @@ const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const FbsRequest = require("./fbs/request_generated");
 const FbsRouter = require("./fbs/router_generated");
+const FbsRtpObserver = require("./fbs/rtpObserver_generated");
 const logger = new Logger_1.Logger('RtpObserver');
 class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -114,7 +115,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async pause() {
         logger.debug('pause()');
         const wasPaused = this.#paused;
-        await this.channel.request('rtpObserver.pause', this.internal.rtpObserverId);
+        await this.channel.requestBinary(FbsRequest.Method.RTP_OBSERVER_PAUSE, undefined, undefined, this.internal.rtpObserverId);
         this.#paused = true;
         // Emit observer event.
         if (!wasPaused)
@@ -126,7 +127,7 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     async resume() {
         logger.debug('resume()');
         const wasPaused = this.#paused;
-        await this.channel.request('rtpObserver.resume', this.internal.rtpObserverId);
+        await this.channel.requestBinary(FbsRequest.Method.RTP_OBSERVER_RESUME, undefined, undefined, this.internal.rtpObserverId);
         this.#paused = false;
         // Emit observer event.
         if (wasPaused)
@@ -142,6 +143,9 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             throw Error(`Producer with id "${producerId}" not found`);
         const reqData = { producerId };
         await this.channel.request('rtpObserver.addProducer', this.internal.rtpObserverId, reqData);
+        const builder = this.channel.bufferBuilder;
+        const requestOffset = new FbsRtpObserver.AddProducerRequestT(producerId).pack(builder);
+        this.channel.requestBinary(FbsRequest.Method.RTP_OBSERVER_ADD_PRODUCER, FbsRequest.Body.FBS_Router_CloseTransportRequest, requestOffset, this.internal.routerId).catch(() => { });
         // Emit observer event.
         this.#observer.safeEmit('addproducer', producer);
     }

@@ -49,9 +49,6 @@ namespace RTC
 		virtual void Paused()  = 0;
 		virtual void Resumed() = 0;
 
-	private:
-		std::string GetProducerIdFromData(json& data) const;
-
 	public:
 		// Passed by argument.
 		const std::string id;

@@ -1,6 +1,7 @@
+include "worker.fbs";
 include "router.fbs";
 include "transport.fbs";
-include "worker.fbs";
+include "rtpObserver.fbs";
 
 namespace FBS.Request;
 
@@ -87,6 +88,8 @@ union Body {
   FBS.Transport.CloseConsumerRequest,
   FBS.Transport.CloseDataProducerRequest,
   FBS.Transport.CloseDataConsumerRequest,
+  FBS.RtpObserver.AddProducerRequest,
+  FBS.RtpObserver.RemoveProducerRequest,
 }
 
 table Request {

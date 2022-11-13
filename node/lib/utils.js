@@ -20,7 +20,7 @@ function generateRandomNumber() {
 }
 exports.generateRandomNumber = generateRandomNumber;
 /**
- * Get the flatbuffers RtpParameters type of a given Producer.
+ * Get the flatbuffers RtpParameters type for a given Producer.
  */
 function getRtpParametersType(producerType, pipe) {
     if (pipe) {
@@ -39,7 +39,7 @@ function getRtpParametersType(producerType, pipe) {
 }
 exports.getRtpParametersType = getRtpParametersType;
 /**
- * Get the flatbuffers Producer type of a given RtpParameter type.
+ * Get the flatbuffers Producer type for a given RtpParameter type.
  */
 function getProducerType(rtpParameterType) {
     switch (rtpParameterType) {

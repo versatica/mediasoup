@@ -8,6 +8,8 @@ import { CreateDirectTransportRequest, CreateDirectTransportRequestT } from '../
 import { CreatePipeTransportRequest, CreatePipeTransportRequestT } from '../../fbs/router/create-pipe-transport-request';
 import { CreatePlainTransportRequest, CreatePlainTransportRequestT } from '../../fbs/router/create-plain-transport-request';
 import { CreateWebRtcTransportRequest, CreateWebRtcTransportRequestT } from '../../fbs/router/create-web-rtc-transport-request';
+import { AddProducerRequest, AddProducerRequestT } from '../../fbs/rtp-observer/add-producer-request';
+import { RemoveProducerRequest, RemoveProducerRequestT } from '../../fbs/rtp-observer/remove-producer-request';
 import { CloseConsumerRequest, CloseConsumerRequestT } from '../../fbs/transport/close-consumer-request';
 import { CloseDataConsumerRequest, CloseDataConsumerRequestT } from '../../fbs/transport/close-data-consumer-request';
 import { CloseDataProducerRequest, CloseDataProducerRequestT } from '../../fbs/transport/close-data-producer-request';
@@ -47,13 +49,15 @@ export enum Body {
   FBS_Transport_CloseProducerRequest = 19,
   FBS_Transport_CloseConsumerRequest = 20,
   FBS_Transport_CloseDataProducerRequest = 21,
-  FBS_Transport_CloseDataConsumerRequest = 22
+  FBS_Transport_CloseDataConsumerRequest = 22,
+  FBS_RtpObserver_AddProducerRequest = 23,
+  FBS_RtpObserver_RemoveProducerRequest = 24
 }
 
 export function unionToBody(
   type: Body,
-  accessor: (obj:CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest) => CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null
-): CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null {
+  accessor: (obj:AddProducerRequest|CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|RemoveProducerRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest) => AddProducerRequest|CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|RemoveProducerRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null
+): AddProducerRequest|CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|RemoveProducerRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_UpdateSettingsRequest': return accessor(new UpdateSettingsRequest())! as UpdateSettingsRequest;
@@ -78,15 +82,17 @@ export function unionToBody(
     case 'FBS_Transport_CloseConsumerRequest': return accessor(new CloseConsumerRequest())! as CloseConsumerRequest;
     case 'FBS_Transport_CloseDataProducerRequest': return accessor(new CloseDataProducerRequest())! as CloseDataProducerRequest;
     case 'FBS_Transport_CloseDataConsumerRequest': return accessor(new CloseDataConsumerRequest())! as CloseDataConsumerRequest;
+    case 'FBS_RtpObserver_AddProducerRequest': return accessor(new AddProducerRequest())! as AddProducerRequest;
+    case 'FBS_RtpObserver_RemoveProducerRequest': return accessor(new RemoveProducerRequest())! as RemoveProducerRequest;
     default: return null;
   }
 }
 
 export function unionListToBody(
   type: Body, 
-  accessor: (index: number, obj:CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest) => CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null, 
+  accessor: (index: number, obj:AddProducerRequest|CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|RemoveProducerRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest) => AddProducerRequest|CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|RemoveProducerRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null, 
   index: number
-): CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null {
+): AddProducerRequest|CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|RemoveProducerRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_UpdateSettingsRequest': return accessor(index, new UpdateSettingsRequest())! as UpdateSettingsRequest;
@@ -111,6 +117,8 @@ export function unionListToBody(
     case 'FBS_Transport_CloseConsumerRequest': return accessor(index, new CloseConsumerRequest())! as CloseConsumerRequest;
     case 'FBS_Transport_CloseDataProducerRequest': return accessor(index, new CloseDataProducerRequest())! as CloseDataProducerRequest;
     case 'FBS_Transport_CloseDataConsumerRequest': return accessor(index, new CloseDataConsumerRequest())! as CloseDataConsumerRequest;
+    case 'FBS_RtpObserver_AddProducerRequest': return accessor(index, new AddProducerRequest())! as AddProducerRequest;
+    case 'FBS_RtpObserver_RemoveProducerRequest': return accessor(index, new RemoveProducerRequest())! as RemoveProducerRequest;
     default: return null;
   }
 }
