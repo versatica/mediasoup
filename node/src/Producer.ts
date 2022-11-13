@@ -431,7 +431,12 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.request('producer.pause', this.#internal.producerId);
+		await this.#channel.requestBinary(
+			FbsRequest.Method.PRODUCER_PAUSE,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
 
 		this.#paused = true;
 
@@ -449,7 +454,12 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.request('producer.resume', this.#internal.producerId);
+		await this.#channel.requestBinary(
+			FbsRequest.Method.PRODUCER_RESUME,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
 
 		this.#paused = false;
 

@@ -216,7 +216,12 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.channel.request('rtpObserver.pause', this.internal.rtpObserverId);
+		await this.channel.requestBinary(
+			FbsRequest.Method.RTP_OBSERVER_PAUSE,
+			undefined,
+			undefined,
+			this.internal.rtpObserverId
+		);
 
 		this.#paused = true;
 
@@ -234,7 +239,12 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.channel.request('rtpObserver.resume', this.internal.rtpObserverId);
+		await this.channel.requestBinary(
+			FbsRequest.Method.RTP_OBSERVER_RESUME,
+			undefined,
+			undefined,
+			this.internal.rtpObserverId
+		);
 
 		this.#paused = false;
 

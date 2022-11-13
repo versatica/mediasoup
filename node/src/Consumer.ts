@@ -506,7 +506,12 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		const wasPaused = this.#paused || this.#producerPaused;
 
-		await this.#channel.request('consumer.pause', this.#internal.consumerId);
+		await this.#channel.requestBinary(
+			FbsRequest.Method.CONSUMER_PAUSE,
+			undefined,
+			undefined,
+			this.#internal.consumerId
+		);
 
 		this.#paused = true;
 
@@ -524,7 +529,13 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		const wasPaused = this.#paused || this.#producerPaused;
 
-		await this.#channel.request('consumer.resume', this.#internal.consumerId);
+		await this.#channel.requestBinary(
+			FbsRequest.Method.CONSUMER_RESUME,
+			undefined,
+			undefined,
+			this.#internal.consumerId
+		);
+
 
 		this.#paused = false;
 
@@ -590,7 +601,12 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('requestKeyFrame()');
 
-		await this.#channel.request('consumer.requestKeyFrame', this.#internal.consumerId);
+		await this.#channel.requestBinary(
+			FbsRequest.Method.CONSUMER_REQUEST_KEY_FRAME,
+			undefined,
+			undefined,
+			this.#internal.consumerId
+		);
 	}
 
 	/**
