@@ -594,9 +594,6 @@ test('producer.dump() succeeds', async () =>
 		]);
 	expect(data.rtpParameters.encodings).toBeType('array');
 	expect(data.rtpParameters.encodings.length).toBe(4);
-
-	console.error(data.rtpParameters.encodings);
-
 	expect(data.rtpParameters.encodings).toMatchObject(
 		[
 			{
