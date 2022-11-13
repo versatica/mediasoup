@@ -1,6 +1,7 @@
+import * as flatbuffers from 'flatbuffers';
 import { RtpCapabilities, RtpCodecCapability, RtpHeaderExtension, RtpParameters, RtpCodecParameters, RtcpFeedback, RtpEncodingParameters, RtpHeaderExtensionParameters, RtcpParameters } from './RtpParameters';
 import { SctpCapabilities, NumSctpStreams, SctpParameters, SctpStreamParameters } from './SctpParameters';
-declare type RtpMapping = {
+export declare type RtpMapping = {
     codecs: {
         payloadType: number;
         mappedPayloadType: number;
@@ -126,5 +127,5 @@ export declare function getConsumerRtpParameters(consumableParams: RtpParameters
  * enableRtx is false, it also removes RTX and NACK support.
  */
 export declare function getPipeConsumerRtpParameters(consumableParams: RtpParameters, enableRtx?: boolean): RtpParameters;
-export {};
+export declare function serializeRtpMapping(builder: flatbuffers.Builder, rtpMapping: RtpMapping): number;
 //# sourceMappingURL=ortc.d.ts.map

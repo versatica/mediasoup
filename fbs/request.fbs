@@ -80,6 +80,7 @@ union Body {
   FBS.Router.CloseRtpObserverRequest,
   FBS.Transport.SetMaxIncomingBitrateRequest,
   FBS.Transport.SetMaxOutgoingBitrateRequest,
+  FBS.Transport.ProduceRequest,
   FBS.Transport.ConsumeRequest,
   FBS.Transport.EnableTraceEventRequest,
   FBS.Transport.CloseProducerRequest,

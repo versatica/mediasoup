@@ -30,6 +30,12 @@ struct ConsumeRequestBuilder;
 struct ConsumeResponse;
 struct ConsumeResponseBuilder;
 
+struct ProduceRequest;
+struct ProduceRequestBuilder;
+
+struct ProduceResponse;
+struct ProduceResponseBuilder;
+
 struct RtpListener;
 struct RtpListenerBuilder;
 
@@ -101,6 +107,10 @@ inline const flatbuffers::TypeTable *TransportListenIpTypeTable();
 inline const flatbuffers::TypeTable *ConsumeRequestTypeTable();
 
 inline const flatbuffers::TypeTable *ConsumeResponseTypeTable();
+
+inline const flatbuffers::TypeTable *ProduceRequestTypeTable();
+
+inline const flatbuffers::TypeTable *ProduceResponseTypeTable();
 
 inline const flatbuffers::TypeTable *RtpListenerTypeTable();
 
@@ -548,6 +558,169 @@ inline flatbuffers::Offset<ConsumeResponse> CreateConsumeResponse(
   builder_.add_score(score);
   builder_.add_producerPaused(producerPaused);
   builder_.add_paused(paused);
+  return builder_.Finish();
+}
+
+struct ProduceRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef ProduceRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return ProduceRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PRODUCERID = 4,
+    VT_KIND = 6,
+    VT_RTPPARAMETERS = 8,
+    VT_RTPMAPPING = 10,
+    VT_KEYFRAMEREQUESTDELAY = 12,
+    VT_PAUSED = 14
+  };
+  const flatbuffers::String *producerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_PRODUCERID);
+  }
+  FBS::RtpParameters::MediaKind kind() const {
+    return static_cast<FBS::RtpParameters::MediaKind>(GetField<uint8_t>(VT_KIND, 0));
+  }
+  const FBS::RtpParameters::RtpParameters *rtpParameters() const {
+    return GetPointer<const FBS::RtpParameters::RtpParameters *>(VT_RTPPARAMETERS);
+  }
+  const FBS::RtpParameters::RtpMapping *rtpMapping() const {
+    return GetPointer<const FBS::RtpParameters::RtpMapping *>(VT_RTPMAPPING);
+  }
+  uint16_t keyFrameRequestDelay() const {
+    return GetField<uint16_t>(VT_KEYFRAMEREQUESTDELAY, 0);
+  }
+  bool paused() const {
+    return GetField<uint8_t>(VT_PAUSED, 0) != 0;
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_PRODUCERID) &&
+           verifier.VerifyString(producerId()) &&
+           VerifyField<uint8_t>(verifier, VT_KIND, 1) &&
+           VerifyOffsetRequired(verifier, VT_RTPPARAMETERS) &&
+           verifier.VerifyTable(rtpParameters()) &&
+           VerifyOffsetRequired(verifier, VT_RTPMAPPING) &&
+           verifier.VerifyTable(rtpMapping()) &&
+           VerifyField<uint16_t>(verifier, VT_KEYFRAMEREQUESTDELAY, 2) &&
+           VerifyField<uint8_t>(verifier, VT_PAUSED, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct ProduceRequestBuilder {
+  typedef ProduceRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_producerId(flatbuffers::Offset<flatbuffers::String> producerId) {
+    fbb_.AddOffset(ProduceRequest::VT_PRODUCERID, producerId);
+  }
+  void add_kind(FBS::RtpParameters::MediaKind kind) {
+    fbb_.AddElement<uint8_t>(ProduceRequest::VT_KIND, static_cast<uint8_t>(kind), 0);
+  }
+  void add_rtpParameters(flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters) {
+    fbb_.AddOffset(ProduceRequest::VT_RTPPARAMETERS, rtpParameters);
+  }
+  void add_rtpMapping(flatbuffers::Offset<FBS::RtpParameters::RtpMapping> rtpMapping) {
+    fbb_.AddOffset(ProduceRequest::VT_RTPMAPPING, rtpMapping);
+  }
+  void add_keyFrameRequestDelay(uint16_t keyFrameRequestDelay) {
+    fbb_.AddElement<uint16_t>(ProduceRequest::VT_KEYFRAMEREQUESTDELAY, keyFrameRequestDelay, 0);
+  }
+  void add_paused(bool paused) {
+    fbb_.AddElement<uint8_t>(ProduceRequest::VT_PAUSED, static_cast<uint8_t>(paused), 0);
+  }
+  explicit ProduceRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<ProduceRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<ProduceRequest>(end);
+    fbb_.Required(o, ProduceRequest::VT_PRODUCERID);
+    fbb_.Required(o, ProduceRequest::VT_RTPPARAMETERS);
+    fbb_.Required(o, ProduceRequest::VT_RTPMAPPING);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<ProduceRequest> CreateProduceRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> producerId = 0,
+    FBS::RtpParameters::MediaKind kind = FBS::RtpParameters::MediaKind::ALL,
+    flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters = 0,
+    flatbuffers::Offset<FBS::RtpParameters::RtpMapping> rtpMapping = 0,
+    uint16_t keyFrameRequestDelay = 0,
+    bool paused = false) {
+  ProduceRequestBuilder builder_(_fbb);
+  builder_.add_rtpMapping(rtpMapping);
+  builder_.add_rtpParameters(rtpParameters);
+  builder_.add_producerId(producerId);
+  builder_.add_keyFrameRequestDelay(keyFrameRequestDelay);
+  builder_.add_paused(paused);
+  builder_.add_kind(kind);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<ProduceRequest> CreateProduceRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *producerId = nullptr,
+    FBS::RtpParameters::MediaKind kind = FBS::RtpParameters::MediaKind::ALL,
+    flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters = 0,
+    flatbuffers::Offset<FBS::RtpParameters::RtpMapping> rtpMapping = 0,
+    uint16_t keyFrameRequestDelay = 0,
+    bool paused = false) {
+  auto producerId__ = producerId ? _fbb.CreateString(producerId) : 0;
+  return FBS::Transport::CreateProduceRequest(
+      _fbb,
+      producerId__,
+      kind,
+      rtpParameters,
+      rtpMapping,
+      keyFrameRequestDelay,
+      paused);
+}
+
+struct ProduceResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef ProduceResponseBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return ProduceResponseTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TYPE = 4
+  };
+  FBS::RtpParameters::Type type() const {
+    return static_cast<FBS::RtpParameters::Type>(GetField<uint8_t>(VT_TYPE, 0));
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_TYPE, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct ProduceResponseBuilder {
+  typedef ProduceResponse Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_type(FBS::RtpParameters::Type type) {
+    fbb_.AddElement<uint8_t>(ProduceResponse::VT_TYPE, static_cast<uint8_t>(type), 0);
+  }
+  explicit ProduceResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<ProduceResponse> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<ProduceResponse>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<ProduceResponse> CreateProduceResponse(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    FBS::RtpParameters::Type type = FBS::RtpParameters::Type::NONE) {
+  ProduceResponseBuilder builder_(_fbb);
+  builder_.add_type(type);
   return builder_.Finish();
 }
 
@@ -2605,6 +2778,50 @@ inline const flatbuffers::TypeTable *ConsumeResponseTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 4, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *ProduceRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_UCHAR, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 },
+    { flatbuffers::ET_SEQUENCE, 0, 2 },
+    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::RtpParameters::MediaKindTypeTable,
+    FBS::RtpParameters::RtpParametersTypeTable,
+    FBS::RtpParameters::RtpMappingTypeTable
+  };
+  static const char * const names[] = {
+    "producerId",
+    "kind",
+    "rtpParameters",
+    "rtpMapping",
+    "keyFrameRequestDelay",
+    "paused"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 6, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *ProduceResponseTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UCHAR, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::RtpParameters::TypeTypeTable
+  };
+  static const char * const names[] = {
+    "type"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

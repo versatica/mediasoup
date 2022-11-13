@@ -28,7 +28,7 @@ function serializeRtpParameters(builder, rtpParameters) {
                 }
             }
             else if (typeof value === 'string') {
-                const valueOffset = builder.createString(value);
+                const valueOffset = rtpParameters_generated_1.String.createString(builder, builder.createString(value));
                 parameterOffset = rtpParameters_generated_1.Parameter.createParameter(builder, keyOffset, rtpParameters_generated_1.Value.String, valueOffset);
             }
             else if (Array.isArray(value)) {
@@ -90,7 +90,7 @@ function serializeRtpEncodingParameters(builder, rtpEncodingParameters) {
         // Prepare Rtx.
         let rtxOffset;
         if (encoding.rtx)
-            rtpParameters_generated_1.Rtx.createRtx(builder, encoding.rtx.ssrc);
+            rtxOffset = rtpParameters_generated_1.Rtx.createRtx(builder, encoding.rtx.ssrc);
         // Prepare scalability mode.
         let scalabilityModeOffset;
         if (encoding.scalabilityMode)

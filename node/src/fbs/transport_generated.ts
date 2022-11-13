@@ -8,6 +8,7 @@ export { ConsumerLayers, ConsumerLayersT } from './fbs/consumer/consumer-layers'
 export { ConsumerScore, ConsumerScoreT } from './fbs/consumer/consumer-score';
 export { MediaKind } from './fbs/rtp-parameters/media-kind';
 export { RtpEncodingParameters, RtpEncodingParametersT } from './fbs/rtp-parameters/rtp-encoding-parameters';
+export { RtpMapping, RtpMappingT } from './fbs/rtp-parameters/rtp-mapping';
 export { RtpParameters, RtpParametersT } from './fbs/rtp-parameters/rtp-parameters';
 export { Type } from './fbs/rtp-parameters/type';
 export { NumSctpStreams, NumSctpStreamsT } from './fbs/sctp-parameters/num-sctp-streams';
@@ -29,6 +30,8 @@ export { IceCandidate, IceCandidateT } from './fbs/transport/ice-candidate';
 export { IceParameters, IceParametersT } from './fbs/transport/ice-parameters';
 export { PipeTransportDump, PipeTransportDumpT } from './fbs/transport/pipe-transport-dump';
 export { PlainTransportDump, PlainTransportDumpT } from './fbs/transport/plain-transport-dump';
+export { ProduceRequest, ProduceRequestT } from './fbs/transport/produce-request';
+export { ProduceResponse, ProduceResponseT } from './fbs/transport/produce-response';
 export { RtpListener, RtpListenerT } from './fbs/transport/rtp-listener';
 export { SctpListener, SctpListenerT } from './fbs/transport/sctp-listener';
 export { SetMaxIncomingBitrateRequest, SetMaxIncomingBitrateRequestT } from './fbs/transport/set-max-incoming-bitrate-request';

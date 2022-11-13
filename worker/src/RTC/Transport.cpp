@@ -726,13 +726,14 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_PRODUCE:
 			{
-				std::string producerId;
+				auto body       = request->_data->body_as<FBS::Transport::ProduceRequest>();
+				auto producerId = body->producerId()->str();
 
 				// This may throw.
-				SetNewProducerIdFromData(request->data, producerId);
+				CheckNoProducer(producerId);
 
 				// This may throw.
-				auto* producer = new RTC::Producer(producerId, this, request->data);
+				auto* producer = new RTC::Producer(producerId, this, body);
 
 				// Insert the Producer into the RtpListener.
 				// This may throw. If so, delete the Producer and throw.
@@ -800,11 +801,10 @@ namespace RTC
 				}
 
 				// Create status response.
-				json data = json::object();
+				auto responseOffset = FBS::Transport::CreateProduceResponse(
+				  request->GetBufferBuilder(), FBS::RtpParameters::Type(producer->GetType()));
 
-				data["type"] = RTC::RtpParameters::GetTypeString(producer->GetType());
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_Transport_ProduceResponse, responseOffset);
 
 				// Check if TransportCongestionControlServer or REMB server must be
 				// created.
@@ -1712,23 +1712,10 @@ namespace RTC
 		this->sctpAssociation->ProcessSctpData(data, len);
 	}
 
-	void Transport::SetNewProducerIdFromData(json& data, std::string& producerId) const
+	void Transport::CheckNoProducer(const std::string& producerId) const
 	{
-		MS_TRACE();
-
-		auto jsonProducerIdIt = data.find("producerId");
-
-		if (jsonProducerIdIt == data.end() || !jsonProducerIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing producerId");
-		}
-
-		producerId.assign(jsonProducerIdIt->get<std::string>());
-
 		if (this->mapProducers.find(producerId) != this->mapProducers.end())
-		{
 			MS_THROW_ERROR("a Producer with same producerId already exists");
-		}
 	}
 
 	RTC::Producer* Transport::GetProducerById(const std::string& producerId) const

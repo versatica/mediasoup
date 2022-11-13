@@ -3,6 +3,7 @@ import {
 	Double as FbsDouble,
 	Integer as FbsInteger,
 	IntegerArray as FbsIntegerArray,
+	String as FbsString,
 	Parameter as FbsParameter,
 	RtcpFeedback as FbsRtcpFeedback,
 	RtcpParameters as FbsRtcpParameters,
@@ -418,7 +419,7 @@ export function serializeRtpParameters(
 
 			else if (typeof value === 'string')
 			{
-				const valueOffset = builder.createString(value);
+				const valueOffset = FbsString.createString(builder, builder.createString(value));
 
 				parameterOffset = FbsParameter.createParameter(
 					builder, keyOffset, FbsValue.String, valueOffset
@@ -539,7 +540,7 @@ export function serializeRtpEncodingParameters(
 		let rtxOffset: number | undefined;
 
 		if (encoding.rtx)
-			FbsRtx.createRtx(builder, encoding.rtx.ssrc);
+			rtxOffset = FbsRtx.createRtx(builder, encoding.rtx.ssrc);
 
 		// Prepare scalability mode.
 		let scalabilityModeOffset: number | undefined;

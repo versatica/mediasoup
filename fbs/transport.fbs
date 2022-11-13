@@ -31,6 +31,19 @@ table ConsumeResponse {
   preferred_layers:FBS.Consumer.ConsumerLayers;
 }
 
+table ProduceRequest {
+  producer_id:string (required);
+  kind:FBS.RtpParameters.MediaKind;
+  rtp_parameters:FBS.RtpParameters.RtpParameters (required);
+  rtp_mapping:FBS.RtpParameters.RtpMapping (required);
+  key_frame_request_delay:uint16;
+  paused:bool = false;
+}
+
+table ProduceResponse {
+  type:FBS.RtpParameters.Type;
+}
+
 table RtpListener {
   ssrc_table:[FBS.Common.Uint32String] (required);
   mid_table:[FBS.Common.StringString] (required);

@@ -117,9 +117,7 @@ namespace RTC
 		MS_TRACE();
 
 		// ssrc is optional.
-		// clang-format off
 		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_SSRC))
-		// clang-format on
 		{
 			this->ssrc = data->ssrc();
 		}

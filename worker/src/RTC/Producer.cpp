@@ -29,35 +29,22 @@ namespace RTC
 
 	/* Instance methods. */
 
-	Producer::Producer(const std::string& id, RTC::Producer::Listener* listener, json& data)
+	Producer::Producer(
+	  const std::string& id, RTC::Producer::Listener* listener, const FBS::Transport::ProduceRequest* data)
 	  : id(id), listener(listener)
 	{
 		MS_TRACE();
 
-		auto jsonKindIt = data.find("kind");
-
-		if (jsonKindIt == data.end() || !jsonKindIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing Producer kind");
-		}
-
 		// This may throw.
-		this->kind = RTC::Media::GetKind(jsonKindIt->get<std::string>());
+		this->kind = RTC::Media::Kind(data->kind());
 
 		if (this->kind == RTC::Media::Kind::ALL)
 		{
 			MS_THROW_TYPE_ERROR("invalid empty kind");
 		}
 
-		auto jsonRtpParametersIt = data.find("rtpParameters");
-
-		if (jsonRtpParametersIt == data.end() || !jsonRtpParametersIt->is_object())
-		{
-			MS_THROW_TYPE_ERROR("missing rtpParameters");
-		}
-
 		// This may throw.
-		this->rtpParameters = RTC::RtpParameters(*jsonRtpParametersIt);
+		this->rtpParameters = RTC::RtpParameters(data->rtpParameters());
 
 		// Evaluate type.
 		this->type = RTC::RtpParameters::GetType(this->rtpParameters);
@@ -78,102 +65,34 @@ namespace RTC
 			  RTC::RtpParameters::GetTypeString(this->type).c_str());
 		}
 
-		auto jsonRtpMappingIt = data.find("rtpMapping");
-
-		if (jsonRtpMappingIt == data.end() || !jsonRtpMappingIt->is_object())
+		for (const auto& codec : *data->rtpMapping()->codecs())
 		{
-			MS_THROW_TYPE_ERROR("missing rtpMapping");
+			this->rtpMapping.codecs[codec->payloadType()] = codec->mappedPayloadType();
 		}
 
-		auto jsonCodecsIt = jsonRtpMappingIt->find("codecs");
+		auto encodings = data->rtpMapping()->encodings();
 
-		if (jsonCodecsIt == jsonRtpMappingIt->end() || !jsonCodecsIt->is_array())
+		this->rtpMapping.encodings.reserve(encodings->size());
+
+		for (const auto& encoding : *encodings)
 		{
-			MS_THROW_TYPE_ERROR("missing rtpMapping.codecs");
-		}
-
-		for (auto& codec : *jsonCodecsIt)
-		{
-			if (!codec.is_object())
-			{
-				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.codecs (not an object)");
-			}
-
-			auto jsonPayloadTypeIt = codec.find("payloadType");
-
-			// clang-format off
-			if (
-				jsonPayloadTypeIt == codec.end() ||
-				!Utils::Json::IsPositiveInteger(*jsonPayloadTypeIt)
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.codecs (missing payloadType)");
-			}
-
-			auto jsonMappedPayloadTypeIt = codec.find("mappedPayloadType");
-
-			// clang-format off
-			if (
-				jsonMappedPayloadTypeIt == codec.end() ||
-				!Utils::Json::IsPositiveInteger(*jsonMappedPayloadTypeIt)
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.codecs (missing mappedPayloadType)");
-			}
-
-			this->rtpMapping.codecs[jsonPayloadTypeIt->get<uint8_t>()] =
-			  jsonMappedPayloadTypeIt->get<uint8_t>();
-		}
-
-		auto jsonEncodingsIt = jsonRtpMappingIt->find("encodings");
-
-		if (jsonEncodingsIt == jsonRtpMappingIt->end() || !jsonEncodingsIt->is_array())
-		{
-			MS_THROW_TYPE_ERROR("missing rtpMapping.encodings");
-		}
-
-		this->rtpMapping.encodings.reserve(jsonEncodingsIt->size());
-
-		for (auto& encoding : *jsonEncodingsIt)
-		{
-			if (!encoding.is_object())
-			{
-				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings");
-			}
-
 			this->rtpMapping.encodings.emplace_back();
 
 			auto& encodingMapping = this->rtpMapping.encodings.back();
 
 			// ssrc is optional.
-			auto jsonSsrcIt = encoding.find("ssrc");
-
-			// clang-format off
-			if (
-				jsonSsrcIt != encoding.end() &&
-				Utils::Json::IsPositiveInteger(*jsonSsrcIt)
-			)
-			// clang-format on
+			if (encoding->ssrc())
 			{
-				encodingMapping.ssrc = jsonSsrcIt->get<uint32_t>();
+				encodingMapping.ssrc = encoding->ssrc();
 			}
 
 			// rid is optional.
-			auto jsonRidIt = encoding.find("rid");
-
-			if (jsonRidIt != encoding.end() && jsonRidIt->is_string())
-			{
-				encodingMapping.rid = jsonRidIt->get<std::string>();
-			}
-
 			// However ssrc or rid must be present (if more than 1 encoding).
 			// clang-format off
 			if (
-				jsonEncodingsIt->size() > 1 &&
-				jsonSsrcIt == encoding.end() &&
-				jsonRidIt == encoding.end()
+				encodings->size() > 1 &&
+				!encoding->ssrc() &&
+				!encoding->rid()
 			)
 			// clang-format on
 			{
@@ -184,9 +103,9 @@ namespace RTC
 			// clang-format off
 			if (
 				this->rtpParameters.mid.empty() &&
-				jsonEncodingsIt->size() == 1 &&
-				jsonSsrcIt == encoding.end() &&
-				jsonRidIt == encoding.end()
+				encodings->size() == 1 &&
+				!encoding->ssrc() &&
+				!encoding->rid()
 			)
 			// clang-format on
 			{
@@ -195,27 +114,15 @@ namespace RTC
 			}
 
 			// mappedSsrc is mandatory.
-			auto jsonMappedSsrcIt = encoding.find("mappedSsrc");
-
-			// clang-format off
-			if (
-				jsonMappedSsrcIt == encoding.end() ||
-				!Utils::Json::IsPositiveInteger(*jsonMappedSsrcIt)
-			)
-			// clang-format on
+			if (!encoding->mappedSsrc())
 			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings (missing mappedSsrc)");
 			}
 
-			encodingMapping.mappedSsrc = jsonMappedSsrcIt->get<uint32_t>();
+			encodingMapping.mappedSsrc = encoding->mappedSsrc();
 		}
 
-		auto jsonPausedIt = data.find("paused");
-
-		if (jsonPausedIt != data.end() && jsonPausedIt->is_boolean())
-		{
-			this->paused = jsonPausedIt->get<bool>();
-		}
+		this->paused = data->paused();
 
 		// The number of encodings in rtpParameters must match the number of encodings
 		// in rtpMapping.
@@ -299,18 +206,7 @@ namespace RTC
 		// Create a KeyFrameRequestManager.
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
-			auto jsonKeyFrameRequestDelayIt = data.find("keyFrameRequestDelay");
-			uint32_t keyFrameRequestDelay   = 0u;
-
-			// clang-format off
-			if (
-				jsonKeyFrameRequestDelayIt != data.end() &&
-				jsonKeyFrameRequestDelayIt->is_number_integer()
-			)
-			// clang-format on
-			{
-				keyFrameRequestDelay = jsonKeyFrameRequestDelayIt->get<uint32_t>();
-			}
+			auto keyFrameRequestDelay = data->keyFrameRequestDelay();
 
 			this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this, keyFrameRequestDelay);
 		}

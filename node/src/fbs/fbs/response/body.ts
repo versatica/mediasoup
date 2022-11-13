@@ -3,6 +3,7 @@
 import { DumpResponse as FBS_Router_DumpResponse, DumpResponseT as FBS_Router_DumpResponseT } from '../../fbs/router/dump-response';
 import { ConsumeResponse, ConsumeResponseT } from '../../fbs/transport/consume-response';
 import { DumpResponse as FBS_Transport_DumpResponse, DumpResponseT as FBS_Transport_DumpResponseT } from '../../fbs/transport/dump-response';
+import { ProduceResponse, ProduceResponseT } from '../../fbs/transport/produce-response';
 import { DumpResponse as FBS_WebRtcServer_DumpResponse, DumpResponseT as FBS_WebRtcServer_DumpResponseT } from '../../fbs/web-rtc-server/dump-response';
 import { DumpResponse, DumpResponseT } from '../../fbs/worker/dump-response';
 import { ResourceUsageResponse, ResourceUsageResponseT } from '../../fbs/worker/resource-usage-response';
@@ -15,13 +16,14 @@ export enum Body {
   FBS_WebRtcServer_DumpResponse = 3,
   FBS_Router_DumpResponse = 4,
   FBS_Transport_DumpResponse = 5,
-  FBS_Transport_ConsumeResponse = 6
+  FBS_Transport_ProduceResponse = 6,
+  FBS_Transport_ConsumeResponse = 7
 }
 
 export function unionToBody(
   type: Body,
-  accessor: (obj:ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ResourceUsageResponse) => ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ResourceUsageResponse|null
-): ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ResourceUsageResponse|null {
+  accessor: (obj:ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ProduceResponse|ResourceUsageResponse) => ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ProduceResponse|ResourceUsageResponse|null
+): ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ProduceResponse|ResourceUsageResponse|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_DumpResponse': return accessor(new DumpResponse())! as DumpResponse;
@@ -29,6 +31,7 @@ export function unionToBody(
     case 'FBS_WebRtcServer_DumpResponse': return accessor(new FBS_WebRtcServer_DumpResponse())! as FBS_WebRtcServer_DumpResponse;
     case 'FBS_Router_DumpResponse': return accessor(new FBS_Router_DumpResponse())! as FBS_Router_DumpResponse;
     case 'FBS_Transport_DumpResponse': return accessor(new FBS_Transport_DumpResponse())! as FBS_Transport_DumpResponse;
+    case 'FBS_Transport_ProduceResponse': return accessor(new ProduceResponse())! as ProduceResponse;
     case 'FBS_Transport_ConsumeResponse': return accessor(new ConsumeResponse())! as ConsumeResponse;
     default: return null;
   }
@@ -36,9 +39,9 @@ export function unionToBody(
 
 export function unionListToBody(
   type: Body, 
-  accessor: (index: number, obj:ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ResourceUsageResponse) => ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ResourceUsageResponse|null, 
+  accessor: (index: number, obj:ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ProduceResponse|ResourceUsageResponse) => ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ProduceResponse|ResourceUsageResponse|null, 
   index: number
-): ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ResourceUsageResponse|null {
+): ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|ProduceResponse|ResourceUsageResponse|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_DumpResponse': return accessor(index, new DumpResponse())! as DumpResponse;
@@ -46,6 +49,7 @@ export function unionListToBody(
     case 'FBS_WebRtcServer_DumpResponse': return accessor(index, new FBS_WebRtcServer_DumpResponse())! as FBS_WebRtcServer_DumpResponse;
     case 'FBS_Router_DumpResponse': return accessor(index, new FBS_Router_DumpResponse())! as FBS_Router_DumpResponse;
     case 'FBS_Transport_DumpResponse': return accessor(index, new FBS_Transport_DumpResponse())! as FBS_Transport_DumpResponse;
+    case 'FBS_Transport_ProduceResponse': return accessor(index, new ProduceResponse())! as ProduceResponse;
     case 'FBS_Transport_ConsumeResponse': return accessor(index, new ConsumeResponse())! as ConsumeResponse;
     default: return null;
   }

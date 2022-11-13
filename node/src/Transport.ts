@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as utils from './utils';
@@ -22,7 +23,7 @@ import {
 	DataConsumerOptions,
 	DataConsumerType
 } from './DataConsumer';
-import { RtpCapabilities, RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
+import { MediaKind, RtpCapabilities, RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
 import { parseSctpParametersDump, SctpParameters, SctpStreamParameters } from './SctpParameters';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsResponse from './fbs/response_generated';
@@ -619,24 +620,37 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const consumableRtpParameters = ortc.getConsumableRtpParameters(
 			kind, rtpParameters, routerRtpCapabilities, rtpMapping);
 
-		const reqData =
-		{
-			producerId : id || uuidv4(),
+		const producerId = uuidv4();
+		const builder = this.channel.bufferBuilder;
+		const requestOffset = createProduceRequest({
+			builder,
+			producerId,
 			kind,
 			rtpParameters,
 			rtpMapping,
 			keyFrameRequestDelay,
 			paused
-		};
+		});
 
-		const status =
-			await this.channel.request('transport.produce', this.internal.transportId, reqData);
+		const response = await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_PRODUCE,
+			FbsRequest.Body.FBS_Transport_ProduceRequest,
+			requestOffset,
+			this.internal.transportId
+		);
+
+		/* Decode the response. */
+		const produceResponse = new FbsTransport.ProduceResponse();
+
+		response.body(produceResponse);
+
+		const status = produceResponse.unpack();
 
 		const data =
 		{
 			kind,
 			rtpParameters,
-			type : status.type,
+			type : utils.getProducerType(status.type),
 			consumableRtpParameters
 		};
 
@@ -645,7 +659,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 				internal :
 				{
 					...this.internal,
-					producerId : reqData.producerId
+					producerId
 				},
 				data,
 				channel        : this.channel,
@@ -1073,7 +1087,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		pipe: boolean;
 	}): number
 	{
-		// Build the request.
 		const builder = this.channel.bufferBuilder;
 		const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
 		const consumerIdOffset = builder.createString(consumerId);
@@ -1247,4 +1260,38 @@ export function parseBaseTransportDump(
 		sctpListener            : sctpListener,
 		traceEventTypes         : traceEventTypes
 	};
+}
+
+function createProduceRequest({
+	builder,
+	producerId,
+	kind,
+	rtpParameters,
+	rtpMapping,
+	keyFrameRequestDelay,
+	paused
+} : {
+	builder: flatbuffers.Builder;
+	producerId: string;
+	kind: MediaKind;
+	rtpParameters: RtpParameters;
+	rtpMapping: ortc.RtpMapping;
+	keyFrameRequestDelay?: number;
+	paused: boolean;
+}): number
+{
+	const producerIdOffset = builder.createString(producerId);
+	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
+	const rtpMappingOffset = ortc.serializeRtpMapping(builder, rtpMapping);
+
+	FbsTransport.ProduceRequest.startProduceRequest(builder);
+	FbsTransport.ProduceRequest.addProducerId(builder, producerIdOffset);
+	FbsTransport.ProduceRequest.addKind(
+		builder, kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
+	FbsTransport.ProduceRequest.addRtpParameters(builder, rtpParametersOffset);
+	FbsTransport.ProduceRequest.addRtpMapping(builder, rtpMappingOffset);
+	FbsTransport.ProduceRequest.addKeyFrameRequestDelay(builder, keyFrameRequestDelay ?? 0);
+	FbsTransport.ProduceRequest.addPaused(builder, paused);
+
+	return FbsTransport.ProduceRequest.endProduceRequest(builder);
 }

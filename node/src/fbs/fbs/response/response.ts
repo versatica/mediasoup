@@ -6,6 +6,7 @@ import { Body, unionToBody, unionListToBody } from '../../fbs/response/body';
 import { DumpResponse as FBS_Router_DumpResponse, DumpResponseT as FBS_Router_DumpResponseT } from '../../fbs/router/dump-response';
 import { ConsumeResponse, ConsumeResponseT } from '../../fbs/transport/consume-response';
 import { DumpResponse as FBS_Transport_DumpResponse, DumpResponseT as FBS_Transport_DumpResponseT } from '../../fbs/transport/dump-response';
+import { ProduceResponse, ProduceResponseT } from '../../fbs/transport/produce-response';
 import { DumpResponse as FBS_WebRtcServer_DumpResponse, DumpResponseT as FBS_WebRtcServer_DumpResponseT } from '../../fbs/web-rtc-server/dump-response';
 import { DumpResponse, DumpResponseT } from '../../fbs/worker/dump-response';
 import { ResourceUsageResponse, ResourceUsageResponseT } from '../../fbs/worker/resource-usage-response';
@@ -114,7 +115,7 @@ constructor(
   public id: number = 0,
   public accepted: boolean = false,
   public bodyType: Body = Body.NONE,
-  public body: ConsumeResponseT|DumpResponseT|FBS_Router_DumpResponseT|FBS_Transport_DumpResponseT|FBS_WebRtcServer_DumpResponseT|ResourceUsageResponseT|null = null
+  public body: ConsumeResponseT|DumpResponseT|FBS_Router_DumpResponseT|FBS_Transport_DumpResponseT|FBS_WebRtcServer_DumpResponseT|ProduceResponseT|ResourceUsageResponseT|null = null
 ){}
 
 

@@ -55,6 +55,15 @@ struct RtcpParametersBuilder;
 struct RtpParameters;
 struct RtpParametersBuilder;
 
+struct CodecMapping;
+struct CodecMappingBuilder;
+
+struct EncodingMapping;
+struct EncodingMappingBuilder;
+
+struct RtpMapping;
+struct RtpMappingBuilder;
+
 inline const flatbuffers::TypeTable *BooleanTypeTable();
 
 inline const flatbuffers::TypeTable *IntegerTypeTable();
@@ -80,6 +89,12 @@ inline const flatbuffers::TypeTable *RtpEncodingParametersTypeTable();
 inline const flatbuffers::TypeTable *RtcpParametersTypeTable();
 
 inline const flatbuffers::TypeTable *RtpParametersTypeTable();
+
+inline const flatbuffers::TypeTable *CodecMappingTypeTable();
+
+inline const flatbuffers::TypeTable *EncodingMappingTypeTable();
+
+inline const flatbuffers::TypeTable *RtpMappingTypeTable();
 
 enum class MediaKind : uint8_t {
   ALL = 0,
@@ -1237,6 +1252,224 @@ inline flatbuffers::Offset<RtpParameters> CreateRtpParametersDirect(
       rtcp);
 }
 
+struct CodecMapping FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef CodecMappingBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return CodecMappingTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PAYLOADTYPE = 4,
+    VT_MAPPEDPAYLOADTYPE = 6
+  };
+  uint8_t payloadType() const {
+    return GetField<uint8_t>(VT_PAYLOADTYPE, 0);
+  }
+  uint8_t mappedPayloadType() const {
+    return GetField<uint8_t>(VT_MAPPEDPAYLOADTYPE, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_PAYLOADTYPE, 1) &&
+           VerifyField<uint8_t>(verifier, VT_MAPPEDPAYLOADTYPE, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct CodecMappingBuilder {
+  typedef CodecMapping Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_payloadType(uint8_t payloadType) {
+    fbb_.AddElement<uint8_t>(CodecMapping::VT_PAYLOADTYPE, payloadType, 0);
+  }
+  void add_mappedPayloadType(uint8_t mappedPayloadType) {
+    fbb_.AddElement<uint8_t>(CodecMapping::VT_MAPPEDPAYLOADTYPE, mappedPayloadType, 0);
+  }
+  explicit CodecMappingBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<CodecMapping> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<CodecMapping>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<CodecMapping> CreateCodecMapping(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint8_t payloadType = 0,
+    uint8_t mappedPayloadType = 0) {
+  CodecMappingBuilder builder_(_fbb);
+  builder_.add_mappedPayloadType(mappedPayloadType);
+  builder_.add_payloadType(payloadType);
+  return builder_.Finish();
+}
+
+struct EncodingMapping FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef EncodingMappingBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return EncodingMappingTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_RID = 4,
+    VT_SSRC = 6,
+    VT_SCALABILITYMODE = 8,
+    VT_MAPPEDSSRC = 10
+  };
+  const flatbuffers::String *rid() const {
+    return GetPointer<const flatbuffers::String *>(VT_RID);
+  }
+  uint32_t ssrc() const {
+    return GetField<uint32_t>(VT_SSRC, 0);
+  }
+  const flatbuffers::String *scalabilityMode() const {
+    return GetPointer<const flatbuffers::String *>(VT_SCALABILITYMODE);
+  }
+  uint32_t mappedSsrc() const {
+    return GetField<uint32_t>(VT_MAPPEDSSRC, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_RID) &&
+           verifier.VerifyString(rid()) &&
+           VerifyField<uint32_t>(verifier, VT_SSRC, 4) &&
+           VerifyOffset(verifier, VT_SCALABILITYMODE) &&
+           verifier.VerifyString(scalabilityMode()) &&
+           VerifyField<uint32_t>(verifier, VT_MAPPEDSSRC, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct EncodingMappingBuilder {
+  typedef EncodingMapping Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_rid(flatbuffers::Offset<flatbuffers::String> rid) {
+    fbb_.AddOffset(EncodingMapping::VT_RID, rid);
+  }
+  void add_ssrc(uint32_t ssrc) {
+    fbb_.AddElement<uint32_t>(EncodingMapping::VT_SSRC, ssrc, 0);
+  }
+  void add_scalabilityMode(flatbuffers::Offset<flatbuffers::String> scalabilityMode) {
+    fbb_.AddOffset(EncodingMapping::VT_SCALABILITYMODE, scalabilityMode);
+  }
+  void add_mappedSsrc(uint32_t mappedSsrc) {
+    fbb_.AddElement<uint32_t>(EncodingMapping::VT_MAPPEDSSRC, mappedSsrc, 0);
+  }
+  explicit EncodingMappingBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<EncodingMapping> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<EncodingMapping>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<EncodingMapping> CreateEncodingMapping(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> rid = 0,
+    uint32_t ssrc = 0,
+    flatbuffers::Offset<flatbuffers::String> scalabilityMode = 0,
+    uint32_t mappedSsrc = 0) {
+  EncodingMappingBuilder builder_(_fbb);
+  builder_.add_mappedSsrc(mappedSsrc);
+  builder_.add_scalabilityMode(scalabilityMode);
+  builder_.add_ssrc(ssrc);
+  builder_.add_rid(rid);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<EncodingMapping> CreateEncodingMappingDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *rid = nullptr,
+    uint32_t ssrc = 0,
+    const char *scalabilityMode = nullptr,
+    uint32_t mappedSsrc = 0) {
+  auto rid__ = rid ? _fbb.CreateString(rid) : 0;
+  auto scalabilityMode__ = scalabilityMode ? _fbb.CreateString(scalabilityMode) : 0;
+  return FBS::RtpParameters::CreateEncodingMapping(
+      _fbb,
+      rid__,
+      ssrc,
+      scalabilityMode__,
+      mappedSsrc);
+}
+
+struct RtpMapping FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef RtpMappingBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return RtpMappingTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_CODECS = 4,
+    VT_ENCODINGS = 6
+  };
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::CodecMapping>> *codecs() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::CodecMapping>> *>(VT_CODECS);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::EncodingMapping>> *encodings() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::EncodingMapping>> *>(VT_ENCODINGS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_CODECS) &&
+           verifier.VerifyVector(codecs()) &&
+           verifier.VerifyVectorOfTables(codecs()) &&
+           VerifyOffsetRequired(verifier, VT_ENCODINGS) &&
+           verifier.VerifyVector(encodings()) &&
+           verifier.VerifyVectorOfTables(encodings()) &&
+           verifier.EndTable();
+  }
+};
+
+struct RtpMappingBuilder {
+  typedef RtpMapping Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_codecs(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::CodecMapping>>> codecs) {
+    fbb_.AddOffset(RtpMapping::VT_CODECS, codecs);
+  }
+  void add_encodings(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::EncodingMapping>>> encodings) {
+    fbb_.AddOffset(RtpMapping::VT_ENCODINGS, encodings);
+  }
+  explicit RtpMappingBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<RtpMapping> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<RtpMapping>(end);
+    fbb_.Required(o, RtpMapping::VT_CODECS);
+    fbb_.Required(o, RtpMapping::VT_ENCODINGS);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<RtpMapping> CreateRtpMapping(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::CodecMapping>>> codecs = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::EncodingMapping>>> encodings = 0) {
+  RtpMappingBuilder builder_(_fbb);
+  builder_.add_encodings(encodings);
+  builder_.add_codecs(codecs);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<RtpMapping> CreateRtpMappingDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<flatbuffers::Offset<FBS::RtpParameters::CodecMapping>> *codecs = nullptr,
+    const std::vector<flatbuffers::Offset<FBS::RtpParameters::EncodingMapping>> *encodings = nullptr) {
+  auto codecs__ = codecs ? _fbb.CreateVector<flatbuffers::Offset<FBS::RtpParameters::CodecMapping>>(*codecs) : 0;
+  auto encodings__ = encodings ? _fbb.CreateVector<flatbuffers::Offset<FBS::RtpParameters::EncodingMapping>>(*encodings) : 0;
+  return FBS::RtpParameters::CreateRtpMapping(
+      _fbb,
+      codecs__,
+      encodings__);
+}
+
 inline bool VerifyValue(flatbuffers::Verifier &verifier, const void *obj, Value type) {
   switch (type) {
     case Value::NONE: {
@@ -1581,6 +1814,59 @@ inline const flatbuffers::TypeTable *RtpParametersTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 5, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *CodecMappingTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UCHAR, 0, -1 },
+    { flatbuffers::ET_UCHAR, 0, -1 }
+  };
+  static const char * const names[] = {
+    "payloadType",
+    "mappedPayloadType"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *EncodingMappingTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 }
+  };
+  static const char * const names[] = {
+    "rid",
+    "ssrc",
+    "scalabilityMode",
+    "mappedSsrc"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 4, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *RtpMappingTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 1, 0 },
+    { flatbuffers::ET_SEQUENCE, 1, 1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::RtpParameters::CodecMappingTypeTable,
+    FBS::RtpParameters::EncodingMappingTypeTable
+  };
+  static const char * const names[] = {
+    "codecs",
+    "encodings"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

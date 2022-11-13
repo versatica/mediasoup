@@ -237,17 +237,18 @@ enum class Body : uint8_t {
   FBS_Router_CloseRtpObserverRequest = 13,
   FBS_Transport_SetMaxIncomingBitrateRequest = 14,
   FBS_Transport_SetMaxOutgoingBitrateRequest = 15,
-  FBS_Transport_ConsumeRequest = 16,
-  FBS_Transport_EnableTraceEventRequest = 17,
-  FBS_Transport_CloseProducerRequest = 18,
-  FBS_Transport_CloseConsumerRequest = 19,
-  FBS_Transport_CloseDataProducerRequest = 20,
-  FBS_Transport_CloseDataConsumerRequest = 21,
+  FBS_Transport_ProduceRequest = 16,
+  FBS_Transport_ConsumeRequest = 17,
+  FBS_Transport_EnableTraceEventRequest = 18,
+  FBS_Transport_CloseProducerRequest = 19,
+  FBS_Transport_CloseConsumerRequest = 20,
+  FBS_Transport_CloseDataProducerRequest = 21,
+  FBS_Transport_CloseDataConsumerRequest = 22,
   MIN = NONE,
   MAX = FBS_Transport_CloseDataConsumerRequest
 };
 
-inline const Body (&EnumValuesBody())[22] {
+inline const Body (&EnumValuesBody())[23] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_UpdateSettingsRequest,
@@ -265,6 +266,7 @@ inline const Body (&EnumValuesBody())[22] {
     Body::FBS_Router_CloseRtpObserverRequest,
     Body::FBS_Transport_SetMaxIncomingBitrateRequest,
     Body::FBS_Transport_SetMaxOutgoingBitrateRequest,
+    Body::FBS_Transport_ProduceRequest,
     Body::FBS_Transport_ConsumeRequest,
     Body::FBS_Transport_EnableTraceEventRequest,
     Body::FBS_Transport_CloseProducerRequest,
@@ -276,7 +278,7 @@ inline const Body (&EnumValuesBody())[22] {
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[23] = {
+  static const char * const names[24] = {
     "NONE",
     "FBS_Worker_UpdateSettingsRequest",
     "FBS_Worker_CreateWebRtcServerRequest",
@@ -293,6 +295,7 @@ inline const char * const *EnumNamesBody() {
     "FBS_Router_CloseRtpObserverRequest",
     "FBS_Transport_SetMaxIncomingBitrateRequest",
     "FBS_Transport_SetMaxOutgoingBitrateRequest",
+    "FBS_Transport_ProduceRequest",
     "FBS_Transport_ConsumeRequest",
     "FBS_Transport_EnableTraceEventRequest",
     "FBS_Transport_CloseProducerRequest",
@@ -372,6 +375,10 @@ template<> struct BodyTraits<FBS::Transport::SetMaxIncomingBitrateRequest> {
 
 template<> struct BodyTraits<FBS::Transport::SetMaxOutgoingBitrateRequest> {
   static const Body enum_value = Body::FBS_Transport_SetMaxOutgoingBitrateRequest;
+};
+
+template<> struct BodyTraits<FBS::Transport::ProduceRequest> {
+  static const Body enum_value = Body::FBS_Transport_ProduceRequest;
 };
 
 template<> struct BodyTraits<FBS::Transport::ConsumeRequest> {
@@ -474,6 +481,9 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Transport::SetMaxOutgoingBitrateRequest *body_as_FBS_Transport_SetMaxOutgoingBitrateRequest() const {
     return body_type() == FBS::Request::Body::FBS_Transport_SetMaxOutgoingBitrateRequest ? static_cast<const FBS::Transport::SetMaxOutgoingBitrateRequest *>(body()) : nullptr;
   }
+  const FBS::Transport::ProduceRequest *body_as_FBS_Transport_ProduceRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Transport_ProduceRequest ? static_cast<const FBS::Transport::ProduceRequest *>(body()) : nullptr;
+  }
   const FBS::Transport::ConsumeRequest *body_as_FBS_Transport_ConsumeRequest() const {
     return body_type() == FBS::Request::Body::FBS_Transport_ConsumeRequest ? static_cast<const FBS::Transport::ConsumeRequest *>(body()) : nullptr;
   }
@@ -563,6 +573,10 @@ template<> inline const FBS::Transport::SetMaxIncomingBitrateRequest *Request::b
 
 template<> inline const FBS::Transport::SetMaxOutgoingBitrateRequest *Request::body_as<FBS::Transport::SetMaxOutgoingBitrateRequest>() const {
   return body_as_FBS_Transport_SetMaxOutgoingBitrateRequest();
+}
+
+template<> inline const FBS::Transport::ProduceRequest *Request::body_as<FBS::Transport::ProduceRequest>() const {
+  return body_as_FBS_Transport_ProduceRequest();
 }
 
 template<> inline const FBS::Transport::ConsumeRequest *Request::body_as<FBS::Transport::ConsumeRequest>() const {
@@ -715,6 +729,10 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     }
     case Body::FBS_Transport_SetMaxOutgoingBitrateRequest: {
       auto ptr = reinterpret_cast<const FBS::Transport::SetMaxOutgoingBitrateRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Transport_ProduceRequest: {
+      auto ptr = reinterpret_cast<const FBS::Transport::ProduceRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case Body::FBS_Transport_ConsumeRequest: {
@@ -908,7 +926,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 17 },
     { flatbuffers::ET_SEQUENCE, 0, 18 },
     { flatbuffers::ET_SEQUENCE, 0, 19 },
-    { flatbuffers::ET_SEQUENCE, 0, 20 }
+    { flatbuffers::ET_SEQUENCE, 0, 20 },
+    { flatbuffers::ET_SEQUENCE, 0, 21 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::UpdateSettingsRequestTypeTable,
@@ -926,6 +945,7 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Router::CloseRtpObserverRequestTypeTable,
     FBS::Transport::SetMaxIncomingBitrateRequestTypeTable,
     FBS::Transport::SetMaxOutgoingBitrateRequestTypeTable,
+    FBS::Transport::ProduceRequestTypeTable,
     FBS::Transport::ConsumeRequestTypeTable,
     FBS::Transport::EnableTraceEventRequestTypeTable,
     FBS::Transport::CloseProducerRequestTypeTable,
@@ -950,6 +970,7 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Router_CloseRtpObserverRequest",
     "FBS_Transport_SetMaxIncomingBitrateRequest",
     "FBS_Transport_SetMaxOutgoingBitrateRequest",
+    "FBS_Transport_ProduceRequest",
     "FBS_Transport_ConsumeRequest",
     "FBS_Transport_EnableTraceEventRequest",
     "FBS_Transport_CloseProducerRequest",
@@ -958,7 +979,7 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Transport_CloseDataConsumerRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 22, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 23, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

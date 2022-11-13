@@ -1,11 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPipeConsumerRtpParameters = exports.getConsumerRtpParameters = exports.canConsume = exports.getConsumableRtpParameters = exports.getProducerRtpParametersMapping = exports.generateRouterRtpCapabilities = exports.validateSctpStreamParameters = exports.validateSctpParameters = exports.validateNumSctpStreams = exports.validateSctpCapabilities = exports.validateRtcpParameters = exports.validateRtpEncodingParameters = exports.validateRtpHeaderExtensionParameters = exports.validateRtpCodecParameters = exports.validateRtpParameters = exports.validateRtpHeaderExtension = exports.validateRtcpFeedback = exports.validateRtpCodecCapability = exports.validateRtpCapabilities = void 0;
+exports.serializeRtpMapping = exports.getPipeConsumerRtpParameters = exports.getConsumerRtpParameters = exports.canConsume = exports.getConsumableRtpParameters = exports.getProducerRtpParametersMapping = exports.generateRouterRtpCapabilities = exports.validateSctpStreamParameters = exports.validateSctpParameters = exports.validateNumSctpStreams = exports.validateSctpCapabilities = exports.validateRtcpParameters = exports.validateRtpEncodingParameters = exports.validateRtpHeaderExtensionParameters = exports.validateRtpCodecParameters = exports.validateRtpParameters = exports.validateRtpHeaderExtension = exports.validateRtcpFeedback = exports.validateRtpCodecCapability = exports.validateRtpCapabilities = void 0;
 const h264 = require("h264-profile-level-id");
 const utils = require("./utils");
 const errors_1 = require("./errors");
 const supportedRtpCapabilities_1 = require("./supportedRtpCapabilities");
 const scalabilityModes_1 = require("./scalabilityModes");
+const FbsRtpParameters = require("./fbs/rtpParameters_generated");
 const DynamicPayloadTypes = [
     100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
     111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
@@ -867,3 +868,17 @@ function matchCodecs(aCodec, bCodec, { strict = false, modify = false } = {}) {
     }
     return true;
 }
+function serializeRtpMapping(builder, rtpMapping) {
+    const codecs = [];
+    for (const codec of rtpMapping.codecs) {
+        codecs.push(FbsRtpParameters.CodecMapping.createCodecMapping(builder, codec.payloadType, codec.mappedPayloadType));
+    }
+    const codecsOffset = FbsRtpParameters.RtpMapping.createCodecsVector(builder, codecs);
+    const encodings = [];
+    for (const encoding of rtpMapping.encodings) {
+        encodings.push(FbsRtpParameters.EncodingMapping.createEncodingMapping(builder, builder.createString(encoding.rid), encoding.ssrc, builder.createString(encoding.scalabilityMode), encoding.mappedSsrc));
+    }
+    const encodingsOffset = FbsRtpParameters.RtpMapping.createEncodingsVector(builder, encodings);
+    return FbsRtpParameters.RtpMapping.createRtpMapping(builder, codecsOffset, encodingsOffset);
+}
+exports.serializeRtpMapping = serializeRtpMapping;

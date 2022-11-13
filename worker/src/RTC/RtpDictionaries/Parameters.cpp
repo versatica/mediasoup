@@ -149,7 +149,7 @@ namespace RTC
 
 				case FBS::RtpParameters::Value::String:
 				{
-					this->mapKeyValues.emplace(key, Value(parameter->value_as_String()->value()));
+					this->mapKeyValues.emplace(key, Value(parameter->value_as_String()->value()->str()));
 
 					break;
 				}

@@ -33,12 +33,13 @@ enum class Body : uint8_t {
   FBS_WebRtcServer_DumpResponse = 3,
   FBS_Router_DumpResponse = 4,
   FBS_Transport_DumpResponse = 5,
-  FBS_Transport_ConsumeResponse = 6,
+  FBS_Transport_ProduceResponse = 6,
+  FBS_Transport_ConsumeResponse = 7,
   MIN = NONE,
   MAX = FBS_Transport_ConsumeResponse
 };
 
-inline const Body (&EnumValuesBody())[7] {
+inline const Body (&EnumValuesBody())[8] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_DumpResponse,
@@ -46,19 +47,21 @@ inline const Body (&EnumValuesBody())[7] {
     Body::FBS_WebRtcServer_DumpResponse,
     Body::FBS_Router_DumpResponse,
     Body::FBS_Transport_DumpResponse,
+    Body::FBS_Transport_ProduceResponse,
     Body::FBS_Transport_ConsumeResponse
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[8] = {
+  static const char * const names[9] = {
     "NONE",
     "FBS_Worker_DumpResponse",
     "FBS_Worker_ResourceUsageResponse",
     "FBS_WebRtcServer_DumpResponse",
     "FBS_Router_DumpResponse",
     "FBS_Transport_DumpResponse",
+    "FBS_Transport_ProduceResponse",
     "FBS_Transport_ConsumeResponse",
     nullptr
   };
@@ -93,6 +96,10 @@ template<> struct BodyTraits<FBS::Router::DumpResponse> {
 
 template<> struct BodyTraits<FBS::Transport::DumpResponse> {
   static const Body enum_value = Body::FBS_Transport_DumpResponse;
+};
+
+template<> struct BodyTraits<FBS::Transport::ProduceResponse> {
+  static const Body enum_value = Body::FBS_Transport_ProduceResponse;
 };
 
 template<> struct BodyTraits<FBS::Transport::ConsumeResponse> {
@@ -141,6 +148,9 @@ struct Response FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Transport::DumpResponse *body_as_FBS_Transport_DumpResponse() const {
     return body_type() == FBS::Response::Body::FBS_Transport_DumpResponse ? static_cast<const FBS::Transport::DumpResponse *>(body()) : nullptr;
   }
+  const FBS::Transport::ProduceResponse *body_as_FBS_Transport_ProduceResponse() const {
+    return body_type() == FBS::Response::Body::FBS_Transport_ProduceResponse ? static_cast<const FBS::Transport::ProduceResponse *>(body()) : nullptr;
+  }
   const FBS::Transport::ConsumeResponse *body_as_FBS_Transport_ConsumeResponse() const {
     return body_type() == FBS::Response::Body::FBS_Transport_ConsumeResponse ? static_cast<const FBS::Transport::ConsumeResponse *>(body()) : nullptr;
   }
@@ -173,6 +183,10 @@ template<> inline const FBS::Router::DumpResponse *Response::body_as<FBS::Router
 
 template<> inline const FBS::Transport::DumpResponse *Response::body_as<FBS::Transport::DumpResponse>() const {
   return body_as_FBS_Transport_DumpResponse();
+}
+
+template<> inline const FBS::Transport::ProduceResponse *Response::body_as<FBS::Transport::ProduceResponse>() const {
+  return body_as_FBS_Transport_ProduceResponse();
 }
 
 template<> inline const FBS::Transport::ConsumeResponse *Response::body_as<FBS::Transport::ConsumeResponse>() const {
@@ -245,6 +259,10 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
       auto ptr = reinterpret_cast<const FBS::Transport::DumpResponse *>(obj);
       return verifier.VerifyTable(ptr);
     }
+    case Body::FBS_Transport_ProduceResponse: {
+      auto ptr = reinterpret_cast<const FBS::Transport::ProduceResponse *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
     case Body::FBS_Transport_ConsumeResponse: {
       auto ptr = reinterpret_cast<const FBS::Transport::ConsumeResponse *>(obj);
       return verifier.VerifyTable(ptr);
@@ -273,7 +291,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 2 },
     { flatbuffers::ET_SEQUENCE, 0, 3 },
     { flatbuffers::ET_SEQUENCE, 0, 4 },
-    { flatbuffers::ET_SEQUENCE, 0, 5 }
+    { flatbuffers::ET_SEQUENCE, 0, 5 },
+    { flatbuffers::ET_SEQUENCE, 0, 6 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::DumpResponseTypeTable,
@@ -281,6 +300,7 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::WebRtcServer::DumpResponseTypeTable,
     FBS::Router::DumpResponseTypeTable,
     FBS::Transport::DumpResponseTypeTable,
+    FBS::Transport::ProduceResponseTypeTable,
     FBS::Transport::ConsumeResponseTypeTable
   };
   static const char * const names[] = {
@@ -290,10 +310,11 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_WebRtcServer_DumpResponse",
     "FBS_Router_DumpResponse",
     "FBS_Transport_DumpResponse",
+    "FBS_Transport_ProduceResponse",
     "FBS_Transport_ConsumeResponse"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 7, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 8, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

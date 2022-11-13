@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseUint32StringVector = exports.parseUint16StringVector = exports.parseStringUint8Vector = exports.parseVector = exports.getRtpParametersType = exports.generateRandomNumber = exports.clone = void 0;
+exports.parseUint32StringVector = exports.parseUint16StringVector = exports.parseStringUint8Vector = exports.parseVector = exports.getProducerType = exports.getRtpParametersType = exports.generateRandomNumber = exports.clone = void 0;
 const crypto_1 = require("crypto");
 const type_1 = require("./fbs/fbs/rtp-parameters/type");
 /**
@@ -38,6 +38,22 @@ function getRtpParametersType(producerType, pipe) {
     }
 }
 exports.getRtpParametersType = getRtpParametersType;
+/**
+ * Get the flatbuffers Producer type of a given RtpParameter type.
+ */
+function getProducerType(rtpParameterType) {
+    switch (rtpParameterType) {
+        case type_1.Type.SIMPLE:
+            return 'simple';
+        case type_1.Type.SIMULCAST:
+            return 'simulcast';
+        case type_1.Type.SVC:
+            return 'svc';
+        default:
+            throw new TypeError('invalid RtpParameter type');
+    }
+}
+exports.getProducerType = getProducerType;
 /**
  * Parse flatbuffers vector into an array of the given type.
  */

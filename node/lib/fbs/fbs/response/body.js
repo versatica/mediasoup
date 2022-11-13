@@ -5,6 +5,7 @@ exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
 const dump_response_1 = require("../../fbs/router/dump-response");
 const consume_response_1 = require("../../fbs/transport/consume-response");
 const dump_response_2 = require("../../fbs/transport/dump-response");
+const produce_response_1 = require("../../fbs/transport/produce-response");
 const dump_response_3 = require("../../fbs/web-rtc-server/dump-response");
 const dump_response_4 = require("../../fbs/worker/dump-response");
 const resource_usage_response_1 = require("../../fbs/worker/resource-usage-response");
@@ -16,7 +17,8 @@ var Body;
     Body[Body["FBS_WebRtcServer_DumpResponse"] = 3] = "FBS_WebRtcServer_DumpResponse";
     Body[Body["FBS_Router_DumpResponse"] = 4] = "FBS_Router_DumpResponse";
     Body[Body["FBS_Transport_DumpResponse"] = 5] = "FBS_Transport_DumpResponse";
-    Body[Body["FBS_Transport_ConsumeResponse"] = 6] = "FBS_Transport_ConsumeResponse";
+    Body[Body["FBS_Transport_ProduceResponse"] = 6] = "FBS_Transport_ProduceResponse";
+    Body[Body["FBS_Transport_ConsumeResponse"] = 7] = "FBS_Transport_ConsumeResponse";
 })(Body = exports.Body || (exports.Body = {}));
 function unionToBody(type, accessor) {
     switch (Body[type]) {
@@ -26,6 +28,7 @@ function unionToBody(type, accessor) {
         case 'FBS_WebRtcServer_DumpResponse': return accessor(new dump_response_3.DumpResponse());
         case 'FBS_Router_DumpResponse': return accessor(new dump_response_1.DumpResponse());
         case 'FBS_Transport_DumpResponse': return accessor(new dump_response_2.DumpResponse());
+        case 'FBS_Transport_ProduceResponse': return accessor(new produce_response_1.ProduceResponse());
         case 'FBS_Transport_ConsumeResponse': return accessor(new consume_response_1.ConsumeResponse());
         default: return null;
     }
@@ -39,6 +42,7 @@ function unionListToBody(type, accessor, index) {
         case 'FBS_WebRtcServer_DumpResponse': return accessor(index, new dump_response_3.DumpResponse());
         case 'FBS_Router_DumpResponse': return accessor(index, new dump_response_1.DumpResponse());
         case 'FBS_Transport_DumpResponse': return accessor(index, new dump_response_2.DumpResponse());
+        case 'FBS_Transport_ProduceResponse': return accessor(index, new produce_response_1.ProduceResponse());
         case 'FBS_Transport_ConsumeResponse': return accessor(index, new consume_response_1.ConsumeResponse());
         default: return null;
     }

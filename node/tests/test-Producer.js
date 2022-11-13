@@ -125,8 +125,8 @@ test('transport1.produce() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapProducerIdConsumerIds : { [audioProducer.id]: [] },
-				mapConsumerIdProducerId  : {}
+				mapProducerIdConsumerIds : [ { key: audioProducer.id, values: [] } ],
+				mapConsumerIdProducerId  : []
 			});
 
 	await expect(transport1.dump())
@@ -215,13 +215,16 @@ test('transport2.produce() succeeds', async () =>
 	expect(videoProducer.score).toEqual([]);
 	expect(videoProducer.appData).toEqual({ foo: 1, bar: '2' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapProducerIdConsumerIds : { [videoProducer.id]: [] },
-				mapConsumerIdProducerId  : {}
-			});
+	const dump = await router.dump();
+
+	expect(dump.mapProducerIdConsumerIds)
+		.toEqual(
+			expect.arrayContaining([
+				{ key: videoProducer.id, values: [] }
+			])
+		);
+
+	expect(dump.mapConsumerIdProducerId.length).toBe(0);
 
 	await expect(transport2.dump())
 		.resolves
@@ -591,6 +594,9 @@ test('producer.dump() succeeds', async () =>
 		]);
 	expect(data.rtpParameters.encodings).toBeType('array');
 	expect(data.rtpParameters.encodings.length).toBe(4);
+
+	console.error(data.rtpParameters.encodings);
+
 	expect(data.rtpParameters.encodings).toMatchObject(
 		[
 			{

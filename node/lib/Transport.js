@@ -329,25 +329,33 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const rtpMapping = ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities);
         // This may throw.
         const consumableRtpParameters = ortc.getConsumableRtpParameters(kind, rtpParameters, routerRtpCapabilities, rtpMapping);
-        const reqData = {
-            producerId: id || (0, uuid_1.v4)(),
+        logger.warn('rtpMapping: ', JSON.stringify(rtpMapping, undefined, 2));
+        const producerId = (0, uuid_1.v4)();
+        const builder = this.channel.bufferBuilder;
+        const requestOffset = createProduceRequest({
+            builder,
+            producerId,
             kind,
             rtpParameters,
             rtpMapping,
             keyFrameRequestDelay,
             paused
-        };
-        const status = await this.channel.request('transport.produce', this.internal.transportId, reqData);
+        });
+        const response = await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_PRODUCE, FbsRequest.Body.FBS_Transport_ProduceRequest, requestOffset, this.internal.transportId);
+        /* Decode the response. */
+        const produceResponse = new FbsTransport.ProduceResponse();
+        response.body(produceResponse);
+        const status = produceResponse.unpack();
         const data = {
             kind,
             rtpParameters,
-            type: status.type,
+            type: utils.getProducerType(status.type),
             consumableRtpParameters
         };
         const producer = new Producer_1.Producer({
             internal: {
                 ...this.internal,
-                producerId: reqData.producerId
+                producerId
             },
             data,
             channel: this.channel,
@@ -573,18 +581,15 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      * Enable 'trace' event.
      */
     async enableTraceEvent(types = []) {
-        logger.error('enableTraceEvent() 1');
+        logger.debug('enableTraceEvent()');
         if (!Array.isArray(types))
             throw new TypeError('types must be an array');
         if (types.find((type) => typeof type !== 'string'))
             throw new TypeError('every type must be a string');
-        logger.error('enableTraceEvent() 2');
         /* Build Request. */
         const builder = this.channel.bufferBuilder;
         const requestOffset = new FbsTransport.EnableTraceEventRequestT(types).pack(builder);
-        logger.error('enableTraceEvent() 3');
         await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT, FbsRequest.Body.FBS_Transport_EnableTraceEventRequest, requestOffset, this.internal.transportId);
-        logger.error('enableTraceEvent() 4');
     }
     getNextSctpStreamId() {
         if (!this.#data.sctpParameters ||
@@ -722,3 +727,17 @@ function parseBaseTransportDump(binary) {
     };
 }
 exports.parseBaseTransportDump = parseBaseTransportDump;
+function createProduceRequest({ builder, producerId, kind, rtpParameters, rtpMapping, keyFrameRequestDelay, paused }) {
+    // Build the request.
+    const producerIdOffset = builder.createString(producerId);
+    const rtpParametersOffset = (0, RtpParameters_1.serializeRtpParameters)(builder, rtpParameters);
+    const rtpMappingOffset = ortc.serializeRtpMapping(builder, rtpMapping);
+    FbsTransport.ProduceRequest.startProduceRequest(builder);
+    FbsTransport.ProduceRequest.addProducerId(builder, producerIdOffset);
+    FbsTransport.ProduceRequest.addKind(builder, kind === 'audio' ? media_kind_1.MediaKind.AUDIO : media_kind_1.MediaKind.VIDEO);
+    FbsTransport.ProduceRequest.addRtpParameters(builder, rtpParametersOffset);
+    FbsTransport.ProduceRequest.addRtpMapping(builder, rtpMappingOffset);
+    FbsTransport.ProduceRequest.addKeyFrameRequestDelay(builder, keyFrameRequestDelay ?? 0);
+    FbsTransport.ProduceRequest.addPaused(builder, paused);
+    return FbsTransport.ProduceRequest.endProduceRequest(builder);
+}

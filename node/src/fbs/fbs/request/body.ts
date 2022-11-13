@@ -14,6 +14,7 @@ import { CloseDataProducerRequest, CloseDataProducerRequestT } from '../../fbs/t
 import { CloseProducerRequest, CloseProducerRequestT } from '../../fbs/transport/close-producer-request';
 import { ConsumeRequest, ConsumeRequestT } from '../../fbs/transport/consume-request';
 import { EnableTraceEventRequest, EnableTraceEventRequestT } from '../../fbs/transport/enable-trace-event-request';
+import { ProduceRequest, ProduceRequestT } from '../../fbs/transport/produce-request';
 import { SetMaxIncomingBitrateRequest, SetMaxIncomingBitrateRequestT } from '../../fbs/transport/set-max-incoming-bitrate-request';
 import { SetMaxOutgoingBitrateRequest, SetMaxOutgoingBitrateRequestT } from '../../fbs/transport/set-max-outgoing-bitrate-request';
 import { CloseRouterRequest, CloseRouterRequestT } from '../../fbs/worker/close-router-request';
@@ -40,18 +41,19 @@ export enum Body {
   FBS_Router_CloseRtpObserverRequest = 13,
   FBS_Transport_SetMaxIncomingBitrateRequest = 14,
   FBS_Transport_SetMaxOutgoingBitrateRequest = 15,
-  FBS_Transport_ConsumeRequest = 16,
-  FBS_Transport_EnableTraceEventRequest = 17,
-  FBS_Transport_CloseProducerRequest = 18,
-  FBS_Transport_CloseConsumerRequest = 19,
-  FBS_Transport_CloseDataProducerRequest = 20,
-  FBS_Transport_CloseDataConsumerRequest = 21
+  FBS_Transport_ProduceRequest = 16,
+  FBS_Transport_ConsumeRequest = 17,
+  FBS_Transport_EnableTraceEventRequest = 18,
+  FBS_Transport_CloseProducerRequest = 19,
+  FBS_Transport_CloseConsumerRequest = 20,
+  FBS_Transport_CloseDataProducerRequest = 21,
+  FBS_Transport_CloseDataConsumerRequest = 22
 }
 
 export function unionToBody(
   type: Body,
-  accessor: (obj:CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest) => CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null
-): CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null {
+  accessor: (obj:CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest) => CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null
+): CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_UpdateSettingsRequest': return accessor(new UpdateSettingsRequest())! as UpdateSettingsRequest;
@@ -69,6 +71,7 @@ export function unionToBody(
     case 'FBS_Router_CloseRtpObserverRequest': return accessor(new CloseRtpObserverRequest())! as CloseRtpObserverRequest;
     case 'FBS_Transport_SetMaxIncomingBitrateRequest': return accessor(new SetMaxIncomingBitrateRequest())! as SetMaxIncomingBitrateRequest;
     case 'FBS_Transport_SetMaxOutgoingBitrateRequest': return accessor(new SetMaxOutgoingBitrateRequest())! as SetMaxOutgoingBitrateRequest;
+    case 'FBS_Transport_ProduceRequest': return accessor(new ProduceRequest())! as ProduceRequest;
     case 'FBS_Transport_ConsumeRequest': return accessor(new ConsumeRequest())! as ConsumeRequest;
     case 'FBS_Transport_EnableTraceEventRequest': return accessor(new EnableTraceEventRequest())! as EnableTraceEventRequest;
     case 'FBS_Transport_CloseProducerRequest': return accessor(new CloseProducerRequest())! as CloseProducerRequest;
@@ -81,9 +84,9 @@ export function unionToBody(
 
 export function unionListToBody(
   type: Body, 
-  accessor: (index: number, obj:CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest) => CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null, 
+  accessor: (index: number, obj:CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest) => CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null, 
   index: number
-): CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null {
+): CloseConsumerRequest|CloseDataConsumerRequest|CloseDataProducerRequest|CloseProducerRequest|CloseRouterRequest|CloseRtpObserverRequest|CloseTransportRequest|CloseWebRtcServerRequest|ConsumeRequest|CreateActiveSpeakerObserverRequest|CreateAudioLevelObserverRequest|CreateDirectTransportRequest|CreatePipeTransportRequest|CreatePlainTransportRequest|CreateRouterRequest|CreateWebRtcServerRequest|CreateWebRtcTransportRequest|EnableTraceEventRequest|ProduceRequest|SetMaxIncomingBitrateRequest|SetMaxOutgoingBitrateRequest|UpdateSettingsRequest|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_UpdateSettingsRequest': return accessor(index, new UpdateSettingsRequest())! as UpdateSettingsRequest;
@@ -101,6 +104,7 @@ export function unionListToBody(
     case 'FBS_Router_CloseRtpObserverRequest': return accessor(index, new CloseRtpObserverRequest())! as CloseRtpObserverRequest;
     case 'FBS_Transport_SetMaxIncomingBitrateRequest': return accessor(index, new SetMaxIncomingBitrateRequest())! as SetMaxIncomingBitrateRequest;
     case 'FBS_Transport_SetMaxOutgoingBitrateRequest': return accessor(index, new SetMaxOutgoingBitrateRequest())! as SetMaxOutgoingBitrateRequest;
+    case 'FBS_Transport_ProduceRequest': return accessor(index, new ProduceRequest())! as ProduceRequest;
     case 'FBS_Transport_ConsumeRequest': return accessor(index, new ConsumeRequest())! as ConsumeRequest;
     case 'FBS_Transport_EnableTraceEventRequest': return accessor(index, new EnableTraceEventRequest())! as EnableTraceEventRequest;
     case 'FBS_Transport_CloseProducerRequest': return accessor(index, new CloseProducerRequest())! as CloseProducerRequest;

@@ -19,6 +19,10 @@ export declare type Either<T, U> = Only<T, U> | Only<U, T>;
  */
 export declare function getRtpParametersType(producerType: ProducerType, pipe: boolean): FbsRtpParametersType;
 /**
+ * Get the flatbuffers Producer type of a given RtpParameter type.
+ */
+export declare function getProducerType(rtpParameterType: FbsRtpParametersType): ProducerType;
+/**
  * Parse flatbuffers vector into an array of the given type.
  */
 export declare function parseVector<Type>(binary: any, methodName: string, parseFn?: (binary2: any) => Type): Type[];

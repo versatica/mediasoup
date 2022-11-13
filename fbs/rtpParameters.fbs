@@ -87,3 +87,20 @@ table RtpParameters {
   encodings:[RtpEncodingParameters];
   rtcp:RtcpParameters;
 }
+
+table CodecMapping {
+  payload_type:uint8;
+  mapped_payload_type:uint8;
+}
+
+table EncodingMapping {
+  rid:string;
+  ssrc:uint32;
+  scalability_mode:string;
+  mapped_ssrc:uint32;
+}
+
+table RtpMapping {
+  codecs:[CodecMapping] (required);
+  encodings:[EncodingMapping] (required);
+}

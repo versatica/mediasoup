@@ -30,7 +30,7 @@ type Only<T, U> = {
 export type Either<T, U> = Only<T, U> | Only<U, T>;
 
 /**
- * Get the flatbuffers RtpParameters type of a given Producer.
+ * Get the flatbuffers RtpParameters type for a given Producer.
  */
 export function getRtpParametersType(
 	producerType: ProducerType, pipe: boolean
@@ -54,6 +54,29 @@ export function getRtpParametersType(
 
 		default:
 			return FbsRtpParametersType.NONE;
+	}
+}
+
+/**
+ * Get the flatbuffers Producer type for a given RtpParameter type.
+ */
+export function getProducerType(
+	rtpParameterType: FbsRtpParametersType
+): ProducerType
+{
+	switch (rtpParameterType)
+	{
+		case FbsRtpParametersType.SIMPLE:
+			return 'simple';
+
+		case FbsRtpParametersType.SIMULCAST:
+			return 'simulcast';
+
+		case FbsRtpParametersType.SVC:
+			return 'svc';
+
+		default:
+			throw new TypeError('invalid RtpParameter type');
 	}
 }
 
