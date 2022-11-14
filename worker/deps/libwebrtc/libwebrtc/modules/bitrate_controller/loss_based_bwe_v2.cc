@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 #define MS_CLASS "webrtc::LossBasedBweV2"
+#define MS_LOG_DEV_LEVEL 3
 
 #include "modules/bitrate_controller/loss_based_bwe_v2.h"
 
@@ -32,6 +33,7 @@
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "rtc_base/experiments/field_trial_list.h"
 #include "rtc_base/experiments/field_trial_parser.h"
+
 #include "Logger.hpp"
 
 namespace webrtc {
@@ -79,15 +81,14 @@ double GetLossProbability(double inherent_loss,
                           DataRate loss_limited_bandwidth,
                           DataRate sending_rate) {
   if (inherent_loss < 0.0 || inherent_loss > 1.0) {
-		/*MS_WARN_TAG(bwe, "Terent loss must be in [0,1]: %", inherent_loss);*/
+		MS_WARN_TAG(bwe, "Terent loss must be in [0,1]: %f", inherent_loss);
     inherent_loss = std::min(std::max(inherent_loss, 0.0), 1.0);
   }
   if (!sending_rate.IsFinite()) {
-    //MS_WARN_TAG(bwe, "The sending rate must be finite: %s", sending_rate);
+    MS_WARN_TAG(bwe, "The sending rate must be finite: %lld", sending_rate.kbps());
   }
   if (!loss_limited_bandwidth.IsFinite()) {
-    /*RTC_LOG(LS_WARNING) << "The loss limited bandwidth must be finite: "
-                        << ToString(loss_limited_bandwidth);*/
+    MS_WARN_TAG(bwe, "The loss limited bandwidth must be finite: %lld", loss_limited_bandwidth.kbps());
   }
 
   double loss_probability = inherent_loss;
@@ -104,13 +105,11 @@ double GetLossProbability(double inherent_loss,
 LossBasedBweV2::LossBasedBweV2(const WebRtcKeyValueConfig* key_value_config)
     : config_(CreateConfig(key_value_config)) {
   if (!config_.has_value()) {
-/*    RTC_LOG(LS_VERBOSE) << "The configuration does not specify that the "
-                           "estimator should be enabled, disabling it.";*/
+    MS_WARN_TAG(bwe, "The configuration does not specify that the estimator should be enabled, disabling it.");
     return;
   }
   if (!IsConfigValid()) {
-/*    RTC_LOG(LS_WARNING)
-        << "The configuration is not valid, disabling the estimator.";*/
+		MS_WARN_TAG(bwe,"The configuration is not valid, disabling the estimator.");
     config_.reset();
     return;
   }
@@ -124,6 +123,7 @@ LossBasedBweV2::LossBasedBweV2(const WebRtcKeyValueConfig* key_value_config)
 }
 
 bool LossBasedBweV2::IsEnabled() const {
+	// MS_DEBUG_DEV("Loss V2 is Enabled: %d ", config_.has_value());
   return config_.has_value();
 }
 
@@ -431,10 +431,32 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config->bandwidth_cap_at_high_loss_rate =
       bandwidth_cap_at_high_loss_rate.Get();
   config->slope_of_bwe_high_loss_func = slope_of_bwe_high_loss_func.Get();
+
+
+	std::string candidate_factors_str;
+
+	MS_DEBUG_TAG(bwe, "Loss V2 settings: ");
+
+	for (double candidate_factor : config->candidate_factors) {
+		MS_DEBUG_TAG(bwe, "Candidate factor %f", candidate_factor);
+	}
+
+	MS_DEBUG_TAG(bwe, "Loss V2 settings: "
+		           "pacing bandwidth_rampup_upper_bound_factor: %f"
+		           ", rampup_acceleration_max_factor: %f"
+		           ", rampup_acceleration_maxout_time: %lld"
+		           ", higher_bandwidth_bias_factor: %f"
+		           ", NotIncreaseIfInherentLossLessThanAverageLoss: %d",
+		           config->bandwidth_rampup_upper_bound_factor,
+		           config->rampup_acceleration_max_factor,
+		           config->rampup_acceleration_maxout_time.ms(),
+		           config->higher_bandwidth_bias_factor,
+		           config->not_increase_if_inherent_loss_less_than_average_loss);
   return config;
 }
 
 bool LossBasedBweV2::IsConfigValid() const {
+	MS_DEBUG_DEV("Validating lossV2 config");
   if (!config_.has_value()) {
     return false;
   }
