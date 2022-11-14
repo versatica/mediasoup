@@ -23,19 +23,19 @@ static getSizePrefixedRootAsDumpResponse(bb:flatbuffers.ByteBuffer, obj?:DumpRes
   return (obj || new DumpResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-pid():bigint {
+pid():number {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? this.bb!.readUint64(this.bb_pos + offset) : BigInt('0');
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
 }
 
-webrtcServerIds(index: number):string
-webrtcServerIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
-webrtcServerIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
+webRtcServerIds(index: number):string
+webRtcServerIds(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
+webRtcServerIds(index: number,optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
 }
 
-webrtcServerIdsLength():number {
+webRtcServerIdsLength():number {
   const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
@@ -61,15 +61,15 @@ static startDumpResponse(builder:flatbuffers.Builder) {
   builder.startObject(4);
 }
 
-static addPid(builder:flatbuffers.Builder, pid:bigint) {
-  builder.addFieldInt64(0, pid, BigInt('0'));
+static addPid(builder:flatbuffers.Builder, pid:number) {
+  builder.addFieldInt32(0, pid, 0);
 }
 
-static addWebrtcServerIds(builder:flatbuffers.Builder, webrtcServerIdsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, webrtcServerIdsOffset, 0);
+static addWebRtcServerIds(builder:flatbuffers.Builder, webRtcServerIdsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, webRtcServerIdsOffset, 0);
 }
 
-static createWebrtcServerIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+static createWebRtcServerIdsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
   builder.startVector(4, data.length, 4);
   for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]!);
@@ -77,7 +77,7 @@ static createWebrtcServerIdsVector(builder:flatbuffers.Builder, data:flatbuffers
   return builder.endVector();
 }
 
-static startWebrtcServerIdsVector(builder:flatbuffers.Builder, numElems:number) {
+static startWebRtcServerIdsVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 
@@ -110,7 +110,7 @@ static endDumpResponse(builder:flatbuffers.Builder):flatbuffers.Offset {
 unpack(): DumpResponseT {
   return new DumpResponseT(
     this.pid(),
-    this.bb!.createScalarList(this.webrtcServerIds.bind(this), this.webrtcServerIdsLength()),
+    this.bb!.createScalarList(this.webRtcServerIds.bind(this), this.webRtcServerIdsLength()),
     this.bb!.createScalarList(this.routerIds.bind(this), this.routerIdsLength()),
     (this.channelMessageHandlers() !== null ? this.channelMessageHandlers()!.unpack() : null)
   );
@@ -119,7 +119,7 @@ unpack(): DumpResponseT {
 
 unpackTo(_o: DumpResponseT): void {
   _o.pid = this.pid();
-  _o.webrtcServerIds = this.bb!.createScalarList(this.webrtcServerIds.bind(this), this.webrtcServerIdsLength());
+  _o.webRtcServerIds = this.bb!.createScalarList(this.webRtcServerIds.bind(this), this.webRtcServerIdsLength());
   _o.routerIds = this.bb!.createScalarList(this.routerIds.bind(this), this.routerIdsLength());
   _o.channelMessageHandlers = (this.channelMessageHandlers() !== null ? this.channelMessageHandlers()!.unpack() : null);
 }
@@ -127,21 +127,21 @@ unpackTo(_o: DumpResponseT): void {
 
 export class DumpResponseT {
 constructor(
-  public pid: bigint = BigInt('0'),
-  public webrtcServerIds: (string)[] = [],
+  public pid: number = 0,
+  public webRtcServerIds: (string)[] = [],
   public routerIds: (string)[] = [],
   public channelMessageHandlers: ChannelMessageHandlersT|null = null
 ){}
 
 
 pack(builder:flatbuffers.Builder): flatbuffers.Offset {
-  const webrtcServerIds = DumpResponse.createWebrtcServerIdsVector(builder, builder.createObjectOffsetList(this.webrtcServerIds));
+  const webRtcServerIds = DumpResponse.createWebRtcServerIdsVector(builder, builder.createObjectOffsetList(this.webRtcServerIds));
   const routerIds = DumpResponse.createRouterIdsVector(builder, builder.createObjectOffsetList(this.routerIds));
   const channelMessageHandlers = (this.channelMessageHandlers !== null ? this.channelMessageHandlers!.pack(builder) : 0);
 
   DumpResponse.startDumpResponse(builder);
   DumpResponse.addPid(builder, this.pid);
-  DumpResponse.addWebrtcServerIds(builder, webrtcServerIds);
+  DumpResponse.addWebRtcServerIds(builder, webRtcServerIds);
   DumpResponse.addRouterIds(builder, routerIds);
   DumpResponse.addChannelMessageHandlers(builder, channelMessageHandlers);
 

@@ -141,11 +141,9 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const producer = this.getProducerById(producerId);
         if (!producer)
             throw Error(`Producer with id "${producerId}" not found`);
-        const reqData = { producerId };
-        await this.channel.request('rtpObserver.addProducer', this.internal.rtpObserverId, reqData);
         const builder = this.channel.bufferBuilder;
         const requestOffset = new FbsRtpObserver.AddProducerRequestT(producerId).pack(builder);
-        this.channel.requestBinary(FbsRequest.Method.RTP_OBSERVER_ADD_PRODUCER, FbsRequest.Body.FBS_Router_CloseTransportRequest, requestOffset, this.internal.routerId).catch(() => { });
+        await this.channel.requestBinary(FbsRequest.Method.RTP_OBSERVER_ADD_PRODUCER, FbsRequest.Body.FBS_RtpObserver_AddProducerRequest, requestOffset, this.internal.rtpObserverId);
         // Emit observer event.
         this.#observer.safeEmit('addproducer', producer);
     }
@@ -157,8 +155,9 @@ class RtpObserver extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const producer = this.getProducerById(producerId);
         if (!producer)
             throw Error(`Producer with id "${producerId}" not found`);
-        const reqData = { producerId };
-        await this.channel.request('rtpObserver.removeProducer', this.internal.rtpObserverId, reqData);
+        const builder = this.channel.bufferBuilder;
+        const requestOffset = new FbsRtpObserver.RemoveProducerRequestT(producerId).pack(builder);
+        await this.channel.requestBinary(FbsRequest.Method.RTP_OBSERVER_REMOVE_PRODUCER, FbsRequest.Body.FBS_RtpObserver_RemoveProducerRequest, requestOffset, this.internal.rtpObserverId);
         // Emit observer event.
         this.#observer.safeEmit('removeproducer', producer);
     }

@@ -71,10 +71,10 @@ struct ChannelMessageHandlers FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tab
   const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *channelRequestHandlers() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_CHANNELREQUESTHANDLERS);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *payloadchannelRequestHandlers() const {
+  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *payloadChannelRequestHandlers() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_PAYLOADCHANNELREQUESTHANDLERS);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *payloadchannelNotificationHandlers() const {
+  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *payloadChannelNotificationHandlers() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_PAYLOADCHANNELNOTIFICATIONHANDLERS);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
@@ -83,11 +83,11 @@ struct ChannelMessageHandlers FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tab
            verifier.VerifyVector(channelRequestHandlers()) &&
            verifier.VerifyVectorOfStrings(channelRequestHandlers()) &&
            VerifyOffset(verifier, VT_PAYLOADCHANNELREQUESTHANDLERS) &&
-           verifier.VerifyVector(payloadchannelRequestHandlers()) &&
-           verifier.VerifyVectorOfStrings(payloadchannelRequestHandlers()) &&
+           verifier.VerifyVector(payloadChannelRequestHandlers()) &&
+           verifier.VerifyVectorOfStrings(payloadChannelRequestHandlers()) &&
            VerifyOffset(verifier, VT_PAYLOADCHANNELNOTIFICATIONHANDLERS) &&
-           verifier.VerifyVector(payloadchannelNotificationHandlers()) &&
-           verifier.VerifyVectorOfStrings(payloadchannelNotificationHandlers()) &&
+           verifier.VerifyVector(payloadChannelNotificationHandlers()) &&
+           verifier.VerifyVectorOfStrings(payloadChannelNotificationHandlers()) &&
            verifier.EndTable();
   }
 };
@@ -99,11 +99,11 @@ struct ChannelMessageHandlersBuilder {
   void add_channelRequestHandlers(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> channelRequestHandlers) {
     fbb_.AddOffset(ChannelMessageHandlers::VT_CHANNELREQUESTHANDLERS, channelRequestHandlers);
   }
-  void add_payloadchannelRequestHandlers(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> payloadchannelRequestHandlers) {
-    fbb_.AddOffset(ChannelMessageHandlers::VT_PAYLOADCHANNELREQUESTHANDLERS, payloadchannelRequestHandlers);
+  void add_payloadChannelRequestHandlers(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> payloadChannelRequestHandlers) {
+    fbb_.AddOffset(ChannelMessageHandlers::VT_PAYLOADCHANNELREQUESTHANDLERS, payloadChannelRequestHandlers);
   }
-  void add_payloadchannelNotificationHandlers(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> payloadchannelNotificationHandlers) {
-    fbb_.AddOffset(ChannelMessageHandlers::VT_PAYLOADCHANNELNOTIFICATIONHANDLERS, payloadchannelNotificationHandlers);
+  void add_payloadChannelNotificationHandlers(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> payloadChannelNotificationHandlers) {
+    fbb_.AddOffset(ChannelMessageHandlers::VT_PAYLOADCHANNELNOTIFICATIONHANDLERS, payloadChannelNotificationHandlers);
   }
   explicit ChannelMessageHandlersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -119,11 +119,11 @@ struct ChannelMessageHandlersBuilder {
 inline flatbuffers::Offset<ChannelMessageHandlers> CreateChannelMessageHandlers(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> channelRequestHandlers = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> payloadchannelRequestHandlers = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> payloadchannelNotificationHandlers = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> payloadChannelRequestHandlers = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> payloadChannelNotificationHandlers = 0) {
   ChannelMessageHandlersBuilder builder_(_fbb);
-  builder_.add_payloadchannelNotificationHandlers(payloadchannelNotificationHandlers);
-  builder_.add_payloadchannelRequestHandlers(payloadchannelRequestHandlers);
+  builder_.add_payloadChannelNotificationHandlers(payloadChannelNotificationHandlers);
+  builder_.add_payloadChannelRequestHandlers(payloadChannelRequestHandlers);
   builder_.add_channelRequestHandlers(channelRequestHandlers);
   return builder_.Finish();
 }
@@ -131,16 +131,16 @@ inline flatbuffers::Offset<ChannelMessageHandlers> CreateChannelMessageHandlers(
 inline flatbuffers::Offset<ChannelMessageHandlers> CreateChannelMessageHandlersDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *channelRequestHandlers = nullptr,
-    const std::vector<flatbuffers::Offset<flatbuffers::String>> *payloadchannelRequestHandlers = nullptr,
-    const std::vector<flatbuffers::Offset<flatbuffers::String>> *payloadchannelNotificationHandlers = nullptr) {
+    const std::vector<flatbuffers::Offset<flatbuffers::String>> *payloadChannelRequestHandlers = nullptr,
+    const std::vector<flatbuffers::Offset<flatbuffers::String>> *payloadChannelNotificationHandlers = nullptr) {
   auto channelRequestHandlers__ = channelRequestHandlers ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*channelRequestHandlers) : 0;
-  auto payloadchannelRequestHandlers__ = payloadchannelRequestHandlers ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*payloadchannelRequestHandlers) : 0;
-  auto payloadchannelNotificationHandlers__ = payloadchannelNotificationHandlers ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*payloadchannelNotificationHandlers) : 0;
+  auto payloadChannelRequestHandlers__ = payloadChannelRequestHandlers ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*payloadChannelRequestHandlers) : 0;
+  auto payloadChannelNotificationHandlers__ = payloadChannelNotificationHandlers ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*payloadChannelNotificationHandlers) : 0;
   return FBS::Worker::CreateChannelMessageHandlers(
       _fbb,
       channelRequestHandlers__,
-      payloadchannelRequestHandlers__,
-      payloadchannelNotificationHandlers__);
+      payloadChannelRequestHandlers__,
+      payloadChannelNotificationHandlers__);
 }
 
 struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -154,10 +154,10 @@ struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_ROUTERIDS = 8,
     VT_CHANNELMESSAGEHANDLERS = 10
   };
-  uint64_t pid() const {
-    return GetField<uint64_t>(VT_PID, 0);
+  uint32_t pid() const {
+    return GetField<uint32_t>(VT_PID, 0);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *webrtcServerIds() const {
+  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *webRtcServerIds() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_WEBRTCSERVERIDS);
   }
   const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *routerIds() const {
@@ -168,10 +168,10 @@ struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint64_t>(verifier, VT_PID, 8) &&
+           VerifyField<uint32_t>(verifier, VT_PID, 4) &&
            VerifyOffset(verifier, VT_WEBRTCSERVERIDS) &&
-           verifier.VerifyVector(webrtcServerIds()) &&
-           verifier.VerifyVectorOfStrings(webrtcServerIds()) &&
+           verifier.VerifyVector(webRtcServerIds()) &&
+           verifier.VerifyVectorOfStrings(webRtcServerIds()) &&
            VerifyOffset(verifier, VT_ROUTERIDS) &&
            verifier.VerifyVector(routerIds()) &&
            verifier.VerifyVectorOfStrings(routerIds()) &&
@@ -185,11 +185,11 @@ struct DumpResponseBuilder {
   typedef DumpResponse Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_pid(uint64_t pid) {
-    fbb_.AddElement<uint64_t>(DumpResponse::VT_PID, pid, 0);
+  void add_pid(uint32_t pid) {
+    fbb_.AddElement<uint32_t>(DumpResponse::VT_PID, pid, 0);
   }
-  void add_webrtcServerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webrtcServerIds) {
-    fbb_.AddOffset(DumpResponse::VT_WEBRTCSERVERIDS, webrtcServerIds);
+  void add_webRtcServerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webRtcServerIds) {
+    fbb_.AddOffset(DumpResponse::VT_WEBRTCSERVERIDS, webRtcServerIds);
   }
   void add_routerIds(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> routerIds) {
     fbb_.AddOffset(DumpResponse::VT_ROUTERIDS, routerIds);
@@ -210,30 +210,30 @@ struct DumpResponseBuilder {
 
 inline flatbuffers::Offset<DumpResponse> CreateDumpResponse(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint64_t pid = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webrtcServerIds = 0,
+    uint32_t pid = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> webRtcServerIds = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> routerIds = 0,
     flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers = 0) {
   DumpResponseBuilder builder_(_fbb);
-  builder_.add_pid(pid);
   builder_.add_channelMessageHandlers(channelMessageHandlers);
   builder_.add_routerIds(routerIds);
-  builder_.add_webrtcServerIds(webrtcServerIds);
+  builder_.add_webRtcServerIds(webRtcServerIds);
+  builder_.add_pid(pid);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<DumpResponse> CreateDumpResponseDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint64_t pid = 0,
-    const std::vector<flatbuffers::Offset<flatbuffers::String>> *webrtcServerIds = nullptr,
+    uint32_t pid = 0,
+    const std::vector<flatbuffers::Offset<flatbuffers::String>> *webRtcServerIds = nullptr,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *routerIds = nullptr,
     flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> channelMessageHandlers = 0) {
-  auto webrtcServerIds__ = webrtcServerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*webrtcServerIds) : 0;
+  auto webRtcServerIds__ = webRtcServerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*webRtcServerIds) : 0;
   auto routerIds__ = routerIds ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*routerIds) : 0;
   return FBS::Worker::CreateDumpResponse(
       _fbb,
       pid,
-      webrtcServerIds__,
+      webRtcServerIds__,
       routerIds__,
       channelMessageHandlers);
 }
@@ -744,8 +744,8 @@ inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable() {
   };
   static const char * const names[] = {
     "channelRequestHandlers",
-    "payloadchannelRequestHandlers",
-    "payloadchannelNotificationHandlers"
+    "payloadChannelRequestHandlers",
+    "payloadChannelNotificationHandlers"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 3, type_codes, nullptr, nullptr, nullptr, names
@@ -755,7 +755,7 @@ inline const flatbuffers::TypeTable *ChannelMessageHandlersTypeTable() {
 
 inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_ULONG, 0, -1 },
+    { flatbuffers::ET_UINT, 0, -1 },
     { flatbuffers::ET_STRING, 1, -1 },
     { flatbuffers::ET_STRING, 1, -1 },
     { flatbuffers::ET_SEQUENCE, 0, 0 }
@@ -765,7 +765,7 @@ inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
   };
   static const char * const names[] = {
     "pid",
-    "webrtcServerIds",
+    "webRtcServerIds",
     "routerIds",
     "channelMessageHandlers"
   };

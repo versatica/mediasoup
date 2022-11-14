@@ -4,13 +4,13 @@ namespace FBS.Worker;
 
 table ChannelMessageHandlers {
   channel_request_handlers:[string];
-  payloadchannel_request_handlers:[string];
-  payloadchannel_notification_handlers:[string];
+  payload_channel_request_handlers:[string];
+  payload_channel_notification_handlers:[string];
 }
 
 table DumpResponse {
-  pid:uint64;
-  webrtc_server_ids:[string];
+  pid:uint32;
+  web_rtc_server_ids:[string];
   router_ids:[string];
   channel_message_handlers:ChannelMessageHandlers;
 }

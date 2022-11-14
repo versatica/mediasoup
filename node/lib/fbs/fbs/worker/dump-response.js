@@ -21,13 +21,13 @@ class DumpResponse {
     }
     pid() {
         const offset = this.bb.__offset(this.bb_pos, 4);
-        return offset ? this.bb.readUint64(this.bb_pos + offset) : BigInt('0');
+        return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
     }
-    webrtcServerIds(index, optionalEncoding) {
+    webRtcServerIds(index, optionalEncoding) {
         const offset = this.bb.__offset(this.bb_pos, 6);
         return offset ? this.bb.__string(this.bb.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
     }
-    webrtcServerIdsLength() {
+    webRtcServerIdsLength() {
         const offset = this.bb.__offset(this.bb_pos, 6);
         return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
     }
@@ -47,19 +47,19 @@ class DumpResponse {
         builder.startObject(4);
     }
     static addPid(builder, pid) {
-        builder.addFieldInt64(0, pid, BigInt('0'));
+        builder.addFieldInt32(0, pid, 0);
     }
-    static addWebrtcServerIds(builder, webrtcServerIdsOffset) {
-        builder.addFieldOffset(1, webrtcServerIdsOffset, 0);
+    static addWebRtcServerIds(builder, webRtcServerIdsOffset) {
+        builder.addFieldOffset(1, webRtcServerIdsOffset, 0);
     }
-    static createWebrtcServerIdsVector(builder, data) {
+    static createWebRtcServerIdsVector(builder, data) {
         builder.startVector(4, data.length, 4);
         for (let i = data.length - 1; i >= 0; i--) {
             builder.addOffset(data[i]);
         }
         return builder.endVector();
     }
-    static startWebrtcServerIdsVector(builder, numElems) {
+    static startWebRtcServerIdsVector(builder, numElems) {
         builder.startVector(4, numElems, 4);
     }
     static addRouterIds(builder, routerIdsOffset) {
@@ -83,11 +83,11 @@ class DumpResponse {
         return offset;
     }
     unpack() {
-        return new DumpResponseT(this.pid(), this.bb.createScalarList(this.webrtcServerIds.bind(this), this.webrtcServerIdsLength()), this.bb.createScalarList(this.routerIds.bind(this), this.routerIdsLength()), (this.channelMessageHandlers() !== null ? this.channelMessageHandlers().unpack() : null));
+        return new DumpResponseT(this.pid(), this.bb.createScalarList(this.webRtcServerIds.bind(this), this.webRtcServerIdsLength()), this.bb.createScalarList(this.routerIds.bind(this), this.routerIdsLength()), (this.channelMessageHandlers() !== null ? this.channelMessageHandlers().unpack() : null));
     }
     unpackTo(_o) {
         _o.pid = this.pid();
-        _o.webrtcServerIds = this.bb.createScalarList(this.webrtcServerIds.bind(this), this.webrtcServerIdsLength());
+        _o.webRtcServerIds = this.bb.createScalarList(this.webRtcServerIds.bind(this), this.webRtcServerIdsLength());
         _o.routerIds = this.bb.createScalarList(this.routerIds.bind(this), this.routerIdsLength());
         _o.channelMessageHandlers = (this.channelMessageHandlers() !== null ? this.channelMessageHandlers().unpack() : null);
     }
@@ -95,22 +95,22 @@ class DumpResponse {
 exports.DumpResponse = DumpResponse;
 class DumpResponseT {
     pid;
-    webrtcServerIds;
+    webRtcServerIds;
     routerIds;
     channelMessageHandlers;
-    constructor(pid = BigInt('0'), webrtcServerIds = [], routerIds = [], channelMessageHandlers = null) {
+    constructor(pid = 0, webRtcServerIds = [], routerIds = [], channelMessageHandlers = null) {
         this.pid = pid;
-        this.webrtcServerIds = webrtcServerIds;
+        this.webRtcServerIds = webRtcServerIds;
         this.routerIds = routerIds;
         this.channelMessageHandlers = channelMessageHandlers;
     }
     pack(builder) {
-        const webrtcServerIds = DumpResponse.createWebrtcServerIdsVector(builder, builder.createObjectOffsetList(this.webrtcServerIds));
+        const webRtcServerIds = DumpResponse.createWebRtcServerIdsVector(builder, builder.createObjectOffsetList(this.webRtcServerIds));
         const routerIds = DumpResponse.createRouterIdsVector(builder, builder.createObjectOffsetList(this.routerIds));
         const channelMessageHandlers = (this.channelMessageHandlers !== null ? this.channelMessageHandlers.pack(builder) : 0);
         DumpResponse.startDumpResponse(builder);
         DumpResponse.addPid(builder, this.pid);
-        DumpResponse.addWebrtcServerIds(builder, webrtcServerIds);
+        DumpResponse.addWebRtcServerIds(builder, webRtcServerIds);
         DumpResponse.addRouterIds(builder, routerIds);
         DumpResponse.addChannelMessageHandlers(builder, channelMessageHandlers);
         return DumpResponse.endDumpResponse(builder);

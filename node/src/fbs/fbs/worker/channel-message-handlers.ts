@@ -34,26 +34,26 @@ channelRequestHandlersLength():number {
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-payloadchannelRequestHandlers(index: number):string
-payloadchannelRequestHandlers(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
-payloadchannelRequestHandlers(index: number,optionalEncoding?:any):string|Uint8Array|null {
+payloadChannelRequestHandlers(index: number):string
+payloadChannelRequestHandlers(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
+payloadChannelRequestHandlers(index: number,optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
 }
 
-payloadchannelRequestHandlersLength():number {
+payloadChannelRequestHandlersLength():number {
   const offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-payloadchannelNotificationHandlers(index: number):string
-payloadchannelNotificationHandlers(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
-payloadchannelNotificationHandlers(index: number,optionalEncoding?:any):string|Uint8Array|null {
+payloadChannelNotificationHandlers(index: number):string
+payloadChannelNotificationHandlers(index: number,optionalEncoding:flatbuffers.Encoding):string|Uint8Array
+payloadChannelNotificationHandlers(index: number,optionalEncoding?:any):string|Uint8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.__string(this.bb!.__vector(this.bb_pos + offset) + index * 4, optionalEncoding) : null;
 }
 
-payloadchannelNotificationHandlersLength():number {
+payloadChannelNotificationHandlersLength():number {
   const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
@@ -78,11 +78,11 @@ static startChannelRequestHandlersVector(builder:flatbuffers.Builder, numElems:n
   builder.startVector(4, numElems, 4);
 }
 
-static addPayloadchannelRequestHandlers(builder:flatbuffers.Builder, payloadchannelRequestHandlersOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, payloadchannelRequestHandlersOffset, 0);
+static addPayloadChannelRequestHandlers(builder:flatbuffers.Builder, payloadChannelRequestHandlersOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, payloadChannelRequestHandlersOffset, 0);
 }
 
-static createPayloadchannelRequestHandlersVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+static createPayloadChannelRequestHandlersVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
   builder.startVector(4, data.length, 4);
   for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]!);
@@ -90,15 +90,15 @@ static createPayloadchannelRequestHandlersVector(builder:flatbuffers.Builder, da
   return builder.endVector();
 }
 
-static startPayloadchannelRequestHandlersVector(builder:flatbuffers.Builder, numElems:number) {
+static startPayloadChannelRequestHandlersVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 
-static addPayloadchannelNotificationHandlers(builder:flatbuffers.Builder, payloadchannelNotificationHandlersOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(2, payloadchannelNotificationHandlersOffset, 0);
+static addPayloadChannelNotificationHandlers(builder:flatbuffers.Builder, payloadChannelNotificationHandlersOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(2, payloadChannelNotificationHandlersOffset, 0);
 }
 
-static createPayloadchannelNotificationHandlersVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+static createPayloadChannelNotificationHandlersVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
   builder.startVector(4, data.length, 4);
   for (let i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]!);
@@ -106,7 +106,7 @@ static createPayloadchannelNotificationHandlersVector(builder:flatbuffers.Builde
   return builder.endVector();
 }
 
-static startPayloadchannelNotificationHandlersVector(builder:flatbuffers.Builder, numElems:number) {
+static startPayloadChannelNotificationHandlersVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 
@@ -115,47 +115,47 @@ static endChannelMessageHandlers(builder:flatbuffers.Builder):flatbuffers.Offset
   return offset;
 }
 
-static createChannelMessageHandlers(builder:flatbuffers.Builder, channelRequestHandlersOffset:flatbuffers.Offset, payloadchannelRequestHandlersOffset:flatbuffers.Offset, payloadchannelNotificationHandlersOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createChannelMessageHandlers(builder:flatbuffers.Builder, channelRequestHandlersOffset:flatbuffers.Offset, payloadChannelRequestHandlersOffset:flatbuffers.Offset, payloadChannelNotificationHandlersOffset:flatbuffers.Offset):flatbuffers.Offset {
   ChannelMessageHandlers.startChannelMessageHandlers(builder);
   ChannelMessageHandlers.addChannelRequestHandlers(builder, channelRequestHandlersOffset);
-  ChannelMessageHandlers.addPayloadchannelRequestHandlers(builder, payloadchannelRequestHandlersOffset);
-  ChannelMessageHandlers.addPayloadchannelNotificationHandlers(builder, payloadchannelNotificationHandlersOffset);
+  ChannelMessageHandlers.addPayloadChannelRequestHandlers(builder, payloadChannelRequestHandlersOffset);
+  ChannelMessageHandlers.addPayloadChannelNotificationHandlers(builder, payloadChannelNotificationHandlersOffset);
   return ChannelMessageHandlers.endChannelMessageHandlers(builder);
 }
 
 unpack(): ChannelMessageHandlersT {
   return new ChannelMessageHandlersT(
     this.bb!.createScalarList(this.channelRequestHandlers.bind(this), this.channelRequestHandlersLength()),
-    this.bb!.createScalarList(this.payloadchannelRequestHandlers.bind(this), this.payloadchannelRequestHandlersLength()),
-    this.bb!.createScalarList(this.payloadchannelNotificationHandlers.bind(this), this.payloadchannelNotificationHandlersLength())
+    this.bb!.createScalarList(this.payloadChannelRequestHandlers.bind(this), this.payloadChannelRequestHandlersLength()),
+    this.bb!.createScalarList(this.payloadChannelNotificationHandlers.bind(this), this.payloadChannelNotificationHandlersLength())
   );
 }
 
 
 unpackTo(_o: ChannelMessageHandlersT): void {
   _o.channelRequestHandlers = this.bb!.createScalarList(this.channelRequestHandlers.bind(this), this.channelRequestHandlersLength());
-  _o.payloadchannelRequestHandlers = this.bb!.createScalarList(this.payloadchannelRequestHandlers.bind(this), this.payloadchannelRequestHandlersLength());
-  _o.payloadchannelNotificationHandlers = this.bb!.createScalarList(this.payloadchannelNotificationHandlers.bind(this), this.payloadchannelNotificationHandlersLength());
+  _o.payloadChannelRequestHandlers = this.bb!.createScalarList(this.payloadChannelRequestHandlers.bind(this), this.payloadChannelRequestHandlersLength());
+  _o.payloadChannelNotificationHandlers = this.bb!.createScalarList(this.payloadChannelNotificationHandlers.bind(this), this.payloadChannelNotificationHandlersLength());
 }
 }
 
 export class ChannelMessageHandlersT {
 constructor(
   public channelRequestHandlers: (string)[] = [],
-  public payloadchannelRequestHandlers: (string)[] = [],
-  public payloadchannelNotificationHandlers: (string)[] = []
+  public payloadChannelRequestHandlers: (string)[] = [],
+  public payloadChannelNotificationHandlers: (string)[] = []
 ){}
 
 
 pack(builder:flatbuffers.Builder): flatbuffers.Offset {
   const channelRequestHandlers = ChannelMessageHandlers.createChannelRequestHandlersVector(builder, builder.createObjectOffsetList(this.channelRequestHandlers));
-  const payloadchannelRequestHandlers = ChannelMessageHandlers.createPayloadchannelRequestHandlersVector(builder, builder.createObjectOffsetList(this.payloadchannelRequestHandlers));
-  const payloadchannelNotificationHandlers = ChannelMessageHandlers.createPayloadchannelNotificationHandlersVector(builder, builder.createObjectOffsetList(this.payloadchannelNotificationHandlers));
+  const payloadChannelRequestHandlers = ChannelMessageHandlers.createPayloadChannelRequestHandlersVector(builder, builder.createObjectOffsetList(this.payloadChannelRequestHandlers));
+  const payloadChannelNotificationHandlers = ChannelMessageHandlers.createPayloadChannelNotificationHandlersVector(builder, builder.createObjectOffsetList(this.payloadChannelNotificationHandlers));
 
   return ChannelMessageHandlers.createChannelMessageHandlers(builder,
     channelRequestHandlers,
-    payloadchannelRequestHandlers,
-    payloadchannelNotificationHandlers
+    payloadChannelRequestHandlers,
+    payloadChannelNotificationHandlers
   );
 }
 }
