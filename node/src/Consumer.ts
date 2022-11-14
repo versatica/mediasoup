@@ -537,7 +537,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			this.#internal.consumerId
 		);
 
-
 		this.#paused = false;
 
 		// Emit observer event.

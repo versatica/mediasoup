@@ -92,16 +92,15 @@ namespace RTC
 		}
 	}
 
-	void PipeConsumer::FillJsonScore(json& jsonObject) const
+	flatbuffers::Offset<FBS::Consumer::ConsumerScore> PipeConsumer::FillBufferScore(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->producerRtpStreamScores, "producerRtpStreamScores not set");
 
 		// NOTE: Hardcoded values in PipeTransport.
-		jsonObject["score"]          = 10;
-		jsonObject["producerScore"]  = 10;
-		jsonObject["producerScores"] = *this->producerRtpStreamScores;
+		return FBS::Consumer::CreateConsumerScoreDirect(builder, 10, 10, this->producerRtpStreamScores);
 	}
 
 	void PipeConsumer::HandleRequest(Channel::ChannelRequest* request)

@@ -12,6 +12,7 @@ const DataProducer_1 = require("./DataProducer");
 const DataConsumer_1 = require("./DataConsumer");
 const RtpParameters_1 = require("./RtpParameters");
 const SctpParameters_1 = require("./SctpParameters");
+const FbsCommon = require("./fbs/common_generated");
 const FbsRequest = require("./fbs/request_generated");
 const FbsResponse = require("./fbs/response_generated");
 const media_kind_1 = require("./fbs/fbs/rtp-parameters/media-kind");
@@ -421,6 +422,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const consumeResponse = new FbsResponse.ConsumeResponse();
         response.body(consumeResponse);
         const status = consumeResponse.unpack();
+        logger.error('status: ', status);
         const data = {
             producerId,
             kind: producer.kind,
@@ -439,7 +441,12 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             paused: status.paused,
             producerPaused: status.producerPaused,
             score: status.score ?? undefined,
-            preferredLayers: status.preferredLayers ?? undefined
+            preferredLayers: status.preferredLayers ?
+                {
+                    spatialLayer: status.preferredLayers.spatialLayer,
+                    temporalLayer: status.preferredLayers.temporalLayer.value
+                } :
+                undefined
         });
         this.consumers.set(consumer.id, consumer);
         consumer.on('@close', () => this.consumers.delete(consumer.id));
@@ -622,8 +629,13 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             consumableRtpEncodingsOffset = (0, RtpParameters_1.serializeRtpEncodingParameters)(builder, producer.consumableRtpParameters.encodings);
         }
         if (preferredLayers) {
-            // NOTE: Add the maximum possible temporae layer if not provided.
-            FbsConsumer.ConsumerLayers.createConsumerLayers(builder, preferredLayers.spatialLayer, preferredLayers.temporalLayer ?? 255);
+            FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
+            FbsConsumer.ConsumerLayers.addSpatialLayer(builder, preferredLayers.spatialLayer);
+            if (preferredLayers.temporalLayer) {
+                const temporalLayerOffset = FbsCommon.OptionalUint16.createOptionalUint16(builder, preferredLayers.temporalLayer);
+                FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayerOffset);
+            }
+            preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
         }
         const ConsumeRequest = FbsRequest.ConsumeRequest;
         // Create Consume Request.

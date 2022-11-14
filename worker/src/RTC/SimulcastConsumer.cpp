@@ -53,14 +53,18 @@ namespace RTC
 		// Set preferredLayers (if given).
 		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeRequest::VT_PREFERREDLAYERS))
 		{
-			this->preferredSpatialLayer = data->preferredLayers()->spatialLayer();
+			auto preferredLayers = data->preferredLayers();
+
+			this->preferredSpatialLayer = preferredLayers->spatialLayer();
 
 			if (this->preferredSpatialLayer > encoding.spatialLayers - 1)
 				this->preferredSpatialLayer = encoding.spatialLayers - 1;
 
 			if (flatbuffers::IsFieldPresent(
-			      data->preferredLayers(), FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
+			      preferredLayers, FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
 			{
+				this->preferredTemporalLayer = preferredLayers->temporalLayer()->value();
+
 				if (this->preferredTemporalLayer > encoding.temporalLayers - 1)
 					this->preferredTemporalLayer = encoding.temporalLayers - 1;
 			}

@@ -25,6 +25,7 @@ import {
 } from './DataConsumer';
 import { MediaKind, RtpCapabilities, RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
 import { parseSctpParametersDump, SctpParameters, SctpStreamParameters } from './SctpParameters';
+import * as FbsCommon from './fbs/common_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsResponse from './fbs/response_generated';
 import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
@@ -792,7 +793,12 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 				paused          : status.paused,
 				producerPaused  : status.producerPaused,
 				score           : status.score ?? undefined,
-				preferredLayers : status.preferredLayers ?? undefined
+				preferredLayers : status.preferredLayers ?
+					{
+						spatialLayer  : status.preferredLayers.spatialLayer,
+						temporalLayer : status.preferredLayers.temporalLayer!.value
+					} :
+					undefined
 			});
 
 		this.consumers.set(consumer.id, consumer);
@@ -1103,10 +1109,19 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		if (preferredLayers)
 		{
-			// NOTE: Add the maximum possible temporae layer if not provided.
-			FbsConsumer.ConsumerLayers.createConsumerLayers(
-				builder, preferredLayers.spatialLayer, preferredLayers.temporalLayer ?? 255
-			);
+			FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
+			FbsConsumer.ConsumerLayers.addSpatialLayer(builder, preferredLayers.spatialLayer);
+
+			if (preferredLayers.temporalLayer)
+			{
+				const temporalLayerOffset = FbsCommon.OptionalUint16.createOptionalUint16(
+					builder, preferredLayers.temporalLayer
+				);
+
+				FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayerOffset);
+			}
+
+			preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
 		}
 
 		const ConsumeRequest = FbsRequest.ConsumeRequest;

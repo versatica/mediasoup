@@ -16,6 +16,9 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
 namespace FBS {
 namespace Common {
 
+struct OptionalUint16;
+struct OptionalUint16Builder;
+
 struct StringString;
 struct StringStringBuilder;
 
@@ -31,6 +34,8 @@ struct Uint32StringBuilder;
 struct StringStringArray;
 struct StringStringArrayBuilder;
 
+inline const flatbuffers::TypeTable *OptionalUint16TypeTable();
+
 inline const flatbuffers::TypeTable *StringStringTypeTable();
 
 inline const flatbuffers::TypeTable *StringUint8TypeTable();
@@ -40,6 +45,50 @@ inline const flatbuffers::TypeTable *Uint16StringTypeTable();
 inline const flatbuffers::TypeTable *Uint32StringTypeTable();
 
 inline const flatbuffers::TypeTable *StringStringArrayTypeTable();
+
+struct OptionalUint16 FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef OptionalUint16Builder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return OptionalUint16TypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_VALUE = 4
+  };
+  uint16_t value() const {
+    return GetField<uint16_t>(VT_VALUE, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint16_t>(verifier, VT_VALUE, 2) &&
+           verifier.EndTable();
+  }
+};
+
+struct OptionalUint16Builder {
+  typedef OptionalUint16 Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_value(uint16_t value) {
+    fbb_.AddElement<uint16_t>(OptionalUint16::VT_VALUE, value, 0);
+  }
+  explicit OptionalUint16Builder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<OptionalUint16> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<OptionalUint16>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<OptionalUint16> CreateOptionalUint16(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint16_t value = 0) {
+  OptionalUint16Builder builder_(_fbb);
+  builder_.add_value(value);
+  return builder_.Finish();
+}
 
 struct StringString FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef StringStringBuilder Builder;
@@ -380,6 +429,19 @@ inline flatbuffers::Offset<StringStringArray> CreateStringStringArrayDirect(
       _fbb,
       key__,
       values__);
+}
+
+inline const flatbuffers::TypeTable *OptionalUint16TypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_USHORT, 0, -1 }
+  };
+  static const char * const names[] = {
+    "value"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
 }
 
 inline const flatbuffers::TypeTable *StringStringTypeTable() {

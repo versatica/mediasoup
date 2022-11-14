@@ -20,7 +20,9 @@ namespace RTC
 	public:
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) const override;
-		void FillJsonScore(json& jsonObject) const override;
+		void FillJsonScore(json& jsonObject) const override{};
+		flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
+		  flatbuffers::FlatBufferBuilder& builder) override;
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;

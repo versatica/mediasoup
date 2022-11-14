@@ -1,3 +1,4 @@
+export { OptionalUint16, OptionalUint16T } from './fbs/common/optional-uint16';
 export { StringString, StringStringT } from './fbs/common/string-string';
 export { StringStringArray, StringStringArrayT } from './fbs/common/string-string-array';
 export { StringUint8, StringUint8T } from './fbs/common/string-uint8';

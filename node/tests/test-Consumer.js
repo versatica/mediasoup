@@ -315,13 +315,17 @@ test('transport.consume() succeeds', async () =>
 	expect(audioConsumer.currentLayers).toBeUndefined();
 	expect(audioConsumer.appData).toEqual({ baz: 'LOL' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapProducerIdConsumerIds : { [audioProducer.id]: [ audioConsumer.id ] },
-				mapConsumerIdProducerId  : { [audioConsumer.id]: audioProducer.id }
-			});
+	let dump = await router.dump();
+
+	expect(dump.mapProducerIdConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: audioProducer.id, values: [ audioConsumer.id ] }
+		]));
+
+	expect(dump.mapConsumerIdProducerId)
+		.toEqual(expect.arrayContaining([
+			{ key: audioConsumer.id, value: audioProducer.id }
+		]));
 
 	await expect(transport2.dump())
 		.resolves
@@ -460,27 +464,36 @@ test('transport.consume() succeeds', async () =>
 	expect(videoPipeConsumer.currentLayers).toBeUndefined();
 	expect(videoPipeConsumer.appData).toBeUndefined;
 
-	const dump = await router.dump();
+	dump = await router.dump();
 
-	for (const key of Object.keys(dump.mapProducerIdConsumerIds))
+	// Sort values for mapProducerIdConsumerIds.
+	expect(dump.mapProducerIdConsumerIds).toBeType('array');
+	dump.mapProducerIdConsumerIds.forEach((entry) =>
 	{
-		dump.mapProducerIdConsumerIds[key] = dump.mapProducerIdConsumerIds[key].sort();
-	}
+		entry.values = entry.values.sort();
+	});
 
-	expect(dump).toMatchObject(
-		{
-			mapProducerIdConsumerIds :
-			{
-				[audioProducer.id] : [ audioConsumer.id ],
-				[videoProducer.id] : [ videoConsumer.id, videoPipeConsumer.id ].sort()
-			},
-			mapConsumerIdProducerId :
-			{
-				[audioConsumer.id]     : audioProducer.id,
-				[videoConsumer.id]     : videoProducer.id,
-				[videoPipeConsumer.id] : videoProducer.id
-			}
-		});
+	expect(dump.mapProducerIdConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: audioProducer.id, values: [ audioConsumer.id ] }
+		]));
+	expect(dump.mapProducerIdConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: videoProducer.id, values: [ videoConsumer.id, videoPipeConsumer.id ].sort() }
+		]));
+
+	expect(dump.mapConsumerIdProducerId)
+		.toEqual(expect.arrayContaining([
+			{ key: audioConsumer.id, value: audioProducer.id }
+		]));
+	expect(dump.mapConsumerIdProducerId)
+		.toEqual(expect.arrayContaining([
+			{ key: videoConsumer.id, value: videoProducer.id }
+		]));
+	expect(dump.mapConsumerIdProducerId)
+		.toEqual(expect.arrayContaining([
+			{ key: videoPipeConsumer.id, value: videoProducer.id }
+		]));
 
 	await expect(transport2.dump())
 		.resolves
@@ -922,15 +935,23 @@ test('consumer.close() succeeds', async () =>
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioConsumer.closed).toBe(true);
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapProducerIdConsumerIds : { [audioProducer.id]: [] },
-				mapConsumerIdProducerId  : {}
-			});
+	let dump = await router.dump();
 
-	const dump = await transport2.dump();
+	expect(dump.mapProducerIdConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: audioProducer.id, values: [ ] }
+		]));
+
+	expect(dump.mapConsumerIdProducerId)
+		.toEqual(expect.arrayContaining([
+			{ key: videoConsumer.id, value: videoProducer.id }
+		]));
+	expect(dump.mapConsumerIdProducerId)
+		.toEqual(expect.arrayContaining([
+			{ key: videoPipeConsumer.id, value: videoProducer.id }
+		]));
+
+	dump = await transport2.dump();
 
 	dump.consumerIds = dump.consumerIds.sort();
 

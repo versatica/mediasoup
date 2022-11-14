@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConsumerLayersT = exports.ConsumerLayers = void 0;
 const flatbuffers = require("flatbuffers");
+const optional_uint16_1 = require("../../fbs/common/optional-uint16");
 class ConsumerLayers {
     bb = null;
     bb_pos = 0;
@@ -20,49 +21,47 @@ class ConsumerLayers {
     }
     spatialLayer() {
         const offset = this.bb.__offset(this.bb_pos, 4);
-        return offset ? this.bb.readUint8(this.bb_pos + offset) : 0;
+        return offset ? this.bb.readUint16(this.bb_pos + offset) : 0;
     }
-    temporalLayer() {
+    temporalLayer(obj) {
         const offset = this.bb.__offset(this.bb_pos, 6);
-        return offset ? this.bb.readUint8(this.bb_pos + offset) : 0;
+        return offset ? (obj || new optional_uint16_1.OptionalUint16()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
     }
     static startConsumerLayers(builder) {
         builder.startObject(2);
     }
     static addSpatialLayer(builder, spatialLayer) {
-        builder.addFieldInt8(0, spatialLayer, 0);
+        builder.addFieldInt16(0, spatialLayer, 0);
     }
-    static addTemporalLayer(builder, temporalLayer) {
-        builder.addFieldInt8(1, temporalLayer, 0);
+    static addTemporalLayer(builder, temporalLayerOffset) {
+        builder.addFieldOffset(1, temporalLayerOffset, 0);
     }
     static endConsumerLayers(builder) {
         const offset = builder.endObject();
         return offset;
     }
-    static createConsumerLayers(builder, spatialLayer, temporalLayer) {
-        ConsumerLayers.startConsumerLayers(builder);
-        ConsumerLayers.addSpatialLayer(builder, spatialLayer);
-        ConsumerLayers.addTemporalLayer(builder, temporalLayer);
-        return ConsumerLayers.endConsumerLayers(builder);
-    }
     unpack() {
-        return new ConsumerLayersT(this.spatialLayer(), this.temporalLayer());
+        return new ConsumerLayersT(this.spatialLayer(), (this.temporalLayer() !== null ? this.temporalLayer().unpack() : null));
     }
     unpackTo(_o) {
         _o.spatialLayer = this.spatialLayer();
-        _o.temporalLayer = this.temporalLayer();
+        _o.temporalLayer = (this.temporalLayer() !== null ? this.temporalLayer().unpack() : null);
     }
 }
 exports.ConsumerLayers = ConsumerLayers;
 class ConsumerLayersT {
     spatialLayer;
     temporalLayer;
-    constructor(spatialLayer = 0, temporalLayer = 0) {
+    constructor(spatialLayer = 0, temporalLayer = null) {
         this.spatialLayer = spatialLayer;
         this.temporalLayer = temporalLayer;
     }
     pack(builder) {
-        return ConsumerLayers.createConsumerLayers(builder, this.spatialLayer, this.temporalLayer);
+        const temporalLayer = (this.temporalLayer !== null ? this.temporalLayer.pack(builder) : 0);
+        ConsumerLayers.startConsumerLayers(builder);
+        ConsumerLayers.addSpatialLayer(builder, this.spatialLayer);
+        ConsumerLayers.addTemporalLayer(builder, temporalLayer);
+        return ConsumerLayers.endConsumerLayers(builder);
     }
 }
 exports.ConsumerLayersT = ConsumerLayersT;
