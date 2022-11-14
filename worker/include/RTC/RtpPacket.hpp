@@ -4,8 +4,6 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-// FIXME: temp just to compile
-#include "libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include <absl/container/flat_hash_map.h>
 #include <array>
 #include <nlohmann/json.hpp>
@@ -154,10 +152,6 @@ namespace RTC
 		const uint8_t* GetData() const
 		{
 			return (const uint8_t*)this->header;
-		}
-		// FIXME: temp just to compile
-		const webrtc::RtpPacketMediaType GetPacketType() const {
-			return webrtc::RtpPacketMediaType::kAudio;
 		}
 
 		size_t GetSize() const

@@ -30,10 +30,7 @@
 
 namespace webrtc {
 namespace {
-static const int64_t kRetransmitWindowSizeMs = 500;
 static const size_t kMaxOverheadBytes = 500;
-
-constexpr TimeDelta kPacerQueueUpdateInterval = TimeDelta::Millis<25>();
 
 TargetRateConstraints ConvertConstraints(int min_bitrate_bps,
                                          int max_bitrate_bps,
@@ -54,33 +51,15 @@ TargetRateConstraints ConvertConstraints(const BitrateConstraints& contraints) {
                             contraints.max_bitrate_bps,
                             contraints.start_bitrate_bps);
 }
-
-bool IsEnabled(const WebRtcKeyValueConfig& trials, absl::string_view key) {
-  return absl::StartsWith(trials.Lookup(key), "Enabled");
-}
-
-bool IsDisabled(const WebRtcKeyValueConfig& trials, absl::string_view key) {
-  return absl::StartsWith(trials.Lookup(key), "Disabled");
-}
-
 }  // namespace
-
-RtpTransportControllerSend::PacerSettings::PacerSettings(
-    const WebRtcKeyValueConfig& trials)
-    : holdback_window("holdback_window", TimeDelta::ms(5)),
-      holdback_packets("holdback_packets", 3) {
-  ParseFieldTrial({&holdback_window, &holdback_packets},
-                  trials.Lookup("WebRTC-TaskQueuePacer"));
-}
 
 RtpTransportControllerSend::RtpTransportControllerSend(
     PacketRouter* packet_router,
     NetworkStatePredictorFactoryInterface* predictor_factory,
     NetworkControllerFactoryInterface* controller_factory,
-    const BitrateConstraints& bitrate_config,
-		const WebRtcKeyValueConfig& trials)
+    const BitrateConstraints& bitrate_config)
     : packet_router_(packet_router),
-      pacer_(packet_router_, trials),
+      pacer_(packet_router_),
       observer_(nullptr),
       controller_factory_override_(controller_factory),
       process_interval_(controller_factory_override_->GetProcessInterval()),
@@ -95,7 +74,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
   // RTC_DCHECK(bitrate_config.start_bitrate_bps > 0);
   MS_ASSERT(bitrate_config.start_bitrate_bps > 0, "start bitrate must be > 0");
 
-  pacer_.SetPacingRates(DataRate::bps(bitrate_config.start_bitrate_bps), DataRate::bps(0));
+  pacer_.SetPacingRates(bitrate_config.start_bitrate_bps, 0);
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
@@ -105,21 +84,12 @@ void RtpTransportControllerSend::UpdateControlState() {
   absl::optional<TargetTransferRate> update = control_handler_->GetUpdate();
   if (!update)
     return;
-  retransmission_rate_limiter_.SetMaxRate(update->target_rate.bps());
+
   // We won't create control_handler_ until we have an observers.
   // RTC_DCHECK(observer_ != nullptr);
   MS_ASSERT(observer_ != nullptr, "no observer");
 
   observer_->OnTargetTransferRate(*update);
-}
-
-void RtpTransportControllerSend::UpdateCongestedState() {
-  bool congested = transport_feedback_adapter_.GetOutstandingData() >=
-                   congestion_window_size_;
-  if (congested != is_congested_) {
-    is_congested_ = congested;
-    pacer_.SetCongested(congested);
-  }
 }
 
 PacketRouter* RtpTransportControllerSend::packet_router() {
@@ -128,16 +98,16 @@ PacketRouter* RtpTransportControllerSend::packet_router() {
 
 NetworkStateEstimateObserver*
 RtpTransportControllerSend::network_state_estimate_observer() {
-  return this->network_state_estimate_observer();
+  return this;
 }
 
 TransportFeedbackObserver*
 RtpTransportControllerSend::transport_feedback_observer() {
-  return this->transport_feedback_observer();
+  return this;
 }
 
-RtpPacketSender* RtpTransportControllerSend::packet_sender() {
-  return &this->pacer_;
+PacedSender* RtpTransportControllerSend::packet_sender() {
+  return &pacer_;
 }
 
 void RtpTransportControllerSend::SetAllocatedSendBitrateLimits(
@@ -161,9 +131,6 @@ void RtpTransportControllerSend::SetPacingFactor(float pacing_factor) {
   streams_config_.pacing_factor = pacing_factor;
   UpdateStreamsConfig();
 }
-/*void RtpTransportControllerSend::SetQueueTimeLimit(int limit_ms) {
-  pacer_.SetQueueTimeLimit(TimeDelta::ms(limit_ms));
-}*/
 
 void RtpTransportControllerSend::RegisterTargetTransferRateObserver(
     TargetTransferRateObserver* observer) {
@@ -191,17 +158,16 @@ void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
   } else {
     pacer_.Pause();
   }
-	is_congested_ = false;
-	pacer_.SetCongested(false);
+  pacer_.UpdateOutstandingData(0);
 
   control_handler_->SetNetworkAvailability(network_available_);
   PostUpdates(controller_->OnNetworkAvailability(msg));
   UpdateControlState();
 }
 
-/*RtcpBandwidthObserver* RtpTransportControllerSend::GetBandwidthObserver() {
+RtcpBandwidthObserver* RtpTransportControllerSend::GetBandwidthObserver() {
   return this;
-}*/
+}
 
 void RtpTransportControllerSend::EnablePeriodicAlrProbing(bool enable) {
 	streams_config_.requests_alr_probing = enable;
@@ -209,54 +175,16 @@ void RtpTransportControllerSend::EnablePeriodicAlrProbing(bool enable) {
 }
 
 void RtpTransportControllerSend::OnSentPacket(
-    const rtc::SentPacket& sent_packet, size_t size)
-{
-	MS_DEBUG_DEV("<<<<< size:%zu", size);
+    const rtc::SentPacket& sent_packet, size_t size) {
+  MS_DEBUG_DEV("<<<<< size:%zu", size);
 
-	absl::optional<SentPacket> packet_msg = transport_feedback_adapter_.ProcessSentPacket(sent_packet);
-	if (packet_msg)
-	{
-		// Only update outstanding data if:
-		// 1. Packet feadback is used.
-		// 2. The packet has not yet received an acknowledgement.
-		// 3. It is not a retransmission of an earlier packet.
-		UpdateCongestedState();
-		if (controller_)
-			PostUpdates(controller_->OnSentPacket(*packet_msg));
-	}
+  absl::optional<SentPacket> packet_msg =
+      transport_feedback_adapter_.ProcessSentPacket(sent_packet);
+  if (packet_msg)
+    PostUpdates(controller_->OnSentPacket(*packet_msg));
+  pacer_.UpdateOutstandingData(
+      transport_feedback_adapter_.GetOutstandingData().bytes());
 }
-
-void RtpTransportControllerSend::UpdateBitrateConstraints(
-    const BitrateConstraints& updated) {
-  TargetRateConstraints msg = ConvertConstraints(updated);
-      PostUpdates(controller_->OnTargetRateConstraints(msg));
-  };
-
-/*void RtpTransportControllerSend::SetSdpBitrateParameters(
-    const BitrateConstraints& constraints) {
-  absl::optional<BitrateConstraints> updated =
-      bitrate_configurator_.UpdateWithSdpParameters(constraints);
-  if (updated.has_value()) {
-    UpdateBitrateConstraints(*updated);
-  } else {
-    RTC_LOG(LS_VERBOSE)
-        << "WebRTC.RtpTransportControllerSend.SetSdpBitrateParameters: "
-           "nothing to update";
-  }
-}
-
-void RtpTransportControllerSend::SetClientBitratePreferences(
-    const BitrateSettings& preferences) {
-  absl::optional<BitrateConstraints> updated =
-      bitrate_configurator_.UpdateWithClientPreferences(preferences);
-  if (updated.has_value()) {
-    UpdateBitrateConstraints(*updated);
-  } else {
-    RTC_LOG(LS_VERBOSE)
-        << "WebRTC.RtpTransportControllerSend.SetClientBitratePreferences: "
-           "nothing to update";
-  }
-}*/
 
 void RtpTransportControllerSend::OnTransportOverheadChanged(
     size_t transport_overhead_bytes_per_packet) {
@@ -266,9 +194,6 @@ void RtpTransportControllerSend::OnTransportOverheadChanged(
     MS_ERROR("transport overhead exceeds: %zu", kMaxOverheadBytes);
     return;
   }
-
-  pacer_.SetTransportOverhead(
-      DataSize::bytes(transport_overhead_bytes_per_packet));
 }
 
 void RtpTransportControllerSend::OnReceivedEstimatedBitrate(uint32_t bitrate) {
@@ -301,7 +226,7 @@ void RtpTransportControllerSend::OnAddPacket(
     const RtpPacketSendInfo& packet_info) {
   transport_feedback_adapter_.AddPacket(
       packet_info,
-      send_side_bwe_with_overhead_ ? transport_overhead_bytes_per_packet_
+      send_side_bwe_with_overhead_ ? transport_overhead_bytes_per_packet_.load()
                                    : 0,
       Timestamp::ms(DepLibUV::GetTimeMsInt64()));
 }
@@ -315,14 +240,14 @@ void RtpTransportControllerSend::OnTransportFeedback(
           feedback, Timestamp::ms(DepLibUV::GetTimeMsInt64()));
   if (feedback_msg)
     PostUpdates(controller_->OnTransportPacketsFeedback(*feedback_msg));
-
-	UpdateCongestedState();
+  pacer_.UpdateOutstandingData(
+      transport_feedback_adapter_.GetOutstandingData().bytes());
 }
 
 void RtpTransportControllerSend::OnRemoteNetworkEstimate(
     NetworkStateEstimate estimate) {
   estimate.update_time = Timestamp::ms(DepLibUV::GetTimeMsInt64());
-	PostUpdates(controller_->OnNetworkStateEstimate(estimate));
+  controller_->OnNetworkStateEstimate(estimate);
 }
 
 void RtpTransportControllerSend::Process()
@@ -372,21 +297,28 @@ void RtpTransportControllerSend::UpdateStreamsConfig() {
 }
 
 void RtpTransportControllerSend::PostUpdates(NetworkControlUpdate update) {
-	if (update.congestion_window) {
-		congestion_window_size_ = *update.congestion_window;
-		UpdateCongestedState();
-	}
-	if (update.pacer_config) {
-		pacer_.SetPacingRates(update.pacer_config->data_rate(),
-			                    update.pacer_config->pad_rate());
-	}
-	if (!update.probe_cluster_configs.empty()) {
-		pacer_.CreateProbeClusters(update.probe_cluster_configs);
-	}
-	if (update.target_rate) {
-		control_handler_->SetTargetRate(*update.target_rate);
-		UpdateControlState();
-	}
+  if (update.congestion_window) {
+    if (update.congestion_window->IsFinite())
+      pacer_.SetCongestionWindow(update.congestion_window->bytes());
+    else
+      pacer_.SetCongestionWindow(PacedSender::kNoCongestionWindow);
+  }
+  if (update.pacer_config) {
+    pacer_.SetPacingRates(update.pacer_config->data_rate().bps(),
+                          update.pacer_config->pad_rate().bps());
+  }
+
+  // TODO: REMOVE: this removes any probation.
+  // update.probe_cluster_configs.clear();
+
+  for (const auto& probe : update.probe_cluster_configs) {
+    int64_t bitrate_bps = probe.target_data_rate.bps();
+    pacer_.CreateProbeCluster(bitrate_bps, probe.id);
+  }
+  if (update.target_rate) {
+    control_handler_->SetTargetRate(*update.target_rate);
+    UpdateControlState();
+  }
 }
 
 void RtpTransportControllerSend::OnReceivedRtcpReceiverReportBlocks(

@@ -214,16 +214,5 @@ enum class RtpPacketSendResult {
   kPacketNotFound  // SSRC/sequence number does not map to an available packet.
 };
 
-// NOTE! `kNumMediaTypes` must be kept in sync with RtpPacketMediaType!
-static constexpr size_t kNumMediaTypes = 5;
-enum class RtpPacketMediaType : size_t {
-	kAudio,                         // Audio media packets.
-	kVideo,                         // Video media packets.
-	kRetransmission,                // Retransmisions, sent as response to NACK.
-	kForwardErrorCorrection,        // FEC packets.
-	kPadding = kNumMediaTypes - 1,  // RTX or plain padding sent to maintain BWE.
-	// Again, don't forget to udate `kNumMediaTypes` if you add another value!
-};
-
 }  // namespace webrtc
 #endif  // MODULES_RTP_RTCP_INCLUDE_RTP_RTCP_DEFINES_H_

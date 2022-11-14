@@ -65,8 +65,6 @@ class AimdRateControl {
   TimeDelta GetExpectedBandwidthPeriod() const;
 
  private:
-  enum class RateControlState { kRcHold, kRcIncrease, kRcDecrease };
-
   friend class GoogCcStatePrinter;
   // Update the target bitrate based on, among other things, the current rate
   // control state, the current target bitrate and the estimated throughput.
@@ -75,9 +73,14 @@ class AimdRateControl {
   // in the "decrease" state the bitrate will be decreased to slightly below the
   // current throughput. When in the "hold" state the bitrate will be kept
   // constant to allow built up queues to drain.
-  void ChangeBitrate(const RateControlInput& input, Timestamp at_time);
-
-  DataRate ClampBitrate(DataRate new_bitrate) const;
+  DataRate ChangeBitrate(DataRate current_bitrate,
+                         const RateControlInput& input,
+                         Timestamp at_time);
+  // Clamps new_bitrate to within the configured min bitrate and a linear
+  // function of the throughput, so that the new bitrate can't grow too
+  // large compared to the bitrate actually being received by the other end.
+  DataRate ClampBitrate(DataRate new_bitrate,
+                        DataRate estimated_throughput) const;
   DataRate MultiplicativeRateIncrease(Timestamp at_time,
                                       Timestamp last_ms,
                                       DataRate current_bitrate) const;
@@ -104,22 +107,20 @@ class AimdRateControl {
   // Allow the delay based estimate to only increase as long as application
   // limited region (alr) is not detected.
   const bool no_bitrate_increase_in_alr_;
+  const bool smoothing_experiment_;
   // Use estimated link capacity lower bound if it is higher than the
   // acknowledged rate when backing off due to overuse.
   const bool estimate_bounded_backoff_;
-  // If false, uses estimated link capacity upper bound *
-  // `estimate_bounded_increase_ratio_` as upper limit for the estimate.
-  FieldTrialFlag disable_estimate_bounded_increase_{"Disabled"};
-  FieldTrialParameter<double> estimate_bounded_increase_ratio_{"ratio", 1.0};
-  FieldTrialParameter<bool> ignore_throughput_limit_if_network_estimate_{
-      "ignore_acked", false};
-  FieldTrialParameter<bool> increase_to_network_estimate_{"immediate_incr",
-                                                          false};
-  FieldTrialParameter<bool> ignore_network_estimate_decrease_{"ignore_decr",
-                                                              false};
+  // Use estimated link capacity upper bound as upper limit for increasing
+  // bitrate over the acknowledged rate.
+  const bool estimate_bounded_increase_;
   absl::optional<DataRate> last_decrease_;
   FieldTrialOptional<TimeDelta> initial_backoff_interval_;
-  FieldTrialFlag link_capacity_fix_;
+  FieldTrialParameter<DataRate> low_throughput_threshold_;
+  // Deprecated, enable |estimate_bounded_backoff_| instead.
+  FieldTrialOptional<double> capacity_deviation_ratio_threshold_;
+  // Deprecated, enable |estimate_bounded_increase_| instead.
+  FieldTrialOptional<double> capacity_limit_deviation_factor_;
 };
 }  // namespace webrtc
 

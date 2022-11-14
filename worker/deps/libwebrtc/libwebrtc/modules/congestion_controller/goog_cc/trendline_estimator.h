@@ -60,6 +60,8 @@ class TrendlineEstimator : public DelayIncreaseDetectorInterface {
   // threshold instead of setting a gain.|network_state_predictor| is used to
   // bettter predict network state.
   TrendlineEstimator(size_t window_size,
+                     double smoothing_coef,
+                     double threshold_gain,
                      NetworkStatePredictor* network_state_predictor);
 
   ~TrendlineEstimator() override;

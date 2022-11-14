@@ -18,11 +18,9 @@
 #include "call/rtp_transport_controller_send_interface.h"
 #include "modules/congestion_controller/rtp/control_handler.h"
 #include "modules/congestion_controller/rtp/transport_feedback_adapter.h"
-#include "modules/pacing/paced_sender.h"
-#include "modules/pacing/pacing_controller.h"
-#include "modules/pacing/packet_router.h"
 #include "rtc_base/constructor_magic.h"
-#include "rtc_base/rate_limiter.h"
+#include "modules/pacing/packet_router.h"
+#include "modules/pacing/paced_sender.h"
 
 #include <atomic>
 #include <map>
@@ -45,19 +43,14 @@ class RtpTransportControllerSend final
       PacketRouter* packet_router,
       NetworkStatePredictorFactoryInterface* predictor_factory,
       NetworkControllerFactoryInterface* controller_factory,
-      const BitrateConstraints& bitrate_config,
-		 	const WebRtcKeyValueConfig& trials);
+      const BitrateConstraints& bitrate_config);
   ~RtpTransportControllerSend() override;
-
-  RtpTransportControllerSend(const RtpTransportControllerSend&) = delete;
-  RtpTransportControllerSend& operator=(const RtpTransportControllerSend&) =
-      delete;
 
   PacketRouter* packet_router() override;
 
   NetworkStateEstimateObserver* network_state_estimate_observer() override;
   TransportFeedbackObserver* transport_feedback_observer() override;
-	RtpPacketSender* packet_sender() override;
+  PacedSender* packet_sender() override;
 
   void SetAllocatedSendBitrateLimits(int min_send_bitrate_bps,
                                      int max_padding_bitrate_bps,
@@ -74,7 +67,7 @@ class RtpTransportControllerSend final
   void OnSentPacket(const rtc::SentPacket& sent_packet, size_t size) override;
 
   void OnTransportOverheadChanged(
-      size_t transport_overhead_bytes_per_packet) override;
+      size_t transport_overhead_per_packet) override;
 
   // Implements RtcpBandwidthObserver interface
   void OnReceivedEstimatedBitrate(uint32_t bitrate) override;
@@ -92,24 +85,15 @@ class RtpTransportControllerSend final
   void Process();
 
  private:
-  struct PacerSettings {
-    explicit PacerSettings(const WebRtcKeyValueConfig& trials);
+  void MaybeCreateControllers();
 
-    FieldTrialParameter<TimeDelta> holdback_window;
-    FieldTrialParameter<int> holdback_packets;
-  };
-
-	void MaybeCreateControllers();
   void UpdateControllerWithTimeInterval();
 
-  void UpdateBitrateConstraints(const BitrateConstraints& updated);
   void UpdateStreamsConfig();
   void OnReceivedRtcpReceiverReportBlocks(const ReportBlockList& report_blocks,
                                           int64_t now_ms);
-
   void PostUpdates(NetworkControlUpdate update);
   void UpdateControlState();
-  void UpdateCongestedState();
 
   const FieldTrialBasedConfig trial_based_config_;
 
@@ -139,20 +123,15 @@ class RtpTransportControllerSend final
   // const bool add_pacing_to_cwin_;
   // Transport overhead is written by OnNetworkRouteChanged and read by
   // AddPacket.
+  // TODO(srte): Remove atomic when feedback adapter runs on task queue.
+  std::atomic<size_t> transport_overhead_bytes_per_packet_;
 
-  size_t transport_overhead_bytes_per_packet_;
   bool network_available_;
 
-  DataSize congestion_window_size_;
-  bool is_congested_;
-
-  // Protected by internal locks.
-  RateLimiter retransmission_rate_limiter_;
-
-  // TODO(perkj): `task_queue_` is supposed to replace `process_thread_`.
-  // `task_queue_` is defined last to ensure all pending tasks are cancelled
+  // TODO(perkj): |task_queue_| is supposed to replace |process_thread_|.
+  // |task_queue_| is defined last to ensure all pending tasks are cancelled
   // and deleted before any other members.
-  const WebRtcKeyValueConfig& field_trials_;
+  RTC_DISALLOW_COPY_AND_ASSIGN(RtpTransportControllerSend);
 };
 
 }  // namespace webrtc

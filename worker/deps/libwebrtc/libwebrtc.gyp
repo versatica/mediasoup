@@ -85,7 +85,7 @@
       'libwebrtc/api/transport/network_control.h',
       'libwebrtc/api/transport/field_trial_based_config.h',
       'libwebrtc/api/transport/goog_cc_factory.h',
-      'libwebrtc/api/transport/bitrate_settings.cc',
+      'libwebrtc/api/bitrate_constraints.h',
       'libwebrtc/api/units/frequency.h',
       'libwebrtc/api/units/data_size.h',
       'libwebrtc/api/units/time_delta.h',

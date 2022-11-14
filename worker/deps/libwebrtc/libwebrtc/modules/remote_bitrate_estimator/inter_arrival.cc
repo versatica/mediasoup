@@ -124,7 +124,14 @@ bool InterArrival::PacketInOrder(uint32_t timestamp) {
     // that in IsNewerTimestamp() in module_common_types.h.
     uint32_t timestamp_diff =
         timestamp - current_timestamp_group_.first_timestamp;
-    return timestamp_diff < 0x80000000;
+
+    const static uint32_t int_middle = 0x80000000;
+
+    if (timestamp_diff == int_middle) {
+      return timestamp > current_timestamp_group_.first_timestamp;
+    }
+
+    return timestamp_diff < int_middle;
   }
 }
 
