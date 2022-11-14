@@ -200,7 +200,6 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
     //RTC_DCHECK_GT(send_rate, receive_rate);
     res = kTargetUtilizationFraction * receive_rate;
   }
-  last_estimate_ = res;
   estimated_data_rate_ = res;
   return res;
 }
@@ -210,10 +209,6 @@ ProbeBitrateEstimator::FetchAndResetLastEstimatedBitrate() {
   absl::optional<DataRate> estimated_data_rate = estimated_data_rate_;
   estimated_data_rate_.reset();
   return estimated_data_rate;
-}
-
-absl::optional<DataRate> ProbeBitrateEstimator::last_estimate() const {
-  return last_estimate_;
 }
 
 void ProbeBitrateEstimator::EraseOldClusters(Timestamp timestamp) {

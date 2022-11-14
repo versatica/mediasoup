@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2019 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,127 +8,191 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_PACING_PACED_SENDER_H_
-#define MODULES_PACING_PACED_SENDER_H_
+#ifndef MODULES_PACING_TASK_QUEUE_PACED_SENDER_H_
+#define MODULES_PACING_TASK_QUEUE_PACED_SENDER_H_
 
-#include "api/transport/field_trial_based_config.h"
-#include "api/transport/network_types.h"
-#include "api/transport/webrtc_key_value_config.h"
-#include "modules/pacing/bitrate_prober.h"
-#include "modules/pacing/interval_budget.h"
-#include "modules/pacing/packet_router.h"
-#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "rtc_base/experiments/field_trial_parser.h"
-
-#include "RTC/RtpPacket.hpp"
-
-#include <absl/types/optional.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <atomic>
+
 #include <memory>
+#include <vector>
+
+#include "absl/types/optional.h"
+//#include "api/field_trials_view.h"
+//#include "api/sequence_checker.h"
+//#include "api/task_queue/task_queue_factory.h"
+#include "api/units/data_size.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
+#include "modules/pacing/pacing_controller.h"
+#include "modules/pacing/rtp_packet_pacer.h"
+#include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
+//#include "modules/utility/maybe_worker_thread.h"
+#include "rtc_base/experiments/field_trial_parser.h"
+#include "rtc_base/numerics/exp_filter.h"
+//#include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
+class Clock;
 
-class PacedSender {
+class PacedSender : public RtpPacketPacer, public RtpPacketSender {
  public:
-  static constexpr int64_t kNoCongestionWindow = -1;
+  static const int kNoPacketHoldback;
 
-  // Pacing-rate relative to our target send rate.
-  // Multiplicative factor that is applied to the target bitrate to calculate
-  // the number of bytes that can be transmitted per interval.
-  // Increasing this factor will result in lower delays in cases of bitrate
-  // overshoots from the encoder.
-  static const float kDefaultPaceMultiplier;
+  // The `hold_back_window` parameter sets a lower bound on time to sleep if
+  // there is currently a pacer queue and packets can't immediately be
+  // processed. Increasing this reduces thread wakeups at the expense of higher
+  // latency.
+  PacedSender(Clock* clock,
+                       PacingController::PacketSender* packet_sender,
+                       const WebRtcKeyValueConfig& field_trials,
+                       TimeDelta max_hold_back_window,
+                       int max_hold_back_window_in_packets);
 
-  PacedSender(PacketRouter* packet_router,
-              const WebRtcKeyValueConfig* field_trials = nullptr);
+  ~PacedSender() override;
 
-  virtual ~PacedSender() = default;
+  // Ensure that necessary delayed tasks are scheduled.
+  void EnsureStarted();
 
-  virtual void CreateProbeCluster(int bitrate_bps, int cluster_id);
+  // Methods implementing RtpPacketSender.
+
+  // Adds the packet to the queue and calls
+  // PacingController::PacketSender::SendPacket() when it's time to send.
+  void EnqueuePackets(
+      std::vector<std::unique_ptr<RtpPacketToSend>> packets) override;
+
+  // Methods implementing RtpPacketPacer.
+
+  void CreateProbeClusters(
+      std::vector<ProbeClusterConfig> probe_cluster_configs) override;
 
   // Temporarily pause all sending.
-  void Pause();
+  void Pause() override;
 
   // Resume sending packets.
-  void Resume();
+  void Resume() override;
 
-  void SetCongestionWindow(int64_t congestion_window_bytes);
-  void UpdateOutstandingData(int64_t outstanding_bytes);
-
-  // Enable bitrate probing. Enabled by default, mostly here to simplify
-  // testing. Must be called before any packets are being sent to have an
-  // effect.
-  void SetProbingEnabled(bool enabled);
+  void SetCongested(bool congested) override;
 
   // Sets the pacing rates. Must be called once before packets can be sent.
-  void SetPacingRates(uint32_t pacing_rate_bps, uint32_t padding_rate_bps);
+  void SetPacingRates(DataRate pacing_rate, DataRate padding_rate) override;
 
-  // Adds the packet information to the queue and calls TimeToSendPacket
-  // when it's time to send.
-  // MS_NOTE: defined in "modules/rtp_rtcp/include/rtp_packet_sender.h"
-  void InsertPacket(size_t bytes);
-
-  // Currently audio traffic is not accounted by pacer and passed through.
-  // With the introduction of audio BWE audio traffic will be accounted for
-  // the pacer budget calculation. The audio traffic still will be injected
+  // Currently audio traffic is not accounted for by pacer and passed through.
+  // With the introduction of audio BWE, audio traffic will be accounted for
+  // in the pacer budget calculation. The audio traffic will still be injected
   // at high priority.
-  void SetAccountForAudioPackets(bool account_for_audio);
+  void SetAccountForAudioPackets(bool account_for_audio) override;
 
-  // Returns the number of milliseconds until the module want a worker thread
-  // to call Process.
-  int64_t TimeUntilNextProcess();
+  void SetIncludeOverhead() override;
+  void SetTransportOverhead(DataSize overhead_per_packet) override;
 
-  // Process any pending packets in the queue(s).
-  void Process();
+  // Returns the time since the oldest queued packet was enqueued.
+  TimeDelta OldestPacketWaitTime() const override;
 
-  void OnPacketSent(size_t size);
-  PacedPacketInfo GetPacingInfo();
+  // Returns total size of all packets in the pacer queue.
+  DataSize QueueSizeData() const override;
+
+  // Returns the time when the first packet was sent;
+  absl::optional<Timestamp> FirstSentPacketTime() const override;
+
+  // Returns the number of milliseconds it will take to send the current
+  // packets in the queue, given the current size and bitrate, ignoring prio.
+  TimeDelta ExpectedQueueTime() const override;
+
+  // Set the max desired queuing delay, pacer will override the pacing rate
+  // specified by SetPacingRates() if needed to achieve this goal.
+  void SetQueueTimeLimit(TimeDelta limit) override;
+
+ protected:
+  // Exposed as protected for test.
+  struct Stats {
+    Stats()
+        : oldest_packet_enqueue_time(Timestamp::MinusInfinity()),
+          queue_size(DataSize::Zero()),
+          expected_queue_time(TimeDelta::Zero()) {}
+    Timestamp oldest_packet_enqueue_time;
+    DataSize queue_size;
+    TimeDelta expected_queue_time;
+    absl::optional<Timestamp> first_sent_packet_time;
+  };
+  void OnStatsUpdated(const Stats& stats);
 
  private:
-  int64_t UpdateTimeAndGetElapsedMs(int64_t now_us);
+  // Check if it is time to send packets, or schedule a delayed task if not.
+  // Use Timestamp::MinusInfinity() to indicate that this call has _not_
+  // been scheduled by the pacing controller. If this is the case, check if
+  // can execute immediately otherwise schedule a delay task that calls this
+  // method again with desired (finite) scheduled process time.
+  void MaybeProcessPackets(Timestamp scheduled_process_time);
 
-  // Updates the number of bytes that can be sent for the next time interval.
-  void UpdateBudgetWithElapsedTime(int64_t delta_time_in_ms);
-  void UpdateBudgetWithBytesSent(size_t bytes);
+  void UpdateStats();
+  Stats GetStats() const;
 
-  size_t PaddingBytesToAdd(absl::optional<size_t> recommended_probe_size,
-                           size_t bytes_sent);
+  Clock* const clock_;
+  struct BurstyPacerFlags {
+    // Parses `kBurstyPacerFieldTrial`. Example:
+    // --force-fieldtrials=WebRTC-BurstyPacer/burst:20ms/
+    explicit BurstyPacerFlags(const WebRtcKeyValueConfig& field_trials);
+    // If set, the pacer is allowed to build up a packet "debt" that correspond
+    // to approximately the send rate during the specified interval.
+    FieldTrialOptional<TimeDelta> burst;
+  };
+  const BurstyPacerFlags bursty_pacer_flags_;
+  struct SlackedPacerFlags {
+    // Parses `kSlackedPacedSenderFieldTrial`. Example:
+    // --force-fieldtrials=WebRTC-SlackedPacedSender/Enabled,max_queue_time:75ms/
+    explicit SlackedPacerFlags(const WebRtcKeyValueConfig& field_trials);
+    // When "Enabled", delayed tasks invoking MaybeProcessPackets() are
+    // scheduled using low precision instead of high precision, resulting in
+    // less idle wake ups and packets being sent in bursts if the `task_queue_`
+    // implementation supports slack. When probing, high precision is used
+    // regardless to ensure good bandwidth estimation.
+    FieldTrialFlag allow_low_precision;
+    // Controlled via the "max_queue_time" experiment argument. If set, uses
+    // high precision scheduling of MaybeProcessPackets() whenever the expected
+    // queue time is greater than or equal to this value.
+    FieldTrialOptional<TimeDelta> max_low_precision_expected_queue_time;
+    // Controlled via "send_burst_interval" experiment argument. If set, the
+    // pacer is allowed to build up a packet "debt" that correspond to
+    // approximately the send rate during the specified interval.
+    FieldTrialOptional<TimeDelta> send_burst_interval;
+  };
+  const SlackedPacerFlags slacked_pacer_flags_;
+  // The holdback window prevents too frequent delayed MaybeProcessPackets()
+  // calls. These are only applicable if `allow_low_precision` is false.
+  const TimeDelta max_hold_back_window_;
+  const int max_hold_back_window_in_packets_;
 
-  void OnPaddingSent(int64_t now_us, size_t bytes_sent);
+  PacingController pacing_controller_;
 
-  bool Congested() const;
+  // We want only one (valid) delayed process task in flight at a time.
+  // If the value of `next_process_time_` is finite, it is an id for a
+  // delayed task that will call MaybeProcessPackets() with that time
+  // as parameter.
+  // Timestamp::MinusInfinity() indicates no valid pending task.
+  Timestamp next_process_time_;
 
-  PacketRouter* const packet_router_;
-  const std::unique_ptr<FieldTrialBasedConfig> fallback_field_trials_;
-  const WebRtcKeyValueConfig* field_trials_;
+  // Indicates if this task queue is started. If not, don't allow
+  // posting delayed tasks yet.
+  bool is_started_;
 
-  FieldTrialParameter<int> min_packet_limit_ms_;
+  // Indicates if this task queue is shutting down. If so, don't allow
+  // posting any more delayed tasks as that can cause the task queue to
+  // never drain.
+  bool is_shutdown_;
 
-  bool paused_;
-  // This is the media budget, keeping track of how many bits of media
-  // we can pace out during the current interval.
-  IntervalBudget media_budget_;
-  // This is the padding budget, keeping track of how many bits of padding we're
-  // allowed to send out during the current interval. This budget will be
-  // utilized when there's no media to send.
-  IntervalBudget padding_budget_;
+  // Filtered size of enqueued packets, in bytes.
+  rtc::ExpFilter packet_size_;
+  bool include_overhead_;
 
-  BitrateProber prober_;
-  bool probing_send_failure_;
+	// Returns the number of milliseconds until the module want a worker thread
+	// to call Process.
+	int64_t TimeUntilNextProcess();
 
-  uint32_t pacing_bitrate_kbps_;
+	// Process any pending packets in the queue(s).
+	void Process();
 
-  int64_t time_last_process_us_;
-  int64_t first_sent_packet_ms_;
-
-  uint64_t packet_counter_;
-
-  int64_t congestion_window_bytes_ = kNoCongestionWindow;
-  int64_t outstanding_bytes_ = 0;
-
-  bool account_for_audio_;
+  Stats current_stats_;
 };
 }  // namespace webrtc
-#endif  // MODULES_PACING_PACED_SENDER_H_
+#endif  // MODULES_PACING_TASK_QUEUE_PACED_SENDER_H_
