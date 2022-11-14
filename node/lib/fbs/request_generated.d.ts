@@ -1,3 +1,5 @@
+export { EnableTraceEventRequest as FBS_Consumer_EnableTraceEventRequest, EnableTraceEventRequestT as FBS_Consumer_EnableTraceEventRequestT } from './fbs/consumer/enable-trace-event-request';
+export { EnableTraceEventRequest as FBS_Producer_EnableTraceEventRequest, EnableTraceEventRequestT as FBS_Producer_EnableTraceEventRequestT } from './fbs/producer/enable-trace-event-request';
 export { Body, unionToBody, unionListToBody } from './fbs/request/body';
 export { Method } from './fbs/request/method';
 export { Request, RequestT } from './fbs/request/request';

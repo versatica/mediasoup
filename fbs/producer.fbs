@@ -1,0 +1,7 @@
+
+namespace FBS.Producer;
+
+table EnableTraceEventRequest {
+  events:[string] (required);
+}
+

@@ -12,3 +12,7 @@ table ConsumerScore {
   producer_score:uint8;
   producer_scores:[uint8];
 }
+
+table EnableTraceEventRequest {
+  events:[string] (required);
+}

@@ -3,8 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Producer = void 0;
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
-const FbsTransport = require("./fbs/transport_generated");
 const FbsRequest = require("./fbs/request_generated");
+const FbsTransport = require("./fbs/transport_generated");
+const FbsProducer = require("./fbs/producer_generated");
 const logger = new Logger_1.Logger('Producer');
 class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -193,8 +194,14 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async enableTraceEvent(types = []) {
         logger.debug('enableTraceEvent()');
-        const reqData = { types };
-        await this.#channel.request('producer.enableTraceEvent', this.#internal.producerId, reqData);
+        if (!Array.isArray(types))
+            throw new TypeError('types must be an array');
+        if (types.find((type) => typeof type !== 'string'))
+            throw new TypeError('every type must be a string');
+        /* Build Request. */
+        const builder = this.#channel.bufferBuilder;
+        const requestOffset = new FbsProducer.EnableTraceEventRequestT(types).pack(builder);
+        await this.#channel.requestBinary(FbsRequest.Method.PRODUCER_ENABLE_TRACE_EVENT, FbsRequest.Body.FBS_Producer_EnableTraceEventRequest, requestOffset, this.#internal.producerId);
     }
     /**
      * Send RTP packet (just valid for Producers created on a DirectTransport).

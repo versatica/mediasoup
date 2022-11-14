@@ -9,8 +9,9 @@ import {
 	RtpCapabilities,
 	RtpParameters
 } from './RtpParameters';
-import * as FbsTransport from './fbs/transport_generated';
 import * as FbsRequest from './fbs/request_generated';
+import * as FbsTransport from './fbs/transport_generated';
+import * as FbsConsumer from './fbs/consumer_generated';
 
 export type ConsumerOptions =
 {
@@ -616,10 +617,24 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('enableTraceEvent()');
 
-		const reqData = { types };
+		if (!Array.isArray(types))
+			throw new TypeError('types must be an array');
+		if (types.find((type) => typeof type !== 'string'))
+			throw new TypeError('every type must be a string');
 
-		await this.#channel.request(
-			'consumer.enableTraceEvent', this.#internal.consumerId, reqData);
+		/* Build Request. */
+
+		const builder = this.#channel.bufferBuilder;
+		const requestOffset = new FbsConsumer.EnableTraceEventRequestT(
+			types
+		).pack(builder);
+
+		await this.#channel.requestBinary(
+			FbsRequest.Method.CONSUMER_ENABLE_TRACE_EVENT,
+			FbsRequest.Body.FBS_Consumer_EnableTraceEventRequest,
+			requestOffset,
+			this.#internal.consumerId
+		);
 	}
 
 	private handleWorkerNotifications(): void

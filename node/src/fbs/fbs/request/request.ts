@@ -2,6 +2,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { EnableTraceEventRequest as FBS_Consumer_EnableTraceEventRequest, EnableTraceEventRequestT as FBS_Consumer_EnableTraceEventRequestT } from '../../fbs/consumer/enable-trace-event-request';
+import { EnableTraceEventRequest as FBS_Producer_EnableTraceEventRequest, EnableTraceEventRequestT as FBS_Producer_EnableTraceEventRequestT } from '../../fbs/producer/enable-trace-event-request';
 import { Body, unionToBody, unionListToBody } from '../../fbs/request/body';
 import { Method } from '../../fbs/request/method';
 import { CloseRtpObserverRequest, CloseRtpObserverRequestT } from '../../fbs/router/close-rtp-observer-request';
@@ -156,7 +158,7 @@ constructor(
   public method: Method = Method.WORKER_CLOSE,
   public handlerId: string|Uint8Array|null = null,
   public bodyType: Body = Body.NONE,
-  public body: AddProducerRequestT|CloseConsumerRequestT|CloseDataConsumerRequestT|CloseDataProducerRequestT|CloseProducerRequestT|CloseRouterRequestT|CloseRtpObserverRequestT|CloseTransportRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateActiveSpeakerObserverRequestT|CreateAudioLevelObserverRequestT|CreateDirectTransportRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|EnableTraceEventRequestT|ProduceRequestT|RemoveProducerRequestT|SetMaxIncomingBitrateRequestT|SetMaxOutgoingBitrateRequestT|UpdateSettingsRequestT|null = null
+  public body: AddProducerRequestT|CloseConsumerRequestT|CloseDataConsumerRequestT|CloseDataProducerRequestT|CloseProducerRequestT|CloseRouterRequestT|CloseRtpObserverRequestT|CloseTransportRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateActiveSpeakerObserverRequestT|CreateAudioLevelObserverRequestT|CreateDirectTransportRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|EnableTraceEventRequestT|FBS_Consumer_EnableTraceEventRequestT|FBS_Producer_EnableTraceEventRequestT|ProduceRequestT|RemoveProducerRequestT|SetMaxIncomingBitrateRequestT|SetMaxOutgoingBitrateRequestT|UpdateSettingsRequestT|null = null
 ){}
 
 

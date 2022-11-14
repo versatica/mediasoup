@@ -3,8 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Consumer = void 0;
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
-const FbsTransport = require("./fbs/transport_generated");
 const FbsRequest = require("./fbs/request_generated");
+const FbsTransport = require("./fbs/transport_generated");
+const FbsConsumer = require("./fbs/consumer_generated");
 const logger = new Logger_1.Logger('Consumer');
 class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -260,8 +261,14 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async enableTraceEvent(types = []) {
         logger.debug('enableTraceEvent()');
-        const reqData = { types };
-        await this.#channel.request('consumer.enableTraceEvent', this.#internal.consumerId, reqData);
+        if (!Array.isArray(types))
+            throw new TypeError('types must be an array');
+        if (types.find((type) => typeof type !== 'string'))
+            throw new TypeError('every type must be a string');
+        /* Build Request. */
+        const builder = this.#channel.bufferBuilder;
+        const requestOffset = new FbsConsumer.EnableTraceEventRequestT(types).pack(builder);
+        await this.#channel.requestBinary(FbsRequest.Method.CONSUMER_ENABLE_TRACE_EVENT, FbsRequest.Body.FBS_Consumer_EnableTraceEventRequest, requestOffset, this.#internal.consumerId);
     }
     handleWorkerNotifications() {
         this.#channel.on(this.#internal.consumerId, (event, data) => {

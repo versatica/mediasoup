@@ -4,8 +4,9 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters } from './RtpParameters';
-import * as FbsTransport from './fbs/transport_generated';
 import * as FbsRequest from './fbs/request_generated';
+import * as FbsTransport from './fbs/transport_generated';
+import * as FbsProducer from './fbs/producer_generated';
 
 export type ProducerOptions =
 {
@@ -475,10 +476,24 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	{
 		logger.debug('enableTraceEvent()');
 
-		const reqData = { types };
+		if (!Array.isArray(types))
+			throw new TypeError('types must be an array');
+		if (types.find((type) => typeof type !== 'string'))
+			throw new TypeError('every type must be a string');
 
-		await this.#channel.request(
-			'producer.enableTraceEvent', this.#internal.producerId, reqData);
+		/* Build Request. */
+
+		const builder = this.#channel.bufferBuilder;
+		const requestOffset = new FbsProducer.EnableTraceEventRequestT(
+			types
+		).pack(builder);
+
+		await this.#channel.requestBinary(
+			FbsRequest.Method.PRODUCER_ENABLE_TRACE_EVENT,
+			FbsRequest.Body.FBS_Producer_EnableTraceEventRequest,
+			requestOffset,
+			this.#internal.producerId
+		);
 	}
 
 	/**
