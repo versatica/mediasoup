@@ -10,6 +10,7 @@
 /Cargo.lock
 /rust/examples-frontend/*/node_modules/
 /rust/examples-frontend/*/package-lock.json
+/target/
 
 ## Worker.
 /worker/out/
@@ -29,7 +30,7 @@
 /NO_GIT/
 *.swp
 *.swo
-.DS_Store
+.DS_Store/
 # Vistual Studio Code stuff.
 /.vscode/
 # JetBrains IDE stuff.
