@@ -60,13 +60,14 @@ test('transport1.produceData() succeeds', async () =>
 	expect(dataProducer1.protocol).toBe('bar');
 	expect(dataProducer1.appData).toEqual({ foo: 1, bar: '2' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapDataProducerIdDataConsumerIds : { [dataProducer1.id]: [] },
-				mapDataConsumerIdDataProducerId  : {}
-			});
+	const dump = await router.dump();
+
+	expect(dump.mapDataProducerIdDataConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: dataProducer1.id, values: [ ] }
+		]));
+
+	expect(dump.mapDataConsumerIdDataProducerId.length).toBe(0);
 
 	await expect(transport1.dump())
 		.resolves
@@ -110,13 +111,14 @@ test('transport2.produceData() succeeds', async () =>
 	expect(dataProducer2.protocol).toBe('bar');
 	expect(dataProducer2.appData).toEqual({ foo: 1, bar: '2' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapDataProducerIdDataConsumerIds : { [dataProducer2.id]: [] },
-				mapDataConsumerIdDataProducerId  : {}
-			});
+	const dump = await router.dump();
+
+	expect(dump.mapDataProducerIdDataConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: dataProducer2.id, values: [ ] }
+		]));
+
+	expect(dump.mapDataConsumerIdDataProducerId.length).toBe(0);
 
 	await expect(transport2.dump())
 		.resolves
