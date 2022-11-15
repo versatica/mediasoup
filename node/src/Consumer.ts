@@ -558,6 +558,11 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('setPreferredLayers()');
 
+		if (typeof spatialLayer !== 'number')
+			throw new TypeError('spatialLayer must be a number');
+		if (temporalLayer && typeof temporalLayer !== 'number')
+			throw new TypeError('if given, temporalLayer must be a number');
+
 		const builder = this.#channel.bufferBuilder;
 
 		let temporalLayerOffset = 0;
@@ -617,12 +622,26 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('setPriority()');
 
-		const reqData = { priority };
+		if (typeof priority !== 'number' || priority < 0)
+			throw new TypeError('priority must be a positive number');
 
-		const data = await this.#channel.request(
-			'consumer.setPriority', this.#internal.consumerId, reqData);
+		const builder = this.#channel.bufferBuilder;
+		const requestOffset = new FbsConsumer.SetPriorityRequestT(priority).pack(builder);
 
-		this.#priority = data.priority;
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.CONSUMER_SET_PRIORITY,
+			FbsRequest.Body.FBS_Consumer_SetPriorityRequest,
+			requestOffset,
+			this.#internal.consumerId
+		);
+
+		const data = new FbsConsumer.SetPriorityResponse();
+
+		response.body(data);
+
+		const status = data.unpack();
+
+		this.#priority = status.priority;
 	}
 
 	/**
@@ -632,12 +651,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('unsetPriority()');
 
-		const reqData = { priority: 1 };
-
-		const data = await this.#channel.request(
-			'consumer.setPriority', this.#internal.consumerId, reqData);
-
-		this.#priority = data.priority;
+		await this.setPriority(1);
 	}
 
 	/**

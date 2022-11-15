@@ -3,6 +3,7 @@
 import * as flatbuffers from 'flatbuffers';
 
 import { SetPreferredLayersResponse, SetPreferredLayersResponseT } from '../../fbs/consumer/set-preferred-layers-response';
+import { SetPriorityResponse, SetPriorityResponseT } from '../../fbs/consumer/set-priority-response';
 import { Body, unionToBody, unionListToBody } from '../../fbs/response/body';
 import { DumpResponse as FBS_Router_DumpResponse, DumpResponseT as FBS_Router_DumpResponseT } from '../../fbs/router/dump-response';
 import { ConsumeResponse, ConsumeResponseT } from '../../fbs/transport/consume-response';
@@ -116,7 +117,7 @@ constructor(
   public id: number = 0,
   public accepted: boolean = false,
   public bodyType: Body = Body.NONE,
-  public body: ConsumeResponseT|DumpResponseT|FBS_Router_DumpResponseT|FBS_Transport_DumpResponseT|FBS_WebRtcServer_DumpResponseT|ProduceResponseT|ResourceUsageResponseT|SetPreferredLayersResponseT|null = null
+  public body: ConsumeResponseT|DumpResponseT|FBS_Router_DumpResponseT|FBS_Transport_DumpResponseT|FBS_WebRtcServer_DumpResponseT|ProduceResponseT|ResourceUsageResponseT|SetPreferredLayersResponseT|SetPriorityResponseT|null = null
 ){}
 
 

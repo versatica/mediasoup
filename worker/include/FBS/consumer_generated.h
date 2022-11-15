@@ -30,6 +30,12 @@ struct SetPreferredLayersRequestBuilder;
 struct SetPreferredLayersResponse;
 struct SetPreferredLayersResponseBuilder;
 
+struct SetPriorityRequest;
+struct SetPriorityRequestBuilder;
+
+struct SetPriorityResponse;
+struct SetPriorityResponseBuilder;
+
 struct EnableTraceEventRequest;
 struct EnableTraceEventRequestBuilder;
 
@@ -40,6 +46,10 @@ inline const flatbuffers::TypeTable *ConsumerScoreTypeTable();
 inline const flatbuffers::TypeTable *SetPreferredLayersRequestTypeTable();
 
 inline const flatbuffers::TypeTable *SetPreferredLayersResponseTypeTable();
+
+inline const flatbuffers::TypeTable *SetPriorityRequestTypeTable();
+
+inline const flatbuffers::TypeTable *SetPriorityResponseTypeTable();
 
 inline const flatbuffers::TypeTable *EnableTraceEventRequestTypeTable();
 
@@ -267,6 +277,94 @@ inline flatbuffers::Offset<SetPreferredLayersResponse> CreateSetPreferredLayersR
   return builder_.Finish();
 }
 
+struct SetPriorityRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SetPriorityRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SetPriorityRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PRIORITY = 4
+  };
+  uint8_t priority() const {
+    return GetField<uint8_t>(VT_PRIORITY, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_PRIORITY, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct SetPriorityRequestBuilder {
+  typedef SetPriorityRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_priority(uint8_t priority) {
+    fbb_.AddElement<uint8_t>(SetPriorityRequest::VT_PRIORITY, priority, 0);
+  }
+  explicit SetPriorityRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SetPriorityRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SetPriorityRequest>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SetPriorityRequest> CreateSetPriorityRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint8_t priority = 0) {
+  SetPriorityRequestBuilder builder_(_fbb);
+  builder_.add_priority(priority);
+  return builder_.Finish();
+}
+
+struct SetPriorityResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SetPriorityResponseBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SetPriorityResponseTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PRIORITY = 4
+  };
+  uint8_t priority() const {
+    return GetField<uint8_t>(VT_PRIORITY, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_PRIORITY, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct SetPriorityResponseBuilder {
+  typedef SetPriorityResponse Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_priority(uint8_t priority) {
+    fbb_.AddElement<uint8_t>(SetPriorityResponse::VT_PRIORITY, priority, 0);
+  }
+  explicit SetPriorityResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SetPriorityResponse> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SetPriorityResponse>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SetPriorityResponse> CreateSetPriorityResponse(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint8_t priority = 0) {
+  SetPriorityResponseBuilder builder_(_fbb);
+  builder_.add_priority(priority);
+  return builder_.Finish();
+}
+
 struct EnableTraceEventRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef EnableTraceEventRequestBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
@@ -386,6 +484,32 @@ inline const flatbuffers::TypeTable *SetPreferredLayersResponseTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 1, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SetPriorityRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UCHAR, 0, -1 }
+  };
+  static const char * const names[] = {
+    "priority"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SetPriorityResponseTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UCHAR, 0, -1 }
+  };
+  static const char * const names[] = {
+    "priority"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
   };
   return &tt;
 }

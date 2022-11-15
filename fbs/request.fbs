@@ -92,6 +92,7 @@ union Body {
   FBS.Transport.CloseDataConsumerRequest,
   FBS.Producer.EnableTraceEventRequest,
   FBS.Consumer.SetPreferredLayersRequest,
+  FBS.Consumer.SetPriorityRequest,
   FBS.Consumer.EnableTraceEventRequest,
   FBS.RtpObserver.AddProducerRequest,
   FBS.RtpObserver.RemoveProducerRequest,

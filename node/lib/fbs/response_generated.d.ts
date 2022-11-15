@@ -1,4 +1,5 @@
 export { SetPreferredLayersResponse, SetPreferredLayersResponseT } from './fbs/consumer/set-preferred-layers-response';
+export { SetPriorityResponse, SetPriorityResponseT } from './fbs/consumer/set-priority-response';
 export { Body, unionToBody, unionListToBody } from './fbs/response/body';
 export { Response, ResponseT } from './fbs/response/response';
 export { DumpResponse as FBS_Router_DumpResponse, DumpResponseT as FBS_Router_DumpResponseT } from './fbs/router/dump-response';

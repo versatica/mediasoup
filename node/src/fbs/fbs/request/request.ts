@@ -4,6 +4,7 @@ import * as flatbuffers from 'flatbuffers';
 
 import { EnableTraceEventRequest as FBS_Consumer_EnableTraceEventRequest, EnableTraceEventRequestT as FBS_Consumer_EnableTraceEventRequestT } from '../../fbs/consumer/enable-trace-event-request';
 import { SetPreferredLayersRequest, SetPreferredLayersRequestT } from '../../fbs/consumer/set-preferred-layers-request';
+import { SetPriorityRequest, SetPriorityRequestT } from '../../fbs/consumer/set-priority-request';
 import { EnableTraceEventRequest as FBS_Producer_EnableTraceEventRequest, EnableTraceEventRequestT as FBS_Producer_EnableTraceEventRequestT } from '../../fbs/producer/enable-trace-event-request';
 import { Body, unionToBody, unionListToBody } from '../../fbs/request/body';
 import { Method } from '../../fbs/request/method';
@@ -159,7 +160,7 @@ constructor(
   public method: Method = Method.WORKER_CLOSE,
   public handlerId: string|Uint8Array|null = null,
   public bodyType: Body = Body.NONE,
-  public body: AddProducerRequestT|CloseConsumerRequestT|CloseDataConsumerRequestT|CloseDataProducerRequestT|CloseProducerRequestT|CloseRouterRequestT|CloseRtpObserverRequestT|CloseTransportRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateActiveSpeakerObserverRequestT|CreateAudioLevelObserverRequestT|CreateDirectTransportRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|EnableTraceEventRequestT|FBS_Consumer_EnableTraceEventRequestT|FBS_Producer_EnableTraceEventRequestT|ProduceRequestT|RemoveProducerRequestT|SetMaxIncomingBitrateRequestT|SetMaxOutgoingBitrateRequestT|SetPreferredLayersRequestT|UpdateSettingsRequestT|null = null
+  public body: AddProducerRequestT|CloseConsumerRequestT|CloseDataConsumerRequestT|CloseDataProducerRequestT|CloseProducerRequestT|CloseRouterRequestT|CloseRtpObserverRequestT|CloseTransportRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateActiveSpeakerObserverRequestT|CreateAudioLevelObserverRequestT|CreateDirectTransportRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|EnableTraceEventRequestT|FBS_Consumer_EnableTraceEventRequestT|FBS_Producer_EnableTraceEventRequestT|ProduceRequestT|RemoveProducerRequestT|SetMaxIncomingBitrateRequestT|SetMaxOutgoingBitrateRequestT|SetPreferredLayersRequestT|SetPriorityRequestT|UpdateSettingsRequestT|null = null
 ){}
 
 

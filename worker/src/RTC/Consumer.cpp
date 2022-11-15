@@ -429,23 +429,16 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::CONSUMER_SET_PRIORITY:
 			{
-				auto jsonPriorityIt = request->data.find("priority");
+				auto body = request->_data->body_as<FBS::Consumer::SetPriorityRequest>();
 
-				if (jsonPriorityIt == request->data.end() || !jsonPriorityIt->is_number())
-					MS_THROW_TYPE_ERROR("wrong priority (not a number)");
-
-				auto priority = jsonPriorityIt->get<uint8_t>();
-
-				if (priority < 1u)
+				if (body->priority() < 1u)
 					MS_THROW_TYPE_ERROR("wrong priority (must be higher than 0)");
 
-				this->priority = priority;
+				this->priority = body->priority();
 
-				json data = json::object();
+				auto responseOffset = FBS::Consumer::CreateSetPriorityResponse(request->GetBufferBuilder(), this->priority);
 
-				data["priority"] = this->priority;
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_Consumer_SetPriorityResponse, responseOffset);
 
 				break;
 			}

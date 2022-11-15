@@ -6,3 +6,5 @@ export { ConsumerScore, ConsumerScoreT } from './fbs/consumer/consumer-score';
 export { EnableTraceEventRequest, EnableTraceEventRequestT } from './fbs/consumer/enable-trace-event-request';
 export { SetPreferredLayersRequest, SetPreferredLayersRequestT } from './fbs/consumer/set-preferred-layers-request';
 export { SetPreferredLayersResponse, SetPreferredLayersResponseT } from './fbs/consumer/set-preferred-layers-response';
+export { SetPriorityRequest, SetPriorityRequestT } from './fbs/consumer/set-priority-request';
+export { SetPriorityResponse, SetPriorityResponseT } from './fbs/consumer/set-priority-response';

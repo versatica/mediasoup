@@ -21,6 +21,14 @@ table SetPreferredLayersResponse {
   preferredLayers:ConsumerLayers;
 }
 
+table SetPriorityRequest {
+  priority:uint8;
+}
+
+table SetPriorityResponse {
+  priority:uint8;
+}
+
 table EnableTraceEventRequest {
   events:[string] (required);
 }
