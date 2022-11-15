@@ -24,7 +24,6 @@ import * as FbsRouter from './fbs/router_generated';
 import * as FbsWebRtcTransport from './fbs/webRtcTransport_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsSctpParameters from './fbs/sctpParameters_generated';
-import * as FbsCommon from './fbs/common_generated';
 
 export type RouterOptions =
 {
