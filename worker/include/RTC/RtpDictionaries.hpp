@@ -156,7 +156,6 @@ namespace RTC
 	{
 	public:
 		RtcpFeedback() = default;
-		explicit RtcpFeedback(json& data);
 		explicit RtcpFeedback(const FBS::RtpParameters::RtcpFeedback* data);
 
 		void FillJson(json& jsonObject) const;
@@ -170,7 +169,6 @@ namespace RTC
 	{
 	public:
 		RtpCodecParameters() = default;
-		explicit RtpCodecParameters(json& data);
 		explicit RtpCodecParameters(const FBS::RtpParameters::RtpCodecParameters* data);
 
 		void FillJson(json& jsonObject) const;
@@ -282,7 +280,6 @@ namespace RTC
 
 	public:
 		RtpParameters() = default;
-		explicit RtpParameters(json& data);
 		explicit RtpParameters(const FBS::RtpParameters::RtpParameters* data);
 
 		void FillJson(json& jsonObject) const;

@@ -9,27 +9,6 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtcpFeedback::RtcpFeedback(json& data)
-	{
-		MS_TRACE();
-
-		if (!data.is_object())
-			MS_THROW_TYPE_ERROR("data is not an object");
-
-		auto jsonTypeIt      = data.find("type");
-		auto jsonParameterIt = data.find("parameter");
-
-		// type is mandatory.
-		if (jsonTypeIt == data.end() || !jsonTypeIt->is_string())
-			MS_THROW_TYPE_ERROR("missing type");
-
-		this->type = jsonTypeIt->get<std::string>();
-
-		// parameter is optional.
-		if (jsonParameterIt != data.end() && jsonParameterIt->is_string())
-			this->parameter = jsonParameterIt->get<std::string>();
-	}
-
 	RtcpFeedback::RtcpFeedback(const FBS::RtpParameters::RtcpFeedback* data)
 	{
 		MS_TRACE();
