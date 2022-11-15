@@ -224,7 +224,7 @@ namespace RTC
 
 				// preferredTemporaLayer is optional.
 				if (flatbuffers::IsFieldPresent(
-							preferredLayers, FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
+				      preferredLayers, FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
 				{
 					this->preferredTemporalLayer = preferredLayers->temporalLayer()->value();
 
@@ -242,9 +242,12 @@ namespace RTC
 				  this->preferredTemporalLayer,
 				  this->id.c_str());
 
-				auto temporalLayerOffset = FBS::Common::CreateOptionalInt16(request->GetBufferBuilder(), this->preferredTemporalLayer);
-				auto preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(request->GetBufferBuilder(), this->preferredSpatialLayer, temporalLayerOffset);
-				auto responseOffset = FBS::Consumer::CreateSetPreferredLayersResponse(request->GetBufferBuilder(), preferredLayersOffset);
+				auto temporalLayerOffset = FBS::Common::CreateOptionalInt16(
+				  request->GetBufferBuilder(), this->preferredTemporalLayer);
+				auto preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
+				  request->GetBufferBuilder(), this->preferredSpatialLayer, temporalLayerOffset);
+				auto responseOffset = FBS::Consumer::CreateSetPreferredLayersResponse(
+				  request->GetBufferBuilder(), preferredLayersOffset);
 
 				request->Accept(FBS::Response::Body::FBS_Consumer_SetPreferredLayersResponse, responseOffset);
 

@@ -14,11 +14,11 @@ table ConsumerScore {
 }
 
 table SetPreferredLayersRequest {
-  preferredLayers:ConsumerLayers (required);
+  preferred_layers:ConsumerLayers (required);
 }
 
 table SetPreferredLayersResponse {
-  preferredLayers:ConsumerLayers;
+  preferred_layers:ConsumerLayers;
 }
 
 table SetPriorityRequest {

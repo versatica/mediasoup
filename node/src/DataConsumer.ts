@@ -6,6 +6,7 @@ import { TransportInternal } from './Transport';
 import { SctpStreamParameters } from './SctpParameters';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsRequest from './fbs/request_generated';
+import * as FbsDataConsumer from './fbs/dataConsumer_generated';
 
 export type DataConsumerOptions =
 {
@@ -374,10 +375,18 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('getBufferedAmount()');
 
-		const { bufferedAmount } =
-			await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal.dataConsumerId);
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.DATA_CONSUMER_GET_BUFFERED_AMOUNT,
+			undefined,
+			undefined,
+			this.#internal.dataConsumerId
+		);
 
-		return bufferedAmount;
+		const data = new FbsDataConsumer.GetBufferedAmountResponse();
+
+		response.body(data);
+
+		return data.bufferedAmount();
 	}
 
 	private handleWorkerNotifications(): void

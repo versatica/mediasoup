@@ -296,7 +296,8 @@ namespace RTC
 
 				this->priority = body->priority();
 
-				auto responseOffset = FBS::Consumer::CreateSetPriorityResponse(request->GetBufferBuilder(), this->priority);
+				auto responseOffset =
+				  FBS::Consumer::CreateSetPriorityResponse(request->GetBufferBuilder(), this->priority);
 
 				request->Accept(FBS::Response::Body::FBS_Consumer_SetPriorityResponse, responseOffset);
 

@@ -180,11 +180,11 @@ namespace RTC
 				}
 
 				// Create status response.
-				json data = json::object();
+				auto responseOffset = FBS::DataConsumer::CreateGetBufferedAmountResponse(
+				  request->GetBufferBuilder(), this->sctpAssociation->GetSctpBufferedAmount());
 
-				data["bufferedAmount"] = this->sctpAssociation->GetSctpBufferedAmount();
-
-				request->Accept(data);
+				request->Accept(
+				  FBS::Response::Body::FBS_DataConsumer_GetBufferedAmountResponse, responseOffset);
 
 				break;
 			}

@@ -3,6 +3,7 @@ include "router.fbs";
 include "webRtcServer.fbs";
 include "transport.fbs";
 include "consumer.fbs";
+include "dataConsumer.fbs";
 
 namespace FBS.Response;
 
@@ -16,6 +17,7 @@ union Body {
   FBS.Transport.ConsumeResponse,
   FBS.Consumer.SetPreferredLayersResponse,
   FBS.Consumer.SetPriorityResponse,
+  FBS.DataConsumer.GetBufferedAmountResponse,
 }
 
 table Response {

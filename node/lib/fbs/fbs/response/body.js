@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
 const set_preferred_layers_response_1 = require("../../fbs/consumer/set-preferred-layers-response");
 const set_priority_response_1 = require("../../fbs/consumer/set-priority-response");
+const get_buffered_amount_response_1 = require("../../fbs/data-consumer/get-buffered-amount-response");
 const dump_response_1 = require("../../fbs/router/dump-response");
 const consume_response_1 = require("../../fbs/transport/consume-response");
 const dump_response_2 = require("../../fbs/transport/dump-response");
@@ -23,6 +24,7 @@ var Body;
     Body[Body["FBS_Transport_ConsumeResponse"] = 7] = "FBS_Transport_ConsumeResponse";
     Body[Body["FBS_Consumer_SetPreferredLayersResponse"] = 8] = "FBS_Consumer_SetPreferredLayersResponse";
     Body[Body["FBS_Consumer_SetPriorityResponse"] = 9] = "FBS_Consumer_SetPriorityResponse";
+    Body[Body["FBS_DataConsumer_GetBufferedAmountResponse"] = 10] = "FBS_DataConsumer_GetBufferedAmountResponse";
 })(Body = exports.Body || (exports.Body = {}));
 function unionToBody(type, accessor) {
     switch (Body[type]) {
@@ -36,6 +38,7 @@ function unionToBody(type, accessor) {
         case 'FBS_Transport_ConsumeResponse': return accessor(new consume_response_1.ConsumeResponse());
         case 'FBS_Consumer_SetPreferredLayersResponse': return accessor(new set_preferred_layers_response_1.SetPreferredLayersResponse());
         case 'FBS_Consumer_SetPriorityResponse': return accessor(new set_priority_response_1.SetPriorityResponse());
+        case 'FBS_DataConsumer_GetBufferedAmountResponse': return accessor(new get_buffered_amount_response_1.GetBufferedAmountResponse());
         default: return null;
     }
 }
@@ -52,6 +55,7 @@ function unionListToBody(type, accessor, index) {
         case 'FBS_Transport_ConsumeResponse': return accessor(index, new consume_response_1.ConsumeResponse());
         case 'FBS_Consumer_SetPreferredLayersResponse': return accessor(index, new set_preferred_layers_response_1.SetPreferredLayersResponse());
         case 'FBS_Consumer_SetPriorityResponse': return accessor(index, new set_priority_response_1.SetPriorityResponse());
+        case 'FBS_DataConsumer_GetBufferedAmountResponse': return accessor(index, new get_buffered_amount_response_1.GetBufferedAmountResponse());
         default: return null;
     }
 }

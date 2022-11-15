@@ -1,0 +1,7 @@
+include "common.fbs";
+
+namespace FBS.DataConsumer;
+
+table GetBufferedAmountResponse {
+  buffered_amount:uint32;
+}

@@ -5,6 +5,7 @@ const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const FbsTransport = require("./fbs/transport_generated");
 const FbsRequest = require("./fbs/request_generated");
+const FbsDataConsumer = require("./fbs/dataConsumer_generated");
 const logger = new Logger_1.Logger('DataConsumer');
 class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -192,8 +193,10 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async getBufferedAmount() {
         logger.debug('getBufferedAmount()');
-        const { bufferedAmount } = await this.#channel.request('dataConsumer.getBufferedAmount', this.#internal.dataConsumerId);
-        return bufferedAmount;
+        const response = await this.#channel.requestBinary(FbsRequest.Method.DATA_CONSUMER_GET_BUFFERED_AMOUNT, undefined, undefined, this.#internal.dataConsumerId);
+        const data = new FbsDataConsumer.GetBufferedAmountResponse();
+        response.body(data);
+        return data.bufferedAmount();
     }
     handleWorkerNotifications() {
         this.#channel.on(this.#internal.dataConsumerId, (event, data) => {
