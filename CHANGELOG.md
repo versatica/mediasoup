@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* `Worker`: Add Globals singleton (PR #953).
+* `Worker`: Add `Globals` singleton for RTC entities (PR #953).
 
 
 ### 3.11.3
