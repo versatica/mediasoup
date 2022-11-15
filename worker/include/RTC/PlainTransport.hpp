@@ -1,6 +1,7 @@
 #ifndef MS_RTC_PLAIN_TRANSPORT_HPP
 #define MS_RTC_PLAIN_TRANSPORT_HPP
 
+#include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
@@ -23,7 +24,8 @@ namespace RTC
 		static absl::flat_hash_map<RTC::SrtpSession::CryptoSuite, std::string> srtpCryptoSuite2String;
 
 	public:
-		PlainTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
+		PlainTransport(
+		  RTC::Shared* shared, const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~PlainTransport() override;
 
 	public:
