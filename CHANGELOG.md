@@ -4,6 +4,7 @@
 ### NEXT
 
 * Node: Compile TypeScript code on `postinstall` (PR #954).
+* `Worker`: Add `RTC::Shared` singleton for RTC entities (PR #953).
 
 
 ### 3.11.3
