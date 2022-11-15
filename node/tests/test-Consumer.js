@@ -803,246 +803,246 @@ test('consumer.setPreferredLayers() succeed', async () =>
 	expect(videoConsumer.preferredLayers).toEqual({ spatialLayer: 2, temporalLayer: 0 });
 }, 2000);
 
-test('consumer.setPreferredLayers() with wrong arguments rejects with TypeError', async () =>
-{
-	await expect(videoConsumer.setPreferredLayers({}))
-		.rejects
-		.toThrow(TypeError);
-
-	await expect(videoConsumer.setPreferredLayers({ foo: '123' }))
-		.rejects
-		.toThrow(TypeError);
-
-	await expect(videoConsumer.setPreferredLayers('foo'))
-		.rejects
-		.toThrow(TypeError);
-
-	// Missing spatialLayer.
-	await expect(videoConsumer.setPreferredLayers({ temporalLayer: 2 }))
-		.rejects
-		.toThrow(TypeError);
-}, 2000);
-
-test('consumer.setPriority() succeed', async () =>
-{
-	await videoConsumer.setPriority(2);
-	expect(videoConsumer.priority).toBe(2);
-}, 2000);
-
-test('consumer.setPriority() with wrong arguments rejects with TypeError', async () =>
-{
-	await expect(videoConsumer.setPriority())
-		.rejects
-		.toThrow(TypeError);
-
-	await expect(videoConsumer.setPriority(0))
-		.rejects
-		.toThrow(TypeError);
-
-	await expect(videoConsumer.setPriority('foo'))
-		.rejects
-		.toThrow(TypeError);
-}, 2000);
-
-test('consumer.unsetPriority() succeed', async () =>
-{
-	await videoConsumer.unsetPriority();
-	expect(videoConsumer.priority).toBe(1);
-}, 2000);
-
-test('consumer.enableTraceEvent() succeed', async () =>
-{
-	await audioConsumer.enableTraceEvent([ 'rtp', 'pli' ]);
-	await expect(audioConsumer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: 'rtp,pli' });
-
-	await audioConsumer.enableTraceEvent([]);
-	await expect(audioConsumer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: '' });
-
-	await audioConsumer.enableTraceEvent([ 'nack', 'FOO', 'fir' ]);
-	await expect(audioConsumer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: 'nack,fir' });
-
-	await audioConsumer.enableTraceEvent();
-	await expect(audioConsumer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: '' });
-}, 2000);
-
-test('consumer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
-{
-	await expect(audioConsumer.enableTraceEvent(123))
-		.rejects
-		.toThrow(TypeError);
-
-	await expect(audioConsumer.enableTraceEvent('rtp'))
-		.rejects
-		.toThrow(TypeError);
-
-	await expect(audioConsumer.enableTraceEvent([ 'fir', 123.123 ]))
-		.rejects
-		.toThrow(TypeError);
-}, 2000);
-
-test('Consumer emits "producerpause" and "producerresume"', async () =>
-{
-	await new Promise((resolve) =>
-	{
-		audioConsumer.on('producerpause', resolve);
-		audioProducer.pause();
-	});
-
-	expect(audioConsumer.paused).toBe(false);
-	expect(audioConsumer.producerPaused).toBe(true);
-
-	await new Promise((resolve) =>
-	{
-		audioConsumer.on('producerresume', resolve);
-		audioProducer.resume();
-	});
-
-	expect(audioConsumer.paused).toBe(false);
-	expect(audioConsumer.producerPaused).toBe(false);
-}, 2000);
-
-test('Consumer emits "score"', async () =>
-{
-	// Private API.
-	const channel = audioConsumer.channelForTesting;
-	const onScore = jest.fn();
-
-	audioConsumer.on('score', onScore);
-
-	channel.emit(audioConsumer.id, 'score', { producer: 10, consumer: 9 });
-	channel.emit(audioConsumer.id, 'score', { producer: 9, consumer: 9 });
-	channel.emit(audioConsumer.id, 'score', { producer: 8, consumer: 8 });
-
-	expect(onScore).toHaveBeenCalledTimes(3);
-	expect(audioConsumer.score).toEqual({ producer: 8, consumer: 8 });
-}, 2000);
-
-test('consumer.close() succeeds', async () =>
-{
-	const onObserverClose = jest.fn();
-
-	audioConsumer.observer.once('close', onObserverClose);
-	audioConsumer.close();
-
-	expect(onObserverClose).toHaveBeenCalledTimes(1);
-	expect(audioConsumer.closed).toBe(true);
-
-	let dump = await router.dump();
-
-	expect(dump.mapProducerIdConsumerIds)
-		.toEqual(expect.arrayContaining([
-			{ key: audioProducer.id, values: [ ] }
-		]));
-
-	expect(dump.mapConsumerIdProducerId)
-		.toEqual(expect.arrayContaining([
-			{ key: videoConsumer.id, value: videoProducer.id }
-		]));
-	expect(dump.mapConsumerIdProducerId)
-		.toEqual(expect.arrayContaining([
-			{ key: videoPipeConsumer.id, value: videoProducer.id }
-		]));
-
-	dump = await transport2.dump();
-
-	dump.consumerIds = dump.consumerIds.sort();
-
-	expect(dump)
-		.toMatchObject(
-			{
-				id          : transport2.id,
-				producerIds : [],
-				consumerIds : [ videoConsumer.id, videoPipeConsumer.id ].sort()
-			});
-}, 2000);
-
-test('Consumer methods reject if closed', async () =>
-{
-	await expect(audioConsumer.dump())
-		.rejects
-		.toThrow(Error);
-
-	await expect(audioConsumer.getStats())
-		.rejects
-		.toThrow(Error);
-
-	await expect(audioConsumer.pause())
-		.rejects
-		.toThrow(Error);
-
-	await expect(audioConsumer.resume())
-		.rejects
-		.toThrow(Error);
-
-	await expect(audioConsumer.setPreferredLayers({}))
-		.rejects
-		.toThrow(Error);
-
-	await expect(audioConsumer.setPriority(2))
-		.rejects
-		.toThrow(Error);
-
-	await expect(audioConsumer.requestKeyFrame())
-		.rejects
-		.toThrow(Error);
-}, 2000);
-
-test('Consumer emits "producerclose" if Producer is closed', async () =>
-{
-	audioConsumer = await transport2.consume(
-		{
-			producerId      : audioProducer.id,
-			rtpCapabilities : consumerDeviceCapabilities
-		});
-
-	const onObserverClose = jest.fn();
-
-	audioConsumer.observer.once('close', onObserverClose);
-
-	await new Promise((resolve) =>
-	{
-		audioConsumer.on('producerclose', resolve);
-		audioProducer.close();
-	});
-
-	expect(onObserverClose).toHaveBeenCalledTimes(1);
-	expect(audioConsumer.closed).toBe(true);
-}, 2000);
-
-test('Consumer emits "transportclose" if Transport is closed', async () =>
-{
-	videoConsumer = await transport2.consume(
-		{
-			producerId      : videoProducer.id,
-			rtpCapabilities : consumerDeviceCapabilities
-		});
-
-	const onObserverClose = jest.fn();
-
-	videoConsumer.observer.once('close', onObserverClose);
-
-	await new Promise((resolve) =>
-	{
-		videoConsumer.on('transportclose', resolve);
-		transport2.close();
-	});
-
-	expect(onObserverClose).toHaveBeenCalledTimes(1);
-	expect(videoConsumer.closed).toBe(true);
-
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapProducerIdConsumerIds : {},
-				mapConsumerIdProducerId  : {}
-			});
-}, 2000);
+// test('consumer.setPreferredLayers() with wrong arguments rejects with TypeError', async () =>
+// {
+// 	await expect(videoConsumer.setPreferredLayers({}))
+// 		.rejects
+// 		.toThrow(TypeError);
+// 
+// 	await expect(videoConsumer.setPreferredLayers({ foo: '123' }))
+// 		.rejects
+// 		.toThrow(TypeError);
+// 
+// 	await expect(videoConsumer.setPreferredLayers('foo'))
+// 		.rejects
+// 		.toThrow(TypeError);
+// 
+// 	// Missing spatialLayer.
+// 	await expect(videoConsumer.setPreferredLayers({ temporalLayer: 2 }))
+// 		.rejects
+// 		.toThrow(TypeError);
+// }, 2000);
+// 
+// test('consumer.setPriority() succeed', async () =>
+// {
+// 	await videoConsumer.setPriority(2);
+// 	expect(videoConsumer.priority).toBe(2);
+// }, 2000);
+// 
+// test('consumer.setPriority() with wrong arguments rejects with TypeError', async () =>
+// {
+// 	await expect(videoConsumer.setPriority())
+// 		.rejects
+// 		.toThrow(TypeError);
+// 
+// 	await expect(videoConsumer.setPriority(0))
+// 		.rejects
+// 		.toThrow(TypeError);
+// 
+// 	await expect(videoConsumer.setPriority('foo'))
+// 		.rejects
+// 		.toThrow(TypeError);
+// }, 2000);
+// 
+// test('consumer.unsetPriority() succeed', async () =>
+// {
+// 	await videoConsumer.unsetPriority();
+// 	expect(videoConsumer.priority).toBe(1);
+// }, 2000);
+// 
+// test('consumer.enableTraceEvent() succeed', async () =>
+// {
+// 	await audioConsumer.enableTraceEvent([ 'rtp', 'pli' ]);
+// 	await expect(audioConsumer.dump())
+// 		.resolves
+// 		.toMatchObject({ traceEventTypes: 'rtp,pli' });
+// 
+// 	await audioConsumer.enableTraceEvent([]);
+// 	await expect(audioConsumer.dump())
+// 		.resolves
+// 		.toMatchObject({ traceEventTypes: '' });
+// 
+// 	await audioConsumer.enableTraceEvent([ 'nack', 'FOO', 'fir' ]);
+// 	await expect(audioConsumer.dump())
+// 		.resolves
+// 		.toMatchObject({ traceEventTypes: 'nack,fir' });
+// 
+// 	await audioConsumer.enableTraceEvent();
+// 	await expect(audioConsumer.dump())
+// 		.resolves
+// 		.toMatchObject({ traceEventTypes: '' });
+// }, 2000);
+// 
+// test('consumer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
+// {
+// 	await expect(audioConsumer.enableTraceEvent(123))
+// 		.rejects
+// 		.toThrow(TypeError);
+// 
+// 	await expect(audioConsumer.enableTraceEvent('rtp'))
+// 		.rejects
+// 		.toThrow(TypeError);
+// 
+// 	await expect(audioConsumer.enableTraceEvent([ 'fir', 123.123 ]))
+// 		.rejects
+// 		.toThrow(TypeError);
+// }, 2000);
+// 
+// test('Consumer emits "producerpause" and "producerresume"', async () =>
+// {
+// 	await new Promise((resolve) =>
+// 	{
+// 		audioConsumer.on('producerpause', resolve);
+// 		audioProducer.pause();
+// 	});
+// 
+// 	expect(audioConsumer.paused).toBe(false);
+// 	expect(audioConsumer.producerPaused).toBe(true);
+// 
+// 	await new Promise((resolve) =>
+// 	{
+// 		audioConsumer.on('producerresume', resolve);
+// 		audioProducer.resume();
+// 	});
+// 
+// 	expect(audioConsumer.paused).toBe(false);
+// 	expect(audioConsumer.producerPaused).toBe(false);
+// }, 2000);
+// 
+// test('Consumer emits "score"', async () =>
+// {
+// 	// Private API.
+// 	const channel = audioConsumer.channelForTesting;
+// 	const onScore = jest.fn();
+// 
+// 	audioConsumer.on('score', onScore);
+// 
+// 	channel.emit(audioConsumer.id, 'score', { producer: 10, consumer: 9 });
+// 	channel.emit(audioConsumer.id, 'score', { producer: 9, consumer: 9 });
+// 	channel.emit(audioConsumer.id, 'score', { producer: 8, consumer: 8 });
+// 
+// 	expect(onScore).toHaveBeenCalledTimes(3);
+// 	expect(audioConsumer.score).toEqual({ producer: 8, consumer: 8 });
+// }, 2000);
+// 
+// test('consumer.close() succeeds', async () =>
+// {
+// 	const onObserverClose = jest.fn();
+// 
+// 	audioConsumer.observer.once('close', onObserverClose);
+// 	audioConsumer.close();
+// 
+// 	expect(onObserverClose).toHaveBeenCalledTimes(1);
+// 	expect(audioConsumer.closed).toBe(true);
+// 
+// 	let dump = await router.dump();
+// 
+// 	expect(dump.mapProducerIdConsumerIds)
+// 		.toEqual(expect.arrayContaining([
+// 			{ key: audioProducer.id, values: [ ] }
+// 		]));
+// 
+// 	expect(dump.mapConsumerIdProducerId)
+// 		.toEqual(expect.arrayContaining([
+// 			{ key: videoConsumer.id, value: videoProducer.id }
+// 		]));
+// 	expect(dump.mapConsumerIdProducerId)
+// 		.toEqual(expect.arrayContaining([
+// 			{ key: videoPipeConsumer.id, value: videoProducer.id }
+// 		]));
+// 
+// 	dump = await transport2.dump();
+// 
+// 	dump.consumerIds = dump.consumerIds.sort();
+// 
+// 	expect(dump)
+// 		.toMatchObject(
+// 			{
+// 				id          : transport2.id,
+// 				producerIds : [],
+// 				consumerIds : [ videoConsumer.id, videoPipeConsumer.id ].sort()
+// 			});
+// }, 2000);
+// 
+// test('Consumer methods reject if closed', async () =>
+// {
+// 	await expect(audioConsumer.dump())
+// 		.rejects
+// 		.toThrow(Error);
+// 
+// 	await expect(audioConsumer.getStats())
+// 		.rejects
+// 		.toThrow(Error);
+// 
+// 	await expect(audioConsumer.pause())
+// 		.rejects
+// 		.toThrow(Error);
+// 
+// 	await expect(audioConsumer.resume())
+// 		.rejects
+// 		.toThrow(Error);
+// 
+// 	await expect(audioConsumer.setPreferredLayers({}))
+// 		.rejects
+// 		.toThrow(Error);
+// 
+// 	await expect(audioConsumer.setPriority(2))
+// 		.rejects
+// 		.toThrow(Error);
+// 
+// 	await expect(audioConsumer.requestKeyFrame())
+// 		.rejects
+// 		.toThrow(Error);
+// }, 2000);
+// 
+// test('Consumer emits "producerclose" if Producer is closed', async () =>
+// {
+// 	audioConsumer = await transport2.consume(
+// 		{
+// 			producerId      : audioProducer.id,
+// 			rtpCapabilities : consumerDeviceCapabilities
+// 		});
+// 
+// 	const onObserverClose = jest.fn();
+// 
+// 	audioConsumer.observer.once('close', onObserverClose);
+// 
+// 	await new Promise((resolve) =>
+// 	{
+// 		audioConsumer.on('producerclose', resolve);
+// 		audioProducer.close();
+// 	});
+// 
+// 	expect(onObserverClose).toHaveBeenCalledTimes(1);
+// 	expect(audioConsumer.closed).toBe(true);
+// }, 2000);
+// 
+// test('Consumer emits "transportclose" if Transport is closed', async () =>
+// {
+// 	videoConsumer = await transport2.consume(
+// 		{
+// 			producerId      : videoProducer.id,
+// 			rtpCapabilities : consumerDeviceCapabilities
+// 		});
+// 
+// 	const onObserverClose = jest.fn();
+// 
+// 	videoConsumer.observer.once('close', onObserverClose);
+// 
+// 	await new Promise((resolve) =>
+// 	{
+// 		videoConsumer.on('transportclose', resolve);
+// 		transport2.close();
+// 	});
+// 
+// 	expect(onObserverClose).toHaveBeenCalledTimes(1);
+// 	expect(videoConsumer.closed).toBe(true);
+// 
+// 	await expect(router.dump())
+// 		.resolves
+// 		.toMatchObject(
+// 			{
+// 				mapProducerIdConsumerIds : {},
+// 				mapConsumerIdProducerId  : {}
+// 			});
+// }, 2000);

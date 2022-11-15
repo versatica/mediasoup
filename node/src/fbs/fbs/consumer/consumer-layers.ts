@@ -2,7 +2,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { OptionalUint16, OptionalUint16T } from '../../fbs/common/optional-uint16';
+import { OptionalInt16, OptionalInt16T } from '../../fbs/common/optional-int16';
 
 
 export class ConsumerLayers {
@@ -25,12 +25,12 @@ static getSizePrefixedRootAsConsumerLayers(bb:flatbuffers.ByteBuffer, obj?:Consu
 
 spatialLayer():number {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? this.bb!.readUint16(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readInt16(this.bb_pos + offset) : 0;
 }
 
-temporalLayer(obj?:OptionalUint16):OptionalUint16|null {
+temporalLayer(obj?:OptionalInt16):OptionalInt16|null {
   const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? (obj || new OptionalUint16()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? (obj || new OptionalInt16()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
 static startConsumerLayers(builder:flatbuffers.Builder) {
@@ -68,7 +68,7 @@ unpackTo(_o: ConsumerLayersT): void {
 export class ConsumerLayersT {
 constructor(
   public spatialLayer: number = 0,
-  public temporalLayer: OptionalUint16T|null = null
+  public temporalLayer: OptionalInt16T|null = null
 ){}
 
 

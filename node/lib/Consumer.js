@@ -6,6 +6,7 @@ const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const FbsRequest = require("./fbs/request_generated");
 const FbsTransport = require("./fbs/transport_generated");
 const FbsConsumer = require("./fbs/consumer_generated");
+const FbsCommon = require("./fbs/common_generated");
 const logger = new Logger_1.Logger('Consumer');
 class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -227,9 +228,34 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async setPreferredLayers({ spatialLayer, temporalLayer }) {
         logger.debug('setPreferredLayers()');
-        const reqData = { spatialLayer, temporalLayer };
-        const data = await this.#channel.request('consumer.setPreferredLayers', this.#internal.consumerId, reqData);
-        this.#preferredLayers = data || undefined;
+        const builder = this.#channel.bufferBuilder;
+        let temporalLayerOffset = 0;
+        // temporalLayer is optional.
+        if (temporalLayer) {
+            temporalLayerOffset = FbsCommon.OptionalInt16.createOptionalInt16(builder, temporalLayer);
+        }
+        FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
+        FbsConsumer.ConsumerLayers.addSpatialLayer(builder, spatialLayer);
+        FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayerOffset);
+        const preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
+        const requestOffset = FbsConsumer.SetPreferredLayersRequest.createSetPreferredLayersRequest(builder, preferredLayersOffset);
+        const response = await this.#channel.requestBinary(FbsRequest.Method.CONSUMER_SET_PREFERRED_LAYERS, FbsRequest.Body.FBS_Consumer_SetPreferredLayersRequest, requestOffset, this.#internal.consumerId);
+        /* Decode the response. */
+        const data = new FbsConsumer.SetPreferredLayersResponse();
+        let preferredLayers;
+        // Response is empty for non Simulcast Consumers.
+        if (response.body(data)) {
+            const status = data.unpack();
+            if (status.preferredLayers) {
+                preferredLayers = {
+                    spatialLayer: status.preferredLayers.spatialLayer,
+                    temporalLayer: status.preferredLayers.temporalLayer ?
+                        status.preferredLayers.temporalLayer.value :
+                        undefined
+                };
+            }
+        }
+        this.#preferredLayers = preferredLayers;
     }
     /**
      * Set priority.

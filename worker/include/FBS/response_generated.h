@@ -13,6 +13,7 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
               FLATBUFFERS_VERSION_REVISION == 8,
              "Non-compatible flatbuffers version included");
 
+#include "consumer_generated.h"
 #include "router_generated.h"
 #include "transport_generated.h"
 #include "webRtcServer_generated.h"
@@ -35,11 +36,12 @@ enum class Body : uint8_t {
   FBS_Transport_DumpResponse = 5,
   FBS_Transport_ProduceResponse = 6,
   FBS_Transport_ConsumeResponse = 7,
+  FBS_Consumer_SetPreferredLayersResponse = 8,
   MIN = NONE,
-  MAX = FBS_Transport_ConsumeResponse
+  MAX = FBS_Consumer_SetPreferredLayersResponse
 };
 
-inline const Body (&EnumValuesBody())[8] {
+inline const Body (&EnumValuesBody())[9] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_DumpResponse,
@@ -48,13 +50,14 @@ inline const Body (&EnumValuesBody())[8] {
     Body::FBS_Router_DumpResponse,
     Body::FBS_Transport_DumpResponse,
     Body::FBS_Transport_ProduceResponse,
-    Body::FBS_Transport_ConsumeResponse
+    Body::FBS_Transport_ConsumeResponse,
+    Body::FBS_Consumer_SetPreferredLayersResponse
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[9] = {
+  static const char * const names[10] = {
     "NONE",
     "FBS_Worker_DumpResponse",
     "FBS_Worker_ResourceUsageResponse",
@@ -63,13 +66,14 @@ inline const char * const *EnumNamesBody() {
     "FBS_Transport_DumpResponse",
     "FBS_Transport_ProduceResponse",
     "FBS_Transport_ConsumeResponse",
+    "FBS_Consumer_SetPreferredLayersResponse",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameBody(Body e) {
-  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Transport_ConsumeResponse)) return "";
+  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_Consumer_SetPreferredLayersResponse)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesBody()[index];
 }
@@ -104,6 +108,10 @@ template<> struct BodyTraits<FBS::Transport::ProduceResponse> {
 
 template<> struct BodyTraits<FBS::Transport::ConsumeResponse> {
   static const Body enum_value = Body::FBS_Transport_ConsumeResponse;
+};
+
+template<> struct BodyTraits<FBS::Consumer::SetPreferredLayersResponse> {
+  static const Body enum_value = Body::FBS_Consumer_SetPreferredLayersResponse;
 };
 
 bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body type);
@@ -154,6 +162,9 @@ struct Response FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Transport::ConsumeResponse *body_as_FBS_Transport_ConsumeResponse() const {
     return body_type() == FBS::Response::Body::FBS_Transport_ConsumeResponse ? static_cast<const FBS::Transport::ConsumeResponse *>(body()) : nullptr;
   }
+  const FBS::Consumer::SetPreferredLayersResponse *body_as_FBS_Consumer_SetPreferredLayersResponse() const {
+    return body_type() == FBS::Response::Body::FBS_Consumer_SetPreferredLayersResponse ? static_cast<const FBS::Consumer::SetPreferredLayersResponse *>(body()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_ID, 4) &&
@@ -191,6 +202,10 @@ template<> inline const FBS::Transport::ProduceResponse *Response::body_as<FBS::
 
 template<> inline const FBS::Transport::ConsumeResponse *Response::body_as<FBS::Transport::ConsumeResponse>() const {
   return body_as_FBS_Transport_ConsumeResponse();
+}
+
+template<> inline const FBS::Consumer::SetPreferredLayersResponse *Response::body_as<FBS::Consumer::SetPreferredLayersResponse>() const {
+  return body_as_FBS_Consumer_SetPreferredLayersResponse();
 }
 
 struct ResponseBuilder {
@@ -267,6 +282,10 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
       auto ptr = reinterpret_cast<const FBS::Transport::ConsumeResponse *>(obj);
       return verifier.VerifyTable(ptr);
     }
+    case Body::FBS_Consumer_SetPreferredLayersResponse: {
+      auto ptr = reinterpret_cast<const FBS::Consumer::SetPreferredLayersResponse *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
     default: return true;
   }
 }
@@ -292,7 +311,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 3 },
     { flatbuffers::ET_SEQUENCE, 0, 4 },
     { flatbuffers::ET_SEQUENCE, 0, 5 },
-    { flatbuffers::ET_SEQUENCE, 0, 6 }
+    { flatbuffers::ET_SEQUENCE, 0, 6 },
+    { flatbuffers::ET_SEQUENCE, 0, 7 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::DumpResponseTypeTable,
@@ -301,7 +321,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Router::DumpResponseTypeTable,
     FBS::Transport::DumpResponseTypeTable,
     FBS::Transport::ProduceResponseTypeTable,
-    FBS::Transport::ConsumeResponseTypeTable
+    FBS::Transport::ConsumeResponseTypeTable,
+    FBS::Consumer::SetPreferredLayersResponseTypeTable
   };
   static const char * const names[] = {
     "NONE",
@@ -311,10 +332,11 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Router_DumpResponse",
     "FBS_Transport_DumpResponse",
     "FBS_Transport_ProduceResponse",
-    "FBS_Transport_ConsumeResponse"
+    "FBS_Transport_ConsumeResponse",
+    "FBS_Consumer_SetPreferredLayersResponse"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 8, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 9, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

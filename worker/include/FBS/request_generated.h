@@ -248,14 +248,15 @@ enum class Body : uint8_t {
   FBS_Transport_CloseDataProducerRequest = 21,
   FBS_Transport_CloseDataConsumerRequest = 22,
   FBS_Producer_EnableTraceEventRequest = 23,
-  FBS_Consumer_EnableTraceEventRequest = 24,
-  FBS_RtpObserver_AddProducerRequest = 25,
-  FBS_RtpObserver_RemoveProducerRequest = 26,
+  FBS_Consumer_SetPreferredLayersRequest = 24,
+  FBS_Consumer_EnableTraceEventRequest = 25,
+  FBS_RtpObserver_AddProducerRequest = 26,
+  FBS_RtpObserver_RemoveProducerRequest = 27,
   MIN = NONE,
   MAX = FBS_RtpObserver_RemoveProducerRequest
 };
 
-inline const Body (&EnumValuesBody())[27] {
+inline const Body (&EnumValuesBody())[28] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_UpdateSettingsRequest,
@@ -281,6 +282,7 @@ inline const Body (&EnumValuesBody())[27] {
     Body::FBS_Transport_CloseDataProducerRequest,
     Body::FBS_Transport_CloseDataConsumerRequest,
     Body::FBS_Producer_EnableTraceEventRequest,
+    Body::FBS_Consumer_SetPreferredLayersRequest,
     Body::FBS_Consumer_EnableTraceEventRequest,
     Body::FBS_RtpObserver_AddProducerRequest,
     Body::FBS_RtpObserver_RemoveProducerRequest
@@ -289,7 +291,7 @@ inline const Body (&EnumValuesBody())[27] {
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[28] = {
+  static const char * const names[29] = {
     "NONE",
     "FBS_Worker_UpdateSettingsRequest",
     "FBS_Worker_CreateWebRtcServerRequest",
@@ -314,6 +316,7 @@ inline const char * const *EnumNamesBody() {
     "FBS_Transport_CloseDataProducerRequest",
     "FBS_Transport_CloseDataConsumerRequest",
     "FBS_Producer_EnableTraceEventRequest",
+    "FBS_Consumer_SetPreferredLayersRequest",
     "FBS_Consumer_EnableTraceEventRequest",
     "FBS_RtpObserver_AddProducerRequest",
     "FBS_RtpObserver_RemoveProducerRequest",
@@ -422,6 +425,10 @@ template<> struct BodyTraits<FBS::Transport::CloseDataConsumerRequest> {
 
 template<> struct BodyTraits<FBS::Producer::EnableTraceEventRequest> {
   static const Body enum_value = Body::FBS_Producer_EnableTraceEventRequest;
+};
+
+template<> struct BodyTraits<FBS::Consumer::SetPreferredLayersRequest> {
+  static const Body enum_value = Body::FBS_Consumer_SetPreferredLayersRequest;
 };
 
 template<> struct BodyTraits<FBS::Consumer::EnableTraceEventRequest> {
@@ -536,6 +543,9 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Producer::EnableTraceEventRequest *body_as_FBS_Producer_EnableTraceEventRequest() const {
     return body_type() == FBS::Request::Body::FBS_Producer_EnableTraceEventRequest ? static_cast<const FBS::Producer::EnableTraceEventRequest *>(body()) : nullptr;
   }
+  const FBS::Consumer::SetPreferredLayersRequest *body_as_FBS_Consumer_SetPreferredLayersRequest() const {
+    return body_type() == FBS::Request::Body::FBS_Consumer_SetPreferredLayersRequest ? static_cast<const FBS::Consumer::SetPreferredLayersRequest *>(body()) : nullptr;
+  }
   const FBS::Consumer::EnableTraceEventRequest *body_as_FBS_Consumer_EnableTraceEventRequest() const {
     return body_type() == FBS::Request::Body::FBS_Consumer_EnableTraceEventRequest ? static_cast<const FBS::Consumer::EnableTraceEventRequest *>(body()) : nullptr;
   }
@@ -648,6 +658,10 @@ template<> inline const FBS::Transport::CloseDataConsumerRequest *Request::body_
 
 template<> inline const FBS::Producer::EnableTraceEventRequest *Request::body_as<FBS::Producer::EnableTraceEventRequest>() const {
   return body_as_FBS_Producer_EnableTraceEventRequest();
+}
+
+template<> inline const FBS::Consumer::SetPreferredLayersRequest *Request::body_as<FBS::Consumer::SetPreferredLayersRequest>() const {
+  return body_as_FBS_Consumer_SetPreferredLayersRequest();
 }
 
 template<> inline const FBS::Consumer::EnableTraceEventRequest *Request::body_as<FBS::Consumer::EnableTraceEventRequest>() const {
@@ -820,6 +834,10 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     }
     case Body::FBS_Producer_EnableTraceEventRequest: {
       auto ptr = reinterpret_cast<const FBS::Producer::EnableTraceEventRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Consumer_SetPreferredLayersRequest: {
+      auto ptr = reinterpret_cast<const FBS::Consumer::SetPreferredLayersRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case Body::FBS_Consumer_EnableTraceEventRequest: {
@@ -1006,7 +1024,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 22 },
     { flatbuffers::ET_SEQUENCE, 0, 23 },
     { flatbuffers::ET_SEQUENCE, 0, 24 },
-    { flatbuffers::ET_SEQUENCE, 0, 25 }
+    { flatbuffers::ET_SEQUENCE, 0, 25 },
+    { flatbuffers::ET_SEQUENCE, 0, 26 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::UpdateSettingsRequestTypeTable,
@@ -1032,6 +1051,7 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Transport::CloseDataProducerRequestTypeTable,
     FBS::Transport::CloseDataConsumerRequestTypeTable,
     FBS::Producer::EnableTraceEventRequestTypeTable,
+    FBS::Consumer::SetPreferredLayersRequestTypeTable,
     FBS::Consumer::EnableTraceEventRequestTypeTable,
     FBS::RtpObserver::AddProducerRequestTypeTable,
     FBS::RtpObserver::RemoveProducerRequestTypeTable
@@ -1061,12 +1081,13 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Transport_CloseDataProducerRequest",
     "FBS_Transport_CloseDataConsumerRequest",
     "FBS_Producer_EnableTraceEventRequest",
+    "FBS_Consumer_SetPreferredLayersRequest",
     "FBS_Consumer_EnableTraceEventRequest",
     "FBS_RtpObserver_AddProducerRequest",
     "FBS_RtpObserver_RemoveProducerRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 27, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 28, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

@@ -631,7 +631,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
             FbsConsumer.ConsumerLayers.addSpatialLayer(builder, preferredLayers.spatialLayer);
             if (preferredLayers.temporalLayer) {
-                const temporalLayerOffset = FbsCommon.OptionalUint16.createOptionalUint16(builder, preferredLayers.temporalLayer);
+                const temporalLayerOffset = FbsCommon.OptionalInt16.createOptionalInt16(builder, preferredLayers.temporalLayer);
                 FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayerOffset);
             }
             preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);

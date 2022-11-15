@@ -1,7 +1,8 @@
-include "router.fbs";
-include "transport.fbs";
-include "webRtcServer.fbs";
 include "worker.fbs";
+include "router.fbs";
+include "webRtcServer.fbs";
+include "transport.fbs";
+include "consumer.fbs";
 
 namespace FBS.Response;
 
@@ -13,6 +14,7 @@ union Body {
   FBS.Transport.DumpResponse,
   FBS.Transport.ProduceResponse,
   FBS.Transport.ConsumeResponse,
+  FBS.Consumer.SetPreferredLayersResponse,
 }
 
 table Response {

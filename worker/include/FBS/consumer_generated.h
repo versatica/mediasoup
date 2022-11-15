@@ -24,12 +24,22 @@ struct ConsumerLayersBuilder;
 struct ConsumerScore;
 struct ConsumerScoreBuilder;
 
+struct SetPreferredLayersRequest;
+struct SetPreferredLayersRequestBuilder;
+
+struct SetPreferredLayersResponse;
+struct SetPreferredLayersResponseBuilder;
+
 struct EnableTraceEventRequest;
 struct EnableTraceEventRequestBuilder;
 
 inline const flatbuffers::TypeTable *ConsumerLayersTypeTable();
 
 inline const flatbuffers::TypeTable *ConsumerScoreTypeTable();
+
+inline const flatbuffers::TypeTable *SetPreferredLayersRequestTypeTable();
+
+inline const flatbuffers::TypeTable *SetPreferredLayersResponseTypeTable();
 
 inline const flatbuffers::TypeTable *EnableTraceEventRequestTypeTable();
 
@@ -42,15 +52,15 @@ struct ConsumerLayers FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_SPATIALLAYER = 4,
     VT_TEMPORALLAYER = 6
   };
-  uint16_t spatialLayer() const {
-    return GetField<uint16_t>(VT_SPATIALLAYER, 0);
+  int16_t spatialLayer() const {
+    return GetField<int16_t>(VT_SPATIALLAYER, 0);
   }
-  const FBS::Common::OptionalUint16 *temporalLayer() const {
-    return GetPointer<const FBS::Common::OptionalUint16 *>(VT_TEMPORALLAYER);
+  const FBS::Common::OptionalInt16 *temporalLayer() const {
+    return GetPointer<const FBS::Common::OptionalInt16 *>(VT_TEMPORALLAYER);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint16_t>(verifier, VT_SPATIALLAYER, 2) &&
+           VerifyField<int16_t>(verifier, VT_SPATIALLAYER, 2) &&
            VerifyOffset(verifier, VT_TEMPORALLAYER) &&
            verifier.VerifyTable(temporalLayer()) &&
            verifier.EndTable();
@@ -61,10 +71,10 @@ struct ConsumerLayersBuilder {
   typedef ConsumerLayers Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_spatialLayer(uint16_t spatialLayer) {
-    fbb_.AddElement<uint16_t>(ConsumerLayers::VT_SPATIALLAYER, spatialLayer, 0);
+  void add_spatialLayer(int16_t spatialLayer) {
+    fbb_.AddElement<int16_t>(ConsumerLayers::VT_SPATIALLAYER, spatialLayer, 0);
   }
-  void add_temporalLayer(flatbuffers::Offset<FBS::Common::OptionalUint16> temporalLayer) {
+  void add_temporalLayer(flatbuffers::Offset<FBS::Common::OptionalInt16> temporalLayer) {
     fbb_.AddOffset(ConsumerLayers::VT_TEMPORALLAYER, temporalLayer);
   }
   explicit ConsumerLayersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
@@ -80,8 +90,8 @@ struct ConsumerLayersBuilder {
 
 inline flatbuffers::Offset<ConsumerLayers> CreateConsumerLayers(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint16_t spatialLayer = 0,
-    flatbuffers::Offset<FBS::Common::OptionalUint16> temporalLayer = 0) {
+    int16_t spatialLayer = 0,
+    flatbuffers::Offset<FBS::Common::OptionalInt16> temporalLayer = 0) {
   ConsumerLayersBuilder builder_(_fbb);
   builder_.add_temporalLayer(temporalLayer);
   builder_.add_spatialLayer(spatialLayer);
@@ -166,6 +176,97 @@ inline flatbuffers::Offset<ConsumerScore> CreateConsumerScoreDirect(
       producerScores__);
 }
 
+struct SetPreferredLayersRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SetPreferredLayersRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SetPreferredLayersRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PREFERREDLAYERS = 4
+  };
+  const FBS::Consumer::ConsumerLayers *preferredLayers() const {
+    return GetPointer<const FBS::Consumer::ConsumerLayers *>(VT_PREFERREDLAYERS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_PREFERREDLAYERS) &&
+           verifier.VerifyTable(preferredLayers()) &&
+           verifier.EndTable();
+  }
+};
+
+struct SetPreferredLayersRequestBuilder {
+  typedef SetPreferredLayersRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_preferredLayers(flatbuffers::Offset<FBS::Consumer::ConsumerLayers> preferredLayers) {
+    fbb_.AddOffset(SetPreferredLayersRequest::VT_PREFERREDLAYERS, preferredLayers);
+  }
+  explicit SetPreferredLayersRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SetPreferredLayersRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SetPreferredLayersRequest>(end);
+    fbb_.Required(o, SetPreferredLayersRequest::VT_PREFERREDLAYERS);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SetPreferredLayersRequest> CreateSetPreferredLayersRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Consumer::ConsumerLayers> preferredLayers = 0) {
+  SetPreferredLayersRequestBuilder builder_(_fbb);
+  builder_.add_preferredLayers(preferredLayers);
+  return builder_.Finish();
+}
+
+struct SetPreferredLayersResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SetPreferredLayersResponseBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SetPreferredLayersResponseTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PREFERREDLAYERS = 4
+  };
+  const FBS::Consumer::ConsumerLayers *preferredLayers() const {
+    return GetPointer<const FBS::Consumer::ConsumerLayers *>(VT_PREFERREDLAYERS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_PREFERREDLAYERS) &&
+           verifier.VerifyTable(preferredLayers()) &&
+           verifier.EndTable();
+  }
+};
+
+struct SetPreferredLayersResponseBuilder {
+  typedef SetPreferredLayersResponse Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_preferredLayers(flatbuffers::Offset<FBS::Consumer::ConsumerLayers> preferredLayers) {
+    fbb_.AddOffset(SetPreferredLayersResponse::VT_PREFERREDLAYERS, preferredLayers);
+  }
+  explicit SetPreferredLayersResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SetPreferredLayersResponse> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SetPreferredLayersResponse>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SetPreferredLayersResponse> CreateSetPreferredLayersResponse(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Consumer::ConsumerLayers> preferredLayers = 0) {
+  SetPreferredLayersResponseBuilder builder_(_fbb);
+  builder_.add_preferredLayers(preferredLayers);
+  return builder_.Finish();
+}
+
 struct EnableTraceEventRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef EnableTraceEventRequestBuilder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
@@ -224,11 +325,11 @@ inline flatbuffers::Offset<EnableTraceEventRequest> CreateEnableTraceEventReques
 
 inline const flatbuffers::TypeTable *ConsumerLayersTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_SHORT, 0, -1 },
     { flatbuffers::ET_SEQUENCE, 0, 0 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Common::OptionalUint16TypeTable
+    FBS::Common::OptionalInt16TypeTable
   };
   static const char * const names[] = {
     "spatialLayer",
@@ -253,6 +354,38 @@ inline const flatbuffers::TypeTable *ConsumerScoreTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 3, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SetPreferredLayersRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Consumer::ConsumerLayersTypeTable
+  };
+  static const char * const names[] = {
+    "preferredLayers"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SetPreferredLayersResponseTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Consumer::ConsumerLayersTypeTable
+  };
+  static const char * const names[] = {
+    "preferredLayers"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
 const enable_trace_event_request_1 = require("../../fbs/consumer/enable-trace-event-request");
+const set_preferred_layers_request_1 = require("../../fbs/consumer/set-preferred-layers-request");
 const enable_trace_event_request_2 = require("../../fbs/producer/enable-trace-event-request");
 const close_rtp_observer_request_1 = require("../../fbs/router/close-rtp-observer-request");
 const close_transport_request_1 = require("../../fbs/router/close-transport-request");
@@ -54,9 +55,10 @@ var Body;
     Body[Body["FBS_Transport_CloseDataProducerRequest"] = 21] = "FBS_Transport_CloseDataProducerRequest";
     Body[Body["FBS_Transport_CloseDataConsumerRequest"] = 22] = "FBS_Transport_CloseDataConsumerRequest";
     Body[Body["FBS_Producer_EnableTraceEventRequest"] = 23] = "FBS_Producer_EnableTraceEventRequest";
-    Body[Body["FBS_Consumer_EnableTraceEventRequest"] = 24] = "FBS_Consumer_EnableTraceEventRequest";
-    Body[Body["FBS_RtpObserver_AddProducerRequest"] = 25] = "FBS_RtpObserver_AddProducerRequest";
-    Body[Body["FBS_RtpObserver_RemoveProducerRequest"] = 26] = "FBS_RtpObserver_RemoveProducerRequest";
+    Body[Body["FBS_Consumer_SetPreferredLayersRequest"] = 24] = "FBS_Consumer_SetPreferredLayersRequest";
+    Body[Body["FBS_Consumer_EnableTraceEventRequest"] = 25] = "FBS_Consumer_EnableTraceEventRequest";
+    Body[Body["FBS_RtpObserver_AddProducerRequest"] = 26] = "FBS_RtpObserver_AddProducerRequest";
+    Body[Body["FBS_RtpObserver_RemoveProducerRequest"] = 27] = "FBS_RtpObserver_RemoveProducerRequest";
 })(Body = exports.Body || (exports.Body = {}));
 function unionToBody(type, accessor) {
     switch (Body[type]) {
@@ -84,6 +86,7 @@ function unionToBody(type, accessor) {
         case 'FBS_Transport_CloseDataProducerRequest': return accessor(new close_data_producer_request_1.CloseDataProducerRequest());
         case 'FBS_Transport_CloseDataConsumerRequest': return accessor(new close_data_consumer_request_1.CloseDataConsumerRequest());
         case 'FBS_Producer_EnableTraceEventRequest': return accessor(new enable_trace_event_request_2.EnableTraceEventRequest());
+        case 'FBS_Consumer_SetPreferredLayersRequest': return accessor(new set_preferred_layers_request_1.SetPreferredLayersRequest());
         case 'FBS_Consumer_EnableTraceEventRequest': return accessor(new enable_trace_event_request_1.EnableTraceEventRequest());
         case 'FBS_RtpObserver_AddProducerRequest': return accessor(new add_producer_request_1.AddProducerRequest());
         case 'FBS_RtpObserver_RemoveProducerRequest': return accessor(new remove_producer_request_1.RemoveProducerRequest());
@@ -117,6 +120,7 @@ function unionListToBody(type, accessor, index) {
         case 'FBS_Transport_CloseDataProducerRequest': return accessor(index, new close_data_producer_request_1.CloseDataProducerRequest());
         case 'FBS_Transport_CloseDataConsumerRequest': return accessor(index, new close_data_consumer_request_1.CloseDataConsumerRequest());
         case 'FBS_Producer_EnableTraceEventRequest': return accessor(index, new enable_trace_event_request_2.EnableTraceEventRequest());
+        case 'FBS_Consumer_SetPreferredLayersRequest': return accessor(index, new set_preferred_layers_request_1.SetPreferredLayersRequest());
         case 'FBS_Consumer_EnableTraceEventRequest': return accessor(index, new enable_trace_event_request_1.EnableTraceEventRequest());
         case 'FBS_RtpObserver_AddProducerRequest': return accessor(index, new add_producer_request_1.AddProducerRequest());
         case 'FBS_RtpObserver_RemoveProducerRequest': return accessor(index, new remove_producer_request_1.RemoveProducerRequest());

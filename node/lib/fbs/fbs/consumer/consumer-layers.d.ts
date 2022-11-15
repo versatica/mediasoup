@@ -1,5 +1,5 @@
 import * as flatbuffers from 'flatbuffers';
-import { OptionalUint16, OptionalUint16T } from '../../fbs/common/optional-uint16';
+import { OptionalInt16, OptionalInt16T } from '../../fbs/common/optional-int16';
 export declare class ConsumerLayers {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;
@@ -7,7 +7,7 @@ export declare class ConsumerLayers {
     static getRootAsConsumerLayers(bb: flatbuffers.ByteBuffer, obj?: ConsumerLayers): ConsumerLayers;
     static getSizePrefixedRootAsConsumerLayers(bb: flatbuffers.ByteBuffer, obj?: ConsumerLayers): ConsumerLayers;
     spatialLayer(): number;
-    temporalLayer(obj?: OptionalUint16): OptionalUint16 | null;
+    temporalLayer(obj?: OptionalInt16): OptionalInt16 | null;
     static startConsumerLayers(builder: flatbuffers.Builder): void;
     static addSpatialLayer(builder: flatbuffers.Builder, spatialLayer: number): void;
     static addTemporalLayer(builder: flatbuffers.Builder, temporalLayerOffset: flatbuffers.Offset): void;
@@ -17,8 +17,8 @@ export declare class ConsumerLayers {
 }
 export declare class ConsumerLayersT {
     spatialLayer: number;
-    temporalLayer: OptionalUint16T | null;
-    constructor(spatialLayer?: number, temporalLayer?: OptionalUint16T | null);
+    temporalLayer: OptionalInt16T | null;
+    constructor(spatialLayer?: number, temporalLayer?: OptionalInt16T | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=consumer-layers.d.ts.map

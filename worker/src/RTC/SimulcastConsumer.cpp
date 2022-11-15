@@ -212,34 +212,21 @@ namespace RTC
 				auto previousPreferredSpatialLayer  = this->preferredSpatialLayer;
 				auto previousPreferredTemporalLayer = this->preferredTemporalLayer;
 
-				auto jsonSpatialLayerIt  = request->data.find("spatialLayer");
-				auto jsonTemporalLayerIt = request->data.find("temporalLayer");
+				auto body = request->_data->body_as<FBS::Consumer::SetPreferredLayersRequest>();
+
+				auto preferredLayers = body->preferredLayers();
 
 				// Spatial layer.
-				// clang-format off
-				if (
-					jsonSpatialLayerIt == request->data.end() ||
-					!Utils::Json::IsPositiveInteger(*jsonSpatialLayerIt)
-				)
-				// clang-format on
-				{
-					MS_THROW_TYPE_ERROR("missing spatialLayer");
-				}
-
-				this->preferredSpatialLayer = jsonSpatialLayerIt->get<int16_t>();
+				this->preferredSpatialLayer = preferredLayers->spatialLayer();
 
 				if (this->preferredSpatialLayer > this->rtpStream->GetSpatialLayers() - 1)
 					this->preferredSpatialLayer = this->rtpStream->GetSpatialLayers() - 1;
 
 				// preferredTemporaLayer is optional.
-				// clang-format off
-				if (
-					jsonTemporalLayerIt != request->data.end() &&
-					Utils::Json::IsPositiveInteger(*jsonTemporalLayerIt)
-				)
-				// clang-format on
+				if (flatbuffers::IsFieldPresent(
+							preferredLayers, FBS::Consumer::ConsumerLayers::VT_TEMPORALLAYER))
 				{
-					this->preferredTemporalLayer = jsonTemporalLayerIt->get<int16_t>();
+					this->preferredTemporalLayer = preferredLayers->temporalLayer()->value();
 
 					if (this->preferredTemporalLayer > this->rtpStream->GetTemporalLayers() - 1)
 						this->preferredTemporalLayer = this->rtpStream->GetTemporalLayers() - 1;
@@ -255,12 +242,11 @@ namespace RTC
 				  this->preferredTemporalLayer,
 				  this->id.c_str());
 
-				json data = json::object();
+				auto temporalLayerOffset = FBS::Common::CreateOptionalInt16(request->GetBufferBuilder(), this->preferredTemporalLayer);
+				auto preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(request->GetBufferBuilder(), this->preferredSpatialLayer, temporalLayerOffset);
+				auto responseOffset = FBS::Consumer::CreateSetPreferredLayersResponse(request->GetBufferBuilder(), preferredLayersOffset);
 
-				data["spatialLayer"]  = this->preferredSpatialLayer;
-				data["temporalLayer"] = this->preferredTemporalLayer;
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_Consumer_SetPreferredLayersResponse, responseOffset);
 
 				// clang-format off
 				if (

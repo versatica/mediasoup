@@ -16,8 +16,8 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
 namespace FBS {
 namespace Common {
 
-struct OptionalUint16;
-struct OptionalUint16Builder;
+struct OptionalInt16;
+struct OptionalInt16Builder;
 
 struct StringString;
 struct StringStringBuilder;
@@ -34,7 +34,7 @@ struct Uint32StringBuilder;
 struct StringStringArray;
 struct StringStringArrayBuilder;
 
-inline const flatbuffers::TypeTable *OptionalUint16TypeTable();
+inline const flatbuffers::TypeTable *OptionalInt16TypeTable();
 
 inline const flatbuffers::TypeTable *StringStringTypeTable();
 
@@ -46,46 +46,46 @@ inline const flatbuffers::TypeTable *Uint32StringTypeTable();
 
 inline const flatbuffers::TypeTable *StringStringArrayTypeTable();
 
-struct OptionalUint16 FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
-  typedef OptionalUint16Builder Builder;
+struct OptionalInt16 FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef OptionalInt16Builder Builder;
   static const flatbuffers::TypeTable *MiniReflectTypeTable() {
-    return OptionalUint16TypeTable();
+    return OptionalInt16TypeTable();
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_VALUE = 4
   };
-  uint16_t value() const {
-    return GetField<uint16_t>(VT_VALUE, 0);
+  int16_t value() const {
+    return GetField<int16_t>(VT_VALUE, 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<uint16_t>(verifier, VT_VALUE, 2) &&
+           VerifyField<int16_t>(verifier, VT_VALUE, 2) &&
            verifier.EndTable();
   }
 };
 
-struct OptionalUint16Builder {
-  typedef OptionalUint16 Table;
+struct OptionalInt16Builder {
+  typedef OptionalInt16 Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_value(uint16_t value) {
-    fbb_.AddElement<uint16_t>(OptionalUint16::VT_VALUE, value, 0);
+  void add_value(int16_t value) {
+    fbb_.AddElement<int16_t>(OptionalInt16::VT_VALUE, value, 0);
   }
-  explicit OptionalUint16Builder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit OptionalInt16Builder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  flatbuffers::Offset<OptionalUint16> Finish() {
+  flatbuffers::Offset<OptionalInt16> Finish() {
     const auto end = fbb_.EndTable(start_);
-    auto o = flatbuffers::Offset<OptionalUint16>(end);
+    auto o = flatbuffers::Offset<OptionalInt16>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<OptionalUint16> CreateOptionalUint16(
+inline flatbuffers::Offset<OptionalInt16> CreateOptionalInt16(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint16_t value = 0) {
-  OptionalUint16Builder builder_(_fbb);
+    int16_t value = 0) {
+  OptionalInt16Builder builder_(_fbb);
   builder_.add_value(value);
   return builder_.Finish();
 }
@@ -431,9 +431,9 @@ inline flatbuffers::Offset<StringStringArray> CreateStringStringArrayDirect(
       values__);
 }
 
-inline const flatbuffers::TypeTable *OptionalUint16TypeTable() {
+inline const flatbuffers::TypeTable *OptionalInt16TypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
-    { flatbuffers::ET_USHORT, 0, -1 }
+    { flatbuffers::ET_SHORT, 0, -1 }
   };
   static const char * const names[] = {
     "value"

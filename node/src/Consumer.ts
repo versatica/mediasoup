@@ -10,8 +10,10 @@ import {
 	RtpParameters
 } from './RtpParameters';
 import * as FbsRequest from './fbs/request_generated';
+import * as FbsResponse from './fbs/response_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsConsumer from './fbs/consumer_generated';
+import * as FbsCommon from './fbs/common_generated';
 
 export type ConsumerOptions =
 {
@@ -556,12 +558,56 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('setPreferredLayers()');
 
-		const reqData = { spatialLayer, temporalLayer };
+		const builder = this.#channel.bufferBuilder;
 
-		const data = await this.#channel.request(
-			'consumer.setPreferredLayers', this.#internal.consumerId, reqData);
+		let temporalLayerOffset = 0;
 
-		this.#preferredLayers = data || undefined;
+		// temporalLayer is optional.
+		if (temporalLayer)
+		{
+			temporalLayerOffset = FbsCommon.OptionalInt16.createOptionalInt16(
+				builder, temporalLayer
+			);
+		}
+
+		FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
+		FbsConsumer.ConsumerLayers.addSpatialLayer(builder, spatialLayer);
+		FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayerOffset);
+
+		const preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
+		const requestOffset =
+			FbsConsumer.SetPreferredLayersRequest.createSetPreferredLayersRequest(
+				builder, preferredLayersOffset);
+
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.CONSUMER_SET_PREFERRED_LAYERS,
+			FbsRequest.Body.FBS_Consumer_SetPreferredLayersRequest,
+			requestOffset,
+			this.#internal.consumerId
+		);
+
+		/* Decode the response. */
+		const data = new FbsConsumer.SetPreferredLayersResponse();
+
+		let preferredLayers: ConsumerLayers | undefined;
+
+		// Response is empty for non Simulcast Consumers.
+		if (response.body(data))
+		{
+			const status = data.unpack();
+
+			if (status.preferredLayers)
+			{
+				preferredLayers = {
+					spatialLayer  : status.preferredLayers.spatialLayer,
+					temporalLayer : status.preferredLayers.temporalLayer ?
+						status.preferredLayers.temporalLayer.value :
+						undefined
+				};
+			}
+		}
+
+		this.#preferredLayers = preferredLayers;
 	}
 
 	/**

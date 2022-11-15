@@ -1114,7 +1114,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 			if (preferredLayers.temporalLayer)
 			{
-				const temporalLayerOffset = FbsCommon.OptionalUint16.createOptionalUint16(
+				const temporalLayerOffset = FbsCommon.OptionalInt16.createOptionalInt16(
 					builder, preferredLayers.temporalLayer
 				);
 

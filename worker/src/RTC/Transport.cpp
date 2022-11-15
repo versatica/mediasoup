@@ -975,7 +975,7 @@ namespace RTC
 				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
 				{
 					auto temporalLayerOffset =
-					  FBS::Common::CreateOptionalUint16(request->GetBufferBuilder(), preferredLayers.temporal);
+					  FBS::Common::CreateOptionalInt16(request->GetBufferBuilder(), preferredLayers.temporal);
 
 					preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
 					  request->GetBufferBuilder(), preferredLayers.spatial, temporalLayerOffset);

@@ -25,7 +25,6 @@ namespace Channel
 		{ "producer.getStats",                           FBS::Request::Method::PRODUCER_GET_STATS                               },
 		{ "consumer.dump",                               FBS::Request::Method::CONSUMER_DUMP                                    },
 		{ "consumer.getStats",                           FBS::Request::Method::CONSUMER_GET_STATS                               },
-		{ "consumer.setPreferredLayers",                 FBS::Request::Method::CONSUMER_SET_PREFERRED_LAYERS                    },
 		{ "consumer.setPriority",                        FBS::Request::Method::CONSUMER_SET_PRIORITY                            },
 		{ "dataProducer.dump",                           FBS::Request::Method::DATA_PRODUCER_DUMP                               },
 		{ "dataProducer.getStats",                       FBS::Request::Method::DATA_PRODUCER_GET_STATS                          },

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConsumerLayersT = exports.ConsumerLayers = void 0;
 const flatbuffers = require("flatbuffers");
-const optional_uint16_1 = require("../../fbs/common/optional-uint16");
+const optional_int16_1 = require("../../fbs/common/optional-int16");
 class ConsumerLayers {
     bb = null;
     bb_pos = 0;
@@ -21,11 +21,11 @@ class ConsumerLayers {
     }
     spatialLayer() {
         const offset = this.bb.__offset(this.bb_pos, 4);
-        return offset ? this.bb.readUint16(this.bb_pos + offset) : 0;
+        return offset ? this.bb.readInt16(this.bb_pos + offset) : 0;
     }
     temporalLayer(obj) {
         const offset = this.bb.__offset(this.bb_pos, 6);
-        return offset ? (obj || new optional_uint16_1.OptionalUint16()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+        return offset ? (obj || new optional_int16_1.OptionalInt16()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
     }
     static startConsumerLayers(builder) {
         builder.startObject(2);

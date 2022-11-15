@@ -1,3 +1,4 @@
+import { SetPreferredLayersResponse } from '../../fbs/consumer/set-preferred-layers-response';
 import { DumpResponse as FBS_Router_DumpResponse } from '../../fbs/router/dump-response';
 import { ConsumeResponse } from '../../fbs/transport/consume-response';
 import { DumpResponse as FBS_Transport_DumpResponse } from '../../fbs/transport/dump-response';
@@ -13,8 +14,9 @@ export declare enum Body {
     FBS_Router_DumpResponse = 4,
     FBS_Transport_DumpResponse = 5,
     FBS_Transport_ProduceResponse = 6,
-    FBS_Transport_ConsumeResponse = 7
+    FBS_Transport_ConsumeResponse = 7,
+    FBS_Consumer_SetPreferredLayersResponse = 8
 }
-export declare function unionToBody(type: Body, accessor: (obj: ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse) => ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse | null): ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse | null;
-export declare function unionListToBody(type: Body, accessor: (index: number, obj: ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse) => ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse | null, index: number): ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse | null;
+export declare function unionToBody(type: Body, accessor: (obj: ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse | SetPreferredLayersResponse) => ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse | SetPreferredLayersResponse | null): ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse | SetPreferredLayersResponse | null;
+export declare function unionListToBody(type: Body, accessor: (index: number, obj: ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse | SetPreferredLayersResponse) => ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse | SetPreferredLayersResponse | null, index: number): ConsumeResponse | DumpResponse | FBS_Router_DumpResponse | FBS_Transport_DumpResponse | FBS_WebRtcServer_DumpResponse | ProduceResponse | ResourceUsageResponse | SetPreferredLayersResponse | null;
 //# sourceMappingURL=body.d.ts.map
