@@ -324,12 +324,12 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			threshold
 		).pack(builder);
 
-		this.#channel.requestBinary(
+		await this.#channel.requestBinary(
 			FbsRequest.Method.DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
 			FbsRequest.Body.FBS_DataConsumer_SetBufferedAmountLowThresholdRequest,
 			requestOffset,
 			this.#internal.dataConsumerId
-		).catch(() => {});
+		);
 	}
 
 	/**
