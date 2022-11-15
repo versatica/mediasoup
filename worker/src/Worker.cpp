@@ -27,8 +27,8 @@ Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannel
 	// Set the SignalHandler.
 	this->signalsHandler = new SignalsHandler(this);
 
-	// Set up the Globals singleton.
-	this->globals = new Globals(
+	// Set up the RTC::Shared singleton.
+	this->shared = new RTC::Shared(
 	  /*channelMessageRegistrator*/ new ChannelMessageRegistrator(),
 	  /*channelNotifier*/ new Channel::ChannelNotifier(this->channel),
 	  /*payloadChannelNotifier*/ new PayloadChannel::PayloadChannelNotifier(this->payloadChannel));
@@ -45,7 +45,7 @@ Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannel
 	DepUsrSCTP::CreateChecker();
 
 	// Tell the Node process that we are running.
-	this->globals->channelNotifier->Emit(Logger::pid, "running");
+	this->shared->channelNotifier->Emit(Logger::pid, "running");
 
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();
@@ -90,8 +90,8 @@ void Worker::Close()
 	}
 	this->mapWebRtcServers.clear();
 
-	// Delete the Globals singleton.
-	delete this->globals;
+	// Delete the RTC::Shared singleton.
+	delete this->shared;
 
 	// Close the Checker instance in DepUsrSCTP.
 	DepUsrSCTP::CloseChecker();
@@ -136,7 +136,7 @@ void Worker::FillJson(json& jsonObject) const
 	jsonObject["channelMessageHandlers"] = json::object();
 	auto jsonChannelMessageHandlersIt    = jsonObject.find("channelMessageHandlers");
 
-	this->globals->channelMessageRegistrator->FillJson(*jsonChannelMessageHandlersIt);
+	this->shared->channelMessageRegistrator->FillJson(*jsonChannelMessageHandlersIt);
 }
 
 void Worker::FillJsonResourceUsage(json& jsonObject) const
@@ -328,7 +328,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 				SetNewWebRtcServerIdFromData(request->data, webRtcServerId);
 
-				auto* webRtcServer = new RTC::WebRtcServer(this->globals, webRtcServerId, request->data);
+				auto* webRtcServer = new RTC::WebRtcServer(this->shared, webRtcServerId, request->data);
 
 				this->mapWebRtcServers[webRtcServerId] = webRtcServer;
 
@@ -386,7 +386,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 				MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
 			}
 
-			auto* router = new RTC::Router(this->globals, routerId, this);
+			auto* router = new RTC::Router(this->shared, routerId, this);
 
 			this->mapRouters[routerId] = router;
 
@@ -428,7 +428,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			try
 			{
 				auto* handler =
-				  this->globals->channelMessageRegistrator->GetChannelRequestHandler(request->handlerId);
+				  this->shared->channelMessageRegistrator->GetChannelRequestHandler(request->handlerId);
 
 				if (handler == nullptr)
 				{
@@ -477,7 +477,7 @@ inline void Worker::HandleRequest(PayloadChannel::PayloadChannelRequest* request
 	try
 	{
 		auto* handler =
-		  this->globals->channelMessageRegistrator->GetPayloadChannelRequestHandler(request->handlerId);
+		  this->shared->channelMessageRegistrator->GetPayloadChannelRequestHandler(request->handlerId);
 
 		if (handler == nullptr)
 		{
@@ -505,7 +505,7 @@ inline void Worker::HandleNotification(PayloadChannel::PayloadChannelNotificatio
 
 	try
 	{
-		auto* handler = this->globals->channelMessageRegistrator->GetPayloadChannelNotificationHandler(
+		auto* handler = this->shared->channelMessageRegistrator->GetPayloadChannelNotificationHandler(
 		  notification->handlerId);
 
 		if (handler == nullptr)

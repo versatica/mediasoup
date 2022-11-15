@@ -95,8 +95,8 @@ namespace RTC
 	}
 
 	ActiveSpeakerObserver::ActiveSpeakerObserver(
-	  Globals* globals, const std::string& id, RTC::RtpObserver::Listener* listener, json& data)
-	  : RTC::RtpObserver(globals, id, listener)
+	  RTC::Shared* shared, const std::string& id, RTC::RtpObserver::Listener* listener, json& data)
+	  : RTC::RtpObserver(shared, id, listener)
 	{
 		MS_TRACE();
 
@@ -119,7 +119,7 @@ namespace RTC
 		this->periodicTimer->Start(interval, interval);
 
 		// NOTE: This may throw.
-		this->globals->channelMessageRegistrator->RegisterHandler(
+		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -130,7 +130,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->periodicTimer;
 
@@ -278,7 +278,7 @@ namespace RTC
 			json data          = json::object();
 			data["producerId"] = this->dominantId;
 
-			this->globals->channelNotifier->Emit(this->id, "dominantspeaker", data);
+			this->shared->channelNotifier->Emit(this->id, "dominantspeaker", data);
 		}
 	}
 

@@ -27,8 +27,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	WebRtcServer::WebRtcServer(Globals* globals, const std::string& id, json& data)
-	  : id(id), globals(globals)
+	WebRtcServer::WebRtcServer(RTC::Shared* shared, const std::string& id, json& data)
+	  : id(id), shared(shared)
 	{
 		MS_TRACE();
 
@@ -138,7 +138,7 @@ namespace RTC
 			}
 
 			// NOTE: This may throw.
-			this->globals->channelMessageRegistrator->RegisterHandler(
+			this->shared->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*payloadChannelRequestHandler*/ nullptr,
@@ -166,7 +166,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		for (auto& item : this->udpSocketOrTcpServers)
 		{

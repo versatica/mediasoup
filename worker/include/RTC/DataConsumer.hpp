@@ -2,12 +2,12 @@
 #define MS_RTC_DATA_CONSUMER_HPP
 
 #include "common.hpp"
-#include "Globals.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/SctpDictionaries.hpp"
+#include "RTC/Shared.hpp"
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -48,7 +48,7 @@ namespace RTC
 
 	public:
 		DataConsumer(
-		  Globals* globals,
+		  RTC::Shared* shared,
 		  const std::string& id,
 		  const std::string& dataProducerId,
 		  RTC::SctpAssociation* sctpAssociation,
@@ -102,7 +102,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
-		Globals* globals{ nullptr };
+		RTC::Shared* shared{ nullptr };
 		RTC::SctpAssociation* sctpAssociation{ nullptr };
 		RTC::DataConsumer::Listener* listener{ nullptr };
 		size_t maxMessageSize{ 0u };

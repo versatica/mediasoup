@@ -1,7 +1,7 @@
 #ifndef MS_RTC_PLAIN_TRANSPORT_HPP
 #define MS_RTC_PLAIN_TRANSPORT_HPP
 
-#include "Globals.hpp"
+#include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
@@ -25,7 +25,7 @@ namespace RTC
 
 	public:
 		PlainTransport(
-		  Globals* globals, const std::string& id, RTC::Transport::Listener* listener, json& data);
+		  RTC::Shared* shared, const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~PlainTransport() override;
 
 	public:

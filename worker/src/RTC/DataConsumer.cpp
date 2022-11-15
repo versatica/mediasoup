@@ -14,14 +14,14 @@ namespace RTC
 	/* Instance methods. */
 
 	DataConsumer::DataConsumer(
-	  Globals* globals,
+	  RTC::Shared* shared,
 	  const std::string& id,
 	  const std::string& dataProducerId,
 	  RTC::SctpAssociation* sctpAssociation,
 	  RTC::DataConsumer::Listener* listener,
 	  json& data,
 	  size_t maxMessageSize)
-	  : id(id), dataProducerId(dataProducerId), globals(globals), sctpAssociation(sctpAssociation),
+	  : id(id), dataProducerId(dataProducerId), shared(shared), sctpAssociation(sctpAssociation),
 	    listener(listener), maxMessageSize(maxMessageSize)
 	{
 		MS_TRACE();
@@ -66,7 +66,7 @@ namespace RTC
 			this->protocol = jsonProtocolIt->get<std::string>();
 
 		// NOTE: This may throw.
-		this->globals->channelMessageRegistrator->RegisterHandler(
+		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ this,
@@ -77,7 +77,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 	}
 
 	void DataConsumer::FillJson(json& jsonObject) const
@@ -354,7 +354,7 @@ namespace RTC
 			data.append(std::to_string(this->bufferedAmount));
 			data.append("}");
 
-			this->globals->channelNotifier->Emit(this->id, "bufferedamountlow", data);
+			this->shared->channelNotifier->Emit(this->id, "bufferedamountlow", data);
 		}
 	}
 
@@ -362,7 +362,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->globals->channelNotifier->Emit(this->id, "sctpsendbufferfull");
+		this->shared->channelNotifier->Emit(this->id, "sctpsendbufferfull");
 	}
 
 	// The caller (Router) is supposed to proceed with the deletion of this DataConsumer
@@ -375,7 +375,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer closed [dataConsumerId:%s]", this->id.c_str());
 
-		this->globals->channelNotifier->Emit(this->id, "dataproducerclose");
+		this->shared->channelNotifier->Emit(this->id, "dataproducerclose");
 
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}

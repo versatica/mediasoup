@@ -12,12 +12,12 @@ namespace RTC
 	/* Instance methods. */
 
 	PipeConsumer::PipeConsumer(
-	  Globals* globals,
+	  RTC::Shared* shared,
 	  const std::string& id,
 	  const std::string& producerId,
 	  RTC::Consumer::Listener* listener,
 	  json& data)
-	  : RTC::Consumer::Consumer(globals, id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
+	  : RTC::Consumer::Consumer(shared, id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
 	{
 		MS_TRACE();
 
@@ -34,7 +34,7 @@ namespace RTC
 		CreateRtpStreams();
 
 		// NOTE: This may throw.
-		this->globals->channelMessageRegistrator->RegisterHandler(
+		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -45,7 +45,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		for (auto* rtpStream : this->rtpStreams)
 		{

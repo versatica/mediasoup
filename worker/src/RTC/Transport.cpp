@@ -30,8 +30,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	Transport::Transport(Globals* globals, const std::string& id, Listener* listener, json& data)
-	  : id(id), globals(globals), listener(listener), recvRtxTransmission(1000u),
+	Transport::Transport(RTC::Shared* shared, const std::string& id, Listener* listener, json& data)
+	  : id(id), shared(shared), listener(listener), recvRtxTransmission(1000u),
 	    sendRtxTransmission(1000u), sendProbationTransmission(100u)
 	{
 		MS_TRACE();
@@ -673,7 +673,7 @@ namespace RTC
 				SetNewProducerIdFromData(request->data, producerId);
 
 				// This may throw.
-				auto* producer = new RTC::Producer(this->globals, producerId, this, request->data);
+				auto* producer = new RTC::Producer(this->shared, producerId, this, request->data);
 
 				// Insert the Producer into the RtpListener.
 				// This may throw. If so, delete the Producer and throw.
@@ -861,7 +861,7 @@ namespace RTC
 					{
 						// This may throw.
 						consumer =
-						  new RTC::SimpleConsumer(this->globals, consumerId, producerId, this, request->data);
+						  new RTC::SimpleConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -870,7 +870,7 @@ namespace RTC
 					{
 						// This may throw.
 						consumer =
-						  new RTC::SimulcastConsumer(this->globals, consumerId, producerId, this, request->data);
+						  new RTC::SimulcastConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -879,7 +879,7 @@ namespace RTC
 					{
 						// This may throw.
 						consumer =
-						  new RTC::SvcConsumer(this->globals, consumerId, producerId, this, request->data);
+						  new RTC::SvcConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -888,7 +888,7 @@ namespace RTC
 					{
 						// This may throw.
 						consumer =
-						  new RTC::PipeConsumer(this->globals, consumerId, producerId, this, request->data);
+						  new RTC::PipeConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -1095,7 +1095,7 @@ namespace RTC
 
 				// This may throw.
 				auto* dataProducer = new RTC::DataProducer(
-				  this->globals, dataProducerId, this->maxMessageSize, this, request->data);
+				  this->shared, dataProducerId, this->maxMessageSize, this, request->data);
 
 				// Verify the type of the DataProducer.
 				switch (dataProducer->GetType())
@@ -1200,7 +1200,7 @@ namespace RTC
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  this->globals,
+				  this->shared,
 				  dataConsumerId,
 				  dataProducerId,
 				  this->sctpAssociation,
@@ -2412,7 +2412,7 @@ namespace RTC
 
 		packet->FillJson(data["info"]);
 
-		this->globals->channelNotifier->Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::EmitTraceEventBweType(
@@ -2446,7 +2446,7 @@ namespace RTC
 				break;
 		}
 
-		this->globals->channelNotifier->Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -2769,7 +2769,7 @@ namespace RTC
 
 		data["sctpState"] = "connecting";
 
-		this->globals->channelNotifier->Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2792,7 +2792,7 @@ namespace RTC
 
 		data["sctpState"] = "connected";
 
-		this->globals->channelNotifier->Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationFailed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2815,7 +2815,7 @@ namespace RTC
 
 		data["sctpState"] = "failed";
 
-		this->globals->channelNotifier->Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2838,7 +2838,7 @@ namespace RTC
 
 		data["sctpState"] = "closed";
 
-		this->globals->channelNotifier->Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationSendData(

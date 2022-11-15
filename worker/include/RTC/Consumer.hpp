@@ -2,7 +2,6 @@
 #define MS_RTC_CONSUMER_HPP
 
 #include "common.hpp"
-#include "Globals.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -16,6 +15,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamSend.hpp"
+#include "RTC/Shared.hpp"
 #include <absl/container/flat_hash_set.h>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -61,7 +61,7 @@ namespace RTC
 
 	public:
 		Consumer(
-		  Globals* globals,
+		  RTC::Shared* shared,
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
@@ -180,7 +180,7 @@ namespace RTC
 
 	protected:
 		// Passed by argument.
-		Globals* globals{ nullptr };
+		RTC::Shared* shared{ nullptr };
 		RTC::Consumer::Listener* listener{ nullptr };
 		RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;

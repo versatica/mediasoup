@@ -23,8 +23,8 @@ namespace RTC
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	PipeTransport::PipeTransport(
-	  Globals* globals, const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(globals, id, listener, data)
+	  RTC::Shared* shared, const std::string& id, RTC::Transport::Listener* listener, json& data)
+	  : RTC::Transport::Transport(shared, id, listener, data)
 	{
 		MS_TRACE();
 
@@ -96,7 +96,7 @@ namespace RTC
 				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
 
 			// NOTE: This may throw.
-			this->globals->channelMessageRegistrator->RegisterHandler(
+			this->shared->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*payloadChannelRequestHandler*/ this,
@@ -117,7 +117,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->udpSocket;
 		this->udpSocket = nullptr;

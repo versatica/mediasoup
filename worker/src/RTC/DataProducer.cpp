@@ -13,12 +13,12 @@ namespace RTC
 	/* Instance methods. */
 
 	DataProducer::DataProducer(
-	  Globals* globals,
+	  RTC::Shared* shared,
 	  const std::string& id,
 	  size_t maxMessageSize,
 	  RTC::DataProducer::Listener* listener,
 	  json& data)
-	  : id(id), globals(globals), maxMessageSize(maxMessageSize), listener(listener)
+	  : id(id), shared(shared), maxMessageSize(maxMessageSize), listener(listener)
 	{
 		MS_TRACE();
 
@@ -62,7 +62,7 @@ namespace RTC
 			this->protocol = jsonProtocolIt->get<std::string>();
 
 		// NOTE: This may throw.
-		this->globals->channelMessageRegistrator->RegisterHandler(
+		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -73,7 +73,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 	}
 
 	void DataProducer::FillJson(json& jsonObject) const

@@ -14,8 +14,8 @@ namespace RTC
 	/* Instance methods. */
 
 	AudioLevelObserver::AudioLevelObserver(
-	  Globals* globals, const std::string& id, RTC::RtpObserver::Listener* listener, json& data)
-	  : RTC::RtpObserver(globals, id, listener)
+	  RTC::Shared* shared, const std::string& id, RTC::RtpObserver::Listener* listener, json& data)
+	  : RTC::RtpObserver(shared, id, listener)
 	{
 		MS_TRACE();
 
@@ -63,7 +63,7 @@ namespace RTC
 		this->periodicTimer->Start(this->interval, this->interval);
 
 		// NOTE: This may throw.
-		this->globals->channelMessageRegistrator->RegisterHandler(
+		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -74,7 +74,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->periodicTimer;
 	}
@@ -141,7 +141,7 @@ namespace RTC
 		{
 			this->silence = true;
 
-			this->globals->channelNotifier->Emit(this->id, "silence");
+			this->shared->channelNotifier->Emit(this->id, "silence");
 		}
 	}
 
@@ -193,13 +193,13 @@ namespace RTC
 				jsonEntry["volume"]     = rit->first;
 			}
 
-			this->globals->channelNotifier->Emit(this->id, "volumes", data);
+			this->shared->channelNotifier->Emit(this->id, "volumes", data);
 		}
 		else if (!this->silence)
 		{
 			this->silence = true;
 
-			this->globals->channelNotifier->Emit(this->id, "silence");
+			this->shared->channelNotifier->Emit(this->id, "silence");
 		}
 	}
 

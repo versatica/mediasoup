@@ -2,13 +2,13 @@
 #define MS_WORKER_HPP
 
 #include "common.hpp"
-#include "Globals.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/Router.hpp"
+#include "RTC/Shared.hpp"
 #include "RTC/WebRtcServer.hpp"
 #include "handles/SignalsHandler.hpp"
 #include <absl/container/flat_hash_map.h>
@@ -69,7 +69,7 @@ private:
 	PayloadChannel::PayloadChannelSocket* payloadChannel{ nullptr };
 	// Allocated by this.
 	SignalsHandler* signalsHandler{ nullptr };
-	Globals* globals{ nullptr };
+	RTC::Shared* shared{ nullptr };
 	absl::flat_hash_map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
 	absl::flat_hash_map<std::string, RTC::Router*> mapRouters;
 	// Others.

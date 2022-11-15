@@ -28,8 +28,8 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	  Globals* globals, const std::string& id, RTC::Producer::Listener* listener, json& data)
-	  : id(id), globals(globals), listener(listener)
+	  RTC::Shared* shared, const std::string& id, RTC::Producer::Listener* listener, json& data)
+	  : id(id), shared(shared), listener(listener)
 	{
 		MS_TRACE();
 
@@ -315,7 +315,7 @@ namespace RTC
 		}
 
 		// NOTE: This may throw.
-		this->globals->channelMessageRegistrator->RegisterHandler(
+		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -326,7 +326,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->globals->channelMessageRegistrator->UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		// Delete all streams.
 		for (auto& kv : this->mapSsrcRtpStream)
@@ -1496,7 +1496,7 @@ namespace RTC
 					data["flip"]     = this->videoOrientation.flip;
 					data["rotation"] = this->videoOrientation.rotation;
 
-					this->globals->channelNotifier->Emit(this->id, "videoorientationchange", data);
+					this->shared->channelNotifier->Emit(this->id, "videoorientationchange", data);
 				}
 			}
 		}
@@ -1526,7 +1526,7 @@ namespace RTC
 			jsonEntry["score"] = rtpStream->GetScore();
 		}
 
-		this->globals->channelNotifier->Emit(this->id, "score", data);
+		this->shared->channelNotifier->Emit(this->id, "score", data);
 	}
 
 	inline void Producer::EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx) const
@@ -1546,7 +1546,7 @@ namespace RTC
 			if (isRtx)
 				data["info"]["isRtx"] = true;
 
-			this->globals->channelNotifier->Emit(this->id, "trace", data);
+			this->shared->channelNotifier->Emit(this->id, "trace", data);
 		}
 		else if (this->traceEventTypes.rtp)
 		{
@@ -1561,7 +1561,7 @@ namespace RTC
 			if (isRtx)
 				data["info"]["isRtx"] = true;
 
-			this->globals->channelNotifier->Emit(this->id, "trace", data);
+			this->shared->channelNotifier->Emit(this->id, "trace", data);
 		}
 	}
 
@@ -1579,7 +1579,7 @@ namespace RTC
 		data["direction"]    = "out";
 		data["info"]["ssrc"] = ssrc;
 
-		this->globals->channelNotifier->Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Producer::EmitTraceEventFirType(uint32_t ssrc) const
@@ -1596,7 +1596,7 @@ namespace RTC
 		data["direction"]    = "out";
 		data["info"]["ssrc"] = ssrc;
 
-		this->globals->channelNotifier->Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Producer::EmitTraceEventNackType() const
@@ -1613,7 +1613,7 @@ namespace RTC
 		data["direction"] = "out";
 		data["info"]      = json::object();
 
-		this->globals->channelNotifier->Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Producer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
