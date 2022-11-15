@@ -38,7 +38,7 @@ static addPreferredLayers(builder:flatbuffers.Builder, preferredLayersOffset:fla
 
 static endSetPreferredLayersRequest(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
-  builder.requiredField(offset, 4) // preferredLayers
+  builder.requiredField(offset, 4) // preferred_layers
   return offset;
 }
 

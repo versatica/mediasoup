@@ -31,7 +31,7 @@ class SetPreferredLayersRequest {
     }
     static endSetPreferredLayersRequest(builder) {
         const offset = builder.endObject();
-        builder.requiredField(offset, 4); // preferredLayers
+        builder.requiredField(offset, 4); // preferred_layers
         return offset;
     }
     static createSetPreferredLayersRequest(builder, preferredLayersOffset) {
