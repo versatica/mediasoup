@@ -72,9 +72,6 @@ void Worker::Close()
 	// Delete the SignalsHandler.
 	delete this->signalsHandler;
 
-	// Delete the Globals singleton.
-	delete this->globals;
-
 	// Delete all Routers.
 	for (auto& kv : this->mapRouters)
 	{
@@ -92,6 +89,9 @@ void Worker::Close()
 		delete webRtcServer;
 	}
 	this->mapWebRtcServers.clear();
+
+	// Delete the Globals singleton.
+	delete this->globals;
 
 	// Close the Checker instance in DepUsrSCTP.
 	DepUsrSCTP::CloseChecker();
