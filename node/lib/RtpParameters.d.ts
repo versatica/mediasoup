@@ -302,4 +302,5 @@ export declare type RtcpParameters = {
 };
 export declare function serializeRtpParameters(builder: flatbuffers.Builder, rtpParameters: RtpParameters): number;
 export declare function serializeRtpEncodingParameters(builder: flatbuffers.Builder, rtpEncodingParameters: RtpEncodingParameters[]): number;
+export declare function serializeParameters(builder: flatbuffers.Builder, parameters: any): number[];
 //# sourceMappingURL=RtpParameters.d.ts.map

@@ -1,46 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.serializeRtpEncodingParameters = exports.serializeRtpParameters = void 0;
+exports.serializeParameters = exports.serializeRtpEncodingParameters = exports.serializeRtpParameters = void 0;
 const rtpParameters_generated_1 = require("./fbs/rtpParameters_generated");
 function serializeRtpParameters(builder, rtpParameters) {
     const codecs = [];
     const headerExtensions = [];
     for (const codec of rtpParameters.codecs) {
         const mimeTypeOffset = builder.createString(codec.mimeType);
-        const codecParameters = [];
-        for (const key of Object.keys(codec.parameters)) {
-            const value = codec.parameters[key];
-            const keyOffset = builder.createString(key);
-            let parameterOffset;
-            if (typeof value === 'boolean') {
-                parameterOffset = rtpParameters_generated_1.Parameter.createParameter(builder, keyOffset, rtpParameters_generated_1.Value.Boolean, value === true ? 1 : 0);
-            }
-            else if (typeof value === 'number') {
-                // Integer.
-                if (value % 1 === 0) {
-                    const valueOffset = rtpParameters_generated_1.Integer.createInteger(builder, value);
-                    parameterOffset = rtpParameters_generated_1.Parameter.createParameter(builder, keyOffset, rtpParameters_generated_1.Value.Integer, valueOffset);
-                }
-                // Float.
-                else {
-                    const valueOffset = rtpParameters_generated_1.Double.createDouble(builder, value);
-                    parameterOffset = rtpParameters_generated_1.Parameter.createParameter(builder, keyOffset, rtpParameters_generated_1.Value.Double, valueOffset);
-                }
-            }
-            else if (typeof value === 'string') {
-                const valueOffset = rtpParameters_generated_1.String.createString(builder, builder.createString(value));
-                parameterOffset = rtpParameters_generated_1.Parameter.createParameter(builder, keyOffset, rtpParameters_generated_1.Value.String, valueOffset);
-            }
-            else if (Array.isArray(value)) {
-                const valueOffset = rtpParameters_generated_1.IntegerArray.createValueVector(builder, value);
-                parameterOffset = rtpParameters_generated_1.Parameter.createParameter(builder, keyOffset, rtpParameters_generated_1.Value.IntegerArray, valueOffset);
-            }
-            else {
-                throw new Error(`invalid parameter type [key:'${key}', value:${value}]`);
-            }
-            codecParameters.push(parameterOffset);
-        }
-        const parametersOffset = rtpParameters_generated_1.RtpCodecParameters.createParametersVector(builder, codecParameters);
+        const parameters = serializeParameters(builder, codec.parameters);
+        const parametersOffset = rtpParameters_generated_1.RtpCodecParameters.createParametersVector(builder, parameters);
         const rtcpFeedback = [];
         for (const rtcp of codec.rtcpFeedback ?? []) {
             const typeOffset = builder.createString(rtcp.type);
@@ -54,7 +22,8 @@ function serializeRtpParameters(builder, rtpParameters) {
     // RtpHeaderExtensionParameters.
     for (const headerExtension of rtpParameters.headerExtensions ?? []) {
         const uriOffset = builder.createString(headerExtension.uri);
-        const parametersOffset = builder.createString(headerExtension.parameters);
+        const parameters = serializeParameters(builder, headerExtension.parameters);
+        const parametersOffset = rtpParameters_generated_1.RtpCodecParameters.createParametersVector(builder, parameters);
         headerExtensions.push(rtpParameters_generated_1.RtpHeaderExtensionParameters.createRtpHeaderExtensionParameters(builder, uriOffset, headerExtension.id, Boolean(headerExtension.encrypt), parametersOffset));
     }
     const headerExtensionsOffset = rtpParameters_generated_1.RtpParameters.createHeaderExtensionsVector(builder, headerExtensions);
@@ -127,3 +96,40 @@ function serializeRtpEncodingParameters(builder, rtpEncodingParameters) {
     return rtpParameters_generated_1.RtpParameters.createEncodingsVector(builder, encodings);
 }
 exports.serializeRtpEncodingParameters = serializeRtpEncodingParameters;
+function serializeParameters(builder, parameters) {
+    const fbsParameters = [];
+    for (const key of Object.keys(parameters)) {
+        const value = parameters[key];
+        const keyOffset = builder.createString(key);
+        let parameterOffset;
+        if (typeof value === 'boolean') {
+            parameterOffset = rtpParameters_generated_1.Parameter.createParameter(builder, keyOffset, rtpParameters_generated_1.Value.Boolean, value === true ? 1 : 0);
+        }
+        else if (typeof value === 'number') {
+            // Integer.
+            if (value % 1 === 0) {
+                const valueOffset = rtpParameters_generated_1.Integer.createInteger(builder, value);
+                parameterOffset = rtpParameters_generated_1.Parameter.createParameter(builder, keyOffset, rtpParameters_generated_1.Value.Integer, valueOffset);
+            }
+            // Float.
+            else {
+                const valueOffset = rtpParameters_generated_1.Double.createDouble(builder, value);
+                parameterOffset = rtpParameters_generated_1.Parameter.createParameter(builder, keyOffset, rtpParameters_generated_1.Value.Double, valueOffset);
+            }
+        }
+        else if (typeof value === 'string') {
+            const valueOffset = rtpParameters_generated_1.String.createString(builder, builder.createString(value));
+            parameterOffset = rtpParameters_generated_1.Parameter.createParameter(builder, keyOffset, rtpParameters_generated_1.Value.String, valueOffset);
+        }
+        else if (Array.isArray(value)) {
+            const valueOffset = rtpParameters_generated_1.IntegerArray.createValueVector(builder, value);
+            parameterOffset = rtpParameters_generated_1.Parameter.createParameter(builder, keyOffset, rtpParameters_generated_1.Value.IntegerArray, valueOffset);
+        }
+        else {
+            throw new Error(`invalid parameter type [key:'${key}', value:${value}]`);
+        }
+        fbsParameters.push(parameterOffset);
+    }
+    return fbsParameters;
+}
+exports.serializeParameters = serializeParameters;

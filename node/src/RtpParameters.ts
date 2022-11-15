@@ -379,71 +379,9 @@ export function serializeRtpParameters(
 	for (const codec of rtpParameters.codecs)
 	{
 		const mimeTypeOffset = builder.createString(codec.mimeType);
-
-		const codecParameters: number[] = [];
-
-		for (const key of Object.keys(codec.parameters))
-		{
-			const value = codec.parameters[key];
-			const keyOffset = builder.createString(key);
-			let parameterOffset: number;
-
-			if (typeof value === 'boolean')
-			{
-				parameterOffset = FbsParameter.createParameter(
-					builder, keyOffset, FbsValue.Boolean, value === true ? 1:0
-				);
-			}
-
-			else if (typeof value === 'number')
-			{
-				// Integer.
-				if (value % 1 === 0)
-				{
-					const valueOffset = FbsInteger.createInteger(builder, value);
-
-					parameterOffset = FbsParameter.createParameter(
-						builder, keyOffset, FbsValue.Integer, valueOffset
-					);
-				}
-				// Float.
-				else
-				{
-					const valueOffset = FbsDouble.createDouble(builder, value);
-
-					parameterOffset = FbsParameter.createParameter(
-						builder, keyOffset, FbsValue.Double, valueOffset
-					);
-				}
-			}
-
-			else if (typeof value === 'string')
-			{
-				const valueOffset = FbsString.createString(builder, builder.createString(value));
-
-				parameterOffset = FbsParameter.createParameter(
-					builder, keyOffset, FbsValue.String, valueOffset
-				);
-			}
-
-			else if (Array.isArray(value))
-			{
-				const valueOffset = FbsIntegerArray.createValueVector(builder, value);
-
-				parameterOffset = FbsParameter.createParameter(
-					builder, keyOffset, FbsValue.IntegerArray, valueOffset
-				);
-			}
-
-			else
-			{
-				throw new Error(`invalid parameter type [key:'${key}', value:${value}]`);
-			}
-
-			codecParameters.push(parameterOffset);
-		}
+		const parameters = serializeParameters(builder, codec.parameters);
 		const parametersOffset =
-			FbsRtpCodecParameters.createParametersVector(builder, codecParameters);
+			FbsRtpCodecParameters.createParametersVector(builder, parameters);
 
 		const rtcpFeedback: number[] = [];
 
@@ -475,7 +413,9 @@ export function serializeRtpParameters(
 	for (const headerExtension of rtpParameters.headerExtensions ?? [])
 	{
 		const uriOffset = builder.createString(headerExtension.uri);
-		const parametersOffset = builder.createString(headerExtension.parameters);
+		const parameters = serializeParameters(builder, headerExtension.parameters);
+		const parametersOffset =
+			FbsRtpCodecParameters.createParametersVector(builder, parameters);
 
 		headerExtensions.push(
 			FbsRtpHeaderExtensionParameters.createRtpHeaderExtensionParameters(
@@ -590,4 +530,74 @@ export function serializeRtpEncodingParameters(
 	}
 
 	return FbsRtpParameters.createEncodingsVector(builder, encodings);
+}
+
+export function serializeParameters(
+	builder: flatbuffers.Builder, parameters: any
+):number[]
+{
+	const fbsParameters: number[] = [];
+
+	for (const key of Object.keys(parameters))
+	{
+		const value = parameters[key];
+		const keyOffset = builder.createString(key);
+		let parameterOffset: number;
+
+		if (typeof value === 'boolean')
+		{
+			parameterOffset = FbsParameter.createParameter(
+				builder, keyOffset, FbsValue.Boolean, value === true ? 1:0
+			);
+		}
+
+		else if (typeof value === 'number')
+		{
+			// Integer.
+			if (value % 1 === 0)
+			{
+				const valueOffset = FbsInteger.createInteger(builder, value);
+
+				parameterOffset = FbsParameter.createParameter(
+					builder, keyOffset, FbsValue.Integer, valueOffset
+				);
+			}
+			// Float.
+			else
+			{
+				const valueOffset = FbsDouble.createDouble(builder, value);
+
+				parameterOffset = FbsParameter.createParameter(
+					builder, keyOffset, FbsValue.Double, valueOffset
+				);
+			}
+		}
+
+		else if (typeof value === 'string')
+		{
+			const valueOffset = FbsString.createString(builder, builder.createString(value));
+
+			parameterOffset = FbsParameter.createParameter(
+				builder, keyOffset, FbsValue.String, valueOffset
+			);
+		}
+
+		else if (Array.isArray(value))
+		{
+			const valueOffset = FbsIntegerArray.createValueVector(builder, value);
+
+			parameterOffset = FbsParameter.createParameter(
+				builder, keyOffset, FbsValue.IntegerArray, valueOffset
+			);
+		}
+
+		else
+		{
+			throw new Error(`invalid parameter type [key:'${key}', value:${value}]`);
+		}
+
+		fbsParameters.push(parameterOffset);
+	}
+
+	return fbsParameters;
 }

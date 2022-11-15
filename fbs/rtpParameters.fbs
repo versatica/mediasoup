@@ -56,7 +56,7 @@ table RtpHeaderExtensionParameters {
   uri:string (required);
   id:uint8;
   encrypt:bool = false;
-  parameters:string;
+  parameters:[Parameter];
 }
 
 table Rtx {

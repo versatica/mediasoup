@@ -803,8 +803,8 @@ struct RtpHeaderExtensionParameters FLATBUFFERS_FINAL_CLASS : private flatbuffer
   bool encrypt() const {
     return GetField<uint8_t>(VT_ENCRYPT, 0) != 0;
   }
-  const flatbuffers::String *parameters() const {
-    return GetPointer<const flatbuffers::String *>(VT_PARAMETERS);
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> *parameters() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> *>(VT_PARAMETERS);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -813,7 +813,8 @@ struct RtpHeaderExtensionParameters FLATBUFFERS_FINAL_CLASS : private flatbuffer
            VerifyField<uint8_t>(verifier, VT_ID, 1) &&
            VerifyField<uint8_t>(verifier, VT_ENCRYPT, 1) &&
            VerifyOffset(verifier, VT_PARAMETERS) &&
-           verifier.VerifyString(parameters()) &&
+           verifier.VerifyVector(parameters()) &&
+           verifier.VerifyVectorOfTables(parameters()) &&
            verifier.EndTable();
   }
 };
@@ -831,7 +832,7 @@ struct RtpHeaderExtensionParametersBuilder {
   void add_encrypt(bool encrypt) {
     fbb_.AddElement<uint8_t>(RtpHeaderExtensionParameters::VT_ENCRYPT, static_cast<uint8_t>(encrypt), 0);
   }
-  void add_parameters(flatbuffers::Offset<flatbuffers::String> parameters) {
+  void add_parameters(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>>> parameters) {
     fbb_.AddOffset(RtpHeaderExtensionParameters::VT_PARAMETERS, parameters);
   }
   explicit RtpHeaderExtensionParametersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
@@ -851,7 +852,7 @@ inline flatbuffers::Offset<RtpHeaderExtensionParameters> CreateRtpHeaderExtensio
     flatbuffers::Offset<flatbuffers::String> uri = 0,
     uint8_t id = 0,
     bool encrypt = false,
-    flatbuffers::Offset<flatbuffers::String> parameters = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>>> parameters = 0) {
   RtpHeaderExtensionParametersBuilder builder_(_fbb);
   builder_.add_parameters(parameters);
   builder_.add_uri(uri);
@@ -865,9 +866,9 @@ inline flatbuffers::Offset<RtpHeaderExtensionParameters> CreateRtpHeaderExtensio
     const char *uri = nullptr,
     uint8_t id = 0,
     bool encrypt = false,
-    const char *parameters = nullptr) {
+    const std::vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> *parameters = nullptr) {
   auto uri__ = uri ? _fbb.CreateString(uri) : 0;
-  auto parameters__ = parameters ? _fbb.CreateString(parameters) : 0;
+  auto parameters__ = parameters ? _fbb.CreateVector<flatbuffers::Offset<FBS::RtpParameters::Parameter>>(*parameters) : 0;
   return FBS::RtpParameters::CreateRtpHeaderExtensionParameters(
       _fbb,
       uri__,
@@ -1717,7 +1718,10 @@ inline const flatbuffers::TypeTable *RtpHeaderExtensionParametersTypeTable() {
     { flatbuffers::ET_STRING, 0, -1 },
     { flatbuffers::ET_UCHAR, 0, -1 },
     { flatbuffers::ET_BOOL, 0, -1 },
-    { flatbuffers::ET_STRING, 0, -1 }
+    { flatbuffers::ET_SEQUENCE, 1, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::RtpParameters::ParameterTypeTable
   };
   static const char * const names[] = {
     "uri",
@@ -1726,7 +1730,7 @@ inline const flatbuffers::TypeTable *RtpHeaderExtensionParametersTypeTable() {
     "parameters"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 4, type_codes, nullptr, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 4, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

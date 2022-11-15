@@ -80,8 +80,7 @@ namespace RTC
 		if (flatbuffers::IsFieldPresent(
 		      data, FBS::RtpParameters::RtpHeaderExtensionParameters::VT_PARAMETERS))
 		{
-			// TODO.
-			// this->parameters.Set(data->parameters()->str());
+			this->parameters.Set(data->parameters());
 		}
 	}
 

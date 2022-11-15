@@ -2,6 +2,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
+import { Parameter, ParameterT } from '../../fbs/rtp-parameters/parameter';
 
 
 export class RtpHeaderExtensionParameters {
@@ -39,11 +40,14 @@ encrypt():boolean {
   return offset ? !!this.bb!.readInt8(this.bb_pos + offset) : false;
 }
 
-parameters():string|null
-parameters(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-parameters(optionalEncoding?:any):string|Uint8Array|null {
+parameters(index: number, obj?:Parameter):Parameter|null {
   const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+  return offset ? (obj || new Parameter()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+parametersLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 static startRtpHeaderExtensionParameters(builder:flatbuffers.Builder) {
@@ -66,6 +70,18 @@ static addParameters(builder:flatbuffers.Builder, parametersOffset:flatbuffers.O
   builder.addFieldOffset(3, parametersOffset, 0);
 }
 
+static createParametersVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startParametersVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+}
+
 static endRtpHeaderExtensionParameters(builder:flatbuffers.Builder):flatbuffers.Offset {
   const offset = builder.endObject();
   builder.requiredField(offset, 4) // uri
@@ -86,7 +102,7 @@ unpack(): RtpHeaderExtensionParametersT {
     this.uri(),
     this.id(),
     this.encrypt(),
-    this.parameters()
+    this.bb!.createObjList(this.parameters.bind(this), this.parametersLength())
   );
 }
 
@@ -95,7 +111,7 @@ unpackTo(_o: RtpHeaderExtensionParametersT): void {
   _o.uri = this.uri();
   _o.id = this.id();
   _o.encrypt = this.encrypt();
-  _o.parameters = this.parameters();
+  _o.parameters = this.bb!.createObjList(this.parameters.bind(this), this.parametersLength());
 }
 }
 
@@ -104,13 +120,13 @@ constructor(
   public uri: string|Uint8Array|null = null,
   public id: number = 0,
   public encrypt: boolean = false,
-  public parameters: string|Uint8Array|null = null
+  public parameters: (ParameterT)[] = []
 ){}
 
 
 pack(builder:flatbuffers.Builder): flatbuffers.Offset {
   const uri = (this.uri !== null ? builder.createString(this.uri!) : 0);
-  const parameters = (this.parameters !== null ? builder.createString(this.parameters!) : 0);
+  const parameters = RtpHeaderExtensionParameters.createParametersVector(builder, builder.createObjectOffsetList(this.parameters));
 
   return RtpHeaderExtensionParameters.createRtpHeaderExtensionParameters(builder,
     uri,

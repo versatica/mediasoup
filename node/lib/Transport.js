@@ -422,7 +422,6 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const consumeResponse = new FbsResponse.ConsumeResponse();
         response.body(consumeResponse);
         const status = consumeResponse.unpack();
-        logger.error('status: ', status);
         const data = {
             producerId,
             kind: producer.kind,
