@@ -330,7 +330,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         const rtpMapping = ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities);
         // This may throw.
         const consumableRtpParameters = ortc.getConsumableRtpParameters(kind, rtpParameters, routerRtpCapabilities, rtpMapping);
-        const producerId = (0, uuid_1.v4)();
+        const producerId = id || (0, uuid_1.v4)();
         const builder = this.channel.bufferBuilder;
         const requestOffset = createProduceRequest({
             builder,

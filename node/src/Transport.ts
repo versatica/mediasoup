@@ -621,7 +621,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		const consumableRtpParameters = ortc.getConsumableRtpParameters(
 			kind, rtpParameters, routerRtpCapabilities, rtpMapping);
 
-		const producerId = uuidv4();
+		const producerId = id || uuidv4();
 		const builder = this.channel.bufferBuilder;
 		const requestOffset = createProduceRequest({
 			builder,
