@@ -22,6 +22,7 @@
   "files": [
     "npm-scripts.js",
     "node/src",
+    "node/tsconfig.json",
     "worker/Makefile",
     "worker/meson.build",
     "worker/meson_options.txt",
