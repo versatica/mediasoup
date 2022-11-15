@@ -196,12 +196,9 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
-				auto jsonThresholdIt = request->data.find("threshold");
+				auto body = request->_data->body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>();
 
-				if (jsonThresholdIt == request->data.end() || !jsonThresholdIt->is_number_unsigned())
-					MS_THROW_TYPE_ERROR("wrong bufferedAmountThreshold (not an unsigned number)");
-
-				this->bufferedAmountLowThreshold = jsonThresholdIt->get<uint32_t>();
+				this->bufferedAmountLowThreshold = body->threshold();
 
 				request->Accept();
 

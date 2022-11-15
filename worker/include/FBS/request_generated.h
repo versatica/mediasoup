@@ -14,6 +14,7 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
              "Non-compatible flatbuffers version included");
 
 #include "consumer_generated.h"
+#include "dataConsumer_generated.h"
 #include "producer_generated.h"
 #include "router_generated.h"
 #include "rtpObserver_generated.h"
@@ -251,13 +252,14 @@ enum class Body : uint8_t {
   FBS_Consumer_SetPreferredLayersRequest = 24,
   FBS_Consumer_SetPriorityRequest = 25,
   FBS_Consumer_EnableTraceEventRequest = 26,
-  FBS_RtpObserver_AddProducerRequest = 27,
-  FBS_RtpObserver_RemoveProducerRequest = 28,
+  FBS_DataConsumer_SetBufferedAmountLowThresholdRequest = 27,
+  FBS_RtpObserver_AddProducerRequest = 28,
+  FBS_RtpObserver_RemoveProducerRequest = 29,
   MIN = NONE,
   MAX = FBS_RtpObserver_RemoveProducerRequest
 };
 
-inline const Body (&EnumValuesBody())[29] {
+inline const Body (&EnumValuesBody())[30] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_UpdateSettingsRequest,
@@ -286,6 +288,7 @@ inline const Body (&EnumValuesBody())[29] {
     Body::FBS_Consumer_SetPreferredLayersRequest,
     Body::FBS_Consumer_SetPriorityRequest,
     Body::FBS_Consumer_EnableTraceEventRequest,
+    Body::FBS_DataConsumer_SetBufferedAmountLowThresholdRequest,
     Body::FBS_RtpObserver_AddProducerRequest,
     Body::FBS_RtpObserver_RemoveProducerRequest
   };
@@ -293,7 +296,7 @@ inline const Body (&EnumValuesBody())[29] {
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[30] = {
+  static const char * const names[31] = {
     "NONE",
     "FBS_Worker_UpdateSettingsRequest",
     "FBS_Worker_CreateWebRtcServerRequest",
@@ -321,6 +324,7 @@ inline const char * const *EnumNamesBody() {
     "FBS_Consumer_SetPreferredLayersRequest",
     "FBS_Consumer_SetPriorityRequest",
     "FBS_Consumer_EnableTraceEventRequest",
+    "FBS_DataConsumer_SetBufferedAmountLowThresholdRequest",
     "FBS_RtpObserver_AddProducerRequest",
     "FBS_RtpObserver_RemoveProducerRequest",
     nullptr
@@ -442,6 +446,10 @@ template<> struct BodyTraits<FBS::Consumer::EnableTraceEventRequest> {
   static const Body enum_value = Body::FBS_Consumer_EnableTraceEventRequest;
 };
 
+template<> struct BodyTraits<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest> {
+  static const Body enum_value = Body::FBS_DataConsumer_SetBufferedAmountLowThresholdRequest;
+};
+
 template<> struct BodyTraits<FBS::RtpObserver::AddProducerRequest> {
   static const Body enum_value = Body::FBS_RtpObserver_AddProducerRequest;
 };
@@ -558,6 +566,9 @@ struct Request FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   const FBS::Consumer::EnableTraceEventRequest *body_as_FBS_Consumer_EnableTraceEventRequest() const {
     return body_type() == FBS::Request::Body::FBS_Consumer_EnableTraceEventRequest ? static_cast<const FBS::Consumer::EnableTraceEventRequest *>(body()) : nullptr;
+  }
+  const FBS::DataConsumer::SetBufferedAmountLowThresholdRequest *body_as_FBS_DataConsumer_SetBufferedAmountLowThresholdRequest() const {
+    return body_type() == FBS::Request::Body::FBS_DataConsumer_SetBufferedAmountLowThresholdRequest ? static_cast<const FBS::DataConsumer::SetBufferedAmountLowThresholdRequest *>(body()) : nullptr;
   }
   const FBS::RtpObserver::AddProducerRequest *body_as_FBS_RtpObserver_AddProducerRequest() const {
     return body_type() == FBS::Request::Body::FBS_RtpObserver_AddProducerRequest ? static_cast<const FBS::RtpObserver::AddProducerRequest *>(body()) : nullptr;
@@ -680,6 +691,10 @@ template<> inline const FBS::Consumer::SetPriorityRequest *Request::body_as<FBS:
 
 template<> inline const FBS::Consumer::EnableTraceEventRequest *Request::body_as<FBS::Consumer::EnableTraceEventRequest>() const {
   return body_as_FBS_Consumer_EnableTraceEventRequest();
+}
+
+template<> inline const FBS::DataConsumer::SetBufferedAmountLowThresholdRequest *Request::body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>() const {
+  return body_as_FBS_DataConsumer_SetBufferedAmountLowThresholdRequest();
 }
 
 template<> inline const FBS::RtpObserver::AddProducerRequest *Request::body_as<FBS::RtpObserver::AddProducerRequest>() const {
@@ -860,6 +875,10 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
     }
     case Body::FBS_Consumer_EnableTraceEventRequest: {
       auto ptr = reinterpret_cast<const FBS::Consumer::EnableTraceEventRequest *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_DataConsumer_SetBufferedAmountLowThresholdRequest: {
+      auto ptr = reinterpret_cast<const FBS::DataConsumer::SetBufferedAmountLowThresholdRequest *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case Body::FBS_RtpObserver_AddProducerRequest: {
@@ -1044,7 +1063,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 24 },
     { flatbuffers::ET_SEQUENCE, 0, 25 },
     { flatbuffers::ET_SEQUENCE, 0, 26 },
-    { flatbuffers::ET_SEQUENCE, 0, 27 }
+    { flatbuffers::ET_SEQUENCE, 0, 27 },
+    { flatbuffers::ET_SEQUENCE, 0, 28 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::UpdateSettingsRequestTypeTable,
@@ -1073,6 +1093,7 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Consumer::SetPreferredLayersRequestTypeTable,
     FBS::Consumer::SetPriorityRequestTypeTable,
     FBS::Consumer::EnableTraceEventRequestTypeTable,
+    FBS::DataConsumer::SetBufferedAmountLowThresholdRequestTypeTable,
     FBS::RtpObserver::AddProducerRequestTypeTable,
     FBS::RtpObserver::RemoveProducerRequestTypeTable
   };
@@ -1104,11 +1125,12 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Consumer_SetPreferredLayersRequest",
     "FBS_Consumer_SetPriorityRequest",
     "FBS_Consumer_EnableTraceEventRequest",
+    "FBS_DataConsumer_SetBufferedAmountLowThresholdRequest",
     "FBS_RtpObserver_AddProducerRequest",
     "FBS_RtpObserver_RemoveProducerRequest"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 29, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 30, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

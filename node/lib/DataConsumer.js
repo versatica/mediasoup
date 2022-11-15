@@ -150,8 +150,10 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async setBufferedAmountLowThreshold(threshold) {
         logger.debug('setBufferedAmountLowThreshold() [threshold:%s]', threshold);
-        const reqData = { threshold };
-        await this.#channel.request('dataConsumer.setBufferedAmountLowThreshold', this.#internal.dataConsumerId, reqData);
+        /* Build Request. */
+        const builder = this.#channel.bufferBuilder;
+        const requestOffset = new FbsDataConsumer.SetBufferedAmountLowThresholdRequestT(threshold).pack(builder);
+        this.#channel.requestBinary(FbsRequest.Method.DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD, FbsRequest.Body.FBS_DataConsumer_SetBufferedAmountLowThresholdRequest, requestOffset, this.#internal.dataConsumerId).catch(() => { });
     }
     /**
      * Send data.

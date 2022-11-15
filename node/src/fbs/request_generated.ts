@@ -3,6 +3,7 @@
 export { EnableTraceEventRequest as FBS_Consumer_EnableTraceEventRequest, EnableTraceEventRequestT as FBS_Consumer_EnableTraceEventRequestT } from './fbs/consumer/enable-trace-event-request';
 export { SetPreferredLayersRequest, SetPreferredLayersRequestT } from './fbs/consumer/set-preferred-layers-request';
 export { SetPriorityRequest, SetPriorityRequestT } from './fbs/consumer/set-priority-request';
+export { SetBufferedAmountLowThresholdRequest, SetBufferedAmountLowThresholdRequestT } from './fbs/data-consumer/set-buffered-amount-low-threshold-request';
 export { EnableTraceEventRequest as FBS_Producer_EnableTraceEventRequest, EnableTraceEventRequestT as FBS_Producer_EnableTraceEventRequestT } from './fbs/producer/enable-trace-event-request';
 export { Body, unionToBody, unionListToBody } from './fbs/request/body';
 export { Method } from './fbs/request/method';

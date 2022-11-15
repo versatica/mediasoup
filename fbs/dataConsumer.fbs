@@ -5,3 +5,7 @@ namespace FBS.DataConsumer;
 table GetBufferedAmountResponse {
   buffered_amount:uint32;
 }
+
+table SetBufferedAmountLowThresholdRequest {
+  threshold:uint32;
+}

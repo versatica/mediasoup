@@ -21,7 +21,12 @@ namespace DataConsumer {
 struct GetBufferedAmountResponse;
 struct GetBufferedAmountResponseBuilder;
 
+struct SetBufferedAmountLowThresholdRequest;
+struct SetBufferedAmountLowThresholdRequestBuilder;
+
 inline const flatbuffers::TypeTable *GetBufferedAmountResponseTypeTable();
+
+inline const flatbuffers::TypeTable *SetBufferedAmountLowThresholdRequestTypeTable();
 
 struct GetBufferedAmountResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef GetBufferedAmountResponseBuilder Builder;
@@ -67,12 +72,69 @@ inline flatbuffers::Offset<GetBufferedAmountResponse> CreateGetBufferedAmountRes
   return builder_.Finish();
 }
 
+struct SetBufferedAmountLowThresholdRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SetBufferedAmountLowThresholdRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SetBufferedAmountLowThresholdRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_THRESHOLD = 4
+  };
+  uint32_t threshold() const {
+    return GetField<uint32_t>(VT_THRESHOLD, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint32_t>(verifier, VT_THRESHOLD, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct SetBufferedAmountLowThresholdRequestBuilder {
+  typedef SetBufferedAmountLowThresholdRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_threshold(uint32_t threshold) {
+    fbb_.AddElement<uint32_t>(SetBufferedAmountLowThresholdRequest::VT_THRESHOLD, threshold, 0);
+  }
+  explicit SetBufferedAmountLowThresholdRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SetBufferedAmountLowThresholdRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SetBufferedAmountLowThresholdRequest>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SetBufferedAmountLowThresholdRequest> CreateSetBufferedAmountLowThresholdRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint32_t threshold = 0) {
+  SetBufferedAmountLowThresholdRequestBuilder builder_(_fbb);
+  builder_.add_threshold(threshold);
+  return builder_.Finish();
+}
+
 inline const flatbuffers::TypeTable *GetBufferedAmountResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_UINT, 0, -1 }
   };
   static const char * const names[] = {
     "bufferedAmount"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SetBufferedAmountLowThresholdRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UINT, 0, -1 }
+  };
+  static const char * const names[] = {
+    "threshold"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names

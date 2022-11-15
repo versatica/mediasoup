@@ -29,7 +29,6 @@ namespace Channel
 		{ "dataProducer.getStats",                       FBS::Request::Method::DATA_PRODUCER_GET_STATS                          },
 		{ "dataConsumer.dump",                           FBS::Request::Method::DATA_CONSUMER_DUMP                               },
 		{ "dataConsumer.getStats",                       FBS::Request::Method::DATA_CONSUMER_GET_STATS                          },
-		{ "dataConsumer.setBufferedAmountLowThreshold",  FBS::Request::Method::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD  },
 	};
 	// clang-format on
 

@@ -3,6 +3,7 @@ include "router.fbs";
 include "transport.fbs";
 include "producer.fbs";
 include "consumer.fbs";
+include "dataConsumer.fbs";
 include "rtpObserver.fbs";
 
 namespace FBS.Request;
@@ -94,6 +95,7 @@ union Body {
   FBS.Consumer.SetPreferredLayersRequest,
   FBS.Consumer.SetPriorityRequest,
   FBS.Consumer.EnableTraceEventRequest,
+  FBS.DataConsumer.SetBufferedAmountLowThresholdRequest,
   FBS.RtpObserver.AddProducerRequest,
   FBS.RtpObserver.RemoveProducerRequest,
 }
