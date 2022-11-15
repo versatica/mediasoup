@@ -87,6 +87,7 @@ switch (task)
 
 	case 'test:node':
 	{
+		execute('node npm-scripts.js typescript:build');
 		taskReplaceVersion();
 
 		if (!process.env.TEST_FILE)
