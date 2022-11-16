@@ -1,6 +1,6 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
 // #define MS_LOG_DEV_LEVEL 3
-// #define USE_TREND_CALCULATOR
+#define USE_TREND_CALCULATOR
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
