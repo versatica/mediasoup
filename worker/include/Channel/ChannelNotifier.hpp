@@ -13,15 +13,17 @@ namespace Channel
 	class ChannelNotifier
 	{
 	public:
-		static void ClassInit(Channel::ChannelSocket* channel);
-		static void Emit(uint64_t targetId, const char* event);
-		static void Emit(const std::string& targetId, const char* event);
-		static void Emit(const std::string& targetId, const char* event, json& data);
-		static void Emit(const std::string& targetId, const char* event, const std::string& data);
+		explicit ChannelNotifier(Channel::ChannelSocket* channel);
 
 	public:
+		void Emit(uint64_t targetId, const char* event);
+		void Emit(const std::string& targetId, const char* event);
+		void Emit(const std::string& targetId, const char* event, json& data);
+		void Emit(const std::string& targetId, const char* event, const std::string& data);
+
+	private:
 		// Passed by argument.
-		thread_local static Channel::ChannelSocket* channel;
+		Channel::ChannelSocket* channel{ nullptr };
 	};
 } // namespace Channel
 

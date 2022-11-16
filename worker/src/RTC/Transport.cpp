@@ -5,8 +5,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
-#include "PayloadChannel/PayloadChannelNotifier.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -32,9 +30,9 @@ namespace RTC
 
 	/* Instance methods. */
 
-	Transport::Transport(const std::string& id, Listener* listener, json& data)
-	  : id(id), listener(listener), recvRtxTransmission(1000u), sendRtxTransmission(1000u),
-	    sendProbationTransmission(100u)
+	Transport::Transport(RTC::Shared* shared, const std::string& id, Listener* listener, json& data)
+	  : id(id), shared(shared), listener(listener), recvRtxTransmission(1000u),
+	    sendRtxTransmission(1000u), sendProbationTransmission(100u)
 	{
 		MS_TRACE();
 
@@ -675,7 +673,7 @@ namespace RTC
 				SetNewProducerIdFromData(request->data, producerId);
 
 				// This may throw.
-				auto* producer = new RTC::Producer(producerId, this, request->data);
+				auto* producer = new RTC::Producer(this->shared, producerId, this, request->data);
 
 				// Insert the Producer into the RtpListener.
 				// This may throw. If so, delete the Producer and throw.
@@ -862,7 +860,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMPLE:
 					{
 						// This may throw.
-						consumer = new RTC::SimpleConsumer(consumerId, producerId, this, request->data);
+						consumer =
+						  new RTC::SimpleConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -870,7 +869,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMULCAST:
 					{
 						// This may throw.
-						consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, request->data);
+						consumer =
+						  new RTC::SimulcastConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -878,7 +878,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::SVC:
 					{
 						// This may throw.
-						consumer = new RTC::SvcConsumer(consumerId, producerId, this, request->data);
+						consumer =
+						  new RTC::SvcConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -886,7 +887,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::PIPE:
 					{
 						// This may throw.
-						consumer = new RTC::PipeConsumer(consumerId, producerId, this, request->data);
+						consumer =
+						  new RTC::PipeConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -1092,8 +1094,8 @@ namespace RTC
 				SetNewDataProducerIdFromData(request->data, dataProducerId);
 
 				// This may throw.
-				auto* dataProducer =
-				  new RTC::DataProducer(dataProducerId, this->maxMessageSize, this, request->data);
+				auto* dataProducer = new RTC::DataProducer(
+				  this->shared, dataProducerId, this->maxMessageSize, this, request->data);
 
 				// Verify the type of the DataProducer.
 				switch (dataProducer->GetType())
@@ -1198,7 +1200,13 @@ namespace RTC
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  dataConsumerId, dataProducerId, this->sctpAssociation, this, request->data, this->maxMessageSize);
+				  this->shared,
+				  dataConsumerId,
+				  dataProducerId,
+				  this->sctpAssociation,
+				  this,
+				  request->data,
+				  this->maxMessageSize);
 
 				// Verify the type of the DataConsumer.
 				switch (dataConsumer->GetType())
@@ -2241,33 +2249,39 @@ namespace RTC
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
+			auto rtcpAdded = consumer->GetRtcp(packet.get(), nowMs);
 
-			// Send the RTCP compound packet if it's full.
-			if (!consumer->GetRtcp(packet.get(), nowMs))
+			// RTCP data couldn't be added because the Compound packet is full.
+			// Send the RTCP compound packet and request for RTCP again.
+			if (!rtcpAdded)
 			{
 				SendRtcpCompoundPacket(packet.get());
 
 				// Create a new compount packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
-			}
 
-			consumer->GetRtcp(packet.get(), nowMs);
+				// Retrieve the RTCP again.
+				consumer->GetRtcp(packet.get(), nowMs);
+			}
 		}
 
 		for (auto& kv : this->mapProducers)
 		{
 			auto* producer = kv.second;
+			auto rtcpAdded = producer->GetRtcp(packet.get(), nowMs);
 
-			// Send the RTCP compound packet if it's full.
-			if (!producer->GetRtcp(packet.get(), nowMs))
+			// RTCP data couldn't be added because the Compound packet is full.
+			// Send the RTCP compound packet and request for RTCP again.
+			if (!rtcpAdded)
 			{
 				SendRtcpCompoundPacket(packet.get());
 
 				// Create a new compount packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
-			}
 
-			producer->GetRtcp(packet.get(), nowMs);
+				// Retrieve the RTCP again.
+				producer->GetRtcp(packet.get(), nowMs);
+			}
 		}
 
 		// Send the RTCP compound packet if there is any sender or receiver report.
@@ -2398,7 +2412,7 @@ namespace RTC
 
 		packet->FillJson(data["info"]);
 
-		Channel::ChannelNotifier::Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::EmitTraceEventBweType(
@@ -2432,7 +2446,7 @@ namespace RTC
 				break;
 		}
 
-		Channel::ChannelNotifier::Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -2755,7 +2769,7 @@ namespace RTC
 
 		data["sctpState"] = "connecting";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2778,7 +2792,7 @@ namespace RTC
 
 		data["sctpState"] = "connected";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationFailed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2801,7 +2815,7 @@ namespace RTC
 
 		data["sctpState"] = "failed";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2824,7 +2838,7 @@ namespace RTC
 
 		data["sctpState"] = "closed";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationSendData(

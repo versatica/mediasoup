@@ -12,7 +12,7 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format off
 		uint8_t originalBuffer[] =
 		{
-			0x67,0x42,0xc0,0x33
+			0x67, 0x42, 0xc0, 0x33
 		};
 		// clang-format on
 
@@ -40,7 +40,7 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format off
 		uint8_t originalBuffer[] =
 		{
-			0x68,0xce,0x01,0xa8
+			0x68, 0xce, 0x01, 0xa8
 		};
 		// clang-format on
 
@@ -68,7 +68,7 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format off
 		uint8_t originalBuffer[] =
 		{
-			0x81,0xe0,0x00,0x4e
+			0x81, 0xe0, 0x00, 0x4e
 		};
 		// clang-format on
 
@@ -96,7 +96,7 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format off
 		uint8_t originalBuffer[] =
 		{
-			0x85,0xb8,0x00,0x04
+			0x85, 0xb8, 0x00, 0x04
 		};
 		// clang-format on
 
@@ -124,7 +124,7 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format off
 		uint8_t originalBuffer[] =
 		{
-			0x6e,0x80,0x90,0x20
+			0x6e, 0x80, 0x90, 0x20
 		};
 		// clang-format on
 
@@ -154,7 +154,7 @@ SCENARIO("parse H264_SVC payload descriptor", "[codecs][h264_svc]")
 		// clang-format off
 		uint8_t originalBuffer[] =
 		{
-			0x74,0x80,0x90,0x20
+			0x74, 0x80, 0x90, 0x20
 		};
 		// clang-format on
 

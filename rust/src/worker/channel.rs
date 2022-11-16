@@ -14,6 +14,7 @@ use serde_json::Value;
 use std::any::TypeId;
 use std::collections::VecDeque;
 use std::fmt::{Debug, Display};
+use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 
@@ -214,7 +215,9 @@ impl Channel {
             let buffered_notifications_for = Arc::clone(&buffered_notifications_for);
             // This this contain cache of targets that are known to not have buffering, so
             // that we can avoid Mutex locking overhead for them
-            let mut non_buffered_notifications = LruCache::<SubscriptionTarget, ()>::new(1000);
+            let mut non_buffered_notifications = LruCache::<SubscriptionTarget, ()>::new(
+                NonZeroUsize::new(1000).expect("Not zero; qed"),
+            );
 
             move |message| {
                 trace!("received raw message: {}", String::from_utf8_lossy(message));

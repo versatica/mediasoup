@@ -2,11 +2,9 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/WebRtcServer.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
 #include <cmath> // std::pow()
 
 namespace RTC
@@ -29,7 +27,8 @@ namespace RTC
 
 	/* Instance methods. */
 
-	WebRtcServer::WebRtcServer(const std::string& id, json& data) : id(id)
+	WebRtcServer::WebRtcServer(RTC::Shared* shared, const std::string& id, json& data)
+	  : id(id), shared(shared)
 	{
 		MS_TRACE();
 
@@ -139,7 +138,7 @@ namespace RTC
 			}
 
 			// NOTE: This may throw.
-			ChannelMessageHandlers::RegisterHandler(
+			this->shared->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*payloadChannelRequestHandler*/ nullptr,
@@ -167,7 +166,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		for (auto& item : this->udpSocketOrTcpServers)
 		{

@@ -25,7 +25,7 @@ import {
 import { RtpCapabilities } from './RtpParameters';
 import { SctpStreamParameters } from './SctpParameters';
 
-export interface TransportListenIp
+export type TransportListenIp =
 {
 	/**
 	 * Listening IPv4 or IPv6.
@@ -37,21 +37,21 @@ export interface TransportListenIp
 	 * private IP).
 	 */
 	announcedIp?: string;
-}
+};
 
 /**
  * Transport protocol.
  */
 export type TransportProtocol = 'udp' | 'tcp';
 
-export interface TransportTuple
+export type TransportTuple =
 {
 	localIp: string;
 	localPort: number;
 	remoteIp?: string;
 	remotePort?: number;
 	protocol: TransportProtocol;
-}
+};
 
 /**
  * Valid types for 'trace' event.
@@ -61,7 +61,7 @@ export type TransportTraceEventType = 'probation' | 'bwe';
 /**
  * 'trace' event data.
  */
-export interface TransportTraceEventData
+export type TransportTraceEventData =
 {
 	/**
 	 * Trace type.
@@ -82,7 +82,7 @@ export interface TransportTraceEventData
 	 * Per type information.
 	 */
 	info: any;
-}
+};
 
 export type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 

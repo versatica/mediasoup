@@ -1,6 +1,7 @@
 #ifndef MS_RTC_PIPE_TRANSPORT_HPP
 #define MS_RTC_PIPE_TRANSPORT_HPP
 
+#include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/TransportTuple.hpp"
@@ -23,7 +24,8 @@ namespace RTC
 		static size_t srtpMasterLength;
 
 	public:
-		PipeTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
+		PipeTransport(
+		  RTC::Shared* shared, const std::string& id, RTC::Transport::Listener* listener, json& data);
 		~PipeTransport() override;
 
 	public:

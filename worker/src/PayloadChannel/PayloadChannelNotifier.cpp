@@ -6,17 +6,10 @@
 
 namespace PayloadChannel
 {
-	/* Class variables. */
-
-	thread_local PayloadChannel::PayloadChannelSocket* PayloadChannelNotifier::payloadChannel{ nullptr };
-
-	/* Static methods. */
-
-	void PayloadChannelNotifier::ClassInit(PayloadChannel::PayloadChannelSocket* payloadChannel)
+	PayloadChannelNotifier::PayloadChannelNotifier(PayloadChannel::PayloadChannelSocket* payloadChannel)
+	  : payloadChannel(payloadChannel)
 	{
 		MS_TRACE();
-
-		PayloadChannelNotifier::payloadChannel = payloadChannel;
 	}
 
 	void PayloadChannelNotifier::Emit(
@@ -24,16 +17,14 @@ namespace PayloadChannel
 	{
 		MS_TRACE();
 
-		MS_ASSERT(PayloadChannelNotifier::payloadChannel, "payloadChannel unset");
-
 		std::string notification("{\"targetId\":\"");
 
 		notification.append(targetId);
 		notification.append("\",\"event\":\"");
 		notification.append(event);
-		notification.append("}");
+		notification.append("\"}");
 
-		PayloadChannelNotifier::payloadChannel->Send(notification, payload, payloadLen);
+		this->payloadChannel->Send(notification, payload, payloadLen);
 	}
 
 	void PayloadChannelNotifier::Emit(
@@ -41,14 +32,12 @@ namespace PayloadChannel
 	{
 		MS_TRACE();
 
-		MS_ASSERT(PayloadChannelNotifier::payloadChannel, "payloadChannel unset");
-
 		json jsonNotification = json::object();
 
 		jsonNotification["targetId"] = targetId;
 		jsonNotification["event"]    = event;
 		jsonNotification["data"]     = data;
 
-		PayloadChannelNotifier::payloadChannel->Send(jsonNotification, payload, payloadLen);
+		this->payloadChannel->Send(jsonNotification, payload, payloadLen);
 	}
 } // namespace PayloadChannel
