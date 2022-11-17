@@ -124,6 +124,8 @@ switch (task)
 		if (!fs.existsSync('node/lib')) {
 			execute('npm install typescript @types/debug @types/uuid');
 			execute('node npm-scripts.js typescript:build');
+			execute('npm uninstall typescript @types/debug @types/uuid');
+
 			// TODO: Compile flatbuffers.
 		}
 
