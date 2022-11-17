@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const process = require('process');
 const os = require('os');
 const fs = require('fs');
@@ -14,8 +16,7 @@ const MAYOR_VERSION = version.split('.')[0];
 // make command to use.
 const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 
-// eslint-disable-next-line no-console
-console.log(`npm-scripts.js [INFO] running task: ${task}`);
+console.log(`npm-scripts.js [INFO] running task "${task}"`);
 
 switch (task)
 {
@@ -28,11 +29,9 @@ switch (task)
 	// So here we compile TypeScript and flatbuffers to JavaScript.
 	case 'prepare':
 	{
-		if (!fs.existsSync('node/lib'))
-		{
-			execute('node npm-scripts.js typescript:build');
-			// TODO: Compile flatbuffers.
-		}
+		buildTypescript(/* force */ false);
+
+		// TODO: Compile flatbuffers.
 
 		break;
 	}
@@ -41,16 +40,11 @@ switch (task)
 	{
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
-			execute('node npm-scripts.js worker:build');
+			buildWorker();
 
 			if (!process.env.MEDIASOUP_LOCAL_DEV)
 			{
-				// Clean build artifacts except `mediasoup-worker`.
-				execute(`${MAKE} clean-build -C worker`);
-				// Clean downloaded dependencies.
-				execute(`${MAKE} clean-subprojects -C worker`);
-				// Clean PIP/Meson/Ninja.
-				execute(`${MAKE} clean-pip -C worker`);
+				cleanWorker();
 			}
 		}
 
@@ -59,37 +53,20 @@ switch (task)
 
 	case 'typescript:build':
 	{
-		if (!isWindows)
-		{
-			execute('rm -rf node/lib');
-		}
-		else
-		{
-			execute('rmdir /s /q "node/lib"', /* exitOnError */ false);
-		}
-
-		execute('tsc --project node');
-		taskReplaceVersion();
+		buildTypescript(/* force */ true);
+		replaceVersion();
 
 		break;
 	}
 
 	case 'typescript:watch':
 	{
+		deleteNodeLib();
+
 		const TscWatchClient = require('tsc-watch/client');
-
-		if (!isWindows)
-		{
-			execute('rm -rf node/lib');
-		}
-		else
-		{
-			execute('rmdir /s /q "node/lib"', /* exitOnError */ false);
-		}
-
 		const watch = new TscWatchClient();
 
-		watch.on('success', taskReplaceVersion);
+		watch.on('success', replaceVersion);
 		watch.start('--project', 'node', '--pretty');
 
 		break;
@@ -97,48 +74,44 @@ switch (task)
 
 	case 'worker:build':
 	{
-		execute(`${MAKE} -C worker`);
+		buildWorker();
 
 		break;
 	}
 
 	case 'lint:node':
 	{
-		execute('eslint -c node/.eslintrc.js --max-warnings 0 node/src/ node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
+		executeCmd('eslint -c node/.eslintrc.js --max-warnings 0 node/src/ node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
 
 		break;
 	}
 
 	case 'lint:worker':
 	{
-		execute(`${MAKE} lint -C worker`);
+		executeCmd(`${MAKE} lint -C worker`);
 
 		break;
 	}
 
 	case 'format:worker':
 	{
-		execute(`${MAKE} format -C worker`);
+		executeCmd(`${MAKE} format -C worker`);
 
 		break;
 	}
 
 	case 'test:node':
 	{
-		if (!fs.existsSync('node/lib'))
-		{
-			execute('node npm-scripts.js typescript:build');
-		}
-
-		taskReplaceVersion();
+		buildTypescript(/* force */ false);
+		replaceVersion();
 
 		if (!process.env.TEST_FILE)
 		{
-			execute('jest');
+			executeCmd('jest');
 		}
 		else
 		{
-			execute(`jest --testPathPattern ${process.env.TEST_FILE}`);
+			executeCmd(`jest --testPathPattern ${process.env.TEST_FILE}`);
 		}
 
 		break;
@@ -146,36 +119,37 @@ switch (task)
 
 	case 'test:worker':
 	{
-		execute(`${MAKE} test -C worker`);
+		executeCmd(`${MAKE} test -C worker`);
 
 		break;
 	}
 
 	case 'coverage':
 	{
-		taskReplaceVersion();
-		execute('jest --coverage');
-		execute('open-cli coverage/lcov-report/index.html');
+		replaceVersion();
+		executeCmd('jest --coverage');
+		executeCmd('open-cli coverage/lcov-report/index.html');
 
 		break;
 	}
 
 	case 'release':
 	{
-		execute('node npm-scripts.js typescript:build');
-		execute('npm run lint');
-		execute('npm run test');
-		execute(`git commit -am '${version}'`);
-		execute(`git tag -a ${version} -m '${version}'`);
-		execute(`git push origin v${MAYOR_VERSION} && git push origin --tags`);
-		execute('npm publish');
+		buildTypescript(/* force */ true);
+		buildWorker();
+		executeCmd('npm run lint');
+		executeCmd('npm run test');
+		executeCmd(`git commit -am '${version}'`);
+		executeCmd(`git tag -a ${version} -m '${version}'`);
+		executeCmd(`git push origin v${MAYOR_VERSION} && git push origin --tags`);
+		executeCmd('npm publish');
 
 		break;
 	}
 
 	case 'install-clang-tools':
 	{
-		execute('npm ci --prefix worker/scripts');
+		executeCmd('npm ci --prefix worker/scripts');
 
 		break;
 	}
@@ -186,10 +160,9 @@ switch (task)
 	}
 }
 
-function taskReplaceVersion()
+function replaceVersion()
 {
-	// eslint-disable-next-line no-console
-	console.log('npm-scripts.js [INFO] taskReplaceVersion()');
+	console.log('npm-scripts.js [INFO] replaceVersion()');
 
 	const files =
 	[
@@ -207,10 +180,57 @@ function taskReplaceVersion()
 	}
 }
 
-function execute(command, exitOnError = true)
+function deleteNodeLib()
 {
-	// eslint-disable-next-line no-console
-	console.log(`npm-scripts.js [INFO] execute(): ${command}`);
+	console.log('npm-scripts.js [INFO] deleteNodeLib()');
+
+	if (!isWindows)
+	{
+		executeCmd('rm -rf node/lib/');
+	}
+	else
+	{
+		// NOTE: This command fails in Windows if the dir doesn't exist.
+		executeCmd('rmdir /s /q "node/lib/"', /* exitOnError */ false);
+	}
+}
+
+function buildTypescript(force = false)
+{
+	if (!force && fs.existsSync('node/lib/'))
+	{
+		return;
+	}
+
+	console.log('npm-scripts.js [INFO] buildTypescript()');
+
+	deleteNodeLib();
+
+	executeCmd('tsc --project node');
+}
+
+function buildWorker()
+{
+	console.log('npm-scripts.js [INFO] buildWorker()');
+
+	executeCmd(`${MAKE} -C worker`);
+}
+
+function cleanWorker()
+{
+	console.log('npm-scripts.js [INFO] cleanWorker()');
+
+	// Clean build artifacts except `mediasoup-worker`.
+	executeCmd(`${MAKE} clean-build -C worker`);
+	// Clean downloaded dependencies.
+	executeCmd(`${MAKE} clean-subprojects -C worker`);
+	// Clean PIP/Meson/Ninja.
+	executeCmd(`${MAKE} clean-pip -C worker`);
+}
+
+function executeCmd(command, exitOnError = true)
+{
+	console.log(`npm-scripts.js [INFO] executeCmd(): ${command}`);
 
 	try
 	{
