@@ -122,9 +122,9 @@ switch (task)
 		// If node/lib/ folder doesn't exist we have to compile TypeScript and
 		// flatbuffers.
 		if (!fs.existsSync('node/lib')) {
-			execute('npm install typescript @types/debug @types/uuid');
+			execute('npm install --no-save typescript @types/debug @types/uuid');
 			execute('node npm-scripts.js typescript:build');
-			execute('npm uninstall typescript @types/debug @types/uuid');
+			execute('npm uninstall --no-save typescript @types/debug @types/uuid');
 
 			// TODO: Compile flatbuffers.
 		}
