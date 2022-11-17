@@ -21,8 +21,7 @@
   "types": "node/lib/index.d.ts",
   "files": [
     "npm-scripts.js",
-    "node/src",
-    "node/tsconfig.json",
+    "node/lib",
     "worker/Makefile",
     "worker/meson.build",
     "worker/meson_options.txt",
@@ -70,25 +69,25 @@
     "testRegex": "node/tests/test.*\\.js"
   },
   "dependencies": {
-    "@types/debug": "^4.1.7",
     "@types/node": "^18.11.9",
-    "@types/uuid": "^8.3.4",
     "debug": "^4.3.4",
     "h264-profile-level-id": "^1.0.1",
     "supports-color": "^9.2.3",
-    "typescript": "^4.8.4",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.42.0",
-    "@typescript-eslint/parser": "^5.42.0",
-    "eslint": "^8.26.0",
-    "eslint-plugin-jest": "^27.1.4",
-    "jest": "^29.2.2",
+    "@types/debug": "^4.1.7",
+    "@types/uuid": "^8.3.4",
+    "@typescript-eslint/eslint-plugin": "^5.43.0",
+    "@typescript-eslint/parser": "^5.43.0",
+    "eslint": "^8.27.0",
+    "eslint-plugin-jest": "^27.1.5",
+    "jest": "^29.3.1",
     "jest-tobetype": "^1.2.3",
     "open-cli": "^7.1.0",
     "pick-port": "^1.0.1",
     "sctp": "^1.0.0",
-    "tsc-watch": "^5.0.3"
+    "tsc-watch": "^5.0.3",
+    "typescript": "^4.9.3"
   }
 }
