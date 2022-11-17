@@ -135,7 +135,7 @@ switch (task)
 		if (!fs.existsSync('node/lib'))
 		{
 			// TODO: Add flatbuffers dependency here.
-			execute('npm install --no-save typescript @types/debug @types/uuid');
+			execute('npm install --production=false --no-save typescript @types/debug @types/uuid');
 			execute('node npm-scripts.js typescript:build');
 			// TODO: Compile flatbuffers.
 			// TODO: Add flatbuffers dependency here.
