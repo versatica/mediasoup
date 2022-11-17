@@ -796,7 +796,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 				preferredLayers : status.preferredLayers ?
 					{
 						spatialLayer  : status.preferredLayers.spatialLayer,
-						temporalLayer : status.preferredLayers.temporalLayer!.value
+						temporalLayer : status.preferredLayers.temporalLayer !== null ?
+							status.preferredLayers.temporalLayer :
+							undefined
 					} :
 					undefined
 			});
@@ -1112,13 +1114,11 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
 			FbsConsumer.ConsumerLayers.addSpatialLayer(builder, preferredLayers.spatialLayer);
 
-			if (preferredLayers.temporalLayer)
+			if (preferredLayers.temporalLayer !== undefined)
 			{
-				const temporalLayerOffset = FbsCommon.OptionalInt16.createOptionalInt16(
+				FbsConsumer.ConsumerLayers.addTemporalLayer(
 					builder, preferredLayers.temporalLayer
 				);
-
-				FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayerOffset);
 			}
 
 			preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);

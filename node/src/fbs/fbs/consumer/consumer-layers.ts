@@ -2,7 +2,6 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { OptionalInt16, OptionalInt16T } from '../../fbs/common/optional-int16';
 
 
 export class ConsumerLayers {
@@ -28,9 +27,9 @@ spatialLayer():number {
   return offset ? this.bb!.readInt16(this.bb_pos + offset) : 0;
 }
 
-temporalLayer(obj?:OptionalInt16):OptionalInt16|null {
+temporalLayer():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? (obj || new OptionalInt16()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? this.bb!.readInt16(this.bb_pos + offset) : null;
 }
 
 static startConsumerLayers(builder:flatbuffers.Builder) {
@@ -41,8 +40,8 @@ static addSpatialLayer(builder:flatbuffers.Builder, spatialLayer:number) {
   builder.addFieldInt16(0, spatialLayer, 0);
 }
 
-static addTemporalLayer(builder:flatbuffers.Builder, temporalLayerOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, temporalLayerOffset, 0);
+static addTemporalLayer(builder:flatbuffers.Builder, temporalLayer:number) {
+  builder.addFieldInt16(1, temporalLayer, 0);
 }
 
 static endConsumerLayers(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -50,35 +49,39 @@ static endConsumerLayers(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
+static createConsumerLayers(builder:flatbuffers.Builder, spatialLayer:number, temporalLayer:number|null):flatbuffers.Offset {
+  ConsumerLayers.startConsumerLayers(builder);
+  ConsumerLayers.addSpatialLayer(builder, spatialLayer);
+  if (temporalLayer !== null)
+    ConsumerLayers.addTemporalLayer(builder, temporalLayer);
+  return ConsumerLayers.endConsumerLayers(builder);
+}
 
 unpack(): ConsumerLayersT {
   return new ConsumerLayersT(
     this.spatialLayer(),
-    (this.temporalLayer() !== null ? this.temporalLayer()!.unpack() : null)
+    this.temporalLayer()
   );
 }
 
 
 unpackTo(_o: ConsumerLayersT): void {
   _o.spatialLayer = this.spatialLayer();
-  _o.temporalLayer = (this.temporalLayer() !== null ? this.temporalLayer()!.unpack() : null);
+  _o.temporalLayer = this.temporalLayer();
 }
 }
 
 export class ConsumerLayersT {
 constructor(
   public spatialLayer: number = 0,
-  public temporalLayer: OptionalInt16T|null = null
+  public temporalLayer: number|null = null
 ){}
 
 
 pack(builder:flatbuffers.Builder): flatbuffers.Offset {
-  const temporalLayer = (this.temporalLayer !== null ? this.temporalLayer!.pack(builder) : 0);
-
-  ConsumerLayers.startConsumerLayers(builder);
-  ConsumerLayers.addSpatialLayer(builder, this.spatialLayer);
-  ConsumerLayers.addTemporalLayer(builder, temporalLayer);
-
-  return ConsumerLayers.endConsumerLayers(builder);
+  return ConsumerLayers.createConsumerLayers(builder,
+    this.spatialLayer,
+    this.temporalLayer
+  );
 }
 }

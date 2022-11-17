@@ -12,7 +12,6 @@ const DataProducer_1 = require("./DataProducer");
 const DataConsumer_1 = require("./DataConsumer");
 const RtpParameters_1 = require("./RtpParameters");
 const SctpParameters_1 = require("./SctpParameters");
-const FbsCommon = require("./fbs/common_generated");
 const FbsRequest = require("./fbs/request_generated");
 const FbsResponse = require("./fbs/response_generated");
 const media_kind_1 = require("./fbs/fbs/rtp-parameters/media-kind");
@@ -443,7 +442,9 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             preferredLayers: status.preferredLayers ?
                 {
                     spatialLayer: status.preferredLayers.spatialLayer,
-                    temporalLayer: status.preferredLayers.temporalLayer.value
+                    temporalLayer: status.preferredLayers.temporalLayer !== null ?
+                        status.preferredLayers.temporalLayer :
+                        undefined
                 } :
                 undefined
         });
@@ -630,9 +631,8 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         if (preferredLayers) {
             FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
             FbsConsumer.ConsumerLayers.addSpatialLayer(builder, preferredLayers.spatialLayer);
-            if (preferredLayers.temporalLayer) {
-                const temporalLayerOffset = FbsCommon.OptionalInt16.createOptionalInt16(builder, preferredLayers.temporalLayer);
-                FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayerOffset);
+            if (preferredLayers.temporalLayer !== undefined) {
+                FbsConsumer.ConsumerLayers.addTemporalLayer(builder, preferredLayers.temporalLayer);
             }
             preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
         }

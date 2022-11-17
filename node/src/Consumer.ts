@@ -10,7 +10,6 @@ import {
 	RtpParameters
 } from './RtpParameters';
 import * as FbsRequest from './fbs/request_generated';
-import * as FbsResponse from './fbs/response_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsConsumer from './fbs/consumer_generated';
 import * as FbsCommon from './fbs/common_generated';
@@ -565,19 +564,11 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		const builder = this.#channel.bufferBuilder;
 
-		let temporalLayerOffset = 0;
-
-		// temporalLayer is optional.
-		if (temporalLayer)
-		{
-			temporalLayerOffset = FbsCommon.OptionalInt16.createOptionalInt16(
-				builder, temporalLayer
-			);
-		}
-
 		FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
 		FbsConsumer.ConsumerLayers.addSpatialLayer(builder, spatialLayer);
-		FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayerOffset);
+
+		if (temporalLayer !== undefined)
+			FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayer);
 
 		const preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
 		const requestOffset =
@@ -605,8 +596,8 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			{
 				preferredLayers = {
 					spatialLayer  : status.preferredLayers.spatialLayer,
-					temporalLayer : status.preferredLayers.temporalLayer ?
-						status.preferredLayers.temporalLayer.value :
+					temporalLayer : status.preferredLayers.temporalLayer !== null ?
+						status.preferredLayers.temporalLayer :
 						undefined
 				};
 			}

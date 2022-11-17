@@ -1,12 +1,6 @@
 
 namespace FBS.Common;
 
-/* Optional scalars */
-
-table OptionalInt16 {
-  value:int16;
-}
-
 /* Common custom types */
 
 table StringString {

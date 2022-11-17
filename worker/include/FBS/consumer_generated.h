@@ -13,8 +13,6 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
               FLATBUFFERS_VERSION_REVISION == 8,
              "Non-compatible flatbuffers version included");
 
-#include "common_generated.h"
-
 namespace FBS {
 namespace Consumer {
 
@@ -65,14 +63,13 @@ struct ConsumerLayers FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   int16_t spatialLayer() const {
     return GetField<int16_t>(VT_SPATIALLAYER, 0);
   }
-  const FBS::Common::OptionalInt16 *temporalLayer() const {
-    return GetPointer<const FBS::Common::OptionalInt16 *>(VT_TEMPORALLAYER);
+  flatbuffers::Optional<int16_t> temporalLayer() const {
+    return GetOptional<int16_t, int16_t>(VT_TEMPORALLAYER);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int16_t>(verifier, VT_SPATIALLAYER, 2) &&
-           VerifyOffset(verifier, VT_TEMPORALLAYER) &&
-           verifier.VerifyTable(temporalLayer()) &&
+           VerifyField<int16_t>(verifier, VT_TEMPORALLAYER, 2) &&
            verifier.EndTable();
   }
 };
@@ -84,8 +81,8 @@ struct ConsumerLayersBuilder {
   void add_spatialLayer(int16_t spatialLayer) {
     fbb_.AddElement<int16_t>(ConsumerLayers::VT_SPATIALLAYER, spatialLayer, 0);
   }
-  void add_temporalLayer(flatbuffers::Offset<FBS::Common::OptionalInt16> temporalLayer) {
-    fbb_.AddOffset(ConsumerLayers::VT_TEMPORALLAYER, temporalLayer);
+  void add_temporalLayer(int16_t temporalLayer) {
+    fbb_.AddElement<int16_t>(ConsumerLayers::VT_TEMPORALLAYER, temporalLayer);
   }
   explicit ConsumerLayersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -101,9 +98,9 @@ struct ConsumerLayersBuilder {
 inline flatbuffers::Offset<ConsumerLayers> CreateConsumerLayers(
     flatbuffers::FlatBufferBuilder &_fbb,
     int16_t spatialLayer = 0,
-    flatbuffers::Offset<FBS::Common::OptionalInt16> temporalLayer = 0) {
+    flatbuffers::Optional<int16_t> temporalLayer = flatbuffers::nullopt) {
   ConsumerLayersBuilder builder_(_fbb);
-  builder_.add_temporalLayer(temporalLayer);
+  if(temporalLayer) { builder_.add_temporalLayer(*temporalLayer); }
   builder_.add_spatialLayer(spatialLayer);
   return builder_.Finish();
 }
@@ -424,17 +421,14 @@ inline flatbuffers::Offset<EnableTraceEventRequest> CreateEnableTraceEventReques
 inline const flatbuffers::TypeTable *ConsumerLayersTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_SHORT, 0, -1 },
-    { flatbuffers::ET_SEQUENCE, 0, 0 }
-  };
-  static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Common::OptionalInt16TypeTable
+    { flatbuffers::ET_SHORT, 0, -1 }
   };
   static const char * const names[] = {
     "spatialLayer",
     "temporalLayer"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
   };
   return &tt;
 }

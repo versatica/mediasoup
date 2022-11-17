@@ -1,10 +1,8 @@
-include "common.fbs";
-
 namespace FBS.Consumer;
 
 table ConsumerLayers {
   spatial_layer:int16;
-  temporal_layer:FBS.Common.OptionalInt16;
+  temporal_layer:int16 = null;
 }
 
 table ConsumerScore {

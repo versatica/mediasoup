@@ -6,7 +6,6 @@ const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
 const FbsRequest = require("./fbs/request_generated");
 const FbsTransport = require("./fbs/transport_generated");
 const FbsConsumer = require("./fbs/consumer_generated");
-const FbsCommon = require("./fbs/common_generated");
 const logger = new Logger_1.Logger('Consumer');
 class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     // Internal data.
@@ -233,14 +232,10 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         if (temporalLayer && typeof temporalLayer !== 'number')
             throw new TypeError('if given, temporalLayer must be a number');
         const builder = this.#channel.bufferBuilder;
-        let temporalLayerOffset = 0;
-        // temporalLayer is optional.
-        if (temporalLayer) {
-            temporalLayerOffset = FbsCommon.OptionalInt16.createOptionalInt16(builder, temporalLayer);
-        }
         FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
         FbsConsumer.ConsumerLayers.addSpatialLayer(builder, spatialLayer);
-        FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayerOffset);
+        if (temporalLayer !== undefined)
+            FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayer);
         const preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
         const requestOffset = FbsConsumer.SetPreferredLayersRequest.createSetPreferredLayersRequest(builder, preferredLayersOffset);
         const response = await this.#channel.requestBinary(FbsRequest.Method.CONSUMER_SET_PREFERRED_LAYERS, FbsRequest.Body.FBS_Consumer_SetPreferredLayersRequest, requestOffset, this.#internal.consumerId);
@@ -253,8 +248,8 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             if (status.preferredLayers) {
                 preferredLayers = {
                     spatialLayer: status.preferredLayers.spatialLayer,
-                    temporalLayer: status.preferredLayers.temporalLayer ?
-                        status.preferredLayers.temporalLayer.value :
+                    temporalLayer: status.preferredLayers.temporalLayer !== null ?
+                        status.preferredLayers.temporalLayer :
                         undefined
                 };
             }
