@@ -22,9 +22,9 @@ static getSizePrefixedRootAsRtx(bb:flatbuffers.ByteBuffer, obj?:Rtx):Rtx {
   return (obj || new Rtx()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-ssrc():number {
+ssrc():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : null;
 }
 
 static startRtx(builder:flatbuffers.Builder) {
@@ -40,9 +40,10 @@ static endRtx(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createRtx(builder:flatbuffers.Builder, ssrc:number):flatbuffers.Offset {
+static createRtx(builder:flatbuffers.Builder, ssrc:number|null):flatbuffers.Offset {
   Rtx.startRtx(builder);
-  Rtx.addSsrc(builder, ssrc);
+  if (ssrc !== null)
+    Rtx.addSsrc(builder, ssrc);
   return Rtx.endRtx(builder);
 }
 
@@ -60,7 +61,7 @@ unpackTo(_o: RtxT): void {
 
 export class RtxT {
 constructor(
-  public ssrc: number = 0
+  public ssrc: number|null = null
 ){}
 
 

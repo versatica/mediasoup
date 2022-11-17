@@ -7,7 +7,7 @@ export declare class EncodingMapping {
     static getSizePrefixedRootAsEncodingMapping(bb: flatbuffers.ByteBuffer, obj?: EncodingMapping): EncodingMapping;
     rid(): string | null;
     rid(optionalEncoding: flatbuffers.Encoding): string | Uint8Array | null;
-    ssrc(): number;
+    ssrc(): number | null;
     scalabilityMode(): string | null;
     scalabilityMode(optionalEncoding: flatbuffers.Encoding): string | Uint8Array | null;
     mappedSsrc(): number;
@@ -17,16 +17,16 @@ export declare class EncodingMapping {
     static addScalabilityMode(builder: flatbuffers.Builder, scalabilityModeOffset: flatbuffers.Offset): void;
     static addMappedSsrc(builder: flatbuffers.Builder, mappedSsrc: number): void;
     static endEncodingMapping(builder: flatbuffers.Builder): flatbuffers.Offset;
-    static createEncodingMapping(builder: flatbuffers.Builder, ridOffset: flatbuffers.Offset, ssrc: number, scalabilityModeOffset: flatbuffers.Offset, mappedSsrc: number): flatbuffers.Offset;
+    static createEncodingMapping(builder: flatbuffers.Builder, ridOffset: flatbuffers.Offset, ssrc: number | null, scalabilityModeOffset: flatbuffers.Offset, mappedSsrc: number): flatbuffers.Offset;
     unpack(): EncodingMappingT;
     unpackTo(_o: EncodingMappingT): void;
 }
 export declare class EncodingMappingT {
     rid: string | Uint8Array | null;
-    ssrc: number;
+    ssrc: number | null;
     scalabilityMode: string | Uint8Array | null;
     mappedSsrc: number;
-    constructor(rid?: string | Uint8Array | null, ssrc?: number, scalabilityMode?: string | Uint8Array | null, mappedSsrc?: number);
+    constructor(rid?: string | Uint8Array | null, ssrc?: number | null, scalabilityMode?: string | Uint8Array | null, mappedSsrc?: number);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=encoding-mapping.d.ts.map

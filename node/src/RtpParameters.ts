@@ -514,13 +514,6 @@ export function serializeRtpEncodingParameters(
 		if (scalabilityModeOffset)
 			FbsRtpEncodingParameters.addScalabilityMode(builder, scalabilityModeOffset);
 
-		// Add scale resolution down by.
-		if (encoding.scaleResolutionDownBy !== undefined)
-		{
-			FbsRtpEncodingParameters.addScaleResolutionDownBy(
-				builder, encoding.scaleResolutionDownBy);
-		}
-
 		// Add max bitrate.
 		if (encoding.maxBitrate !== undefined)
 			FbsRtpEncodingParameters.addMaxBitrate(builder, encoding.maxBitrate);

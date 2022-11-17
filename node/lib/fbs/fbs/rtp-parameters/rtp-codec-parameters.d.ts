@@ -11,7 +11,7 @@ export declare class RtpCodecParameters {
     mimeType(optionalEncoding: flatbuffers.Encoding): string | Uint8Array | null;
     payloadType(): number;
     clockRate(): number;
-    channels(): number;
+    channels(): number | null;
     parameters(index: number, obj?: Parameter): Parameter | null;
     parametersLength(): number;
     rtcpFeedback(index: number, obj?: RtcpFeedback): RtcpFeedback | null;
@@ -28,7 +28,7 @@ export declare class RtpCodecParameters {
     static createRtcpFeedbackVector(builder: flatbuffers.Builder, data: flatbuffers.Offset[]): flatbuffers.Offset;
     static startRtcpFeedbackVector(builder: flatbuffers.Builder, numElems: number): void;
     static endRtpCodecParameters(builder: flatbuffers.Builder): flatbuffers.Offset;
-    static createRtpCodecParameters(builder: flatbuffers.Builder, mimeTypeOffset: flatbuffers.Offset, payloadType: number, clockRate: number, channels: number, parametersOffset: flatbuffers.Offset, rtcpFeedbackOffset: flatbuffers.Offset): flatbuffers.Offset;
+    static createRtpCodecParameters(builder: flatbuffers.Builder, mimeTypeOffset: flatbuffers.Offset, payloadType: number, clockRate: number, channels: number | null, parametersOffset: flatbuffers.Offset, rtcpFeedbackOffset: flatbuffers.Offset): flatbuffers.Offset;
     unpack(): RtpCodecParametersT;
     unpackTo(_o: RtpCodecParametersT): void;
 }
@@ -36,10 +36,10 @@ export declare class RtpCodecParametersT {
     mimeType: string | Uint8Array | null;
     payloadType: number;
     clockRate: number;
-    channels: number;
+    channels: number | null;
     parameters: (ParameterT)[];
     rtcpFeedback: (RtcpFeedbackT)[];
-    constructor(mimeType?: string | Uint8Array | null, payloadType?: number, clockRate?: number, channels?: number, parameters?: (ParameterT)[], rtcpFeedback?: (RtcpFeedbackT)[]);
+    constructor(mimeType?: string | Uint8Array | null, payloadType?: number, clockRate?: number, channels?: number | null, parameters?: (ParameterT)[], rtcpFeedback?: (RtcpFeedbackT)[]);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=rtp-codec-parameters.d.ts.map

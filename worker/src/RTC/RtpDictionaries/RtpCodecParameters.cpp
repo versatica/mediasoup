@@ -25,9 +25,9 @@ namespace RTC
 		this->clockRate = data->clockRate();
 
 		// channels is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpCodecParameters::VT_CHANNELS))
+		if (data->channels().has_value())
 		{
-			this->channels = data->channels();
+			this->channels = data->channels().value();
 		}
 
 		// parameters is optional.

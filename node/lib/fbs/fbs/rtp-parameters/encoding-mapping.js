@@ -24,7 +24,7 @@ class EncodingMapping {
     }
     ssrc() {
         const offset = this.bb.__offset(this.bb_pos, 6);
-        return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
+        return offset ? this.bb.readUint32(this.bb_pos + offset) : null;
     }
     scalabilityMode(optionalEncoding) {
         const offset = this.bb.__offset(this.bb_pos, 8);
@@ -56,7 +56,8 @@ class EncodingMapping {
     static createEncodingMapping(builder, ridOffset, ssrc, scalabilityModeOffset, mappedSsrc) {
         EncodingMapping.startEncodingMapping(builder);
         EncodingMapping.addRid(builder, ridOffset);
-        EncodingMapping.addSsrc(builder, ssrc);
+        if (ssrc !== null)
+            EncodingMapping.addSsrc(builder, ssrc);
         EncodingMapping.addScalabilityMode(builder, scalabilityModeOffset);
         EncodingMapping.addMappedSsrc(builder, mappedSsrc);
         return EncodingMapping.endEncodingMapping(builder);
@@ -77,7 +78,7 @@ class EncodingMappingT {
     ssrc;
     scalabilityMode;
     mappedSsrc;
-    constructor(rid = null, ssrc = 0, scalabilityMode = null, mappedSsrc = 0) {
+    constructor(rid = null, ssrc = null, scalabilityMode = null, mappedSsrc = 0) {
         this.rid = rid;
         this.ssrc = ssrc;
         this.scalabilityMode = scalabilityMode;

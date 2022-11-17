@@ -41,9 +41,9 @@ clockRate():number {
   return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
 }
 
-channels():number {
+channels():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 10);
-  return offset ? this.bb!.readUint8(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
 }
 
 parameters(index: number, obj?:Parameter):Parameter|null {
@@ -124,12 +124,13 @@ static endRtpCodecParameters(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createRtpCodecParameters(builder:flatbuffers.Builder, mimeTypeOffset:flatbuffers.Offset, payloadType:number, clockRate:number, channels:number, parametersOffset:flatbuffers.Offset, rtcpFeedbackOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createRtpCodecParameters(builder:flatbuffers.Builder, mimeTypeOffset:flatbuffers.Offset, payloadType:number, clockRate:number, channels:number|null, parametersOffset:flatbuffers.Offset, rtcpFeedbackOffset:flatbuffers.Offset):flatbuffers.Offset {
   RtpCodecParameters.startRtpCodecParameters(builder);
   RtpCodecParameters.addMimeType(builder, mimeTypeOffset);
   RtpCodecParameters.addPayloadType(builder, payloadType);
   RtpCodecParameters.addClockRate(builder, clockRate);
-  RtpCodecParameters.addChannels(builder, channels);
+  if (channels !== null)
+    RtpCodecParameters.addChannels(builder, channels);
   RtpCodecParameters.addParameters(builder, parametersOffset);
   RtpCodecParameters.addRtcpFeedback(builder, rtcpFeedbackOffset);
   return RtpCodecParameters.endRtpCodecParameters(builder);
@@ -162,7 +163,7 @@ constructor(
   public mimeType: string|Uint8Array|null = null,
   public payloadType: number = 0,
   public clockRate: number = 0,
-  public channels: number = 0,
+  public channels: number|null = null,
   public parameters: (ParameterT)[] = [],
   public rtcpFeedback: (RtcpFeedbackT)[] = []
 ){}

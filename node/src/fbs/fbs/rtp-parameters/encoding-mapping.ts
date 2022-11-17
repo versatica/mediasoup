@@ -29,9 +29,9 @@ rid(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-ssrc():number {
+ssrc():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : null;
 }
 
 scalabilityMode():string|null
@@ -71,10 +71,11 @@ static endEncodingMapping(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createEncodingMapping(builder:flatbuffers.Builder, ridOffset:flatbuffers.Offset, ssrc:number, scalabilityModeOffset:flatbuffers.Offset, mappedSsrc:number):flatbuffers.Offset {
+static createEncodingMapping(builder:flatbuffers.Builder, ridOffset:flatbuffers.Offset, ssrc:number|null, scalabilityModeOffset:flatbuffers.Offset, mappedSsrc:number):flatbuffers.Offset {
   EncodingMapping.startEncodingMapping(builder);
   EncodingMapping.addRid(builder, ridOffset);
-  EncodingMapping.addSsrc(builder, ssrc);
+  if (ssrc !== null)
+    EncodingMapping.addSsrc(builder, ssrc);
   EncodingMapping.addScalabilityMode(builder, scalabilityModeOffset);
   EncodingMapping.addMappedSsrc(builder, mappedSsrc);
   return EncodingMapping.endEncodingMapping(builder);
@@ -101,7 +102,7 @@ unpackTo(_o: EncodingMappingT): void {
 export class EncodingMappingT {
 constructor(
   public rid: string|Uint8Array|null = null,
-  public ssrc: number = 0,
+  public ssrc: number|null = null,
   public scalabilityMode: string|Uint8Array|null = null,
   public mappedSsrc: number = 0
 ){}

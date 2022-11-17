@@ -117,20 +117,17 @@ namespace RTC
 		MS_TRACE();
 
 		// ssrc is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_SSRC))
-		{
-			this->ssrc = data->ssrc();
-		}
+		if (data->ssrc().has_value())
+			this->ssrc = data->ssrc().value();
 
 		// rid is optional.
 		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_RID))
 			this->rid = data->rid()->str();
 
 		// codecPayloadType is optional.
-		if (flatbuffers::IsFieldPresent(
-		      data, FBS::RtpParameters::RtpEncodingParameters::VT_CODECPAYLOADTYPE))
+		if (data->codecPayloadType().has_value())
 		{
-			this->codecPayloadType    = data->codecPayloadType();
+			this->codecPayloadType    = data->codecPayloadType().value();
 			this->hasCodecPayloadType = true;
 		}
 
@@ -142,12 +139,10 @@ namespace RTC
 		}
 
 		// maxBitrate is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_MAXBITRATE))
-		{
-			this->maxBitrate = data->maxBitrate();
-		}
+		if (data->maxBitrate().has_value())
+			this->maxBitrate = data->maxBitrate().value();
 
-		// dtx is optional, defauled to false.
+		// dtx is optional, default is false.
 		this->dtx = data->dtx();
 
 		// scalabilityMode is optional.

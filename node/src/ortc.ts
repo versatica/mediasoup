@@ -1304,7 +1304,7 @@ export function serializeRtpMapping(
 			FbsRtpParameters.EncodingMapping.createEncodingMapping(
 				builder,
 				builder.createString(encoding.rid),
-				encoding.ssrc!,
+				encoding.ssrc ?? null,
 				builder.createString(encoding.scalabilityMode),
 				encoding.mappedSsrc)
 		);

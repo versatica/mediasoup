@@ -21,7 +21,7 @@ class RtpEncodingParameters {
     }
     ssrc() {
         const offset = this.bb.__offset(this.bb_pos, 4);
-        return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
+        return offset ? this.bb.readUint32(this.bb_pos + offset) : null;
     }
     rid(optionalEncoding) {
         const offset = this.bb.__offset(this.bb_pos, 6);
@@ -29,7 +29,7 @@ class RtpEncodingParameters {
     }
     codecPayloadType() {
         const offset = this.bb.__offset(this.bb_pos, 8);
-        return offset ? this.bb.readUint8(this.bb_pos + offset) : 0;
+        return offset ? this.bb.readUint8(this.bb_pos + offset) : null;
     }
     rtx(obj) {
         const offset = this.bb.__offset(this.bb_pos, 10);
@@ -43,16 +43,12 @@ class RtpEncodingParameters {
         const offset = this.bb.__offset(this.bb_pos, 14);
         return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
     }
-    scaleResolutionDownBy() {
-        const offset = this.bb.__offset(this.bb_pos, 16);
-        return offset ? this.bb.readUint8(this.bb_pos + offset) : 0;
-    }
     maxBitrate() {
-        const offset = this.bb.__offset(this.bb_pos, 18);
-        return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
+        const offset = this.bb.__offset(this.bb_pos, 16);
+        return offset ? this.bb.readUint32(this.bb_pos + offset) : null;
     }
     static startRtpEncodingParameters(builder) {
-        builder.startObject(8);
+        builder.startObject(7);
     }
     static addSsrc(builder, ssrc) {
         builder.addFieldInt32(0, ssrc, 0);
@@ -72,18 +68,15 @@ class RtpEncodingParameters {
     static addScalabilityMode(builder, scalabilityModeOffset) {
         builder.addFieldOffset(5, scalabilityModeOffset, 0);
     }
-    static addScaleResolutionDownBy(builder, scaleResolutionDownBy) {
-        builder.addFieldInt8(6, scaleResolutionDownBy, 0);
-    }
     static addMaxBitrate(builder, maxBitrate) {
-        builder.addFieldInt32(7, maxBitrate, 0);
+        builder.addFieldInt32(6, maxBitrate, 0);
     }
     static endRtpEncodingParameters(builder) {
         const offset = builder.endObject();
         return offset;
     }
     unpack() {
-        return new RtpEncodingParametersT(this.ssrc(), this.rid(), this.codecPayloadType(), (this.rtx() !== null ? this.rtx().unpack() : null), this.dtx(), this.scalabilityMode(), this.scaleResolutionDownBy(), this.maxBitrate());
+        return new RtpEncodingParametersT(this.ssrc(), this.rid(), this.codecPayloadType(), (this.rtx() !== null ? this.rtx().unpack() : null), this.dtx(), this.scalabilityMode(), this.maxBitrate());
     }
     unpackTo(_o) {
         _o.ssrc = this.ssrc();
@@ -92,7 +85,6 @@ class RtpEncodingParameters {
         _o.rtx = (this.rtx() !== null ? this.rtx().unpack() : null);
         _o.dtx = this.dtx();
         _o.scalabilityMode = this.scalabilityMode();
-        _o.scaleResolutionDownBy = this.scaleResolutionDownBy();
         _o.maxBitrate = this.maxBitrate();
     }
 }
@@ -104,16 +96,14 @@ class RtpEncodingParametersT {
     rtx;
     dtx;
     scalabilityMode;
-    scaleResolutionDownBy;
     maxBitrate;
-    constructor(ssrc = 0, rid = null, codecPayloadType = 0, rtx = null, dtx = false, scalabilityMode = null, scaleResolutionDownBy = 0, maxBitrate = 0) {
+    constructor(ssrc = null, rid = null, codecPayloadType = null, rtx = null, dtx = false, scalabilityMode = null, maxBitrate = null) {
         this.ssrc = ssrc;
         this.rid = rid;
         this.codecPayloadType = codecPayloadType;
         this.rtx = rtx;
         this.dtx = dtx;
         this.scalabilityMode = scalabilityMode;
-        this.scaleResolutionDownBy = scaleResolutionDownBy;
         this.maxBitrate = maxBitrate;
     }
     pack(builder) {
@@ -121,14 +111,16 @@ class RtpEncodingParametersT {
         const rtx = (this.rtx !== null ? this.rtx.pack(builder) : 0);
         const scalabilityMode = (this.scalabilityMode !== null ? builder.createString(this.scalabilityMode) : 0);
         RtpEncodingParameters.startRtpEncodingParameters(builder);
-        RtpEncodingParameters.addSsrc(builder, this.ssrc);
+        if (this.ssrc !== null)
+            RtpEncodingParameters.addSsrc(builder, this.ssrc);
         RtpEncodingParameters.addRid(builder, rid);
-        RtpEncodingParameters.addCodecPayloadType(builder, this.codecPayloadType);
+        if (this.codecPayloadType !== null)
+            RtpEncodingParameters.addCodecPayloadType(builder, this.codecPayloadType);
         RtpEncodingParameters.addRtx(builder, rtx);
         RtpEncodingParameters.addDtx(builder, this.dtx);
         RtpEncodingParameters.addScalabilityMode(builder, scalabilityMode);
-        RtpEncodingParameters.addScaleResolutionDownBy(builder, this.scaleResolutionDownBy);
-        RtpEncodingParameters.addMaxBitrate(builder, this.maxBitrate);
+        if (this.maxBitrate !== null)
+            RtpEncodingParameters.addMaxBitrate(builder, this.maxBitrate);
         return RtpEncodingParameters.endRtpEncodingParameters(builder);
     }
 }

@@ -81,9 +81,9 @@ namespace RTC
 			auto& encodingMapping = this->rtpMapping.encodings.back();
 
 			// ssrc is optional.
-			if (encoding->ssrc())
+			if (encoding->ssrc().has_value())
 			{
-				encodingMapping.ssrc = encoding->ssrc();
+				encodingMapping.ssrc = encoding->ssrc().value();
 			}
 
 			// rid is optional.
@@ -91,8 +91,8 @@ namespace RTC
 			// clang-format off
 			if (
 				encodings->size() > 1 &&
-				!encoding->ssrc() &&
-				!encoding->rid()
+				!encoding->ssrc().has_value() &&
+				!flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID)
 			)
 			// clang-format on
 			{
@@ -104,8 +104,8 @@ namespace RTC
 			if (
 				this->rtpParameters.mid.empty() &&
 				encodings->size() == 1 &&
-				!encoding->ssrc() &&
-				!encoding->rid()
+				!encoding->ssrc().has_value() &&
+				!flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID)
 			)
 			// clang-format on
 			{

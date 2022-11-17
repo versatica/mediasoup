@@ -876,7 +876,7 @@ function serializeRtpMapping(builder, rtpMapping) {
     const codecsOffset = FbsRtpParameters.RtpMapping.createCodecsVector(builder, codecs);
     const encodings = [];
     for (const encoding of rtpMapping.encodings) {
-        encodings.push(FbsRtpParameters.EncodingMapping.createEncodingMapping(builder, builder.createString(encoding.rid), encoding.ssrc, builder.createString(encoding.scalabilityMode), encoding.mappedSsrc));
+        encodings.push(FbsRtpParameters.EncodingMapping.createEncodingMapping(builder, builder.createString(encoding.rid), encoding.ssrc ?? null, builder.createString(encoding.scalabilityMode), encoding.mappedSsrc));
     }
     const encodingsOffset = FbsRtpParameters.RtpMapping.createEncodingsVector(builder, encodings);
     return FbsRtpParameters.RtpMapping.createRtpMapping(builder, codecsOffset, encodingsOffset);

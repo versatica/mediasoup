@@ -47,7 +47,7 @@ table RtpCodecParameters {
   mime_type:string (required);
   payload_type:uint8;
   clock_rate:uint32;
-  channels:uint8;
+  channels:uint8 = null;
   parameters:[Parameter];
   rtcp_feedback:[RtcpFeedback];
 }
@@ -60,18 +60,17 @@ table RtpHeaderExtensionParameters {
 }
 
 table Rtx {
-  ssrc:uint32;
+  ssrc:uint32 = null;
 }
 
 table RtpEncodingParameters {
-  ssrc:uint32;
+  ssrc:uint32 = null;
   rid:string;
-  codec_payload_type:uint8;
+  codec_payload_type:uint8 = null;
   rtx:Rtx;
   dtx:bool = false;
   scalability_mode:string;
-  scale_resolution_down_by:uint8;
-  max_bitrate:uint32;
+  max_bitrate:uint32 = null;
 }
 
 table RtcpParameters {
@@ -95,7 +94,7 @@ table CodecMapping {
 
 table EncodingMapping {
   rid:string;
-  ssrc:uint32;
+  ssrc:uint32 = null;
   scalability_mode:string;
   mapped_ssrc:uint32;
 }

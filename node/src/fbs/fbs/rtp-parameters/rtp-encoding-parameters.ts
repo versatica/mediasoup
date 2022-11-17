@@ -23,9 +23,9 @@ static getSizePrefixedRootAsRtpEncodingParameters(bb:flatbuffers.ByteBuffer, obj
   return (obj || new RtpEncodingParameters()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 }
 
-ssrc():number {
+ssrc():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : null;
 }
 
 rid():string|null
@@ -35,9 +35,9 @@ rid(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-codecPayloadType():number {
+codecPayloadType():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? this.bb!.readUint8(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint8(this.bb_pos + offset) : null;
 }
 
 rtx(obj?:Rtx):Rtx|null {
@@ -57,18 +57,13 @@ scalabilityMode(optionalEncoding?:any):string|Uint8Array|null {
   return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
 }
 
-scaleResolutionDownBy():number {
+maxBitrate():number|null {
   const offset = this.bb!.__offset(this.bb_pos, 16);
-  return offset ? this.bb!.readUint8(this.bb_pos + offset) : 0;
-}
-
-maxBitrate():number {
-  const offset = this.bb!.__offset(this.bb_pos, 18);
-  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : null;
 }
 
 static startRtpEncodingParameters(builder:flatbuffers.Builder) {
-  builder.startObject(8);
+  builder.startObject(7);
 }
 
 static addSsrc(builder:flatbuffers.Builder, ssrc:number) {
@@ -95,12 +90,8 @@ static addScalabilityMode(builder:flatbuffers.Builder, scalabilityModeOffset:fla
   builder.addFieldOffset(5, scalabilityModeOffset, 0);
 }
 
-static addScaleResolutionDownBy(builder:flatbuffers.Builder, scaleResolutionDownBy:number) {
-  builder.addFieldInt8(6, scaleResolutionDownBy, 0);
-}
-
 static addMaxBitrate(builder:flatbuffers.Builder, maxBitrate:number) {
-  builder.addFieldInt32(7, maxBitrate, 0);
+  builder.addFieldInt32(6, maxBitrate, 0);
 }
 
 static endRtpEncodingParameters(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -117,7 +108,6 @@ unpack(): RtpEncodingParametersT {
     (this.rtx() !== null ? this.rtx()!.unpack() : null),
     this.dtx(),
     this.scalabilityMode(),
-    this.scaleResolutionDownBy(),
     this.maxBitrate()
   );
 }
@@ -130,21 +120,19 @@ unpackTo(_o: RtpEncodingParametersT): void {
   _o.rtx = (this.rtx() !== null ? this.rtx()!.unpack() : null);
   _o.dtx = this.dtx();
   _o.scalabilityMode = this.scalabilityMode();
-  _o.scaleResolutionDownBy = this.scaleResolutionDownBy();
   _o.maxBitrate = this.maxBitrate();
 }
 }
 
 export class RtpEncodingParametersT {
 constructor(
-  public ssrc: number = 0,
+  public ssrc: number|null = null,
   public rid: string|Uint8Array|null = null,
-  public codecPayloadType: number = 0,
+  public codecPayloadType: number|null = null,
   public rtx: RtxT|null = null,
   public dtx: boolean = false,
   public scalabilityMode: string|Uint8Array|null = null,
-  public scaleResolutionDownBy: number = 0,
-  public maxBitrate: number = 0
+  public maxBitrate: number|null = null
 ){}
 
 
@@ -154,14 +142,16 @@ pack(builder:flatbuffers.Builder): flatbuffers.Offset {
   const scalabilityMode = (this.scalabilityMode !== null ? builder.createString(this.scalabilityMode!) : 0);
 
   RtpEncodingParameters.startRtpEncodingParameters(builder);
-  RtpEncodingParameters.addSsrc(builder, this.ssrc);
+  if (this.ssrc !== null)
+    RtpEncodingParameters.addSsrc(builder, this.ssrc);
   RtpEncodingParameters.addRid(builder, rid);
-  RtpEncodingParameters.addCodecPayloadType(builder, this.codecPayloadType);
+  if (this.codecPayloadType !== null)
+    RtpEncodingParameters.addCodecPayloadType(builder, this.codecPayloadType);
   RtpEncodingParameters.addRtx(builder, rtx);
   RtpEncodingParameters.addDtx(builder, this.dtx);
   RtpEncodingParameters.addScalabilityMode(builder, scalabilityMode);
-  RtpEncodingParameters.addScaleResolutionDownBy(builder, this.scaleResolutionDownBy);
-  RtpEncodingParameters.addMaxBitrate(builder, this.maxBitrate);
+  if (this.maxBitrate !== null)
+    RtpEncodingParameters.addMaxBitrate(builder, this.maxBitrate);
 
   return RtpEncodingParameters.endRtpEncodingParameters(builder);
 }

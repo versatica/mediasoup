@@ -34,7 +34,7 @@ class RtpCodecParameters {
     }
     channels() {
         const offset = this.bb.__offset(this.bb_pos, 10);
-        return offset ? this.bb.readUint8(this.bb_pos + offset) : 0;
+        return offset ? this.bb.readUint8(this.bb_pos + offset) : null;
     }
     parameters(index, obj) {
         const offset = this.bb.__offset(this.bb_pos, 12);
@@ -103,7 +103,8 @@ class RtpCodecParameters {
         RtpCodecParameters.addMimeType(builder, mimeTypeOffset);
         RtpCodecParameters.addPayloadType(builder, payloadType);
         RtpCodecParameters.addClockRate(builder, clockRate);
-        RtpCodecParameters.addChannels(builder, channels);
+        if (channels !== null)
+            RtpCodecParameters.addChannels(builder, channels);
         RtpCodecParameters.addParameters(builder, parametersOffset);
         RtpCodecParameters.addRtcpFeedback(builder, rtcpFeedbackOffset);
         return RtpCodecParameters.endRtpCodecParameters(builder);
@@ -128,7 +129,7 @@ class RtpCodecParametersT {
     channels;
     parameters;
     rtcpFeedback;
-    constructor(mimeType = null, payloadType = 0, clockRate = 0, channels = 0, parameters = [], rtcpFeedback = []) {
+    constructor(mimeType = null, payloadType = 0, clockRate = 0, channels = null, parameters = [], rtcpFeedback = []) {
         this.mimeType = mimeType;
         this.payloadType = payloadType;
         this.clockRate = clockRate;

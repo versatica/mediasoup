@@ -83,10 +83,6 @@ function serializeRtpEncodingParameters(builder, rtpEncodingParameters) {
         // Add scalability ode.
         if (scalabilityModeOffset)
             rtpParameters_generated_1.RtpEncodingParameters.addScalabilityMode(builder, scalabilityModeOffset);
-        // Add scale resolution down by.
-        if (encoding.scaleResolutionDownBy !== undefined) {
-            rtpParameters_generated_1.RtpEncodingParameters.addScaleResolutionDownBy(builder, encoding.scaleResolutionDownBy);
-        }
         // Add max bitrate.
         if (encoding.maxBitrate !== undefined)
             rtpParameters_generated_1.RtpEncodingParameters.addMaxBitrate(builder, encoding.maxBitrate);

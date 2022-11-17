@@ -684,8 +684,8 @@ struct RtpCodecParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   uint32_t clockRate() const {
     return GetField<uint32_t>(VT_CLOCKRATE, 0);
   }
-  uint8_t channels() const {
-    return GetField<uint8_t>(VT_CHANNELS, 0);
+  flatbuffers::Optional<uint8_t> channels() const {
+    return GetOptional<uint8_t, uint8_t>(VT_CHANNELS);
   }
   const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> *parameters() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> *>(VT_PARAMETERS);
@@ -724,7 +724,7 @@ struct RtpCodecParametersBuilder {
     fbb_.AddElement<uint32_t>(RtpCodecParameters::VT_CLOCKRATE, clockRate, 0);
   }
   void add_channels(uint8_t channels) {
-    fbb_.AddElement<uint8_t>(RtpCodecParameters::VT_CHANNELS, channels, 0);
+    fbb_.AddElement<uint8_t>(RtpCodecParameters::VT_CHANNELS, channels);
   }
   void add_parameters(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>>> parameters) {
     fbb_.AddOffset(RtpCodecParameters::VT_PARAMETERS, parameters);
@@ -749,7 +749,7 @@ inline flatbuffers::Offset<RtpCodecParameters> CreateRtpCodecParameters(
     flatbuffers::Offset<flatbuffers::String> mimeType = 0,
     uint8_t payloadType = 0,
     uint32_t clockRate = 0,
-    uint8_t channels = 0,
+    flatbuffers::Optional<uint8_t> channels = flatbuffers::nullopt,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>>> parameters = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtcpFeedback>>> rtcpFeedback = 0) {
   RtpCodecParametersBuilder builder_(_fbb);
@@ -757,7 +757,7 @@ inline flatbuffers::Offset<RtpCodecParameters> CreateRtpCodecParameters(
   builder_.add_parameters(parameters);
   builder_.add_clockRate(clockRate);
   builder_.add_mimeType(mimeType);
-  builder_.add_channels(channels);
+  if(channels) { builder_.add_channels(*channels); }
   builder_.add_payloadType(payloadType);
   return builder_.Finish();
 }
@@ -767,7 +767,7 @@ inline flatbuffers::Offset<RtpCodecParameters> CreateRtpCodecParametersDirect(
     const char *mimeType = nullptr,
     uint8_t payloadType = 0,
     uint32_t clockRate = 0,
-    uint8_t channels = 0,
+    flatbuffers::Optional<uint8_t> channels = flatbuffers::nullopt,
     const std::vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> *parameters = nullptr,
     const std::vector<flatbuffers::Offset<FBS::RtpParameters::RtcpFeedback>> *rtcpFeedback = nullptr) {
   auto mimeType__ = mimeType ? _fbb.CreateString(mimeType) : 0;
@@ -885,8 +885,8 @@ struct Rtx FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_SSRC = 4
   };
-  uint32_t ssrc() const {
-    return GetField<uint32_t>(VT_SSRC, 0);
+  flatbuffers::Optional<uint32_t> ssrc() const {
+    return GetOptional<uint32_t, uint32_t>(VT_SSRC);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -900,7 +900,7 @@ struct RtxBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_ssrc(uint32_t ssrc) {
-    fbb_.AddElement<uint32_t>(Rtx::VT_SSRC, ssrc, 0);
+    fbb_.AddElement<uint32_t>(Rtx::VT_SSRC, ssrc);
   }
   explicit RtxBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -915,9 +915,9 @@ struct RtxBuilder {
 
 inline flatbuffers::Offset<Rtx> CreateRtx(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint32_t ssrc = 0) {
+    flatbuffers::Optional<uint32_t> ssrc = flatbuffers::nullopt) {
   RtxBuilder builder_(_fbb);
-  builder_.add_ssrc(ssrc);
+  if(ssrc) { builder_.add_ssrc(*ssrc); }
   return builder_.Finish();
 }
 
@@ -933,17 +933,16 @@ struct RtpEncodingParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tabl
     VT_RTX = 10,
     VT_DTX = 12,
     VT_SCALABILITYMODE = 14,
-    VT_SCALERESOLUTIONDOWNBY = 16,
-    VT_MAXBITRATE = 18
+    VT_MAXBITRATE = 16
   };
-  uint32_t ssrc() const {
-    return GetField<uint32_t>(VT_SSRC, 0);
+  flatbuffers::Optional<uint32_t> ssrc() const {
+    return GetOptional<uint32_t, uint32_t>(VT_SSRC);
   }
   const flatbuffers::String *rid() const {
     return GetPointer<const flatbuffers::String *>(VT_RID);
   }
-  uint8_t codecPayloadType() const {
-    return GetField<uint8_t>(VT_CODECPAYLOADTYPE, 0);
+  flatbuffers::Optional<uint8_t> codecPayloadType() const {
+    return GetOptional<uint8_t, uint8_t>(VT_CODECPAYLOADTYPE);
   }
   const FBS::RtpParameters::Rtx *rtx() const {
     return GetPointer<const FBS::RtpParameters::Rtx *>(VT_RTX);
@@ -954,11 +953,8 @@ struct RtpEncodingParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tabl
   const flatbuffers::String *scalabilityMode() const {
     return GetPointer<const flatbuffers::String *>(VT_SCALABILITYMODE);
   }
-  uint8_t scaleResolutionDownBy() const {
-    return GetField<uint8_t>(VT_SCALERESOLUTIONDOWNBY, 0);
-  }
-  uint32_t maxBitrate() const {
-    return GetField<uint32_t>(VT_MAXBITRATE, 0);
+  flatbuffers::Optional<uint32_t> maxBitrate() const {
+    return GetOptional<uint32_t, uint32_t>(VT_MAXBITRATE);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -971,7 +967,6 @@ struct RtpEncodingParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Tabl
            VerifyField<uint8_t>(verifier, VT_DTX, 1) &&
            VerifyOffset(verifier, VT_SCALABILITYMODE) &&
            verifier.VerifyString(scalabilityMode()) &&
-           VerifyField<uint8_t>(verifier, VT_SCALERESOLUTIONDOWNBY, 1) &&
            VerifyField<uint32_t>(verifier, VT_MAXBITRATE, 4) &&
            verifier.EndTable();
   }
@@ -982,13 +977,13 @@ struct RtpEncodingParametersBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_ssrc(uint32_t ssrc) {
-    fbb_.AddElement<uint32_t>(RtpEncodingParameters::VT_SSRC, ssrc, 0);
+    fbb_.AddElement<uint32_t>(RtpEncodingParameters::VT_SSRC, ssrc);
   }
   void add_rid(flatbuffers::Offset<flatbuffers::String> rid) {
     fbb_.AddOffset(RtpEncodingParameters::VT_RID, rid);
   }
   void add_codecPayloadType(uint8_t codecPayloadType) {
-    fbb_.AddElement<uint8_t>(RtpEncodingParameters::VT_CODECPAYLOADTYPE, codecPayloadType, 0);
+    fbb_.AddElement<uint8_t>(RtpEncodingParameters::VT_CODECPAYLOADTYPE, codecPayloadType);
   }
   void add_rtx(flatbuffers::Offset<FBS::RtpParameters::Rtx> rtx) {
     fbb_.AddOffset(RtpEncodingParameters::VT_RTX, rtx);
@@ -999,11 +994,8 @@ struct RtpEncodingParametersBuilder {
   void add_scalabilityMode(flatbuffers::Offset<flatbuffers::String> scalabilityMode) {
     fbb_.AddOffset(RtpEncodingParameters::VT_SCALABILITYMODE, scalabilityMode);
   }
-  void add_scaleResolutionDownBy(uint8_t scaleResolutionDownBy) {
-    fbb_.AddElement<uint8_t>(RtpEncodingParameters::VT_SCALERESOLUTIONDOWNBY, scaleResolutionDownBy, 0);
-  }
   void add_maxBitrate(uint32_t maxBitrate) {
-    fbb_.AddElement<uint32_t>(RtpEncodingParameters::VT_MAXBITRATE, maxBitrate, 0);
+    fbb_.AddElement<uint32_t>(RtpEncodingParameters::VT_MAXBITRATE, maxBitrate);
   }
   explicit RtpEncodingParametersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1018,36 +1010,33 @@ struct RtpEncodingParametersBuilder {
 
 inline flatbuffers::Offset<RtpEncodingParameters> CreateRtpEncodingParameters(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint32_t ssrc = 0,
+    flatbuffers::Optional<uint32_t> ssrc = flatbuffers::nullopt,
     flatbuffers::Offset<flatbuffers::String> rid = 0,
-    uint8_t codecPayloadType = 0,
+    flatbuffers::Optional<uint8_t> codecPayloadType = flatbuffers::nullopt,
     flatbuffers::Offset<FBS::RtpParameters::Rtx> rtx = 0,
     bool dtx = false,
     flatbuffers::Offset<flatbuffers::String> scalabilityMode = 0,
-    uint8_t scaleResolutionDownBy = 0,
-    uint32_t maxBitrate = 0) {
+    flatbuffers::Optional<uint32_t> maxBitrate = flatbuffers::nullopt) {
   RtpEncodingParametersBuilder builder_(_fbb);
-  builder_.add_maxBitrate(maxBitrate);
+  if(maxBitrate) { builder_.add_maxBitrate(*maxBitrate); }
   builder_.add_scalabilityMode(scalabilityMode);
   builder_.add_rtx(rtx);
   builder_.add_rid(rid);
-  builder_.add_ssrc(ssrc);
-  builder_.add_scaleResolutionDownBy(scaleResolutionDownBy);
+  if(ssrc) { builder_.add_ssrc(*ssrc); }
   builder_.add_dtx(dtx);
-  builder_.add_codecPayloadType(codecPayloadType);
+  if(codecPayloadType) { builder_.add_codecPayloadType(*codecPayloadType); }
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<RtpEncodingParameters> CreateRtpEncodingParametersDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    uint32_t ssrc = 0,
+    flatbuffers::Optional<uint32_t> ssrc = flatbuffers::nullopt,
     const char *rid = nullptr,
-    uint8_t codecPayloadType = 0,
+    flatbuffers::Optional<uint8_t> codecPayloadType = flatbuffers::nullopt,
     flatbuffers::Offset<FBS::RtpParameters::Rtx> rtx = 0,
     bool dtx = false,
     const char *scalabilityMode = nullptr,
-    uint8_t scaleResolutionDownBy = 0,
-    uint32_t maxBitrate = 0) {
+    flatbuffers::Optional<uint32_t> maxBitrate = flatbuffers::nullopt) {
   auto rid__ = rid ? _fbb.CreateString(rid) : 0;
   auto scalabilityMode__ = scalabilityMode ? _fbb.CreateString(scalabilityMode) : 0;
   return FBS::RtpParameters::CreateRtpEncodingParameters(
@@ -1058,7 +1047,6 @@ inline flatbuffers::Offset<RtpEncodingParameters> CreateRtpEncodingParametersDir
       rtx,
       dtx,
       scalabilityMode__,
-      scaleResolutionDownBy,
       maxBitrate);
 }
 
@@ -1321,8 +1309,8 @@ struct EncodingMapping FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::String *rid() const {
     return GetPointer<const flatbuffers::String *>(VT_RID);
   }
-  uint32_t ssrc() const {
-    return GetField<uint32_t>(VT_SSRC, 0);
+  flatbuffers::Optional<uint32_t> ssrc() const {
+    return GetOptional<uint32_t, uint32_t>(VT_SSRC);
   }
   const flatbuffers::String *scalabilityMode() const {
     return GetPointer<const flatbuffers::String *>(VT_SCALABILITYMODE);
@@ -1350,7 +1338,7 @@ struct EncodingMappingBuilder {
     fbb_.AddOffset(EncodingMapping::VT_RID, rid);
   }
   void add_ssrc(uint32_t ssrc) {
-    fbb_.AddElement<uint32_t>(EncodingMapping::VT_SSRC, ssrc, 0);
+    fbb_.AddElement<uint32_t>(EncodingMapping::VT_SSRC, ssrc);
   }
   void add_scalabilityMode(flatbuffers::Offset<flatbuffers::String> scalabilityMode) {
     fbb_.AddOffset(EncodingMapping::VT_SCALABILITYMODE, scalabilityMode);
@@ -1372,13 +1360,13 @@ struct EncodingMappingBuilder {
 inline flatbuffers::Offset<EncodingMapping> CreateEncodingMapping(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> rid = 0,
-    uint32_t ssrc = 0,
+    flatbuffers::Optional<uint32_t> ssrc = flatbuffers::nullopt,
     flatbuffers::Offset<flatbuffers::String> scalabilityMode = 0,
     uint32_t mappedSsrc = 0) {
   EncodingMappingBuilder builder_(_fbb);
   builder_.add_mappedSsrc(mappedSsrc);
   builder_.add_scalabilityMode(scalabilityMode);
-  builder_.add_ssrc(ssrc);
+  if(ssrc) { builder_.add_ssrc(*ssrc); }
   builder_.add_rid(rid);
   return builder_.Finish();
 }
@@ -1386,7 +1374,7 @@ inline flatbuffers::Offset<EncodingMapping> CreateEncodingMapping(
 inline flatbuffers::Offset<EncodingMapping> CreateEncodingMappingDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *rid = nullptr,
-    uint32_t ssrc = 0,
+    flatbuffers::Optional<uint32_t> ssrc = flatbuffers::nullopt,
     const char *scalabilityMode = nullptr,
     uint32_t mappedSsrc = 0) {
   auto rid__ = rid ? _fbb.CreateString(rid) : 0;
@@ -1756,7 +1744,6 @@ inline const flatbuffers::TypeTable *RtpEncodingParametersTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 0 },
     { flatbuffers::ET_BOOL, 0, -1 },
     { flatbuffers::ET_STRING, 0, -1 },
-    { flatbuffers::ET_UCHAR, 0, -1 },
     { flatbuffers::ET_UINT, 0, -1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
@@ -1769,11 +1756,10 @@ inline const flatbuffers::TypeTable *RtpEncodingParametersTypeTable() {
     "rtx",
     "dtx",
     "scalabilityMode",
-    "scaleResolutionDownBy",
     "maxBitrate"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 8, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 7, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }
