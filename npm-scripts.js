@@ -15,7 +15,7 @@ const MAYOR_VERSION = version.split('.')[0];
 const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 
 // eslint-disable-next-line no-console
-console.log(`npm-scripts.js [INFO] running task "${task}"`);
+console.log(`npm-scripts.js [INFO] running task: ${task}`);
 
 switch (task)
 {
@@ -87,7 +87,11 @@ switch (task)
 
 	case 'test:node':
 	{
-		execute('node npm-scripts.js typescript:build');
+		if (!fs.existsSync('node/lib'))
+		{
+			execute('node npm-scripts.js typescript:build');
+		}
+
 		taskReplaceVersion();
 
 		if (!process.env.TEST_FILE)
@@ -105,6 +109,7 @@ switch (task)
 	case 'test:worker':
 	{
 		execute(`${MAKE} test -C worker`);
+
 		break;
 	}
 
@@ -135,22 +140,26 @@ switch (task)
 		if (!fs.existsSync('node/lib'))
 		{
 			// TODO: Add flatbuffers dependency here.
-			execute('npm install --production=false --no-save typescript @types/debug @types/uuid');
+			execute('npm install --omit=optional --no-save typescript @types/debug @types/node @types/uuid');
 			execute('node npm-scripts.js typescript:build');
 			// TODO: Compile flatbuffers.
 			// TODO: Add flatbuffers dependency here.
-			execute('npm uninstall --no-save typescript @types/debug @types/uuid');
+			execute('npm uninstall --no-save typescript @types/debug @types/node @types/uuid');
 		}
 
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
 			execute('node npm-scripts.js worker:build');
-			// Clean build artifacts except `mediasoup-worker`.
-			execute(`${MAKE} clean-build -C worker`);
-			// Clean downloaded dependencies.
-			execute(`${MAKE} clean-subprojects -C worker`);
-			// Clean PIP/Meson/Ninja.
-			execute(`${MAKE} clean-pip -C worker`);
+
+			if (!process.env.MEDIASOUP_LOCAL_DEV)
+			{
+				// Clean build artifacts except `mediasoup-worker`.
+				execute(`${MAKE} clean-build -C worker`);
+				// Clean downloaded dependencies.
+				execute(`${MAKE} clean-subprojects -C worker`);
+				// Clean PIP/Meson/Ninja.
+				execute(`${MAKE} clean-pip -C worker`);
+			}
 		}
 
 		break;
@@ -184,6 +193,9 @@ switch (task)
 
 function taskReplaceVersion()
 {
+	// eslint-disable-next-line no-console
+	console.log('npm-scripts.js [INFO] taskReplaceVersion()');
+
 	const files =
 	[
 		'node/lib/index.js',
@@ -203,7 +215,7 @@ function taskReplaceVersion()
 function execute(command, exitOnError = true)
 {
 	// eslint-disable-next-line no-console
-	console.log(`npm-scripts.js [INFO] executing command: ${command}`);
+	console.log(`npm-scripts.js [INFO] execute(): ${command}`);
 
 	try
 	{

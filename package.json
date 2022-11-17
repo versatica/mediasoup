@@ -57,9 +57,9 @@
     "lint:worker": "node npm-scripts.js lint:worker",
     "format:worker": "node npm-scripts.js format:worker",
     "test": "npm run test:node && npm run test:worker",
-    "test:node": "npm run worker:build && node npm-scripts.js test:node",
+    "test:node": "node npm-scripts.js test:node",
     "test:worker": "node npm-scripts.js test:worker",
-    "coverage": "npm run worker:build && node npm-scripts.js coverage",
+    "coverage": "node npm-scripts.js coverage",
     "prepack": "node npm-scripts.js prepack",
     "postinstall": "node npm-scripts.js postinstall",
     "release": "node npm-scripts.js release"
@@ -70,7 +70,6 @@
     "testRegex": "node/tests/test.*\\.js"
   },
   "dependencies": {
-    "@types/node": "^18.11.9",
     "debug": "^4.3.4",
     "h264-profile-level-id": "^1.0.1",
     "supports-color": "^9.2.3",
@@ -78,6 +77,7 @@
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
+    "@types/node": "^18.11.9",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.43.0",
     "@typescript-eslint/parser": "^5.43.0",
