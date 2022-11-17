@@ -48,7 +48,7 @@
     "node": ">=12"
   },
   "scripts": {
-    "prepack": "node npm-scripts.js prepack",
+    "prepare": "node npm-scripts.js prepare",
     "postinstall": "node npm-scripts.js postinstall",
     "typescript:build": "node npm-scripts.js typescript:build",
     "typescript:watch": "node npm-scripts.js typescript:watch",

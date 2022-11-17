@@ -19,31 +19,26 @@ console.log(`npm-scripts.js [INFO] running task: ${task}`);
 
 switch (task)
 {
-	case 'prepack':
+	// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts):
+	//
+	// If a package being installed through git contains a prepare script, its
+	// dependencies and devDependencies will be installed, and the prepare script
+	// will be run, before the package is packaged and installed.
+	//
+	// So here we compile TypeScript and flatbuffers to JavaScript.
+	case 'prepare':
 	{
-		// Before publishing to NPM ensure TypeScript and flatbuffers are compiled
-		// to JavaScript.
-		execute('node npm-scripts.js typescript:build');
-		// TODO: Compile flatbuffers.
+		if (!fs.existsSync('node/lib'))
+		{
+			execute('node npm-scripts.js typescript:build');
+			// TODO: Compile flatbuffers.
+		}
 
 		break;
 	}
 
 	case 'postinstall':
 	{
-		// If node/lib/ folder doesn't exist we have to compile TypeScript and
-		// flatbuffers.
-		// NOTE: This will just happen when installing mediasoup from Git.
-		if (!fs.existsSync('node/lib'))
-		{
-			// TODO: Add flatbuffers dependency here.
-			execute('npm install --omit=optional --no-save typescript @types/debug @types/node @types/uuid');
-			execute('node npm-scripts.js typescript:build');
-			// TODO: Compile flatbuffers.
-			// TODO: Add flatbuffers dependency here.
-			execute('npm uninstall --no-save typescript @types/debug @types/node @types/uuid');
-		}
-
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
 			execute('node npm-scripts.js worker:build');
