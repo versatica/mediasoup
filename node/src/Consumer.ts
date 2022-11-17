@@ -12,7 +12,6 @@ import {
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsConsumer from './fbs/consumer_generated';
-import * as FbsCommon from './fbs/common_generated';
 
 export type ConsumerOptions =
 {

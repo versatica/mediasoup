@@ -1312,5 +1312,6 @@ export function serializeRtpMapping(
 	const encodingsOffset =
 		FbsRtpParameters.RtpMapping.createEncodingsVector(builder, encodings);
 
-	return FbsRtpParameters.RtpMapping.createRtpMapping(builder, codecsOffset, encodingsOffset);
+	return FbsRtpParameters.RtpMapping.createRtpMapping(
+		builder, codecsOffset, encodingsOffset);
 }

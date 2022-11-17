@@ -25,7 +25,6 @@ import {
 } from './DataConsumer';
 import { MediaKind, RtpCapabilities, RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
 import { parseSctpParametersDump, SctpParameters, SctpStreamParameters } from './SctpParameters';
-import * as FbsCommon from './fbs/common_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsResponse from './fbs/response_generated';
 import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
