@@ -974,9 +974,9 @@ namespace RTC
 
 				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
 				{
-					flatbuffers::Optional<int16_t> preferredTemporalLayer { preferredLayers.temporal };
+					flatbuffers::Optional<int16_t> preferredTemporalLayer{ preferredLayers.temporal };
 					preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
-							request->GetBufferBuilder(), preferredLayers.spatial, preferredTemporalLayer);
+					  request->GetBufferBuilder(), preferredLayers.spatial, preferredTemporalLayer);
 				}
 
 				auto scoreOffset    = consumer->FillBufferScore(request->GetBufferBuilder());

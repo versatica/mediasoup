@@ -240,7 +240,7 @@ namespace RTC
 				  this->preferredTemporalLayer,
 				  this->id.c_str());
 
-				flatbuffers::Optional<int16_t> preferredTemporalLayer { this->preferredTemporalLayer };
+				flatbuffers::Optional<int16_t> preferredTemporalLayer{ this->preferredTemporalLayer };
 				auto preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
 				  request->GetBufferBuilder(), this->preferredSpatialLayer, preferredTemporalLayer);
 				auto responseOffset = FBS::Consumer::CreateSetPreferredLayersResponse(
