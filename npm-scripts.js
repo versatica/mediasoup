@@ -131,12 +131,15 @@ switch (task)
 	{
 		// If node/lib/ folder doesn't exist we have to compile TypeScript and
 		// flatbuffers.
+		// NOTE: This will just happen when installing mediasoup from Git.
 		if (!fs.existsSync('node/lib'))
 		{
-			// execute('npm install --no-save typescript @types/debug @types/uuid');
+			// TODO: Add flatbuffers dependency here.
+			execute('npm install --no-save typescript @types/debug @types/uuid');
 			execute('node npm-scripts.js typescript:build');
 			// TODO: Compile flatbuffers.
-			// execute('npm uninstall --no-save typescript @types/debug @types/uuid');
+			// TODO: Add flatbuffers dependency here.
+			execute('npm uninstall --no-save typescript @types/debug @types/uuid');
 		}
 
 		if (!process.env.MEDIASOUP_WORKER_BIN)
