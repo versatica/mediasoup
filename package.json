@@ -21,7 +21,7 @@
   "types": "node/lib/index.d.ts",
   "files": [
     "npm-scripts.js",
-    "node/lib",
+    "node/lib/",
     "worker/Makefile",
     "worker/meson.build",
     "worker/meson_options.txt",
@@ -60,6 +60,7 @@
     "test:node": "npm run worker:build && node npm-scripts.js test:node",
     "test:worker": "node npm-scripts.js test:worker",
     "coverage": "npm run worker:build && node npm-scripts.js coverage",
+    "prepack": "node npm-scripts.js prepack",
     "postinstall": "node npm-scripts.js postinstall",
     "release": "node npm-scripts.js release"
   },

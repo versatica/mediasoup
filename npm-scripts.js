@@ -117,16 +117,26 @@ switch (task)
 		break;
 	}
 
+	case 'prepack':
+	{
+		// Before publishing to NPM ensure TypeScript and flatbuffers are compiled
+		// to JavaScript.
+		execute('node npm-scripts.js typescript:build');
+		// TODO: Compile flatbuffers.
+
+		break;
+	}
+
 	case 'postinstall':
 	{
 		// If node/lib/ folder doesn't exist we have to compile TypeScript and
 		// flatbuffers.
-		if (!fs.existsSync('node/lib')) {
+		if (!fs.existsSync('node/lib'))
+		{
 			execute('npm install --no-save typescript @types/debug @types/uuid');
 			execute('node npm-scripts.js typescript:build');
-			execute('npm uninstall --no-save typescript @types/debug @types/uuid');
-
 			// TODO: Compile flatbuffers.
+			execute('npm uninstall --no-save typescript @types/debug @types/uuid');
 		}
 
 		if (!process.env.MEDIASOUP_WORKER_BIN)
