@@ -19,6 +19,49 @@ console.log(`npm-scripts.js [INFO] running task: ${task}`);
 
 switch (task)
 {
+	case 'prepack':
+	{
+		// Before publishing to NPM ensure TypeScript and flatbuffers are compiled
+		// to JavaScript.
+		execute('node npm-scripts.js typescript:build');
+		// TODO: Compile flatbuffers.
+
+		break;
+	}
+
+	case 'postinstall':
+	{
+		// If node/lib/ folder doesn't exist we have to compile TypeScript and
+		// flatbuffers.
+		// NOTE: This will just happen when installing mediasoup from Git.
+		if (!fs.existsSync('node/lib'))
+		{
+			// TODO: Add flatbuffers dependency here.
+			execute('npm install --omit=optional --no-save typescript @types/debug @types/node @types/uuid');
+			execute('node npm-scripts.js typescript:build');
+			// TODO: Compile flatbuffers.
+			// TODO: Add flatbuffers dependency here.
+			execute('npm uninstall --no-save typescript @types/debug @types/node @types/uuid');
+		}
+
+		if (!process.env.MEDIASOUP_WORKER_BIN)
+		{
+			execute('node npm-scripts.js worker:build');
+
+			if (!process.env.MEDIASOUP_LOCAL_DEV)
+			{
+				// Clean build artifacts except `mediasoup-worker`.
+				execute(`${MAKE} clean-build -C worker`);
+				// Clean downloaded dependencies.
+				execute(`${MAKE} clean-subprojects -C worker`);
+				// Clean PIP/Meson/Ninja.
+				execute(`${MAKE} clean-pip -C worker`);
+			}
+		}
+
+		break;
+	}
+
 	case 'typescript:build':
 	{
 		if (!isWindows)
@@ -118,49 +161,6 @@ switch (task)
 		taskReplaceVersion();
 		execute('jest --coverage');
 		execute('open-cli coverage/lcov-report/index.html');
-
-		break;
-	}
-
-	case 'prepack':
-	{
-		// Before publishing to NPM ensure TypeScript and flatbuffers are compiled
-		// to JavaScript.
-		execute('node npm-scripts.js typescript:build');
-		// TODO: Compile flatbuffers.
-
-		break;
-	}
-
-	case 'postinstall':
-	{
-		// If node/lib/ folder doesn't exist we have to compile TypeScript and
-		// flatbuffers.
-		// NOTE: This will just happen when installing mediasoup from Git.
-		if (!fs.existsSync('node/lib'))
-		{
-			// TODO: Add flatbuffers dependency here.
-			execute('npm install --omit=optional --no-save typescript @types/debug @types/node @types/uuid');
-			execute('node npm-scripts.js typescript:build');
-			// TODO: Compile flatbuffers.
-			// TODO: Add flatbuffers dependency here.
-			execute('npm uninstall --no-save typescript @types/debug @types/node @types/uuid');
-		}
-
-		if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			execute('node npm-scripts.js worker:build');
-
-			if (!process.env.MEDIASOUP_LOCAL_DEV)
-			{
-				// Clean build artifacts except `mediasoup-worker`.
-				execute(`${MAKE} clean-build -C worker`);
-				// Clean downloaded dependencies.
-				execute(`${MAKE} clean-subprojects -C worker`);
-				// Clean PIP/Meson/Ninja.
-				execute(`${MAKE} clean-pip -C worker`);
-			}
-		}
 
 		break;
 	}

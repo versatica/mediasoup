@@ -48,7 +48,8 @@
     "node": ">=12"
   },
   "scripts": {
-    "install-clang-tools": "node npm-scripts.js install-clang-tools",
+    "prepack": "node npm-scripts.js prepack",
+    "postinstall": "node npm-scripts.js postinstall",
     "typescript:build": "node npm-scripts.js typescript:build",
     "typescript:watch": "node npm-scripts.js typescript:watch",
     "worker:build": "node npm-scripts.js worker:build",
@@ -60,9 +61,8 @@
     "test:node": "node npm-scripts.js test:node",
     "test:worker": "node npm-scripts.js test:worker",
     "coverage": "node npm-scripts.js coverage",
-    "prepack": "node npm-scripts.js prepack",
-    "postinstall": "node npm-scripts.js postinstall",
-    "release": "node npm-scripts.js release"
+    "release": "node npm-scripts.js release",
+    "install-clang-tools": "node npm-scripts.js install-clang-tools"
   },
   "jest": {
     "verbose": true,
