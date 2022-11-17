@@ -89,7 +89,7 @@ namespace RTC
 		// Iterate all temporal layers of spatial layers previous to the given one.
 		for (uint8_t sIdx{ 0u }; sIdx < spatialLayer; ++sIdx)
 		{
-			for (uint8_t tIdx{ 0u }; tIdx < this->spatialLayerCounters[sIdx].size(); ++tIdx)
+			for (size_t tIdx{ 0u }; tIdx < this->spatialLayerCounters[sIdx].size(); ++tIdx)
 			{
 				auto& temporalLayerCounter = this->spatialLayerCounters[sIdx][tIdx];
 
@@ -118,7 +118,7 @@ namespace RTC
 
 		// clang-format off
 		for (
-			uint8_t tIdx{ 0u };
+			size_t tIdx{ 0u };
 			tIdx < this->spatialLayerCounters[spatialLayer].size();
 			++tIdx
 		)

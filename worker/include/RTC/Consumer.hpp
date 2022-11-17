@@ -15,6 +15,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamSend.hpp"
+#include "RTC/Shared.hpp"
 #include <absl/container/flat_hash_set.h>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -60,6 +61,7 @@ namespace RTC
 
 	public:
 		Consumer(
+		  RTC::Shared* shared,
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
@@ -178,6 +180,7 @@ namespace RTC
 
 	protected:
 		// Passed by argument.
+		RTC::Shared* shared{ nullptr };
 		RTC::Consumer::Listener* listener{ nullptr };
 		RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;

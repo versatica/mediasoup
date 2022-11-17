@@ -111,9 +111,9 @@ private:
 // clang-format off
 uint8_t rtpBuffer[] =
 {
-	0b10000000, 0b01111011, 0b01010010, 0b00001110,
-	0b01011011, 0b01101011, 0b11001010, 0b10110101,
-	0, 0, 0, 2
+	0x80, 0x7b, 0x52, 0x0e,
+	0x5b, 0x6b, 0xca, 0xb5,
+	0x00, 0x00, 0x00, 0x02
 };
 // clang-format on
 

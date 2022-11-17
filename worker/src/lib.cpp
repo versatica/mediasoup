@@ -12,9 +12,7 @@
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "Worker.hpp"
-#include "Channel/ChannelNotifier.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "PayloadChannel/PayloadChannelNotifier.hpp"
 #include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
@@ -95,7 +93,7 @@ extern "C" int mediasoup_worker_run(
 	}
 	catch (const MediaSoupError& error)
 	{
-		MS_ERROR_STD("error creating the RTC Channel: %s", error.what());
+		MS_ERROR_STD("error creating the PayloadChannel: %s", error.what());
 
 		channel->Close();
 		DepLibUV::RunLoop();
@@ -166,8 +164,6 @@ extern "C" int mediasoup_worker_run(
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
 		RTC::SrtpSession::ClassInit();
-		Channel::ChannelNotifier::ClassInit(channel.get());
-		PayloadChannel::PayloadChannelNotifier::ClassInit(payloadChannel.get());
 
 #ifdef MS_EXECUTABLE
 		// Ignore some signals.

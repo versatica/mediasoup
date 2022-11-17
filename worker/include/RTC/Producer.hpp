@@ -14,6 +14,7 @@
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
+#include "RTC/Shared.hpp"
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -92,7 +93,7 @@ namespace RTC
 		};
 
 	public:
-		Producer(const std::string& id, RTC::Producer::Listener* listener, json& data);
+		Producer(RTC::Shared* shared, const std::string& id, RTC::Producer::Listener* listener, json& data);
 		virtual ~Producer();
 
 	public:
@@ -172,6 +173,7 @@ namespace RTC
 
 	private:
 		// Passed by argument.
+		RTC::Shared* shared{ nullptr };
 		RTC::Producer::Listener* listener{ nullptr };
 		// Allocated by this.
 		absl::flat_hash_map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;

@@ -51,6 +51,7 @@ struct TransportOptions {
 #[derive(Serialize, Message)]
 #[serde(tag = "action")]
 #[rtype(result = "()")]
+#[allow(clippy::large_enum_variant)]
 enum ServerMessage {
     /// Initialization message with consumer/producer transport options and Router's RTP
     /// capabilities necessary to establish WebRTC transport connection client-side
