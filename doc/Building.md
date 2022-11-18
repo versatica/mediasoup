@@ -63,9 +63,9 @@ Runs [Catch2](https://github.com/catchorg/Catch2) test units located at `worker/
 Same as `npm run test:node` but it also opens a browser window with JavaScript coverage results.
 
 
-### `npm run update-deps:node`
+### `npm run install-deps:node`
 
-Updates NPM dependencies and `package-lock.json`.
+Installs NPM dependencies and updates `package-lock.json`.
 
 
 ### `npm run install-clang-tools`

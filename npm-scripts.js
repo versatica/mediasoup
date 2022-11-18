@@ -56,7 +56,7 @@ switch (task)
 
 	case 'typescript:build':
 	{
-		updateNodeDeps();
+		installNodeDeps();
 		buildTypescript(/* force */ true);
 		replaceVersion();
 
@@ -130,16 +130,16 @@ switch (task)
 		break;
 	}
 
-	case 'update-deps:node':
+	case 'install-deps:node':
 	{
-		updateNodeDeps();
+		installNodeDeps();
 
 		break;
 	}
 
 	case 'release':
 	{
-		updateNodeDeps();
+		installNodeDeps();
 		buildTypescript(/* force */ true);
 		replaceVersion();
 		buildWorker();
@@ -189,9 +189,9 @@ function replaceVersion()
 	}
 }
 
-function updateNodeDeps()
+function installNodeDeps()
 {
-	console.log('npm-scripts.js [INFO] updateNodeDeps()');
+	console.log('npm-scripts.js [INFO] installNodeDeps()');
 
 	// Install/update Node deps.
 	executeCmd('npm ci --ignore-scripts');
