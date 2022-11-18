@@ -56,6 +56,7 @@ switch (task)
 
 	case 'typescript:build':
 	{
+		updateNodeDeps();
 		buildTypescript(/* force */ true);
 		replaceVersion();
 
@@ -119,7 +120,7 @@ switch (task)
 		break;
 	}
 
-	case 'coverage':
+	case 'coverage:node':
 	{
 		buildTypescript(/* force */ false);
 		replaceVersion();
@@ -129,9 +130,18 @@ switch (task)
 		break;
 	}
 
+	case 'update-deps:node':
+	{
+		updateNodeDeps();
+
+		break;
+	}
+
 	case 'release':
 	{
+		updateNodeDeps();
 		buildTypescript(/* force */ true);
+		replaceVersion();
 		buildWorker();
 		lintNode();
 		lintWorker();
@@ -139,7 +149,8 @@ switch (task)
 		testWorker();
 		executeCmd(`git commit -am '${version}'`);
 		executeCmd(`git tag -a ${version} -m '${version}'`);
-		executeCmd(`git push origin v${MAYOR_VERSION} && git push origin --tags`);
+		executeCmd(`git push origin v${MAYOR_VERSION}`);
+		executeCmd(`git push origin '${version}'`);
 		executeCmd('npm publish');
 
 		break;
@@ -178,9 +189,19 @@ function replaceVersion()
 	}
 }
 
+function updateNodeDeps()
+{
+	console.log('npm-scripts.js [INFO] updateNodeDeps()');
+
+	// Install/update Node deps.
+	executeCmd(`npm ci --ignore-scripts`);
+	// Update package-lock.json.
+	executeCmd(`npm install --package-lock-only --ignore-scripts`);
+}
+
 function deleteNodeLib()
 {
-	if (!fs.existsSync('node/lib/'))
+	if (!fs.existsSync('node/lib'))
 	{
 		return;
 	}
@@ -189,18 +210,18 @@ function deleteNodeLib()
 
 	if (!isWindows)
 	{
-		executeCmd('rm -rf node/lib/');
+		executeCmd('rm -rf node/lib');
 	}
 	else
 	{
 		// NOTE: This command fails in Windows if the dir doesn't exist.
-		executeCmd('rmdir /s /q "node/lib/"', /* exitOnError */ false);
+		executeCmd('rmdir /s /q "node/lib"', /* exitOnError */ false);
 	}
 }
 
 function buildTypescript(force = false)
 {
-	if (!force && fs.existsSync('node/lib/'))
+	if (!force && fs.existsSync('node/lib'))
 	{
 		return;
 	}
@@ -235,7 +256,7 @@ function lintNode()
 {
 	console.log('npm-scripts.js [INFO] lintNode()');
 
-	executeCmd('eslint -c node/.eslintrc.js --max-warnings 0 node/src/ node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
+	executeCmd('eslint -c node/.eslintrc.js --max-warnings 0 node/src node/.eslintrc.js npm-scripts.js node/tests worker/scripts/gulpfile.js');
 }
 
 function lintWorker()
