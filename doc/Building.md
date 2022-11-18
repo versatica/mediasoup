@@ -17,6 +17,12 @@ Compiles mediasoup TypeScript code (`lib` folder) JavaScript and places it into 
 
 Compiles mediasoup TypeScript code (`lib` folder) JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
 
+
+### `npm run worker:build`
+
+Builds the `mediasoup-worker` binary. It invokes `make`below.
+
+
 ### `npm run lint`
 
 Runs both `npm run lint:node` and `npm run lint:worker`.
@@ -57,6 +63,16 @@ Runs [Catch2](https://github.com/catchorg/Catch2) test units located at `worker/
 Same as `npm run test:node` but it also opens a browser window with JavaScript coverage results.
 
 
+### `npm run install-deps:node`
+
+Installs NPM dependencies and updates `package-lock.json`.
+
+
+### `npm run install-clang-tools`
+
+Installs clang tools needed for local development.
+
+
 ## Makefile
 
 The `worker` folder contains a `Makefile` for the mediasoup-worker C++ subproject. It includes the following tasks:
@@ -64,34 +80,13 @@ The `worker` folder contains a `Makefile` for the mediasoup-worker C++ subprojec
 
 ### `make` or `make mediasoup-worker`
 
-Builds the `mediasoup-worker` binary at `worker/out/Release/`.
-
-If the "MEDIASOUP_MAX_CORES" environment variable is set, the build process will use that number of CPU cores. Otherwise it will auto-detect the number of cores in the machine.
-
-"MEDIASOUP_BUILDTYPE" environment variable controls build types, `Release` and `Debug` are presets optimized for those use cases.
-Other build types are possible too, but they are not presets and will require "MESON_ARGS" use to customize build configuration.
-Check the meaning of useful macros in the `worker/include/Logger.hpp` header file if you want to enable tracing or other debug information.
-
-Binary is built at `worker/out/MEDIASOUP_BUILDTYPE/build`. 
-
-In order to instruct the mediasoup Node.js module to use the `Debug` mediasoup-worker binary, an environment variable must be set before running the Node.js application:
-
-```bash
-$ MEDIASOUP_BUILDTYPE=Debug node myapp.js
-```
-
-If the "MEDIASOUP_WORKER_BIN" environment variable is set, mediasoup will use the it as mediasoup-worker binary and **won't** compile the binary:
-
-```bash
-$ MEDIASOUP_WORKER_BIN="/home/xxx/src/foo/mediasoup-worker" node myapp.js
-```
+Alias of ``make mediasoup-worker` below.
 
 
-### `make libmediasoup-worker`
+### `make meson-ninja`
 
-Builds the `libmediasoup-worker` static library at `worker/out/Release/`.
+Installs `meson` and `ninja`.
 
-`MEDIASOUP_MAX_CORES` and `MEDIASOUP_BUILDTYPE` environment variables from above still apply for static library build.
 
 ### `make clean`
 
@@ -126,6 +121,39 @@ Update the wrap file of a subproject with Meson. Usage example:
 $ cd worker
 $ make update-wrap-file SUBPROJECT=openssl
 ```
+
+
+### `make mediasoup-worker`
+
+Builds the `mediasoup-worker` binary at `worker/out/Release/`.
+
+If the "MEDIASOUP_MAX_CORES" environment variable is set, the build process will use that number of CPU cores. Otherwise it will auto-detect the number of cores in the machine.
+
+"MEDIASOUP_BUILDTYPE" environment variable controls build types, `Release` and `Debug` are presets optimized for those use cases.
+Other build types are possible too, but they are not presets and will require "MESON_ARGS" use to customize build configuration.
+Check the meaning of useful macros in the `worker/include/Logger.hpp` header file if you want to enable tracing or other debug information.
+
+Binary is built at `worker/out/MEDIASOUP_BUILDTYPE/build`. 
+
+In order to instruct the mediasoup Node.js module to use the `Debug` mediasoup-worker binary, an environment variable must be set before running the Node.js application:
+
+```bash
+$ MEDIASOUP_BUILDTYPE=Debug node myapp.js
+```
+
+If the "MEDIASOUP_WORKER_BIN" environment variable is set, mediasoup will use the it as mediasoup-worker binary and **won't** compile the binary:
+
+```bash
+$ MEDIASOUP_WORKER_BIN="/home/xxx/src/foo/mediasoup-worker" node myapp.js
+```
+
+
+
+### `make libmediasoup-worker`
+
+Builds the `libmediasoup-worker` static library at `worker/out/Release/`.
+
+`MEDIASOUP_MAX_CORES` and `MEDIASOUP_BUILDTYPE` environment variables from above still apply for static library build.
 
 
 ### `make xcode`

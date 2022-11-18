@@ -41,5 +41,4 @@ jobs:
       - run: npm install
       - run: npm run lint:node
         if: runner.os == 'Linux'
-      - run: npm run typescript:build
       - run: npm run test:node
