@@ -11,6 +11,7 @@ export { RtpParameters, RtpParametersT } from './fbs/rtp-parameters/rtp-paramete
 export { Type } from './fbs/rtp-parameters/type';
 export { NumSctpStreams, NumSctpStreamsT } from './fbs/sctp-parameters/num-sctp-streams';
 export { SctpParameters, SctpParametersT } from './fbs/sctp-parameters/sctp-parameters';
+export { SctpStreamParameters, SctpStreamParametersT } from './fbs/sctp-parameters/sctp-stream-parameters';
 export { BaseTransportDump, BaseTransportDumpT } from './fbs/transport/base-transport-dump';
 export { BaseTransportOptions, BaseTransportOptionsT } from './fbs/transport/base-transport-options';
 export { CloseConsumerRequest, CloseConsumerRequestT } from './fbs/transport/close-consumer-request';
@@ -28,6 +29,7 @@ export { IceCandidate, IceCandidateT } from './fbs/transport/ice-candidate';
 export { IceParameters, IceParametersT } from './fbs/transport/ice-parameters';
 export { PipeTransportDump, PipeTransportDumpT } from './fbs/transport/pipe-transport-dump';
 export { PlainTransportDump, PlainTransportDumpT } from './fbs/transport/plain-transport-dump';
+export { ProduceDataRequest, ProduceDataRequestT } from './fbs/transport/produce-data-request';
 export { ProduceRequest, ProduceRequestT } from './fbs/transport/produce-request';
 export { ProduceResponse, ProduceResponseT } from './fbs/transport/produce-response';
 export { RtpListener, RtpListenerT } from './fbs/transport/rtp-listener';

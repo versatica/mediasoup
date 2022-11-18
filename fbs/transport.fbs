@@ -44,6 +44,14 @@ table ProduceResponse {
   type:FBS.RtpParameters.Type;
 }
 
+table ProduceDataRequest {
+  data_producer_id:string (required);
+  type:string (required);
+  sctp_stream_parameters:FBS.SctpParameters.SctpStreamParameters;
+  label:string;
+  protocol:string;
+}
+
 table RtpListener {
   ssrc_table:[FBS.Common.Uint32String] (required);
   mid_table:[FBS.Common.StringString] (required);

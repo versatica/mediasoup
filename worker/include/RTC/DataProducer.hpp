@@ -36,11 +36,15 @@ namespace RTC
 
 	public:
 		DataProducer(
-		  const std::string& id, size_t maxMessageSize, RTC::DataProducer::Listener* listener, json& data);
+		  const std::string& id,
+		  size_t maxMessageSize,
+		  RTC::DataProducer::Listener* listener,
+		  const FBS::Transport::ProduceDataRequest* data);
 		virtual ~DataProducer();
 
 	public:
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::DataProducer::DumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		void FillJsonStats(json& jsonArray) const;
 		Type GetType() const
 		{

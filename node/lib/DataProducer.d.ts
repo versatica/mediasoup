@@ -4,6 +4,7 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { SctpStreamParameters } from './SctpParameters';
+import * as FbsDataProducer from './fbs/dataProducer_generated';
 export declare type DataProducerOptions = {
     /**
      * DataProducer id (just for Router.pipeToRouter() method).
@@ -127,5 +128,9 @@ export declare class DataProducer extends EnhancedEventEmitter<DataProducerEvent
     send(message: string | Buffer, ppid?: number): void;
     private handleWorkerNotifications;
 }
+declare type DataProducerDump = DataProducerData & {
+    id: string;
+};
+export declare function parseDataProducerDump(data: FbsDataProducer.DumpResponse): DataProducerDump;
 export {};
 //# sourceMappingURL=DataProducer.d.ts.map

@@ -1,0 +1,12 @@
+include "sctpParameters.fbs";
+
+namespace FBS.DataProducer;
+
+table DumpResponse {
+  id:string (required);
+  type:string (required);
+  sctp_stream_parameters: FBS.SctpParameters.SctpStreamParameters;
+  label:string (required);
+  protocol:string (required);
+}
+

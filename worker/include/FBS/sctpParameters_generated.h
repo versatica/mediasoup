@@ -22,9 +22,14 @@ struct NumSctpStreamsBuilder;
 struct SctpParameters;
 struct SctpParametersBuilder;
 
+struct SctpStreamParameters;
+struct SctpStreamParametersBuilder;
+
 inline const flatbuffers::TypeTable *NumSctpStreamsTypeTable();
 
 inline const flatbuffers::TypeTable *SctpParametersTypeTable();
+
+inline const flatbuffers::TypeTable *SctpStreamParametersTypeTable();
 
 struct NumSctpStreams FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef NumSctpStreamsBuilder Builder;
@@ -184,6 +189,80 @@ inline flatbuffers::Offset<SctpParameters> CreateSctpParameters(
   return builder_.Finish();
 }
 
+struct SctpStreamParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SctpStreamParametersBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SctpStreamParametersTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_STREAMID = 4,
+    VT_ORDERED = 6,
+    VT_MAXPACKETLIFETIME = 8,
+    VT_MAXRETRANSMITS = 10
+  };
+  uint16_t streamId() const {
+    return GetField<uint16_t>(VT_STREAMID, 0);
+  }
+  flatbuffers::Optional<bool> ordered() const {
+    return GetOptional<uint8_t, bool>(VT_ORDERED);
+  }
+  flatbuffers::Optional<uint16_t> maxPacketLifeTime() const {
+    return GetOptional<uint16_t, uint16_t>(VT_MAXPACKETLIFETIME);
+  }
+  flatbuffers::Optional<uint16_t> maxRetransmits() const {
+    return GetOptional<uint16_t, uint16_t>(VT_MAXRETRANSMITS);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint16_t>(verifier, VT_STREAMID, 2) &&
+           VerifyField<uint8_t>(verifier, VT_ORDERED, 1) &&
+           VerifyField<uint16_t>(verifier, VT_MAXPACKETLIFETIME, 2) &&
+           VerifyField<uint16_t>(verifier, VT_MAXRETRANSMITS, 2) &&
+           verifier.EndTable();
+  }
+};
+
+struct SctpStreamParametersBuilder {
+  typedef SctpStreamParameters Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_streamId(uint16_t streamId) {
+    fbb_.AddElement<uint16_t>(SctpStreamParameters::VT_STREAMID, streamId, 0);
+  }
+  void add_ordered(bool ordered) {
+    fbb_.AddElement<uint8_t>(SctpStreamParameters::VT_ORDERED, static_cast<uint8_t>(ordered));
+  }
+  void add_maxPacketLifeTime(uint16_t maxPacketLifeTime) {
+    fbb_.AddElement<uint16_t>(SctpStreamParameters::VT_MAXPACKETLIFETIME, maxPacketLifeTime);
+  }
+  void add_maxRetransmits(uint16_t maxRetransmits) {
+    fbb_.AddElement<uint16_t>(SctpStreamParameters::VT_MAXRETRANSMITS, maxRetransmits);
+  }
+  explicit SctpStreamParametersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SctpStreamParameters> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SctpStreamParameters>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SctpStreamParameters> CreateSctpStreamParameters(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    uint16_t streamId = 0,
+    flatbuffers::Optional<bool> ordered = flatbuffers::nullopt,
+    flatbuffers::Optional<uint16_t> maxPacketLifeTime = flatbuffers::nullopt,
+    flatbuffers::Optional<uint16_t> maxRetransmits = flatbuffers::nullopt) {
+  SctpStreamParametersBuilder builder_(_fbb);
+  if(maxRetransmits) { builder_.add_maxRetransmits(*maxRetransmits); }
+  if(maxPacketLifeTime) { builder_.add_maxPacketLifeTime(*maxPacketLifeTime); }
+  builder_.add_streamId(streamId);
+  if(ordered) { builder_.add_ordered(*ordered); }
+  return builder_.Finish();
+}
+
 inline const flatbuffers::TypeTable *NumSctpStreamsTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_UINT, 0, -1 },
@@ -220,6 +299,25 @@ inline const flatbuffers::TypeTable *SctpParametersTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 7, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SctpStreamParametersTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_USHORT, 0, -1 },
+    { flatbuffers::ET_USHORT, 0, -1 }
+  };
+  static const char * const names[] = {
+    "streamId",
+    "ordered",
+    "maxPacketLifeTime",
+    "maxRetransmits"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 4, type_codes, nullptr, nullptr, nullptr, names
   };
   return &tt;
 }

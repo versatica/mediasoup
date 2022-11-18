@@ -14,20 +14,18 @@ namespace RTC
 	/* Instance methods. */
 
 	DataProducer::DataProducer(
-	  const std::string& id, size_t maxMessageSize, RTC::DataProducer::Listener* listener, json& data)
+	  const std::string& id,
+	  size_t maxMessageSize,
+	  RTC::DataProducer::Listener* listener,
+	  const FBS::Transport::ProduceDataRequest* data)
 	  : id(id), maxMessageSize(maxMessageSize), listener(listener)
 	{
 		MS_TRACE();
 
-		auto jsonTypeIt                 = data.find("type");
-		auto jsonSctpStreamParametersIt = data.find("sctpStreamParameters");
-		auto jsonLabelIt                = data.find("label");
-		auto jsonProtocolIt             = data.find("protocol");
-
-		if (jsonTypeIt == data.end() || !jsonTypeIt->is_string())
+		if (!flatbuffers::IsFieldPresent(data, FBS::Transport::ProduceDataRequest::VT_TYPE))
 			MS_THROW_TYPE_ERROR("missing type");
 
-		this->typeString = jsonTypeIt->get<std::string>();
+		this->typeString = data->type()->str();
 
 		if (this->typeString == "sctp")
 			this->type = DataProducer::Type::SCTP;
@@ -38,25 +36,21 @@ namespace RTC
 
 		if (this->type == DataProducer::Type::SCTP)
 		{
-			// clang-format off
-			if (
-				jsonSctpStreamParametersIt == data.end() ||
-				!jsonSctpStreamParametersIt->is_object()
-			)
-			// clang-format on
+			if (!flatbuffers::IsFieldPresent(
+			      data, FBS::Transport::ProduceDataRequest::VT_SCTPSTREAMPARAMETERS))
 			{
 				MS_THROW_TYPE_ERROR("missing sctpStreamParameters");
 			}
 
 			// This may throw.
-			this->sctpStreamParameters = RTC::SctpStreamParameters(*jsonSctpStreamParametersIt);
+			this->sctpStreamParameters = RTC::SctpStreamParameters(data->sctpStreamParameters());
 		}
 
-		if (jsonLabelIt != data.end() && jsonLabelIt->is_string())
-			this->label = jsonLabelIt->get<std::string>();
+		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ProduceDataRequest::VT_LABEL))
+			this->label = data->label()->str();
 
-		if (jsonProtocolIt != data.end() && jsonProtocolIt->is_string())
-			this->protocol = jsonProtocolIt->get<std::string>();
+		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ProduceDataRequest::VT_PROTOCOL))
+			this->protocol = data->protocol()->str();
 
 		// NOTE: This may throw.
 		ChannelMessageHandlers::RegisterHandler(
@@ -73,27 +67,26 @@ namespace RTC
 		ChannelMessageHandlers::UnregisterHandler(this->id);
 	}
 
-	void DataProducer::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::DataProducer::DumpResponse> DataProducer::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add id.
-		jsonObject["id"] = this->id;
-
-		// Add type.
-		jsonObject["type"] = this->typeString;
+		flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> sctpStreamParametersOffset;
 
 		// Add sctpStreamParameters.
 		if (this->type == DataProducer::Type::SCTP)
 		{
-			this->sctpStreamParameters.FillJson(jsonObject["sctpStreamParameters"]);
+			sctpStreamParametersOffset = this->sctpStreamParameters.FillBuffer(builder);
 		}
 
-		// Add label.
-		jsonObject["label"] = this->label;
-
-		// Add protocol.
-		jsonObject["protocol"] = this->protocol;
+		return FBS::DataProducer::CreateDumpResponseDirect(
+		  builder,
+		  this->id.c_str(),
+		  this->typeString.c_str(),
+		  sctpStreamParametersOffset,
+		  this->label.c_str(),
+		  this->protocol.c_str());
 	}
 
 	void DataProducer::FillJsonStats(json& jsonArray) const
@@ -130,11 +123,9 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::DATA_PRODUCER_DUMP:
 			{
-				json data = json::object();
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				FillJson(data);
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_DataProducer_DumpResponse, dumpOffset);
 
 				break;
 			}

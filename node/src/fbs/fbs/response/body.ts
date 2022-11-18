@@ -3,6 +3,7 @@
 import { SetPreferredLayersResponse, SetPreferredLayersResponseT } from '../../fbs/consumer/set-preferred-layers-response';
 import { SetPriorityResponse, SetPriorityResponseT } from '../../fbs/consumer/set-priority-response';
 import { GetBufferedAmountResponse, GetBufferedAmountResponseT } from '../../fbs/data-consumer/get-buffered-amount-response';
+import { DumpResponse as FBS_DataProducer_DumpResponse, DumpResponseT as FBS_DataProducer_DumpResponseT } from '../../fbs/data-producer/dump-response';
 import { DumpResponse as FBS_Router_DumpResponse, DumpResponseT as FBS_Router_DumpResponseT } from '../../fbs/router/dump-response';
 import { ConsumeResponse, ConsumeResponseT } from '../../fbs/transport/consume-response';
 import { DumpResponse as FBS_Transport_DumpResponse, DumpResponseT as FBS_Transport_DumpResponseT } from '../../fbs/transport/dump-response';
@@ -23,13 +24,14 @@ export enum Body {
   FBS_Transport_ConsumeResponse = 7,
   FBS_Consumer_SetPreferredLayersResponse = 8,
   FBS_Consumer_SetPriorityResponse = 9,
-  FBS_DataConsumer_GetBufferedAmountResponse = 10
+  FBS_DataProducer_DumpResponse = 10,
+  FBS_DataConsumer_GetBufferedAmountResponse = 11
 }
 
 export function unionToBody(
   type: Body,
-  accessor: (obj:ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse) => ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse|null
-): ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse|null {
+  accessor: (obj:ConsumeResponse|DumpResponse|FBS_DataProducer_DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse) => ConsumeResponse|DumpResponse|FBS_DataProducer_DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse|null
+): ConsumeResponse|DumpResponse|FBS_DataProducer_DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_DumpResponse': return accessor(new DumpResponse())! as DumpResponse;
@@ -41,6 +43,7 @@ export function unionToBody(
     case 'FBS_Transport_ConsumeResponse': return accessor(new ConsumeResponse())! as ConsumeResponse;
     case 'FBS_Consumer_SetPreferredLayersResponse': return accessor(new SetPreferredLayersResponse())! as SetPreferredLayersResponse;
     case 'FBS_Consumer_SetPriorityResponse': return accessor(new SetPriorityResponse())! as SetPriorityResponse;
+    case 'FBS_DataProducer_DumpResponse': return accessor(new FBS_DataProducer_DumpResponse())! as FBS_DataProducer_DumpResponse;
     case 'FBS_DataConsumer_GetBufferedAmountResponse': return accessor(new GetBufferedAmountResponse())! as GetBufferedAmountResponse;
     default: return null;
   }
@@ -48,9 +51,9 @@ export function unionToBody(
 
 export function unionListToBody(
   type: Body, 
-  accessor: (index: number, obj:ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse) => ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse|null, 
+  accessor: (index: number, obj:ConsumeResponse|DumpResponse|FBS_DataProducer_DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse) => ConsumeResponse|DumpResponse|FBS_DataProducer_DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse|null, 
   index: number
-): ConsumeResponse|DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse|null {
+): ConsumeResponse|DumpResponse|FBS_DataProducer_DumpResponse|FBS_Router_DumpResponse|FBS_Transport_DumpResponse|FBS_WebRtcServer_DumpResponse|GetBufferedAmountResponse|ProduceResponse|ResourceUsageResponse|SetPreferredLayersResponse|SetPriorityResponse|null {
   switch(Body[type]) {
     case 'NONE': return null; 
     case 'FBS_Worker_DumpResponse': return accessor(index, new DumpResponse())! as DumpResponse;
@@ -62,6 +65,7 @@ export function unionListToBody(
     case 'FBS_Transport_ConsumeResponse': return accessor(index, new ConsumeResponse())! as ConsumeResponse;
     case 'FBS_Consumer_SetPreferredLayersResponse': return accessor(index, new SetPreferredLayersResponse())! as SetPreferredLayersResponse;
     case 'FBS_Consumer_SetPriorityResponse': return accessor(index, new SetPriorityResponse())! as SetPriorityResponse;
+    case 'FBS_DataProducer_DumpResponse': return accessor(index, new FBS_DataProducer_DumpResponse())! as FBS_DataProducer_DumpResponse;
     case 'FBS_DataConsumer_GetBufferedAmountResponse': return accessor(index, new GetBufferedAmountResponse())! as GetBufferedAmountResponse;
     default: return null;
   }

@@ -3,9 +3,10 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
-import { SctpStreamParameters } from './SctpParameters';
+import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsRequest from './fbs/request_generated';
+import * as FbsDataProducer from './fbs/dataProducer_generated';
 
 export type DataProducerOptions =
 {
@@ -273,7 +274,19 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('dataProducer.dump', this.#internal.dataProducerId);
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.DATA_PRODUCER_DUMP,
+			undefined,
+			undefined,
+			this.#internal.dataProducerId
+		);
+
+		/* Decode the response. */
+		const produceResponse = new FbsDataProducer.DumpResponse();
+
+		response.body(produceResponse);
+
+		return parseDataProducerDump(produceResponse);
 	}
 
 	/**
@@ -335,4 +348,23 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		// No need to subscribe to any event.
 	}
+}
+
+type DataProducerDump = DataProducerData & {
+	id: string;
+};
+
+export function parseDataProducerDump(
+	data: FbsDataProducer.DumpResponse
+): DataProducerDump
+{
+	return {
+		id                   : data.id()!,
+		type                 : data.type()! as DataProducerType,
+		sctpStreamParameters : data.sctpStreamParameters() !== null ?
+			parseSctpStreamParameters(data.sctpStreamParameters()!) :
+			undefined,
+		label    : data.label()!,
+		protocol : data.protocol()!
+	};
 }

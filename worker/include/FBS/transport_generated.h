@@ -36,6 +36,9 @@ struct ProduceRequestBuilder;
 struct ProduceResponse;
 struct ProduceResponseBuilder;
 
+struct ProduceDataRequest;
+struct ProduceDataRequestBuilder;
+
 struct RtpListener;
 struct RtpListenerBuilder;
 
@@ -111,6 +114,8 @@ inline const flatbuffers::TypeTable *ConsumeResponseTypeTable();
 inline const flatbuffers::TypeTable *ProduceRequestTypeTable();
 
 inline const flatbuffers::TypeTable *ProduceResponseTypeTable();
+
+inline const flatbuffers::TypeTable *ProduceDataRequestTypeTable();
 
 inline const flatbuffers::TypeTable *RtpListenerTypeTable();
 
@@ -722,6 +727,117 @@ inline flatbuffers::Offset<ProduceResponse> CreateProduceResponse(
   ProduceResponseBuilder builder_(_fbb);
   builder_.add_type(type);
   return builder_.Finish();
+}
+
+struct ProduceDataRequest FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef ProduceDataRequestBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return ProduceDataRequestTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_DATAPRODUCERID = 4,
+    VT_TYPE = 6,
+    VT_SCTPSTREAMPARAMETERS = 8,
+    VT_LABEL = 10,
+    VT_PROTOCOL = 12
+  };
+  const flatbuffers::String *dataProducerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_DATAPRODUCERID);
+  }
+  const flatbuffers::String *type() const {
+    return GetPointer<const flatbuffers::String *>(VT_TYPE);
+  }
+  const FBS::SctpParameters::SctpStreamParameters *sctpStreamParameters() const {
+    return GetPointer<const FBS::SctpParameters::SctpStreamParameters *>(VT_SCTPSTREAMPARAMETERS);
+  }
+  const flatbuffers::String *label() const {
+    return GetPointer<const flatbuffers::String *>(VT_LABEL);
+  }
+  const flatbuffers::String *protocol() const {
+    return GetPointer<const flatbuffers::String *>(VT_PROTOCOL);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_DATAPRODUCERID) &&
+           verifier.VerifyString(dataProducerId()) &&
+           VerifyOffsetRequired(verifier, VT_TYPE) &&
+           verifier.VerifyString(type()) &&
+           VerifyOffset(verifier, VT_SCTPSTREAMPARAMETERS) &&
+           verifier.VerifyTable(sctpStreamParameters()) &&
+           VerifyOffset(verifier, VT_LABEL) &&
+           verifier.VerifyString(label()) &&
+           VerifyOffset(verifier, VT_PROTOCOL) &&
+           verifier.VerifyString(protocol()) &&
+           verifier.EndTable();
+  }
+};
+
+struct ProduceDataRequestBuilder {
+  typedef ProduceDataRequest Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_dataProducerId(flatbuffers::Offset<flatbuffers::String> dataProducerId) {
+    fbb_.AddOffset(ProduceDataRequest::VT_DATAPRODUCERID, dataProducerId);
+  }
+  void add_type(flatbuffers::Offset<flatbuffers::String> type) {
+    fbb_.AddOffset(ProduceDataRequest::VT_TYPE, type);
+  }
+  void add_sctpStreamParameters(flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> sctpStreamParameters) {
+    fbb_.AddOffset(ProduceDataRequest::VT_SCTPSTREAMPARAMETERS, sctpStreamParameters);
+  }
+  void add_label(flatbuffers::Offset<flatbuffers::String> label) {
+    fbb_.AddOffset(ProduceDataRequest::VT_LABEL, label);
+  }
+  void add_protocol(flatbuffers::Offset<flatbuffers::String> protocol) {
+    fbb_.AddOffset(ProduceDataRequest::VT_PROTOCOL, protocol);
+  }
+  explicit ProduceDataRequestBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<ProduceDataRequest> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<ProduceDataRequest>(end);
+    fbb_.Required(o, ProduceDataRequest::VT_DATAPRODUCERID);
+    fbb_.Required(o, ProduceDataRequest::VT_TYPE);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<ProduceDataRequest> CreateProduceDataRequest(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> dataProducerId = 0,
+    flatbuffers::Offset<flatbuffers::String> type = 0,
+    flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> sctpStreamParameters = 0,
+    flatbuffers::Offset<flatbuffers::String> label = 0,
+    flatbuffers::Offset<flatbuffers::String> protocol = 0) {
+  ProduceDataRequestBuilder builder_(_fbb);
+  builder_.add_protocol(protocol);
+  builder_.add_label(label);
+  builder_.add_sctpStreamParameters(sctpStreamParameters);
+  builder_.add_type(type);
+  builder_.add_dataProducerId(dataProducerId);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<ProduceDataRequest> CreateProduceDataRequestDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *dataProducerId = nullptr,
+    const char *type = nullptr,
+    flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> sctpStreamParameters = 0,
+    const char *label = nullptr,
+    const char *protocol = nullptr) {
+  auto dataProducerId__ = dataProducerId ? _fbb.CreateString(dataProducerId) : 0;
+  auto type__ = type ? _fbb.CreateString(type) : 0;
+  auto label__ = label ? _fbb.CreateString(label) : 0;
+  auto protocol__ = protocol ? _fbb.CreateString(protocol) : 0;
+  return FBS::Transport::CreateProduceDataRequest(
+      _fbb,
+      dataProducerId__,
+      type__,
+      sctpStreamParameters,
+      label__,
+      protocol__);
 }
 
 struct RtpListener FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -2822,6 +2938,30 @@ inline const flatbuffers::TypeTable *ProduceResponseTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 1, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *ProduceDataRequestTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::SctpParameters::SctpStreamParametersTypeTable
+  };
+  static const char * const names[] = {
+    "dataProducerId",
+    "type",
+    "sctpStreamParameters",
+    "label",
+    "protocol"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 5, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

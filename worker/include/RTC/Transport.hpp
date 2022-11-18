@@ -194,6 +194,7 @@ namespace RTC
 		void EmitTraceEventProbationType(RTC::RtpPacket* packet) const;
 		void EmitTraceEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const;
 		void CheckNoProducer(const std::string& producerId) const;
+		void CheckNoDataProducer(const std::string& dataProducerId) const;
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:

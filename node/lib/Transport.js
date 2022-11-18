@@ -15,6 +15,7 @@ const SctpParameters_1 = require("./SctpParameters");
 const FbsRequest = require("./fbs/request_generated");
 const FbsResponse = require("./fbs/response_generated");
 const media_kind_1 = require("./fbs/fbs/rtp-parameters/media-kind");
+const FbsDataProducer = require("./fbs/dataProducer_generated");
 const FbsConsumer = require("./fbs/consumer_generated");
 const FbsTransport = require("./fbs/transport_generated");
 const FbsRouter = require("./fbs/router_generated");
@@ -478,18 +479,25 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
                 logger.warn('produceData() | sctpStreamParameters are ignored when producing data on a DirectTransport');
             }
         }
-        const reqData = {
-            dataProducerId: id || (0, uuid_1.v4)(),
+        const dataProducerId = id || (0, uuid_1.v4)();
+        const builder = this.channel.bufferBuilder;
+        const requestOffset = createDataProduceRequest({
+            builder,
+            dataProducerId,
             type,
             sctpStreamParameters,
             label,
             protocol
-        };
-        const data = await this.channel.request('transport.produceData', this.internal.transportId, reqData);
+        });
+        const response = await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_PRODUCE_DATA, FbsRequest.Body.FBS_Transport_ProduceDataRequest, requestOffset, this.internal.transportId);
+        /* Decode the response. */
+        const produceResponse = new FbsDataProducer.DumpResponse();
+        response.body(produceResponse);
+        const data = (0, DataProducer_1.parseDataProducerDump)(produceResponse);
         const dataProducer = new DataProducer_1.DataProducer({
             internal: {
                 ...this.internal,
-                dataProducerId: reqData.dataProducerId
+                dataProducerId
             },
             data,
             channel: this.channel,
@@ -748,4 +756,23 @@ function createProduceRequest({ builder, producerId, kind, rtpParameters, rtpMap
     FbsTransport.ProduceRequest.addKeyFrameRequestDelay(builder, keyFrameRequestDelay ?? 0);
     FbsTransport.ProduceRequest.addPaused(builder, paused);
     return FbsTransport.ProduceRequest.endProduceRequest(builder);
+}
+function createDataProduceRequest({ builder, dataProducerId, type, sctpStreamParameters, label, protocol }) {
+    const dataProducerIdOffset = builder.createString(dataProducerId);
+    const typeOffset = builder.createString(type);
+    const labelOffset = builder.createString(label);
+    const protocolOffset = builder.createString(protocol);
+    let sctpStreamParametersOffset = 0;
+    if (sctpStreamParameters) {
+        sctpStreamParametersOffset = (0, SctpParameters_1.serializeSctpStreamParameters)(builder, sctpStreamParameters);
+    }
+    FbsTransport.ProduceDataRequest.startProduceDataRequest(builder);
+    FbsTransport.ProduceDataRequest.addDataProducerId(builder, dataProducerIdOffset);
+    FbsTransport.ProduceDataRequest.addType(builder, typeOffset);
+    if (sctpStreamParametersOffset) {
+        FbsTransport.ProduceDataRequest.addSctpStreamParameters(builder, sctpStreamParametersOffset);
+    }
+    FbsTransport.ProduceDataRequest.addLabel(builder, labelOffset);
+    FbsTransport.ProduceDataRequest.addProtocol(builder, protocolOffset);
+    return FbsTransport.ProduceDataRequest.endProduceDataRequest(builder);
 }

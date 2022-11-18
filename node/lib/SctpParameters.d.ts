@@ -1,3 +1,4 @@
+import * as flatbuffers from 'flatbuffers';
 import * as FbsSctpParameters from './fbs/sctpParameters_generated';
 export declare type SctpCapabilities = {
     numStreams: NumSctpStreams;
@@ -90,4 +91,6 @@ export declare type SctpParametersDump = {
     isDataChannel: boolean;
 };
 export declare function parseSctpParametersDump(binary: FbsSctpParameters.SctpParameters): SctpParametersDump;
+export declare function serializeSctpStreamParameters(builder: flatbuffers.Builder, parameters: SctpStreamParameters): number;
+export declare function parseSctpStreamParameters(parameters: FbsSctpParameters.SctpStreamParameters): SctpStreamParameters;
 //# sourceMappingURL=SctpParameters.d.ts.map

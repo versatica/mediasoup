@@ -2,6 +2,7 @@ import * as flatbuffers from 'flatbuffers';
 import { SetPreferredLayersResponseT } from '../../fbs/consumer/set-preferred-layers-response';
 import { SetPriorityResponseT } from '../../fbs/consumer/set-priority-response';
 import { GetBufferedAmountResponseT } from '../../fbs/data-consumer/get-buffered-amount-response';
+import { DumpResponseT as FBS_DataProducer_DumpResponseT } from '../../fbs/data-producer/dump-response';
 import { Body } from '../../fbs/response/body';
 import { DumpResponseT as FBS_Router_DumpResponseT } from '../../fbs/router/dump-response';
 import { ConsumeResponseT } from '../../fbs/transport/consume-response';
@@ -34,8 +35,8 @@ export declare class ResponseT {
     id: number;
     accepted: boolean;
     bodyType: Body;
-    body: ConsumeResponseT | DumpResponseT | FBS_Router_DumpResponseT | FBS_Transport_DumpResponseT | FBS_WebRtcServer_DumpResponseT | GetBufferedAmountResponseT | ProduceResponseT | ResourceUsageResponseT | SetPreferredLayersResponseT | SetPriorityResponseT | null;
-    constructor(id?: number, accepted?: boolean, bodyType?: Body, body?: ConsumeResponseT | DumpResponseT | FBS_Router_DumpResponseT | FBS_Transport_DumpResponseT | FBS_WebRtcServer_DumpResponseT | GetBufferedAmountResponseT | ProduceResponseT | ResourceUsageResponseT | SetPreferredLayersResponseT | SetPriorityResponseT | null);
+    body: ConsumeResponseT | DumpResponseT | FBS_DataProducer_DumpResponseT | FBS_Router_DumpResponseT | FBS_Transport_DumpResponseT | FBS_WebRtcServer_DumpResponseT | GetBufferedAmountResponseT | ProduceResponseT | ResourceUsageResponseT | SetPreferredLayersResponseT | SetPriorityResponseT | null;
+    constructor(id?: number, accepted?: boolean, bodyType?: Body, body?: ConsumeResponseT | DumpResponseT | FBS_DataProducer_DumpResponseT | FBS_Router_DumpResponseT | FBS_Transport_DumpResponseT | FBS_WebRtcServer_DumpResponseT | GetBufferedAmountResponseT | ProduceResponseT | ResourceUsageResponseT | SetPreferredLayersResponseT | SetPriorityResponseT | null);
     pack(builder: flatbuffers.Builder): flatbuffers.Offset;
 }
 //# sourceMappingURL=response.d.ts.map

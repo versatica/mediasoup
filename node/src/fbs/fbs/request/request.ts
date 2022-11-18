@@ -25,6 +25,7 @@ import { CloseDataProducerRequest, CloseDataProducerRequestT } from '../../fbs/t
 import { CloseProducerRequest, CloseProducerRequestT } from '../../fbs/transport/close-producer-request';
 import { ConsumeRequest, ConsumeRequestT } from '../../fbs/transport/consume-request';
 import { EnableTraceEventRequest, EnableTraceEventRequestT } from '../../fbs/transport/enable-trace-event-request';
+import { ProduceDataRequest, ProduceDataRequestT } from '../../fbs/transport/produce-data-request';
 import { ProduceRequest, ProduceRequestT } from '../../fbs/transport/produce-request';
 import { SetMaxIncomingBitrateRequest, SetMaxIncomingBitrateRequestT } from '../../fbs/transport/set-max-incoming-bitrate-request';
 import { SetMaxOutgoingBitrateRequest, SetMaxOutgoingBitrateRequestT } from '../../fbs/transport/set-max-outgoing-bitrate-request';
@@ -161,7 +162,7 @@ constructor(
   public method: Method = Method.WORKER_CLOSE,
   public handlerId: string|Uint8Array|null = null,
   public bodyType: Body = Body.NONE,
-  public body: AddProducerRequestT|CloseConsumerRequestT|CloseDataConsumerRequestT|CloseDataProducerRequestT|CloseProducerRequestT|CloseRouterRequestT|CloseRtpObserverRequestT|CloseTransportRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateActiveSpeakerObserverRequestT|CreateAudioLevelObserverRequestT|CreateDirectTransportRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|EnableTraceEventRequestT|FBS_Consumer_EnableTraceEventRequestT|FBS_Producer_EnableTraceEventRequestT|ProduceRequestT|RemoveProducerRequestT|SetBufferedAmountLowThresholdRequestT|SetMaxIncomingBitrateRequestT|SetMaxOutgoingBitrateRequestT|SetPreferredLayersRequestT|SetPriorityRequestT|UpdateSettingsRequestT|null = null
+  public body: AddProducerRequestT|CloseConsumerRequestT|CloseDataConsumerRequestT|CloseDataProducerRequestT|CloseProducerRequestT|CloseRouterRequestT|CloseRtpObserverRequestT|CloseTransportRequestT|CloseWebRtcServerRequestT|ConsumeRequestT|CreateActiveSpeakerObserverRequestT|CreateAudioLevelObserverRequestT|CreateDirectTransportRequestT|CreatePipeTransportRequestT|CreatePlainTransportRequestT|CreateRouterRequestT|CreateWebRtcServerRequestT|CreateWebRtcTransportRequestT|EnableTraceEventRequestT|FBS_Consumer_EnableTraceEventRequestT|FBS_Producer_EnableTraceEventRequestT|ProduceDataRequestT|ProduceRequestT|RemoveProducerRequestT|SetBufferedAmountLowThresholdRequestT|SetMaxIncomingBitrateRequestT|SetMaxOutgoingBitrateRequestT|SetPreferredLayersRequestT|SetPriorityRequestT|UpdateSettingsRequestT|null = null
 ){}
 
 

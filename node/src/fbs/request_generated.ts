@@ -24,6 +24,7 @@ export { CloseDataProducerRequest, CloseDataProducerRequestT } from './fbs/trans
 export { CloseProducerRequest, CloseProducerRequestT } from './fbs/transport/close-producer-request';
 export { ConsumeRequest, ConsumeRequestT } from './fbs/transport/consume-request';
 export { EnableTraceEventRequest, EnableTraceEventRequestT } from './fbs/transport/enable-trace-event-request';
+export { ProduceDataRequest, ProduceDataRequestT } from './fbs/transport/produce-data-request';
 export { ProduceRequest, ProduceRequestT } from './fbs/transport/produce-request';
 export { SetMaxIncomingBitrateRequest, SetMaxIncomingBitrateRequestT } from './fbs/transport/set-max-incoming-bitrate-request';
 export { SetMaxOutgoingBitrateRequest, SetMaxOutgoingBitrateRequestT } from './fbs/transport/set-max-outgoing-bitrate-request';

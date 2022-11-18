@@ -23,6 +23,7 @@ const close_data_producer_request_1 = require("../../fbs/transport/close-data-pr
 const close_producer_request_1 = require("../../fbs/transport/close-producer-request");
 const consume_request_1 = require("../../fbs/transport/consume-request");
 const enable_trace_event_request_3 = require("../../fbs/transport/enable-trace-event-request");
+const produce_data_request_1 = require("../../fbs/transport/produce-data-request");
 const produce_request_1 = require("../../fbs/transport/produce-request");
 const set_max_incoming_bitrate_request_1 = require("../../fbs/transport/set-max-incoming-bitrate-request");
 const set_max_outgoing_bitrate_request_1 = require("../../fbs/transport/set-max-outgoing-bitrate-request");
@@ -51,18 +52,19 @@ var Body;
     Body[Body["FBS_Transport_SetMaxOutgoingBitrateRequest"] = 15] = "FBS_Transport_SetMaxOutgoingBitrateRequest";
     Body[Body["FBS_Transport_ProduceRequest"] = 16] = "FBS_Transport_ProduceRequest";
     Body[Body["FBS_Transport_ConsumeRequest"] = 17] = "FBS_Transport_ConsumeRequest";
-    Body[Body["FBS_Transport_EnableTraceEventRequest"] = 18] = "FBS_Transport_EnableTraceEventRequest";
-    Body[Body["FBS_Transport_CloseProducerRequest"] = 19] = "FBS_Transport_CloseProducerRequest";
-    Body[Body["FBS_Transport_CloseConsumerRequest"] = 20] = "FBS_Transport_CloseConsumerRequest";
-    Body[Body["FBS_Transport_CloseDataProducerRequest"] = 21] = "FBS_Transport_CloseDataProducerRequest";
-    Body[Body["FBS_Transport_CloseDataConsumerRequest"] = 22] = "FBS_Transport_CloseDataConsumerRequest";
-    Body[Body["FBS_Producer_EnableTraceEventRequest"] = 23] = "FBS_Producer_EnableTraceEventRequest";
-    Body[Body["FBS_Consumer_SetPreferredLayersRequest"] = 24] = "FBS_Consumer_SetPreferredLayersRequest";
-    Body[Body["FBS_Consumer_SetPriorityRequest"] = 25] = "FBS_Consumer_SetPriorityRequest";
-    Body[Body["FBS_Consumer_EnableTraceEventRequest"] = 26] = "FBS_Consumer_EnableTraceEventRequest";
-    Body[Body["FBS_DataConsumer_SetBufferedAmountLowThresholdRequest"] = 27] = "FBS_DataConsumer_SetBufferedAmountLowThresholdRequest";
-    Body[Body["FBS_RtpObserver_AddProducerRequest"] = 28] = "FBS_RtpObserver_AddProducerRequest";
-    Body[Body["FBS_RtpObserver_RemoveProducerRequest"] = 29] = "FBS_RtpObserver_RemoveProducerRequest";
+    Body[Body["FBS_Transport_ProduceDataRequest"] = 18] = "FBS_Transport_ProduceDataRequest";
+    Body[Body["FBS_Transport_EnableTraceEventRequest"] = 19] = "FBS_Transport_EnableTraceEventRequest";
+    Body[Body["FBS_Transport_CloseProducerRequest"] = 20] = "FBS_Transport_CloseProducerRequest";
+    Body[Body["FBS_Transport_CloseConsumerRequest"] = 21] = "FBS_Transport_CloseConsumerRequest";
+    Body[Body["FBS_Transport_CloseDataProducerRequest"] = 22] = "FBS_Transport_CloseDataProducerRequest";
+    Body[Body["FBS_Transport_CloseDataConsumerRequest"] = 23] = "FBS_Transport_CloseDataConsumerRequest";
+    Body[Body["FBS_Producer_EnableTraceEventRequest"] = 24] = "FBS_Producer_EnableTraceEventRequest";
+    Body[Body["FBS_Consumer_SetPreferredLayersRequest"] = 25] = "FBS_Consumer_SetPreferredLayersRequest";
+    Body[Body["FBS_Consumer_SetPriorityRequest"] = 26] = "FBS_Consumer_SetPriorityRequest";
+    Body[Body["FBS_Consumer_EnableTraceEventRequest"] = 27] = "FBS_Consumer_EnableTraceEventRequest";
+    Body[Body["FBS_DataConsumer_SetBufferedAmountLowThresholdRequest"] = 28] = "FBS_DataConsumer_SetBufferedAmountLowThresholdRequest";
+    Body[Body["FBS_RtpObserver_AddProducerRequest"] = 29] = "FBS_RtpObserver_AddProducerRequest";
+    Body[Body["FBS_RtpObserver_RemoveProducerRequest"] = 30] = "FBS_RtpObserver_RemoveProducerRequest";
 })(Body = exports.Body || (exports.Body = {}));
 function unionToBody(type, accessor) {
     switch (Body[type]) {
@@ -84,6 +86,7 @@ function unionToBody(type, accessor) {
         case 'FBS_Transport_SetMaxOutgoingBitrateRequest': return accessor(new set_max_outgoing_bitrate_request_1.SetMaxOutgoingBitrateRequest());
         case 'FBS_Transport_ProduceRequest': return accessor(new produce_request_1.ProduceRequest());
         case 'FBS_Transport_ConsumeRequest': return accessor(new consume_request_1.ConsumeRequest());
+        case 'FBS_Transport_ProduceDataRequest': return accessor(new produce_data_request_1.ProduceDataRequest());
         case 'FBS_Transport_EnableTraceEventRequest': return accessor(new enable_trace_event_request_3.EnableTraceEventRequest());
         case 'FBS_Transport_CloseProducerRequest': return accessor(new close_producer_request_1.CloseProducerRequest());
         case 'FBS_Transport_CloseConsumerRequest': return accessor(new close_consumer_request_1.CloseConsumerRequest());
@@ -120,6 +123,7 @@ function unionListToBody(type, accessor, index) {
         case 'FBS_Transport_SetMaxOutgoingBitrateRequest': return accessor(index, new set_max_outgoing_bitrate_request_1.SetMaxOutgoingBitrateRequest());
         case 'FBS_Transport_ProduceRequest': return accessor(index, new produce_request_1.ProduceRequest());
         case 'FBS_Transport_ConsumeRequest': return accessor(index, new consume_request_1.ConsumeRequest());
+        case 'FBS_Transport_ProduceDataRequest': return accessor(index, new produce_data_request_1.ProduceDataRequest());
         case 'FBS_Transport_EnableTraceEventRequest': return accessor(index, new enable_trace_event_request_3.EnableTraceEventRequest());
         case 'FBS_Transport_CloseProducerRequest': return accessor(index, new close_producer_request_1.CloseProducerRequest());
         case 'FBS_Transport_CloseConsumerRequest': return accessor(index, new close_consumer_request_1.CloseConsumerRequest());

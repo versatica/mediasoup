@@ -17,4 +17,9 @@ table SctpParameters {
   is_data_channel:bool;
 }
 
-
+table SctpStreamParameters {
+  stream_id:uint16;
+  ordered:bool = null;
+  max_packet_life_time:uint16 = null;
+  max_retransmits:uint16 = null;
+}

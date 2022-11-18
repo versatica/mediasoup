@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_DICTIONARIES_HPP
 
 #include "common.hpp"
+#include <FBS/sctpParameters_generated.h>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -14,8 +15,11 @@ namespace RTC
 	public:
 		SctpStreamParameters() = default;
 		explicit SctpStreamParameters(json& data);
+		explicit SctpStreamParameters(const FBS::SctpParameters::SctpStreamParameters* data);
 
 		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	public:
 		uint16_t streamId{ 0u };

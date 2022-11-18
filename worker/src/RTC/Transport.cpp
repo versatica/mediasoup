@@ -1136,14 +1136,15 @@ namespace RTC
 					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
 				}
 
-				std::string dataProducerId;
+				auto body = request->_data->body_as<FBS::Transport::ProduceDataRequest>();
+
+				auto dataProducerId = body->dataProducerId()->str();
 
 				// This may throw.
-				SetNewDataProducerIdFromData(request->data, dataProducerId);
+				CheckNoDataProducer(dataProducerId);
 
 				// This may throw.
-				auto* dataProducer =
-				  new RTC::DataProducer(dataProducerId, this->maxMessageSize, this, request->data);
+				auto* dataProducer = new RTC::DataProducer(dataProducerId, this->maxMessageSize, this, body);
 
 				// Verify the type of the DataProducer.
 				switch (dataProducer->GetType())
@@ -1216,11 +1217,9 @@ namespace RTC
 
 				MS_DEBUG_DEV("DataProducer created [dataProducerId:%s]", dataProducerId.c_str());
 
-				json data = json::object();
+				auto dumpOffset = dataProducer->FillBuffer(request->GetBufferBuilder());
 
-				dataProducer->FillJson(data);
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_DataProducer_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -1716,6 +1715,12 @@ namespace RTC
 	{
 		if (this->mapProducers.find(producerId) != this->mapProducers.end())
 			MS_THROW_ERROR("a Producer with same producerId already exists");
+	}
+
+	void Transport::CheckNoDataProducer(const std::string& dataProducerId) const
+	{
+		if (this->mapDataProducers.find(dataProducerId) != this->mapDataProducers.end())
+			MS_THROW_ERROR("a DataProducer with same dataProducerId already exists");
 	}
 
 	RTC::Producer* Transport::GetProducerById(const std::string& producerId) const
