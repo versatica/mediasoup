@@ -20,11 +20,14 @@ console.log(`npm-scripts.js [INFO] running task "${task}"`);
 
 switch (task)
 {
-	// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts):
+	// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
+	// `prepare` script:
 	//
-	// If a package being installed through git contains a prepare script, its
-	// dependencies and devDependencies will be installed, and the prepare script
-	// will be run, before the package is packaged and installed.
+	// - Runs BEFORE the package is packed, i.e. during `npm publish` and `npm pack`.
+	// - Runs on local `npm install` without any arguments.
+	// - NOTE: If a package being installed through git contains a `prepare` script,
+	//   its dependencies and devDependencies will be installed, and the `prepare`
+	//   script will be run, before the package is packaged and installed.
 	//
 	// So here we compile TypeScript and flatbuffers to JavaScript.
 	case 'prepare':
