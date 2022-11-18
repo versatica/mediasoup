@@ -189,16 +189,6 @@ function replaceVersion()
 	}
 }
 
-function installNodeDeps()
-{
-	console.log('npm-scripts.js [INFO] installNodeDeps()');
-
-	// Install/update Node deps.
-	executeCmd('npm ci --ignore-scripts');
-	// Update package-lock.json.
-	executeCmd('npm install --package-lock-only --ignore-scripts');
-}
-
 function deleteNodeLib()
 {
 	if (!fs.existsSync('node/lib'))
@@ -285,6 +275,16 @@ function testWorker()
 	console.log('npm-scripts.js [INFO] testWorker()');
 
 	executeCmd(`${MAKE} test -C worker`);
+}
+
+function installNodeDeps()
+{
+	console.log('npm-scripts.js [INFO] installNodeDeps()');
+
+	// Install/update Node deps.
+	executeCmd('npm ci --ignore-scripts');
+	// Update package-lock.json.
+	executeCmd('npm install --package-lock-only --ignore-scripts');
 }
 
 function executeCmd(command, exitOnError = true)

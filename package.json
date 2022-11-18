@@ -62,8 +62,8 @@
     "test:worker": "node npm-scripts.js test:worker",
     "coverage:node": "node npm-scripts.js coverage:node",
     "install-deps:node": "node npm-scripts.js install-deps:node",
-    "release": "node npm-scripts.js release",
-    "install-clang-tools": "node npm-scripts.js install-clang-tools"
+    "install-clang-tools": "node npm-scripts.js install-clang-tools",
+    "release": "node npm-scripts.js release"
   },
   "jest": {
     "verbose": true,
