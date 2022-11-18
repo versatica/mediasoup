@@ -81,14 +81,14 @@ switch (task)
 
 	case 'lint:node':
 	{
-		executeCmd('eslint -c node/.eslintrc.js --max-warnings 0 node/src/ node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
+		lintNode();
 
 		break;
 	}
 
 	case 'lint:worker':
 	{
-		executeCmd(`${MAKE} lint -C worker`);
+		lintWorker();
 
 		break;
 	}
@@ -104,28 +104,21 @@ switch (task)
 	{
 		buildTypescript(/* force */ false);
 		replaceVersion();
-
-		if (!process.env.TEST_FILE)
-		{
-			executeCmd('jest');
-		}
-		else
-		{
-			executeCmd(`jest --testPathPattern ${process.env.TEST_FILE}`);
-		}
+		testNode();
 
 		break;
 	}
 
 	case 'test:worker':
 	{
-		executeCmd(`${MAKE} test -C worker`);
+		testWorker();
 
 		break;
 	}
 
 	case 'coverage':
 	{
+		buildTypescript(/* force */ false);
 		replaceVersion();
 		executeCmd('jest --coverage');
 		executeCmd('open-cli coverage/lcov-report/index.html');
@@ -137,8 +130,10 @@ switch (task)
 	{
 		buildTypescript(/* force */ true);
 		buildWorker();
-		executeCmd('npm run lint');
-		executeCmd('npm run test');
+		lintNode();
+		lintWorker();
+		testNode();
+		testWorker();
 		executeCmd(`git commit -am '${version}'`);
 		executeCmd(`git tag -a ${version} -m '${version}'`);
 		executeCmd(`git push origin v${MAYOR_VERSION} && git push origin --tags`);
@@ -182,6 +177,11 @@ function replaceVersion()
 
 function deleteNodeLib()
 {
+	if (!fs.existsSync('node/lib/'))
+	{
+		return;
+	}
+
 	console.log('npm-scripts.js [INFO] deleteNodeLib()');
 
 	if (!isWindows)
@@ -226,6 +226,41 @@ function cleanWorker()
 	executeCmd(`${MAKE} clean-subprojects -C worker`);
 	// Clean PIP/Meson/Ninja.
 	executeCmd(`${MAKE} clean-pip -C worker`);
+}
+
+function lintNode()
+{
+	console.log('npm-scripts.js [INFO] lintNode()');
+
+	executeCmd('eslint -c node/.eslintrc.js --max-warnings 0 node/src/ node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
+}
+
+function lintWorker()
+{
+	console.log('npm-scripts.js [INFO] lintWorker()');
+
+	executeCmd(`${MAKE} lint -C worker`);
+}
+
+function testNode()
+{
+	console.log('npm-scripts.js [INFO] testNode()');
+
+	if (!process.env.TEST_FILE)
+	{
+		executeCmd('jest');
+	}
+	else
+	{
+		executeCmd(`jest --testPathPattern ${process.env.TEST_FILE}`);
+	}
+}
+
+function testWorker()
+{
+	console.log('npm-scripts.js [INFO] testWorker()');
+
+	executeCmd(`${MAKE} test -C worker`);
 }
 
 function executeCmd(command, exitOnError = true)
