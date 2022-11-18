@@ -169,7 +169,6 @@ namespace RTC
 		RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const;
 		void SetNewDataProducerIdFromData(json& data, std::string& dataProducerId) const;
 		RTC::DataProducer* GetDataProducerById(const std::string& dataProducerId) const;
-		void SetNewDataConsumerIdFromData(json& data, std::string& dataConsumerId) const;
 		RTC::DataConsumer* GetDataConsumerById(const std::string& dataConsumerId) const;
 
 	private:
@@ -195,6 +194,7 @@ namespace RTC
 		void EmitTraceEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const;
 		void CheckNoProducer(const std::string& producerId) const;
 		void CheckNoDataProducer(const std::string& dataProducerId) const;
+		void CheckNoDataConsumer(const std::string& dataConsumerId) const;
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:

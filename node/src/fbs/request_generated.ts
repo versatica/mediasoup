@@ -22,6 +22,7 @@ export { CloseConsumerRequest, CloseConsumerRequestT } from './fbs/transport/clo
 export { CloseDataConsumerRequest, CloseDataConsumerRequestT } from './fbs/transport/close-data-consumer-request';
 export { CloseDataProducerRequest, CloseDataProducerRequestT } from './fbs/transport/close-data-producer-request';
 export { CloseProducerRequest, CloseProducerRequestT } from './fbs/transport/close-producer-request';
+export { ConsumeDataRequest, ConsumeDataRequestT } from './fbs/transport/consume-data-request';
 export { ConsumeRequest, ConsumeRequestT } from './fbs/transport/consume-request';
 export { EnableTraceEventRequest, EnableTraceEventRequestT } from './fbs/transport/enable-trace-event-request';
 export { ProduceDataRequest, ProduceDataRequestT } from './fbs/transport/produce-data-request';

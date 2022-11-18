@@ -4,14 +4,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.unionListToBody = exports.unionToBody = exports.Body = void 0;
 const set_preferred_layers_response_1 = require("../../fbs/consumer/set-preferred-layers-response");
 const set_priority_response_1 = require("../../fbs/consumer/set-priority-response");
+const dump_response_1 = require("../../fbs/data-consumer/dump-response");
 const get_buffered_amount_response_1 = require("../../fbs/data-consumer/get-buffered-amount-response");
-const dump_response_1 = require("../../fbs/data-producer/dump-response");
-const dump_response_2 = require("../../fbs/router/dump-response");
+const dump_response_2 = require("../../fbs/data-producer/dump-response");
+const dump_response_3 = require("../../fbs/router/dump-response");
 const consume_response_1 = require("../../fbs/transport/consume-response");
-const dump_response_3 = require("../../fbs/transport/dump-response");
+const dump_response_4 = require("../../fbs/transport/dump-response");
 const produce_response_1 = require("../../fbs/transport/produce-response");
-const dump_response_4 = require("../../fbs/web-rtc-server/dump-response");
-const dump_response_5 = require("../../fbs/worker/dump-response");
+const dump_response_5 = require("../../fbs/web-rtc-server/dump-response");
+const dump_response_6 = require("../../fbs/worker/dump-response");
 const resource_usage_response_1 = require("../../fbs/worker/resource-usage-response");
 var Body;
 (function (Body) {
@@ -27,21 +28,23 @@ var Body;
     Body[Body["FBS_Consumer_SetPriorityResponse"] = 9] = "FBS_Consumer_SetPriorityResponse";
     Body[Body["FBS_DataProducer_DumpResponse"] = 10] = "FBS_DataProducer_DumpResponse";
     Body[Body["FBS_DataConsumer_GetBufferedAmountResponse"] = 11] = "FBS_DataConsumer_GetBufferedAmountResponse";
+    Body[Body["FBS_DataConsumer_DumpResponse"] = 12] = "FBS_DataConsumer_DumpResponse";
 })(Body = exports.Body || (exports.Body = {}));
 function unionToBody(type, accessor) {
     switch (Body[type]) {
         case 'NONE': return null;
-        case 'FBS_Worker_DumpResponse': return accessor(new dump_response_5.DumpResponse());
+        case 'FBS_Worker_DumpResponse': return accessor(new dump_response_6.DumpResponse());
         case 'FBS_Worker_ResourceUsageResponse': return accessor(new resource_usage_response_1.ResourceUsageResponse());
-        case 'FBS_WebRtcServer_DumpResponse': return accessor(new dump_response_4.DumpResponse());
-        case 'FBS_Router_DumpResponse': return accessor(new dump_response_2.DumpResponse());
-        case 'FBS_Transport_DumpResponse': return accessor(new dump_response_3.DumpResponse());
+        case 'FBS_WebRtcServer_DumpResponse': return accessor(new dump_response_5.DumpResponse());
+        case 'FBS_Router_DumpResponse': return accessor(new dump_response_3.DumpResponse());
+        case 'FBS_Transport_DumpResponse': return accessor(new dump_response_4.DumpResponse());
         case 'FBS_Transport_ProduceResponse': return accessor(new produce_response_1.ProduceResponse());
         case 'FBS_Transport_ConsumeResponse': return accessor(new consume_response_1.ConsumeResponse());
         case 'FBS_Consumer_SetPreferredLayersResponse': return accessor(new set_preferred_layers_response_1.SetPreferredLayersResponse());
         case 'FBS_Consumer_SetPriorityResponse': return accessor(new set_priority_response_1.SetPriorityResponse());
-        case 'FBS_DataProducer_DumpResponse': return accessor(new dump_response_1.DumpResponse());
+        case 'FBS_DataProducer_DumpResponse': return accessor(new dump_response_2.DumpResponse());
         case 'FBS_DataConsumer_GetBufferedAmountResponse': return accessor(new get_buffered_amount_response_1.GetBufferedAmountResponse());
+        case 'FBS_DataConsumer_DumpResponse': return accessor(new dump_response_1.DumpResponse());
         default: return null;
     }
 }
@@ -49,17 +52,18 @@ exports.unionToBody = unionToBody;
 function unionListToBody(type, accessor, index) {
     switch (Body[type]) {
         case 'NONE': return null;
-        case 'FBS_Worker_DumpResponse': return accessor(index, new dump_response_5.DumpResponse());
+        case 'FBS_Worker_DumpResponse': return accessor(index, new dump_response_6.DumpResponse());
         case 'FBS_Worker_ResourceUsageResponse': return accessor(index, new resource_usage_response_1.ResourceUsageResponse());
-        case 'FBS_WebRtcServer_DumpResponse': return accessor(index, new dump_response_4.DumpResponse());
-        case 'FBS_Router_DumpResponse': return accessor(index, new dump_response_2.DumpResponse());
-        case 'FBS_Transport_DumpResponse': return accessor(index, new dump_response_3.DumpResponse());
+        case 'FBS_WebRtcServer_DumpResponse': return accessor(index, new dump_response_5.DumpResponse());
+        case 'FBS_Router_DumpResponse': return accessor(index, new dump_response_3.DumpResponse());
+        case 'FBS_Transport_DumpResponse': return accessor(index, new dump_response_4.DumpResponse());
         case 'FBS_Transport_ProduceResponse': return accessor(index, new produce_response_1.ProduceResponse());
         case 'FBS_Transport_ConsumeResponse': return accessor(index, new consume_response_1.ConsumeResponse());
         case 'FBS_Consumer_SetPreferredLayersResponse': return accessor(index, new set_preferred_layers_response_1.SetPreferredLayersResponse());
         case 'FBS_Consumer_SetPriorityResponse': return accessor(index, new set_priority_response_1.SetPriorityResponse());
-        case 'FBS_DataProducer_DumpResponse': return accessor(index, new dump_response_1.DumpResponse());
+        case 'FBS_DataProducer_DumpResponse': return accessor(index, new dump_response_2.DumpResponse());
         case 'FBS_DataConsumer_GetBufferedAmountResponse': return accessor(index, new get_buffered_amount_response_1.GetBufferedAmountResponse());
+        case 'FBS_DataConsumer_DumpResponse': return accessor(index, new dump_response_1.DumpResponse());
         default: return null;
     }
 }

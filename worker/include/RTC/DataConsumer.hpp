@@ -51,12 +51,13 @@ namespace RTC
 		  const std::string& dataProducerId,
 		  RTC::SctpAssociation* sctpAssociation,
 		  RTC::DataConsumer::Listener* listener,
-		  json& data,
+		  const FBS::Transport::ConsumeDataRequest* data,
 		  size_t maxMessageSize);
 		virtual ~DataConsumer();
 
 	public:
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::DataConsumer::DumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		void FillJsonStats(json& jsonArray) const;
 		Type GetType() const
 		{

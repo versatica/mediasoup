@@ -3,7 +3,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
-import { SctpStreamParameters } from './SctpParameters';
+import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsDataConsumer from './fbs/dataConsumer_generated';
@@ -297,7 +297,19 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('dataConsumer.dump', this.#internal.dataConsumerId);
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.DATA_CONSUMER_DUMP,
+			undefined,
+			undefined,
+			this.#internal.dataConsumerId
+		);
+
+		/* Decode the response. */
+		const dumpResponse = new FbsDataConsumer.DumpResponse();
+
+		response.body(dumpResponse);
+
+		return parseDataConsumerDump(dumpResponse);
 	}
 
 	/**
@@ -473,4 +485,24 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 				}
 			});
 	}
+}
+
+type DataConsumerDump = DataConsumerData & {
+	id: string;
+};
+
+export function parseDataConsumerDump(
+	data: FbsDataConsumer.DumpResponse
+): DataConsumerDump
+{
+	return {
+		id                   : data.id()!,
+		dataProducerId       : data.dataProducerId()!,
+		type                 : data.type()! as DataConsumerType,
+		sctpStreamParameters : data.sctpStreamParameters() !== null ?
+			parseSctpStreamParameters(data.sctpStreamParameters()!) :
+			undefined,
+		label    : data.label()!,
+		protocol : data.protocol()!
+	};
 }

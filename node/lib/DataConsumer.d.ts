@@ -4,6 +4,7 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { SctpStreamParameters } from './SctpParameters';
+import * as FbsDataConsumer from './fbs/dataConsumer_generated';
 export declare type DataConsumerOptions = {
     /**
      * The id of the DataProducer to consume.
@@ -154,5 +155,9 @@ export declare class DataConsumer extends EnhancedEventEmitter<DataConsumerEvent
     getBufferedAmount(): Promise<number>;
     private handleWorkerNotifications;
 }
+declare type DataConsumerDump = DataConsumerData & {
+    id: string;
+};
+export declare function parseDataConsumerDump(data: FbsDataConsumer.DumpResponse): DataConsumerDump;
 export {};
 //# sourceMappingURL=DataConsumer.d.ts.map

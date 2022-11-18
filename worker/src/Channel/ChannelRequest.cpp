@@ -19,13 +19,11 @@ namespace Channel
 		{ "transport.getStats",                          FBS::Request::Method::TRANSPORT_GET_STATS                              },
 		{ "transport.connect",                           FBS::Request::Method::TRANSPORT_CONNECT                                },
 		{ "transport.restartIce",                        FBS::Request::Method::TRANSPORT_RESTART_ICE                            },
-		{ "transport.consumeData",                       FBS::Request::Method::TRANSPORT_CONSUME_DATA                           },
 		{ "producer.dump",                               FBS::Request::Method::PRODUCER_DUMP                                    },
 		{ "producer.getStats",                           FBS::Request::Method::PRODUCER_GET_STATS                               },
 		{ "consumer.dump",                               FBS::Request::Method::CONSUMER_DUMP                                    },
 		{ "consumer.getStats",                           FBS::Request::Method::CONSUMER_GET_STATS                               },
 		{ "dataProducer.getStats",                       FBS::Request::Method::DATA_PRODUCER_GET_STATS                          },
-		{ "dataConsumer.dump",                           FBS::Request::Method::DATA_CONSUMER_DUMP                               },
 		{ "dataConsumer.getStats",                       FBS::Request::Method::DATA_CONSUMER_GET_STATS                          },
 	};
 	// clang-format on

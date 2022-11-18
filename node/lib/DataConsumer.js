@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DataConsumer = void 0;
+exports.parseDataConsumerDump = exports.DataConsumer = void 0;
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
+const SctpParameters_1 = require("./SctpParameters");
 const FbsTransport = require("./fbs/transport_generated");
 const FbsRequest = require("./fbs/request_generated");
 const FbsDataConsumer = require("./fbs/dataConsumer_generated");
@@ -136,7 +137,11 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('dataConsumer.dump', this.#internal.dataConsumerId);
+        const response = await this.#channel.requestBinary(FbsRequest.Method.DATA_CONSUMER_DUMP, undefined, undefined, this.#internal.dataConsumerId);
+        /* Decode the response. */
+        const dumpResponse = new FbsDataConsumer.DumpResponse();
+        response.body(dumpResponse);
+        return parseDataConsumerDump(dumpResponse);
     }
     /**
      * Get DataConsumer stats.
@@ -254,3 +259,16 @@ class DataConsumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
     }
 }
 exports.DataConsumer = DataConsumer;
+function parseDataConsumerDump(data) {
+    return {
+        id: data.id(),
+        dataProducerId: data.dataProducerId(),
+        type: data.type(),
+        sctpStreamParameters: data.sctpStreamParameters() !== null ?
+            (0, SctpParameters_1.parseSctpStreamParameters)(data.sctpStreamParameters()) :
+            undefined,
+        label: data.label(),
+        protocol: data.protocol()
+    };
+}
+exports.parseDataConsumerDump = parseDataConsumerDump;

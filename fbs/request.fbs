@@ -87,6 +87,7 @@ union Body {
   FBS.Transport.ProduceRequest,
   FBS.Transport.ConsumeRequest,
   FBS.Transport.ProduceDataRequest,
+  FBS.Transport.ConsumeDataRequest,
   FBS.Transport.EnableTraceEventRequest,
   FBS.Transport.CloseProducerRequest,
   FBS.Transport.CloseConsumerRequest,

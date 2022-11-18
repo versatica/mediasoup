@@ -20,6 +20,7 @@ union Body {
   FBS.Consumer.SetPriorityResponse,
   FBS.DataProducer.DumpResponse,
   FBS.DataConsumer.GetBufferedAmountResponse,
+  FBS.DataConsumer.DumpResponse,
 }
 
 table Response {

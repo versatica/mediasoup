@@ -4,6 +4,7 @@ import * as flatbuffers from 'flatbuffers';
 
 import { SetPreferredLayersResponse, SetPreferredLayersResponseT } from '../../fbs/consumer/set-preferred-layers-response';
 import { SetPriorityResponse, SetPriorityResponseT } from '../../fbs/consumer/set-priority-response';
+import { DumpResponse as FBS_DataConsumer_DumpResponse, DumpResponseT as FBS_DataConsumer_DumpResponseT } from '../../fbs/data-consumer/dump-response';
 import { GetBufferedAmountResponse, GetBufferedAmountResponseT } from '../../fbs/data-consumer/get-buffered-amount-response';
 import { DumpResponse as FBS_DataProducer_DumpResponse, DumpResponseT as FBS_DataProducer_DumpResponseT } from '../../fbs/data-producer/dump-response';
 import { Body, unionToBody, unionListToBody } from '../../fbs/response/body';
@@ -119,7 +120,7 @@ constructor(
   public id: number = 0,
   public accepted: boolean = false,
   public bodyType: Body = Body.NONE,
-  public body: ConsumeResponseT|DumpResponseT|FBS_DataProducer_DumpResponseT|FBS_Router_DumpResponseT|FBS_Transport_DumpResponseT|FBS_WebRtcServer_DumpResponseT|GetBufferedAmountResponseT|ProduceResponseT|ResourceUsageResponseT|SetPreferredLayersResponseT|SetPriorityResponseT|null = null
+  public body: ConsumeResponseT|DumpResponseT|FBS_DataConsumer_DumpResponseT|FBS_DataProducer_DumpResponseT|FBS_Router_DumpResponseT|FBS_Transport_DumpResponseT|FBS_WebRtcServer_DumpResponseT|GetBufferedAmountResponseT|ProduceResponseT|ResourceUsageResponseT|SetPreferredLayersResponseT|SetPriorityResponseT|null = null
 ){}
 
 

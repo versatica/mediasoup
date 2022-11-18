@@ -1232,22 +1232,17 @@ namespace RTC
 					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
 				}
 
-				auto jsonDataProducerIdIt = request->data.find("dataProducerId");
+				auto body = request->_data->body_as<FBS::Transport::ConsumeDataRequest>();
 
-				if (jsonDataProducerIdIt == request->data.end() || !jsonDataProducerIdIt->is_string())
-				{
-					MS_THROW_ERROR("missing dataProducerId");
-				}
-
-				std::string dataProducerId = jsonDataProducerIdIt->get<std::string>();
-				std::string dataConsumerId;
+				auto dataProducerId = body->dataProducerId()->str();
+				auto dataConsumerId = body->dataConsumerId()->str();
 
 				// This may throw.
-				SetNewDataConsumerIdFromData(request->data, dataConsumerId);
+				CheckNoDataConsumer(dataConsumerId);
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  dataConsumerId, dataProducerId, this->sctpAssociation, this, request->data, this->maxMessageSize);
+				  dataConsumerId, dataProducerId, this->sctpAssociation, this, body, this->maxMessageSize);
 
 				// Verify the type of the DataConsumer.
 				switch (dataConsumer->GetType())
@@ -1302,11 +1297,9 @@ namespace RTC
 				  dataConsumerId.c_str(),
 				  dataProducerId.c_str());
 
-				json data = json::object();
+				auto dumpOffset = dataConsumer->FillBuffer(request->GetBufferBuilder());
 
-				dataConsumer->FillJson(data);
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_DataConsumer_DumpResponse, dumpOffset);
 
 				if (IsConnected())
 					dataConsumer->TransportConnected();
@@ -1723,6 +1716,12 @@ namespace RTC
 			MS_THROW_ERROR("a DataProducer with same dataProducerId already exists");
 	}
 
+	void Transport::CheckNoDataConsumer(const std::string& dataConsumerId) const
+	{
+		if (this->mapDataConsumers.find(dataConsumerId) != this->mapDataConsumers.end())
+			MS_THROW_ERROR("a DataConsumer with same dataConsumerId already exists");
+	}
+
 	RTC::Producer* Transport::GetProducerById(const std::string& producerId) const
 	{
 		MS_TRACE();
@@ -1823,25 +1822,6 @@ namespace RTC
 			MS_THROW_ERROR("DataProducer not found");
 
 		return it->second;
-	}
-
-	void Transport::SetNewDataConsumerIdFromData(json& data, std::string& dataConsumerId) const
-	{
-		MS_TRACE();
-
-		auto jsonDataConsumerIdIt = data.find("dataConsumerId");
-
-		if (jsonDataConsumerIdIt == data.end() || !jsonDataConsumerIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing dataConsumerId");
-		}
-
-		dataConsumerId.assign(jsonDataConsumerIdIt->get<std::string>());
-
-		if (this->mapDataConsumers.find(dataConsumerId) != this->mapDataConsumers.end())
-		{
-			MS_THROW_ERROR("a DataConsumer with same dataConsumerId already exists");
-		}
 	}
 
 	RTC::DataConsumer* Transport::GetDataConsumerById(const std::string& dataConsumerId) const

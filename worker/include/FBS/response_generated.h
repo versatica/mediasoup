@@ -42,11 +42,12 @@ enum class Body : uint8_t {
   FBS_Consumer_SetPriorityResponse = 9,
   FBS_DataProducer_DumpResponse = 10,
   FBS_DataConsumer_GetBufferedAmountResponse = 11,
+  FBS_DataConsumer_DumpResponse = 12,
   MIN = NONE,
-  MAX = FBS_DataConsumer_GetBufferedAmountResponse
+  MAX = FBS_DataConsumer_DumpResponse
 };
 
-inline const Body (&EnumValuesBody())[12] {
+inline const Body (&EnumValuesBody())[13] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_DumpResponse,
@@ -59,13 +60,14 @@ inline const Body (&EnumValuesBody())[12] {
     Body::FBS_Consumer_SetPreferredLayersResponse,
     Body::FBS_Consumer_SetPriorityResponse,
     Body::FBS_DataProducer_DumpResponse,
-    Body::FBS_DataConsumer_GetBufferedAmountResponse
+    Body::FBS_DataConsumer_GetBufferedAmountResponse,
+    Body::FBS_DataConsumer_DumpResponse
   };
   return values;
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[13] = {
+  static const char * const names[14] = {
     "NONE",
     "FBS_Worker_DumpResponse",
     "FBS_Worker_ResourceUsageResponse",
@@ -78,13 +80,14 @@ inline const char * const *EnumNamesBody() {
     "FBS_Consumer_SetPriorityResponse",
     "FBS_DataProducer_DumpResponse",
     "FBS_DataConsumer_GetBufferedAmountResponse",
+    "FBS_DataConsumer_DumpResponse",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameBody(Body e) {
-  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_DataConsumer_GetBufferedAmountResponse)) return "";
+  if (flatbuffers::IsOutRange(e, Body::NONE, Body::FBS_DataConsumer_DumpResponse)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesBody()[index];
 }
@@ -135,6 +138,10 @@ template<> struct BodyTraits<FBS::DataProducer::DumpResponse> {
 
 template<> struct BodyTraits<FBS::DataConsumer::GetBufferedAmountResponse> {
   static const Body enum_value = Body::FBS_DataConsumer_GetBufferedAmountResponse;
+};
+
+template<> struct BodyTraits<FBS::DataConsumer::DumpResponse> {
+  static const Body enum_value = Body::FBS_DataConsumer_DumpResponse;
 };
 
 bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body type);
@@ -197,6 +204,9 @@ struct Response FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::DataConsumer::GetBufferedAmountResponse *body_as_FBS_DataConsumer_GetBufferedAmountResponse() const {
     return body_type() == FBS::Response::Body::FBS_DataConsumer_GetBufferedAmountResponse ? static_cast<const FBS::DataConsumer::GetBufferedAmountResponse *>(body()) : nullptr;
   }
+  const FBS::DataConsumer::DumpResponse *body_as_FBS_DataConsumer_DumpResponse() const {
+    return body_type() == FBS::Response::Body::FBS_DataConsumer_DumpResponse ? static_cast<const FBS::DataConsumer::DumpResponse *>(body()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_ID, 4) &&
@@ -250,6 +260,10 @@ template<> inline const FBS::DataProducer::DumpResponse *Response::body_as<FBS::
 
 template<> inline const FBS::DataConsumer::GetBufferedAmountResponse *Response::body_as<FBS::DataConsumer::GetBufferedAmountResponse>() const {
   return body_as_FBS_DataConsumer_GetBufferedAmountResponse();
+}
+
+template<> inline const FBS::DataConsumer::DumpResponse *Response::body_as<FBS::DataConsumer::DumpResponse>() const {
+  return body_as_FBS_DataConsumer_DumpResponse();
 }
 
 struct ResponseBuilder {
@@ -342,6 +356,10 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
       auto ptr = reinterpret_cast<const FBS::DataConsumer::GetBufferedAmountResponse *>(obj);
       return verifier.VerifyTable(ptr);
     }
+    case Body::FBS_DataConsumer_DumpResponse: {
+      auto ptr = reinterpret_cast<const FBS::DataConsumer::DumpResponse *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
     default: return true;
   }
 }
@@ -371,7 +389,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 7 },
     { flatbuffers::ET_SEQUENCE, 0, 8 },
     { flatbuffers::ET_SEQUENCE, 0, 9 },
-    { flatbuffers::ET_SEQUENCE, 0, 10 }
+    { flatbuffers::ET_SEQUENCE, 0, 10 },
+    { flatbuffers::ET_SEQUENCE, 0, 11 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::DumpResponseTypeTable,
@@ -384,7 +403,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Consumer::SetPreferredLayersResponseTypeTable,
     FBS::Consumer::SetPriorityResponseTypeTable,
     FBS::DataProducer::DumpResponseTypeTable,
-    FBS::DataConsumer::GetBufferedAmountResponseTypeTable
+    FBS::DataConsumer::GetBufferedAmountResponseTypeTable,
+    FBS::DataConsumer::DumpResponseTypeTable
   };
   static const char * const names[] = {
     "NONE",
@@ -398,10 +418,11 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Consumer_SetPreferredLayersResponse",
     "FBS_Consumer_SetPriorityResponse",
     "FBS_DataProducer_DumpResponse",
-    "FBS_DataConsumer_GetBufferedAmountResponse"
+    "FBS_DataConsumer_GetBufferedAmountResponse",
+    "FBS_DataConsumer_DumpResponse"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 12, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 13, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

@@ -1,4 +1,5 @@
 include "common.fbs";
+include "sctpParameters.fbs";
 
 namespace FBS.DataConsumer;
 
@@ -8,4 +9,13 @@ table GetBufferedAmountResponse {
 
 table SetBufferedAmountLowThresholdRequest {
   threshold:uint32;
+}
+
+table DumpResponse {
+  id:string (required);
+  data_producer_id:string (required);
+  type:string (required);
+  sctp_stream_parameters: FBS.SctpParameters.SctpStreamParameters;
+  label:string (required);
+  protocol:string (required);
 }

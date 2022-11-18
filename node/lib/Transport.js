@@ -15,8 +15,9 @@ const SctpParameters_1 = require("./SctpParameters");
 const FbsRequest = require("./fbs/request_generated");
 const FbsResponse = require("./fbs/response_generated");
 const media_kind_1 = require("./fbs/fbs/rtp-parameters/media-kind");
-const FbsDataProducer = require("./fbs/dataProducer_generated");
 const FbsConsumer = require("./fbs/consumer_generated");
+const FbsDataConsumer = require("./fbs/dataConsumer_generated");
+const FbsDataProducer = require("./fbs/dataProducer_generated");
 const FbsTransport = require("./fbs/transport_generated");
 const FbsRouter = require("./fbs/router_generated");
 const logger = new Logger_1.Logger('Transport');
@@ -481,7 +482,7 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
         }
         const dataProducerId = id || (0, uuid_1.v4)();
         const builder = this.channel.bufferBuilder;
-        const requestOffset = createDataProduceRequest({
+        const requestOffset = createProduceDataRequest({
             builder,
             dataProducerId,
             type,
@@ -557,19 +558,26 @@ class Transport extends EnhancedEventEmitter_1.EnhancedEventEmitter {
             }
         }
         const { label, protocol } = dataProducer;
-        const reqData = {
-            dataConsumerId: (0, uuid_1.v4)(),
+        const dataConsumerId = (0, uuid_1.v4)();
+        const builder = this.channel.bufferBuilder;
+        const requestOffset = createConsumeDataRequest({
+            builder,
+            dataConsumerId,
             dataProducerId,
             type,
             sctpStreamParameters,
             label,
             protocol
-        };
-        const data = await this.channel.request('transport.consumeData', this.internal.transportId, reqData);
+        });
+        const response = await this.channel.requestBinary(FbsRequest.Method.TRANSPORT_CONSUME_DATA, FbsRequest.Body.FBS_Transport_ConsumeDataRequest, requestOffset, this.internal.transportId);
+        /* Decode the response. */
+        const consumeResponse = new FbsDataConsumer.DumpResponse();
+        response.body(consumeResponse);
+        const data = (0, DataConsumer_1.parseDataConsumerDump)(consumeResponse);
         const dataConsumer = new DataConsumer_1.DataConsumer({
             internal: {
                 ...this.internal,
-                dataConsumerId: reqData.dataConsumerId
+                dataConsumerId
             },
             data,
             channel: this.channel,
@@ -757,7 +765,7 @@ function createProduceRequest({ builder, producerId, kind, rtpParameters, rtpMap
     FbsTransport.ProduceRequest.addPaused(builder, paused);
     return FbsTransport.ProduceRequest.endProduceRequest(builder);
 }
-function createDataProduceRequest({ builder, dataProducerId, type, sctpStreamParameters, label, protocol }) {
+function createProduceDataRequest({ builder, dataProducerId, type, sctpStreamParameters, label, protocol }) {
     const dataProducerIdOffset = builder.createString(dataProducerId);
     const typeOffset = builder.createString(type);
     const labelOffset = builder.createString(label);
@@ -775,4 +783,26 @@ function createDataProduceRequest({ builder, dataProducerId, type, sctpStreamPar
     FbsTransport.ProduceDataRequest.addLabel(builder, labelOffset);
     FbsTransport.ProduceDataRequest.addProtocol(builder, protocolOffset);
     return FbsTransport.ProduceDataRequest.endProduceDataRequest(builder);
+}
+function createConsumeDataRequest({ builder, dataConsumerId, dataProducerId, type, sctpStreamParameters, label, protocol }) {
+    logger.error(`createConsumeDataRequest | type:${type}`);
+    const dataConsumerIdOffset = builder.createString(dataConsumerId);
+    const dataProducerIdOffset = builder.createString(dataProducerId);
+    const typeOffset = builder.createString(type);
+    const labelOffset = builder.createString(label);
+    const protocolOffset = builder.createString(protocol);
+    let sctpStreamParametersOffset = 0;
+    if (sctpStreamParameters) {
+        sctpStreamParametersOffset = (0, SctpParameters_1.serializeSctpStreamParameters)(builder, sctpStreamParameters);
+    }
+    FbsTransport.ConsumeDataRequest.startConsumeDataRequest(builder);
+    FbsTransport.ConsumeDataRequest.addDataConsumerId(builder, dataConsumerIdOffset);
+    FbsTransport.ConsumeDataRequest.addDataProducerId(builder, dataProducerIdOffset);
+    FbsTransport.ConsumeDataRequest.addType(builder, typeOffset);
+    if (sctpStreamParametersOffset) {
+        FbsTransport.ConsumeDataRequest.addSctpStreamParameters(builder, sctpStreamParametersOffset);
+    }
+    FbsTransport.ConsumeDataRequest.addLabel(builder, labelOffset);
+    FbsTransport.ConsumeDataRequest.addProtocol(builder, protocolOffset);
+    return FbsTransport.ConsumeDataRequest.endConsumeDataRequest(builder);
 }
