@@ -194,9 +194,9 @@ function updateNodeDeps()
 	console.log('npm-scripts.js [INFO] updateNodeDeps()');
 
 	// Install/update Node deps.
-	executeCmd(`npm ci --ignore-scripts`);
+	executeCmd('npm ci --ignore-scripts');
 	// Update package-lock.json.
-	executeCmd(`npm install --package-lock-only --ignore-scripts`);
+	executeCmd('npm install --package-lock-only --ignore-scripts');
 }
 
 function deleteNodeLib()
