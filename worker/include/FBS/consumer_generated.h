@@ -13,6 +13,9 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
               FLATBUFFERS_VERSION_REVISION == 8,
              "Non-compatible flatbuffers version included");
 
+#include "rtpParameters_generated.h"
+#include "rtpStream_generated.h"
+
 namespace FBS {
 namespace Consumer {
 
@@ -37,6 +40,24 @@ struct SetPriorityResponseBuilder;
 struct EnableTraceEventRequest;
 struct EnableTraceEventRequestBuilder;
 
+struct DumpResponse;
+struct DumpResponseBuilder;
+
+struct BaseConsumerDump;
+struct BaseConsumerDumpBuilder;
+
+struct SimpleConsumerDump;
+struct SimpleConsumerDumpBuilder;
+
+struct SimulcastConsumerDump;
+struct SimulcastConsumerDumpBuilder;
+
+struct SvcConsumerDump;
+struct SvcConsumerDumpBuilder;
+
+struct PipeConsumerDump;
+struct PipeConsumerDumpBuilder;
+
 inline const flatbuffers::TypeTable *ConsumerLayersTypeTable();
 
 inline const flatbuffers::TypeTable *ConsumerScoreTypeTable();
@@ -50,6 +71,87 @@ inline const flatbuffers::TypeTable *SetPriorityRequestTypeTable();
 inline const flatbuffers::TypeTable *SetPriorityResponseTypeTable();
 
 inline const flatbuffers::TypeTable *EnableTraceEventRequestTypeTable();
+
+inline const flatbuffers::TypeTable *DumpResponseTypeTable();
+
+inline const flatbuffers::TypeTable *BaseConsumerDumpTypeTable();
+
+inline const flatbuffers::TypeTable *SimpleConsumerDumpTypeTable();
+
+inline const flatbuffers::TypeTable *SimulcastConsumerDumpTypeTable();
+
+inline const flatbuffers::TypeTable *SvcConsumerDumpTypeTable();
+
+inline const flatbuffers::TypeTable *PipeConsumerDumpTypeTable();
+
+enum class ConsumerDumpData : uint8_t {
+  NONE = 0,
+  BaseConsumerDump = 1,
+  SimpleConsumerDump = 2,
+  SimulcastConsumerDump = 3,
+  SvcConsumerDump = 4,
+  PipeConsumerDump = 5,
+  MIN = NONE,
+  MAX = PipeConsumerDump
+};
+
+inline const ConsumerDumpData (&EnumValuesConsumerDumpData())[6] {
+  static const ConsumerDumpData values[] = {
+    ConsumerDumpData::NONE,
+    ConsumerDumpData::BaseConsumerDump,
+    ConsumerDumpData::SimpleConsumerDump,
+    ConsumerDumpData::SimulcastConsumerDump,
+    ConsumerDumpData::SvcConsumerDump,
+    ConsumerDumpData::PipeConsumerDump
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesConsumerDumpData() {
+  static const char * const names[7] = {
+    "NONE",
+    "BaseConsumerDump",
+    "SimpleConsumerDump",
+    "SimulcastConsumerDump",
+    "SvcConsumerDump",
+    "PipeConsumerDump",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameConsumerDumpData(ConsumerDumpData e) {
+  if (flatbuffers::IsOutRange(e, ConsumerDumpData::NONE, ConsumerDumpData::PipeConsumerDump)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesConsumerDumpData()[index];
+}
+
+template<typename T> struct ConsumerDumpDataTraits {
+  static const ConsumerDumpData enum_value = ConsumerDumpData::NONE;
+};
+
+template<> struct ConsumerDumpDataTraits<FBS::Consumer::BaseConsumerDump> {
+  static const ConsumerDumpData enum_value = ConsumerDumpData::BaseConsumerDump;
+};
+
+template<> struct ConsumerDumpDataTraits<FBS::Consumer::SimpleConsumerDump> {
+  static const ConsumerDumpData enum_value = ConsumerDumpData::SimpleConsumerDump;
+};
+
+template<> struct ConsumerDumpDataTraits<FBS::Consumer::SimulcastConsumerDump> {
+  static const ConsumerDumpData enum_value = ConsumerDumpData::SimulcastConsumerDump;
+};
+
+template<> struct ConsumerDumpDataTraits<FBS::Consumer::SvcConsumerDump> {
+  static const ConsumerDumpData enum_value = ConsumerDumpData::SvcConsumerDump;
+};
+
+template<> struct ConsumerDumpDataTraits<FBS::Consumer::PipeConsumerDump> {
+  static const ConsumerDumpData enum_value = ConsumerDumpData::PipeConsumerDump;
+};
+
+bool VerifyConsumerDumpData(flatbuffers::Verifier &verifier, const void *obj, ConsumerDumpData type);
+bool VerifyConsumerDumpDataVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<ConsumerDumpData> *types);
 
 struct ConsumerLayers FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ConsumerLayersBuilder Builder;
@@ -418,6 +520,724 @@ inline flatbuffers::Offset<EnableTraceEventRequest> CreateEnableTraceEventReques
       events__);
 }
 
+struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef DumpResponseBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return DumpResponseTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_DATA_TYPE = 4,
+    VT_DATA = 6
+  };
+  FBS::Consumer::ConsumerDumpData data_type() const {
+    return static_cast<FBS::Consumer::ConsumerDumpData>(GetField<uint8_t>(VT_DATA_TYPE, 0));
+  }
+  const void *data() const {
+    return GetPointer<const void *>(VT_DATA);
+  }
+  template<typename T> const T *data_as() const;
+  const FBS::Consumer::BaseConsumerDump *data_as_BaseConsumerDump() const {
+    return data_type() == FBS::Consumer::ConsumerDumpData::BaseConsumerDump ? static_cast<const FBS::Consumer::BaseConsumerDump *>(data()) : nullptr;
+  }
+  const FBS::Consumer::SimpleConsumerDump *data_as_SimpleConsumerDump() const {
+    return data_type() == FBS::Consumer::ConsumerDumpData::SimpleConsumerDump ? static_cast<const FBS::Consumer::SimpleConsumerDump *>(data()) : nullptr;
+  }
+  const FBS::Consumer::SimulcastConsumerDump *data_as_SimulcastConsumerDump() const {
+    return data_type() == FBS::Consumer::ConsumerDumpData::SimulcastConsumerDump ? static_cast<const FBS::Consumer::SimulcastConsumerDump *>(data()) : nullptr;
+  }
+  const FBS::Consumer::SvcConsumerDump *data_as_SvcConsumerDump() const {
+    return data_type() == FBS::Consumer::ConsumerDumpData::SvcConsumerDump ? static_cast<const FBS::Consumer::SvcConsumerDump *>(data()) : nullptr;
+  }
+  const FBS::Consumer::PipeConsumerDump *data_as_PipeConsumerDump() const {
+    return data_type() == FBS::Consumer::ConsumerDumpData::PipeConsumerDump ? static_cast<const FBS::Consumer::PipeConsumerDump *>(data()) : nullptr;
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_DATA_TYPE, 1) &&
+           VerifyOffset(verifier, VT_DATA) &&
+           VerifyConsumerDumpData(verifier, data(), data_type()) &&
+           verifier.EndTable();
+  }
+};
+
+template<> inline const FBS::Consumer::BaseConsumerDump *DumpResponse::data_as<FBS::Consumer::BaseConsumerDump>() const {
+  return data_as_BaseConsumerDump();
+}
+
+template<> inline const FBS::Consumer::SimpleConsumerDump *DumpResponse::data_as<FBS::Consumer::SimpleConsumerDump>() const {
+  return data_as_SimpleConsumerDump();
+}
+
+template<> inline const FBS::Consumer::SimulcastConsumerDump *DumpResponse::data_as<FBS::Consumer::SimulcastConsumerDump>() const {
+  return data_as_SimulcastConsumerDump();
+}
+
+template<> inline const FBS::Consumer::SvcConsumerDump *DumpResponse::data_as<FBS::Consumer::SvcConsumerDump>() const {
+  return data_as_SvcConsumerDump();
+}
+
+template<> inline const FBS::Consumer::PipeConsumerDump *DumpResponse::data_as<FBS::Consumer::PipeConsumerDump>() const {
+  return data_as_PipeConsumerDump();
+}
+
+struct DumpResponseBuilder {
+  typedef DumpResponse Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_data_type(FBS::Consumer::ConsumerDumpData data_type) {
+    fbb_.AddElement<uint8_t>(DumpResponse::VT_DATA_TYPE, static_cast<uint8_t>(data_type), 0);
+  }
+  void add_data(flatbuffers::Offset<void> data) {
+    fbb_.AddOffset(DumpResponse::VT_DATA, data);
+  }
+  explicit DumpResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<DumpResponse> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<DumpResponse>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<DumpResponse> CreateDumpResponse(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    FBS::Consumer::ConsumerDumpData data_type = FBS::Consumer::ConsumerDumpData::NONE,
+    flatbuffers::Offset<void> data = 0) {
+  DumpResponseBuilder builder_(_fbb);
+  builder_.add_data(data);
+  builder_.add_data_type(data_type);
+  return builder_.Finish();
+}
+
+struct BaseConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef BaseConsumerDumpBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return BaseConsumerDumpTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_PRODUCERID = 6,
+    VT_KIND = 8,
+    VT_TYPE = 10,
+    VT_RTPPARAMETERS = 12,
+    VT_CONSUMABLERTPENCODINGS = 14,
+    VT_SUPPORTEDCODECPAYLOADTYPES = 16,
+    VT_TRACEEVENTTYPES = 18,
+    VT_PAUSED = 20,
+    VT_PRODUCERPAUSED = 22,
+    VT_PRIORTY = 24
+  };
+  const flatbuffers::String *id() const {
+    return GetPointer<const flatbuffers::String *>(VT_ID);
+  }
+  const flatbuffers::String *producerId() const {
+    return GetPointer<const flatbuffers::String *>(VT_PRODUCERID);
+  }
+  FBS::RtpParameters::MediaKind kind() const {
+    return static_cast<FBS::RtpParameters::MediaKind>(GetField<uint8_t>(VT_KIND, 0));
+  }
+  const flatbuffers::String *type() const {
+    return GetPointer<const flatbuffers::String *>(VT_TYPE);
+  }
+  const FBS::RtpParameters::RtpParameters *rtpParameters() const {
+    return GetPointer<const FBS::RtpParameters::RtpParameters *>(VT_RTPPARAMETERS);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> *consumableRtpEncodings() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> *>(VT_CONSUMABLERTPENCODINGS);
+  }
+  const flatbuffers::Vector<uint8_t> *supportedCodecPayloadTypes() const {
+    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_SUPPORTEDCODECPAYLOADTYPES);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *traceEventTypes() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>> *>(VT_TRACEEVENTTYPES);
+  }
+  bool paused() const {
+    return GetField<uint8_t>(VT_PAUSED, 0) != 0;
+  }
+  bool producerPaused() const {
+    return GetField<uint8_t>(VT_PRODUCERPAUSED, 0) != 0;
+  }
+  uint8_t priorty() const {
+    return GetField<uint8_t>(VT_PRIORTY, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_ID) &&
+           verifier.VerifyString(id()) &&
+           VerifyOffsetRequired(verifier, VT_PRODUCERID) &&
+           verifier.VerifyString(producerId()) &&
+           VerifyField<uint8_t>(verifier, VT_KIND, 1) &&
+           VerifyOffsetRequired(verifier, VT_TYPE) &&
+           verifier.VerifyString(type()) &&
+           VerifyOffsetRequired(verifier, VT_RTPPARAMETERS) &&
+           verifier.VerifyTable(rtpParameters()) &&
+           VerifyOffset(verifier, VT_CONSUMABLERTPENCODINGS) &&
+           verifier.VerifyVector(consumableRtpEncodings()) &&
+           verifier.VerifyVectorOfTables(consumableRtpEncodings()) &&
+           VerifyOffset(verifier, VT_SUPPORTEDCODECPAYLOADTYPES) &&
+           verifier.VerifyVector(supportedCodecPayloadTypes()) &&
+           VerifyOffsetRequired(verifier, VT_TRACEEVENTTYPES) &&
+           verifier.VerifyVector(traceEventTypes()) &&
+           verifier.VerifyVectorOfStrings(traceEventTypes()) &&
+           VerifyField<uint8_t>(verifier, VT_PAUSED, 1) &&
+           VerifyField<uint8_t>(verifier, VT_PRODUCERPAUSED, 1) &&
+           VerifyField<uint8_t>(verifier, VT_PRIORTY, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct BaseConsumerDumpBuilder {
+  typedef BaseConsumerDump Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_id(flatbuffers::Offset<flatbuffers::String> id) {
+    fbb_.AddOffset(BaseConsumerDump::VT_ID, id);
+  }
+  void add_producerId(flatbuffers::Offset<flatbuffers::String> producerId) {
+    fbb_.AddOffset(BaseConsumerDump::VT_PRODUCERID, producerId);
+  }
+  void add_kind(FBS::RtpParameters::MediaKind kind) {
+    fbb_.AddElement<uint8_t>(BaseConsumerDump::VT_KIND, static_cast<uint8_t>(kind), 0);
+  }
+  void add_type(flatbuffers::Offset<flatbuffers::String> type) {
+    fbb_.AddOffset(BaseConsumerDump::VT_TYPE, type);
+  }
+  void add_rtpParameters(flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters) {
+    fbb_.AddOffset(BaseConsumerDump::VT_RTPPARAMETERS, rtpParameters);
+  }
+  void add_consumableRtpEncodings(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>> consumableRtpEncodings) {
+    fbb_.AddOffset(BaseConsumerDump::VT_CONSUMABLERTPENCODINGS, consumableRtpEncodings);
+  }
+  void add_supportedCodecPayloadTypes(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> supportedCodecPayloadTypes) {
+    fbb_.AddOffset(BaseConsumerDump::VT_SUPPORTEDCODECPAYLOADTYPES, supportedCodecPayloadTypes);
+  }
+  void add_traceEventTypes(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> traceEventTypes) {
+    fbb_.AddOffset(BaseConsumerDump::VT_TRACEEVENTTYPES, traceEventTypes);
+  }
+  void add_paused(bool paused) {
+    fbb_.AddElement<uint8_t>(BaseConsumerDump::VT_PAUSED, static_cast<uint8_t>(paused), 0);
+  }
+  void add_producerPaused(bool producerPaused) {
+    fbb_.AddElement<uint8_t>(BaseConsumerDump::VT_PRODUCERPAUSED, static_cast<uint8_t>(producerPaused), 0);
+  }
+  void add_priorty(uint8_t priorty) {
+    fbb_.AddElement<uint8_t>(BaseConsumerDump::VT_PRIORTY, priorty, 0);
+  }
+  explicit BaseConsumerDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<BaseConsumerDump> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<BaseConsumerDump>(end);
+    fbb_.Required(o, BaseConsumerDump::VT_ID);
+    fbb_.Required(o, BaseConsumerDump::VT_PRODUCERID);
+    fbb_.Required(o, BaseConsumerDump::VT_TYPE);
+    fbb_.Required(o, BaseConsumerDump::VT_RTPPARAMETERS);
+    fbb_.Required(o, BaseConsumerDump::VT_TRACEEVENTTYPES);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<BaseConsumerDump> CreateBaseConsumerDump(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<flatbuffers::String> id = 0,
+    flatbuffers::Offset<flatbuffers::String> producerId = 0,
+    FBS::RtpParameters::MediaKind kind = FBS::RtpParameters::MediaKind::ALL,
+    flatbuffers::Offset<flatbuffers::String> type = 0,
+    flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>> consumableRtpEncodings = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> supportedCodecPayloadTypes = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> traceEventTypes = 0,
+    bool paused = false,
+    bool producerPaused = false,
+    uint8_t priorty = 0) {
+  BaseConsumerDumpBuilder builder_(_fbb);
+  builder_.add_traceEventTypes(traceEventTypes);
+  builder_.add_supportedCodecPayloadTypes(supportedCodecPayloadTypes);
+  builder_.add_consumableRtpEncodings(consumableRtpEncodings);
+  builder_.add_rtpParameters(rtpParameters);
+  builder_.add_type(type);
+  builder_.add_producerId(producerId);
+  builder_.add_id(id);
+  builder_.add_priorty(priorty);
+  builder_.add_producerPaused(producerPaused);
+  builder_.add_paused(paused);
+  builder_.add_kind(kind);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<BaseConsumerDump> CreateBaseConsumerDumpDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    const char *id = nullptr,
+    const char *producerId = nullptr,
+    FBS::RtpParameters::MediaKind kind = FBS::RtpParameters::MediaKind::ALL,
+    const char *type = nullptr,
+    flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters = 0,
+    const std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> *consumableRtpEncodings = nullptr,
+    const std::vector<uint8_t> *supportedCodecPayloadTypes = nullptr,
+    const std::vector<flatbuffers::Offset<flatbuffers::String>> *traceEventTypes = nullptr,
+    bool paused = false,
+    bool producerPaused = false,
+    uint8_t priorty = 0) {
+  auto id__ = id ? _fbb.CreateString(id) : 0;
+  auto producerId__ = producerId ? _fbb.CreateString(producerId) : 0;
+  auto type__ = type ? _fbb.CreateString(type) : 0;
+  auto consumableRtpEncodings__ = consumableRtpEncodings ? _fbb.CreateVector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>(*consumableRtpEncodings) : 0;
+  auto supportedCodecPayloadTypes__ = supportedCodecPayloadTypes ? _fbb.CreateVector<uint8_t>(*supportedCodecPayloadTypes) : 0;
+  auto traceEventTypes__ = traceEventTypes ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*traceEventTypes) : 0;
+  return FBS::Consumer::CreateBaseConsumerDump(
+      _fbb,
+      id__,
+      producerId__,
+      kind,
+      type__,
+      rtpParameters,
+      consumableRtpEncodings__,
+      supportedCodecPayloadTypes__,
+      traceEventTypes__,
+      paused,
+      producerPaused,
+      priorty);
+}
+
+struct SimpleConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SimpleConsumerDumpBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SimpleConsumerDumpTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BASE = 4,
+    VT_RTPSTREAM = 6
+  };
+  const FBS::Consumer::DumpResponse *base() const {
+    return GetPointer<const FBS::Consumer::DumpResponse *>(VT_BASE);
+  }
+  const FBS::RtpStream::Dump *rtpStream() const {
+    return GetPointer<const FBS::RtpStream::Dump *>(VT_RTPSTREAM);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_BASE) &&
+           verifier.VerifyTable(base()) &&
+           VerifyOffsetRequired(verifier, VT_RTPSTREAM) &&
+           verifier.VerifyTable(rtpStream()) &&
+           verifier.EndTable();
+  }
+};
+
+struct SimpleConsumerDumpBuilder {
+  typedef SimpleConsumerDump Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_base(flatbuffers::Offset<FBS::Consumer::DumpResponse> base) {
+    fbb_.AddOffset(SimpleConsumerDump::VT_BASE, base);
+  }
+  void add_rtpStream(flatbuffers::Offset<FBS::RtpStream::Dump> rtpStream) {
+    fbb_.AddOffset(SimpleConsumerDump::VT_RTPSTREAM, rtpStream);
+  }
+  explicit SimpleConsumerDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SimpleConsumerDump> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SimpleConsumerDump>(end);
+    fbb_.Required(o, SimpleConsumerDump::VT_BASE);
+    fbb_.Required(o, SimpleConsumerDump::VT_RTPSTREAM);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SimpleConsumerDump> CreateSimpleConsumerDump(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Consumer::DumpResponse> base = 0,
+    flatbuffers::Offset<FBS::RtpStream::Dump> rtpStream = 0) {
+  SimpleConsumerDumpBuilder builder_(_fbb);
+  builder_.add_rtpStream(rtpStream);
+  builder_.add_base(base);
+  return builder_.Finish();
+}
+
+struct SimulcastConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SimulcastConsumerDumpBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SimulcastConsumerDumpTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BASE = 4,
+    VT_RTPSTREAM = 6,
+    VT_PREFERREDSPATIALLAYER = 8,
+    VT_TARGETSPATIALLAYER = 10,
+    VT_CURRENTSPATIALLAYER = 12,
+    VT_PREFERREDTEMPORALLAYER = 14,
+    VT_TARGETTEMPORALLAYER = 16,
+    VT_CURRENTTEMPORALLAYER = 18
+  };
+  const FBS::Consumer::DumpResponse *base() const {
+    return GetPointer<const FBS::Consumer::DumpResponse *>(VT_BASE);
+  }
+  const FBS::RtpStream::Dump *rtpStream() const {
+    return GetPointer<const FBS::RtpStream::Dump *>(VT_RTPSTREAM);
+  }
+  int16_t preferredSpatialLayer() const {
+    return GetField<int16_t>(VT_PREFERREDSPATIALLAYER, 0);
+  }
+  int16_t targetSpatialLayer() const {
+    return GetField<int16_t>(VT_TARGETSPATIALLAYER, 0);
+  }
+  int16_t currentSpatialLayer() const {
+    return GetField<int16_t>(VT_CURRENTSPATIALLAYER, 0);
+  }
+  int16_t preferredTemporalLayer() const {
+    return GetField<int16_t>(VT_PREFERREDTEMPORALLAYER, 0);
+  }
+  int16_t targetTemporalLayer() const {
+    return GetField<int16_t>(VT_TARGETTEMPORALLAYER, 0);
+  }
+  int16_t currentTemporalLayer() const {
+    return GetField<int16_t>(VT_CURRENTTEMPORALLAYER, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_BASE) &&
+           verifier.VerifyTable(base()) &&
+           VerifyOffsetRequired(verifier, VT_RTPSTREAM) &&
+           verifier.VerifyTable(rtpStream()) &&
+           VerifyField<int16_t>(verifier, VT_PREFERREDSPATIALLAYER, 2) &&
+           VerifyField<int16_t>(verifier, VT_TARGETSPATIALLAYER, 2) &&
+           VerifyField<int16_t>(verifier, VT_CURRENTSPATIALLAYER, 2) &&
+           VerifyField<int16_t>(verifier, VT_PREFERREDTEMPORALLAYER, 2) &&
+           VerifyField<int16_t>(verifier, VT_TARGETTEMPORALLAYER, 2) &&
+           VerifyField<int16_t>(verifier, VT_CURRENTTEMPORALLAYER, 2) &&
+           verifier.EndTable();
+  }
+};
+
+struct SimulcastConsumerDumpBuilder {
+  typedef SimulcastConsumerDump Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_base(flatbuffers::Offset<FBS::Consumer::DumpResponse> base) {
+    fbb_.AddOffset(SimulcastConsumerDump::VT_BASE, base);
+  }
+  void add_rtpStream(flatbuffers::Offset<FBS::RtpStream::Dump> rtpStream) {
+    fbb_.AddOffset(SimulcastConsumerDump::VT_RTPSTREAM, rtpStream);
+  }
+  void add_preferredSpatialLayer(int16_t preferredSpatialLayer) {
+    fbb_.AddElement<int16_t>(SimulcastConsumerDump::VT_PREFERREDSPATIALLAYER, preferredSpatialLayer, 0);
+  }
+  void add_targetSpatialLayer(int16_t targetSpatialLayer) {
+    fbb_.AddElement<int16_t>(SimulcastConsumerDump::VT_TARGETSPATIALLAYER, targetSpatialLayer, 0);
+  }
+  void add_currentSpatialLayer(int16_t currentSpatialLayer) {
+    fbb_.AddElement<int16_t>(SimulcastConsumerDump::VT_CURRENTSPATIALLAYER, currentSpatialLayer, 0);
+  }
+  void add_preferredTemporalLayer(int16_t preferredTemporalLayer) {
+    fbb_.AddElement<int16_t>(SimulcastConsumerDump::VT_PREFERREDTEMPORALLAYER, preferredTemporalLayer, 0);
+  }
+  void add_targetTemporalLayer(int16_t targetTemporalLayer) {
+    fbb_.AddElement<int16_t>(SimulcastConsumerDump::VT_TARGETTEMPORALLAYER, targetTemporalLayer, 0);
+  }
+  void add_currentTemporalLayer(int16_t currentTemporalLayer) {
+    fbb_.AddElement<int16_t>(SimulcastConsumerDump::VT_CURRENTTEMPORALLAYER, currentTemporalLayer, 0);
+  }
+  explicit SimulcastConsumerDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SimulcastConsumerDump> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SimulcastConsumerDump>(end);
+    fbb_.Required(o, SimulcastConsumerDump::VT_BASE);
+    fbb_.Required(o, SimulcastConsumerDump::VT_RTPSTREAM);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SimulcastConsumerDump> CreateSimulcastConsumerDump(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Consumer::DumpResponse> base = 0,
+    flatbuffers::Offset<FBS::RtpStream::Dump> rtpStream = 0,
+    int16_t preferredSpatialLayer = 0,
+    int16_t targetSpatialLayer = 0,
+    int16_t currentSpatialLayer = 0,
+    int16_t preferredTemporalLayer = 0,
+    int16_t targetTemporalLayer = 0,
+    int16_t currentTemporalLayer = 0) {
+  SimulcastConsumerDumpBuilder builder_(_fbb);
+  builder_.add_rtpStream(rtpStream);
+  builder_.add_base(base);
+  builder_.add_currentTemporalLayer(currentTemporalLayer);
+  builder_.add_targetTemporalLayer(targetTemporalLayer);
+  builder_.add_preferredTemporalLayer(preferredTemporalLayer);
+  builder_.add_currentSpatialLayer(currentSpatialLayer);
+  builder_.add_targetSpatialLayer(targetSpatialLayer);
+  builder_.add_preferredSpatialLayer(preferredSpatialLayer);
+  return builder_.Finish();
+}
+
+struct SvcConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef SvcConsumerDumpBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return SvcConsumerDumpTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BASE = 4,
+    VT_RTPSTREAM = 6,
+    VT_PREFERREDSPATIALLAYER = 8,
+    VT_TARGETSPATIALLAYER = 10,
+    VT_CURRENTSPATIALLAYER = 12,
+    VT_PREFERREDTEMPORALLAYER = 14,
+    VT_TARGETTEMPORALLAYER = 16,
+    VT_CURRENTTEMPORALLAYER = 18
+  };
+  const FBS::Consumer::DumpResponse *base() const {
+    return GetPointer<const FBS::Consumer::DumpResponse *>(VT_BASE);
+  }
+  const FBS::RtpStream::Dump *rtpStream() const {
+    return GetPointer<const FBS::RtpStream::Dump *>(VT_RTPSTREAM);
+  }
+  int16_t preferredSpatialLayer() const {
+    return GetField<int16_t>(VT_PREFERREDSPATIALLAYER, 0);
+  }
+  int16_t targetSpatialLayer() const {
+    return GetField<int16_t>(VT_TARGETSPATIALLAYER, 0);
+  }
+  int16_t currentSpatialLayer() const {
+    return GetField<int16_t>(VT_CURRENTSPATIALLAYER, 0);
+  }
+  int16_t preferredTemporalLayer() const {
+    return GetField<int16_t>(VT_PREFERREDTEMPORALLAYER, 0);
+  }
+  int16_t targetTemporalLayer() const {
+    return GetField<int16_t>(VT_TARGETTEMPORALLAYER, 0);
+  }
+  int16_t currentTemporalLayer() const {
+    return GetField<int16_t>(VT_CURRENTTEMPORALLAYER, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_BASE) &&
+           verifier.VerifyTable(base()) &&
+           VerifyOffsetRequired(verifier, VT_RTPSTREAM) &&
+           verifier.VerifyTable(rtpStream()) &&
+           VerifyField<int16_t>(verifier, VT_PREFERREDSPATIALLAYER, 2) &&
+           VerifyField<int16_t>(verifier, VT_TARGETSPATIALLAYER, 2) &&
+           VerifyField<int16_t>(verifier, VT_CURRENTSPATIALLAYER, 2) &&
+           VerifyField<int16_t>(verifier, VT_PREFERREDTEMPORALLAYER, 2) &&
+           VerifyField<int16_t>(verifier, VT_TARGETTEMPORALLAYER, 2) &&
+           VerifyField<int16_t>(verifier, VT_CURRENTTEMPORALLAYER, 2) &&
+           verifier.EndTable();
+  }
+};
+
+struct SvcConsumerDumpBuilder {
+  typedef SvcConsumerDump Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_base(flatbuffers::Offset<FBS::Consumer::DumpResponse> base) {
+    fbb_.AddOffset(SvcConsumerDump::VT_BASE, base);
+  }
+  void add_rtpStream(flatbuffers::Offset<FBS::RtpStream::Dump> rtpStream) {
+    fbb_.AddOffset(SvcConsumerDump::VT_RTPSTREAM, rtpStream);
+  }
+  void add_preferredSpatialLayer(int16_t preferredSpatialLayer) {
+    fbb_.AddElement<int16_t>(SvcConsumerDump::VT_PREFERREDSPATIALLAYER, preferredSpatialLayer, 0);
+  }
+  void add_targetSpatialLayer(int16_t targetSpatialLayer) {
+    fbb_.AddElement<int16_t>(SvcConsumerDump::VT_TARGETSPATIALLAYER, targetSpatialLayer, 0);
+  }
+  void add_currentSpatialLayer(int16_t currentSpatialLayer) {
+    fbb_.AddElement<int16_t>(SvcConsumerDump::VT_CURRENTSPATIALLAYER, currentSpatialLayer, 0);
+  }
+  void add_preferredTemporalLayer(int16_t preferredTemporalLayer) {
+    fbb_.AddElement<int16_t>(SvcConsumerDump::VT_PREFERREDTEMPORALLAYER, preferredTemporalLayer, 0);
+  }
+  void add_targetTemporalLayer(int16_t targetTemporalLayer) {
+    fbb_.AddElement<int16_t>(SvcConsumerDump::VT_TARGETTEMPORALLAYER, targetTemporalLayer, 0);
+  }
+  void add_currentTemporalLayer(int16_t currentTemporalLayer) {
+    fbb_.AddElement<int16_t>(SvcConsumerDump::VT_CURRENTTEMPORALLAYER, currentTemporalLayer, 0);
+  }
+  explicit SvcConsumerDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<SvcConsumerDump> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<SvcConsumerDump>(end);
+    fbb_.Required(o, SvcConsumerDump::VT_BASE);
+    fbb_.Required(o, SvcConsumerDump::VT_RTPSTREAM);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<SvcConsumerDump> CreateSvcConsumerDump(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Consumer::DumpResponse> base = 0,
+    flatbuffers::Offset<FBS::RtpStream::Dump> rtpStream = 0,
+    int16_t preferredSpatialLayer = 0,
+    int16_t targetSpatialLayer = 0,
+    int16_t currentSpatialLayer = 0,
+    int16_t preferredTemporalLayer = 0,
+    int16_t targetTemporalLayer = 0,
+    int16_t currentTemporalLayer = 0) {
+  SvcConsumerDumpBuilder builder_(_fbb);
+  builder_.add_rtpStream(rtpStream);
+  builder_.add_base(base);
+  builder_.add_currentTemporalLayer(currentTemporalLayer);
+  builder_.add_targetTemporalLayer(targetTemporalLayer);
+  builder_.add_preferredTemporalLayer(preferredTemporalLayer);
+  builder_.add_currentSpatialLayer(currentSpatialLayer);
+  builder_.add_targetSpatialLayer(targetSpatialLayer);
+  builder_.add_preferredSpatialLayer(preferredSpatialLayer);
+  return builder_.Finish();
+}
+
+struct PipeConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef PipeConsumerDumpBuilder Builder;
+  static const flatbuffers::TypeTable *MiniReflectTypeTable() {
+    return PipeConsumerDumpTypeTable();
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_BASE = 4,
+    VT_RTPSTREAM = 6
+  };
+  const FBS::Consumer::DumpResponse *base() const {
+    return GetPointer<const FBS::Consumer::DumpResponse *>(VT_BASE);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>> *rtpStream() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>> *>(VT_RTPSTREAM);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_BASE) &&
+           verifier.VerifyTable(base()) &&
+           VerifyOffsetRequired(verifier, VT_RTPSTREAM) &&
+           verifier.VerifyVector(rtpStream()) &&
+           verifier.VerifyVectorOfTables(rtpStream()) &&
+           verifier.EndTable();
+  }
+};
+
+struct PipeConsumerDumpBuilder {
+  typedef PipeConsumerDump Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_base(flatbuffers::Offset<FBS::Consumer::DumpResponse> base) {
+    fbb_.AddOffset(PipeConsumerDump::VT_BASE, base);
+  }
+  void add_rtpStream(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>>> rtpStream) {
+    fbb_.AddOffset(PipeConsumerDump::VT_RTPSTREAM, rtpStream);
+  }
+  explicit PipeConsumerDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<PipeConsumerDump> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<PipeConsumerDump>(end);
+    fbb_.Required(o, PipeConsumerDump::VT_BASE);
+    fbb_.Required(o, PipeConsumerDump::VT_RTPSTREAM);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<PipeConsumerDump> CreatePipeConsumerDump(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Consumer::DumpResponse> base = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>>> rtpStream = 0) {
+  PipeConsumerDumpBuilder builder_(_fbb);
+  builder_.add_rtpStream(rtpStream);
+  builder_.add_base(base);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<PipeConsumerDump> CreatePipeConsumerDumpDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    flatbuffers::Offset<FBS::Consumer::DumpResponse> base = 0,
+    const std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> *rtpStream = nullptr) {
+  auto rtpStream__ = rtpStream ? _fbb.CreateVector<flatbuffers::Offset<FBS::RtpStream::Dump>>(*rtpStream) : 0;
+  return FBS::Consumer::CreatePipeConsumerDump(
+      _fbb,
+      base,
+      rtpStream__);
+}
+
+inline bool VerifyConsumerDumpData(flatbuffers::Verifier &verifier, const void *obj, ConsumerDumpData type) {
+  switch (type) {
+    case ConsumerDumpData::NONE: {
+      return true;
+    }
+    case ConsumerDumpData::BaseConsumerDump: {
+      auto ptr = reinterpret_cast<const FBS::Consumer::BaseConsumerDump *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case ConsumerDumpData::SimpleConsumerDump: {
+      auto ptr = reinterpret_cast<const FBS::Consumer::SimpleConsumerDump *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case ConsumerDumpData::SimulcastConsumerDump: {
+      auto ptr = reinterpret_cast<const FBS::Consumer::SimulcastConsumerDump *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case ConsumerDumpData::SvcConsumerDump: {
+      auto ptr = reinterpret_cast<const FBS::Consumer::SvcConsumerDump *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case ConsumerDumpData::PipeConsumerDump: {
+      auto ptr = reinterpret_cast<const FBS::Consumer::PipeConsumerDump *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    default: return true;
+  }
+}
+
+inline bool VerifyConsumerDumpDataVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<ConsumerDumpData> *types) {
+  if (!values || !types) return !values && !types;
+  if (values->size() != types->size()) return false;
+  for (flatbuffers::uoffset_t i = 0; i < values->size(); ++i) {
+    if (!VerifyConsumerDumpData(
+        verifier,  values->Get(i), types->GetEnum<ConsumerDumpData>(i))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+inline const flatbuffers::TypeTable *ConsumerDumpDataTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 },
+    { flatbuffers::ET_SEQUENCE, 0, 2 },
+    { flatbuffers::ET_SEQUENCE, 0, 3 },
+    { flatbuffers::ET_SEQUENCE, 0, 4 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Consumer::BaseConsumerDumpTypeTable,
+    FBS::Consumer::SimpleConsumerDumpTypeTable,
+    FBS::Consumer::SimulcastConsumerDumpTypeTable,
+    FBS::Consumer::SvcConsumerDumpTypeTable,
+    FBS::Consumer::PipeConsumerDumpTypeTable
+  };
+  static const char * const names[] = {
+    "NONE",
+    "BaseConsumerDump",
+    "SimpleConsumerDump",
+    "SimulcastConsumerDump",
+    "SvcConsumerDump",
+    "PipeConsumerDump"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_UNION, 6, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
 inline const flatbuffers::TypeTable *ConsumerLayersTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_SHORT, 0, -1 },
@@ -517,6 +1337,162 @@ inline const flatbuffers::TypeTable *EnableTraceEventRequestTypeTable() {
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 1, type_codes, nullptr, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_UTYPE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 0 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Consumer::ConsumerDumpDataTypeTable
+  };
+  static const char * const names[] = {
+    "data_type",
+    "data"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *BaseConsumerDumpTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_UCHAR, 0, 0 },
+    { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 },
+    { flatbuffers::ET_SEQUENCE, 1, 2 },
+    { flatbuffers::ET_UCHAR, 1, -1 },
+    { flatbuffers::ET_STRING, 1, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_BOOL, 0, -1 },
+    { flatbuffers::ET_UCHAR, 0, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::RtpParameters::MediaKindTypeTable,
+    FBS::RtpParameters::RtpParametersTypeTable,
+    FBS::RtpParameters::RtpEncodingParametersTypeTable
+  };
+  static const char * const names[] = {
+    "id",
+    "producerId",
+    "kind",
+    "type",
+    "rtpParameters",
+    "consumableRtpEncodings",
+    "supportedCodecPayloadTypes",
+    "traceEventTypes",
+    "paused",
+    "producerPaused",
+    "priorty"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 11, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SimpleConsumerDumpTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Consumer::DumpResponseTypeTable,
+    FBS::RtpStream::DumpTypeTable
+  };
+  static const char * const names[] = {
+    "base",
+    "rtpStream"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SimulcastConsumerDumpTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 },
+    { flatbuffers::ET_SHORT, 0, -1 },
+    { flatbuffers::ET_SHORT, 0, -1 },
+    { flatbuffers::ET_SHORT, 0, -1 },
+    { flatbuffers::ET_SHORT, 0, -1 },
+    { flatbuffers::ET_SHORT, 0, -1 },
+    { flatbuffers::ET_SHORT, 0, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Consumer::DumpResponseTypeTable,
+    FBS::RtpStream::DumpTypeTable
+  };
+  static const char * const names[] = {
+    "base",
+    "rtpStream",
+    "preferredSpatialLayer",
+    "targetSpatialLayer",
+    "currentSpatialLayer",
+    "preferredTemporalLayer",
+    "targetTemporalLayer",
+    "currentTemporalLayer"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 8, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *SvcConsumerDumpTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 0, 1 },
+    { flatbuffers::ET_SHORT, 0, -1 },
+    { flatbuffers::ET_SHORT, 0, -1 },
+    { flatbuffers::ET_SHORT, 0, -1 },
+    { flatbuffers::ET_SHORT, 0, -1 },
+    { flatbuffers::ET_SHORT, 0, -1 },
+    { flatbuffers::ET_SHORT, 0, -1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Consumer::DumpResponseTypeTable,
+    FBS::RtpStream::DumpTypeTable
+  };
+  static const char * const names[] = {
+    "base",
+    "rtpStream",
+    "preferredSpatialLayer",
+    "targetSpatialLayer",
+    "currentSpatialLayer",
+    "preferredTemporalLayer",
+    "targetTemporalLayer",
+    "currentTemporalLayer"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 8, type_codes, type_refs, nullptr, nullptr, names
+  };
+  return &tt;
+}
+
+inline const flatbuffers::TypeTable *PipeConsumerDumpTypeTable() {
+  static const flatbuffers::TypeCode type_codes[] = {
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_SEQUENCE, 1, 1 }
+  };
+  static const flatbuffers::TypeFunction type_refs[] = {
+    FBS::Consumer::DumpResponseTypeTable,
+    FBS::RtpStream::DumpTypeTable
+  };
+  static const char * const names[] = {
+    "base",
+    "rtpStream"
+  };
+  static const flatbuffers::TypeTable tt = {
+    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

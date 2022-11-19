@@ -10,27 +10,6 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtpRtxParameters::RtpRtxParameters(json& data)
-	{
-		MS_TRACE();
-
-		if (!data.is_object())
-			MS_THROW_TYPE_ERROR("data is not an object");
-
-		auto jsonSsrcIt = data.find("ssrc");
-
-		// ssrc is optional.
-		// clang-format off
-		if (
-			jsonSsrcIt != data.end() &&
-			Utils::Json::IsPositiveInteger(*jsonSsrcIt)
-		)
-		// clang-format on
-		{
-			this->ssrc = jsonSsrcIt->get<uint32_t>();
-		}
-	}
-
 	RtpRtxParameters::RtpRtxParameters(const FBS::RtpParameters::Rtx* data)
 	{
 		MS_TRACE();
@@ -40,15 +19,12 @@ namespace RTC
 			this->ssrc = data->ssrc().value();
 	}
 
-	void RtpRtxParameters::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtpParameters::Rtx> RtpRtxParameters::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Force it to be an object even if no key/values are added below.
-		jsonObject = json::object();
-
-		// Add ssrc (optional).
-		if (this->ssrc != 0u)
-			jsonObject["ssrc"] = this->ssrc;
+		return FBS::RtpParameters::CreateRtx(
+		  builder, this->ssrc != 0u ? flatbuffers::Optional<uint32_t>(this->ssrc) : flatbuffers::nullopt);
 	}
 } // namespace RTC

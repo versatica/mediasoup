@@ -189,7 +189,27 @@ class Consumer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('consumer.dump', this.#internal.consumerId);
+        const response = await this.#channel.requestBinary(FbsRequest.Method.CONSUMER_DUMP, undefined, undefined, this.#internal.consumerId);
+        /* Decode the response. */
+        const dumpResponse = new FbsConsumer.DumpResponse();
+        response.body(dumpResponse);
+        const consumerDump = new FbsConsumer.SimpleConsumerDump();
+        dumpResponse.data(consumerDump);
+        let data = consumerDump.unpack();
+        logger.error(data);
+        data = { ...data, ...data.base.data };
+        // @ts-ignore.
+        delete data.base;
+        return data;
+        /* Adapt the object. */
+        /*
+        // TODO: Should be use enum instead of string?.
+        // @ts-ignore.
+        dump.kind = dump.kind === FbsTransport.MediaKind.AUDIO ? 'audio' : 'video';
+        parseRtpParameters(dump.rtpParameters!);
+
+        return dump;
+        */
     }
     /**
      * Get Consumer stats.

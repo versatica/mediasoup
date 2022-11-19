@@ -16,6 +16,7 @@ static_assert(FLATBUFFERS_VERSION_MAJOR == 2 &&
 #include "consumer_generated.h"
 #include "dataConsumer_generated.h"
 #include "dataProducer_generated.h"
+#include "producer_generated.h"
 #include "router_generated.h"
 #include "transport_generated.h"
 #include "webRtcServer_generated.h"
@@ -38,16 +39,18 @@ enum class Body : uint8_t {
   FBS_Transport_DumpResponse = 5,
   FBS_Transport_ProduceResponse = 6,
   FBS_Transport_ConsumeResponse = 7,
-  FBS_Consumer_SetPreferredLayersResponse = 8,
-  FBS_Consumer_SetPriorityResponse = 9,
-  FBS_DataProducer_DumpResponse = 10,
-  FBS_DataConsumer_GetBufferedAmountResponse = 11,
-  FBS_DataConsumer_DumpResponse = 12,
+  FBS_Producer_DumpResponse = 8,
+  FBS_Consumer_DumpResponse = 9,
+  FBS_Consumer_SetPreferredLayersResponse = 10,
+  FBS_Consumer_SetPriorityResponse = 11,
+  FBS_DataProducer_DumpResponse = 12,
+  FBS_DataConsumer_GetBufferedAmountResponse = 13,
+  FBS_DataConsumer_DumpResponse = 14,
   MIN = NONE,
   MAX = FBS_DataConsumer_DumpResponse
 };
 
-inline const Body (&EnumValuesBody())[13] {
+inline const Body (&EnumValuesBody())[15] {
   static const Body values[] = {
     Body::NONE,
     Body::FBS_Worker_DumpResponse,
@@ -57,6 +60,8 @@ inline const Body (&EnumValuesBody())[13] {
     Body::FBS_Transport_DumpResponse,
     Body::FBS_Transport_ProduceResponse,
     Body::FBS_Transport_ConsumeResponse,
+    Body::FBS_Producer_DumpResponse,
+    Body::FBS_Consumer_DumpResponse,
     Body::FBS_Consumer_SetPreferredLayersResponse,
     Body::FBS_Consumer_SetPriorityResponse,
     Body::FBS_DataProducer_DumpResponse,
@@ -67,7 +72,7 @@ inline const Body (&EnumValuesBody())[13] {
 }
 
 inline const char * const *EnumNamesBody() {
-  static const char * const names[14] = {
+  static const char * const names[16] = {
     "NONE",
     "FBS_Worker_DumpResponse",
     "FBS_Worker_ResourceUsageResponse",
@@ -76,6 +81,8 @@ inline const char * const *EnumNamesBody() {
     "FBS_Transport_DumpResponse",
     "FBS_Transport_ProduceResponse",
     "FBS_Transport_ConsumeResponse",
+    "FBS_Producer_DumpResponse",
+    "FBS_Consumer_DumpResponse",
     "FBS_Consumer_SetPreferredLayersResponse",
     "FBS_Consumer_SetPriorityResponse",
     "FBS_DataProducer_DumpResponse",
@@ -122,6 +129,14 @@ template<> struct BodyTraits<FBS::Transport::ProduceResponse> {
 
 template<> struct BodyTraits<FBS::Transport::ConsumeResponse> {
   static const Body enum_value = Body::FBS_Transport_ConsumeResponse;
+};
+
+template<> struct BodyTraits<FBS::Producer::DumpResponse> {
+  static const Body enum_value = Body::FBS_Producer_DumpResponse;
+};
+
+template<> struct BodyTraits<FBS::Consumer::DumpResponse> {
+  static const Body enum_value = Body::FBS_Consumer_DumpResponse;
 };
 
 template<> struct BodyTraits<FBS::Consumer::SetPreferredLayersResponse> {
@@ -192,6 +207,12 @@ struct Response FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Transport::ConsumeResponse *body_as_FBS_Transport_ConsumeResponse() const {
     return body_type() == FBS::Response::Body::FBS_Transport_ConsumeResponse ? static_cast<const FBS::Transport::ConsumeResponse *>(body()) : nullptr;
   }
+  const FBS::Producer::DumpResponse *body_as_FBS_Producer_DumpResponse() const {
+    return body_type() == FBS::Response::Body::FBS_Producer_DumpResponse ? static_cast<const FBS::Producer::DumpResponse *>(body()) : nullptr;
+  }
+  const FBS::Consumer::DumpResponse *body_as_FBS_Consumer_DumpResponse() const {
+    return body_type() == FBS::Response::Body::FBS_Consumer_DumpResponse ? static_cast<const FBS::Consumer::DumpResponse *>(body()) : nullptr;
+  }
   const FBS::Consumer::SetPreferredLayersResponse *body_as_FBS_Consumer_SetPreferredLayersResponse() const {
     return body_type() == FBS::Response::Body::FBS_Consumer_SetPreferredLayersResponse ? static_cast<const FBS::Consumer::SetPreferredLayersResponse *>(body()) : nullptr;
   }
@@ -244,6 +265,14 @@ template<> inline const FBS::Transport::ProduceResponse *Response::body_as<FBS::
 
 template<> inline const FBS::Transport::ConsumeResponse *Response::body_as<FBS::Transport::ConsumeResponse>() const {
   return body_as_FBS_Transport_ConsumeResponse();
+}
+
+template<> inline const FBS::Producer::DumpResponse *Response::body_as<FBS::Producer::DumpResponse>() const {
+  return body_as_FBS_Producer_DumpResponse();
+}
+
+template<> inline const FBS::Consumer::DumpResponse *Response::body_as<FBS::Consumer::DumpResponse>() const {
+  return body_as_FBS_Consumer_DumpResponse();
 }
 
 template<> inline const FBS::Consumer::SetPreferredLayersResponse *Response::body_as<FBS::Consumer::SetPreferredLayersResponse>() const {
@@ -340,6 +369,14 @@ inline bool VerifyBody(flatbuffers::Verifier &verifier, const void *obj, Body ty
       auto ptr = reinterpret_cast<const FBS::Transport::ConsumeResponse *>(obj);
       return verifier.VerifyTable(ptr);
     }
+    case Body::FBS_Producer_DumpResponse: {
+      auto ptr = reinterpret_cast<const FBS::Producer::DumpResponse *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case Body::FBS_Consumer_DumpResponse: {
+      auto ptr = reinterpret_cast<const FBS::Consumer::DumpResponse *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
     case Body::FBS_Consumer_SetPreferredLayersResponse: {
       auto ptr = reinterpret_cast<const FBS::Consumer::SetPreferredLayersResponse *>(obj);
       return verifier.VerifyTable(ptr);
@@ -390,7 +427,9 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     { flatbuffers::ET_SEQUENCE, 0, 8 },
     { flatbuffers::ET_SEQUENCE, 0, 9 },
     { flatbuffers::ET_SEQUENCE, 0, 10 },
-    { flatbuffers::ET_SEQUENCE, 0, 11 }
+    { flatbuffers::ET_SEQUENCE, 0, 11 },
+    { flatbuffers::ET_SEQUENCE, 0, 12 },
+    { flatbuffers::ET_SEQUENCE, 0, 13 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
     FBS::Worker::DumpResponseTypeTable,
@@ -400,6 +439,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     FBS::Transport::DumpResponseTypeTable,
     FBS::Transport::ProduceResponseTypeTable,
     FBS::Transport::ConsumeResponseTypeTable,
+    FBS::Producer::DumpResponseTypeTable,
+    FBS::Consumer::DumpResponseTypeTable,
     FBS::Consumer::SetPreferredLayersResponseTypeTable,
     FBS::Consumer::SetPriorityResponseTypeTable,
     FBS::DataProducer::DumpResponseTypeTable,
@@ -415,6 +456,8 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_Transport_DumpResponse",
     "FBS_Transport_ProduceResponse",
     "FBS_Transport_ConsumeResponse",
+    "FBS_Producer_DumpResponse",
+    "FBS_Consumer_DumpResponse",
     "FBS_Consumer_SetPreferredLayersResponse",
     "FBS_Consumer_SetPriorityResponse",
     "FBS_DataProducer_DumpResponse",
@@ -422,7 +465,7 @@ inline const flatbuffers::TypeTable *BodyTypeTable() {
     "FBS_DataConsumer_DumpResponse"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_UNION, 13, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_UNION, 15, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

@@ -1,4 +1,5 @@
 import * as flatbuffers from 'flatbuffers';
+import { ParameterT as FbsParameterT, RtpParametersT as FbsRtpParametersT } from './fbs/rtpParameters_generated';
 /**
  * The RTP capabilities define what mediasoup or an endpoint can receive at
  * media level.
@@ -303,4 +304,6 @@ export declare type RtcpParameters = {
 export declare function serializeRtpParameters(builder: flatbuffers.Builder, rtpParameters: RtpParameters): number;
 export declare function serializeRtpEncodingParameters(builder: flatbuffers.Builder, rtpEncodingParameters: RtpEncodingParameters[]): number;
 export declare function serializeParameters(builder: flatbuffers.Builder, parameters: any): number[];
+export declare function parseParameters(fbsParameters: FbsParameterT[]): any;
+export declare function parseRtpParameters(parameters: FbsRtpParametersT): void;
 //# sourceMappingURL=RtpParameters.d.ts.map

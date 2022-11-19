@@ -56,25 +56,27 @@ namespace RTC
 		this->mapSsrcRtpStream.clear();
 	}
 
-	void PipeConsumer::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::Consumer::DumpResponse> PipeConsumer::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
 		// Call the parent method.
-		RTC::Consumer::FillJson(jsonObject);
+		auto baseDump = RTC::Consumer::FillBuffer(builder);
 
 		// Add rtpStreams.
-		jsonObject["rtpStreams"] = json::array();
-		auto jsonRtpStreamsIt    = jsonObject.find("rtpStreams");
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams;
 
-		for (auto* rtpStream : this->rtpStreams)
+		for (const auto* rtpStream : this->rtpStreams)
 		{
-			jsonRtpStreamsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonRtpStreamsIt)[jsonRtpStreamsIt->size() - 1];
-
-			rtpStream->FillJson(jsonEntry);
+			rtpStreams.emplace_back(rtpStream->FillBuffer(builder));
 		}
+
+		auto pipeConsumerDump =
+		  FBS::Consumer::CreatePipeConsumerDumpDirect(builder, baseDump, &rtpStreams);
+
+		return FBS::Consumer::CreateDumpResponse(
+		  builder, FBS::Consumer::ConsumerDumpData::PipeConsumerDump, pipeConsumerDump.Union());
 	}
 
 	void PipeConsumer::FillJsonStats(json& jsonArray) const

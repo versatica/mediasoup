@@ -539,10 +539,12 @@ test('producer.dump() succeeds', async () =>
 		]);
 	expect(data.rtpParameters.encodings).toBeType('array');
 	expect(data.rtpParameters.encodings.length).toBe(1);
-	expect(data.rtpParameters.encodings).toEqual(
-		[
-			{ codecPayloadType: 0 }
-		]);
+	expect(data.rtpParameters.encodings[0]).toEqual(
+		expect.objectContaining(
+			{
+				codecPayloadType : 0
+			})
+	);
 	expect(data.type).toBe('simple');
 
 	data = await videoProducer.dump();
@@ -639,25 +641,27 @@ test('producer.pause() and resume() succeed', async () =>
 
 test('producer.enableTraceEvent() succeed', async () =>
 {
+	let dump;
+
 	await audioProducer.enableTraceEvent([ 'rtp', 'pli' ]);
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: 'rtp,pli' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([ 'rtp', 'pli' ]));
 
 	await audioProducer.enableTraceEvent([]);
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: '' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([]));
 
 	await audioProducer.enableTraceEvent([ 'nack', 'FOO', 'fir' ]);
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: 'nack,fir' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([ 'nack', 'fir' ]));
 
 	await audioProducer.enableTraceEvent();
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: '' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([]));
 }, 2000);
 
 test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>

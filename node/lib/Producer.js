@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Producer = void 0;
 const Logger_1 = require("./Logger");
 const EnhancedEventEmitter_1 = require("./EnhancedEventEmitter");
+const RtpParameters_1 = require("./RtpParameters");
 const FbsRequest = require("./fbs/request_generated");
 const FbsTransport = require("./fbs/transport_generated");
 const FbsProducer = require("./fbs/producer_generated");
@@ -156,7 +157,17 @@ class Producer extends EnhancedEventEmitter_1.EnhancedEventEmitter {
      */
     async dump() {
         logger.debug('dump()');
-        return this.#channel.request('producer.dump', this.#internal.producerId);
+        const response = await this.#channel.requestBinary(FbsRequest.Method.PRODUCER_DUMP, undefined, undefined, this.#internal.producerId);
+        /* Decode the response. */
+        const dumpResponse = new FbsProducer.DumpResponse();
+        response.body(dumpResponse);
+        const dump = dumpResponse.unpack();
+        /* Adapt the object. */
+        // TODO: Should be use enum instead of string?.
+        // @ts-ignore.
+        dump.kind = dump.kind === FbsTransport.MediaKind.AUDIO ? 'audio' : 'video';
+        (0, RtpParameters_1.parseRtpParameters)(dump.rtpParameters);
+        return dump;
     }
     /**
      * Get Producer stats.

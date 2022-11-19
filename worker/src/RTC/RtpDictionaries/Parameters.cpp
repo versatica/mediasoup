@@ -8,41 +8,77 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	void Parameters::FillJson(json& jsonObject) const
+	std::vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> Parameters::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Force it to be an object even if no key/values are added below.
-		jsonObject = json::object();
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> parameters;
 
-		for (auto& kv : this->mapKeyValues)
+		for (const auto& kv : this->mapKeyValues)
 		{
 			auto& key   = kv.first;
 			auto& value = kv.second;
 
+			flatbuffers::Offset<FBS::RtpParameters::Parameter> parameter;
+
 			switch (value.type)
 			{
 				case Value::Type::BOOLEAN:
-					jsonObject[key] = value.booleanValue;
+				{
+					auto valueOffset = FBS::RtpParameters::CreateBoolean(builder, value.booleanValue);
+
+					parameter = FBS::RtpParameters::CreateParameterDirect(
+					  builder, key.c_str(), FBS::RtpParameters::Value::Boolean, valueOffset.Union());
+
 					break;
+				}
 
 				case Value::Type::INTEGER:
-					jsonObject[key] = value.integerValue;
+				{
+					auto valueOffset = FBS::RtpParameters::CreateInteger(builder, value.integerValue);
+
+					parameters.emplace_back(FBS::RtpParameters::CreateParameterDirect(
+					  builder, key.c_str(), FBS::RtpParameters::Value::Integer, valueOffset.Union()));
+
 					break;
+				}
 
 				case Value::Type::DOUBLE:
-					jsonObject[key] = value.doubleValue;
+				{
+					auto valueOffset = FBS::RtpParameters::CreateDouble(builder, value.doubleValue);
+
+					parameters.emplace_back(FBS::RtpParameters::CreateParameterDirect(
+					  builder, key.c_str(), FBS::RtpParameters::Value::Double, valueOffset.Union()));
+
 					break;
+				}
 
 				case Value::Type::STRING:
-					jsonObject[key] = value.stringValue;
+				{
+					auto valueOffset =
+					  FBS::RtpParameters::CreateStringDirect(builder, value.stringValue.c_str());
+
+					parameters.emplace_back(FBS::RtpParameters::CreateParameterDirect(
+					  builder, key.c_str(), FBS::RtpParameters::Value::String, valueOffset.Union()));
+
 					break;
+				}
 
 				case Value::Type::ARRAY_OF_INTEGERS:
-					jsonObject[key] = value.arrayOfIntegers;
+				{
+					auto valueOffset =
+					  FBS::RtpParameters::CreateIntegerArrayDirect(builder, &value.arrayOfIntegers);
+
+					parameters.emplace_back(FBS::RtpParameters::CreateParameterDirect(
+					  builder, key.c_str(), FBS::RtpParameters::Value::IntegerArray, valueOffset.Union()));
+
 					break;
+				}
 			}
 		}
+
+		return parameters;
 	}
 
 	void Parameters::Set(json& data)

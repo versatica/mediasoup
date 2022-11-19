@@ -1,7 +1,20 @@
+include "rtpParameters.fbs";
+include "rtpStream.fbs";
 
 namespace FBS.Producer;
 
 table EnableTraceEventRequest {
   events:[string] (required);
+}
+
+table DumpResponse {
+  id:string (required);
+  kind:FBS.RtpParameters.MediaKind;
+  type:string (required);
+  rtp_parameters:FBS.RtpParameters.RtpParameters (required);
+  rtp_mapping:FBS.RtpParameters.RtpMapping (required);
+  rtp_streams:[FBS.RtpStream.Dump];
+  trace_event_types:[string] (required);
+  paused:bool = false;
 }
 

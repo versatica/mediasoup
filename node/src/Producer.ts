@@ -3,7 +3,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
-import { MediaKind, RtpParameters } from './RtpParameters';
+import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsProducer from './fbs/producer_generated';
@@ -410,7 +410,30 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('producer.dump', this.#internal.producerId);
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.PRODUCER_DUMP,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
+
+		/* Decode the response. */
+		const dumpResponse = new FbsProducer.DumpResponse();
+
+		response.body(dumpResponse);
+
+		const dump = dumpResponse.unpack();
+
+		// TODO: Properly parse it, the same way we do with Transports.
+
+		/* Adapt the object. */
+
+		// TODO: Should be use enum instead of string?.
+		// @ts-ignore.
+		dump.kind = dump.kind === FbsTransport.MediaKind.AUDIO ? 'audio' : 'video';
+		parseRtpParameters(dump.rtpParameters!);
+
+		return dump;
 	}
 
 	/**

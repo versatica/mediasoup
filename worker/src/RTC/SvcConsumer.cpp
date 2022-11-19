@@ -103,33 +103,29 @@ namespace RTC
 		delete this->rtpStream;
 	}
 
-	void SvcConsumer::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::Consumer::DumpResponse> SvcConsumer::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
 		// Call the parent method.
-		RTC::Consumer::FillJson(jsonObject);
-
+		auto baseDump = RTC::Consumer::FillBuffer(builder);
 		// Add rtpStream.
-		this->rtpStream->FillJson(jsonObject["rtpStream"]);
+		auto rtpStream = this->rtpStream->FillBuffer(builder);
 
-		// Add preferredSpatialLayer.
-		jsonObject["preferredSpatialLayer"] = this->preferredSpatialLayer;
+		auto svcConsumerDump = FBS::Consumer::CreateSvcConsumerDump(
+		  builder,
+		  baseDump,
+		  rtpStream,
+		  this->preferredSpatialLayer,
+		  this->encodingContext->GetTargetSpatialLayer(),
+		  this->encodingContext->GetCurrentSpatialLayer(),
+		  this->preferredTemporalLayer,
+		  this->encodingContext->GetTargetTemporalLayer(),
+		  this->encodingContext->GetCurrentTemporalLayer());
 
-		// Add targetSpatialLayer.
-		jsonObject["targetSpatialLayer"] = this->encodingContext->GetTargetSpatialLayer();
-
-		// Add currentSpatialLayer.
-		jsonObject["currentSpatialLayer"] = this->encodingContext->GetCurrentSpatialLayer();
-
-		// Add preferredTemporalLayer.
-		jsonObject["preferredTemporalLayer"] = this->preferredTemporalLayer;
-
-		// Add targetTemporalLayer.
-		jsonObject["targetTemporalLayer"] = this->encodingContext->GetTargetTemporalLayer();
-
-		// Add currentTemporalLayer.
-		jsonObject["currentTemporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
+		return FBS::Consumer::CreateDumpResponse(
+		  builder, FBS::Consumer::ConsumerDumpData::SvcConsumerDump, svcConsumerDump.Union());
 	}
 
 	void SvcConsumer::FillJsonStats(json& jsonArray) const

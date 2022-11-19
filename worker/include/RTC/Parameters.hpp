@@ -64,6 +64,8 @@ namespace RTC
 
 	public:
 		void FillJson(json& jsonObject) const;
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		void Set(json& data);
 		void Set(const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::Parameter>>* data);
 		bool HasBoolean(const std::string& key) const;

@@ -68,7 +68,8 @@ namespace RTC
 		virtual ~Consumer();
 
 	public:
-		virtual void FillJson(json& jsonObject) const;
+		virtual flatbuffers::Offset<FBS::Consumer::DumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		virtual void FillJsonStats(json& jsonArray) const  = 0;
 		virtual void FillJsonScore(json& jsonObject) const = 0;
 		virtual flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(

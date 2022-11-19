@@ -5,12 +5,14 @@ import {
 	IntegerArray as FbsIntegerArray,
 	String as FbsString,
 	Parameter as FbsParameter,
+	ParameterT as FbsParameterT,
 	RtcpFeedback as FbsRtcpFeedback,
 	RtcpParameters as FbsRtcpParameters,
 	RtpCodecParameters as FbsRtpCodecParameters,
 	RtpEncodingParameters as FbsRtpEncodingParameters,
 	RtpHeaderExtensionParameters as FbsRtpHeaderExtensionParameters,
 	RtpParameters as FbsRtpParameters,
+	RtpParametersT as FbsRtpParametersT,
 	Rtx as FbsRtx,
 	Value as FbsValue
 } from './fbs/rtpParameters_generated';
@@ -593,4 +595,39 @@ export function serializeParameters(
 	}
 
 	return fbsParameters;
+}
+
+export function parseParameters(
+	fbsParameters: FbsParameterT[]
+):any
+{
+	const parameters: any = {};
+
+	for (const { name, value } of fbsParameters)
+	{
+		parameters[String(name)] = value?.value;
+	}
+
+	return parameters;
+}
+
+export function parseRtpParameters(parameters: FbsRtpParametersT): void
+{
+	for (const codec of parameters.codecs)
+	{
+		codec.parameters = parseParameters(codec.parameters);
+		// @ts-ignore.
+		codec.channels = codec.channels ?? undefined;
+
+		for (const rtcpFeedback of codec.rtcpFeedback)
+		{
+			// @ts-ignore.
+			rtcpFeedback.parameter = rtcpFeedback.parameter ?? undefined;
+		}
+	}
+
+	for (const headerExtension of parameters.headerExtensions)
+	{
+		headerExtension.parameters = parseParameters(headerExtension.parameters);
+	}
 }

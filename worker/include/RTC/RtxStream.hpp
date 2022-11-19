@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "FBS/rtxStream_generated.h"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
@@ -20,7 +21,8 @@ namespace RTC
 	public:
 		struct Params
 		{
-			void FillJson(json& jsonObject) const;
+			flatbuffers::Offset<FBS::RtxStream::Params> FillBuffer(
+			  flatbuffers::FlatBufferBuilder& builder) const;
 
 			uint32_t ssrc{ 0 };
 			uint8_t payloadType{ 0 };
@@ -34,7 +36,7 @@ namespace RTC
 		explicit RtxStream(RTC::RtxStream::Params& params);
 		virtual ~RtxStream();
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::RtxStream::RtxDump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 		uint32_t GetSsrc() const
 		{
 			return this->params.ssrc;

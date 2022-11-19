@@ -30,19 +30,21 @@ namespace RTC
 		delete this->rtxStream;
 	}
 
-	void RtpStream::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtpStream::Dump> RtpStream::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
 		// Add params.
-		this->params.FillJson(jsonObject["params"]);
-
-		// Add score.
-		jsonObject["score"] = this->score;
+		auto params = this->params.FillBuffer(builder);
 
 		// Add rtxStream.
+		flatbuffers::Offset<FBS::RtxStream::RtxDump> rtxStream;
+
 		if (HasRtx())
-			this->rtxStream->FillJson(jsonObject["rtxStream"]);
+			rtxStream = this->rtxStream->FillBuffer(builder);
+
+		return FBS::RtpStream::CreateDump(builder, params, this->score, rtxStream);
 	}
 
 	void RtpStream::FillJsonStats(json& jsonObject)
@@ -334,33 +336,28 @@ namespace RTC
 		this->badSeq  = RtpSeqMod + 1; // So seq == badSeq is false.
 	}
 
-	void RtpStream::Params::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtpStream::Params> RtpStream::Params::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		jsonObject["encodingIdx"] = this->encodingIdx;
-		jsonObject["ssrc"]        = this->ssrc;
-		jsonObject["payloadType"] = this->payloadType;
-		jsonObject["mimeType"]    = this->mimeType.ToString();
-		jsonObject["clockRate"]   = this->clockRate;
-
-		if (!this->rid.empty())
-			jsonObject["rid"] = this->rid;
-
-		jsonObject["cname"] = this->cname;
-
-		if (this->rtxSsrc != 0)
-		{
-			jsonObject["rtxSsrc"]        = this->rtxSsrc;
-			jsonObject["rtxPayloadType"] = this->rtxPayloadType;
-		}
-
-		jsonObject["useNack"]        = this->useNack;
-		jsonObject["usePli"]         = this->usePli;
-		jsonObject["useFir"]         = this->useFir;
-		jsonObject["useInBandFec"]   = this->useInBandFec;
-		jsonObject["useDtx"]         = this->useDtx;
-		jsonObject["spatialLayers"]  = this->spatialLayers;
-		jsonObject["temporalLayers"] = this->temporalLayers;
+		return FBS::RtpStream::CreateParamsDirect(
+		  builder,
+		  this->encodingIdx,
+		  this->ssrc,
+		  this->payloadType,
+		  this->mimeType.ToString().c_str(),
+		  this->clockRate,
+		  this->rid.c_str(),
+		  this->cname.c_str(),
+		  this->rtxSsrc != 0 ? flatbuffers::Optional<uint32_t>(this->rtxSsrc) : flatbuffers::nullopt,
+		  this->rtxSsrc != 0 ? flatbuffers::Optional<uint8_t>(this->rtxPayloadType) : flatbuffers::nullopt,
+		  this->useNack,
+		  this->usePli,
+		  this->useFir,
+		  this->useInBandFec,
+		  this->useDtx,
+		  this->spatialLayers,
+		  this->temporalLayers);
 	}
 } // namespace RTC

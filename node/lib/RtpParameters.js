@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.serializeParameters = exports.serializeRtpEncodingParameters = exports.serializeRtpParameters = void 0;
+exports.parseRtpParameters = exports.parseParameters = exports.serializeParameters = exports.serializeRtpEncodingParameters = exports.serializeRtpParameters = void 0;
 const rtpParameters_generated_1 = require("./fbs/rtpParameters_generated");
 function serializeRtpParameters(builder, rtpParameters) {
     const codecs = [];
@@ -129,3 +129,26 @@ function serializeParameters(builder, parameters) {
     return fbsParameters;
 }
 exports.serializeParameters = serializeParameters;
+function parseParameters(fbsParameters) {
+    const parameters = {};
+    for (const { name, value } of fbsParameters) {
+        parameters[String(name)] = value?.value;
+    }
+    return parameters;
+}
+exports.parseParameters = parseParameters;
+function parseRtpParameters(parameters) {
+    for (const codec of parameters.codecs) {
+        codec.parameters = parseParameters(codec.parameters);
+        // @ts-ignore.
+        codec.channels = codec.channels ?? undefined;
+        for (const rtcpFeedback of codec.rtcpFeedback) {
+            // @ts-ignore.
+            rtcpFeedback.parameter = rtcpFeedback.parameter ?? undefined;
+        }
+    }
+    for (const headerExtension of parameters.headerExtensions) {
+        headerExtension.parameters = parseParameters(headerExtension.parameters);
+    }
+}
+exports.parseRtpParameters = parseRtpParameters;

@@ -10,37 +10,6 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	RtcpParameters::RtcpParameters(json& data)
-	{
-		MS_TRACE();
-
-		if (!data.is_object())
-			MS_THROW_TYPE_ERROR("data is not an object");
-
-		auto jsonCnameIt       = data.find("cname");
-		auto jsonSsrcIt        = data.find("ssrc");
-		auto jsonRedicedSizeIt = data.find("reducedSize");
-
-		// cname is optional.
-		if (jsonCnameIt != data.end() && jsonCnameIt->is_string())
-			this->cname = jsonCnameIt->get<std::string>();
-
-		// ssrc is optional.
-		// clang-format off
-		if (
-			jsonSsrcIt != data.end() &&
-			Utils::Json::IsPositiveInteger(*jsonSsrcIt)
-		)
-		// clang-format on
-		{
-			this->ssrc = jsonSsrcIt->get<uint32_t>();
-		}
-
-		// reducedSize is optional.
-		if (jsonRedicedSizeIt != data.end() && jsonRedicedSizeIt->is_boolean())
-			this->reducedSize = jsonRedicedSizeIt->get<bool>();
-	}
-
 	RtcpParameters::RtcpParameters(const FBS::RtpParameters::RtcpParameters* data)
 	{
 		MS_TRACE();
@@ -53,19 +22,16 @@ namespace RTC
 		this->reducedSize = data->reducedSize();
 	}
 
-	void RtcpParameters::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtpParameters::RtcpParameters> RtcpParameters::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add cname.
-		if (!this->cname.empty())
-			jsonObject["cname"] = this->cname;
-
-		// Add ssrc.
-		if (this->ssrc != 0u)
-			jsonObject["ssrc"] = this->ssrc;
-
-		// Add reducedSize.
-		jsonObject["reducedSize"] = this->reducedSize;
+		return FBS::RtpParameters::CreateRtcpParametersDirect(
+		  builder,
+		  this->cname.c_str(),
+		  this->reducedSize,
+		  true /* discrepancy between MUX and SSRC. Node dictionary specifies mux and C++ one ssrc */
+		);
 	}
 } // namespace RTC

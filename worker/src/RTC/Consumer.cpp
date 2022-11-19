@@ -137,82 +137,62 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void Consumer::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::Consumer::DumpResponse> Consumer::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add id.
-		jsonObject["id"] = this->id;
-
-		// Add producerId.
-		jsonObject["producerId"] = this->producerId;
-
-		// Add kind.
-		jsonObject["kind"] = RTC::Media::GetString(this->kind);
-
 		// Add rtpParameters.
-		this->rtpParameters.FillJson(jsonObject["rtpParameters"]);
-
-		// Add type.
-		jsonObject["type"] = RTC::RtpParameters::GetTypeString(this->type);
+		auto rtpParameters = this->rtpParameters.FillBuffer(builder);
 
 		// Add consumableRtpEncodings.
-		jsonObject["consumableRtpEncodings"] = json::array();
-		auto jsonConsumableRtpEncodingsIt    = jsonObject.find("consumableRtpEncodings");
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> consumableRtpEncodings;
 
-		for (size_t i{ 0 }; i < this->consumableRtpEncodings.size(); ++i)
+		for (const auto& encoding : this->consumableRtpEncodings)
 		{
-			jsonConsumableRtpEncodingsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry      = (*jsonConsumableRtpEncodingsIt)[i];
-			const auto& encoding = this->consumableRtpEncodings[i];
-
-			encoding.FillJson(jsonEntry);
+			consumableRtpEncodings.emplace_back(encoding.FillBuffer(builder));
 		}
 
 		// Add supportedCodecPayloadTypes.
-		jsonObject["supportedCodecPayloadTypes"] = json::array();
+		std::vector<uint8_t> supportedCodecPayloadTypes;
 
 		for (auto i = 0; i < 128; ++i)
 		{
 			if (this->supportedCodecPayloadTypes[i])
-				jsonObject["supportedCodecPayloadTypes"].push_back(i);
+				supportedCodecPayloadTypes.push_back(i);
 		}
-
-		// Add paused.
-		jsonObject["paused"] = this->paused;
-
-		// Add producerPaused.
-		jsonObject["producerPaused"] = this->producerPaused;
-
-		// Add priority.
-		jsonObject["priority"] = this->priority;
 
 		// Add traceEventTypes.
-		std::vector<std::string> traceEventTypes;
-		std::ostringstream traceEventTypesStream;
+		std::vector<flatbuffers::Offset<flatbuffers::String>> traceEventTypes;
 
 		if (this->traceEventTypes.rtp)
-			traceEventTypes.emplace_back("rtp");
+			traceEventTypes.emplace_back(builder.CreateString("rtp"));
 		if (this->traceEventTypes.keyframe)
-			traceEventTypes.emplace_back("keyframe");
+			traceEventTypes.emplace_back(builder.CreateString("keyframe"));
 		if (this->traceEventTypes.nack)
-			traceEventTypes.emplace_back("nack");
+			traceEventTypes.emplace_back(builder.CreateString("nack"));
 		if (this->traceEventTypes.pli)
-			traceEventTypes.emplace_back("pli");
+			traceEventTypes.emplace_back(builder.CreateString("pli"));
 		if (this->traceEventTypes.fir)
-			traceEventTypes.emplace_back("fir");
+			traceEventTypes.emplace_back(builder.CreateString("fir"));
 
-		if (!traceEventTypes.empty())
-		{
-			std::copy(
-			  traceEventTypes.begin(),
-			  traceEventTypes.end() - 1,
-			  std::ostream_iterator<std::string>(traceEventTypesStream, ","));
-			traceEventTypesStream << traceEventTypes.back();
-		}
+		auto baseConsumerDump = FBS::Consumer::CreateBaseConsumerDumpDirect(
+		  builder,
+		  this->id.c_str(),
+		  this->producerId.c_str(),
+		  this->kind == RTC::Media::Kind::AUDIO ? FBS::RtpParameters::MediaKind::AUDIO
+		                                        : FBS::RtpParameters::MediaKind::VIDEO,
+		  RtpParameters::GetTypeString(this->type).c_str(),
+		  rtpParameters,
+		  &consumableRtpEncodings,
+		  &supportedCodecPayloadTypes,
+		  &traceEventTypes,
+		  this->paused,
+		  this->producerPaused,
+		  this->priority);
 
-		jsonObject["traceEventTypes"] = traceEventTypesStream.str();
+		return FBS::Consumer::CreateDumpResponse(
+		  builder, FBS::Consumer::ConsumerDumpData::BaseConsumerDump, baseConsumerDump.Union());
 	}
 
 	void Consumer::HandleRequest(Channel::ChannelRequest* request)
@@ -223,11 +203,9 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::CONSUMER_DUMP:
 			{
-				json data = json::object();
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				FillJson(data);
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_Consumer_DumpResponse, dumpOffset);
 
 				break;
 			}

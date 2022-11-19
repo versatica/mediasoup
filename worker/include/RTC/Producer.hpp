@@ -99,7 +99,8 @@ namespace RTC
 		virtual ~Producer();
 
 	public:
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::Producer::DumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		void FillJsonStats(json& jsonArray) const;
 		RTC::Media::Kind GetKind() const
 		{

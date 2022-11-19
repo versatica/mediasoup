@@ -2,6 +2,7 @@ include "worker.fbs";
 include "router.fbs";
 include "webRtcServer.fbs";
 include "transport.fbs";
+include "producer.fbs";
 include "consumer.fbs";
 include "dataProducer.fbs";
 include "dataConsumer.fbs";
@@ -16,6 +17,8 @@ union Body {
   FBS.Transport.DumpResponse,
   FBS.Transport.ProduceResponse,
   FBS.Transport.ConsumeResponse,
+  FBS.Producer.DumpResponse,
+  FBS.Consumer.DumpResponse,
   FBS.Consumer.SetPreferredLayersResponse,
   FBS.Consumer.SetPriorityResponse,
   FBS.DataProducer.DumpResponse,

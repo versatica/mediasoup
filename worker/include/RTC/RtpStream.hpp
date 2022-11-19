@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "FBS/rtpStream_generated.h"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
@@ -37,7 +38,8 @@ namespace RTC
 	public:
 		struct Params
 		{
-			void FillJson(json& jsonObject) const;
+			flatbuffers::Offset<FBS::RtpStream::Params> FillBuffer(
+			  flatbuffers::FlatBufferBuilder& builder) const;
 
 			size_t encodingIdx{ 0u };
 			uint32_t ssrc{ 0u };
@@ -61,7 +63,7 @@ namespace RTC
 		RtpStream(RTC::RtpStream::Listener* listener, RTC::RtpStream::Params& params, uint8_t initialScore);
 		virtual ~RtpStream();
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::RtpStream::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 		virtual void FillJsonStats(json& jsonObject);
 		uint32_t GetEncodingIdx() const
 		{

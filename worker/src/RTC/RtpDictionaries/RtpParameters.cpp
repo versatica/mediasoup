@@ -149,61 +149,43 @@ namespace RTC
 		ValidateEncodings();
 	}
 
-	void RtpParameters::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtpParameters::RtpParameters> RtpParameters::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add mid.
-		if (!this->mid.empty())
-			jsonObject["mid"] = this->mid;
-
 		// Add codecs.
-		jsonObject["codecs"] = json::array();
-		auto jsonCodecsIt    = jsonObject.find("codecs");
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpCodecParameters>> codecs;
 
-		for (size_t i{ 0 }; i < this->codecs.size(); ++i)
+		for (const auto& codec : this->codecs)
 		{
-			jsonCodecsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonCodecsIt)[i];
-			auto& codec     = this->codecs[i];
-
-			codec.FillJson(jsonEntry);
+			codecs.emplace_back(codec.FillBuffer(builder));
 		}
 
 		// Add encodings.
-		jsonObject["encodings"] = json::array();
-		auto jsonEncodingsIt    = jsonObject.find("encodings");
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> encodings;
 
-		for (size_t i{ 0 }; i < this->encodings.size(); ++i)
+		for (const auto& encoding : this->encodings)
 		{
-			jsonEncodingsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonEncodingsIt)[i];
-			auto& encoding  = this->encodings[i];
-
-			encoding.FillJson(jsonEntry);
+			encodings.emplace_back(encoding.FillBuffer(builder));
 		}
 
 		// Add headerExtensions.
-		jsonObject["headerExtensions"] = json::array();
-		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpHeaderExtensionParameters>> headerExtensions;
 
-		for (size_t i{ 0 }; i < this->headerExtensions.size(); ++i)
+		for (const auto& headerExtension : this->headerExtensions)
 		{
-			jsonHeaderExtensionsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry       = (*jsonHeaderExtensionsIt)[i];
-			auto& headerExtension = this->headerExtensions[i];
-
-			headerExtension.FillJson(jsonEntry);
+			headerExtensions.emplace_back(headerExtension.FillBuffer(builder));
 		}
 
 		// Add rtcp.
+		flatbuffers::Offset<FBS::RtpParameters::RtcpParameters> rtcp;
+
 		if (this->hasRtcp)
-			this->rtcp.FillJson(jsonObject["rtcp"]);
-		else
-			jsonObject["rtcp"] = json::object();
+			rtcp = this->rtcp.FillBuffer(builder);
+
+		return FBS::RtpParameters::CreateRtpParametersDirect(
+		  builder, mid.c_str(), &codecs, &headerExtensions, &encodings, rtcp);
 	}
 
 	const RTC::RtpCodecParameters* RtpParameters::GetCodecForEncoding(RtpEncodingParameters& encoding) const

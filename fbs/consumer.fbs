@@ -1,3 +1,6 @@
+include "rtpParameters.fbs";
+include "rtpStream.fbs";
+
 namespace FBS.Consumer;
 
 table ConsumerLayers {
@@ -29,4 +32,62 @@ table SetPriorityResponse {
 
 table EnableTraceEventRequest {
   events:[string] (required);
+}
+
+union ConsumerDumpData {
+  BaseConsumerDump,
+  SimpleConsumerDump,
+  SimulcastConsumerDump,
+  SvcConsumerDump,
+  PipeConsumerDump,
+}
+
+table DumpResponse {
+  data: ConsumerDumpData;
+}
+
+table BaseConsumerDump {
+  id:string (required);
+  producer_id:string (required);
+  kind:FBS.RtpParameters.MediaKind;
+  type:string (required);
+  rtp_parameters:FBS.RtpParameters.RtpParameters (required);
+  consumable_rtp_encodings:[FBS.RtpParameters.RtpEncodingParameters];
+  supported_codec_payload_types:[uint8];
+  trace_event_types:[string] (required);
+  paused:bool = false;
+  producer_paused:bool = false;
+  priorty:uint8;
+}
+
+table SimpleConsumerDump {
+  base:DumpResponse (required);
+  rtp_stream:FBS.RtpStream.Dump (required);
+}
+
+table SimulcastConsumerDump {
+  base:DumpResponse (required);
+  rtp_stream:FBS.RtpStream.Dump (required);
+  preferred_spatial_layer:int16;
+  target_spatial_layer:int16;
+  current_spatial_layer:int16;
+  preferred_temporal_layer:int16;
+  target_temporal_layer:int16;
+  current_temporal_layer:int16;
+}
+
+table SvcConsumerDump {
+  base:DumpResponse (required);
+  rtp_stream:FBS.RtpStream.Dump (required);
+  preferred_spatial_layer:int16;
+  target_spatial_layer:int16;
+  current_spatial_layer:int16;
+  preferred_temporal_layer:int16;
+  target_temporal_layer:int16;
+  current_temporal_layer:int16;
+}
+
+table PipeConsumerDump {
+  base:DumpResponse (required);
+  rtp_stream:[FBS.RtpStream.Dump] (required);
 }

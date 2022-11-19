@@ -1,0 +1,67 @@
+import * as flatbuffers from 'flatbuffers';
+import { MediaKind } from '../../fbs/rtp-parameters/media-kind';
+import { RtpEncodingParameters, RtpEncodingParametersT } from '../../fbs/rtp-parameters/rtp-encoding-parameters';
+import { RtpParameters, RtpParametersT } from '../../fbs/rtp-parameters/rtp-parameters';
+export declare class BaseConsumerDump {
+    bb: flatbuffers.ByteBuffer | null;
+    bb_pos: number;
+    __init(i: number, bb: flatbuffers.ByteBuffer): BaseConsumerDump;
+    static getRootAsBaseConsumerDump(bb: flatbuffers.ByteBuffer, obj?: BaseConsumerDump): BaseConsumerDump;
+    static getSizePrefixedRootAsBaseConsumerDump(bb: flatbuffers.ByteBuffer, obj?: BaseConsumerDump): BaseConsumerDump;
+    id(): string | null;
+    id(optionalEncoding: flatbuffers.Encoding): string | Uint8Array | null;
+    producerId(): string | null;
+    producerId(optionalEncoding: flatbuffers.Encoding): string | Uint8Array | null;
+    kind(): MediaKind;
+    type(): string | null;
+    type(optionalEncoding: flatbuffers.Encoding): string | Uint8Array | null;
+    rtpParameters(obj?: RtpParameters): RtpParameters | null;
+    consumableRtpEncodings(index: number, obj?: RtpEncodingParameters): RtpEncodingParameters | null;
+    consumableRtpEncodingsLength(): number;
+    supportedCodecPayloadTypes(index: number): number | null;
+    supportedCodecPayloadTypesLength(): number;
+    supportedCodecPayloadTypesArray(): Uint8Array | null;
+    traceEventTypes(index: number): string;
+    traceEventTypes(index: number, optionalEncoding: flatbuffers.Encoding): string | Uint8Array;
+    traceEventTypesLength(): number;
+    paused(): boolean;
+    producerPaused(): boolean;
+    priorty(): number;
+    static startBaseConsumerDump(builder: flatbuffers.Builder): void;
+    static addId(builder: flatbuffers.Builder, idOffset: flatbuffers.Offset): void;
+    static addProducerId(builder: flatbuffers.Builder, producerIdOffset: flatbuffers.Offset): void;
+    static addKind(builder: flatbuffers.Builder, kind: MediaKind): void;
+    static addType(builder: flatbuffers.Builder, typeOffset: flatbuffers.Offset): void;
+    static addRtpParameters(builder: flatbuffers.Builder, rtpParametersOffset: flatbuffers.Offset): void;
+    static addConsumableRtpEncodings(builder: flatbuffers.Builder, consumableRtpEncodingsOffset: flatbuffers.Offset): void;
+    static createConsumableRtpEncodingsVector(builder: flatbuffers.Builder, data: flatbuffers.Offset[]): flatbuffers.Offset;
+    static startConsumableRtpEncodingsVector(builder: flatbuffers.Builder, numElems: number): void;
+    static addSupportedCodecPayloadTypes(builder: flatbuffers.Builder, supportedCodecPayloadTypesOffset: flatbuffers.Offset): void;
+    static createSupportedCodecPayloadTypesVector(builder: flatbuffers.Builder, data: number[] | Uint8Array): flatbuffers.Offset;
+    static startSupportedCodecPayloadTypesVector(builder: flatbuffers.Builder, numElems: number): void;
+    static addTraceEventTypes(builder: flatbuffers.Builder, traceEventTypesOffset: flatbuffers.Offset): void;
+    static createTraceEventTypesVector(builder: flatbuffers.Builder, data: flatbuffers.Offset[]): flatbuffers.Offset;
+    static startTraceEventTypesVector(builder: flatbuffers.Builder, numElems: number): void;
+    static addPaused(builder: flatbuffers.Builder, paused: boolean): void;
+    static addProducerPaused(builder: flatbuffers.Builder, producerPaused: boolean): void;
+    static addPriorty(builder: flatbuffers.Builder, priorty: number): void;
+    static endBaseConsumerDump(builder: flatbuffers.Builder): flatbuffers.Offset;
+    unpack(): BaseConsumerDumpT;
+    unpackTo(_o: BaseConsumerDumpT): void;
+}
+export declare class BaseConsumerDumpT {
+    id: string | Uint8Array | null;
+    producerId: string | Uint8Array | null;
+    kind: MediaKind;
+    type: string | Uint8Array | null;
+    rtpParameters: RtpParametersT | null;
+    consumableRtpEncodings: (RtpEncodingParametersT)[];
+    supportedCodecPayloadTypes: (number)[];
+    traceEventTypes: (string)[];
+    paused: boolean;
+    producerPaused: boolean;
+    priorty: number;
+    constructor(id?: string | Uint8Array | null, producerId?: string | Uint8Array | null, kind?: MediaKind, type?: string | Uint8Array | null, rtpParameters?: RtpParametersT | null, consumableRtpEncodings?: (RtpEncodingParametersT)[], supportedCodecPayloadTypes?: (number)[], traceEventTypes?: (string)[], paused?: boolean, producerPaused?: boolean, priorty?: number);
+    pack(builder: flatbuffers.Builder): flatbuffers.Offset;
+}
+//# sourceMappingURL=base-consumer-dump.d.ts.map

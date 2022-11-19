@@ -66,15 +66,20 @@ namespace RTC
 		delete this->rtpStream;
 	}
 
-	void SimpleConsumer::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::Consumer::DumpResponse> SimpleConsumer::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
 		// Call the parent method.
-		RTC::Consumer::FillJson(jsonObject);
-
+		auto baseDump = RTC::Consumer::FillBuffer(builder);
 		// Add rtpStream.
-		this->rtpStream->FillJson(jsonObject["rtpStream"]);
+		auto rtpStream = this->rtpStream->FillBuffer(builder);
+
+		auto simpleConsumerDump = FBS::Consumer::CreateSimpleConsumerDump(builder, baseDump, rtpStream);
+
+		return FBS::Consumer::CreateDumpResponse(
+		  builder, FBS::Consumer::ConsumerDumpData::SimpleConsumerDump, simpleConsumerDump.Union());
 	}
 
 	void SimpleConsumer::FillJsonStats(json& jsonArray) const

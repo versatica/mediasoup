@@ -20,15 +20,12 @@ namespace RTC
 			this->parameter = data->parameter()->str();
 	}
 
-	void RtcpFeedback::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtpParameters::RtcpFeedback> RtcpFeedback::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add type.
-		jsonObject["type"] = this->type;
-
-		// Add parameter (optional).
-		if (this->parameter.length() > 0)
-			jsonObject["parameter"] = this->parameter;
+		return FBS::RtpParameters::CreateRtcpFeedbackDirect(
+		  builder, this->type.c_str(), this->parameter.length() > 0 ? this->parameter.c_str() : nullptr);
 	}
 } // namespace RTC

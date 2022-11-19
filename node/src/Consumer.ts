@@ -485,7 +485,32 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('consumer.dump', this.#internal.consumerId);
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.CONSUMER_DUMP,
+			undefined,
+			undefined,
+			this.#internal.consumerId
+		);
+
+		/* Decode the response. */
+		const dumpResponse = new FbsConsumer.DumpResponse();
+
+		response.body(dumpResponse);
+
+		const consumerDump = new FbsConsumer.SimpleConsumerDump();
+
+		dumpResponse.data(consumerDump);
+
+		let data = consumerDump.unpack() as any;
+
+		data = { ...data, ...data.base.data };
+
+		// @ts-ignore.
+		delete data.base;
+
+		return data;
+
+		// TODO: Properly parse it, the same way we do with Transports.
 	}
 
 	/**

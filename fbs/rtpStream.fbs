@@ -1,0 +1,28 @@
+include "rtxStream.fbs";
+
+namespace FBS.RtpStream;
+
+table Params {
+  encoding_idx:uint32;
+  ssrc:uint32;
+  payload_type:uint8;
+  mime_type:string (required);
+  clock_rate: uint32;
+  rid:string;
+  cname:string (required);
+  rtx_ssrc:uint32 = null;
+  rtx_payload_type:uint8 = null;
+  use_nack:bool;
+  use_pli:bool;
+  use_fir:bool;
+  use_in_band_fec:bool;
+  use_dtx:bool;
+  spatial_layers:uint8;
+  temporal_layers:uint8;
+}
+
+table Dump {
+  params:Params (required);
+  score:uint8;
+  rtx_stream:FBS.RtxStream.RtxDump;
+}

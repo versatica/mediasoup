@@ -18,7 +18,8 @@ namespace RTC
 		~PipeConsumer() override;
 
 	public:
-		void FillJson(json& jsonObject) const override;
+		flatbuffers::Offset<FBS::Consumer::DumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const override;
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override{};
 		flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(

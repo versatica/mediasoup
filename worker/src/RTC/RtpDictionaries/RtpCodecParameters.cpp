@@ -49,39 +49,28 @@ namespace RTC
 		CheckCodec();
 	}
 
-	void RtpCodecParameters::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtpParameters::RtpCodecParameters> RtpCodecParameters::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add mimeType.
-		jsonObject["mimeType"] = this->mimeType.ToString();
+		auto parameters = this->parameters.FillBuffer(builder);
 
-		// Add payloadType.
-		jsonObject["payloadType"] = this->payloadType;
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtcpFeedback>> rtcpFeedback;
 
-		// Add clockRate.
-		jsonObject["clockRate"] = this->clockRate;
-
-		// Add channels.
-		if (this->channels > 1)
-			jsonObject["channels"] = this->channels;
-
-		// Add parameters.
-		this->parameters.FillJson(jsonObject["parameters"]);
-
-		// Add rtcpFeedback.
-		jsonObject["rtcpFeedback"] = json::array();
-		auto jsonRtcpFeedbackIt    = jsonObject.find("rtcpFeedback");
-
-		for (size_t i{ 0 }; i < this->rtcpFeedback.size(); ++i)
+		for (const auto& fb : this->rtcpFeedback)
 		{
-			jsonRtcpFeedbackIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonRtcpFeedbackIt)[i];
-			auto& fb        = this->rtcpFeedback[i];
-
-			fb.FillJson(jsonEntry);
+			rtcpFeedback.emplace_back(fb.FillBuffer(builder));
 		}
+
+		return FBS::RtpParameters::CreateRtpCodecParametersDirect(
+		  builder,
+		  this->mimeType.ToString().c_str(),
+		  this->payloadType,
+		  this->clockRate,
+		  this->channels > 1 ? flatbuffers::Optional<uint8_t>(this->channels) : flatbuffers::nullopt,
+		  &parameters,
+		  &rtcpFeedback);
 	}
 
 	inline void RtpCodecParameters::CheckCodec()

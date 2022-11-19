@@ -244,117 +244,74 @@ namespace RTC
 		delete this->keyFrameRequestManager;
 	}
 
-	void Producer::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::Producer::DumpResponse> Producer::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add id.
-		jsonObject["id"] = this->id;
-
-		// Add kind.
-		jsonObject["kind"] = RTC::Media::GetString(this->kind);
-
 		// Add rtpParameters.
-		this->rtpParameters.FillJson(jsonObject["rtpParameters"]);
-
-		// Add type.
-		jsonObject["type"] = RTC::RtpParameters::GetTypeString(this->type);
-
-		// Add rtpMapping.
-		jsonObject["rtpMapping"] = json::object();
-		auto jsonRtpMappingIt    = jsonObject.find("rtpMapping");
+		auto rtpParameters = this->rtpParameters.FillBuffer(builder);
 
 		// Add rtpMapping.codecs.
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::CodecMapping>> codecs;
+		for (const auto& kv : this->rtpMapping.codecs)
 		{
-			(*jsonRtpMappingIt)["codecs"] = json::array();
-			auto jsonCodecsIt             = jsonRtpMappingIt->find("codecs");
-			size_t idx{ 0 };
-
-			for (auto& kv : this->rtpMapping.codecs)
-			{
-				jsonCodecsIt->emplace_back(json::value_t::object);
-
-				auto& jsonEntry        = (*jsonCodecsIt)[idx];
-				auto payloadType       = kv.first;
-				auto mappedPayloadType = kv.second;
-
-				jsonEntry["payloadType"]       = payloadType;
-				jsonEntry["mappedPayloadType"] = mappedPayloadType;
-
-				++idx;
-			}
+			codecs.emplace_back(FBS::RtpParameters::CreateCodecMapping(builder, kv.first, kv.second));
 		}
 
 		// Add rtpMapping.encodings.
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::EncodingMapping>> encodings;
+
+		for (const auto& encodingMapping : this->rtpMapping.encodings)
 		{
-			(*jsonRtpMappingIt)["encodings"] = json::array();
-			auto jsonEncodingsIt             = jsonRtpMappingIt->find("encodings");
-
-			for (size_t i{ 0 }; i < this->rtpMapping.encodings.size(); ++i)
-			{
-				jsonEncodingsIt->emplace_back(json::value_t::object);
-
-				auto& jsonEntry             = (*jsonEncodingsIt)[i];
-				const auto& encodingMapping = this->rtpMapping.encodings[i];
-
-				if (!encodingMapping.rid.empty())
-					jsonEntry["rid"] = encodingMapping.rid;
-				else
-					jsonEntry["rid"] = nullptr;
-
-				if (encodingMapping.ssrc != 0u)
-					jsonEntry["ssrc"] = encodingMapping.ssrc;
-				else
-					jsonEntry["ssrc"] = nullptr;
-
-				jsonEntry["mappedSsrc"] = encodingMapping.mappedSsrc;
-			}
+			encodings.emplace_back(FBS::RtpParameters::CreateEncodingMappingDirect(
+			  builder,
+			  encodingMapping.rid.c_str(),
+			  encodingMapping.ssrc != 0u ? flatbuffers::Optional<uint32_t>(encodingMapping.ssrc)
+			                             : flatbuffers::nullopt,
+			  nullptr, /* scapability mode. NOTE: Present in NODE*/
+			  encodingMapping.mappedSsrc));
 		}
 
-		// Add rtpStreams.
-		jsonObject["rtpStreams"] = json::array();
-		auto jsonRtpStreamsIt    = jsonObject.find("rtpStreams");
+		// Build rtpMapping.
+		auto rtpMapping = FBS::RtpParameters::CreateRtpMappingDirect(builder, &codecs, &encodings);
 
-		for (auto* rtpStream : this->rtpStreamByEncodingIdx)
+		// Add rtpStreams.
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams;
+
+		for (const auto* rtpStream : this->rtpStreamByEncodingIdx)
 		{
 			if (!rtpStream)
 				continue;
 
-			jsonRtpStreamsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonRtpStreamsIt)[jsonRtpStreamsIt->size() - 1];
-
-			rtpStream->FillJson(jsonEntry);
+			rtpStreams.emplace_back(rtpStream->FillBuffer(builder));
 		}
-
-		// Add paused.
-		jsonObject["paused"] = this->paused;
 
 		// Add traceEventTypes.
-		std::vector<std::string> traceEventTypes;
-		std::ostringstream traceEventTypesStream;
+		std::vector<flatbuffers::Offset<flatbuffers::String>> traceEventTypes;
 
 		if (this->traceEventTypes.rtp)
-			traceEventTypes.emplace_back("rtp");
+			traceEventTypes.emplace_back(builder.CreateString("rtp"));
 		if (this->traceEventTypes.keyframe)
-			traceEventTypes.emplace_back("keyframe");
+			traceEventTypes.emplace_back(builder.CreateString("keyframe"));
 		if (this->traceEventTypes.nack)
-			traceEventTypes.emplace_back("nack");
+			traceEventTypes.emplace_back(builder.CreateString("nack"));
 		if (this->traceEventTypes.pli)
-			traceEventTypes.emplace_back("pli");
+			traceEventTypes.emplace_back(builder.CreateString("pli"));
 		if (this->traceEventTypes.fir)
-			traceEventTypes.emplace_back("fir");
+			traceEventTypes.emplace_back(builder.CreateString("fir"));
 
-		if (!traceEventTypes.empty())
-		{
-			std::copy(
-			  traceEventTypes.begin(),
-			  traceEventTypes.end() - 1,
-			  std::ostream_iterator<std::string>(traceEventTypesStream, ","));
-			traceEventTypesStream << traceEventTypes.back();
-		}
-
-		jsonObject["traceEventTypes"] = traceEventTypesStream.str();
+		return FBS::Producer::CreateDumpResponseDirect(
+		  builder,
+		  this->id.c_str(),
+		  this->kind == RTC::Media::Kind::AUDIO ? FBS::RtpParameters::MediaKind::AUDIO
+		                                        : FBS::RtpParameters::MediaKind::VIDEO,
+		  RTC::RtpParameters::GetTypeString(this->type).c_str(),
+		  rtpParameters,
+		  rtpMapping,
+		  &rtpStreams,
+		  &traceEventTypes,
+		  this->paused);
 	}
 
 	void Producer::FillJsonStats(json& jsonArray) const
@@ -382,11 +339,9 @@ namespace RTC
 		{
 			case Channel::ChannelRequest::Method::PRODUCER_DUMP:
 			{
-				json data = json::object();
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				FillJson(data);
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_Producer_DumpResponse, dumpOffset);
 
 				break;
 			}
