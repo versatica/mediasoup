@@ -5,6 +5,7 @@
 ## Node.
 /node_modules
 /node/lib
+/node/src/fbs
 
 ## Rust.
 /Cargo.lock

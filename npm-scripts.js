@@ -29,9 +29,11 @@ switch (task)
 	//   its dependencies and devDependencies will be installed, and the `prepare`
 	//   script will be run, before the package is packaged and installed.
 	//
-	// So here we compile TypeScript to JavaScript.
+	// So here we generate flatbuffers definitions for TypeScript and compile
+	// TypeScript to JavaScript.
 	case 'prepare':
 	{
+		flatcNode();
 		buildTypescript(/* force */ false);
 
 		break;
@@ -41,6 +43,7 @@ switch (task)
 	{
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
+			flatcWorker();
 			buildWorker();
 
 			if (!process.env.MEDIASOUP_LOCAL_DEV)
@@ -160,8 +163,10 @@ switch (task)
 	case 'release':
 	{
 		installNodeDeps();
+		flatcNode();
 		buildTypescript(/* force */ true);
 		replaceVersion();
+		flatcWorker();
 		buildWorker();
 		lintNode();
 		lintWorker();
