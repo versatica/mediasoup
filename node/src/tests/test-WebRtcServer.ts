@@ -1,12 +1,11 @@
-const { toBeType } = require('jest-tobetype');
-const pickPort = require('pick-port');
-const mediasoup = require('../lib/');
+// @ts-ignore
+import * as pickPort from 'pick-port';
+import * as mediasoup from '../';
+import { InvalidStateError } from '../errors';
+
 const { createWorker } = mediasoup;
-const { InvalidStateError } = require('../lib/errors');
 
-expect.extend({ toBeType });
-
-let worker;
+let worker: mediasoup.types.Worker;
 
 beforeEach(() => worker && !worker.closed && worker.close());
 afterEach(() => worker && !worker.closed && worker.close());
@@ -43,7 +42,7 @@ test('worker.createWebRtcServer() succeeds', async () =>
 
 	expect(onObserverNewWebRtcServer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewWebRtcServer).toHaveBeenCalledWith(webRtcServer);
-	expect(webRtcServer.id).toBeType('string');
+	expect(typeof webRtcServer.id).toBe('string');
 	expect(webRtcServer.closed).toBe(false);
 	expect(webRtcServer.appData).toEqual({ foo: 123 });
 
@@ -118,7 +117,7 @@ test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 
 	expect(onObserverNewWebRtcServer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewWebRtcServer).toHaveBeenCalledWith(webRtcServer);
-	expect(webRtcServer.id).toBeType('string');
+	expect(typeof webRtcServer.id).toBe('string');
 	expect(webRtcServer.closed).toBe(false);
 	expect(webRtcServer.appData).toEqual({ foo: 123 });
 
@@ -170,14 +169,17 @@ test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', 
 {
 	worker = await createWorker();
 
-	await expect(worker.createWebRtcServer({ }))
+	// @ts-ignore
+	await expect(worker.createWebRtcServer({}))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(worker.createWebRtcServer({ listenInfos: 'NOT-AN-ARRAY' }))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(worker.createWebRtcServer({ listenInfos: [ 'NOT-AN-OBJECT' ] }))
 		.rejects
 		.toThrow(TypeError);
@@ -316,7 +318,7 @@ test('WebRtcServer emits "workerclose" if Worker is closed', async () =>
 
 	webRtcServer.observer.once('close', onObserverClose);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		webRtcServer.on('workerclose', resolve);
 		worker.close();
@@ -368,7 +370,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 	expect(onObserverWebRtcTransportHandled).toHaveBeenCalledWith(transport);
 	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
 	expect(onObserverNewTransport).toHaveBeenCalledWith(transport);
-	expect(transport.id).toBeType('string');
+	expect(typeof transport.id).toBe('string');
 	expect(transport.closed).toBe(false);
 	expect(transport.appData).toEqual({ foo: 'bar' });
 
@@ -472,7 +474,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 		.resolves
 		.toMatchObject({ transportIds: [ transport.id ] });
 
-	expect(transport.id).toBeType('string');
+	expect(typeof transport.id).toBe('string');
 	expect(transport.closed).toBe(false);
 	expect(transport.appData).toEqual({ foo: 'bar' });
 

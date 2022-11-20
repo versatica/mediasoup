@@ -15,7 +15,8 @@ const eslintConfig =
 		{
 			impliedStrict : true
 		},
-		lib : [ 'es2018' ]
+		lib     : [ 'es2018' ],
+		project : 'node/tsconfig.json'
 	},
 	globals :
 	{
@@ -222,7 +223,7 @@ eslintConfig.overrides.push(
 
 eslintConfig.overrides.push(
 	{
-		files : [ '*.js' ],
+		files : [ '*.ts' ],
 		env   : {
 			...eslintConfig.env,
 			'jest/globals' : true

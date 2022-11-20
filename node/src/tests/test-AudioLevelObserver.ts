@@ -1,14 +1,11 @@
-const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../lib/');
+import * as mediasoup from '../';
 const { createWorker } = mediasoup;
 
-expect.extend({ toBeType });
+let worker: mediasoup.types.Worker;
+let router: mediasoup.types.Router;
+let audioLevelObserver: mediasoup.types.AudioLevelObserver;
 
-let worker;
-let router;
-let audioLevelObserver;
-
-const mediaCodecs =
+const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 [
 	{
 		kind       : 'audio',
@@ -41,7 +38,7 @@ test('router.createAudioLevelObserver() succeeds', async () =>
 
 	expect(onObserverNewRtpObserver).toHaveBeenCalledTimes(1);
 	expect(onObserverNewRtpObserver).toHaveBeenCalledWith(audioLevelObserver);
-	expect(audioLevelObserver.id).toBeType('string');
+	expect(typeof audioLevelObserver.id).toBe('string');
 	expect(audioLevelObserver.closed).toBe(false);
 	expect(audioLevelObserver.paused).toBe(false);
 	expect(audioLevelObserver.appData).toEqual({});
@@ -64,14 +61,17 @@ test('router.createAudioLevelObserver() with wrong arguments rejects with TypeEr
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(router.createAudioLevelObserver({ threshold: 'foo' }))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(router.createAudioLevelObserver({ interval: false }))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(router.createAudioLevelObserver({ appData: 'NOT-AN-OBJECT' }))
 		.rejects
 		.toThrow(TypeError);
@@ -114,7 +114,7 @@ test('AudioLevelObserver emits "routerclose" if Router is closed', async () =>
 	const router2 = await worker.createRouter({ mediaCodecs });
 	const audioLevelObserver2 = await router2.createAudioLevelObserver();
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		audioLevelObserver2.on('routerclose', resolve);
 		router2.close();
@@ -125,7 +125,7 @@ test('AudioLevelObserver emits "routerclose" if Router is closed', async () =>
 
 test('AudioLevelObserver emits "routerclose" if Worker is closed', async () =>
 {
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		audioLevelObserver.on('routerclose', resolve);
 		worker.close();

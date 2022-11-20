@@ -1,12 +1,10 @@
-const { toBeType } = require('jest-tobetype');
-const { UnsupportedError } = require('../lib/errors');
-const ortc = require('../lib/ortc');
-
-expect.extend({ toBeType });
+import * as mediasoup from '../';
+import * as ortc from '../ortc';
+import { UnsupportedError } from '../errors';
 
 test('generateRouterRtpCapabilities() succeeds', () =>
 {
-	const mediaCodecs =
+	const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 	[
 		{
 			kind       : 'audio',
@@ -41,10 +39,10 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 
 	const rtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
 
-	expect(rtpCapabilities.codecs.length).toBe(5);
+	expect(rtpCapabilities.codecs?.length).toBe(5);
 
 	// opus.
-	expect(rtpCapabilities.codecs[0]).toEqual(
+	expect(rtpCapabilities.codecs?.[0]).toEqual(
 		{
 			kind                 : 'audio',
 			mimeType             : 'audio/opus',
@@ -63,7 +61,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 		});
 
 	// VP8.
-	expect(rtpCapabilities.codecs[1]).toEqual(
+	expect(rtpCapabilities.codecs?.[1]).toEqual(
 		{
 			kind                 : 'video',
 			mimeType             : 'video/VP8',
@@ -81,7 +79,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 		});
 
 	// VP8 RTX.
-	expect(rtpCapabilities.codecs[2]).toEqual(
+	expect(rtpCapabilities.codecs?.[2]).toEqual(
 		{
 			kind                 : 'video',
 			mimeType             : 'video/rtx',
@@ -95,7 +93,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 		});
 
 	// H264.
-	expect(rtpCapabilities.codecs[3]).toEqual(
+	expect(rtpCapabilities.codecs?.[3]).toEqual(
 		{
 			kind                 : 'video',
 			mimeType             : 'video/H264',
@@ -121,7 +119,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 		});
 
 	// H264 RTX.
-	expect(rtpCapabilities.codecs[4]).toEqual(
+	expect(rtpCapabilities.codecs?.[4]).toEqual(
 		{
 			kind                 : 'video',
 			mimeType             : 'video/rtx',
@@ -137,7 +135,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 
 test('generateRouterRtpCapabilities() with unsupported codecs throws UnsupportedError', () =>
 {
-	let mediaCodecs;
+	let mediaCodecs: mediasoup.types.RtpCodecCapability[];
 
 	mediaCodecs =
 	[
@@ -168,7 +166,7 @@ test('generateRouterRtpCapabilities() with unsupported codecs throws Unsupported
 
 test('generateRouterRtpCapabilities() with too many codecs throws', () =>
 {
-	const mediaCodecs = [];
+	const mediaCodecs: mediasoup.types.RtpCodecCapability[] = [];
 
 	for (let i = 0; i < 100; ++i)
 	{
@@ -187,7 +185,7 @@ test('generateRouterRtpCapabilities() with too many codecs throws', () =>
 
 test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsumerRtpParameters() and getPipeConsumerRtpParameters() succeed', () =>
 {
-	const mediaCodecs =
+	const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 	[
 		{
 			kind      : 'audio',
@@ -211,7 +209,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 
 	const routerRtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
 
-	const rtpParameters =
+	const rtpParameters: mediasoup.types.RtpParameters =
 	{
 		codecs :
 		[
@@ -291,13 +289,13 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 
 	expect(rtpMapping.encodings[0].ssrc).toBe(11111111);
 	expect(rtpMapping.encodings[0].rid).toBeUndefined();
-	expect(rtpMapping.encodings[0].mappedSsrc).toBeType('number');
+	expect(typeof rtpMapping.encodings[0].mappedSsrc).toBe('number');
 	expect(rtpMapping.encodings[1].ssrc).toBe(21111111);
 	expect(rtpMapping.encodings[1].rid).toBeUndefined();
-	expect(rtpMapping.encodings[1].mappedSsrc).toBeType('number');
+	expect(typeof rtpMapping.encodings[1].mappedSsrc).toBe('number');
 	expect(rtpMapping.encodings[2].ssrc).toBeUndefined();
 	expect(rtpMapping.encodings[2].rid).toBe('high');
-	expect(rtpMapping.encodings[2].mappedSsrc).toBeType('number');
+	expect(typeof rtpMapping.encodings[2].mappedSsrc).toBe('number');
 
 	const consumableRtpParameters = ortc.getConsumableRtpParameters(
 		'video', rtpParameters, routerRtpCapabilities, rtpMapping);
@@ -317,19 +315,19 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(consumableRtpParameters.codecs[1].clockRate).toBe(90000);
 	expect(consumableRtpParameters.codecs[1].parameters).toEqual({ apt: 101 });
 
-	expect(consumableRtpParameters.encodings[0]).toEqual(
+	expect(consumableRtpParameters.encodings?.[0]).toEqual(
 		{
 			ssrc            : rtpMapping.encodings[0].mappedSsrc,
 			maxBitrate      : 111111,
 			scalabilityMode : 'L1T3'
 		});
-	expect(consumableRtpParameters.encodings[1]).toEqual(
+	expect(consumableRtpParameters.encodings?.[1]).toEqual(
 		{
 			ssrc            : rtpMapping.encodings[1].mappedSsrc,
 			maxBitrate      : 222222,
 			scalabilityMode : 'L1T3'
 		});
-	expect(consumableRtpParameters.encodings[2]).toEqual(
+	expect(consumableRtpParameters.encodings?.[2]).toEqual(
 		{
 			ssrc            : rtpMapping.encodings[2].mappedSsrc,
 			maxBitrate      : 333333,
@@ -338,12 +336,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 
 	expect(consumableRtpParameters.rtcp).toEqual(
 		{
-			cname       : rtpParameters.rtcp.cname,
+			cname       : rtpParameters.rtcp?.cname,
 			reducedSize : true,
 			mux         : true
 		});
 
-	const remoteRtpCapabilities =
+	const remoteRtpCapabilities: mediasoup.types.RtpCapabilities =
 	{
 		codecs :
 		[
@@ -467,12 +465,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 			rtcpFeedback : []
 		});
 
-	expect(consumerRtpParameters.encodings.length).toBe(1);
-	expect(consumerRtpParameters.encodings[0].ssrc).toBeType('number');
-	expect(consumerRtpParameters.encodings[0].rtx).toBeType('object');
-	expect(consumerRtpParameters.encodings[0].rtx.ssrc).toBeType('number');
-	expect(consumerRtpParameters.encodings[0].scalabilityMode).toBe('S3T3');
-	expect(consumerRtpParameters.encodings[0].maxBitrate).toBe(333333);
+	expect(consumerRtpParameters.encodings?.length).toBe(1);
+	expect(typeof consumerRtpParameters.encodings?.[0].ssrc).toBe('number');
+	expect(typeof consumerRtpParameters.encodings?.[0].rtx).toBe('object');
+	expect(typeof consumerRtpParameters.encodings?.[0].rtx?.ssrc).toBe('number');
+	expect(consumerRtpParameters.encodings?.[0].scalabilityMode).toBe('S3T3');
+	expect(consumerRtpParameters.encodings?.[0].maxBitrate).toBe(333333);
 
 	expect(consumerRtpParameters.headerExtensions).toEqual(
 		[
@@ -498,7 +496,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 
 	expect(consumerRtpParameters.rtcp).toEqual(
 		{
-			cname       : rtpParameters.rtcp.cname,
+			cname       : rtpParameters.rtcp?.cname,
 			reducedSize : true,
 			mux         : true
 		});
@@ -525,23 +523,23 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 			]
 		});
 
-	expect(pipeConsumerRtpParameters.encodings.length).toBe(3);
-	expect(pipeConsumerRtpParameters.encodings[0].ssrc).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[0].rtx).toBeUndefined();
-	expect(pipeConsumerRtpParameters.encodings[0].maxBitrate).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[0].scalabilityMode).toBe('L1T3');
-	expect(pipeConsumerRtpParameters.encodings[1].ssrc).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[1].rtx).toBeUndefined();
-	expect(pipeConsumerRtpParameters.encodings[1].maxBitrate).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[1].scalabilityMode).toBe('L1T3');
-	expect(pipeConsumerRtpParameters.encodings[2].ssrc).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[2].rtx).toBeUndefined();
-	expect(pipeConsumerRtpParameters.encodings[2].maxBitrate).toBeType('number');
-	expect(pipeConsumerRtpParameters.encodings[2].scalabilityMode).toBe('L1T3');
+	expect(pipeConsumerRtpParameters.encodings?.length).toBe(3);
+	expect(typeof pipeConsumerRtpParameters.encodings?.[0].ssrc).toBe('number');
+	expect(pipeConsumerRtpParameters.encodings?.[0].rtx).toBeUndefined();
+	expect(typeof pipeConsumerRtpParameters.encodings?.[0].maxBitrate).toBe('number');
+	expect(pipeConsumerRtpParameters.encodings?.[0].scalabilityMode).toBe('L1T3');
+	expect(typeof pipeConsumerRtpParameters.encodings?.[1].ssrc).toBe('number');
+	expect(pipeConsumerRtpParameters.encodings?.[1].rtx).toBeUndefined();
+	expect(typeof pipeConsumerRtpParameters.encodings?.[1].maxBitrate).toBe('number');
+	expect(pipeConsumerRtpParameters.encodings?.[1].scalabilityMode).toBe('L1T3');
+	expect(typeof pipeConsumerRtpParameters.encodings?.[2].ssrc).toBe('number');
+	expect(pipeConsumerRtpParameters.encodings?.[2].rtx).toBeUndefined();
+	expect(typeof pipeConsumerRtpParameters.encodings?.[2].maxBitrate).toBe('number');
+	expect(pipeConsumerRtpParameters.encodings?.[2].scalabilityMode).toBe('L1T3');
 
 	expect(pipeConsumerRtpParameters.rtcp).toEqual(
 		{
-			cname       : rtpParameters.rtcp.cname,
+			cname       : rtpParameters.rtcp?.cname,
 			reducedSize : true,
 			mux         : true
 		});
@@ -549,7 +547,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 
 test('getProducerRtpParametersMapping() with incompatible params throws UnsupportedError', () =>
 {
-	const mediaCodecs =
+	const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 	[
 		{
 			kind      : 'audio',

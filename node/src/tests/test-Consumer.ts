@@ -1,21 +1,19 @@
-const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../lib/');
+import * as mediasoup from '../';
+import { UnsupportedError } from '../errors';
+
 const { createWorker } = mediasoup;
-const { UnsupportedError } = require('../lib/errors');
 
-expect.extend({ toBeType });
+let worker: mediasoup.types.Worker;
+let router: mediasoup.types.Router;
+let transport1: mediasoup.types.WebRtcTransport;
+let transport2: mediasoup.types.WebRtcTransport;
+let audioProducer: mediasoup.types.Producer;
+let videoProducer: mediasoup.types.Producer;
+let audioConsumer: mediasoup.types.Consumer;
+let videoConsumer: mediasoup.types.Consumer;
+let videoPipeConsumer: mediasoup.types.Consumer;
 
-let worker;
-let router;
-let transport1;
-let transport2;
-let audioProducer;
-let videoProducer;
-let audioConsumer;
-let videoConsumer;
-let videoPipeConsumer;
-
-const mediaCodecs =
+const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 [
 	{
 		kind       : 'audio',
@@ -46,7 +44,7 @@ const mediaCodecs =
 	}
 ];
 
-const audioProducerParameters =
+const audioProducerParameters: mediasoup.types.ProducerOptions =
 {
 	kind          : 'audio',
 	rtpParameters :
@@ -88,7 +86,7 @@ const audioProducerParameters =
 	appData : { foo: 1, bar: '2' }
 };
 
-const videoProducerParameters =
+const videoProducerParameters: mediasoup.types.ProducerOptions =
 {
 	kind          : 'video',
 	rtpParameters :
@@ -145,7 +143,7 @@ const videoProducerParameters =
 	appData : { foo: 1, bar: '2' }
 };
 
-const consumerDeviceCapabilities =
+const consumerDeviceCapabilities: mediasoup.types.RtpCapabilities =
 {
 	codecs :
 	[
@@ -283,11 +281,11 @@ test('transport.consume() succeeds', async () =>
 
 	expect(onObserverNewConsumer1).toHaveBeenCalledTimes(1);
 	expect(onObserverNewConsumer1).toHaveBeenCalledWith(audioConsumer);
-	expect(audioConsumer.id).toBeType('string');
+	expect(typeof audioConsumer.id).toBe('string');
 	expect(audioConsumer.producerId).toBe(audioProducer.id);
 	expect(audioConsumer.closed).toBe(false);
 	expect(audioConsumer.kind).toBe('audio');
-	expect(audioConsumer.rtpParameters).toBeType('object');
+	expect(typeof audioConsumer.rtpParameters).toBe('object');
 	expect(audioConsumer.rtpParameters.mid).toBe('0');
 	expect(audioConsumer.rtpParameters.codecs.length).toBe(1);
 	expect(audioConsumer.rtpParameters.codecs[0]).toEqual(
@@ -354,11 +352,11 @@ test('transport.consume() succeeds', async () =>
 
 	expect(onObserverNewConsumer2).toHaveBeenCalledTimes(1);
 	expect(onObserverNewConsumer2).toHaveBeenCalledWith(videoConsumer);
-	expect(videoConsumer.id).toBeType('string');
+	expect(typeof videoConsumer.id).toBe('string');
 	expect(videoConsumer.producerId).toBe(videoProducer.id);
 	expect(videoConsumer.closed).toBe(false);
 	expect(videoConsumer.kind).toBe('video');
-	expect(videoConsumer.rtpParameters).toBeType('object');
+	expect(typeof videoConsumer.rtpParameters).toBe('object');
 	expect(videoConsumer.rtpParameters.mid).toBe('1');
 	expect(videoConsumer.rtpParameters.codecs.length).toBe(2);
 	expect(videoConsumer.rtpParameters.codecs[0]).toEqual(
@@ -417,11 +415,11 @@ test('transport.consume() succeeds', async () =>
 
 	expect(onObserverNewConsumer3).toHaveBeenCalledTimes(1);
 	expect(onObserverNewConsumer3).toHaveBeenCalledWith(videoPipeConsumer);
-	expect(videoPipeConsumer.id).toBeType('string');
+	expect(typeof videoPipeConsumer.id).toBe('string');
 	expect(videoPipeConsumer.producerId).toBe(videoProducer.id);
 	expect(videoPipeConsumer.closed).toBe(false);
 	expect(videoPipeConsumer.kind).toBe('video');
-	expect(videoPipeConsumer.rtpParameters).toBeType('object');
+	expect(typeof videoPipeConsumer.rtpParameters).toBe('object');
 	expect(videoPipeConsumer.rtpParameters.mid).toBeUndefined();
 	expect(videoPipeConsumer.rtpParameters.codecs.length).toBe(2);
 	expect(videoPipeConsumer.rtpParameters.codecs[0]).toEqual(
@@ -535,7 +533,7 @@ test('transport.consume() can be created with user provided mid', async () =>
 
 test('transport.consume() with incompatible rtpCapabilities rejects with UnsupportedError', async () =>
 {
-	let invalidDeviceCapabilities;
+	let invalidDeviceCapabilities: mediasoup.types.RtpCapabilities;
 
 	invalidDeviceCapabilities =
 	{
@@ -592,8 +590,8 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.id).toBe(audioConsumer.id);
 	expect(data.producerId).toBe(audioConsumer.producerId);
 	expect(data.kind).toBe(audioConsumer.kind);
-	expect(data.rtpParameters).toBeType('object');
-	expect(data.rtpParameters.codecs).toBeType('array');
+	expect(typeof data.rtpParameters).toBe('object');
+	expect(Array.isArray(data.rtpParameters.codecs)).toBe(true);
 	expect(data.rtpParameters.codecs.length).toBe(1);
 	expect(data.rtpParameters.codecs[0].mimeType).toBe('audio/opus');
 	expect(data.rtpParameters.codecs[0].payloadType).toBe(100);
@@ -608,7 +606,7 @@ test('consumer.dump() succeeds', async () =>
 				bar          : '333'
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
-	expect(data.rtpParameters.headerExtensions).toBeType('array');
+	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
 	expect(data.rtpParameters.headerExtensions.length).toBe(3);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
@@ -631,21 +629,21 @@ test('consumer.dump() succeeds', async () =>
 				encrypt    : false
 			}
 		]);
-	expect(data.rtpParameters.encodings).toBeType('array');
+	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
 	expect(data.rtpParameters.encodings.length).toBe(1);
 	expect(data.rtpParameters.encodings).toEqual(
 		[
 			{
 				codecPayloadType : 100,
-				ssrc             : audioConsumer.rtpParameters.encodings[0].ssrc
+				ssrc             : audioConsumer.rtpParameters.encodings?.[0].ssrc
 			}
 		]);
 	expect(data.type).toBe('simple');
-	expect(data.consumableRtpEncodings).toBeType('array');
+	expect(Array.isArray(data.consumableRtpEncodings)).toBe(true);
 	expect(data.consumableRtpEncodings.length).toBe(1);
 	expect(data.consumableRtpEncodings).toEqual(
 		[
-			{ ssrc: audioProducer.consumableRtpParameters.encodings[0].ssrc }
+			{ ssrc: audioProducer.consumableRtpParameters.encodings?.[0].ssrc }
 		]);
 	expect(data.supportedCodecPayloadTypes).toEqual([ 100 ]);
 	expect(data.paused).toBe(false);
@@ -657,8 +655,8 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.id).toBe(videoConsumer.id);
 	expect(data.producerId).toBe(videoConsumer.producerId);
 	expect(data.kind).toBe(videoConsumer.kind);
-	expect(data.rtpParameters).toBeType('object');
-	expect(data.rtpParameters.codecs).toBeType('array');
+	expect(typeof data.rtpParameters).toBe('object');
+	expect(Array.isArray(data.rtpParameters.codecs)).toBe(true);
 	expect(data.rtpParameters.codecs.length).toBe(2);
 	expect(data.rtpParameters.codecs[0].mimeType).toBe('video/H264');
 	expect(data.rtpParameters.codecs[0].payloadType).toBe(103);
@@ -677,7 +675,7 @@ test('consumer.dump() succeeds', async () =>
 			{ type: 'ccm', parameter: 'fir' },
 			{ type: 'goog-remb' }
 		]);
-	expect(data.rtpParameters.headerExtensions).toBeType('array');
+	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
 	expect(data.rtpParameters.headerExtensions.length).toBe(4);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
@@ -706,28 +704,28 @@ test('consumer.dump() succeeds', async () =>
 				encrypt    : false
 			}
 		]);
-	expect(data.rtpParameters.encodings).toBeType('array');
+	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
 	expect(data.rtpParameters.encodings.length).toBe(1);
 	expect(data.rtpParameters.encodings).toMatchObject(
 		[
 			{
 				codecPayloadType : 103,
-				ssrc             : videoConsumer.rtpParameters.encodings[0].ssrc,
+				ssrc             : videoConsumer.rtpParameters.encodings?.[0].ssrc,
 				rtx              :
 				{
-					ssrc : videoConsumer.rtpParameters.encodings[0].rtx.ssrc
+					ssrc : videoConsumer.rtpParameters.encodings?.[0].rtx?.ssrc
 				},
 				scalabilityMode : 'S4T1'
 			}
 		]);
-	expect(data.consumableRtpEncodings).toBeType('array');
+	expect(Array.isArray(data.consumableRtpEncodings)).toBe(true);
 	expect(data.consumableRtpEncodings.length).toBe(4);
 	expect(data.consumableRtpEncodings).toEqual(
 		[
-			{ ssrc: videoProducer.consumableRtpParameters.encodings[0].ssrc },
-			{ ssrc: videoProducer.consumableRtpParameters.encodings[1].ssrc },
-			{ ssrc: videoProducer.consumableRtpParameters.encodings[2].ssrc },
-			{ ssrc: videoProducer.consumableRtpParameters.encodings[3].ssrc }
+			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[0].ssrc },
+			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[1].ssrc },
+			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[2].ssrc },
+			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[3].ssrc }
 		]);
 	expect(data.supportedCodecPayloadTypes).toEqual([ 103 ]);
 	expect(data.paused).toBe(true);
@@ -746,7 +744,7 @@ test('consumer.getStats() succeeds', async () =>
 						type     : 'outbound-rtp',
 						kind     : 'audio',
 						mimeType : 'audio/opus',
-						ssrc     : audioConsumer.rtpParameters.encodings[0].ssrc
+						ssrc     : audioConsumer.rtpParameters.encodings?.[0].ssrc
 					})
 			]);
 
@@ -759,7 +757,7 @@ test('consumer.getStats() succeeds', async () =>
 						type     : 'outbound-rtp',
 						kind     : 'video',
 						mimeType : 'video/H264',
-						ssrc     : videoConsumer.rtpParameters.encodings[0].ssrc
+						ssrc     : videoConsumer.rtpParameters.encodings?.[0].ssrc
 					})
 			]);
 }, 2000);
@@ -792,19 +790,23 @@ test('consumer.setPreferredLayers() succeed', async () =>
 
 test('consumer.setPreferredLayers() with wrong arguments rejects with TypeError', async () =>
 {
+	// @ts-ignore
 	await expect(videoConsumer.setPreferredLayers({}))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(videoConsumer.setPreferredLayers({ foo: '123' }))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(videoConsumer.setPreferredLayers('foo'))
 		.rejects
 		.toThrow(TypeError);
 
 	// Missing spatialLayer.
+	// @ts-ignore
 	await expect(videoConsumer.setPreferredLayers({ temporalLayer: 2 }))
 		.rejects
 		.toThrow(TypeError);
@@ -818,6 +820,7 @@ test('consumer.setPriority() succeed', async () =>
 
 test('consumer.setPriority() with wrong arguments rejects with TypeError', async () =>
 {
+	// @ts-ignore
 	await expect(videoConsumer.setPriority())
 		.rejects
 		.toThrow(TypeError);
@@ -826,6 +829,7 @@ test('consumer.setPriority() with wrong arguments rejects with TypeError', async
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(videoConsumer.setPriority('foo'))
 		.rejects
 		.toThrow(TypeError);
@@ -849,6 +853,7 @@ test('consumer.enableTraceEvent() succeed', async () =>
 		.resolves
 		.toMatchObject({ traceEventTypes: '' });
 
+	// @ts-ignore
 	await audioConsumer.enableTraceEvent([ 'nack', 'FOO', 'fir' ]);
 	await expect(audioConsumer.dump())
 		.resolves
@@ -862,14 +867,17 @@ test('consumer.enableTraceEvent() succeed', async () =>
 
 test('consumer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
 {
+	// @ts-ignore
 	await expect(audioConsumer.enableTraceEvent(123))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(audioConsumer.enableTraceEvent('rtp'))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(audioConsumer.enableTraceEvent([ 'fir', 123.123 ]))
 		.rejects
 		.toThrow(TypeError);
@@ -877,7 +885,7 @@ test('consumer.enableTraceEvent() with wrong arguments rejects with TypeError', 
 
 test('Consumer emits "producerpause" and "producerresume"', async () =>
 {
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		audioConsumer.on('producerpause', resolve);
 		audioProducer.pause();
@@ -886,7 +894,7 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(true);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		audioConsumer.on('producerresume', resolve);
 		audioProducer.resume();
@@ -961,6 +969,7 @@ test('Consumer methods reject if closed', async () =>
 		.rejects
 		.toThrow(Error);
 
+	// @ts-ignore
 	await expect(audioConsumer.setPreferredLayers({}))
 		.rejects
 		.toThrow(Error);
@@ -986,7 +995,7 @@ test('Consumer emits "producerclose" if Producer is closed', async () =>
 
 	audioConsumer.observer.once('close', onObserverClose);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		audioConsumer.on('producerclose', resolve);
 		audioProducer.close();
@@ -1008,7 +1017,7 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 
 	videoConsumer.observer.once('close', onObserverClose);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		videoConsumer.on('transportclose', resolve);
 		transport2.close();
