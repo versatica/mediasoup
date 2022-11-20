@@ -7,6 +7,7 @@ PYTHON ?= $(shell command -v python3 2> /dev/null || echo python)
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh || echo 4)
 MEDIASOUP_OUT_DIR ?= $(shell pwd)/out
+FLATBUFFERS_DIR ?= $(shell pwd)/subprojects/flatbuffers-2.0.8
 # Controls build types, `Release` and `Debug` are presets optimized for those
 # use cases. Other build types are possible too, but they are not presets and
 # will require `MESON_ARGS` use to customize build configuration.
@@ -77,6 +78,7 @@ endif
 	update-wrap-file \
 	mediasoup-worker \
 	libmediasoup-worker \
+	flatc \
 	xcode \
 	lint \
 	format \
@@ -203,6 +205,10 @@ endif
 libmediasoup-worker: setup
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) libmediasoup-worker
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags libmediasoup-worker
+
+flatc: setup
+	$(MESON) setup -Dcpp_std=c++11 $(FLATBUFFERS_DIR)/build $(FLATBUFFERS_DIR)
+	$(MESON) compile -C $(FLATBUFFERS_DIR)/build flatc
 
 xcode: setup
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode

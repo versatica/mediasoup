@@ -29,12 +29,10 @@ switch (task)
 	//   its dependencies and devDependencies will be installed, and the `prepare`
 	//   script will be run, before the package is packaged and installed.
 	//
-	// So here we compile TypeScript and flatbuffers to JavaScript.
+	// So here we compile TypeScript to JavaScript.
 	case 'prepare':
 	{
 		buildTypescript(/* force */ false);
-
-		// TODO: Compile flatbuffers.
 
 		break;
 	}
@@ -106,38 +104,22 @@ switch (task)
 
 	case 'flatc':
 	{
-		execute('npm run flatc:node');
-		execute('npm run flatc:worker');
+		flatcNode();
+		flatcWorker();
 
 		break;
 	}
 
 	case 'flatc:node':
 	{
-		const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
-
-		const options = '--gen-object-api';
-		const out = 'node/src/fbs';
-		const command = `${flatc} --ts ${options} -o ${out} `;
-
-		execute(`rm -rf ${out}`);
-		execute(`for file in fbs/*; do ${command} \$\{file\}; done`);
-		execute('npm run typescript:build');
+		flatcNode();
 
 		break;
 	}
 
 	case 'flatc:worker':
 	{
-		const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
-
-		const options = '--cpp-field-case-style lower --reflect-names --scoped-enums';
-		const out = 'worker/include/FBS/';
-		const command = `${flatc} --cpp ${options} -o ${out} `;
-
-		execute(`rm -rf ${out}`);
-		execute(`for file in fbs/*; do ${command} \$\{file\}; done`);
-		execute('npm run worker:build');
+		flatcWorker();
 
 		break;
 	}
@@ -292,6 +274,36 @@ function lintWorker()
 	console.log('npm-scripts.js [INFO] lintWorker()');
 
 	executeCmd(`${MAKE} lint -C worker`);
+}
+
+function flatcNode()
+{
+	console.log('npm-scripts.js [INFO] flatcNode()');
+
+	// Build flatc binary if needed.
+	executeCmd(`${MAKE} -C worker flatc`);
+
+	const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
+	const options = '--gen-object-api';
+	const out = 'node/src/fbs';
+	const command = `${flatc} --ts ${options} -o ${out} `;
+
+	executeCmd(`for file in fbs/*; do ${command} \$\{file\}; done`);
+}
+
+function flatcWorker()
+{
+	console.log('npm-scripts.js [INFO] flatcWorker()');
+
+	// Build flatc binary if needed.
+	executeCmd(`${MAKE} -C worker flatc`);
+
+	const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
+	const options = '--cpp-field-case-style lower --reflect-names --scoped-enums';
+	const out = 'worker/include/FBS/';
+	const command = `${flatc} --cpp ${options} -o ${out} `;
+
+	executeCmd(`for file in fbs/*; do ${command} \$\{file\}; done`);
 }
 
 function testNode()
