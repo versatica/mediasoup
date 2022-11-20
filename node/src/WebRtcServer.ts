@@ -4,7 +4,7 @@ import { Channel } from './Channel';
 import { TransportProtocol } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';
 import { Body as RequestBody, Method, CloseWebRtcServerRequestT } from './fbs/request_generated';
-import * as FbsWebRtcServer from './fbs/webrtcserver_generated';
+import * as FbsWebRtcServer from './fbs/webRtcServer_generated';
 
 export type WebRtcServerListenInfo =
 {
