@@ -28,7 +28,10 @@ namespace RTC
 	/* Instance methods. */
 
 	Producer::Producer(
-	  RTC::Shared* shared, const std::string& id, RTC::Producer::Listener* listener, const FBS::Transport::ProduceRequest* data)
+	  RTC::Shared* shared,
+	  const std::string& id,
+	  RTC::Producer::Listener* listener,
+	  const FBS::Transport::ProduceRequest* data)
 	  : id(id), shared(shared), listener(listener)
 	{
 		MS_TRACE();

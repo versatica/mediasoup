@@ -36,8 +36,8 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::Transport::BaseTransportOptions* options)
-	  : id(id), shared(shared), listener(listener), recvRtxTransmission(1000u), sendRtxTransmission(1000u),
-	    sendProbationTransmission(100u)
+	  : id(id), shared(shared), listener(listener), recvRtxTransmission(1000u),
+	    sendRtxTransmission(1000u), sendProbationTransmission(100u)
 	{
 		MS_TRACE();
 
@@ -765,8 +765,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMPLE:
 					{
 						// This may throw.
-						consumer =
-						  new RTC::SimpleConsumer(this->shared, consumerId, producerId, this, body);
+						consumer = new RTC::SimpleConsumer(this->shared, consumerId, producerId, this, body);
 
 						break;
 					}
@@ -774,8 +773,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMULCAST:
 					{
 						// This may throw.
-						consumer =
-						  new RTC::SimulcastConsumer(this->shared, consumerId, producerId, this, body);
+						consumer = new RTC::SimulcastConsumer(this->shared, consumerId, producerId, this, body);
 
 						break;
 					}
@@ -783,8 +781,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::SVC:
 					{
 						// This may throw.
-						consumer =
-						  new RTC::SvcConsumer(this->shared, consumerId, producerId, this, body);
+						consumer = new RTC::SvcConsumer(this->shared, consumerId, producerId, this, body);
 
 						break;
 					}
@@ -792,8 +789,7 @@ namespace RTC
 					case RTC::RtpParameters::Type::PIPE:
 					{
 						// This may throw.
-						consumer =
-						  new RTC::PipeConsumer(this->shared, consumerId, producerId, this, body);
+						consumer = new RTC::PipeConsumer(this->shared, consumerId, producerId, this, body);
 
 						break;
 					}
@@ -1003,8 +999,8 @@ namespace RTC
 				CheckNoDataProducer(dataProducerId);
 
 				// This may throw.
-				auto* dataProducer = new RTC::DataProducer(
-				  this->shared, dataProducerId, this->maxMessageSize, this, body);
+				auto* dataProducer =
+				  new RTC::DataProducer(this->shared, dataProducerId, this->maxMessageSize, this, body);
 
 				// Verify the type of the DataProducer.
 				switch (dataProducer->GetType())

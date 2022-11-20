@@ -16,7 +16,7 @@ public:
 
 public:
 	flatbuffers::Offset<FBS::Worker::ChannelMessageHandlers> FillBuffer(
-			flatbuffers::FlatBufferBuilder& builder);
+	  flatbuffers::FlatBufferBuilder& builder);
 	void RegisterHandler(
 	  const std::string& id,
 	  Channel::ChannelSocket::RequestHandler* channelRequestHandler,

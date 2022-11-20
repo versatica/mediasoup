@@ -25,7 +25,8 @@ namespace RTC
 	  const std::string& producerId,
 	  RTC::Consumer::Listener* listener,
 	  const FBS::Transport::ConsumeRequest* data)
-	  : RTC::Consumer::Consumer(shared, id, producerId, listener, data, RTC::RtpParameters::Type::SIMULCAST)
+	  : RTC::Consumer::Consumer(
+	      shared, id, producerId, listener, data, RTC::RtpParameters::Type::SIMULCAST)
 	{
 		MS_TRACE();
 

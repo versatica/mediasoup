@@ -243,8 +243,8 @@ namespace RTC
 				  options->enableUdp(), options->enableTcp(), options->preferUdp(), options->preferTcp());
 
 				// This may throw.
-				auto* webRtcTransport =
-				  new RTC::WebRtcTransport(this->shared, transportId, this, webRtcServer, iceCandidates, options);
+				auto* webRtcTransport = new RTC::WebRtcTransport(
+				  this->shared, transportId, this, webRtcServer, iceCandidates, options);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = webRtcTransport;
@@ -267,7 +267,8 @@ namespace RTC
 				// This may throw.
 				CheckNoTransport(transportId);
 
-				auto* plainTransport = new RTC::PlainTransport(this->shared, transportId, this, body->options());
+				auto* plainTransport =
+				  new RTC::PlainTransport(this->shared, transportId, this, body->options());
 
 				// Insert into the map.
 				this->mapTransports[transportId] = plainTransport;
@@ -289,7 +290,8 @@ namespace RTC
 				// This may throw.
 				CheckNoTransport(transportId);
 
-				auto* pipeTransport = new RTC::PipeTransport(this->shared, transportId, this, body->options());
+				auto* pipeTransport =
+				  new RTC::PipeTransport(this->shared, transportId, this, body->options());
 
 				// Insert into the map.
 				this->mapTransports[transportId] = pipeTransport;
@@ -311,7 +313,8 @@ namespace RTC
 				// This may throw.
 				CheckNoTransport(transportId);
 
-				auto* directTransport = new RTC::DirectTransport(this->shared, transportId, this, body->options());
+				auto* directTransport =
+				  new RTC::DirectTransport(this->shared, transportId, this, body->options());
 
 				// Insert into the map.
 				this->mapTransports[transportId] = directTransport;
@@ -354,7 +357,8 @@ namespace RTC
 				// This may throw.
 				CheckNoRtpObserver(rtpObserverId);
 
-				auto* audioLevelObserver = new RTC::AudioLevelObserver(this->shared, rtpObserverId, this, body->options());
+				auto* audioLevelObserver =
+				  new RTC::AudioLevelObserver(this->shared, rtpObserverId, this, body->options());
 
 				// Insert into the map.
 				this->mapRtpObservers[rtpObserverId] = audioLevelObserver;
