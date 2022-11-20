@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const process = require('process');
 const os = require('os');
 const fs = require('fs');
@@ -14,44 +16,61 @@ const MAYOR_VERSION = version.split('.')[0];
 // make command to use.
 const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 
-// eslint-disable-next-line no-console
 console.log(`npm-scripts.js [INFO] running task "${task}"`);
 
 switch (task)
 {
-	case 'typescript:build':
+	// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
+	// `prepare` script:
+	//
+	// - Runs BEFORE the package is packed, i.e. during `npm publish` and `npm pack`.
+	// - Runs on local `npm install` without any arguments.
+	// - NOTE: If a package being installed through git contains a `prepare` script,
+	//   its dependencies and devDependencies will be installed, and the `prepare`
+	//   script will be run, before the package is packaged and installed.
+	//
+	// So here we compile TypeScript and flatbuffers to JavaScript.
+	case 'prepare':
 	{
-		if (!isWindows)
+		buildTypescript(/* force */ false);
+
+		// TODO: Compile flatbuffers.
+
+		break;
+	}
+
+	case 'postinstall':
+	{
+		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
-			execute('rm -rf node/lib');
-		}
-		else
-		{
-			execute('rmdir /s /q "node/lib"');
+			buildWorker();
+
+			if (!process.env.MEDIASOUP_LOCAL_DEV)
+			{
+				cleanWorker();
+			}
 		}
 
-		execute('tsc --project node');
-		taskReplaceVersion();
+		break;
+	}
+
+	case 'typescript:build':
+	{
+		installNodeDeps();
+		buildTypescript(/* force */ true);
+		replaceVersion();
 
 		break;
 	}
 
 	case 'typescript:watch':
 	{
+		deleteNodeLib();
+
 		const TscWatchClient = require('tsc-watch/client');
-
-		if (!isWindows)
-		{
-			execute('rm -rf node/lib');
-		}
-		else
-		{
-			execute('rmdir /s /q "node/lib"');
-		}
-
 		const watch = new TscWatchClient();
 
-		watch.on('success', taskReplaceVersion);
+		watch.on('success', replaceVersion);
 		watch.start('--project', 'node', '--pretty');
 
 		break;
@@ -59,28 +78,28 @@ switch (task)
 
 	case 'worker:build':
 	{
-		execute(`${MAKE} -C worker`);
+		buildWorker();
 
 		break;
 	}
 
 	case 'lint:node':
 	{
-		execute('eslint -c node/.eslintrc.js --ignore-path node/.eslintignore --max-warnings 0 node/src/ node/.eslintrc.js npm-scripts.js node/tests/ worker/scripts/gulpfile.js');
+		lintNode();
 
 		break;
 	}
 
 	case 'lint:worker':
 	{
-		execute(`${MAKE} lint -C worker`);
+		lintWorker();
 
 		break;
 	}
 
 	case 'format:worker':
 	{
-		execute(`${MAKE} format -C worker`);
+		executeCmd(`${MAKE} format -C worker`);
 
 		break;
 	}
@@ -125,67 +144,59 @@ switch (task)
 
 	case 'test:node':
 	{
-		taskReplaceVersion();
-
-		if (!process.env.TEST_FILE)
-		{
-			execute('jest');
-		}
-		else
-		{
-			execute(`jest --testPathPattern ${process.env.TEST_FILE}`);
-		}
+		buildTypescript(/* force */ false);
+		replaceVersion();
+		testNode();
 
 		break;
 	}
 
 	case 'test:worker':
 	{
-		execute(`${MAKE} test -C worker`);
-		break;
-	}
-
-	case 'coverage':
-	{
-		taskReplaceVersion();
-		execute('jest --coverage');
-		execute('open-cli coverage/lcov-report/index.html');
+		testWorker();
 
 		break;
 	}
 
-	case 'postinstall':
+	case 'coverage:node':
 	{
-		if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			execute('node npm-scripts.js worker:build');
-			// Clean build artifacts except `mediasoup-worker`.
-			execute(`${MAKE} clean-build -C worker`);
-			// Clean downloaded dependencies.
-			execute(`${MAKE} clean-subprojects -C worker`);
-			// Clean PIP/Meson/Ninja.
-			execute(`${MAKE} clean-pip -C worker`);
-		}
+		buildTypescript(/* force */ false);
+		replaceVersion();
+		executeCmd('jest --coverage');
+		executeCmd('open-cli coverage/lcov-report/index.html');
+
+		break;
+	}
+
+	case 'install-deps:node':
+	{
+		installNodeDeps();
 
 		break;
 	}
 
 	case 'release':
 	{
-		execute('node npm-scripts.js typescript:build');
-		execute('npm run lint');
-		execute('npm run test');
-		execute(`git commit -am '${version}'`);
-		execute(`git tag -a ${version} -m '${version}'`);
-		execute(`git push origin v${MAYOR_VERSION} && git push origin --tags`);
-		execute('npm publish');
+		installNodeDeps();
+		buildTypescript(/* force */ true);
+		replaceVersion();
+		buildWorker();
+		lintNode();
+		lintWorker();
+		testNode();
+		testWorker();
+		executeCmd(`git commit -am '${version}'`);
+		executeCmd(`git tag -a ${version} -m '${version}'`);
+		executeCmd(`git push origin v${MAYOR_VERSION}`);
+		executeCmd(`git push origin '${version}'`);
+		executeCmd('npm publish');
 
 		break;
 	}
 
 	case 'install-clang-tools':
 	{
-		execute('npm ci --prefix worker/scripts');
+		executeCmd('npm ci --prefix worker/scripts');
 
 		break;
 	}
@@ -196,8 +207,10 @@ switch (task)
 	}
 }
 
-function taskReplaceVersion()
+function replaceVersion()
 {
+	console.log('npm-scripts.js [INFO] replaceVersion()');
+
 	const files =
 	[
 		'node/lib/index.js',
@@ -214,10 +227,107 @@ function taskReplaceVersion()
 	}
 }
 
-function execute(command)
+function deleteNodeLib()
 {
-	// eslint-disable-next-line no-console
-	console.log(`npm-scripts.js [INFO] executing command: ${command}`);
+	if (!fs.existsSync('node/lib'))
+	{
+		return;
+	}
+
+	console.log('npm-scripts.js [INFO] deleteNodeLib()');
+
+	if (!isWindows)
+	{
+		executeCmd('rm -rf node/lib');
+	}
+	else
+	{
+		// NOTE: This command fails in Windows if the dir doesn't exist.
+		executeCmd('rmdir /s /q "node/lib"', /* exitOnError */ false);
+	}
+}
+
+function buildTypescript(force = false)
+{
+	if (!force && fs.existsSync('node/lib'))
+	{
+		return;
+	}
+
+	console.log('npm-scripts.js [INFO] buildTypescript()');
+
+	deleteNodeLib();
+
+	executeCmd('tsc --project node');
+}
+
+function buildWorker()
+{
+	console.log('npm-scripts.js [INFO] buildWorker()');
+
+	executeCmd(`${MAKE} -C worker`);
+}
+
+function cleanWorker()
+{
+	console.log('npm-scripts.js [INFO] cleanWorker()');
+
+	// Clean build artifacts except `mediasoup-worker`.
+	executeCmd(`${MAKE} clean-build -C worker`);
+	// Clean downloaded dependencies.
+	executeCmd(`${MAKE} clean-subprojects -C worker`);
+	// Clean PIP/Meson/Ninja.
+	executeCmd(`${MAKE} clean-pip -C worker`);
+}
+
+function lintNode()
+{
+	console.log('npm-scripts.js [INFO] lintNode()');
+
+	executeCmd('eslint -c node/.eslintrc.js --max-warnings 0 node/src node/.eslintrc.js npm-scripts.js node/tests worker/scripts/gulpfile.js');
+}
+
+function lintWorker()
+{
+	console.log('npm-scripts.js [INFO] lintWorker()');
+
+	executeCmd(`${MAKE} lint -C worker`);
+}
+
+function testNode()
+{
+	console.log('npm-scripts.js [INFO] testNode()');
+
+	if (!process.env.TEST_FILE)
+	{
+		executeCmd('jest');
+	}
+	else
+	{
+		executeCmd(`jest --testPathPattern ${process.env.TEST_FILE}`);
+	}
+}
+
+function testWorker()
+{
+	console.log('npm-scripts.js [INFO] testWorker()');
+
+	executeCmd(`${MAKE} test -C worker`);
+}
+
+function installNodeDeps()
+{
+	console.log('npm-scripts.js [INFO] installNodeDeps()');
+
+	// Install/update Node deps.
+	executeCmd('npm ci --ignore-scripts');
+	// Update package-lock.json.
+	executeCmd('npm install --package-lock-only --ignore-scripts');
+}
+
+function executeCmd(command, exitOnError = true)
+{
+	console.log(`npm-scripts.js [INFO] executeCmd(): ${command}`);
 
 	try
 	{
@@ -225,6 +335,9 @@ function execute(command)
 	}
 	catch (error)
 	{
-		process.exit(1);
+		if (exitOnError)
+		{
+			process.exit(1);
+		}
 	}
 }

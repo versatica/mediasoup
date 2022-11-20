@@ -6,8 +6,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
-#include "PayloadChannel/PayloadChannelNotifier.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -33,155 +31,12 @@ namespace RTC
 
 	/* Instance methods. */
 
-	Transport::Transport(const std::string& id, Listener* listener, json& data)
-	  : id(id), listener(listener), recvRtxTransmission(1000u), sendRtxTransmission(1000u),
-	    sendProbationTransmission(100u)
-	{
-		MS_TRACE();
-
-		auto jsonDirectIt = data.find("direct");
-
-		// clang-format off
-		if (
-			jsonDirectIt != data.end() &&
-			jsonDirectIt->is_boolean() &&
-			jsonDirectIt->get<bool>()
-		)
-		// clang-format on
-		{
-			this->direct = true;
-
-			auto jsonMaxMessageSizeIt = data.find("maxMessageSize");
-
-			// maxMessageSize is mandatory for direct Transports.
-			// clang-format off
-			if (
-				jsonMaxMessageSizeIt == data.end() ||
-				!Utils::Json::IsPositiveInteger(*jsonMaxMessageSizeIt)
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong maxMessageSize (not a number)");
-			}
-
-			this->maxMessageSize = jsonMaxMessageSizeIt->get<size_t>();
-		}
-
-		auto jsonInitialAvailableOutgoingBitrateIt = data.find("initialAvailableOutgoingBitrate");
-
-		if (jsonInitialAvailableOutgoingBitrateIt != data.end())
-		{
-			if (!Utils::Json::IsPositiveInteger(*jsonInitialAvailableOutgoingBitrateIt))
-				MS_THROW_TYPE_ERROR("wrong initialAvailableOutgoingBitrate (not a number)");
-
-			this->initialAvailableOutgoingBitrate = jsonInitialAvailableOutgoingBitrateIt->get<uint32_t>();
-		}
-
-		auto jsonEnableSctpIt = data.find("enableSctp");
-
-		// clang-format off
-		if (
-			jsonEnableSctpIt != data.end() &&
-			jsonEnableSctpIt->is_boolean() &&
-			jsonEnableSctpIt->get<bool>()
-		)
-		// clang-format on
-		{
-			if (this->direct)
-			{
-				MS_THROW_TYPE_ERROR("cannot enable SCTP in a direct Transport");
-			}
-
-			auto jsonNumSctpStreamsIt     = data.find("numSctpStreams");
-			auto jsonMaxSctpMessageSizeIt = data.find("maxSctpMessageSize");
-			auto jsonSctpSendBufferSizeIt = data.find("sctpSendBufferSize");
-			auto jsonIsDataChannelIt      = data.find("isDataChannel");
-
-			// numSctpStreams is mandatory.
-			// clang-format off
-			if (
-				jsonNumSctpStreamsIt == data.end() ||
-				!jsonNumSctpStreamsIt->is_object()
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong numSctpStreams (not an object)");
-			}
-
-			auto jsonOSIt  = jsonNumSctpStreamsIt->find("OS");
-			auto jsonMISIt = jsonNumSctpStreamsIt->find("MIS");
-
-			// numSctpStreams.OS and numSctpStreams.MIS are mandatory.
-			// clang-format off
-			if (
-				jsonOSIt == jsonNumSctpStreamsIt->end() ||
-				!Utils::Json::IsPositiveInteger(*jsonOSIt) ||
-				jsonMISIt == jsonNumSctpStreamsIt->end() ||
-				!Utils::Json::IsPositiveInteger(*jsonMISIt)
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong numSctpStreams.OS and/or numSctpStreams.MIS (not a number)");
-			}
-
-			auto os  = jsonOSIt->get<uint16_t>();
-			auto mis = jsonMISIt->get<uint16_t>();
-
-			// maxSctpMessageSize is mandatory.
-			// clang-format off
-			if (
-				jsonMaxSctpMessageSizeIt == data.end() ||
-				!Utils::Json::IsPositiveInteger(*jsonMaxSctpMessageSizeIt)
-			)
-			// clang-format on
-			{
-				MS_THROW_TYPE_ERROR("wrong maxSctpMessageSize (not a number)");
-			}
-
-			this->maxMessageSize = jsonMaxSctpMessageSizeIt->get<size_t>();
-
-			size_t sctpSendBufferSize;
-
-			// sctpSendBufferSize is optional.
-			if (jsonSctpSendBufferSizeIt != data.end())
-			{
-				if (!Utils::Json::IsPositiveInteger(*jsonSctpSendBufferSizeIt))
-				{
-					MS_THROW_TYPE_ERROR("wrong sctpSendBufferSize (not a number)");
-				}
-
-				sctpSendBufferSize = jsonSctpSendBufferSizeIt->get<size_t>();
-
-				if (sctpSendBufferSize > MaxSctpSendBufferSize)
-				{
-					MS_THROW_TYPE_ERROR("wrong sctpSendBufferSize (maximum value exceeded)");
-				}
-			}
-			else
-			{
-				sctpSendBufferSize = DefaultSctpSendBufferSize;
-			}
-
-			// isDataChannel is optional.
-			bool isDataChannel{ false };
-
-			if (jsonIsDataChannelIt != data.end() && jsonIsDataChannelIt->is_boolean())
-				isDataChannel = jsonIsDataChannelIt->get<bool>();
-
-			// This may throw.
-			this->sctpAssociation = new RTC::SctpAssociation(
-			  this, os, mis, this->maxMessageSize, sctpSendBufferSize, isDataChannel);
-		}
-
-		// Create the RTCP timer.
-		this->rtcpTimer = new Timer(this);
-	}
-
 	Transport::Transport(
+	  RTC::Shared* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::Transport::BaseTransportOptions* options)
-	  : id(id), listener(listener), recvRtxTransmission(1000u), sendRtxTransmission(1000u),
+	  : id(id), shared(shared), listener(listener), recvRtxTransmission(1000u), sendRtxTransmission(1000u),
 	    sendProbationTransmission(100u)
 	{
 		MS_TRACE();
@@ -733,7 +588,7 @@ namespace RTC
 				CheckNoProducer(producerId);
 
 				// This may throw.
-				auto* producer = new RTC::Producer(producerId, this, body);
+				auto* producer = new RTC::Producer(this->shared, producerId, this, body);
 
 				// Insert the Producer into the RtpListener.
 				// This may throw. If so, delete the Producer and throw.
@@ -910,7 +765,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMPLE:
 					{
 						// This may throw.
-						consumer = new RTC::SimpleConsumer(consumerId, producerId, this, body);
+						consumer =
+						  new RTC::SimpleConsumer(this->shared, consumerId, producerId, this, body);
 
 						break;
 					}
@@ -918,7 +774,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMULCAST:
 					{
 						// This may throw.
-						consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, body);
+						consumer =
+						  new RTC::SimulcastConsumer(this->shared, consumerId, producerId, this, body);
 
 						break;
 					}
@@ -926,7 +783,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::SVC:
 					{
 						// This may throw.
-						consumer = new RTC::SvcConsumer(consumerId, producerId, this, body);
+						consumer =
+						  new RTC::SvcConsumer(this->shared, consumerId, producerId, this, body);
 
 						break;
 					}
@@ -934,7 +792,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::PIPE:
 					{
 						// This may throw.
-						consumer = new RTC::PipeConsumer(consumerId, producerId, this, body);
+						consumer =
+						  new RTC::PipeConsumer(this->shared, consumerId, producerId, this, body);
 
 						break;
 					}
@@ -1144,7 +1003,8 @@ namespace RTC
 				CheckNoDataProducer(dataProducerId);
 
 				// This may throw.
-				auto* dataProducer = new RTC::DataProducer(dataProducerId, this->maxMessageSize, this, body);
+				auto* dataProducer = new RTC::DataProducer(
+				  this->shared, dataProducerId, this->maxMessageSize, this, body);
 
 				// Verify the type of the DataProducer.
 				switch (dataProducer->GetType())
@@ -1242,7 +1102,13 @@ namespace RTC
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  dataConsumerId, dataProducerId, this->sctpAssociation, this, body, this->maxMessageSize);
+				  this->shared,
+				  dataConsumerId,
+				  dataProducerId,
+				  this->sctpAssociation,
+				  this,
+				  body,
+				  this->maxMessageSize);
 
 				// Verify the type of the DataConsumer.
 				switch (dataConsumer->GetType())
@@ -2401,7 +2267,7 @@ namespace RTC
 
 		packet->FillJson(data["info"]);
 
-		Channel::ChannelNotifier::Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::EmitTraceEventBweType(
@@ -2435,7 +2301,7 @@ namespace RTC
 				break;
 		}
 
-		Channel::ChannelNotifier::Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -2758,7 +2624,7 @@ namespace RTC
 
 		data["sctpState"] = "connecting";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2781,7 +2647,7 @@ namespace RTC
 
 		data["sctpState"] = "connected";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationFailed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2804,7 +2670,7 @@ namespace RTC
 
 		data["sctpState"] = "failed";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2827,7 +2693,7 @@ namespace RTC
 
 		data["sctpState"] = "closed";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationSendData(

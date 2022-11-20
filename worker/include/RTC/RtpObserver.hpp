@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/Shared.hpp"
 #include <string>
 
 namespace RTC
@@ -25,7 +26,7 @@ namespace RTC
 		};
 
 	public:
-		RtpObserver(const std::string& id, RTC::RtpObserver::Listener* listener);
+		RtpObserver(RTC::Shared* shared, const std::string& id, RTC::RtpObserver::Listener* listener);
 		virtual ~RtpObserver();
 
 	public:
@@ -52,9 +53,14 @@ namespace RTC
 	public:
 		// Passed by argument.
 		const std::string id;
-		RTC::RtpObserver::Listener* listener{ nullptr };
+
+	protected:
+		// Passed by argument.
+		RTC::Shared* shared{ nullptr };
 
 	private:
+		// Passed by argument.
+		RTC::RtpObserver::Listener* listener{ nullptr };
 		// Others.
 		bool paused{ false };
 	};

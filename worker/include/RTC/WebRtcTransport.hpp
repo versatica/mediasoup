@@ -4,6 +4,7 @@
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"
 #include "RTC/IceServer.hpp"
+#include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/StunPacket.hpp"
 #include "RTC/TcpConnection.hpp"
@@ -49,18 +50,13 @@ namespace RTC
 		};
 
 	public:
-		WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, json& data);
 		WebRtcTransport(
-		  const std::string& id,
-		  RTC::Transport::Listener* listener,
-		  WebRtcTransportListener* webRtcTransportListener,
-		  std::vector<RTC::IceCandidate>& iceCandidates,
-		  json& data);
-		WebRtcTransport(
+		  RTC::Shared* shared,
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  const FBS::WebRtcTransport::WebRtcTransportOptions* options);
 		WebRtcTransport(
+		  RTC::Shared* shared,
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  WebRtcTransportListener* webRtcTransportListener,

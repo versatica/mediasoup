@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/PipeTransport.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -24,10 +23,11 @@ namespace RTC
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	PipeTransport::PipeTransport(
+	  RTC::Shared* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::PipeTransport::PipeTransportOptions* options)
-	  : RTC::Transport::Transport(id, listener, options->base())
+	  : RTC::Transport::Transport(shared, id, listener, options->base())
 	{
 		MS_TRACE();
 
@@ -54,7 +54,7 @@ namespace RTC
 				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
 
 			// NOTE: This may throw.
-			ChannelMessageHandlers::RegisterHandler(
+			this->shared->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*payloadChannelRequestHandler*/ this,
@@ -75,7 +75,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->udpSocket;
 		this->udpSocket = nullptr;

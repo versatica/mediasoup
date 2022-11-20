@@ -2,11 +2,9 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/WebRtcTransport.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
 #include <cmath> // std::pow()
 
 namespace RTC
@@ -29,226 +27,12 @@ namespace RTC
 
 	/* Instance methods. */
 
-	WebRtcTransport::WebRtcTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener, data)
-	{
-		MS_TRACE();
-
-		bool enableUdp{ true };
-		auto jsonEnableUdpIt = data.find("enableUdp");
-
-		if (jsonEnableUdpIt != data.end())
-		{
-			if (!jsonEnableUdpIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong enableUdp (not a boolean)");
-
-			enableUdp = jsonEnableUdpIt->get<bool>();
-		}
-
-		bool enableTcp{ false };
-		auto jsonEnableTcpIt = data.find("enableTcp");
-
-		if (jsonEnableTcpIt != data.end())
-		{
-			if (!jsonEnableTcpIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong enableTcp (not a boolean)");
-
-			enableTcp = jsonEnableTcpIt->get<bool>();
-		}
-
-		bool preferUdp{ false };
-		auto jsonPreferUdpIt = data.find("preferUdp");
-
-		if (jsonPreferUdpIt != data.end())
-		{
-			if (!jsonPreferUdpIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong preferUdp (not a boolean)");
-
-			preferUdp = jsonPreferUdpIt->get<bool>();
-		}
-
-		bool preferTcp{ false };
-		auto jsonPreferTcpIt = data.find("preferTcp");
-
-		if (jsonPreferTcpIt != data.end())
-		{
-			if (!jsonPreferTcpIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong preferTcp (not a boolean)");
-
-			preferTcp = jsonPreferTcpIt->get<bool>();
-		}
-
-		auto jsonListenIpsIt = data.find("listenIps");
-
-		if (jsonListenIpsIt == data.end())
-			MS_THROW_TYPE_ERROR("missing listenIps");
-		else if (!jsonListenIpsIt->is_array())
-			MS_THROW_TYPE_ERROR("wrong listenIps (not an array)");
-		else if (jsonListenIpsIt->empty())
-			MS_THROW_TYPE_ERROR("wrong listenIps (empty array)");
-		else if (jsonListenIpsIt->size() > 8)
-			MS_THROW_TYPE_ERROR("wrong listenIps (too many IPs)");
-
-		std::vector<ListenIp> listenIps(jsonListenIpsIt->size());
-
-		for (size_t i{ 0 }; i < jsonListenIpsIt->size(); ++i)
-		{
-			auto& jsonListenIp = (*jsonListenIpsIt)[i];
-			auto& listenIp     = listenIps[i];
-
-			if (!jsonListenIp.is_object())
-				MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
-
-			auto jsonIpIt = jsonListenIp.find("ip");
-
-			if (jsonIpIt == jsonListenIp.end())
-				MS_THROW_TYPE_ERROR("missing listenIp.ip");
-			else if (!jsonIpIt->is_string())
-				MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string");
-
-			listenIp.ip.assign(jsonIpIt->get<std::string>());
-
-			// This may throw.
-			Utils::IP::NormalizeIp(listenIp.ip);
-
-			auto jsonAnnouncedIpIt = jsonListenIp.find("announcedIp");
-
-			if (jsonAnnouncedIpIt != jsonListenIp.end())
-			{
-				if (!jsonAnnouncedIpIt->is_string())
-					MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string)");
-
-				listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
-			}
-		}
-
-		uint16_t port{ 0 };
-		auto jsonPortIt = data.find("port");
-
-		if (jsonPortIt != data.end())
-		{
-			if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
-				MS_THROW_TYPE_ERROR("wrong port (not a positive number)");
-
-			port = jsonPortIt->get<uint16_t>();
-		}
-
-		try
-		{
-			uint16_t iceLocalPreferenceDecrement{ 0 };
-
-			if (enableUdp && enableTcp)
-				this->iceCandidates.reserve(2 * jsonListenIpsIt->size());
-			else
-				this->iceCandidates.reserve(jsonListenIpsIt->size());
-
-			for (auto& listenIp : listenIps)
-			{
-				if (enableUdp)
-				{
-					uint16_t iceLocalPreference =
-					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
-
-					if (preferUdp)
-						iceLocalPreference += 1000;
-
-					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
-
-					// This may throw.
-					RTC::UdpSocket* udpSocket;
-					if (port != 0)
-						udpSocket = new RTC::UdpSocket(this, listenIp.ip, port);
-					else
-						udpSocket = new RTC::UdpSocket(this, listenIp.ip);
-
-					this->udpSockets[udpSocket] = listenIp.announcedIp;
-
-					if (listenIp.announcedIp.empty())
-						this->iceCandidates.emplace_back(udpSocket, icePriority);
-					else
-						this->iceCandidates.emplace_back(udpSocket, icePriority, listenIp.announcedIp);
-				}
-
-				if (enableTcp)
-				{
-					uint16_t iceLocalPreference =
-					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
-
-					if (preferTcp)
-						iceLocalPreference += 1000;
-
-					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
-
-					// This may throw.
-					RTC::TcpServer* tcpServer;
-					if (port != 0)
-						tcpServer = new RTC::TcpServer(this, this, listenIp.ip, port);
-					else
-						tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
-
-					this->tcpServers[tcpServer] = listenIp.announcedIp;
-
-					if (listenIp.announcedIp.empty())
-						this->iceCandidates.emplace_back(tcpServer, icePriority);
-					else
-						this->iceCandidates.emplace_back(tcpServer, icePriority, listenIp.announcedIp);
-				}
-
-				// Decrement initial ICE local preference for next IP.
-				iceLocalPreferenceDecrement += 100;
-			}
-
-			// Create a ICE server.
-			this->iceServer = new RTC::IceServer(
-			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
-
-			// Create a DTLS transport.
-			this->dtlsTransport = new RTC::DtlsTransport(this);
-
-			// NOTE: This may throw.
-			ChannelMessageHandlers::RegisterHandler(
-			  this->id,
-			  /*channelRequestHandler*/ this,
-			  /*payloadChannelRequestHandler*/ this,
-			  /*payloadChannelNotificationHandler*/ this);
-		}
-		catch (const MediaSoupError& error)
-		{
-			// Must delete everything since the destructor won't be called.
-
-			delete this->dtlsTransport;
-			this->dtlsTransport = nullptr;
-
-			delete this->iceServer;
-			this->iceServer = nullptr;
-
-			for (auto& kv : this->udpSockets)
-			{
-				auto* udpSocket = kv.first;
-
-				delete udpSocket;
-			}
-			this->udpSockets.clear();
-
-			for (auto& kv : this->tcpServers)
-			{
-				auto* tcpServer = kv.first;
-
-				delete tcpServer;
-			}
-			this->tcpServers.clear();
-
-			this->iceCandidates.clear();
-
-			throw;
-		}
-	}
-
 	WebRtcTransport::WebRtcTransport(
+	  RTC::Shared* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
-	  : RTC::Transport::Transport(id, listener, options->base())
+	  : RTC::Transport::Transport(shared, id, listener, options->base())
 	{
 		MS_TRACE();
 
@@ -337,7 +121,7 @@ namespace RTC
 			this->dtlsTransport = new RTC::DtlsTransport(this);
 
 			// NOTE: This may throw.
-			ChannelMessageHandlers::RegisterHandler(
+			this->shared->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*payloadChannelRequestHandler*/ this,
@@ -379,64 +163,13 @@ namespace RTC
 	 * This constructor is used when the WebRtcTransport uses a WebRtcServer.
 	 */
 	WebRtcTransport::WebRtcTransport(
-	  const std::string& id,
-	  RTC::Transport::Listener* listener,
-	  WebRtcTransportListener* webRtcTransportListener,
-	  std::vector<RTC::IceCandidate>& iceCandidates,
-	  json& data)
-	  : RTC::Transport::Transport(id, listener, data),
-	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
-	{
-		MS_TRACE();
-
-		try
-		{
-			if (iceCandidates.empty())
-				MS_THROW_TYPE_ERROR("empty iceCandidates");
-
-			// Create a ICE server.
-			this->iceServer = new RTC::IceServer(
-			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
-
-			// Create a DTLS transport.
-			this->dtlsTransport = new RTC::DtlsTransport(this);
-
-			// Notify the webRtcTransportListener.
-			this->webRtcTransportListener->OnWebRtcTransportCreated(this);
-
-			// NOTE: This may throw.
-			ChannelMessageHandlers::RegisterHandler(
-			  this->id,
-			  /*channelRequestHandler*/ this,
-			  /*payloadChannelRequestHandler*/ this,
-			  /*payloadChannelNotificationHandler*/ this);
-		}
-		catch (const MediaSoupError& error)
-		{
-			// Must delete everything since the destructor won't be called.
-
-			delete this->dtlsTransport;
-			this->dtlsTransport = nullptr;
-
-			delete this->iceServer;
-			this->iceServer = nullptr;
-
-			this->iceCandidates.clear();
-
-			throw;
-		}
-	}
-
-	/**
-	 * This constructor is used when the WebRtcTransport uses a WebRtcServer.
-	 */
-	WebRtcTransport::WebRtcTransport(
+	  RTC::Shared* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  WebRtcTransportListener* webRtcTransportListener,
 	  std::vector<RTC::IceCandidate>& iceCandidates,
 	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
-	  : RTC::Transport::Transport(id, listener, options->base()),
+	  : RTC::Transport::Transport(shared, id, listener, options->base()),
 	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
 	{
 		MS_TRACE();
@@ -457,7 +190,7 @@ namespace RTC
 			this->webRtcTransportListener->OnWebRtcTransportCreated(this);
 
 			// NOTE: This may throw.
-			ChannelMessageHandlers::RegisterHandler(
+			this->shared->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*payloadChannelRequestHandler*/ this,
@@ -483,7 +216,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		// Must delete the DTLS transport first since it will generate a DTLS alert
 		// to be sent.
@@ -1494,7 +1227,7 @@ namespace RTC
 
 		this->iceServer->GetSelectedTuple()->FillJson(data["iceSelectedTuple"]);
 
-		Channel::ChannelNotifier::Emit(this->id, "iceselectedtuplechange", data);
+		this->shared->channelNotifier->Emit(this->id, "iceselectedtuplechange", data);
 	}
 
 	inline void WebRtcTransport::OnIceServerConnected(const RTC::IceServer* /*iceServer*/)
@@ -1508,7 +1241,7 @@ namespace RTC
 
 		data["iceState"] = "connected";
 
-		Channel::ChannelNotifier::Emit(this->id, "icestatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "icestatechange", data);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1531,7 +1264,7 @@ namespace RTC
 
 		data["iceState"] = "completed";
 
-		Channel::ChannelNotifier::Emit(this->id, "icestatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "icestatechange", data);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1554,7 +1287,7 @@ namespace RTC
 
 		data["iceState"] = "disconnected";
 
-		Channel::ChannelNotifier::Emit(this->id, "icestatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "icestatechange", data);
 
 		// If DTLS was already connected, notify the parent class.
 		if (this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
@@ -1574,7 +1307,7 @@ namespace RTC
 
 		data["dtlsState"] = "connecting";
 
-		Channel::ChannelNotifier::Emit(this->id, "dtlsstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportConnected(
@@ -1618,7 +1351,7 @@ namespace RTC
 			data["dtlsState"]      = "connected";
 			data["dtlsRemoteCert"] = remoteCert;
 
-			Channel::ChannelNotifier::Emit(this->id, "dtlsstatechange", data);
+			this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
 
 			// Tell the parent class.
 			RTC::Transport::Connected();
@@ -1643,7 +1376,7 @@ namespace RTC
 
 		data["dtlsState"] = "failed";
 
-		Channel::ChannelNotifier::Emit(this->id, "dtlsstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1657,7 +1390,7 @@ namespace RTC
 
 		data["dtlsState"] = "closed";
 
-		Channel::ChannelNotifier::Emit(this->id, "dtlsstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
 
 		// Tell the parent class.
 		RTC::Transport::Disconnected();

@@ -2,6 +2,7 @@
 #define MS_RTC_AUDIO_LEVEL_OBSERVER_HPP
 
 #include "RTC/RtpObserver.hpp"
+#include "RTC/Shared.hpp"
 #include "handles/Timer.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <nlohmann/json.hpp>
@@ -21,6 +22,7 @@ namespace RTC
 
 	public:
 		AudioLevelObserver(
+		  RTC::Shared* shared,
 		  const std::string& id,
 		  RTC::RtpObserver::Listener* listener,
 		  const FBS::Router::AudioLevelObserverOptions* options);

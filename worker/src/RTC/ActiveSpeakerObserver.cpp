@@ -1,11 +1,9 @@
 #define MS_CLASS "RTC::ActiveSpeakerObserver"
 
 #include "RTC/ActiveSpeakerObserver.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -97,10 +95,11 @@ namespace RTC
 	}
 
 	ActiveSpeakerObserver::ActiveSpeakerObserver(
+	  RTC::Shared* shared,
 	  const std::string& id,
 	  RTC::RtpObserver::Listener* listener,
 	  const FBS::Router::ActiveSpeakerObserverOptions* options)
-	  : RTC::RtpObserver(id, listener)
+	  : RTC::RtpObserver(shared, id, listener)
 	{
 		MS_TRACE();
 
@@ -116,7 +115,7 @@ namespace RTC
 		this->periodicTimer->Start(interval, interval);
 
 		// NOTE: This may throw.
-		ChannelMessageHandlers::RegisterHandler(
+		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -127,7 +126,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->periodicTimer;
 
@@ -275,7 +274,7 @@ namespace RTC
 			json data          = json::object();
 			data["producerId"] = this->dominantId;
 
-			Channel::ChannelNotifier::Emit(this->id, "dominantspeaker", data);
+			this->shared->channelNotifier->Emit(this->id, "dominantspeaker", data);
 		}
 	}
 

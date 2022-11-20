@@ -2,11 +2,9 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/PlainTransport.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
 
 namespace RTC
 {
@@ -46,169 +44,12 @@ namespace RTC
 
 	/* Instance methods. */
 
-	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-	PlainTransport::PlainTransport(const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(id, listener, data)
-	{
-		MS_TRACE();
-
-		auto jsonListenIpIt = data.find("listenIp");
-
-		if (jsonListenIpIt == data.end())
-			MS_THROW_TYPE_ERROR("missing listenIp");
-		else if (!jsonListenIpIt->is_object())
-			MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
-
-		auto jsonIpIt = jsonListenIpIt->find("ip");
-
-		if (jsonIpIt == jsonListenIpIt->end())
-			MS_THROW_TYPE_ERROR("missing listenIp.ip");
-		else if (!jsonIpIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string)");
-
-		this->listenIp.ip.assign(jsonIpIt->get<std::string>());
-
-		// This may throw.
-		Utils::IP::NormalizeIp(this->listenIp.ip);
-
-		auto jsonAnnouncedIpIt = jsonListenIpIt->find("announcedIp");
-
-		if (jsonAnnouncedIpIt != jsonListenIpIt->end())
-		{
-			if (!jsonAnnouncedIpIt->is_string())
-				MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string");
-
-			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
-		}
-
-		uint16_t port{ 0 };
-		auto jsonPortIt = data.find("port");
-
-		if (jsonPortIt != data.end())
-		{
-			if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
-				MS_THROW_TYPE_ERROR("wrong port (not a positive number)");
-
-			port = jsonPortIt->get<uint16_t>();
-		}
-
-		auto jsonRtcpMuxIt = data.find("rtcpMux");
-
-		if (jsonRtcpMuxIt != data.end())
-		{
-			if (!jsonRtcpMuxIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong rtcpMux (not a boolean)");
-
-			this->rtcpMux = jsonRtcpMuxIt->get<bool>();
-		}
-
-		auto jsonComediaIt = data.find("comedia");
-
-		if (jsonComediaIt != data.end())
-		{
-			if (!jsonComediaIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong comedia (not a boolean)");
-
-			this->comedia = jsonComediaIt->get<bool>();
-		}
-
-		auto jsonEnableSrtpIt = data.find("enableSrtp");
-
-		// clang-format off
-		if (
-			jsonEnableSrtpIt != data.end() &&
-			jsonEnableSrtpIt->is_boolean() &&
-			jsonEnableSrtpIt->get<bool>()
-		)
-		// clang-format on
-		{
-			auto jsonSrtpCryptoSuiteIt = data.find("srtpCryptoSuite");
-
-			if (jsonSrtpCryptoSuiteIt == data.end() || !jsonSrtpCryptoSuiteIt->is_string())
-				MS_THROW_TYPE_ERROR("missing srtpCryptoSuite)");
-
-			// Ensure it's a crypto suite supported by us.
-			auto it =
-			  PlainTransport::string2SrtpCryptoSuite.find(jsonSrtpCryptoSuiteIt->get<std::string>());
-
-			if (it == PlainTransport::string2SrtpCryptoSuite.end())
-				MS_THROW_TYPE_ERROR("invalid/unsupported srtpCryptoSuite");
-
-			// NOTE: The SRTP crypto suite may change later on connect().
-			this->srtpCryptoSuite = it->second;
-
-			switch (this->srtpCryptoSuite)
-			{
-				case RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
-				{
-					this->srtpMasterLength = SrtpAesGcm256MasterLength;
-
-					break;
-				}
-
-				case RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM:
-				{
-					this->srtpMasterLength = SrtpAesGcm128MasterLength;
-
-					break;
-				}
-
-				case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
-				case RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
-				{
-					this->srtpMasterLength = SrtpMasterLength;
-
-					break;
-				}
-
-				default:
-				{
-					MS_ABORT("unknown SRTP crypto suite");
-				}
-			}
-
-			this->srtpKey       = Utils::Crypto::GetRandomString(this->srtpMasterLength);
-			this->srtpKeyBase64 = Utils::String::Base64Encode(this->srtpKey);
-		}
-
-		try
-		{
-			// This may throw.
-			if (port != 0)
-				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip, port);
-			else
-				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
-
-			if (!this->rtcpMux)
-			{
-				// This may throw.
-				this->rtcpUdpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
-			}
-
-			// NOTE: This may throw.
-			ChannelMessageHandlers::RegisterHandler(
-			  this->id,
-			  /*channelRequestHandler*/ this,
-			  /*payloadChannelRequestHandler*/ this,
-			  /*payloadChannelNotificationHandler*/ this);
-		}
-		catch (const MediaSoupError& error)
-		{
-			delete this->udpSocket;
-			this->udpSocket = nullptr;
-
-			delete this->rtcpUdpSocket;
-			this->rtcpUdpSocket = nullptr;
-
-			throw;
-		}
-	}
-
 	PlainTransport::PlainTransport(
+	  RTC::Shared* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::PlainTransport::PlainTransportOptions* options)
-	  : RTC::Transport::Transport(id, listener, options->base())
+	  : RTC::Transport::Transport(shared, id, listener, options->base())
 	{
 		MS_TRACE();
 
@@ -286,7 +127,7 @@ namespace RTC
 			}
 
 			// NOTE: This may throw.
-			ChannelMessageHandlers::RegisterHandler(
+			this->shared->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
 			  /*payloadChannelRequestHandler*/ this,
@@ -308,7 +149,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->udpSocket;
 		this->udpSocket = nullptr;
@@ -1046,7 +887,7 @@ namespace RTC
 
 				this->tuple->FillJson(data["tuple"]);
 
-				Channel::ChannelNotifier::Emit(this->id, "tuple", data);
+				this->shared->channelNotifier->Emit(this->id, "tuple", data);
 
 				RTC::Transport::Connected();
 			}
@@ -1113,7 +954,7 @@ namespace RTC
 
 				this->tuple->FillJson(data["tuple"]);
 
-				Channel::ChannelNotifier::Emit(this->id, "tuple", data);
+				this->shared->channelNotifier->Emit(this->id, "tuple", data);
 
 				RTC::Transport::Connected();
 			}
@@ -1141,7 +982,7 @@ namespace RTC
 
 			this->rtcpTuple->FillJson(data["rtcpTuple"]);
 
-			Channel::ChannelNotifier::Emit(this->id, "rtcptuple", data);
+			this->shared->channelNotifier->Emit(this->id, "rtcptuple", data);
 		}
 		// If RTCP-mux verify that the packet's tuple matches our RTP tuple.
 		else if (this->rtcpMux && !this->tuple->Compare(tuple))
@@ -1203,7 +1044,7 @@ namespace RTC
 
 				this->tuple->FillJson(data["tuple"]);
 
-				Channel::ChannelNotifier::Emit(this->id, "tuple", data);
+				this->shared->channelNotifier->Emit(this->id, "tuple", data);
 
 				RTC::Transport::Connected();
 			}

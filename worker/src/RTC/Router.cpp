@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Router.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -17,12 +16,13 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Router::Router(const std::string& id, Listener* listener) : id(id), listener(listener)
+	Router::Router(RTC::Shared* shared, const std::string& id, Listener* listener)
+	  : id(id), shared(shared), listener(listener)
 	{
 		MS_TRACE();
 
 		// NOTE: This may throw.
-		ChannelMessageHandlers::RegisterHandler(
+		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -33,7 +33,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		// Close all Transports.
 		for (auto& kv : this->mapTransports)
@@ -206,7 +206,8 @@ namespace RTC
 				CheckNoTransport(transportId);
 
 				// This may throw.
-				auto* webRtcTransport = new RTC::WebRtcTransport(transportId, this, body->options());
+				auto* webRtcTransport =
+				  new RTC::WebRtcTransport(this->shared, transportId, this, body->options());
 
 				// Insert into the map.
 				this->mapTransports[transportId] = webRtcTransport;
@@ -243,7 +244,7 @@ namespace RTC
 
 				// This may throw.
 				auto* webRtcTransport =
-				  new RTC::WebRtcTransport(transportId, this, webRtcServer, iceCandidates, options);
+				  new RTC::WebRtcTransport(this->shared, transportId, this, webRtcServer, iceCandidates, options);
 
 				// Insert into the map.
 				this->mapTransports[transportId] = webRtcTransport;
@@ -266,7 +267,7 @@ namespace RTC
 				// This may throw.
 				CheckNoTransport(transportId);
 
-				auto* plainTransport = new RTC::PlainTransport(transportId, this, body->options());
+				auto* plainTransport = new RTC::PlainTransport(this->shared, transportId, this, body->options());
 
 				// Insert into the map.
 				this->mapTransports[transportId] = plainTransport;
@@ -288,7 +289,7 @@ namespace RTC
 				// This may throw.
 				CheckNoTransport(transportId);
 
-				auto* pipeTransport = new RTC::PipeTransport(transportId, this, body->options());
+				auto* pipeTransport = new RTC::PipeTransport(this->shared, transportId, this, body->options());
 
 				// Insert into the map.
 				this->mapTransports[transportId] = pipeTransport;
@@ -310,7 +311,7 @@ namespace RTC
 				// This may throw.
 				CheckNoTransport(transportId);
 
-				auto* directTransport = new RTC::DirectTransport(transportId, this, body->options());
+				auto* directTransport = new RTC::DirectTransport(this->shared, transportId, this, body->options());
 
 				// Insert into the map.
 				this->mapTransports[transportId] = directTransport;
@@ -333,7 +334,7 @@ namespace RTC
 				CheckNoRtpObserver(rtpObserverId);
 
 				auto* activeSpeakerObserver =
-				  new RTC::ActiveSpeakerObserver(rtpObserverId, this, body->options());
+				  new RTC::ActiveSpeakerObserver(this->shared, rtpObserverId, this, body->options());
 
 				// Insert into the map.
 				this->mapRtpObservers[rtpObserverId] = activeSpeakerObserver;
@@ -353,7 +354,7 @@ namespace RTC
 				// This may throw.
 				CheckNoRtpObserver(rtpObserverId);
 
-				auto* audioLevelObserver = new RTC::AudioLevelObserver(rtpObserverId, this, body->options());
+				auto* audioLevelObserver = new RTC::AudioLevelObserver(this->shared, rtpObserverId, this, body->options());
 
 				// Insert into the map.
 				this->mapRtpObservers[rtpObserverId] = audioLevelObserver;

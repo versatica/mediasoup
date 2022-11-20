@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DataProducer.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -14,11 +13,12 @@ namespace RTC
 	/* Instance methods. */
 
 	DataProducer::DataProducer(
+	  RTC::Shared* shared,
 	  const std::string& id,
 	  size_t maxMessageSize,
 	  RTC::DataProducer::Listener* listener,
 	  const FBS::Transport::ProduceDataRequest* data)
-	  : id(id), maxMessageSize(maxMessageSize), listener(listener)
+	  : id(id), shared(shared), maxMessageSize(maxMessageSize), listener(listener)
 	{
 		MS_TRACE();
 
@@ -53,7 +53,7 @@ namespace RTC
 			this->protocol = data->protocol()->str();
 
 		// NOTE: This may throw.
-		ChannelMessageHandlers::RegisterHandler(
+		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -64,7 +64,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 	}
 
 	flatbuffers::Offset<FBS::DataProducer::DumpResponse> DataProducer::FillBuffer(

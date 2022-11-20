@@ -12,6 +12,7 @@
 #include "RTC/RtpObserver.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
+#include "RTC/Shared.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/WebRtcServer.hpp"
 #include <absl/container/flat_hash_map.h>
@@ -36,7 +37,7 @@ namespace RTC
 		};
 
 	public:
-		explicit Router(const std::string& id, Listener* listener);
+		explicit Router(RTC::Shared* shared, const std::string& id, Listener* listener);
 		virtual ~Router();
 
 	public:
@@ -109,9 +110,11 @@ namespace RTC
 	public:
 		// Passed by argument.
 		const std::string id;
-		Listener* listener{ nullptr };
 
 	private:
+		// Passed by argument.
+		RTC::Shared* shared{ nullptr };
+		Listener* listener{ nullptr };
 		// Allocated by this.
 		absl::flat_hash_map<std::string, RTC::Transport*> mapTransports;
 		absl::flat_hash_map<std::string, RTC::RtpObserver*> mapRtpObservers;

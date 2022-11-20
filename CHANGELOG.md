@@ -1,6 +1,12 @@
 # Changelog
 
 
+### NEXT
+
+* Node: Remove compiled JavaScript from repository and compile TypeScript code on NPM `prepare` script on demand when installed via git (PR #954).
+* `Worker`: Add `RTC::Shared` singleton for RTC entities (PR #953).
+
+
 ### 3.11.3
 
 * `ChannelMessageHandlers`: Make `RegisterHandler()` not remove the existing handler if another one with same `id` is given (PR #952).

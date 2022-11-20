@@ -3,6 +3,7 @@
 
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/IceCandidate.hpp"
+#include "RTC/Shared.hpp"
 #include "RTC/StunPacket.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
@@ -39,6 +40,7 @@ namespace RTC
 
 	public:
 		WebRtcServer(
+		  RTC::Shared* shared,
 		  const std::string& id,
 		  const flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::WebRtcServerListenInfo>>*
 		    listenInfos);
@@ -92,6 +94,8 @@ namespace RTC
 		const std::string id;
 
 	private:
+		// Passed by argument.
+		RTC::Shared* shared{ nullptr };
 		// Vector of UdpSockets and TcpServers in the user given order.
 		std::vector<UdpSocketOrTcpServer> udpSocketOrTcpServers;
 		// Set of WebRtcTransports.
