@@ -182,7 +182,6 @@ namespace RTC
 		  this->producerId.c_str(),
 		  this->kind == RTC::Media::Kind::AUDIO ? FBS::RtpParameters::MediaKind::AUDIO
 		                                        : FBS::RtpParameters::MediaKind::VIDEO,
-		  RtpParameters::GetTypeString(this->type).c_str(),
 		  rtpParameters,
 		  &consumableRtpEncodings,
 		  &supportedCodecPayloadTypes,
@@ -192,7 +191,10 @@ namespace RTC
 		  this->priority);
 
 		return FBS::Consumer::CreateDumpResponse(
-		  builder, FBS::Consumer::ConsumerDumpData::BaseConsumerDump, baseConsumerDump.Union());
+		  builder,
+		  FBS::Consumer::ConsumerDumpData::BaseConsumerDump,
+		  baseConsumerDump.Union(),
+		  FBS::RtpParameters::Type(this->type));
 	}
 
 	void Consumer::HandleRequest(Channel::ChannelRequest* request)

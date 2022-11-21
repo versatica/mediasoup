@@ -527,7 +527,8 @@ struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_DATA_TYPE = 4,
-    VT_DATA = 6
+    VT_DATA = 6,
+    VT_TYPE = 8
   };
   FBS::Consumer::ConsumerDumpData data_type() const {
     return static_cast<FBS::Consumer::ConsumerDumpData>(GetField<uint8_t>(VT_DATA_TYPE, 0));
@@ -551,11 +552,15 @@ struct DumpResponse FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const FBS::Consumer::PipeConsumerDump *data_as_PipeConsumerDump() const {
     return data_type() == FBS::Consumer::ConsumerDumpData::PipeConsumerDump ? static_cast<const FBS::Consumer::PipeConsumerDump *>(data()) : nullptr;
   }
+  FBS::RtpParameters::Type type() const {
+    return static_cast<FBS::RtpParameters::Type>(GetField<uint8_t>(VT_TYPE, 0));
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_DATA_TYPE, 1) &&
            VerifyOffset(verifier, VT_DATA) &&
            VerifyConsumerDumpData(verifier, data(), data_type()) &&
+           VerifyField<uint8_t>(verifier, VT_TYPE, 1) &&
            verifier.EndTable();
   }
 };
@@ -590,6 +595,9 @@ struct DumpResponseBuilder {
   void add_data(flatbuffers::Offset<void> data) {
     fbb_.AddOffset(DumpResponse::VT_DATA, data);
   }
+  void add_type(FBS::RtpParameters::Type type) {
+    fbb_.AddElement<uint8_t>(DumpResponse::VT_TYPE, static_cast<uint8_t>(type), 0);
+  }
   explicit DumpResponseBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -604,9 +612,11 @@ struct DumpResponseBuilder {
 inline flatbuffers::Offset<DumpResponse> CreateDumpResponse(
     flatbuffers::FlatBufferBuilder &_fbb,
     FBS::Consumer::ConsumerDumpData data_type = FBS::Consumer::ConsumerDumpData::NONE,
-    flatbuffers::Offset<void> data = 0) {
+    flatbuffers::Offset<void> data = 0,
+    FBS::RtpParameters::Type type = FBS::RtpParameters::Type::NONE) {
   DumpResponseBuilder builder_(_fbb);
   builder_.add_data(data);
+  builder_.add_type(type);
   builder_.add_data_type(data_type);
   return builder_.Finish();
 }
@@ -620,14 +630,13 @@ struct BaseConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_ID = 4,
     VT_PRODUCERID = 6,
     VT_KIND = 8,
-    VT_TYPE = 10,
-    VT_RTPPARAMETERS = 12,
-    VT_CONSUMABLERTPENCODINGS = 14,
-    VT_SUPPORTEDCODECPAYLOADTYPES = 16,
-    VT_TRACEEVENTTYPES = 18,
-    VT_PAUSED = 20,
-    VT_PRODUCERPAUSED = 22,
-    VT_PRIORTY = 24
+    VT_RTPPARAMETERS = 10,
+    VT_CONSUMABLERTPENCODINGS = 12,
+    VT_SUPPORTEDCODECPAYLOADTYPES = 14,
+    VT_TRACEEVENTTYPES = 16,
+    VT_PAUSED = 18,
+    VT_PRODUCERPAUSED = 20,
+    VT_PRIORITY = 22
   };
   const flatbuffers::String *id() const {
     return GetPointer<const flatbuffers::String *>(VT_ID);
@@ -637,9 +646,6 @@ struct BaseConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   FBS::RtpParameters::MediaKind kind() const {
     return static_cast<FBS::RtpParameters::MediaKind>(GetField<uint8_t>(VT_KIND, 0));
-  }
-  const flatbuffers::String *type() const {
-    return GetPointer<const flatbuffers::String *>(VT_TYPE);
   }
   const FBS::RtpParameters::RtpParameters *rtpParameters() const {
     return GetPointer<const FBS::RtpParameters::RtpParameters *>(VT_RTPPARAMETERS);
@@ -659,8 +665,8 @@ struct BaseConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   bool producerPaused() const {
     return GetField<uint8_t>(VT_PRODUCERPAUSED, 0) != 0;
   }
-  uint8_t priorty() const {
-    return GetField<uint8_t>(VT_PRIORTY, 0);
+  uint8_t priority() const {
+    return GetField<uint8_t>(VT_PRIORITY, 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -669,8 +675,6 @@ struct BaseConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyOffsetRequired(verifier, VT_PRODUCERID) &&
            verifier.VerifyString(producerId()) &&
            VerifyField<uint8_t>(verifier, VT_KIND, 1) &&
-           VerifyOffsetRequired(verifier, VT_TYPE) &&
-           verifier.VerifyString(type()) &&
            VerifyOffsetRequired(verifier, VT_RTPPARAMETERS) &&
            verifier.VerifyTable(rtpParameters()) &&
            VerifyOffset(verifier, VT_CONSUMABLERTPENCODINGS) &&
@@ -683,7 +687,7 @@ struct BaseConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            verifier.VerifyVectorOfStrings(traceEventTypes()) &&
            VerifyField<uint8_t>(verifier, VT_PAUSED, 1) &&
            VerifyField<uint8_t>(verifier, VT_PRODUCERPAUSED, 1) &&
-           VerifyField<uint8_t>(verifier, VT_PRIORTY, 1) &&
+           VerifyField<uint8_t>(verifier, VT_PRIORITY, 1) &&
            verifier.EndTable();
   }
 };
@@ -700,9 +704,6 @@ struct BaseConsumerDumpBuilder {
   }
   void add_kind(FBS::RtpParameters::MediaKind kind) {
     fbb_.AddElement<uint8_t>(BaseConsumerDump::VT_KIND, static_cast<uint8_t>(kind), 0);
-  }
-  void add_type(flatbuffers::Offset<flatbuffers::String> type) {
-    fbb_.AddOffset(BaseConsumerDump::VT_TYPE, type);
   }
   void add_rtpParameters(flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters) {
     fbb_.AddOffset(BaseConsumerDump::VT_RTPPARAMETERS, rtpParameters);
@@ -722,8 +723,8 @@ struct BaseConsumerDumpBuilder {
   void add_producerPaused(bool producerPaused) {
     fbb_.AddElement<uint8_t>(BaseConsumerDump::VT_PRODUCERPAUSED, static_cast<uint8_t>(producerPaused), 0);
   }
-  void add_priorty(uint8_t priorty) {
-    fbb_.AddElement<uint8_t>(BaseConsumerDump::VT_PRIORTY, priorty, 0);
+  void add_priority(uint8_t priority) {
+    fbb_.AddElement<uint8_t>(BaseConsumerDump::VT_PRIORITY, priority, 0);
   }
   explicit BaseConsumerDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -734,7 +735,6 @@ struct BaseConsumerDumpBuilder {
     auto o = flatbuffers::Offset<BaseConsumerDump>(end);
     fbb_.Required(o, BaseConsumerDump::VT_ID);
     fbb_.Required(o, BaseConsumerDump::VT_PRODUCERID);
-    fbb_.Required(o, BaseConsumerDump::VT_TYPE);
     fbb_.Required(o, BaseConsumerDump::VT_RTPPARAMETERS);
     fbb_.Required(o, BaseConsumerDump::VT_TRACEEVENTTYPES);
     return o;
@@ -746,23 +746,21 @@ inline flatbuffers::Offset<BaseConsumerDump> CreateBaseConsumerDump(
     flatbuffers::Offset<flatbuffers::String> id = 0,
     flatbuffers::Offset<flatbuffers::String> producerId = 0,
     FBS::RtpParameters::MediaKind kind = FBS::RtpParameters::MediaKind::ALL,
-    flatbuffers::Offset<flatbuffers::String> type = 0,
     flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>> consumableRtpEncodings = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint8_t>> supportedCodecPayloadTypes = 0,
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>> traceEventTypes = 0,
     bool paused = false,
     bool producerPaused = false,
-    uint8_t priorty = 0) {
+    uint8_t priority = 0) {
   BaseConsumerDumpBuilder builder_(_fbb);
   builder_.add_traceEventTypes(traceEventTypes);
   builder_.add_supportedCodecPayloadTypes(supportedCodecPayloadTypes);
   builder_.add_consumableRtpEncodings(consumableRtpEncodings);
   builder_.add_rtpParameters(rtpParameters);
-  builder_.add_type(type);
   builder_.add_producerId(producerId);
   builder_.add_id(id);
-  builder_.add_priorty(priorty);
+  builder_.add_priority(priority);
   builder_.add_producerPaused(producerPaused);
   builder_.add_paused(paused);
   builder_.add_kind(kind);
@@ -774,17 +772,15 @@ inline flatbuffers::Offset<BaseConsumerDump> CreateBaseConsumerDumpDirect(
     const char *id = nullptr,
     const char *producerId = nullptr,
     FBS::RtpParameters::MediaKind kind = FBS::RtpParameters::MediaKind::ALL,
-    const char *type = nullptr,
     flatbuffers::Offset<FBS::RtpParameters::RtpParameters> rtpParameters = 0,
     const std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> *consumableRtpEncodings = nullptr,
     const std::vector<uint8_t> *supportedCodecPayloadTypes = nullptr,
     const std::vector<flatbuffers::Offset<flatbuffers::String>> *traceEventTypes = nullptr,
     bool paused = false,
     bool producerPaused = false,
-    uint8_t priorty = 0) {
+    uint8_t priority = 0) {
   auto id__ = id ? _fbb.CreateString(id) : 0;
   auto producerId__ = producerId ? _fbb.CreateString(producerId) : 0;
-  auto type__ = type ? _fbb.CreateString(type) : 0;
   auto consumableRtpEncodings__ = consumableRtpEncodings ? _fbb.CreateVector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>(*consumableRtpEncodings) : 0;
   auto supportedCodecPayloadTypes__ = supportedCodecPayloadTypes ? _fbb.CreateVector<uint8_t>(*supportedCodecPayloadTypes) : 0;
   auto traceEventTypes__ = traceEventTypes ? _fbb.CreateVector<flatbuffers::Offset<flatbuffers::String>>(*traceEventTypes) : 0;
@@ -793,14 +789,13 @@ inline flatbuffers::Offset<BaseConsumerDump> CreateBaseConsumerDumpDirect(
       id__,
       producerId__,
       kind,
-      type__,
       rtpParameters,
       consumableRtpEncodings__,
       supportedCodecPayloadTypes__,
       traceEventTypes__,
       paused,
       producerPaused,
-      priorty);
+      priority);
 }
 
 struct SimpleConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -1344,17 +1339,20 @@ inline const flatbuffers::TypeTable *EnableTraceEventRequestTypeTable() {
 inline const flatbuffers::TypeTable *DumpResponseTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_UTYPE, 0, 0 },
-    { flatbuffers::ET_SEQUENCE, 0, 0 }
+    { flatbuffers::ET_SEQUENCE, 0, 0 },
+    { flatbuffers::ET_UCHAR, 0, 1 }
   };
   static const flatbuffers::TypeFunction type_refs[] = {
-    FBS::Consumer::ConsumerDumpDataTypeTable
+    FBS::Consumer::ConsumerDumpDataTypeTable,
+    FBS::RtpParameters::TypeTypeTable
   };
   static const char * const names[] = {
     "data_type",
-    "data"
+    "data",
+    "type"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 3, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }
@@ -1364,7 +1362,6 @@ inline const flatbuffers::TypeTable *BaseConsumerDumpTypeTable() {
     { flatbuffers::ET_STRING, 0, -1 },
     { flatbuffers::ET_STRING, 0, -1 },
     { flatbuffers::ET_UCHAR, 0, 0 },
-    { flatbuffers::ET_STRING, 0, -1 },
     { flatbuffers::ET_SEQUENCE, 0, 1 },
     { flatbuffers::ET_SEQUENCE, 1, 2 },
     { flatbuffers::ET_UCHAR, 1, -1 },
@@ -1382,17 +1379,16 @@ inline const flatbuffers::TypeTable *BaseConsumerDumpTypeTable() {
     "id",
     "producerId",
     "kind",
-    "type",
     "rtpParameters",
     "consumableRtpEncodings",
     "supportedCodecPayloadTypes",
     "traceEventTypes",
     "paused",
     "producerPaused",
-    "priorty"
+    "priority"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 11, type_codes, type_refs, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 10, type_codes, type_refs, nullptr, nullptr, names
   };
   return &tt;
 }

@@ -263,7 +263,7 @@ function lintNode()
 {
 	console.log('npm-scripts.js [INFO] lintNode()');
 
-	executeCmd('eslint --ignore-path node/.eslintignore -c node/.eslintrc.js --max-warnings 0 node/src node/.eslintrc.js npm-scripts.js node/tests worker/scripts/gulpfile.js');
+	executeCmd('eslint --ignore-path node/.eslintignore -c node/.eslintrc.js --max-warnings 0 node/src node/.eslintrc.js npm-scripts.js node/src/tests worker/scripts/gulpfile.js');
 }
 
 function lintWorker()

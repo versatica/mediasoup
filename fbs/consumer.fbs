@@ -44,20 +44,20 @@ union ConsumerDumpData {
 
 table DumpResponse {
   data: ConsumerDumpData;
+  type:FBS.RtpParameters.Type;
 }
 
 table BaseConsumerDump {
   id:string (required);
   producer_id:string (required);
   kind:FBS.RtpParameters.MediaKind;
-  type:string (required);
   rtp_parameters:FBS.RtpParameters.RtpParameters (required);
   consumable_rtp_encodings:[FBS.RtpParameters.RtpEncodingParameters];
   supported_codec_payload_types:[uint8];
   trace_event_types:[string] (required);
   paused:bool = false;
   producer_paused:bool = false;
-  priorty:uint8;
+  priority:uint8;
 }
 
 table SimpleConsumerDump {

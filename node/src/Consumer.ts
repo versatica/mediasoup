@@ -7,11 +7,16 @@ import { ProducerStat } from './Producer';
 import {
 	MediaKind,
 	RtpCapabilities,
-	RtpParameters
+	RtpEncodingParameters,
+	RtpParameters,
+	parseRtpEncodingParameters,
+	parseRtpParameters
 } from './RtpParameters';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsConsumer from './fbs/consumer_generated';
+import { Type as FbsRtpParametersType } from './fbs/fbs/rtp-parameters/type';
+import * as utils from './utils';
 
 export type ConsumerOptions =
 {
@@ -497,20 +502,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		response.body(dumpResponse);
 
-		const consumerDump = new FbsConsumer.SimpleConsumerDump();
-
-		dumpResponse.data(consumerDump);
-
-		let data = consumerDump.unpack() as any;
-
-		data = { ...data, ...data.base.data };
-
-		// @ts-ignore.
-		delete data.base;
-
-		return data;
-
-		// TODO: Properly parse it, the same way we do with Transports.
+		return parseConsumerDump(dumpResponse);
 	}
 
 	/**
@@ -844,5 +836,72 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 					}
 				}
 			});
+	}
+}
+
+type BaseConsumerDump = {
+	id: string;
+	producerId:string;
+	kind:MediaKind;
+	rtpParameters:RtpParameters;
+	consumableRtpEncodings?:RtpEncodingParameters[];
+	supportedCodecPayloadTypes:number[];
+	traceEventTypes:string[];
+	paused:boolean;
+	producerPaused:boolean;
+	priorty:number;
+};
+
+type SimpleConsumerDump = BaseConsumerDump & {
+	type: string;
+};
+
+type ConsumerDump = SimpleConsumerDump;
+
+function parseBaseConsumerDump(data: FbsConsumer.BaseConsumerDump): BaseConsumerDump
+{
+	return {
+		id         : data.id()!,
+		producerId : data.producerId()!,
+		kind       : data.kind() === FbsTransport.MediaKind.AUDIO ?
+			'audio' :
+			'video',
+		rtpParameters          : parseRtpParameters(data.rtpParameters()!),
+		consumableRtpEncodings : data.consumableRtpEncodingsLength() > 0 ?
+			utils.parseVector(data, 'consumableRtpEncodings', parseRtpEncodingParameters) :
+			undefined,
+		traceEventTypes            : utils.parseVector(data, 'traceEventTypes'),
+		supportedCodecPayloadTypes : utils.parseVector(data, 'supportedCodecPayloadTypes'),
+		paused                     : data.paused(),
+		producerPaused             : data.producerPaused(),
+		priorty                    : data.priority()
+	};
+}
+
+function parseSimpleConsumerDump(dump: FbsConsumer.SimpleConsumerDump): SimpleConsumerDump
+{
+	const baseDump = new FbsConsumer.BaseConsumerDump();
+
+	const base = parseBaseConsumerDump(dump.base()!.data(baseDump)!);
+
+	return {
+		...base,
+		type : 'simple'
+	};
+}
+
+function parseConsumerDump(data: FbsConsumer.DumpResponse): ConsumerDump
+{
+	switch (data.type())
+	{
+		case FbsRtpParametersType.SIMPLE:
+		default:
+		{
+			const dump = new FbsConsumer.SimpleConsumerDump();
+
+			data.data(dump);
+
+			return parseSimpleConsumerDump(dump);
+		}
 	}
 }
