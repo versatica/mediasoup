@@ -151,29 +151,28 @@ switch (task)
 		break;
 	}
 
+	case 'install-clang-tools':
+	{
+		executeCmd('npm ci --prefix worker/scripts');
+
+		break;
+	}
+
+	case 'release:check':
+	{
+		checkRelease();
+
+		break;
+	}
+
 	case 'release':
 	{
-		installNodeDeps();
-		buildTypescript(/* force */ true);
-		replaceVersion();
-		flatcWorker();
-		buildWorker();
-		lintNode();
-		lintWorker();
-		testNode();
-		testWorker();
+		checkRelease();
 		executeCmd(`git commit -am '${version}'`);
 		executeCmd(`git tag -a ${version} -m '${version}'`);
 		executeCmd(`git push origin v${MAYOR_VERSION}`);
 		executeCmd(`git push origin '${version}'`);
 		executeCmd('npm publish');
-
-		break;
-	}
-
-	case 'install-clang-tools':
-	{
-		executeCmd('npm ci --prefix worker/scripts');
 
 		break;
 	}
@@ -335,6 +334,21 @@ function installNodeDeps()
 	executeCmd('npm install --package-lock-only --ignore-scripts');
 }
 
+function checkRelease()
+{
+	console.log('npm-scripts.js [INFO] checkRelease()');
+
+	installNodeDeps();
+	buildTypescript(/* force */ true);
+	replaceVersion();
+	flatcWorker();
+	buildWorker();
+	lintNode();
+	lintWorker();
+	testNode();
+	testWorker();
+}
+
 function executeCmd(command, exitOnError = true)
 {
 	console.log(`npm-scripts.js [INFO] executeCmd(): ${command}`);
@@ -347,7 +361,13 @@ function executeCmd(command, exitOnError = true)
 	{
 		if (exitOnError)
 		{
+			console.error(`npm-scripts.js [ERROR] executeCmd() failed, exiting: ${error}`);
+
 			process.exit(1);
+		}
+		else
+		{
+			console.log(`npm-scripts.js [INFO] executeCmd() failed, ignoring: ${error}`);
 		}
 	}
 }

@@ -1,15 +1,13 @@
-const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../lib/');
+import * as mediasoup from '../';
+
 const { createWorker } = mediasoup;
 
-expect.extend({ toBeType });
-
-let worker;
-let router;
-let transport1;
-let transport2;
-let dataProducer1;
-let dataProducer2;
+let worker: mediasoup.types.Worker;
+let router: mediasoup.types.Router;
+let transport1: mediasoup.types.WebRtcTransport;
+let transport2: mediasoup.types.PlainTransport;
+let dataProducer1: mediasoup.types.DataProducer;
+let dataProducer2: mediasoup.types.DataProducer;
 
 beforeAll(async () =>
 {
@@ -48,14 +46,14 @@ test('transport1.produceData() succeeds', async () =>
 
 	expect(onObserverNewDataProducer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewDataProducer).toHaveBeenCalledWith(dataProducer1);
-	expect(dataProducer1.id).toBeType('string');
+	expect(typeof dataProducer1.id).toBe('string');
 	expect(dataProducer1.closed).toBe(false);
 	expect(dataProducer1.type).toBe('sctp');
-	expect(dataProducer1.sctpStreamParameters).toBeType('object');
-	expect(dataProducer1.sctpStreamParameters.streamId).toBe(666);
-	expect(dataProducer1.sctpStreamParameters.ordered).toBe(true);
-	expect(dataProducer1.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
-	expect(dataProducer1.sctpStreamParameters.maxRetransmits).toBeUndefined();
+	expect(typeof dataProducer1.sctpStreamParameters).toBe('object');
+	expect(dataProducer1.sctpStreamParameters?.streamId).toBe(666);
+	expect(dataProducer1.sctpStreamParameters?.ordered).toBe(true);
+	expect(dataProducer1.sctpStreamParameters?.maxPacketLifeTime).toBeUndefined();
+	expect(dataProducer1.sctpStreamParameters?.maxRetransmits).toBeUndefined();
 	expect(dataProducer1.label).toBe('foo');
 	expect(dataProducer1.protocol).toBe('bar');
 	expect(dataProducer1.appData).toEqual({ foo: 1, bar: '2' });
@@ -99,14 +97,14 @@ test('transport2.produceData() succeeds', async () =>
 
 	expect(onObserverNewDataProducer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewDataProducer).toHaveBeenCalledWith(dataProducer2);
-	expect(dataProducer2.id).toBeType('string');
+	expect(typeof dataProducer2.id).toBe('string');
 	expect(dataProducer2.closed).toBe(false);
 	expect(dataProducer2.type).toBe('sctp');
-	expect(dataProducer2.sctpStreamParameters).toBeType('object');
-	expect(dataProducer2.sctpStreamParameters.streamId).toBe(777);
-	expect(dataProducer2.sctpStreamParameters.ordered).toBe(false);
-	expect(dataProducer2.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
-	expect(dataProducer2.sctpStreamParameters.maxRetransmits).toBe(3);
+	expect(typeof dataProducer2.sctpStreamParameters).toBe('object');
+	expect(dataProducer2.sctpStreamParameters?.streamId).toBe(777);
+	expect(dataProducer2.sctpStreamParameters?.ordered).toBe(false);
+	expect(dataProducer2.sctpStreamParameters?.maxPacketLifeTime).toBeUndefined();
+	expect(dataProducer2.sctpStreamParameters?.maxRetransmits).toBe(3);
 	expect(dataProducer2.label).toBe('foo');
 	expect(dataProducer2.protocol).toBe('bar');
 	expect(dataProducer2.appData).toEqual({ foo: 1, bar: '2' });
@@ -139,6 +137,7 @@ test('transport1.produceData() with wrong arguments rejects with TypeError', asy
 	// Missing or empty sctpStreamParameters.streamId.
 	await expect(transport1.produceData(
 		{
+			// @ts-ignore
 			sctpStreamParameters : { foo: 'foo' }
 		}))
 		.rejects
@@ -181,7 +180,7 @@ test('dataProducer.dump() succeeds', async () =>
 
 	expect(data.id).toBe(dataProducer1.id);
 	expect(data.type).toBe('sctp');
-	expect(data.sctpStreamParameters).toBeType('object');
+	expect(typeof data.sctpStreamParameters).toBe('object');
 	expect(data.sctpStreamParameters.streamId).toBe(666);
 	expect(data.sctpStreamParameters.ordered).toBe(true);
 	expect(data.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
@@ -193,7 +192,7 @@ test('dataProducer.dump() succeeds', async () =>
 
 	expect(data.id).toBe(dataProducer2.id);
 	expect(data.type).toBe('sctp');
-	expect(data.sctpStreamParameters).toBeType('object');
+	expect(typeof data.sctpStreamParameters).toBe('object');
 	expect(data.sctpStreamParameters.streamId).toBe(777);
 	expect(data.sctpStreamParameters.ordered).toBe(false);
 	expect(data.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
@@ -276,7 +275,7 @@ test('DataProducer emits "transportclose" if Transport is closed', async () =>
 
 	dataProducer2.observer.once('close', onObserverClose);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		dataProducer2.on('transportclose', resolve);
 		transport2.close();

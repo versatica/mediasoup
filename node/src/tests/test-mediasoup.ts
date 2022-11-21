@@ -1,28 +1,19 @@
-const { toBeType } = require('jest-tobetype');
-const pkg = require('../../package.json');
-const mediasoup = require('../lib/');
+import * as mediasoup from '../';
+
 const {
-	version,
 	getSupportedRtpCapabilities,
 	parseScalabilityMode
 } = mediasoup;
-
-expect.extend({ toBeType });
-
-test('mediasoup.version exposes the package version', () =>
-{
-	expect(version).toBeType('string');
-	expect(version).toBe(pkg.version);
-}, 500);
 
 test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabilities', () =>
 {
 	const rtpCapabilities = getSupportedRtpCapabilities();
 
-	expect(rtpCapabilities).toBeType('object');
+	expect(typeof rtpCapabilities).toBe('object');
 
 	// Mangle retrieved codecs to check that, if called again,
 	// getSupportedRtpCapabilities() returns a cloned object.
+	// @ts-ignore
 	rtpCapabilities.codecs = 'bar';
 
 	const rtpCapabilities2 = getSupportedRtpCapabilities();
@@ -44,7 +35,7 @@ test('parseScalabilityMode() works', () =>
 	expect(parseScalabilityMode('foo'))
 		.toEqual({ spatialLayers: 1, temporalLayers: 1, ksvc: false });
 
-	expect(parseScalabilityMode(null))
+	expect(parseScalabilityMode(undefined))
 		.toEqual({ spatialLayers: 1, temporalLayers: 1, ksvc: false });
 
 	expect(parseScalabilityMode('S0T3'))

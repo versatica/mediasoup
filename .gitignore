@@ -28,6 +28,7 @@
 
 ## Others.
 /coverage
+/.cache
 /NO_GIT
 *.swp
 *.swo

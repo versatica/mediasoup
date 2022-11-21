@@ -1,18 +1,16 @@
-const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../lib/');
+import * as mediasoup from '../';
+import { UnsupportedError } from '../errors';
+
 const { createWorker } = mediasoup;
-const { UnsupportedError } = require('../lib/errors');
 
-expect.extend({ toBeType });
+let worker: mediasoup.types.Worker;
+let router: mediasoup.types.Router;
+let transport1: mediasoup.types.WebRtcTransport;
+let transport2: mediasoup.types.PlainTransport;
+let audioProducer: mediasoup.types.Producer;
+let videoProducer: mediasoup.types.Producer;
 
-let worker;
-let router;
-let transport1;
-let transport2;
-let audioProducer;
-let videoProducer;
-
-const mediaCodecs =
+const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 [
 	{
 		kind       : 'audio',
@@ -110,13 +108,13 @@ test('transport1.produce() succeeds', async () =>
 
 	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewProducer).toHaveBeenCalledWith(audioProducer);
-	expect(audioProducer.id).toBeType('string');
+	expect(typeof audioProducer.id).toBe('string');
 	expect(audioProducer.closed).toBe(false);
 	expect(audioProducer.kind).toBe('audio');
-	expect(audioProducer.rtpParameters).toBeType('object');
+	expect(typeof audioProducer.rtpParameters).toBe('object');
 	expect(audioProducer.type).toBe('simple');
 	// Private API.
-	expect(audioProducer.consumableRtpParameters).toBeType('object');
+	expect(typeof audioProducer.consumableRtpParameters).toBe('object');
 	expect(audioProducer.paused).toBe(false);
 	expect(audioProducer.score).toEqual([]);
 	expect(audioProducer.appData).toEqual({ foo: 1, bar: '2' });
@@ -204,13 +202,13 @@ test('transport2.produce() succeeds', async () =>
 
 	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewProducer).toHaveBeenCalledWith(videoProducer);
-	expect(videoProducer.id).toBeType('string');
+	expect(typeof videoProducer.id).toBe('string');
 	expect(videoProducer.closed).toBe(false);
 	expect(videoProducer.kind).toBe('video');
-	expect(videoProducer.rtpParameters).toBeType('object');
+	expect(typeof videoProducer.rtpParameters).toBe('object');
 	expect(videoProducer.type).toBe('simulcast');
 	// Private API.
-	expect(videoProducer.consumableRtpParameters).toBeType('object');
+	expect(typeof videoProducer.consumableRtpParameters).toBe('object');
 	expect(videoProducer.paused).toBe(false);
 	expect(videoProducer.score).toEqual([]);
 	expect(videoProducer.appData).toEqual({ foo: 1, bar: '2' });
@@ -240,7 +238,9 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 {
 	await expect(transport1.produce(
 		{
+			// @ts-ignore
 			kind          : 'chicken',
+			// @ts-ignore
 			rtpParameters : {}
 		}))
 		.rejects
@@ -249,12 +249,13 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 	await expect(transport1.produce(
 		{
 			kind          : 'audio',
+			// @ts-ignore
 			rtpParameters : {}
 		}))
 		.rejects
 		.toThrow(TypeError);
 
-	// Missing or empty rtpParameters.codecs.
+	// Invalid ssrc.
 	await expect(transport1.produce(
 		{
 			kind          : 'audio',
@@ -262,6 +263,7 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 			{
 				codecs           : [],
 				headerExtensions : [],
+				// @ts-ignore
 				encodings        : [ { ssrc: '1111' } ],
 				rtcp             : { cname: 'qwerty'	}
 			}
@@ -504,8 +506,8 @@ test('producer.dump() succeeds', async () =>
 
 	expect(data.id).toBe(audioProducer.id);
 	expect(data.kind).toBe(audioProducer.kind);
-	expect(data.rtpParameters).toBeType('object');
-	expect(data.rtpParameters.codecs).toBeType('array');
+	expect(typeof data.rtpParameters).toBe('object');
+	expect(Array.isArray(data.rtpParameters.codecs)).toBe(true);
 	expect(data.rtpParameters.codecs.length).toBe(1);
 	expect(data.rtpParameters.codecs[0].mimeType).toBe('audio/opus');
 	expect(data.rtpParameters.codecs[0].payloadType).toBe(0);
@@ -520,7 +522,7 @@ test('producer.dump() succeeds', async () =>
 				bar          : '333'
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
-	expect(data.rtpParameters.headerExtensions).toBeType('array');
+	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
 	expect(data.rtpParameters.headerExtensions.length).toBe(2);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
@@ -537,7 +539,7 @@ test('producer.dump() succeeds', async () =>
 				encrypt    : false
 			}
 		]);
-	expect(data.rtpParameters.encodings).toBeType('array');
+	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
 	expect(data.rtpParameters.encodings.length).toBe(1);
 	expect(data.rtpParameters.encodings[0]).toEqual(
 		expect.objectContaining(
@@ -551,8 +553,8 @@ test('producer.dump() succeeds', async () =>
 
 	expect(data.id).toBe(videoProducer.id);
 	expect(data.kind).toBe(videoProducer.kind);
-	expect(data.rtpParameters).toBeType('object');
-	expect(data.rtpParameters.codecs).toBeType('array');
+	expect(typeof data.rtpParameters).toBe('object');
+	expect(Array.isArray(data.rtpParameters.codecs)).toBe(true);
 	expect(data.rtpParameters.codecs.length).toBe(2);
 	expect(data.rtpParameters.codecs[0].mimeType).toBe('video/H264');
 	expect(data.rtpParameters.codecs[0].payloadType).toBe(112);
@@ -577,7 +579,7 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[1].channels).toBeUndefined();
 	expect(data.rtpParameters.codecs[1].parameters).toEqual({ apt: 112 });
 	expect(data.rtpParameters.codecs[1].rtcpFeedback).toEqual([]);
-	expect(data.rtpParameters.headerExtensions).toBeType('array');
+	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
 	expect(data.rtpParameters.headerExtensions.length).toBe(2);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
@@ -594,7 +596,7 @@ test('producer.dump() succeeds', async () =>
 				encrypt    : false
 			}
 		]);
-	expect(data.rtpParameters.encodings).toBeType('array');
+	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
 	expect(data.rtpParameters.encodings.length).toBe(4);
 	expect(data.rtpParameters.encodings).toMatchObject(
 		[
@@ -653,6 +655,7 @@ test('producer.enableTraceEvent() succeed', async () =>
 	expect(dump.traceEventTypes)
 		.toEqual(expect.arrayContaining([]));
 
+	// @ts-ignore
 	await audioProducer.enableTraceEvent([ 'nack', 'FOO', 'fir' ]);
 	dump = await audioProducer.dump();
 	expect(dump.traceEventTypes)
@@ -666,14 +669,17 @@ test('producer.enableTraceEvent() succeed', async () =>
 
 test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
 {
+	// @ts-ignore
 	await expect(audioProducer.enableTraceEvent(123))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(audioProducer.enableTraceEvent('rtp'))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(audioProducer.enableTraceEvent([ 'fir', 123.123 ]))
 		.rejects
 		.toThrow(TypeError);
@@ -748,7 +754,7 @@ test('Producer emits "transportclose" if Transport is closed', async () =>
 
 	videoProducer.observer.once('close', onObserverClose);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		videoProducer.on('transportclose', resolve);
 		transport2.close();

@@ -1,16 +1,14 @@
-const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../lib/');
+import * as mediasoup from '../';
+import { InvalidStateError } from '../errors';
+
 const { createWorker } = mediasoup;
-const { InvalidStateError } = require('../lib/errors');
 
-expect.extend({ toBeType });
-
-let worker;
+let worker: mediasoup.types.Worker;
 
 beforeEach(() => worker && !worker.closed && worker.close());
 afterEach(() => worker && !worker.closed && worker.close());
 
-const mediaCodecs =
+const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 [
 	{
 		kind       : 'audio',
@@ -54,11 +52,11 @@ test('worker.createRouter() succeeds', async () =>
 
 	expect(onObserverNewRouter).toHaveBeenCalledTimes(1);
 	expect(onObserverNewRouter).toHaveBeenCalledWith(router);
-	expect(router.id).toBeType('string');
+	expect(typeof router.id).toBe('string');
 	expect(router.closed).toBe(false);
-	expect(router.rtpCapabilities).toBeType('object');
-	expect(router.rtpCapabilities.codecs).toBeType('array');
-	expect(router.rtpCapabilities.headerExtensions).toBeType('array');
+	expect(typeof router.rtpCapabilities).toBe('object');
+	expect(Array.isArray(router.rtpCapabilities.codecs)).toBe(true);
+	expect(Array.isArray(router.rtpCapabilities.headerExtensions)).toBe(true);
 	expect(router.appData).toEqual({ foo: 123 });
 
 	await expect(worker.dump())
@@ -105,10 +103,12 @@ test('worker.createRouter() with wrong arguments rejects with TypeError', async 
 {
 	worker = await createWorker();
 
+	// @ts-ignore
 	await expect(worker.createRouter({ mediaCodecs: {} }))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(worker.createRouter({ appData: 'NOT-AN-OBJECT' }))
 		.rejects
 		.toThrow(TypeError);
@@ -150,7 +150,7 @@ test('Router emits "workerclose" if Worker is closed', async () =>
 
 	router.observer.once('close', onObserverClose);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		router.on('workerclose', resolve);
 		worker.close();

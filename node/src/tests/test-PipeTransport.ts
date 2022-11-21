@@ -1,23 +1,22 @@
-const { toBeType } = require('jest-tobetype');
-const pickPort = require('pick-port');
-const mediasoup = require('../lib/');
+// @ts-ignore
+import * as pickPort from 'pick-port';
+import * as mediasoup from '../';
+
 const { createWorker } = mediasoup;
 
-expect.extend({ toBeType });
+let worker1: mediasoup.types.Worker;
+let worker2: mediasoup.types.Worker;
+let router1: mediasoup.types.Router;
+let router2: mediasoup.types.Router;
+let transport1: mediasoup.types.WebRtcTransport;
+let audioProducer: mediasoup.types.Producer;
+let videoProducer: mediasoup.types.Producer;
+let transport2: mediasoup.types.WebRtcTransport;
+let videoConsumer: mediasoup.types.Consumer;
+let dataProducer: mediasoup.types.DataProducer;
+let dataConsumer: mediasoup.types.DataConsumer;
 
-let worker1;
-let worker2;
-let router1;
-let router2;
-let transport1;
-let audioProducer;
-let videoProducer;
-let transport2;
-let videoConsumer;
-let dataProducer;
-let dataConsumer;
-
-const mediaCodecs =
+const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 [
 	{
 		kind      : 'audio',
@@ -32,7 +31,7 @@ const mediaCodecs =
 	}
 ];
 
-const audioProducerParameters =
+const audioProducerParameters: mediasoup.types.ProducerOptions =
 {
 	kind          : 'audio',
 	rtpParameters :
@@ -68,7 +67,7 @@ const audioProducerParameters =
 	appData : { foo: 'bar1' }
 };
 
-const videoProducerParameters =
+const videoProducerParameters: mediasoup.types.ProducerOptions =
 {
 	kind          : 'video',
 	rtpParameters :
@@ -118,7 +117,7 @@ const videoProducerParameters =
 	appData : { foo: 'bar2' }
 };
 
-const dataProducerParameters =
+const dataProducerParameters: mediasoup.types.DataProducerOptions =
 {
 	sctpStreamParameters :
 	{
@@ -130,7 +129,7 @@ const dataProducerParameters =
 	protocol : 'bar'
 };
 
-const consumerDeviceCapabilities =
+const consumerDeviceCapabilities: mediasoup.types.RtpCapabilities =
 {
 	codecs :
 	[
@@ -227,7 +226,10 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 		{
 			producerId : audioProducer.id,
 			router     : router2
-		});
+		}) as {
+			pipeConsumer: mediasoup.types.Consumer;
+			pipeProducer: mediasoup.types.Producer;
+		};
 
 	dump = await router1.dump();
 
@@ -243,10 +245,10 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 	// - PipeTransport between router2 and router1.
 	expect(dump.transportIds.length).toBe(2);
 
-	expect(pipeConsumer.id).toBeType('string');
+	expect(typeof pipeConsumer.id).toBe('string');
 	expect(pipeConsumer.closed).toBe(false);
 	expect(pipeConsumer.kind).toBe('audio');
-	expect(pipeConsumer.rtpParameters).toBeType('object');
+	expect(typeof pipeConsumer.rtpParameters).toBe('object');
 	expect(pipeConsumer.rtpParameters.mid).toBeUndefined();
 	expect(pipeConsumer.rtpParameters.codecs).toEqual(
 		[
@@ -289,7 +291,7 @@ test('router.pipeToRouter() succeeds with audio', async () =>
 	expect(pipeProducer.id).toBe(audioProducer.id);
 	expect(pipeProducer.closed).toBe(false);
 	expect(pipeProducer.kind).toBe('audio');
-	expect(pipeProducer.rtpParameters).toBeType('object');
+	expect(typeof pipeProducer.rtpParameters).toBe('object');
 	expect(pipeProducer.rtpParameters.mid).toBeUndefined();
 	expect(pipeProducer.rtpParameters.codecs).toEqual(
 		[
@@ -332,7 +334,10 @@ test('router.pipeToRouter() succeeds with video', async () =>
 		{
 			producerId : videoProducer.id,
 			router     : router2
-		});
+		}) as {
+			pipeConsumer: mediasoup.types.Consumer;
+			pipeProducer: mediasoup.types.Producer;
+		};
 
 	dump = await router1.dump();
 
@@ -344,10 +349,10 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	// No new PipeTransport should has been created. The existing one is used.
 	expect(dump.transportIds.length).toBe(2);
 
-	expect(pipeConsumer.id).toBeType('string');
+	expect(typeof pipeConsumer.id).toBe('string');
 	expect(pipeConsumer.closed).toBe(false);
 	expect(pipeConsumer.kind).toBe('video');
-	expect(pipeConsumer.rtpParameters).toBeType('object');
+	expect(typeof pipeConsumer.rtpParameters).toBe('object');
 	expect(pipeConsumer.rtpParameters.mid).toBeUndefined();
 	expect(pipeConsumer.rtpParameters.codecs).toEqual(
 		[
@@ -408,7 +413,7 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeProducer.id).toBe(videoProducer.id);
 	expect(pipeProducer.closed).toBe(false);
 	expect(pipeProducer.kind).toBe('video');
-	expect(pipeProducer.rtpParameters).toBeType('object');
+	expect(typeof pipeProducer.rtpParameters).toBe('object');
 	expect(pipeProducer.rtpParameters.mid).toBeUndefined();
 	expect(pipeProducer.rtpParameters.codecs).toEqual(
 		[
@@ -487,10 +492,10 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 	const pipeConsumer =
 		await pipeTransport.consume({ producerId: videoProducer.id });
 
-	expect(pipeConsumer.id).toBeType('string');
+	expect(typeof pipeConsumer.id).toBe('string');
 	expect(pipeConsumer.closed).toBe(false);
 	expect(pipeConsumer.kind).toBe('video');
-	expect(pipeConsumer.rtpParameters).toBeType('object');
+	expect(typeof pipeConsumer.rtpParameters).toBe('object');
 	expect(pipeConsumer.rtpParameters.mid).toBeUndefined();
 	expect(pipeConsumer.rtpParameters.codecs).toEqual(
 		[
@@ -588,6 +593,7 @@ test('router.createPipeTransport() with invalid srtpParameters must fail', async
 		{
 			ip             : '127.0.0.2',
 			port           : 9999,
+			// @ts-ignore
 			srtpParameters : 'invalid'
 		}))
 		.rejects
@@ -604,10 +610,10 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			enableSrtp : true
 		});
 
-	expect(pipeTransport.id).toBeType('string');
-	expect(pipeTransport.srtpParameters).toBeType('object');
+	expect(typeof pipeTransport.id).toBe('string');
+	expect(typeof pipeTransport.srtpParameters).toBe('object');
 	// The master length of AEAD_AES_256_GCM.
-	expect(pipeTransport.srtpParameters.keyBase64.length).toBe(60);
+	expect(pipeTransport.srtpParameters?.keyBase64.length).toBe(60);
 
 	// Missing srtpParameters.
 	await expect(pipeTransport.connect(
@@ -623,6 +629,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 		{
 			ip             : '127.0.0.2',
 			port           : 9999,
+			// @ts-ignore
 			srtpParameters : 1
 		}))
 		.rejects
@@ -633,6 +640,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 		{
 			ip             : '127.0.0.2',
 			port           : 9999,
+			// @ts-ignore
 			srtpParameters :
 			{
 				keyBase64 : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
@@ -646,6 +654,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 		{
 			ip             : '127.0.0.2',
 			port           : 9999,
+			// @ts-ignore
 			srtpParameters :
 			{
 				cryptoSuite : 'AEAD_AES_256_GCM'
@@ -661,6 +670,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			port           : 9999,
 			srtpParameters :
 			{
+				// @ts-ignore
 				cryptoSuite : 'FOO',
 				keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 			}
@@ -675,6 +685,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			port           : 9999,
 			srtpParameters :
 			{
+				// @ts-ignore
 				cryptoSuite : 123,
 				keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
 			}
@@ -690,6 +701,7 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 			srtpParameters :
 			{
 				cryptoSuite : 'AEAD_AES_256_GCM',
+				// @ts-ignore
 				keyBase64   : []
 			}
 		}))
@@ -735,10 +747,10 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 			rtpCapabilities : consumerDeviceCapabilities
 		});
 
-	expect(videoConsumer.id).toBeType('string');
+	expect(typeof videoConsumer.id).toBe('string');
 	expect(videoConsumer.closed).toBe(false);
 	expect(videoConsumer.kind).toBe('video');
-	expect(videoConsumer.rtpParameters).toBeType('object');
+	expect(typeof videoConsumer.rtpParameters).toBe('object');
 	expect(videoConsumer.rtpParameters.mid).toBe('0');
 	expect(videoConsumer.rtpParameters.codecs).toEqual(
 		[
@@ -780,10 +792,10 @@ test('transport.consume() for a pipe Producer succeeds', async () =>
 				parameters : {}
 			}
 		]);
-	expect(videoConsumer.rtpParameters.encodings.length).toBe(1);
-	expect(videoConsumer.rtpParameters.encodings[0].ssrc).toBeType('number');
-	expect(videoConsumer.rtpParameters.encodings[0].rtx).toBeType('object');
-	expect(videoConsumer.rtpParameters.encodings[0].rtx.ssrc).toBeType('number');
+	expect(videoConsumer.rtpParameters.encodings?.length).toBe(1);
+	expect(typeof videoConsumer.rtpParameters.encodings?.[0].ssrc).toBe('number');
+	expect(typeof videoConsumer.rtpParameters.encodings?.[0].rtx).toBe('object');
+	expect(typeof videoConsumer.rtpParameters.encodings?.[0].rtx?.ssrc).toBe('number');
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(false);
 	expect(videoConsumer.producerPaused).toBe(true);
@@ -802,7 +814,7 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 	expect(videoConsumer.producerPaused).toBe(true);
 	expect(videoConsumer.paused).toBe(false);
 
-	promise = new Promise((resolve) => videoConsumer.once('producerresume', resolve));
+	promise = new Promise<void>((resolve) => videoConsumer.once('producerresume', resolve));
 
 	await videoProducer.resume();
 	await promise;
@@ -810,7 +822,7 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 	expect(videoConsumer.producerPaused).toBe(false);
 	expect(videoConsumer.paused).toBe(false);
 
-	promise = new Promise((resolve) => videoConsumer.once('producerpause', resolve));
+	promise = new Promise<void>((resolve) => videoConsumer.once('producerpause', resolve));
 
 	await videoProducer.pause();
 	await promise;
@@ -826,7 +838,7 @@ test('producer.close() is transmitted to pipe Consumer', async () =>
 	expect(videoProducer.closed).toBe(true);
 
 	if (!videoConsumer.closed)
-		await new Promise((resolve) => videoConsumer.once('producerclose', resolve));
+		await new Promise<void>((resolve) => videoConsumer.once('producerclose', resolve));
 
 	expect(videoConsumer.closed).toBe(true);
 }, 2000);
@@ -839,7 +851,10 @@ test('router.pipeToRouter() succeeds with data', async () =>
 		{
 			dataProducerId : dataProducer.id,
 			router         : router2
-		});
+		}) as {
+			pipeDataConsumer: mediasoup.types.DataConsumer;
+			pipeDataProducer: mediasoup.types.DataProducer;
+		};
 
 	dump = await router1.dump();
 
@@ -855,25 +870,25 @@ test('router.pipeToRouter() succeeds with data', async () =>
 	// - PipeTransport between router2 and router1.
 	expect(dump.transportIds.length).toBe(2);
 
-	expect(pipeDataConsumer.id).toBeType('string');
+	expect(typeof pipeDataConsumer.id).toBe('string');
 	expect(pipeDataConsumer.closed).toBe(false);
 	expect(pipeDataConsumer.type).toBe('sctp');
-	expect(pipeDataConsumer.sctpStreamParameters).toBeType('object');
-	expect(pipeDataConsumer.sctpStreamParameters.streamId).toBeType('number');
-	expect(pipeDataConsumer.sctpStreamParameters.ordered).toBe(false);
-	expect(pipeDataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
-	expect(pipeDataConsumer.sctpStreamParameters.maxRetransmits).toBeUndefined();
+	expect(typeof pipeDataConsumer.sctpStreamParameters).toBe('object');
+	expect(typeof pipeDataConsumer.sctpStreamParameters?.streamId).toBe('number');
+	expect(pipeDataConsumer.sctpStreamParameters?.ordered).toBe(false);
+	expect(pipeDataConsumer.sctpStreamParameters?.maxPacketLifeTime).toBe(5000);
+	expect(pipeDataConsumer.sctpStreamParameters?.maxRetransmits).toBeUndefined();
 	expect(pipeDataConsumer.label).toBe('foo');
 	expect(pipeDataConsumer.protocol).toBe('bar');
 
 	expect(pipeDataProducer.id).toBe(dataProducer.id);
 	expect(pipeDataProducer.closed).toBe(false);
 	expect(pipeDataProducer.type).toBe('sctp');
-	expect(pipeDataProducer.sctpStreamParameters).toBeType('object');
-	expect(pipeDataProducer.sctpStreamParameters.streamId).toBeType('number');
-	expect(pipeDataProducer.sctpStreamParameters.ordered).toBe(false);
-	expect(pipeDataProducer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
-	expect(pipeDataProducer.sctpStreamParameters.maxRetransmits).toBeUndefined();
+	expect(typeof pipeDataProducer.sctpStreamParameters).toBe('object');
+	expect(typeof pipeDataProducer.sctpStreamParameters?.streamId).toBe('number');
+	expect(pipeDataProducer.sctpStreamParameters?.ordered).toBe(false);
+	expect(pipeDataProducer.sctpStreamParameters?.maxPacketLifeTime).toBe(5000);
+	expect(pipeDataProducer.sctpStreamParameters?.maxRetransmits).toBeUndefined();
 	expect(pipeDataProducer.label).toBe('foo');
 	expect(pipeDataProducer.protocol).toBe('bar');
 }, 2000);
@@ -885,14 +900,14 @@ test('transport.dataConsume() for a pipe DataProducer succeeds', async () =>
 			dataProducerId : dataProducer.id
 		});
 
-	expect(dataConsumer.id).toBeType('string');
+	expect(typeof dataConsumer.id).toBe('string');
 	expect(dataConsumer.closed).toBe(false);
 	expect(dataConsumer.type).toBe('sctp');
-	expect(dataConsumer.sctpStreamParameters).toBeType('object');
-	expect(dataConsumer.sctpStreamParameters.streamId).toBeType('number');
-	expect(dataConsumer.sctpStreamParameters.ordered).toBe(false);
-	expect(dataConsumer.sctpStreamParameters.maxPacketLifeTime).toBe(5000);
-	expect(dataConsumer.sctpStreamParameters.maxRetransmits).toBeUndefined();
+	expect(typeof dataConsumer.sctpStreamParameters).toBe('object');
+	expect(typeof dataConsumer.sctpStreamParameters?.streamId).toBe('number');
+	expect(dataConsumer.sctpStreamParameters?.ordered).toBe(false);
+	expect(dataConsumer.sctpStreamParameters?.maxPacketLifeTime).toBe(5000);
+	expect(dataConsumer.sctpStreamParameters?.maxRetransmits).toBeUndefined();
 	expect(dataConsumer.label).toBe('foo');
 	expect(dataConsumer.protocol).toBe('bar');
 }, 2000);
@@ -904,7 +919,7 @@ test('dataProducer.close() is transmitted to pipe DataConsumer', async () =>
 	expect(dataProducer.closed).toBe(true);
 
 	if (!dataConsumer.closed)
-		await new Promise((resolve) => dataConsumer.once('dataproducerclose', resolve));
+		await new Promise<void>((resolve) => dataConsumer.once('dataproducerclose', resolve));
 
 	expect(dataConsumer.closed).toBe(true);
 }, 2000);
