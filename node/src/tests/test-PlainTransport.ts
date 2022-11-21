@@ -109,8 +109,8 @@ test('router.createPlainTransport() succeeds', async () =>
 	expect(data1.rtcpTuple).toEqual(transport1.rtcpTuple);
 	expect(data1.sctpParameters).toEqual(transport1.sctpParameters);
 	expect(data1.sctpState).toBe('new');
-	expect(typeof data1.recvRtpHeaderExtensions).to('array');
-	expect(typeof data1.rtpListener).to('object');
+	expect(Array.isArray(data1.recvRtpHeaderExtensions)).toBe(true);
+	expect(typeof data1.rtpListener).toBe('object');
 
 	transport1.close();
 	expect(transport1.closed).toBe(true);

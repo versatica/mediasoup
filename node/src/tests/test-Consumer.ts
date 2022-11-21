@@ -465,8 +465,8 @@ test('transport.consume() succeeds', async () =>
 	dump = await router.dump();
 
 	// Sort values for mapProducerIdConsumerIds.
-	expect(dump.mapProducerIdConsumerIds).toBeType('array');
-	dump.mapProducerIdConsumerIds.forEach((entry) =>
+	expect(Array.isArray(dump.mapProducerIdConsumerIds)).toBe(true);
+	dump.mapProducerIdConsumerIds.forEach((entry: any) =>
 	{
 		entry.values = entry.values.sort();
 	});
