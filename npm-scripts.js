@@ -263,7 +263,7 @@ function testNode()
 
 	if (!process.env.TEST_FILE)
 	{
-		executeCmd('jest');
+		executeCmd('jest --detectOpenHandles');
 	}
 	else
 	{
