@@ -153,8 +153,8 @@ switch (task)
 
 	case 'release':
 	{
-		executeCmd('git diff --quiet || exit 1');
 		checkRelease();
+		executeCmd('git diff --quiet || exit 1');
 		executeCmd(`git commit -am '${version}'`);
 		executeCmd(`git tag -a ${version} -m '${version}'`);
 		executeCmd(`git push origin v${MAYOR_VERSION}`);
