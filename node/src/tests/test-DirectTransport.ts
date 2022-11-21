@@ -1,12 +1,10 @@
-const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../lib/');
+import * as mediasoup from '../';
+
 const { createWorker } = mediasoup;
 
-expect.extend({ toBeType });
-
-let worker;
-let router;
-let transport;
+let worker: mediasoup.types.Worker;
+let router: mediasoup.types.Router;
+let transport: mediasoup.types.DirectTransport;
 
 beforeAll(async () =>
 {
@@ -42,7 +40,7 @@ test('router.createDirectTransport() succeeds', async () =>
 
 	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
 	expect(onObserverNewTransport).toHaveBeenCalledWith(transport1);
-	expect(transport1.id).toBeType('string');
+	expect(typeof transport1.id).toBe('string');
 	expect(transport1.closed).toBe(false);
 	expect(transport1.appData).toEqual({ foo: 'bar' });
 
@@ -54,19 +52,16 @@ test('router.createDirectTransport() succeeds', async () =>
 	expect(data1.consumerIds).toEqual([]);
 	expect(data1.dataProducerIds).toEqual([]);
 	expect(data1.dataConsumerIds).toEqual([]);
-	expect(data1.recvRtpHeaderExtensions).toBeType('object');
-	expect(data1.rtpListener).toBeType('object');
+	expect(typeof data1.recvRtpHeaderExtensions).toBe('object');
+	expect(typeof data1.rtpListener).toBe('object');
 
 	transport1.close();
 	expect(transport1.closed).toBe(true);
-
-	await expect(router.createDirectTransport())
-		.resolves
-		.toBeType('object');
 }, 2000);
 
 test('router.createDirectTransport() with wrong arguments rejects with TypeError', async () =>
 {
+	// @ts-ignore
 	await expect(router.createDirectTransport({ maxMessageSize: 'foo' }))
 		.rejects
 		.toThrow(TypeError);
@@ -80,11 +75,11 @@ test('directTransport.getStats() succeeds', async () =>
 {
 	const data = await transport.getStats();
 
-	expect(data).toBeType('array');
+	expect(Array.isArray(data)).toBe(true);
 	expect(data.length).toBe(1);
 	expect(data[0].type).toBe('direct-transport');
 	expect(data[0].transportId).toBe(transport.id);
-	expect(data[0].timestamp).toBeType('number');
+	expect(typeof data[0].timestamp).toBe('number');
 	expect(data[0].bytesReceived).toBe(0);
 	expect(data[0].recvBitrate).toBe(0);
 	expect(data[0].bytesSent).toBe(0);
@@ -127,7 +122,7 @@ test('dataProducer.send() succeeds', async () =>
 	let lastSentMessageId = 0;
 	let lastRecvMessageId = 0;
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		// Send messages over the sctpSendStream created above.
 		const interval = setInterval(() =>
@@ -235,7 +230,7 @@ test('DirectTransport emits "routerclose" if Router is closed', async () =>
 
 	transport2.observer.once('close', onObserverClose);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		transport2.on('routerclose', resolve);
 		router2.close();
@@ -251,7 +246,7 @@ test('DirectTransport emits "routerclose" if Worker is closed', async () =>
 
 	transport.observer.once('close', onObserverClose);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		transport.on('routerclose', resolve);
 		worker.close();

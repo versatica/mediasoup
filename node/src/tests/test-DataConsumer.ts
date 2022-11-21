@@ -1,19 +1,17 @@
-const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../lib/');
+import * as mediasoup from '../';
+
 const { createWorker } = mediasoup;
 
-expect.extend({ toBeType });
+let worker: mediasoup.types.Worker;
+let router: mediasoup.types.Router;
+let transport1: mediasoup.types.WebRtcTransport;
+let transport2: mediasoup.types.PlainTransport;
+let transport3: mediasoup.types.DirectTransport;
+let dataProducer: mediasoup.types.DataProducer;
+let dataConsumer1: mediasoup.types.DataConsumer;
+let dataConsumer2: mediasoup.types.DataConsumer;
 
-let worker;
-let router;
-let transport1;
-let transport2;
-let transport3;
-let dataProducer;
-let dataConsumer1;
-let dataConsumer2;
-
-const dataProducerParameters =
+const dataProducerParameters: mediasoup.types.DataProducerOptions =
 {
 	sctpStreamParameters :
 	{
@@ -60,15 +58,15 @@ test('transport.consumeData() succeeds', async () =>
 
 	expect(onObserverNewDataConsumer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewDataConsumer).toHaveBeenCalledWith(dataConsumer1);
-	expect(dataConsumer1.id).toBeType('string');
+	expect(typeof dataConsumer1.id).toBe('string');
 	expect(dataConsumer1.dataProducerId).toBe(dataProducer.id);
 	expect(dataConsumer1.closed).toBe(false);
 	expect(dataConsumer1.type).toBe('sctp');
-	expect(dataConsumer1.sctpStreamParameters).toBeType('object');
-	expect(dataConsumer1.sctpStreamParameters.streamId).toBeType('number');
-	expect(dataConsumer1.sctpStreamParameters.ordered).toBe(false);
-	expect(dataConsumer1.sctpStreamParameters.maxPacketLifeTime).toBe(4000);
-	expect(dataConsumer1.sctpStreamParameters.maxRetransmits).toBeUndefined();
+	expect(typeof dataConsumer1.sctpStreamParameters).toBe('object');
+	expect(typeof dataConsumer1.sctpStreamParameters?.streamId).toBe('number');
+	expect(dataConsumer1.sctpStreamParameters?.ordered).toBe(false);
+	expect(dataConsumer1.sctpStreamParameters?.maxPacketLifeTime).toBe(4000);
+	expect(dataConsumer1.sctpStreamParameters?.maxRetransmits).toBeUndefined();
 	expect(dataConsumer1.label).toBe('foo');
 	expect(dataConsumer1.protocol).toBe('bar');
 	expect(dataConsumer1.appData).toEqual({ baz: 'LOL' });
@@ -98,9 +96,9 @@ test('dataConsumer.dump() succeeds', async () =>
 	expect(data.id).toBe(dataConsumer1.id);
 	expect(data.dataProducerId).toBe(dataConsumer1.dataProducerId);
 	expect(data.type).toBe('sctp');
-	expect(data.sctpStreamParameters).toBeType('object');
+	expect(typeof data.sctpStreamParameters).toBe('object');
 	expect(data.sctpStreamParameters.streamId)
-		.toBe(dataConsumer1.sctpStreamParameters.streamId);
+		.toBe(dataConsumer1.sctpStreamParameters?.streamId);
 	expect(data.sctpStreamParameters.ordered).toBe(false);
 	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(4000);
 	expect(data.sctpStreamParameters.maxRetransmits).toBeUndefined();
@@ -138,7 +136,7 @@ test('transport.consumeData() on a DirectTransport succeeds', async () =>
 
 	expect(onObserverNewDataConsumer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewDataConsumer).toHaveBeenCalledWith(dataConsumer2);
-	expect(dataConsumer2.id).toBeType('string');
+	expect(typeof dataConsumer2.id).toBe('string');
 	expect(dataConsumer2.dataProducerId).toBe(dataProducer.id);
 	expect(dataConsumer2.closed).toBe(false);
 	expect(dataConsumer2.type).toBe('direct');
@@ -235,7 +233,7 @@ test('DataConsumer emits "dataproducerclose" if DataProducer is closed', async (
 
 	dataConsumer1.observer.once('close', onObserverClose);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		dataConsumer1.on('dataproducerclose', resolve);
 		dataProducer.close();
@@ -257,7 +255,7 @@ test('DataConsumer emits "transportclose" if Transport is closed', async () =>
 
 	dataConsumer1.observer.once('close', onObserverClose);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		dataConsumer1.on('transportclose', resolve);
 		transport2.close();

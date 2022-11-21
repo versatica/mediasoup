@@ -1,15 +1,14 @@
-const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../lib/');
-const { UnsupportedError } = require('../lib/errors');
+import * as mediasoup from '../';
+import { UnsupportedError } from '../errors';
+
 const { createWorker } = mediasoup;
 
-expect.extend({ toBeType });
+let worker: mediasoup.types.Worker;
+let router: mediasoup.types.Router;
+let transport: mediasoup.types.WebRtcTransport;
 
-let worker;
-let router;
-let transport;
-
-const mediaCodecs = [
+const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
+[
 	{
 		kind       : 'audio',
 		mimeType   : 'audio/multiopus',
@@ -25,7 +24,8 @@ const mediaCodecs = [
 	}
 ];
 
-const audioProducerOptions = {
+const audioProducerParameters: mediasoup.types.ProducerOptions =
+{
 	kind          : 'audio',
 	rtpParameters :
 		{
@@ -60,7 +60,8 @@ const audioProducerOptions = {
 		}
 };
 
-const consumerDeviceCapabilities = {
+const consumerDeviceCapabilities: mediasoup.types.RtpCapabilities =
+{
 	codecs :
 		[
 			{
@@ -114,7 +115,7 @@ afterAll(() => worker.close());
 
 test('produce/consume succeeds', async () =>
 {
-	const audioProducer = await transport.produce(audioProducerOptions);
+	const audioProducer = await transport.produce(audioProducerParameters);
 
 	expect(audioProducer.rtpParameters.codecs).toEqual([
 		{
@@ -220,9 +221,9 @@ test('fails to produce wrong parameters', async () =>
 
 test('fails to consume wrong channels', async () =>
 {
-	const audioProducer = await transport.produce(audioProducerOptions);
+	const audioProducer = await transport.produce(audioProducerParameters);
 
-	const localConsumerDeviceCapabilities = {
+	const localConsumerDeviceCapabilities: mediasoup.types.RtpCapabilities = {
 		codecs :
 			[
 				{

@@ -1,23 +1,22 @@
-const { toBeType } = require('jest-tobetype');
-const dgram = require('dgram');
-const sctp = require('sctp');
-const mediasoup = require('../lib/');
-const { createWorker } = mediasoup;
+import * as dgram from 'dgram';
+// @ts-ignore
+import * as sctp from 'sctp';
+import * as mediasoup from '../';
 
-expect.extend({ toBeType });
+const { createWorker } = mediasoup;
 
 // Set node-sctp default PMTU to 1200.
 sctp.defaults({ PMTU: 1200 });
 
-let worker;
-let router;
-let transport;
-let dataProducer;
-let dataConsumer;
-let udpSocket;
-let sctpSocket;
-let sctpSendStreamId;
-let sctpSendStream;
+let worker: mediasoup.types.Worker;
+let router: mediasoup.types.Router;
+let transport: mediasoup.types.PlainTransport;
+let dataProducer: mediasoup.types.DataProducer;
+let dataConsumer: mediasoup.types.DataConsumer;
+let udpSocket: dgram.Socket;
+let sctpSocket: any;
+let sctpSendStreamId: number;
+let sctpSendStream: any;
 
 beforeAll(async () =>
 {
@@ -34,18 +33,19 @@ beforeAll(async () =>
 	// Node UDP socket for SCTP.
 	udpSocket = dgram.createSocket({ type: 'udp4' });
 
-	await new Promise((resolve) => udpSocket.bind(0, '127.0.0.1', resolve));
+	await new Promise<void>((resolve) => udpSocket.bind(0, '127.0.0.1', resolve));
 
 	const remoteUdpIp = transport.tuple.localIp;
 	const remoteUdpPort = transport.tuple.localPort;
-	const { OS, MIS } = transport.sctpParameters;
+	const { OS, MIS } = transport.sctpParameters!;
 
 	// Use UDP connected socket if Node >= 12.
 	if (typeof udpSocket.connect === 'function')
 	{
-		await new Promise((resolve, reject) =>
+		await new Promise<void>((resolve, reject) =>
 		{
-			udpSocket.connect(remoteUdpPort, remoteUdpIp, (error) =>
+			// @ts-ignore
+			udpSocket.connect(remoteUdpPort, remoteUdpIp, (error: Error) =>
 			{
 				if (error)
 				{
@@ -88,8 +88,8 @@ beforeAll(async () =>
 	// Wait for the SCTP association to be open.
 	await Promise.race(
 		[
-			new Promise((resolve) => sctpSocket.on('connect', resolve)),
-			new Promise((resolve, reject) => (
+			new Promise<void>((resolve) => sctpSocket.on('connect', resolve)),
+			new Promise<void>((resolve, reject) => (
 				setTimeout(() => reject(new Error('SCTP connection timeout')), 3000)
 			))
 		]);
@@ -133,9 +133,9 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 	let lastRecvMessageId = 0;
 
 	// It must be zero because it's the first DataConsumer on the transport.
-	expect(dataConsumer.sctpStreamParameters.streamId).toBe(0);
+	expect(dataConsumer.sctpStreamParameters?.streamId).toBe(0);
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		// Send SCTP messages over the sctpSendStream created above.
 		const interval = setInterval(() =>
@@ -146,11 +146,13 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 			// Set ppid of type WebRTC DataChannel string.
 			if (id < numMessages / 2)
 			{
+				// @ts-ignore
 				data.ppid = sctp.PPID.WEBRTC_STRING;
 			}
 			// Set ppid of type WebRTC DataChannel binary.
 			else
 			{
+				// @ts-ignore
 				data.ppid = sctp.PPID.WEBRTC_BINARY;
 			}
 
@@ -164,13 +166,15 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 		sctpSocket.on('stream', onStream);
 
 		// Handle the generated SCTP incoming stream and SCTP messages receives on it.
+		// @ts-ignore
 		sctpSocket.on('stream', (stream, streamId) =>
 		{
 			// It must be zero because it's the first SCTP incoming stream (so first
 			// DataConsumer).
 			expect(streamId).toBe(0);
 
-			stream.on('data', (data) =>
+			// @ts-ignore
+			stream.on('data', (data: Buffer) =>
 			{
 				recvMessageBytes += data.byteLength;
 
@@ -183,9 +187,15 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 				}
 
 				if (id < numMessages / 2)
+				{
+					// @ts-ignore
 					expect(data.ppid).toBe(sctp.PPID.WEBRTC_STRING);
+				}
 				else
+				{
+					// @ts-ignore
 					expect(data.ppid).toBe(sctp.PPID.WEBRTC_BINARY);
+				}
 
 				expect(id).toBe(++lastRecvMessageId);
 			});

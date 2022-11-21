@@ -1,14 +1,12 @@
-const os = require('os');
-const process = require('process');
-const path = require('path');
-const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../lib/');
+import * as os from 'os';
+import * as process from 'process';
+import * as path from 'path';
+import * as mediasoup from '../';
+import { InvalidStateError } from '../errors';
+
 const { createWorker, observer } = mediasoup;
-const { InvalidStateError } = require('../lib/errors');
 
-expect.extend({ toBeType });
-
-let worker;
+let worker: mediasoup.types.Worker;
 
 beforeEach(() => worker && !worker.closed && worker.close());
 afterEach(() => worker && !worker.closed && worker.close());
@@ -23,8 +21,8 @@ test('createWorker() succeeds', async () =>
 
 	expect(onObserverNewWorker).toHaveBeenCalledTimes(1);
 	expect(onObserverNewWorker).toHaveBeenCalledWith(worker);
-	expect(worker).toBeType('object');
-	expect(worker.pid).toBeType('number');
+	expect(worker.constructor.name).toBe('Worker');
+	expect(typeof worker.pid).toBe('number');
 	expect(worker.closed).toBe(false);
 	expect(worker.died).toBe(false);
 
@@ -44,8 +42,8 @@ test('createWorker() succeeds', async () =>
 			dtlsPrivateKeyFile  : path.join(__dirname, 'data', 'dtls-key.pem'),
 			appData             : { bar: 456 }
 		});
-	expect(worker).toBeType('object');
-	expect(worker.pid).toBeType('number');
+	expect(worker.constructor.name).toBe('Worker');
+	expect(typeof worker.pid).toBe('number');
 	expect(worker.closed).toBe(false);
 	expect(worker.died).toBe(false);
 	expect(worker.appData).toEqual({ bar: 456 });
@@ -58,6 +56,7 @@ test('createWorker() succeeds', async () =>
 
 test('createWorker() with wrong settings rejects with TypeError', async () =>
 {
+	// @ts-ignore
 	await expect(createWorker({ logLevel: 'chicken' }))
 		.rejects
 		.toThrow(TypeError);
@@ -79,6 +78,7 @@ test('createWorker() with wrong settings rejects with TypeError', async () =>
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(createWorker({ appData: 'NOT-AN-OBJECT' }))
 		.rejects
 		.toThrow(TypeError);
@@ -99,6 +99,7 @@ test('worker.updateSettings() with wrong settings rejects with TypeError', async
 {
 	worker = await createWorker();
 
+	// @ts-ignore
 	await expect(worker.updateSettings({ logLevel: 'chicken' }))
 		.rejects
 		.toThrow(TypeError);
@@ -179,8 +180,8 @@ test('worker.close() succeeds', async () =>
 
 test('Worker emits "died" if worker process died unexpectedly', async () =>
 {
-	let onDied;
-	let onObserverClose;
+	let onDied: ReturnType<typeof jest.fn>;
+	let onObserverClose: ReturnType<typeof jest.fn>;
 
 	worker = await createWorker({ logLevel: 'warn' });
 	onDied = jest.fn();
@@ -188,7 +189,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 
 	worker.observer.once('close', onObserverClose);
 
-	await new Promise((resolve, reject) =>
+	await new Promise<void>((resolve, reject) =>
 	{
 		worker.on('died', () =>
 		{
@@ -224,7 +225,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 
 	worker.observer.once('close', onObserverClose);
 
-	await new Promise((resolve, reject) =>
+	await new Promise<void>((resolve, reject) =>
 	{
 		worker.on('died', () =>
 		{
@@ -260,7 +261,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 
 	worker.observer.once('close', onObserverClose);
 
-	await new Promise((resolve, reject) =>
+	await new Promise<void>((resolve, reject) =>
 	{
 		worker.on('died', () =>
 		{
@@ -299,7 +300,7 @@ test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () =
 
 	worker = await createWorker({ logLevel: 'warn' });
 
-	await new Promise((resolve, reject) =>
+	await new Promise<void>((resolve, reject) =>
 	{
 		worker.on('died', reject);
 

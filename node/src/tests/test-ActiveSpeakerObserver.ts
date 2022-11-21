@@ -1,14 +1,12 @@
-const { toBeType } = require('jest-tobetype');
-const mediasoup = require('../lib/');
+import * as mediasoup from '../';
+
 const { createWorker } = mediasoup;
 
-expect.extend({ toBeType });
+let worker: mediasoup.types.Worker;
+let router: mediasoup.types.Router;
+let activeSpeakerObserver: mediasoup.types.ActiveSpeakerObserver;
 
-let worker;
-let router;
-let activeSpeakerObserver;
-
-const mediaCodecs =
+const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 [
 	{
 		kind       : 'audio',
@@ -41,7 +39,7 @@ test('router.createActiveSpeakerObserver() succeeds', async () =>
 
 	expect(onObserverNewRtpObserver).toHaveBeenCalledTimes(1);
 	expect(onObserverNewRtpObserver).toHaveBeenCalledWith(activeSpeakerObserver);
-	expect(activeSpeakerObserver.id).toBeType('string');
+	expect(typeof activeSpeakerObserver.id).toBe('string');
 	expect(activeSpeakerObserver.closed).toBe(false);
 	expect(activeSpeakerObserver.paused).toBe(false);
 	expect(activeSpeakerObserver.appData).toEqual({});
@@ -56,10 +54,12 @@ test('router.createActiveSpeakerObserver() succeeds', async () =>
 
 test('router.createActiveSpeakerObserver() with wrong arguments rejects with TypeError', async () =>
 {
+	// @ts-ignore
 	await expect(router.createActiveSpeakerObserver({ interval: false }))
 		.rejects
 		.toThrow(TypeError);
 
+	// @ts-ignore
 	await expect(router.createActiveSpeakerObserver({ appData: 'NOT-AN-OBJECT' }))
 		.rejects
 		.toThrow(TypeError);
@@ -102,7 +102,7 @@ test('ActiveSpeakerObserver emits "routerclose" if Router is closed', async () =
 	const router2 = await worker.createRouter({ mediaCodecs });
 	const activeSpeakerObserver2 = await router2.createAudioLevelObserver();
 
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		activeSpeakerObserver2.on('routerclose', resolve);
 		router2.close();
@@ -113,7 +113,7 @@ test('ActiveSpeakerObserver emits "routerclose" if Router is closed', async () =
 
 test('ActiveSpeakerObserver emits "routerclose" if Worker is closed', async () =>
 {
-	await new Promise((resolve) =>
+	await new Promise<void>((resolve) =>
 	{
 		activeSpeakerObserver.on('routerclose', resolve);
 		worker.close();
