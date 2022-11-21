@@ -1,21 +1,21 @@
 import * as flatbuffers from 'flatbuffers';
 import {
+	Boolean as FbsBoolean,
 	Double as FbsDouble,
 	Integer as FbsInteger,
 	IntegerArray as FbsIntegerArray,
 	String as FbsString,
 	Parameter as FbsParameter,
-	ParameterT as FbsParameterT,
 	RtcpFeedback as FbsRtcpFeedback,
 	RtcpParameters as FbsRtcpParameters,
 	RtpCodecParameters as FbsRtpCodecParameters,
 	RtpEncodingParameters as FbsRtpEncodingParameters,
 	RtpHeaderExtensionParameters as FbsRtpHeaderExtensionParameters,
 	RtpParameters as FbsRtpParameters,
-	RtpParametersT as FbsRtpParametersT,
 	Rtx as FbsRtx,
 	Value as FbsValue
 } from './fbs/rtpParameters_generated';
+import * as utils from './utils';
 
 /**
  * The RTP capabilities define what mediasoup or an endpoint can receive at
@@ -597,37 +597,176 @@ export function serializeParameters(
 	return fbsParameters;
 }
 
-export function parseParameters(
-	fbsParameters: FbsParameterT[]
-):any
+export function parseRtcpFeedback(data: FbsRtcpFeedback): RtcpFeedback
+{
+	return {
+		type      : data.type()!,
+		parameter : data.parameter() ?? undefined
+	};
+}
+
+export function parseParameters(data: any): any
 {
 	const parameters: any = {};
 
-	for (const { name, value } of fbsParameters)
+	for (let i=0; i<data.parametersLength(); i++)
 	{
-		parameters[String(name)] = value?.value;
+		const fbsParameter = data.parameters(i)!;
+
+		switch (fbsParameter.valueType())
+		{
+			case FbsValue.Boolean:
+			{
+				const value = new FbsBoolean();
+
+				fbsParameter.value(value);
+
+				parameters[String(fbsParameter.name()!)] = value.value();
+
+				break;
+			}
+
+			case FbsValue.Integer:
+			{
+				const value = new FbsInteger();
+
+				fbsParameter.value(value);
+
+				parameters[String(fbsParameter.name()!)] = value.value();
+
+				break;
+			}
+
+			case FbsValue.Double:
+			{
+				const value = new FbsDouble();
+
+				fbsParameter.value(value);
+
+				parameters[String(fbsParameter.name()!)] = value.value();
+
+				break;
+			}
+
+			case FbsValue.String:
+			{
+				const value = new FbsString();
+
+				fbsParameter.value(value);
+
+				parameters[String(fbsParameter.name()!)] = value.value();
+
+				break;
+			}
+
+			case FbsValue.IntegerArray:
+			{
+				const value = new FbsIntegerArray();
+
+				fbsParameter.value(value);
+
+				parameters[String(fbsParameter.name()!)] = value.valueArray();
+
+				break;
+			}
+		}
 	}
 
 	return parameters;
 }
 
-export function parseRtpParameters(parameters: FbsRtpParametersT): void
+export function parseRtpCodecParameters(data: FbsRtpCodecParameters): RtpCodecParameters
 {
-	for (const codec of parameters.codecs)
-	{
-		codec.parameters = parseParameters(codec.parameters);
-		// @ts-ignore.
-		codec.channels = codec.channels ?? undefined;
+	const parameters = parseParameters(data);
 
-		for (const rtcpFeedback of codec.rtcpFeedback)
-		{
-			// @ts-ignore.
-			rtcpFeedback.parameter = rtcpFeedback.parameter ?? undefined;
-		}
+	let rtcpFeedback: RtcpFeedback[] = [];
+
+	if (data.rtcpFeedbackLength() > 0)
+	{
+		rtcpFeedback = utils.parseVector(data, 'rtcpFeedback', parseRtcpFeedback);
 	}
 
-	for (const headerExtension of parameters.headerExtensions)
+	return {
+		mimeType    : data.mimeType()!,
+		payloadType : data.payloadType(),
+		clockRate   : data.clockRate(),
+		channels    : data.channels() ?? undefined,
+		parameters,
+		rtcpFeedback
+	};
+}
+
+export function parseRtpHeaderExtensionParameters(
+	data: FbsRtpHeaderExtensionParameters): RtpHeaderExtensionParameters
+{
+	return {
+		uri        : data.uri()!,
+		id         : data.id(),
+		encrypt    : data.encrypt(),
+		parameters : parseParameters(data)
+	};
+}
+
+export function parseRtpEncodingParameters(
+	data: FbsRtpEncodingParameters): RtpEncodingParameters
+{
+	return {
+		ssrc             : data.ssrc() ?? undefined,
+		rid              : data.rid() ?? undefined,
+		codecPayloadType : data.codecPayloadType() !== null ?
+			data.codecPayloadType()! :
+			undefined,
+		rtx : data.rtx() ?
+			{ ssrc: data.rtx()!.ssrc()! } :
+			undefined,
+		dtx             : data.dtx(),
+		scalabilityMode : data.scalabilityMode() ?? undefined,
+		maxBitrate      : data.maxBitrate() !== null ? data.maxBitrate()! : undefined
+	};
+}
+
+export function parseRtpParameters(data: FbsRtpParameters): RtpParameters
+{
+	const codecs = utils.parseVector(data, 'codecs', parseRtpCodecParameters);
+
+	let headerExtensions: RtpHeaderExtensionParameters[] = [];
+
+	if (data.headerExtensionsLength() > 0)
 	{
-		headerExtension.parameters = parseParameters(headerExtension.parameters);
+		headerExtensions = utils.parseVector(
+			data,
+			'headerExtensions',
+			parseRtpHeaderExtensionParameters);
 	}
+
+	let encodings: RtpEncodingParameters[] = [];
+
+	if (data.encodingsLength() > 0)
+	{
+		encodings = utils.parseVector(
+			data,
+			'encodings',
+			parseRtpEncodingParameters);
+	}
+
+	let rtcp: RtcpParameters | undefined;
+
+	if (data.rtcp())
+	{
+		const fbsRtcp = data.rtcp()!;
+
+		rtcp = {
+			cname       : fbsRtcp.cname() ?? undefined,
+			reducedSize : fbsRtcp.reducedSize() ?? undefined,
+			mux         : fbsRtcp.mux() ?? undefined
+		};
+	}
+
+	return {
+		mid : data.mid() ?? undefined,
+		codecs,
+		headerExtensions,
+		encodings,
+		rtcp
+	};
 }

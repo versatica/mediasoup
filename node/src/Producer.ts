@@ -7,6 +7,7 @@ import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsProducer from './fbs/producer_generated';
+import * as utils from './utils';
 
 export type ProducerOptions =
 {
@@ -422,18 +423,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		response.body(dumpResponse);
 
-		const dump = dumpResponse.unpack();
-
-		// TODO: Properly parse it, the same way we do with Transports.
-
-		/* Adapt the object. */
-
-		// TODO: Should be use enum instead of string?.
-		// @ts-ignore.
-		dump.kind = dump.kind === FbsTransport.MediaKind.AUDIO ? 'audio' : 'video';
-		parseRtpParameters(dump.rtpParameters!);
-
-		return dump;
+		return parseProducerDump(dumpResponse);
 	}
 
 	/**
@@ -584,4 +574,37 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			}
 		});
 	}
+}
+
+type ProducerDump = {
+	id: string;
+	kind: string;
+	type:ProducerType;
+	rtpParameters:RtpParameters;
+	rtpMapping:any;
+	rtpStreams:any;
+	traceEventTypes:string[];
+	paused:boolean;
+};
+
+export function parseProducerDump(
+	data: FbsProducer.DumpResponse
+): ProducerDump
+{
+	return {
+		id            : data.id()!,
+		kind          : data.kind() === FbsTransport.MediaKind.AUDIO ? 'audio' : 'video',
+		type          : data.type()! as ProducerType,
+		rtpParameters : parseRtpParameters(data.rtpParameters()!),
+		// NOTE: optional values are represented with null instead of undefined.
+		// TODO: Make flatbuffers TS return undefined instead of null.
+		rtpMapping    : data.rtpMapping() ? data.rtpMapping()!.unpack() : undefined,
+		// NOTE: optional values are represented with null instead of undefined.
+		// TODO: Make flatbuffers TS return undefined instead of null.
+		rtpStreams    : data.rtpStreamsLength() > 0 ?
+			utils.parseVector(data, 'rtpStreams', (rtpStream: any) => rtpStream.unpack()) :
+			undefined,
+		traceEventTypes : utils.parseVector(data, 'traceEventTypes'),
+		paused          : data.paused()
+	};
 }

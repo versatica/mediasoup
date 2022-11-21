@@ -89,7 +89,7 @@ namespace RTC
 		                            : flatbuffers::nullopt,
 		  this->hasRtx ? this->rtx.FillBuffer(builder) : 0u,
 		  this->dtx,
-		  this->scalabilityMode.c_str());
+		  this->scalabilityMode.size() > 0 ? this->scalabilityMode.c_str() : nullptr);
 
 		// NOTE: Simplified scalabilitymode to simply report the string, the same way
 		// it's created, for consistency.
