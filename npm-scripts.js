@@ -33,7 +33,6 @@ switch (task)
 	// TypeScript to JavaScript.
 	case 'prepare':
 	{
-		flatcNode();
 		buildTypescript(/* force */ false);
 
 		break;
@@ -105,14 +104,6 @@ switch (task)
 		break;
 	}
 
-	case 'flatc':
-	{
-		flatcNode();
-		flatcWorker();
-
-		break;
-	}
-
 	case 'flatc:node':
 	{
 		flatcNode();
@@ -163,7 +154,6 @@ switch (task)
 	case 'release':
 	{
 		installNodeDeps();
-		flatcNode();
 		buildTypescript(/* force */ true);
 		replaceVersion();
 		flatcWorker();
@@ -243,7 +233,10 @@ function buildTypescript(force = false)
 
 	console.log('npm-scripts.js [INFO] buildTypescript()');
 
+	// Clean lib folder.
 	deleteNodeLib();
+	// Compile flatbuffres schemas into TypeScript.
+	flatcNode();
 
 	executeCmd('tsc --project node');
 }

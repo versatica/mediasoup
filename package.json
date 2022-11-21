@@ -57,7 +57,7 @@
     "lint:node": "node npm-scripts.js lint:node",
     "lint:worker": "node npm-scripts.js lint:worker",
     "format:worker": "node npm-scripts.js format:worker",
-    "flatc": "node npm-scripts.js flatc",
+    "flatc": "npm run flatc:node && npm run flatc:worker",
     "flatc:node": "node npm-scripts.js flatc:node",
     "flatc:worker": "node npm-scripts.js flatc:worker",
     "test": "npm run test:node && npm run test:worker",
