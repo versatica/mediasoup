@@ -76,7 +76,10 @@ namespace RTC
 		  FBS::Consumer::CreatePipeConsumerDumpDirect(builder, baseDump, &rtpStreams);
 
 		return FBS::Consumer::CreateDumpResponse(
-		  builder, FBS::Consumer::ConsumerDumpData::PipeConsumerDump, pipeConsumerDump.Union());
+		  builder,
+		  FBS::Consumer::ConsumerDumpData::PipeConsumerDump,
+		  pipeConsumerDump.Union(),
+		  FBS::RtpParameters::Type(this->type));
 	}
 
 	void PipeConsumer::FillJsonStats(json& jsonArray) const

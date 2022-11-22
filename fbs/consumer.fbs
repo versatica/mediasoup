@@ -89,5 +89,5 @@ table SvcConsumerDump {
 
 table PipeConsumerDump {
   base:DumpResponse (required);
-  rtp_stream:[FBS.RtpStream.Dump] (required);
+  rtp_streams:[FBS.RtpStream.Dump] (required);
 }

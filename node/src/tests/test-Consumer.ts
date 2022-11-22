@@ -646,17 +646,19 @@ test('consumer.dump() succeeds', async () =>
 	expect(data.rtpParameters.encodings.length).toBe(1);
 	expect(data.rtpParameters.encodings).toEqual(
 		[
-			{
-				codecPayloadType : 100,
-				ssrc             : audioConsumer.rtpParameters.encodings?.[0].ssrc
-			}
+			expect.objectContaining(
+				{
+					codecPayloadType : 100,
+					ssrc             : audioConsumer.rtpParameters.encodings?.[0].ssrc
+				})
 		]);
 	expect(data.type).toBe('simple');
 	expect(Array.isArray(data.consumableRtpEncodings)).toBe(true);
 	expect(data.consumableRtpEncodings.length).toBe(1);
 	expect(data.consumableRtpEncodings).toEqual(
 		[
-			{ ssrc: audioProducer.consumableRtpParameters.encodings?.[0].ssrc }
+			expect.objectContaining(
+				{ ssrc: audioProducer.consumableRtpParameters.encodings?.[0].ssrc })
 		]);
 	expect(data.supportedCodecPayloadTypes).toEqual([ 100 ]);
 	expect(data.paused).toBe(false);
@@ -733,13 +735,22 @@ test('consumer.dump() succeeds', async () =>
 		]);
 	expect(Array.isArray(data.consumableRtpEncodings)).toBe(true);
 	expect(data.consumableRtpEncodings.length).toBe(4);
-	expect(data.consumableRtpEncodings).toEqual(
-		[
-			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[0].ssrc },
-			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[1].ssrc },
-			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[2].ssrc },
-			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[3].ssrc }
-		]);
+	expect(data.consumableRtpEncodings[0]).toEqual(
+		expect.objectContaining(
+			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[0].ssrc })
+	);
+	expect(data.consumableRtpEncodings[1]).toEqual(
+		expect.objectContaining(
+			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[1].ssrc })
+	);
+	expect(data.consumableRtpEncodings[2]).toEqual(
+		expect.objectContaining(
+			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[2].ssrc })
+	);
+	expect(data.consumableRtpEncodings[3]).toEqual(
+		expect.objectContaining(
+			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[3].ssrc })
+	);
 	expect(data.supportedCodecPayloadTypes).toEqual([ 103 ]);
 	expect(data.paused).toBe(true);
 	expect(data.producerPaused).toBe(true);
@@ -856,26 +867,28 @@ test('consumer.unsetPriority() succeed', async () =>
 
 test('consumer.enableTraceEvent() succeed', async () =>
 {
+	let dump;
+
 	await audioConsumer.enableTraceEvent([ 'rtp', 'pli' ]);
-	await expect(audioConsumer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: 'rtp,pli' });
+	dump = await audioConsumer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([ 'rtp', 'pli' ]));
 
 	await audioConsumer.enableTraceEvent([]);
-	await expect(audioConsumer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: '' });
+	dump = await audioConsumer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([]));
 
 	// @ts-ignore
 	await audioConsumer.enableTraceEvent([ 'nack', 'FOO', 'fir' ]);
-	await expect(audioConsumer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: 'nack,fir' });
+	dump = await audioConsumer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([ 'nack', 'fir' ]));
 
 	await audioConsumer.enableTraceEvent();
-	await expect(audioConsumer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: '' });
+	dump = await audioConsumer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([]));
 }, 2000);
 
 test('consumer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>

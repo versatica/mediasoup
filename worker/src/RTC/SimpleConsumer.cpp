@@ -78,7 +78,10 @@ namespace RTC
 		auto simpleConsumerDump = FBS::Consumer::CreateSimpleConsumerDump(builder, baseDump, rtpStream);
 
 		return FBS::Consumer::CreateDumpResponse(
-		  builder, FBS::Consumer::ConsumerDumpData::SimpleConsumerDump, simpleConsumerDump.Union());
+		  builder,
+		  FBS::Consumer::ConsumerDumpData::SimpleConsumerDump,
+		  simpleConsumerDump.Union(),
+		  FBS::RtpParameters::Type(this->type));
 	}
 
 	void SimpleConsumer::FillJsonStats(json& jsonArray) const

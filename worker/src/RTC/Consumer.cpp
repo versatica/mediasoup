@@ -191,10 +191,7 @@ namespace RTC
 		  this->priority);
 
 		return FBS::Consumer::CreateDumpResponse(
-		  builder,
-		  FBS::Consumer::ConsumerDumpData::BaseConsumerDump,
-		  baseConsumerDump.Union(),
-		  FBS::RtpParameters::Type(this->type));
+		  builder, FBS::Consumer::ConsumerDumpData::BaseConsumerDump, baseConsumerDump.Union());
 	}
 
 	void Consumer::HandleRequest(Channel::ChannelRequest* request)

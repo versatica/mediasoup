@@ -1099,21 +1099,21 @@ struct PipeConsumerDump FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_BASE = 4,
-    VT_RTPSTREAM = 6
+    VT_RTPSTREAMS = 6
   };
   const FBS::Consumer::DumpResponse *base() const {
     return GetPointer<const FBS::Consumer::DumpResponse *>(VT_BASE);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>> *rtpStream() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>> *>(VT_RTPSTREAM);
+  const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>> *rtpStreams() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>> *>(VT_RTPSTREAMS);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffsetRequired(verifier, VT_BASE) &&
            verifier.VerifyTable(base()) &&
-           VerifyOffsetRequired(verifier, VT_RTPSTREAM) &&
-           verifier.VerifyVector(rtpStream()) &&
-           verifier.VerifyVectorOfTables(rtpStream()) &&
+           VerifyOffsetRequired(verifier, VT_RTPSTREAMS) &&
+           verifier.VerifyVector(rtpStreams()) &&
+           verifier.VerifyVectorOfTables(rtpStreams()) &&
            verifier.EndTable();
   }
 };
@@ -1125,8 +1125,8 @@ struct PipeConsumerDumpBuilder {
   void add_base(flatbuffers::Offset<FBS::Consumer::DumpResponse> base) {
     fbb_.AddOffset(PipeConsumerDump::VT_BASE, base);
   }
-  void add_rtpStream(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>>> rtpStream) {
-    fbb_.AddOffset(PipeConsumerDump::VT_RTPSTREAM, rtpStream);
+  void add_rtpStreams(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>>> rtpStreams) {
+    fbb_.AddOffset(PipeConsumerDump::VT_RTPSTREAMS, rtpStreams);
   }
   explicit PipeConsumerDumpBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1136,7 +1136,7 @@ struct PipeConsumerDumpBuilder {
     const auto end = fbb_.EndTable(start_);
     auto o = flatbuffers::Offset<PipeConsumerDump>(end);
     fbb_.Required(o, PipeConsumerDump::VT_BASE);
-    fbb_.Required(o, PipeConsumerDump::VT_RTPSTREAM);
+    fbb_.Required(o, PipeConsumerDump::VT_RTPSTREAMS);
     return o;
   }
 };
@@ -1144,9 +1144,9 @@ struct PipeConsumerDumpBuilder {
 inline flatbuffers::Offset<PipeConsumerDump> CreatePipeConsumerDump(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<FBS::Consumer::DumpResponse> base = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>>> rtpStream = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<FBS::RtpStream::Dump>>> rtpStreams = 0) {
   PipeConsumerDumpBuilder builder_(_fbb);
-  builder_.add_rtpStream(rtpStream);
+  builder_.add_rtpStreams(rtpStreams);
   builder_.add_base(base);
   return builder_.Finish();
 }
@@ -1154,12 +1154,12 @@ inline flatbuffers::Offset<PipeConsumerDump> CreatePipeConsumerDump(
 inline flatbuffers::Offset<PipeConsumerDump> CreatePipeConsumerDumpDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<FBS::Consumer::DumpResponse> base = 0,
-    const std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> *rtpStream = nullptr) {
-  auto rtpStream__ = rtpStream ? _fbb.CreateVector<flatbuffers::Offset<FBS::RtpStream::Dump>>(*rtpStream) : 0;
+    const std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> *rtpStreams = nullptr) {
+  auto rtpStreams__ = rtpStreams ? _fbb.CreateVector<flatbuffers::Offset<FBS::RtpStream::Dump>>(*rtpStreams) : 0;
   return FBS::Consumer::CreatePipeConsumerDump(
       _fbb,
       base,
-      rtpStream__);
+      rtpStreams__);
 }
 
 inline bool VerifyConsumerDumpData(flatbuffers::Verifier &verifier, const void *obj, ConsumerDumpData type) {
@@ -1485,7 +1485,7 @@ inline const flatbuffers::TypeTable *PipeConsumerDumpTypeTable() {
   };
   static const char * const names[] = {
     "base",
-    "rtpStream"
+    "rtpStreams"
   };
   static const flatbuffers::TypeTable tt = {
     flatbuffers::ST_TABLE, 2, type_codes, type_refs, nullptr, nullptr, names

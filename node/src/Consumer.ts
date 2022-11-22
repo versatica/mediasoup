@@ -15,6 +15,8 @@ import {
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsConsumer from './fbs/consumer_generated';
+import * as FbsRtpStream from './fbs/rtpStream_generated';
+import * as FbsRtxStream from './fbs/rtxStream_generated';
 import { Type as FbsRtpParametersType } from './fbs/fbs/rtp-parameters/type';
 import * as utils from './utils';
 
@@ -849,14 +851,136 @@ type BaseConsumerDump = {
 	traceEventTypes:string[];
 	paused:boolean;
 	producerPaused:boolean;
-	priorty:number;
+	priority:number;
 };
 
 type SimpleConsumerDump = BaseConsumerDump & {
 	type: string;
+	rtpStream: RtpStreamDump;
 };
 
-type ConsumerDump = SimpleConsumerDump;
+type SimulcastConsumerDump = BaseConsumerDump & {
+	type: string;
+	rtpStream: RtpStreamDump;
+	preferredSpatialLayer: number;
+	targetSpatialLayer: number;
+	currentSpatialLayer: number;
+	preferredTemporalLayer: number;
+	targetTemporalLayer: number;
+	currentTemporalLayer: number;
+};
+
+type SvcConsumerDump = SimulcastConsumerDump;
+
+type PipeConsumerDump = BaseConsumerDump & {
+	type: string;
+	rtpStreams: RtpStreamDump[];
+};
+
+type ConsumerDump =
+	SimpleConsumerDump |
+	SimulcastConsumerDump |
+	SvcConsumerDump |
+	PipeConsumerDump;
+
+type RtpStreamParameters = {
+	encodingIdx: number;
+	ssrc: number;
+	payloadType: number;
+	mimeType: string;
+	clockRate: number;
+	rid?: string;
+	cname: string;
+	rtxSsrc?: number;
+	rtxPayloadType?: number;
+	useNack: boolean;
+	usePli: boolean;
+	useFir: boolean;
+	useInBandFec: boolean;
+	useDtx: boolean;
+	spatialLayers: number;
+	temporalLayers: number;
+};
+
+type RtpStreamDump = {
+	params: RtpStreamParameters;
+	score: number;
+	rtxStream?: RtxStreamDump;
+};
+
+type RtxStreamParameters = {
+  ssrc:number;
+  payloadType:number;
+  mimeType:string;
+  clockRate: number;
+  rrid?:string;
+  cname:string;
+};
+
+type RtxStreamDump = {
+	params: RtxStreamParameters;
+};
+
+function parseRtpStreamParameters(data: FbsRtpStream.Params): RtpStreamParameters
+{
+	return {
+		encodingIdx    : data.encodingIdx(),
+		ssrc           : data.ssrc(),
+		payloadType    : data.payloadType(),
+		mimeType       : data.mimeType()!,
+		clockRate      : data.clockRate(),
+		rid            : data.rid()!.length > 0 ? data.rid()! : undefined,
+		cname          : data.cname()!,
+		rtxSsrc        : data.rtxSsrc() !== null ? data.rtxSsrc()! : undefined,
+		rtxPayloadType : data.rtxPayloadType() !== null ? data.rtxPayloadType()! : undefined,
+		useNack        : data.useNack(),
+		usePli         : data.usePli(),
+		useFir         : data.useFir(),
+		useInBandFec   : data.useInBandFec(),
+		useDtx         : data.useDtx(),
+		spatialLayers  : data.spatialLayers(),
+		temporalLayers : data.temporalLayers()
+	};
+}
+
+function parseRtxStreamParameters(data: FbsRtxStream.Params): RtxStreamParameters
+{
+	return {
+		ssrc        : data.ssrc(),
+		payloadType : data.payloadType(),
+		mimeType    : data.mimeType()!,
+		clockRate   : data.clockRate(),
+		rrid        : data.rrid()!.length > 0 ? data.rrid()! : undefined,
+		cname       : data.cname()!
+	};
+}
+
+function parseRtxStream(data: FbsRtxStream.RtxDump): RtxStreamDump
+{
+	const params = parseRtxStreamParameters(data.params()!);
+
+	return {
+		params
+	};
+}
+
+function parseRtpStream(data: FbsRtpStream.Dump): RtpStreamDump
+{
+	const params = parseRtpStreamParameters(data.params()!);
+
+	let rtxStream: RtxStreamDump | undefined;
+
+	if (data.rtxStream())
+	{
+		rtxStream = parseRtxStream(data.rtxStream()!);
+	}
+
+	return {
+		params,
+		score : data.score(),
+		rtxStream
+	};
+}
 
 function parseBaseConsumerDump(data: FbsConsumer.BaseConsumerDump): BaseConsumerDump
 {
@@ -874,34 +998,117 @@ function parseBaseConsumerDump(data: FbsConsumer.BaseConsumerDump): BaseConsumer
 		supportedCodecPayloadTypes : utils.parseVector(data, 'supportedCodecPayloadTypes'),
 		paused                     : data.paused(),
 		producerPaused             : data.producerPaused(),
-		priorty                    : data.priority()
+		priority                   : data.priority()
 	};
 }
 
-function parseSimpleConsumerDump(dump: FbsConsumer.SimpleConsumerDump): SimpleConsumerDump
+function parseSimpleConsumerDump(data: FbsConsumer.SimpleConsumerDump): SimpleConsumerDump
 {
 	const baseDump = new FbsConsumer.BaseConsumerDump();
 
-	const base = parseBaseConsumerDump(dump.base()!.data(baseDump)!);
+	const base = parseBaseConsumerDump(data.base()!.data(baseDump)!);
+	const rtpStream = parseRtpStream(data.rtpStream()!);
 
 	return {
 		...base,
-		type : 'simple'
+		type : 'simple',
+		rtpStream
+	};
+}
+
+function parseSimulcastConsumerDump(
+	data: FbsConsumer.SimulcastConsumerDump
+) : SimulcastConsumerDump
+{
+	const baseDump = new FbsConsumer.BaseConsumerDump();
+
+	const base = parseBaseConsumerDump(data.base()!.data(baseDump)!);
+	const rtpStream = parseRtpStream(data.rtpStream()!);
+
+	return {
+		...base,
+		type                   : 'simulcast',
+		rtpStream,
+		preferredSpatialLayer  : data.preferredSpatialLayer(),
+		targetSpatialLayer     : data.targetSpatialLayer(),
+		currentSpatialLayer    : data.currentSpatialLayer(),
+		preferredTemporalLayer : data.preferredTemporalLayer(),
+		targetTemporalLayer    : data.targetTemporalLayer(),
+		currentTemporalLayer   : data.currentTemporalLayer()
+	};
+}
+
+function parseSvcConsumerDump(
+	data: FbsConsumer.SvcConsumerDump
+) : SvcConsumerDump
+{
+	const dump = parseSimulcastConsumerDump(data);
+
+	dump.type = 'svc';
+
+	return dump;
+}
+
+function parsePipeConsumerDump(
+	data: FbsConsumer.PipeConsumerDump
+) : PipeConsumerDump
+{
+	const baseDump = new FbsConsumer.BaseConsumerDump();
+
+	const base = parseBaseConsumerDump(data.base()!.data(baseDump)!);
+	const rtpStreams = utils.parseVector(data, 'rtpStreams', parseRtpStream);
+
+	return {
+		...base,
+		type : 'pipe',
+		rtpStreams
 	};
 }
 
 function parseConsumerDump(data: FbsConsumer.DumpResponse): ConsumerDump
 {
+	logger.warn(data.unpack());
 	switch (data.type())
 	{
 		case FbsRtpParametersType.SIMPLE:
-		default:
 		{
 			const dump = new FbsConsumer.SimpleConsumerDump();
 
 			data.data(dump);
 
 			return parseSimpleConsumerDump(dump);
+		}
+
+		case FbsRtpParametersType.SIMULCAST:
+		{
+			const dump = new FbsConsumer.SimulcastConsumerDump();
+
+			data.data(dump);
+
+			return parseSimulcastConsumerDump(dump);
+		}
+
+		case FbsRtpParametersType.SVC:
+		{
+			const dump = new FbsConsumer.SvcConsumerDump();
+
+			data.data(dump);
+
+			return parseSvcConsumerDump(dump);
+		}
+
+		case FbsRtpParametersType.PIPE:
+		{
+			const dump = new FbsConsumer.PipeConsumerDump();
+
+			data.data(dump);
+
+			return parsePipeConsumerDump(dump);
+		}
+
+		default:
+		{
+			throw new TypeError(`invalid Consumer type: ${data.type()}`);
 		}
 	}
 }

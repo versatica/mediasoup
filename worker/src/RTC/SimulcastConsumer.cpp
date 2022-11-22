@@ -145,7 +145,10 @@ namespace RTC
 		  this->encodingContext->GetCurrentTemporalLayer());
 
 		return FBS::Consumer::CreateDumpResponse(
-		  builder, FBS::Consumer::ConsumerDumpData::SimulcastConsumerDump, simulcastConsumerDump.Union());
+		  builder,
+		  FBS::Consumer::ConsumerDumpData::SimulcastConsumerDump,
+		  simulcastConsumerDump.Union(),
+		  FBS::RtpParameters::Type(this->type));
 	}
 
 	void SimulcastConsumer::FillJsonStats(json& jsonArray) const
