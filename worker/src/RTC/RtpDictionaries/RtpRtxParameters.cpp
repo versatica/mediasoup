@@ -14,9 +14,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// ssrc is optional.
-		if (data->ssrc().has_value())
-			this->ssrc = data->ssrc().value();
+		this->ssrc = data->ssrc();
 	}
 
 	flatbuffers::Offset<FBS::RtpParameters::Rtx> RtpRtxParameters::FillBuffer(
@@ -24,7 +22,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return FBS::RtpParameters::CreateRtx(
-		  builder, this->ssrc != 0u ? flatbuffers::Optional<uint32_t>(this->ssrc) : flatbuffers::nullopt);
+		return FBS::RtpParameters::CreateRtx(builder, this->ssrc);
 	}
 } // namespace RTC

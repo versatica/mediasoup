@@ -885,8 +885,8 @@ struct Rtx FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_SSRC = 4
   };
-  flatbuffers::Optional<uint32_t> ssrc() const {
-    return GetOptional<uint32_t, uint32_t>(VT_SSRC);
+  uint32_t ssrc() const {
+    return GetField<uint32_t>(VT_SSRC, 0);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -900,7 +900,7 @@ struct RtxBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_ssrc(uint32_t ssrc) {
-    fbb_.AddElement<uint32_t>(Rtx::VT_SSRC, ssrc);
+    fbb_.AddElement<uint32_t>(Rtx::VT_SSRC, ssrc, 0);
   }
   explicit RtxBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -915,9 +915,9 @@ struct RtxBuilder {
 
 inline flatbuffers::Offset<Rtx> CreateRtx(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Optional<uint32_t> ssrc = flatbuffers::nullopt) {
+    uint32_t ssrc = 0) {
   RtxBuilder builder_(_fbb);
-  if(ssrc) { builder_.add_ssrc(*ssrc); }
+  builder_.add_ssrc(ssrc);
   return builder_.Finish();
 }
 

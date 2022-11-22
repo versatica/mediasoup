@@ -60,7 +60,7 @@ table RtpHeaderExtensionParameters {
 }
 
 table Rtx {
-  ssrc:uint32 = null;
+  ssrc:uint32;
 }
 
 table RtpEncodingParameters {
