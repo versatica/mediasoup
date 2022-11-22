@@ -28,8 +28,6 @@ namespace RTC
 		MS_TRACE();
 
 		return FBS::RtpParameters::CreateRtcpParametersDirect(
-		  builder,
-		  this->cname.c_str(),
-		  this->reducedSize);
+		  builder, this->cname.c_str(), this->reducedSize);
 	}
 } // namespace RTC

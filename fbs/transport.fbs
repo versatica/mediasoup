@@ -12,6 +12,12 @@ table TransportListenIp {
   announced_ip:string;
 }
 
+table RestartIceResponse {
+  username_fragment:string (required);
+  password:string (required);
+  ice_lite:bool;
+}
+
 table ConsumeRequest {
   consumer_id:string (required);
   producer_id:string (required);

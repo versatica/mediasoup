@@ -449,10 +449,23 @@ export class WebRtcTransport extends
 	{
 		logger.debug('restartIce()');
 
-		const data =
-			await this.channel.request('transport.restartIce', this.internal.transportId);
+		const response = await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_RESTART_ICE,
+			undefined,
+			undefined,
+			this.internal.transportId
+		);
 
-		const { iceParameters } = data;
+		/* Decode the response. */
+		const restartIceResponse = new FbsTransport.RestartIceResponse();
+
+		response.body(restartIceResponse);
+
+		const iceParameters = {
+			usernameFragment : restartIceResponse.usernameFragment()!,
+			password         : restartIceResponse.password()!,
+			iceLite          : restartIceResponse.iceLite()
+		};
 
 		this.#data.iceParameters = iceParameters;
 

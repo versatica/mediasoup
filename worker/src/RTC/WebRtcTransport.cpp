@@ -580,16 +580,14 @@ namespace RTC
 				  "WebRtcTransport ICE usernameFragment and password changed [id:%s]", this->id.c_str());
 
 				// Reply with the updated ICE local parameters.
-				json data = json::object();
+				auto responseOffset = FBS::Transport::CreateRestartIceResponseDirect(
+				  request->GetBufferBuilder(),
+				  this->iceServer->GetUsernameFragment().c_str(),
+				  this->iceServer->GetPassword().c_str(),
+				  true /* iceLite */
+				);
 
-				data["iceParameters"]    = json::object();
-				auto jsonIceParametersIt = data.find("iceParameters");
-
-				(*jsonIceParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
-				(*jsonIceParametersIt)["password"]         = this->iceServer->GetPassword();
-				(*jsonIceParametersIt)["iceLite"]          = true;
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_Transport_DumpResponse, responseOffset);
 
 				break;
 			}

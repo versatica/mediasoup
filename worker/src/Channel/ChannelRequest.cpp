@@ -18,7 +18,6 @@ namespace Channel
 	{
 		{ "transport.getStats",                          FBS::Request::Method::TRANSPORT_GET_STATS                              },
 		{ "transport.connect",                           FBS::Request::Method::TRANSPORT_CONNECT                                },
-		{ "transport.restartIce",                        FBS::Request::Method::TRANSPORT_RESTART_ICE                            },
 		{ "producer.getStats",                           FBS::Request::Method::PRODUCER_GET_STATS                               },
 		{ "consumer.getStats",                           FBS::Request::Method::CONSUMER_GET_STATS                               },
 		{ "dataProducer.getStats",                       FBS::Request::Method::DATA_PRODUCER_GET_STATS                          },
