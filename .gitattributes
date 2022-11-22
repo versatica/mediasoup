@@ -1,6 +1,7 @@
 # Tell GitHub to ignore some folders when detecting the project language.
 art/* linguist-vendored=true
 doc/* linguist-vendored=true
+fbs/* linguist-vendored=true
 rust/benches/* linguist-vendored=true
 rust/examples/* linguist-vendored=true
 rust/examples-frontend/* linguist-vendored=true
