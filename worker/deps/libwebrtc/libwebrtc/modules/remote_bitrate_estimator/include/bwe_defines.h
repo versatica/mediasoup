@@ -28,8 +28,8 @@ DataRate GetMinBitrate();
 }  // namespace congestion_controller
 
 static const int64_t kBitrateWindowMs = 1000;
-
-constexpr DataRate kCongestionControllerMinBitrate = DataRate::BitsPerSec<5000>();
+// NOTE: the default value was 5000 kbps, which is just too small for SFU scenario.
+constexpr DataRate kCongestionControllerMinBitrate = DataRate::BitsPerSec<150000>();
 
 extern const char kBweTypeHistogram[];
 

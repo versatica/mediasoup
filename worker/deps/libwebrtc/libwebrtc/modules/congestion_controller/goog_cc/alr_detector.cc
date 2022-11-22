@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::AlrDetector"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/alr_detector.h"
 #include "rtc_base/numerics/safe_conversions.h"
@@ -66,6 +66,16 @@ AlrDetector::AlrDetector(const WebRtcKeyValueConfig* key_value_config)
 
 AlrDetector::~AlrDetector() {}
 
+// This is used to trigger ALR start state if we had sudden stop in traffic (all consumers paused due to low bw report).
+void AlrDetector::Process() {
+	int64_t now = DepLibUV::GetTimeMsInt64();
+	if (!alr_started_time_ms_.has_value() && last_send_time_ms_.has_value()) {
+			if ((now - last_send_time_ms_.value()) > 1000) {
+				OnBytesSent(0, now);
+			}
+	}
+}
+
 void AlrDetector::OnBytesSent(size_t bytes_sent, int64_t send_time_ms) {
   if (!last_send_time_ms_.has_value()) {
     last_send_time_ms_ = send_time_ms;
@@ -95,9 +105,14 @@ void AlrDetector::OnBytesSent(size_t bytes_sent, int64_t send_time_ms) {
 
 void AlrDetector::SetEstimatedBitrate(int bitrate_bps) {
   //RTC_DCHECK(bitrate_bps);
-  int target_rate_kbps =
-      static_cast<double>(bitrate_bps) * conf_.bandwidth_usage_ratio / 1000;
-  alr_budget_.set_target_rate_kbps(target_rate_kbps);
+
+	if (last_estimated_bitrate_ != bitrate_bps) {
+		last_estimated_bitrate_ = bitrate_bps;
+		MS_DEBUG_TAG(bwe, "Setting ALR bitrate to %d", bitrate_bps);
+		int target_rate_kbps =
+			static_cast<double>(bitrate_bps) * conf_.bandwidth_usage_ratio / 1000;
+		alr_budget_.set_target_rate_kbps(target_rate_kbps);
+	}
 }
 
 absl::optional<int64_t> AlrDetector::GetApplicationLimitedRegionStartTime()

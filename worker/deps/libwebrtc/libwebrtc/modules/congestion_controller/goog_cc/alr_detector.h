@@ -58,13 +58,14 @@ class AlrDetector {
   // Returns time in milliseconds when the current application-limited region
   // started or empty result if the sender is currently not application-limited.
   absl::optional<int64_t> GetApplicationLimitedRegionStartTime() const;
+	void Process();
 
  private:
   friend class GoogCcStatePrinter;
   const AlrDetectorConfig conf_;
 
   absl::optional<int64_t> last_send_time_ms_;
-
+	int last_estimated_bitrate_;
   IntervalBudget alr_budget_;
   absl::optional<int64_t> alr_started_time_ms_;
 };

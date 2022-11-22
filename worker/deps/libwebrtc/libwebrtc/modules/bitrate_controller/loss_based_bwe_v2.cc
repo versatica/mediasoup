@@ -208,6 +208,7 @@ void LossBasedBweV2::SetMinMaxBitrate(DataRate min_bitrate,
 void LossBasedBweV2::SetProbeBitrate(absl::optional<DataRate> probe_bitrate) {
   if (probe_bitrate.has_value() && IsValid(probe_bitrate.value())) {
     if (!IsValid(probe_bitrate_) || probe_bitrate_ > probe_bitrate.value()) {
+			MS_DEBUG_DEV("Setting probe bitrate to %d", probe_bitrate.value().bps());
       probe_bitrate_ = probe_bitrate.value();
     }
   }
@@ -222,14 +223,12 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
   delay_based_estimate_ = delay_based_estimate;
   upper_link_capacity_ = upper_link_capacity;
   if (!IsEnabled()) {
-/*    RTC_LOG(LS_WARNING)
-        << "The estimator must be enabled before it can be used.";*/
+		MS_WARN_TAG(bwe, "The estimator must be enabled before it can be used.");
     return;
   }
   SetProbeBitrate(probe_bitrate);
   if (packet_results.empty()) {
-/*    RTC_LOG(LS_VERBOSE)
-        << "The estimate cannot be updated without any loss statistics.";*/
+		MS_WARN_TAG(bwe, "The estimate cannot be updated without any loss statistics.");
     return;
   }
 
@@ -238,8 +237,7 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
   }
 
   if (!IsValid(current_estimate_.loss_limited_bandwidth)) {
-/*    RTC_LOG(LS_VERBOSE)
-        << "The estimator must be initialized before it can be used.";*/
+		MS_WARN_TAG(bwe, "The estimator must be initialized before it can be used.");
     return;
   }
 
@@ -307,13 +305,12 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
     }
   }
 
-  if (IsEstimateIncreasingWhenLossLimited(best_candidate)) {
+  if (IsEstimateIncreasingWhenLossLimited(best_candidate) &&
+      best_candidate.loss_limited_bandwidth < delay_based_estimate) {
     current_state_ = LossBasedState::kIncreasing;
-  } else if (IsValid(delay_based_estimate_) &&
-             best_candidate.loss_limited_bandwidth < delay_based_estimate_) {
+  } else if (best_candidate.loss_limited_bandwidth < delay_based_estimate_) {
     current_state_ = LossBasedState::kDecreasing;
-  } else if (IsValid(delay_based_estimate_) &&
-             best_candidate.loss_limited_bandwidth == delay_based_estimate_) {
+  } else if (best_candidate.loss_limited_bandwidth >= delay_based_estimate_) {
     current_state_ = LossBasedState::kDelayBasedEstimate;
   }
   current_estimate_ = best_candidate;
