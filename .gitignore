@@ -16,6 +16,8 @@
 ## Worker.
 /worker/out
 /worker/scripts/node_modules
+# Flatbuffers generated header files.
+/worker/include/FBS
 # Vistual Studio generated Stuff.
 /worker/**/Debug
 /worker/**/Release
