@@ -364,11 +364,6 @@ export type RtcpParameters =
 	 * as specified in RFC 3550 (if false). Default true.
 	 */
 	reducedSize?: boolean;
-
-	/**
-	 * Whether RTCP-mux is used. Default true.
-	 */
-	mux?: boolean;
 };
 
 export function serializeRtpParameters(
@@ -441,11 +436,11 @@ export function serializeRtpParameters(
 
 	if (rtpParameters.rtcp)
 	{
-		const { cname, reducedSize, mux } = rtpParameters.rtcp;
+		const { cname, reducedSize } = rtpParameters.rtcp;
 		const cnameOffset = builder.createString(cname);
 
 		rtcpOffset = FbsRtcpParameters.createRtcpParameters(
-			builder, cnameOffset, Boolean(reducedSize), Boolean(mux)
+			builder, cnameOffset, Boolean(reducedSize)
 		);
 	}
 
@@ -757,8 +752,7 @@ export function parseRtpParameters(data: FbsRtpParameters): RtpParameters
 
 		rtcp = {
 			cname       : fbsRtcp.cname() ?? undefined,
-			reducedSize : fbsRtcp.reducedSize() ?? undefined,
-			mux         : fbsRtcp.mux() ?? undefined
+			reducedSize : fbsRtcp.reducedSize()
 		};
 	}
 

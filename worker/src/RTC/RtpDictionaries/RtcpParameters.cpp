@@ -30,8 +30,6 @@ namespace RTC
 		return FBS::RtpParameters::CreateRtcpParametersDirect(
 		  builder,
 		  this->cname.c_str(),
-		  this->reducedSize,
-		  true /* discrepancy between MUX and SSRC. Node dictionary specifies mux and C++ one ssrc */
-		);
+		  this->reducedSize);
 	}
 } // namespace RTC

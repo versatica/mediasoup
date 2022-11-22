@@ -250,7 +250,6 @@ namespace RTC
 
 	public:
 		std::string cname;
-		uint32_t ssrc{ 0u };
 		bool reducedSize{ true };
 	};
 

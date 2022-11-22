@@ -890,8 +890,7 @@ export function getConsumableRtpParameters(
 	consumableParams.rtcp =
 	{
 		cname       : params.rtcp!.cname,
-		reducedSize : true,
-		mux         : true
+		reducedSize : true
 	};
 
 	return consumableParams;

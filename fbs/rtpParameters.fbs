@@ -76,7 +76,6 @@ table RtpEncodingParameters {
 table RtcpParameters {
   cname:string;
   reduced_size:bool = true;
-  mux:bool = true;
 }
 
 table RtpParameters {

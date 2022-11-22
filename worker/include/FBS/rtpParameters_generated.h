@@ -1057,8 +1057,7 @@ struct RtcpParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_CNAME = 4,
-    VT_REDUCEDSIZE = 6,
-    VT_MUX = 8
+    VT_REDUCEDSIZE = 6
   };
   const flatbuffers::String *cname() const {
     return GetPointer<const flatbuffers::String *>(VT_CNAME);
@@ -1066,15 +1065,11 @@ struct RtcpParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   bool reducedSize() const {
     return GetField<uint8_t>(VT_REDUCEDSIZE, 1) != 0;
   }
-  bool mux() const {
-    return GetField<uint8_t>(VT_MUX, 1) != 0;
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_CNAME) &&
            verifier.VerifyString(cname()) &&
            VerifyField<uint8_t>(verifier, VT_REDUCEDSIZE, 1) &&
-           VerifyField<uint8_t>(verifier, VT_MUX, 1) &&
            verifier.EndTable();
   }
 };
@@ -1088,9 +1083,6 @@ struct RtcpParametersBuilder {
   }
   void add_reducedSize(bool reducedSize) {
     fbb_.AddElement<uint8_t>(RtcpParameters::VT_REDUCEDSIZE, static_cast<uint8_t>(reducedSize), 1);
-  }
-  void add_mux(bool mux) {
-    fbb_.AddElement<uint8_t>(RtcpParameters::VT_MUX, static_cast<uint8_t>(mux), 1);
   }
   explicit RtcpParametersBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1106,11 +1098,9 @@ struct RtcpParametersBuilder {
 inline flatbuffers::Offset<RtcpParameters> CreateRtcpParameters(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> cname = 0,
-    bool reducedSize = true,
-    bool mux = true) {
+    bool reducedSize = true) {
   RtcpParametersBuilder builder_(_fbb);
   builder_.add_cname(cname);
-  builder_.add_mux(mux);
   builder_.add_reducedSize(reducedSize);
   return builder_.Finish();
 }
@@ -1118,14 +1108,12 @@ inline flatbuffers::Offset<RtcpParameters> CreateRtcpParameters(
 inline flatbuffers::Offset<RtcpParameters> CreateRtcpParametersDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *cname = nullptr,
-    bool reducedSize = true,
-    bool mux = true) {
+    bool reducedSize = true) {
   auto cname__ = cname ? _fbb.CreateString(cname) : 0;
   return FBS::RtpParameters::CreateRtcpParameters(
       _fbb,
       cname__,
-      reducedSize,
-      mux);
+      reducedSize);
 }
 
 struct RtpParameters FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -1767,16 +1755,14 @@ inline const flatbuffers::TypeTable *RtpEncodingParametersTypeTable() {
 inline const flatbuffers::TypeTable *RtcpParametersTypeTable() {
   static const flatbuffers::TypeCode type_codes[] = {
     { flatbuffers::ET_STRING, 0, -1 },
-    { flatbuffers::ET_BOOL, 0, -1 },
     { flatbuffers::ET_BOOL, 0, -1 }
   };
   static const char * const names[] = {
     "cname",
-    "reducedSize",
-    "mux"
+    "reducedSize"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 3, type_codes, nullptr, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 2, type_codes, nullptr, nullptr, nullptr, names
   };
   return &tt;
 }
