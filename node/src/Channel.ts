@@ -4,9 +4,8 @@ import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
-import { Request } from './fbs/fbs/request/request';
-import { Response } from './fbs/fbs/response/response';
-import { Body as RequestBody, Method } from './fbs/request_generated';
+import { Body as RequestBody, Method, Request } from './fbs/request_generated';
+import { Response } from './fbs/response_generated';
 
 const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('Channel');
@@ -246,6 +245,7 @@ export class Channel extends EnhancedEventEmitter
 
 		const id = this.#nextId;
 
+		// TODO: DEV. Remove.
 		logger.warn('request() [method:%s, id:%s]', Method[method], id);
 
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);

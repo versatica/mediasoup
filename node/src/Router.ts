@@ -394,6 +394,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		}: WebRtcTransportOptions
 	): Promise<WebRtcTransport>
 	{
+		logger.debug('createWebRtcTransport()');
+
 		if (!webRtcServer && !Array.isArray(listenIps))
 			throw new TypeError('missing webRtcServer and listenIps (one of them is mandatory)');
 		else if (
