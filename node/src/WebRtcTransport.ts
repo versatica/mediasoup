@@ -1,3 +1,4 @@
+import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import {
 	parseBaseTransportDump,
@@ -433,13 +434,40 @@ export class WebRtcTransport extends
 	{
 		logger.debug('connect()');
 
-		const reqData = { dtlsParameters };
+		const builder = this.channel.bufferBuilder;
+		// Serialize DtlsParameters.
+		const dtlsParametersOffset = serializeDtlsParameters(builder, dtlsParameters);
+		// Create WebRtcTransportConnectData.
+		const connectData =
+			FbsTransport.ConnectWebRtcTransportData.createConnectWebRtcTransportData(
+				builder, dtlsParametersOffset
+			);
+		// Create request.
+		const requestOffset = FbsTransport.ConnectRequest.createConnectRequest(
+			builder,
+			FbsTransport.ConnectData.ConnectWebRtcTransportData,
+			connectData);
+		// Wait for response.
+		const response = await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_CONNECT,
+			FbsRequest.Body.FBS_Transport_ConnectRequest,
+			requestOffset,
+			this.internal.transportId
+		);
 
-		const data =
-			await this.channel.request('transport.connect', this.internal.transportId, reqData);
+		/* Decode the response. */
+		const data = new FbsTransport.ConnectResponse();
+
+		response.body(data);
+
+		const webRtcTransportConnectResponse =
+			new FbsTransport.ConnectWebRtcTransportResponse();
+
+		data.data(webRtcTransportConnectResponse);
 
 		// Update data.
-		this.#data.dtlsParameters.role = data.dtlsLocalRole;
+		this.#data.dtlsParameters.role =
+			webRtcTransportConnectResponse.dtlsLocalRole()! as DtlsRole;
 	}
 
 	/**
@@ -600,6 +628,39 @@ export function parseDtlsParameters(binary: FbsTransport.DtlsParameters): DtlsPa
 		fingerprints : fingerprints,
 		role         : binary.role()! as DtlsRole
 	};
+}
+
+export function serializeDtlsParameters(
+	builder: flatbuffers.Builder, dtlsParameters: DtlsParameters
+): number
+{
+	const fingerprints: number[] = [];
+
+	try
+	{
+		for (const fingerprint of dtlsParameters.fingerprints)
+		{
+			const algorithmOffset = builder.createString(fingerprint.algorithm);
+			const valueOffset = builder.createString(fingerprint.value);
+			const fingerprintOffset = FbsTransport.Fingerprint.createFingerprint(
+				builder, algorithmOffset, valueOffset);
+
+			fingerprints.push(fingerprintOffset);
+		}
+
+		const fingerprintsOffset = FbsTransport.DtlsParameters.createFingerprintsVector(
+			builder, fingerprints);
+		const roleOffset = builder.createString(dtlsParameters.role);
+
+		return FbsTransport.DtlsParameters.createDtlsParameters(
+			builder,
+			fingerprintsOffset,
+			roleOffset);
+	}
+	catch (error)
+	{
+		throw new TypeError(`${error}`);
+	}
 }
 
 type WebRtcTransportDump = BaseTransportDump &

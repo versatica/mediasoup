@@ -18,6 +18,57 @@ table RestartIceResponse {
   ice_lite:bool;
 }
 
+union ConnectData {
+  ConnectPlainTransportData,
+  ConnectWebRtcTransportData,
+  ConnectPipeTransportData,
+}
+
+table ConnectRequest {
+  data: ConnectData (required);
+}
+
+union ConnectResponseData {
+  ConnectPlainTransportResponse,
+  ConnectWebRtcTransportResponse,
+  ConnectPipeTransportResponse,
+}
+
+table ConnectResponse {
+  data:ConnectResponseData;
+}
+
+table ConnectPlainTransportData {
+  ip:string;
+  port:uint16 = null;
+  rtcp_port:uint16 = null;
+  srtp_parameters:SrtpParameters;
+}
+
+table ConnectPlainTransportResponse {
+  tuple:Tuple (required);
+  rtcp_tuple:Tuple;
+  srtp_parameters:SrtpParameters;
+}
+
+table ConnectWebRtcTransportData {
+  dtls_parameters:DtlsParameters (required);
+}
+
+table ConnectWebRtcTransportResponse {
+  dtls_local_role:string (required);
+}
+
+table ConnectPipeTransportData {
+  ip:string (required);
+  port:uint16 = null;
+  srtp_parameters:SrtpParameters;
+}
+
+table ConnectPipeTransportResponse {
+  tuple:Tuple;
+}
+
 table ConsumeRequest {
   consumer_id:string (required);
   producer_id:string (required);
@@ -140,7 +191,7 @@ table Fingerprint {
 
 table DtlsParameters {
   fingerprints:[Fingerprint] (required);
-  role:string (required);
+  role:string;
 }
 
 table WebRtcTransportDump {

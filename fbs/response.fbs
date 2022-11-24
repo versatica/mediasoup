@@ -15,6 +15,7 @@ union Body {
   FBS.WebRtcServer.DumpResponse,
   FBS.Router.DumpResponse,
   FBS.Transport.DumpResponse,
+  FBS.Transport.ConnectResponse,
   FBS.Transport.ProduceResponse,
   FBS.Transport.ConsumeResponse,
   FBS.Producer.DumpResponse,

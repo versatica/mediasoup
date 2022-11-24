@@ -323,9 +323,9 @@ export class Channel extends EnhancedEventEmitter
 		const buffer = this.#bufferBuilder.asUint8Array();
 
 		// TODO: DEV. Remove.
-		// const req = Request.getRootAsRequest(new flatbuffers.ByteBuffer(buffer));
+		const req = Request.getRootAsRequest(new flatbuffers.ByteBuffer(buffer));
 
-		// logger.warn(JSON.stringify(req.unpack(), undefined, 2));
+		logger.warn(JSON.stringify(req.unpack(), undefined, 2));
 
 		// Clear the buffer builder so it's reused for the next request.
 		this.#bufferBuilder.clear();

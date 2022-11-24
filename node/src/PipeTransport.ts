@@ -19,7 +19,7 @@ import { Consumer, ConsumerType } from './Consumer';
 import { Producer } from './Producer';
 import { RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import { parseSrtpParameters, SrtpParameters } from './SrtpParameters';
+import { parseSrtpParameters, serializeSrtpParameters, SrtpParameters } from './SrtpParameters';
 import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsResponse from './fbs/response_generated';
@@ -273,13 +273,42 @@ export class PipeTransport
 	{
 		logger.debug('connect()');
 
-		const reqData = { ip, port, srtpParameters };
+		const builder = this.channel.bufferBuilder;
+
+		const connectData = createConnectRequest({
+			builder,
+			ip,
+			port,
+			srtpParameters
+		});
+
+		const requestOffset = FbsTransport.ConnectRequest.createConnectRequest(
+			builder,
+			FbsTransport.ConnectData.ConnectPipeTransportData,
+			connectData
+		);
+
+		// Wait for response.
+		const response = await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_CONNECT,
+			FbsRequest.Body.FBS_Transport_ConnectRequest,
+			requestOffset,
+			this.internal.transportId
+		);
+
+		/* Decode the response. */
+		const connectResponse = new FbsTransport.ConnectResponse();
+
+		response.body(connectResponse);
 
 		const data =
-			await this.channel.request('transport.connect', this.internal.transportId, reqData);
+			new FbsTransport.ConnectPlainTransportResponse();
+
+		connectResponse.data(data);
 
 		// Update data.
-		this.#data.tuple = data.tuple;
+		if (data.tuple())
+			this.#data.tuple = parseTuple(data.tuple()!);
 	}
 
 	/**
@@ -482,4 +511,54 @@ export function parsePipeTransportDump(
 		rtx            : binary.rtx(),
 		srtpParameters : srtpParameters
 	};
+}
+
+function createConnectRequest(
+	{
+		builder,
+		ip,
+		port,
+		srtpParameters
+	}:
+	{
+		builder: flatbuffers.Builder;
+		ip?: string;
+		port?: number;
+		srtpParameters?: SrtpParameters;
+	}
+): number
+{
+	try
+	{
+		let ipOffset = 0;
+		let srtpParametersOffset = 0;
+
+		if (ip)
+		{
+			ipOffset = builder.createString(ip);
+		}
+
+		// Serialize SrtpParameters.
+		if (srtpParameters)
+		{
+			srtpParametersOffset = serializeSrtpParameters(builder, srtpParameters);
+		}
+
+		// Create PlainTransportConnectData.
+		FbsTransport.ConnectPlainTransportData.startConnectPlainTransportData(builder);
+		FbsTransport.ConnectPlainTransportData.addIp(builder, ipOffset);
+
+		if (typeof port === 'number')
+			FbsTransport.ConnectPlainTransportData.addPort(builder, port);
+		if (srtpParameters)
+			FbsTransport.ConnectPlainTransportData.addSrtpParameters(
+				builder, srtpParametersOffset
+			);
+
+		return FbsTransport.ConnectPlainTransportData.endConnectPlainTransportData(builder);
+	}
+	catch (error)
+	{
+		throw new TypeError(`${error}`);
+	}
 }

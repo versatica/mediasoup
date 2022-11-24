@@ -445,67 +445,38 @@ namespace RTC
 				if (this->connectCalled)
 					MS_THROW_ERROR("connect() already called");
 
+				auto body           = request->_data->body_as<FBS::Transport::ConnectRequest>();
+				auto connectData    = body->data_as<FBS::Transport::ConnectWebRtcTransportData>();
+				auto dtlsParameters = connectData->dtlsParameters();
+
 				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
 				RTC::DtlsTransport::Role dtlsRemoteRole;
 
-				auto jsonDtlsParametersIt = request->data.find("dtlsParameters");
-
-				if (jsonDtlsParametersIt == request->data.end() || !jsonDtlsParametersIt->is_object())
-					MS_THROW_TYPE_ERROR("missing dtlsParameters");
-
-				auto jsonFingerprintsIt = jsonDtlsParametersIt->find("fingerprints");
-
-				if (jsonFingerprintsIt == jsonDtlsParametersIt->end() || !jsonFingerprintsIt->is_array())
-				{
-					MS_THROW_TYPE_ERROR("missing dtlsParameters.fingerprints");
-				}
-				else if (jsonFingerprintsIt->empty())
+				if (dtlsParameters->fingerprints()->size() == 0)
 				{
 					MS_THROW_TYPE_ERROR("empty dtlsParameters.fingerprints array");
 				}
 
 				// NOTE: Just take the first fingerprint.
-				for (auto& jsonFingerprint : *jsonFingerprintsIt)
+				for (const auto& fingerprint : *dtlsParameters->fingerprints())
 				{
-					if (!jsonFingerprint.is_object())
-						MS_THROW_TYPE_ERROR("wrong entry in dtlsParameters.fingerprints (not an object)");
-
-					auto jsonAlgorithmIt = jsonFingerprint.find("algorithm");
-
-					if (jsonAlgorithmIt == jsonFingerprint.end())
-						MS_THROW_TYPE_ERROR("missing fingerprint.algorithm");
-					else if (!jsonAlgorithmIt->is_string())
-						MS_THROW_TYPE_ERROR("wrong fingerprint.algorithm (not a string)");
-
 					dtlsRemoteFingerprint.algorithm =
-					  RTC::DtlsTransport::GetFingerprintAlgorithm(jsonAlgorithmIt->get<std::string>());
+					  RTC::DtlsTransport::GetFingerprintAlgorithm(fingerprint->algorithm()->str());
 
 					if (dtlsRemoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
 					{
 						MS_THROW_TYPE_ERROR("invalid fingerprint.algorithm value");
 					}
 
-					auto jsonValueIt = jsonFingerprint.find("value");
-
-					if (jsonValueIt == jsonFingerprint.end())
-						MS_THROW_TYPE_ERROR("missing fingerprint.value");
-					else if (!jsonValueIt->is_string())
-						MS_THROW_TYPE_ERROR("wrong fingerprint.value (not a string)");
-
-					dtlsRemoteFingerprint.value = jsonValueIt->get<std::string>();
+					dtlsRemoteFingerprint.value = fingerprint->value()->str();
 
 					// Just use the first fingerprint.
 					break;
 				}
 
-				auto jsonRoleIt = jsonDtlsParametersIt->find("role");
-
-				if (jsonRoleIt != jsonDtlsParametersIt->end())
+				if (flatbuffers::IsFieldPresent(dtlsParameters, FBS::Transport::DtlsParameters::VT_ROLE))
 				{
-					if (!jsonRoleIt->is_string())
-						MS_THROW_TYPE_ERROR("wrong dtlsParameters.role (not a string)");
-
-					dtlsRemoteRole = RTC::DtlsTransport::StringToRole(jsonRoleIt->get<std::string>());
+					dtlsRemoteRole = RTC::DtlsTransport::StringToRole(dtlsParameters->role()->str());
 
 					if (dtlsRemoteRole == RTC::DtlsTransport::Role::NONE)
 						MS_THROW_TYPE_ERROR("invalid dtlsParameters.role value");
@@ -548,23 +519,31 @@ namespace RTC
 				}
 
 				// Tell the caller about the selected local DTLS role.
-				json data = json::object();
+				std::string dtlsLocalRole;
 
 				switch (this->dtlsRole)
 				{
 					case RTC::DtlsTransport::Role::CLIENT:
-						data["dtlsLocalRole"] = "client";
+						dtlsLocalRole = "client";
 						break;
 
 					case RTC::DtlsTransport::Role::SERVER:
-						data["dtlsLocalRole"] = "server";
+						dtlsLocalRole = "server";
 						break;
 
 					default:
 						MS_ABORT("invalid local DTLS role");
 				}
 
-				request->Accept(data);
+				auto connectResponseDataOffset = FBS::Transport::CreateConnectWebRtcTransportResponseDirect(
+				  request->GetBufferBuilder(), dtlsLocalRole.c_str());
+
+				auto responseOffset = FBS::Transport::CreateConnectResponse(
+				  request->GetBufferBuilder(),
+				  FBS::Transport::ConnectResponseData::ConnectWebRtcTransportResponse,
+				  connectResponseDataOffset.Union());
+
+				request->Accept(FBS::Response::Body::FBS_Transport_ConnectResponse, responseOffset);
 
 				break;
 			}

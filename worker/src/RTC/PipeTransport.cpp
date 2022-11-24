@@ -184,56 +184,33 @@ namespace RTC
 					uint16_t port{ 0u };
 					std::string srtpKeyBase64;
 
-					auto jsonSrtpParametersIt = request->data.find("srtpParameters");
+					auto body        = request->_data->body_as<FBS::Transport::ConnectRequest>();
+					auto connectData = body->data_as<FBS::Transport::ConnectPipeTransportData>();
 
-					if (!HasSrtp() && jsonSrtpParametersIt != request->data.end())
+					auto srtpParametersPresent = flatbuffers::IsFieldPresent(
+					  connectData, FBS::Transport::ConnectPipeTransportData::VT_SRTPPARAMETERS);
+
+					if (!HasSrtp() && srtpParametersPresent)
 					{
 						MS_THROW_TYPE_ERROR("invalid srtpParameters (SRTP not enabled)");
 					}
 					else if (HasSrtp())
 					{
-						// clang-format off
-						if (
-							jsonSrtpParametersIt == request->data.end() ||
-							!jsonSrtpParametersIt->is_object()
-						)
-						// clang-format on
+						if (!srtpParametersPresent)
 						{
 							MS_THROW_TYPE_ERROR("missing srtpParameters (SRTP enabled)");
 						}
 
-						auto jsonCryptoSuiteIt = jsonSrtpParametersIt->find("cryptoSuite");
-
-						// clang-format off
-						if (
-							jsonCryptoSuiteIt == jsonSrtpParametersIt->end() ||
-							!jsonCryptoSuiteIt->is_string()
-						)
-						// clang-format on
-						{
-							MS_THROW_TYPE_ERROR("missing srtpParameters.cryptoSuite)");
-						}
+						auto srtpParameters = connectData->srtpParameters();
 
 						// NOTE: We just use AEAD_AES_256_GCM as SRTP crypto suite in
 						// PipeTransport.
-						if (jsonCryptoSuiteIt->get<std::string>() != PipeTransport::srtpCryptoSuiteString)
+						if (srtpParameters->cryptoSuite()->str() != PipeTransport::srtpCryptoSuiteString)
 						{
 							MS_THROW_TYPE_ERROR("invalid/unsupported srtpParameters.cryptoSuite");
 						}
 
-						auto jsonKeyBase64It = jsonSrtpParametersIt->find("keyBase64");
-
-						// clang-format off
-						if (
-							jsonKeyBase64It == jsonSrtpParametersIt->end() ||
-							!jsonKeyBase64It->is_string()
-						)
-						// clang-format on
-						{
-							MS_THROW_TYPE_ERROR("missing srtpParameters.keyBase64)");
-						}
-
-						srtpKeyBase64 = jsonKeyBase64It->get<std::string>();
+						srtpKeyBase64 = srtpParameters->keyBase64()->str();
 
 						size_t outLen;
 						// This may throw.
@@ -284,29 +261,21 @@ namespace RTC
 						delete[] srtpRemoteKey;
 					}
 
-					auto jsonIpIt = request->data.find("ip");
-
-					if (jsonIpIt == request->data.end() || !jsonIpIt->is_string())
+					if (!flatbuffers::IsFieldPresent(
+					      connectData, FBS::Transport::ConnectPipeTransportData::VT_IP))
 						MS_THROW_TYPE_ERROR("missing ip");
 
-					ip = jsonIpIt->get<std::string>();
+					ip = connectData->ip()->str();
 
 					// This may throw.
 					Utils::IP::NormalizeIp(ip);
 
-					auto jsonPortIt = request->data.find("port");
-
-					// clang-format off
-					if (
-						jsonPortIt == request->data.end() ||
-						!Utils::Json::IsPositiveInteger(*jsonPortIt)
-					)
-					// clang-format on
+					if (!connectData->port().has_value())
 					{
 						MS_THROW_TYPE_ERROR("missing port");
 					}
 
-					port = jsonPortIt->get<uint16_t>();
+					port = connectData->port().value();
 
 					int err;
 
@@ -365,12 +334,17 @@ namespace RTC
 					throw;
 				}
 
-				// Tell the caller about the selected local DTLS role.
-				json data = json::object();
+				auto tupleOffset = this->tuple->FillBuffer(request->GetBufferBuilder());
 
-				this->tuple->FillJson(data["tuple"]);
+				auto connectResponseDataOffset = FBS::Transport::CreateConnectPipeTransportResponse(
+				  request->GetBufferBuilder(), tupleOffset);
 
-				request->Accept(data);
+				auto responseOffset = FBS::Transport::CreateConnectResponse(
+				  request->GetBufferBuilder(),
+				  FBS::Transport::ConnectResponseData::ConnectPipeTransportResponse,
+				  connectResponseDataOffset.Union());
+
+				request->Accept(FBS::Response::Body::FBS_Transport_ConnectResponse, responseOffset);
 
 				// Assume we are connected (there is no much more we can do to know it)
 				// and tell the parent class.

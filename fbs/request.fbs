@@ -82,6 +82,7 @@ union Body {
   FBS.Router.CreateAudioLevelObserverRequest,
   FBS.Router.CloseTransportRequest,
   FBS.Router.CloseRtpObserverRequest,
+  FBS.Transport.ConnectRequest,
   FBS.Transport.SetMaxIncomingBitrateRequest,
   FBS.Transport.SetMaxOutgoingBitrateRequest,
   FBS.Transport.ProduceRequest,

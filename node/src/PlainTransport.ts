@@ -1,3 +1,4 @@
+import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import {
 	BaseTransportDump,
@@ -13,7 +14,7 @@ import {
 	SctpState
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import { parseSrtpParameters, SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
+import { parseSrtpParameters, serializeSrtpParameters, SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
 
@@ -310,19 +311,50 @@ export class PlainTransport extends
 	{
 		logger.debug('connect()');
 
-		const reqData = { ip, port, rtcpPort, srtpParameters };
+		const builder = this.channel.bufferBuilder;
+
+		const connectData = createConnectRequest({
+			builder,
+			ip,
+			port,
+			rtcpPort,
+			srtpParameters
+		});
+
+		const requestOffset = FbsTransport.ConnectRequest.createConnectRequest(
+			builder,
+			FbsTransport.ConnectData.ConnectPlainTransportData,
+			connectData
+		);
+
+		// Wait for response.
+		const response = await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_CONNECT,
+			FbsRequest.Body.FBS_Transport_ConnectRequest,
+			requestOffset,
+			this.internal.transportId
+		);
+
+		/* Decode the response. */
+		const connectResponse = new FbsTransport.ConnectResponse();
+
+		response.body(connectResponse);
 
 		const data =
-			await this.channel.request('transport.connect', this.internal.transportId, reqData);
+			new FbsTransport.ConnectPlainTransportResponse();
+
+		connectResponse.data(data);
 
 		// Update data.
-		if (data.tuple)
-			this.#data.tuple = data.tuple;
+		if (data.tuple())
+			this.#data.tuple = parseTuple(data.tuple()!);
 
-		if (data.rtcpTuple)
-			this.#data.rtcpTuple = data.rtcpTuple;
+		if (data.rtcpTuple())
+			this.#data.rtcpTuple = parseTuple(data.rtcpTuple()!);
 
-		this.#data.srtpParameters = data.srtpParameters;
+		if (data.srtpParameters())
+			this.#data.srtpParameters = parseSrtpParameters(
+				data.srtpParameters()!);
 	}
 
 	private handleWorkerNotifications(): void
@@ -391,6 +423,60 @@ export class PlainTransport extends
 				}
 			}
 		});
+	}
+}
+
+function createConnectRequest(
+	{
+		builder,
+		ip,
+		port,
+		rtcpPort,
+		srtpParameters
+	}:
+	{
+		builder: flatbuffers.Builder;
+		ip?: string;
+		port?: number;
+		rtcpPort?: number;
+		srtpParameters?: SrtpParameters;
+	}
+): number
+{
+	try
+	{
+		let ipOffset = 0;
+		let srtpParametersOffset = 0;
+
+		if (ip)
+		{
+			ipOffset = builder.createString(ip);
+		}
+
+		// Serialize SrtpParameters.
+		if (srtpParameters)
+		{
+			srtpParametersOffset = serializeSrtpParameters(builder, srtpParameters);
+		}
+
+		// Create PlainTransportConnectData.
+		FbsTransport.ConnectPlainTransportData.startConnectPlainTransportData(builder);
+		FbsTransport.ConnectPlainTransportData.addIp(builder, ipOffset);
+
+		if (typeof port === 'number')
+			FbsTransport.ConnectPlainTransportData.addPort(builder, port);
+		if (typeof rtcpPort === 'number')
+			FbsTransport.ConnectPlainTransportData.addRtcpPort(builder, rtcpPort);
+		if (srtpParameters)
+			FbsTransport.ConnectPlainTransportData.addSrtpParameters(
+				builder, srtpParametersOffset
+			);
+
+		return FbsTransport.ConnectPlainTransportData.endConnectPlainTransportData(builder);
+	}
+	catch (error)
+	{
+		throw new TypeError(`${error}`);
 	}
 }
 
