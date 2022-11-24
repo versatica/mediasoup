@@ -15,16 +15,21 @@ union Body {
   FBS.WebRtcServer.DumpResponse,
   FBS.Router.DumpResponse,
   FBS.Transport.DumpResponse,
+  FBS.Transport.GetStatsResponse,
   FBS.Transport.ConnectResponse,
   FBS.Transport.ProduceResponse,
   FBS.Transport.ConsumeResponse,
   FBS.Producer.DumpResponse,
+  FBS.Producer.GetStatsResponse,
   FBS.Consumer.DumpResponse,
+  FBS.Consumer.GetStatsResponse,
   FBS.Consumer.SetPreferredLayersResponse,
   FBS.Consumer.SetPriorityResponse,
   FBS.DataProducer.DumpResponse,
+  FBS.DataProducer.GetStatsResponse,
   FBS.DataConsumer.GetBufferedAmountResponse,
   FBS.DataConsumer.DumpResponse,
+  FBS.DataConsumer.GetStatsResponse,
 }
 
 table Response {

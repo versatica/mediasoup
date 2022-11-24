@@ -216,9 +216,7 @@ namespace Channel
 		{
 			try
 			{
-				char* charMessage{ reinterpret_cast<char*>(message) };
-
-				auto* request = new Channel::ChannelRequest(this, charMessage, messageLen);
+				auto* request = new Channel::ChannelRequest(this, reinterpret_cast<uint8_t*>(message));
 
 				// Notify the listener.
 				try
@@ -282,47 +280,6 @@ namespace Channel
 	{
 		MS_TRACE_STD();
 
-		// TODO: Remove when every request is ported to flatbuffers.
-		if (msg[0] != 'r')
-		{
-			goto binary;
-		}
-
-		++msg;
-		--msgLen;
-		try
-		{
-			auto* request = new Channel::ChannelRequest(this, msg, msgLen);
-
-			// Notify the listener.
-			try
-			{
-				this->listener->HandleRequest(request);
-			}
-			catch (const MediaSoupTypeError& error)
-			{
-				request->TypeError(error.what());
-			}
-			catch (const MediaSoupError& error)
-			{
-				request->Error(error.what());
-			}
-
-			// Delete the Request.
-			delete request;
-		}
-		catch (const json::parse_error& error)
-		{
-			MS_ERROR_STD("JSON parsing error: %s", error.what());
-		}
-		catch (const MediaSoupError& error)
-		{
-			MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
-		}
-
-		return;
-
-	binary:
 		try
 		{
 			auto* request = new Channel::ChannelRequest(this, reinterpret_cast<uint8_t*>(msg));

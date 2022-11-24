@@ -514,7 +514,19 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('consumer.getStats', this.#internal.consumerId);
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.CONSUMER_GET_STATS,
+			undefined,
+			undefined,
+			this.#internal.consumerId
+		);
+
+		/* Decode the response. */
+		const data = new FbsConsumer.GetStatsResponse();
+
+		response.body(data);
+
+		return JSON.parse(data.stats()!);
 	}
 
 	/**

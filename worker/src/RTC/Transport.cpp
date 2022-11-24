@@ -521,11 +521,16 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
 			{
+				// TMP: Replace JSON by flatbuffers.
+
 				json data = json::array();
 
 				FillJsonStats(data);
 
-				request->Accept(data);
+				auto responseOffset = FBS::Transport::CreateGetStatsResponseDirect(
+				  request->GetBufferBuilder(), data.dump().c_str());
+
+				request->Accept(FBS::Response::Body::FBS_Transport_GetStatsResponse, responseOffset);
 
 				break;
 			}

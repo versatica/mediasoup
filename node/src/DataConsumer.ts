@@ -319,7 +319,19 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('dataConsumer.getStats', this.#internal.dataConsumerId);
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.DATA_CONSUMER_GET_STATS,
+			undefined,
+			undefined,
+			this.#internal.dataConsumerId
+		);
+
+		/* Decode the response. */
+		const data = new FbsTransport.GetStatsResponse();
+
+		response.body(data);
+
+		return JSON.parse(data.stats()!);
 	}
 
 	/**

@@ -422,7 +422,19 @@ export class WebRtcTransport extends
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal.transportId);
+		const response = await this.channel.requestBinary(
+			FbsRequest.Method.TRANSPORT_GET_STATS,
+			undefined,
+			undefined,
+			this.internal.transportId
+		);
+
+		/* Decode the response. */
+		const data = new FbsTransport.GetStatsResponse();
+
+		response.body(data);
+
+		return JSON.parse(data.stats()!);
 	}
 
 	/**

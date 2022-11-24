@@ -433,7 +433,19 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('producer.getStats', this.#internal.producerId);
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.PRODUCER_GET_STATS,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
+
+		/* Decode the response. */
+		const data = new FbsTransport.GetStatsResponse();
+
+		response.body(data);
+
+		return JSON.parse(data.stats()!);
 	}
 
 	/**

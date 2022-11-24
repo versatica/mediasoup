@@ -12,18 +12,6 @@ namespace Channel
 {
 	/* Class variables. */
 
-	// TODO: Remove once JSON is removed.
-	// clang-format off
-	absl::flat_hash_map<std::string, FBS::Request::Method> ChannelRequest::string2Method =
-	{
-		{ "transport.getStats",                          FBS::Request::Method::TRANSPORT_GET_STATS                              },
-		{ "producer.getStats",                           FBS::Request::Method::PRODUCER_GET_STATS                               },
-		{ "consumer.getStats",                           FBS::Request::Method::CONSUMER_GET_STATS                               },
-		{ "dataProducer.getStats",                       FBS::Request::Method::DATA_PRODUCER_GET_STATS                          },
-		{ "dataConsumer.getStats",                       FBS::Request::Method::DATA_CONSUMER_GET_STATS                          },
-	};
-	// clang-format on
-
 	// clang-format off
 	absl::flat_hash_map<FBS::Request::Method, const char*> ChannelRequest::method2String =
 	{
@@ -90,67 +78,6 @@ namespace Channel
 	flatbuffers::FlatBufferBuilder ChannelRequest::bufferBuilder;
 
 	/* Instance methods. */
-
-	/**
-	 * msg contains "id:method:handlerId:data" where:
-	 * - id: The ID of the request.
-	 * - handlerId: The ID of the target entity
-	 * - data: JSON object.
-	 */
-	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, const char* msg, size_t msgLen)
-	  : channel(channel)
-	{
-		MS_TRACE();
-
-		auto info = Utils::String::Split(std::string(msg, msgLen), ':', 3);
-
-		if (info.size() < 2)
-			MS_THROW_ERROR("too few arguments");
-
-		this->id = std::stoul(info[0]);
-
-		auto method = info[1];
-
-		auto methodIdIt = ChannelRequest::string2Method.find(method);
-
-		if (methodIdIt == ChannelRequest::string2Method.end())
-		{
-			Error("unknown method");
-
-			MS_THROW_ERROR("unknown method '%s'", methodStr.c_str());
-		}
-
-		this->methodStr = method;
-		this->method    = methodIdIt->second;
-
-		if (info.size() > 2)
-		{
-			auto& handlerId = info[2];
-
-			if (handlerId != "undefined")
-				this->handlerId = handlerId;
-		}
-
-		if (info.size() > 3)
-		{
-			auto& data = info[3];
-
-			if (data != "undefined")
-			{
-				try
-				{
-					this->data = json::parse(data);
-
-					if (!this->data.is_object())
-						this->data = json::object();
-				}
-				catch (const json::parse_error& error)
-				{
-					MS_THROW_TYPE_ERROR("JSON parsing error: %s", error.what());
-				}
-			}
-		}
-	}
 
 	/**
 	 * msg contains the request flatbuffer.

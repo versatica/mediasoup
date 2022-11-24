@@ -25,15 +25,10 @@ namespace Channel
 	public:
 		static absl::flat_hash_map<FBS::Request::Method, const char*> method2String;
 
-	private:
-		// TODO: Remove once JSON is removed.
-		static absl::flat_hash_map<std::string, FBS::Request::Method> string2Method;
-
 	public:
 		static flatbuffers::FlatBufferBuilder bufferBuilder;
 
 	public:
-		ChannelRequest(Channel::ChannelSocket* channel, const char* msg, size_t msgLen);
 		ChannelRequest(Channel::ChannelSocket* channel, const uint8_t* msg);
 		virtual ~ChannelRequest();
 

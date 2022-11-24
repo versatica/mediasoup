@@ -296,7 +296,19 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('dataProducer.getStats', this.#internal.dataProducerId);
+		const response = await this.#channel.requestBinary(
+			FbsRequest.Method.DATA_PRODUCER_GET_STATS,
+			undefined,
+			undefined,
+			this.#internal.dataProducerId
+		);
+
+		/* Decode the response. */
+		const data = new FbsTransport.GetStatsResponse();
+
+		response.body(data);
+
+		return JSON.parse(data.stats()!);
 	}
 
 	/**

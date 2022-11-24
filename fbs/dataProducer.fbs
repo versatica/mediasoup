@@ -10,3 +10,7 @@ table DumpResponse {
   protocol:string (required);
 }
 
+// TMP: String holding JSON stats.
+table GetStatsResponse {
+  stats:string (required);
+}

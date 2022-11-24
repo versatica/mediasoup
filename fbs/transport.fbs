@@ -249,6 +249,11 @@ table BaseTransportOptions {
   is_data_channel:bool = false;
 }
 
+// TMP: String holding JSON stats.
+table GetStatsResponse {
+  stats:string (required);
+}
+
 table SetMaxIncomingBitrateRequest {
   max_incoming_bitrate:uint32;
 }
