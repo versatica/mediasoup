@@ -545,17 +545,17 @@ function createConnectRequest(
 		}
 
 		// Create PlainTransportConnectData.
-		FbsTransport.ConnectPlainTransportData.startConnectPlainTransportData(builder);
-		FbsTransport.ConnectPlainTransportData.addIp(builder, ipOffset);
+		FbsTransport.ConnectPipeTransportData.startConnectPipeTransportData(builder);
+		FbsTransport.ConnectPipeTransportData.addIp(builder, ipOffset);
 
 		if (typeof port === 'number')
-			FbsTransport.ConnectPlainTransportData.addPort(builder, port);
+			FbsTransport.ConnectPipeTransportData.addPort(builder, port);
 		if (srtpParameters)
-			FbsTransport.ConnectPlainTransportData.addSrtpParameters(
+			FbsTransport.ConnectPipeTransportData.addSrtpParameters(
 				builder, srtpParametersOffset
 			);
 
-		return FbsTransport.ConnectPlainTransportData.endConnectPlainTransportData(builder);
+		return FbsTransport.ConnectPipeTransportData.endConnectPipeTransportData(builder);
 	}
 	catch (error)
 	{
