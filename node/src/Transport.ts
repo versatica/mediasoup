@@ -308,7 +308,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			this.internal.transportId
 		).pack(builder);
 
-		this.channel.requestBinary(
+		this.channel.request(
 			FbsRequest.Method.ROUTER_CLOSE_TRANSPORT,
 			FbsRequest.Body.FBS_Router_CloseTransportRequest,
 			requestOffset,
@@ -526,7 +526,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			bitrate
 		).pack(builder);
 
-		await this.channel.requestBinary(
+		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE,
 			FbsRequest.Body.FBS_Transport_SetMaxIncomingBitrateRequest,
 			requestOffset,
@@ -548,7 +548,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			bitrate
 		).pack(builder);
 
-		await this.channel.requestBinary(
+		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE,
 			FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest,
 			requestOffset,
@@ -636,7 +636,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			paused
 		});
 
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_PRODUCE,
 			FbsRequest.Body.FBS_Transport_ProduceRequest,
 			requestOffset,
@@ -760,7 +760,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			pipe
 		});
 
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONSUME,
 			FbsRequest.Body.FBS_Transport_ConsumeRequest,
 			consumeRequestOffset,
@@ -870,7 +870,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			protocol
 		});
 
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_PRODUCE_DATA,
 			FbsRequest.Body.FBS_Transport_ProduceDataRequest,
 			requestOffset,
@@ -994,7 +994,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			protocol
 		});
 
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONSUME_DATA,
 			FbsRequest.Body.FBS_Transport_ConsumeDataRequest,
 			requestOffset,
@@ -1061,7 +1061,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			types
 		).pack(builder);
 
-		await this.channel.requestBinary(
+		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT,
 			FbsRequest.Body.FBS_Transport_EnableTraceEventRequest,
 			requestOffset,

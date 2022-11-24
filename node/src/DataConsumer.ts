@@ -253,7 +253,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			this.#internal.dataConsumerId
 		).pack(builder);
 
-		this.#channel.requestBinary(
+		this.#channel.request(
 			FbsRequest.Method.TRANSPORT_CLOSE_DATA_CONSUMER,
 			FbsRequest.Body.FBS_Transport_CloseDataConsumerRequest,
 			requestOffset,
@@ -297,7 +297,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('dump()');
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.DATA_CONSUMER_DUMP,
 			undefined,
 			undefined,
@@ -319,7 +319,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('getStats()');
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.DATA_CONSUMER_GET_STATS,
 			undefined,
 			undefined,
@@ -348,7 +348,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			threshold
 		).pack(builder);
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
 			FbsRequest.Body.FBS_DataConsumer_SetBufferedAmountLowThresholdRequest,
 			requestOffset,
@@ -408,7 +408,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	{
 		logger.debug('getBufferedAmount()');
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.DATA_CONSUMER_GET_BUFFERED_AMOUNT,
 			undefined,
 			undefined,

@@ -171,7 +171,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 			this.internal.rtpObserverId
 		).pack(builder);
 
-		this.channel.requestBinary(
+		this.channel.request(
 			FbsRequest.Method.ROUTER_CLOSE_RTP_OBSERVER,
 			FbsRequest.Body.FBS_Router_CloseRtpObserverRequest,
 			requestOffset,
@@ -217,7 +217,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.channel.requestBinary(
+		await this.channel.request(
 			FbsRequest.Method.RTP_OBSERVER_PAUSE,
 			undefined,
 			undefined,
@@ -240,7 +240,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.channel.requestBinary(
+		await this.channel.request(
 			FbsRequest.Method.RTP_OBSERVER_RESUME,
 			undefined,
 			undefined,
@@ -271,7 +271,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 			producerId
 		).pack(builder);
 
-		await this.channel.requestBinary(
+		await this.channel.request(
 			FbsRequest.Method.RTP_OBSERVER_ADD_PRODUCER,
 			FbsRequest.Body.FBS_RtpObserver_AddProducerRequest,
 			requestOffset,
@@ -299,7 +299,7 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 			producerId
 		).pack(builder);
 
-		await this.channel.requestBinary(
+		await this.channel.request(
 			FbsRequest.Method.RTP_OBSERVER_REMOVE_PRODUCER,
 			FbsRequest.Body.FBS_RtpObserver_RemoveProducerRequest,
 			requestOffset,

@@ -278,7 +278,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const requestOffset = new FbsRequest.CloseRouterRequestT(
 			this.#internal.routerId).pack(builder);
 
-		this.#channel.requestBinary(
+		this.#channel.request(
 			FbsRequest.Method.WORKER_CLOSE_ROUTER,
 			FbsRequest.Body.FBS_Worker_CloseRouterRequest,
 			requestOffset)
@@ -358,7 +358,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		logger.debug('dump()');
 
 		// Send the request and wait for the response.
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_DUMP,
 			undefined,
 			undefined,
@@ -491,7 +491,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			transportId, webRtcTransportOptions
 		).pack(builder);
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			webRtcServer
 				? FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER
 				: FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT,
@@ -629,7 +629,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			transportId, plainTransportOptions
 		).pack(builder);
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_PLAIN_TRANSPORT,
 			FbsRequest.Body.FBS_Router_CreatePlainTransportRequest,
 			requestOffset,
@@ -758,7 +758,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			transportId, pipeTransportOptions
 		).pack(builder);
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_PIPE_TRANSPORT,
 			FbsRequest.Body.FBS_Router_CreatePipeTransportRequest,
 			requestOffset,
@@ -859,7 +859,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			transportId, directTransportOptions
 		).pack(builder);
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_DIRECT_TRANSPORT,
 			FbsRequest.Body.FBS_Router_CreateDirectTransportRequest,
 			requestOffset,
@@ -1237,7 +1237,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 				activeRtpObserverOptions
 			).pack(builder);
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER,
 			FbsRequest.Body.FBS_Router_CreateActiveSpeakerObserverRequest,
 			requestOffset,
@@ -1310,7 +1310,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			audioLevelObserverOptions
 		).pack(builder);
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_AUDIO_LEVEL_OBSERVER,
 			FbsRequest.Body.FBS_Router_CreateAudioLevelObserverRequest,
 			requestOffset,

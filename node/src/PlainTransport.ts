@@ -258,7 +258,7 @@ export class PlainTransport extends
 	{
 		logger.debug('dump()');
 
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_DUMP,
 			undefined,
 			undefined,
@@ -286,7 +286,7 @@ export class PlainTransport extends
 	{
 		logger.debug('getStats()');
 
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_GET_STATS,
 			undefined,
 			undefined,
@@ -340,7 +340,7 @@ export class PlainTransport extends
 		);
 
 		// Wait for response.
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONNECT,
 			FbsRequest.Body.FBS_Transport_ConnectRequest,
 			requestOffset,

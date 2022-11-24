@@ -367,7 +367,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			this.#internal.producerId
 		).pack(builder);
 
-		this.#channel.requestBinary(
+		this.#channel.request(
 			FbsRequest.Method.TRANSPORT_CLOSE_PRODUCER,
 			FbsRequest.Body.FBS_Transport_CloseProducerRequest,
 			requestOffset,
@@ -411,7 +411,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	{
 		logger.debug('dump()');
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.PRODUCER_DUMP,
 			undefined,
 			undefined,
@@ -433,7 +433,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	{
 		logger.debug('getStats()');
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.PRODUCER_GET_STATS,
 			undefined,
 			undefined,
@@ -457,7 +457,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.PRODUCER_PAUSE,
 			undefined,
 			undefined,
@@ -480,7 +480,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.PRODUCER_RESUME,
 			undefined,
 			undefined,
@@ -513,7 +513,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			types
 		).pack(builder);
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.PRODUCER_ENABLE_TRACE_EVENT,
 			FbsRequest.Body.FBS_Producer_EnableTraceEventRequest,
 			requestOffset,

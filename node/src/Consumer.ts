@@ -448,7 +448,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			this.#internal.consumerId
 		).pack(builder);
 
-		this.#channel.requestBinary(
+		this.#channel.request(
 			FbsRequest.Method.TRANSPORT_CLOSE_CONSUMER,
 			FbsRequest.Body.FBS_Transport_CloseConsumerRequest,
 			requestOffset,
@@ -492,7 +492,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('dump()');
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.CONSUMER_DUMP,
 			undefined,
 			undefined,
@@ -514,7 +514,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('getStats()');
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.CONSUMER_GET_STATS,
 			undefined,
 			undefined,
@@ -538,7 +538,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		const wasPaused = this.#paused || this.#producerPaused;
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.CONSUMER_PAUSE,
 			undefined,
 			undefined,
@@ -561,7 +561,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		const wasPaused = this.#paused || this.#producerPaused;
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.CONSUMER_RESUME,
 			undefined,
 			undefined,
@@ -605,7 +605,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			FbsConsumer.SetPreferredLayersRequest.createSetPreferredLayersRequest(
 				builder, preferredLayersOffset);
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.CONSUMER_SET_PREFERRED_LAYERS,
 			FbsRequest.Body.FBS_Consumer_SetPreferredLayersRequest,
 			requestOffset,
@@ -649,7 +649,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		const builder = this.#channel.bufferBuilder;
 		const requestOffset = new FbsConsumer.SetPriorityRequestT(priority).pack(builder);
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.CONSUMER_SET_PRIORITY,
 			FbsRequest.Body.FBS_Consumer_SetPriorityRequest,
 			requestOffset,
@@ -682,7 +682,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	{
 		logger.debug('requestKeyFrame()');
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.CONSUMER_REQUEST_KEY_FRAME,
 			undefined,
 			undefined,
@@ -709,7 +709,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			types
 		).pack(builder);
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.CONSUMER_ENABLE_TRACE_EVENT,
 			FbsRequest.Body.FBS_Consumer_EnableTraceEventRequest,
 			requestOffset,

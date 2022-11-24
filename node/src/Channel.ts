@@ -233,7 +233,7 @@ export class Channel extends EnhancedEventEmitter
 		}, 200);
 	}
 
-	async requestBinary(
+	async request(
 		method: Method,
 		bodyType?: RequestBody,
 		bodyOffset?: number,
@@ -246,7 +246,7 @@ export class Channel extends EnhancedEventEmitter
 
 		const id = this.#nextId;
 
-		logger.warn('requestBinary() [method:%s, id:%s]', Method[method], id);
+		logger.warn('request() [method:%s, id:%s]', Method[method], id);
 
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
 

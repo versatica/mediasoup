@@ -175,7 +175,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 		const requestOffset = new CloseWebRtcServerRequestT(
 			this.#internal.webRtcServerId).pack(builder);
 
-		this.#channel.requestBinary(
+		this.#channel.request(
 			Method.WORKER_WEBRTC_SERVER_CLOSE,
 			RequestBody.FBS_Worker_CloseWebRtcServerRequest,
 			requestOffset)
@@ -228,7 +228,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	{
 		logger.debug('dump()');
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			Method.WEBRTC_SERVER_DUMP, undefined, undefined, this.#internal.webRtcServerId);
 
 		/* Decode the response. */

@@ -230,7 +230,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 			this.#internal.dataProducerId
 		).pack(builder);
 
-		this.#channel.requestBinary(
+		this.#channel.request(
 			FbsRequest.Method.TRANSPORT_CLOSE_DATA_PRODUCER,
 			FbsRequest.Body.FBS_Transport_CloseDataProducerRequest,
 			requestOffset,
@@ -274,7 +274,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('dump()');
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.DATA_PRODUCER_DUMP,
 			undefined,
 			undefined,
@@ -296,7 +296,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	{
 		logger.debug('getStats()');
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.DATA_PRODUCER_GET_STATS,
 			undefined,
 			undefined,

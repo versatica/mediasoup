@@ -566,7 +566,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		logger.debug('dump()');
 
 		// Send the request and wait for the response.
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.WORKER_DUMP
 		);
 
@@ -585,7 +585,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	{
 		logger.debug('getResourceUsage()');
 
-		const response = await this.#channel.requestBinary(
+		const response = await this.#channel.request(
 			FbsRequest.Method.WORKER_GET_RESOURCE_USAGE
 		);
 
@@ -637,7 +637,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			new FbsWorker.UpdateSettingsRequestT(logLevel, logTags);
 		const updateaSettingsRequestOffset = updateaSettingsRequest.pack(builder);
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.WORKER_UPDATE_SETTINGS,
 			FbsRequest.Body.FBS_Worker_UpdateSettingsRequest,
 			updateaSettingsRequestOffset
@@ -677,7 +677,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			webRtcServerId, fbsListenInfos);
 		const createWebRtcServerRequestOffset = createWebRtcServerRequestT.pack(builder);
 
-		await this.#channel.requestBinary(
+		await this.#channel.request(
 			FbsRequest.Method.WORKER_CREATE_WEBRTC_SERVER,
 			FbsRequest.Body.FBS_Worker_CreateWebRtcServerRequest,
 			createWebRtcServerRequestOffset
@@ -723,7 +723,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		const createRouterRequestOffset =
 			new FbsRequest.CreateRouterRequestT(routerId).pack(builder);
 
-		await this.#channel.requestBinary(FbsRequest.Method.WORKER_CREATE_ROUTER,
+		await this.#channel.request(FbsRequest.Method.WORKER_CREATE_ROUTER,
 			FbsRequest.Body.FBS_Worker_CreateRouterRequest, createRouterRequestOffset);
 
 		const data = { rtpCapabilities };

@@ -250,7 +250,7 @@ export class PipeTransport
 	{
 		logger.debug('getStats()');
 
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_GET_STATS,
 			undefined,
 			undefined,
@@ -301,7 +301,7 @@ export class PipeTransport
 		);
 
 		// Wait for response.
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONNECT,
 			FbsRequest.Body.FBS_Transport_ConnectRequest,
 			requestOffset,
@@ -355,7 +355,7 @@ export class PipeTransport
 			rtpParameters
 		});
 
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONSUME,
 			FbsRequest.Body.FBS_Transport_ConsumeRequest,
 			consumeRequestOffset,

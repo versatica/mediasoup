@@ -131,7 +131,7 @@ export class DirectTransport extends
 	{
 		logger.debug('dump()');
 
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_DUMP,
 			undefined,
 			undefined,
@@ -159,7 +159,7 @@ export class DirectTransport extends
 	{
 		logger.debug('getStats()');
 
-		const response = await this.channel.requestBinary(
+		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_GET_STATS,
 			undefined,
 			undefined,
