@@ -371,10 +371,6 @@ void SendSideBandwidthEstimation::UpdateLossBasedEstimator(
         report.packet_feedbacks, report.feedback_time);
   }
   if (LossBasedBandwidthEstimatorV2Enabled()) {
-      MS_DEBUG_DEV("Updating loss_based_bandwidth_estimator_v2_. Delay limit %lld, Upper Link Capacity %lld", delay_based_limit_.kbps(), upper_link_capacity.kbps());
-      if (probe_bitrate.has_value()) {
-          MS_DEBUG_DEV("Updating loss_based_bandwidth_estimator_v2_. Probe bitrate: %lld", probe_bitrate.value().kbps());
-      }
     loss_based_bandwidth_estimator_v2_.UpdateBandwidthEstimate(
         report.packet_feedbacks, delay_based_limit_, delay_detector_state,
         probe_bitrate, upper_link_capacity);

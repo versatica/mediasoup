@@ -49,6 +49,14 @@ constexpr float kDefaultPaceMultiplier = 2.5f;
 // below the current throughput estimate to drain the network queues.
 constexpr double kProbeDropThroughputFraction = 0.85;
 
+int64_t GetBpsOrDefault(const absl::optional<DataRate>& rate,
+                        int64_t fallback_bps) {
+  if (rate && rate->IsFinite()) {
+    return rate->bps();
+  } else {
+    return fallback_bps;
+  }
+}
 bool IsEnabled(const WebRtcKeyValueConfig* config, absl::string_view key) {
   return config->Lookup(key).find("Enabled") == 0;
 }
@@ -202,7 +210,6 @@ NetworkControlUpdate GoogCcNetworkController::OnProcessInterval(
         msg.pacer_queue->bytes());
   }
   bandwidth_estimation_->UpdateEstimate(msg.at_time);
-	alr_detector_->Process();
   absl::optional<int64_t> start_time_ms =
       alr_detector_->GetApplicationLimitedRegionStartTime();
   probe_controller_->SetAlrStartTimeMs(start_time_ms);
@@ -522,7 +529,6 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
       probe_controller_->SetNetworkStateEstimate(*estimate_);
     }
   }
-
   absl::optional<DataRate> probe_bitrate =
       probe_bitrate_estimator_->FetchAndResetLastEstimatedBitrate();
   if (ignore_probes_lower_than_network_estimate_ && probe_bitrate &&
@@ -698,10 +704,10 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
                                          probes.begin(), probes.end());
     update->pacer_config = GetPacingRates(at_time);
 
-/*    MS_DEBUG_DEV("bwe [at_time:%" PRIu64", pushback_target_bps:%lld, estimate_bps:%lld]",
+    MS_DEBUG_DEV("bwe [at_time:%" PRIu64", pushback_target_bps:%lld, estimate_bps:%lld]",
                  at_time.ms(),
                  last_pushback_target_rate_.bps(),
-                 loss_based_target_rate.bps());*/
+                 last_raw_target_rate_.bps());
   }
 }
 

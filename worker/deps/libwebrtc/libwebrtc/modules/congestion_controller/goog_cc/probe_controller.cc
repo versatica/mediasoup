@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::ProbeController"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
 #include "api/units/data_rate.h"
@@ -17,7 +17,6 @@
 #include "api/units/timestamp.h"
 #include "rtc_base/numerics/safe_conversions.h"
 
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 
 #include <absl/memory/memory.h>
@@ -173,10 +172,10 @@ std::vector<ProbeClusterConfig> ProbeController::SetBitrates(
   } else if (start_bitrate_.IsZero()) {
     start_bitrate_ = min_bitrate;
   }
-/*	MS_DEBUG_DEV(
+	MS_DEBUG_DEV(
 		"[old_max_bitrate_bps:%lld, max_bitrate_bps:%lld]",
-		max_bitrate_.bps(),
-		max_bitrate.bps());*/
+		max_bitrate_bps_,
+		max_bitrate_bps);
   // The reason we use the variable `old_max_bitrate_pbs` is because we
   // need to set `max_bitrate_` before we call InitiateProbing.
   DataRate old_max_bitrate = max_bitrate_;
@@ -306,6 +305,7 @@ std::vector<ProbeClusterConfig> ProbeController::SetEstimatedBitrate(
                                // bitrate_bps / 1000);
     mid_call_probing_waiting_for_result_ = false;
   }
+  std::vector<ProbeClusterConfig> pending_probes;
   if (state_ == State::kWaitingForProbingResult) {
     // Continue probing if probing results indicate channel has greater
     // capacity.
@@ -339,18 +339,13 @@ void ProbeController::EnablePeriodicAlrProbing(bool enable) {
 
 void ProbeController::SetAlrStartTimeMs(
     absl::optional<int64_t> alr_start_time_ms) {
-  if ((alr_start_time_ms.has_value() && !alr_start_time_.has_value()) ||
-		(alr_start_time_ms.has_value() && alr_start_time_.has_value() && (alr_start_time_.value().ms() != alr_start_time_ms.value())))
-	{
-		MS_DEBUG_TAG(bwe, "ALR Start, start time %ld", alr_start_time_ms.value());
-		alr_start_time_ = Timestamp::ms(alr_start_time_ms.value());
-	}
-  /*} else {
+  if (alr_start_time_ms) {
+    alr_start_time_ = Timestamp::ms(*alr_start_time_ms);
+  } else {
     alr_start_time_ = absl::nullopt;
-  }*/
+  }
 }
 void ProbeController::SetAlrEndedTimeMs(int64_t alr_end_time_ms) {
-	MS_DEBUG_TAG(bwe, "ALR End");
   alr_end_time_.emplace(Timestamp::ms(alr_end_time_ms));
 }
 
@@ -390,6 +385,12 @@ std::vector<ProbeClusterConfig> ProbeController::RequestProbe(
   return std::vector<ProbeClusterConfig>();
 }
 
+void ProbeController::SetMaxBitrate(DataRate max_bitrate) {
+  MS_DEBUG_DEV("[max_bitrate_bps:%" PRIi64 "]", max_bitrate);
+
+  max_bitrate_ = max_bitrate;
+}
+
 void ProbeController::SetNetworkStateEstimate(
     webrtc::NetworkStateEstimate estimate) {
   network_estimate_ = estimate;
@@ -416,7 +417,6 @@ void ProbeController::Reset(Timestamp at_time) {
 
 bool ProbeController::TimeForAlrProbe(Timestamp at_time) const {
   if (enable_periodic_alr_probing_ && alr_start_time_) {
-		//MS_DEBUG_TAG(bwe, "enable_periodic_alr_probing_: %d, alr_start_time_: %lld", enable_periodic_alr_probing_, alr_start_time_.value().ms());
     Timestamp next_probe_time =
         std::max(*alr_start_time_, time_last_probing_initiated_) +
         config_.alr_probing_interval;
@@ -515,21 +515,14 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     switch (bandwidth_limited_cause_) {
       case BandwidthLimitedCause::kLossLimitedBweDecreasing:
         // If bandwidth estimate is decreasing because of packet loss, do not
-        // send probes. Unless we are in ALR state, where we might not have traffic to estimate.
-				// This might be terribly wrong when we have a big gap between factual and probation bitrate.
-				if (!alr_start_time_) {
-					MS_DEBUG_TAG(bwe, "State is BandwidthLimitedCause::kLossLimitedBweDecreasing");
-					return {};
-				}
-				break;
+        // send probes.
+        return {};
       case BandwidthLimitedCause::kLossLimitedBweIncreasing:
-				MS_DEBUG_TAG(bwe, "State is BandwidthLimitedCause::kLossLimitedBweIncreasing");
         estimate_capped_bitrate =
             std::min(max_probe_bitrate,
                      estimated_bitrate_ * config_.loss_limited_probe_scale);
         break;
       case BandwidthLimitedCause::kDelayBasedLimited:
-				MS_DEBUG_TAG(bwe, "State is BandwidthLimitedCause::kDelayBasedLimited");
         break;
     }
   }
