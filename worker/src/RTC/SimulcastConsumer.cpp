@@ -210,8 +210,7 @@ namespace RTC
 				auto previousPreferredSpatialLayer  = this->preferredSpatialLayer;
 				auto previousPreferredTemporalLayer = this->preferredTemporalLayer;
 
-				auto body = request->_data->body_as<FBS::Consumer::SetPreferredLayersRequest>();
-
+				auto body            = request->data->body_as<FBS::Consumer::SetPreferredLayersRequest>();
 				auto preferredLayers = body->preferredLayers();
 
 				// Spatial layer.

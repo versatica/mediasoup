@@ -198,7 +198,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTC_TRANSPORT:
 			{
-				auto body = request->_data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
+				auto body = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
 
 				auto transportId = body->transportId()->str();
 
@@ -223,7 +223,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
 			{
-				auto body        = request->_data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
+				auto body        = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -261,7 +261,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_PLAIN_TRANSPORT:
 			{
-				auto body        = request->_data->body_as<FBS::Router::CreatePlainTransportRequest>();
+				auto body        = request->data->body_as<FBS::Router::CreatePlainTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -284,7 +284,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_PIPE_TRANSPORT:
 			{
-				auto body        = request->_data->body_as<FBS::Router::CreatePipeTransportRequest>();
+				auto body        = request->data->body_as<FBS::Router::CreatePipeTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -307,7 +307,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_DIRECT_TRANSPORT:
 			{
-				auto body        = request->_data->body_as<FBS::Router::CreateDirectTransportRequest>();
+				auto body        = request->data->body_as<FBS::Router::CreateDirectTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -330,7 +330,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER:
 			{
-				auto body = request->_data->body_as<FBS::Router::CreateActiveSpeakerObserverRequest>();
+				auto body = request->data->body_as<FBS::Router::CreateActiveSpeakerObserverRequest>();
 				auto rtpObserverId = body->activeSpeakerObserverId()->str();
 
 				// This may throw.
@@ -351,7 +351,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER:
 			{
-				auto body = request->_data->body_as<FBS::Router::CreateAudioLevelObserverRequest>();
+				auto body          = request->data->body_as<FBS::Router::CreateAudioLevelObserverRequest>();
 				auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.
@@ -372,7 +372,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CLOSE_TRANSPORT:
 			{
-				auto body        = request->_data->body_as<FBS::Router::CloseTransportRequest>();
+				auto body        = request->data->body_as<FBS::Router::CloseTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -397,7 +397,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CLOSE_RTP_OBSERVER:
 			{
-				auto body          = request->_data->body_as<FBS::Router::CloseRtpObserverRequest>();
+				auto body          = request->data->body_as<FBS::Router::CloseRtpObserverRequest>();
 				auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.

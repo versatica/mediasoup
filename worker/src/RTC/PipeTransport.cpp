@@ -184,7 +184,7 @@ namespace RTC
 					uint16_t port{ 0u };
 					std::string srtpKeyBase64;
 
-					auto body        = request->_data->body_as<FBS::Transport::ConnectRequest>();
+					auto body        = request->data->body_as<FBS::Transport::ConnectRequest>();
 					auto connectData = body->data_as<FBS::Transport::ConnectPipeTransportData>();
 
 					auto srtpParametersPresent = flatbuffers::IsFieldPresent(

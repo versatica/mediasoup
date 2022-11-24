@@ -64,12 +64,11 @@ namespace Channel
 		// Passed by argument.
 		Channel::ChannelSocket* channel{ nullptr };
 		uint32_t id{ 0u };
+		// TODO: Move it to const char*.
 		std::string methodStr;
 		Method method;
 		std::string handlerId;
-		json data;
-		// TODO: Rename to `data` once JSON is removed.
-		const FBS::Request::Request* _data{ nullptr };
+		const FBS::Request::Request* data{ nullptr };
 		// Others.
 		bool replied{ false };
 	};

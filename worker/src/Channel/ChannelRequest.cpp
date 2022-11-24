@@ -92,15 +92,15 @@ namespace Channel
 		// TODO: Fails when consuming from a PIPE transport.
 		MS_ERROR("%s", s.c_str());
 
-		this->_data = FBS::Request::GetRequest(msg);
+		this->data = FBS::Request::GetRequest(msg);
 
-		this->id        = this->_data->id();
-		this->method    = this->_data->method();
+		this->id        = this->data->id();
+		this->method    = this->data->method();
 		this->methodStr = method2String[this->method];
 
 		// Handler ID is optional.
-		if (flatbuffers::IsFieldPresent(this->_data, FBS::Request::Request::VT_HANDLERID))
-			this->handlerId = this->_data->handlerId()->str();
+		if (flatbuffers::IsFieldPresent(this->data, FBS::Request::Request::VT_HANDLERID))
+			this->handlerId = this->data->handlerId()->str();
 	}
 
 	ChannelRequest::~ChannelRequest()

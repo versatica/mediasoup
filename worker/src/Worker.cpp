@@ -277,7 +277,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			try
 			{
-				auto body = request->_data->body_as<FBS::Worker::CreateWebRtcServerRequest>();
+				auto body = request->data->body_as<FBS::Worker::CreateWebRtcServerRequest>();
 
 				std::string webRtcServerId = body->webRtcServerId()->str();
 
@@ -307,7 +307,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			RTC::WebRtcServer* webRtcServer{ nullptr };
 
-			auto body = request->_data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
+			auto body = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
 
 			auto webRtcServerId = body->webRtcServerId()->str();
 
@@ -334,7 +334,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CREATE_ROUTER:
 		{
-			auto body = request->_data->body_as<FBS::Worker::CreateRouterRequest>();
+			auto body = request->data->body_as<FBS::Worker::CreateRouterRequest>();
 
 			auto routerId = body->routerId()->str();
 
@@ -362,7 +362,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			RTC::Router* router{ nullptr };
 
-			auto body = request->_data->body_as<FBS::Worker::CloseRouterRequest>();
+			auto body = request->data->body_as<FBS::Worker::CloseRouterRequest>();
 
 			auto routerId = body->routerId()->str();
 

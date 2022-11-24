@@ -271,7 +271,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::CONSUMER_SET_PRIORITY:
 			{
-				auto body = request->_data->body_as<FBS::Consumer::SetPriorityRequest>();
+				auto body = request->data->body_as<FBS::Consumer::SetPriorityRequest>();
 
 				if (body->priority() < 1u)
 					MS_THROW_TYPE_ERROR("wrong priority (must be higher than 0)");
@@ -288,7 +288,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::CONSUMER_ENABLE_TRACE_EVENT:
 			{
-				auto body = request->_data->body_as<FBS::Consumer::EnableTraceEventRequest>();
+				auto body = request->data->body_as<FBS::Consumer::EnableTraceEventRequest>();
 
 				// Reset traceEventTypes.
 				struct TraceEventTypes newTraceEventTypes;

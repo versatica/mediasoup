@@ -46,7 +46,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::RTP_OBSERVER_ADD_PRODUCER:
 			{
-				auto body       = request->_data->body_as<FBS::RtpObserver::AddProducerRequest>();
+				auto body       = request->data->body_as<FBS::RtpObserver::AddProducerRequest>();
 				auto producerId = body->producerId()->str();
 
 				RTC::Producer* producer = this->listener->RtpObserverGetProducer(this, producerId);
@@ -62,7 +62,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::RTP_OBSERVER_REMOVE_PRODUCER:
 			{
-				auto body       = request->_data->body_as<FBS::RtpObserver::RemoveProducerRequest>();
+				auto body       = request->data->body_as<FBS::RtpObserver::RemoveProducerRequest>();
 				auto producerId = body->producerId()->str();
 
 				RTC::Producer* producer = this->listener->RtpObserverGetProducer(this, producerId);

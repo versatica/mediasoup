@@ -445,7 +445,7 @@ namespace RTC
 				if (this->connectCalled)
 					MS_THROW_ERROR("connect() already called");
 
-				auto body           = request->_data->body_as<FBS::Transport::ConnectRequest>();
+				auto body           = request->data->body_as<FBS::Transport::ConnectRequest>();
 				auto connectData    = body->data_as<FBS::Transport::ConnectWebRtcTransportData>();
 				auto dtlsParameters = connectData->dtlsParameters();
 

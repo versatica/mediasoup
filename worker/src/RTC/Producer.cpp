@@ -434,7 +434,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::PRODUCER_ENABLE_TRACE_EVENT:
 			{
-				auto body = request->_data->body_as<FBS::Producer::EnableTraceEventRequest>();
+				auto body = request->data->body_as<FBS::Producer::EnableTraceEventRequest>();
 
 				// Reset traceEventTypes.
 				struct TraceEventTypes newTraceEventTypes;

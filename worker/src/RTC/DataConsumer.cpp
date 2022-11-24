@@ -183,8 +183,7 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
-				auto body =
-				  request->_data->body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>();
+				auto body = request->data->body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>();
 
 				this->bufferedAmountLowThreshold = body->threshold();
 
