@@ -6,10 +6,7 @@
 #include "FBS/response_generated.h"
 #include <absl/container/flat_hash_map.h>
 #include <flatbuffers/minireflect.h>
-#include <nlohmann/json.hpp>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace Channel
 {
@@ -53,7 +50,6 @@ namespace Channel
 
 			builder.Reset();
 		}
-		void Accept(json& data);
 		void Error(const char* reason = nullptr);
 		void TypeError(const char* reason = nullptr);
 

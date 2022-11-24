@@ -132,25 +132,6 @@ namespace Channel
 		this->channel->Send(buffer, size);
 	}
 
-	void ChannelRequest::Accept(json& data)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(!this->replied, "request already replied");
-
-		this->replied = true;
-
-		json jsonResponse = json::object();
-
-		jsonResponse["id"]       = this->id;
-		jsonResponse["accepted"] = true;
-
-		if (data.is_structured())
-			jsonResponse["data"] = data;
-
-		this->channel->Send(jsonResponse);
-	}
-
 	void ChannelRequest::Error(const char* reason)
 	{
 		MS_TRACE();
@@ -159,15 +140,15 @@ namespace Channel
 
 		this->replied = true;
 
-		json jsonResponse = json::object();
+		auto& builder = ChannelRequest::bufferBuilder;
+		auto response = FBS::Response::CreateResponseDirect(
+		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "Error" /*Error*/, reason);
 
-		jsonResponse["id"]    = this->id;
-		jsonResponse["error"] = "Error";
+		builder.Finish(response);
 
-		if (reason != nullptr)
-			jsonResponse["reason"] = reason;
+		this->Send(builder.GetBufferPointer(), builder.GetSize());
 
-		this->channel->Send(jsonResponse);
+		builder.Reset();
 	}
 
 	void ChannelRequest::TypeError(const char* reason)
@@ -178,14 +159,12 @@ namespace Channel
 
 		this->replied = true;
 
-		json jsonResponse = json::object();
+		auto& builder = ChannelRequest::bufferBuilder;
+		auto response = FBS::Response::CreateResponseDirect(
+		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "TypeError" /*Error*/, reason);
 
-		jsonResponse["id"]    = this->id;
-		jsonResponse["error"] = "TypeError";
+		builder.Finish(response);
 
-		if (reason != nullptr)
-			jsonResponse["reason"] = reason;
-
-		this->channel->Send(jsonResponse);
+		this->Send(builder.GetBufferPointer(), builder.GetSize());
 	}
 } // namespace Channel

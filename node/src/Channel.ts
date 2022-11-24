@@ -460,24 +460,22 @@ export class Channel extends EnhancedEventEmitter
 
 				sent.resolve(msg);
 			}
-			/*
-			else if (msg.error)
+			else if (msg.error())
 			{
 				logger.warn(
 					'request failed [method:%s, id:%s]: %s',
 					sent.method, sent.id, msg.reason);
 
-				switch (msg.error)
+				switch (msg.error()!)
 				{
 					case 'TypeError':
-						sent.reject(new TypeError(msg.reason));
+						sent.reject(new TypeError(msg.reason()!));
 						break;
 
 					default:
-						sent.reject(new Error(msg.reason));
+						sent.reject(new Error(msg.reason()!));
 				}
 			}
-			*/
 			else
 			{
 				logger.error(

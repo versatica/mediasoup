@@ -36,4 +36,6 @@ table Response {
   id:uint32;
   accepted:bool;
   body:Body;
+  error:string;
+  reason:string;
 }
