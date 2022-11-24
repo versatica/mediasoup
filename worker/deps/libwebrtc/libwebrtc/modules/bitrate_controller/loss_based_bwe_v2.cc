@@ -884,23 +884,37 @@ DataRate LossBasedBweV2::GetInstantUpperBound() const {
 }
 
 void LossBasedBweV2::CalculateInstantUpperBound() {
-  DataRate instant_limit = DataRate::PlusInfinity();
-  const double average_reported_loss_ratio = GetAverageReportedLossRatio();
-  if (average_reported_loss_ratio > config_->instant_upper_bound_loss_offset) {
-    instant_limit = config_->instant_upper_bound_bandwidth_balance /
-                    (average_reported_loss_ratio -
-                     config_->instant_upper_bound_loss_offset);
-    if (average_reported_loss_ratio > config_->high_loss_rate_threshold) {
-      instant_limit = std::min(
-          instant_limit, DataRate::kbps(std::max(
-                             static_cast<double>(min_bitrate_.kbps()),
-                             config_->bandwidth_cap_at_high_loss_rate.kbps() -
-                                 config_->slope_of_bwe_high_loss_func *
-                                     average_reported_loss_ratio)));
-    }
-  }
+	DataRate instant_limit = DataRate::PlusInfinity();
+	const double average_reported_loss_ratio = GetAverageReportedLossRatio();
 
-  cached_instant_upper_bound_ = instant_limit;
+	// In case of high bitrates the value of balance (75kbps) is too small,
+	// and leads to big BW drops even in case of small loss ratio.
+	DataRate bandwidth_balance = DataRate::kbps(std::max(
+		config_->instant_upper_bound_bandwidth_balance.kbps(),
+		current_estimate_.loss_limited_bandwidth.kbps() / 100));
+
+	if (average_reported_loss_ratio > config_->instant_upper_bound_loss_offset) {
+		instant_limit = bandwidth_balance /
+			              (average_reported_loss_ratio -
+			               config_->instant_upper_bound_loss_offset);
+
+/*		MS_DEBUG_DEV("balance %lld, instant_limit %lld, average_reported_loss_ratio %f, diff: %f",
+			           bandwidth_balance.bps(),
+			           instant_limit.bps(),
+			           average_reported_loss_ratio,
+			           average_reported_loss_ratio - config_->instant_upper_bound_loss_offset);*/
+
+		if (average_reported_loss_ratio > config_->high_loss_rate_threshold) {
+			instant_limit = std::min(
+				instant_limit, DataRate::kbps(std::max(
+				                 static_cast<double>(min_bitrate_.kbps()),
+				                 config_->bandwidth_cap_at_high_loss_rate.kbps() -
+				                   config_->slope_of_bwe_high_loss_func *
+				                     average_reported_loss_ratio)));
+		}
+	}
+
+	cached_instant_upper_bound_ = instant_limit;
 }
 
 void LossBasedBweV2::CalculateTemporalWeights() {
