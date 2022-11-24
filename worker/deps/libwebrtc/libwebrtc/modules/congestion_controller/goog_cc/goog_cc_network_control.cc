@@ -49,14 +49,6 @@ constexpr float kDefaultPaceMultiplier = 2.5f;
 // below the current throughput estimate to drain the network queues.
 constexpr double kProbeDropThroughputFraction = 0.85;
 
-int64_t GetBpsOrDefault(const absl::optional<DataRate>& rate,
-                        int64_t fallback_bps) {
-  if (rate && rate->IsFinite()) {
-    return rate->bps();
-  } else {
-    return fallback_bps;
-  }
-}
 bool IsEnabled(const WebRtcKeyValueConfig* config, absl::string_view key) {
   return config->Lookup(key).find("Enabled") == 0;
 }
@@ -202,6 +194,7 @@ NetworkControlUpdate GoogCcNetworkController::OnProcessInterval(
         msg.pacer_queue->bytes());
   }
   bandwidth_estimation_->UpdateEstimate(msg.at_time);
+	alr_detector_->Process();
   absl::optional<int64_t> start_time_ms =
       alr_detector_->GetApplicationLimitedRegionStartTime();
   probe_controller_->SetAlrStartTimeMs(start_time_ms);

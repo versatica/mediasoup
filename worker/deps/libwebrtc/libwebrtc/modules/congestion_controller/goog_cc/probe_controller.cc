@@ -316,13 +316,21 @@ void ProbeController::EnablePeriodicAlrProbing(bool enable) {
 
 void ProbeController::SetAlrStartTimeMs(
     absl::optional<int64_t> alr_start_time_ms) {
-  if (alr_start_time_ms) {
-    alr_start_time_ = Timestamp::ms(*alr_start_time_ms);
-  } else {
+  if ((alr_start_time_ms.has_value() && !alr_start_time_.has_value()) ||
+		(alr_start_time_ms.has_value() && alr_start_time_.has_value() && (alr_start_time_.value().ms() != alr_start_time_ms.value())))
+	{
+		MS_DEBUG_TAG(bwe, "ALR Start, start time %ld", alr_start_time_ms.value());
+		alr_start_time_ = Timestamp::ms(alr_start_time_ms.value());
+	}
+	if (alr_start_time_.has_value() && !alr_start_time_ms.has_value()) {
+		alr_start_time_ = absl::nullopt;
+	}
+  /*} else {
     alr_start_time_ = absl::nullopt;
-  }
+  }*/
 }
 void ProbeController::SetAlrEndedTimeMs(int64_t alr_end_time_ms) {
+	MS_DEBUG_TAG(bwe, "ALR End, end time %lld", alr_end_time_ms);
   alr_end_time_.emplace(Timestamp::ms(alr_end_time_ms));
 }
 
