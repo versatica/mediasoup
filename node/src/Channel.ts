@@ -233,61 +233,6 @@ export class Channel extends EnhancedEventEmitter
 		}, 200);
 	}
 
-	/**
-	 * @private
-	 */
-	async request(method: string, handlerId?: string, data?: any): Promise<any>
-	{
-		if (this.#closed)
-			throw new InvalidStateError('Channel closed');
-
-		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
-
-		const id = this.#nextId;
-
-		logger.debug('request() [method:%s, id:%s]', method, id);
-
-		const request = `r${id}:${method}:${handlerId}:${JSON.stringify(data)}`;
-
-		if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
-			throw new Error('Channel request too big');
-
-		// This may throw if closed or remote side ended.
-		this.#producerSocket.write(
-			Buffer.from(Uint32Array.of(Buffer.byteLength(request)).buffer));
-		this.#producerSocket.write(request);
-
-		return new Promise((pResolve, pReject) =>
-		{
-			const sent: Sent =
-			{
-				id      : id,
-				method  : method,
-				resolve : (data2) =>
-				{
-					if (!this.#sents.delete(id))
-						return;
-
-					pResolve(data2);
-				},
-				reject : (error) =>
-				{
-					if (!this.#sents.delete(id))
-						return;
-
-					pReject(error);
-				},
-				close : () =>
-				{
-					pReject(new InvalidStateError('Channel closed'));
-				}
-			};
-
-			// Add sent stuff to the map.
-			this.#sents.set(id, sent);
-		});
-	}
-
 	async requestBinary(
 		method: Method,
 		bodyType?: RequestBody,
@@ -301,7 +246,7 @@ export class Channel extends EnhancedEventEmitter
 
 		const id = this.#nextId;
 
-		logger.warn('requestBinary() [method:%s, id:%s]', method, id);
+		logger.warn('requestBinary() [method:%s, id:%s]', Method[method], id);
 
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
 
@@ -323,9 +268,8 @@ export class Channel extends EnhancedEventEmitter
 		const buffer = this.#bufferBuilder.asUint8Array();
 
 		// TODO: DEV. Remove.
-		const req = Request.getRootAsRequest(new flatbuffers.ByteBuffer(buffer));
-
-		logger.warn(JSON.stringify(req.unpack(), undefined, 2));
+		// const req = Request.getRootAsRequest(new flatbuffers.ByteBuffer(buffer));
+		// logger.warn(JSON.stringify(req.unpack(), undefined, 2));
 
 		// Clear the buffer builder so it's reused for the next request.
 		this.#bufferBuilder.clear();
@@ -344,8 +288,7 @@ export class Channel extends EnhancedEventEmitter
 			const sent: Sent =
 			{
 				id      : id,
-				// TODO: Use the Request.Method type when JSON is removed.
-				method  : '',
+				method  : Method[method],
 				resolve : (data2) =>
 				{
 					if (!this.#sents.delete(id))
