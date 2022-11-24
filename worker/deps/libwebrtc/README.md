@@ -10,8 +10,3 @@ The file `libwebrtc/mediasoup_helpers.h` includes some utilities to plug mediaso
 The file `worker/deps/libwebrtc/deps/abseil-cpp/abseil-cpp/absl/synchronization/internal/graphcycles.cc` has `#include <limits>` added to it to fix CI builds with Clang.
 
 The file `meson.build` is written for using with Meson build system.
-
-Updated and synced with:
-
-* libwebrtc branch: main
-* libwebrtc commit: 17887eb04a84e426b604d4c084898c3147c7d810
