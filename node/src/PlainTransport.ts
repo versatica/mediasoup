@@ -145,6 +145,15 @@ export type PlainTransportData =
 	srtpParameters?: SrtpParameters;
 };
 
+type PlainTransportDump = BaseTransportDump &
+{
+	rtcMux: boolean;
+	comedia: boolean;
+	tuple: TransportTuple;
+	rtcpTuple?: TransportTuple;
+	srtpParameters?: SrtpParameters;
+};
+
 const logger = new Logger('PlainTransport');
 
 export class PlainTransport extends
@@ -254,7 +263,7 @@ export class PlainTransport extends
 	/**
 	 * Dump Transport.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<PlainTransportDump>
 	{
 		logger.debug('dump()');
 
@@ -438,6 +447,45 @@ export class PlainTransport extends
 	}
 }
 
+export function parsePlainTransportDump(
+	binary: FbsTransport.PlainTransportDump
+): PlainTransportDump
+{
+	// Retrieve BaseTransportDump.
+	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
+
+	binary.base()!.data(fbsBaseTransportDump);
+	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
+
+	// Retrieve RTP Tuple.
+	const tuple = parseTuple(binary.tuple()!);
+
+	// Retrieve RTCP Tuple.
+	let rtcpTuple: TransportTuple | undefined;
+
+	if (binary.rtcpTuple())
+	{
+		rtcpTuple = parseTuple(binary.rtcpTuple()!);
+	}
+
+	// Retrieve SRTP Parameters.
+	let srtpParameters: SrtpParameters | undefined;
+
+	if (binary.srtpParameters())
+	{
+		srtpParameters = parseSrtpParameters(binary.srtpParameters()!);
+	}
+
+	return {
+		...baseTransportDump,
+		rtcMux         : binary.rtcMux(),
+		comedia        : binary.comedia(),
+		tuple          : tuple,
+		rtcpTuple      : rtcpTuple,
+		srtpParameters : srtpParameters
+	};
+}
+
 function createConnectRequest(
 	{
 		builder,
@@ -490,52 +538,4 @@ function createConnectRequest(
 	{
 		throw new TypeError(`${error}`);
 	}
-}
-
-type PlainTransportDump = BaseTransportDump &
-{
-	rtcMux: boolean;
-	comedia: boolean;
-	tuple: TransportTuple;
-	rtcpTuple?: TransportTuple;
-	srtpParameters?: SrtpParameters;
-};
-
-export function parsePlainTransportDump(
-	binary: FbsTransport.PlainTransportDump
-): PlainTransportDump
-{
-	// Retrieve BaseTransportDump.
-	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
-
-	binary.base()!.data(fbsBaseTransportDump);
-	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
-
-	// Retrieve RTP Tuple.
-	const tuple = parseTuple(binary.tuple()!);
-
-	// Retrieve RTCP Tuple.
-	let rtcpTuple: TransportTuple | undefined;
-
-	if (binary.rtcpTuple())
-	{
-		rtcpTuple = parseTuple(binary.rtcpTuple()!);
-	}
-
-	// Retrieve SRTP Parameters.
-	let srtpParameters: SrtpParameters | undefined;
-
-	if (binary.srtpParameters())
-	{
-		srtpParameters = parseSrtpParameters(binary.srtpParameters()!);
-	}
-
-	return {
-		...baseTransportDump,
-		rtcMux         : binary.rtcMux(),
-		comedia        : binary.comedia(),
-		tuple          : tuple,
-		rtcpTuple      : rtcpTuple,
-		srtpParameters : srtpParameters
-	};
 }

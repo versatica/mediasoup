@@ -101,11 +101,11 @@ test('dataConsumer.dump() succeeds', async () =>
 	expect(data.dataProducerId).toBe(dataConsumer1.dataProducerId);
 	expect(data.type).toBe('sctp');
 	expect(typeof data.sctpStreamParameters).toBe('object');
-	expect(data.sctpStreamParameters.streamId)
+	expect(data.sctpStreamParameters!.streamId)
 		.toBe(dataConsumer1.sctpStreamParameters?.streamId);
-	expect(data.sctpStreamParameters.ordered).toBe(false);
-	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(4000);
-	expect(data.sctpStreamParameters.maxRetransmits).toBeUndefined();
+	expect(data.sctpStreamParameters!.ordered).toBe(false);
+	expect(data.sctpStreamParameters!.maxPacketLifeTime).toBe(4000);
+	expect(data.sctpStreamParameters!.maxRetransmits).toBeUndefined();
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
 }, 2000);

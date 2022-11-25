@@ -64,6 +64,10 @@ export type DataProducerObserverEvents =
 	close: [];
 };
 
+type DataProducerDump = DataProducerData & {
+	id: string;
+};
+
 type DataProducerInternal = TransportInternal &
 {
 	dataProducerId: string;
@@ -270,7 +274,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	/**
 	 * Dump DataProducer.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<DataProducerDump>
 	{
 		logger.debug('dump()');
 
@@ -361,10 +365,6 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		// No need to subscribe to any event.
 	}
 }
-
-type DataProducerDump = DataProducerData & {
-	id: string;
-};
 
 export function parseDataProducerDump(
 	data: FbsDataProducer.DumpResponse

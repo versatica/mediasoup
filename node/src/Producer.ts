@@ -165,6 +165,17 @@ export type ProducerObserverEvents =
 	trace: [ProducerTraceEventData];
 };
 
+type ProducerDump = {
+	id: string;
+	kind: string;
+	type:ProducerType;
+	rtpParameters:RtpParameters;
+	rtpMapping:any;
+	rtpStreams:any;
+	traceEventTypes:string[];
+	paused:boolean;
+};
+
 type ProducerInternal = TransportInternal &
 {
 	producerId: string;
@@ -407,7 +418,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	/**
 	 * Dump Producer.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<ProducerDump>
 	{
 		logger.debug('dump()');
 
@@ -587,17 +598,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		});
 	}
 }
-
-type ProducerDump = {
-	id: string;
-	kind: string;
-	type:ProducerType;
-	rtpParameters:RtpParameters;
-	rtpMapping:any;
-	rtpStreams:any;
-	traceEventTypes:string[];
-	paused:boolean;
-};
 
 export function parseProducerDump(
 	data: FbsProducer.DumpResponse

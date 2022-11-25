@@ -523,7 +523,7 @@ test('producer.dump() succeeds', async () =>
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
 	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
-	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions!.length).toBe(2);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
@@ -540,8 +540,8 @@ test('producer.dump() succeeds', async () =>
 			}
 		]);
 	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
-	expect(data.rtpParameters.encodings.length).toBe(1);
-	expect(data.rtpParameters.encodings[0]).toEqual(
+	expect(data.rtpParameters.encodings!.length).toBe(1);
+	expect(data.rtpParameters.encodings![0]).toEqual(
 		expect.objectContaining(
 			{
 				codecPayloadType : 0
@@ -580,7 +580,7 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[1].parameters).toEqual({ apt: 112 });
 	expect(data.rtpParameters.codecs[1].rtcpFeedback).toEqual([]);
 	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
-	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions!.length).toBe(2);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
@@ -597,7 +597,7 @@ test('producer.dump() succeeds', async () =>
 			}
 		]);
 	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
-	expect(data.rtpParameters.encodings.length).toBe(4);
+	expect(data.rtpParameters.encodings!.length).toBe(4);
 	expect(data.rtpParameters.encodings).toMatchObject(
 		[
 			{

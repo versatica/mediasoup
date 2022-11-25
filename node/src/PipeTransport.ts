@@ -145,6 +145,13 @@ export type PipeTransportData =
 	srtpParameters?: SrtpParameters;
 };
 
+export type PipeTransportDump = BaseTransportDump &
+{
+	tuple: TransportTuple;
+	rtx: boolean;
+	srtpParameters?: SrtpParameters;
+};
+
 const logger = new Logger('PipeTransport');
 
 export class PipeTransport
@@ -447,6 +454,35 @@ export class PipeTransport
  * flatbuffers helpers
  */
 
+export function parsePipeTransportDump(
+	binary: FbsTransport.PipeTransportDump
+): PipeTransportDump
+{
+	// Retrieve BaseTransportDump.
+	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
+
+	binary.base()!.data(fbsBaseTransportDump);
+	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
+
+	// Retrieve RTP Tuple.
+	const tuple = parseTuple(binary.tuple()!);
+
+	// Retrieve SRTP Parameters.
+	let srtpParameters: SrtpParameters | undefined;
+
+	if (binary.srtpParameters())
+	{
+		srtpParameters = parseSrtpParameters(binary.srtpParameters()!);
+	}
+
+	return {
+		...baseTransportDump,
+		tuple          : tuple,
+		rtx            : binary.rtx(),
+		srtpParameters : srtpParameters
+	};
+}
+
 function createConsumeRequest({
 	builder,
 	consumerId,
@@ -487,42 +523,6 @@ function createConsumeRequest({
 		ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
 
 	return ConsumeRequest.endConsumeRequest(builder);
-}
-
-type PipeTransportDump = BaseTransportDump &
-{
-	tuple: TransportTuple;
-	rtx: boolean;
-	srtpParameters?: SrtpParameters;
-};
-
-export function parsePipeTransportDump(
-	binary: FbsTransport.PipeTransportDump
-): PipeTransportDump
-{
-	// Retrieve BaseTransportDump.
-	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
-
-	binary.base()!.data(fbsBaseTransportDump);
-	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
-
-	// Retrieve RTP Tuple.
-	const tuple = parseTuple(binary.tuple()!);
-
-	// Retrieve SRTP Parameters.
-	let srtpParameters: SrtpParameters | undefined;
-
-	if (binary.srtpParameters())
-	{
-		srtpParameters = parseSrtpParameters(binary.srtpParameters()!);
-	}
-
-	return {
-		...baseTransportDump,
-		tuple          : tuple,
-		rtx            : binary.rtx(),
-		srtpParameters : srtpParameters
-	};
 }
 
 function createConnectRequest(

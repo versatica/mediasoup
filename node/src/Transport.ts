@@ -138,11 +138,39 @@ export type TransportInternal = RouterInternal &
 	transportId: string;
 };
 
+export type BaseTransportDump = {
+	id : string;
+	direct : boolean;
+	producerIds : string[];
+	consumerIds : string[];
+	mapSsrcConsumerId : { key: number; value: string }[];
+	mapRtxSsrcConsumerId : { key: number; value: string }[];
+	recvRtpHeaderExtensions : { key: string; value: number }[];
+	rtpListener: RtpListenerDump;
+	maxMessageSize: number;
+	dataProducerIds : string[];
+	dataConsumerIds : string[];
+	sctpParameters? : SctpParameters;
+	sctpState? : SctpState;
+	sctpListener?: SctpListenerDump;
+	traceEventTypes? : string[];
+};
+
 type TransportData =
   | WebRtcTransportData
   | PlainTransportData
   | PipeTransportData
   | DirectTransportData;
+
+type RtpListenerDump = {
+	ssrcTable : {key: number; value: string}[];
+	midTable : {key: number; value: string}[];
+	ridTable : {key: number; value: string}[];
+};
+
+type SctpListenerDump = {
+	streamIdTable : {key: number; value: string}[];
+};
 
 const logger = new Logger('Transport');
 
@@ -1180,34 +1208,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	}
 }
 
-type RtpListenerDump = {
-	ssrcTable : {key: number; value: string}[];
-	midTable : {key: number; value: string}[];
-	ridTable : {key: number; value: string}[];
-};
-
-type SctpListenerDump = {
-	streamIdTable : {key: number; value: string}[];
-};
-
-export type BaseTransportDump = {
-	id : string;
-	direct : boolean;
-	producerIds : string[];
-	consumerIds : string[];
-	mapSsrcConsumerId : { key: number; value: string }[];
-	mapRtxSsrcConsumerId : { key: number; value: string }[];
-	recvRtpHeaderExtensions : { key: string; value: number }[];
-	rtpListener: RtpListenerDump;
-	maxMessageSize: number;
-	dataProducerIds : string[];
-	dataConsumerIds : string[];
-	sctpParameters? : SctpParameters;
-	sctpState? : SctpState;
-	sctpListener?: SctpListenerDump;
-	traceEventTypes? : string[];
-};
-
 export function parseTuple(binary: FbsTransport.Tuple): TransportTuple
 {
 	return {
@@ -1216,32 +1216,6 @@ export function parseTuple(binary: FbsTransport.Tuple): TransportTuple
 		remoteIp   : binary.remoteIp() ?? undefined,
 		remotePort : binary.remotePort(),
 		protocol   : binary.protocol()! as TransportProtocol
-	};
-}
-
-export function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump
-{
-	// Retrieve ssrcTable.
-	const ssrcTable = utils.parseUint32StringVector(binary, 'ssrcTable');
-	// Retrieve midTable.
-	const midTable = utils.parseUint32StringVector(binary, 'midTable');
-	// Retrieve ridTable.
-	const ridTable = utils.parseUint32StringVector(binary, 'ridTable');
-
-	return {
-		ssrcTable,
-		midTable,
-		ridTable
-	};
-}
-
-export function parseSctpListenerDump(binary: FbsTransport.SctpListener): SctpListenerDump
-{
-	// Retrieve streamIdTable.
-	const streamIdTable = utils.parseUint32StringVector(binary, 'streamIdTable');
-
-	return {
-		streamIdTable
 	};
 }
 
@@ -1404,7 +1378,6 @@ function createConsumeDataRequest({
 	protocol: string;
 }): number
 {
-	logger.error(`createConsumeDataRequest | type:${type}`);
 	const dataConsumerIdOffset = builder.createString(dataConsumerId);
 	const dataProducerIdOffset = builder.createString(dataProducerId);
 	const typeOffset = builder.createString(type);
@@ -1437,3 +1410,30 @@ function createConsumeDataRequest({
 
 	return FbsTransport.ConsumeDataRequest.endConsumeDataRequest(builder);
 }
+
+function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump
+{
+	// Retrieve ssrcTable.
+	const ssrcTable = utils.parseUint32StringVector(binary, 'ssrcTable');
+	// Retrieve midTable.
+	const midTable = utils.parseUint32StringVector(binary, 'midTable');
+	// Retrieve ridTable.
+	const ridTable = utils.parseUint32StringVector(binary, 'ridTable');
+
+	return {
+		ssrcTable,
+		midTable,
+		ridTable
+	};
+}
+
+function parseSctpListenerDump(binary: FbsTransport.SctpListener): SctpListenerDump
+{
+	// Retrieve streamIdTable.
+	const streamIdTable = utils.parseUint32StringVector(binary, 'streamIdTable');
+
+	return {
+		streamIdTable
+	};
+}
+

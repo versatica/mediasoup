@@ -210,6 +210,18 @@ export type WebRtcTransportData =
 	sctpState?: SctpState;
 };
 
+type WebRtcTransportDump = BaseTransportDump &
+{
+	iceRole: 'controlled';
+	iceParameters: IceParameters;
+	iceCandidates: IceCandidate[];
+	iceState: IceState;
+	iceSelectedTuple?: TransportTuple;
+	dtlsParameters: DtlsParameters;
+	dtlsState: DtlsState;
+	dtlsRemoteCert?: string;
+};
+
 const logger = new Logger('WebRtcTransport');
 
 export class WebRtcTransport extends
@@ -390,7 +402,7 @@ export class WebRtcTransport extends
 	/**
 	 * Dump Transport.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<WebRtcTransportDump>
 	{
 		logger.debug('dump()');
 
@@ -599,7 +611,37 @@ export class WebRtcTransport extends
 	}
 }
 
-export function parseIceCandidate(binary: FbsTransport.IceCandidate): IceCandidate
+export function parseWebRtcTransportDump(
+	binary: FbsTransport.WebRtcTransportDump
+): WebRtcTransportDump
+{
+	// Retrieve BaseTransportDump.
+	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
+
+	binary.base()!.data(fbsBaseTransportDump);
+	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
+
+	// Retrieve ICE candidates.
+	const iceCandidates = parseVector<IceCandidate>(binary, 'iceCandidates', parseIceCandidate);
+	// Retrieve ICE parameters.
+	const iceParameters = parseIceParameters(binary.iceParameters()!);
+	// Retrieve DTLS parameters.
+	const dtlsParameters = parseDtlsParameters(binary.dtlsParameters()!);
+
+	return {
+		...baseTransportDump,
+		sctpParameters : baseTransportDump.sctpParameters,
+		sctpState      : baseTransportDump.sctpState,
+		iceRole        : 'controlled',
+		iceParameters  : iceParameters,
+		iceCandidates  : iceCandidates,
+		iceState       : binary.iceState() as IceState,
+		dtlsParameters : dtlsParameters,
+		dtlsState      : binary.dtlsState() as DtlsState
+	};
+}
+
+function parseIceCandidate(binary: FbsTransport.IceCandidate): IceCandidate
 {
 	return {
 		foundation : binary.foundation()!,
@@ -612,7 +654,7 @@ export function parseIceCandidate(binary: FbsTransport.IceCandidate): IceCandida
 	};
 }
 
-export function parseIceParameters(binary: FbsTransport.IceParameters): IceParameters
+function parseIceParameters(binary: FbsTransport.IceParameters): IceParameters
 {
 	return {
 		usernameFragment : binary.usernameFragment()!,
@@ -621,7 +663,7 @@ export function parseIceParameters(binary: FbsTransport.IceParameters): IceParam
 	};
 }
 
-export function parseDtlsParameters(binary: FbsTransport.DtlsParameters): DtlsParameters
+function parseDtlsParameters(binary: FbsTransport.DtlsParameters): DtlsParameters
 {
 	const fingerprints: DtlsFingerprint[] = [];
 
@@ -642,7 +684,7 @@ export function parseDtlsParameters(binary: FbsTransport.DtlsParameters): DtlsPa
 	};
 }
 
-export function serializeDtlsParameters(
+function serializeDtlsParameters(
 	builder: flatbuffers.Builder, dtlsParameters: DtlsParameters
 ): number
 {
@@ -673,46 +715,4 @@ export function serializeDtlsParameters(
 	{
 		throw new TypeError(`${error}`);
 	}
-}
-
-type WebRtcTransportDump = BaseTransportDump &
-{
-	iceRole: 'controlled';
-	iceParameters: IceParameters;
-	iceCandidates: IceCandidate[];
-	iceState: IceState;
-	iceSelectedTuple?: TransportTuple;
-	dtlsParameters: DtlsParameters;
-	dtlsState: DtlsState;
-	dtlsRemoteCert?: string;
-};
-
-export function parseWebRtcTransportDump(
-	binary: FbsTransport.WebRtcTransportDump
-): WebRtcTransportDump
-{
-	// Retrieve BaseTransportDump.
-	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
-
-	binary.base()!.data(fbsBaseTransportDump);
-	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
-
-	// Retrieve ICE candidates.
-	const iceCandidates = parseVector<IceCandidate>(binary, 'iceCandidates', parseIceCandidate);
-	// Retrieve ICE parameters.
-	const iceParameters = parseIceParameters(binary.iceParameters()!);
-	// Retrieve DTLS parameters.
-	const dtlsParameters = parseDtlsParameters(binary.dtlsParameters()!);
-
-	return {
-		...baseTransportDump,
-		sctpParameters : baseTransportDump.sctpParameters,
-		sctpState      : baseTransportDump.sctpState,
-		iceRole        : 'controlled',
-		iceParameters  : iceParameters,
-		iceCandidates  : iceCandidates,
-		iceState       : binary.iceState() as IceState,
-		dtlsParameters : dtlsParameters,
-		dtlsState      : binary.dtlsState() as DtlsState
-	};
 }

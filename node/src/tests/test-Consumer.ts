@@ -620,7 +620,7 @@ test('consumer.dump() succeeds', async () =>
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
 	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
-	expect(data.rtpParameters.headerExtensions.length).toBe(3);
+	expect(data.rtpParameters.headerExtensions!.length).toBe(3);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
@@ -643,7 +643,7 @@ test('consumer.dump() succeeds', async () =>
 			}
 		]);
 	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
-	expect(data.rtpParameters.encodings.length).toBe(1);
+	expect(data.rtpParameters.encodings!.length).toBe(1);
 	expect(data.rtpParameters.encodings).toEqual(
 		[
 			expect.objectContaining(
@@ -654,7 +654,7 @@ test('consumer.dump() succeeds', async () =>
 		]);
 	expect(data.type).toBe('simple');
 	expect(Array.isArray(data.consumableRtpEncodings)).toBe(true);
-	expect(data.consumableRtpEncodings.length).toBe(1);
+	expect(data.consumableRtpEncodings!.length).toBe(1);
 	expect(data.consumableRtpEncodings).toEqual(
 		[
 			expect.objectContaining(
@@ -691,7 +691,7 @@ test('consumer.dump() succeeds', async () =>
 			{ type: 'goog-remb' }
 		]);
 	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
-	expect(data.rtpParameters.headerExtensions.length).toBe(4);
+	expect(data.rtpParameters.headerExtensions!.length).toBe(4);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
@@ -720,7 +720,7 @@ test('consumer.dump() succeeds', async () =>
 			}
 		]);
 	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
-	expect(data.rtpParameters.encodings.length).toBe(1);
+	expect(data.rtpParameters.encodings!.length).toBe(1);
 	expect(data.rtpParameters.encodings).toMatchObject(
 		[
 			{
@@ -734,20 +734,20 @@ test('consumer.dump() succeeds', async () =>
 			}
 		]);
 	expect(Array.isArray(data.consumableRtpEncodings)).toBe(true);
-	expect(data.consumableRtpEncodings.length).toBe(4);
-	expect(data.consumableRtpEncodings[0]).toEqual(
+	expect(data.consumableRtpEncodings!.length).toBe(4);
+	expect(data.consumableRtpEncodings![0]).toEqual(
 		expect.objectContaining(
 			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[0].ssrc })
 	);
-	expect(data.consumableRtpEncodings[1]).toEqual(
+	expect(data.consumableRtpEncodings![1]).toEqual(
 		expect.objectContaining(
 			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[1].ssrc })
 	);
-	expect(data.consumableRtpEncodings[2]).toEqual(
+	expect(data.consumableRtpEncodings![2]).toEqual(
 		expect.objectContaining(
 			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[2].ssrc })
 	);
-	expect(data.consumableRtpEncodings[3]).toEqual(
+	expect(data.consumableRtpEncodings![3]).toEqual(
 		expect.objectContaining(
 			{ ssrc: videoProducer.consumableRtpParameters.encodings?.[3].ssrc })
 	);

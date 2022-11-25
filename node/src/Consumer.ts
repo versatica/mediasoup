@@ -196,6 +196,35 @@ export type ConsumerObserverEvents =
 	trace: [ConsumerTraceEventData];
 };
 
+export type SimpleConsumerDump = BaseConsumerDump & {
+	type: string;
+	rtpStream: RtpStreamDump;
+};
+
+export type SimulcastConsumerDump = BaseConsumerDump & {
+	type: string;
+	rtpStream: RtpStreamDump;
+	preferredSpatialLayer: number;
+	targetSpatialLayer: number;
+	currentSpatialLayer: number;
+	preferredTemporalLayer: number;
+	targetTemporalLayer: number;
+	currentTemporalLayer: number;
+};
+
+export type SvcConsumerDump = SimulcastConsumerDump;
+
+export type PipeConsumerDump = BaseConsumerDump & {
+	type: string;
+	rtpStreams: RtpStreamDump[];
+};
+
+export type ConsumerDump =
+	SimpleConsumerDump |
+	SimulcastConsumerDump |
+	SvcConsumerDump |
+	PipeConsumerDump;
+
 type ConsumerInternal = TransportInternal &
 {
 	consumerId: string;
@@ -207,6 +236,57 @@ type ConsumerData =
 	kind: MediaKind;
 	rtpParameters: RtpParameters;
 	type: ConsumerType;
+};
+
+type BaseConsumerDump = {
+	id: string;
+	producerId:string;
+	kind:MediaKind;
+	rtpParameters:RtpParameters;
+	consumableRtpEncodings?:RtpEncodingParameters[];
+	supportedCodecPayloadTypes:number[];
+	traceEventTypes:string[];
+	paused:boolean;
+	producerPaused:boolean;
+	priority:number;
+};
+
+type RtpStreamParameters = {
+	encodingIdx: number;
+	ssrc: number;
+	payloadType: number;
+	mimeType: string;
+	clockRate: number;
+	rid?: string;
+	cname: string;
+	rtxSsrc?: number;
+	rtxPayloadType?: number;
+	useNack: boolean;
+	usePli: boolean;
+	useFir: boolean;
+	useInBandFec: boolean;
+	useDtx: boolean;
+	spatialLayers: number;
+	temporalLayers: number;
+};
+
+type RtpStreamDump = {
+	params: RtpStreamParameters;
+	score: number;
+	rtxStream?: RtxStreamDump;
+};
+
+type RtxStreamParameters = {
+	ssrc:number;
+	payloadType:number;
+	mimeType:string;
+	clockRate: number;
+	rrid?:string;
+	cname:string;
+};
+
+type RtxStreamDump = {
+	params: RtxStreamParameters;
 };
 
 const logger = new Logger('Consumer');
@@ -488,7 +568,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	/**
 	 * Dump Consumer.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<SimpleConsumerDump | SimulcastConsumerDump | SvcConsumerDump | PipeConsumerDump>
 	{
 		logger.debug('dump()');
 
@@ -852,86 +932,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			});
 	}
 }
-
-type BaseConsumerDump = {
-	id: string;
-	producerId:string;
-	kind:MediaKind;
-	rtpParameters:RtpParameters;
-	consumableRtpEncodings?:RtpEncodingParameters[];
-	supportedCodecPayloadTypes:number[];
-	traceEventTypes:string[];
-	paused:boolean;
-	producerPaused:boolean;
-	priority:number;
-};
-
-type SimpleConsumerDump = BaseConsumerDump & {
-	type: string;
-	rtpStream: RtpStreamDump;
-};
-
-type SimulcastConsumerDump = BaseConsumerDump & {
-	type: string;
-	rtpStream: RtpStreamDump;
-	preferredSpatialLayer: number;
-	targetSpatialLayer: number;
-	currentSpatialLayer: number;
-	preferredTemporalLayer: number;
-	targetTemporalLayer: number;
-	currentTemporalLayer: number;
-};
-
-type SvcConsumerDump = SimulcastConsumerDump;
-
-type PipeConsumerDump = BaseConsumerDump & {
-	type: string;
-	rtpStreams: RtpStreamDump[];
-};
-
-type ConsumerDump =
-	SimpleConsumerDump |
-	SimulcastConsumerDump |
-	SvcConsumerDump |
-	PipeConsumerDump;
-
-type RtpStreamParameters = {
-	encodingIdx: number;
-	ssrc: number;
-	payloadType: number;
-	mimeType: string;
-	clockRate: number;
-	rid?: string;
-	cname: string;
-	rtxSsrc?: number;
-	rtxPayloadType?: number;
-	useNack: boolean;
-	usePli: boolean;
-	useFir: boolean;
-	useInBandFec: boolean;
-	useDtx: boolean;
-	spatialLayers: number;
-	temporalLayers: number;
-};
-
-type RtpStreamDump = {
-	params: RtpStreamParameters;
-	score: number;
-	rtxStream?: RtxStreamDump;
-};
-
-type RtxStreamParameters = {
-  ssrc:number;
-  payloadType:number;
-  mimeType:string;
-  clockRate: number;
-  rrid?:string;
-  cname:string;
-};
-
-type RtxStreamDump = {
-	params: RtxStreamParameters;
-};
 
 function parseRtpStreamParameters(data: FbsRtpStream.Params): RtpStreamParameters
 {

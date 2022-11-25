@@ -78,6 +78,10 @@ export type DataConsumerObserverEvents =
 	close: [];
 };
 
+type DataConsumerDump = DataConsumerData & {
+	id: string;
+};
+
 type DataConsumerInternal = TransportInternal &
 {
 	dataConsumerId: string;
@@ -293,7 +297,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	/**
 	 * Dump DataConsumer.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<DataConsumerDump>
 	{
 		logger.debug('dump()');
 
@@ -498,10 +502,6 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			});
 	}
 }
-
-type DataConsumerDump = DataConsumerData & {
-	id: string;
-};
 
 export function parseDataConsumerDump(
 	data: FbsDataConsumer.DumpResponse
