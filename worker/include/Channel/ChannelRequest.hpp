@@ -2,6 +2,7 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
+#include "FBS/message_generated.h"
 #include "FBS/request_generated.h"
 #include "FBS/response_generated.h"
 #include <absl/container/flat_hash_map.h>
@@ -44,10 +45,14 @@ namespace Channel
 			auto& builder = ChannelRequest::bufferBuilder;
 			auto response = FBS::Response::CreateResponse(builder, this->id, true, type, body.Union());
 
-			builder.Finish(response);
+			auto message = FBS::Message::CreateMessage(
+			  builder,
+			  FBS::Message::Type::RESPONSE,
+			  FBS::Message::Body::FBS_Response_Response,
+			  response.Union());
 
+			builder.Finish(message);
 			this->Send(builder.GetBufferPointer(), builder.GetSize());
-
 			builder.Reset();
 		}
 		void Error(const char* reason = nullptr);

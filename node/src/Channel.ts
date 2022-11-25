@@ -6,6 +6,9 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request_generated';
 import { Response } from './fbs/response_generated';
+import { Message, Type as MessageType } from './fbs/message_generated';
+import { Notification } from './fbs/notification_generated';
+import { Log } from './fbs/log_generated';
 
 const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('Channel');
@@ -119,40 +122,77 @@ export class Channel extends EnhancedEventEmitter
 
 				msgStart += 4 + msgLen;
 
+				const buf = new flatbuffers.ByteBuffer(new Uint8Array(payload));
+				const message = Message.getRootAsMessage(buf);
+
 				try
 				{
-					// We can receive JSON messages (Channel messages) or log strings.
-					switch (payload[0])
+					switch (message.type())
 					{
-						// 123 = '{' (a Channel JSON message).
-						case 123:
-							this.processMessage(JSON.parse(payload.toString('utf8')));
-							break;
+						case MessageType.RESPONSE:
+						{
+							const response = new Response();
 
-						// 68 = 'D' (a debug log).
-						case 68:
-							logger.debug(`[pid:${pid}] ${payload.toString('utf8', 1)}`);
-							break;
+							message.data(response);
 
-						// 87 = 'W' (a warn log).
-						case 87:
-							logger.warn(`[pid:${pid}] ${payload.toString('utf8', 1)}`);
-							break;
+							this.processResponse(response);
 
-						// 69 = 'E' (an error log).
-						case 69:
-							logger.error(`[pid:${pid} ${payload.toString('utf8', 1)}`);
 							break;
+						}
 
-						// 88 = 'X' (a dump log).
-						case 88:
-							// eslint-disable-next-line no-console
-							console.log(payload.toString('utf8', 1));
+						case MessageType.NOTIFICATION:
+						{
+							const notification = new Notification();
+
+							message.data(notification);
+
+							const notificationData = notification.data()!;
+
+							this.processNotification(JSON.parse(notificationData));
+
 							break;
+						}
+
+						case MessageType.LOG:
+						{
+							const log = new Log();
+
+							message.data(log);
+
+							const logData = log.data()!;
+
+							switch (logData[0])
+							{
+								// 'D' (a debug log).
+								case 'D':
+									logger.debug(`[pid:${pid}] ${logData.slice(1)}`);
+									break;
+
+								// 'W' (a warn log).
+								case 'W':
+									logger.warn(`[pid:${pid}] ${logData.slice(1)}`);
+									break;
+
+								// 'E' (a error log).
+								case 'E':
+									logger.error(`[pid:${pid}] ${logData.slice(1)}`);
+									break;
+
+								// 'X' (a dump log).
+								case 'X':
+									// eslint-disable-next-line no-console
+									console.log(logData.slice(1));
+									break;
+							}
+
+							break;
+						}
 
 						default:
-							// TODO: Consider it a flatbuffer.
-							this.processBuffer(payload);
+							// eslint-disable-next-line no-console
+							console.warn(
+								`worker[pid:${pid}] unexpected data: %s`,
+								payload.toString('utf8', 1));
 					}
 				}
 				catch (error)
@@ -314,136 +354,61 @@ export class Channel extends EnhancedEventEmitter
 		});
 	}
 
-	private processMessage(msg: any): void
+	private processResponse(response: Response): void
 	{
-		// If a response, retrieve its associated request.
-		if (msg.id)
+		const sent = this.#sents.get(response.id());
+
+		if (!sent)
 		{
-			const sent = this.#sents.get(msg.id);
+			logger.error(
+				'received response does not match any sent request [id:%s]', response.id);
 
-			if (!sent)
+			return;
+		}
+
+		if (response.accepted())
+		{
+			logger.debug(
+				'request succeeded [method:%s, id:%s]', sent.method, sent.id);
+
+			sent.resolve(response);
+		}
+		else if (response.error())
+		{
+			logger.warn(
+				'request failed [method:%s, id:%s]: %s',
+				sent.method, sent.id, response.reason);
+
+			switch (response.error()!)
 			{
-				logger.error(
-					'received response does not match any sent request [id:%s]', msg.id);
+				case 'TypeError':
+					sent.reject(new TypeError(response.reason()!));
+					break;
 
-				return;
-			}
-
-			if (msg.accepted)
-			{
-				logger.debug(
-					'request succeeded [method:%s, id:%s]', sent.method, sent.id);
-
-				sent.resolve(msg.data);
-			}
-			else if (msg.error)
-			{
-				logger.warn(
-					'request failed [method:%s, id:%s]: %s',
-					sent.method, sent.id, msg.reason);
-
-				switch (msg.error)
-				{
-					case 'TypeError':
-						sent.reject(new TypeError(msg.reason));
-						break;
-
-					default:
-						sent.reject(new Error(msg.reason));
-				}
-			}
-			else
-			{
-				logger.error(
-					'received response is not accepted nor rejected [method:%s, id:%s]',
-					sent.method, sent.id);
+				default:
+					sent.reject(new Error(response.reason()!));
 			}
 		}
-		// If a notification emit it to the corresponding entity.
-		else if (msg.targetId && msg.event)
-		{
-			// Due to how Promises work, it may happen that we receive a response
-			// from the worker followed by a notification from the worker. If we
-			// emit the notification immediately it may reach its target **before**
-			// the response, destroying the ordered delivery. So we must wait a bit
-			// here.
-			// See https://github.com/versatica/mediasoup/issues/510
-			setImmediate(() => this.emit(String(msg.targetId), msg.event, msg.data));
-		}
-		// Otherwise unexpected message.
 		else
 		{
 			logger.error(
-				'received message is not a response nor a notification');
+				'received response is not accepted nor rejected [method:%s, id:%s]',
+				sent.method, sent.id);
 		}
 	}
 
-	private processBuffer(data: Buffer): void
+	private processNotification(notification: any): void
 	{
-		const buffer = new flatbuffers.ByteBuffer(new Uint8Array(data));
-		const msg = Response.getRootAsResponse(buffer);
-
-		// If a response, retrieve its associated request.
-		if (msg.id())
-		{
-			const sent = this.#sents.get(msg.id());
-
-			if (!sent)
-			{
-				logger.error(
-					'received response does not match any sent request [id:%s]', msg.id);
-
-				return;
-			}
-
-			if (msg.accepted())
-			{
-				logger.debug(
-					'request succeeded [method:%s, id:%s]', sent.method, sent.id);
-
-				sent.resolve(msg);
-			}
-			else if (msg.error())
-			{
-				logger.warn(
-					'request failed [method:%s, id:%s]: %s',
-					sent.method, sent.id, msg.reason);
-
-				switch (msg.error()!)
-				{
-					case 'TypeError':
-						sent.reject(new TypeError(msg.reason()!));
-						break;
-
-					default:
-						sent.reject(new Error(msg.reason()!));
-				}
-			}
-			else
-			{
-				logger.error(
-					'received response is not accepted nor rejected [method:%s, id:%s]',
-					sent.method, sent.id);
-			}
-		}
-		/*
-		// If a notification emit it to the corresponding entity.
-		else if (msg.targetId && msg.event)
-		{
-			// Due to how Promises work, it may happen that we receive a response
-			// from the worker followed by a notification from the worker. If we
-			// emit the notification immediately it may reach its target **before**
-			// the response, destroying the ordered delivery. So we must wait a bit
-			// here.
-			// See https://github.com/versatica/mediasoup/issues/510
-			setImmediate(() => this.emit(String(msg.targetId), msg.event, msg.data));
-		}
-		// Otherwise unexpected message.
-		else
-		{
-			logger.error(
-				'received message is not a response nor a notification');
-		}
-		*/
+		// Due to how Promises work, it may happen that we receive a response
+		// from the worker followed by a notification from the worker. If we
+		// emit the notification immediately it may reach its target **before**
+		// the response, destroying the ordered delivery. So we must wait a bit
+		// here.
+		// See https://github.com/versatica/mediasoup/issues/510
+		setImmediate(() => this.emit(
+			String(notification.targetId),
+			notification.event,
+			notification.data)
+		);
 	}
 }

@@ -3,6 +3,9 @@
 
 #include "Channel/ChannelSocket.hpp"
 #include "DepLibUV.hpp"
+#include "FBS/log_generated.h"
+#include "FBS/message_generated.h"
+#include "FBS/notification_generated.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cmath>   // std::ceil()
@@ -129,17 +132,26 @@ namespace Channel
 		if (this->closed)
 			return;
 
-		std::string message = jsonMessage.dump();
+		std::string msg = jsonMessage.dump();
 
-		if (message.length() > PayloadMaxLen)
+		if (msg.length() > PayloadMaxLen)
 		{
 			MS_ERROR_STD("message too big");
 
 			return;
 		}
 
-		SendImpl(
-		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
+		auto notification = FBS::Notification::CreateNotificationDirect(this->bufferBuilder, msg.c_str());
+
+		auto message = FBS::Message::CreateMessage(
+		  this->bufferBuilder,
+		  FBS::Message::Type::NOTIFICATION,
+		  FBS::Message::Body::FBS_Notification_Notification,
+		  notification.Union());
+
+		this->bufferBuilder.Finish(message);
+		this->Send(this->bufferBuilder.GetBufferPointer(), this->bufferBuilder.GetSize());
+		this->bufferBuilder.Reset();
 	}
 
 	void ChannelSocket::Send(const std::string& message)
@@ -177,7 +189,7 @@ namespace Channel
 		SendImpl(reinterpret_cast<const uint8_t*>(message), messageLen);
 	}
 
-	void ChannelSocket::SendLog(const char* message, uint32_t messageLen)
+	void ChannelSocket::SendLog(const char* msg, uint32_t messageLen)
 	{
 		MS_TRACE_STD();
 
@@ -191,7 +203,13 @@ namespace Channel
 			return;
 		}
 
-		SendImpl(reinterpret_cast<const uint8_t*>(message), messageLen);
+		auto log     = FBS::Log::CreateLogDirect(this->bufferBuilder, msg);
+		auto message = FBS::Message::CreateMessage(
+		  this->bufferBuilder, FBS::Message::Type::LOG, FBS::Message::Body::FBS_Log_Log, log.Union());
+
+		this->bufferBuilder.Finish(message);
+		this->Send(this->bufferBuilder.GetBufferPointer(), this->bufferBuilder.GetSize());
+		this->bufferBuilder.Reset();
 	}
 
 	bool ChannelSocket::CallbackRead()

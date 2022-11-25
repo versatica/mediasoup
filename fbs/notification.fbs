@@ -1,0 +1,7 @@
+
+namespace FBS.Notification;
+
+// TMP: Notification do contain a stringified JSON right now.
+table Notification {
+  data:string (required);
+}

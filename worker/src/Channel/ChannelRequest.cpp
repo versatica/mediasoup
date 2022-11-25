@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/ChannelRequest.hpp"
+#include "FBS/message_generated.h"
 #include "FBS/request_generated.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -73,8 +74,9 @@ namespace Channel
 		{ FBS::Request::Method::RTP_OBSERVER_ADD_PRODUCER,                       "rtpObserver.addProducer"                    },
 		{ FBS::Request::Method::RTP_OBSERVER_REMOVE_PRODUCER,                    "rtpObserver.removeProducer"                 },
 	};
-
 	// clang-format on
+
+	/* Class method. */
 	flatbuffers::FlatBufferBuilder ChannelRequest::bufferBuilder;
 
 	/* Instance methods. */
@@ -120,10 +122,14 @@ namespace Channel
 		auto response =
 		  FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
 
-		builder.Finish(response);
+		auto message = FBS::Message::CreateMessage(
+		  builder,
+		  FBS::Message::Type::RESPONSE,
+		  FBS::Message::Body::FBS_Response_Response,
+		  response.Union());
 
+		builder.Finish(message);
 		this->Send(builder.GetBufferPointer(), builder.GetSize());
-
 		builder.Reset();
 	}
 
@@ -144,10 +150,14 @@ namespace Channel
 		auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "Error" /*Error*/, reason);
 
-		builder.Finish(response);
+		auto message = FBS::Message::CreateMessage(
+		  builder,
+		  FBS::Message::Type::RESPONSE,
+		  FBS::Message::Body::FBS_Response_Response,
+		  response.Union());
 
+		builder.Finish(message);
 		this->Send(builder.GetBufferPointer(), builder.GetSize());
-
 		builder.Reset();
 	}
 
@@ -163,10 +173,14 @@ namespace Channel
 		auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "TypeError" /*Error*/, reason);
 
-		builder.Finish(response);
+		auto message = FBS::Message::CreateMessage(
+		  builder,
+		  FBS::Message::Type::RESPONSE,
+		  FBS::Message::Body::FBS_Response_Response,
+		  response.Union());
 
+		builder.Finish(message);
 		this->Send(builder.GetBufferPointer(), builder.GetSize());
-
 		builder.Reset();
 	}
 } // namespace Channel
