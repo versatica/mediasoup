@@ -166,5 +166,7 @@ namespace Channel
 		builder.Finish(response);
 
 		this->Send(builder.GetBufferPointer(), builder.GetSize());
+
+		builder.Reset();
 	}
 } // namespace Channel

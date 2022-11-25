@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+using json = nlohmann::json;
+
 namespace RTC
 {
 	class PortManager
