@@ -568,7 +568,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	/**
 	 * Dump Consumer.
 	 */
-	async dump(): Promise<SimpleConsumerDump | SimulcastConsumerDump | SvcConsumerDump | PipeConsumerDump>
+	async dump(): Promise<ConsumerDump>
 	{
 		logger.debug('dump()');
 

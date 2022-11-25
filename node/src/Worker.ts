@@ -633,9 +633,8 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		// Build the request.
 		const builder = this.#channel.bufferBuilder;
 
-		const updateaSettingsRequest =
-			new FbsWorker.UpdateSettingsRequestT(logLevel, logTags);
-		const updateaSettingsRequestOffset = updateaSettingsRequest.pack(builder);
+		const updateaSettingsRequestOffset =
+			new FbsWorker.UpdateSettingsRequestT(logLevel, logTags).pack(builder);
 
 		await this.#channel.request(
 			FbsRequest.Method.WORKER_UPDATE_SETTINGS,
@@ -673,9 +672,8 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		}
 
 		const webRtcServerId = uuidv4();
-		const createWebRtcServerRequestT = new FbsRequest.CreateWebRtcServerRequestT(
-			webRtcServerId, fbsListenInfos);
-		const createWebRtcServerRequestOffset = createWebRtcServerRequestT.pack(builder);
+		const createWebRtcServerRequestOffset = new FbsRequest.CreateWebRtcServerRequestT(
+			webRtcServerId, fbsListenInfos).pack(builder);
 
 		await this.#channel.request(
 			FbsRequest.Method.WORKER_CREATE_WEBRTC_SERVER,

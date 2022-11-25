@@ -1260,7 +1260,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 					this.#producers.get(producerId)
 				)
 			});
-		
+
 		this.#rtpObservers.set(activeSpeakerObserver.id, activeSpeakerObserver);
 		activeSpeakerObserver.on('@close', () =>
 		{

@@ -777,7 +777,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		}
 
 		const consumerId = uuidv4();
-
 		const consumeRequestOffset = this.createConsumeRequest({
 			producer,
 			consumerId,
