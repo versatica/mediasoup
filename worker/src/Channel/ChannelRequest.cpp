@@ -122,20 +122,7 @@ namespace Channel
 		auto response =
 		  FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
 
-		auto message = FBS::Message::CreateMessage(
-		  builder,
-		  FBS::Message::Type::RESPONSE,
-		  FBS::Message::Body::FBS_Response_Response,
-		  response.Union());
-
-		builder.Finish(message);
-		this->Send(builder.GetBufferPointer(), builder.GetSize());
-		builder.Reset();
-	}
-
-	void ChannelRequest::Send(uint8_t* buffer, size_t size)
-	{
-		this->channel->Send(buffer, size);
+		Send(response);
 	}
 
 	void ChannelRequest::Error(const char* reason)
@@ -150,15 +137,7 @@ namespace Channel
 		auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "Error" /*Error*/, reason);
 
-		auto message = FBS::Message::CreateMessage(
-		  builder,
-		  FBS::Message::Type::RESPONSE,
-		  FBS::Message::Body::FBS_Response_Response,
-		  response.Union());
-
-		builder.Finish(message);
-		this->Send(builder.GetBufferPointer(), builder.GetSize());
-		builder.Reset();
+		Send(response);
 	}
 
 	void ChannelRequest::TypeError(const char* reason)
@@ -173,6 +152,17 @@ namespace Channel
 		auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "TypeError" /*Error*/, reason);
 
+		Send(response);
+	}
+
+	void ChannelRequest::Send(uint8_t* buffer, size_t size)
+	{
+		this->channel->Send(buffer, size);
+	}
+
+	void ChannelRequest::Send(const flatbuffers::Offset<FBS::Response::Response>& response)
+	{
+		auto& builder = ChannelRequest::bufferBuilder;
 		auto message = FBS::Message::CreateMessage(
 		  builder,
 		  FBS::Message::Type::RESPONSE,
@@ -183,4 +173,5 @@ namespace Channel
 		this->Send(builder.GetBufferPointer(), builder.GetSize());
 		builder.Reset();
 	}
+
 } // namespace Channel

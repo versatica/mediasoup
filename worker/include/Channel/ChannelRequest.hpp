@@ -60,6 +60,7 @@ namespace Channel
 
 	private:
 		void Send(uint8_t* buffer, size_t size);
+		void Send(const flatbuffers::Offset<FBS::Response::Response>& reponse);
 
 	public:
 		// Passed by argument.
