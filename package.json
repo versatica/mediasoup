@@ -71,7 +71,16 @@
     "testEnvironment": "node",
     "testRegex": "node/src/tests/test-.*\\.ts",
     "transform": {
-      "^.*\\.ts$": [ "ts-jest", { "diagnostics": { "ignoreCodes": [ "TS151001" ] } } ]
+      "^.*\\.ts$": [
+        "ts-jest",
+        {
+          "diagnostics": {
+            "ignoreCodes": [
+              "TS151001"
+            ]
+          }
+        }
+      ]
     },
     "cacheDirectory": ".cache/jest"
   },
@@ -86,10 +95,10 @@
     "@types/jest": "^29.2.3",
     "@types/node": "^18.11.9",
     "@types/uuid": "^8.3.4",
-    "@typescript-eslint/eslint-plugin": "^5.43.0",
-    "@typescript-eslint/parser": "^5.43.0",
-    "eslint": "^8.27.0",
-    "eslint-plugin-jest": "^27.1.5",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "eslint-plugin-jest": "^27.1.6",
     "jest": "^29.3.1",
     "open-cli": "^7.1.0",
     "pick-port": "^1.0.1",
