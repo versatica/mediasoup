@@ -23,3 +23,7 @@ table GetStatsResponse {
   stats:string (required);
 }
 
+table SendNotification {
+  data:[uint8] (required);
+}
+

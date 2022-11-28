@@ -2,7 +2,11 @@
 #define MS_PAYLOAD_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
+#include "FBS/message_generated.h"
+#include "FBS/request_generated.h"
+#include "FBS/response_generated.h"
 #include <absl/container/flat_hash_map.h>
+#include <flatbuffers/flatbuffers.h>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -17,19 +21,17 @@ namespace PayloadChannel
 	class PayloadChannelRequest
 	{
 	public:
-		enum class MethodId
-		{
-			DATA_CONSUMER_SEND
-		};
+		using Method = FBS::Request::Method;
 
 	public:
-		static bool IsRequest(const char* msg, size_t msgLen);
+		static flatbuffers::FlatBufferBuilder bufferBuilder;
 
 	private:
-		static absl::flat_hash_map<std::string, MethodId> string2MethodId;
+		static absl::flat_hash_map<FBS::Request::Method, const char*> method2String;
 
 	public:
-		PayloadChannelRequest(PayloadChannel::PayloadChannelSocket* channel, char* msg, size_t msgLen);
+		PayloadChannelRequest(
+		  PayloadChannel::PayloadChannelSocket* channel, const FBS::Request::Request* request);
 		virtual ~PayloadChannelRequest();
 
 	public:
@@ -37,18 +39,19 @@ namespace PayloadChannel
 		void Accept(json& data);
 		void Error(const char* reason = nullptr);
 		void TypeError(const char* reason = nullptr);
-		void SetPayload(const uint8_t* payload, size_t payloadLen);
+
+	private:
+		void Send(const flatbuffers::Offset<FBS::Response::Response>& reponse);
 
 	public:
 		// Passed by argument.
 		PayloadChannel::PayloadChannelSocket* channel{ nullptr };
 		uint32_t id{ 0u };
-		std::string method;
-		MethodId methodId;
+		// TODO: Move it to const char*.
+		std::string methodStr;
+		Method method;
 		std::string handlerId;
-		std::string data;
-		const uint8_t* payload{ nullptr };
-		size_t payloadLen{ 0u };
+		const FBS::Request::Request* data{ nullptr };
 		// Others.
 		bool replied{ false };
 	};

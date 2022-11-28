@@ -71,24 +71,24 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (notification->eventId)
+		switch (notification->event)
 		{
-			case PayloadChannel::PayloadChannelNotification::EventId::TRANSPORT_SEND_RTCP:
+			case PayloadChannel::PayloadChannelNotification::Event::TRANSPORT_SEND_RTCP:
 			{
-				const auto* data = notification->payload;
-				auto len         = notification->payloadLen;
+				auto body = notification->data->body_as<FBS::Transport::SendRtcpNotification>();
+				auto len  = body->data()->size();
 
 				// Increase receive transmission.
 				RTC::Transport::DataReceived(len);
 
 				if (len > RTC::MtuSize + 100)
 				{
-					MS_WARN_TAG(rtp, "given RTCP packet exceeds maximum size [len:%zu]", len);
+					MS_WARN_TAG(rtp, "given RTCP packet exceeds maximum size [len:%i]", len);
 
 					return;
 				}
 
-				RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
+				RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(body->data()->data(), len);
 
 				if (!packet)
 				{

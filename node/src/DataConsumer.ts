@@ -399,10 +399,20 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		else if (ppid === 57)
 			message = Buffer.alloc(1);
 
-		const requestData = String(ppid);
+		const builder = this.#payloadChannel.bufferBuilder;
+		const dataOffset = builder.createString(message);
+		const requestOffset = FbsDataConsumer.SendRequest.createSendRequest(
+			builder,
+			ppid,
+			dataOffset
+		);
 
 		await this.#payloadChannel.request(
-			'dataConsumer.send', this.#internal.dataConsumerId, requestData, message);
+			FbsRequest.Method.DATA_CONSUMER_SEND,
+			FbsRequest.Body.FBS_DataConsumer_SendRequest,
+			requestOffset,
+			this.#internal.dataConsumerId
+		);
 	}
 
 	/**

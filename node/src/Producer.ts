@@ -4,6 +4,7 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
+import * as FbsNotification from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsProducer from './fbs/producer_generated';
@@ -542,8 +543,19 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			throw new TypeError('rtpPacket must be a Buffer');
 		}
 
+		const builder = this.#payloadChannel.bufferBuilder;
+		const dataOffset = FbsProducer.SendNotification.createDataVector(builder, rtpPacket);
+		const notificationOffset = FbsProducer.SendNotification.createSendNotification(
+			builder,
+			dataOffset
+		);
+
 		this.#payloadChannel.notify(
-			'producer.send', this.#internal.producerId, undefined, rtpPacket);
+			FbsNotification.Event.PRODUCER_SEND,
+			FbsNotification.Body.FBS_Producer_SendNotification,
+			notificationOffset,
+			this.#internal.producerId
+		);
 	}
 
 	private handleWorkerNotifications(): void

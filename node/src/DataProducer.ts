@@ -5,6 +5,7 @@ import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
 import * as FbsTransport from './fbs/transport_generated';
+import * as FbsNotification from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsDataProducer from './fbs/dataProducer_generated';
 
@@ -354,10 +355,20 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		else if (ppid === 57)
 			message = Buffer.alloc(1);
 
-		const notifData = String(ppid);
+		const builder = this.#payloadChannel.bufferBuilder;
+		const dataOffset = builder.createString(message);
+		const notificationOffset = FbsDataProducer.SendNotification.createSendNotification(
+			builder,
+			ppid,
+			dataOffset
+		);
 
 		this.#payloadChannel.notify(
-			'dataProducer.send', this.#internal.dataProducerId, notifData, message);
+			FbsNotification.Event.DATA_PRODUCER_SEND,
+			FbsNotification.Body.FBS_DataProducer_SendNotification,
+			notificationOffset,
+			this.#internal.dataProducerId
+		);
 	}
 
 	private handleWorkerNotifications(): void

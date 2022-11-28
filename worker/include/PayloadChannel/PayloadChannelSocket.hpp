@@ -100,6 +100,7 @@ namespace PayloadChannel
 		void Send(const std::string& message, const uint8_t* payload, size_t payloadLen);
 		void Send(json& jsonMessage);
 		void Send(const std::string& message);
+		void Send(const uint8_t* buffer, size_t size);
 		bool CallbackRead();
 
 	private:
@@ -123,8 +124,6 @@ namespace PayloadChannel
 		PayloadChannelReadCtx payloadChannelReadCtx{ nullptr };
 		PayloadChannelWriteFn payloadChannelWriteFn{ nullptr };
 		PayloadChannelWriteCtx payloadChannelWriteCtx{ nullptr };
-		PayloadChannel::PayloadChannelNotification* ongoingNotification{ nullptr };
-		PayloadChannel::PayloadChannelRequest* ongoingRequest{ nullptr };
 		uv_async_t* uvReadHandle{ nullptr };
 		uint8_t* writeBuffer{ nullptr };
 	};

@@ -454,11 +454,11 @@ inline void Worker::HandleRequest(PayloadChannel::PayloadChannelRequest* request
 	}
 	catch (const MediaSoupTypeError& error)
 	{
-		MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+		MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
 	}
 	catch (const MediaSoupError& error)
 	{
-		MS_THROW_ERROR("%s [method:%s]", error.what(), request->method.c_str());
+		MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
 	}
 }
 
@@ -483,11 +483,11 @@ inline void Worker::HandleNotification(PayloadChannel::PayloadChannelNotificatio
 	}
 	catch (const MediaSoupTypeError& error)
 	{
-		MS_THROW_TYPE_ERROR("%s [event:%s]", error.what(), notification->event.c_str());
+		MS_THROW_TYPE_ERROR("%s [event:%s]", error.what(), notification->eventStr.c_str());
 	}
 	catch (const MediaSoupError& error)
 	{
-		MS_THROW_ERROR("%s [method:%s]", error.what(), notification->event.c_str());
+		MS_THROW_ERROR("%s [method:%s]", error.what(), notification->eventStr.c_str());
 	}
 }
 

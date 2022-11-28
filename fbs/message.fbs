@@ -1,18 +1,22 @@
 include "log.fbs";
 include "notification.fbs";
+include "request.fbs";
 include "response.fbs";
 
 namespace FBS.Message;
 
 enum Type : uint8 {
-  RESPONSE = 0,
+  REQUEST = 0,
+  RESPONSE,
   NOTIFICATION,
   LOG,
 }
 
 union Body {
+  FBS.Request.Request,
   FBS.Response.Response,
   FBS.Notification.Notification,
+  FBS.Notification.NotificationX,
   FBS.Log.Log,
 }
 
@@ -20,3 +24,5 @@ table Message {
   type:Type;
   data:Body (required);
 }
+
+root_type Message;

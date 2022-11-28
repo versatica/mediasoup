@@ -1,7 +1,29 @@
+include "transport.fbs";
+include "producer.fbs";
+include "dataProducer.fbs";
 
 namespace FBS.Notification;
+
+enum Event: uint8 {
+  TRANSPORT_SEND_RTCP = 0,
+  PRODUCER_SEND,
+  DATA_PRODUCER_SEND,
+}
+
+union Body {
+  FBS.Transport.SendRtcpNotification,
+  FBS.Producer.SendNotification,
+  FBS.DataProducer.SendNotification,
+}
 
 // TMP: Notification do contain a stringified JSON right now.
 table Notification {
   data:string (required);
+}
+
+// TODO: Rename it to Notification.
+table NotificationX {
+  event:Event;
+  handler_id:string;
+  body:Body;
 }

@@ -219,9 +219,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case PayloadChannel::PayloadChannelRequest::MethodId::DATA_CONSUMER_SEND:
+			case PayloadChannel::PayloadChannelRequest::Method::DATA_CONSUMER_SEND:
 			{
 				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
@@ -233,29 +233,19 @@ namespace RTC
 					MS_THROW_ERROR("no SCTP association present");
 				}
 
-				int ppid;
+				auto body = request->data->body_as<FBS::DataConsumer::SendRequest>();
 
-				// This may throw.
-				// NOTE: If this throws we have to catch the error and throw a MediaSoupError
-				// intead, otherwise the process would crash.
-				try
-				{
-					ppid = std::stoi(request->data);
-				}
-				catch (const std::exception& error)
-				{
-					MS_THROW_TYPE_ERROR("invalid PPID value: %s", error.what());
-				}
+				int ppid = body->ppid();
 
-				const auto* msg = request->payload;
-				auto len        = request->payloadLen;
+				const auto* msg = body->data()->c_str();
+				auto len        = body->data()->size();
 
 				if (len > this->maxMessageSize)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
-					  len,
-					  this->maxMessageSize);
+					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%i]",
+					  this->maxMessageSize,
+					  len);
 				}
 
 				const auto* cb = new onQueuedCallback(
@@ -268,14 +258,14 @@ namespace RTC
 						    sctpSendBufferFull == true ? "sctpsendbufferfull" : "message send failed");
 				  });
 
-				SendMessage(ppid, msg, len, cb);
+				SendMessage(ppid, reinterpret_cast<const uint8_t*>(msg), len, cb);
 
 				break;
 			}
 
 			default:
 			{
-				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+				MS_THROW_ERROR("unknown method '%s'", request->methodStr.c_str());
 			}
 		}
 	}

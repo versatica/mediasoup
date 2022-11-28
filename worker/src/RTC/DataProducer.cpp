@@ -157,36 +157,22 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (notification->eventId)
+		switch (notification->event)
 		{
-			case PayloadChannel::PayloadChannelNotification::EventId::DATA_PRODUCER_SEND:
+			case PayloadChannel::PayloadChannelNotification::Event::DATA_PRODUCER_SEND:
 			{
-				int ppid;
-
-				// This may throw.
-				// NOTE: If this throws we have to catch the error and throw a MediaSoupError
-				// intead, otherwise the process would crash.
-				try
-				{
-					ppid = std::stoi(notification->data);
-				}
-				catch (const std::exception& error)
-				{
-					MS_THROW_TYPE_ERROR("invalid PPID value: %s", error.what());
-				}
-
-				const auto* msg = notification->payload;
-				auto len        = notification->payloadLen;
+				auto body = notification->data->body_as<FBS::DataProducer::SendNotification>();
+				auto len  = body->data()->size();
 
 				if (len > this->maxMessageSize)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
-					  len,
-					  this->maxMessageSize);
+					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%i]",
+					  this->maxMessageSize,
+					  len);
 				}
 
-				this->ReceiveMessage(ppid, msg, len);
+				this->ReceiveMessage(body->ppid(), body->data()->Data(), len);
 
 				// Increase receive transmission.
 				this->listener->OnDataProducerReceiveData(this, len);
@@ -196,7 +182,7 @@ namespace RTC
 
 			default:
 			{
-				MS_ERROR("unknown event '%s'", notification->event.c_str());
+				MS_ERROR("unknown event '%s'", notification->eventStr.c_str());
 			}
 		}
 	}

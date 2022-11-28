@@ -2,6 +2,7 @@
 #define MS_PAYLOAD_CHANNEL_NOTIFICATION_HPP
 
 #include "common.hpp"
+#include "FBS/notification_generated.h"
 #include <absl/container/flat_hash_map.h>
 #include <string>
 
@@ -10,21 +11,17 @@ namespace PayloadChannel
 	class PayloadChannelNotification
 	{
 	public:
-		enum class EventId
-		{
-			TRANSPORT_SEND_RTCP = 1,
-			PRODUCER_SEND,
-			DATA_PRODUCER_SEND
-		};
+		using Event = FBS::Notification::Event;
 
 	public:
-		static bool IsNotification(const char* msg, size_t msgLen);
+		static flatbuffers::FlatBufferBuilder bufferBuilder;
 
 	private:
-		static absl::flat_hash_map<std::string, EventId> string2EventId;
+		static absl::flat_hash_map<FBS::Notification::Event, const char*> event2String;
 
 	public:
 		PayloadChannelNotification(const char* msg, size_t msgLen);
+		PayloadChannelNotification(const FBS::Notification::NotificationX* notification);
 		virtual ~PayloadChannelNotification();
 
 	public:
@@ -32,12 +29,11 @@ namespace PayloadChannel
 
 	public:
 		// Passed by argument.
-		std::string event;
-		EventId eventId;
+		// TODO: Move it to const char*.
+		std::string eventStr;
+		Event event;
 		std::string handlerId;
-		std::string data;
-		const uint8_t* payload{ nullptr };
-		size_t payloadLen{ 0u };
+		const FBS::Notification::NotificationX* data{ nullptr };
 	};
 } // namespace PayloadChannel
 

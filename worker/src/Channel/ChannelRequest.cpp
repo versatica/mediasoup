@@ -76,7 +76,7 @@ namespace Channel
 	};
 	// clang-format on
 
-	/* Class method. */
+	/* Class methods. */
 	flatbuffers::FlatBufferBuilder ChannelRequest::bufferBuilder;
 
 	/* Instance methods. */
@@ -163,15 +163,14 @@ namespace Channel
 	void ChannelRequest::Send(const flatbuffers::Offset<FBS::Response::Response>& response)
 	{
 		auto& builder = ChannelRequest::bufferBuilder;
-		auto message = FBS::Message::CreateMessage(
-		  builder,
-		  FBS::Message::Type::RESPONSE,
-		  FBS::Message::Body::FBS_Response_Response,
-		  response.Union());
+		auto message  = FBS::Message::CreateMessage(
+      builder,
+      FBS::Message::Type::RESPONSE,
+      FBS::Message::Body::FBS_Response_Response,
+      response.Union());
 
 		builder.Finish(message);
 		this->Send(builder.GetBufferPointer(), builder.GetSize());
 		builder.Reset();
 	}
-
 } // namespace Channel

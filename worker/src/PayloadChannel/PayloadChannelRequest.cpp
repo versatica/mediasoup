@@ -12,69 +12,31 @@ namespace PayloadChannel
 	/* Class variables. */
 
 	// clang-format off
-	absl::flat_hash_map<std::string, PayloadChannelRequest::MethodId> PayloadChannelRequest::string2MethodId =
+	absl::flat_hash_map<FBS::Request::Method, const char*> PayloadChannelRequest::method2String =
 	{
-		{ "dataConsumer.send", PayloadChannelRequest::MethodId::DATA_CONSUMER_SEND },
+		{ FBS::Request::Method::DATA_CONSUMER_SEND, "dataConsumer.send" },
 	};
 	// clang-format on
 
 	/* Class methods. */
-
-	bool PayloadChannelRequest::IsRequest(const char* msg, size_t msgLen)
-	{
-		MS_TRACE();
-
-		return (msgLen > 2 && msg[0] == 'r' && msg[1] == ':');
-	}
+	flatbuffers::FlatBufferBuilder PayloadChannelRequest::bufferBuilder;
 
 	/* Instance methods. */
 
-	/**
-	 * msg contains "id:method:handlerId:data" where:
-	 * - id: The ID of the request.
-	 * - handlerId: The ID of the target entity
-	 * - data: JSON object.
-	 */
 	PayloadChannelRequest::PayloadChannelRequest(
-	  PayloadChannel::PayloadChannelSocket* channel, char* msg, size_t msgLen)
+	  PayloadChannel::PayloadChannelSocket* channel, const FBS::Request::Request* request)
 	  : channel(channel)
 	{
 		MS_TRACE();
 
-		auto info = Utils::String::Split(std::string(msg, msgLen), ':', 3);
+		this->data      = request;
+		this->id        = this->data->id();
+		this->method    = this->data->method();
+		this->methodStr = method2String[this->method];
 
-		if (info.size() < 2)
-			MS_THROW_ERROR("too few arguments");
-
-		this->id     = std::stoul(info[0]);
-		this->method = info[1];
-
-		auto methodIdIt = PayloadChannelRequest::string2MethodId.find(this->method);
-
-		if (methodIdIt == PayloadChannelRequest::string2MethodId.end())
-		{
-			Error("unknown method");
-
-			MS_THROW_ERROR("unknown method '%s'", this->method.c_str());
-		}
-
-		this->methodId = methodIdIt->second;
-
-		if (info.size() > 2)
-		{
-			auto& handlerId = info[2];
-
-			if (handlerId != "undefined")
-				this->handlerId = handlerId;
-		}
-
-		if (info.size() > 3)
-		{
-			auto& data = info[3];
-
-			if (data != "undefined")
-				this->data = data;
-		}
+		// Handler ID is optional.
+		if (flatbuffers::IsFieldPresent(this->data, FBS::Request::Request::VT_HANDLERID))
+			this->handlerId = this->data->handlerId()->str();
 	}
 
 	PayloadChannelRequest::~PayloadChannelRequest()
@@ -90,12 +52,11 @@ namespace PayloadChannel
 
 		this->replied = true;
 
-		std::string response("{\"id\":");
+		auto& builder = PayloadChannelRequest::bufferBuilder;
+		auto response =
+		  FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
 
-		response.append(std::to_string(this->id));
-		response.append(",\"accepted\":true}");
-
-		this->channel->Send(response);
+		Send(response);
 	}
 
 	void PayloadChannelRequest::Accept(json& data)
@@ -155,11 +116,17 @@ namespace PayloadChannel
 		this->channel->Send(jsonResponse);
 	}
 
-	void PayloadChannelRequest::SetPayload(const uint8_t* payload, size_t payloadLen)
+	void PayloadChannelRequest::Send(const flatbuffers::Offset<FBS::Response::Response>& response)
 	{
-		MS_TRACE();
+		auto& builder = PayloadChannelRequest::bufferBuilder;
+		auto message  = FBS::Message::CreateMessage(
+      builder,
+      FBS::Message::Type::RESPONSE,
+      FBS::Message::Body::FBS_Response_Response,
+      response.Union());
 
-		this->payload    = payload;
-		this->payloadLen = payloadLen;
+		builder.Finish(message);
+		this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
+		builder.Reset();
 	}
 } // namespace PayloadChannel

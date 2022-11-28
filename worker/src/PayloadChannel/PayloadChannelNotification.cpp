@@ -11,70 +11,34 @@ namespace PayloadChannel
 	/* Class variables. */
 
 	// clang-format off
-	absl::flat_hash_map<std::string, PayloadChannelNotification::EventId> PayloadChannelNotification::string2EventId =
+	absl::flat_hash_map<FBS::Notification::Event, const char*> PayloadChannelNotification::event2String =
 	{
-		{ "transport.sendRtcp", PayloadChannelNotification::EventId::TRANSPORT_SEND_RTCP },
-		{ "producer.send",      PayloadChannelNotification::EventId::PRODUCER_SEND       },
-		{ "dataProducer.send",  PayloadChannelNotification::EventId::DATA_PRODUCER_SEND  }
+		{ FBS::Notification::Event::TRANSPORT_SEND_RTCP, "transport.sendRtcp" },
+		{ FBS::Notification::Event::PRODUCER_SEND,       "producer.send" },
+		{ FBS::Notification::Event::DATA_PRODUCER_SEND,  "dataProducer.send" },
 	};
 	// clang-format on
 
-	/* Class methods. */
-
-	bool PayloadChannelNotification::IsNotification(const char* msg, size_t msgLen)
-	{
-		MS_TRACE();
-
-		return (msgLen > 2 && msg[0] == 'n' && msg[1] == ':');
-	}
+	flatbuffers::FlatBufferBuilder PayloadChannelNotification::bufferBuilder;
 
 	/* Instance methods. */
 
-	PayloadChannelNotification::PayloadChannelNotification(const char* msg, size_t msgLen)
+	PayloadChannelNotification::PayloadChannelNotification(
+	  const FBS::Notification::NotificationX* notification)
 	{
 		MS_TRACE();
 
-		auto info = Utils::String::Split(std::string(msg, msgLen), ':');
+		this->data     = notification;
+		this->event    = notification->event();
+		this->eventStr = event2String[this->event];
 
-		if (info.size() < 1)
-			MS_THROW_ERROR("too few arguments");
-
-		this->event = info[0];
-
-		auto eventIdIt = PayloadChannelNotification::string2EventId.find(this->event);
-
-		if (eventIdIt == PayloadChannelNotification::string2EventId.end())
-			MS_THROW_ERROR("unknown event '%s'", this->event.c_str());
-
-		this->eventId = eventIdIt->second;
-
-		if (info.size() > 1)
-		{
-			auto& handlerId = info[1];
-
-			if (handlerId != "undefined")
-				this->handlerId = handlerId;
-		}
-
-		if (info.size() > 2)
-		{
-			auto& data = info[2];
-
-			if (data != "undefined")
-				this->data = data;
-		}
+		// Handler ID is optional.
+		if (flatbuffers::IsFieldPresent(this->data, FBS::Notification::NotificationX::VT_HANDLERID))
+			this->handlerId = this->data->handlerId()->str();
 	}
 
 	PayloadChannelNotification::~PayloadChannelNotification()
 	{
 		MS_TRACE();
-	}
-
-	void PayloadChannelNotification::SetPayload(const uint8_t* payload, size_t payloadLen)
-	{
-		MS_TRACE();
-
-		this->payload    = payload;
-		this->payloadLen = payloadLen;
 	}
 } // namespace PayloadChannel

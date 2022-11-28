@@ -24,3 +24,8 @@ table DumpResponse {
 table GetStatsResponse {
   stats:string (required);
 }
+
+table SendRequest {
+  ppid:uint8;
+  data:string (required);
+}

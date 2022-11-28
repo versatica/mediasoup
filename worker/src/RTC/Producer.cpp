@@ -473,19 +473,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		switch (notification->eventId)
+		switch (notification->event)
 		{
-			case PayloadChannel::PayloadChannelNotification::EventId::PRODUCER_SEND:
+			case PayloadChannel::PayloadChannelNotification::Event::PRODUCER_SEND:
 			{
-				const auto* data = notification->payload;
-				auto len         = notification->payloadLen;
+				auto body = notification->data->body_as<FBS::Producer::SendNotification>();
+				auto len  = body->data()->size();
 
 				// Increase receive transmission.
 				this->listener->OnProducerReceiveData(this, len);
 
 				if (len > RTC::MtuSize + 100)
 				{
-					MS_WARN_TAG(rtp, "given RTP packet exceeds maximum size [len:%zu]", len);
+					MS_WARN_TAG(rtp, "given RTP packet exceeds maximum size [len:%i]", len);
 
 					break;
 				}
@@ -495,7 +495,7 @@ namespace RTC
 					Producer::buffer = new uint8_t[RTC::MtuSize + 100];
 
 				// Copy the received packet into this buffer so it can be expanded later.
-				std::memcpy(Producer::buffer, data, static_cast<size_t>(len));
+				std::memcpy(Producer::buffer, body->data()->data(), static_cast<size_t>(len));
 
 				RTC::RtpPacket* packet = RTC::RtpPacket::Parse(Producer::buffer, len);
 
@@ -514,7 +514,7 @@ namespace RTC
 
 			default:
 			{
-				MS_ERROR("unknown event '%s'", notification->event.c_str());
+				MS_ERROR("unknown event '%s'", notification->eventStr.c_str());
 			}
 		}
 	}

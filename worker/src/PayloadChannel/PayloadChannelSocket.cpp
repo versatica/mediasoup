@@ -83,7 +83,6 @@ namespace PayloadChannel
 		MS_TRACE();
 
 		std::free(this->writeBuffer);
-		delete this->ongoingNotification;
 
 		if (!this->closed)
 			Close();
@@ -201,6 +200,23 @@ namespace PayloadChannel
 		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
 	}
 
+	void PayloadChannelSocket::Send(const uint8_t* buffer, size_t size)
+	{
+		MS_TRACE();
+
+		if (this->closed)
+			return;
+
+		if (size > PayloadMaxLen)
+		{
+			MS_ERROR("message too big");
+
+			return;
+		}
+
+		SendImpl(buffer, static_cast<uint32_t>(size));
+	}
+
 	bool PayloadChannelSocket::CallbackRead()
 	{
 		MS_TRACE();
@@ -234,78 +250,80 @@ namespace PayloadChannel
 		{
 			try
 			{
+				/*
 				char* charMessage{ reinterpret_cast<char*>(message) };
 
 				if (PayloadChannelRequest::IsRequest(charMessage, messageLen))
 				{
-					try
-					{
-						auto* request =
-						  new PayloadChannel::PayloadChannelRequest(this, charMessage + 2, messageLen - 2);
-						request->SetPayload(payload, payloadLen);
+				  try
+				  {
+				    auto* request =
+				      new PayloadChannel::PayloadChannelRequest(this, charMessage + 2, messageLen - 2);
+				    request->SetPayload(payload, payloadLen);
 
-						// Notify the listener.
-						try
-						{
-							this->listener->HandleRequest(request);
-						}
-						catch (const MediaSoupTypeError& error)
-						{
-							request->TypeError(error.what());
-						}
-						catch (const MediaSoupError& error)
-						{
-							request->Error(error.what());
-						}
+				    // Notify the listener.
+				    try
+				    {
+				      this->listener->HandleRequest(request);
+				    }
+				    catch (const MediaSoupTypeError& error)
+				    {
+				      request->TypeError(error.what());
+				    }
+				    catch (const MediaSoupError& error)
+				    {
+				      request->Error(error.what());
+				    }
 
-						// Delete the Request.
-						delete request;
-					}
-					catch (const json::parse_error& error)
-					{
-						MS_ERROR_STD("message parsing error: %s", error.what());
-					}
-					catch (const MediaSoupError& error)
-					{
-						MS_ERROR("discarding wrong PayloadChannel request: %s", error.what());
-					}
+				    // Delete the Request.
+				    delete request;
+				  }
+				  catch (const json::parse_error& error)
+				  {
+				    MS_ERROR_STD("message parsing error: %s", error.what());
+				  }
+				  catch (const MediaSoupError& error)
+				  {
+				    MS_ERROR("discarding wrong PayloadChannel request: %s", error.what());
+				  }
 				}
 
 				else if (PayloadChannelNotification::IsNotification(charMessage, messageLen))
 				{
-					try
-					{
-						auto* notification =
-						  new PayloadChannel::PayloadChannelNotification(charMessage + 2, messageLen - 2);
-						notification->SetPayload(payload, payloadLen);
+				  try
+				  {
+				    auto* notification =
+				      new PayloadChannel::PayloadChannelNotification(charMessage + 2, messageLen - 2);
+				    notification->SetPayload(payload, payloadLen);
 
-						// Notify the listener.
-						try
-						{
-							this->listener->HandleNotification(notification);
-						}
-						catch (const MediaSoupError& error)
-						{
-							MS_ERROR("notification failed: %s", error.what());
-						}
+				    // Notify the listener.
+				    try
+				    {
+				      this->listener->HandleNotification(notification);
+				    }
+				    catch (const MediaSoupError& error)
+				    {
+				      MS_ERROR("notification failed: %s", error.what());
+				    }
 
-						// Delete the Notification.
-						delete notification;
-					}
-					catch (const json::parse_error& error)
-					{
-						MS_ERROR_STD("message parsing error: %s", error.what());
-					}
-					catch (const MediaSoupError& error)
-					{
-						MS_ERROR("discarding wrong PayloadChannel notification: %s", error.what());
-					}
+				    // Delete the Notification.
+				    delete notification;
+				  }
+				  catch (const json::parse_error& error)
+				  {
+				    MS_ERROR_STD("message parsing error: %s", error.what());
+				  }
+				  catch (const MediaSoupError& error)
+				  {
+				    MS_ERROR("discarding wrong PayloadChannel notification: %s", error.what());
+				  }
 				}
 
 				else
 				{
-					MS_ERROR("discarding wrong PayloadChannel data");
+				  MS_ERROR("discarding wrong PayloadChannel data");
 				}
+			*/
 			}
 			catch (const json::parse_error& error)
 			{
@@ -372,83 +390,59 @@ namespace PayloadChannel
 	{
 		MS_TRACE();
 
-		if (!this->ongoingNotification && !this->ongoingRequest)
-		{
-			if (PayloadChannelRequest::IsRequest(msg, msgLen))
-			{
-				try
-				{
-					this->ongoingRequest = new PayloadChannel::PayloadChannelRequest(this, msg + 2, msgLen - 2);
-				}
-				catch (const json::parse_error& error)
-				{
-					MS_ERROR_STD("msg parsing error: %s", error.what());
-				}
-				catch (const MediaSoupError& error)
-				{
-					MS_ERROR("discarding wrong PayloadChannel request: %s", error.what());
-				}
-			}
-			else if (PayloadChannelNotification::IsNotification(msg, msgLen))
-			{
-				try
-				{
-					this->ongoingNotification =
-					  new PayloadChannel::PayloadChannelNotification(msg + 2, msgLen - 2);
-				}
-				catch (const json::parse_error& error)
-				{
-					MS_ERROR_STD("msg parsing error: %s", error.what());
-				}
-				catch (const MediaSoupError& error)
-				{
-					MS_ERROR("discarding wrong PayloadChannel notification: %s", error.what());
-				}
-			}
-			else
-			{
-				MS_ERROR("discarding wrong PayloadChannel data");
-			}
-		}
-		else if (this->ongoingNotification)
-		{
-			this->ongoingNotification->SetPayload(reinterpret_cast<const uint8_t*>(msg), msgLen);
+		auto* message = FBS::Message::GetMessage(msg);
 
-			// Notify the listener.
+		// TMP: For debugging.
+		auto s = flatbuffers::FlatBufferToString(
+		  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+		MS_ERROR("%s", s.c_str());
+
+		if (message->type() == FBS::Message::Type::REQUEST)
+		{
+			PayloadChannelRequest* request;
+
 			try
 			{
-				this->listener->HandleNotification(this->ongoingNotification);
+				request = new PayloadChannelRequest(this, message->data_as<FBS::Request::Request>());
+
+				// Notify the listener.
+				this->listener->HandleRequest(request);
+			}
+			catch (const MediaSoupTypeError& error)
+			{
+				request->TypeError(error.what());
+			}
+			catch (const MediaSoupError& error)
+			{
+				request->Error(error.what());
+			}
+
+			if (request)
+				delete request;
+		}
+		else if (message->type() == FBS::Message::Type::NOTIFICATION)
+		{
+			PayloadChannelNotification* notification;
+
+			try
+			{
+				notification =
+				  new PayloadChannelNotification(message->data_as<FBS::Notification::NotificationX>());
+
+				// Notify the listener.
+				this->listener->HandleNotification(notification);
 			}
 			catch (const MediaSoupError& error)
 			{
 				MS_ERROR("notification failed: %s", error.what());
 			}
 
-			// Delete the Notification.
-			delete this->ongoingNotification;
-			this->ongoingNotification = nullptr;
+			if (notification)
+				delete notification;
 		}
-		else if (this->ongoingRequest)
+		else
 		{
-			this->ongoingRequest->SetPayload(reinterpret_cast<const uint8_t*>(msg), msgLen);
-
-			// Notify the listener.
-			try
-			{
-				this->listener->HandleRequest(this->ongoingRequest);
-			}
-			catch (const MediaSoupTypeError& error)
-			{
-				this->ongoingRequest->TypeError(error.what());
-			}
-			catch (const MediaSoupError& error)
-			{
-				this->ongoingRequest->Error(error.what());
-			}
-
-			// Delete the Request.
-			delete this->ongoingRequest;
-			this->ongoingRequest = nullptr;
+			MS_ERROR("discarding wrong PayloadChannel data");
 		}
 	}
 

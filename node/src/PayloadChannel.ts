@@ -1,8 +1,13 @@
 import * as os from 'os';
 import { Duplex } from 'stream';
+import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
+import { Body as RequestBody, Method, Request } from './fbs/request_generated';
+import { Response } from './fbs/response_generated';
+import { Message, Type as MessageType, Body as MessageBody } from './fbs/message_generated';
+import { NotificationX, Body as NotificationBody, Event } from './fbs/notification_generated';
 
 const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('PayloadChannel');
@@ -39,6 +44,9 @@ export class PayloadChannel extends EnhancedEventEmitter
 
 	// Buffer for reading messages from the worker.
 	#recvBuffer = Buffer.alloc(0);
+
+	// flatbuffers builder.
+	#bufferBuilder:flatbuffers.Builder = new flatbuffers.Builder(1024);
 
 	// Ongoing notification (waiting for its payload).
 	#ongoingNotification?: { targetId: string; event: string; data?: any };
@@ -114,7 +122,35 @@ export class PayloadChannel extends EnhancedEventEmitter
 
 				msgStart += 4 + msgLen;
 
-				this.processData(payload);
+				const buf = new flatbuffers.ByteBuffer(new Uint8Array(payload));
+				const message = Message.getRootAsMessage(buf);
+
+				try
+				{
+					switch (message.type())
+					{
+						case MessageType.RESPONSE:
+						{
+							const response = new Response();
+
+							message.data(response);
+
+							this.processResponse(response);
+
+							break;
+						}
+
+						default:
+							this.processData(payload);
+
+					}
+				}
+				catch (error)
+				{
+					logger.error(
+						'received invalid message from the worker process: %s',
+						String(error));
+				}
 			}
 
 			if (msgStart != 0)
@@ -138,6 +174,14 @@ export class PayloadChannel extends EnhancedEventEmitter
 		this.#producerSocket.on('error', (error) => (
 			logger.error('Producer PayloadChannel error: %s', String(error))
 		));
+	}
+
+	/**
+	 * flatbuffer builder.
+	 */
+	get bufferBuilder(): flatbuffers.Builder
+	{
+		return this.#bufferBuilder;
 	}
 
 	/**
@@ -176,48 +220,63 @@ export class PayloadChannel extends EnhancedEventEmitter
 	 * @private
 	 */
 	notify(
-		event: string,
-		handlerId: string,
-		data: string | undefined,
-		payload: string | Buffer
+		event: Event,
+		bodyType?: NotificationBody,
+		bodyOffset?: number,
+		handlerId?: string
 	): void
 	{
-		logger.debug('notify() [event:%s]', event);
+		logger.debug('notify() [event:%s]', Event[event]);
 
 		if (this.#closed)
 			throw new InvalidStateError('PayloadChannel closed');
 
-		const notification = `n:${event}:${handlerId}:${data}`;
+		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
 
-		if (Buffer.byteLength(notification) > MESSAGE_MAX_LEN)
-			throw new Error('PayloadChannel notification too big');
-		else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
-			throw new Error('PayloadChannel payload too big');
+		let notificationOffset: number;
+
+		if (bodyType && bodyOffset)
+		{
+			notificationOffset = NotificationX.createNotificationX(
+				this.#bufferBuilder, event, handlerIdOffset, bodyType, bodyOffset);
+		}
+		else
+		{
+			notificationOffset = NotificationX.createNotificationX(
+				this.#bufferBuilder, event, handlerIdOffset, NotificationBody.NONE, 0);
+		}
+
+		const messageOffset = Message.createMessage(
+			this.#bufferBuilder,
+			MessageType.NOTIFICATION,
+			MessageBody.FBS_Notification_NotificationX,
+			notificationOffset
+		);
+
+		this.#bufferBuilder.finish(messageOffset);
+
+		const buffer = this.#bufferBuilder.asUint8Array();
+
+		// TODO: DEV. Remove.
+		// const req = Request.getRootAsRequest(new flatbuffers.ByteBuffer(buffer));
+		// logger.warn(JSON.stringify(req.unpack(), undefined, 2));
+
+		// Clear the buffer builder so it's reused for the next request.
+		this.#bufferBuilder.clear();
+
+		if (buffer.byteLength > MESSAGE_MAX_LEN)
+			throw new Error('PayloadChannel request too big');
 
 		try
 		{
 			// This may throw if closed or remote side ended.
 			this.#producerSocket.write(
-				Buffer.from(Uint32Array.of(Buffer.byteLength(notification)).buffer));
-			this.#producerSocket.write(notification);
+				Buffer.from(Uint32Array.of(buffer.byteLength).buffer));
+			this.#producerSocket.write(buffer, 'binary');
 		}
 		catch (error)
 		{
 			logger.warn('notify() | sending notification failed: %s', String(error));
-
-			return;
-		}
-
-		try
-		{
-			// This may throw if closed or remote side ended.
-			this.#producerSocket.write(
-				Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
-			this.#producerSocket.write(payload);
-		}
-		catch (error)
-		{
-			logger.warn('notify() | sending payload failed: %s', String(error));
 
 			return;
 		}
@@ -227,41 +286,68 @@ export class PayloadChannel extends EnhancedEventEmitter
 	 * @private
 	 */
 	async request(
-		method: string,
-		handlerId: string,
-		data: string,
-		payload: string | Buffer): Promise<any>
+		method: Method,
+		bodyType?: RequestBody,
+		bodyOffset?: number,
+		handlerId?: string): Promise<Response>
 	{
+		if (this.#closed)
+			throw new InvalidStateError('PayloadChannel closed');
+
 		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
 
 		const id = this.#nextId;
 
-		logger.debug('request() [method:%s, id:%s]', method, id);
+		// TODO: DEV. Remove.
+		logger.debug('request() [method:%s, id:%s]', Method[method], id);
 
-		if (this.#closed)
-			throw new InvalidStateError('PayloadChannel closed');
+		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
 
-		const request = `r:${id}:${method}:${handlerId}:${data}`;
+		let requestOffset: number;
 
-		if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
+		if (bodyType && bodyOffset)
+		{
+			requestOffset = Request.createRequest(
+				this.#bufferBuilder, id, method, handlerIdOffset, bodyType, bodyOffset);
+		}
+		else
+		{
+			requestOffset = Request.createRequest(
+				this.#bufferBuilder, id, method, handlerIdOffset, RequestBody.NONE, 0);
+		}
+
+		const messageOffset = Message.createMessage(
+			this.#bufferBuilder,
+			MessageType.REQUEST,
+			MessageBody.FBS_Request_Request,
+			requestOffset
+		);
+
+		this.#bufferBuilder.finish(messageOffset);
+
+		const buffer = this.#bufferBuilder.asUint8Array();
+
+		// TODO: DEV. Remove.
+		// const req = Request.getRootAsRequest(new flatbuffers.ByteBuffer(buffer));
+		// logger.warn(JSON.stringify(req.unpack(), undefined, 2));
+
+		// Clear the buffer builder so it's reused for the next request.
+		this.#bufferBuilder.clear();
+
+		if (buffer.byteLength > MESSAGE_MAX_LEN)
 			throw new Error('PayloadChannel request too big');
-		else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
-			throw new Error('PayloadChannel payload too big');
 
 		// This may throw if closed or remote side ended.
 		this.#producerSocket.write(
-			Buffer.from(Uint32Array.of(Buffer.byteLength(request)).buffer));
-		this.#producerSocket.write(request);
-		this.#producerSocket.write(
-			Buffer.from(Uint32Array.of(Buffer.byteLength(payload)).buffer));
-		this.#producerSocket.write(payload);
+			Buffer.from(Uint32Array.of(buffer.byteLength).buffer));
+		this.#producerSocket.write(buffer, 'binary');
 
 		return new Promise((pResolve, pReject) =>
 		{
 			const sent: Sent =
 			{
 				id      : id,
-				method  : method,
+				method  : Method[method],
 				resolve : (data2) =>
 				{
 					if (!this.#sents.delete(id))
@@ -379,6 +465,49 @@ export class PayloadChannel extends EnhancedEventEmitter
 
 			// Unset ongoing notification.
 			this.#ongoingNotification = undefined;
+		}
+	}
+
+	private processResponse(response: Response): void
+	{
+		const sent = this.#sents.get(response.id());
+
+		if (!sent)
+		{
+			logger.error(
+				'received response does not match any sent request [id:%s]', response.id);
+
+			return;
+		}
+
+		if (response.accepted())
+		{
+			logger.debug(
+				'request succeeded [method:%s, id:%s]', sent.method, sent.id);
+
+			sent.resolve(response);
+		}
+		else if (response.error())
+		{
+			logger.warn(
+				'request failed [method:%s, id:%s]: %s',
+				sent.method, sent.id, response.reason);
+
+			switch (response.error()!)
+			{
+				case 'TypeError':
+					sent.reject(new TypeError(response.reason()!));
+					break;
+
+				default:
+					sent.reject(new Error(response.reason()!));
+			}
+		}
+		else
+		{
+			logger.error(
+				'received response is not accepted nor rejected [method:%s, id:%s]',
+				sent.method, sent.id);
 		}
 	}
 }

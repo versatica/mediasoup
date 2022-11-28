@@ -11,6 +11,7 @@ import {
 } from './Transport';
 import { SctpParameters } from './SctpParameters';
 import * as FbsTransport from './fbs/transport_generated';
+import * as FbsNotification from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 
 export type DirectTransportOptions =
@@ -214,8 +215,21 @@ export class DirectTransport extends
 			throw new TypeError('rtcpPacket must be a Buffer');
 		}
 
+		const builder = this.payloadChannel.bufferBuilder;
+		const dataOffset = FbsTransport.SendRtcpNotification.createDataVector(builder, rtcpPacket);
+		const notificationOffset =
+			FbsTransport.SendRtcpNotification.createSendRtcpNotification(
+				builder,
+				dataOffset
+			);
+
 		this.payloadChannel.notify(
-			'transport.sendRtcp', this.internal.transportId, undefined, rtcpPacket);
+			FbsNotification.Event.TRANSPORT_SEND_RTCP,
+			FbsNotification.Body.FBS_Transport_SendRtcpNotification,
+			notificationOffset,
+			this.internal.transportId
+		);
+
 	}
 
 	private handleWorkerNotifications(): void

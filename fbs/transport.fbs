@@ -281,3 +281,7 @@ table CloseDataProducerRequest {
 table CloseDataConsumerRequest {
   data_consumer_id:string (required);
 }
+
+table SendRtcpNotification {
+  data:[uint8] (required);
+}
