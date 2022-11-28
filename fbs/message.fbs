@@ -9,6 +9,8 @@ enum Type : uint8 {
   REQUEST = 0,
   RESPONSE,
   NOTIFICATION,
+  // TODO: Remove after migration.
+  JSON_NOTIFICATION,
   LOG,
 }
 

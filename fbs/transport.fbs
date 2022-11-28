@@ -1,6 +1,7 @@
 include "common.fbs";
 include "consumer.fbs";
 include "rtpParameters.fbs";
+include "sctpAssociation.fbs";
 include "sctpParameters.fbs";
 
 namespace FBS.Transport;
@@ -284,4 +285,8 @@ table CloseDataConsumerRequest {
 
 table SendRtcpNotification {
   data:[uint8] (required);
+}
+
+table SctpStateChangeNotification {
+  sctp_state:FBS.SctpAssociation.SctpState;
 }

@@ -5,15 +5,21 @@ include "dataProducer.fbs";
 namespace FBS.Notification;
 
 enum Event: uint8 {
+  // Notifications to worker.
   TRANSPORT_SEND_RTCP = 0,
   PRODUCER_SEND,
   DATA_PRODUCER_SEND,
+  // Notifications from worker.
+  TRANSPORT_SCTP_STATE_CHANGE,
 }
 
 union Body {
+  // Notifications to worker.
   FBS.Transport.SendRtcpNotification,
   FBS.Producer.SendNotification,
   FBS.DataProducer.SendNotification,
+  // Notifications from worker.
+  FBS.Transport.SctpStateChangeNotification,
 }
 
 // TMP: Notification do contain a stringified JSON right now.
@@ -22,7 +28,7 @@ table JsonNotification {
 }
 
 table Notification {
-  event:Event;
   handler_id:string;
+  event:Event;
   body:Body;
 }

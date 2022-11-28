@@ -2621,11 +2621,14 @@ namespace RTC
 		MS_TRACE();
 
 		// Notify the Node Transport.
-		json data = json::object();
+		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::SctpAssociation::SctpState::CONNECTING);
 
-		data["sctpState"] = "connecting";
-
-		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_Transport_SctpStateChangeNotification,
+		  sctpStateChangeOffset);
 	}
 
 	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2644,11 +2647,14 @@ namespace RTC
 		}
 
 		// Notify the Node Transport.
-		json data = json::object();
+		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::SctpAssociation::SctpState::CONNECTED);
 
-		data["sctpState"] = "connected";
-
-		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_Transport_SctpStateChangeNotification,
+		  sctpStateChangeOffset);
 	}
 
 	inline void Transport::OnSctpAssociationFailed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2667,11 +2673,14 @@ namespace RTC
 		}
 
 		// Notify the Node Transport.
-		json data = json::object();
+		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::SctpAssociation::SctpState::FAILED);
 
-		data["sctpState"] = "failed";
-
-		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_Transport_SctpStateChangeNotification,
+		  sctpStateChangeOffset);
 	}
 
 	inline void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2690,11 +2699,14 @@ namespace RTC
 		}
 
 		// Notify the Node Transport.
-		json data = json::object();
+		auto sctpStateChangeOffset = FBS::Transport::CreateSctpStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::SctpAssociation::SctpState::CLOSED);
 
-		data["sctpState"] = "closed";
-
-		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_Transport_SctpStateChangeNotification,
+		  sctpStateChangeOffset);
 	}
 
 	inline void Transport::OnSctpAssociationSendData(

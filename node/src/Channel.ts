@@ -7,7 +7,7 @@ import { InvalidStateError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request_generated';
 import { Response } from './fbs/response_generated';
 import { Message, Type as MessageType } from './fbs/message_generated';
-import { JsonNotification } from './fbs/notification_generated';
+import { Event, JsonNotification, Notification } from './fbs/notification_generated';
 import { Log } from './fbs/log_generated';
 
 const littleEndian = os.endianness() == 'LE';
@@ -140,7 +140,7 @@ export class Channel extends EnhancedEventEmitter
 							break;
 						}
 
-						case MessageType.NOTIFICATION:
+						case MessageType.JSON_NOTIFICATION:
 						{
 							const notification = new JsonNotification();
 
@@ -148,7 +148,18 @@ export class Channel extends EnhancedEventEmitter
 
 							const notificationData = notification.data()!;
 
-							this.processNotification(JSON.parse(notificationData));
+							this.processJsonNotification(JSON.parse(notificationData));
+
+							break;
+						}
+
+						case MessageType.NOTIFICATION:
+						{
+							const notification = new Notification();
+
+							message.data(notification);
+
+							this.processNotification(notification);
 
 							break;
 						}
@@ -397,7 +408,7 @@ export class Channel extends EnhancedEventEmitter
 		}
 	}
 
-	private processNotification(notification: any): void
+	private processJsonNotification(notification: any): void
 	{
 		// Due to how Promises work, it may happen that we receive a response
 		// from the worker followed by a notification from the worker. If we
@@ -409,6 +420,21 @@ export class Channel extends EnhancedEventEmitter
 			String(notification.targetId),
 			notification.event,
 			notification.data)
+		);
+	}
+
+	private processNotification(notification: Notification): void
+	{
+		// Due to how Promises work, it may happen that we receive a response
+		// from the worker followed by a notification from the worker. If we
+		// emit the notification immediately it may reach its target **before**
+		// the response, destroying the ordered delivery. So we must wait a bit
+		// here.
+		// See https://github.com/versatica/mediasoup/issues/510
+		setImmediate(() => this.emit(
+			notification.handlerId()!,
+			notification.event(),
+			notification)
 		);
 	}
 }

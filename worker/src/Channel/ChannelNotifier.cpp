@@ -2,10 +2,14 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/ChannelNotifier.hpp"
+#include "FBS/notification_generated.h"
 #include "Logger.hpp"
 
 namespace Channel
 {
+	/* Class variables. */
+	flatbuffers::FlatBufferBuilder ChannelNotifier::bufferBuilder;
+
 	ChannelNotifier::ChannelNotifier(Channel::ChannelSocket* channel) : channel(channel)
 	{
 		MS_TRACE();
@@ -20,7 +24,11 @@ namespace Channel
 		jsonNotification["targetId"] = targetId;
 		jsonNotification["event"]    = event;
 
-		this->channel->Send(jsonNotification);
+		auto& builder = ChannelNotifier::bufferBuilder;
+		auto notification =
+		  FBS::Notification::CreateJsonNotificationDirect(builder, jsonNotification.dump().c_str());
+
+		Emit(notification);
 	}
 
 	void ChannelNotifier::Emit(const std::string& targetId, const char* event)
@@ -32,7 +40,11 @@ namespace Channel
 		jsonNotification["targetId"] = targetId;
 		jsonNotification["event"]    = event;
 
-		this->channel->Send(jsonNotification);
+		auto& builder = ChannelNotifier::bufferBuilder;
+		auto notification =
+		  FBS::Notification::CreateJsonNotificationDirect(builder, jsonNotification.dump().c_str());
+
+		Emit(notification);
 	}
 
 	void ChannelNotifier::Emit(const std::string& targetId, const char* event, json& data)
@@ -45,22 +57,44 @@ namespace Channel
 		jsonNotification["event"]    = event;
 		jsonNotification["data"]     = data;
 
-		this->channel->Send(jsonNotification);
+		auto& builder = ChannelNotifier::bufferBuilder;
+		auto notification =
+		  FBS::Notification::CreateJsonNotificationDirect(builder, jsonNotification.dump().c_str());
+
+		Emit(notification);
 	}
 
 	void ChannelNotifier::Emit(const std::string& targetId, const char* event, const std::string& data)
 	{
 		MS_TRACE();
 
-		std::string notification("{\"targetId\":\"");
+		std::string jsonNotification("{\"targetId\":\"");
 
-		notification.append(targetId);
-		notification.append("\",\"event\":\"");
-		notification.append(event);
-		notification.append("\",\"data\":");
-		notification.append(data);
-		notification.append("}");
+		jsonNotification.append(targetId);
+		jsonNotification.append("\",\"event\":\"");
+		jsonNotification.append(event);
+		jsonNotification.append("\",\"data\":");
+		jsonNotification.append(data);
+		jsonNotification.append("}");
 
-		this->channel->Send(notification);
+		auto& builder = ChannelNotifier::bufferBuilder;
+		auto notification =
+		  FBS::Notification::CreateJsonNotificationDirect(builder, jsonNotification.c_str());
+
+		Emit(notification);
+	}
+
+	void ChannelNotifier::Emit(flatbuffers::Offset<FBS::Notification::JsonNotification>& notification)
+	{
+		auto& builder = ChannelNotifier::bufferBuilder;
+		auto message  = FBS::Message::CreateMessage(
+      builder,
+      FBS::Message::Type::JSON_NOTIFICATION,
+      FBS::Message::Body::FBS_Notification_JsonNotification,
+      notification.Union());
+
+		builder.Finish(message);
+		this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
+		builder.Reset();
 	}
 } // namespace Channel

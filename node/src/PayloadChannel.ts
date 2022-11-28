@@ -238,12 +238,12 @@ export class PayloadChannel extends EnhancedEventEmitter
 		if (bodyType && bodyOffset)
 		{
 			notificationOffset = Notification.createNotification(
-				this.#bufferBuilder, event, handlerIdOffset, bodyType, bodyOffset);
+				this.#bufferBuilder, handlerIdOffset, event, bodyType, bodyOffset);
 		}
 		else
 		{
 			notificationOffset = Notification.createNotification(
-				this.#bufferBuilder, event, handlerIdOffset, NotificationBody.NONE, 0);
+				this.#bufferBuilder, handlerIdOffset, event, NotificationBody.NONE, 0);
 		}
 
 		const messageOffset = Message.createMessage(
@@ -258,8 +258,8 @@ export class PayloadChannel extends EnhancedEventEmitter
 		const buffer = this.#bufferBuilder.asUint8Array();
 
 		// TODO: DEV. Remove.
-		// const req = Request.getRootAsRequest(new flatbuffers.ByteBuffer(buffer));
-		// logger.warn(JSON.stringify(req.unpack(), undefined, 2));
+		// const notif = Message.getRootAsMessage(new flatbuffers.ByteBuffer(buffer));
+		// logger.warn(JSON.stringify(notif.unpack(), undefined, 2));
 
 		// Clear the buffer builder so it's reused for the next request.
 		this.#bufferBuilder.clear();

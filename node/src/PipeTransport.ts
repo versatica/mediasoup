@@ -21,9 +21,12 @@ import { RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters }
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { parseSrtpParameters, serializeSrtpParameters, SrtpParameters } from './SrtpParameters';
 import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
+import * as FbsNotification from './fbs/notification_generated';
+import { Event as FbsEvent } from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsResponse from './fbs/response_generated';
 import * as FbsTransport from './fbs/transport_generated';
+import * as FbsSctpState from './fbs/fbs/sctp-association/sctp-state';
 
 export type PipeTransportOptions =
 {
@@ -411,13 +414,18 @@ export class PipeTransport
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: FbsEvent, data?: any) =>
 		{
 			switch (event)
 			{
-				case 'sctpstatechange':
+				case FbsEvent.TRANSPORT_SCTP_STATE_CHANGE:
 				{
-					const sctpState = data.sctpState as SctpState;
+					const notification = new FbsTransport.SctpStateChangeNotification();
+
+					(data as FbsNotification.Notification).body(notification);
+
+					const sctpState =
+						FbsSctpState.SctpState[notification.sctpState()].toLowerCase() as SctpState;
 
 					this.#data.sctpState = sctpState;
 
@@ -428,7 +436,13 @@ export class PipeTransport
 
 					break;
 				}
+			}
+		});
 
+		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
+		{
+			switch (event)
+			{
 				case 'trace':
 				{
 					const trace = data as TransportTraceEventData;

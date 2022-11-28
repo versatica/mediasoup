@@ -15,8 +15,11 @@ import {
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import * as FbsNotification from './fbs/notification_generated';
+import { Event as FbsEvent } from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
+import * as FbsSctpState from './fbs/fbs/sctp-association/sctp-state';
 import { Either, parseVector } from './utils';
 
 export type WebRtcTransportListenIndividual =
@@ -526,6 +529,31 @@ export class WebRtcTransport extends
 
 	private handleWorkerNotifications(): void
 	{
+		this.channel.on(this.internal.transportId, (event: FbsEvent, data?: any) =>
+		{
+			switch (event)
+			{
+				case FbsEvent.TRANSPORT_SCTP_STATE_CHANGE:
+				{
+					const notification = new FbsTransport.SctpStateChangeNotification();
+
+					(data as FbsNotification.Notification).body(notification);
+
+					const sctpState =
+						FbsSctpState.SctpState[notification.sctpState()].toLowerCase() as SctpState;
+
+					this.#data.sctpState = sctpState;
+
+					this.safeEmit('sctpstatechange', sctpState);
+
+					// Emit observer event.
+					this.observer.safeEmit('sctpstatechange', sctpState);
+
+					break;
+				}
+			}
+		});
+
 		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
 		{
 			switch (event)
@@ -572,20 +600,6 @@ export class WebRtcTransport extends
 
 					// Emit observer event.
 					this.observer.safeEmit('dtlsstatechange', dtlsState);
-
-					break;
-				}
-
-				case 'sctpstatechange':
-				{
-					const sctpState = data.sctpState as SctpState;
-
-					this.#data.sctpState = sctpState;
-
-					this.safeEmit('sctpstatechange', sctpState);
-
-					// Emit observer event.
-					this.observer.safeEmit('sctpstatechange', sctpState);
 
 					break;
 				}
