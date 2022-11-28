@@ -7,7 +7,7 @@ import { InvalidStateError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request_generated';
 import { Response } from './fbs/response_generated';
 import { Message, Type as MessageType, Body as MessageBody } from './fbs/message_generated';
-import { NotificationX, Body as NotificationBody, Event } from './fbs/notification_generated';
+import { Notification, Body as NotificationBody, Event } from './fbs/notification_generated';
 
 const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('PayloadChannel');
@@ -237,19 +237,19 @@ export class PayloadChannel extends EnhancedEventEmitter
 
 		if (bodyType && bodyOffset)
 		{
-			notificationOffset = NotificationX.createNotificationX(
+			notificationOffset = Notification.createNotification(
 				this.#bufferBuilder, event, handlerIdOffset, bodyType, bodyOffset);
 		}
 		else
 		{
-			notificationOffset = NotificationX.createNotificationX(
+			notificationOffset = Notification.createNotification(
 				this.#bufferBuilder, event, handlerIdOffset, NotificationBody.NONE, 0);
 		}
 
 		const messageOffset = Message.createMessage(
 			this.#bufferBuilder,
 			MessageType.NOTIFICATION,
-			MessageBody.FBS_Notification_NotificationX,
+			MessageBody.FBS_Notification_Notification,
 			notificationOffset
 		);
 

@@ -15,8 +15,8 @@ enum Type : uint8 {
 union Body {
   FBS.Request.Request,
   FBS.Response.Response,
+  FBS.Notification.JsonNotification,
   FBS.Notification.Notification,
-  FBS.Notification.NotificationX,
   FBS.Log.Log,
 }
 

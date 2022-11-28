@@ -21,7 +21,7 @@ namespace PayloadChannel
 
 	public:
 		PayloadChannelNotification(const char* msg, size_t msgLen);
-		PayloadChannelNotification(const FBS::Notification::NotificationX* notification);
+		PayloadChannelNotification(const FBS::Notification::Notification* notification);
 		virtual ~PayloadChannelNotification();
 
 	public:
@@ -33,7 +33,7 @@ namespace PayloadChannel
 		std::string eventStr;
 		Event event;
 		std::string handlerId;
-		const FBS::Notification::NotificationX* data{ nullptr };
+		const FBS::Notification::Notification* data{ nullptr };
 	};
 } // namespace PayloadChannel
 

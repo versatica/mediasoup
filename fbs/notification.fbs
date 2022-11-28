@@ -17,12 +17,11 @@ union Body {
 }
 
 // TMP: Notification do contain a stringified JSON right now.
-table Notification {
+table JsonNotification {
   data:string (required);
 }
 
-// TODO: Rename it to Notification.
-table NotificationX {
+table Notification {
   event:Event;
   handler_id:string;
   body:Body;

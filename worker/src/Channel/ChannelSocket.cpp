@@ -141,12 +141,13 @@ namespace Channel
 			return;
 		}
 
-		auto notification = FBS::Notification::CreateNotificationDirect(this->bufferBuilder, msg.c_str());
+		auto notification =
+		  FBS::Notification::CreateJsonNotificationDirect(this->bufferBuilder, msg.c_str());
 
 		auto message = FBS::Message::CreateMessage(
 		  this->bufferBuilder,
 		  FBS::Message::Type::NOTIFICATION,
-		  FBS::Message::Body::FBS_Notification_Notification,
+		  FBS::Message::Body::FBS_Notification_JsonNotification,
 		  notification.Union());
 
 		this->bufferBuilder.Finish(message);

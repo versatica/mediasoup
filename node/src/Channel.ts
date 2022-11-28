@@ -7,7 +7,7 @@ import { InvalidStateError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request_generated';
 import { Response } from './fbs/response_generated';
 import { Message, Type as MessageType } from './fbs/message_generated';
-import { Notification } from './fbs/notification_generated';
+import { JsonNotification } from './fbs/notification_generated';
 import { Log } from './fbs/log_generated';
 
 const littleEndian = os.endianness() == 'LE';
@@ -142,7 +142,7 @@ export class Channel extends EnhancedEventEmitter
 
 						case MessageType.NOTIFICATION:
 						{
-							const notification = new Notification();
+							const notification = new JsonNotification();
 
 							message.data(notification);
 

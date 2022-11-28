@@ -24,7 +24,7 @@ namespace PayloadChannel
 	/* Instance methods. */
 
 	PayloadChannelNotification::PayloadChannelNotification(
-	  const FBS::Notification::NotificationX* notification)
+	  const FBS::Notification::Notification* notification)
 	{
 		MS_TRACE();
 
@@ -33,7 +33,7 @@ namespace PayloadChannel
 		this->eventStr = event2String[this->event];
 
 		// Handler ID is optional.
-		if (flatbuffers::IsFieldPresent(this->data, FBS::Notification::NotificationX::VT_HANDLERID))
+		if (flatbuffers::IsFieldPresent(this->data, FBS::Notification::Notification::VT_HANDLERID))
 			this->handlerId = this->data->handlerId()->str();
 	}
 

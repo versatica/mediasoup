@@ -427,7 +427,7 @@ namespace PayloadChannel
 			try
 			{
 				notification =
-				  new PayloadChannelNotification(message->data_as<FBS::Notification::NotificationX>());
+				  new PayloadChannelNotification(message->data_as<FBS::Notification::Notification>());
 
 				// Notify the listener.
 				this->listener->HandleNotification(notification);
