@@ -3,34 +3,36 @@
 !/worker/subprojects/*.wrap
 
 ## Node.
-/node_modules/
+/node_modules
+/node/lib
 
 ## Rust.
 /Cargo.lock
-/rust/examples-frontend/*/node_modules/
+/rust/examples-frontend/*/node_modules
 /rust/examples-frontend/*/package-lock.json
-/target/
+/target
 
 ## Worker.
-/worker/out/
-/worker/scripts/node_modules/
+/worker/out
+/worker/scripts/node_modules
 # Vistual Studio generated Stuff.
-/worker/**/Debug/
-/worker/**/Release/
-/worker/.vs/
+/worker/**/Debug
+/worker/**/Release
+/worker/.vs
 # clang-fuzzer stuff is too big.
-/worker/deps/clang-fuzzer/
+/worker/deps/clang-fuzzer
 # Ignore all fuzzer generated test inputs.
 /worker/fuzzer/new-corpus/*
 !/worker/fuzzer/new-corpus/.placeholder
 
 ## Others.
-/coverage/
-/NO_GIT/
+/coverage
+/.cache
+/NO_GIT
 *.swp
 *.swo
-.DS_Store/
+.DS_Store
 # Vistual Studio Code stuff.
-/.vscode/
+/.vscode
 # JetBrains IDE stuff.
-/.idea/
+/.idea

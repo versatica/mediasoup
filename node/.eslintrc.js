@@ -1,3 +1,7 @@
+const os = require('os');
+
+const isWindows = os.platform() === 'win32';
+
 const eslintConfig =
 {
 	env :
@@ -15,7 +19,8 @@ const eslintConfig =
 		{
 			impliedStrict : true
 		},
-		lib : [ 'es2018' ]
+		lib     : [ 'es2018' ],
+		project : 'node/tsconfig.json'
 	},
 	globals :
 	{
@@ -54,12 +59,13 @@ const eslintConfig =
 				{
 					beforeColon : true,
 					afterColon  : true,
+					mode        : 'minimum',
 					align       : 'colon'
 				}
 			}
 		],
 		'keyword-spacing'      : 2,
-		'linebreak-style'      : [ 2, 'unix' ],
+		'linebreak-style'      : [ 2, isWindows ? 'windows' : 'unix' ],
 		'lines-around-comment' : [ 2,
 			{
 				allowBlockStart    : true,
@@ -222,7 +228,7 @@ eslintConfig.overrides.push(
 
 eslintConfig.overrides.push(
 	{
-		files : [ '*.js' ],
+		files : [ '*.ts' ],
 		env   : {
 			...eslintConfig.env,
 			'jest/globals' : true
