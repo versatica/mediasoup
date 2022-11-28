@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 #define MS_CLASS "webrtc::LossBasedBweV2"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/bitrate_controller/loss_based_bwe_v2.h"
 
