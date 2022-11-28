@@ -85,10 +85,10 @@ double GetLossProbability(double inherent_loss,
     inherent_loss = std::min(std::max(inherent_loss, 0.0), 1.0);
   }
   if (!sending_rate.IsFinite()) {
-    MS_WARN_TAG(bwe, "The sending rate must be finite: %lld", sending_rate.kbps());
+    MS_WARN_TAG(bwe, "The sending rate must be finite: %ld", sending_rate.bps());
   }
   if (!loss_limited_bandwidth.IsFinite()) {
-    MS_WARN_TAG(bwe, "The loss limited bandwidth must be finite: %lld", loss_limited_bandwidth.kbps());
+    MS_WARN_TAG(bwe, "The loss limited bandwidth must be finite: %ld", loss_limited_bandwidth.bps());
   }
 
   double loss_probability = inherent_loss;
@@ -114,12 +114,28 @@ LossBasedBweV2::LossBasedBweV2(const WebRtcKeyValueConfig* key_value_config)
     return;
   }
 
-  current_estimate_.inherent_loss = config_->initial_inherent_loss_estimate;
-  observations_.resize(config_->observation_window_size);
-  temporal_weights_.resize(config_->observation_window_size);
-  instant_upper_bound_temporal_weights_.resize(
-      config_->observation_window_size);
-  CalculateTemporalWeights();
+	current_estimate_.inherent_loss = config_->initial_inherent_loss_estimate;
+	observations_.resize(config_->observation_window_size);
+	temporal_weights_.resize(config_->observation_window_size);
+	instant_upper_bound_temporal_weights_.resize(
+		config_->observation_window_size);
+	CalculateTemporalWeights();
+}
+
+void LossBasedBweV2::Reset() {
+	current_estimate_.inherent_loss = config_->initial_inherent_loss_estimate;
+	//current_estimate_.loss_limited_bandwidth = config_->bandwidth_rampup_upper_bound_factor;
+
+	observations_.clear();
+	temporal_weights_.clear();
+	instant_upper_bound_temporal_weights_.clear();
+
+	observations_.resize(config_->observation_window_size);
+	temporal_weights_.resize(config_->observation_window_size);
+	instant_upper_bound_temporal_weights_.resize(
+		config_->observation_window_size);
+
+	CalculateTemporalWeights();
 }
 
 bool LossBasedBweV2::IsEnabled() const {
@@ -135,26 +151,29 @@ bool LossBasedBweV2::IsReady() const {
 DataRate LossBasedBweV2::GetBandwidthEstimate(
     DataRate delay_based_limit) const {
   if (!IsReady()) {
-/*    if (!IsEnabled()) {
-      RTC_LOG(LS_WARNING)
-          << "The estimator must be enabled before it can be used.";
+    if (!IsEnabled()) {
+			MS_WARN_TAG(bwe, "The estimator must be enabled before it can be used.");
     } else {
       if (!IsValid(current_estimate_.loss_limited_bandwidth)) {
-        RTC_LOG(LS_WARNING)
-            << "The estimator must be initialized before it can be used.";
+				MS_WARN_TAG(bwe, "The estimator must be initialized before it can be used.");
       }
       if (num_observations_ <= 0) {
-        RTC_LOG(LS_WARNING) << "The estimator must receive enough loss "
-                               "statistics before it can be used.";
+        MS_WARN_TAG(bwe, "The estimator must receive enough loss statistics before it can be used.");
       }
-    }*/
+    }
     return IsValid(delay_based_limit) ? delay_based_limit
                                       : DataRate::PlusInfinity();
   }
 
+	auto instant_limit = GetInstantUpperBound();
+	MS_DEBUG_DEV("Using %s, Inherent Loss limit %" PRIi64 ", Delay limit %" PRIi64 ", Instant Loss limit %" PRIi64 "",
+		           current_estimate_.loss_limited_bandwidth.bps() <= delay_based_limit.bps() ? "Loss" : "Delay",
+		           current_estimate_.loss_limited_bandwidth.bps(),
+		           delay_based_limit.IsFinite() ? delay_based_limit.bps() : 0,
+		           instant_limit.IsFinite() ? instant_limit.bps() : 0);
   if (delay_based_limit.IsFinite()) {
     return std::min({current_estimate_.loss_limited_bandwidth,
-                     GetInstantUpperBound(), delay_based_limit});
+			                instant_limit, delay_based_limit});
   } else {
     return std::min(current_estimate_.loss_limited_bandwidth,
                     GetInstantUpperBound());
@@ -165,8 +184,7 @@ void LossBasedBweV2::SetAcknowledgedBitrate(DataRate acknowledged_bitrate) {
   if (IsValid(acknowledged_bitrate)) {
     acknowledged_bitrate_ = acknowledged_bitrate;
   } else {
-/*    RTC_LOG(LS_WARNING) << "The acknowledged bitrate must be finite: "
-                        << ToString(acknowledged_bitrate);*/
+			MS_WARN_TAG(bwe, "The acknowledged bitrate must be finite: %" PRIi64 "", acknowledged_bitrate.bps());
   }
 }
 
@@ -174,8 +192,7 @@ void LossBasedBweV2::SetBandwidthEstimate(DataRate bandwidth_estimate) {
   if (IsValid(bandwidth_estimate)) {
     current_estimate_.loss_limited_bandwidth = bandwidth_estimate;
   } else {
-/*    RTC_LOG(LS_WARNING) << "The bandwidth estimate must be finite: "
-                        << ToString(bandwidth_estimate);*/
+		MS_WARN_TAG(bwe, "The bandwidth estimate must be finite: %" PRIi64 "", bandwidth_estimate.bps());
   }
 }
 
@@ -183,8 +200,7 @@ void LossBasedBweV2::SetMinBitrate(DataRate min_bitrate) {
   if (IsValid(min_bitrate)) {
     min_bitrate_ = min_bitrate;
   } else {
-/*    RTC_LOG(LS_WARNING) << "The min bitrate must be finite: "
-                        << ToString(min_bitrate);*/
+			MS_WARN_TAG(bwe, "The min bitrate must be finite: %" PRIi64 "", min_bitrate.bps());
   }
 }
 
@@ -193,13 +209,11 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
     DataRate delay_based_estimate,
     BandwidthUsage delay_detector_state) {
   if (!IsEnabled()) {
-/*    RTC_LOG(LS_WARNING)
-        << "The estimator must be enabled before it can be used.";*/
+		MS_WARN_TAG(bwe, "The estimator must be enabled before it can be used.");
     return;
   }
   if (packet_results.empty()) {
-/*    RTC_LOG(LS_VERBOSE)
-        << "The estimate cannot be updated without any loss statistics.";*/
+		MS_WARN_TAG(bwe, "The estimate cannot be updated without any loss statistics.");
     return;
   }
 
@@ -208,8 +222,7 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
   }
 
   if (!IsValid(current_estimate_.loss_limited_bandwidth)) {
-/*    RTC_LOG(LS_VERBOSE)
-        << "The estimator must be initialized before it can be used.";*/
+		MS_WARN_TAG(bwe, "The estimator must be initialized before it can be used.");
     return;
   }
 
@@ -436,22 +449,44 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
 	std::string candidate_factors_str;
 
 	MS_DEBUG_TAG(bwe, "Loss V2 settings: ");
-
+	MS_DEBUG_TAG(bwe, "bandwidth_rampup_upper_bound_factor: %f ", config->bandwidth_rampup_upper_bound_factor);
+	MS_DEBUG_TAG(bwe, "rampup_acceleration_max_factor: %f ", config->rampup_acceleration_max_factor);
+	MS_DEBUG_TAG(bwe, "rampup_acceleration_maxout_time: %" PRIi64 "", config->rampup_acceleration_maxout_time.ms());
 	for (double candidate_factor : config->candidate_factors) {
-		MS_DEBUG_TAG(bwe, "Candidate factor %f", candidate_factor);
+		MS_DEBUG_TAG(bwe, "candidate_factor: %f", candidate_factor);
 	}
+	MS_DEBUG_TAG(bwe, "higher_bandwidth_bias_factor: %f ", config->higher_bandwidth_bias_factor);
+	MS_DEBUG_TAG(bwe, "slope_of_bwe_high_loss_func: %f ", config->slope_of_bwe_high_loss_func);
+	MS_DEBUG_TAG(bwe, "slope_of_bwe_high_loss_func: %f ", config->slope_of_bwe_high_loss_func);
+	MS_DEBUG_TAG(bwe, "higher_log_bandwidth_bias_factor: %f ", config->higher_log_bandwidth_bias_factor);
+	MS_DEBUG_TAG(bwe, "inherent_loss_lower_bound: %f ", config->inherent_loss_lower_bound);
+	MS_DEBUG_TAG(bwe, "loss_threshold_of_high_bandwidth_preference: %f ", config->loss_threshold_of_high_bandwidth_preference);
+	MS_DEBUG_TAG(bwe, "bandwidth_preference_smoothing_factor: %f ", config->bandwidth_preference_smoothing_factor);
+	MS_DEBUG_TAG(bwe, "inherent_loss_upper_bound_bandwidth_balance: %" PRIi64 "", config->inherent_loss_upper_bound_bandwidth_balance.bps());
+	MS_DEBUG_TAG(bwe, "inherent_loss_upper_bound_offset: %f ", config->inherent_loss_upper_bound_offset);
+	MS_DEBUG_TAG(bwe, "initial_inherent_loss_estimate: %f ", config->initial_inherent_loss_estimate);
+	MS_DEBUG_TAG(bwe, "newton_iterations: %d ", config->newton_iterations);
+	MS_DEBUG_TAG(bwe, "newton_step_size: %f ", config->newton_step_size);
+	MS_DEBUG_TAG(bwe, "append_acknowledged_rate_candidate: %d ", config->append_acknowledged_rate_candidate);
+	MS_DEBUG_TAG(bwe, "append_delay_based_estimate_candidate: %d ", config->append_delay_based_estimate_candidate);
+	MS_DEBUG_TAG(bwe, "observation_duration_lower_bound: %" PRIi64 "", config->observation_duration_lower_bound.ms());
+	MS_DEBUG_TAG(bwe, "observation_window_size: %d ", config->observation_window_size);
+	MS_DEBUG_TAG(bwe, "sending_rate_smoothing_factor: %f ", config->sending_rate_smoothing_factor);
+	MS_DEBUG_TAG(bwe, "instant_upper_bound_temporal_weight_factor: %f ", config->instant_upper_bound_temporal_weight_factor);
+	MS_DEBUG_TAG(bwe, "instant_upper_bound_bandwidth_balance: %" PRIi64 "", config->instant_upper_bound_bandwidth_balance.bps());
+	MS_DEBUG_TAG(bwe, "instant_upper_bound_loss_offset: %f ", config->instant_upper_bound_loss_offset);
+	MS_DEBUG_TAG(bwe, "temporal_weight_factor: %f ", config->temporal_weight_factor);
+	MS_DEBUG_TAG(bwe, "bandwidth_backoff_lower_bound_factor: %f ", config->bandwidth_backoff_lower_bound_factor);
+	MS_DEBUG_TAG(bwe, "trendline_integration_enabled: %d ", config->trendline_integration_enabled);
+	MS_DEBUG_TAG(bwe, "trendline_observations_window_size: %d ", config->trendline_observations_window_size);
+	MS_DEBUG_TAG(bwe, "max_increase_factor: %f ", config->max_increase_factor);
+	MS_DEBUG_TAG(bwe, "delayed_increase_window: %" PRIi64 "", config->delayed_increase_window.ms());
+	MS_DEBUG_TAG(bwe, "use_acked_bitrate_only_when_overusing: %d ", config->use_acked_bitrate_only_when_overusing);
+	MS_DEBUG_TAG(bwe, "not_increase_if_inherent_loss_less_than_average_loss: %d ", config->not_increase_if_inherent_loss_less_than_average_loss);
+	MS_DEBUG_TAG(bwe, "high_loss_rate_threshold: %f ", config->high_loss_rate_threshold);
+	MS_DEBUG_TAG(bwe, "bandwidth_cap_at_high_loss_rate: %" PRIi64 "", config->bandwidth_cap_at_high_loss_rate.bps());
+	MS_DEBUG_TAG(bwe, "slope_of_bwe_high_loss_func: %f ", config->slope_of_bwe_high_loss_func);
 
-	MS_DEBUG_TAG(bwe, "Loss V2 settings: "
-		           "pacing bandwidth_rampup_upper_bound_factor: %f"
-		           ", rampup_acceleration_max_factor: %f"
-		           ", rampup_acceleration_maxout_time: %lld"
-		           ", higher_bandwidth_bias_factor: %f"
-		           ", NotIncreaseIfInherentLossLessThanAverageLoss: %d",
-		           config->bandwidth_rampup_upper_bound_factor,
-		           config->rampup_acceleration_max_factor,
-		           config->rampup_acceleration_maxout_time.ms(),
-		           config->higher_bandwidth_bias_factor,
-		           config->not_increase_if_inherent_loss_less_than_average_loss);
   return config;
 }
 
@@ -464,27 +499,23 @@ bool LossBasedBweV2::IsConfigValid() const {
   bool valid = true;
 
   if (config_->bandwidth_rampup_upper_bound_factor <= 1.0) {
-/*    RTC_LOG(LS_WARNING)
-        << "The bandwidth rampup upper bound factor must be greater than 1: "
-        << config_->bandwidth_rampup_upper_bound_factor;*/
+		MS_WARN_TAG(bwe, "The bandwidth rampup upper bound factor must be greater than 1: %f",
+			          config_->bandwidth_rampup_upper_bound_factor);
     valid = false;
   }
   if (config_->rampup_acceleration_max_factor < 0.0) {
-/*    RTC_LOG(LS_WARNING)
-        << "The rampup acceleration max factor must be non-negative.: "
-        << config_->rampup_acceleration_max_factor;*/
+		MS_WARN_TAG(bwe, "The rampup acceleration max factor must be non-negative.: %f",
+			          config_->rampup_acceleration_max_factor);
     valid = false;
   }
   if (config_->rampup_acceleration_maxout_time <= TimeDelta::Zero()) {
-/*    RTC_LOG(LS_WARNING)
-        << "The rampup acceleration maxout time must be above zero: "
-        << config_->rampup_acceleration_maxout_time.seconds();*/
+		MS_WARN_TAG(bwe, "The rampup acceleration maxout time must be above zero: %ld ",
+			          config_->rampup_acceleration_maxout_time.seconds());
     valid = false;
   }
   for (double candidate_factor : config_->candidate_factors) {
     if (candidate_factor <= 0.0) {
- /*     RTC_LOG(LS_WARNING) << "All candidate factors must be greater than zero: "
-                          << candidate_factor;*/
+			MS_WARN_TAG(bwe, "All candidate factors must be greater than zero: %f", candidate_factor);
       valid = false;
     }
   }
@@ -495,146 +526,129 @@ bool LossBasedBweV2::IsConfigValid() const {
       !config_->append_delay_based_estimate_candidate &&
       !absl::c_any_of(config_->candidate_factors,
                       [](double cf) { return cf != 1.0; })) {
-/*    RTC_LOG(LS_WARNING)
-        << "The configuration does not allow generating candidates. Specify "
+			MS_WARN_TAG(bwe, "The configuration does not allow generating candidates. Specify "
            "a candidate factor other than 1.0, allow the acknowledged rate "
            "to be a candidate, and/or allow the delay based estimate to be a "
-           "candidate.";*/
+           "candidate.");
     valid = false;
   }
 
   if (config_->higher_bandwidth_bias_factor < 0.0) {
-/*    RTC_LOG(LS_WARNING)
-        << "The higher bandwidth bias factor must be non-negative: "
-        << config_->higher_bandwidth_bias_factor;*/
+		MS_WARN_TAG(bwe, "The higher bandwidth bias factor must be non-negative: %f",
+			          config_->higher_bandwidth_bias_factor);
     valid = false;
   }
   if (config_->inherent_loss_lower_bound < 0.0 ||
       config_->inherent_loss_lower_bound >= 1.0) {
-/*    RTC_LOG(LS_WARNING) << "The inherent loss lower bound must be in [0, 1): "
-                        << config_->inherent_loss_lower_bound;*/
+    	MS_WARN_TAG(bwe, "The inherent loss lower bound must be in [0, 1] %f ",
+			          config_->inherent_loss_lower_bound);
     valid = false;
   }
   if (config_->loss_threshold_of_high_bandwidth_preference < 0.0 ||
       config_->loss_threshold_of_high_bandwidth_preference >= 1.0) {
-/*    RTC_LOG(LS_WARNING)
-        << "The loss threshold of high bandwidth preference must be in [0, 1): "
-        << config_->loss_threshold_of_high_bandwidth_preference;*/
+			MS_WARN_TAG(bwe, "The loss threshold of high bandwidth preference must be in [0, 1]: %f",
+			          config_->loss_threshold_of_high_bandwidth_preference);
     valid = false;
   }
   if (config_->bandwidth_preference_smoothing_factor <= 0.0 ||
       config_->bandwidth_preference_smoothing_factor > 1.0) {
-/*    RTC_LOG(LS_WARNING)
-        << "The bandwidth preference smoothing factor must be in (0, 1]: "
-        << config_->bandwidth_preference_smoothing_factor;*/
+			MS_WARN_TAG(bwe, "The bandwidth preference smoothing factor must be in [0, 1]: %f",
+			          config_->bandwidth_preference_smoothing_factor);
     valid = false;
   }
   if (config_->inherent_loss_upper_bound_bandwidth_balance <=
       DataRate::Zero()) {
-/*    RTC_LOG(LS_WARNING)
-        << "The inherent loss upper bound bandwidth balance "
-           "must be positive: "
-        << ToString(config_->inherent_loss_upper_bound_bandwidth_balance);*/
+			MS_WARN_TAG(bwe, "The inherent loss upper bound bandwidth balance must be positive: %ld",
+			          config_->inherent_loss_upper_bound_bandwidth_balance.bps());
     valid = false;
   }
   if (config_->inherent_loss_upper_bound_offset <
           config_->inherent_loss_lower_bound ||
       config_->inherent_loss_upper_bound_offset >= 1.0) {
-/*    RTC_LOG(LS_WARNING) << "The inherent loss upper bound must be greater "
-                           "than or equal to the inherent "
-                           "loss lower bound, which is "
-                        << config_->inherent_loss_lower_bound
-                        << ", and less than 1: "
-                        << config_->inherent_loss_upper_bound_offset;*/
+			MS_WARN_TAG(bwe, "The inherent loss upper bound must be greater than or equal to the inherent "
+			          	"loss lower bound, which is %f, and less than 1: %f",
+                        config_->inherent_loss_lower_bound,
+                        config_->inherent_loss_upper_bound_offset);
     valid = false;
   }
   if (config_->initial_inherent_loss_estimate < 0.0 ||
       config_->initial_inherent_loss_estimate >= 1.0) {
-/*    RTC_LOG(LS_WARNING)
-        << "The initial inherent loss estimate must be in [0, 1): "
-        << config_->initial_inherent_loss_estimate;*/
+		MS_WARN_TAG(bwe, "The initial inherent loss estimate must be in [0, 1]: %f",
+			          config_->initial_inherent_loss_estimate);
     valid = false;
   }
   if (config_->newton_iterations <= 0) {
-/*    RTC_LOG(LS_WARNING) << "The number of Newton iterations must be positive: "
-                        << config_->newton_iterations;*/
+		MS_WARN_TAG(bwe, "The number of Newton iterations must be positive: %d",
+			          config_->newton_iterations);
     valid = false;
   }
   if (config_->newton_step_size <= 0.0) {
-/*    RTC_LOG(LS_WARNING) << "The Newton step size must be positive: "
-                        << config_->newton_step_size;*/
+		MS_WARN_TAG(bwe, "The Newton step size must be positive: %f",
+			          config_->newton_step_size);
     valid = false;
   }
   if (config_->observation_duration_lower_bound <= TimeDelta::Zero()) {
-/*    RTC_LOG(LS_WARNING)
-        << "The observation duration lower bound must be positive: "
-        << ToString(config_->observation_duration_lower_bound);*/
+		MS_WARN_TAG(bwe, "The observation duration lower bound must be positive: %" PRIi64 " ms",
+			          config_->observation_duration_lower_bound.ms());
     valid = false;
   }
   if (config_->observation_window_size < 2) {
-/*    RTC_LOG(LS_WARNING) << "The observation window size must be at least 2: "
-                        << config_->observation_window_size;*/
+		MS_WARN_TAG(bwe, "The observation window size must be at least 2: %d",
+			          config_->observation_window_size);
     valid = false;
   }
   if (config_->sending_rate_smoothing_factor < 0.0 ||
       config_->sending_rate_smoothing_factor >= 1.0) {
-/*    RTC_LOG(LS_WARNING)
-        << "The sending rate smoothing factor must be in [0, 1): "
-        << config_->sending_rate_smoothing_factor;*/
+		MS_WARN_TAG(bwe, "The sending rate smoothing factor must be in (0, 1): %f",
+			          config_->sending_rate_smoothing_factor);
     valid = false;
   }
   if (config_->instant_upper_bound_temporal_weight_factor <= 0.0 ||
       config_->instant_upper_bound_temporal_weight_factor > 1.0) {
-/*    RTC_LOG(LS_WARNING)
-        << "The instant upper bound temporal weight factor must be in (0, 1]"
-        << config_->instant_upper_bound_temporal_weight_factor;*/
+		MS_WARN_TAG(bwe, "The instant upper bound temporal weight factor must be in (0, 1] %f",
+			          config_->instant_upper_bound_temporal_weight_factor);
     valid = false;
   }
   if (config_->instant_upper_bound_bandwidth_balance <= DataRate::Zero()) {
-/*    RTC_LOG(LS_WARNING)
-        << "The instant upper bound bandwidth balance must be positive: "
-        << ToString(config_->instant_upper_bound_bandwidth_balance);*/
+		MS_WARN_TAG(bwe, "The instant upper bound bandwidth balance must be positive: %" PRIi64 "",
+			          config_->instant_upper_bound_bandwidth_balance.bps());
     valid = false;
   }
   if (config_->instant_upper_bound_loss_offset < 0.0 ||
       config_->instant_upper_bound_loss_offset >= 1.0) {
-/*    RTC_LOG(LS_WARNING)
-        << "The instant upper bound loss offset must be in [0, 1): "
-        << config_->instant_upper_bound_loss_offset;*/
+			MS_WARN_TAG(bwe, "The instant upper bound loss offset must be in [0, 1): %f",
+			          config_->instant_upper_bound_loss_offset);
     valid = false;
   }
   if (config_->temporal_weight_factor <= 0.0 ||
       config_->temporal_weight_factor > 1.0) {
-/*    RTC_LOG(LS_WARNING) << "The temporal weight factor must be in (0, 1]: "
-                        << config_->temporal_weight_factor;*/
+		MS_WARN_TAG(bwe, "The temporal weight factor must be in (0, 1]: %f",
+			          config_->temporal_weight_factor);
     valid = false;
   }
   if (config_->bandwidth_backoff_lower_bound_factor > 1.0) {
-/*    RTC_LOG(LS_WARNING)
-        << "The bandwidth backoff lower bound factor must not be greater than "
-           "1: "
-        << config_->bandwidth_backoff_lower_bound_factor;*/
+		MS_WARN_TAG(bwe, "The bandwidth backoff lower bound factor must not be greater than 1: %f",
+			          config_->bandwidth_backoff_lower_bound_factor);
     valid = false;
   }
   if (config_->trendline_observations_window_size < 1) {
-/*    RTC_LOG(LS_WARNING) << "The trendline window size must be at least 1: "
-                        << config_->trendline_observations_window_size;*/
+		MS_WARN_TAG(bwe, "The trendline window size must be at least 1: %d",
+			          config_->trendline_observations_window_size);
     valid = false;
   }
   if (config_->max_increase_factor <= 0.0) {
-/*    RTC_LOG(LS_WARNING) << "The maximum increase factor must be positive: "
-                        << config_->max_increase_factor;*/
+		MS_WARN_TAG(bwe, "The maximum increase factor must be positive: %f", config_->max_increase_factor);
     valid = false;
   }
   if (config_->delayed_increase_window <= TimeDelta::Zero()) {
-/*    RTC_LOG(LS_WARNING) << "The delayed increase window must be positive: "
-                        << config_->delayed_increase_window.ms();*/
+		MS_WARN_TAG(bwe, "The delayed increase window must be positive: %" PRIi64 " ms",
+			          config_->delayed_increase_window.ms());
     valid = false;
   }
   if (config_->high_loss_rate_threshold <= 0.0 ||
       config_->high_loss_rate_threshold > 1.0) {
-/*    RTC_LOG(LS_WARNING) << "The high loss rate threshold must be in (0, 1]: "
-                        << config_->high_loss_rate_threshold;*/
+		MS_WARN_TAG(bwe, "The high loss rate threshold must be in (0, 1]: %f",
+			          config_->high_loss_rate_threshold);
     valid = false;
   }
   return valid;
@@ -889,20 +903,21 @@ void LossBasedBweV2::CalculateInstantUpperBound() {
 
 	// In case of high bitrates the value of balance (75kbps) is too small,
 	// and leads to big BW drops even in case of small loss ratio.
-	DataRate bandwidth_balance = DataRate::kbps(std::max(
-		config_->instant_upper_bound_bandwidth_balance.kbps(),
-		current_estimate_.loss_limited_bandwidth.kbps() / 100));
+	DataRate bandwidth_balance = DataRate::bps(std::max(
+		config_->instant_upper_bound_bandwidth_balance.bps(),
+		current_estimate_.loss_limited_bandwidth.bps() / 100));
 
 	if (average_reported_loss_ratio > config_->instant_upper_bound_loss_offset) {
 		instant_limit = bandwidth_balance /
 			              (average_reported_loss_ratio -
 			               config_->instant_upper_bound_loss_offset);
 
-/*		MS_DEBUG_DEV("balance %lld, instant_limit %lld, average_reported_loss_ratio %f, diff: %f",
+
+		MS_DEBUG_DEV("Instant Limit!, BW balance %" PRIi64 ", instant_limit %" PRIi64 ", average_reported_loss_ratio %f, diff: %f",
 			           bandwidth_balance.bps(),
-			           instant_limit.bps(),
+			           instant_limit.IsFinite() ? instant_limit.bps() : 0,
 			           average_reported_loss_ratio,
-			           average_reported_loss_ratio - config_->instant_upper_bound_loss_offset);*/
+			           average_reported_loss_ratio - config_->instant_upper_bound_loss_offset);
 
 		if (average_reported_loss_ratio > config_->high_loss_rate_threshold) {
 			instant_limit = std::min(
@@ -1002,11 +1017,28 @@ bool LossBasedBweV2::PushBackObservation(
   const Timestamp last_send_time = packet_results_summary.last_send_time;
   const TimeDelta observation_duration =
       last_send_time - last_send_time_most_recent_observation_;
+
+	// MS_NOTE Here we reset loss estimator if there was not traffic in
+	// max_observation_duration_before_reset_, otherwise, we will stuck
+	// at low bitrate.
+	if (observation_duration > max_observation_duration_before_reset_) {
+		MS_DEBUG_TAG(bwe, "Too big observation duration, resetting stats");
+		MS_DEBUG_TAG(bwe, "Current estimate bw: %" PRIi64 ", inherent_loss: %f", current_estimate_.loss_limited_bandwidth.bps(), current_estimate_.inherent_loss);
+		Reset();
+	}
+
+
   // Too small to be meaningful.
   if (observation_duration <= TimeDelta::Zero() ||
       (observation_duration < config_->observation_duration_lower_bound &&
        (delay_detector_state != BandwidthUsage::kBwOverusing ||
         !config_->trendline_integration_enabled))) {
+		MS_DEBUG_DEV("Observation Duration %" PRIi64 ", Delay detector state %s, trendline_integration_enabled, %d, Current estimate %" PRIi64 "",
+			           observation_duration.ms(),
+			           delay_detector_state == BandwidthUsage::kBwNormal ? "Normal" :
+			           delay_detector_state == BandwidthUsage::kBwOverusing ? "Overusing" : "Underusing",
+			           config_->trendline_integration_enabled,
+			           current_estimate_.loss_limited_bandwidth.bps());
     return false;
   }
 

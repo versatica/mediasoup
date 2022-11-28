@@ -155,6 +155,8 @@ class LossBasedBweV2 {
       Timestamp at_time);
   void UpdateDelayDetector(BandwidthUsage delay_detector_state);
 
+	void Reset();
+
   absl::optional<DataRate> acknowledged_bitrate_;
   absl::optional<Config> config_;
   ChannelParameters current_estimate_;
@@ -170,7 +172,10 @@ class LossBasedBweV2 {
   Timestamp recovering_after_loss_timestamp_ = Timestamp::MinusInfinity();
   DataRate bandwidth_limit_in_current_window_ = DataRate::PlusInfinity();
   bool limited_due_to_loss_candidate_ = false;
-  DataRate min_bitrate_ = DataRate::kbps(1);
+	// MS_NOTE changed min bitrate from 1 to 100, this allows faster recover
+	// from huge drop.
+  DataRate min_bitrate_ = DataRate::kbps(100);
+	TimeDelta max_observation_duration_before_reset_ = TimeDelta::seconds(4);
 };
 
 }  // namespace webrtc
