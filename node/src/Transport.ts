@@ -1435,4 +1435,3 @@ function parseSctpListenerDump(binary: FbsTransport.SctpListener): SctpListenerD
 		streamIdTable
 	};
 }
-

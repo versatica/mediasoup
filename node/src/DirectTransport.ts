@@ -216,7 +216,8 @@ export class DirectTransport extends
 		}
 
 		const builder = this.payloadChannel.bufferBuilder;
-		const dataOffset = FbsTransport.SendRtcpNotification.createDataVector(builder, rtcpPacket);
+		const dataOffset =
+			FbsTransport.SendRtcpNotification.createDataVector(builder, rtcpPacket);
 		const notificationOffset =
 			FbsTransport.SendRtcpNotification.createSendRtcpNotification(
 				builder,
