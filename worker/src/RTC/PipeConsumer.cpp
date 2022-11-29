@@ -98,7 +98,7 @@ namespace RTC
 	}
 
 	flatbuffers::Offset<FBS::Consumer::ConsumerScore> PipeConsumer::FillBufferScore(
-	  flatbuffers::FlatBufferBuilder& builder)
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 

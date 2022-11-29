@@ -283,10 +283,38 @@ table CloseDataConsumerRequest {
   data_consumer_id:string (required);
 }
 
+// Notifications to Worker.
+
 table SendRtcpNotification {
   data:[uint8] (required);
 }
 
+// Notifications from Worker.
+
 table SctpStateChangeNotification {
   sctp_state:FBS.SctpAssociation.SctpState;
+}
+
+enum TraceType: uint8 { PROBATION = 0, BWE }
+enum TraceDirection: uint8 { IN = 0, OUT }
+
+union TraceInfo {
+  BweTraceInfo,
+}
+
+table BweTraceInfo {
+  desired_bitrate:uint32;
+  effective_desired_bitrate:uint32;
+  min_bitrate:uint32;
+  max_bitrate:uint32;
+  start_bitrate:uint32;
+  max_padding_bitrate:uint32;
+  available_bitrate:uint32;
+}
+
+table TraceNotification {
+  type: TraceType;
+  timestamp: uint64;
+  direction: TraceDirection;
+  info: TraceInfo;
 }

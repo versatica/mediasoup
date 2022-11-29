@@ -1,13 +1,15 @@
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import {
+	fbsSctpState2StcpState,
 	parseBaseTransportDump,
+	parseTransportTraceEventData,
+	parseTuple,
 	BaseTransportDump,
 	Transport,
 	TransportListenIp,
 	TransportProtocol,
 	TransportTuple,
-	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
 	TransportConstructorOptions,
@@ -15,11 +17,12 @@ import {
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import * as FbsNotification from './fbs/notification_generated';
-import { Event as FbsEvent } from './fbs/notification_generated';
+import { Event, Notification } from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
-import * as FbsSctpState from './fbs/fbs/sctp-association/sctp-state';
+import * as FbsWebRtcTransport from './fbs/webRtcTransport_generated';
+import { DtlsState as FbsDtlsState } from './fbs/fbs/web-rtc-transport/dtls-state';
+import { IceState as FbsIceState } from './fbs/fbs/web-rtc-transport/ice-state';
 import { Either, parseVector } from './utils';
 
 export type WebRtcTransportListenIndividual =
@@ -529,38 +532,17 @@ export class WebRtcTransport extends
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: FbsEvent, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case FbsEvent.TRANSPORT_SCTP_STATE_CHANGE:
+				case Event.WEBRTCTRANSPORT_ICE_STATE_CHANGE:
 				{
-					const notification = new FbsTransport.SctpStateChangeNotification();
+					const notification = new FbsWebRtcTransport.IceStateChangeNotification();
 
-					(data as FbsNotification.Notification).body(notification);
+					data!.body(notification);
 
-					const sctpState =
-						FbsSctpState.SctpState[notification.sctpState()].toLowerCase() as SctpState;
-
-					this.#data.sctpState = sctpState;
-
-					this.safeEmit('sctpstatechange', sctpState);
-
-					// Emit observer event.
-					this.observer.safeEmit('sctpstatechange', sctpState);
-
-					break;
-				}
-			}
-		});
-
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
-		{
-			switch (event)
-			{
-				case 'icestatechange':
-				{
-					const iceState = data.iceState as IceState;
+					const iceState = fbsIceState2IceState(notification.iceState());
 
 					this.#data.iceState = iceState;
 
@@ -572,9 +554,14 @@ export class WebRtcTransport extends
 					break;
 				}
 
-				case 'iceselectedtuplechange':
+				case Event.WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE:
 				{
-					const iceSelectedTuple = data.iceSelectedTuple as TransportTuple;
+					const notification =
+						new FbsWebRtcTransport.IceSelectedTupleChangeNotification();
+
+					data!.body(notification);
+
+					const iceSelectedTuple = parseTuple(notification.tuple()!);
 
 					this.#data.iceSelectedTuple = iceSelectedTuple;
 
@@ -586,15 +573,18 @@ export class WebRtcTransport extends
 					break;
 				}
 
-				case 'dtlsstatechange':
+				case Event.WEBRTCTRANSPORT_DTLS_STATE_CHANGE:
 				{
-					const dtlsState = data.dtlsState as DtlsState;
-					const dtlsRemoteCert = data.dtlsRemoteCert as string;
+					const notification = new FbsWebRtcTransport.DtlsStateChangeNotification();
+
+					data!.body(notification);
+
+					const dtlsState = fbsDtlsState2DtlsState(notification.dtlsState());
 
 					this.#data.dtlsState = dtlsState;
 
 					if (dtlsState === 'connected')
-						this.#data.dtlsRemoteCert = dtlsRemoteCert;
+						this.#data.dtlsRemoteCert = notification.remoteCert()!;
 
 					this.safeEmit('dtlsstatechange', dtlsState);
 
@@ -604,9 +594,31 @@ export class WebRtcTransport extends
 					break;
 				}
 
-				case 'trace':
+				case Event.TRANSPORT_SCTP_STATE_CHANGE:
 				{
-					const trace = data as TransportTraceEventData;
+					const notification = new FbsTransport.SctpStateChangeNotification();
+
+					data!.body(notification);
+
+					const sctpState = fbsSctpState2StcpState(notification.sctpState());
+
+					this.#data.sctpState = sctpState;
+
+					this.safeEmit('sctpstatechange', sctpState);
+
+					// Emit observer event.
+					this.observer.safeEmit('sctpstatechange', sctpState);
+
+					break;
+				}
+
+				case Event.TRANSPORT_TRACE:
+				{
+					const notification = new FbsTransport.TraceNotification();
+
+					data!.body(notification);
+
+					const trace = parseTransportTraceEventData(notification);
 
 					this.safeEmit('trace', trace);
 
@@ -622,6 +634,44 @@ export class WebRtcTransport extends
 				}
 			}
 		});
+	}
+}
+
+export function fbsIceState2IceState(fbsIceState: FbsIceState): IceState
+{
+	switch (fbsIceState)
+	{
+		case FbsIceState.NEW:
+			return 'new';
+		case FbsIceState.CONNECTED:
+			return 'connected';
+		case FbsIceState.COMPLETED:
+			return 'completed';
+		case FbsIceState.DISCONNECTED:
+			return 'disconnected';
+		case FbsIceState.CLOSED:
+			return 'closed';
+		default:
+			throw new TypeError(`invalid SctpState: ${fbsIceState}`);
+	}
+}
+
+export function fbsDtlsState2DtlsState(fbsDtlsState: FbsDtlsState): DtlsState
+{
+	switch (fbsDtlsState)
+	{
+		case FbsDtlsState.NEW:
+			return 'new';
+		case FbsDtlsState.CONNECTING:
+			return 'connecting';
+		case FbsDtlsState.CONNECTED:
+			return 'connected';
+		case FbsDtlsState.FAILED:
+			return 'failed';
+		case FbsDtlsState.CLOSED:
+			return 'closed';
+		default:
+			throw new TypeError(`invalid SctpState: ${fbsDtlsState}`);
 	}
 }
 

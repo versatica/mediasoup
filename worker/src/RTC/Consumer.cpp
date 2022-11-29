@@ -367,7 +367,7 @@ namespace RTC
 		if (wasActive)
 			UserOnPaused();
 
-		this->shared->channelNotifier->Emit(this->id, "producerpause");
+		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::CONSUMER_PRODUCER_PAUSE);
 	}
 
 	void Consumer::ProducerResumed()
@@ -384,7 +384,7 @@ namespace RTC
 		if (IsActive())
 			UserOnResumed();
 
-		this->shared->channelNotifier->Emit(this->id, "producerresume");
+		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::CONSUMER_PRODUCER_RESUME);
 	}
 
 	void Consumer::ProducerRtpStreamScores(const std::vector<uint8_t>* scores)
@@ -405,7 +405,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("Producer closed [consumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(this->id, "producerclose");
+		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::CONSUMER_PRODUCER_CLOSE);
 
 		this->listener->OnConsumerProducerClosed(this);
 	}

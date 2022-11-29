@@ -26,3 +26,20 @@ table WebRtcTransportOptions {
   prefer_tcp:bool = false;
 }
 
+// Notifications from Worker.
+
+table IceSelectedTupleChangeNotification {
+  tuple:FBS.Transport.Tuple (required);
+}
+
+enum IceState: uint8 { NEW = 0, CONNECTED, COMPLETED, DISCONNECTED, CLOSED }
+enum DtlsState: uint8 { NEW = 0, CONNECTING, CONNECTED, FAILED, CLOSED }
+
+table IceStateChangeNotification {
+  ice_state:IceState;
+}
+
+table DtlsStateChangeNotification {
+  dtls_state:DtlsState;
+  remote_cert:string;
+}

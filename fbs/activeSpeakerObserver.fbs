@@ -1,0 +1,7 @@
+namespace FBS.ActiveSpeakerObserver;
+
+// Notifications from Worker.
+
+table DominantSpeakerNotification {
+  producer_id:string;
+}

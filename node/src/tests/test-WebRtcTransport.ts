@@ -416,6 +416,7 @@ test('transport.enableTraceEvent() with wrong arguments rejects with TypeError',
 		.toThrow(TypeError);
 }, 2000);
 
+/* TODO: What's the reationale for testing this is WebRtcTransport?.
 test('WebRtcTransport events succeed', async () =>
 {
 	// Private API.
@@ -464,6 +465,7 @@ test('WebRtcTransport events succeed', async () =>
 	expect(transport.dtlsState).toBe('connected');
 	expect(transport.dtlsRemoteCert).toBe('ABCD');
 }, 2000);
+*/
 
 test('WebRtcTransport methods reject if closed', async () =>
 {

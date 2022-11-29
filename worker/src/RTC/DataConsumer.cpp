@@ -324,12 +324,14 @@ namespace RTC
 			this->forceTriggerBufferedAmountLow = false;
 
 			// Notify the Node DataConsumer.
-			std::string data(R"({"bufferedAmount":)");
+			auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
+			  this->shared->channelNotifier->GetBufferBuilder(), this->bufferedAmount);
 
-			data.append(std::to_string(this->bufferedAmount));
-			data.append("}");
-
-			this->shared->channelNotifier->Emit(this->id, "bufferedamountlow", data);
+			this->shared->channelNotifier->Emit(
+			  this->id,
+			  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
+			  FBS::Notification::Body::FBS_DataConsumer_BufferedAmountLowNotification,
+			  bufferedAmountLowOffset);
 		}
 	}
 
@@ -337,7 +339,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelNotifier->Emit(this->id, "sctpsendbufferfull");
+		this->shared->channelNotifier->Emit(
+		  this->id, FBS::Notification::Event::DATACONSUMER_SCTP_SENDBUFFER_FULL);
 	}
 
 	// The caller (Router) is supposed to proceed with the deletion of this DataConsumer
@@ -350,7 +353,8 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer closed [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(this->id, "dataproducerclose");
+		this->shared->channelNotifier->Emit(
+		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_CLOSE);
 
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}

@@ -75,7 +75,7 @@ namespace RTC
 		virtual void FillJsonStats(json& jsonArray) const  = 0;
 		virtual void FillJsonScore(json& jsonObject) const = 0;
 		virtual flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
-		  flatbuffers::FlatBufferBuilder& builder)
+		  flatbuffers::FlatBufferBuilder& builder) const
 		{
 			return 0;
 		};

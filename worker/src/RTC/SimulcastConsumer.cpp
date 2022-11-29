@@ -170,7 +170,7 @@ namespace RTC
 	}
 
 	flatbuffers::Offset<FBS::Consumer::ConsumerScore> SimulcastConsumer::FillBufferScore(
-	  flatbuffers::FlatBufferBuilder& builder)
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
@@ -1426,11 +1426,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		json data = json::object();
+		auto scoreOffset = FillBufferScore(this->shared->channelNotifier->GetBufferBuilder());
 
-		FillJsonScore(data);
+		auto notificationOffset = FBS::Consumer::CreateScoreNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), scoreOffset);
 
-		this->shared->channelNotifier->Emit(this->id, "score", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::CONSUMER_SCORE,
+		  FBS::Notification::Body::FBS_Consumer_ScoreNotification,
+		  notificationOffset);
 	}
 
 	inline void SimulcastConsumer::EmitLayersChange() const
@@ -1443,19 +1448,24 @@ namespace RTC
 		  this->encodingContext->GetCurrentTemporalLayer(),
 		  this->id.c_str());
 
-		json data = json::object();
+		flatbuffers::Offset<FBS::Consumer::ConsumerLayers> layersOffset;
 
 		if (this->currentSpatialLayer >= 0)
 		{
-			data["spatialLayer"]  = this->currentSpatialLayer;
-			data["temporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
-		}
-		else
-		{
-			data = nullptr;
+			layersOffset = FBS::Consumer::CreateConsumerLayers(
+			  this->shared->channelNotifier->GetBufferBuilder(),
+			  this->currentSpatialLayer,
+			  this->encodingContext->GetCurrentTemporalLayer());
 		}
 
-		this->shared->channelNotifier->Emit(this->id, "layerschange", data);
+		auto notificationOffset = FBS::Consumer::CreateLayersChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), layersOffset);
+
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::CONSUMER_LAYERS_CHANGE,
+		  FBS::Notification::Body::FBS_Consumer_LayersChangeNotification,
+		  notificationOffset);
 	}
 
 	inline RTC::RtpStream* SimulcastConsumer::GetProducerCurrentRtpStream() const

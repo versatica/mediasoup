@@ -7,7 +7,7 @@ import { InvalidStateError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request_generated';
 import { Response } from './fbs/response_generated';
 import { Message, Type as MessageType } from './fbs/message_generated';
-import { Event, JsonNotification, Notification } from './fbs/notification_generated';
+import { JsonNotification, Notification } from './fbs/notification_generated';
 import { Log } from './fbs/log_generated';
 
 const littleEndian = os.endianness() == 'LE';

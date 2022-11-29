@@ -162,6 +162,24 @@ namespace RTC
 		jsonObject["producerScores"] = *this->producerRtpStreamScores;
 	}
 
+	flatbuffers::Offset<FBS::Consumer::ConsumerScore> SvcConsumer::FillBufferScore(
+	  flatbuffers::FlatBufferBuilder& builder) const
+	{
+		MS_TRACE();
+
+		MS_ASSERT(this->producerRtpStreamScores, "producerRtpStreamScores not set");
+
+		uint8_t producerScore{ 0 };
+
+		if (this->producerRtpStream)
+			producerScore = this->producerRtpStream->GetScore();
+		else
+			producerScore = 0;
+
+		return FBS::Consumer::CreateConsumerScoreDirect(
+		  builder, this->rtpStream->GetScore(), producerScore, this->producerRtpStreamScores);
+	}
+
 	void SvcConsumer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
@@ -1038,11 +1056,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		json data = json::object();
+		auto scoreOffset = FillBufferScore(this->shared->channelNotifier->GetBufferBuilder());
 
-		FillJsonScore(data);
+		auto notificationOffset = FBS::Consumer::CreateScoreNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), scoreOffset);
 
-		this->shared->channelNotifier->Emit(this->id, "score", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::CONSUMER_SCORE,
+		  FBS::Notification::Body::FBS_Consumer_ScoreNotification,
+		  notificationOffset);
 	}
 
 	inline void SvcConsumer::EmitLayersChange() const
@@ -1055,19 +1078,24 @@ namespace RTC
 		  this->encodingContext->GetCurrentTemporalLayer(),
 		  this->id.c_str());
 
-		json data = json::object();
+		flatbuffers::Offset<FBS::Consumer::ConsumerLayers> layersOffset;
 
 		if (this->encodingContext->GetCurrentSpatialLayer() >= 0)
 		{
-			data["spatialLayer"]  = this->encodingContext->GetCurrentSpatialLayer();
-			data["temporalLayer"] = this->encodingContext->GetCurrentTemporalLayer();
-		}
-		else
-		{
-			data = nullptr;
+			layersOffset = FBS::Consumer::CreateConsumerLayers(
+			  this->shared->channelNotifier->GetBufferBuilder(),
+			  this->encodingContext->GetCurrentSpatialLayer(),
+			  this->encodingContext->GetCurrentTemporalLayer());
 		}
 
-		this->shared->channelNotifier->Emit(this->id, "layerschange", data);
+		auto notificationOffset = FBS::Consumer::CreateLayersChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), layersOffset);
+
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::CONSUMER_LAYERS_CHANGE,
+		  FBS::Notification::Body::FBS_Consumer_LayersChangeNotification,
+		  notificationOffset);
 	}
 
 	inline void SvcConsumer::OnRtpStreamScore(

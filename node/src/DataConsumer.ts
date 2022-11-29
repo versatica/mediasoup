@@ -4,6 +4,7 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
+import { Event, Notification } from './fbs/notification_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsDataConsumer from './fbs/dataConsumer_generated';
@@ -438,11 +439,11 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 
 	private handleWorkerNotifications(): void
 	{
-		this.#channel.on(this.#internal.dataConsumerId, (event: string, data: any) =>
+		this.#channel.on(this.#internal.dataConsumerId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case 'dataproducerclose':
+				case Event.DATACONSUMER_DATAPRODUCER_CLOSE:
 				{
 					if (this.#closed)
 						break;
@@ -462,16 +463,20 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 					break;
 				}
 
-				case 'sctpsendbufferfull':
+				case Event.DATACONSUMER_SCTP_SENDBUFFER_FULL:
 				{
 					this.safeEmit('sctpsendbufferfull');
 
 					break;
 				}
 
-				case 'bufferedamountlow':
+				case Event.DATACONSUMER_BUFFERED_AMOUNT_LOW:
 				{
-					const { bufferedAmount } = data as { bufferedAmount: number };
+					const notification = new FbsDataConsumer.BufferedAmountLowNotification();
+
+					data!.body(notification);
+
+					const bufferedAmount = notification.bufferedAmount();
 
 					this.safeEmit('bufferedamountlow', bufferedAmount);
 

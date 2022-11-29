@@ -96,3 +96,46 @@ table PipeConsumerDump {
 table GetStatsResponse {
   stats:string (required);
 }
+
+// Notifications from Worker.
+
+table LayersChangeNotification {
+  layers:ConsumerLayers;
+}
+
+table ScoreNotification {
+  score:ConsumerScore (required);
+}
+
+enum TraceType: uint8 { KEYFRAME = 0, FIR, NACK, PLI, RTP,  }
+enum TraceDirection: uint8 { IN = 0, OUT }
+
+union TraceInfo {
+  KeyFrameTraceInfo,
+  FirTraceInfo,
+  PliTraceInfo,
+  RtpTraceInfo,
+}
+
+table KeyFrameTraceInfo {
+  is_rtx:bool;
+}
+
+table FirTraceInfo {
+  ssrc:uint32;
+}
+
+table PliTraceInfo {
+  ssrc:uint32;
+}
+
+table RtpTraceInfo {
+  is_rtx:bool;
+}
+
+table TraceNotification {
+  type: TraceType;
+  timestamp: uint64;
+  direction: TraceDirection;
+  info: TraceInfo;
+}

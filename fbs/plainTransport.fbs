@@ -13,3 +13,12 @@ table PlainTransportOptions {
   srtp_crypto_suite:string;
 }
 
+// Notifications from Worker.
+
+table TupleNotification {
+  tuple:FBS.Transport.Tuple (required);
+}
+
+table RtcpTupleNotification {
+  tuple:FBS.Transport.Tuple (required);
+}

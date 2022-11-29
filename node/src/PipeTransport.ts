@@ -4,12 +4,13 @@ import { Logger } from './Logger';
 import * as ortc from './ortc';
 import {
 	BaseTransportDump,
+	fbsSctpState2StcpState,
 	parseTuple,
 	parseBaseTransportDump,
+	parseTransportTraceEventData,
 	Transport,
 	TransportListenIp,
 	TransportTuple,
-	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
 	TransportConstructorOptions,
@@ -21,12 +22,10 @@ import { RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters }
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { parseSrtpParameters, serializeSrtpParameters, SrtpParameters } from './SrtpParameters';
 import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
-import * as FbsNotification from './fbs/notification_generated';
-import { Event as FbsEvent } from './fbs/notification_generated';
+import { Event, Notification } from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsResponse from './fbs/response_generated';
 import * as FbsTransport from './fbs/transport_generated';
-import * as FbsSctpState from './fbs/fbs/sctp-association/sctp-state';
 
 export type PipeTransportOptions =
 {
@@ -414,18 +413,17 @@ export class PipeTransport
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: FbsEvent, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case FbsEvent.TRANSPORT_SCTP_STATE_CHANGE:
+				case Event.TRANSPORT_SCTP_STATE_CHANGE:
 				{
 					const notification = new FbsTransport.SctpStateChangeNotification();
 
-					(data as FbsNotification.Notification).body(notification);
+					data!.body(notification);
 
-					const sctpState =
-						FbsSctpState.SctpState[notification.sctpState()].toLowerCase() as SctpState;
+					const sctpState = fbsSctpState2StcpState(notification.sctpState());
 
 					this.#data.sctpState = sctpState;
 
@@ -436,16 +434,14 @@ export class PipeTransport
 
 					break;
 				}
-			}
-		});
 
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
-		{
-			switch (event)
-			{
-				case 'trace':
+				case Event.TRANSPORT_TRACE:
 				{
-					const trace = data as TransportTraceEventData;
+					const notification = new FbsTransport.TraceNotification();
+
+					data!.body(notification);
+
+					const trace = parseTransportTraceEventData(notification);
 
 					this.safeEmit('trace', trace);
 

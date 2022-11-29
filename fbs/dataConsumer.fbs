@@ -29,3 +29,9 @@ table SendRequest {
   ppid:uint8;
   data:string (required);
 }
+
+// Notifications from Worker.
+
+table BufferedAmountLowNotification {
+  buffered_amount:uint32;
+}

@@ -9,4 +9,3 @@ table PipeTransportOptions {
   enable_rtx:bool;
   enable_srtp:bool;
 }
-

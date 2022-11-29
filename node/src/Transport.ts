@@ -35,6 +35,7 @@ import * as FbsDataConsumer from './fbs/dataConsumer_generated';
 import * as FbsDataProducer from './fbs/dataProducer_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsRouter from './fbs/router_generated';
+import { SctpState as FbsSctpState } from './fbs/fbs/sctp-association/sctp-state';
 
 export type TransportListenIp =
 {
@@ -1207,6 +1208,25 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	}
 }
 
+export function fbsSctpState2StcpState(fbsSctpState: FbsSctpState): SctpState
+{
+	switch (fbsSctpState)
+	{
+		case FbsSctpState.NEW:
+			return 'new';
+		case FbsSctpState.CONNECTING:
+			return 'connecting';
+		case FbsSctpState.CONNECTED:
+			return 'connected';
+		case FbsSctpState.FAILED:
+			return 'failed';
+		case FbsSctpState.CLOSED:
+			return 'closed';
+		default:
+			throw new TypeError(`invalid SctpState: ${fbsSctpState}`);
+	}
+}
+
 export function parseTuple(binary: FbsTransport.Tuple): TransportTuple
 {
 	return {
@@ -1275,6 +1295,27 @@ export function parseBaseTransportDump(
 		sctpState               : sctpState,
 		sctpListener            : sctpListener,
 		traceEventTypes         : traceEventTypes
+	};
+}
+
+export function parseTransportTraceEventData(
+	trace: FbsTransport.TraceNotification
+): TransportTraceEventData
+{
+	let info: FbsTransport.BweTraceInfo | undefined;
+
+	if (trace.type() === FbsTransport.TraceType.BWE)
+	{
+		info = new FbsTransport.BweTraceInfo();
+
+		trace.info(info);
+	}
+
+	return {
+		type      : trace.type() === FbsTransport.TraceType.BWE ? 'bwe' : 'probation',
+		timestamp : trace.timestamp() as unknown as number,
+		direction : trace.direction() === FbsTransport.TraceDirection.IN ? 'in' : 'out',
+		info      : info ? info.unpack() : undefined
 	};
 }
 

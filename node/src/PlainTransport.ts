@@ -1,13 +1,14 @@
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import {
+	fbsSctpState2StcpState,
 	BaseTransportDump,
 	parseTuple,
 	parseBaseTransportDump,
+	parseTransportTraceEventData,
 	Transport,
 	TransportListenIp,
 	TransportTuple,
-	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
 	TransportConstructorOptions,
@@ -15,11 +16,10 @@ import {
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { parseSrtpParameters, serializeSrtpParameters, SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
-import * as FbsNotification from './fbs/notification_generated';
-import { Event as FbsEvent } from './fbs/notification_generated';
+import { Event, Notification } from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
-import * as FbsSctpState from './fbs/fbs/sctp-association/sctp-state';
+import * as FbsPlainTransport from './fbs/plainTransport_generated';
 
 export type PlainTransportOptions =
 {
@@ -383,38 +383,17 @@ export class PlainTransport extends
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: FbsEvent, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case FbsEvent.TRANSPORT_SCTP_STATE_CHANGE:
+				case Event.PLAINTRANSPORT_TUPLE:
 				{
-					const notification = new FbsTransport.SctpStateChangeNotification();
+					const notification = new FbsPlainTransport.TupleNotification();
 
-					(data as FbsNotification.Notification).body(notification);
+					data!.body(notification);
 
-					const sctpState =
-						FbsSctpState.SctpState[notification.sctpState()].toLowerCase() as SctpState;
-
-					this.#data.sctpState = sctpState;
-
-					this.safeEmit('sctpstatechange', sctpState);
-
-					// Emit observer event.
-					this.observer.safeEmit('sctpstatechange', sctpState);
-
-					break;
-				}
-			}
-		});
-
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
-		{
-			switch (event)
-			{
-				case 'tuple':
-				{
-					const tuple = data.tuple as TransportTuple;
+					const tuple = parseTuple(notification.tuple()!);
 
 					this.#data.tuple = tuple;
 
@@ -426,9 +405,13 @@ export class PlainTransport extends
 					break;
 				}
 
-				case 'rtcptuple':
+				case Event.PLAINTRANSPORT_RTCP_TUPLE:
 				{
-					const rtcpTuple = data.rtcpTuple as TransportTuple;
+					const notification = new FbsPlainTransport.RtcpTupleNotification();
+
+					data!.body(notification);
+
+					const rtcpTuple = parseTuple(notification.tuple()!);
 
 					this.#data.rtcpTuple = rtcpTuple;
 
@@ -440,9 +423,31 @@ export class PlainTransport extends
 					break;
 				}
 
-				case 'trace':
+				case Event.TRANSPORT_SCTP_STATE_CHANGE:
 				{
-					const trace = data as TransportTraceEventData;
+					const notification = new FbsTransport.SctpStateChangeNotification();
+
+					data!.body(notification);
+
+					const sctpState = fbsSctpState2StcpState(notification.sctpState());
+
+					this.#data.sctpState = sctpState;
+
+					this.safeEmit('sctpstatechange', sctpState);
+
+					// Emit observer event.
+					this.observer.safeEmit('sctpstatechange', sctpState);
+
+					break;
+				}
+
+				case Event.TRANSPORT_TRACE:
+				{
+					const notification = new FbsTransport.TraceNotification();
+
+					data!.body(notification);
+
+					const trace = parseTransportTraceEventData(notification);
 
 					this.safeEmit('trace', trace);
 

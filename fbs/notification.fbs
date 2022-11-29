@@ -1,6 +1,10 @@
 include "transport.fbs";
+include "webRtcTransport.fbs";
+include "plainTransport.fbs";
 include "producer.fbs";
 include "dataProducer.fbs";
+include "dataConsumer.fbs";
+include "activeSpeakerObserver.fbs";
 
 namespace FBS.Notification;
 
@@ -10,16 +14,50 @@ enum Event: uint8 {
   PRODUCER_SEND,
   DATA_PRODUCER_SEND,
   // Notifications from worker.
+  WORKER_RUNNING,
   TRANSPORT_SCTP_STATE_CHANGE,
+  TRANSPORT_TRACE,
+  WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
+  WEBRTCTRANSPORT_ICE_STATE_CHANGE,
+  WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
+  PLAINTRANSPORT_TUPLE,
+  PLAINTRANSPORT_RTCP_TUPLE,
+  PRODUCER_SCORE,
+  PRODUCER_TRACE,
+  PRODUCER_VIDEO_ORIENTATION_CHANGE,
+  CONSUMER_PRODUCER_PAUSE,
+  CONSUMER_PRODUCER_RESUME,
+  CONSUMER_PRODUCER_CLOSE,
+  CONSUMER_LAYERS_CHANGE,
+  CONSUMER_SCORE,
+  CONSUMER_TRACE,
+  DATACONSUMER_BUFFERED_AMOUNT_LOW,
+  DATACONSUMER_SCTP_SENDBUFFER_FULL,
+  DATACONSUMER_DATAPRODUCER_CLOSE,
+  ACTIVESPEAKEROBSERVER_DOMINANT_SPEAKER,
 }
 
 union Body {
   // Notifications to worker.
   FBS.Transport.SendRtcpNotification,
+  FBS.Transport.SctpStateChangeNotification,
   FBS.Producer.SendNotification,
   FBS.DataProducer.SendNotification,
   // Notifications from worker.
-  FBS.Transport.SctpStateChangeNotification,
+  FBS.Transport.TraceNotification,
+  FBS.WebRtcTransport.IceSelectedTupleChangeNotification,
+  FBS.WebRtcTransport.IceStateChangeNotification,
+  FBS.WebRtcTransport.DtlsStateChangeNotification,
+  FBS.PlainTransport.TupleNotification,
+  FBS.PlainTransport.RtcpTupleNotification,
+  FBS.Producer.ScoreNotification,
+  FBS.Producer.TraceNotification,
+  FBS.Producer.VideoOrientationChangeNotification,
+  FBS.Consumer.LayersChangeNotification,
+  FBS.Consumer.ScoreNotification,
+  FBS.Consumer.TraceNotification,
+  FBS.DataConsumer.BufferedAmountLowNotification,
+  FBS.ActiveSpeakerObserver.DominantSpeakerNotification,
 }
 
 // TMP: Notification do contain a stringified JSON right now.

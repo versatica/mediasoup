@@ -1214,11 +1214,14 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE connected");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::IceState::CONNECTED);
 
-		data["iceState"] = "connected";
-
-		this->shared->channelNotifier->Emit(this->id, "icestatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_IceStateChangeNotification,
+		  iceStateChangeOffset);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1237,11 +1240,14 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE completed");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::IceState::COMPLETED);
 
-		data["iceState"] = "completed";
-
-		this->shared->channelNotifier->Emit(this->id, "icestatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_IceStateChangeNotification,
+		  iceStateChangeOffset);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1260,11 +1266,15 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE disconnected");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::WebRtcTransport::IceState::DISCONNECTED);
 
-		data["iceState"] = "disconnected";
-
-		this->shared->channelNotifier->Emit(this->id, "icestatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_IceStateChangeNotification,
+		  iceStateChangeOffset);
 
 		// If DTLS was already connected, notify the parent class.
 		if (this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
@@ -1280,11 +1290,14 @@ namespace RTC
 		MS_DEBUG_TAG(dtls, "DTLS connecting");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::DtlsState::CONNECTING);
 
-		data["dtlsState"] = "connecting";
-
-		this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+		  dtlsStateChangeOffset);
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportConnected(
@@ -1323,12 +1336,16 @@ namespace RTC
 			  RTC::SrtpSession::Type::INBOUND, srtpCryptoSuite, srtpRemoteKey, srtpRemoteKeyLen);
 
 			// Notify the Node WebRtcTransport.
-			json data = json::object();
+			auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotificationDirect(
+			  this->shared->channelNotifier->GetBufferBuilder(),
+			  FBS::WebRtcTransport::DtlsState::CONNECTED,
+			  remoteCert.c_str());
 
-			data["dtlsState"]      = "connected";
-			data["dtlsRemoteCert"] = remoteCert;
-
-			this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
+			this->shared->channelNotifier->Emit(
+			  this->id,
+			  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
+			  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+			  dtlsStateChangeOffset);
 
 			// Tell the parent class.
 			RTC::Transport::Connected();
@@ -1349,11 +1366,14 @@ namespace RTC
 		MS_WARN_TAG(dtls, "DTLS failed");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::DtlsState::FAILED);
 
-		data["dtlsState"] = "failed";
-
-		this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+		  dtlsStateChangeOffset);
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1363,11 +1383,14 @@ namespace RTC
 		MS_WARN_TAG(dtls, "DTLS remotely closed");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::DtlsState::CLOSED);
 
-		data["dtlsState"] = "closed";
-
-		this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+		  dtlsStateChangeOffset);
 
 		// Tell the parent class.
 		RTC::Transport::Disconnected();
