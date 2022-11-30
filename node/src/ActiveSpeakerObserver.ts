@@ -7,6 +7,8 @@ import {
 	RtpObserverConstructorOptions
 } from './RtpObserver';
 import { Producer } from './Producer';
+import { Event, Notification } from './fbs/notification_generated';
+import * as FbsActiveSpeakerObserver from './fbs/activeSpeakerObserver_generated';
 
 export type ActiveSpeakerObserverOptions =
 {
@@ -62,13 +64,20 @@ export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEven
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.rtpObserverId, (event: string, data?: any) =>
+		this.channel.on(this.internal.rtpObserverId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case 'dominantspeaker':
+				case Event.ACTIVESPEAKEROBSERVER_DOMINANT_SPEAKER:
 				{
-					const producer = this.getProducerById(data.producerId);
+					const notification = new FbsActiveSpeakerObserver.DominantSpeakerNotification();
+
+					data!.body(notification);
+
+					if (!notification.producerId())
+						break;
+
+					const producer = this.getProducerById(notification.producerId()!);
 
 					if (!producer)
 						break;

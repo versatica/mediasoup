@@ -271,10 +271,15 @@ namespace RTC
 
 		if (!this->mapProducerSpeakers.empty() && CalculateActiveSpeaker())
 		{
-			json data          = json::object();
-			data["producerId"] = this->dominantId;
+			auto notification = FBS::ActiveSpeakerObserver::CreateDominantSpeakerNotificationDirect(
+					this->shared->channelNotifier->GetBufferBuilder(),
+					this->dominantId.c_str());
 
-			this->shared->channelNotifier->Emit(this->id, "dominantspeaker", data);
+			this->shared->channelNotifier->Emit(
+					this->id,
+					FBS::Notification::Event::ACTIVESPEAKEROBSERVER_DOMINANT_SPEAKER,
+					FBS::Notification::Body::FBS_ActiveSpeakerObserver_DominantSpeakerNotification,
+					notification);
 		}
 	}
 
