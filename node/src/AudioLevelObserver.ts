@@ -7,6 +7,9 @@ import {
 	RtpObserverConstructorOptions
 } from './RtpObserver';
 import { Producer } from './Producer';
+import { Event, Notification } from './fbs/notification_generated';
+import * as FbsAudioLevelObserver from './fbs/audioLevelObserver_generated';
+import * as utils from './utils';
 
 export type AudioLevelObserverOptions =
 {
@@ -84,22 +87,27 @@ export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.rtpObserverId, (event: string, data?: any) =>
+		this.channel.on(this.internal.rtpObserverId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case 'volumes':
+				case Event.AUDIOLEVELOBSERVER_VOLUMES:
 				{
+					const notification = new FbsAudioLevelObserver.VolumesNotification();
+
+					data!.body(notification);
+
 					// Get the corresponding Producer instance and remove entries with
 					// no Producer (it may have been closed in the meanwhile).
-					const volumes: AudioLevelObserverVolume[] = data
-						.map(({ producerId, volume }: { producerId: string; volume: number }) => (
-							{
-								producer : this.getProducerById(producerId),
-								volume
-							}
-						))
-						.filter(({ producer }: { producer: Producer }) => producer);
+					const volumes: AudioLevelObserverVolume[] =
+						utils.parseVector(notification, 'volumes', parseVolume)
+							.map(({ producerId, volume }: { producerId: string; volume: number }) => (
+								{
+									producer : this.getProducerById(producerId)!,
+									volume
+								}
+							))
+							.filter(({ producer }: { producer: Producer }) => producer);
 
 					if (volumes.length > 0)
 					{
@@ -112,7 +120,7 @@ export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
 					break;
 				}
 
-				case 'silence':
+				case Event.AUDIOLEVELOBSERVER_SILENCE:
 				{
 					this.safeEmit('silence');
 
@@ -129,4 +137,15 @@ export class AudioLevelObserver extends RtpObserver<AudioLevelObserverEvents>
 			}
 		});
 	}
+}
+
+function parseVolume(binary: FbsAudioLevelObserver.Volume): {
+	producerId: string;
+	volume: number;
+}
+{
+	return {
+		producerId : binary.producerId()!,
+		volume     : binary.volume()
+	};
 }

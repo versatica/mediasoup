@@ -5,6 +5,7 @@ include "producer.fbs";
 include "dataProducer.fbs";
 include "dataConsumer.fbs";
 include "activeSpeakerObserver.fbs";
+include "audioLevelObserver.fbs";
 
 namespace FBS.Notification;
 
@@ -35,6 +36,8 @@ enum Event: uint8 {
   DATACONSUMER_SCTP_SENDBUFFER_FULL,
   DATACONSUMER_DATAPRODUCER_CLOSE,
   ACTIVESPEAKEROBSERVER_DOMINANT_SPEAKER,
+  AUDIOLEVELOBSERVER_SILENCE,
+  AUDIOLEVELOBSERVER_VOLUMES,
 }
 
 union Body {
@@ -58,6 +61,7 @@ union Body {
   FBS.Consumer.TraceNotification,
   FBS.DataConsumer.BufferedAmountLowNotification,
   FBS.ActiveSpeakerObserver.DominantSpeakerNotification,
+  FBS.AudioLevelObserver.VolumesNotification,
 }
 
 // TMP: Notification do contain a stringified JSON right now.

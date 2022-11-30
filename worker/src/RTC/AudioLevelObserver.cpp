@@ -117,7 +117,8 @@ namespace RTC
 		{
 			this->silence = true;
 
-			this->shared->channelNotifier->Emit(this->id, "silence");
+			this->shared->channelNotifier->Emit(
+			  this->id, FBS::Notification::Event::AUDIOLEVELOBSERVER_SILENCE);
 		}
 	}
 
@@ -159,23 +160,29 @@ namespace RTC
 			auto rit  = mapDBovsProducer.crbegin();
 			json data = json::array();
 
+			std::vector<flatbuffers::Offset<FBS::AudioLevelObserver::Volume>> volumes;
+
 			for (; idx < this->maxEntries && rit != mapDBovsProducer.crend(); ++idx, ++rit)
 			{
-				data.emplace_back(json::value_t::object);
-
-				auto& jsonEntry = data[idx];
-
-				jsonEntry["producerId"] = rit->second->id;
-				jsonEntry["volume"]     = rit->first;
+				volumes.emplace_back(FBS::AudioLevelObserver::CreateVolumeDirect(
+				  this->shared->channelNotifier->GetBufferBuilder(), rit->second->id.c_str(), rit->first));
 			}
 
-			this->shared->channelNotifier->Emit(this->id, "volumes", data);
+			auto notification = FBS::AudioLevelObserver::CreateVolumesNotificationDirect(
+			  this->shared->channelNotifier->GetBufferBuilder(), &volumes);
+
+			this->shared->channelNotifier->Emit(
+			  this->id,
+			  FBS::Notification::Event::AUDIOLEVELOBSERVER_VOLUMES,
+			  FBS::Notification::Body::FBS_AudioLevelObserver_VolumesNotification,
+			  notification);
 		}
 		else if (!this->silence)
 		{
 			this->silence = true;
 
-			this->shared->channelNotifier->Emit(this->id, "silence");
+			this->shared->channelNotifier->Emit(
+			  this->id, FBS::Notification::Event::AUDIOLEVELOBSERVER_SILENCE);
 		}
 	}
 

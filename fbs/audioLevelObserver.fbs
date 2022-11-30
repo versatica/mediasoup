@@ -1,0 +1,12 @@
+namespace FBS.AudioLevelObserver;
+
+// Notifications from Worker.
+
+table Volume {
+  producer_id:string (required);
+  volume:int8;
+}
+
+table VolumesNotification {
+  volumes:[Volume] (required);
+}
