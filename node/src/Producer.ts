@@ -4,6 +4,7 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
+import { Event, Notification } from './fbs/notification_generated';
 import * as FbsNotification from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
@@ -560,13 +561,19 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 	private handleWorkerNotifications(): void
 	{
-		this.#channel.on(this.#internal.producerId, (event: string, data?: any) =>
+		this.#channel.on(this.#internal.producerId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case 'score':
+				case Event.PRODUCER_SCORE:
 				{
-					const score = data as ProducerScore[];
+					const notification = new FbsProducer.ScoreNotification();
+
+					data!.body(notification);
+
+					const score: ProducerScore[] = utils.parseVector(
+						notification, 'scores', parseProducerScore
+					);
 
 					this.#score = score;
 
@@ -578,9 +585,13 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 					break;
 				}
 
-				case 'videoorientationchange':
+				case Event.PRODUCER_VIDEO_ORIENTATION_CHANGE:
 				{
-					const videoOrientation = data as ProducerVideoOrientation;
+					const notification = new FbsProducer.VideoOrientationChangeNotification();
+
+					data!.body(notification);
+
+					const videoOrientation: ProducerVideoOrientation = notification.unpack();
 
 					this.safeEmit('videoorientationchange', videoOrientation);
 
@@ -590,9 +601,13 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 					break;
 				}
 
-				case 'trace':
+				case Event.PRODUCER_TRACE:
 				{
-					const trace = data as ProducerTraceEventData;
+					const notification = new FbsProducer.TraceNotification();
+
+					data!.body(notification);
+
+					const trace: ProducerTraceEventData = parseTraceEventData(notification);
 
 					this.safeEmit('trace', trace);
 
@@ -631,4 +646,57 @@ export function parseProducerDump(
 		traceEventTypes : utils.parseVector(data, 'traceEventTypes'),
 		paused          : data.paused()
 	};
+}
+
+function parseProducerScore(
+	binary: FbsProducer.Score
+): ProducerScore
+{
+	return {
+		ssrc  : binary.score(),
+		rid   : binary.rid() ?? undefined,
+		score : binary.score()
+	};
+}
+
+function parseTraceEventData(
+	trace: FbsProducer.TraceNotification
+): ProducerTraceEventData
+{
+	let info: any;
+
+	if (trace.infoType() !== FbsProducer.TraceInfo.NONE)
+	{
+		const accessor = trace.info.bind(trace);
+
+		info = FbsProducer.unionToTraceInfo(trace.infoType(), accessor);
+
+		trace.info(info);
+	}
+
+	return {
+		type      : fbstraceType2String(trace.type()),
+		timestamp : trace.timestamp() as unknown as number,
+		direction : trace.direction() === FbsProducer.TraceDirection.IN ? 'in' : 'out',
+		info      : info ? info.unpack() : undefined
+	};
+}
+
+function fbstraceType2String(traceType: FbsProducer.TraceType): ProducerTraceEventType
+{
+	switch (traceType)
+	{
+		case FbsProducer.TraceType.KEYFRAME:
+			return 'keyframe';
+		case FbsProducer.TraceType.FIR:
+			return 'fir';
+		case FbsProducer.TraceType.NACK:
+			return 'nack';
+		case FbsProducer.TraceType.PLI:
+			return 'pli';
+		case FbsProducer.TraceType.RTP:
+			return 'rtp';
+		default:
+			throw new TypeError(`invalid TraceType: ${traceType}`);
+	}
 }

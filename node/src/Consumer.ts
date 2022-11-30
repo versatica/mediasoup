@@ -866,7 +866,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 					data!.body(notification);
 
-					const score = notification!.score()!.unpack();
+					const score: ConsumerScore = notification!.score()!.unpack();
 
 					this.#score = score;
 
@@ -884,7 +884,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 					data!.body(notification);
 
-					const layers = notification.layers() ?
+					const layers: ConsumerLayers | undefined = notification.layers() ?
 						parseConsumerLayers(notification.layers()!) :
 						undefined;
 
@@ -904,7 +904,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 					data!.body(notification);
 
-					const trace = parseTraceEventData(notification);
+					const trace: ConsumerTraceEventData = parseTraceEventData(notification);
 
 					this.safeEmit('trace', trace);
 
@@ -971,7 +971,7 @@ export function parseTraceEventData(
 	return {
 		type      : fbstraceType2String(trace.type()),
 		timestamp : trace.timestamp() as unknown as number,
-		direction : trace.direction() === FbsTransport.TraceDirection.IN ? 'in' : 'out',
+		direction : trace.direction() === FbsConsumer.TraceDirection.IN ? 'in' : 'out',
 		info      : info ? info.unpack() : undefined
 	};
 }

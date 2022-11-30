@@ -427,11 +427,7 @@ namespace RTC
 			  FBS::Consumer::TraceInfo::KeyFrameTraceInfo,
 			  traceInfo.Union());
 
-			this->shared->channelNotifier->Emit(
-			  this->id,
-			  FBS::Notification::Event::CONSUMER_TRACE,
-			  FBS::Notification::Body::FBS_Consumer_TraceNotification,
-			  notification);
+			EmitTraceEvent(notification);
 		}
 		else if (this->traceEventTypes.rtp)
 		{
@@ -446,11 +442,7 @@ namespace RTC
 			  FBS::Consumer::TraceInfo::RtpTraceInfo,
 			  traceInfo.Union());
 
-			this->shared->channelNotifier->Emit(
-			  this->id,
-			  FBS::Notification::Event::CONSUMER_TRACE,
-			  FBS::Notification::Body::FBS_Consumer_TraceNotification,
-			  notification);
+			EmitTraceEvent(notification);
 		}
 	}
 
@@ -472,11 +464,7 @@ namespace RTC
 		  FBS::Consumer::TraceInfo::PliTraceInfo,
 		  traceInfo.Union());
 
-		this->shared->channelNotifier->Emit(
-		  this->id,
-		  FBS::Notification::Event::CONSUMER_TRACE,
-		  FBS::Notification::Body::FBS_Consumer_TraceNotification,
-		  notification);
+		EmitTraceEvent(notification);
 	}
 
 	void Consumer::EmitTraceEventFirType(uint32_t ssrc) const
@@ -497,11 +485,7 @@ namespace RTC
 		  FBS::Consumer::TraceInfo::FirTraceInfo,
 		  traceInfo.Union());
 
-		this->shared->channelNotifier->Emit(
-		  this->id,
-		  FBS::Notification::Event::CONSUMER_TRACE,
-		  FBS::Notification::Body::FBS_Consumer_TraceNotification,
-		  notification);
+		EmitTraceEvent(notification);
 	}
 
 	void Consumer::EmitTraceEventNackType() const
@@ -516,6 +500,13 @@ namespace RTC
 		  FBS::Consumer::TraceType::NACK,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Consumer::TraceDirection::IN);
+
+		EmitTraceEvent(notification);
+	}
+
+	void Consumer::EmitTraceEvent(flatbuffers::Offset<FBS::Consumer::TraceNotification>& notification) const
+	{
+		MS_TRACE();
 
 		this->shared->channelNotifier->Emit(
 		  this->id,

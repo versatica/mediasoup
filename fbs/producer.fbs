@@ -29,8 +29,14 @@ table SendNotification {
 
 // Notifications from Worker.
 
-table ScoreNotification {
+table Score {
+  ssrc:uint32;
+  rid:string;
   score:uint8;
+}
+
+table ScoreNotification {
+  scores:[Score];
 }
 
 table VideoOrientationChangeNotification {

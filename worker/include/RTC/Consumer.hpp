@@ -172,6 +172,7 @@ namespace RTC
 		void EmitTraceEventPliType(uint32_t ssrc) const;
 		void EmitTraceEventFirType(uint32_t ssrc) const;
 		void EmitTraceEventNackType() const;
+		void EmitTraceEvent(flatbuffers::Offset<FBS::Consumer::TraceNotification>& notification) const;
 
 	private:
 		virtual void UserOnTransportConnected()    = 0;

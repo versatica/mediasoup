@@ -255,6 +255,7 @@ namespace RTC
 
 		// Add rtpMapping.codecs.
 		std::vector<flatbuffers::Offset<FBS::RtpParameters::CodecMapping>> codecs;
+
 		for (const auto& kv : this->rtpMapping.codecs)
 		{
 			codecs.emplace_back(FBS::RtpParameters::CreateCodecMapping(builder, kv.first, kv.second));
@@ -1341,13 +1342,17 @@ namespace RTC
 					this->videoOrientation.flip     = flip;
 					this->videoOrientation.rotation = rotation;
 
-					json data = json::object();
+					auto notification = FBS::Producer::CreateVideoOrientationChangeNotification(
+							this->shared->channelNotifier->GetBufferBuilder(),
+							this->videoOrientation.camera,
+							this->videoOrientation.flip,
+							this->videoOrientation.rotation);
 
-					data["camera"]   = this->videoOrientation.camera;
-					data["flip"]     = this->videoOrientation.flip;
-					data["rotation"] = this->videoOrientation.rotation;
-
-					this->shared->channelNotifier->Emit(this->id, "videoorientationchange", data);
+					this->shared->channelNotifier->Emit(
+							this->id,
+							FBS::Notification::Event::PRODUCER_VIDEO_ORIENTATION_CHANGE,
+							FBS::Notification::Body::FBS_Producer_VideoOrientationChangeNotification,
+							notification);
 				}
 			}
 		}
@@ -1357,27 +1362,32 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		json data = json::array();
+		std::vector<flatbuffers::Offset<FBS::Producer::Score>> scores;
 
-		for (auto* rtpStream : this->rtpStreamByEncodingIdx)
+		for (const auto* rtpStream : this->rtpStreamByEncodingIdx)
 		{
 			if (!rtpStream)
 				continue;
 
-			data.emplace_back(json::value_t::object);
-
-			auto& jsonEntry = data[data.size() - 1];
-
-			jsonEntry["encodingIdx"] = rtpStream->GetEncodingIdx();
-			jsonEntry["ssrc"]        = rtpStream->GetSsrc();
-
-			if (!rtpStream->GetRid().empty())
-				jsonEntry["rid"] = rtpStream->GetRid();
-
-			jsonEntry["score"] = rtpStream->GetScore();
+			scores.emplace_back(
+					FBS::Producer::CreateScoreDirect(
+						this->shared->channelNotifier->GetBufferBuilder(),
+						rtpStream->GetSsrc(),
+						!rtpStream->GetRid().empty() ? rtpStream->GetRid().c_str() : nullptr,
+						rtpStream->GetScore())
+					);
 		}
 
-		this->shared->channelNotifier->Emit(this->id, "score", data);
+		auto notification = FBS::Producer::CreateScoreNotificationDirect(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+			&scores
+		  );
+
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::PRODUCER_SCORE,
+		  FBS::Notification::Body::FBS_Producer_ScoreNotification,
+		  notification);
 	}
 
 	inline void Producer::EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx) const
@@ -1386,33 +1396,33 @@ namespace RTC
 
 		if (this->traceEventTypes.keyframe && packet->IsKeyFrame())
 		{
-			json data = json::object();
+			auto traceInfo = FBS::Producer::CreateKeyFrameTraceInfo(
+			  this->shared->channelNotifier->GetBufferBuilder(), isRtx);
 
-			data["type"]      = "keyframe";
-			data["timestamp"] = DepLibUV::GetTimeMs();
-			data["direction"] = "in";
+			auto notification = FBS::Producer::CreateTraceNotification(
+			  this->shared->channelNotifier->GetBufferBuilder(),
+			  FBS::Producer::TraceType::KEYFRAME,
+			  DepLibUV::GetTimeMs(),
+			  FBS::Producer::TraceDirection::IN,
+			  FBS::Producer::TraceInfo::KeyFrameTraceInfo,
+			  traceInfo.Union());
 
-			packet->FillJson(data["info"]);
-
-			if (isRtx)
-				data["info"]["isRtx"] = true;
-
-			this->shared->channelNotifier->Emit(this->id, "trace", data);
+			EmitTraceEvent(notification);
 		}
 		else if (this->traceEventTypes.rtp)
 		{
-			json data = json::object();
+			auto traceInfo =
+			  FBS::Producer::CreateRtpTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), isRtx);
 
-			data["type"]      = "rtp";
-			data["timestamp"] = DepLibUV::GetTimeMs();
-			data["direction"] = "in";
+			auto notification = FBS::Producer::CreateTraceNotification(
+			  this->shared->channelNotifier->GetBufferBuilder(),
+			  FBS::Producer::TraceType::RTP,
+			  DepLibUV::GetTimeMs(),
+			  FBS::Producer::TraceDirection::IN,
+			  FBS::Producer::TraceInfo::RtpTraceInfo,
+			  traceInfo.Union());
 
-			packet->FillJson(data["info"]);
-
-			if (isRtx)
-				data["info"]["isRtx"] = true;
-
-			this->shared->channelNotifier->Emit(this->id, "trace", data);
+			EmitTraceEvent(notification);
 		}
 	}
 
@@ -1423,14 +1433,18 @@ namespace RTC
 		if (!this->traceEventTypes.pli)
 			return;
 
-		json data = json::object();
+		auto traceInfo =
+		  FBS::Producer::CreatePliTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
 
-		data["type"]         = "pli";
-		data["timestamp"]    = DepLibUV::GetTimeMs();
-		data["direction"]    = "out";
-		data["info"]["ssrc"] = ssrc;
+		auto notification = FBS::Producer::CreateTraceNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::Producer::TraceType::PLI,
+		  DepLibUV::GetTimeMs(),
+		  FBS::Producer::TraceDirection::OUT,
+		  FBS::Producer::TraceInfo::PliTraceInfo,
+		  traceInfo.Union());
 
-		this->shared->channelNotifier->Emit(this->id, "trace", data);
+		EmitTraceEvent(notification);
 	}
 
 	inline void Producer::EmitTraceEventFirType(uint32_t ssrc) const
@@ -1440,14 +1454,18 @@ namespace RTC
 		if (!this->traceEventTypes.fir)
 			return;
 
-		json data = json::object();
+		auto traceInfo =
+		  FBS::Producer::CreateFirTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
 
-		data["type"]         = "fir";
-		data["timestamp"]    = DepLibUV::GetTimeMs();
-		data["direction"]    = "out";
-		data["info"]["ssrc"] = ssrc;
+		auto notification = FBS::Producer::CreateTraceNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::Producer::TraceType::FIR,
+		  DepLibUV::GetTimeMs(),
+		  FBS::Producer::TraceDirection::OUT,
+		  FBS::Producer::TraceInfo::FirTraceInfo,
+		  traceInfo.Union());
 
-		this->shared->channelNotifier->Emit(this->id, "trace", data);
+		EmitTraceEvent(notification);
 	}
 
 	inline void Producer::EmitTraceEventNackType() const
@@ -1457,14 +1475,25 @@ namespace RTC
 		if (!this->traceEventTypes.nack)
 			return;
 
-		json data = json::object();
+		auto notification = FBS::Producer::CreateTraceNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::Producer::TraceType::NACK,
+		  DepLibUV::GetTimeMs(),
+		  FBS::Producer::TraceDirection::OUT);
 
-		data["type"]      = "nack";
-		data["timestamp"] = DepLibUV::GetTimeMs();
-		data["direction"] = "out";
-		data["info"]      = json::object();
+		EmitTraceEvent(notification);
+	}
 
-		this->shared->channelNotifier->Emit(this->id, "trace", data);
+	inline void Producer::EmitTraceEvent(
+	  flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const
+	{
+		MS_TRACE();
+
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::PRODUCER_TRACE,
+		  FBS::Notification::Body::FBS_Producer_TraceNotification,
+		  notification);
 	}
 
 	inline void Producer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
