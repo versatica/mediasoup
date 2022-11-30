@@ -34,13 +34,14 @@ test('createWorker() succeeds', async () =>
 	// eslint-disable-next-line require-atomic-updates
 	worker = await createWorker(
 		{
-			logLevel            : 'debug',
-			logTags             : [ 'info' ],
-			rtcMinPort          : 0,
-			rtcMaxPort          : 9999,
-			dtlsCertificateFile : path.join(__dirname, 'data', 'dtls-cert.pem'),
-			dtlsPrivateKeyFile  : path.join(__dirname, 'data', 'dtls-key.pem'),
-			appData             : { bar: 456 }
+			logLevel             : 'debug',
+			logTags              : [ 'info' ],
+			rtcMinPort           : 0,
+			rtcMaxPort           : 9999,
+			dtlsCertificateFile  : path.join(__dirname, 'data', 'dtls-cert.pem'),
+			dtlsPrivateKeyFile   : path.join(__dirname, 'data', 'dtls-key.pem'),
+			libwebrtcFieldTrials : 'WebRTC-Bwe-AlrLimitedBackoff/Disabled/',
+			appData              : { bar: 456 }
 		});
 	expect(worker.constructor.name).toBe('Worker');
 	expect(typeof worker.pid).toBe('number');

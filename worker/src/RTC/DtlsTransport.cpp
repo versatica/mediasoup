@@ -483,8 +483,6 @@ namespace RTC
 			}
 			hexFingerprint[(size * 3) - 1] = '\0';
 
-			MS_DUMP("--- hexFingerprint1: <%s> (%zu chars)", hexFingerprint, strlen(hexFingerprint));
-
 			MS_DEBUG_TAG(dtls, "%-7s fingerprint: %s", algorithmString.c_str(), hexFingerprint);
 
 			// Store it in the vector.
