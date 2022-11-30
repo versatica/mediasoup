@@ -2260,15 +2260,17 @@ namespace RTC
 		if (!this->traceEventTypes.probation)
 			return;
 
-		json data = json::object();
+		auto notification = FBS::Transport::CreateTraceNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::Transport::TraceType::PROBATION,
+		  DepLibUV::GetTimeMs(),
+		  FBS::Transport::TraceDirection::OUT);
 
-		data["type"]      = "probation";
-		data["timestamp"] = DepLibUV::GetTimeMs();
-		data["direction"] = "out";
-
-		packet->FillJson(data["info"]);
-
-		this->shared->channelNotifier->Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_TRACE,
+		  FBS::Notification::Body::FBS_Transport_TraceNotification,
+		  notification);
 	}
 
 	inline void Transport::EmitTraceEventBweType(
@@ -2279,30 +2281,32 @@ namespace RTC
 		if (!this->traceEventTypes.bwe)
 			return;
 
-		json data = json::object();
+		auto traceInfo = FBS::Transport::CreateBweTraceInfo(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  bitrates.desiredBitrate,
+		  bitrates.effectiveDesiredBitrate,
+		  bitrates.minBitrate,
+		  bitrates.maxBitrate,
+		  bitrates.startBitrate,
+		  bitrates.maxPaddingBitrate,
+		  bitrates.availableBitrate,
+		  this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC
+		    ? FBS::Transport::BweType::TRANSPORT_CC
+		    : FBS::Transport::BweType::REMB);
 
-		data["type"]                            = "bwe";
-		data["timestamp"]                       = DepLibUV::GetTimeMs();
-		data["direction"]                       = "out";
-		data["info"]["desiredBitrate"]          = bitrates.desiredBitrate;
-		data["info"]["effectiveDesiredBitrate"] = bitrates.effectiveDesiredBitrate;
-		data["info"]["minBitrate"]              = bitrates.minBitrate;
-		data["info"]["maxBitrate"]              = bitrates.maxBitrate;
-		data["info"]["startBitrate"]            = bitrates.startBitrate;
-		data["info"]["maxPaddingBitrate"]       = bitrates.maxPaddingBitrate;
-		data["info"]["availableBitrate"]        = bitrates.availableBitrate;
+		auto notification = FBS::Transport::CreateTraceNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::Transport::TraceType::BWE,
+		  DepLibUV::GetTimeMs(),
+		  FBS::Transport::TraceDirection::OUT,
+		  FBS::Transport::TraceInfo::BweTraceInfo,
+		  traceInfo.Union());
 
-		switch (this->tccClient->GetBweType())
-		{
-			case RTC::BweType::TRANSPORT_CC:
-				data["info"]["type"] = "transport-cc";
-				break;
-			case RTC::BweType::REMB:
-				data["info"]["type"] = "remb";
-				break;
-		}
-
-		this->shared->channelNotifier->Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::TRANSPORT_TRACE,
+		  FBS::Notification::Body::FBS_Transport_TraceNotification,
+		  notification);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)

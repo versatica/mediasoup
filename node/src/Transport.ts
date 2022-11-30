@@ -1302,20 +1302,57 @@ export function parseTransportTraceEventData(
 	trace: FbsTransport.TraceNotification
 ): TransportTraceEventData
 {
-	let info: FbsTransport.BweTraceInfo | undefined;
-
-	if (trace.type() === FbsTransport.TraceType.BWE)
+	switch (trace.type())
 	{
-		info = new FbsTransport.BweTraceInfo();
+		case FbsTransport.TraceType.BWE:
+		{
+			const info = new FbsTransport.BweTraceInfo();
 
-		trace.info(info);
+			trace.info(info);
+
+			return {
+				type      : 'bwe',
+				timestamp : trace.timestamp() as unknown as number,
+				direction : trace.direction() === FbsTransport.TraceDirection.IN ? 'in' : 'out',
+				info      : parseBweTraceInfo(info!)
+			};
+		}
+
+		case FbsTransport.TraceType.PROBATION:
+		{
+			return {
+				type      : 'probation',
+				timestamp : trace.timestamp() as unknown as number,
+				direction : trace.direction() === FbsTransport.TraceDirection.IN ? 'in' : 'out',
+				info      : {}
+			};
+		}
 	}
+}
 
+function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo):
+{
+  desiredBitrate:number;
+  effectiveDesiredBitrate:number;
+  minBitrate:number;
+  maxBitrate:number;
+  startBitrate:number;
+  maxPaddingBitrate:number;
+  availableBitrate:number;
+  bweType:'transport-cc' | 'remb';
+}
+{
 	return {
-		type      : trace.type() === FbsTransport.TraceType.BWE ? 'bwe' : 'probation',
-		timestamp : trace.timestamp() as unknown as number,
-		direction : trace.direction() === FbsTransport.TraceDirection.IN ? 'in' : 'out',
-		info      : info ? info.unpack() : undefined
+		desiredBitrate          : binary.desiredBitrate(),
+		effectiveDesiredBitrate : binary.effectiveDesiredBitrate(),
+		minBitrate              : binary.minBitrate(),
+		maxBitrate              : binary.maxBitrate(),
+		startBitrate            : binary.startBitrate(),
+		maxPaddingBitrate       : binary.maxPaddingBitrate(),
+		availableBitrate        : binary.availableBitrate(),
+		bweType                 : binary.bweType() === FbsTransport.BweType.TRANSPORT_CC ?
+			'transport-cc' :
+			'remb'
 	};
 }
 
