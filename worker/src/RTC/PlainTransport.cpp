@@ -853,11 +853,7 @@ namespace RTC
 			if (!wasConnected)
 			{
 				// Notify the Node PlainTransport.
-				json data = json::object();
-
-				this->tuple->FillJson(data["tuple"]);
-
-				this->shared->channelNotifier->Emit(this->id, "tuple", data);
+				EmitTuple();
 
 				RTC::Transport::Connected();
 			}
@@ -920,11 +916,7 @@ namespace RTC
 			if (!wasConnected)
 			{
 				// Notify the Node PlainTransport.
-				json data = json::object();
-
-				this->tuple->FillJson(data["tuple"]);
-
-				this->shared->channelNotifier->Emit(this->id, "tuple", data);
+				EmitTuple();
 
 				RTC::Transport::Connected();
 			}
@@ -948,11 +940,7 @@ namespace RTC
 				this->rtcpTuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
 
 			// Notify the Node PlainTransport.
-			json data = json::object();
-
-			this->rtcpTuple->FillJson(data["rtcpTuple"]);
-
-			this->shared->channelNotifier->Emit(this->id, "rtcptuple", data);
+			EmitRtcpTuple();
 		}
 		// If RTCP-mux verify that the packet's tuple matches our RTP tuple.
 		else if (this->rtcpMux && !this->tuple->Compare(tuple))
@@ -1010,11 +998,7 @@ namespace RTC
 			if (!wasConnected)
 			{
 				// Notify the Node PlainTransport.
-				json data = json::object();
-
-				this->tuple->FillJson(data["tuple"]);
-
-				this->shared->channelNotifier->Emit(this->id, "tuple", data);
+				EmitTuple();
 
 				RTC::Transport::Connected();
 			}
@@ -1030,6 +1014,34 @@ namespace RTC
 
 		// Pass it to the parent transport.
 		RTC::Transport::ReceiveSctpData(data, len);
+	}
+
+	inline void PlainTransport::EmitTuple() const
+	{
+		auto tuple = this->tuple->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
+		auto notification = FBS::PlainTransport::CreateTupleNotification(
+				this->shared->channelNotifier->GetBufferBuilder(),
+				tuple);
+
+		this->shared->channelNotifier->Emit(
+				this->id,
+				FBS::Notification::Event::PLAINTRANSPORT_TUPLE,
+				FBS::Notification::Body::FBS_PlainTransport_TupleNotification,
+				notification);
+	}
+
+	inline void PlainTransport::EmitRtcpTuple() const
+	{
+		auto rtcpTuple = this->rtcpTuple->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
+		auto notification = FBS::PlainTransport::CreateRtcpTupleNotification(
+				this->shared->channelNotifier->GetBufferBuilder(),
+				rtcpTuple);
+
+		this->shared->channelNotifier->Emit(
+				this->id,
+				FBS::Notification::Event::PLAINTRANSPORT_RTCP_TUPLE,
+				FBS::Notification::Body::FBS_PlainTransport_RtcpTupleNotification,
+				notification);
 	}
 
 	inline void PlainTransport::OnUdpSocketPacketReceived(

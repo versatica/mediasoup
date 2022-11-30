@@ -1343,16 +1343,16 @@ namespace RTC
 					this->videoOrientation.rotation = rotation;
 
 					auto notification = FBS::Producer::CreateVideoOrientationChangeNotification(
-							this->shared->channelNotifier->GetBufferBuilder(),
-							this->videoOrientation.camera,
-							this->videoOrientation.flip,
-							this->videoOrientation.rotation);
+					  this->shared->channelNotifier->GetBufferBuilder(),
+					  this->videoOrientation.camera,
+					  this->videoOrientation.flip,
+					  this->videoOrientation.rotation);
 
 					this->shared->channelNotifier->Emit(
-							this->id,
-							FBS::Notification::Event::PRODUCER_VIDEO_ORIENTATION_CHANGE,
-							FBS::Notification::Body::FBS_Producer_VideoOrientationChangeNotification,
-							notification);
+					  this->id,
+					  FBS::Notification::Event::PRODUCER_VIDEO_ORIENTATION_CHANGE,
+					  FBS::Notification::Body::FBS_Producer_VideoOrientationChangeNotification,
+					  notification);
 				}
 			}
 		}
@@ -1369,19 +1369,15 @@ namespace RTC
 			if (!rtpStream)
 				continue;
 
-			scores.emplace_back(
-					FBS::Producer::CreateScoreDirect(
-						this->shared->channelNotifier->GetBufferBuilder(),
-						rtpStream->GetSsrc(),
-						!rtpStream->GetRid().empty() ? rtpStream->GetRid().c_str() : nullptr,
-						rtpStream->GetScore())
-					);
+			scores.emplace_back(FBS::Producer::CreateScoreDirect(
+			  this->shared->channelNotifier->GetBufferBuilder(),
+			  rtpStream->GetSsrc(),
+			  !rtpStream->GetRid().empty() ? rtpStream->GetRid().c_str() : nullptr,
+			  rtpStream->GetScore()));
 		}
 
 		auto notification = FBS::Producer::CreateScoreNotificationDirect(
-		  this->shared->channelNotifier->GetBufferBuilder(),
-			&scores
-		  );
+		  this->shared->channelNotifier->GetBufferBuilder(), &scores);
 
 		this->shared->channelNotifier->Emit(
 		  this->id,
