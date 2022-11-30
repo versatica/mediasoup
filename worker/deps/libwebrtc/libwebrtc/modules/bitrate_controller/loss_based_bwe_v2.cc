@@ -901,13 +901,13 @@ void LossBasedBweV2::CalculateInstantUpperBound() {
 	DataRate instant_limit = DataRate::PlusInfinity();
 	const double average_reported_loss_ratio = GetAverageReportedLossRatio();
 
-	// In case of high bitrates the value of balance (75kbps) is too small,
-	// and leads to big BW drops even in case of small loss ratio.
-	DataRate bandwidth_balance = DataRate::bps(std::max(
-		config_->instant_upper_bound_bandwidth_balance.bps(),
-		current_estimate_.loss_limited_bandwidth.bps() * kBwBalanceMultiplicator / 100));
-
 	if (average_reported_loss_ratio > config_->instant_upper_bound_loss_offset) {
+		// In case of high bitrates the value of balance (75kbps) is too small,
+		// and leads to big BW drops even in case of small loss ratio.
+		DataRate bandwidth_balance = DataRate::bps(std::max(
+			static_cast<double>(config_->instant_upper_bound_bandwidth_balance.bps()),
+			(current_estimate_.loss_limited_bandwidth.bps() / 100) * kBwBalanceMultiplicator));
+
 		instant_limit = bandwidth_balance /
 			              (average_reported_loss_ratio -
 			               config_->instant_upper_bound_loss_offset);
