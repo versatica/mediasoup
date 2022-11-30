@@ -930,6 +930,7 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 	expect(audioConsumer.producerPaused).toBe(false);
 }, 2000);
 
+/* TODO: Test the internal notification event handler.
 test('Consumer emits "score"', async () =>
 {
 	// Private API.
@@ -945,6 +946,7 @@ test('Consumer emits "score"', async () =>
 	expect(onScore).toHaveBeenCalledTimes(3);
 	expect(audioConsumer.score).toEqual({ producer: 8, consumer: 8 });
 }, 2000);
+*/
 
 test('consumer.close() succeeds', async () =>
 {

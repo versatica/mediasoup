@@ -12,6 +12,7 @@ import {
 	parseRtpEncodingParameters,
 	parseRtpParameters
 } from './RtpParameters';
+import { Event, Notification } from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsConsumer from './fbs/consumer_generated';
@@ -799,11 +800,11 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 	private handleWorkerNotifications(): void
 	{
-		this.#channel.on(this.#internal.consumerId, (event: string, data?: any) =>
+		this.#channel.on(this.#internal.consumerId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case 'producerclose':
+				case Event.CONSUMER_PRODUCER_CLOSE:
 				{
 					if (this.#closed)
 						break;
@@ -823,7 +824,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 					break;
 				}
 
-				case 'producerpause':
+				case Event.CONSUMER_PRODUCER_PAUSE:
 				{
 					if (this.#producerPaused)
 						break;
@@ -841,7 +842,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 					break;
 				}
 
-				case 'producerresume':
+				case Event.CONSUMER_PRODUCER_RESUME:
 				{
 					if (!this.#producerPaused)
 						break;
@@ -859,9 +860,13 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 					break;
 				}
 
-				case 'score':
+				case Event.CONSUMER_SCORE:
 				{
-					const score = data as ConsumerScore;
+					const notification = new FbsConsumer.ScoreNotification();
+
+					data!.body(notification);
+
+					const score = notification!.score()!.unpack();
 
 					this.#score = score;
 
@@ -873,9 +878,15 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 					break;
 				}
 
-				case 'layerschange':
+				case Event.CONSUMER_LAYERS_CHANGE:
 				{
-					const layers = data as ConsumerLayers | undefined;
+					const notification = new FbsConsumer.LayersChangeNotification()!;
+
+					data!.body(notification);
+
+					const layers = notification.layers() ?
+						parseConsumerLayers(notification.layers()!) :
+						undefined;
 
 					this.#currentLayers = layers;
 
@@ -887,9 +898,18 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 					break;
 				}
 
-				case 'trace':
+				case Event.CONSUMER_TRACE:
 				{
-					const trace = data as ConsumerTraceEventData;
+					const notification = new FbsConsumer.TraceNotification();
+
+					data!.body(notification);
+
+					const trace = parseTraceEventData(notification);
+
+					this.safeEmit('trace', trace);
+
+					// Emit observer event.
+					this.observer.safeEmit('trace', trace);
 
 					this.safeEmit('trace', trace);
 
@@ -931,6 +951,59 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 				}
 			});
 	}
+}
+
+export function parseTraceEventData(
+	trace: FbsConsumer.TraceNotification
+): ConsumerTraceEventData
+{
+	let info: any;
+
+	if (trace.infoType() !== FbsConsumer.TraceInfo.NONE)
+	{
+		const accessor = trace.info.bind(trace);
+
+		info = FbsConsumer.unionToTraceInfo(trace.infoType(), accessor);
+
+		trace.info(info);
+	}
+
+	return {
+		type      : fbstraceType2String(trace.type()),
+		timestamp : trace.timestamp() as unknown as number,
+		direction : trace.direction() === FbsTransport.TraceDirection.IN ? 'in' : 'out',
+		info      : info ? info.unpack() : undefined
+	};
+}
+
+function fbstraceType2String(traceType: FbsConsumer.TraceType): ConsumerTraceEventType
+{
+	switch (traceType)
+	{
+		case FbsConsumer.TraceType.KEYFRAME:
+			return 'keyframe';
+		case FbsConsumer.TraceType.FIR:
+			return 'fir';
+		case FbsConsumer.TraceType.NACK:
+			return 'nack';
+		case FbsConsumer.TraceType.PLI:
+			return 'pli';
+		case FbsConsumer.TraceType.RTP:
+			return 'rtp';
+		default:
+			throw new TypeError(`invalid TraceType: ${traceType}`);
+	}
+}
+
+function parseConsumerLayers(data: FbsConsumer.ConsumerLayers): ConsumerLayers
+{
+	const spatialLayer = data.spatialLayer();
+	const temporalLayer = data.temporalLayer() !== null ? data.temporalLayer()! : undefined;
+
+	return {
+		spatialLayer,
+		temporalLayer
+	};
 }
 
 function parseRtpStreamParameters(data: FbsRtpStream.Params): RtpStreamParameters

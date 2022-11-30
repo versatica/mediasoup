@@ -416,33 +416,41 @@ namespace RTC
 
 		if (this->traceEventTypes.keyframe && packet->IsKeyFrame())
 		{
-			json data = json::object();
+			auto traceInfo = FBS::Consumer::CreateKeyFrameTraceInfo(
+			  this->shared->channelNotifier->GetBufferBuilder(), isRtx);
 
-			data["type"]      = "keyframe";
-			data["timestamp"] = DepLibUV::GetTimeMs();
-			data["direction"] = "out";
+			auto notification = FBS::Consumer::CreateTraceNotification(
+			  this->shared->channelNotifier->GetBufferBuilder(),
+			  FBS::Consumer::TraceType::KEYFRAME,
+			  DepLibUV::GetTimeMs(),
+			  FBS::Consumer::TraceDirection::OUT,
+			  FBS::Consumer::TraceInfo::KeyFrameTraceInfo,
+			  traceInfo.Union());
 
-			packet->FillJson(data["info"]);
-
-			if (isRtx)
-				data["info"]["isRtx"] = true;
-
-			this->shared->channelNotifier->Emit(this->id, "trace", data);
+			this->shared->channelNotifier->Emit(
+			  this->id,
+			  FBS::Notification::Event::CONSUMER_TRACE,
+			  FBS::Notification::Body::FBS_Consumer_TraceNotification,
+			  notification);
 		}
 		else if (this->traceEventTypes.rtp)
 		{
-			json data = json::object();
+			auto traceInfo =
+			  FBS::Consumer::CreateRtpTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), isRtx);
 
-			data["type"]      = "rtp";
-			data["timestamp"] = DepLibUV::GetTimeMs();
-			data["direction"] = "out";
+			auto notification = FBS::Consumer::CreateTraceNotification(
+			  this->shared->channelNotifier->GetBufferBuilder(),
+			  FBS::Consumer::TraceType::RTP,
+			  DepLibUV::GetTimeMs(),
+			  FBS::Consumer::TraceDirection::OUT,
+			  FBS::Consumer::TraceInfo::RtpTraceInfo,
+			  traceInfo.Union());
 
-			packet->FillJson(data["info"]);
-
-			if (isRtx)
-				data["info"]["isRtx"] = true;
-
-			this->shared->channelNotifier->Emit(this->id, "trace", data);
+			this->shared->channelNotifier->Emit(
+			  this->id,
+			  FBS::Notification::Event::CONSUMER_TRACE,
+			  FBS::Notification::Body::FBS_Consumer_TraceNotification,
+			  notification);
 		}
 	}
 
@@ -453,14 +461,22 @@ namespace RTC
 		if (!this->traceEventTypes.pli)
 			return;
 
-		json data = json::object();
+		auto traceInfo =
+		  FBS::Consumer::CreatePliTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
 
-		data["type"]         = "pli";
-		data["timestamp"]    = DepLibUV::GetTimeMs();
-		data["direction"]    = "in";
-		data["info"]["ssrc"] = ssrc;
+		auto notification = FBS::Consumer::CreateTraceNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::Consumer::TraceType::PLI,
+		  DepLibUV::GetTimeMs(),
+		  FBS::Consumer::TraceDirection::IN,
+		  FBS::Consumer::TraceInfo::PliTraceInfo,
+		  traceInfo.Union());
 
-		this->shared->channelNotifier->Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::CONSUMER_TRACE,
+		  FBS::Notification::Body::FBS_Consumer_TraceNotification,
+		  notification);
 	}
 
 	void Consumer::EmitTraceEventFirType(uint32_t ssrc) const
@@ -470,14 +486,22 @@ namespace RTC
 		if (!this->traceEventTypes.fir)
 			return;
 
-		json data = json::object();
+		auto traceInfo =
+		  FBS::Consumer::CreateFirTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
 
-		data["type"]         = "fir";
-		data["timestamp"]    = DepLibUV::GetTimeMs();
-		data["direction"]    = "in";
-		data["info"]["ssrc"] = ssrc;
+		auto notification = FBS::Consumer::CreateTraceNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::Consumer::TraceType::FIR,
+		  DepLibUV::GetTimeMs(),
+		  FBS::Consumer::TraceDirection::IN,
+		  FBS::Consumer::TraceInfo::FirTraceInfo,
+		  traceInfo.Union());
 
-		this->shared->channelNotifier->Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::CONSUMER_TRACE,
+		  FBS::Notification::Body::FBS_Consumer_TraceNotification,
+		  notification);
 	}
 
 	void Consumer::EmitTraceEventNackType() const
@@ -487,13 +511,16 @@ namespace RTC
 		if (!this->traceEventTypes.nack)
 			return;
 
-		json data = json::object();
+		auto notification = FBS::Consumer::CreateTraceNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::Consumer::TraceType::NACK,
+		  DepLibUV::GetTimeMs(),
+		  FBS::Consumer::TraceDirection::IN);
 
-		data["type"]      = "nack";
-		data["timestamp"] = DepLibUV::GetTimeMs();
-		data["direction"] = "in";
-		data["info"]      = json::object();
-
-		this->shared->channelNotifier->Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::CONSUMER_TRACE,
+		  FBS::Notification::Body::FBS_Consumer_TraceNotification,
+		  notification);
 	}
 } // namespace RTC
