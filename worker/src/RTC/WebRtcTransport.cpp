@@ -1200,11 +1200,17 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE selected tuple");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto tuple = this->iceServer->GetSelectedTuple()->FillBuffer(
+		  this->shared->channelNotifier->GetBufferBuilder());
 
-		this->iceServer->GetSelectedTuple()->FillJson(data["iceSelectedTuple"]);
+		auto notification = FBS::WebRtcTransport::CreateIceSelectedTupleChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), tuple);
 
-		this->shared->channelNotifier->Emit(this->id, "iceselectedtuplechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_IceSelectedTupleChangeNotification,
+		  notification);
 	}
 
 	inline void WebRtcTransport::OnIceServerConnected(const RTC::IceServer* /*iceServer*/)
