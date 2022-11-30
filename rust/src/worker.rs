@@ -386,7 +386,9 @@ impl Inner {
             ));
         }
 
-        spawn_args.push(format!("--libwebrtcFieldTrials={}", libwebrtc_field_trials.as_str()));
+        if let Some(libwebrtc_field_trials) = libwebrtc_field_trials {
+            spawn_args.push(format!("--libwebrtcFieldTrials={}", libwebrtc_field_trials.as_str()));
+        }
 
         let id = WorkerId::new();
         debug!(
