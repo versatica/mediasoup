@@ -905,7 +905,7 @@ void LossBasedBweV2::CalculateInstantUpperBound() {
 	// and leads to big BW drops even in case of small loss ratio.
 	DataRate bandwidth_balance = DataRate::bps(std::max(
 		config_->instant_upper_bound_bandwidth_balance.bps(),
-		current_estimate_.loss_limited_bandwidth.bps() / 100));
+		current_estimate_.loss_limited_bandwidth.bps() * kBwBalanceMultiplicator / 100));
 
 	if (average_reported_loss_ratio > config_->instant_upper_bound_loss_offset) {
 		instant_limit = bandwidth_balance /

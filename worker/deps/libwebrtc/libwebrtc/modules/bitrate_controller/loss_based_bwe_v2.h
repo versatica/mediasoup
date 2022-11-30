@@ -176,6 +176,7 @@ class LossBasedBweV2 {
 	// from huge drop.
   DataRate min_bitrate_ = DataRate::kbps(100);
 	TimeDelta max_observation_duration_before_reset_ = TimeDelta::seconds(4);
+	long long static constexpr kBwBalanceMultiplicator = 1.3;
 };
 
 }  // namespace webrtc
