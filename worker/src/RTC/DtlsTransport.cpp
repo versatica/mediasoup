@@ -9,7 +9,7 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <uv.h>
-#include <cstdio>  // std::sprintf(), std::fopen()
+#include <cstdio>  // std::snprintf(), std::fopen()
 #include <cstring> // std::memcpy(), std::strcmp()
 
 #define LOG_OPENSSL_ERROR(desc)                                                                    \
@@ -479,9 +479,11 @@ namespace RTC
 			// Convert to hexadecimal format in uppercase with colons.
 			for (unsigned int i{ 0 }; i < size; ++i)
 			{
-				std::sprintf(hexFingerprint + (i * 3), "%.2X:", binaryFingerprint[i]);
+				std::snprintf(hexFingerprint + (i * 3), 4, "%.2X:", binaryFingerprint[i]);
 			}
 			hexFingerprint[(size * 3) - 1] = '\0';
+
+			MS_DUMP("--- hexFingerprint1: <%s> (%zu chars)", hexFingerprint, strlen(hexFingerprint));
 
 			MS_DEBUG_TAG(dtls, "%-7s fingerprint: %s", algorithmString.c_str(), hexFingerprint);
 
@@ -1134,7 +1136,7 @@ namespace RTC
 		// Convert to hexadecimal format in uppercase with colons.
 		for (unsigned int i{ 0 }; i < size; ++i)
 		{
-			std::sprintf(hexFingerprint + (i * 3), "%.2X:", binaryFingerprint[i]);
+			std::snprintf(hexFingerprint + (i * 3), 4, "%.2X:", binaryFingerprint[i]);
 		}
 		hexFingerprint[(size * 3) - 1] = '\0';
 
