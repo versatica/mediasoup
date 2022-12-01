@@ -65,9 +65,6 @@ namespace Channel
 		void Emit(const FBS::Notification::Notification& notification);
 
 	private:
-		void Emit(flatbuffers::Offset<FBS::Notification::JsonNotification>& notification);
-
-	private:
 		// Passed by argument.
 		Channel::ChannelSocket* channel{ nullptr };
 	};

@@ -7,7 +7,7 @@ import { InvalidStateError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request_generated';
 import { Response } from './fbs/response_generated';
 import { Message, Type as MessageType } from './fbs/message_generated';
-import { JsonNotification, Notification } from './fbs/notification_generated';
+import { Notification } from './fbs/notification_generated';
 import { Log } from './fbs/log_generated';
 
 const littleEndian = os.endianness() == 'LE';
@@ -136,19 +136,6 @@ export class Channel extends EnhancedEventEmitter
 							message.data(response);
 
 							this.processResponse(response);
-
-							break;
-						}
-
-						case MessageType.JSON_NOTIFICATION:
-						{
-							const notification = new JsonNotification();
-
-							message.data(notification);
-
-							const notificationData = notification.data()!;
-
-							this.processJsonNotification(JSON.parse(notificationData));
 
 							break;
 						}
@@ -406,21 +393,6 @@ export class Channel extends EnhancedEventEmitter
 				'received response is not accepted nor rejected [method:%s, id:%s]',
 				sent.method, sent.id);
 		}
-	}
-
-	private processJsonNotification(notification: any): void
-	{
-		// Due to how Promises work, it may happen that we receive a response
-		// from the worker followed by a notification from the worker. If we
-		// emit the notification immediately it may reach its target **before**
-		// the response, destroying the ordered delivery. So we must wait a bit
-		// here.
-		// See https://github.com/versatica/mediasoup/issues/510
-		setImmediate(() => this.emit(
-			String(notification.targetId),
-			notification.event,
-			notification.data)
-		);
 	}
 
 	private processNotification(notification: Notification): void

@@ -71,11 +71,6 @@ union Body {
   FBS.AudioLevelObserver.VolumesNotification,
 }
 
-// TMP: Notification do contain a stringified JSON right now.
-table JsonNotification {
-  data:string (required);
-}
-
 table Notification {
   handler_id:string;
   event:Event;

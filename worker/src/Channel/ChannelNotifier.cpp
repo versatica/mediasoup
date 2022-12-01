@@ -14,18 +14,4 @@ namespace Channel
 	{
 		MS_TRACE();
 	}
-
-	void ChannelNotifier::Emit(flatbuffers::Offset<FBS::Notification::JsonNotification>& notification)
-	{
-		auto& builder = ChannelNotifier::bufferBuilder;
-		auto message  = FBS::Message::CreateMessage(
-      builder,
-      FBS::Message::Type::JSON_NOTIFICATION,
-      FBS::Message::Body::FBS_Notification_JsonNotification,
-      notification.Union());
-
-		builder.Finish(message);
-		this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
-		builder.Reset();
-	}
 } // namespace Channel
