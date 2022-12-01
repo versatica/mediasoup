@@ -62,7 +62,6 @@ namespace Channel
 			this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
 			builder.Reset();
 		}
-		void Emit(uint64_t targetId, const char* event);
 		void Emit(const FBS::Notification::Notification& notification);
 
 	private:

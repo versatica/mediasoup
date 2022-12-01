@@ -47,7 +47,8 @@ Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannel
 	DepUsrSCTP::CreateChecker();
 
 	// Tell the Node process that we are running.
-	this->shared->channelNotifier->Emit(Logger::pid, "running");
+	this->shared->channelNotifier->Emit(
+	  std::to_string(Logger::pid), FBS::Notification::Event::WORKER_RUNNING);
 
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();

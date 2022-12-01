@@ -9,6 +9,7 @@ import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
+import { Event } from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsWorker from './fbs/worker_generated';
 import * as FbsWebRtcServer from './fbs/webRtcServer_generated';
@@ -349,9 +350,9 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		let spawnDone = false;
 
 		// Listen for 'running' notification.
-		this.#channel.once(String(this.#pid), (event: string) =>
+		this.#channel.once(String(this.#pid), (event: Event) =>
 		{
-			if (!spawnDone && event === 'running')
+			if (!spawnDone && event === Event.WORKER_RUNNING)
 			{
 				spawnDone = true;
 

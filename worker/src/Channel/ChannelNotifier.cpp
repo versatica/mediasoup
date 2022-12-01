@@ -15,22 +15,6 @@ namespace Channel
 		MS_TRACE();
 	}
 
-	void ChannelNotifier::Emit(uint64_t targetId, const char* event)
-	{
-		MS_TRACE();
-
-		json jsonNotification = json::object();
-
-		jsonNotification["targetId"] = targetId;
-		jsonNotification["event"]    = event;
-
-		auto& builder = ChannelNotifier::bufferBuilder;
-		auto notification =
-		  FBS::Notification::CreateJsonNotificationDirect(builder, jsonNotification.dump().c_str());
-
-		Emit(notification);
-	}
-
 	void ChannelNotifier::Emit(flatbuffers::Offset<FBS::Notification::JsonNotification>& notification)
 	{
 		auto& builder = ChannelNotifier::bufferBuilder;
