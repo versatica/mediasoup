@@ -66,6 +66,8 @@ export type WorkerSettings =
 
 	/**
 	 * Field trials for libwebrtc.
+	 * @private
+	 *
 	 * NOTE: For advanced users only. An invalid value will make the worker crash.
 	 * Default value is
 	 * "WebRTC-Bwe-AlrLimitedBackoff/Enabled/".

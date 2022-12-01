@@ -187,6 +187,7 @@ pub struct WorkerSettings {
     /// NOTE: For advanced users only. An invalid value will make the worker crash.
     /// Default value is
     /// "WebRTC-Bwe-AlrLimitedBackoff/Enabled/".
+    #[doc(hidden)]
     pub libwebrtc_field_trials: Option<String>,
     /// Function that will be called under worker thread before worker starts, can be used for
     /// pinning worker threads to CPU cores.

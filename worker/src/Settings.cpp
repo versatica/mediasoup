@@ -142,8 +142,16 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'W':
 			{
-				stringValue                                  = std::string(optarg);
-				Settings::configuration.libwebrtcFieldTrials = stringValue;
+				stringValue = std::string(optarg);
+
+				if (stringValue != Settings::configuration.libwebrtcFieldTrials)
+				{
+					MS_WARN_TAG(
+					  info,
+					  "overriding default value of libwebrtcFieldTrials may generate crashes in medoasoup-worker");
+
+					Settings::configuration.libwebrtcFieldTrials = stringValue;
+				}
 
 				break;
 			}
