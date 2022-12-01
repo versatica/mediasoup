@@ -148,7 +148,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 				{
 					MS_WARN_TAG(
 					  info,
-					  "overriding default value of libwebrtcFieldTrials may generate crashes in medoasoup-worker");
+					  "overriding default value of libwebrtcFieldTrials may generate crashes in mediasoup-worker");
 
 					Settings::configuration.libwebrtcFieldTrials = stringValue;
 				}
