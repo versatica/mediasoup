@@ -64,9 +64,6 @@ namespace Channel
 		}
 		void Emit(uint64_t targetId, const char* event);
 		void Emit(const FBS::Notification::Notification& notification);
-		void Emit(const std::string& targetId, const char* event);
-		void Emit(const std::string& targetId, const char* event, json& data);
-		void Emit(const std::string& targetId, const char* event, const std::string& data);
 
 	private:
 		void Emit(flatbuffers::Offset<FBS::Notification::JsonNotification>& notification);

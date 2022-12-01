@@ -125,36 +125,6 @@ namespace Channel
 		this->listener = listener;
 	}
 
-	void ChannelSocket::Send(json& jsonMessage)
-	{
-		MS_TRACE_STD();
-
-		if (this->closed)
-			return;
-
-		std::string msg = jsonMessage.dump();
-
-		if (msg.length() > PayloadMaxLen)
-		{
-			MS_ERROR_STD("message too big");
-
-			return;
-		}
-
-		auto notification =
-		  FBS::Notification::CreateJsonNotificationDirect(this->bufferBuilder, msg.c_str());
-
-		auto message = FBS::Message::CreateMessage(
-		  this->bufferBuilder,
-		  FBS::Message::Type::NOTIFICATION,
-		  FBS::Message::Body::FBS_Notification_JsonNotification,
-		  notification.Union());
-
-		this->bufferBuilder.Finish(message);
-		this->Send(this->bufferBuilder.GetBufferPointer(), this->bufferBuilder.GetSize());
-		this->bufferBuilder.Reset();
-	}
-
 	void ChannelSocket::Send(const std::string& message)
 	{
 		MS_TRACE_STD();
@@ -253,10 +223,6 @@ namespace Channel
 
 				// Delete the Request.
 				delete request;
-			}
-			catch (const json::parse_error& error)
-			{
-				MS_ERROR_STD("message parsing error: %s", error.what());
 			}
 			catch (const MediaSoupError& error)
 			{

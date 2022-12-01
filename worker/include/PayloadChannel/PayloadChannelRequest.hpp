@@ -7,10 +7,7 @@
 #include "FBS/response_generated.h"
 #include <absl/container/flat_hash_map.h>
 #include <flatbuffers/flatbuffers.h>
-#include <nlohmann/json.hpp>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace PayloadChannel
 {
@@ -36,7 +33,6 @@ namespace PayloadChannel
 
 	public:
 		void Accept();
-		void Accept(json& data);
 		void Error(const char* reason = nullptr);
 		void TypeError(const char* reason = nullptr);
 

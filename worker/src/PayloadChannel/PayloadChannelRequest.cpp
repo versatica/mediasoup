@@ -59,25 +59,6 @@ namespace PayloadChannel
 		Send(response);
 	}
 
-	void PayloadChannelRequest::Accept(json& data)
-	{
-		MS_TRACE();
-
-		MS_ASSERT(!this->replied, "request already replied");
-
-		this->replied = true;
-
-		json jsonResponse = json::object();
-
-		jsonResponse["id"]       = this->id;
-		jsonResponse["accepted"] = true;
-
-		if (data.is_structured())
-			jsonResponse["data"] = data;
-
-		this->channel->Send(jsonResponse);
-	}
-
 	void PayloadChannelRequest::Error(const char* reason)
 	{
 		MS_TRACE();
@@ -86,15 +67,11 @@ namespace PayloadChannel
 
 		this->replied = true;
 
-		json jsonResponse = json::object();
+		auto& builder = PayloadChannelRequest::bufferBuilder;
+		auto response = FBS::Response::CreateResponseDirect(
+		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "Error" /*Error*/, reason);
 
-		jsonResponse["id"]    = this->id;
-		jsonResponse["error"] = "Error";
-
-		if (reason != nullptr)
-			jsonResponse["reason"] = reason;
-
-		this->channel->Send(jsonResponse);
+		Send(response);
 	}
 
 	void PayloadChannelRequest::TypeError(const char* reason)
@@ -105,15 +82,11 @@ namespace PayloadChannel
 
 		this->replied = true;
 
-		json jsonResponse = json::object();
+		auto& builder = PayloadChannelRequest::bufferBuilder;
+		auto response = FBS::Response::CreateResponseDirect(
+		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "TypeError" /*Error*/, reason);
 
-		jsonResponse["id"]    = this->id;
-		jsonResponse["error"] = "TypeError";
-
-		if (reason != nullptr)
-			jsonResponse["reason"] = reason;
-
-		this->channel->Send(jsonResponse);
+		Send(response);
 	}
 
 	void PayloadChannelRequest::Send(const flatbuffers::Offset<FBS::Response::Response>& response)

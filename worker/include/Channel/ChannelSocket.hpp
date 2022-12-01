@@ -4,10 +4,7 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
-#include <nlohmann/json.hpp>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace Channel
 {
@@ -86,7 +83,6 @@ namespace Channel
 	public:
 		void Close();
 		void SetListener(Listener* listener);
-		void Send(json& jsonMessage);
 		void Send(const std::string& message);
 		void Send(const uint8_t* message, uint32_t messageLen);
 		void SendLog(const char* message, uint32_t messageLen);

@@ -15,32 +15,19 @@ namespace PayloadChannel
 		MS_TRACE();
 	}
 
-	void PayloadChannelNotifier::Emit(
-	  const std::string& targetId, const char* event, const uint8_t* payload, size_t payloadLen)
+	void PayloadChannelNotifier::Emit(const std::string& targetId, FBS::Notification::Event event)
 	{
-		MS_TRACE();
+		auto& builder     = PayloadChannelNotifier::bufferBuilder;
+		auto notification = FBS::Notification::CreateNotificationDirect(builder, targetId.c_str(), event);
 
-		std::string notification("{\"targetId\":\"");
+		auto message = FBS::Message::CreateMessage(
+		  builder,
+		  FBS::Message::Type::NOTIFICATION,
+		  FBS::Message::Body::FBS_Notification_Notification,
+		  notification.Union());
 
-		notification.append(targetId);
-		notification.append("\",\"event\":\"");
-		notification.append(event);
-		notification.append("\"}");
-
-		this->payloadChannel->Send(notification, payload, payloadLen);
-	}
-
-	void PayloadChannelNotifier::Emit(
-	  const std::string& targetId, const char* event, json& data, const uint8_t* payload, size_t payloadLen)
-	{
-		MS_TRACE();
-
-		json jsonNotification = json::object();
-
-		jsonNotification["targetId"] = targetId;
-		jsonNotification["event"]    = event;
-		jsonNotification["data"]     = data;
-
-		this->payloadChannel->Send(jsonNotification, payload, payloadLen);
+		builder.Finish(message);
+		this->payloadChannel->Send(builder.GetBufferPointer(), builder.GetSize());
+		builder.Reset();
 	}
 } // namespace PayloadChannel

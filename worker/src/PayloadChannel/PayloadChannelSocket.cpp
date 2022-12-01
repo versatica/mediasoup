@@ -123,18 +123,6 @@ namespace PayloadChannel
 		this->listener = listener;
 	}
 
-	void PayloadChannelSocket::Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen)
-	{
-		MS_TRACE();
-
-		if (this->closed)
-			return;
-
-		std::string message = jsonMessage.dump();
-
-		this->Send(message, payload, payloadLen);
-	}
-
 	void PayloadChannelSocket::Send(const std::string& message, const uint8_t* payload, size_t payloadLen)
 	{
 		MS_TRACE();
@@ -160,26 +148,6 @@ namespace PayloadChannel
 		  static_cast<uint32_t>(message.length()),
 		  payload,
 		  static_cast<uint32_t>(payloadLen));
-	}
-
-	void PayloadChannelSocket::Send(json& jsonMessage)
-	{
-		MS_TRACE_STD();
-
-		if (this->closed)
-			return;
-
-		std::string message = jsonMessage.dump();
-
-		if (message.length() > PayloadMaxLen)
-		{
-			MS_ERROR_STD("message too big");
-
-			return;
-		}
-
-		SendImpl(
-		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
 	}
 
 	void PayloadChannelSocket::Send(const std::string& message)
@@ -324,10 +292,6 @@ namespace PayloadChannel
 				  MS_ERROR("discarding wrong PayloadChannel data");
 				}
 			*/
-			}
-			catch (const json::parse_error& error)
-			{
-				MS_ERROR("JSON parsing error: %s", error.what());
 			}
 			catch (const MediaSoupError& error)
 			{

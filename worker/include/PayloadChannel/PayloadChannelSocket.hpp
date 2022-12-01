@@ -5,10 +5,7 @@
 #include "PayloadChannel/PayloadChannelNotification.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
-#include <nlohmann/json.hpp>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace PayloadChannel
 {
@@ -96,9 +93,7 @@ namespace PayloadChannel
 	public:
 		void Close();
 		void SetListener(Listener* listener);
-		void Send(json& jsonMessage, const uint8_t* payload, size_t payloadLen);
 		void Send(const std::string& message, const uint8_t* payload, size_t payloadLen);
-		void Send(json& jsonMessage);
 		void Send(const std::string& message);
 		void Send(const uint8_t* buffer, size_t size);
 		bool CallbackRead();
