@@ -7,7 +7,6 @@
 #include "MediaSoupErrors.hpp"
 #include "PayloadChannel/PayloadChannelRequest.hpp"
 #include <cmath>   // std::ceil()
-#include <cstdio>  // sprintf()
 #include <cstring> // std::memcpy(), std::memmove()
 
 namespace PayloadChannel
