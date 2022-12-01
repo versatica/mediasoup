@@ -128,11 +128,17 @@ namespace RTC
 			return;
 		}
 
-		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		auto data = this->shared->payloadChannelNotifier->GetBufferBuilder().CreateVector(
+		  packet->GetData(), packet->GetSize());
 
-		// Notify the Node DirectTransport.
-		this->shared->payloadChannelNotifier->Emit(consumer->id, "rtp", data, len);
+		auto notification = FBS::Consumer::CreateRtpNotification(
+		  this->shared->payloadChannelNotifier->GetBufferBuilder(), data);
+
+		this->shared->payloadChannelNotifier->Emit(
+		  consumer->id,
+		  FBS::Notification::Event::CONSUMER_RTP,
+		  FBS::Notification::Body::FBS_Consumer_RtpNotification,
+		  notification);
 
 		if (cb)
 		{
@@ -141,21 +147,28 @@ namespace RTC
 		}
 
 		// Increase send transmission.
-		RTC::Transport::DataSent(len);
+		RTC::Transport::DataSent(packet->GetSize());
 	}
 
 	void DirectTransport::SendRtcpPacket(RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
 
-		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
-
 		// Notify the Node DirectTransport.
-		this->shared->payloadChannelNotifier->Emit(this->id, "rtcp", data, len);
+		auto data = this->shared->payloadChannelNotifier->GetBufferBuilder().CreateVector(
+		  packet->GetData(), packet->GetSize());
+
+		auto notification = FBS::DirectTransport::CreateRtcpNotification(
+		  this->shared->payloadChannelNotifier->GetBufferBuilder(), data);
+
+		this->shared->payloadChannelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::DIRECTTRANSPORT_RTCP,
+		  FBS::Notification::Body::FBS_DirectTransport_RtcpNotification,
+		  notification);
 
 		// Increase send transmission.
-		RTC::Transport::DataSent(len);
+		RTC::Transport::DataSent(packet->GetSize());
 	}
 
 	void DirectTransport::SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet)
@@ -164,14 +177,17 @@ namespace RTC
 
 		packet->Serialize(RTC::RTCP::Buffer);
 
-		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		auto data = this->shared->payloadChannelNotifier->GetBufferBuilder().CreateVector(
+		  packet->GetData(), packet->GetSize());
 
-		// Notify the Node DirectTransport.
-		this->shared->payloadChannelNotifier->Emit(this->id, "rtcp", data, len);
+		auto notification = FBS::DirectTransport::CreateRtcpNotification(
+		  this->shared->payloadChannelNotifier->GetBufferBuilder(), data);
 
-		// Increase send transmission.
-		RTC::Transport::DataSent(len);
+		this->shared->payloadChannelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::DIRECTTRANSPORT_RTCP,
+		  FBS::Notification::Body::FBS_DirectTransport_RtcpNotification,
+		  notification);
 	}
 
 	void DirectTransport::SendMessage(
@@ -180,11 +196,16 @@ namespace RTC
 		MS_TRACE();
 
 		// Notify the Node DirectTransport.
-		json data = json::object();
+		auto data = this->shared->payloadChannelNotifier->GetBufferBuilder().CreateVector(msg, len);
 
-		data["ppid"] = ppid;
+		auto notification = FBS::DataConsumer::CreateMessageNotification(
+		  this->shared->payloadChannelNotifier->GetBufferBuilder(), ppid, data);
 
-		this->shared->payloadChannelNotifier->Emit(dataConsumer->id, "message", data, msg, len);
+		this->shared->payloadChannelNotifier->Emit(
+		  dataConsumer->id,
+		  FBS::Notification::Event::DATACONSUMER_MESSAGE,
+		  FBS::Notification::Body::FBS_DataConsumer_MessageNotification,
+		  notification);
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);

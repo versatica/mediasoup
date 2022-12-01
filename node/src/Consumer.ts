@@ -928,18 +928,20 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		this.#payloadChannel.on(
 			this.#internal.consumerId,
-			(event: string, data: any | undefined, payload: Buffer) =>
+			(event: Event, data?: Notification) =>
 			{
 				switch (event)
 				{
-					case 'rtp':
+					case Event.CONSUMER_RTP:
 					{
 						if (this.#closed)
 							break;
 
-						const packet = payload;
+						const notification = new FbsConsumer.RtpNotification();
 
-						this.safeEmit('rtp', packet);
+						data!.body(notification);
+
+						this.safeEmit('rtp', Buffer.from(notification.dataArray()!));
 
 						break;
 					}

@@ -5,3 +5,9 @@ namespace FBS.DirectTransport;
 table DirectTransportOptions {
   base:FBS.Transport.BaseTransportOptions;
 }
+
+// Notifications from Worker.
+
+table RtcpNotification {
+  data:[ubyte] (required);
+}

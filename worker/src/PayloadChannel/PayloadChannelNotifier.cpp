@@ -6,6 +6,9 @@
 
 namespace PayloadChannel
 {
+	/* Class variables. */
+	flatbuffers::FlatBufferBuilder PayloadChannelNotifier::bufferBuilder;
+
 	PayloadChannelNotifier::PayloadChannelNotifier(PayloadChannel::PayloadChannelSocket* payloadChannel)
 	  : payloadChannel(payloadChannel)
 	{

@@ -492,19 +492,24 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 
 		this.#payloadChannel.on(
 			this.#internal.dataConsumerId,
-			(event: string, data: any | undefined, payload: Buffer) =>
+			(event: Event, data?: Notification) =>
 			{
 				switch (event)
 				{
-					case 'message':
+					case Event.DATACONSUMER_MESSAGE:
 					{
 						if (this.#closed)
 							break;
 
-						const ppid = data.ppid as number;
-						const message = payload;
+						const notification = new FbsDataConsumer.MessageNotification();
 
-						this.safeEmit('message', message, ppid);
+						data!.body(notification);
+
+						this.safeEmit(
+							'message',
+							Buffer.from(notification.dataArray()!),
+							notification.ppid()
+						);
 
 						break;
 					}

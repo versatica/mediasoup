@@ -131,11 +131,24 @@ export class PayloadChannel extends EnhancedEventEmitter
 					{
 						case MessageType.RESPONSE:
 						{
+							logger.warn('received RESPONSE');
 							const response = new Response();
 
 							message.data(response);
 
 							this.processResponse(response);
+
+							break;
+						}
+
+						case MessageType.NOTIFICATION:
+						{
+							logger.warn('received NOTIFICATION');
+							const notification = new Notification();
+
+							message.data(notification);
+
+							this.processNotification(notification);
 
 							break;
 						}
@@ -509,5 +522,20 @@ export class PayloadChannel extends EnhancedEventEmitter
 				'received response is not accepted nor rejected [method:%s, id:%s]',
 				sent.method, sent.id);
 		}
+	}
+
+	private processNotification(notification: Notification): void
+	{
+		// Due to how Promises work, it may happen that we receive a response
+		// from the worker followed by a notification from the worker. If we
+		// emit the notification immediately it may reach its target **before**
+		// the response, destroying the ordered delivery. So we must wait a bit
+		// here.
+		// See https://github.com/versatica/mediasoup/issues/510
+		setImmediate(() => this.emit(
+			notification.handlerId()!,
+			notification.event(),
+			notification)
+		);
 	}
 }

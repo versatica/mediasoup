@@ -16,6 +16,53 @@ namespace PayloadChannel
 		explicit PayloadChannelNotifier(PayloadChannel::PayloadChannelSocket* payloadChannel);
 
 	public:
+		static flatbuffers::FlatBufferBuilder bufferBuilder;
+
+	public:
+		flatbuffers::FlatBufferBuilder& GetBufferBuilder() const
+		{
+			return PayloadChannelNotifier::bufferBuilder;
+		}
+
+		template<class Body>
+		void Emit(
+		  const std::string& targetId,
+		  FBS::Notification::Event event,
+		  FBS::Notification::Body type,
+		  flatbuffers::Offset<Body>& body)
+		{
+			auto& builder     = PayloadChannelNotifier::bufferBuilder;
+			auto notification = FBS::Notification::CreateNotificationDirect(
+			  builder, targetId.c_str(), event, type, body.Union());
+
+			auto message = FBS::Message::CreateMessage(
+			  builder,
+			  FBS::Message::Type::NOTIFICATION,
+			  FBS::Message::Body::FBS_Notification_Notification,
+			  notification.Union());
+
+			builder.Finish(message);
+			this->payloadChannel->Send(builder.GetBufferPointer(), builder.GetSize());
+			builder.Reset();
+		}
+
+		void Emit(const std::string& targetId, FBS::Notification::Event event)
+		{
+			auto& builder = PayloadChannelNotifier::bufferBuilder;
+			auto notification =
+			  FBS::Notification::CreateNotificationDirect(builder, targetId.c_str(), event);
+
+			auto message = FBS::Message::CreateMessage(
+			  builder,
+			  FBS::Message::Type::NOTIFICATION,
+			  FBS::Message::Body::FBS_Notification_Notification,
+			  notification.Union());
+
+			builder.Finish(message);
+			this->payloadChannel->Send(builder.GetBufferPointer(), builder.GetSize());
+			builder.Reset();
+		}
+
 		void Emit(const std::string& targetId, const char* event, const uint8_t* payload, size_t payloadLen);
 		void Emit(
 		  const std::string& targetId,

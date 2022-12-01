@@ -103,6 +103,10 @@ table LayersChangeNotification {
   layers:ConsumerLayers;
 }
 
+table RtpNotification {
+  data:[ubyte] (required);
+}
+
 table ScoreNotification {
   score:ConsumerScore (required);
 }

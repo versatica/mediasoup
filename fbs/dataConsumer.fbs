@@ -35,3 +35,8 @@ table SendRequest {
 table BufferedAmountLowNotification {
   buffered_amount:uint32;
 }
+
+table MessageNotification {
+  ppid:uint32;
+  data:[ubyte] (required);
+}

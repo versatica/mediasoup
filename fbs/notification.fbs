@@ -1,6 +1,7 @@
 include "transport.fbs";
 include "webRtcTransport.fbs";
 include "plainTransport.fbs";
+include "directTransport.fbs";
 include "producer.fbs";
 include "dataProducer.fbs";
 include "dataConsumer.fbs";
@@ -23,6 +24,7 @@ enum Event: uint8 {
   WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
   PLAINTRANSPORT_TUPLE,
   PLAINTRANSPORT_RTCP_TUPLE,
+  DIRECTTRANSPORT_RTCP,
   PRODUCER_SCORE,
   PRODUCER_TRACE,
   PRODUCER_VIDEO_ORIENTATION_CHANGE,
@@ -30,11 +32,13 @@ enum Event: uint8 {
   CONSUMER_PRODUCER_RESUME,
   CONSUMER_PRODUCER_CLOSE,
   CONSUMER_LAYERS_CHANGE,
+  CONSUMER_RTP,
   CONSUMER_SCORE,
   CONSUMER_TRACE,
   DATACONSUMER_BUFFERED_AMOUNT_LOW,
   DATACONSUMER_SCTP_SENDBUFFER_FULL,
   DATACONSUMER_DATAPRODUCER_CLOSE,
+  DATACONSUMER_MESSAGE,
   ACTIVESPEAKEROBSERVER_DOMINANT_SPEAKER,
   AUDIOLEVELOBSERVER_SILENCE,
   AUDIOLEVELOBSERVER_VOLUMES,
@@ -53,12 +57,15 @@ union Body {
   FBS.WebRtcTransport.DtlsStateChangeNotification,
   FBS.PlainTransport.TupleNotification,
   FBS.PlainTransport.RtcpTupleNotification,
+  FBS.DirectTransport.RtcpNotification,
   FBS.Producer.ScoreNotification,
   FBS.Producer.TraceNotification,
   FBS.Producer.VideoOrientationChangeNotification,
   FBS.Consumer.LayersChangeNotification,
+  FBS.Consumer.RtpNotification,
   FBS.Consumer.ScoreNotification,
   FBS.Consumer.TraceNotification,
+  FBS.DataConsumer.MessageNotification,
   FBS.DataConsumer.BufferedAmountLowNotification,
   FBS.ActiveSpeakerObserver.DominantSpeakerNotification,
   FBS.AudioLevelObserver.VolumesNotification,
