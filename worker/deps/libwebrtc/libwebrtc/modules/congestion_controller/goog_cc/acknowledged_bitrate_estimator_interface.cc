@@ -29,17 +29,17 @@ RobustThroughputEstimatorSettings::RobustThroughputEstimatorSettings(
   Parser()->Parse(
       key_value_config->Lookup(RobustThroughputEstimatorSettings::kKey));
   if (window_packets < 10 || 1000 < window_packets) {
-    MS_WARN_TAG(bwe, "Window size must be between 10 and 1000 packets");
+    MS_WARN_TAG(bwe, "window size must be between 10 and 1000 packets");
     window_packets = 20;
   }
   if (max_window_packets < 10 || 1000 < max_window_packets) {
-    MS_WARN_TAG(bwe, "Max window size must be between 10 and 1000 packets");
+    MS_WARN_TAG(bwe, "max window size must be between 10 and 1000 packets");
     max_window_packets = 500;
   }
   max_window_packets = std::max(max_window_packets, window_packets);
 
   if (required_packets < 10 || 1000 < required_packets) {
-    MS_WARN_TAG(bwe, "Required number of initial packets must be between "
+    MS_WARN_TAG(bwe, "required number of initial packets must be between "
                            "10 and 1000 packets");
     required_packets = 10;
   }
@@ -47,18 +47,18 @@ RobustThroughputEstimatorSettings::RobustThroughputEstimatorSettings(
 
   if (min_window_duration < TimeDelta::Millis<100>() ||
       TimeDelta::Millis<3000>() < min_window_duration) {
-    MS_WARN_TAG(bwe, "Window duration must be between 100 and 3000 ms");
+    MS_WARN_TAG(bwe, "window duration must be between 100 and 3000 ms");
     min_window_duration = TimeDelta::Millis<750>();
   }
   if (max_window_duration < TimeDelta::Seconds<1>() ||
       TimeDelta::Seconds<15>() < max_window_duration) {
-    MS_WARN_TAG(bwe, "Max window duration must be between 1 and 15 s");
+    MS_WARN_TAG(bwe, "max window duration must be between 1 and 15 seconds");
     max_window_duration = TimeDelta::Seconds<5>();
   }
   min_window_duration = std::min(min_window_duration, max_window_duration);
 
   if (unacked_weight < 0.0 || 1.0 < unacked_weight) {
-    MS_WARN_TAG(bwe, "Weight for prior unacked size must be between 0 and 1.");
+    MS_WARN_TAG(bwe, "weight for prior unacked size must be between 0 and 1");
     unacked_weight = 1.0;
   }
 }

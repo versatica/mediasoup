@@ -120,25 +120,25 @@ TrendlineEstimatorSettings::TrendlineEstimatorSettings(
   }
   Parser()->Parse(key_value_config->Lookup(TrendlineEstimatorSettings::kKey));
   if (window_size < 10 || 200 < window_size) {
-		MS_WARN_TAG(bwe, "Window size must be between 10 and 200 packets");
+		MS_WARN_TAG(bwe, "window size must be between 10 and 200 packets");
     window_size = kDefaultTrendlineWindowSize;
   }
   if (enable_cap) {
     if (beginning_packets < 1 || end_packets < 1 ||
         beginning_packets > window_size || end_packets > window_size) {
-      MS_WARN_TAG(bwe, "Size of beginning and end must be between 1 and %d", window_size);
+      MS_WARN_TAG(bwe, "size of beginning and end must be between 1 and %d", window_size);
       enable_cap = false;
       beginning_packets = end_packets = 0;
       cap_uncertainty = 0.0;
     }
     if (beginning_packets + end_packets > window_size) {
-      MS_WARN_TAG(bwe, "Size of beginning plus end can't exceed the window size");
+      MS_WARN_TAG(bwe, "size of beginning plus end can't exceed the window size");
       enable_cap = false;
       beginning_packets = end_packets = 0;
       cap_uncertainty = 0.0;
     }
     if (cap_uncertainty < 0.0 || 0.025 < cap_uncertainty) {
-      MS_WARN_TAG(bwe, "Cap uncertainty must be between 0 and 0.025");
+      MS_WARN_TAG(bwe, "cap uncertainty must be between 0 and 0.025");
       cap_uncertainty = 0.0;
     }
   }

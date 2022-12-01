@@ -48,7 +48,7 @@ struct StreamsConfig {
   absl::optional<bool> requests_alr_probing;
   absl::optional<double> pacing_factor;
 
-  // TODO(srte): Use BitrateAllocationLimits here.
+  // TODO: (srte) Use BitrateAllocationLimits here.
   absl::optional<DataRate> min_total_allocated_bitrate;
   absl::optional<DataRate> max_padding_rate;
   absl::optional<DataRate> max_total_allocated_bitrate;

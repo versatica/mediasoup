@@ -100,7 +100,7 @@ void AlrDetector::OnBytesSent(size_t bytes_sent, int64_t send_time_ms) {
     alr_started_time_ms_.reset();
   }
   if (state_changed) {
-		MS_DEBUG_TAG(bwe, "ALR State change");
+		MS_DEBUG_TAG(bwe, "ALR state change");
   }
 }
 
@@ -109,7 +109,7 @@ void AlrDetector::SetEstimatedBitrate(int bitrate_bps) {
 
 	if (last_estimated_bitrate_ != bitrate_bps) {
 		last_estimated_bitrate_ = bitrate_bps;
-		MS_DEBUG_TAG(bwe, "Setting ALR bitrate to %d", bitrate_bps);
+		MS_DEBUG_TAG(bwe, "setting ALR bitrate to %d bps", bitrate_bps);
 		int target_rate_kbps =
 			static_cast<double>(bitrate_bps) * conf_.bandwidth_usage_ratio / 1000;
 		alr_budget_.set_target_rate_kbps(target_rate_kbps);

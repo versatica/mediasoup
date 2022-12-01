@@ -60,7 +60,7 @@ bool InterArrivalDelta::ComputeDeltas(Timestamp send_time,
 
       if (*arrival_time_delta - system_time_delta >=
           kArrivalTimeOffsetThreshold) {
-        MS_WARN_TAG(bwe, "The arrival time clock offset has changed (diff = %lld ms), resetting.",
+        MS_WARN_TAG(bwe, "the arrival time clock offset has changed (diff = %lld ms), resetting",
 					          arrival_time_delta->ms() - system_time_delta.ms());
         Reset();
         return false;
@@ -70,7 +70,7 @@ bool InterArrivalDelta::ComputeDeltas(Timestamp send_time,
         // arrival timestamp.
         ++num_consecutive_reordered_packets_;
         if (num_consecutive_reordered_packets_ >= kReorderedResetThreshold) {
-          MS_WARN_TAG(bwe, "Packets between send burst arrived out of order, resetting. arrival_time_delta %lld send time delta %lld",
+          MS_WARN_TAG(bwe, "packets between send burst arrived out of order, resetting. arrival_time_delta %lld send time delta %lld",
 						          arrival_time_delta->ms(),
 						          send_time_delta->ms());
           Reset();
