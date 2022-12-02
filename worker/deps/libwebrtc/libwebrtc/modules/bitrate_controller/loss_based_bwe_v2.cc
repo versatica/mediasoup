@@ -965,11 +965,10 @@ bool LossBasedBweV2::TrendlineEsimateAllowBitrateIncrease() const {
   }
 
   for (const auto& detector_state : delay_detector_states_) {
-/*    if (detector_state == BandwidthUsage::kBwOverusing ||
+    if (detector_state == BandwidthUsage::kBwOverusing ||
         detector_state == BandwidthUsage::kBwUnderusing) {
       return false;
-    }*/
-			if (detector_state == BandwidthUsage::kBwOverusing) return false;
+    }
   }
   return true;
 }
