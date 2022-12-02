@@ -135,7 +135,7 @@ class LossBasedBweV2 {
   double GetObjective(const ChannelParameters& channel_parameters) const;
   DataRate GetSendingRate(DataRate instantaneous_sending_rate) const;
   DataRate GetInstantUpperBound() const;
-  void CalculateInstantUpperBound();
+  void CalculateInstantUpperBound(DataRate instantaneous_sending_rate);
 
   void CalculateTemporalWeights();
   void NewtonsMethodUpdate(ChannelParameters& channel_parameters) const;

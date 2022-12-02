@@ -897,27 +897,31 @@ DataRate LossBasedBweV2::GetInstantUpperBound() const {
   return cached_instant_upper_bound_.value_or(DataRate::PlusInfinity());
 }
 
-void LossBasedBweV2::CalculateInstantUpperBound() {
+void LossBasedBweV2::CalculateInstantUpperBound(DataRate sending_rate) {
 	DataRate instant_limit = DataRate::PlusInfinity();
 	const double average_reported_loss_ratio = GetAverageReportedLossRatio();
 
 	if (average_reported_loss_ratio > config_->instant_upper_bound_loss_offset) {
-		// In case of high bitrates the value of balance (75kbps) is too small,
-		// and leads to big BW drops even in case of small loss ratio.
-		DataRate bandwidth_balance = DataRate::bps(std::max(
-			static_cast<double>(config_->instant_upper_bound_bandwidth_balance.bps()),
-			(current_estimate_.loss_limited_bandwidth.bps() / 100) * kBwBalanceMultiplicator));
+
+		DataRate bandwidth_balance = config_->instant_upper_bound_bandwidth_balance;
+
+		// MS_NOTE: In case of high sending rate the value of balance (75kbps) is too small,
+		// and leads to big BW drops even in the case of small loss ratio.
+		if (sending_rate.bps() > config_->instant_upper_bound_bandwidth_balance.bps() * 100) {
+			bandwidth_balance = DataRate::bps((sending_rate.bps() / 100) * kBwBalanceMultiplicator);
+		}
 
 		instant_limit = bandwidth_balance /
 			              (average_reported_loss_ratio -
 			               config_->instant_upper_bound_loss_offset);
 
 
-		MS_DEBUG_DEV("Instant Limit!, BW balance %" PRIi64 ", instant_limit %" PRIi64 ", average_reported_loss_ratio %f, diff: %f",
+		MS_DEBUG_DEV("Instant Limit!, BW balance %" PRIi64 ", instant_limit %" PRIi64 ", average_reported_loss_ratio %f, diff: %f, sending rate: %lld",
 			           bandwidth_balance.bps(),
 			           instant_limit.IsFinite() ? instant_limit.bps() : 0,
 			           average_reported_loss_ratio,
-			           average_reported_loss_ratio - config_->instant_upper_bound_loss_offset);
+			           average_reported_loss_ratio - config_->instant_upper_bound_loss_offset,
+			           sending_rate.bps());
 
 		if (average_reported_loss_ratio > config_->high_loss_rate_threshold) {
 			instant_limit = std::min(
@@ -961,10 +965,11 @@ bool LossBasedBweV2::TrendlineEsimateAllowBitrateIncrease() const {
   }
 
   for (const auto& detector_state : delay_detector_states_) {
-    if (detector_state == BandwidthUsage::kBwOverusing ||
+/*    if (detector_state == BandwidthUsage::kBwOverusing ||
         detector_state == BandwidthUsage::kBwUnderusing) {
       return false;
-    }
+    }*/
+			if (detector_state == BandwidthUsage::kBwOverusing) return false;
   }
   return true;
 }
@@ -1018,16 +1023,6 @@ bool LossBasedBweV2::PushBackObservation(
   const TimeDelta observation_duration =
       last_send_time - last_send_time_most_recent_observation_;
 
-	// MS_NOTE Here we reset loss estimator if there was not traffic in
-	// max_observation_duration_before_reset_, otherwise, we will stuck
-	// at low bitrate.
-	if (observation_duration > max_observation_duration_before_reset_) {
-		MS_DEBUG_TAG(bwe, "Too big observation duration, resetting stats");
-		MS_DEBUG_TAG(bwe, "Current estimate bw: %" PRIi64 ", inherent_loss: %f", current_estimate_.loss_limited_bandwidth.bps(), current_estimate_.inherent_loss);
-		Reset();
-	}
-
-
   // Too small to be meaningful.
   if (observation_duration <= TimeDelta::Zero() ||
       (observation_duration < config_->observation_duration_lower_bound &&
@@ -1043,21 +1038,30 @@ bool LossBasedBweV2::PushBackObservation(
   }
 
   last_send_time_most_recent_observation_ = last_send_time;
+	DataRate sending_rate = GetSendingRate(partial_observation_.size / observation_duration);
 
   Observation observation;
   observation.num_packets = partial_observation_.num_packets;
   observation.num_lost_packets = partial_observation_.num_lost_packets;
   observation.num_received_packets =
       observation.num_packets - observation.num_lost_packets;
-  observation.sending_rate =
-      GetSendingRate(partial_observation_.size / observation_duration);
+  observation.sending_rate = sending_rate;
   observation.id = num_observations_++;
   observations_[observation.id % config_->observation_window_size] =
       observation;
 
   partial_observation_ = PartialObservation();
 
-  CalculateInstantUpperBound();
+  CalculateInstantUpperBound(sending_rate);
+
+	// MS_NOTE Here we reset loss estimator if there was not traffic in
+	// max_observation_duration_before_reset_, otherwise, we will stuck
+	// at low bitrate.
+	if (observation_duration > max_observation_duration_before_reset_) {
+		MS_DEBUG_TAG(bwe, "Too big observation duration, resetting stats");
+		MS_DEBUG_TAG(bwe, "Current estimate bw: %" PRIi64 ", inherent_loss: %f", current_estimate_.loss_limited_bandwidth.bps(), current_estimate_.inherent_loss);
+		Reset();
+	}
   return true;
 }
 
