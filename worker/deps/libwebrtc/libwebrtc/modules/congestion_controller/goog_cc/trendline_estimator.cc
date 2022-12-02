@@ -123,6 +123,9 @@ TrendlineEstimatorSettings::TrendlineEstimatorSettings(
 		MS_WARN_TAG(bwe, "window size must be between 10 and 200 packets");
     window_size = kDefaultTrendlineWindowSize;
   }
+	MS_DEBUG_DEV(
+		"using Trendline filter for delay change estimation with window size: %zu",
+		window_size);
   if (enable_cap) {
     if (beginning_packets < 1 || end_packets < 1 ||
         beginning_packets > window_size || end_packets > window_size) {
@@ -177,9 +180,6 @@ TrendlineEstimator::TrendlineEstimator(
       hypothesis_(BandwidthUsage::kBwNormal),
       hypothesis_predicted_(BandwidthUsage::kBwNormal),
       network_state_predictor_(network_state_predictor) {
-  MS_DEBUG_DEV(
-    "using Trendline filter for delay change estimation with window size: %zu",
-    window_size_);
 }
 
 TrendlineEstimator::~TrendlineEstimator() {}
@@ -267,6 +267,9 @@ void TrendlineEstimator::Detect(double trend, double ts_delta, int64_t now_ms) {
     hypothesis_ = BandwidthUsage::kBwNormal;
     return;
   }
+
+	BandwidthUsage prev_hypothesis = hypothesis_;
+
   const double modified_trend =
       std::min(num_of_deltas_, kMinNumDeltas) * trend * threshold_gain_;
   prev_modified_trend_ = modified_trend;
@@ -287,27 +290,34 @@ void TrendlineEstimator::Detect(double trend, double ts_delta, int64_t now_ms) {
       if (trend >= prev_trend_) {
         time_over_using_ = 0;
         overuse_counter_ = 0;
-        MS_DEBUG_DEV("hypothesis_: BandwidthUsage::kBwOverusing");
 
+
+/*
 #if MS_LOG_DEV_LEVEL == 3
         for (auto& kv : delay_hist_) {
           MS_DEBUG_DEV("arrival_time_ms - first_arrival_time_ms_:%f, smoothed_delay_:%f", kv.first, kv.second);
         }
 #endif
+*/
 
         hypothesis_ = BandwidthUsage::kBwOverusing;
+				if (hypothesis_ != prev_hypothesis)
+					MS_DEBUG_DEV("hypothesis_: BandwidthUsage::kBwOverusing");
+
       }
     }
   } else if (modified_trend < -threshold_) {
     time_over_using_ = -1;
     overuse_counter_ = 0;
     hypothesis_ = BandwidthUsage::kBwUnderusing;
-    MS_DEBUG_DEV("---- BandwidthUsage::kBwUnderusing ---");
+		if (hypothesis_ != prev_hypothesis)
+    	MS_DEBUG_DEV("---- BandwidthUsage::kBwUnderusing ---");
   } else {
     time_over_using_ = -1;
     overuse_counter_ = 0;
-    MS_DEBUG_DEV("---- BandwidthUsage::kBwNormal ---");
     hypothesis_ = BandwidthUsage::kBwNormal;
+		if (hypothesis_ != prev_hypothesis)
+			MS_DEBUG_DEV("---- BandwidthUsage::kBwNormal ---");
   }
   prev_trend_ = trend;
   UpdateThreshold(modified_trend, now_ms);

@@ -449,6 +449,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
 	std::string candidate_factors_str;
 
 	MS_DEBUG_TAG(bwe, "Loss V2 settings: ");
+	MS_DEBUG_TAG(bwe, "Enabled: %d ", enabled.Get());
 	MS_DEBUG_TAG(bwe, "bandwidth_rampup_upper_bound_factor: %f ", config->bandwidth_rampup_upper_bound_factor);
 	MS_DEBUG_TAG(bwe, "rampup_acceleration_max_factor: %f ", config->rampup_acceleration_max_factor);
 	MS_DEBUG_TAG(bwe, "rampup_acceleration_maxout_time: %" PRIi64 "", config->rampup_acceleration_maxout_time.ms());
