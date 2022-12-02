@@ -104,18 +104,14 @@ AimdRateControl::AimdRateControl(const WebRtcKeyValueConfig* key_value_config,
        &ignore_network_estimate_decrease_, &increase_to_network_estimate_},
       key_value_config->Lookup("WebRTC-Bwe-EstimateBoundedIncrease"));
   // E.g
-  // WebRTC-BweAimdRateControlConfig/initial_backoff_interval:100ms,
-  // low_throughput:50kbps/
-  ParseFieldTrial({&initial_backoff_interval_, &low_throughput_threshold_},
+  // WebRTC-BweAimdRateControlConfig/initial_backoff_interval:100ms/
+  ParseFieldTrial({&initial_backoff_interval_, &link_capacity_fix_},
                   key_value_config->Lookup("WebRTC-BweAimdRateControlConfig"));
   if (initial_backoff_interval_) {
     MS_DEBUG_TAG(bwe, "Using aimd rate control with initial back-off interval: %s",
                      ToString(*initial_backoff_interval_).c_str());
   }
   MS_DEBUG_TAG(bwe, "Using aimd rate control with back off factor: %f ", beta_);
-  ParseFieldTrial(
-      {&capacity_deviation_ratio_threshold_, &capacity_limit_deviation_factor_},
-      key_value_config->Lookup("WebRTC-Bwe-AimdRateControl-NetworkState"));
 }
 
 AimdRateControl::~AimdRateControl() {}
@@ -295,7 +291,7 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
       // bitrate increases. We allow a bit more lag at very low rates to not too
       // easily get stuck if the encoder produces uneven outputs.
       DataRate increase_limit =
-          1.5 * estimated_throughput + DataRate::KilobitsPerSec(10);
+          1.5 * estimated_throughput + DataRate::kbps(10);
       if (ignore_throughput_limit_if_network_estimate_ && network_estimate_ &&
           network_estimate_->link_capacity_upper.IsFinite()) {
         // If we have a Network estimate, we do allow the estimate to increase.
