@@ -38,6 +38,7 @@ public:
 		uint16_t rtcMaxPort{ 59999u };
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
+		std::string libwebrtcFieldTrials{ "WebRTC-Bwe-AlrLimitedBackoff/Enabled/" };
 	};
 
 public:

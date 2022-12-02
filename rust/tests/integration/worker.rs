@@ -47,6 +47,8 @@ fn create_worker_succeeds() {
                     certificate: "tests/integration/data/dtls-cert.pem".into(),
                     private_key: "tests/integration/data/dtls-key.pem".into(),
                 });
+                settings.libwebrtc_field_trials =
+                    Some("WebRTC-Bwe-AlrLimitedBackoff/Disabled/".to_string());
                 settings.app_data = AppData::new(CustomAppData { bar: 456 });
 
                 settings
