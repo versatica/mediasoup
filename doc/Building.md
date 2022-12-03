@@ -73,6 +73,12 @@ Installs NPM dependencies and updates `package-lock.json`.
 Installs clang tools needed for local development.
 
 
+## Rust
+
+The only special feature in Rust case is special environment variable `KEEP_BUILD_ARTIFACTS`, that when set to `1` will allow incremental recompilation of changed C++ sources during hacking on mediasoup.
+It is not necessary for normal usage of mediasoup as a dependency.
+
+
 ## Makefile
 
 The `worker` folder contains a `Makefile` for the mediasoup-worker C++ subproject. It includes the following tasks:
