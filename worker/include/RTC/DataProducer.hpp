@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include "RTC/Shared.hpp"
@@ -14,7 +13,7 @@
 namespace RTC
 {
 	class DataProducer : public Channel::ChannelSocket::RequestHandler,
-	                     public PayloadChannel::PayloadChannelSocket::NotificationHandler
+	                     public Channel::ChannelSocket::NotificationHandler
 	{
 	public:
 		class Listener
@@ -62,9 +61,9 @@ namespace RTC
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
-		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
+		/* Methods inherited from Channel::ChannelSocket::NotificationHandler. */
 	public:
-		void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
+		void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	public:
 		// Passed by argument.

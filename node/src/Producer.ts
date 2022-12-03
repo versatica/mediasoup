@@ -1,7 +1,6 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
 import { Event, Notification } from './fbs/notification_generated';
@@ -204,9 +203,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	// Channel instance.
 	readonly #channel: Channel;
 
-	// PayloadChannel instance.
-	readonly #payloadChannel: PayloadChannel;
-
 	// Closed flag.
 	#closed = false;
 
@@ -230,7 +226,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			internal,
 			data,
 			channel,
-			payloadChannel,
 			appData,
 			paused
 		}:
@@ -238,7 +233,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			internal: ProducerInternal;
 			data: ProducerData;
 			channel: Channel;
-			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;
 			paused: boolean;
 		}
@@ -251,7 +245,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {};
 		this.#paused = paused;
 
@@ -371,7 +364,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.producerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
 
 		/* Build Request. */
 
@@ -409,7 +401,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.producerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
 
 		this.safeEmit('transportclose');
 
@@ -544,14 +535,14 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			throw new TypeError('rtpPacket must be a Buffer');
 		}
 
-		const builder = this.#payloadChannel.bufferBuilder;
+		const builder = this.#channel.bufferBuilder;
 		const dataOffset = FbsProducer.SendNotification.createDataVector(builder, rtpPacket);
 		const notificationOffset = FbsProducer.SendNotification.createSendNotification(
 			builder,
 			dataOffset
 		);
 
-		this.#payloadChannel.notify(
+		this.#channel.notify(
 			FbsNotification.Event.PRODUCER_SEND,
 			FbsNotification.Body.FBS_Producer_SendNotification,
 			notificationOffset,

@@ -55,9 +55,8 @@ test('worker.createWebRtcServer() succeeds', async () =>
 				routerIds              : [],
 				channelMessageHandlers :
 				{
-					channelRequestHandlers             : [ webRtcServer.id ],
-					payloadChannelRequestHandlers      : [],
-					payloadChannelNotificationHandlers : []
+					channelRequestHandlers      : [ webRtcServer.id ],
+					channelNotificationHandlers : []
 				}
 			});
 
@@ -130,9 +129,8 @@ test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 				routerIds              : [],
 				channelMessageHandlers :
 				{
-					channelRequestHandlers             : [ webRtcServer.id ],
-					payloadChannelRequestHandlers      : [],
-					payloadChannelNotificationHandlers : []
+					channelRequestHandlers      : [ webRtcServer.id ],
+					channelNotificationHandlers : []
 				}
 			});
 
@@ -568,9 +566,8 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 				routerIds              : [ router.id ],
 				channelMessageHandlers :
 				{
-					channelRequestHandlers             : [ router.id ],
-					payloadChannelRequestHandlers      : [],
-					payloadChannelNotificationHandlers : []
+					channelRequestHandlers      : [ router.id ],
+					channelNotificationHandlers : []
 				}
 			});
 

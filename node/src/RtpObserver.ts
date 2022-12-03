@@ -1,7 +1,6 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { RouterInternal } from './Router';
 import { Producer } from './Producer';
 import * as FbsRequest from './fbs/request_generated';
@@ -28,7 +27,6 @@ export type RtpObserverConstructorOptions =
 {
 	internal: RtpObserverObserverInternal;
 	channel: Channel;
-	payloadChannel: PayloadChannel;
 	appData?: Record<string, unknown>;
 	getProducerById: (producerId: string) => Producer | undefined;
 };
@@ -57,9 +55,6 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	// Channel instance.
 	protected readonly channel: Channel;
 
-	// PayloadChannel instance.
-	protected readonly payloadChannel: PayloadChannel;
-
 	// Closed flag.
 	#closed = false;
 
@@ -83,7 +78,6 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		{
 			internal,
 			channel,
-			payloadChannel,
 			appData,
 			getProducerById
 		}: RtpObserverConstructorOptions
@@ -95,7 +89,6 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		this.internal = internal;
 		this.channel = channel;
-		this.payloadChannel = payloadChannel;
 		this.#appData = appData || {};
 		this.getProducerById = getProducerById;
 	}
@@ -162,7 +155,6 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		// Remove notification subscriptions.
 		this.channel.removeAllListeners(this.internal.rtpObserverId);
-		this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
 
 		/* Build Request. */
 
@@ -200,7 +192,6 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		// Remove notification subscriptions.
 		this.channel.removeAllListeners(this.internal.rtpObserverId);
-		this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
 
 		this.safeEmit('routerclose');
 

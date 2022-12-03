@@ -190,26 +190,34 @@ namespace Channel
 		if (this->closed)
 			return false;
 
-		uint8_t* message{ nullptr };
-		uint32_t messageLen;
-		size_t messageCtx;
+		uint8_t* msg{ nullptr };
+		uint32_t msgLen;
+		size_t msgCtx;
 
 		// Try to read next message using `channelReadFn`, message, its length and context will be
 		// stored in provided arguments.
-		auto free = this->channelReadFn(
-		  &message, &messageLen, &messageCtx, this->uvReadHandle, this->channelReadCtx);
+		auto free = this->channelReadFn(&msg, &msgLen, &msgCtx, this->uvReadHandle, this->channelReadCtx);
 
 		// Non-null free function pointer means message was successfully read above and will need to be
 		// freed later.
 		if (free)
 		{
-			try
-			{
-				auto* request = new Channel::ChannelRequest(this, reinterpret_cast<uint8_t*>(message));
+			auto* message = FBS::Message::GetMessage(msg);
 
-				// Notify the listener.
+			// TMP: For debugging.
+			auto s = flatbuffers::FlatBufferToString(
+			  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+			MS_ERROR("%s", s.c_str());
+
+			if (message->type() == FBS::Message::Type::REQUEST)
+			{
+				ChannelRequest* request;
+
 				try
 				{
+					request = new ChannelRequest(this, message->data_as<FBS::Request::Request>());
+
+					// Notify the listener.
 					this->listener->HandleRequest(request);
 				}
 				catch (const MediaSoupTypeError& error)
@@ -221,16 +229,35 @@ namespace Channel
 					request->Error(error.what());
 				}
 
-				// Delete the Request.
-				delete request;
+				if (request)
+					delete request;
 			}
-			catch (const MediaSoupError& error)
+			else if (message->type() == FBS::Message::Type::NOTIFICATION)
 			{
-				MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
+				ChannelNotification* notification;
+
+				try
+				{
+					notification = new ChannelNotification(message->data_as<FBS::Notification::Notification>());
+
+					// Notify the listener.
+					this->listener->HandleNotification(notification);
+				}
+				catch (const MediaSoupError& error)
+				{
+					MS_ERROR("notification failed: %s", error.what());
+				}
+
+				if (notification)
+					delete notification;
+			}
+			else
+			{
+				MS_ERROR("discarding wrong PayloadChannel data");
 			}
 
 			// Message needs to be freed using stored function pointer.
-			free(message, messageLen, messageCtx);
+			free(msg, msgLen, msgCtx);
 		}
 
 		// Return `true` if something was processed.
@@ -263,15 +290,24 @@ namespace Channel
 
 	void ChannelSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, char* msg, size_t msgLen)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
-		try
+		auto* message = FBS::Message::GetMessage(msg);
+
+		// TMP: For debugging.
+		auto s = flatbuffers::FlatBufferToString(
+		  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+		MS_ERROR("%s", s.c_str());
+
+		if (message->type() == FBS::Message::Type::REQUEST)
 		{
-			auto* request = new Channel::ChannelRequest(this, reinterpret_cast<uint8_t*>(msg));
+			ChannelRequest* request;
 
-			// Notify the listener.
 			try
 			{
+				request = new ChannelRequest(this, message->data_as<FBS::Request::Request>());
+
+				// Notify the listener.
 				this->listener->HandleRequest(request);
 			}
 			catch (const MediaSoupTypeError& error)
@@ -283,12 +319,31 @@ namespace Channel
 				request->Error(error.what());
 			}
 
-			// Delete the Request.
-			delete request;
+			if (request)
+				delete request;
 		}
-		catch (const MediaSoupError& error)
+		else if (message->type() == FBS::Message::Type::NOTIFICATION)
 		{
-			MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
+			ChannelNotification* notification;
+
+			try
+			{
+				notification = new ChannelNotification(message->data_as<FBS::Notification::Notification>());
+
+				// Notify the listener.
+				this->listener->HandleNotification(notification);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR("notification failed: %s", error.what());
+			}
+
+			if (notification)
+				delete notification;
+		}
+		else
+		{
+			MS_ERROR("discarding wrong Channel data");
 		}
 	}
 

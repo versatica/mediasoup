@@ -1,7 +1,6 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
 import { Event, Notification } from './fbs/notification_generated';
@@ -110,9 +109,6 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	// Channel instance.
 	readonly #channel: Channel;
 
-	// PayloadChannel instance.
-	readonly #payloadChannel: PayloadChannel;
-
 	// Closed flag.
 	#closed = false;
 
@@ -130,14 +126,12 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			internal,
 			data,
 			channel,
-			payloadChannel,
 			appData
 		}:
 		{
 			internal: DataConsumerInternal;
 			data: DataConsumerData;
 			channel: Channel;
-			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;
 		}
 	)
@@ -149,7 +143,6 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {};
 
 		this.handleWorkerNotifications();
@@ -249,7 +242,6 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.dataConsumerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
 
 		/* Build Request. */
 
@@ -287,7 +279,6 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.dataConsumerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
 
 		this.safeEmit('transportclose');
 
@@ -400,7 +391,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		else if (ppid === 57)
 			message = Buffer.alloc(1);
 
-		const builder = this.#payloadChannel.bufferBuilder;
+		const builder = this.#channel.bufferBuilder;
 		const dataOffset = builder.createString(message);
 		const requestOffset = FbsDataConsumer.SendRequest.createSendRequest(
 			builder,
@@ -408,7 +399,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			dataOffset
 		);
 
-		await this.#payloadChannel.request(
+		await this.#channel.request(
 			FbsRequest.Method.DATA_CONSUMER_SEND,
 			FbsRequest.Body.FBS_DataConsumer_SendRequest,
 			requestOffset,
@@ -452,7 +443,6 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 
 					// Remove notification subscriptions.
 					this.#channel.removeAllListeners(this.#internal.dataConsumerId);
-					this.#payloadChannel.removeAllListeners(this.#internal.dataConsumerId);
 
 					this.emit('@dataproducerclose');
 					this.safeEmit('dataproducerclose');
@@ -483,43 +473,30 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 					break;
 				}
 
+				case Event.DATACONSUMER_MESSAGE:
+				{
+					if (this.#closed)
+						break;
+
+					const notification = new FbsDataConsumer.MessageNotification();
+
+					data!.body(notification);
+
+					this.safeEmit(
+						'message',
+						Buffer.from(notification.dataArray()!),
+						notification.ppid()
+					);
+
+					break;
+				}
+
 				default:
 				{
 					logger.error('ignoring unknown event "%s" in channel listener', event);
 				}
 			}
 		});
-
-		this.#payloadChannel.on(
-			this.#internal.dataConsumerId,
-			(event: Event, data?: Notification) =>
-			{
-				switch (event)
-				{
-					case Event.DATACONSUMER_MESSAGE:
-					{
-						if (this.#closed)
-							break;
-
-						const notification = new FbsDataConsumer.MessageNotification();
-
-						data!.body(notification);
-
-						this.safeEmit(
-							'message',
-							Buffer.from(notification.dataArray()!),
-							notification.ppid()
-						);
-
-						break;
-					}
-
-					default:
-					{
-						logger.error('ignoring unknown event "%s" in payload channel listener', event);
-					}
-				}
-			});
 	}
 }
 

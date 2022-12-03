@@ -4,7 +4,6 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { InvalidStateError } from './errors';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { Transport, TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions, parseWebRtcTransportDump } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions, parsePlainTransportDump } from './PlainTransport';
@@ -144,9 +143,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	// Channel instance.
 	readonly #channel: Channel;
 
-	// PayloadChannel instance.
-	readonly #payloadChannel: PayloadChannel;
-
 	// Closed flag.
 	#closed = false;
 
@@ -181,14 +177,12 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			internal,
 			data,
 			channel,
-			payloadChannel,
 			appData
 		}:
 		{
 			internal: RouterInternal;
 			data: any;
 			channel: Channel;
-			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;
 		}
 	)
@@ -200,7 +194,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {};
 	}
 
@@ -523,7 +516,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 				},
 				data                     : webRtcTransportData,
 				channel                  : this.#channel,
-				payloadChannel           : this.#payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this.#data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer | undefined => (
@@ -659,7 +651,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 				},
 				data                     : plainTransportData,
 				channel                  : this.#channel,
-				payloadChannel           : this.#payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this.#data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer | undefined => (
@@ -788,7 +779,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 				},
 				data                     : plainTransportData,
 				channel                  : this.#channel,
-				payloadChannel           : this.#payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this.#data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer | undefined => (
@@ -889,7 +879,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 				},
 				data                     : directTransportData,
 				channel                  : this.#channel,
-				payloadChannel           : this.#payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this.#data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer | undefined => (
@@ -1254,7 +1243,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 					rtpObserverId : rtpObserverId
 				},
 				channel         : this.#channel,
-				payloadChannel  : this.#payloadChannel,
 				appData,
 				getProducerById : (producerId: string): Producer | undefined => (
 					this.#producers.get(producerId)
@@ -1327,7 +1315,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 					rtpObserverId : rtpObserverId
 				},
 				channel         : this.#channel,
-				payloadChannel  : this.#payloadChannel,
 				appData,
 				getProducerById : (producerId: string): Producer | undefined => (
 					this.#producers.get(producerId)

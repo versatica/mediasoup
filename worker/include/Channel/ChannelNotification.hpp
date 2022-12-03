@@ -1,14 +1,14 @@
-#ifndef MS_PAYLOAD_CHANNEL_NOTIFICATION_HPP
-#define MS_PAYLOAD_CHANNEL_NOTIFICATION_HPP
+#ifndef MS_CHANNEL_NOTIFICATION_HPP
+#define MS_CHANNEL_NOTIFICATION_HPP
 
 #include "common.hpp"
 #include "FBS/notification_generated.h"
 #include <absl/container/flat_hash_map.h>
 #include <string>
 
-namespace PayloadChannel
+namespace Channel
 {
-	class PayloadChannelNotification
+	class ChannelNotification
 	{
 	public:
 		using Event = FBS::Notification::Event;
@@ -20,12 +20,11 @@ namespace PayloadChannel
 		static absl::flat_hash_map<FBS::Notification::Event, const char*> event2String;
 
 	public:
-		PayloadChannelNotification(const char* msg, size_t msgLen);
-		PayloadChannelNotification(const FBS::Notification::Notification* notification);
-		virtual ~PayloadChannelNotification();
+		ChannelNotification(const FBS::Notification::Notification* notification);
+		virtual ~ChannelNotification();
 
 	public:
-		void SetPayload(const uint8_t* payload, size_t payloadLen);
+		void Set(const uint8_t* payload, size_t payloadLen);
 
 	public:
 		// Passed by argument.
@@ -35,6 +34,6 @@ namespace PayloadChannel
 		std::string handlerId;
 		const FBS::Notification::Notification* data{ nullptr };
 	};
-} // namespace PayloadChannel
+} // namespace Channel
 
 #endif

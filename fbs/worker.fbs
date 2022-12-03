@@ -4,8 +4,7 @@ namespace FBS.Worker;
 
 table ChannelMessageHandlers {
   channel_request_handlers:[string];
-  payload_channel_request_handlers:[string];
-  payload_channel_notification_handlers:[string];
+  channel_notification_handlers:[string];
 }
 
 table DumpResponse {

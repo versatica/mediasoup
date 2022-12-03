@@ -2,6 +2,7 @@
 #define MS_CHANNEL_SOCKET_HPP
 
 #include "common.hpp"
+#include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocket.hpp"
 #include <string>
@@ -62,7 +63,16 @@ namespace Channel
 			virtual void HandleRequest(Channel::ChannelRequest* request) = 0;
 		};
 
-		class Listener : public RequestHandler
+		class NotificationHandler
+		{
+		public:
+			virtual ~NotificationHandler() = default;
+
+		public:
+			virtual void HandleNotification(Channel::ChannelNotification* notification) = 0;
+		};
+
+		class Listener : public RequestHandler, public NotificationHandler
 		{
 		public:
 			virtual ~Listener() = default;

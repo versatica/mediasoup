@@ -6,7 +6,6 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { Event } from './fbs/notification_generated';
@@ -177,8 +176,7 @@ export type WorkerDump =
 	routerIds : string[];
 	channelMessageHandlers : {
 		channelRequestHandlers : string[];
-		payloadChannelRequestHandlers : string[];
-		payloadNotificationHandlers : string[];
+		channelNotificationHandlers : string[];
 	};
 };
 
@@ -219,9 +217,6 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 	// Channel instance.
 	readonly #channel: Channel;
-
-	// PayloadChannel instance.
-	readonly #payloadChannel: PayloadChannel;
 
 	// Closed flag.
 	#closed = false;
@@ -321,9 +316,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 				// fd 2 (stderr)  : Same as stdout.
 				// fd 3 (channel) : Producer Channel fd.
 				// fd 4 (channel) : Consumer Channel fd.
-				// fd 5 (channel) : Producer PayloadChannel fd.
-				// fd 6 (channel) : Consumer PayloadChannel fd.
-				stdio       : [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe' ],
+				stdio       : [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe' ],
 				windowsHide : true
 			});
 
@@ -334,15 +327,6 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 				producerSocket : this.#child.stdio[3],
 				consumerSocket : this.#child.stdio[4],
 				pid            : this.#pid
-			});
-
-		this.#payloadChannel = new PayloadChannel(
-			{
-				// NOTE: TypeScript does not like more than 5 fds.
-				// @ts-ignore
-				producerSocket : this.#child.stdio[5],
-				// @ts-ignore
-				consumerSocket : this.#child.stdio[6]
 			});
 
 		this.#appData = appData || {};
@@ -538,9 +522,6 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		// Close the Channel instance.
 		this.#channel.close();
 
-		// Close the PayloadChannel instance.
-		this.#payloadChannel.close();
-
 		// Close every Router.
 		for (const router of this.#routers)
 		{
@@ -734,7 +715,6 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 				},
 				data,
 				channel        : this.#channel,
-				payloadChannel : this.#payloadChannel,
 				appData
 			});
 
@@ -759,9 +739,6 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		// Close the Channel instance.
 		this.#channel.close();
-
-		// Close the PayloadChannel instance.
-		this.#payloadChannel.close();
 
 		// Close every Router.
 		for (const router of this.#routers)

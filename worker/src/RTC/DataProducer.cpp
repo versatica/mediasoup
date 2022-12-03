@@ -56,8 +56,7 @@ namespace RTC
 		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
-		  /*payloadChannelRequestHandler*/ nullptr,
-		  /*payloadChannelNotificationHandler*/ this);
+		  /*channelNotificationHandler*/ this);
 	}
 
 	DataProducer::~DataProducer()
@@ -153,13 +152,13 @@ namespace RTC
 		}
 	}
 
-	void DataProducer::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
+	void DataProducer::HandleNotification(Channel::ChannelNotification* notification)
 	{
 		MS_TRACE();
 
 		switch (notification->event)
 		{
-			case PayloadChannel::PayloadChannelNotification::Event::DATA_PRODUCER_SEND:
+			case Channel::ChannelNotification::Event::DATA_PRODUCER_SEND:
 			{
 				auto body = notification->data->body_as<FBS::DataProducer::SendNotification>();
 				auto len  = body->data()->size();

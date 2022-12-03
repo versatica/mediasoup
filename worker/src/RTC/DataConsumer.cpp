@@ -60,8 +60,7 @@ namespace RTC
 		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
-		  /*payloadChannelRequestHandler*/ this,
-		  /*payloadChannelNotificationHandler*/ nullptr);
+		  /*channelNotificationHandler*/ nullptr);
 	}
 
 	DataConsumer::~DataConsumer()
@@ -208,20 +207,7 @@ namespace RTC
 				break;
 			}
 
-			default:
-			{
-				MS_THROW_ERROR("unknown method '%s'", request->methodStr.c_str());
-			}
-		}
-	}
-
-	void DataConsumer::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
-	{
-		MS_TRACE();
-
-		switch (request->method)
-		{
-			case PayloadChannel::PayloadChannelRequest::Method::DATA_CONSUMER_SEND:
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_SEND:
 			{
 				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
 				{

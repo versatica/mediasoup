@@ -1370,20 +1370,7 @@ namespace RTC
 		}
 	}
 
-	void Transport::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
-	{
-		MS_TRACE();
-
-		switch (request->method)
-		{
-			default:
-			{
-				MS_THROW_ERROR("unknown method '%s'", request->methodStr.c_str());
-			}
-		}
-	}
-
-	void Transport::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
+	void Transport::HandleNotification(Channel::ChannelNotification* notification)
 	{
 		MS_TRACE();
 

@@ -5,7 +5,6 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as utils from './utils';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { RouterInternal } from './Router';
 import { WebRtcTransportData } from './WebRtcTransport';
 import { PlainTransportData } from './PlainTransport';
@@ -127,7 +126,6 @@ export type TransportConstructorOptions =
 	internal: TransportInternal;
 	data: TransportData;
 	channel: Channel;
-	payloadChannel: PayloadChannel;
 	appData?: Record<string, unknown>;
 	getRouterRtpCapabilities: () => RtpCapabilities;
 	getProducerById: (producerId: string) => Producer | undefined;
@@ -188,9 +186,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 	// Channel instance.
 	protected readonly channel: Channel;
 
-	// PayloadChannel instance.
-	protected readonly payloadChannel: PayloadChannel;
-
 	// Close flag.
 	#closed = false;
 
@@ -243,7 +238,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			internal,
 			data,
 			channel,
-			payloadChannel,
 			appData,
 			getRouterRtpCapabilities,
 			getProducerById,
@@ -258,7 +252,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		this.internal = internal;
 		this.#data = data;
 		this.channel = channel;
-		this.payloadChannel = payloadChannel;
 		this.#appData = appData || {};
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
@@ -328,7 +321,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		// Remove notification subscriptions.
 		this.channel.removeAllListeners(this.internal.transportId);
-		this.payloadChannel.removeAllListeners(this.internal.transportId);
 
 		/* Build Request. */
 
@@ -401,7 +393,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		// Remove notification subscriptions.
 		this.channel.removeAllListeners(this.internal.transportId);
-		this.payloadChannel.removeAllListeners(this.internal.transportId);
 
 		// Close every Producer.
 		for (const producer of this.#producers.values())
@@ -460,7 +451,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		// Remove notification subscriptions.
 		this.channel.removeAllListeners(this.internal.transportId);
-		this.payloadChannel.removeAllListeners(this.internal.transportId);
 
 		// Close every Producer.
 		for (const producer of this.#producers.values())
@@ -696,7 +686,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 				},
 				data,
 				channel        : this.channel,
-				payloadChannel : this.payloadChannel,
 				appData,
 				paused
 			});
@@ -819,7 +808,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 				},
 				data,
 				channel         : this.channel,
-				payloadChannel  : this.payloadChannel,
 				appData,
 				paused          : status.paused,
 				producerPaused  : status.producerPaused,
@@ -920,7 +908,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 				},
 				data,
 				channel        : this.channel,
-				payloadChannel : this.payloadChannel,
 				appData
 			});
 
@@ -1044,7 +1031,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 				},
 				data,
 				channel        : this.channel,
-				payloadChannel : this.payloadChannel,
 				appData
 			});
 

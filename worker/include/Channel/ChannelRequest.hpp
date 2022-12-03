@@ -27,7 +27,7 @@ namespace Channel
 		static flatbuffers::FlatBufferBuilder bufferBuilder;
 
 	public:
-		ChannelRequest(Channel::ChannelSocket* channel, const uint8_t* msg);
+		ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request);
 		virtual ~ChannelRequest();
 
 		flatbuffers::FlatBufferBuilder& GetBufferBuilder()

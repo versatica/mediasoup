@@ -5,9 +5,6 @@
 #include "FBS/worker_generated.h"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "PayloadChannel/PayloadChannelNotification.hpp"
-#include "PayloadChannel/PayloadChannelRequest.hpp"
-#include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/Router.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/WebRtcServer.hpp"
@@ -17,12 +14,11 @@
 #include <string>
 
 class Worker : public Channel::ChannelSocket::Listener,
-               public PayloadChannel::PayloadChannelSocket::Listener,
                public SignalsHandler::Listener,
                public RTC::Router::Listener
 {
 public:
-	explicit Worker(Channel::ChannelSocket* channel, PayloadChannel::PayloadChannelSocket* payloadChannel);
+	explicit Worker(Channel::ChannelSocket* channel);
 	~Worker();
 
 private:
@@ -39,22 +35,11 @@ private:
 	/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 public:
 	void HandleRequest(Channel::ChannelRequest* request) override;
+	void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	/* Methods inherited from Channel::ChannelSocket::Listener. */
 public:
 	void OnChannelClosed(Channel::ChannelSocket* channel) override;
-
-	/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
-public:
-	void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
-
-	/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
-public:
-	void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
-
-	/* Methods inherited from PayloadChannel::PayloadChannelSocket::Listener. */
-public:
-	void OnPayloadChannelClosed(PayloadChannel::PayloadChannelSocket* payloadChannel) override;
 
 	/* Methods inherited from SignalsHandler::Listener. */
 public:
@@ -67,7 +52,6 @@ public:
 private:
 	// Passed by argument.
 	Channel::ChannelSocket* channel{ nullptr };
-	PayloadChannel::PayloadChannelSocket* payloadChannel{ nullptr };
 	// Allocated by this.
 	SignalsHandler* signalsHandler{ nullptr };
 	RTC::Shared* shared{ nullptr };

@@ -1,7 +1,6 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { ProducerStat } from './Producer';
 import {
@@ -303,9 +302,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	// Channel instance.
 	readonly #channel: Channel;
 
-	// PayloadChannel instance.
-	#payloadChannel: PayloadChannel;
-
 	// Closed flag.
 	#closed = false;
 
@@ -341,7 +337,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			internal,
 			data,
 			channel,
-			payloadChannel,
 			appData,
 			paused,
 			producerPaused,
@@ -352,7 +347,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			internal: ConsumerInternal;
 			data: ConsumerData;
 			channel: Channel;
-			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;
 			paused: boolean;
 			producerPaused: boolean;
@@ -367,7 +361,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {};
 		this.#paused = paused;
 		this.#producerPaused = producerPaused;
@@ -520,7 +513,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.consumerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
 
 		/* Build Request. */
 
@@ -558,7 +550,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.consumerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
 
 		this.safeEmit('transportclose');
 
@@ -813,7 +804,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 					// Remove notification subscriptions.
 					this.#channel.removeAllListeners(this.#internal.consumerId);
-					this.#payloadChannel.removeAllListeners(this.#internal.consumerId);
 
 					this.emit('@producerclose');
 					this.safeEmit('producerclose');
@@ -919,39 +909,26 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 					break;
 				}
 
+				case Event.CONSUMER_RTP:
+				{
+					if (this.#closed)
+						break;
+
+					const notification = new FbsConsumer.RtpNotification();
+
+					data!.body(notification);
+
+					this.safeEmit('rtp', Buffer.from(notification.dataArray()!));
+
+					break;
+				}
+
 				default:
 				{
 					logger.error('ignoring unknown event "%s"', event);
 				}
 			}
 		});
-
-		this.#payloadChannel.on(
-			this.#internal.consumerId,
-			(event: Event, data?: Notification) =>
-			{
-				switch (event)
-				{
-					case Event.CONSUMER_RTP:
-					{
-						if (this.#closed)
-							break;
-
-						const notification = new FbsConsumer.RtpNotification();
-
-						data!.body(notification);
-
-						this.safeEmit('rtp', Buffer.from(notification.dataArray()!));
-
-						break;
-					}
-
-					default:
-					{
-						logger.error('ignoring unknown event "%s"', event);
-					}
-				}
-			});
 	}
 }
 

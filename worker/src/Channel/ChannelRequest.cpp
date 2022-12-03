@@ -69,6 +69,7 @@ namespace Channel
 		{ FBS::Request::Method::DATA_CONSUMER_GET_STATS,                         "dataConsumer.getStats"                      },
 		{ FBS::Request::Method::DATA_CONSUMER_GET_BUFFERED_AMOUNT,               "dataConsumer.getBufferedAmount"             },
 		{ FBS::Request::Method::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD, "dataConsumer.setBufferedAmountLowThreshold" },
+		{ FBS::Request::Method::DATA_CONSUMER_SEND,                              "dataConsumer.send"                          },
 		{ FBS::Request::Method::RTP_OBSERVER_PAUSE,                              "rtpObserver.pause"                          },
 		{ FBS::Request::Method::RTP_OBSERVER_RESUME,                             "rtpObserver.resume"                         },
 		{ FBS::Request::Method::RTP_OBSERVER_ADD_PRODUCER,                       "rtpObserver.addProducer"                    },
@@ -84,20 +85,14 @@ namespace Channel
 	/**
 	 * msg contains the request flatbuffer.
 	 */
-	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, const uint8_t* msg)
+	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request)
 	  : channel(channel)
 	{
 		MS_TRACE();
 
-		// TMP: For debugging.
-		auto s = flatbuffers::FlatBufferToString(msg, FBS::Request::RequestTypeTable());
-		// TODO: Fails when consuming from a PIPE transport.
-		MS_ERROR("%s", s.c_str());
-
-		this->data = FBS::Request::GetRequest(msg);
-
-		this->id        = this->data->id();
-		this->method    = this->data->method();
+		this->data      = request;
+		this->id        = request->id();
+		this->method    = request->method();
 		this->methodStr = method2String[this->method];
 
 		// Handler ID is optional.

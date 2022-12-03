@@ -11,20 +11,15 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Channel/ChannelNotifier.hpp"
-#include "PayloadChannel/PayloadChannelNotifier.hpp"
 
 /* Instance methods. */
 
-Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannelSocket* payloadChannel)
-  : channel(channel), payloadChannel(payloadChannel)
+Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 {
 	MS_TRACE();
 
 	// Set us as Channel's listener.
 	this->channel->SetListener(this);
-
-	// Set us as PayloadChannel's listener.
-	this->payloadChannel->SetListener(this);
 
 	// Set the SignalHandler.
 	this->signalsHandler = new SignalsHandler(this);
@@ -32,8 +27,7 @@ Worker::Worker(::Channel::ChannelSocket* channel, PayloadChannel::PayloadChannel
 	// Set up the RTC::Shared singleton.
 	this->shared = new RTC::Shared(
 	  /*channelMessageRegistrator*/ new ChannelMessageRegistrator(),
-	  /*channelNotifier*/ new Channel::ChannelNotifier(this->channel),
-	  /*payloadChannelNotifier*/ new PayloadChannel::PayloadChannelNotifier(this->payloadChannel));
+	  /*channelNotifier*/ new Channel::ChannelNotifier(this->channel));
 
 #ifdef MS_EXECUTABLE
 	{
@@ -101,9 +95,6 @@ void Worker::Close()
 
 	// Close the Channel.
 	this->channel->Close();
-
-	// Close the PayloadChannel.
-	this->payloadChannel->Close();
 }
 
 flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
@@ -417,67 +408,21 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 	}
 }
 
-inline void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
-{
-	MS_TRACE_STD();
-
-	// Only needed for executable, library user can close channel earlier and it is fine.
-#ifdef MS_EXECUTABLE
-	// If the pipe is remotely closed it may mean that mediasoup Node process
-	// abruptly died (SIGKILL?) so we must die.
-	MS_ERROR_STD("channel remotely closed, closing myself");
-#endif
-
-	Close();
-}
-
-inline void Worker::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
+inline void Worker::HandleNotification(Channel::ChannelNotification* notification)
 {
 	MS_TRACE();
 
-	MS_DEBUG_DEV(
-	  "PayloadChannel request received [method:%s, id:%" PRIu32 "]",
-	  request->methodStr.c_str(),
-	  request->id);
+	MS_DEBUG_DEV("Channel notification received [event:%s]", notification->event.c_str());
 
 	try
 	{
 		auto* handler =
-		  this->shared->channelMessageRegistrator->GetPayloadChannelRequestHandler(request->handlerId);
+		  this->shared->channelMessageRegistrator->GetChannelNotificationHandler(notification->handlerId);
 
 		if (handler == nullptr)
 		{
 			MS_THROW_ERROR(
-			  "PayloadChannel request handler with ID %s not found", request->handlerId.c_str());
-		}
-
-		handler->HandleRequest(request);
-	}
-	catch (const MediaSoupTypeError& error)
-	{
-		MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
-	}
-	catch (const MediaSoupError& error)
-	{
-		MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
-	}
-}
-
-inline void Worker::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
-{
-	MS_TRACE();
-
-	MS_DEBUG_DEV("PayloadChannel notification received [event:%s]", notification->event.c_str());
-
-	try
-	{
-		auto* handler = this->shared->channelMessageRegistrator->GetPayloadChannelNotificationHandler(
-		  notification->handlerId);
-
-		if (handler == nullptr)
-		{
-			MS_THROW_ERROR(
-			  "PayloadChannel notification handler with ID %s not found", notification->handlerId.c_str());
+			  "Channel notification handler with ID %s not found", notification->handlerId.c_str());
 		}
 
 		handler->HandleNotification(notification);
@@ -492,15 +437,15 @@ inline void Worker::HandleNotification(PayloadChannel::PayloadChannelNotificatio
 	}
 }
 
-inline void Worker::OnPayloadChannelClosed(PayloadChannel::PayloadChannelSocket* /*payloadChannel*/)
+inline void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
 {
-	MS_TRACE();
+	MS_TRACE_STD();
 
 	// Only needed for executable, library user can close channel earlier and it is fine.
 #ifdef MS_EXECUTABLE
 	// If the pipe is remotely closed it may mean that mediasoup Node process
 	// abruptly died (SIGKILL?) so we must die.
-	MS_ERROR_STD("payloadChannel remotely closed, closing myself");
+	MS_ERROR_STD("channel remotely closed, closing myself");
 #endif
 
 	Close();

@@ -395,7 +395,6 @@ export class PipeTransport
 				},
 				data,
 				channel        : this.channel,
-				payloadChannel : this.payloadChannel,
 				appData,
 				paused         : status.paused,
 				producerPaused : status.producerPaused

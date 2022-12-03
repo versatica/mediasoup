@@ -132,9 +132,8 @@ test('worker.dump() succeeds', async () =>
 				routerIds              : [],
 				channelMessageHandlers :
 				{
-					channelRequestHandlers             : [],
-					payloadChannelRequestHandlers      : [],
-					payloadChannelNotificationHandlers : []
+					channelRequestHandlers      : [],
+					channelNotificationHandlers : []
 				}
 			});
 

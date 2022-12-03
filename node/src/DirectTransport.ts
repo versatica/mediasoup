@@ -3,13 +3,15 @@ import { UnsupportedError } from './errors';
 import {
 	BaseTransportDump,
 	parseBaseTransportDump,
+	parseTransportTraceEventData,
 	Transport,
-	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
 	TransportConstructorOptions
 } from './Transport';
 import { SctpParameters } from './SctpParameters';
+import { Event, Notification } from './fbs/notification_generated';
+import * as FbsDirectTransport from './fbs/directTransport_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsNotification from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
@@ -215,7 +217,7 @@ export class DirectTransport extends
 			throw new TypeError('rtcpPacket must be a Buffer');
 		}
 
-		const builder = this.payloadChannel.bufferBuilder;
+		const builder = this.channel.bufferBuilder;
 		const dataOffset =
 			FbsTransport.SendRtcpNotification.createDataVector(builder, rtcpPacket);
 		const notificationOffset =
@@ -224,7 +226,7 @@ export class DirectTransport extends
 				dataOffset
 			);
 
-		this.payloadChannel.notify(
+		this.channel.notify(
 			FbsNotification.Event.TRANSPORT_SEND_RTCP,
 			FbsNotification.Body.FBS_Transport_SendRtcpNotification,
 			notificationOffset,
@@ -235,18 +237,36 @@ export class DirectTransport extends
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case 'trace':
+				case Event.TRANSPORT_TRACE:
 				{
-					const trace = data as TransportTraceEventData;
+					const notification = new FbsTransport.TraceNotification();
+
+					data!.body(notification);
+
+					const trace = parseTransportTraceEventData(notification);
 
 					this.safeEmit('trace', trace);
 
 					// Emit observer event.
 					this.observer.safeEmit('trace', trace);
+
+					break;
+				}
+
+				case Event.DIRECTTRANSPORT_RTCP:
+				{
+					if (this.closed)
+						break;
+
+					const notification = new FbsDirectTransport.RtcpNotification();
+
+					data!.body(notification);
+
+					this.safeEmit('rtcp', Buffer.from(notification.dataArray()!));
 
 					break;
 				}
@@ -257,31 +277,6 @@ export class DirectTransport extends
 				}
 			}
 		});
-
-		this.payloadChannel.on(
-			this.internal.transportId,
-			(event: string, data: any | undefined, payload: Buffer) =>
-			{
-				switch (event)
-				{
-					case 'rtcp':
-					{
-						if (this.closed)
-							break;
-
-						const packet = payload;
-
-						this.safeEmit('rtcp', packet);
-
-						break;
-					}
-
-					default:
-					{
-						logger.error('ignoring unknown event "%s"', event);
-					}
-				}
-			});
 	}
 }
 

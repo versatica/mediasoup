@@ -1,7 +1,6 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
 import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
 import * as FbsTransport from './fbs/transport_generated';
@@ -95,9 +94,6 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	// Channel instance.
 	readonly #channel: Channel;
 
-	// PayloadChannel instance.
-	readonly #payloadChannel: PayloadChannel;
-
 	// Closed flag.
 	#closed = false;
 
@@ -115,14 +111,12 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 			internal,
 			data,
 			channel,
-			payloadChannel,
 			appData
 		}:
 		{
 			internal: DataProducerInternal;
 			data: DataProducerData;
 			channel: Channel;
-			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;
 		}
 	)
@@ -134,7 +128,6 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {};
 
 		this.handleWorkerNotifications();
@@ -226,7 +219,6 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.dataProducerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
 
 		/* Build Request. */
 
@@ -264,7 +256,6 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.dataProducerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
 
 		this.safeEmit('transportclose');
 
@@ -355,7 +346,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		else if (ppid === 57)
 			message = Buffer.alloc(1);
 
-		const builder = this.#payloadChannel.bufferBuilder;
+		const builder = this.#channel.bufferBuilder;
 		const dataOffset = builder.createString(message);
 		const notificationOffset = FbsDataProducer.SendNotification.createSendNotification(
 			builder,
@@ -363,7 +354,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 			dataOffset
 		);
 
-		this.#payloadChannel.notify(
+		this.#channel.notify(
 			FbsNotification.Event.DATA_PRODUCER_SEND,
 			FbsNotification.Body.FBS_DataProducer_SendNotification,
 			notificationOffset,

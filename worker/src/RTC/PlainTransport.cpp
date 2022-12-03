@@ -130,8 +130,7 @@ namespace RTC
 			this->shared->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
-			  /*payloadChannelRequestHandler*/ this,
-			  /*payloadChannelNotificationHandler*/ this);
+			  /*channelNotificationHandler*/ this);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -602,7 +601,7 @@ namespace RTC
 		}
 	}
 
-	void PlainTransport::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
+	void PlainTransport::HandleNotification(Channel::ChannelNotification* notification)
 	{
 		MS_TRACE();
 

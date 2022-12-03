@@ -68,9 +68,8 @@ test('worker.createRouter() succeeds', async () =>
 				routerIds              : [ router.id ],
 				channelMessageHandlers :
 				{
-					channelRequestHandlers             : [ router.id ],
-					payloadChannelRequestHandlers      : [],
-					payloadChannelNotificationHandlers : []
+					channelRequestHandlers      : [ router.id ],
+					channelNotificationHandlers : []
 				}
 			});
 

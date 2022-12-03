@@ -1,17 +1,17 @@
-#define MS_CLASS "PayloadChannel::PayloadChannelNotification"
+#define MS_CLASS "Channel::ChannelNotification"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "PayloadChannel/PayloadChannelNotification.hpp"
+#include "Channel/ChannelNotification.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 
-namespace PayloadChannel
+namespace Channel
 {
 	/* Class variables. */
 
 	// clang-format off
-	absl::flat_hash_map<FBS::Notification::Event, const char*> PayloadChannelNotification::event2String =
+	absl::flat_hash_map<FBS::Notification::Event, const char*> ChannelNotification::event2String =
 	{
 		{ FBS::Notification::Event::TRANSPORT_SEND_RTCP, "transport.sendRtcp" },
 		{ FBS::Notification::Event::PRODUCER_SEND,       "producer.send" },
@@ -19,12 +19,11 @@ namespace PayloadChannel
 	};
 	// clang-format on
 
-	flatbuffers::FlatBufferBuilder PayloadChannelNotification::bufferBuilder;
+	flatbuffers::FlatBufferBuilder ChannelNotification::bufferBuilder;
 
 	/* Instance methods. */
 
-	PayloadChannelNotification::PayloadChannelNotification(
-	  const FBS::Notification::Notification* notification)
+	ChannelNotification::ChannelNotification(const FBS::Notification::Notification* notification)
 	{
 		MS_TRACE();
 
@@ -37,8 +36,8 @@ namespace PayloadChannel
 			this->handlerId = this->data->handlerId()->str();
 	}
 
-	PayloadChannelNotification::~PayloadChannelNotification()
+	ChannelNotification::~ChannelNotification()
 	{
 		MS_TRACE();
 	}
-} // namespace PayloadChannel
+} // namespace Channel

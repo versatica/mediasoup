@@ -6,8 +6,8 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request_generated';
 import { Response } from './fbs/response_generated';
-import { Message, Type as MessageType } from './fbs/message_generated';
-import { Notification } from './fbs/notification_generated';
+import { Message, Type as MessageType, Body as MessageBody } from './fbs/message_generated';
+import { Notification, Body as NotificationBody, Event } from './fbs/notification_generated';
 import { Log } from './fbs/log_generated';
 
 const littleEndian = os.endianness() == 'LE';
@@ -270,6 +270,74 @@ export class Channel extends EnhancedEventEmitter
 		}, 200);
 	}
 
+	/**
+	 * @private
+	 */
+	notify(
+		event: Event,
+		bodyType?: NotificationBody,
+		bodyOffset?: number,
+		handlerId?: string
+	): void
+	{
+		logger.debug('notify() [event:%s]', Event[event]);
+
+		if (this.#closed)
+			throw new InvalidStateError('Channel closed');
+
+		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
+
+		let notificationOffset: number;
+
+		if (bodyType && bodyOffset)
+		{
+			notificationOffset = Notification.createNotification(
+				this.#bufferBuilder, handlerIdOffset, event, bodyType, bodyOffset);
+		}
+		else
+		{
+			notificationOffset = Notification.createNotification(
+				this.#bufferBuilder, handlerIdOffset, event, NotificationBody.NONE, 0);
+		}
+
+		const messageOffset = Message.createMessage(
+			this.#bufferBuilder,
+			MessageType.NOTIFICATION,
+			MessageBody.FBS_Notification_Notification,
+			notificationOffset
+		);
+
+		this.#bufferBuilder.finish(messageOffset);
+
+		// Create a new buffer with this data so multiple contiguous flatbuffers
+		// do not point to the builder buffer overriding others info.
+		const buffer = new Uint8Array(this.#bufferBuilder.asUint8Array());
+
+		// Clear the buffer builder so it's reused for the next request.
+		this.#bufferBuilder.clear();
+
+		// TODO: DEV. Remove.
+		// const notif = Message.getRootAsMessage(new flatbuffers.ByteBuffer(buffer));
+		// logger.warn(JSON.stringify(notif.unpack(), undefined, 2));
+
+		if (buffer.byteLength > MESSAGE_MAX_LEN)
+			throw new Error('Channel request too big');
+
+		try
+		{
+			// This may throw if closed or remote side ended.
+			this.#producerSocket.write(
+				Buffer.from(Uint32Array.of(buffer.byteLength).buffer));
+			this.#producerSocket.write(buffer, 'binary');
+		}
+		catch (error)
+		{
+			logger.warn('notify() | sending notification failed: %s', String(error));
+
+			return;
+		}
+	}
+
 	async request(
 		method: Method,
 		bodyType?: RequestBody,
@@ -301,16 +369,25 @@ export class Channel extends EnhancedEventEmitter
 				this.#bufferBuilder, id, method, handlerIdOffset, RequestBody.NONE, 0);
 		}
 
-		this.#bufferBuilder.finish(requestOffset);
+		const messageOffset = Message.createMessage(
+			this.#bufferBuilder,
+			MessageType.REQUEST,
+			MessageBody.FBS_Request_Request,
+			requestOffset
+		);
 
-		const buffer = this.#bufferBuilder.asUint8Array();
+		this.#bufferBuilder.finish(messageOffset);
 
-		// TODO: DEV. Remove.
-		// const req = Request.getRootAsRequest(new flatbuffers.ByteBuffer(buffer));
-		// logger.warn(JSON.stringify(req.unpack(), undefined, 2));
+		// Create a new buffer with this data so multiple contiguous flatbuffers
+		// do not point to the builder buffer overriding others info.
+		const buffer = new Uint8Array(this.#bufferBuilder.asUint8Array());
 
 		// Clear the buffer builder so it's reused for the next request.
 		this.#bufferBuilder.clear();
+
+		// TODO: DEV. Remove.
+		// const message = Message.getRootAsMessage(new flatbuffers.ByteBuffer(buffer));
+		// logger.warn(JSON.stringify(message.unpack(), undefined, 2));
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');
@@ -318,6 +395,7 @@ export class Channel extends EnhancedEventEmitter
 		// This may throw if closed or remote side ended.
 		this.#producerSocket.write(
 			Buffer.from(Uint32Array.of(buffer.byteLength).buffer));
+
 		// Set buffer enconding to 'binary.'
 		this.#producerSocket.write(buffer, 'binary');
 
@@ -375,7 +453,7 @@ export class Channel extends EnhancedEventEmitter
 		{
 			logger.warn(
 				'request failed [method:%s, id:%s]: %s',
-				sent.method, sent.id, response.reason);
+				sent.method, sent.id, response.reason());
 
 			switch (response.error()!)
 			{

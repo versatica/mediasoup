@@ -4,10 +4,9 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "PayloadChannel/PayloadChannelNotification.hpp"
-#include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -44,8 +43,7 @@ namespace RTC
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
 	                  public Channel::ChannelSocket::RequestHandler,
-	                  public PayloadChannel::PayloadChannelSocket::RequestHandler,
-	                  public PayloadChannel::PayloadChannelSocket::NotificationHandler,
+	                  public Channel::ChannelSocket::NotificationHandler,
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 	                  public RTC::SenderBandwidthEstimator::Listener,
 #endif
@@ -139,13 +137,9 @@ namespace RTC
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
-		/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
+		/* Methods inherited from Channel::ChannelSocket::NotificationHandler. */
 	public:
-		void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
-
-		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
-	public:
-		void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
+		void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	protected:
 		// Must be called from the subclass.
@@ -320,7 +314,7 @@ namespace RTC
 		RTC::SenderBandwidthEstimator* senderBwe{ nullptr };
 #endif
 		// Others.
-		bool direct{ false }; // Whether this Transport allows PayloadChannel comm.
+		bool direct{ false }; // Whether this Transport allows direct communication.
 		bool destroying{ false };
 		struct RTC::RtpHeaderExtensionIds recvRtpHeaderExtensionIds;
 		RTC::RtpListener rtpListener;
