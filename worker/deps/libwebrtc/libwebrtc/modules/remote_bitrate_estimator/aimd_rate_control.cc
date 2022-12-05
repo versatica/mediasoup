@@ -275,9 +275,8 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
     return;
 
   ChangeState(input, at_time);
-	MS_DEBUG_DEV("[estimated_throughput %lld, low_throughput_threshold_ %lld, link_capacity_: %lld]",
+	MS_DEBUG_DEV("[estimated_throughput %lld, link_capacity_: %lld]",
 		           estimated_throughput.bps(),
-		           low_throughput_threshold_->bps(),
 		           link_capacity_.has_estimate() ? link_capacity_.estimate().bps() : -1);
   switch (rate_control_state_) {
     case RateControlState::kRcHold:
