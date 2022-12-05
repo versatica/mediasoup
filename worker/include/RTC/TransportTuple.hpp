@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/TcpConnection.hpp"
+#include "RTC/Transport.hpp"
 #include "RTC/UdpSocket.hpp"
 #include <nlohmann/json.hpp>
 #include <string>
@@ -14,9 +15,6 @@ namespace RTC
 {
 	class TransportTuple
 	{
-	protected:
-		using onSendCallback = const std::function<void(bool sent)>;
-
 	public:
 		enum class Protocol
 		{
@@ -85,12 +83,16 @@ namespace RTC
 			this->localAnnouncedIp = localAnnouncedIp;
 		}
 
-		void Send(const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback* cb = nullptr)
+		void Send(
+		  const uint8_t* data,
+		  size_t len,
+		  Transport::onSendCallback* cb     = nullptr,
+		  Transport::OnSendCallbackCtx* ctx = nullptr)
 		{
 			if (this->protocol == Protocol::UDP)
-				this->udpSocket->Send(data, len, this->udpRemoteAddr, cb);
+				this->udpSocket->Send(data, len, this->udpRemoteAddr, cb, ctx);
 			else
-				this->tcpConnection->Send(data, len, cb);
+				this->tcpConnection->Send(data, len, cb, ctx);
 		}
 
 		Protocol GetProtocol() const

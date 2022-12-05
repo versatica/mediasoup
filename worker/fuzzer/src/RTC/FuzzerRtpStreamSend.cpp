@@ -60,5 +60,6 @@ void Fuzzer::RTC::RtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	}
 
 	delete stream;
-	delete packet;
+
+	::RTC::RtpPacket::Deallocate(packet);
 }

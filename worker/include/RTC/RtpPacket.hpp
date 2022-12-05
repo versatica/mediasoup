@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_PACKET_HPP
 
 #include "common.hpp"
+#include "ObjectPoolAllocator.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include <absl/container/flat_hash_map.h>
@@ -23,6 +24,15 @@ namespace RTC
 	class RtpPacket
 	{
 	public:
+		using Allocator       = Utils::ObjectPoolAllocator<RtpPacket>;
+		using AllocatorTraits = std::allocator_traits<Allocator>;
+		// Memory to hold the cloned packet (with extra space for RTX encoding).
+		using RtpPacketBuffer       = std::array<uint8_t, MtuSize + 100>;
+		using BufferAllocator       = Utils::ObjectPoolAllocator<RtpPacket::RtpPacketBuffer>;
+		using BufferAllocatorTraits = std::allocator_traits<BufferAllocator>;
+
+		static void Deallocate(RtpPacket* packet);
+
 		/* Struct for RTP header. */
 		struct Header
 		{
@@ -133,7 +143,7 @@ namespace RTC
 
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
 
-	private:
+	public:
 		RtpPacket(
 		  Header* header,
 		  HeaderExtension* headerExtension,
@@ -142,7 +152,6 @@ namespace RTC
 		  uint8_t payloadPadding,
 		  size_t size);
 
-	public:
 		~RtpPacket();
 
 		void Dump() const;
@@ -589,7 +598,7 @@ namespace RTC
 			return this->payloadDescriptorHandler->IsKeyFrame();
 		}
 
-		RtpPacket* Clone() const;
+		std::shared_ptr<RtpPacket> Clone() const;
 
 		void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
 
@@ -635,7 +644,7 @@ namespace RTC
 		std::shared_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
 		// Buffer where this packet is allocated, can be `nullptr` if packet was
 		// parsed from externally provided buffer.
-		uint8_t* buffer{ nullptr };
+		RtpPacketBuffer* buffer{ nullptr };
 	};
 } // namespace RTC
 

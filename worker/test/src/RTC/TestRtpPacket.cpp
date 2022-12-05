@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+// #define PERFORMANCE_TEST 1
+
 using namespace RTC;
 
 static uint8_t buffer[65536];
@@ -47,7 +49,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->ReadRid(rid) == false);
 		REQUIRE(rid == "");
 
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("parse packet2.raw")
@@ -73,7 +75,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions() == false);
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("parse packet3.raw")
@@ -127,7 +129,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
-		auto* clonedPacket = packet->Clone();
+		auto clonedPacket = packet->Clone();
 
 		std::memset(buffer, '0', sizeof(buffer));
 
@@ -163,8 +165,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(clonedPacket->ReadAbsSendTime(absSendTime) == true);
 		REQUIRE(absSendTime == 0x65341e);
 
-		delete packet;
-		delete clonedPacket;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("create RtpPacket without header extension")
@@ -192,7 +193,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetSsrc() == 5);
 
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("create RtpPacket with One-Byte header extension")
@@ -233,7 +234,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadLength() == 1000);
 		REQUIRE(packet->GetSize() == 1028);
 
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("create RtpPacket with Two-Bytes header extension")
@@ -299,7 +300,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenValue == nullptr);
 		REQUIRE(extenLen == 0);
 
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("rtx encryption-decryption")
@@ -340,7 +341,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		auto rtxPacket = packet->Clone();
 
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 
 		std::memset(buffer, '0', sizeof(buffer));
 
@@ -369,8 +370,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(rtxPacket->GetHeaderExtensionLength() == 12);
 		REQUIRE(rtxPacket->HasOneByteExtensions() == false);
 		REQUIRE(rtxPacket->HasTwoBytesExtensions());
-
-		delete rtxPacket;
 	}
 
 	SECTION("create RtpPacket and apply payload shift to it")
@@ -481,7 +480,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadPadding() == 0);
 		REQUIRE(packet->GetSize() == 1028);
 
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("set One-Byte header extensions")
@@ -645,7 +644,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenValue[2] == 0x03);
 		REQUIRE(extenValue[3] == 0x00);
 
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("set Two-Bytes header extensions")
@@ -790,7 +789,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasExtension(24) == true);
 		REQUIRE(extenLen == 4);
 
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
 
 	SECTION("read frame-marking extension")
@@ -840,6 +839,128 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(frameMarking->lid == 1);
 		REQUIRE(frameMarking->tl0picidx == 5);
 
-		delete packet;
+		RTC::RtpPacket::Deallocate(packet);
 	}
+
+#ifdef PERFORMANCE_TEST
+	SECTION("Parse()")
+	{
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			0b10010000, 0b00000001, 0, 8,
+			0, 0, 0, 4,
+			0, 0, 0, 5,
+			0xBE, 0xDE, 0, 1, // Header Extension
+			0b00110010, 0b10101011, 1, 5,
+			1, 2, 3, 4
+		};
+		// clang-format on
+
+		const uint8_t probes = 5;
+		size_t iterations    = 1000000;
+		std::array<double, probes> durations;
+
+		for (auto idx = 0; idx < probes; ++idx)
+		{
+			auto start = std::chrono::system_clock::now();
+
+			for (auto i = 0; i < iterations; ++i)
+			{
+				RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+
+				if (!packet)
+					FAIL("not a RTP packet");
+
+				REQUIRE(packet->HasMarker() == false);
+				REQUIRE(packet->HasHeaderExtension() == true);
+				REQUIRE(packet->GetPayloadType() == 1);
+				REQUIRE(packet->GetSequenceNumber() == 8);
+				REQUIRE(packet->GetTimestamp() == 4);
+				REQUIRE(packet->GetSsrc() == 5);
+				REQUIRE(packet->GetHeaderExtensionId() == 0xBEDE);
+				REQUIRE(packet->GetHeaderExtensionLength() == 4);
+				REQUIRE(packet->HasOneByteExtensions());
+				REQUIRE(packet->HasTwoBytesExtensions() == false);
+				REQUIRE(packet->GetPayloadLength() == 4);
+
+				RTC::RtpPacket::Deallocate(packet);
+			}
+
+			std::chrono::duration<double> dur = std::chrono::system_clock::now() - start;
+
+			durations[idx] = dur.count();
+		}
+
+		double sum{ 0 };
+
+		for (auto idx = 0; idx < probes; ++idx)
+		{
+			sum += durations[idx];
+		}
+
+		std::cout << +probes << " probes of " << iterations << " RtpPackets parsed in an AVG: \t"
+		          << sum / probes << " seconds" << std::endl;
+	}
+
+	SECTION("Clone()")
+	{
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			0b10010000, 0b00000001, 0, 8,
+			0, 0, 0, 4,
+			0, 0, 0, 5,
+			0xBE, 0xDE, 0, 1, // Header Extension
+			0b00110010, 0b10101011, 1, 5,
+			1, 2, 3, 4
+		};
+		// clang-format on
+
+		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+
+		if (!packet)
+			FAIL("not a RTP packet");
+
+		const uint8_t probes = 5;
+		size_t iterations    = 1000000;
+		std::array<double, probes> durations;
+
+		for (auto idx = 0; idx < probes; ++idx)
+		{
+			auto start = std::chrono::system_clock::now();
+
+			for (auto i = 0; i < iterations; ++i)
+			{
+				auto clone = packet->Clone();
+
+				REQUIRE(clone->HasMarker() == false);
+				REQUIRE(clone->HasHeaderExtension() == true);
+				REQUIRE(clone->GetPayloadType() == 1);
+				REQUIRE(clone->GetSequenceNumber() == 8);
+				REQUIRE(clone->GetTimestamp() == 4);
+				REQUIRE(clone->GetSsrc() == 5);
+				REQUIRE(clone->GetHeaderExtensionId() == 0xBEDE);
+				REQUIRE(clone->GetHeaderExtensionLength() == 4);
+				REQUIRE(clone->HasOneByteExtensions());
+				REQUIRE(clone->HasTwoBytesExtensions() == false);
+				REQUIRE(clone->GetPayloadLength() == 4);
+			}
+
+			std::chrono::duration<double> dur = std::chrono::system_clock::now() - start;
+
+			durations[idx] = dur.count();
+		}
+
+		double sum{ 0 };
+
+		for (auto idx = 0; idx < probes; ++idx)
+		{
+			sum += durations[idx];
+		}
+
+		std::cout << +probes << " probes of " << iterations << " RtpPackets cloned in an AVG: \t"
+		          << sum / probes << " seconds" << std::endl;
+	}
+#endif
 }

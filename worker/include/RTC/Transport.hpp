@@ -4,6 +4,7 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "ObjectPoolAllocator.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "PayloadChannel/PayloadChannelNotification.hpp"
@@ -52,8 +53,30 @@ namespace RTC
 	                  public Timer::Listener
 	{
 	protected:
-		using onSendCallback   = const std::function<void(bool sent)>;
 		using onQueuedCallback = const std::function<void(bool queued, bool sctpSendBufferFull)>;
+
+	public:
+#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
+		struct OnSendCallbackCtx
+		{
+			RTC::TransportCongestionControlClient* tccClient;
+			webrtc::RtpPacketSendInfo packetInfo;
+			RTC::SenderBandwidthEstimator* senderBwe;
+			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
+		};
+#else
+		struct OnSendCallbackCtx
+		{
+			using Allocator       = Utils::ObjectPoolAllocator<Transport::OnSendCallbackCtx>;
+			using AllocatorTraits = std::allocator_traits<Allocator>;
+
+			RTC::TransportCongestionControlClient* tccClient;
+			webrtc::RtpPacketSendInfo packetInfo;
+		};
+#endif
+		// This function MUST NOT be de-allocated manually and MUST be called EXACTLY once.
+		static void OnSendCallback(bool sent, OnSendCallbackCtx* ctx);
+		using onSendCallback = void(bool sent, OnSendCallbackCtx* ctx);
 
 	public:
 		class Listener
@@ -171,7 +194,10 @@ namespace RTC
 	private:
 		virtual bool IsConnected() const = 0;
 		virtual void SendRtpPacket(
-		  RTC::Consumer* consumer, RTC::RtpPacket* packet, onSendCallback* cb = nullptr) = 0;
+		  RTC::Consumer* consumer,
+		  RTC::RtpPacket* packet,
+		  onSendCallback* cb     = nullptr,
+		  OnSendCallbackCtx* ctx = nullptr) = 0;
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcp(uint64_t nowMs);
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;

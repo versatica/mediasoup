@@ -123,7 +123,9 @@ namespace RTC
 
 		auto* storageItem = this->buffer[0];
 
-		delete storageItem;
+		// Destroy and deallocate the StorageItem.
+		StorageItem::AllocatorTraits::destroy(StorageItem::Allocator::Pool, storageItem);
+		StorageItem::Allocator::Pool.deallocate(storageItem, 1);
 
 		this->buffer[0] = nullptr;
 
@@ -143,10 +145,9 @@ namespace RTC
 			if (!storageItem)
 				continue;
 
-			// Reset the storage item (decrease RTP packet shared pointer counter).
-			storageItem->Reset();
-
-			delete storageItem;
+			// Destroy and deallocate the StorageItem.
+			StorageItem::AllocatorTraits::destroy(StorageItem::Allocator::Pool, storageItem);
+			StorageItem::Allocator::Pool.deallocate(storageItem, 1);
 		}
 
 		this->buffer.clear();
@@ -492,7 +493,10 @@ namespace RTC
 		else
 		{
 			// Allocate a new storage item.
-			storageItem = new StorageItem();
+			storageItem = StorageItem::Allocator::Pool.allocate(1);
+			// Memory is not initialized in any way, reset it.
+			// Create a new StorageItem instance in this memory.
+			StorageItem::AllocatorTraits::construct(StorageItem::Allocator::Pool, storageItem);
 
 			this->storageItemBuffer.Insert(seq, storageItem);
 		}
@@ -500,7 +504,7 @@ namespace RTC
 		// Only clone once and only if necessary.
 		if (!sharedPacket.get())
 		{
-			sharedPacket.reset(packet->Clone());
+			sharedPacket = packet->Clone();
 		}
 
 		// Store original packet and some extra info into the storage item.

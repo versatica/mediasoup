@@ -110,13 +110,21 @@ namespace RTC
 	}
 
 	void DirectTransport::SendRtpPacket(
-	  RTC::Consumer* consumer, RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	  RTC::Consumer* consumer,
+	  RTC::RtpPacket* packet,
+	  RTC::Transport::onSendCallback* cb,
+	  RTC::Transport::OnSendCallbackCtx* ctx)
 	{
 		MS_TRACE();
 
 		if (!consumer)
 		{
 			MS_WARN_TAG(rtp, "cannot send RTP packet not associated to a Consumer");
+
+			if (cb)
+			{
+				(*cb)(false, ctx);
+			}
 
 			return;
 		}
@@ -129,8 +137,7 @@ namespace RTC
 
 		if (cb)
 		{
-			(*cb)(true);
-			delete cb;
+			(*cb)(true, ctx);
 		}
 
 		// Increase send transmission.
