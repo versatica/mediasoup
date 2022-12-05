@@ -34,7 +34,6 @@ class CongestionWindowPushbackController {
       uint32_t min_pushback_target_bitrate_bps);
   void UpdateOutstandingData(int64_t outstanding_bytes);
   void UpdatePacingQueue(int64_t pacing_bytes);
-  void UpdateMaxOutstandingData(size_t max_outstanding_bytes);
   uint32_t UpdateTargetBitrate(uint32_t bitrate_bps);
   void SetDataWindow(DataSize data_window);
 

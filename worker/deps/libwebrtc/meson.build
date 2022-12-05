@@ -38,7 +38,6 @@ libwebrtc_sources = [
   'libwebrtc/modules/congestion_controller/goog_cc/link_capacity_estimator.cc',
   'libwebrtc/modules/congestion_controller/goog_cc/alr_detector.cc',
   'libwebrtc/modules/congestion_controller/goog_cc/probe_controller.cc',
-  'libwebrtc/modules/congestion_controller/goog_cc/median_slope_estimator.cc',
   'libwebrtc/modules/congestion_controller/goog_cc/bitrate_estimator.cc',
   'libwebrtc/modules/congestion_controller/goog_cc/trendline_estimator.cc',
   'libwebrtc/modules/congestion_controller/goog_cc/delay_based_bwe.cc',

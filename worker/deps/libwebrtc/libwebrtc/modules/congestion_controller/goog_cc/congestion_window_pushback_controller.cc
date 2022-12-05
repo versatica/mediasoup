@@ -44,15 +44,6 @@ void CongestionWindowPushbackController::UpdatePacingQueue(
   pacing_bytes_ = pacing_bytes;
 }
 
-void CongestionWindowPushbackController::UpdateMaxOutstandingData(
-    size_t max_outstanding_bytes) {
-  DataSize data_window = DataSize::bytes(max_outstanding_bytes);
-  if (current_data_window_) {
-    data_window = (data_window + current_data_window_.value()) / 2;
-  }
-  current_data_window_ = data_window;
-}
-
 void CongestionWindowPushbackController::SetDataWindow(DataSize data_window) {
   current_data_window_ = data_window;
 }
