@@ -240,6 +240,7 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
 		MS_WARN_TAG(bwe, "The estimator must be enabled before it can be used.");
     return;
   }
+  SetProbeBitrate(probe_bitrate);
   if (packet_results.empty()) {
 		MS_WARN_TAG(bwe, "The estimate cannot be updated without any loss statistics.");
     return;
