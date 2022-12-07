@@ -253,7 +253,7 @@ namespace Channel
 			}
 			else
 			{
-				MS_ERROR("discarding wrong PayloadChannel data");
+				MS_ERROR("discarding wrong Channel data");
 			}
 
 			// Message needs to be freed using stored function pointer.
