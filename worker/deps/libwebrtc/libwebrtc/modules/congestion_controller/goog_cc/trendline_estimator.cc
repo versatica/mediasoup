@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::TrendlineEstimator"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/trendline_estimator.h"
 
@@ -50,7 +50,7 @@ size_t ReadTrendlineFilterWindowSize(const WebRtcKeyValueConfig* key_value_confi
 	return TrendlineEstimatorSettings::kDefaultTrendlineWindowSize;
 }
 
-absl::optional<double> LinearFitSlope(
+absl::optional<TrendlineEstimator::RegressionResult> LinearFitSlope(
     const std::deque<TrendlineEstimator::PacketTiming>& packets) {
   // RTC_DCHECK(packets.size() >= 2);
   // Compute the "center of mass".
@@ -73,7 +73,22 @@ absl::optional<double> LinearFitSlope(
   }
   if (denominator == 0)
     return absl::nullopt;
-  return numerator / denominator;
+	double b1 = numerator / denominator;
+	double b0 = y_avg - (b1 * x_avg);
+
+	// Compute the R squared
+	double r_numerator = 0;
+	double r_denominator = 0;
+	for (const auto& packet : packets) {
+		double x = packet.arrival_time_ms;
+		double y = packet.smoothed_delay_ms;
+		r_numerator += pow(((b0 + (b1 * x)) - y_avg), 2);
+		r_denominator += pow((y - y_avg), 2);
+	}
+
+	double r_squared = r_numerator / r_denominator;
+
+  return TrendlineEstimator::RegressionResult(b1, r_squared);
 }
 
 absl::optional<double> ComputeSlopeCap(
@@ -104,8 +119,15 @@ absl::optional<double> ComputeSlopeCap(
          settings.cap_uncertainty;
 }
 
+double getAverage(std::deque<double> const& hist) {
+	if (hist.empty()) {
+		return 0;
+	}
+	return std::accumulate(hist.begin(), hist.end(), 0.0) / hist.size();
+}
+
 constexpr double kMaxAdaptOffsetMs = 15.0;
-constexpr double kOverUsingTimeThreshold = 10;
+constexpr double kOverUsingTimeThreshold = 5;
 constexpr int kMinNumDeltas = 60;
 constexpr int kDeltaCounterMax = 1000;
 
@@ -168,13 +190,14 @@ TrendlineEstimator::TrendlineEstimator(
       accumulated_delay_(0),
       smoothed_delay_(0),
       delay_hist_(),
+	  	r_squared_hist_(),
       k_up_(0.0087),
       k_down_(0.039),
       overusing_time_threshold_(kOverUsingTimeThreshold),
       threshold_(12.5),
       prev_modified_trend_(NAN),
       last_update_ms_(-1),
-      prev_trend_(0.0),
+      prev_trend_(0.0, 0.0),
       time_over_using_(-1),
       overuse_counter_(0),
       hypothesis_(BandwidthUsage::kBwNormal),
@@ -220,26 +243,32 @@ void TrendlineEstimator::UpdateTrendline(double recv_delta_ms,
     delay_hist_.pop_front();
 
   // Simple linear regression.
-  double trend = prev_trend_;
+  auto trend = prev_trend_;
+	RegressionResult result;
+	double avg_r_squared {0.0};
   if (delay_hist_.size() == settings_.window_size) {
     // Update trend_ if it is possible to fit a line to the data. The delay
     // trend can be seen as an estimate of (send_rate - capacity)/capacity.
     // 0 < trend < 1   ->  the delay increases, queues are filling up
     //   trend == 0    ->  the delay does not change
     //   trend < 0     ->  the delay decreases, queues are being emptied
-    trend = LinearFitSlope(delay_hist_).value_or(trend);
+		result = LinearFitSlope(delay_hist_).value_or(trend);
+		r_squared_hist_.emplace_back(result.r_squared);
+		if (r_squared_hist_.size() > settings_.window_size)
+			r_squared_hist_.pop_front();
+		avg_r_squared = getAverage(r_squared_hist_);
     if (settings_.enable_cap) {
       absl::optional<double> cap = ComputeSlopeCap(delay_hist_, settings_);
       // We only use the cap to filter out overuse detections, not
       // to detect additional underuses.
-      if (trend >= 0 && cap.has_value() && trend > cap.value()) {
-        trend = cap.value();
+      if (trend.slope >= 0 && cap.has_value() && trend.slope > cap.value()) {
+        trend.slope = cap.value();
       }
     }
   }
-  // BWE_TEST_LOGGING_PLOT(1, "trendline_slope", arrival_time_ms, trend);
+  MS_DEBUG_DEV("slope, r_squared, avg_r_squared [%f,  %f, %f]", trend.slope, trend.r_squared, avg_r_squared);
 
-  Detect(trend, send_delta_ms, arrival_time_ms);
+  Detect(result, send_delta_ms, arrival_time_ms, avg_r_squared);
 }
 
 void TrendlineEstimator::Update(double recv_delta_ms,
@@ -262,7 +291,7 @@ BandwidthUsage TrendlineEstimator::State() const {
   return network_state_predictor_ ? hypothesis_predicted_ : hypothesis_;
 }
 
-void TrendlineEstimator::Detect(double trend, double ts_delta, int64_t now_ms) {
+void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, double ts_delta, int64_t now_ms, double avg_r_squared) {
   if (num_of_deltas_ < 2) {
     hypothesis_ = BandwidthUsage::kBwNormal;
     return;
@@ -271,10 +300,28 @@ void TrendlineEstimator::Detect(double trend, double ts_delta, int64_t now_ms) {
 	BandwidthUsage prev_hypothesis = hypothesis_;
 
   const double modified_trend =
-      std::min(num_of_deltas_, kMinNumDeltas) * trend * threshold_gain_;
+      std::min(num_of_deltas_, kMinNumDeltas) * trend.slope * threshold_gain_;
   prev_modified_trend_ = modified_trend;
   // BWE_TEST_LOGGING_PLOT(1, "T", now_ms, modified_trend);
   // BWE_TEST_LOGGING_PLOT(1, "threshold", now_ms, threshold_);
+/*	for (auto it = delay_hist_.crbegin(); it != delay_hist_.crend(); ++it) {
+		MS_DEBUG_DEV("arrival_time_ms - first_arrival_time_ms_:%f, smoothed_delay_:%f, raw_delay_:%f", it->arrival_time_ms, it->smoothed_delay_ms, it->raw_delay_ms);
+	}*/
+	if (avg_r_squared > 0 && avg_r_squared < 0.50 ) {
+		if (avg_r_squared < 0.1) {
+			hypothesis_ = BandwidthUsage::kBwOverusing;
+			MS_DEBUG_DEV("OverUsing!");
+		} else {
+			hypothesis_ = BandwidthUsage::kBwUnderusing;
+			MS_DEBUG_DEV("HOLD");
+		}
+
+		prev_trend_ = trend;
+		UpdateThreshold(modified_trend, now_ms);
+
+		return;
+	}
+
   if (modified_trend > threshold_) {
     if (time_over_using_ == -1) {
       // Initialize the timer. Assume that we've been
@@ -286,21 +333,12 @@ void TrendlineEstimator::Detect(double trend, double ts_delta, int64_t now_ms) {
       time_over_using_ += ts_delta;
     }
     overuse_counter_++;
-    if (time_over_using_ > overusing_time_threshold_ && overuse_counter_ > 1) {
-      if (trend >= prev_trend_) {
+    //if (time_over_using_ > overusing_time_threshold_ && overuse_counter_ > 1) {
+		if (time_over_using_ > overusing_time_threshold_) {
+      if (trend.slope >= prev_trend_.slope) {
         time_over_using_ = 0;
         overuse_counter_ = 0;
-
-
-/*
-#if MS_LOG_DEV_LEVEL == 3
-        for (auto& kv : delay_hist_) {
-          MS_DEBUG_DEV("arrival_time_ms - first_arrival_time_ms_:%f, smoothed_delay_:%f", kv.first, kv.second);
-        }
-#endif
-*/
-
-        hypothesis_ = BandwidthUsage::kBwOverusing;
+				hypothesis_ = BandwidthUsage::kBwOverusing;
 				if (hypothesis_ != prev_hypothesis)
 					MS_DEBUG_DEV("hypothesis_: BandwidthUsage::kBwOverusing");
 

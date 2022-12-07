@@ -173,11 +173,11 @@ LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult() const {
   }
 
 	auto instant_limit = GetInstantUpperBound();
-	MS_DEBUG_DEV("Using %s, Inherent Loss limit %" PRIi64 ", Delay limit %" PRIi64 ", Instant Loss limit %" PRIi64 "",
-		           current_estimate_.loss_limited_bandwidth.bps() <= delay_based_limit.bps() ? "Loss" : "Delay",
+/*	MS_DEBUG_DEV("Using %s, Inherent Loss limit %" PRIi64 ", Delay limit %" PRIi64 ", Instant Loss limit %" PRIi64 "",
+		           current_estimate_.loss_limited_bandwidth.bps() <= delay_based_estimate_.bps() ? "Loss" : "Delay",
 		           current_estimate_.loss_limited_bandwidth.bps(),
-		           delay_based_limit.IsFinite() ? delay_based_limit.bps() : 0,
-		           instant_limit.IsFinite() ? instant_limit.bps() : 0);
+		           delay_based_estimate_.IsFinite() ? delay_based_estimate_.bps() : 0,
+		           instant_limit.IsFinite() ? instant_limit.bps() : 0);*/
 	if (IsValid(delay_based_estimate_)) {
 		result.bandwidth_estimate =
 			std::min({current_estimate_.loss_limited_bandwidth,
@@ -1103,12 +1103,12 @@ bool LossBasedBweV2::PushBackObservation(
       (observation_duration < config_->observation_duration_lower_bound &&
        (delay_detector_state != BandwidthUsage::kBwOverusing ||
         !config_->trendline_integration_enabled))) {
-		MS_DEBUG_DEV("Observation Duration %" PRIi64 ", Delay detector state %s, trendline_integration_enabled, %d, Current estimate %" PRIi64 "",
+/*		MS_DEBUG_DEV("Observation Duration %" PRIi64 ", Delay detector state %s, trendline_integration_enabled, %d, Current estimate %" PRIi64 "",
 			           observation_duration.ms(),
 			           delay_detector_state == BandwidthUsage::kBwNormal ? "Normal" :
 			           delay_detector_state == BandwidthUsage::kBwOverusing ? "Overusing" : "Underusing",
 			           config_->trendline_integration_enabled,
-			           current_estimate_.loss_limited_bandwidth.bps());
+			           current_estimate_.loss_limited_bandwidth.bps());*/
     return false;
   }
 

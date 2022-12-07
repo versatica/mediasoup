@@ -275,9 +275,9 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
     return;
 
   ChangeState(input, at_time);
-	MS_DEBUG_DEV("[estimated_throughput %lld, link_capacity_: %lld]",
+/*	MS_DEBUG_DEV("[estimated_throughput %lld, link_capacity_: %lld]",
 		           estimated_throughput.bps(),
-		           link_capacity_.has_estimate() ? link_capacity_.estimate().bps() : -1);
+		           link_capacity_.has_estimate() ? link_capacity_.estimate().bps() : -1);*/
   switch (rate_control_state_) {
     case RateControlState::kRcHold:
       break;
@@ -337,6 +337,7 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
       // Set bit rate to something slightly lower than the measured throughput
       // to get rid of any self-induced delay.
       decreased_bitrate = estimated_throughput * beta_;
+			MS_DEBUG_DEV("estimated_throughput: %lld, decreased_bitrate: %lld", estimated_throughput.bps(), decreased_bitrate.bps());
       if (decreased_bitrate > current_bitrate_ && !link_capacity_fix_) {
         // TODO(terelius): The link_capacity estimate may be based on old
         // throughput measurements. Relying on them may lead to unnecessary

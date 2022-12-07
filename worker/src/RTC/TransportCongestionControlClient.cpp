@@ -38,7 +38,7 @@ namespace RTC
 		webrtc::GoogCcFactoryConfig config;
 
 		// Provide RTCP feedback as well as Receiver Reports.
-		config.feedback_only = false;
+		config.feedback_only = true;
 
 		this->controllerFactory = new webrtc::GoogCcNetworkControllerFactory(std::move(config));
 	}

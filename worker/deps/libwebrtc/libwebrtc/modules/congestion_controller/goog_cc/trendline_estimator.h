@@ -98,9 +98,21 @@ class TrendlineEstimator : public DelayIncreaseDetectorInterface {
     double raw_delay_ms;
   };
 
+	struct RegressionResult {
+		RegressionResult(double slope,
+			               double r_squared)
+			: slope(slope),
+			  r_squared(r_squared) {}
+		RegressionResult()
+			: slope(0.0),
+			  r_squared(0.0) {}
+		double slope;
+		double r_squared;
+	};
+
  private:
   friend class GoogCcStatePrinter;
-  void Detect(double trend, double ts_delta, int64_t now_ms);
+  void Detect(RegressionResult trend, double ts_delta, int64_t now_ms, double avg_r_squared);
 
   void UpdateThreshold(double modified_offset, int64_t now_ms);
 
@@ -117,6 +129,8 @@ class TrendlineEstimator : public DelayIncreaseDetectorInterface {
   double smoothed_delay_;
   // Linear least squares regression.
   std::deque<PacketTiming> delay_hist_;
+	//
+	std::deque<double> r_squared_hist_;
 
   const double k_up_;
   const double k_down_;
@@ -124,7 +138,7 @@ class TrendlineEstimator : public DelayIncreaseDetectorInterface {
   double threshold_;
   double prev_modified_trend_;
   int64_t last_update_ms_;
-  double prev_trend_;
+	RegressionResult prev_trend_;
   double time_over_using_;
   int overuse_counter_;
   BandwidthUsage hypothesis_;
