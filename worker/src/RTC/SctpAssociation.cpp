@@ -340,32 +340,6 @@ namespace RTC
 		}
 	}
 
-	void SctpAssociation::FillJson(json& jsonObject) const
-	{
-		MS_TRACE();
-
-		// Add port (always 5000).
-		jsonObject["port"] = 5000;
-
-		// Add OS.
-		jsonObject["OS"] = this->os;
-
-		// Add MIS.
-		jsonObject["MIS"] = this->mis;
-
-		// Add maxMessageSize.
-		jsonObject["maxMessageSize"] = this->maxSctpMessageSize;
-
-		// Add sendBufferSize.
-		jsonObject["sendBufferSize"] = this->sctpSendBufferSize;
-
-		// Add sctpBufferedAmountLowThreshold.
-		jsonObject["sctpBufferedAmount"] = this->sctpBufferedAmount;
-
-		// Add isDataChannel.
-		jsonObject["isDataChannel"] = this->isDataChannel;
-	}
-
 	flatbuffers::Offset<FBS::SctpParameters::SctpParameters> SctpAssociation::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{

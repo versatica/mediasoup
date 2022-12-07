@@ -10,46 +10,6 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	void RtpListener::FillJson(json& jsonObject) const
-	{
-		MS_TRACE();
-
-		jsonObject["ssrcTable"] = json::object();
-		jsonObject["midTable"]  = json::object();
-		jsonObject["ridTable"]  = json::object();
-
-		auto jsonSsrcTableIt = jsonObject.find("ssrcTable");
-		auto jsonMidTableIt  = jsonObject.find("midTable");
-		auto jsonRidTableIt  = jsonObject.find("ridTable");
-
-		// Add ssrcTable.
-		for (auto& kv : this->ssrcTable)
-		{
-			auto ssrc      = kv.first;
-			auto* producer = kv.second;
-
-			(*jsonSsrcTableIt)[std::to_string(ssrc)] = producer->id;
-		}
-
-		// Add midTable.
-		for (auto& kv : this->midTable)
-		{
-			auto& mid      = kv.first;
-			auto* producer = kv.second;
-
-			(*jsonMidTableIt)[mid] = producer->id;
-		}
-
-		// Add ridTable.
-		for (auto& kv : this->ridTable)
-		{
-			auto& rid      = kv.first;
-			auto* producer = kv.second;
-
-			(*jsonRidTableIt)[rid] = producer->id;
-		}
-	}
-
 	flatbuffers::Offset<FBS::Transport::RtpListener> RtpListener::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{

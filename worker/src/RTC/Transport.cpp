@@ -1588,25 +1588,6 @@ namespace RTC
 		return it->second;
 	}
 
-	void Transport::SetNewConsumerIdFromData(json& data, std::string& consumerId) const
-	{
-		MS_TRACE();
-
-		auto jsonConsumerIdIt = data.find("consumerId");
-
-		if (jsonConsumerIdIt == data.end() || !jsonConsumerIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing consumerId");
-		}
-
-		consumerId.assign(jsonConsumerIdIt->get<std::string>());
-
-		if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
-		{
-			MS_THROW_ERROR("a Consumer with same consumerId already exists");
-		}
-	}
-
 	RTC::Consumer* Transport::GetConsumerById(const std::string& consumerId) const
 	{
 		MS_TRACE();
@@ -1645,25 +1626,6 @@ namespace RTC
 		auto* consumer = mapRtxSsrcConsumerIt->second;
 
 		return consumer;
-	}
-
-	void Transport::SetNewDataProducerIdFromData(json& data, std::string& dataProducerId) const
-	{
-		MS_TRACE();
-
-		auto jsonDataProducerIdIt = data.find("dataProducerId");
-
-		if (jsonDataProducerIdIt == data.end() || !jsonDataProducerIdIt->is_string())
-		{
-			MS_THROW_TYPE_ERROR("missing dataProducerId");
-		}
-
-		dataProducerId.assign(jsonDataProducerIdIt->get<std::string>());
-
-		if (this->mapDataProducers.find(dataProducerId) != this->mapDataProducers.end())
-		{
-			MS_THROW_ERROR("a DataProducer with same dataProducerId already exists");
-		}
 	}
 
 	RTC::DataProducer* Transport::GetDataProducerById(const std::string& dataProducerId) const

@@ -9,10 +9,7 @@
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
-#include <nlohmann/json.hpp>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace RTC
 {

@@ -5,9 +5,6 @@
 #include "RTC/Shared.hpp"
 #include "handles/Timer.hpp"
 #include <absl/container/flat_hash_map.h>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
 
 namespace RTC
 {

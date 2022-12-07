@@ -10,24 +10,6 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	void SctpListener::FillJson(json& jsonObject) const
-	{
-		MS_TRACE();
-
-		jsonObject["streamIdTable"] = json::object();
-
-		auto jsonStreamIdTableIt = jsonObject.find("streamIdTable");
-
-		// Add streamIdTable.
-		for (const auto& kv : this->streamIdTable)
-		{
-			auto streamId      = kv.first;
-			auto* dataProducer = kv.second;
-
-			(*jsonStreamIdTableIt)[std::to_string(streamId)] = dataProducer->id;
-		}
-	}
-
 	flatbuffers::Offset<FBS::Transport::SctpListener> SctpListener::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{

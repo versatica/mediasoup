@@ -156,13 +156,10 @@ namespace RTC
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
-		void SetNewProducerIdFromData(json& data, std::string& producerId) const;
 		RTC::Producer* GetProducerById(const std::string& producerId) const;
-		void SetNewConsumerIdFromData(json& data, std::string& consumerId) const;
 		RTC::Consumer* GetConsumerById(const std::string& consumerId) const;
 		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
 		RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const;
-		void SetNewDataProducerIdFromData(json& data, std::string& dataProducerId) const;
 		RTC::DataProducer* GetDataProducerById(const std::string& dataProducerId) const;
 		RTC::DataConsumer* GetDataConsumerById(const std::string& dataConsumerId) const;
 

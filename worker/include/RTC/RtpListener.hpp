@@ -4,18 +4,14 @@
 #include "common.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RtpPacket.hpp"
-#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
 	class RtpListener
 	{
 	public:
-		void FillJson(json& jsonObject) const;
 		flatbuffers::Offset<FBS::Transport::RtpListener> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 		void AddProducer(RTC::Producer* producer);

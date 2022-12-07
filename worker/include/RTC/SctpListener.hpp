@@ -3,17 +3,13 @@
 
 #include "common.hpp"
 #include "RTC/DataProducer.hpp"
-#include <nlohmann/json.hpp>
 #include <unordered_map>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
 	class SctpListener
 	{
 	public:
-		void FillJson(json& jsonObject) const;
 		flatbuffers::Offset<FBS::Transport::SctpListener> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 		void AddDataProducer(RTC::DataProducer* dataProducer);
