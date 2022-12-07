@@ -767,7 +767,10 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		}
 
 		const consumerId = uuidv4();
-		const consumeRequestOffset = this.createConsumeRequest({
+		const builder = this.channel.bufferBuilder;
+
+		const consumeRequestOffset = createConsumeRequest({
+			builder,
 			producer,
 			consumerId,
 			rtpParameters,
@@ -1114,84 +1117,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		throw new Error('no sctpStreamId available');
 	}
-
-	/**
-	 * flatbuffers helpers
-	 */
-
-	private createConsumeRequest({
-		producer,
-		consumerId,
-		rtpParameters,
-		paused,
-		preferredLayers,
-		ignoreDtx,
-		pipe
-	} : {
-		producer: Producer;
-		consumerId: string;
-		rtpParameters: RtpParameters;
-		paused: boolean;
-		preferredLayers?: ConsumerLayers;
-		ignoreDtx?: boolean;
-		pipe: boolean;
-	}): number
-	{
-		const builder = this.channel.bufferBuilder;
-		const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
-		const consumerIdOffset = builder.createString(consumerId);
-		const producerIdOffset = builder.createString(producer.id);
-		let consumableRtpEncodingsOffset: number | undefined;
-		let preferredLayersOffset: number | undefined;
-
-		if (producer.consumableRtpParameters.encodings)
-		{
-			consumableRtpEncodingsOffset = serializeRtpEncodingParameters(
-				builder, producer.consumableRtpParameters.encodings
-			);
-		}
-
-		if (preferredLayers)
-		{
-			FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
-			FbsConsumer.ConsumerLayers.addSpatialLayer(builder, preferredLayers.spatialLayer);
-
-			if (preferredLayers.temporalLayer !== undefined)
-			{
-				FbsConsumer.ConsumerLayers.addTemporalLayer(
-					builder, preferredLayers.temporalLayer
-				);
-			}
-
-			preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
-		}
-
-		const ConsumeRequest = FbsRequest.ConsumeRequest;
-
-		// Create Consume Request.
-		ConsumeRequest.startConsumeRequest(builder);
-		ConsumeRequest.addConsumerId(builder, consumerIdOffset);
-		ConsumeRequest.addProducerId(builder, producerIdOffset);
-		ConsumeRequest.addKind(
-			builder, producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
-		ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
-		ConsumeRequest.addType(
-			builder,
-			utils.getRtpParametersType(producer.type, pipe)
-		);
-
-		if (consumableRtpEncodingsOffset)
-			ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
-
-		ConsumeRequest.addPaused(builder, paused);
-
-		if (preferredLayersOffset)
-			ConsumeRequest.addPreferredLayers(builder, preferredLayersOffset);
-
-		ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
-
-		return ConsumeRequest.endConsumeRequest(builder);
-	}
 }
 
 export function fbsSctpState2StcpState(fbsSctpState: FbsSctpState): SctpState
@@ -1340,6 +1265,81 @@ function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo):
 			'transport-cc' :
 			'remb'
 	};
+}
+
+function createConsumeRequest({
+	builder,
+	producer,
+	consumerId,
+	rtpParameters,
+	paused,
+	preferredLayers,
+	ignoreDtx,
+	pipe
+} : {
+	builder: flatbuffers.Builder;
+	producer: Producer;
+	consumerId: string;
+	rtpParameters: RtpParameters;
+	paused: boolean;
+	preferredLayers?: ConsumerLayers;
+	ignoreDtx?: boolean;
+	pipe: boolean;
+}): number
+{
+	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
+	const consumerIdOffset = builder.createString(consumerId);
+	const producerIdOffset = builder.createString(producer.id);
+	let consumableRtpEncodingsOffset: number | undefined;
+	let preferredLayersOffset: number | undefined;
+
+	if (producer.consumableRtpParameters.encodings)
+	{
+		consumableRtpEncodingsOffset = serializeRtpEncodingParameters(
+			builder, producer.consumableRtpParameters.encodings
+		);
+	}
+
+	if (preferredLayers)
+	{
+		FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
+		FbsConsumer.ConsumerLayers.addSpatialLayer(builder, preferredLayers.spatialLayer);
+
+		if (preferredLayers.temporalLayer !== undefined)
+		{
+			FbsConsumer.ConsumerLayers.addTemporalLayer(
+				builder, preferredLayers.temporalLayer
+			);
+		}
+
+		preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
+	}
+
+	const ConsumeRequest = FbsRequest.ConsumeRequest;
+
+	// Create Consume Request.
+	ConsumeRequest.startConsumeRequest(builder);
+	ConsumeRequest.addConsumerId(builder, consumerIdOffset);
+	ConsumeRequest.addProducerId(builder, producerIdOffset);
+	ConsumeRequest.addKind(
+		builder, producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
+	ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
+	ConsumeRequest.addType(
+		builder,
+		utils.getRtpParametersType(producer.type, pipe)
+	);
+
+	if (consumableRtpEncodingsOffset)
+		ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
+
+	ConsumeRequest.addPaused(builder, paused);
+
+	if (preferredLayersOffset)
+		ConsumeRequest.addPreferredLayers(builder, preferredLayersOffset);
+
+	ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
+
+	return ConsumeRequest.endConsumeRequest(builder);
 }
 
 function createProduceRequest({
