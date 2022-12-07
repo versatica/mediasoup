@@ -3,10 +3,6 @@
 
 #include "common.hpp"
 #include <FBS/sctpParameters_generated.h>
-#include <nlohmann/json.hpp>
-#include <string>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
