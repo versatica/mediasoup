@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 #define MS_CLASS "webrtc::LossBasedBweV2"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "modules/bitrate_controller/loss_based_bwe_v2.h"
 
@@ -34,6 +34,7 @@
 #include "rtc_base/experiments/field_trial_list.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 
 namespace webrtc {
@@ -123,23 +124,29 @@ LossBasedBweV2::LossBasedBweV2(const WebRtcKeyValueConfig* key_value_config)
 	temporal_weights_.resize(config_->observation_window_size);
 	instant_upper_bound_temporal_weights_.resize(
 		config_->observation_window_size);
+	instant_loos_debounce_duration = (config_->observation_window_size / 2) * config_->observation_duration_lower_bound;
 	CalculateTemporalWeights();
 }
 
 void LossBasedBweV2::Reset() {
 	current_estimate_.inherent_loss = config_->initial_inherent_loss_estimate;
-	//current_estimate_.loss_limited_bandwidth = config_->bandwidth_rampup_upper_bound_factor;
+	current_estimate_.loss_limited_bandwidth = max_bitrate_;
 
 	observations_.clear();
-	temporal_weights_.clear();
-	instant_upper_bound_temporal_weights_.clear();
 
-	observations_.resize(config_->observation_window_size);
-	temporal_weights_.resize(config_->observation_window_size);
-	instant_upper_bound_temporal_weights_.resize(
-		config_->observation_window_size);
-
-	CalculateTemporalWeights();
+	num_observations_ = 0;
+	partial_observation_.num_lost_packets = 0;
+	partial_observation_.num_packets = 0;
+	last_send_time_most_recent_observation_ = Timestamp::PlusInfinity();
+	last_time_estimate_reduced_ = Timestamp::MinusInfinity();
+	cached_instant_upper_bound_ = absl::nullopt;
+	delay_detector_states_.clear();
+	recovering_after_loss_timestamp_ = Timestamp::MinusInfinity();
+	bandwidth_limit_in_current_window_ = DataRate::PlusInfinity();
+	current_state_ = LossBasedState::kDelayBasedEstimate;
+	probe_bitrate_ = DataRate::PlusInfinity();
+	delay_based_estimate_ = DataRate::PlusInfinity();
+	upper_link_capacity_ = DataRate::PlusInfinity();
 }
 
 bool LossBasedBweV2::IsEnabled() const {
@@ -388,7 +395,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       "DelayBasedCandidate", false);
   FieldTrialParameter<TimeDelta> observation_duration_lower_bound(
       "ObservationDurationLowerBound", TimeDelta::seconds(1));
-  FieldTrialParameter<int> observation_window_size("ObservationWindowSize", 20);
+  FieldTrialParameter<int> observation_window_size("ObservationWindowSize", 50);
   FieldTrialParameter<double> sending_rate_smoothing_factor(
       "SendingRateSmoothingFactor", 0.0);
   FieldTrialParameter<double> instant_upper_bound_temporal_weight_factor(
@@ -973,7 +980,23 @@ void LossBasedBweV2::CalculateInstantUpperBound(DataRate sending_rate) {
 	const double average_reported_loss_ratio = GetAverageReportedLossRatio();
 
 	if (average_reported_loss_ratio > config_->instant_upper_bound_loss_offset) {
-
+		// MS_NOTE: Here we create debounce mechanism, that must help in
+		// bursts smoothening. Initially we reduce to 85% of previous BW estimate,
+		// if that will not help after debounce counter, we will reduce further with f
+		// formula based on bw balance. If we do not continue to overshoot limit in half of the
+		// observation duration window size, we reset.
+		if (!instant_loss_debounce_start.IsFinite()) {
+			instant_loss_debounce_start = Timestamp::ms(DepLibUV::GetTimeMsInt64());
+			cached_instant_upper_bound_ = current_estimate_.loss_limited_bandwidth * 0.85;
+		}
+		instant_loos_debounce_counter_ += 1;
+		if (Timestamp::ms(DepLibUV::GetTimeMsInt64()) > instant_loss_debounce_start + instant_loos_debounce_duration) {
+			instant_loos_debounce_counter_ = 0;
+			instant_loss_debounce_start = Timestamp::MinusInfinity();
+		}
+		if (kInstantLossDebounce < instant_loos_debounce_counter_) {
+			return;
+		}
 		DataRate bandwidth_balance = config_->instant_upper_bound_bandwidth_balance;
 
 		// MS_NOTE: In case of high sending rate the value of balance (75kbps) is too small,

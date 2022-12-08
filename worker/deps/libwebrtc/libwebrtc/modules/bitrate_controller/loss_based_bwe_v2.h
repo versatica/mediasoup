@@ -200,6 +200,11 @@ class LossBasedBweV2 {
 	DataRate max_bitrate_ = DataRate::PlusInfinity();
 	TimeDelta max_observation_duration_before_reset_ = TimeDelta::seconds(4);
 	double static constexpr kBwBalanceMultiplicator = 1.3;
+	double static constexpr kInstantLossDebounce = 3;
+	double instant_loos_debounce_counter_ = 0;
+	TimeDelta instant_loos_debounce_duration = TimeDelta::seconds(0);
+	Timestamp instant_loss_debounce_start = Timestamp::MinusInfinity();
+
 };
 
 }  // namespace webrtc

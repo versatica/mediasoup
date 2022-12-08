@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::ProbeController"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
 #include "api/units/data_rate.h"
@@ -172,16 +172,15 @@ std::vector<ProbeClusterConfig> ProbeController::SetBitrates(
   } else if (start_bitrate_.IsZero()) {
     start_bitrate_ = min_bitrate;
   }
-	MS_DEBUG_DEV(
-		"[old_max_bitrate_bps:%lld, max_bitrate_bps:%lld]",
-		max_bitrate_bps_,
-		max_bitrate_bps);
   // The reason we use the variable `old_max_bitrate_pbs` is because we
   // need to set `max_bitrate_` before we call InitiateProbing.
   DataRate old_max_bitrate = max_bitrate_;
   max_bitrate_ =
       max_bitrate.IsFinite() ? max_bitrate : kDefaultMaxProbingBitrate;
-
+	MS_DEBUG_DEV(
+		"[old_max_bitrate_bps:%lld, max_bitrate_bps:%lld]",
+		old_max_bitrate.bps(),
+		max_bitrate_.bps());
   switch (state_) {
     case State::kInit:
       if (network_available_)
@@ -354,6 +353,7 @@ void ProbeController::SetAlrEndedTimeMs(int64_t alr_end_time_ms) {
 
 std::vector<ProbeClusterConfig> ProbeController::RequestProbe(
     Timestamp at_time) {
+	MS_DEBUG_DEV("Requesting probe");
   // Called once we have returned to normal state after a large drop in
   // estimated bandwidth. The current response is to initiate a single probe
   // session (if not already probing) at the previous bitrate.
@@ -364,6 +364,7 @@ std::vector<ProbeClusterConfig> ProbeController::RequestProbe(
   bool alr_ended_recently =
       (alr_end_time_.has_value() &&
        at_time - alr_end_time_.value() < kAlrEndedTimeout);
+	MS_DEBUG_DEV("in_alr: %d, alr_ended_recently:%d, in_rapid_recovery_experiment_:%d, state: %d", in_alr, alr_ended_recently, in_rapid_recovery_experiment_, state_);
   if (in_alr || alr_ended_recently || in_rapid_recovery_experiment_) {
     if (state_ == State::kProbingComplete) {
       DataRate suggested_probe =
@@ -372,6 +373,7 @@ std::vector<ProbeClusterConfig> ProbeController::RequestProbe(
           (1 - kProbeUncertainty) * suggested_probe;
       TimeDelta time_since_drop = at_time - time_of_last_large_drop_;
       TimeDelta time_since_probe = at_time - last_bwe_drop_probing_time_;
+			MS_DEBUG_DEV("min_expected_probe_result: %lld, estimated_bitrate_:%lld, time_since_drop:%lld, time_since_probe: %lld", min_expected_probe_result.bps(), estimated_bitrate_.bps(), time_since_drop.seconds(), time_since_probe.seconds());
       if (min_expected_probe_result > estimated_bitrate_ &&
           time_since_drop < kBitrateDropTimeout &&
           time_since_probe > kMinTimeBetweenAlrProbes) {

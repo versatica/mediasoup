@@ -32,7 +32,7 @@ namespace webrtc {
 namespace {
 
 constexpr TimeDelta kDefaultRtt = TimeDelta::Millis<200>();
-constexpr double kDefaultBackoffFactor = 0.85;
+constexpr double kDefaultBackoffFactor = 0.95;
 
 constexpr char kBweBackOffFactorExperiment[] = "WebRTC-BweBackOffFactor";
 
