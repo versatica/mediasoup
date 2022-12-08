@@ -7,6 +7,7 @@
 * Node: Remove compiled JavaScript from repository and compile TypeScript code on NPM `prepare` script on demand when installed via git (PR #954).
 * `Worker`: Add `RTC::Shared` singleton for RTC entities (PR #953).
 * Update OpenSSL to 3.0.7.
+* Update NPM deps.
 
 
 ### 3.11.3
