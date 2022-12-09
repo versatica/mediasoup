@@ -2541,8 +2541,10 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
+			std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			auto* senderBwe = this->senderBwe;
+			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr(this->senderBwe);
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
 			sentInfo.wideSeq     = this->transportWideCcSeq;
@@ -2550,25 +2552,36 @@ namespace RTC
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
 			auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo, senderBweWeakPtr, &sentInfo](bool sent)
 			  {
 				  if (sent)
 				  {
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  auto tccClient = tccClientWeakPtr.lock();
 
-					  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+					  if (tccClient)
+						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
-					  senderBwe->RtpPacketSent(sentInfo);
+					  auto senderBwe = senderBweWeakPtr.lock();
+
+					  if (senderBwe)
+					  {
+					  	  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+					  	  senderBwe->RtpPacketSent(sentInfo);
+					  }
 				  }
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
 #else
 			const auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo](bool sent)
 			  {
 				  if (sent)
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+				  {
+					  auto tccClient = tccClientWeakPtr.lock();
+					  if (tccClient)
+					  	  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+				  }
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
@@ -2613,8 +2626,10 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
+			std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			auto* senderBwe = this->senderBwe;
+			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
 			sentInfo.wideSeq     = this->transportWideCcSeq;
@@ -2622,25 +2637,34 @@ namespace RTC
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
 			auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo, senderBweWeakPtr, &sentInfo](bool sent)
 			  {
 				  if (sent)
 				  {
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  auto tccClient = tccClientWeakPtr.lock();
+					  if (tccClient)
+						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
-					  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
-
-					  senderBwe->RtpPacketSent(sentInfo);
+					  auto senderBwe = senderBweWeakPtr.lock();
+					  if (senderBwe)
+					  {
+						  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+						  senderBwe->RtpPacketSent(sentInfo);
+					  }
 				  }
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
 #else
 			const auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo](bool sent)
 			  {
 				  if (sent)
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+				  {
+					  auto tccClient = tccClientWeakPtr.lock();
+					  if (tccClient)
+					  	  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+				  }
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
@@ -2951,8 +2975,10 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
+			std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			auto* senderBwe = this->senderBwe;
+			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
 			sentInfo.wideSeq     = this->transportWideCcSeq;
@@ -2961,25 +2987,34 @@ namespace RTC
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
 			auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo, senderBweWeakPtr, &sentInfo](bool sent)
 			  {
 				  if (sent)
-				  {
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+				  {	
+					  auto tccClient = tccClientWeakPtr.lock();
+					  if (tccClient)
+						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 
-					  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
-
-					  senderBwe->RtpPacketSent(sentInfo);
+					  auto senderBwe = senderBweWeakPtr.lock();
+					  if (senderBwe)
+					  {
+					 	  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+						  senderBwe->RtpPacketSent(sentInfo);
+					  }
 				  }
 			  });
 
 			SendRtpPacket(nullptr, packet, cb);
 #else
 			const auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo](bool sent)
 			  {
 				  if (sent)
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+				  {
+				  	  auto tccClient = tccClientWeakPtr.lock();
+					  if (tccClient)
+						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+				  }
 			  });
 
 			SendRtpPacket(nullptr, packet, cb);
