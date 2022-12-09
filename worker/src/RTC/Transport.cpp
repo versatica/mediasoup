@@ -2990,7 +2990,7 @@ namespace RTC
 			  [tccClientWeakPtr, &packetInfo, senderBweWeakPtr, &sentInfo](bool sent)
 			  {
 				  if (sent)
-				  {	
+				  {
 					  auto tccClient = tccClientWeakPtr.lock();
 					  if (tccClient)
 						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
@@ -3011,7 +3011,7 @@ namespace RTC
 			  {
 				  if (sent)
 				  {
-				  	  auto tccClient = tccClientWeakPtr.lock();
+					  auto tccClient = tccClientWeakPtr.lock();
 					  if (tccClient)
 						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
 				  }
