@@ -228,20 +228,6 @@ namespace RTC
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
 		this->rtcpTimer = nullptr;
-
-		// Delete Transport-CC client.
-		delete this->tccClient;
-		this->tccClient = nullptr;
-
-		// Delete Transport-CC server.
-		delete this->tccServer;
-		this->tccServer = nullptr;
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-		// Delete Sender BWE.
-		delete this->senderBwe;
-		this->senderBwe = nullptr;
-#endif
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -809,7 +795,8 @@ namespace RTC
 
 					if (createTccServer)
 					{
-						this->tccServer = new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize);
+						this->tccServer =
+						  std::make_shared<RTC::TransportCongestionControlServer>(this, bweType, RTC::MtuSize);
 
 						if (this->maxIncomingBitrate != 0u)
 							this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
@@ -1014,7 +1001,7 @@ namespace RTC
 							consumer->SetExternallyManagedBitrate();
 						};
 
-						this->tccClient = new RTC::TransportCongestionControlClient(
+						this->tccClient = std::make_shared<RTC::TransportCongestionControlClient>(
 						  this, bweType, this->initialAvailableOutgoingBitrate, this->maxOutgoingBitrate);
 
 						if (IsConnected())
@@ -1061,8 +1048,8 @@ namespace RTC
 						consumer->SetExternallyManagedBitrate();
 					};
 
-					this->senderBwe =
-					  new RTC::SenderBandwidthEstimator(this, this->initialAvailableOutgoingBitrate);
+					this->senderBwe = std::make_shared<RTC::SenderBandwidthEstimator>(
+					  this, this->initialAvailableOutgoingBitrate);
 
 					if (IsConnected())
 						this->senderBwe->TransportConnected();
