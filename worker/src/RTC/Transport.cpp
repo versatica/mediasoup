@@ -2527,6 +2527,11 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
+			// When using WebRtcServer, the lifecycle of a RTC::UdpSocket maybe longer
+			// than WebRtcTransport so there is a chance for the send callback to be
+			// invoked *after* the WebRtcTransport has been closed (freed). To avoid
+			// invalid memory access we need to use weak_ptr. Same applies in other
+			// send callbacks.
 			std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
@@ -2545,7 +2550,9 @@ namespace RTC
 					  auto tccClient = tccClientWeakPtr.lock();
 
 					  if (tccClient)
+					  {
 						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
 
 					  auto senderBwe = senderBweWeakPtr.lock();
 
@@ -2565,8 +2572,11 @@ namespace RTC
 				  if (sent)
 				  {
 					  auto tccClient = tccClientWeakPtr.lock();
+
 					  if (tccClient)
+					  {
 						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
 				  }
 			  });
 
@@ -2627,10 +2637,14 @@ namespace RTC
 				  if (sent)
 				  {
 					  auto tccClient = tccClientWeakPtr.lock();
+
 					  if (tccClient)
+					  {
 						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
 
 					  auto senderBwe = senderBweWeakPtr.lock();
+
 					  if (senderBwe)
 					  {
 						  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
@@ -2647,8 +2661,11 @@ namespace RTC
 				  if (sent)
 				  {
 					  auto tccClient = tccClientWeakPtr.lock();
+
 					  if (tccClient)
+					  {
 						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
 				  }
 			  });
 
@@ -2977,10 +2994,14 @@ namespace RTC
 				  if (sent)
 				  {
 					  auto tccClient = tccClientWeakPtr.lock();
+
 					  if (tccClient)
+					  {
 						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
 
 					  auto senderBwe = senderBweWeakPtr.lock();
+
 					  if (senderBwe)
 					  {
 						  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
@@ -2997,8 +3018,11 @@ namespace RTC
 				  if (sent)
 				  {
 					  auto tccClient = tccClientWeakPtr.lock();
+
 					  if (tccClient)
+					  {
 						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
 				  }
 			  });
 
