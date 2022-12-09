@@ -1,7 +1,7 @@
 # Changelog
 
 
-### NEXT
+### 3.11.4
 
 * Node: Migrate tests to TypeScript (PR #958).
 * Node: Remove compiled JavaScript from repository and compile TypeScript code on NPM `prepare` script on demand when installed via git (PR #954).
