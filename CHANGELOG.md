@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* Require Node.js >= 16 (PR #973).
+
+
 ### 3.11.4
 
 * Node: Migrate tests to TypeScript (PR #958).
