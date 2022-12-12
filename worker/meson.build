@@ -334,7 +334,6 @@ mediasoup_worker_test = executable(
     'test/src/RTC/RTCP/TestXr.cpp',
     'test/src/Utils/TestBits.cpp',
     'test/src/Utils/TestIP.cpp',
-    'test/src/Utils/TestJson.cpp',
     'test/src/Utils/TestString.cpp',
     'test/src/Utils/TestTime.cpp',
   ],
