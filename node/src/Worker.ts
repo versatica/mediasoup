@@ -99,82 +99,82 @@ export type WorkerResourceUsage =
 	/**
 	 * User CPU time used (in ms).
 	 */
-	ru_utime: BigInt;
+	ru_utime: Number;
 
 	/**
 	 * System CPU time used (in ms).
 	 */
-	ru_stime: BigInt;
+	ru_stime: Number;
 
 	/**
 	 * Maximum resident set size.
 	 */
-	ru_maxrss: BigInt;
+	ru_maxrss: Number;
 
 	/**
 	 * Integral shared memory size.
 	 */
-	ru_ixrss: BigInt;
+	ru_ixrss: Number;
 
 	/**
 	 * Integral unshared data size.
 	 */
-	ru_idrss: BigInt;
+	ru_idrss: Number;
 
 	/**
 	 * Integral unshared stack size.
 	 */
-	ru_isrss: BigInt;
+	ru_isrss: Number;
 
 	/**
 	 * Page reclaims (soft page faults).
 	 */
-	ru_minflt: BigInt;
+	ru_minflt: Number;
 
 	/**
 	 * Page faults (hard page faults).
 	 */
-	ru_majflt: BigInt;
+	ru_majflt: Number;
 
 	/**
 	 * Swaps.
 	 */
-	ru_nswap: BigInt;
+	ru_nswap: Number;
 
 	/**
 	 * Block input operations.
 	 */
-	ru_inblock: BigInt;
+	ru_inblock: Number;
 
 	/**
 	 * Block output operations.
 	 */
-	ru_oublock: BigInt;
+	ru_oublock: Number;
 
 	/**
 	 * IPC messages sent.
 	 */
-	ru_msgsnd: BigInt;
+	ru_msgsnd: Number;
 
 	/**
 	 * IPC messages received.
 	 */
-	ru_msgrcv: BigInt;
+	ru_msgrcv: Number;
 
 	/**
 	 * Signals received.
 	 */
-	ru_nsignals: BigInt;
+	ru_nsignals: Number;
 
 	/**
 	 * Voluntary context switches.
 	 */
-	ru_nvcsw: BigInt;
+	ru_nvcsw: Number;
 
 	/**
 	 * Involuntary context switches.
 	 */
-	ru_nivcsw: BigInt;
+	ru_nivcsw: Number;
 
 	/* eslint-enable camelcase */
 };
@@ -594,22 +594,22 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		/* eslint-disable camelcase */
 		return {
-			ru_utime    : ru.ruUtime,
-			ru_stime    : ru.ruStime,
-			ru_maxrss   : ru.ruMaxrss,
-			ru_ixrss    : ru.ruIxrss,
-			ru_idrss    : ru.ruIdrss,
-			ru_isrss    : ru.ruIsrss,
-			ru_minflt   : ru.ruMinflt,
-			ru_majflt   : ru.ruMajflt,
-			ru_nswap    : ru.ruNswap,
-			ru_inblock  : ru.ruInblock,
-			ru_oublock  : ru.ruOublock,
-			ru_msgsnd   : ru.ruMsgsnd,
-			ru_msgrcv   : ru.ruMsgrcv,
-			ru_nsignals : ru.ruNsignals,
-			ru_nvcsw    : ru.ruNvcsw,
-			ru_nivcsw   : ru.ruNivcsw
+			ru_utime    : Number(ru.ruUtime),
+			ru_stime    : Number(ru.ruStime),
+			ru_maxrss   : Number(ru.ruMaxrss),
+			ru_ixrss    : Number(ru.ruIxrss),
+			ru_idrss    : Number(ru.ruIdrss),
+			ru_isrss    : Number(ru.ruIsrss),
+			ru_minflt   : Number(ru.ruMinflt),
+			ru_majflt   : Number(ru.ruMajflt),
+			ru_nswap    : Number(ru.ruNswap),
+			ru_inblock  : Number(ru.ruInblock),
+			ru_oublock  : Number(ru.ruOublock),
+			ru_msgsnd   : Number(ru.ruMsgsnd),
+			ru_msgrcv   : Number(ru.ruMsgrcv),
+			ru_nsignals : Number(ru.ruNsignals),
+			ru_nvcsw    : Number(ru.ruNvcsw),
+			ru_nivcsw   : Number(ru.ruNivcsw)
 		};
 		/* eslint-enable camelcase */
 	}

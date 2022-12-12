@@ -949,7 +949,7 @@ export function parseTraceEventData(
 
 	return {
 		type      : fbstraceType2String(trace.type()),
-		timestamp : trace.timestamp() as unknown as number,
+		timestamp : Number(trace.timestamp()),
 		direction : trace.direction() === FbsConsumer.TraceDirection.IN ? 'in' : 'out',
 		info      : info ? info.unpack() : undefined
 	};

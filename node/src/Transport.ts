@@ -1223,7 +1223,7 @@ export function parseTransportTraceEventData(
 
 			return {
 				type      : 'bwe',
-				timestamp : trace.timestamp() as unknown as number,
+				timestamp : Number(trace.timestamp()),
 				direction : trace.direction() === FbsTransport.TraceDirection.IN ? 'in' : 'out',
 				info      : parseBweTraceInfo(info!)
 			};
@@ -1233,7 +1233,7 @@ export function parseTransportTraceEventData(
 		{
 			return {
 				type      : 'probation',
-				timestamp : trace.timestamp() as unknown as number,
+				timestamp : Number(trace.timestamp()),
 				direction : trace.direction() === FbsTransport.TraceDirection.IN ? 'in' : 'out',
 				info      : {}
 			};
