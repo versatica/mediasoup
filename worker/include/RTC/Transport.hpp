@@ -305,10 +305,10 @@ namespace RTC
 		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
 		Timer* rtcpTimer{ nullptr };
-		RTC::TransportCongestionControlClient* tccClient{ nullptr };
-		RTC::TransportCongestionControlServer* tccServer{ nullptr };
+		std::shared_ptr<RTC::TransportCongestionControlClient> tccClient{ nullptr };
+		std::shared_ptr<RTC::TransportCongestionControlServer> tccServer{ nullptr };
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-		RTC::SenderBandwidthEstimator* senderBwe{ nullptr };
+		std::shared_ptr<RTC::SenderBandwidthEstimator> senderBwe{ nullptr };
 #endif
 		// Others.
 		bool direct{ false }; // Whether this Transport allows direct communication.

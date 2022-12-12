@@ -9,7 +9,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cmath>   // std::ceil()
-#include <cstdio>  // sprintf()
 #include <cstring> // std::memcpy(), std::memmove()
 
 namespace Channel

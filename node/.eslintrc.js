@@ -59,6 +59,7 @@ const eslintConfig =
 				{
 					beforeColon : true,
 					afterColon  : true,
+					mode        : 'minimum',
 					align       : 'colon'
 				}
 			}

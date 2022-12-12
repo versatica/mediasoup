@@ -9,8 +9,6 @@ jobs:
         # Different Node versions on Ubuntu, the latest Node on other platforms
         ci:
           - os: ubuntu-22.04
-            node: 14
-          - os: ubuntu-22.04
             node: 16
           - os: ubuntu-22.04
             node: 18

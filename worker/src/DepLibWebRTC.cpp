@@ -3,13 +3,13 @@
 
 #include "DepLibWebRTC.hpp"
 #include "Logger.hpp"
+#include "Settings.hpp"
 #include "system_wrappers/source/field_trial.h" // webrtc::field_trial
 #include <mutex>
 
 /* Static. */
 
 static std::once_flag globalInitOnce;
-static constexpr char FieldTrials[] = "WebRTC-Bwe-AlrLimitedBackoff/Enabled/";
 
 /* Static methods. */
 
@@ -17,7 +17,16 @@ void DepLibWebRTC::ClassInit()
 {
 	MS_TRACE();
 
-	std::call_once(globalInitOnce, [] { webrtc::field_trial::InitFieldTrialsFromString(FieldTrials); });
+	MS_DEBUG_TAG(
+	  info, "libwebrtc field trials: \"%s\"", Settings::configuration.libwebrtcFieldTrials.c_str());
+
+	std::call_once(
+	  globalInitOnce,
+	  []
+	  {
+		  webrtc::field_trial::InitFieldTrialsFromString(
+		    Settings::configuration.libwebrtcFieldTrials.c_str());
+	  });
 }
 
 void DepLibWebRTC::ClassDestroy()

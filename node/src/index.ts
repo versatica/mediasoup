@@ -46,6 +46,7 @@ export async function createWorker(
 		rtcMaxPort = 59999,
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
+		libwebrtcFieldTrials,
 		appData
 	}: WorkerSettings = {}
 ): Promise<Worker>
@@ -63,6 +64,7 @@ export async function createWorker(
 			rtcMaxPort,
 			dtlsCertificateFile,
 			dtlsPrivateKeyFile,
+			libwebrtcFieldTrials,
 			appData
 		});
 
