@@ -70,6 +70,7 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
+      - run: npm run flatc:worker
       - run: npm run worker:build
       - run: npm run test:worker
         if: runner.os != 'Windows'
