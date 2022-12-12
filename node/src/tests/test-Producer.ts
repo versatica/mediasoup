@@ -695,8 +695,14 @@ test('Producer emits "score"', async () =>
 	videoProducer.on('score', onScore);
 
 	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 10 } ]);
-	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 9 }, { ssrc: 22, score: 8 } ]);
-	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 9 }, { ssrc: 22, score: 9 } ]);
+	channel.emit(videoProducer.id, 'score', [
+		{ ssrc: 11, score: 9 },
+		{ ssrc: 22, score: 8 }
+	]);
+	channel.emit(videoProducer.id, 'score', [
+		{ ssrc: 11, score: 9 },
+		{ ssrc: 22, score: 9 }
+	]);
 
 	expect(onScore).toHaveBeenCalledTimes(3);
 	expect(videoProducer.score).toEqual([ { ssrc: 11, score: 9 }, { ssrc: 22, score: 9 } ]);
