@@ -279,7 +279,7 @@ function flatcNode()
 	// Build flatc binary if needed.
 	executeCmd(`${MAKE} -C worker flatc`);
 
-	const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
+	const flatc = 'worker/subprojects/flatbuffers-22.11.23/build/flatc';
 	const options = '--gen-object-api';
 	const out = 'node/src/fbs';
 	const command = `${flatc} --ts ${options} -o ${out} `;
@@ -294,7 +294,7 @@ function flatcWorker()
 	// Build flatc binary if needed.
 	executeCmd(`${MAKE} -C worker flatc`);
 
-	const flatc = 'worker/subprojects/flatbuffers-2.0.8/build/flatc';
+	const flatc = 'worker/subprojects/flatbuffers-22.11.23/build/flatc';
 	const options = '--cpp-field-case-style lower --reflect-names --scoped-enums';
 	const out = 'worker/include/FBS/';
 	const command = `${flatc} --cpp ${options} -o ${out} `;

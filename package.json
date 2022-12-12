@@ -74,13 +74,22 @@
     "testEnvironment": "node",
     "testRegex": "node/src/tests/test-.*\\.ts",
     "transform": {
-      "^.*\\.ts$": [ "ts-jest", { "diagnostics": { "ignoreCodes": [ "TS151001" ] } } ]
+      "^.*\\.ts$": [
+        "ts-jest",
+        {
+          "diagnostics": {
+            "ignoreCodes": [
+              "TS151001"
+            ]
+          }
+        }
+      ]
     },
     "cacheDirectory": ".cache/jest"
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "flatbuffers": "^2.0.7",
+    "flatbuffers": "^22.11.23",
     "h264-profile-level-id": "^1.0.1",
     "supports-color": "^9.2.3",
     "uuid": "^9.0.0"
