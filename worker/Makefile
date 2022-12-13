@@ -229,7 +229,7 @@ tidy:
 	$(PYTHON) ./scripts/clang-tidy.py \
 		-clang-tidy-binary=./scripts/node_modules/.bin/clang-tidy \
 		-clang-apply-replacements-binary=./scripts/node_modules/.bin/clang-apply-replacements \
-		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)' \
+		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|EventEmitter.hpp|handles/**/*.hpp)' \
 		-p=$(BUILD_DIR) \
 		-j=$(CORES) \
 		-checks=$(MEDIASOUP_TIDY_CHECKS) \

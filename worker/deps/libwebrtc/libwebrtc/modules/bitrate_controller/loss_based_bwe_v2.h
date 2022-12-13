@@ -23,6 +23,7 @@
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/transport/webrtc_key_value_config.h"
+#include "EventEmitter.hpp"
 
 namespace webrtc {
 
@@ -204,7 +205,7 @@ class LossBasedBweV2 {
 	size_t instant_loss_debounce_counter_ = 0;
 	TimeDelta instant_loss_debounce_duration = TimeDelta::seconds(2);
 	Timestamp instant_loss_debounce_start = Timestamp::MinusInfinity();
-
+	EventEmitter events;
 };
 
 }  // namespace webrtc

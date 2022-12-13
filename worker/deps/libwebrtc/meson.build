@@ -73,6 +73,7 @@ libwebrtc = library(
     libuv_proj.get_variable('libuv_dep'),
   ],
   include_directories: libwebrtc_include_directories,
+  override_options : ['c_std=c11', 'cpp_std=c++14'],
   cpp_args: cpp_args,
 )
 
