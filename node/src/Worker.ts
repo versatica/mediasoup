@@ -63,17 +63,17 @@ export type WorkerSettings =
 	 * certificate is dynamically created.
 	 */
 	dtlsPrivateKeyFile?: string;
-
+	/* eslint-disable max-len */
 	/**
 	 * Field trials for libwebrtc.
 	 * @private
 	 *
 	 * NOTE: For advanced users only. An invalid value will make the worker crash.
 	 * Default value is
-	 * eslint-disable-next-line max-len
 	 * "WebRTC-Bwe-AlrLimitedBackoff/Enabled/WebRTC-Bwe-LossBasedBweV2/Enabled:true,CandidateFactors:1.02|1.0|0.95,DelayBasedCandidate:true,HigherBwBiasFactor:0.0002,HigherLogBwBiasFactor:0.02,ObservationDurationLowerBound:250ms,InstantUpperBoundBwBalance:75kbps,BwRampupUpperBoundFactor:1000000.0,InstantUpperBoundTemporalWeightFactor:0.9,TemporalWeightFactor:0.9,MaxIncreaseFactor:1.3,NewtonStepSize:0.75,InherentLossUpperBoundBwBalance:75kbps,LossThresholdOfHighBandwidthPreference:0.15,NotIncreaseIfInherentLossLessThanAverageLoss:true,TrendlineIntegrationEnabled:true,SendingRateSmoothingFactor:0.6/".
 	 */
 	libwebrtcFieldTrials?: string;
+	/* eslint-enable max-len */
 
 	/**
 	 * Custom application data.
