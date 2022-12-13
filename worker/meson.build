@@ -3,7 +3,7 @@ project(
   ['c', 'cpp'],
   default_options : [
     'warning_level=1',
-    'cpp_std=c++11',
+    'cpp_std=c++14',
     'default_library=static',
   ],
   meson_version: '>= 0.58',
