@@ -127,7 +127,7 @@ double getAverage(std::deque<double> const& hist) {
 }
 
 constexpr double kMaxAdaptOffsetMs = 15.0;
-constexpr double kOverUsingTimeThreshold = 5;
+constexpr double kOverUsingTimeThreshold = 10;
 constexpr int kMinNumDeltas = 60;
 constexpr int kDeltaCounterMax = 1000;
 
@@ -307,13 +307,11 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
 /*	for (auto it = delay_hist_.crbegin(); it != delay_hist_.crend(); ++it) {
 		MS_DEBUG_DEV("arrival_time_ms - first_arrival_time_ms_:%f, smoothed_delay_:%f, raw_delay_:%f", it->arrival_time_ms, it->smoothed_delay_ms, it->raw_delay_ms);
 	}*/
-	if (avg_r_squared > 0 && trend.slope > 0.0 && avg_r_squared < 0.6) {
-		if (avg_r_squared < 0.09) {
+
+	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < 0.4) {
+		if (avg_r_squared < 0.15) {
 			hypothesis_ = BandwidthUsage::kBwOverusing;
-			MS_DEBUG_DEV("Instant OverUsing!");
-		} else if (avg_r_squared < 0.2) {
 			MS_DEBUG_DEV("OverUsing!");
-			hypothesis_ = BandwidthUsage::kBwOverusing;
 		} else  {
 			hypothesis_ = BandwidthUsage::kBwUnderusing;
 			MS_DEBUG_DEV("HOLD");

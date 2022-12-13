@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::ProbeController"
-#define MS_LOG_DEV_LEVEL 3
+//#define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
 #include "api/units/data_rate.h"
