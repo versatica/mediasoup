@@ -92,9 +92,8 @@ table PipeConsumerDump {
   rtp_streams:[FBS.RtpStream.Dump] (required);
 }
 
-// TMP: String holding JSON stats.
 table GetStatsResponse {
-  stats:string (required);
+  stats:[FBS.RtpStream.Stats];
 }
 
 // Notifications from Worker.

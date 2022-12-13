@@ -17,11 +17,8 @@
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/Shared.hpp"
 #include <absl/container/flat_hash_set.h>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -72,8 +69,8 @@ namespace RTC
 	public:
 		virtual flatbuffers::Offset<FBS::Consumer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
-		virtual void FillJsonStats(json& jsonArray) const  = 0;
-		virtual void FillJsonScore(json& jsonObject) const = 0;
+		virtual flatbuffers::Offset<FBS::Consumer::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder) = 0;
 		virtual flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
 		  flatbuffers::FlatBufferBuilder& builder) const
 		{

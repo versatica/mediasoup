@@ -211,14 +211,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::CONSUMER_GET_STATS:
 			{
-				// TMP: Replace JSON by flatbuffers.
-
-				json data = json::array();
-
-				FillJsonStats(data);
-
-				auto responseOffset = FBS::Consumer::CreateGetStatsResponseDirect(
-				  request->GetBufferBuilder(), data.dump().c_str());
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::FBS_Consumer_GetStatsResponse, responseOffset);
 

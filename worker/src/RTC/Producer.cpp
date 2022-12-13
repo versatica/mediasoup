@@ -315,21 +315,22 @@ namespace RTC
 		  this->paused);
 	}
 
-	void Producer::FillJsonStats(json& jsonArray) const
+	flatbuffers::Offset<FBS::Producer::GetStatsResponse> Producer::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
+
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Stats>> rtpStreams;
 
 		for (auto* rtpStream : this->rtpStreamByEncodingIdx)
 		{
 			if (!rtpStream)
 				continue;
 
-			jsonArray.emplace_back(json::value_t::object);
-
-			auto& jsonEntry = jsonArray[jsonArray.size() - 1];
-
-			rtpStream->FillJsonStats(jsonEntry);
+			rtpStreams.emplace_back(rtpStream->FillBufferStats(builder));
 		}
+
+		return FBS::Producer::CreateGetStatsResponseDirect(builder, &rtpStreams);
 	}
 
 	void Producer::HandleRequest(Channel::ChannelRequest* request)
@@ -349,14 +350,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::PRODUCER_GET_STATS:
 			{
-				// TMP: Replace JSON by flatbuffers.
-
-				json data = json::array();
-
-				FillJsonStats(data);
-
-				auto responseOffset = FBS::Producer::CreateGetStatsResponseDirect(
-				  request->GetBufferBuilder(), data.dump().c_str());
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::FBS_Producer_GetStatsResponse, responseOffset);
 

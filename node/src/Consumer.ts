@@ -11,6 +11,7 @@ import {
 	parseRtpEncodingParameters,
 	parseRtpParameters
 } from './RtpParameters';
+import { parseStreamStats } from './RtpStream';
 import { Event, Notification } from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
@@ -598,7 +599,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		response.body(data);
 
-		return JSON.parse(data.stats()!);
+		return parseConsumerStats(data);
 	}
 
 	/**
@@ -1175,4 +1176,10 @@ function parseConsumerDump(data: FbsConsumer.DumpResponse): ConsumerDump
 			throw new TypeError(`invalid Consumer type: ${data.type()}`);
 		}
 	}
+}
+
+function parseConsumerStats(binary: FbsConsumer.GetStatsResponse)
+	: Array<ConsumerStat | ProducerStat>
+{
+	return utils.parseVector(binary, 'stats', parseStreamStats);
 }

@@ -18,9 +18,8 @@ table DumpResponse {
   paused:bool = false;
 }
 
-// TMP: String holding JSON stats.
 table GetStatsResponse {
-  stats:string (required);
+  stats:[FBS.RtpStream.Stats];
 }
 
 table SendNotification {

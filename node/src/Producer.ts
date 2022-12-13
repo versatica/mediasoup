@@ -4,6 +4,7 @@ import { Channel } from './Channel';
 import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
 import { Event, Notification } from './fbs/notification_generated';
+import { parseRecvStreamStats } from './RtpStream';
 import * as FbsNotification from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
@@ -445,11 +446,11 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		);
 
 		/* Decode the response. */
-		const data = new FbsTransport.GetStatsResponse();
+		const data = new FbsProducer.GetStatsResponse();
 
 		response.body(data);
 
-		return JSON.parse(data.stats()!);
+		return parseProducerStats(data);
 	}
 
 	/**
@@ -637,6 +638,11 @@ export function parseProducerDump(
 		traceEventTypes : utils.parseVector(data, 'traceEventTypes'),
 		paused          : data.paused()
 	};
+}
+
+function parseProducerStats(binary: FbsProducer.GetStatsResponse): ProducerStat[]
+{
+	return utils.parseVector(binary, 'stats', parseRecvStreamStats);
 }
 
 function parseProducerScore(

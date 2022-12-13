@@ -150,22 +150,25 @@ namespace RTC
 		  FBS::RtpParameters::Type(this->type));
 	}
 
-	void SimulcastConsumer::FillJsonStats(json& jsonArray) const
+	flatbuffers::Offset<FBS::Consumer::GetStatsResponse> SimulcastConsumer::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
-		// Add stats of our send stream.
-		jsonArray.emplace_back(json::value_t::object);
-		this->rtpStream->FillJsonStats(jsonArray[0]);
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Stats>> rtpStreams;
 
-		// Add stats of our recv stream.
+		// Add stats of our send stream.
+		rtpStreams.emplace_back(this->rtpStream->FillBufferStats(builder));
+
 		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
 
+		// Add stats of our recv stream.
 		if (producerCurrentRtpStream)
 		{
-			jsonArray.emplace_back(json::value_t::object);
-			producerCurrentRtpStream->FillJsonStats(jsonArray[1]);
+			rtpStreams.emplace_back(producerCurrentRtpStream->FillBufferStats(builder));
 		}
+
+		return FBS::Consumer::CreateGetStatsResponseDirect(builder, &rtpStreams);
 	}
 
 	flatbuffers::Offset<FBS::Consumer::ConsumerScore> SimulcastConsumer::FillBufferScore(

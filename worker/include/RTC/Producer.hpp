@@ -102,7 +102,8 @@ namespace RTC
 	public:
 		flatbuffers::Offset<FBS::Producer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
-		void FillJsonStats(json& jsonArray) const;
+		flatbuffers::Offset<FBS::Producer::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder);
 		RTC::Media::Kind GetKind() const
 		{
 			return this->kind;

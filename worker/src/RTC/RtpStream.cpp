@@ -47,38 +47,37 @@ namespace RTC
 		return FBS::RtpStream::CreateDump(builder, params, this->score, rtxStream);
 	}
 
-	void RtpStream::FillJsonStats(json& jsonObject)
+	flatbuffers::Offset<FBS::RtpStream::Stats> RtpStream::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
 		uint64_t nowMs = DepLibUV::GetTimeMs();
 
-		jsonObject["timestamp"]            = nowMs;
-		jsonObject["ssrc"]                 = this->params.ssrc;
-		jsonObject["kind"]                 = RtpCodecMimeType::type2String[this->params.mimeType.type];
-		jsonObject["mimeType"]             = this->params.mimeType.ToString();
-		jsonObject["packetsLost"]          = this->packetsLost;
-		jsonObject["fractionLost"]         = this->fractionLost;
-		jsonObject["packetsDiscarded"]     = this->packetsDiscarded;
-		jsonObject["packetsRetransmitted"] = this->packetsRetransmitted;
-		jsonObject["packetsRepaired"]      = this->packetsRepaired;
-		jsonObject["nackCount"]            = this->nackCount;
-		jsonObject["nackPacketCount"]      = this->nackPacketCount;
-		jsonObject["pliCount"]             = this->pliCount;
-		jsonObject["firCount"]             = this->firCount;
-		jsonObject["score"]                = this->score;
+		auto baseStats = FBS::RtpStream::CreateBaseStatsDirect(
+		  builder,
+		  nowMs,
+		  this->params.ssrc,
+		  FBS::RtpParameters::MediaKind(this->params.mimeType.type),
+		  this->params.mimeType.ToString().c_str(),
+		  this->packetsLost,
+		  this->fractionLost,
+		  this->packetsDiscarded,
+		  this->packetsRetransmitted,
+		  this->packetsRepaired,
+		  this->nackCount,
+		  this->nackPacketCount,
+		  this->pliCount,
+		  this->firCount,
+		  this->score,
+		  !this->params.rid.empty() ? this->params.rid.c_str() : nullptr,
+		  this->params.rtxSsrc ? flatbuffers::Optional<uint32_t>(this->params.rtxSsrc)
+		                       : flatbuffers::nullopt,
+		  this->rtxStream ? this->rtxStream->GetPacketsDiscarded() : 0,
+		  this->hasRtt ? this->rtt : 0);
 
-		if (!this->params.rid.empty())
-			jsonObject["rid"] = this->params.rid;
-
-		if (this->params.rtxSsrc)
-			jsonObject["rtxSsrc"] = this->params.rtxSsrc;
-
-		if (this->rtxStream)
-			jsonObject["rtxPacketsDiscarded"] = this->rtxStream->GetPacketsDiscarded();
-
-		if (this->hasRtt)
-			jsonObject["roundTripTime"] = this->rtt;
+		return FBS::RtpStream::CreateStats(
+		  builder, FBS::RtpStream::StatsData::BaseStats, baseStats.Union());
 	}
 
 	void RtpStream::SetRtx(uint8_t payloadType, uint32_t ssrc)

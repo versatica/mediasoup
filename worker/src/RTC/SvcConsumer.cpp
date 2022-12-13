@@ -129,36 +129,23 @@ namespace RTC
 		  FBS::RtpParameters::Type(this->type));
 	}
 
-	void SvcConsumer::FillJsonStats(json& jsonArray) const
+	flatbuffers::Offset<FBS::Consumer::GetStatsResponse> SvcConsumer::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Stats>> rtpStreams;
+
 		// Add stats of our send stream.
-		jsonArray.emplace_back(json::value_t::object);
-		this->rtpStream->FillJsonStats(jsonArray[0]);
+		rtpStreams.emplace_back(this->rtpStream->FillBufferStats(builder));
 
 		// Add stats of our recv stream.
 		if (this->producerRtpStream)
 		{
-			jsonArray.emplace_back(json::value_t::object);
-			this->producerRtpStream->FillJsonStats(jsonArray[1]);
+			rtpStreams.emplace_back(producerRtpStream->FillBufferStats(builder));
 		}
-	}
 
-	void SvcConsumer::FillJsonScore(json& jsonObject) const
-	{
-		MS_TRACE();
-
-		MS_ASSERT(this->producerRtpStreamScores, "producerRtpStreamScores not set");
-
-		jsonObject["score"] = this->rtpStream->GetScore();
-
-		if (this->producerRtpStream)
-			jsonObject["producerScore"] = this->producerRtpStream->GetScore();
-		else
-			jsonObject["producerScore"] = 0;
-
-		jsonObject["producerScores"] = *this->producerRtpStreamScores;
+		return FBS::Consumer::CreateGetStatsResponseDirect(builder, &rtpStreams);
 	}
 
 	flatbuffers::Offset<FBS::Consumer::ConsumerScore> SvcConsumer::FillBufferScore(

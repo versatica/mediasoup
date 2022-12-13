@@ -81,19 +81,20 @@ namespace RTC
 		  FBS::RtpParameters::Type(this->type));
 	}
 
-	void PipeConsumer::FillJsonStats(json& jsonArray) const
+	flatbuffers::Offset<FBS::Consumer::GetStatsResponse> PipeConsumer::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
+
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Stats>> rtpStreams;
 
 		// Add stats of our send streams.
 		for (auto* rtpStream : this->rtpStreams)
 		{
-			jsonArray.emplace_back(json::value_t::object);
-
-			auto& jsonEntry = jsonArray[jsonArray.size() - 1];
-
-			rtpStream->FillJsonStats(jsonEntry);
+			rtpStreams.emplace_back(rtpStream->FillBufferStats(builder));
 		}
+
+		return FBS::Consumer::CreateGetStatsResponseDirect(builder, &rtpStreams);
 	}
 
 	flatbuffers::Offset<FBS::Consumer::ConsumerScore> PipeConsumer::FillBufferScore(

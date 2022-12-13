@@ -22,8 +22,8 @@ namespace RTC
 	public:
 		flatbuffers::Offset<FBS::Consumer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const override;
-		void FillJsonStats(json& jsonArray) const override;
-		void FillJsonScore(json& jsonObject) const override{};
+		flatbuffers::Offset<FBS::Consumer::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder) override;
 		flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
 		  flatbuffers::FlatBufferBuilder& builder) const override;
 		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;

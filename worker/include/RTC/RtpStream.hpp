@@ -15,11 +15,8 @@
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtxStream.hpp"
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -64,7 +61,8 @@ namespace RTC
 		virtual ~RtpStream();
 
 		flatbuffers::Offset<FBS::RtpStream::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
-		virtual void FillJsonStats(json& jsonObject);
+		virtual flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder);
 		uint32_t GetEncodingIdx() const
 		{
 			return this->params.encodingIdx;
