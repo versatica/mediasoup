@@ -63,7 +63,7 @@ export type WorkerSettings =
 	 * certificate is dynamically created.
 	 */
 	dtlsPrivateKeyFile?: string;
-	/* eslint-disable max-len */
+
 	/**
 	 * Field trials for libwebrtc.
 	 * @private
