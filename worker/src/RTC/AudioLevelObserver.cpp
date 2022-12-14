@@ -157,7 +157,6 @@ namespace RTC
 
 			uint16_t idx{ 0 };
 			auto rit  = mapDBovsProducer.crbegin();
-			json data = json::array();
 
 			std::vector<flatbuffers::Offset<FBS::AudioLevelObserver::Volume>> volumes;
 

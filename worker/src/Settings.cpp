@@ -9,7 +9,6 @@
 #include <flatbuffers/flatbuffers.h>
 #include <iterator> // std::ostream_iterator
 #include <mutex>
-#include <nlohmann/json.hpp>
 #include <sstream> // std::ostringstream
 #include <stdexcept>
 extern "C"
