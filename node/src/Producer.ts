@@ -4,7 +4,7 @@ import { Channel } from './Channel';
 import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
 import { Event, Notification } from './fbs/notification_generated';
-import { parseRecvStreamStats } from './RtpStream';
+import { parseRtpStreamRecvStats, RtpStreamRecvStats } from './RtpStream';
 import * as FbsNotification from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
@@ -112,35 +112,7 @@ export type ProducerVideoOrientation =
 	rotation: number;
 };
 
-export type ProducerStat =
-{
-	// Common to all RtpStreams.
-	type: string;
-	timestamp: number;
-	ssrc: number;
-	rtxSsrc?: number;
-	rid?: string;
-	kind: string;
-	mimeType: string;
-	packetsLost: number;
-	fractionLost: number;
-	packetsDiscarded: number;
-	packetsRetransmitted: number;
-	packetsRepaired: number;
-	nackCount: number;
-	nackPacketCount: number;
-	pliCount: number;
-	firCount: number;
-	score: number;
-	packetCount: number;
-	byteCount: number;
-	bitrate: number;
-	roundTripTime?: number;
-	rtxPacketsDiscarded?: number;
-	// RtpStreamRecv specific.
-	jitter: number;
-	bitrateByLayer?: any;
-};
+export type ProducerStat = RtpStreamRecvStats;
 
 /**
  * Producer type.
@@ -642,7 +614,7 @@ export function parseProducerDump(
 
 function parseProducerStats(binary: FbsProducer.GetStatsResponse): ProducerStat[]
 {
-	return utils.parseVector(binary, 'stats', parseRecvStreamStats);
+	return utils.parseVector(binary, 'stats', parseRtpStreamRecvStats);
 }
 
 function parseProducerScore(

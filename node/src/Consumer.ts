@@ -11,7 +11,7 @@ import {
 	parseRtpEncodingParameters,
 	parseRtpParameters
 } from './RtpParameters';
-import { parseStreamStats } from './RtpStream';
+import { parseRtpStreamStats, RtpStreamSendStats } from './RtpStream';
 import { Event, Notification } from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsTransport from './fbs/transport_generated';
@@ -142,30 +142,7 @@ export type ConsumerLayers =
 	temporalLayer?: number;
 };
 
-export type ConsumerStat =
-{
-	// Common to all RtpStreams.
-	type: string;
-	timestamp: number;
-	ssrc: number;
-	rtxSsrc?: number;
-	kind: string;
-	mimeType: string;
-	packetsLost: number;
-	fractionLost: number;
-	packetsDiscarded: number;
-	packetsRetransmitted: number;
-	packetsRepaired: number;
-	nackCount: number;
-	nackPacketCount: number;
-	pliCount: number;
-	firCount: number;
-	score: number;
-	packetCount: number;
-	byteCount: number;
-	bitrate: number;
-	roundTripTime?: number;
-};
+export type ConsumerStat = RtpStreamSendStats;
 
 /**
  * Consumer type.
@@ -1181,5 +1158,5 @@ function parseConsumerDump(data: FbsConsumer.DumpResponse): ConsumerDump
 function parseConsumerStats(binary: FbsConsumer.GetStatsResponse)
 	: Array<ConsumerStat | ProducerStat>
 {
-	return utils.parseVector(binary, 'stats', parseStreamStats);
+	return utils.parseVector(binary, 'stats', parseRtpStreamStats);
 }

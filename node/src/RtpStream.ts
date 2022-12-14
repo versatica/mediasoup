@@ -1,6 +1,22 @@
 import * as FbsRtpStream from './fbs/rtpStream_generated';
 
-type BaseStreamStats = {
+export type RtpStreamRecvStats = BaseRtpStreamStats & {
+	type: string;
+	jitter: number;
+	packetCount: number;
+	byteCount: number;
+	bitrate: number;
+	bitrateByLayer?: any;
+};
+
+export type RtpStreamSendStats = BaseRtpStreamStats & {
+	type: string;
+	packetCount: number;
+	byteCount: number;
+	bitrate: number;
+};
+
+type BaseRtpStreamStats = {
 	timestamp: number;
 	ssrc: number;
 	rtxSsrc?: number;
@@ -21,32 +37,16 @@ type BaseStreamStats = {
 	rtxPacketsDiscarded?: number;
 };
 
-type RecvStreamStats = BaseStreamStats & {
-	type: string;
-	jitter: number;
-	packetCount: number;
-	byteCount: number;
-	bitrate: number;
-	bitrateByLayer?: any;
-};
-
-type SendStreamStats = BaseStreamStats & {
-	type: string;
-	packetCount: number;
-	byteCount: number;
-	bitrate: number;
-};
-
-export function parseStreamStats(binary: FbsRtpStream.Stats)
-	: RecvStreamStats | SendStreamStats
+export function parseRtpStreamStats(binary: FbsRtpStream.Stats)
+	: RtpStreamRecvStats | RtpStreamSendStats
 {
 	if (binary.dataType() === FbsRtpStream.StatsData.RecvStats)
-		return parseRecvStreamStats(binary);
+		return parseRtpStreamRecvStats(binary);
 	else
 		return parseSendStreamStats(binary);
 }
 
-export function parseRecvStreamStats(binary: FbsRtpStream.Stats): RecvStreamStats
+export function parseRtpStreamRecvStats(binary: FbsRtpStream.Stats): RtpStreamRecvStats
 {
 	const recvStats = new FbsRtpStream.RecvStats();
 	const baseStats = new FbsRtpStream.BaseStats();
@@ -67,7 +67,7 @@ export function parseRecvStreamStats(binary: FbsRtpStream.Stats): RecvStreamStat
 	};
 }
 
-export function parseSendStreamStats(binary: FbsRtpStream.Stats): SendStreamStats
+export function parseSendStreamStats(binary: FbsRtpStream.Stats): RtpStreamSendStats
 {
 	const sendStats = new FbsRtpStream.SendStats();
 	const baseStats = new FbsRtpStream.BaseStats();
@@ -86,7 +86,7 @@ export function parseSendStreamStats(binary: FbsRtpStream.Stats): SendStreamStat
 	};
 }
 
-function parseBaseStreamStats(binary: FbsRtpStream.BaseStats): BaseStreamStats
+function parseBaseStreamStats(binary: FbsRtpStream.BaseStats): BaseRtpStreamStats
 {
 	return {
 		timestamp : Number(binary.timestamp()),
