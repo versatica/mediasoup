@@ -3,10 +3,7 @@
 
 #include "common.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include <nlohmann/json.hpp>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace Channel
 {

@@ -7,10 +7,7 @@
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
 #include <flatbuffers/flatbuffers.h>
-#include <nlohmann/json.hpp>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -65,7 +62,6 @@ namespace RTC
 				return this->tcpConnection->IsClosed();
 		}
 
-		void FillJson(json& jsonObject) const;
 		flatbuffers::Offset<FBS::Transport::Tuple> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
 		void Dump() const;
