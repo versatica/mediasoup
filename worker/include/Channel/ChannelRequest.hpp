@@ -51,7 +51,7 @@ namespace Channel
 			  FBS::Message::Body::FBS_Response_Response,
 			  response.Union());
 
-			builder.Finish(message);
+			builder.FinishSizePrefixed(message);
 			this->Send(builder.GetBufferPointer(), builder.GetSize());
 			builder.Reset();
 		}

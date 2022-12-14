@@ -38,7 +38,7 @@ namespace Channel
 			  FBS::Message::Body::FBS_Notification_Notification,
 			  notification.Union());
 
-			builder.Finish(message);
+			builder.FinishSizePrefixed(message);
 			this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
 			builder.Reset();
 		}
@@ -55,7 +55,7 @@ namespace Channel
 			  FBS::Message::Body::FBS_Notification_Notification,
 			  notification.Union());
 
-			builder.Finish(message);
+			builder.FinishSizePrefixed(message);
 			this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
 			builder.Reset();
 		}

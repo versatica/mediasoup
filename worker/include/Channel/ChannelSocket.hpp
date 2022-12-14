@@ -93,7 +93,6 @@ namespace Channel
 	public:
 		void Close();
 		void SetListener(Listener* listener);
-		void Send(const std::string& message);
 		void Send(const uint8_t* message, uint32_t messageLen);
 		void SendLog(const char* message, uint32_t messageLen);
 		bool CallbackRead();
@@ -118,7 +117,6 @@ namespace Channel
 		ChannelWriteFn channelWriteFn{ nullptr };
 		ChannelWriteCtx channelWriteCtx{ nullptr };
 		uv_async_t* uvReadHandle{ nullptr };
-		uint8_t* writeBuffer{ nullptr };
 		flatbuffers::FlatBufferBuilder bufferBuilder{ 1024 };
 	};
 } // namespace Channel

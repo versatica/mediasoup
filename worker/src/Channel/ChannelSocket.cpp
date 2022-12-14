@@ -36,8 +36,7 @@ namespace Channel
 
 	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)
 	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
-	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen)),
-	    writeBuffer(static_cast<uint8_t*>(std::malloc(MessageMaxLen)))
+	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen))
 	{
 		MS_TRACE_STD();
 	}
@@ -83,8 +82,6 @@ namespace Channel
 	{
 		MS_TRACE_STD();
 
-		std::free(this->writeBuffer);
-
 		if (!this->closed)
 			Close();
 
@@ -124,24 +121,6 @@ namespace Channel
 		this->listener = listener;
 	}
 
-	void ChannelSocket::Send(const std::string& message)
-	{
-		MS_TRACE_STD();
-
-		if (this->closed)
-			return;
-
-		if (message.length() > PayloadMaxLen)
-		{
-			MS_ERROR_STD("message too big");
-
-			return;
-		}
-
-		SendImpl(
-		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
-	}
-
 	void ChannelSocket::Send(const uint8_t* message, uint32_t messageLen)
 	{
 		MS_TRACE_STD();
@@ -177,7 +156,7 @@ namespace Channel
 		auto message = FBS::Message::CreateMessage(
 		  this->bufferBuilder, FBS::Message::Type::LOG, FBS::Message::Body::FBS_Log_Log, log.Union());
 
-		this->bufferBuilder.Finish(message);
+		this->bufferBuilder.FinishSizePrefixed(message);
 		this->Send(this->bufferBuilder.GetBufferPointer(), this->bufferBuilder.GetSize());
 		this->bufferBuilder.Reset();
 	}
@@ -274,16 +253,7 @@ namespace Channel
 		}
 		else
 		{
-			std::memcpy(this->writeBuffer, &payloadLen, sizeof(uint32_t));
-
-			if (payloadLen != 0)
-			{
-				std::memcpy(this->writeBuffer + sizeof(uint32_t), payload, payloadLen);
-			}
-
-			size_t len = sizeof(uint32_t) + payloadLen;
-
-			this->producerSocket->Write(this->writeBuffer, len);
+			this->producerSocket->Write(payload, payloadLen);
 		}
 	}
 
