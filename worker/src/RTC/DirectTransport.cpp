@@ -45,17 +45,18 @@ namespace RTC
 		  builder, FBS::Transport::TransportDumpData::DirectTransportDump, directTransportDump.Union());
 	}
 
-	void DirectTransport::FillJsonStats(json& jsonArray)
+	flatbuffers::Offset<FBS::Transport::GetStatsResponse> DirectTransport::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
-		// Call the parent method.
-		RTC::Transport::FillJsonStats(jsonArray);
+		// Base Transport stats.
+		auto base = Transport::FillBufferStats(builder);
+		// DirectTransport stats.
+		auto directTransportStats = FBS::Transport::CreateDirectTransportStats(builder, base);
 
-		auto& jsonObject = jsonArray[0];
-
-		// Add type.
-		jsonObject["type"] = "direct-transport";
+		return FBS::Transport::CreateGetStatsResponse(
+		  builder, FBS::Transport::StatsData::DirectTransportStats, directTransportStats.Union());
 	}
 
 	void DirectTransport::HandleRequest(Channel::ChannelRequest* request)

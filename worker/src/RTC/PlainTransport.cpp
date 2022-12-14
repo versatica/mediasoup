@@ -238,47 +238,61 @@ namespace RTC
 		  builder, FBS::Transport::TransportDumpData::PlainTransportDump, plainTransportDump.Union());
 	}
 
-	void PlainTransport::FillJsonStats(json& jsonArray)
+	flatbuffers::Offset<FBS::Transport::GetStatsResponse> PlainTransport::FillBufferStats(
+			flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
-		// Call the parent method.
-		RTC::Transport::FillJsonStats(jsonArray);
-
-		auto& jsonObject = jsonArray[0];
-
-		// Add type.
-		jsonObject["type"] = "plain-rtp-transport";
-
-		// Add rtcpMux.
-		jsonObject["rtcpMux"] = this->rtcpMux;
-
-		// Add comedia.
-		jsonObject["comedia"] = this->comedia;
+		// Add tuple.
+		flatbuffers::Offset<FBS::Transport::Tuple> tuple;
 
 		if (this->tuple)
 		{
-			// Add tuple.
-			this->tuple->FillJson(jsonObject["tuple"]);
+			tuple = this->tuple->FillBuffer(builder);
 		}
 		else
 		{
-			// Add tuple.
-			jsonObject["tuple"] = json::object();
-			auto jsonTupleIt    = jsonObject.find("tuple");
+			std::string localIp;
 
 			if (this->listenIp.announcedIp.empty())
-				(*jsonTupleIt)["localIp"] = this->udpSocket->GetLocalIp();
+				localIp = this->udpSocket->GetLocalIp();
 			else
-				(*jsonTupleIt)["localIp"] = this->listenIp.announcedIp;
+				localIp = this->listenIp.announcedIp;
 
-			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
-			(*jsonTupleIt)["protocol"]  = "udp";
+			tuple = FBS::Transport::CreateTupleDirect(
+					builder,
+					// localIp.
+					localIp.c_str(),
+					// localPort,
+					this->udpSocket->GetLocalPort(),
+					// remoteIp.
+					nullptr,
+					// remotePort.
+					0,
+					// protocol.
+					"udp"
+					);
 		}
 
 		// Add rtcpTuple.
+		flatbuffers::Offset<FBS::Transport::Tuple> rtcpTuple;
+
 		if (!this->rtcpMux && this->rtcpTuple)
-			this->rtcpTuple->FillJson(jsonObject["rtcpTuple"]);
+			rtcpTuple = this->rtcpTuple->FillBuffer(builder);
+
+		// Base Transport stats.
+		auto base = Transport::FillBufferStats(builder);
+		// PlainTransport stats.
+		auto plainTransportStats = FBS::Transport::CreatePlainTransportStats(
+				builder,
+				base,
+				this->rtcpMux,
+				this->comedia,
+				tuple,
+				rtcpTuple);
+
+		return FBS::Transport::CreateGetStatsResponse(
+		  builder, FBS::Transport::StatsData::PlainTransportStats, plainTransportStats.Union());
 	}
 
 	void PlainTransport::HandleRequest(Channel::ChannelRequest* request)

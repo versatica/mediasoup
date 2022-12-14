@@ -155,6 +155,29 @@ export type BaseTransportDump = {
 	traceEventTypes? : string[];
 };
 
+export type BaseTransportStats = {
+	transportId: string;
+	timestamp: number;
+	sctpState?: SctpState;
+	bytesReceived: number;
+	recvBitrate: number;
+	bytesSent: number;
+	sendBitrate: number;
+	rtpBytesReceived: number;
+	rtpRecvBitrate: number;
+	rtpBytesSent: number;
+	rtpSendBitrate: number;
+	rtxBytesReceived: number;
+	rtxRecvBitrate: number;
+	rtxBytesSent: number;
+	rtxSendBitrate: number;
+	probationBytesSent: number;
+	probationSendBitrate: number;
+	availableOutgoingBitrate?: number;
+	availableIncomingBitrate?: number;
+	maxIncomingBitrate?: number;
+};
+
 type TransportData =
   | WebRtcTransportData
   | PlainTransportData
@@ -1206,6 +1229,38 @@ export function parseBaseTransportDump(
 		sctpState               : sctpState,
 		sctpListener            : sctpListener,
 		traceEventTypes         : traceEventTypes
+	};
+}
+
+export function parseBaseTransportStats(
+	binary: FbsTransport.BaseTransportStats
+): BaseTransportStats
+{
+	const sctpState = binary.sctpState() === '' ? undefined : binary.sctpState() as SctpState;
+
+	return {
+		transportId              : binary.transportId()!,
+		timestamp                : Number(binary.timestamp()),
+		sctpState,
+		bytesReceived            : Number(binary.bytesReceived()),
+		recvBitrate              : Number(binary.recvBitrate()),
+		bytesSent                : Number(binary.bytesSent()),
+		sendBitrate              : Number(binary.sendBitrate()),
+		rtpBytesReceived         : Number(binary.rtpBytesReceived()),
+		rtpRecvBitrate           : Number(binary.rtpRecvBitrate()),
+		rtpBytesSent             : Number(binary.rtpBytesSent()),
+		rtpSendBitrate           : Number(binary.rtpSendBitrate()),
+		rtxBytesReceived         : Number(binary.rtxBytesReceived()),
+		rtxRecvBitrate           : Number(binary.rtxRecvBitrate()),
+		rtxBytesSent             : Number(binary.rtxBytesSent()),
+		rtxSendBitrate           : Number(binary.rtxSendBitrate()),
+		probationBytesSent       : Number(binary.probationBytesSent()),
+		probationSendBitrate     : Number(binary.probationSendBitrate()),
+		availableOutgoingBitrate : Number(binary.availableOutgoingBitrate()),
+		availableIncomingBitrate : Number(binary.availableIncomingBitrate()),
+		maxIncomingBitrate       : binary.maxIncomingBitrate() ?
+			Number(binary.maxIncomingBitrate()) :
+			undefined
 	};
 }
 

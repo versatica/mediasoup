@@ -2,7 +2,9 @@ import { Logger } from './Logger';
 import { UnsupportedError } from './errors';
 import {
 	BaseTransportDump,
+	BaseTransportStats,
 	parseBaseTransportDump,
+	parseBaseTransportStats,
 	parseTransportTraceEventData,
 	Transport,
 	TransportEvents,
@@ -30,29 +32,9 @@ export type DirectTransportOptions =
 	appData?: Record<string, unknown>;
 };
 
-export type DirectTransportStat =
+export type DirectTransportStat = BaseTransportStats &
 {
-	// Common to all Transports.
 	type: string;
-	transportId: string;
-	timestamp: number;
-	bytesReceived: number;
-	recvBitrate: number;
-	bytesSent: number;
-	sendBitrate: number;
-	rtpBytesReceived: number;
-	rtpRecvBitrate: number;
-	rtpBytesSent: number;
-	rtpSendBitrate: number;
-	rtxBytesReceived: number;
-	rtxRecvBitrate: number;
-	rtxBytesSent: number;
-	rtxSendBitrate: number;
-	probationBytesSent: number;
-	probationSendBitrate: number;
-	availableOutgoingBitrate?: number;
-	availableIncomingBitrate?: number;
-	maxIncomingBitrate?: number;
 };
 
 export type DirectTransportEvents = TransportEvents &
@@ -174,7 +156,7 @@ export class DirectTransport extends
 
 		response.body(data);
 
-		return JSON.parse(data.stats()!);
+		return [ parseDirectTransportStats(data) ];
 	}
 
 	/**
@@ -290,4 +272,22 @@ export function parseDirectTransportDump(
 	binary.base()!.data(fbsBaseTransportDump);
 
 	return parseBaseTransportDump(fbsBaseTransportDump);
+}
+
+function parseDirectTransportStats(
+	binary: FbsTransport.GetStatsResponse
+):DirectTransportStat
+{
+	const directTransportStats = new FbsTransport.DirectTransportStats();
+	const baseStats = new FbsTransport.BaseTransportStats();
+
+	binary.data(directTransportStats);
+	directTransportStats.base()!.data(baseStats);
+
+	const base = parseBaseTransportStats(baseStats);
+
+	return {
+		...base,
+		type : 'direct-transport'
+	};
 }

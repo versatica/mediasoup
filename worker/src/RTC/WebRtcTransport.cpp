@@ -372,63 +372,72 @@ namespace RTC
 		  builder, FBS::Transport::TransportDumpData::WebRtcTransportDump, webRtcTransportDump.Union());
 	}
 
-	void WebRtcTransport::FillJsonStats(json& jsonArray)
+	flatbuffers::Offset<FBS::Transport::GetStatsResponse> WebRtcTransport::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
-		// Call the parent method.
-		RTC::Transport::FillJsonStats(jsonArray);
-
-		auto& jsonObject = jsonArray[0];
-
-		// Add type.
-		jsonObject["type"] = "webrtc-transport";
-
-		// Add iceRole (we are always "controlled").
-		jsonObject["iceRole"] = "controlled";
-
 		// Add iceState.
+		std::string iceState;
+
 		switch (this->iceServer->GetState())
 		{
 			case RTC::IceServer::IceState::NEW:
-				jsonObject["iceState"] = "new";
+				iceState = "new";
 				break;
 			case RTC::IceServer::IceState::CONNECTED:
-				jsonObject["iceState"] = "connected";
+				iceState = "connected";
 				break;
 			case RTC::IceServer::IceState::COMPLETED:
-				jsonObject["iceState"] = "completed";
+				iceState = "completed";
 				break;
 			case RTC::IceServer::IceState::DISCONNECTED:
-				jsonObject["iceState"] = "disconnected";
+				iceState = "disconnected";
 				break;
 		}
 
+		// Add iceSelectedTuple.
+		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
+
 		if (this->iceServer->GetSelectedTuple())
-		{
-			// Add iceSelectedTuple.
-			this->iceServer->GetSelectedTuple()->FillJson(jsonObject["iceSelectedTuple"]);
-		}
+			iceSelectedTuple = this->iceServer->GetSelectedTuple()->FillBuffer(builder);
+
+		std::string dtlsState;
 
 		// Add dtlsState.
 		switch (this->dtlsTransport->GetState())
 		{
 			case RTC::DtlsTransport::DtlsState::NEW:
-				jsonObject["dtlsState"] = "new";
+				dtlsState = "new";
 				break;
 			case RTC::DtlsTransport::DtlsState::CONNECTING:
-				jsonObject["dtlsState"] = "connecting";
+				dtlsState = "connecting";
 				break;
 			case RTC::DtlsTransport::DtlsState::CONNECTED:
-				jsonObject["dtlsState"] = "connected";
+				dtlsState = "connected";
 				break;
 			case RTC::DtlsTransport::DtlsState::FAILED:
-				jsonObject["dtlsState"] = "failed";
+				dtlsState = "failed";
 				break;
 			case RTC::DtlsTransport::DtlsState::CLOSED:
-				jsonObject["dtlsState"] = "closed";
+				dtlsState = "closed";
 				break;
 		}
+
+		// Base Transport stats.
+		auto base = Transport::FillBufferStats(builder);
+		// WebRtcTransport stats.
+		auto webRtcTransportStats = FBS::Transport::CreateWebRtcTransportStatsDirect(
+		  builder,
+		  base,
+		  // iceRole (we are always "controlled").
+		  "controlled",
+		  iceState.c_str(),
+		  iceSelectedTuple,
+		  dtlsState.c_str());
+
+		return FBS::Transport::CreateGetStatsResponse(
+		  builder, FBS::Transport::StatsData::WebRtcTransportStats, webRtcTransportStats.Union());
 	}
 
 	void WebRtcTransport::HandleRequest(Channel::ChannelRequest* request)

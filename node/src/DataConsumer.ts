@@ -323,7 +323,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		);
 
 		/* Decode the response. */
-		const data = new FbsTransport.GetStatsResponse();
+		const data = new FbsDataConsumer.GetStatsResponse();
 
 		response.body(data);
 

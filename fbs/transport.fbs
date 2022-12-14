@@ -215,7 +215,7 @@ table SrtpParameters {
 
 table PlainTransportDump {
   base:DumpResponse (required);
-  rtc_mux:bool;
+  rtcp_mux:bool;
   comedia:bool;
   tuple:Tuple;
   rtcp_tuple:Tuple;
@@ -250,9 +250,66 @@ table BaseTransportOptions {
   is_data_channel:bool = false;
 }
 
-// TMP: String holding JSON stats.
+union StatsData {
+  BaseTransportStats,
+  DirectTransportStats,
+  PipeTransportStats,
+  PlainTransportStats,
+  WebRtcTransportStats,
+}
+
 table GetStatsResponse {
-  stats:string (required);
+  data:StatsData;
+}
+
+table BaseTransportStats {
+  transport_id:string (required);
+  timestamp:uint64;
+  sctp_state:string;
+  bytes_received:uint64;
+  recv_bitrate:uint64;
+  bytes_sent:uint64;
+  send_bitrate:uint64;
+  rtp_bytes_received:uint64;
+  rtp_recv_bitrate:uint64;
+  rtp_bytes_sent:uint64;
+  rtp_send_bitrate:uint64;
+  rtx_bytes_received:uint64;
+  rtx_recv_bitrate:uint64;
+  rtx_bytes_sent:uint64;
+  rtx_send_bitrate:uint64;
+  probation_bytes_sent:uint64;
+  probation_send_bitrate:uint64;
+  available_outgoing_bitrate:uint64;
+  available_incoming_bitrate:uint64;
+  max_incoming_bitrate:uint64;
+  rtp_packet_loss_received:uint64;
+  rtp_packet_loss_sent:uint64;
+}
+
+table DirectTransportStats {
+  base:GetStatsResponse (required);
+}
+
+table PipeTransportStats {
+  base:GetStatsResponse (required);
+  tuple:Tuple (required);
+}
+
+table PlainTransportStats {
+  base:GetStatsResponse (required);
+  rtcp_mux:bool;
+  comedia:bool;
+  tuple:Tuple (required);
+  rtcp_tuple:Tuple;
+}
+
+table WebRtcTransportStats {
+  base:GetStatsResponse (required);
+  ice_role:string (required);
+  ice_state:string (required);
+  ice_selected_tuple:Tuple;
+  dtls_state:string (required);
 }
 
 table SetMaxIncomingBitrateRequest {

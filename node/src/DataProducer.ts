@@ -300,7 +300,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		);
 
 		/* Decode the response. */
-		const data = new FbsTransport.GetStatsResponse();
+		const data = new FbsDataProducer.GetStatsResponse();
 
 		response.body(data);
 

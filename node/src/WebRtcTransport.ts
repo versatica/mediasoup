@@ -3,9 +3,11 @@ import { Logger } from './Logger';
 import {
 	fbsSctpState2StcpState,
 	parseBaseTransportDump,
+	parseBaseTransportStats,
 	parseTransportTraceEventData,
 	parseTuple,
 	BaseTransportDump,
+	BaseTransportStats,
 	Transport,
 	TransportListenIp,
 	TransportProtocol,
@@ -150,31 +152,9 @@ export type DtlsRole = 'auto' | 'client' | 'server';
 
 export type DtlsState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 
-export type WebRtcTransportStat =
+export type WebRtcTransportStat = BaseTransportStats &
 {
-	// Common to all Transports.
 	type: string;
-	transportId: string;
-	timestamp: number;
-	sctpState?: SctpState;
-	bytesReceived: number;
-	recvBitrate: number;
-	bytesSent: number;
-	sendBitrate: number;
-	rtpBytesReceived: number;
-	rtpRecvBitrate: number;
-	rtpBytesSent: number;
-	rtpSendBitrate: number;
-	rtxBytesReceived: number;
-	rtxRecvBitrate: number;
-	rtxBytesSent: number;
-	rtxSendBitrate: number;
-	probationBytesSent: number;
-	probationSendBitrate: number;
-	availableOutgoingBitrate?: number;
-	availableIncomingBitrate?: number;
-	maxIncomingBitrate?: number;
-	// WebRtcTransport specific.
 	iceRole: string;
 	iceState: IceState;
 	iceSelectedTuple?: TransportTuple;
@@ -452,7 +432,7 @@ export class WebRtcTransport extends
 
 		response.body(data);
 
-		return JSON.parse(data.stats()!);
+		return [ parseWebRtcTransportStats(data) ];
 	}
 
 	/**
@@ -702,6 +682,30 @@ export function parseWebRtcTransportDump(
 		iceState       : binary.iceState() as IceState,
 		dtlsParameters : dtlsParameters,
 		dtlsState      : binary.dtlsState() as DtlsState
+	};
+}
+
+function parseWebRtcTransportStats(
+	binary: FbsTransport.GetStatsResponse
+):WebRtcTransportStat
+{
+	const webRtcStats = new FbsTransport.WebRtcTransportStats();
+	const baseStats = new FbsTransport.BaseTransportStats();
+
+	binary.data(webRtcStats);
+	webRtcStats.base()!.data(baseStats);
+
+	const base = parseBaseTransportStats(baseStats);
+
+	return {
+		...base,
+		type             : 'webrtc-transport',
+		iceRole          : webRtcStats.iceRole()!,
+		iceState         : webRtcStats.iceState() as IceState,
+		iceSelectedTuple : webRtcStats.iceSelectedTuple() ?
+			parseTuple(webRtcStats.iceSelectedTuple()!) :
+			undefined,
+		dtlsState : webRtcStats.dtlsState() as DtlsState
 	};
 }
 

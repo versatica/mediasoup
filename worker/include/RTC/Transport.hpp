@@ -28,10 +28,7 @@
 #include "RTC/TransportCongestionControlServer.hpp"
 #include "handles/Timer.hpp"
 #include <absl/container/flat_hash_map.h>
-#include <nlohmann/json.hpp>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -129,7 +126,8 @@ namespace RTC
 		void CloseProducersAndConsumers();
 		void ListenServerClosed();
 		// Subclasses must also invoke the parent Close().
-		virtual void FillJsonStats(json& jsonArray);
+		virtual flatbuffers::Offset<FBS::Transport::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder);
 		virtual flatbuffers::Offset<FBS::Transport::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 

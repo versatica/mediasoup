@@ -4,9 +4,11 @@ import { Logger } from './Logger';
 import * as ortc from './ortc';
 import {
 	BaseTransportDump,
+	BaseTransportStats,
+	parseBaseTransportDump,
+	parseBaseTransportStats,
 	fbsSctpState2StcpState,
 	parseTuple,
-	parseBaseTransportDump,
 	parseTransportTraceEventData,
 	Transport,
 	TransportListenIp,
@@ -82,31 +84,9 @@ export type PipeTransportOptions =
 	appData?: Record<string, unknown>;
 };
 
-export type PipeTransportStat =
+export type PipeTransportStat = BaseTransportStats &
 {
-	// Common to all Transports.
 	type: string;
-	transportId: string;
-	timestamp: number;
-	sctpState?: SctpState;
-	bytesReceived: number;
-	recvBitrate: number;
-	bytesSent: number;
-	sendBitrate: number;
-	rtpBytesReceived: number;
-	rtpRecvBitrate: number;
-	rtpBytesSent: number;
-	rtpSendBitrate: number;
-	rtxBytesReceived: number;
-	rtxRecvBitrate: number;
-	rtxBytesSent: number;
-	rtxSendBitrate: number;
-	probationBytesSent: number;
-	probationSendBitrate: number;
-	availableOutgoingBitrate?: number;
-	availableIncomingBitrate?: number;
-	maxIncomingBitrate?: number;
-	// PipeTransport specific.
 	tuple: TransportTuple;
 };
 
@@ -271,7 +251,7 @@ export class PipeTransport
 
 		response.body(data);
 
-		return JSON.parse(data.stats()!);
+		return [ parsePipeTransportStats(data) ];
 	}
 
 	/**
@@ -489,6 +469,25 @@ export function parsePipeTransportDump(
 		tuple          : tuple,
 		rtx            : binary.rtx(),
 		srtpParameters : srtpParameters
+	};
+}
+
+function parsePipeTransportStats(
+	binary: FbsTransport.GetStatsResponse
+):PipeTransportStat
+{
+	const pipeTransportStats = new FbsTransport.PipeTransportStats();
+	const baseStats = new FbsTransport.BaseTransportStats();
+
+	binary.data(pipeTransportStats);
+	pipeTransportStats.base()!.data(baseStats);
+
+	const base = parseBaseTransportStats(baseStats);
+
+	return {
+		...base,
+		type  : 'pipe-transport',
+		tuple : parseTuple(pipeTransportStats.tuple()!)
 	};
 }
 

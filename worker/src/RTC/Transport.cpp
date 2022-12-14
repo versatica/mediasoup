@@ -389,20 +389,15 @@ namespace RTC
 		  builder, FBS::Transport::TransportDumpData::BaseTransportDump, baseTransportDump.Union());
 	}
 
-	void Transport::FillJsonStats(json& jsonArray)
+	flatbuffers::Offset<FBS::Transport::GetStatsResponse> Transport::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
 		auto nowMs = DepLibUV::GetTimeMs();
 
-		jsonArray.emplace_back(json::value_t::object);
-		auto& jsonObject = jsonArray[0];
-
-		// Add transportId.
-		jsonObject["transportId"] = this->id;
-
-		// Add timestamp.
-		jsonObject["timestamp"] = nowMs;
+		// Add sctpState.
+		std::string sctpState;
 
 		if (this->sctpAssociation)
 		{
@@ -410,84 +405,72 @@ namespace RTC
 			switch (this->sctpAssociation->GetState())
 			{
 				case RTC::SctpAssociation::SctpState::NEW:
-					jsonObject["sctpState"] = "new";
+					sctpState = "new";
 					break;
 				case RTC::SctpAssociation::SctpState::CONNECTING:
-					jsonObject["sctpState"] = "connecting";
+					sctpState = "connecting";
 					break;
 				case RTC::SctpAssociation::SctpState::CONNECTED:
-					jsonObject["sctpState"] = "connected";
+					sctpState = "connected";
 					break;
 				case RTC::SctpAssociation::SctpState::FAILED:
-					jsonObject["sctpState"] = "failed";
+					sctpState = "failed";
 					break;
 				case RTC::SctpAssociation::SctpState::CLOSED:
-					jsonObject["sctpState"] = "closed";
+					sctpState = "closed";
 					break;
 			}
 		}
 
-		// Add bytesReceived.
-		jsonObject["bytesReceived"] = this->recvTransmission.GetBytes();
+		auto baseTransportStats = FBS::Transport::CreateBaseTransportStatsDirect(
+		  builder,
+		  // transportId.
+		  this->id.c_str(),
+		  // timestamp.
+		  nowMs,
+		  // sctpState.
+		  sctpState.c_str(),
+		  // bytesReceived.
+		  this->recvTransmission.GetBytes(),
+		  // recvBitrate.
+		  this->recvTransmission.GetRate(nowMs),
+		  // bytesSent.
+		  this->sendTransmission.GetBytes(),
+		  // sendBitrate.
+		  this->sendTransmission.GetRate(nowMs),
+		  // rtpBytesReceived.
+		  this->recvRtpTransmission.GetBytes(),
+		  // rtpRecvBitrate.
+		  this->recvRtpTransmission.GetBitrate(nowMs),
+		  // rtpBytesSent.
+		  this->sendRtpTransmission.GetBytes(),
+		  // rtpSendBitrate.
+		  this->sendRtpTransmission.GetBitrate(nowMs),
+		  // rtxBytesReceived.
+		  this->recvRtxTransmission.GetBytes(),
+		  // rtxRecvBitrate.
+		  this->recvRtxTransmission.GetBitrate(nowMs),
+		  // rtxBytesSent.
+		  this->sendRtxTransmission.GetBytes(),
+		  // rtxSendBitrate.
+		  this->sendRtxTransmission.GetBitrate(nowMs),
+		  // probationBytesSent.
+		  this->sendProbationTransmission.GetBytes(),
+		  // probationSendBitrate.
+		  this->sendProbationTransmission.GetBitrate(nowMs),
+		  // availableOutgoingBitrate.
+		  this->tccClient ? this->tccClient->GetAvailableBitrate() : 0u,
+		  // availableIncomingBitrate.
+		  this->tccServer ? this->tccServer->GetAvailableBitrate() : 0u,
+		  // maxIncomingBitrate.
+		  this->maxIncomingBitrate,
+		  // packetLossReceived.
+		  this->tccServer ? this->tccServer->GetPacketLoss() : 0u,
+		  // packetLossSent.
+		  this->tccClient ? this->tccClient->GetPacketLoss() : 0u);
 
-		// Add recvBitrate.
-		jsonObject["recvBitrate"] = this->recvTransmission.GetRate(nowMs);
-
-		// Add bytesSent.
-		jsonObject["bytesSent"] = this->sendTransmission.GetBytes();
-
-		// Add sendBitrate.
-		jsonObject["sendBitrate"] = this->sendTransmission.GetRate(nowMs);
-
-		// Add rtpBytesReceived.
-		jsonObject["rtpBytesReceived"] = this->recvRtpTransmission.GetBytes();
-
-		// Add rtpRecvBitrate.
-		jsonObject["rtpRecvBitrate"] = this->recvRtpTransmission.GetBitrate(nowMs);
-
-		// Add rtpBytesSent.
-		jsonObject["rtpBytesSent"] = this->sendRtpTransmission.GetBytes();
-
-		// Add rtpSendBitrate.
-		jsonObject["rtpSendBitrate"] = this->sendRtpTransmission.GetBitrate(nowMs);
-
-		// Add rtxBytesReceived.
-		jsonObject["rtxBytesReceived"] = this->recvRtxTransmission.GetBytes();
-
-		// Add rtxRecvBitrate.
-		jsonObject["rtxRecvBitrate"] = this->recvRtxTransmission.GetBitrate(nowMs);
-
-		// Add rtxBytesSent.
-		jsonObject["rtxBytesSent"] = this->sendRtxTransmission.GetBytes();
-
-		// Add rtxSendBitrate.
-		jsonObject["rtxSendBitrate"] = this->sendRtxTransmission.GetBitrate(nowMs);
-
-		// Add probationBytesSent.
-		jsonObject["probationBytesSent"] = this->sendProbationTransmission.GetBytes();
-
-		// Add probationSendBitrate.
-		jsonObject["probationSendBitrate"] = this->sendProbationTransmission.GetBitrate(nowMs);
-
-		// Add availableOutgoingBitrate.
-		if (this->tccClient)
-			jsonObject["availableOutgoingBitrate"] = this->tccClient->GetAvailableBitrate();
-
-		// Add availableIncomingBitrate.
-		if (this->tccServer && this->tccServer->GetAvailableBitrate() != 0u)
-			jsonObject["availableIncomingBitrate"] = this->tccServer->GetAvailableBitrate();
-
-		// Add maxIncomingBitrate.
-		if (this->maxIncomingBitrate != 0u)
-			jsonObject["maxIncomingBitrate"] = this->maxIncomingBitrate;
-
-		// Add packetLossReceived.
-		if (this->tccServer)
-			jsonObject["rtpPacketLossReceived"] = this->tccServer->GetPacketLoss();
-
-		// Add packetLossSent.
-		if (this->tccClient)
-			jsonObject["rtpPacketLossSent"] = this->tccClient->GetPacketLoss();
+		return FBS::Transport::CreateGetStatsResponse(
+		  builder, FBS::Transport::StatsData::BaseTransportStats, baseTransportStats.Union());
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)
@@ -507,14 +490,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
 			{
-				// TMP: Replace JSON by flatbuffers.
-
-				json data = json::array();
-
-				FillJsonStats(data);
-
-				auto responseOffset = FBS::Transport::CreateGetStatsResponseDirect(
-				  request->GetBufferBuilder(), data.dump().c_str());
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::FBS_Transport_GetStatsResponse, responseOffset);
 

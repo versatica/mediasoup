@@ -3,8 +3,10 @@ import { Logger } from './Logger';
 import {
 	fbsSctpState2StcpState,
 	BaseTransportDump,
+	BaseTransportStats,
 	parseTuple,
 	parseBaseTransportDump,
+	parseBaseTransportStats,
 	parseTransportTraceEventData,
 	Transport,
 	TransportListenIp,
@@ -87,31 +89,9 @@ export type PlainTransportOptions =
 	appData?: Record<string, unknown>;
 };
 
-export type PlainTransportStat =
+export type PlainTransportStat = BaseTransportStats &
 {
-	// Common to all Transports.
 	type: string;
-	transportId: string;
-	timestamp: number;
-	sctpState?: SctpState;
-	bytesReceived: number;
-	recvBitrate: number;
-	bytesSent: number;
-	sendBitrate: number;
-	rtpBytesReceived: number;
-	rtpRecvBitrate: number;
-	rtpBytesSent: number;
-	rtpSendBitrate: number;
-	rtxBytesReceived: number;
-	rtxRecvBitrate: number;
-	rtxBytesSent: number;
-	rtxSendBitrate: number;
-	probationBytesSent: number;
-	probationSendBitrate: number;
-	availableOutgoingBitrate?: number;
-	availableIncomingBitrate?: number;
-	maxIncomingBitrate?: number;
-	// PlainTransport specific.
 	rtcpMux: boolean;
 	comedia: boolean;
 	tuple: TransportTuple;
@@ -150,7 +130,7 @@ export type PlainTransportData =
 
 type PlainTransportDump = BaseTransportDump &
 {
-	rtcMux: boolean;
+	rtcpMux: boolean;
 	comedia: boolean;
 	tuple: TransportTuple;
 	rtcpTuple?: TransportTuple;
@@ -310,7 +290,7 @@ export class PlainTransport extends
 
 		response.body(data);
 
-		return JSON.parse(data.stats()!);
+		return [ parsePlainTransportStats(data) ];
 	}
 
 	/**
@@ -497,11 +477,35 @@ export function parsePlainTransportDump(
 
 	return {
 		...baseTransportDump,
-		rtcMux         : binary.rtcMux(),
+		rtcpMux        : binary.rtcpMux(),
 		comedia        : binary.comedia(),
 		tuple          : tuple,
 		rtcpTuple      : rtcpTuple,
 		srtpParameters : srtpParameters
+	};
+}
+
+function parsePlainTransportStats(
+	binary: FbsTransport.GetStatsResponse
+):PlainTransportStat
+{
+	const plainTransportStats = new FbsTransport.PlainTransportStats();
+	const baseStats = new FbsTransport.BaseTransportStats();
+
+	binary.data(plainTransportStats);
+	plainTransportStats.base()!.data(baseStats);
+
+	const base = parseBaseTransportStats(baseStats);
+
+	return {
+		...base,
+		type      : 'plain-rtp-transport',
+		rtcpMux   : plainTransportStats.rtcpMux(),
+		comedia   : plainTransportStats.comedia(),
+		tuple     : parseTuple(plainTransportStats.tuple()!),
+		rtcpTuple : plainTransportStats.rtcpTuple() ?
+			parseTuple(plainTransportStats.rtcpTuple()!) :
+			undefined
 	};
 }
 
