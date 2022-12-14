@@ -304,7 +304,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 
 		response.body(data);
 
-		return JSON.parse(data.stats()!);
+		return [ parseDataProducerStats(data) ];
 	}
 
 	/**
@@ -380,5 +380,19 @@ export function parseDataProducerDump(
 			undefined,
 		label    : data.label()!,
 		protocol : data.protocol()!
+	};
+}
+
+function parseDataProducerStats(
+	binary: FbsDataProducer.GetStatsResponse
+):DataProducerStat
+{
+	return {
+		type             : 'data-producer',
+		timestamp        : Number(binary.timestamp()),
+		label            : binary.label()!,
+		protocol         : binary.protocol()!,
+		messagesReceived : Number(binary.messagesReceived()),
+		bytesReceived    : Number(binary.bytesReceived())
 	};
 }

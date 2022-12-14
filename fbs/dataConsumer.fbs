@@ -20,9 +20,13 @@ table DumpResponse {
   protocol:string (required);
 }
 
-// TMP: String holding JSON stats.
 table GetStatsResponse {
-  stats:string (required);
+  timestamp:uint64;
+  label:string (required);
+  protocol:string (required);
+  messages_sent:uint64;
+  bytes_sent:uint64;
+  buffered_amount:uint32;
 }
 
 table SendRequest {

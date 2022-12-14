@@ -6,7 +6,6 @@
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include "RTC/Shared.hpp"
-#include <nlohmann/json.hpp>
 #include <string>
 
 namespace RTC
@@ -57,7 +56,8 @@ namespace RTC
 	public:
 		flatbuffers::Offset<FBS::DataConsumer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
-		void FillJsonStats(json& jsonArray) const;
+		flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		Type GetType() const
 		{
 			return this->type;

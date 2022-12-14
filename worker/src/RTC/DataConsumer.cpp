@@ -93,33 +93,25 @@ namespace RTC
 		  this->protocol.c_str());
 	}
 
-	void DataConsumer::FillJsonStats(json& jsonArray) const
+	flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> DataConsumer::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		jsonArray.emplace_back(json::value_t::object);
-		auto& jsonObject = jsonArray[0];
-
-		// Add type.
-		jsonObject["type"] = "data-consumer";
-
-		// Add timestamp.
-		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
-
-		// Add label.
-		jsonObject["label"] = this->label;
-
-		// Add protocol.
-		jsonObject["protocol"] = this->protocol;
-
-		// Add messagesSent.
-		jsonObject["messagesSent"] = this->messagesSent;
-
-		// Add bytesSent.
-		jsonObject["bytesSent"] = this->bytesSent;
-
-		// Add bufferedAmount.
-		jsonObject["bufferedAmount"] = this->bufferedAmount;
+		return FBS::DataConsumer::CreateGetStatsResponseDirect(
+		  builder,
+		  // timestamp.
+		  DepLibUV::GetTimeMs(),
+		  // label.
+		  this->label.c_str(),
+		  // protocol.
+		  this->protocol.c_str(),
+		  // messagesSent.
+		  this->messagesSent,
+		  // bytesSent.
+		  this->bytesSent,
+		  // bufferedAmount.
+		  this->bufferedAmount);
 	}
 
 	void DataConsumer::HandleRequest(Channel::ChannelRequest* request)
@@ -139,14 +131,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::DATA_CONSUMER_GET_STATS:
 			{
-				// TMP: Replace JSON by flatbuffers.
-
-				json data = json::array();
-
-				FillJsonStats(data);
-
-				auto responseOffset = FBS::DataConsumer::CreateGetStatsResponseDirect(
-				  request->GetBufferBuilder(), data.dump().c_str());
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::FBS_DataConsumer_GetStatsResponse, responseOffset);
 

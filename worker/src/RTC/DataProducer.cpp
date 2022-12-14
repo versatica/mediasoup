@@ -88,30 +88,23 @@ namespace RTC
 		  this->protocol.c_str());
 	}
 
-	void DataProducer::FillJsonStats(json& jsonArray) const
+	flatbuffers::Offset<FBS::DataProducer::GetStatsResponse> DataProducer::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		jsonArray.emplace_back(json::value_t::object);
-		auto& jsonObject = jsonArray[0];
-
-		// Add type.
-		jsonObject["type"] = "data-producer";
-
-		// Add timestamp.
-		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
-
-		// Add label.
-		jsonObject["label"] = this->label;
-
-		// Add protocol.
-		jsonObject["protocol"] = this->protocol;
-
-		// Add messagesReceived.
-		jsonObject["messagesReceived"] = this->messagesReceived;
-
-		// Add bytesReceived.
-		jsonObject["bytesReceived"] = this->bytesReceived;
+		return FBS::DataProducer::CreateGetStatsResponseDirect(
+		  builder,
+		  // timestamp.
+		  DepLibUV::GetTimeMs(),
+		  // label.
+		  this->label.c_str(),
+		  // protocol.
+		  this->protocol.c_str(),
+		  // messagesReceived.
+		  this->messagesReceived,
+		  // bytesReceived.
+		  this->bytesReceived);
 	}
 
 	void DataProducer::HandleRequest(Channel::ChannelRequest* request)
@@ -131,14 +124,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::DATA_PRODUCER_GET_STATS:
 			{
-				// TMP: Replace JSON by flatbuffers.
-
-				json data = json::array();
-
-				FillJsonStats(data);
-
-				auto responseOffset = FBS::DataProducer::CreateGetStatsResponseDirect(
-				  request->GetBufferBuilder(), data.dump().c_str());
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::FBS_DataProducer_GetStatsResponse, responseOffset);
 

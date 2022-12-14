@@ -327,7 +327,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 
 		response.body(data);
 
-		return JSON.parse(data.stats()!);
+		return [ parseDataConsumerStats(data) ];
 	}
 
 	/**
@@ -513,5 +513,20 @@ export function parseDataConsumerDump(
 			undefined,
 		label    : data.label()!,
 		protocol : data.protocol()!
+	};
+}
+
+function parseDataConsumerStats(
+	binary: FbsDataConsumer.GetStatsResponse
+):DataConsumerStat
+{
+	return {
+		type           : 'data-consumer',
+		timestamp      : Number(binary.timestamp()),
+		label          : binary.label()!,
+		protocol       : binary.protocol()!,
+		messagesSent   : Number(binary.messagesSent()),
+		bytesSent      : Number(binary.bytesSent()),
+		bufferedAmount : binary.bufferedAmount()
 	};
 }
