@@ -119,6 +119,19 @@ table ConsumeDataRequest {
   protocol:string;
 }
 
+table Tuple {
+  local_ip:string (required);
+  local_port:uint16;
+  remote_ip:string (required);
+  remote_port:uint16;
+  protocol:string (required);
+}
+
+table SrtpParameters {
+  crypto_suite:string (required);
+  key_base64:string (required);
+}
+
 table RtpListener {
   ssrc_table:[FBS.Common.Uint32String] (required);
   mid_table:[FBS.Common.StringString] (required);
@@ -177,14 +190,6 @@ table IceCandidate {
   tcp_type:string;
 }
 
-table Tuple {
-  local_ip:string (required);
-  local_port:uint16;
-  remote_ip:string (required);
-  remote_port:uint16;
-  protocol:string (required);
-}
-
 table Fingerprint {
   algorithm:string (required);
   value:string (required);
@@ -207,11 +212,6 @@ table WebRtcTransportDump {
 }
 
 /* PlainTransport */
-
-table SrtpParameters {
-  crypto_suite:string (required);
-  key_base64:string (required);
-}
 
 table PlainTransportDump {
   base:DumpResponse (required);

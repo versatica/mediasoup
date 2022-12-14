@@ -9,7 +9,6 @@ include "rtpObserver.fbs";
 namespace FBS.Request;
 
 enum Method: uint8 {
-  // Channel Requests.
   WORKER_CLOSE = 0,
   WORKER_DUMP,
   WORKER_GET_RESOURCE_USAGE,
@@ -63,12 +62,11 @@ enum Method: uint8 {
   DATA_CONSUMER_GET_STATS,
   DATA_CONSUMER_GET_BUFFERED_AMOUNT,
   DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
+  DATA_CONSUMER_SEND,
   RTP_OBSERVER_PAUSE,
   RTP_OBSERVER_RESUME,
   RTP_OBSERVER_ADD_PRODUCER,
   RTP_OBSERVER_REMOVE_PRODUCER,
-  // PayloadChannel Requests.
-  DATA_CONSUMER_SEND,
 }
 
 union Body {
@@ -102,10 +100,9 @@ union Body {
   FBS.Consumer.SetPriorityRequest,
   FBS.Consumer.EnableTraceEventRequest,
   FBS.DataConsumer.SetBufferedAmountLowThresholdRequest,
+  FBS.DataConsumer.SendRequest,
   FBS.RtpObserver.AddProducerRequest,
   FBS.RtpObserver.RemoveProducerRequest,
-  // PayloadChannel Request bodies.
-  FBS.DataConsumer.SendRequest,
 }
 
 table Request {
