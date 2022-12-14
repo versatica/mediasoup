@@ -90,19 +90,5 @@ namespace RTC
 		  this->hasRtx ? this->rtx.FillBuffer(builder) : 0u,
 		  this->dtx,
 		  this->scalabilityMode.size() > 0 ? this->scalabilityMode.c_str() : nullptr);
-
-		// NOTE: Simplified scalabilitymode to simply report the string, the same way
-		// it's created, for consistency.
-
-		/*
-		// Add scalabilityMode.
-		if (!this->scalabilityMode.empty())
-		{
-		  jsonObject["scalabilityMode"] = this->scalabilityMode;
-		  jsonObject["spatialLayers"]   = this->spatialLayers;
-		  jsonObject["temporalLayers"]  = this->temporalLayers;
-		  jsonObject["ksvc"]            = this->ksvc;
-		}
-		*/
 	}
 } // namespace RTC
