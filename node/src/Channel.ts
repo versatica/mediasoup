@@ -307,7 +307,7 @@ export class Channel extends EnhancedEventEmitter
 			notificationOffset
 		);
 
-		this.#bufferBuilder.finish(messageOffset);
+		this.#bufferBuilder.finishSizePrefixed(messageOffset);
 
 		// Create a new buffer with this data so multiple contiguous flatbuffers
 		// do not point to the builder buffer overriding others info.
@@ -326,8 +326,6 @@ export class Channel extends EnhancedEventEmitter
 		try
 		{
 			// This may throw if closed or remote side ended.
-			this.#producerSocket.write(
-				Buffer.from(Uint32Array.of(buffer.byteLength).buffer));
 			this.#producerSocket.write(buffer, 'binary');
 		}
 		catch (error)
@@ -376,7 +374,7 @@ export class Channel extends EnhancedEventEmitter
 			requestOffset
 		);
 
-		this.#bufferBuilder.finish(messageOffset);
+		this.#bufferBuilder.finishSizePrefixed(messageOffset);
 
 		// Create a new buffer with this data so multiple contiguous flatbuffers
 		// do not point to the builder buffer overriding others info.
@@ -393,10 +391,6 @@ export class Channel extends EnhancedEventEmitter
 			throw new Error('Channel request too big');
 
 		// This may throw if closed or remote side ended.
-		this.#producerSocket.write(
-			Buffer.from(Uint32Array.of(buffer.byteLength).buffer));
-
-		// Set buffer enconding to 'binary.'
 		this.#producerSocket.write(buffer, 'binary');
 
 		return new Promise((pResolve, pReject) =>
