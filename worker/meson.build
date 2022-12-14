@@ -164,12 +164,6 @@ openssl_proj = subproject(
     'warning_level=0',
   ],
 )
-nlohmann_json_proj = subproject(
-  'nlohmann_json',
-  default_options: [
-    'warning_level=0',
-  ],
-)
 libuv_proj = subproject(
   'libuv',
   default_options: [
@@ -218,7 +212,6 @@ subdir('deps/libwebrtc')
 dependencies = [
   abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
-  nlohmann_json_proj.get_variable('nlohmann_json_dep'),
   libuv_proj.get_variable('libuv_dep'),
   libsrtp2_proj.get_variable('libsrtp2_dep'),
   usrsctp_proj.get_variable('usrsctp_dep'),
@@ -229,7 +222,6 @@ dependencies = [
 test_dependencies = [
   abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
-  nlohmann_json_proj.get_variable('nlohmann_json_dep'),
   libuv_proj.get_variable('libuv_dep'),
   libsrtp2_proj.get_variable('libsrtp2_dep'),
   usrsctp_proj.get_variable('usrsctp_dep'),
