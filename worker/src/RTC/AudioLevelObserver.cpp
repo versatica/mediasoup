@@ -156,7 +156,7 @@ namespace RTC
 			this->silence = false;
 
 			uint16_t idx{ 0 };
-			auto rit  = mapDBovsProducer.crbegin();
+			auto rit = mapDBovsProducer.crbegin();
 
 			std::vector<flatbuffers::Offset<FBS::AudioLevelObserver::Volume>> volumes;
 
