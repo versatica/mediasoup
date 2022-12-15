@@ -5,6 +5,7 @@
 #include <catch2/catch.hpp>
 #include <cstring> // std::memset()
 #include <string>
+#include <sstream>
 #include <vector>
 
 using namespace RTC;
