@@ -258,15 +258,11 @@ export class PlainTransport extends
 		);
 
 		/* Decode the response. */
-		const dump = new FbsTransport.DumpResponse();
+		const data = new FbsPlainTransport.PlainTransportDumpResponse();
 
-		response.body(dump);
+		response.body(data);
 
-		const transportDump = new FbsTransport.PlainTransportDump();
-
-		dump.data(transportDump);
-
-		return parsePlainTransportDump(transportDump);
+		return parsePlainTransportDumpResponse(data);
 	}
 
 	/**
@@ -317,7 +313,7 @@ export class PlainTransport extends
 
 		const builder = this.channel.bufferBuilder;
 
-		const connectData = createConnectRequest({
+		const requestOffset = createConnectRequest({
 			builder,
 			ip,
 			port,
@@ -325,29 +321,18 @@ export class PlainTransport extends
 			srtpParameters
 		});
 
-		const requestOffset = FbsTransport.ConnectRequest.createConnectRequest(
-			builder,
-			FbsTransport.ConnectData.ConnectPlainTransportData,
-			connectData
-		);
-
 		// Wait for response.
 		const response = await this.channel.request(
-			FbsRequest.Method.TRANSPORT_CONNECT,
-			FbsRequest.Body.FBS_Transport_ConnectRequest,
+			FbsRequest.Method.PLAIN_TRANSPORT_CONNECT,
+			FbsRequest.Body.FBS_PlainTransport_ConnectRequest,
 			requestOffset,
 			this.internal.transportId
 		);
 
 		/* Decode the response. */
-		const connectResponse = new FbsTransport.ConnectResponse();
+		const data = new FbsPlainTransport.ConnectResponse();
 
-		response.body(connectResponse);
-
-		const data =
-			new FbsTransport.ConnectPlainTransportResponse();
-
-		connectResponse.data(data);
+		response.body(data);
 
 		// Update data.
 		if (data.tuple())
@@ -446,16 +431,12 @@ export class PlainTransport extends
 	}
 }
 
-export function parsePlainTransportDump(
-	binary: FbsTransport.PlainTransportDump
+export function parsePlainTransportDumpResponse(
+	binary: FbsPlainTransport.PlainTransportDumpResponse
 ): PlainTransportDump
 {
 	// Retrieve BaseTransportDump.
-	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
-
-	binary.base()!.data(fbsBaseTransportDump);
-	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
-
+	const baseTransportDump = parseBaseTransportDump(binary.base()!);
 	// Retrieve RTP Tuple.
 	const tuple = parseTuple(binary.tuple()!);
 
@@ -543,19 +524,19 @@ function createConnectRequest(
 		}
 
 		// Create PlainTransportConnectData.
-		FbsTransport.ConnectPlainTransportData.startConnectPlainTransportData(builder);
-		FbsTransport.ConnectPlainTransportData.addIp(builder, ipOffset);
+		FbsPlainTransport.ConnectRequest.startConnectRequest(builder);
+		FbsPlainTransport.ConnectRequest.addIp(builder, ipOffset);
 
 		if (typeof port === 'number')
-			FbsTransport.ConnectPlainTransportData.addPort(builder, port);
+			FbsPlainTransport.ConnectRequest.addPort(builder, port);
 		if (typeof rtcpPort === 'number')
-			FbsTransport.ConnectPlainTransportData.addRtcpPort(builder, rtcpPort);
+			FbsPlainTransport.ConnectRequest.addRtcpPort(builder, rtcpPort);
 		if (srtpParameters)
-			FbsTransport.ConnectPlainTransportData.addSrtpParameters(
+			FbsPlainTransport.ConnectRequest.addSrtpParameters(
 				builder, srtpParametersOffset
 			);
 
-		return FbsTransport.ConnectPlainTransportData.endConnectPlainTransportData(builder);
+		return FbsPlainTransport.ConnectRequest.endConnectRequest(builder);
 	}
 	catch (error)
 	{

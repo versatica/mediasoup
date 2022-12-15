@@ -9,3 +9,20 @@ table PipeTransportOptions {
   enable_rtx:bool;
   enable_srtp:bool;
 }
+
+table ConnectRequest {
+  ip:string (required);
+  port:uint16 = null;
+  srtp_parameters:FBS.Transport.SrtpParameters;
+}
+
+table ConnectResponse {
+  tuple:FBS.Transport.Tuple;
+}
+
+table PipeTransportDumpResponse {
+  base:FBS.Transport.BaseTransportDump (required);
+  tuple:FBS.Transport.Tuple (required);
+  rtx:bool;
+  srtp_parameters:FBS.Transport.SrtpParameters;
+}

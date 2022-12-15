@@ -1,10 +1,11 @@
+#include "FBS/plainTransport_generated.h"
 #define MS_CLASS "RTC::PlainTransport"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/PlainTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/PlainTransport.hpp"
 
 namespace RTC
 {
@@ -169,7 +170,7 @@ namespace RTC
 		this->srtpRecvSession = nullptr;
 	}
 
-	flatbuffers::Offset<FBS::Transport::DumpResponse> PlainTransport::FillBuffer(
+	flatbuffers::Offset<FBS::PlainTransport::PlainTransportDumpResponse> PlainTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -231,11 +232,8 @@ namespace RTC
 		// Add base transport dump.
 		auto base = Transport::FillBuffer(builder);
 
-		auto plainTransportDump = FBS::Transport::CreatePlainTransportDump(
+		return FBS::PlainTransport::CreatePlainTransportDumpResponse(
 		  builder, base, this->rtcpMux, this->comedia, tuple, rtcpTuple, srtpParameters);
-
-		return FBS::Transport::CreateDumpResponse(
-		  builder, FBS::Transport::TransportDumpData::PlainTransportDump, plainTransportDump.Union());
 	}
 
 	flatbuffers::Offset<FBS::Transport::GetStatsResponse> PlainTransport::FillBufferStats(
@@ -301,7 +299,16 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
+			{
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_PlainTransport_PlainTransportDumpResponse, dumpOffset);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::PLAIN_TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->connectCalled)
@@ -314,11 +321,10 @@ namespace RTC
 					uint16_t rtcpPort{ 0u };
 					std::string srtpKeyBase64;
 
-					auto body = request->data->body_as<FBS::Transport::ConnectRequest>();
-					auto connectData = body->data_as<FBS::Transport::ConnectPlainTransportData>();
+					auto body = request->data->body_as<FBS::PlainTransport::ConnectRequest>();
 
 					auto srtpParametersPresent = flatbuffers::IsFieldPresent(
-							connectData, FBS::Transport::ConnectPlainTransportData::VT_SRTPPARAMETERS);
+							body, FBS::PlainTransport::ConnectRequest::VT_SRTPPARAMETERS);
 
 					if (!HasSrtp() && srtpParametersPresent)
 					{
@@ -331,7 +337,7 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing srtpParameters (SRTP enabled)");
 						}
 
-						auto srtpParameters = connectData->srtpParameters();
+						auto srtpParameters = body->srtpParameters();
 						// Ensure it's a crypto suite supported by us.
 						auto it =
 						  PlainTransport::string2SrtpCryptoSuite.find(srtpParameters->cryptoSuite()->str());
@@ -433,27 +439,27 @@ namespace RTC
 
 					if (!this->comedia)
 					{
-						if (!flatbuffers::IsFieldPresent(connectData, FBS::Transport::ConnectPlainTransportData::VT_IP))
+						if (!flatbuffers::IsFieldPresent(body, FBS::PlainTransport::ConnectRequest::VT_IP))
 							MS_THROW_TYPE_ERROR("missing ip");
 
-						ip = connectData->ip()->str();
+						ip = body->ip()->str();
 
 						// This may throw.
 						Utils::IP::NormalizeIp(ip);
 
-						if (!connectData->port().has_value())
+						if (!body->port().has_value())
 						{
 							MS_THROW_TYPE_ERROR("missing port");
 						}
 
-						port = connectData->port().value();
+						port = body->port().value();
 
-						if (connectData->rtcpPort().has_value())
+						if (body->rtcpPort().has_value())
 						{
 							if (this->rtcpMux)
 								MS_THROW_TYPE_ERROR("cannot set rtcpPort with rtcpMux enabled");
 
-							rtcpPort = connectData->rtcpPort().value();
+							rtcpPort = body->rtcpPort().value();
 						}
 						else
 						{
@@ -589,16 +595,11 @@ namespace RTC
 							);
 				}
 
-				auto connectResponseDataOffset =
-				  FBS::Transport::CreateConnectPlainTransportResponse(
+				auto responseOffset =
+				  FBS::PlainTransport::CreateConnectResponse(
 				  request->GetBufferBuilder(), tupleOffset, rtcpTupleOffset, srtpParametersOffset);
 
-				auto responseOffset = FBS::Transport::CreateConnectResponse(
-					 request->GetBufferBuilder(),
-					 FBS::Transport::ConnectResponseData::ConnectPlainTransportResponse,
-					 connectResponseDataOffset.Union());
-
-				request->Accept(FBS::Response::Body::FBS_Transport_ConnectResponse, responseOffset);
+				request->Accept(FBS::Response::Body::FBS_PlainTransport_ConnectResponse, responseOffset);
 
 				// Assume we are connected (there is no much more we can do to know it)
 				// and tell the parent class.

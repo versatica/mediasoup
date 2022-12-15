@@ -13,6 +13,28 @@ table PlainTransportOptions {
   srtp_crypto_suite:string;
 }
 
+table ConnectRequest {
+  ip:string;
+  port:uint16 = null;
+  rtcp_port:uint16 = null;
+  srtp_parameters:FBS.Transport.SrtpParameters;
+}
+
+table ConnectResponse {
+  tuple:FBS.Transport.Tuple (required);
+  rtcp_tuple:FBS.Transport.Tuple;
+  srtp_parameters:FBS.Transport.SrtpParameters;
+}
+
+table PlainTransportDumpResponse {
+  base:FBS.Transport.BaseTransportDump (required);
+  rtcp_mux:bool;
+  comedia:bool;
+  tuple:FBS.Transport.Tuple;
+  rtcp_tuple:FBS.Transport.Tuple;
+  srtp_parameters:FBS.Transport.SrtpParameters;
+}
+
 // Notifications from Worker.
 
 table TupleNotification {

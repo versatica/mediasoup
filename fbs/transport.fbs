@@ -19,57 +19,6 @@ table RestartIceResponse {
   ice_lite:bool;
 }
 
-union ConnectData {
-  ConnectPlainTransportData,
-  ConnectWebRtcTransportData,
-  ConnectPipeTransportData,
-}
-
-table ConnectRequest {
-  data: ConnectData (required);
-}
-
-union ConnectResponseData {
-  ConnectPlainTransportResponse,
-  ConnectWebRtcTransportResponse,
-  ConnectPipeTransportResponse,
-}
-
-table ConnectResponse {
-  data:ConnectResponseData;
-}
-
-table ConnectPlainTransportData {
-  ip:string;
-  port:uint16 = null;
-  rtcp_port:uint16 = null;
-  srtp_parameters:SrtpParameters;
-}
-
-table ConnectPlainTransportResponse {
-  tuple:Tuple (required);
-  rtcp_tuple:Tuple;
-  srtp_parameters:SrtpParameters;
-}
-
-table ConnectWebRtcTransportData {
-  dtls_parameters:DtlsParameters (required);
-}
-
-table ConnectWebRtcTransportResponse {
-  dtls_local_role:string (required);
-}
-
-table ConnectPipeTransportData {
-  ip:string (required);
-  port:uint16 = null;
-  srtp_parameters:SrtpParameters;
-}
-
-table ConnectPipeTransportResponse {
-  tuple:Tuple;
-}
-
 table ConsumeRequest {
   consumer_id:string (required);
   producer_id:string (required);
@@ -142,18 +91,6 @@ table SctpListener {
   stream_id_table:[FBS.Common.Uint16String] (required);
 }
 
-union TransportDumpData {
-  BaseTransportDump,
-  DirectTransportDump,
-  PipeTransportDump,
-  PlainTransportDump,
-  WebRtcTransportDump,
-}
-
-table DumpResponse {
-  data:TransportDumpData;
-}
-
 table BaseTransportDump {
   id:string (required);
   direct:bool=false;
@@ -171,73 +108,6 @@ table BaseTransportDump {
   sctp_listener: SctpListener;
   trace_event_types:[string] (required);
 }
-
-/* WebRtcTransport */
-
-table IceParameters {
- username_fragment:string (required);
- password:string (required);
- ice_lite:bool = true;
-}
-
-table IceCandidate {
-  foundation:string (required);
-  priority:uint32;
-  ip:string (required);
-  protocol:string (required);
-  port:uint16;
-  type:string;
-  tcp_type:string;
-}
-
-table Fingerprint {
-  algorithm:string (required);
-  value:string (required);
-}
-
-table DtlsParameters {
-  fingerprints:[Fingerprint] (required);
-  role:string;
-}
-
-table WebRtcTransportDump {
-  base:DumpResponse (required);
-  ice_role:string (required);
-  ice_parameters:IceParameters (required);
-  ice_candidates:[IceCandidate] (required);
-  ice_state:string (required);
-  ice_selected_tuple:Tuple;
-  dtls_parameters:DtlsParameters (required);
-  dtls_state:string (required);
-}
-
-/* PlainTransport */
-
-table PlainTransportDump {
-  base:DumpResponse (required);
-  rtcp_mux:bool;
-  comedia:bool;
-  tuple:Tuple;
-  rtcp_tuple:Tuple;
-  srtp_parameters:SrtpParameters;
-}
-
-/* DirectTransort */
-
-table DirectTransportDump {
-  base:DumpResponse (required);
-}
-
-/* PipeTransort */
-
-table PipeTransportDump {
-  base:DumpResponse (required);
-  tuple:Tuple (required);
-  rtx:bool;
-  srtp_parameters:SrtpParameters;
-}
-
-/* BaseTransportOptions */
 
 table BaseTransportOptions {
   direct:bool = false;

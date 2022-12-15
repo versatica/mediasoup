@@ -1,9 +1,10 @@
+#include "FBS/directTransport_generated.h"
 #define MS_CLASS "RTC::DirectTransport"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/DirectTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/DirectTransport.hpp"
 
 namespace RTC
 {
@@ -33,16 +34,13 @@ namespace RTC
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 	}
 
-	flatbuffers::Offset<FBS::Transport::DumpResponse> DirectTransport::FillBuffer(
+	flatbuffers::Offset<FBS::DirectTransport::DirectTransportDumpResponse> DirectTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		// Add base transport dump.
 		auto base = Transport::FillBuffer(builder);
 
-		auto directTransportDump = FBS::Transport::CreateDirectTransportDump(builder, base);
-
-		return FBS::Transport::CreateDumpResponse(
-		  builder, FBS::Transport::TransportDumpData::DirectTransportDump, directTransportDump.Union());
+		return FBS::DirectTransport::CreateDirectTransportDumpResponse(builder, base);
 	}
 
 	flatbuffers::Offset<FBS::Transport::GetStatsResponse> DirectTransport::FillBufferStats(
@@ -63,8 +61,23 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Pass it to the parent class.
-		RTC::Transport::HandleRequest(request);
+		switch (request->method)
+		{
+			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
+			{
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_PipeTransport_PipeTransportDumpResponse, dumpOffset);
+
+				break;
+			}
+
+			default:
+			{
+				// Pass it to the parent class.
+				RTC::Transport::HandleRequest(request);
+			}
+		}
 	}
 
 	void DirectTransport::HandleNotification(Channel::ChannelNotification* notification)

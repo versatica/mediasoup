@@ -231,7 +231,7 @@ namespace RTC
 		this->listener->OnTransportListenServerClosed(this);
 	}
 
-	flatbuffers::Offset<FBS::Transport::DumpResponse> Transport::FillBuffer(
+	flatbuffers::Offset<FBS::Transport::BaseTransportDump> Transport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -367,7 +367,7 @@ namespace RTC
 		if (this->traceEventTypes.bwe)
 			traceEventTypes.emplace_back(builder.CreateString("bwe"));
 
-		auto baseTransportDump = FBS::Transport::CreateBaseTransportDumpDirect(
+		return FBS::Transport::CreateBaseTransportDumpDirect(
 		  builder,
 		  this->id.c_str(),
 		  this->direct,
@@ -384,9 +384,6 @@ namespace RTC
 		  sctpState.c_str(),
 		  sctpListener,
 		  &traceEventTypes);
-
-		return FBS::Transport::CreateDumpResponse(
-		  builder, FBS::Transport::TransportDumpData::BaseTransportDump, baseTransportDump.Union());
 	}
 
 	flatbuffers::Offset<FBS::Transport::GetStatsResponse> Transport::FillBufferStats(
@@ -479,15 +476,6 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
-			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
-
-				request->Accept(FBS::Response::Body::FBS_Transport_DumpResponse, dumpOffset);
-
-				break;
-			}
-
 			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());

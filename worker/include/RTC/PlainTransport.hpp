@@ -1,6 +1,7 @@
 #ifndef MS_RTC_PLAIN_TRANSPORT_HPP
 #define MS_RTC_PLAIN_TRANSPORT_HPP
 
+#include "FBS/plainTransport_generated.h"
 #include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"
@@ -34,8 +35,8 @@ namespace RTC
 	public:
 		flatbuffers::Offset<FBS::Transport::GetStatsResponse> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) override;
-		flatbuffers::Offset<FBS::Transport::DumpResponse> FillBuffer(
-		  flatbuffers::FlatBufferBuilder& builder) const override;
+		flatbuffers::Offset<FBS::PlainTransport::PlainTransportDumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:

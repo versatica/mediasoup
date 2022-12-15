@@ -2,7 +2,7 @@
 #define MS_RTC_ICE_CANDIDATE_HPP
 
 #include "common.hpp"
-#include "FBS/transport_generated.h"
+#include "FBS/webRtcTransport_generated.h"
 #include "RTC/TcpServer.hpp"
 #include "RTC/UdpSocket.hpp"
 #include <flatbuffers/flatbuffers.h>
@@ -58,7 +58,7 @@ namespace RTC
 		{
 		}
 
-		flatbuffers::Offset<FBS::Transport::IceCandidate> FillBuffer(
+		flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	private:

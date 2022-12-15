@@ -1,10 +1,11 @@
+#include "FBS/pipeTransport_generated.h"
 #define MS_CLASS "RTC::PipeTransport"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/PipeTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/PipeTransport.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -89,7 +90,7 @@ namespace RTC
 		this->srtpRecvSession = nullptr;
 	}
 
-	flatbuffers::Offset<FBS::Transport::DumpResponse> PipeTransport::FillBuffer(
+	flatbuffers::Offset<FBS::PipeTransport::PipeTransportDumpResponse> PipeTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -126,11 +127,8 @@ namespace RTC
 		// Add base transport dump.
 		auto base = Transport::FillBuffer(builder);
 
-		auto pipeTransportDump =
-		  FBS::Transport::CreatePipeTransportDump(builder, base, tuple, this->rtx, srtpParameters);
-
-		return FBS::Transport::CreateDumpResponse(
-		  builder, FBS::Transport::TransportDumpData::PipeTransportDump, pipeTransportDump.Union());
+		return FBS::PipeTransport::CreatePipeTransportDumpResponse(
+		  builder, base, tuple, this->rtx, srtpParameters);
 	}
 
 	flatbuffers::Offset<FBS::Transport::GetStatsResponse> PipeTransport::FillBufferStats(
@@ -183,7 +181,16 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
+			{
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_PipeTransport_PipeTransportDumpResponse, dumpOffset);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::PIPE_TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->tuple)
@@ -195,11 +202,10 @@ namespace RTC
 					uint16_t port{ 0u };
 					std::string srtpKeyBase64;
 
-					auto body        = request->data->body_as<FBS::Transport::ConnectRequest>();
-					auto connectData = body->data_as<FBS::Transport::ConnectPipeTransportData>();
+					auto body = request->data->body_as<FBS::PipeTransport::ConnectRequest>();
 
-					auto srtpParametersPresent = flatbuffers::IsFieldPresent(
-					  connectData, FBS::Transport::ConnectPipeTransportData::VT_SRTPPARAMETERS);
+					auto srtpParametersPresent =
+					  flatbuffers::IsFieldPresent(body, FBS::PipeTransport::ConnectRequest::VT_SRTPPARAMETERS);
 
 					if (!HasSrtp() && srtpParametersPresent)
 					{
@@ -212,7 +218,7 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing srtpParameters (SRTP enabled)");
 						}
 
-						auto srtpParameters = connectData->srtpParameters();
+						auto srtpParameters = body->srtpParameters();
 
 						// NOTE: We just use AEAD_AES_256_GCM as SRTP crypto suite in
 						// PipeTransport.
@@ -272,21 +278,20 @@ namespace RTC
 						delete[] srtpRemoteKey;
 					}
 
-					if (!flatbuffers::IsFieldPresent(
-					      connectData, FBS::Transport::ConnectPipeTransportData::VT_IP))
+					if (!flatbuffers::IsFieldPresent(body, FBS::PipeTransport::ConnectRequest::VT_IP))
 						MS_THROW_TYPE_ERROR("missing ip");
 
-					ip = connectData->ip()->str();
+					ip = body->ip()->str();
 
 					// This may throw.
 					Utils::IP::NormalizeIp(ip);
 
-					if (!connectData->port().has_value())
+					if (!body->port().has_value())
 					{
 						MS_THROW_TYPE_ERROR("missing port");
 					}
 
-					port = connectData->port().value();
+					port = body->port().value();
 
 					int err;
 
@@ -347,15 +352,10 @@ namespace RTC
 
 				auto tupleOffset = this->tuple->FillBuffer(request->GetBufferBuilder());
 
-				auto connectResponseDataOffset = FBS::Transport::CreateConnectPipeTransportResponse(
-				  request->GetBufferBuilder(), tupleOffset);
+				auto responseOffset =
+				  FBS::PipeTransport::CreateConnectResponse(request->GetBufferBuilder(), tupleOffset);
 
-				auto responseOffset = FBS::Transport::CreateConnectResponse(
-				  request->GetBufferBuilder(),
-				  FBS::Transport::ConnectResponseData::ConnectPipeTransportResponse,
-				  connectResponseDataOffset.Union());
-
-				request->Accept(FBS::Response::Body::FBS_Transport_ConnectResponse, responseOffset);
+				request->Accept(FBS::Response::Body::FBS_PipeTransport_ConnectResponse, responseOffset);
 
 				// Assume we are connected (there is no much more we can do to know it)
 				// and tell the parent class.

@@ -5,10 +5,10 @@ import * as ortc from './ortc';
 import { InvalidStateError } from './errors';
 import { Channel } from './Channel';
 import { Transport, TransportListenIp } from './Transport';
-import { WebRtcTransport, WebRtcTransportOptions, parseWebRtcTransportDump } from './WebRtcTransport';
-import { PlainTransport, PlainTransportOptions, parsePlainTransportDump } from './PlainTransport';
-import { PipeTransport, PipeTransportOptions, parsePipeTransportDump } from './PipeTransport';
-import { DirectTransport, DirectTransportOptions, parseDirectTransportDump } from './DirectTransport';
+import { WebRtcTransport, WebRtcTransportOptions, parseWebRtcTransportDumpResponse } from './WebRtcTransport';
+import { PlainTransport, PlainTransportOptions, parsePlainTransportDumpResponse } from './PlainTransport';
+import { PipeTransport, PipeTransportOptions, parsePipeTransportDumpResponse } from './PipeTransport';
+import { DirectTransport, DirectTransportOptions, parseDirectTransportDumpResponse } from './DirectTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
@@ -20,6 +20,9 @@ import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsRouter from './fbs/router_generated';
+import * as FbsPlainTransport from './fbs/plainTransport_generated';
+import * as FbsPipeTransport from './fbs/pipeTransport_generated';
+import * as FbsDirectTransport from './fbs/directTransport_generated';
 import * as FbsWebRtcTransport from './fbs/webRtcTransport_generated';
 import * as FbsTransport from './fbs/transport_generated';
 import * as FbsSctpParameters from './fbs/sctpParameters_generated';
@@ -497,15 +500,11 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Decode the response. */
 
-		const dump = new FbsTransport.DumpResponse();
+		const data = new FbsWebRtcTransport.WebRtcTransportDumpResponse();
 
-		response.body(dump);
+		response.body(data);
 
-		const transportDump = new FbsTransport.WebRtcTransportDump();
-
-		dump.data(transportDump);
-
-		const webRtcTransportData = parseWebRtcTransportDump(transportDump);
+		const webRtcTransportData = parseWebRtcTransportDumpResponse(data);
 
 		const transport = new WebRtcTransport(
 			{
@@ -632,15 +631,11 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Decode the response. */
 
-		const dump = new FbsTransport.DumpResponse();
+		const data = new FbsPlainTransport.PlainTransportDumpResponse();
 
-		response.body(dump);
+		response.body(data);
 
-		const transportDump = new FbsTransport.PlainTransportDump();
-
-		dump.data(transportDump);
-
-		const plainTransportData = parsePlainTransportDump(transportDump);
+		const plainTransportData = parsePlainTransportDumpResponse(data);
 
 		const transport = new PlainTransport(
 			{
@@ -760,15 +755,11 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Decode the response. */
 
-		const dump = new FbsTransport.DumpResponse();
+		const data = new FbsPipeTransport.PipeTransportDumpResponse();
 
-		response.body(dump);
+		response.body(data);
 
-		const transportDump = new FbsTransport.PipeTransportDump();
-
-		dump.data(transportDump);
-
-		const plainTransportData = parsePipeTransportDump(transportDump);
+		const plainTransportData = parsePipeTransportDumpResponse(data);
 
 		const transport = new PipeTransport(
 			{
@@ -843,7 +834,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			undefined /* isDataChannel */
 		);
 
-		const directTransportOptions = new FbsRouter.DirectTransportOptionsT(
+		const directTransportOptions = new FbsDirectTransport.DirectTransportOptionsT(
 			baseTransportOptions
 		);
 
@@ -860,15 +851,11 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Decode the response. */
 
-		const dump = new FbsTransport.DumpResponse();
+		const data = new FbsDirectTransport.DirectTransportDumpResponse();
 
-		response.body(dump);
+		response.body(data);
 
-		const transportDump = new FbsTransport.DirectTransportDump();
-
-		dump.data(transportDump);
-
-		const directTransportData = parseDirectTransportDump(transportDump);
+		const directTransportData = parseDirectTransportDumpResponse(data);
 
 		const transport = new DirectTransport(
 			{

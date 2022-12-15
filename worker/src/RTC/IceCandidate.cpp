@@ -8,7 +8,7 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	flatbuffers::Offset<FBS::Transport::IceCandidate> IceCandidate::FillBuffer(
+	flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate> IceCandidate::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -47,7 +47,7 @@ namespace RTC
 			}
 		}
 
-		return FBS::Transport::CreateIceCandidateDirect(
+		return FBS::WebRtcTransport::CreateIceCandidateDirect(
 		  builder,
 		  // foundation.
 		  this->foundation.c_str(),

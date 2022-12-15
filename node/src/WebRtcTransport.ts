@@ -400,15 +400,11 @@ export class WebRtcTransport extends
 		);
 
 		/* Decode the response. */
-		const dump = new FbsTransport.DumpResponse();
+		const data = new FbsWebRtcTransport.WebRtcTransportDumpResponse();
 
-		response.body(dump);
+		response.body(data);
 
-		const transportDump = new FbsTransport.WebRtcTransportDump();
-
-		dump.data(transportDump);
-
-		return parseWebRtcTransportDump(transportDump);
+		return parseWebRtcTransportDumpResponse(data);
 	}
 
 	/**
@@ -447,37 +443,26 @@ export class WebRtcTransport extends
 		const builder = this.channel.bufferBuilder;
 		// Serialize DtlsParameters.
 		const dtlsParametersOffset = serializeDtlsParameters(builder, dtlsParameters);
-		// Create WebRtcTransportConnectData.
-		const connectData =
-			FbsTransport.ConnectWebRtcTransportData.createConnectWebRtcTransportData(
-				builder, dtlsParametersOffset
-			);
 		// Create request.
-		const requestOffset = FbsTransport.ConnectRequest.createConnectRequest(
+		const requestOffset = FbsWebRtcTransport.ConnectRequest.createConnectRequest(
 			builder,
-			FbsTransport.ConnectData.ConnectWebRtcTransportData,
-			connectData);
+			dtlsParametersOffset);
 		// Wait for response.
 		const response = await this.channel.request(
-			FbsRequest.Method.TRANSPORT_CONNECT,
-			FbsRequest.Body.FBS_Transport_ConnectRequest,
+			FbsRequest.Method.WEBRTC_TRANSPORT_CONNECT,
+			FbsRequest.Body.FBS_WebRtcTransport_ConnectRequest,
 			requestOffset,
 			this.internal.transportId
 		);
 
 		/* Decode the response. */
-		const data = new FbsTransport.ConnectResponse();
+		const data = new FbsWebRtcTransport.ConnectResponse();
 
 		response.body(data);
 
-		const webRtcTransportConnectResponse =
-			new FbsTransport.ConnectWebRtcTransportResponse();
-
-		data.data(webRtcTransportConnectResponse);
-
 		// Update data.
 		this.#data.dtlsParameters.role =
-			webRtcTransportConnectResponse.dtlsLocalRole()! as DtlsRole;
+			data.dtlsLocalRole()! as DtlsRole;
 	}
 
 	/**
@@ -655,16 +640,12 @@ export function fbsDtlsState2DtlsState(fbsDtlsState: FbsDtlsState): DtlsState
 	}
 }
 
-export function parseWebRtcTransportDump(
-	binary: FbsTransport.WebRtcTransportDump
+export function parseWebRtcTransportDumpResponse(
+	binary: FbsWebRtcTransport.WebRtcTransportDumpResponse
 ): WebRtcTransportDump
 {
 	// Retrieve BaseTransportDump.
-	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
-
-	binary.base()!.data(fbsBaseTransportDump);
-	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
-
+	const baseTransportDump = parseBaseTransportDump(binary.base()!);
 	// Retrieve ICE candidates.
 	const iceCandidates = parseVector<IceCandidate>(binary, 'iceCandidates', parseIceCandidate);
 	// Retrieve ICE parameters.
@@ -709,7 +690,7 @@ function parseWebRtcTransportStats(
 	};
 }
 
-function parseIceCandidate(binary: FbsTransport.IceCandidate): IceCandidate
+function parseIceCandidate(binary: FbsWebRtcTransport.IceCandidate): IceCandidate
 {
 	return {
 		foundation : binary.foundation()!,
@@ -722,7 +703,7 @@ function parseIceCandidate(binary: FbsTransport.IceCandidate): IceCandidate
 	};
 }
 
-function parseIceParameters(binary: FbsTransport.IceParameters): IceParameters
+function parseIceParameters(binary: FbsWebRtcTransport.IceParameters): IceParameters
 {
 	return {
 		usernameFragment : binary.usernameFragment()!,
@@ -731,7 +712,7 @@ function parseIceParameters(binary: FbsTransport.IceParameters): IceParameters
 	};
 }
 
-function parseDtlsParameters(binary: FbsTransport.DtlsParameters): DtlsParameters
+function parseDtlsParameters(binary: FbsWebRtcTransport.DtlsParameters): DtlsParameters
 {
 	const fingerprints: DtlsFingerprint[] = [];
 
@@ -764,17 +745,17 @@ function serializeDtlsParameters(
 		{
 			const algorithmOffset = builder.createString(fingerprint.algorithm);
 			const valueOffset = builder.createString(fingerprint.value);
-			const fingerprintOffset = FbsTransport.Fingerprint.createFingerprint(
+			const fingerprintOffset = FbsWebRtcTransport.Fingerprint.createFingerprint(
 				builder, algorithmOffset, valueOffset);
 
 			fingerprints.push(fingerprintOffset);
 		}
 
-		const fingerprintsOffset = FbsTransport.DtlsParameters.createFingerprintsVector(
+		const fingerprintsOffset = FbsWebRtcTransport.DtlsParameters.createFingerprintsVector(
 			builder, fingerprints);
 		const roleOffset = builder.createString(dtlsParameters.role);
 
-		return FbsTransport.DtlsParameters.createDtlsParameters(
+		return FbsWebRtcTransport.DtlsParameters.createDtlsParameters(
 			builder,
 			fingerprintsOffset,
 			roleOffset);

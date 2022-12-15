@@ -28,6 +28,7 @@ import { Event, Notification } from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsResponse from './fbs/response_generated';
 import * as FbsTransport from './fbs/transport_generated';
+import * as FbsPipeTransport from './fbs/pipeTransport_generated';
 
 export type PipeTransportOptions =
 {
@@ -276,36 +277,25 @@ export class PipeTransport
 
 		const builder = this.channel.bufferBuilder;
 
-		const connectData = createConnectRequest({
+		const requestOffset = createConnectRequest({
 			builder,
 			ip,
 			port,
 			srtpParameters
 		});
 
-		const requestOffset = FbsTransport.ConnectRequest.createConnectRequest(
-			builder,
-			FbsTransport.ConnectData.ConnectPipeTransportData,
-			connectData
-		);
-
 		// Wait for response.
 		const response = await this.channel.request(
-			FbsRequest.Method.TRANSPORT_CONNECT,
-			FbsRequest.Body.FBS_Transport_ConnectRequest,
+			FbsRequest.Method.PIPE_TRANSPORT_CONNECT,
+			FbsRequest.Body.FBS_PipeTransport_ConnectRequest,
 			requestOffset,
 			this.internal.transportId
 		);
 
 		/* Decode the response. */
-		const connectResponse = new FbsTransport.ConnectResponse();
+		const data = new FbsPipeTransport.ConnectResponse();
 
-		response.body(connectResponse);
-
-		const data =
-			new FbsTransport.ConnectPlainTransportResponse();
-
-		connectResponse.data(data);
+		response.body(data);
 
 		// Update data.
 		if (data.tuple())
@@ -443,16 +433,12 @@ export class PipeTransport
  * flatbuffers helpers
  */
 
-export function parsePipeTransportDump(
-	binary: FbsTransport.PipeTransportDump
+export function parsePipeTransportDumpResponse(
+	binary: FbsPipeTransport.PipeTransportDumpResponse
 ): PipeTransportDump
 {
 	// Retrieve BaseTransportDump.
-	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
-
-	binary.base()!.data(fbsBaseTransportDump);
-	const baseTransportDump = parseBaseTransportDump(fbsBaseTransportDump);
-
+	const baseTransportDump = parseBaseTransportDump(binary.base()!);
 	// Retrieve RTP Tuple.
 	const tuple = parseTuple(binary.tuple()!);
 
@@ -565,17 +551,17 @@ function createConnectRequest(
 		}
 
 		// Create PlainTransportConnectData.
-		FbsTransport.ConnectPipeTransportData.startConnectPipeTransportData(builder);
-		FbsTransport.ConnectPipeTransportData.addIp(builder, ipOffset);
+		FbsPipeTransport.ConnectRequest.startConnectRequest(builder);
+		FbsPipeTransport.ConnectRequest.addIp(builder, ipOffset);
 
 		if (typeof port === 'number')
-			FbsTransport.ConnectPipeTransportData.addPort(builder, port);
+			FbsPipeTransport.ConnectRequest.addPort(builder, port);
 		if (srtpParameters)
-			FbsTransport.ConnectPipeTransportData.addSrtpParameters(
+			FbsPipeTransport.ConnectRequest.addSrtpParameters(
 				builder, srtpParametersOffset
 			);
 
-		return FbsTransport.ConnectPipeTransportData.endConnectPipeTransportData(builder);
+		return FbsPipeTransport.ConnectRequest.endConnectRequest(builder);
 	}
 	catch (error)
 	{

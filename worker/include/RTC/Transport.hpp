@@ -4,6 +4,7 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "FBS/transport_generated.h"
 #include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
@@ -128,7 +129,7 @@ namespace RTC
 		// Subclasses must also invoke the parent Close().
 		virtual flatbuffers::Offset<FBS::Transport::GetStatsResponse> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder);
-		virtual flatbuffers::Offset<FBS::Transport::DumpResponse> FillBuffer(
+		flatbuffers::Offset<FBS::Transport::BaseTransportDump> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */

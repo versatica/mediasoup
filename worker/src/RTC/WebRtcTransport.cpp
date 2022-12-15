@@ -1,10 +1,11 @@
+#include "FBS/webRtcTransport_generated.h"
 #define MS_CLASS "RTC::WebRtcTransport"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/WebRtcTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/WebRtcTransport.hpp"
 #include <cmath> // std::pow()
 
 namespace RTC
@@ -253,19 +254,19 @@ namespace RTC
 			this->webRtcTransportListener->OnWebRtcTransportClosed(this);
 	}
 
-	flatbuffers::Offset<FBS::Transport::DumpResponse> WebRtcTransport::FillBuffer(
+	flatbuffers::Offset<FBS::WebRtcTransport::WebRtcTransportDumpResponse> WebRtcTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
 		// Add iceParameters.
-		auto iceParameters = FBS::Transport::CreateIceParametersDirect(
+		auto iceParameters = FBS::WebRtcTransport::CreateIceParametersDirect(
 		  builder,
 		  this->iceServer->GetUsernameFragment().c_str(),
 		  this->iceServer->GetPassword().c_str(),
 		  true);
 
-		std::vector<flatbuffers::Offset<FBS::Transport::IceCandidate>> iceCandidates;
+		std::vector<flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate>> iceCandidates;
 
 		for (const auto& iceCandidate : this->iceCandidates)
 		{
@@ -298,7 +299,7 @@ namespace RTC
 			iceSelectedTuple = this->iceServer->GetSelectedTuple()->FillBuffer(builder);
 
 		// Add dtlsParameters.fingerprints.
-		std::vector<flatbuffers::Offset<FBS::Transport::Fingerprint>> fingerprints;
+		std::vector<flatbuffers::Offset<FBS::WebRtcTransport::Fingerprint>> fingerprints;
 
 		for (const auto& fingerprint : this->dtlsTransport->GetLocalFingerprints())
 		{
@@ -306,7 +307,7 @@ namespace RTC
 			auto& value     = fingerprint.value;
 
 			fingerprints.emplace_back(
-			  FBS::Transport::CreateFingerprintDirect(builder, algorithm.c_str(), value.c_str()));
+			  FBS::WebRtcTransport::CreateFingerprintDirect(builder, algorithm.c_str(), value.c_str()));
 		}
 
 		// Add dtlsParameters.role.
@@ -354,9 +355,9 @@ namespace RTC
 		auto base = Transport::FillBuffer(builder);
 		// Add dtlsParameters.
 		auto dtlsParameters =
-		  FBS::Transport::CreateDtlsParametersDirect(builder, &fingerprints, dtlsRole.c_str());
+		  FBS::WebRtcTransport::CreateDtlsParametersDirect(builder, &fingerprints, dtlsRole.c_str());
 
-		auto webRtcTransportDump = FBS::Transport::CreateWebRtcTransportDumpDirect(
+		return FBS::WebRtcTransport::CreateWebRtcTransportDumpResponseDirect(
 		  builder,
 		  base,
 		  // iceRole (we are always "controlled").
@@ -367,9 +368,6 @@ namespace RTC
 		  iceSelectedTuple,
 		  dtlsParameters,
 		  dtlsState.c_str());
-
-		return FBS::Transport::CreateDumpResponse(
-		  builder, FBS::Transport::TransportDumpData::WebRtcTransportDump, webRtcTransportDump.Union());
 	}
 
 	flatbuffers::Offset<FBS::Transport::GetStatsResponse> WebRtcTransport::FillBufferStats(
@@ -446,15 +444,24 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
+			{
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+
+				request->Accept(
+				  FBS::Response::Body::FBS_WebRtcTransport_WebRtcTransportDumpResponse, dumpOffset);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::WEBRTC_TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->connectCalled)
 					MS_THROW_ERROR("connect() already called");
 
-				auto body           = request->data->body_as<FBS::Transport::ConnectRequest>();
-				auto connectData    = body->data_as<FBS::Transport::ConnectWebRtcTransportData>();
-				auto dtlsParameters = connectData->dtlsParameters();
+				auto body           = request->data->body_as<FBS::WebRtcTransport::ConnectRequest>();
+				auto dtlsParameters = body->dtlsParameters();
 
 				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
 				RTC::DtlsTransport::Role dtlsRemoteRole;
@@ -481,7 +488,7 @@ namespace RTC
 					break;
 				}
 
-				if (flatbuffers::IsFieldPresent(dtlsParameters, FBS::Transport::DtlsParameters::VT_ROLE))
+				if (flatbuffers::IsFieldPresent(dtlsParameters, FBS::WebRtcTransport::DtlsParameters::VT_ROLE))
 				{
 					dtlsRemoteRole = RTC::DtlsTransport::StringToRole(dtlsParameters->role()->str());
 
@@ -542,15 +549,10 @@ namespace RTC
 						MS_ABORT("invalid local DTLS role");
 				}
 
-				auto connectResponseDataOffset = FBS::Transport::CreateConnectWebRtcTransportResponseDirect(
+				auto responseOffset = FBS::WebRtcTransport::CreateConnectResponseDirect(
 				  request->GetBufferBuilder(), dtlsLocalRole.c_str());
 
-				auto responseOffset = FBS::Transport::CreateConnectResponse(
-				  request->GetBufferBuilder(),
-				  FBS::Transport::ConnectResponseData::ConnectWebRtcTransportResponse,
-				  connectResponseDataOffset.Union());
-
-				request->Accept(FBS::Response::Body::FBS_Transport_ConnectResponse, responseOffset);
+				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_ConnectResponse, responseOffset);
 
 				break;
 			}
@@ -573,7 +575,7 @@ namespace RTC
 				  true /* iceLite */
 				);
 
-				request->Accept(FBS::Response::Body::FBS_Transport_DumpResponse, responseOffset);
+				request->Accept(FBS::Response::Body::FBS_Transport_RestartIceResponse, responseOffset);
 
 				break;
 			}

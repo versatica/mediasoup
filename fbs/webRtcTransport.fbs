@@ -26,6 +26,56 @@ table WebRtcTransportOptions {
   prefer_tcp:bool = false;
 }
 
+// Note: Duplicated from transport.fbs!!
+table Fingerprint {
+  algorithm:string (required);
+  value:string (required);
+}
+
+// Note: Duplicated from transport.fbs!!
+table DtlsParameters {
+  fingerprints:[Fingerprint] (required);
+  role:string;
+}
+
+// Note: Duplicated from transport.fbs!!
+table IceParameters {
+ username_fragment:string (required);
+ password:string (required);
+ ice_lite:bool = true;
+}
+
+table IceCandidate {
+  foundation:string (required);
+  priority:uint32;
+  ip:string (required);
+  protocol:string (required);
+  port:uint16;
+  type:string;
+  tcp_type:string;
+}
+
+table ConnectRequest {
+  dtls_parameters:DtlsParameters (required);
+}
+
+table ConnectResponse {
+  dtls_local_role:string (required);
+}
+
+// NOTE: 'DumpResponse' collides with Transport 'DumpResponse'.
+// TODO: Verify in flatbuffers code.
+table WebRtcTransportDumpResponse {
+  base:FBS.Transport.BaseTransportDump (required);
+  ice_role:string (required);
+  ice_parameters:IceParameters (required);
+  ice_candidates:[IceCandidate] (required);
+  ice_state:string (required);
+  ice_selected_tuple:FBS.Transport.Tuple;
+  dtls_parameters:DtlsParameters (required);
+  dtls_state:string (required);
+}
+
 // Notifications from Worker.
 
 table IceSelectedTupleChangeNotification {

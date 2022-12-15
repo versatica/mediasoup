@@ -6,6 +6,10 @@ table DirectTransportOptions {
   base:FBS.Transport.BaseTransportOptions;
 }
 
+table DirectTransportDumpResponse {
+  base:FBS.Transport.BaseTransportDump (required);
+}
+
 // Notifications from Worker.
 
 table RtcpNotification {

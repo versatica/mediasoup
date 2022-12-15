@@ -19,8 +19,8 @@ namespace RTC
 	public:
 		flatbuffers::Offset<FBS::Transport::GetStatsResponse> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) override;
-		virtual flatbuffers::Offset<FBS::Transport::DumpResponse> FillBuffer(
-		  flatbuffers::FlatBufferBuilder& builder) const override;
+		flatbuffers::Offset<FBS::DirectTransport::DirectTransportDumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	private:
 		bool IsConnected() const override;

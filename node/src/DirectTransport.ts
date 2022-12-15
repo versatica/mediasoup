@@ -124,15 +124,11 @@ export class DirectTransport extends
 		);
 
 		/* Decode the response. */
-		const dump = new FbsTransport.DumpResponse();
+		const data = new FbsDirectTransport.DirectTransportDumpResponse();
 
-		response.body(dump);
+		response.body(data);
 
-		const transportDump = new FbsTransport.DirectTransportDump();
-
-		dump.data(transportDump);
-
-		return parseDirectTransportDump(transportDump);
+		return parseDirectTransportDumpResponse(data);
 	}
 
 	/**
@@ -262,16 +258,11 @@ export class DirectTransport extends
 	}
 }
 
-export function parseDirectTransportDump(
-	binary: FbsTransport.DirectTransportDump
+export function parseDirectTransportDumpResponse(
+	binary: FbsDirectTransport.DirectTransportDumpResponse
 ): BaseTransportDump
 {
-	// Retrieve BaseTransportDump.
-	const fbsBaseTransportDump = new FbsTransport.BaseTransportDump();
-
-	binary.base()!.data(fbsBaseTransportDump);
-
-	return parseBaseTransportDump(fbsBaseTransportDump);
+	return parseBaseTransportDump(binary.base()!);
 }
 
 function parseDirectTransportStats(
