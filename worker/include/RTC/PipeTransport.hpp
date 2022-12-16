@@ -35,7 +35,7 @@ namespace RTC
 	public:
 		flatbuffers::Offset<FBS::Transport::GetStatsResponse> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) override;
-		flatbuffers::Offset<FBS::PipeTransport::PipeTransportDumpResponse> FillBuffer(
+		flatbuffers::Offset<FBS::PipeTransport::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */

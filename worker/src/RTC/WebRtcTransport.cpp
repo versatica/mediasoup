@@ -254,7 +254,7 @@ namespace RTC
 			this->webRtcTransportListener->OnWebRtcTransportClosed(this);
 	}
 
-	flatbuffers::Offset<FBS::WebRtcTransport::WebRtcTransportDumpResponse> WebRtcTransport::FillBuffer(
+	flatbuffers::Offset<FBS::WebRtcTransport::DumpResponse> WebRtcTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -357,7 +357,7 @@ namespace RTC
 		auto dtlsParameters =
 		  FBS::WebRtcTransport::CreateDtlsParametersDirect(builder, &fingerprints, dtlsRole.c_str());
 
-		return FBS::WebRtcTransport::CreateWebRtcTransportDumpResponseDirect(
+		return FBS::WebRtcTransport::CreateDumpResponseDirect(
 		  builder,
 		  base,
 		  // iceRole (we are always "controlled").
@@ -448,8 +448,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(
-				  FBS::Response::Body::FBS_WebRtcTransport_WebRtcTransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_DumpResponse, dumpOffset);
 
 				break;
 			}

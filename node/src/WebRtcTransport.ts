@@ -400,7 +400,7 @@ export class WebRtcTransport extends
 		);
 
 		/* Decode the response. */
-		const data = new FbsWebRtcTransport.WebRtcTransportDumpResponse();
+		const data = new FbsWebRtcTransport.DumpResponse();
 
 		response.body(data);
 
@@ -641,7 +641,7 @@ export function fbsDtlsState2DtlsState(fbsDtlsState: FbsDtlsState): DtlsState
 }
 
 export function parseWebRtcTransportDumpResponse(
-	binary: FbsWebRtcTransport.WebRtcTransportDumpResponse
+	binary: FbsWebRtcTransport.DumpResponse
 ): WebRtcTransportDump
 {
 	// Retrieve BaseTransportDump.

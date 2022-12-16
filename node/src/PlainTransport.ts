@@ -258,7 +258,7 @@ export class PlainTransport extends
 		);
 
 		/* Decode the response. */
-		const data = new FbsPlainTransport.PlainTransportDumpResponse();
+		const data = new FbsPlainTransport.DumpResponse();
 
 		response.body(data);
 
@@ -432,7 +432,7 @@ export class PlainTransport extends
 }
 
 export function parsePlainTransportDumpResponse(
-	binary: FbsPlainTransport.PlainTransportDumpResponse
+	binary: FbsPlainTransport.DumpResponse
 ): PlainTransportDump
 {
 	// Retrieve BaseTransportDump.

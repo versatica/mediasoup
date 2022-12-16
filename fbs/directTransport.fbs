@@ -6,7 +6,7 @@ table DirectTransportOptions {
   base:FBS.Transport.BaseTransportOptions;
 }
 
-table DirectTransportDumpResponse {
+table DumpResponse {
   base:FBS.Transport.BaseTransportDump (required);
 }
 

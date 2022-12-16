@@ -67,7 +67,7 @@ namespace RTC
 	public:
 		flatbuffers::Offset<FBS::Transport::GetStatsResponse> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) override;
-		flatbuffers::Offset<FBS::WebRtcTransport::WebRtcTransportDumpResponse> FillBuffer(
+		flatbuffers::Offset<FBS::WebRtcTransport::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 		void ProcessStunPacketFromWebRtcServer(RTC::TransportTuple* tuple, RTC::StunPacket* packet);
 		void ProcessNonStunPacketFromWebRtcServer(

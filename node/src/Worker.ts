@@ -629,13 +629,13 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		// Build the request.
 		const builder = this.#channel.bufferBuilder;
 
-		const updateaSettingsRequestOffset =
+		const requestOffset =
 			new FbsWorker.UpdateSettingsRequestT(logLevel, logTags).pack(builder);
 
 		await this.#channel.request(
 			FbsRequest.Method.WORKER_UPDATE_SETTINGS,
 			FbsRequest.Body.FBS_Worker_UpdateSettingsRequest,
-			updateaSettingsRequestOffset
+			requestOffset
 		);
 	}
 

@@ -34,13 +34,13 @@ namespace RTC
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 	}
 
-	flatbuffers::Offset<FBS::DirectTransport::DirectTransportDumpResponse> DirectTransport::FillBuffer(
+	flatbuffers::Offset<FBS::DirectTransport::DumpResponse> DirectTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		// Add base transport dump.
 		auto base = Transport::FillBuffer(builder);
 
-		return FBS::DirectTransport::CreateDirectTransportDumpResponse(builder, base);
+		return FBS::DirectTransport::CreateDumpResponse(builder, base);
 	}
 
 	flatbuffers::Offset<FBS::Transport::GetStatsResponse> DirectTransport::FillBufferStats(
@@ -67,7 +67,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_PipeTransport_PipeTransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_PipeTransport_DumpResponse, dumpOffset);
 
 				break;
 			}

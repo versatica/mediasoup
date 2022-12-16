@@ -124,7 +124,7 @@ export class DirectTransport extends
 		);
 
 		/* Decode the response. */
-		const data = new FbsDirectTransport.DirectTransportDumpResponse();
+		const data = new FbsDirectTransport.DumpResponse();
 
 		response.body(data);
 
@@ -259,7 +259,7 @@ export class DirectTransport extends
 }
 
 export function parseDirectTransportDumpResponse(
-	binary: FbsDirectTransport.DirectTransportDumpResponse
+	binary: FbsDirectTransport.DumpResponse
 ): BaseTransportDump
 {
 	return parseBaseTransportDump(binary.base()!);

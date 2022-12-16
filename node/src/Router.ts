@@ -500,7 +500,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Decode the response. */
 
-		const data = new FbsWebRtcTransport.WebRtcTransportDumpResponse();
+		const data = new FbsWebRtcTransport.DumpResponse();
 
 		response.body(data);
 
@@ -631,7 +631,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Decode the response. */
 
-		const data = new FbsPlainTransport.PlainTransportDumpResponse();
+		const data = new FbsPlainTransport.DumpResponse();
 
 		response.body(data);
 
@@ -755,7 +755,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Decode the response. */
 
-		const data = new FbsPipeTransport.PipeTransportDumpResponse();
+		const data = new FbsPipeTransport.DumpResponse();
 
 		response.body(data);
 
@@ -851,7 +851,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Decode the response. */
 
-		const data = new FbsDirectTransport.DirectTransportDumpResponse();
+		const data = new FbsDirectTransport.DumpResponse();
 
 		response.body(data);
 

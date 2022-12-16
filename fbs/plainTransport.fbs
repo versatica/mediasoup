@@ -26,7 +26,7 @@ table ConnectResponse {
   srtp_parameters:FBS.Transport.SrtpParameters;
 }
 
-table PlainTransportDumpResponse {
+table DumpResponse {
   base:FBS.Transport.BaseTransportDump (required);
   rtcp_mux:bool;
   comedia:bool;

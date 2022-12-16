@@ -434,7 +434,7 @@ export class PipeTransport
  */
 
 export function parsePipeTransportDumpResponse(
-	binary: FbsPipeTransport.PipeTransportDumpResponse
+	binary: FbsPipeTransport.DumpResponse
 ): PipeTransportDump
 {
 	// Retrieve BaseTransportDump.

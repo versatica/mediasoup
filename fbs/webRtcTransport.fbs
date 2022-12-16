@@ -63,9 +63,7 @@ table ConnectResponse {
   dtls_local_role:string (required);
 }
 
-// NOTE: 'DumpResponse' collides with Transport 'DumpResponse'.
-// TODO: Verify in flatbuffers code.
-table WebRtcTransportDumpResponse {
+table DumpResponse {
   base:FBS.Transport.BaseTransportDump (required);
   ice_role:string (required);
   ice_parameters:IceParameters (required);

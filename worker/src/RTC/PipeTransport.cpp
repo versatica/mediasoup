@@ -90,7 +90,7 @@ namespace RTC
 		this->srtpRecvSession = nullptr;
 	}
 
-	flatbuffers::Offset<FBS::PipeTransport::PipeTransportDumpResponse> PipeTransport::FillBuffer(
+	flatbuffers::Offset<FBS::PipeTransport::DumpResponse> PipeTransport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -127,8 +127,7 @@ namespace RTC
 		// Add base transport dump.
 		auto base = Transport::FillBuffer(builder);
 
-		return FBS::PipeTransport::CreatePipeTransportDumpResponse(
-		  builder, base, tuple, this->rtx, srtpParameters);
+		return FBS::PipeTransport::CreateDumpResponse(builder, base, tuple, this->rtx, srtpParameters);
 	}
 
 	flatbuffers::Offset<FBS::Transport::GetStatsResponse> PipeTransport::FillBufferStats(
@@ -185,7 +184,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_PipeTransport_PipeTransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_PipeTransport_DumpResponse, dumpOffset);
 
 				break;
 			}

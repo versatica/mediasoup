@@ -215,8 +215,7 @@ namespace RTC
 
 				auto dumpOffset = webRtcTransport->FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(
-				  FBS::Response::Body::FBS_WebRtcTransport_WebRtcTransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -254,8 +253,7 @@ namespace RTC
 
 				auto dumpOffset = webRtcTransport->FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(
-				  FBS::Response::Body::FBS_WebRtcTransport_WebRtcTransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -278,8 +276,7 @@ namespace RTC
 
 				auto dumpOffset = plainTransport->FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(
-				  FBS::Response::Body::FBS_PlainTransport_PlainTransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_PlainTransport_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -302,7 +299,7 @@ namespace RTC
 
 				auto dumpOffset = pipeTransport->FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_PipeTransport_PipeTransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_PipeTransport_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -325,8 +322,7 @@ namespace RTC
 
 				auto dumpOffset = directTransport->FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(
-				  FBS::Response::Body::FBS_DirectTransport_DirectTransportDumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_DirectTransport_DumpResponse, dumpOffset);
 
 				break;
 			}

@@ -20,7 +20,7 @@ table ConnectResponse {
   tuple:FBS.Transport.Tuple;
 }
 
-table PipeTransportDumpResponse {
+table DumpResponse {
   base:FBS.Transport.BaseTransportDump (required);
   tuple:FBS.Transport.Tuple (required);
   rtx:bool;
