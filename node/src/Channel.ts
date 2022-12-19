@@ -31,6 +31,9 @@ export class Channel extends EnhancedEventEmitter
 	// Closed flag.
 	#closed = false;
 
+	// Worker PID.
+	readonly #pid: number;
+
 	// Unix Socket instance for sending messages to the worker process.
 	readonly #producerSocket: Duplex;
 
@@ -68,6 +71,7 @@ export class Channel extends EnhancedEventEmitter
 
 		logger.debug('constructor()');
 
+		this.#pid = pid;
 		this.#producerSocket = producerSocket as Duplex;
 		this.#consumerSocket = consumerSocket as Duplex;
 
@@ -157,31 +161,7 @@ export class Channel extends EnhancedEventEmitter
 
 							message.data(log);
 
-							const logData = log.data()!;
-
-							switch (logData[0])
-							{
-								// 'D' (a debug log).
-								case 'D':
-									logger.debug(`[pid:${pid}] ${logData.slice(1)}`);
-									break;
-
-								// 'W' (a warn log).
-								case 'W':
-									logger.warn(`[pid:${pid}] ${logData.slice(1)}`);
-									break;
-
-								// 'E' (a error log).
-								case 'E':
-									logger.error(`[pid:${pid}] ${logData.slice(1)}`);
-									break;
-
-								// 'X' (a dump log).
-								case 'X':
-									// eslint-disable-next-line no-console
-									console.log(logData.slice(1));
-									break;
-							}
+							this.processLog(log);
 
 							break;
 						}
@@ -469,5 +449,34 @@ export class Channel extends EnhancedEventEmitter
 			notification.event(),
 			notification)
 		);
+	}
+
+	private processLog(log: Log): void
+	{
+		const logData = log.data()!;
+
+		switch (logData[0])
+		{
+			// 'D' (a debug log).
+			case 'D':
+				logger.debug(`[pid:${this.#pid}] ${logData.slice(1)}`);
+				break;
+
+			// 'W' (a warn log).
+			case 'W':
+				logger.warn(`[pid:${this.#pid}] ${logData.slice(1)}`);
+				break;
+
+			// 'E' (a error log).
+			case 'E':
+				logger.error(`[pid:${this.#pid}] ${logData.slice(1)}`);
+				break;
+
+			// 'X' (a dump log).
+			case 'X':
+				// eslint-disable-next-line no-console
+				console.log(logData.slice(1));
+				break;
+		}
 	}
 }
