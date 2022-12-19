@@ -306,10 +306,12 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
   prev_modified_trend_ = modified_trend;
   // BWE_TEST_LOGGING_PLOT(1, "T", now_ms, modified_trend);
   // BWE_TEST_LOGGING_PLOT(1, "threshold", now_ms, threshold_);
-/*	for (auto it = delay_hist_.crbegin(); it != delay_hist_.crend(); ++it) {
+	/*for (auto it = delay_hist_.crbegin(); it != delay_hist_.crend(); ++it) {
 		MS_DEBUG_DEV("arrival_time_ms - first_arrival_time_ms_:%f, smoothed_delay_:%f, raw_delay_:%f", it->arrival_time_ms, it->smoothed_delay_ms, it->raw_delay_ms);
 	}*/
 
+  // MS_NOTE: In case of positive slope we want to limit BW increase or even decrease
+	// in case we see that we have many outliers.
 	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < kDefaultRSquaredUpperBound) {
 		if (avg_r_squared < kDefaultRSquaredLowerBound) {
 			hypothesis_ = BandwidthUsage::kBwOverusing;
