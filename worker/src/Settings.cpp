@@ -300,7 +300,7 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 
 		default:
 		{
-			MS_THROW_ERROR("unknown method '%s'", request->methodStr.c_str());
+			MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
 		}
 	}
 }

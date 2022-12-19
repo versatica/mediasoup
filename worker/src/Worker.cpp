@@ -222,9 +222,8 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
-	// TODO: Remove when every request is ported to flatbuffers.
-	MS_ERROR(
-	  "Channel request received [method:%s, id:%" PRIu32 "]", request->methodStr.c_str(), request->id);
+	MS_DEBUG_DEV(
+	  "Channel request received [method:%s, id:%" PRIu32 "]", request->methodCStr, request->id);
 
 	switch (request->method)
 	{
@@ -285,11 +284,11 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			}
 			catch (const MediaSoupTypeError& error)
 			{
-				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
+				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->methodCStr);
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodCStr);
 			}
 
 			break;
@@ -309,7 +308,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodCStr);
 			}
 
 			// Remove it from the map and delete it.
@@ -336,7 +335,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodCStr);
 			}
 
 			auto* router = new RTC::Router(this->shared, routerId, this);
@@ -364,7 +363,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodCStr);
 			}
 
 			// Remove it from the map and delete it.
@@ -396,11 +395,11 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			}
 			catch (const MediaSoupTypeError& error)
 			{
-				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
+				MS_THROW_TYPE_ERROR("%s [method:%s]", error.what(), request->methodCStr);
 			}
 			catch (const MediaSoupError& error)
 			{
-				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodStr.c_str());
+				MS_THROW_ERROR("%s [method:%s]", error.what(), request->methodCStr);
 			}
 
 			break;
@@ -412,7 +411,7 @@ inline void Worker::HandleNotification(Channel::ChannelNotification* notificatio
 {
 	MS_TRACE();
 
-	MS_DEBUG_DEV("Channel notification received [event:%s]", notification->event.c_str());
+	MS_DEBUG_DEV("Channel notification received [event:%s]", notification->eventCStr);
 
 	try
 	{
@@ -429,11 +428,11 @@ inline void Worker::HandleNotification(Channel::ChannelNotification* notificatio
 	}
 	catch (const MediaSoupTypeError& error)
 	{
-		MS_THROW_TYPE_ERROR("%s [event:%s]", error.what(), notification->eventStr.c_str());
+		MS_THROW_TYPE_ERROR("%s [event:%s]", error.what(), notification->eventCStr);
 	}
 	catch (const MediaSoupError& error)
 	{
-		MS_THROW_ERROR("%s [method:%s]", error.what(), notification->eventStr.c_str());
+		MS_THROW_ERROR("%s [method:%s]", error.what(), notification->eventCStr);
 	}
 }
 

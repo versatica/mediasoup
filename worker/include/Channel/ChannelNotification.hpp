@@ -28,9 +28,8 @@ namespace Channel
 
 	public:
 		// Passed by argument.
-		// TODO: Move it to const char*.
-		std::string eventStr;
 		Event event;
+		const char* eventCStr;
 		std::string handlerId;
 		const FBS::Notification::Notification* data{ nullptr };
 	};

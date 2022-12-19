@@ -29,7 +29,7 @@ namespace Channel
 
 		this->data     = notification;
 		this->event    = notification->event();
-		this->eventStr = event2String[this->event];
+		this->eventCStr = event2String[this->event];
 
 		// Handler ID is optional.
 		if (flatbuffers::IsFieldPresent(this->data, FBS::Notification::Notification::VT_HANDLERID))

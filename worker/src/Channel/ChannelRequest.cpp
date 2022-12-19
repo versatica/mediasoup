@@ -93,10 +93,10 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		this->data      = request;
-		this->id        = request->id();
-		this->method    = request->method();
-		this->methodStr = method2String[this->method];
+		this->data       = request;
+		this->id         = request->id();
+		this->method     = request->method();
+		this->methodCStr = method2String[this->method];
 
 		// Handler ID is optional.
 		if (flatbuffers::IsFieldPresent(this->data, FBS::Request::Request::VT_HANDLERID))

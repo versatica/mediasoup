@@ -1294,7 +1294,7 @@ namespace RTC
 
 			default:
 			{
-				MS_THROW_ERROR("unknown method '%s'", request->methodStr.c_str());
+				MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
 			}
 		}
 
@@ -1317,7 +1317,7 @@ namespace RTC
 		{
 			default:
 			{
-				MS_ERROR("unknown event '%s'", notification->eventStr.c_str());
+				MS_ERROR("unknown event '%s'", notification->eventCStr);
 			}
 		}
 	}
