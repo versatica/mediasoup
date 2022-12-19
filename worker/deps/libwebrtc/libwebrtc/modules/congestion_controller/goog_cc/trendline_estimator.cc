@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::TrendlineEstimator"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/trendline_estimator.h"
 
@@ -30,6 +30,8 @@ namespace {
 // Parameters for linear least squares fit of regression line to noisy data.
 constexpr double kDefaultTrendlineSmoothingCoeff = 0.9;
 constexpr double kDefaultTrendlineThresholdGain = 4.0;
+constexpr double kDefaultRSquaredUpperBound = 0.4;
+constexpr double kDefaultRSquaredLowerBound = 0.15;
 const char kBweWindowSizeInPacketsExperiment[] =
     "WebRTC-BweWindowSizeInPackets";
 
@@ -308,8 +310,8 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
 		MS_DEBUG_DEV("arrival_time_ms - first_arrival_time_ms_:%f, smoothed_delay_:%f, raw_delay_:%f", it->arrival_time_ms, it->smoothed_delay_ms, it->raw_delay_ms);
 	}*/
 
-	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < 0.4) {
-		if (avg_r_squared < 0.15) {
+	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < kDefaultRSquaredUpperBound) {
+		if (avg_r_squared < kDefaultRSquaredLowerBound) {
 			hypothesis_ = BandwidthUsage::kBwOverusing;
 			MS_DEBUG_DEV("OverUsing!");
 		} else  {
