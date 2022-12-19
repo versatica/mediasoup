@@ -1,4 +1,3 @@
-#include "FBS/plainTransport_generated.h"
 #define MS_CLASS "RTC::PlainTransport"
 // #define MS_LOG_DEV_LEVEL 3
 

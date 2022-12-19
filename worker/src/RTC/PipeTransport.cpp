@@ -1,5 +1,3 @@
-#include "FBS/pipeTransport_generated.h"
-#include "FBS/transport_generated.h"
 #define MS_CLASS "RTC::PipeTransport"
 // #define MS_LOG_DEV_LEVEL 3
 

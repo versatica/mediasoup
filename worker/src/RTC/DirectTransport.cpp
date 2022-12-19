@@ -1,4 +1,3 @@
-#include "FBS/directTransport_generated.h"
 #define MS_CLASS "RTC::DirectTransport"
 // #define MS_LOG_DEV_LEVEL 3
 
