@@ -527,8 +527,8 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Transport::ProduceRequest>();
 				auto producerId  = body->producerId()->str();
 
-				// This may throw.
-				CheckNoProducer(producerId);
+				if (this->mapProducers.find(producerId) != this->mapProducers.end())
+					MS_THROW_ERROR("a Producer with same producerId already exists");
 
 				// This may throw.
 				auto* producer = new RTC::Producer(this->shared, producerId, this, body);
@@ -687,11 +687,8 @@ namespace RTC
 				std::string producerId = body->producerId()->str();
 				std::string consumerId = body->consumerId()->str();
 
-				// TODO: use CheckNoConsumer(consumerId) instead.
 				if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
-				{
 					MS_THROW_ERROR("a Consumer with same consumerId already exists");
-				}
 
 				auto type = RTC::RtpParameters::Type(body->type());
 
@@ -1495,12 +1492,6 @@ namespace RTC
 
 		// Pass it to the SctpAssociation.
 		this->sctpAssociation->ProcessSctpData(data, len);
-	}
-
-	void Transport::CheckNoProducer(const std::string& producerId) const
-	{
-		if (this->mapProducers.find(producerId) != this->mapProducers.end())
-			MS_THROW_ERROR("a Producer with same producerId already exists");
 	}
 
 	void Transport::CheckNoDataProducer(const std::string& dataProducerId) const
