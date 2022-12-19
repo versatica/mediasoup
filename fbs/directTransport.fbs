@@ -3,11 +3,11 @@ include "transport.fbs";
 namespace FBS.DirectTransport;
 
 table DirectTransportOptions {
-  base:FBS.Transport.BaseTransportOptions (required);
+  base:FBS.Transport.Options (required);
 }
 
 table DumpResponse {
-  base:FBS.Transport.BaseTransportDump (required);
+  base:FBS.Transport.Dump (required);
 }
 
 table GetStatsResponse {

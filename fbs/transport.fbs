@@ -91,7 +91,7 @@ table SctpListener {
   stream_id_table:[FBS.Common.Uint16String] (required);
 }
 
-table BaseTransportDump {
+table Dump {
   id:string (required);
   direct:bool=false;
   producer_ids:[string] (required);
@@ -109,7 +109,7 @@ table BaseTransportDump {
   trace_event_types:[string] (required);
 }
 
-table BaseTransportOptions {
+table Options {
   direct:bool = false;
   max_message_size:uint32;
   initial_available_outgoing_bitrate:uint32;

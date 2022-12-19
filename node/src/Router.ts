@@ -464,7 +464,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 				new FbsWebRtcTransport.WebRtcTransportListenIndividualT(transportListenIps, port);
 		}
 
-		const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(
+		const baseTransportOptions = new FbsTransport.OptionsT(
 			undefined /* direct */,
 			undefined /* maxMessageSize */,
 			initialAvailableOutgoingBitrate,
@@ -599,7 +599,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const transportListenIp =
 			new FbsTransport.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
 
-		const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(
+		const baseTransportOptions = new FbsTransport.OptionsT(
 			undefined /* direct */,
 			undefined /* maxMessageSize */,
 			undefined /* initialAvailableOutgoingBitrate */,
@@ -725,7 +725,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const transportListenIp =
 			new FbsTransport.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
 
-		const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(
+		const baseTransportOptions = new FbsTransport.OptionsT(
 			undefined /* direct */,
 			undefined /* maxMessageSize */,
 			undefined /* initialAvailableOutgoingBitrate */,
@@ -825,7 +825,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-		const baseTransportOptions = new FbsTransport.BaseTransportOptionsT(
+		const baseTransportOptions = new FbsTransport.OptionsT(
 			true /* direct */,
 			maxMessageSize,
 			undefined /* initialAvailableOutgoingBitrate */,

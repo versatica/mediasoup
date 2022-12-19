@@ -18,7 +18,7 @@ union WebRtcTransportListen {
 }
 
 table WebRtcTransportOptions {
-  base:FBS.Transport.BaseTransportOptions (required);
+  base:FBS.Transport.Options (required);
   listen:WebRtcTransportListen (required);
   enable_udp:bool = true;
   enable_tcp:bool = false;
@@ -61,7 +61,7 @@ table ConnectResponse {
 }
 
 table DumpResponse {
-  base:FBS.Transport.BaseTransportDump (required);
+  base:FBS.Transport.Dump (required);
   ice_role:string (required);
   ice_parameters:IceParameters (required);
   ice_candidates:[IceCandidate] (required);

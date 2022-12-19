@@ -1173,7 +1173,7 @@ export function parseTuple(binary: FbsTransport.Tuple): TransportTuple
 }
 
 export function parseBaseTransportDump(
-	binary: FbsTransport.BaseTransportDump
+	binary: FbsTransport.Dump
 ): BaseTransportDump
 {
 	// Retrieve producerIds.

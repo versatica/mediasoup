@@ -3,7 +3,7 @@ include "transport.fbs";
 namespace FBS.PipeTransport;
 
 table PipeTransportOptions {
-  base:FBS.Transport.BaseTransportOptions (required);
+  base:FBS.Transport.Options (required);
   listen_ip:FBS.Transport.TransportListenIp (required);
   port:uint16;
   enable_rtx:bool;
@@ -21,7 +21,7 @@ table ConnectResponse {
 }
 
 table DumpResponse {
-  base:FBS.Transport.BaseTransportDump (required);
+  base:FBS.Transport.Dump (required);
   tuple:FBS.Transport.Tuple (required);
   rtx:bool;
   srtp_parameters:FBS.Transport.SrtpParameters;

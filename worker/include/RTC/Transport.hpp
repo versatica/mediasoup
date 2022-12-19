@@ -120,7 +120,7 @@ namespace RTC
 		  RTC::Shared* shared,
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
-		  const FBS::Transport::BaseTransportOptions* options);
+		  const FBS::Transport::Options* options);
 		virtual ~Transport();
 
 	public:
@@ -128,8 +128,7 @@ namespace RTC
 		void ListenServerClosed();
 		// Subclasses must also invoke the parent Close().
 		flatbuffers::Offset<FBS::Transport::Stats> FillBufferStats(flatbuffers::FlatBufferBuilder& builder);
-		flatbuffers::Offset<FBS::Transport::BaseTransportDump> FillBuffer(
-		  flatbuffers::FlatBufferBuilder& builder) const;
+		flatbuffers::Offset<FBS::Transport::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:

@@ -35,7 +35,7 @@ namespace RTC
 	  RTC::Shared* shared,
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
-	  const FBS::Transport::BaseTransportOptions* options)
+	  const FBS::Transport::Options* options)
 	  : id(id), shared(shared), listener(listener), recvRtxTransmission(1000u),
 	    sendRtxTransmission(1000u), sendProbationTransmission(100u)
 	{
@@ -59,15 +59,13 @@ namespace RTC
 			}
 
 			// numSctpStreams is mandatory.
-			if (!flatbuffers::IsFieldPresent(
-			      options, FBS::Transport::BaseTransportOptions::VT_NUMSCTPSTREAMS))
+			if (!flatbuffers::IsFieldPresent(options, FBS::Transport::Options::VT_NUMSCTPSTREAMS))
 			{
 				MS_THROW_TYPE_ERROR("numSctpStreams missing");
 			}
 
 			// maxSctpMessageSize is mandatory.
-			if (!flatbuffers::IsFieldPresent(
-			      options, FBS::Transport::BaseTransportOptions::VT_MAXSCTPMESSAGESIZE))
+			if (!flatbuffers::IsFieldPresent(options, FBS::Transport::Options::VT_MAXSCTPMESSAGESIZE))
 			{
 				MS_THROW_TYPE_ERROR("maxSctpMessageSize missing");
 			}
@@ -77,8 +75,7 @@ namespace RTC
 			size_t sctpSendBufferSize;
 
 			// sctpSendBufferSize is optional.
-			if (flatbuffers::IsFieldPresent(
-			      options, FBS::Transport::BaseTransportOptions::VT_SCTPSENDBUFFERSIZE))
+			if (flatbuffers::IsFieldPresent(options, FBS::Transport::Options::VT_SCTPSENDBUFFERSIZE))
 			{
 				if (options->sctpSendBufferSize() > MaxSctpSendBufferSize)
 				{
@@ -231,7 +228,7 @@ namespace RTC
 		this->listener->OnTransportListenServerClosed(this);
 	}
 
-	flatbuffers::Offset<FBS::Transport::BaseTransportDump> Transport::FillBuffer(
+	flatbuffers::Offset<FBS::Transport::Dump> Transport::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -367,7 +364,7 @@ namespace RTC
 		if (this->traceEventTypes.bwe)
 			traceEventTypes.emplace_back(builder.CreateString("bwe"));
 
-		return FBS::Transport::CreateBaseTransportDumpDirect(
+		return FBS::Transport::CreateDumpDirect(
 		  builder,
 		  this->id.c_str(),
 		  this->direct,
