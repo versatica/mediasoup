@@ -1233,7 +1233,7 @@ export function parseBaseTransportDump(
 }
 
 export function parseBaseTransportStats(
-	binary: FbsTransport.BaseTransportStats
+	binary: FbsTransport.Stats
 ): BaseTransportStats
 {
 	const sctpState = binary.sctpState() === '' ? undefined : binary.sctpState() as SctpState;

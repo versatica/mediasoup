@@ -1,4 +1,5 @@
 #include "FBS/pipeTransport_generated.h"
+#include "FBS/transport_generated.h"
 #define MS_CLASS "RTC::PipeTransport"
 // #define MS_LOG_DEV_LEVEL 3
 
@@ -130,7 +131,7 @@ namespace RTC
 		return FBS::PipeTransport::CreateDumpResponse(builder, base, tuple, this->rtx, srtpParameters);
 	}
 
-	flatbuffers::Offset<FBS::Transport::GetStatsResponse> PipeTransport::FillBufferStats(
+	flatbuffers::Offset<FBS::PipeTransport::GetStatsResponse> PipeTransport::FillBufferStats(
 	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
@@ -167,11 +168,8 @@ namespace RTC
 
 		// Base Transport stats.
 		auto base = Transport::FillBufferStats(builder);
-		// PipeTransport stats.
-		auto pipeTransportStats = FBS::Transport::CreatePipeTransportStats(builder, base, tuple);
 
-		return FBS::Transport::CreateGetStatsResponse(
-		  builder, FBS::Transport::StatsData::PipeTransportStats, pipeTransportStats.Union());
+		return FBS::PipeTransport::CreateGetStatsResponse(builder, base, tuple);
 	}
 
 	void PipeTransport::HandleRequest(Channel::ChannelRequest* request)
@@ -180,6 +178,15 @@ namespace RTC
 
 		switch (request->method)
 		{
+			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
+			{
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_PipeTransport_GetStatsResponse, responseOffset);
+
+				break;
+			}
+
 			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());

@@ -71,6 +71,14 @@ table DumpResponse {
   dtls_state:string (required);
 }
 
+table GetStatsResponse {
+  base:FBS.Transport.Stats (required);
+  ice_role:string (required);
+  ice_state:string (required);
+  ice_selected_tuple:FBS.Transport.Tuple;
+  dtls_state:string (required);
+}
+
 // Notifications from Worker.
 
 table IceSelectedTupleChangeNotification {

@@ -120,19 +120,7 @@ table BaseTransportOptions {
   is_data_channel:bool = false;
 }
 
-union StatsData {
-  BaseTransportStats,
-  DirectTransportStats,
-  PipeTransportStats,
-  PlainTransportStats,
-  WebRtcTransportStats,
-}
-
-table GetStatsResponse {
-  data:StatsData;
-}
-
-table BaseTransportStats {
+table Stats {
   transport_id:string (required);
   timestamp:uint64;
   sctp_state:string;
@@ -155,31 +143,6 @@ table BaseTransportStats {
   max_incoming_bitrate:uint64;
   rtp_packet_loss_received:uint64;
   rtp_packet_loss_sent:uint64;
-}
-
-table DirectTransportStats {
-  base:GetStatsResponse (required);
-}
-
-table PipeTransportStats {
-  base:GetStatsResponse (required);
-  tuple:Tuple (required);
-}
-
-table PlainTransportStats {
-  base:GetStatsResponse (required);
-  rtcp_mux:bool;
-  comedia:bool;
-  tuple:Tuple (required);
-  rtcp_tuple:Tuple;
-}
-
-table WebRtcTransportStats {
-  base:GetStatsResponse (required);
-  ice_role:string (required);
-  ice_state:string (required);
-  ice_selected_tuple:Tuple;
-  dtls_state:string (required);
 }
 
 table SetMaxIncomingBitrateRequest {

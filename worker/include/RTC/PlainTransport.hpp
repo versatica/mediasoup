@@ -33,8 +33,8 @@ namespace RTC
 		~PlainTransport() override;
 
 	public:
-		flatbuffers::Offset<FBS::Transport::GetStatsResponse> FillBufferStats(
-		  flatbuffers::FlatBufferBuilder& builder) override;
+		flatbuffers::Offset<FBS::PlainTransport::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder);
 		flatbuffers::Offset<FBS::PlainTransport::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 

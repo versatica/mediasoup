@@ -127,8 +127,7 @@ namespace RTC
 		void CloseProducersAndConsumers();
 		void ListenServerClosed();
 		// Subclasses must also invoke the parent Close().
-		virtual flatbuffers::Offset<FBS::Transport::GetStatsResponse> FillBufferStats(
-		  flatbuffers::FlatBufferBuilder& builder);
+		flatbuffers::Offset<FBS::Transport::Stats> FillBufferStats(flatbuffers::FlatBufferBuilder& builder);
 		flatbuffers::Offset<FBS::Transport::BaseTransportDump> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 

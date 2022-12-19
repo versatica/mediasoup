@@ -33,8 +33,8 @@ namespace RTC
 		~PipeTransport() override;
 
 	public:
-		flatbuffers::Offset<FBS::Transport::GetStatsResponse> FillBufferStats(
-		  flatbuffers::FlatBufferBuilder& builder) override;
+		flatbuffers::Offset<FBS::PipeTransport::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder);
 		flatbuffers::Offset<FBS::PipeTransport::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 

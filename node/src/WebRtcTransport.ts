@@ -424,11 +424,11 @@ export class WebRtcTransport extends
 		);
 
 		/* Decode the response. */
-		const data = new FbsTransport.GetStatsResponse();
+		const data = new FbsWebRtcTransport.GetStatsResponse();
 
 		response.body(data);
 
-		return [ parseWebRtcTransportStats(data) ];
+		return [ parseGetStatsResponse(data) ];
 	}
 
 	/**
@@ -666,27 +666,21 @@ export function parseWebRtcTransportDumpResponse(
 	};
 }
 
-function parseWebRtcTransportStats(
-	binary: FbsTransport.GetStatsResponse
+function parseGetStatsResponse(
+	binary: FbsWebRtcTransport.GetStatsResponse
 ):WebRtcTransportStat
 {
-	const webRtcStats = new FbsTransport.WebRtcTransportStats();
-	const baseStats = new FbsTransport.BaseTransportStats();
-
-	binary.data(webRtcStats);
-	webRtcStats.base()!.data(baseStats);
-
-	const base = parseBaseTransportStats(baseStats);
+	const base = parseBaseTransportStats(binary.base()!);
 
 	return {
 		...base,
 		type             : 'webrtc-transport',
-		iceRole          : webRtcStats.iceRole()!,
-		iceState         : webRtcStats.iceState() as IceState,
-		iceSelectedTuple : webRtcStats.iceSelectedTuple() ?
-			parseTuple(webRtcStats.iceSelectedTuple()!) :
+		iceRole          : binary.iceRole()!,
+		iceState         : binary.iceState() as IceState,
+		iceSelectedTuple : binary.iceSelectedTuple() ?
+			parseTuple(binary.iceSelectedTuple()!) :
 			undefined,
-		dtlsState : webRtcStats.dtlsState() as DtlsState
+		dtlsState : binary.dtlsState() as DtlsState
 	};
 }
 

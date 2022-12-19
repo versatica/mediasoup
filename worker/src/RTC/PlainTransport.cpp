@@ -236,7 +236,7 @@ namespace RTC
 		  builder, base, this->rtcpMux, this->comedia, tuple, rtcpTuple, srtpParameters);
 	}
 
-	flatbuffers::Offset<FBS::Transport::GetStatsResponse> PlainTransport::FillBufferStats(
+	flatbuffers::Offset<FBS::PlainTransport::GetStatsResponse> PlainTransport::FillBufferStats(
 			flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
@@ -280,17 +280,14 @@ namespace RTC
 
 		// Base Transport stats.
 		auto base = Transport::FillBufferStats(builder);
-		// PlainTransport stats.
-		auto plainTransportStats = FBS::Transport::CreatePlainTransportStats(
+
+		return FBS::PlainTransport::CreateGetStatsResponse(
 				builder,
 				base,
 				this->rtcpMux,
 				this->comedia,
 				tuple,
 				rtcpTuple);
-
-		return FBS::Transport::CreateGetStatsResponse(
-		  builder, FBS::Transport::StatsData::PlainTransportStats, plainTransportStats.Union());
 	}
 
 	void PlainTransport::HandleRequest(Channel::ChannelRequest* request)
@@ -304,6 +301,15 @@ namespace RTC
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::FBS_PlainTransport_DumpResponse, dumpOffset);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
+			{
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_PlainTransport_GetStatsResponse, responseOffset);
 
 				break;
 			}

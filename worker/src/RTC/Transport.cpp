@@ -386,7 +386,7 @@ namespace RTC
 		  &traceEventTypes);
 	}
 
-	flatbuffers::Offset<FBS::Transport::GetStatsResponse> Transport::FillBufferStats(
+	flatbuffers::Offset<FBS::Transport::Stats> Transport::FillBufferStats(
 	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
@@ -419,7 +419,7 @@ namespace RTC
 			}
 		}
 
-		auto baseTransportStats = FBS::Transport::CreateBaseTransportStatsDirect(
+		return FBS::Transport::CreateStatsDirect(
 		  builder,
 		  // transportId.
 		  this->id.c_str(),
@@ -465,9 +465,6 @@ namespace RTC
 		  this->tccServer ? this->tccServer->GetPacketLoss() : 0u,
 		  // packetLossSent.
 		  this->tccClient ? this->tccClient->GetPacketLoss() : 0u);
-
-		return FBS::Transport::CreateGetStatsResponse(
-		  builder, FBS::Transport::StatsData::BaseTransportStats, baseTransportStats.Union());
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)
@@ -476,15 +473,6 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
-			{
-				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
-
-				request->Accept(FBS::Response::Body::FBS_Transport_GetStatsResponse, responseOffset);
-
-				break;
-			}
-
 			case Channel::ChannelRequest::Method::TRANSPORT_SET_MAX_INCOMING_BITRATE:
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxIncomingBitrateRequest>();

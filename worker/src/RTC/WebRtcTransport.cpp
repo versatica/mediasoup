@@ -371,7 +371,7 @@ namespace RTC
 		  dtlsState.c_str());
 	}
 
-	flatbuffers::Offset<FBS::Transport::GetStatsResponse> WebRtcTransport::FillBufferStats(
+	flatbuffers::Offset<FBS::WebRtcTransport::GetStatsResponse> WebRtcTransport::FillBufferStats(
 	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
@@ -425,8 +425,8 @@ namespace RTC
 
 		// Base Transport stats.
 		auto base = Transport::FillBufferStats(builder);
-		// WebRtcTransport stats.
-		auto webRtcTransportStats = FBS::Transport::CreateWebRtcTransportStatsDirect(
+
+		return FBS::WebRtcTransport::CreateGetStatsResponseDirect(
 		  builder,
 		  base,
 		  // iceRole (we are always "controlled").
@@ -434,9 +434,6 @@ namespace RTC
 		  iceState.c_str(),
 		  iceSelectedTuple,
 		  dtlsState.c_str());
-
-		return FBS::Transport::CreateGetStatsResponse(
-		  builder, FBS::Transport::StatsData::WebRtcTransportStats, webRtcTransportStats.Union());
 	}
 
 	void WebRtcTransport::HandleRequest(Channel::ChannelRequest* request)
@@ -445,6 +442,15 @@ namespace RTC
 
 		switch (request->method)
 		{
+			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
+			{
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_GetStatsResponse, responseOffset);
+
+				break;
+			}
+
 			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());

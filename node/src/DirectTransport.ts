@@ -148,11 +148,11 @@ export class DirectTransport extends
 		);
 
 		/* Decode the response. */
-		const data = new FbsTransport.GetStatsResponse();
+		const data = new FbsDirectTransport.GetStatsResponse();
 
 		response.body(data);
 
-		return [ parseDirectTransportStats(data) ];
+		return [ parseGetStatsResponse(data) ];
 	}
 
 	/**
@@ -265,17 +265,11 @@ export function parseDirectTransportDumpResponse(
 	return parseBaseTransportDump(binary.base()!);
 }
 
-function parseDirectTransportStats(
-	binary: FbsTransport.GetStatsResponse
+function parseGetStatsResponse(
+	binary: FbsDirectTransport.GetStatsResponse
 ):DirectTransportStat
 {
-	const directTransportStats = new FbsTransport.DirectTransportStats();
-	const baseStats = new FbsTransport.BaseTransportStats();
-
-	binary.data(directTransportStats);
-	directTransportStats.base()!.data(baseStats);
-
-	const base = parseBaseTransportStats(baseStats);
+	const base = parseBaseTransportStats(binary.base()!);
 
 	return {
 		...base,

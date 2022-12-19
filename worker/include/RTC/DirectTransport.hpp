@@ -17,8 +17,8 @@ namespace RTC
 		~DirectTransport() override;
 
 	public:
-		flatbuffers::Offset<FBS::Transport::GetStatsResponse> FillBufferStats(
-		  flatbuffers::FlatBufferBuilder& builder) override;
+		flatbuffers::Offset<FBS::DirectTransport::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder);
 		flatbuffers::Offset<FBS::DirectTransport::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 

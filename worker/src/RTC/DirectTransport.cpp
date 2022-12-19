@@ -43,18 +43,15 @@ namespace RTC
 		return FBS::DirectTransport::CreateDumpResponse(builder, base);
 	}
 
-	flatbuffers::Offset<FBS::Transport::GetStatsResponse> DirectTransport::FillBufferStats(
+	flatbuffers::Offset<FBS::DirectTransport::GetStatsResponse> DirectTransport::FillBufferStats(
 	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
 		// Base Transport stats.
 		auto base = Transport::FillBufferStats(builder);
-		// DirectTransport stats.
-		auto directTransportStats = FBS::Transport::CreateDirectTransportStats(builder, base);
 
-		return FBS::Transport::CreateGetStatsResponse(
-		  builder, FBS::Transport::StatsData::DirectTransportStats, directTransportStats.Union());
+		return FBS::DirectTransport::CreateGetStatsResponse(builder, base);
 	}
 
 	void DirectTransport::HandleRequest(Channel::ChannelRequest* request)
@@ -63,6 +60,15 @@ namespace RTC
 
 		switch (request->method)
 		{
+			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
+			{
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_DirectTransport_GetStatsResponse, responseOffset);
+
+				break;
+			}
+
 			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());

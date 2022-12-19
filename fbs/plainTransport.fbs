@@ -35,6 +35,14 @@ table DumpResponse {
   srtp_parameters:FBS.Transport.SrtpParameters;
 }
 
+table GetStatsResponse {
+  base:FBS.Transport.Stats (required);
+  rtcp_mux:bool;
+  comedia:bool;
+  tuple:FBS.Transport.Tuple (required);
+  rtcp_tuple:FBS.Transport.Tuple;
+}
+
 // Notifications from Worker.
 
 table TupleNotification {

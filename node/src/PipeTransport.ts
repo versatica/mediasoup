@@ -248,11 +248,11 @@ export class PipeTransport
 		);
 
 		/* Decode the response. */
-		const data = new FbsTransport.GetStatsResponse();
+		const data = new FbsPipeTransport.GetStatsResponse();
 
 		response.body(data);
 
-		return [ parsePipeTransportStats(data) ];
+		return [ parseGetStatsResponse(data) ];
 	}
 
 	/**
@@ -458,22 +458,16 @@ export function parsePipeTransportDumpResponse(
 	};
 }
 
-function parsePipeTransportStats(
-	binary: FbsTransport.GetStatsResponse
+function parseGetStatsResponse(
+	binary: FbsPipeTransport.GetStatsResponse
 ):PipeTransportStat
 {
-	const pipeTransportStats = new FbsTransport.PipeTransportStats();
-	const baseStats = new FbsTransport.BaseTransportStats();
-
-	binary.data(pipeTransportStats);
-	pipeTransportStats.base()!.data(baseStats);
-
-	const base = parseBaseTransportStats(baseStats);
+	const base = parseBaseTransportStats(binary.base()!);
 
 	return {
 		...base,
 		type  : 'pipe-transport',
-		tuple : parseTuple(pipeTransportStats.tuple()!)
+		tuple : parseTuple(binary.tuple()!)
 	};
 }
 

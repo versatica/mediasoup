@@ -282,11 +282,11 @@ export class PlainTransport extends
 		);
 
 		/* Decode the response. */
-		const data = new FbsTransport.GetStatsResponse();
+		const data = new FbsPlainTransport.GetStatsResponse();
 
 		response.body(data);
 
-		return [ parsePlainTransportStats(data) ];
+		return [ parseGetStatsResponse(data) ];
 	}
 
 	/**
@@ -466,26 +466,20 @@ export function parsePlainTransportDumpResponse(
 	};
 }
 
-function parsePlainTransportStats(
-	binary: FbsTransport.GetStatsResponse
+function parseGetStatsResponse(
+	binary: FbsPlainTransport.GetStatsResponse
 ):PlainTransportStat
 {
-	const plainTransportStats = new FbsTransport.PlainTransportStats();
-	const baseStats = new FbsTransport.BaseTransportStats();
-
-	binary.data(plainTransportStats);
-	plainTransportStats.base()!.data(baseStats);
-
-	const base = parseBaseTransportStats(baseStats);
+	const base = parseBaseTransportStats(binary.base()!);
 
 	return {
 		...base,
 		type      : 'plain-rtp-transport',
-		rtcpMux   : plainTransportStats.rtcpMux(),
-		comedia   : plainTransportStats.comedia(),
-		tuple     : parseTuple(plainTransportStats.tuple()!),
-		rtcpTuple : plainTransportStats.rtcpTuple() ?
-			parseTuple(plainTransportStats.rtcpTuple()!) :
+		rtcpMux   : binary.rtcpMux(),
+		comedia   : binary.comedia(),
+		tuple     : parseTuple(binary.tuple()!),
+		rtcpTuple : binary.rtcpTuple() ?
+			parseTuple(binary.rtcpTuple()!) :
 			undefined
 	};
 }
