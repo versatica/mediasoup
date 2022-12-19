@@ -1,10 +1,11 @@
+#include "FBS/consumer_generated.h"
 #define MS_CLASS "RTC::Consumer"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/Consumer.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/Consumer.hpp"
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
@@ -137,7 +138,7 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	flatbuffers::Offset<FBS::Consumer::DumpResponse> Consumer::FillBuffer(
+	flatbuffers::Offset<FBS::Consumer::BaseConsumerDump> Consumer::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
@@ -176,7 +177,7 @@ namespace RTC
 		if (this->traceEventTypes.fir)
 			traceEventTypes.emplace_back(builder.CreateString("fir"));
 
-		auto baseConsumerDump = FBS::Consumer::CreateBaseConsumerDumpDirect(
+		return FBS::Consumer::CreateBaseConsumerDumpDirect(
 		  builder,
 		  this->id.c_str(),
 		  this->producerId.c_str(),
@@ -189,9 +190,6 @@ namespace RTC
 		  this->paused,
 		  this->producerPaused,
 		  this->priority);
-
-		return FBS::Consumer::CreateDumpResponse(
-		  builder, FBS::Consumer::ConsumerDumpData::BaseConsumerDump, baseConsumerDump.Union());
 	}
 
 	void Consumer::HandleRequest(Channel::ChannelRequest* request)
@@ -200,15 +198,6 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::CONSUMER_DUMP:
-			{
-				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
-
-				request->Accept(FBS::Response::Body::FBS_Consumer_DumpResponse, dumpOffset);
-
-				break;
-			}
-
 			case Channel::ChannelRequest::Method::CONSUMER_GET_STATS:
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());

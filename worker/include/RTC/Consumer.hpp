@@ -2,6 +2,7 @@
 #define MS_RTC_CONSUMER_HPP
 
 #include "common.hpp"
+#include "FBS/consumer_generated.h"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -67,7 +68,7 @@ namespace RTC
 		virtual ~Consumer();
 
 	public:
-		virtual flatbuffers::Offset<FBS::Consumer::DumpResponse> FillBuffer(
+		flatbuffers::Offset<FBS::Consumer::BaseConsumerDump> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
 		virtual flatbuffers::Offset<FBS::Consumer::GetStatsResponse> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) = 0;

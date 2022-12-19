@@ -550,11 +550,11 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		);
 
 		/* Decode the response. */
-		const dumpResponse = new FbsConsumer.DumpResponse();
+		const data = new FbsConsumer.DumpResponse();
 
-		response.body(dumpResponse);
+		response.body(data);
 
-		return parseConsumerDump(dumpResponse);
+		return parseConsumerDumpResponse(data);
 	}
 
 	/**
@@ -1046,9 +1046,7 @@ function parseBaseConsumerDump(data: FbsConsumer.BaseConsumerDump): BaseConsumer
 
 function parseSimpleConsumerDump(data: FbsConsumer.SimpleConsumerDump): SimpleConsumerDump
 {
-	const baseDump = new FbsConsumer.BaseConsumerDump();
-
-	const base = parseBaseConsumerDump(data.base()!.data(baseDump)!);
+	const base = parseBaseConsumerDump(data.base()!);
 	const rtpStream = parseRtpStream(data.rtpStream()!);
 
 	return {
@@ -1062,9 +1060,7 @@ function parseSimulcastConsumerDump(
 	data: FbsConsumer.SimulcastConsumerDump
 ) : SimulcastConsumerDump
 {
-	const baseDump = new FbsConsumer.BaseConsumerDump();
-
-	const base = parseBaseConsumerDump(data.base()!.data(baseDump)!);
+	const base = parseBaseConsumerDump(data.base()!);
 	const rtpStream = parseRtpStream(data.rtpStream()!);
 
 	return {
@@ -1095,9 +1091,7 @@ function parsePipeConsumerDump(
 	data: FbsConsumer.PipeConsumerDump
 ) : PipeConsumerDump
 {
-	const baseDump = new FbsConsumer.BaseConsumerDump();
-
-	const base = parseBaseConsumerDump(data.base()!.data(baseDump)!);
+	const base = parseBaseConsumerDump(data.base()!);
 	const rtpStreams = utils.parseVector(data, 'rtpStreams', parseRtpStream);
 
 	return {
@@ -1107,9 +1101,8 @@ function parsePipeConsumerDump(
 	};
 }
 
-function parseConsumerDump(data: FbsConsumer.DumpResponse): ConsumerDump
+function parseConsumerDumpResponse(data: FbsConsumer.DumpResponse): ConsumerDump
 {
-	logger.warn(data.unpack());
 	switch (data.type())
 	{
 		case FbsRtpParametersType.SIMPLE:

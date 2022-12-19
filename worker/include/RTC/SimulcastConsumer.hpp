@@ -1,6 +1,7 @@
 #ifndef MS_RTC_SIMULCAST_CONSUMER_HPP
 #define MS_RTC_SIMULCAST_CONSUMER_HPP
 
+#include "FBS/consumer_generated.h"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"
@@ -22,7 +23,7 @@ namespace RTC
 
 	public:
 		flatbuffers::Offset<FBS::Consumer::DumpResponse> FillBuffer(
-		  flatbuffers::FlatBufferBuilder& builder) const override;
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		flatbuffers::Offset<FBS::Consumer::GetStatsResponse> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) override;
 		flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(

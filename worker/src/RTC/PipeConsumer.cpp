@@ -114,6 +114,15 @@ namespace RTC
 
 		switch (request->method)
 		{
+			case Channel::ChannelRequest::Method::CONSUMER_DUMP:
+			{
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_Consumer_DumpResponse, dumpOffset);
+
+				break;
+			}
+
 			case Channel::ChannelRequest::Method::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())

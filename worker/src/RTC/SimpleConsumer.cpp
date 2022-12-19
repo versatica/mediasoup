@@ -1,11 +1,12 @@
+#include "FBS/consumer_generated.h"
 #define MS_CLASS "RTC::SimpleConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SimpleConsumer.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#include "RTC/SimpleConsumer.hpp"
 
 namespace RTC
 {
@@ -124,6 +125,15 @@ namespace RTC
 
 		switch (request->method)
 		{
+			case Channel::ChannelRequest::Method::CONSUMER_DUMP:
+			{
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_Consumer_DumpResponse, dumpOffset);
+
+				break;
+			}
+
 			case Channel::ChannelRequest::Method::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())

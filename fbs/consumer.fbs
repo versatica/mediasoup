@@ -35,7 +35,6 @@ table EnableTraceEventRequest {
 }
 
 union ConsumerDumpData {
-  BaseConsumerDump,
   SimpleConsumerDump,
   SimulcastConsumerDump,
   SvcConsumerDump,
@@ -61,12 +60,12 @@ table BaseConsumerDump {
 }
 
 table SimpleConsumerDump {
-  base:DumpResponse (required);
+  base:BaseConsumerDump (required);
   rtp_stream:FBS.RtpStream.Dump (required);
 }
 
 table SimulcastConsumerDump {
-  base:DumpResponse (required);
+  base:BaseConsumerDump (required);
   rtp_stream:FBS.RtpStream.Dump (required);
   preferred_spatial_layer:int16;
   target_spatial_layer:int16;
@@ -77,7 +76,7 @@ table SimulcastConsumerDump {
 }
 
 table SvcConsumerDump {
-  base:DumpResponse (required);
+  base:BaseConsumerDump (required);
   rtp_stream:FBS.RtpStream.Dump (required);
   preferred_spatial_layer:int16;
   target_spatial_layer:int16;
@@ -88,7 +87,7 @@ table SvcConsumerDump {
 }
 
 table PipeConsumerDump {
-  base:DumpResponse (required);
+  base:BaseConsumerDump (required);
   rtp_streams:[FBS.RtpStream.Dump] (required);
 }
 
