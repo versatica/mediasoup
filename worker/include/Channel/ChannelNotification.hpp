@@ -13,19 +13,17 @@ namespace Channel
 	public:
 		using Event = FBS::Notification::Event;
 
-	public:
-		static flatbuffers::FlatBufferBuilder bufferBuilder;
-
 	private:
 		static absl::flat_hash_map<FBS::Notification::Event, const char*> event2String;
 
 	public:
 		explicit ChannelNotification(const FBS::Notification::Notification* notification);
-		virtual ~ChannelNotification();
+		~ChannelNotification() = default;
 
 	public:
 		// Passed by argument.
 		Event event;
+		// Others.
 		const char* eventCStr;
 		std::string handlerId;
 		const FBS::Notification::Notification* data{ nullptr };

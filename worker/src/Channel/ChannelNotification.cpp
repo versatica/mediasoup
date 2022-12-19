@@ -19,8 +19,6 @@ namespace Channel
 	};
 	// clang-format on
 
-	flatbuffers::FlatBufferBuilder ChannelNotification::bufferBuilder;
-
 	/* Instance methods. */
 
 	ChannelNotification::ChannelNotification(const FBS::Notification::Notification* notification)
@@ -34,10 +32,5 @@ namespace Channel
 		// Handler ID is optional.
 		if (flatbuffers::IsFieldPresent(this->data, FBS::Notification::Notification::VT_HANDLERID))
 			this->handlerId = this->data->handlerId()->str();
-	}
-
-	ChannelNotification::~ChannelNotification()
-	{
-		MS_TRACE();
 	}
 } // namespace Channel

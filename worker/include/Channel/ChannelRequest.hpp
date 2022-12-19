@@ -28,9 +28,9 @@ namespace Channel
 
 	public:
 		ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request);
-		virtual ~ChannelRequest();
+		~ChannelRequest() = default;
 
-		flatbuffers::FlatBufferBuilder& GetBufferBuilder()
+		flatbuffers::FlatBufferBuilder& GetBufferBuilder() const
 		{
 			return bufferBuilder;
 		}
@@ -65,12 +65,12 @@ namespace Channel
 	public:
 		// Passed by argument.
 		Channel::ChannelSocket* channel{ nullptr };
+		const FBS::Request::Request* data{ nullptr };
+		// Others.
 		uint32_t id{ 0u };
 		Method method;
 		const char* methodCStr;
 		std::string handlerId;
-		const FBS::Request::Request* data{ nullptr };
-		// Others.
 		bool replied{ false };
 	};
 } // namespace Channel

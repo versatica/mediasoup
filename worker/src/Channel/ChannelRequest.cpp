@@ -103,11 +103,6 @@ namespace Channel
 			this->handlerId = this->data->handlerId()->str();
 	}
 
-	ChannelRequest::~ChannelRequest()
-	{
-		MS_TRACE();
-	}
-
 	void ChannelRequest::Accept()
 	{
 		MS_TRACE();
