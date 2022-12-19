@@ -18,7 +18,7 @@ union WebRtcTransportListen {
 }
 
 table WebRtcTransportOptions {
-  base:FBS.Transport.BaseTransportOptions;
+  base:FBS.Transport.BaseTransportOptions (required);
   listen:WebRtcTransportListen (required);
   enable_udp:bool = true;
   enable_tcp:bool = false;
@@ -26,19 +26,16 @@ table WebRtcTransportOptions {
   prefer_tcp:bool = false;
 }
 
-// Note: Duplicated from transport.fbs!!
 table Fingerprint {
   algorithm:string (required);
   value:string (required);
 }
 
-// Note: Duplicated from transport.fbs!!
 table DtlsParameters {
   fingerprints:[Fingerprint] (required);
   role:string;
 }
 
-// Note: Duplicated from transport.fbs!!
 table IceParameters {
  username_fragment:string (required);
  password:string (required);
