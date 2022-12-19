@@ -25,8 +25,8 @@ namespace RTC
 		if (this->rtpParameters.encodings.size() != this->consumableRtpEncodings.size())
 			MS_THROW_TYPE_ERROR("number of rtpParameters.encodings and consumableRtpEncodings do not match");
 
-		auto& encoding   = this->rtpParameters.encodings[0];
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		auto& encoding         = this->rtpParameters.encodings[0];
+		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 

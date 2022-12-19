@@ -37,7 +37,7 @@ namespace RTC
 
 		if (rtpParameters.encodings.size() == 1)
 		{
-			auto& encoding = rtpParameters.encodings[0];
+			const auto& encoding = rtpParameters.encodings[0];
 
 			if (encoding.spatialLayers > 1 || encoding.temporalLayers > 1)
 				return RtpParameters::Type::SVC;
@@ -197,7 +197,7 @@ namespace RTC
 
 		for (; it != this->codecs.end(); ++it)
 		{
-			auto& codec = *it;
+			const auto& codec = *it;
 
 			if (codec.payloadType == payloadType)
 				return std::addressof(codec);

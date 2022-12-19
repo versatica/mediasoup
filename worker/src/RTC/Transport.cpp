@@ -487,7 +487,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_SET_MAX_INCOMING_BITRATE:
 			{
-				auto body = request->data->body_as<FBS::Transport::SetMaxIncomingBitrateRequest>();
+				const auto* body = request->data->body_as<FBS::Transport::SetMaxIncomingBitrateRequest>();
 
 				this->maxIncomingBitrate = body->maxIncomingBitrate();
 
@@ -503,7 +503,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_SET_MAX_OUTGOING_BITRATE:
 			{
-				auto body = request->data->body_as<FBS::Transport::SetMaxOutgoingBitrateRequest>();
+				const auto* body = request->data->body_as<FBS::Transport::SetMaxOutgoingBitrateRequest>();
 
 				uint32_t bitrate = body->maxOutgoingBitrate();
 
@@ -536,8 +536,8 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_PRODUCE:
 			{
-				auto body       = request->data->body_as<FBS::Transport::ProduceRequest>();
-				auto producerId = body->producerId()->str();
+				const auto* body = request->data->body_as<FBS::Transport::ProduceRequest>();
+				auto producerId  = body->producerId()->str();
 
 				// This may throw.
 				CheckNoProducer(producerId);
@@ -694,7 +694,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CONSUME:
 			{
-				auto body = request->data->body_as<FBS::Transport::ConsumeRequest>();
+				const auto* body = request->data->body_as<FBS::Transport::ConsumeRequest>();
 
 				std::string producerId = body->producerId()->str();
 				std::string consumerId = body->consumerId()->str();
@@ -947,7 +947,7 @@ namespace RTC
 					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
 				}
 
-				auto body = request->data->body_as<FBS::Transport::ProduceDataRequest>();
+				const auto* body = request->data->body_as<FBS::Transport::ProduceDataRequest>();
 
 				auto dataProducerId = body->dataProducerId()->str();
 
@@ -1044,7 +1044,7 @@ namespace RTC
 					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
 				}
 
-				auto body = request->data->body_as<FBS::Transport::ConsumeDataRequest>();
+				const auto* body = request->data->body_as<FBS::Transport::ConsumeDataRequest>();
 
 				auto dataProducerId = body->dataProducerId()->str();
 				auto dataConsumerId = body->dataConsumerId()->str();
@@ -1138,7 +1138,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_ENABLE_TRACE_EVENT:
 			{
-				auto body = request->data->body_as<FBS::Transport::EnableTraceEventRequest>();
+				const auto* body = request->data->body_as<FBS::Transport::EnableTraceEventRequest>();
 
 				// Reset traceEventTypes.
 				struct TraceEventTypes newTraceEventTypes;
@@ -1162,7 +1162,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_PRODUCER:
 			{
-				auto body = request->data->body_as<FBS::Transport::CloseProducerRequest>();
+				const auto* body = request->data->body_as<FBS::Transport::CloseProducerRequest>();
 
 				// This may throw.
 				RTC::Producer* producer = GetProducerById(body->producerId()->str());
@@ -1199,7 +1199,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_CONSUMER:
 			{
-				auto body = request->data->body_as<FBS::Transport::CloseConsumerRequest>();
+				const auto* body = request->data->body_as<FBS::Transport::CloseConsumerRequest>();
 
 				// This may throw.
 				RTC::Consumer* consumer = GetConsumerById(body->consumerId()->str());
@@ -1242,7 +1242,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATA_PRODUCER:
 			{
-				auto body = request->data->body_as<FBS::Transport::CloseDataProducerRequest>();
+				const auto* body = request->data->body_as<FBS::Transport::CloseDataProducerRequest>();
 
 				// This may throw.
 				RTC::DataProducer* dataProducer = GetDataProducerById(body->dataProducerId()->str());
@@ -1277,7 +1277,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATA_CONSUMER:
 			{
-				auto body = request->data->body_as<FBS::Transport::CloseDataConsumerRequest>();
+				const auto* body = request->data->body_as<FBS::Transport::CloseDataConsumerRequest>();
 
 				// This may throw.
 				RTC::DataConsumer* dataConsumer = GetDataConsumerById(body->dataConsumerId()->str());

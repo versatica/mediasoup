@@ -88,8 +88,8 @@ namespace RTC
 		{
 			case Channel::ChannelNotification::Event::TRANSPORT_SEND_RTCP:
 			{
-				auto body = notification->data->body_as<FBS::Transport::SendRtcpNotification>();
-				auto len  = body->data()->size();
+				const auto* body = notification->data->body_as<FBS::Transport::SendRtcpNotification>();
+				auto len         = body->data()->size();
 
 				// Increase receive transmission.
 				RTC::Transport::DataReceived(len);

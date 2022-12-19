@@ -55,8 +55,8 @@ namespace RTC
 		this->rtpStreamByEncodingIdx.resize(this->rtpParameters.encodings.size(), nullptr);
 		this->rtpStreamScores.resize(this->rtpParameters.encodings.size(), 0u);
 
-		auto& encoding   = this->rtpParameters.encodings[0];
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		auto& encoding         = this->rtpParameters.encodings[0];
+		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		if (!RTC::Codecs::Tools::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
 		{
@@ -71,7 +71,7 @@ namespace RTC
 			this->rtpMapping.codecs[codec->payloadType()] = codec->mappedPayloadType();
 		}
 
-		auto encodings = data->rtpMapping()->encodings();
+		const auto* encodings = data->rtpMapping()->encodings();
 
 		this->rtpMapping.encodings.reserve(encodings->size());
 
@@ -428,7 +428,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::PRODUCER_ENABLE_TRACE_EVENT:
 			{
-				auto body = request->data->body_as<FBS::Producer::EnableTraceEventRequest>();
+				const auto* body = request->data->body_as<FBS::Producer::EnableTraceEventRequest>();
 
 				// Reset traceEventTypes.
 				struct TraceEventTypes newTraceEventTypes;
@@ -471,8 +471,8 @@ namespace RTC
 		{
 			case Channel::ChannelNotification::Event::PRODUCER_SEND:
 			{
-				auto body = notification->data->body_as<FBS::Producer::SendNotification>();
-				auto len  = body->data()->size();
+				const auto* body = notification->data->body_as<FBS::Producer::SendNotification>();
+				auto len         = body->data()->size();
 
 				// Increase receive transmission.
 				this->listener->OnProducerReceiveData(this, len);

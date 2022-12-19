@@ -47,7 +47,7 @@ namespace RTC
 
 		for (size_t i{ 0 }; i < data->consumableRtpEncodings()->size(); ++i)
 		{
-			auto* entry = data->consumableRtpEncodings()->Get(i);
+			const auto* entry = data->consumableRtpEncodings()->Get(i);
 
 			// This may throw due the constructor of RTC::RtpEncodingParameters.
 			this->consumableRtpEncodings.emplace_back(entry);
@@ -264,7 +264,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::CONSUMER_SET_PRIORITY:
 			{
-				auto body = request->data->body_as<FBS::Consumer::SetPriorityRequest>();
+				const auto* body = request->data->body_as<FBS::Consumer::SetPriorityRequest>();
 
 				if (body->priority() < 1u)
 					MS_THROW_TYPE_ERROR("wrong priority (must be higher than 0)");
@@ -281,7 +281,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::CONSUMER_ENABLE_TRACE_EVENT:
 			{
-				auto body = request->data->body_as<FBS::Consumer::EnableTraceEventRequest>();
+				const auto* body = request->data->body_as<FBS::Consumer::EnableTraceEventRequest>();
 
 				// Reset traceEventTypes.
 				struct TraceEventTypes newTraceEventTypes;

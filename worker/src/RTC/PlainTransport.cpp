@@ -321,7 +321,7 @@ namespace RTC
 					uint16_t rtcpPort{ 0u };
 					std::string srtpKeyBase64;
 
-					auto body = request->data->body_as<FBS::PlainTransport::ConnectRequest>();
+					const auto *body = request->data->body_as<FBS::PlainTransport::ConnectRequest>();
 
 					auto srtpParametersPresent = flatbuffers::IsFieldPresent(
 							body, FBS::PlainTransport::ConnectRequest::VT_SRTPPARAMETERS);
@@ -337,7 +337,7 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing srtpParameters (SRTP enabled)");
 						}
 
-						auto srtpParameters = body->srtpParameters();
+						const auto *srtpParameters = body->srtpParameters();
 						// Ensure it's a crypto suite supported by us.
 						auto it =
 						  PlainTransport::string2SrtpCryptoSuite.find(srtpParameters->cryptoSuite()->str());

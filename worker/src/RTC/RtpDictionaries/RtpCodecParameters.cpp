@@ -39,7 +39,7 @@ namespace RTC
 		{
 			this->rtcpFeedback.reserve(data->rtcpFeedback()->size());
 
-			for (auto* entry : *data->rtcpFeedback())
+			for (const auto* entry : *data->rtcpFeedback())
 			{
 				this->rtcpFeedback.emplace_back(entry);
 			}

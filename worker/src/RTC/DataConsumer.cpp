@@ -167,7 +167,8 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
-				auto body = request->data->body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>();
+				const auto* body =
+				  request->data->body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>();
 
 				this->bufferedAmountLowThreshold = body->threshold();
 
@@ -204,7 +205,7 @@ namespace RTC
 					MS_THROW_ERROR("no SCTP association present");
 				}
 
-				auto body = request->data->body_as<FBS::DataConsumer::SendRequest>();
+				const auto* body = request->data->body_as<FBS::DataConsumer::SendRequest>();
 
 				int ppid = body->ppid();
 

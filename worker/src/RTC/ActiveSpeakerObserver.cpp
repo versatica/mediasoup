@@ -323,7 +323,7 @@ namespace RTC
 			{
 				auto* producerSpeaker = kv.second;
 				auto* speaker         = producerSpeaker->speaker;
-				auto& id              = producerSpeaker->producer->id;
+				const auto& id        = producerSpeaker->producer->id;
 
 				if (id == this->dominantId || speaker->paused)
 				{
@@ -369,7 +369,7 @@ namespace RTC
 		{
 			auto* producerSpeaker = kv.second;
 			auto* speaker         = producerSpeaker->speaker;
-			auto& id              = producerSpeaker->producer->id;
+			const auto& id        = producerSpeaker->producer->id;
 			uint64_t idle         = now - speaker->lastLevelChangeTime;
 
 			if (SpeakerIdleTimeout < idle && (this->dominantId.empty() || id != this->dominantId))

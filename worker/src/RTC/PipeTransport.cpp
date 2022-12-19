@@ -201,7 +201,7 @@ namespace RTC
 					uint16_t port{ 0u };
 					std::string srtpKeyBase64;
 
-					auto body = request->data->body_as<FBS::PipeTransport::ConnectRequest>();
+					const auto* body = request->data->body_as<FBS::PipeTransport::ConnectRequest>();
 
 					auto srtpParametersPresent =
 					  flatbuffers::IsFieldPresent(body, FBS::PipeTransport::ConnectRequest::VT_SRTPPARAMETERS);
@@ -217,7 +217,7 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing srtpParameters (SRTP enabled)");
 						}
 
-						auto srtpParameters = body->srtpParameters();
+						const auto* srtpParameters = body->srtpParameters();
 
 						// NOTE: We just use AEAD_AES_256_GCM as SRTP crypto suite in
 						// PipeTransport.

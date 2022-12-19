@@ -17,8 +17,8 @@ namespace RTC
 
 		for (const auto& kv : this->mapKeyValues)
 		{
-			auto& key   = kv.first;
-			auto& value = kv.second;
+			const auto& key   = kv.first;
+			const auto& value = kv.second;
 
 			flatbuffers::Offset<FBS::RtpParameters::Parameter> parameter;
 
@@ -141,7 +141,7 @@ namespace RTC
 		if (it == this->mapKeyValues.end())
 			return false;
 
-		auto& value = it->second;
+		const auto& value = it->second;
 
 		return value.type == Value::Type::BOOLEAN;
 	}
@@ -155,7 +155,7 @@ namespace RTC
 		if (it == this->mapKeyValues.end())
 			return false;
 
-		auto& value = it->second;
+		const auto& value = it->second;
 
 		return value.type == Value::Type::INTEGER;
 	}
@@ -169,7 +169,7 @@ namespace RTC
 		if (it == this->mapKeyValues.end())
 			return false;
 
-		auto& value = it->second;
+		const auto& value = it->second;
 
 		return value.type == Value::Type::INTEGER && value.integerValue >= 0;
 	}
@@ -183,7 +183,7 @@ namespace RTC
 		if (it == this->mapKeyValues.end())
 			return false;
 
-		auto& value = it->second;
+		const auto& value = it->second;
 
 		return value.type == Value::Type::DOUBLE;
 	}
@@ -197,7 +197,7 @@ namespace RTC
 		if (it == this->mapKeyValues.end())
 			return false;
 
-		auto& value = it->second;
+		const auto& value = it->second;
 
 		return value.type == Value::Type::STRING;
 	}
@@ -211,7 +211,7 @@ namespace RTC
 		if (it == this->mapKeyValues.end())
 			return false;
 
-		auto& value = it->second;
+		const auto& value = it->second;
 
 		return value.type == Value::Type::ARRAY_OF_INTEGERS;
 	}
@@ -225,8 +225,8 @@ namespace RTC
 		if (it == this->mapKeyValues.end())
 			return false;
 
-		auto& value = it->second;
-		auto& array = value.arrayOfIntegers;
+		const auto& value = it->second;
+		const auto& array = value.arrayOfIntegers;
 
 		return std::find(array.begin(), array.end(), integer) != array.end();
 	}
@@ -239,7 +239,7 @@ namespace RTC
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
-		auto& value = it->second;
+		const auto& value = it->second;
 
 		return value.booleanValue;
 	}
@@ -252,7 +252,7 @@ namespace RTC
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
-		auto& value = it->second;
+		const auto& value = it->second;
 
 		return value.integerValue;
 	}
@@ -265,7 +265,7 @@ namespace RTC
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
-		auto& value = it->second;
+		const auto& value = it->second;
 
 		return value.doubleValue;
 	}
@@ -278,7 +278,7 @@ namespace RTC
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
-		auto& value = it->second;
+		const auto& value = it->second;
 
 		return value.stringValue;
 	}
@@ -291,7 +291,7 @@ namespace RTC
 
 		MS_ASSERT(it != this->mapKeyValues.end(), "key does not exist [key:%s]", key.c_str());
 
-		auto& value = it->second;
+		const auto& value = it->second;
 
 		return value.arrayOfIntegers;
 	}

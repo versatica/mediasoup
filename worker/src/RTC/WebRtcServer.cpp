@@ -139,7 +139,7 @@ namespace RTC
 		std::vector<flatbuffers::Offset<FBS::WebRtcServer::IpPort>> udpSockets;
 		std::vector<flatbuffers::Offset<FBS::WebRtcServer::IpPort>> tcpServers;
 
-		for (auto& item : this->udpSocketOrTcpServers)
+		for (const auto& item : this->udpSocketOrTcpServers)
 		{
 			if (item.udpSocket)
 			{
@@ -164,7 +164,7 @@ namespace RTC
 		// Add localIceUsernameFragments.
 		std::vector<flatbuffers::Offset<FBS::WebRtcServer::IceUserNameFragment>> localIceUsernameFragments;
 
-		for (auto& kv : this->mapLocalIceUsernameFragmentWebRtcTransport)
+		for (const auto& kv : this->mapLocalIceUsernameFragmentWebRtcTransport)
 		{
 			const auto& localIceUsernameFragment = kv.first;
 			const auto* webRtcTransport          = kv.second;
@@ -176,7 +176,7 @@ namespace RTC
 		// Add tupleHashes.
 		std::vector<flatbuffers::Offset<FBS::WebRtcServer::TupleHash>> tupleHashes;
 
-		for (auto& kv : this->mapTupleWebRtcTransport)
+		for (const auto& kv : this->mapTupleWebRtcTransport)
 		{
 			const auto& tupleHash       = kv.first;
 			const auto* webRtcTransport = kv.second;
@@ -273,8 +273,8 @@ namespace RTC
 		// local usernameFragment) which is the first value in the attribute value
 		// before the ":" symbol.
 
-		auto& username  = packet->GetUsername();
-		size_t colonPos = username.find(':');
+		const auto& username = packet->GetUsername();
+		size_t colonPos      = username.find(':');
 
 		// If no colon is found just return the whole USERNAME attribute anyway.
 		if (colonPos == std::string::npos)

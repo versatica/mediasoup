@@ -37,8 +37,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* listenInfo = options->listen_as<FBS::WebRtcTransport::WebRtcTransportListenIndividual>();
-		auto* listenIps  = listenInfo->listenIps();
+		const auto* listenInfo =
+		  options->listen_as<FBS::WebRtcTransport::WebRtcTransportListenIndividual>();
+		const auto* listenIps = listenInfo->listenIps();
 
 		try
 		{
@@ -303,8 +304,8 @@ namespace RTC
 
 		for (const auto& fingerprint : this->dtlsTransport->GetLocalFingerprints())
 		{
-			auto& algorithm = RTC::DtlsTransport::GetFingerprintAlgorithmString(fingerprint.algorithm);
-			auto& value     = fingerprint.value;
+			auto& algorithm   = RTC::DtlsTransport::GetFingerprintAlgorithmString(fingerprint.algorithm);
+			const auto& value = fingerprint.value;
 
 			fingerprints.emplace_back(
 			  FBS::WebRtcTransport::CreateFingerprintDirect(builder, algorithm.c_str(), value.c_str()));
@@ -459,8 +460,8 @@ namespace RTC
 				if (this->connectCalled)
 					MS_THROW_ERROR("connect() already called");
 
-				auto body           = request->data->body_as<FBS::WebRtcTransport::ConnectRequest>();
-				auto dtlsParameters = body->dtlsParameters();
+				const auto* body           = request->data->body_as<FBS::WebRtcTransport::ConnectRequest>();
+				const auto* dtlsParameters = body->dtlsParameters();
 
 				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
 				RTC::DtlsTransport::Role dtlsRemoteRole;

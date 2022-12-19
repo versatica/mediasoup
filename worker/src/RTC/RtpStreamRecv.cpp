@@ -152,9 +152,9 @@ namespace RTC
 
 		size_t packetCount{ 0u };
 
-		for (auto& spatialLayerCounter : this->spatialLayerCounters)
+		for (const auto& spatialLayerCounter : this->spatialLayerCounters)
 		{
-			for (auto& temporalLayerCounter : spatialLayerCounter)
+			for (const auto& temporalLayerCounter : spatialLayerCounter)
 			{
 				packetCount += temporalLayerCounter.GetPacketCount();
 			}

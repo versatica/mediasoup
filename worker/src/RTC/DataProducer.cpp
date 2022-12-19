@@ -146,8 +146,8 @@ namespace RTC
 		{
 			case Channel::ChannelNotification::Event::DATA_PRODUCER_SEND:
 			{
-				auto body = notification->data->body_as<FBS::DataProducer::SendNotification>();
-				auto len  = body->data()->size();
+				const auto* body = notification->data->body_as<FBS::DataProducer::SendNotification>();
+				auto len         = body->data()->size();
 
 				if (len > this->maxMessageSize)
 				{

@@ -70,9 +70,9 @@ namespace RTC
 		// Add transportIds.
 		std::vector<flatbuffers::Offset<flatbuffers::String>> transportIds;
 
-		for (auto& kv : this->mapTransports)
+		for (const auto& kv : this->mapTransports)
 		{
-			auto& transportId = kv.first;
+			const auto& transportId = kv.first;
 
 			transportIds.push_back(builder.CreateString(transportId));
 		}
@@ -80,9 +80,9 @@ namespace RTC
 		// Add rtpObserverIds.
 		std::vector<flatbuffers::Offset<flatbuffers::String>> rtpObserverIds;
 
-		for (auto& kv : this->mapRtpObservers)
+		for (const auto& kv : this->mapRtpObservers)
 		{
-			auto& rtpObserverId = kv.first;
+			const auto& rtpObserverId = kv.first;
 
 			rtpObserverIds.push_back(builder.CreateString(rtpObserverId));
 		}
@@ -197,7 +197,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTC_TRANSPORT:
 			{
-				auto body = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
+				const auto* body = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
 
 				auto transportId = body->transportId()->str();
 
@@ -222,14 +222,15 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
 			{
-				auto body        = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
+				const auto* body = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
 				CheckNoTransport(transportId);
 
-				auto* options    = body->options();
-				auto* listenInfo = options->listen_as<FBS::WebRtcTransport::WebRtcTransportListenServer>();
+				const auto* options = body->options();
+				const auto* listenInfo =
+				  options->listen_as<FBS::WebRtcTransport::WebRtcTransportListenServer>();
 
 				auto webRtcServerId = listenInfo->webRtcServerId()->str();
 
@@ -260,7 +261,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_PLAIN_TRANSPORT:
 			{
-				auto body        = request->data->body_as<FBS::Router::CreatePlainTransportRequest>();
+				const auto* body = request->data->body_as<FBS::Router::CreatePlainTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -283,7 +284,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_PIPE_TRANSPORT:
 			{
-				auto body        = request->data->body_as<FBS::Router::CreatePipeTransportRequest>();
+				const auto* body = request->data->body_as<FBS::Router::CreatePipeTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -306,7 +307,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_DIRECT_TRANSPORT:
 			{
-				auto body        = request->data->body_as<FBS::Router::CreateDirectTransportRequest>();
+				const auto* body = request->data->body_as<FBS::Router::CreateDirectTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -329,7 +330,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER:
 			{
-				auto body = request->data->body_as<FBS::Router::CreateActiveSpeakerObserverRequest>();
+				const auto* body = request->data->body_as<FBS::Router::CreateActiveSpeakerObserverRequest>();
 				auto rtpObserverId = body->activeSpeakerObserverId()->str();
 
 				// This may throw.
@@ -350,7 +351,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER:
 			{
-				auto body          = request->data->body_as<FBS::Router::CreateAudioLevelObserverRequest>();
+				const auto* body   = request->data->body_as<FBS::Router::CreateAudioLevelObserverRequest>();
 				auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.
@@ -371,7 +372,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CLOSE_TRANSPORT:
 			{
-				auto body        = request->data->body_as<FBS::Router::CloseTransportRequest>();
+				const auto* body = request->data->body_as<FBS::Router::CloseTransportRequest>();
 				auto transportId = body->transportId()->str();
 
 				// This may throw.
@@ -396,7 +397,7 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::ROUTER_CLOSE_RTP_OBSERVER:
 			{
-				auto body          = request->data->body_as<FBS::Router::CloseRtpObserverRequest>();
+				const auto* body   = request->data->body_as<FBS::Router::CloseRtpObserverRequest>();
 				auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.
