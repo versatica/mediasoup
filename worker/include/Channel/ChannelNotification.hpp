@@ -20,11 +20,8 @@ namespace Channel
 		static absl::flat_hash_map<FBS::Notification::Event, const char*> event2String;
 
 	public:
-		ChannelNotification(const FBS::Notification::Notification* notification);
+		explicit ChannelNotification(const FBS::Notification::Notification* notification);
 		virtual ~ChannelNotification();
-
-	public:
-		void Set(const uint8_t* payload, size_t payloadLen);
 
 	public:
 		// Passed by argument.

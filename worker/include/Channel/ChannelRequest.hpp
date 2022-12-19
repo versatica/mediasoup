@@ -38,7 +38,7 @@ namespace Channel
 		template<class Body>
 		void Accept(FBS::Response::Body type, flatbuffers::Offset<Body>& body)
 		{
-			// TODO: Assert the request is not already replied.
+			assert(!this->replied);
 
 			this->replied = true;
 
