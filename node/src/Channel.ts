@@ -316,10 +316,6 @@ export class Channel extends EnhancedEventEmitter
 		// Clear the buffer builder so it's reused for the next request.
 		this.#bufferBuilder.clear();
 
-		// TODO: DEV. Remove.
-		// const notif = Message.getRootAsMessage(new flatbuffers.ByteBuffer(buffer));
-		// logger.warn(JSON.stringify(notif.unpack(), undefined, 2));
-
 		if (buffer.byteLength > MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');
 
@@ -348,9 +344,6 @@ export class Channel extends EnhancedEventEmitter
 		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
 
 		const id = this.#nextId;
-
-		// TODO: DEV. Remove.
-		logger.warn('request() [method:%s, id:%s]', Method[method], id);
 
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
 
@@ -382,10 +375,6 @@ export class Channel extends EnhancedEventEmitter
 
 		// Clear the buffer builder so it's reused for the next request.
 		this.#bufferBuilder.clear();
-
-		// TODO: DEV. Remove.
-		// const message = Message.getRootAsMessage(new flatbuffers.ByteBuffer(buffer));
-		// logger.warn(JSON.stringify(message.unpack(), undefined, 2));
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN)
 			throw new Error('Channel request too big');
