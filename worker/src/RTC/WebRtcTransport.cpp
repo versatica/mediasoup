@@ -1,11 +1,11 @@
 #define MS_CLASS "RTC::WebRtcTransport"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "RTC/WebRtcTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "FBS/webRtcTransport_generated.h"
-#include "RTC/WebRtcTransport.hpp"
 #include <cmath> // std::pow()
 
 namespace RTC

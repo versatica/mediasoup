@@ -3,11 +3,11 @@
 
 #include "Channel/ChannelSocket.hpp"
 #include "DepLibUV.hpp"
+#include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include "FBS/log_generated.h"
 #include "FBS/message_generated.h"
 #include "FBS/notification_generated.h"
-#include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
 #include <cmath>   // std::ceil()
 #include <cstring> // std::memcpy(), std::memmove()
 

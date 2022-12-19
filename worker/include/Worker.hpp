@@ -2,9 +2,9 @@
 #define MS_WORKER_HPP
 
 #include "common.hpp"
-#include "FBS/worker_generated.h"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include "FBS/worker_generated.h"
 #include "RTC/Router.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/WebRtcServer.hpp"

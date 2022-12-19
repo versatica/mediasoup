@@ -5,12 +5,12 @@
 #include "ChannelMessageRegistrator.hpp"
 #include "DepLibUV.hpp"
 #include "DepUsrSCTP.hpp"
-#include "FBS/response_generated.h"
-#include "FBS/worker_generated.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Channel/ChannelNotifier.hpp"
+#include "FBS/response_generated.h"
+#include "FBS/worker_generated.h"
 
 /* Instance methods. */
 

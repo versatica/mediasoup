@@ -1,12 +1,12 @@
 #define MS_CLASS "RTC::SimulcastConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "RTC/SimulcastConsumer.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
-#include "RTC/SimulcastConsumer.hpp"
 
 namespace RTC
 {

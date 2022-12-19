@@ -2,11 +2,11 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/ChannelRequest.hpp"
-#include "FBS/message_generated.h"
-#include "FBS/request_generated.h"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "FBS/message_generated.h"
+#include "FBS/request_generated.h"
 #include <flatbuffers/minireflect.h>
 
 namespace Channel

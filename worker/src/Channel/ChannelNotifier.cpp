@@ -2,8 +2,8 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/ChannelNotifier.hpp"
-#include "FBS/notification_generated.h"
 #include "Logger.hpp"
+#include "FBS/notification_generated.h"
 
 namespace Channel
 {

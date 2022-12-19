@@ -2,8 +2,8 @@
 #define MS_RTC_TRANSPORT_TUPLE_HPP
 
 #include "common.hpp"
-#include "FBS/transport_generated.h"
 #include "Utils.hpp"
+#include "FBS/transport_generated.h"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
 #include <flatbuffers/flatbuffers.h>
