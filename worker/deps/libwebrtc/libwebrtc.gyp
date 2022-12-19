@@ -143,13 +143,13 @@
       # Platform-specifics.
 
       [ 'OS != "win"', {
-        'cflags': [ '-std=c++14' ]
+        'cflags': [ '-std=c++11' ]
       }],
 
       [ 'OS == "mac"', {
         'xcode_settings':
         {
-          'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++14' ]
+          'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++11' ]
         }
       }]
     ]

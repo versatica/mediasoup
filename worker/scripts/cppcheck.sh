@@ -30,7 +30,7 @@ XML_FILE="/tmp/mediasoup-worker-cppcheck.xml"
 HTML_REPORT_DIR="/tmp/mediasoup-worker-cppcheck-report"
 
 echo ">>> [INFO] running cppcheck ..."
-cppcheck --std=c++14 --enable=${CPPCHECKS} -v --quiet --report-progress --inline-suppr --error-exitcode=69 -I include src --xml-version=2 2> $XML_FILE
+cppcheck --std=c++11 --enable=${CPPCHECKS} -v --quiet --report-progress --inline-suppr --error-exitcode=69 -I include src --xml-version=2 2> $XML_FILE
 
 # If exit code is 1 it means that some cppcheck option is wrong, so abort.
 if [ $? -eq 1 ] ; then
