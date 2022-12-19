@@ -1002,7 +1002,6 @@ void LossBasedBweV2::CalculateInstantUpperBound(DataRate sending_rate) {
 		else
 		{
 			current_estimate = current_estimate_.loss_limited_bandwidth;
-			events.emit(current_estimate_.loss_limited_bandwidth);
 		}
 
 		instant_loss_debounce_counter_ += 1;

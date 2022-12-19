@@ -375,10 +375,6 @@ void SendSideBandwidthEstimation::UpdateLossBasedEstimator(
         report.packet_feedbacks, delay_based_limit_, delay_detector_state,
         probe_bitrate, upper_link_capacity);
 
-		loss_based_bandwidth_estimator_v2_.events.subscribe<DataRate>([&](auto &event) {
-				MS_DEBUG_DEV("loss bitrate %lld", event.bps());
-		});
-
     UpdateEstimate(report.feedback_time);
   }
 }
