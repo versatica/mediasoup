@@ -17,7 +17,7 @@ namespace RTC
 	  RTC::Shared* shared,
 	  const std::string& id,
 	  RTC::RtpObserver::Listener* listener,
-	  const FBS::Router::AudioLevelObserverOptions* options)
+	  const FBS::AudioLevelObserver::AudioLevelObserverOptions* options)
 	  : RTC::RtpObserver(shared, id, listener)
 	{
 		MS_TRACE();

@@ -1,4 +1,6 @@
 include "common.fbs";
+include "activeSpeakerObserver.fbs";
+include "audioLevelObserver.fbs";
 include "transport.fbs";
 include "pipeTransport.fbs";
 include "plainTransport.fbs";
@@ -38,24 +40,14 @@ table CreateDirectTransportRequest {
   options:FBS.DirectTransport.DirectTransportOptions (required);
 }
 
-table AudioLevelObserverOptions {
-  max_entries:uint16;
-  threshold:int8;
-  interval:uint16;
-}
-
 table CreateAudioLevelObserverRequest {
   rtp_observer_id:string (required);
-  options:AudioLevelObserverOptions (required);
-}
-
-table ActiveSpeakerObserverOptions {
-  interval:uint16;
+  options:FBS.AudioLevelObserver.AudioLevelObserverOptions (required);
 }
 
 table CreateActiveSpeakerObserverRequest {
   active_speaker_observer_id:string (required);
-  options:ActiveSpeakerObserverOptions (required);
+  options:FBS.ActiveSpeakerObserver.ActiveSpeakerObserverOptions (required);
 }
 
 table CloseTransportRequest {

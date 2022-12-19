@@ -73,7 +73,7 @@ namespace RTC
 		  RTC::Shared* shared,
 		  const std::string& id,
 		  RTC::RtpObserver::Listener* listener,
-		  const FBS::Router::ActiveSpeakerObserverOptions* options);
+		  const FBS::ActiveSpeakerObserver::ActiveSpeakerObserverOptions* options);
 		~ActiveSpeakerObserver() override;
 
 	public:

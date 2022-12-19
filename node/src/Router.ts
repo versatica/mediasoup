@@ -18,6 +18,8 @@ import { ActiveSpeakerObserver, ActiveSpeakerObserverOptions } from './ActiveSpe
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
+import * as FbsActiveSpeakerObserver from './fbs/activeSpeakerObserver_generated';
+import * as FbsAudioLevelObserver from './fbs/audioLevelObserver_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsRouter from './fbs/router_generated';
 import * as FbsPlainTransport from './fbs/plainTransport_generated';
@@ -1205,9 +1207,10 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-		const activeRtpObserverOptions = new FbsRouter.ActiveSpeakerObserverOptionsT(
-			interval
-		);
+		const activeRtpObserverOptions =
+			new FbsActiveSpeakerObserver.ActiveSpeakerObserverOptionsT(
+				interval
+			);
 
 		const requestOffset =
 			new FbsRouter.CreateActiveSpeakerObserverRequestT(
@@ -1276,11 +1279,12 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-		const audioLevelObserverOptions = new FbsRouter.AudioLevelObserverOptionsT(
-			maxEntries,
-			threshold,
-			interval
-		);
+		const audioLevelObserverOptions =
+			new FbsAudioLevelObserver.AudioLevelObserverOptionsT(
+				maxEntries,
+				threshold,
+				interval
+			);
 
 		const requestOffset = new FbsRouter.CreateAudioLevelObserverRequestT(
 			rtpObserverId,

@@ -1,5 +1,11 @@
 namespace FBS.AudioLevelObserver;
 
+table AudioLevelObserverOptions {
+  max_entries:uint16;
+  threshold:int8;
+  interval:uint16;
+}
+
 // Notifications from Worker.
 
 table Volume {

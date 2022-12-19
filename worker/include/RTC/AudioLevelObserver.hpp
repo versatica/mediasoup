@@ -22,7 +22,7 @@ namespace RTC
 		  RTC::Shared* shared,
 		  const std::string& id,
 		  RTC::RtpObserver::Listener* listener,
-		  const FBS::Router::AudioLevelObserverOptions* options);
+		  const FBS::AudioLevelObserver::AudioLevelObserverOptions* options);
 		~AudioLevelObserver() override;
 
 	public:
