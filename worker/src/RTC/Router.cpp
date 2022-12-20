@@ -228,9 +228,8 @@ namespace RTC
 				// This may throw.
 				CheckNoTransport(transportId);
 
-				const auto* options = body->options();
-				const auto* listenInfo =
-				  options->listen_as<FBS::WebRtcTransport::WebRtcTransportListenServer>();
+				const auto* options    = body->options();
+				const auto* listenInfo = options->listen_as<FBS::WebRtcTransport::ListenServer>();
 
 				auto webRtcServerId = listenInfo->webRtcServerId()->str();
 

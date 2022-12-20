@@ -12,7 +12,7 @@ import { Event } from './fbs/notification_generated';
 import * as FbsRequest from './fbs/request_generated';
 import * as FbsWorker from './fbs/worker_generated';
 import * as FbsWebRtcServer from './fbs/webRtcServer_generated';
-import { TransportProtocol as FbsTransportProtocol } from './fbs/fbs/transport/transport-protocol';
+import { Protocol as FbsTransportProtocol } from './fbs/fbs/transport/protocol';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
@@ -655,11 +655,11 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		// Build the request.
 		const builder = this.#channel.bufferBuilder;
-		const fbsListenInfos:FbsWebRtcServer.WebRtcServerListenInfoT[] = [];
+		const fbsListenInfos:FbsWebRtcServer.ListenInfoT[] = [];
 
 		for (const listenInfo of listenInfos)
 		{
-			fbsListenInfos.push(new FbsWebRtcServer.WebRtcServerListenInfoT(
+			fbsListenInfos.push(new FbsWebRtcServer.ListenInfoT(
 				listenInfo.protocol === 'udp' ? FbsTransportProtocol.UDP : FbsTransportProtocol.TCP,
 				listenInfo.ip,
 				listenInfo.announcedIp,

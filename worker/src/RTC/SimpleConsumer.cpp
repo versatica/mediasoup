@@ -78,7 +78,7 @@ namespace RTC
 
 		return FBS::Consumer::CreateDumpResponse(
 		  builder,
-		  FBS::Consumer::ConsumerDumpData::SimpleConsumerDump,
+		  FBS::Consumer::DumpData::SimpleConsumerDump,
 		  simpleConsumerDump.Union(),
 		  FBS::RtpParameters::Type(this->type));
 	}

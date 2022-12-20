@@ -40,7 +40,7 @@ table UpdateSettingsRequest {
 
 table CreateWebRtcServerRequest {
   web_rtc_server_id:string (required);
-  listen_infos:[FBS.WebRtcServer.WebRtcServerListenInfo];
+  listen_infos:[FBS.WebRtcServer.ListenInfo];
 }
 
 table CloseWebRtcServerRequest {

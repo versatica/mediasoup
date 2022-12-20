@@ -6,9 +6,9 @@ include "sctpParameters.fbs";
 
 namespace FBS.Transport;
 
-enum TransportProtocol: uint8 { UDP = 1, TCP }
+enum Protocol: uint8 { UDP = 1, TCP }
 
-table TransportListenIp {
+table ListenIp {
   ip:string (required);
   announced_ip:string;
 }

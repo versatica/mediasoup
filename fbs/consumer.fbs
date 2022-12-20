@@ -34,7 +34,7 @@ table EnableTraceEventRequest {
   events:[string] (required);
 }
 
-union ConsumerDumpData {
+union DumpData {
   SimpleConsumerDump,
   SimulcastConsumerDump,
   SvcConsumerDump,
@@ -42,7 +42,7 @@ union ConsumerDumpData {
 }
 
 table DumpResponse {
-  data: ConsumerDumpData;
+  data: DumpData;
   type:FBS.RtpParameters.Type;
 }
 

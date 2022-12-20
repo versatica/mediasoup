@@ -439,29 +439,27 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const builder = this.#channel.bufferBuilder;
 
 		let webRtcTransportListenServer:
-			FbsWebRtcTransport.WebRtcTransportListenServerT | undefined;
+			FbsWebRtcTransport.ListenServerT | undefined;
 		let webRtcTransportListenIndividual:
-			FbsWebRtcTransport.WebRtcTransportListenIndividualT | undefined;
+			FbsWebRtcTransport.ListenIndividualT | undefined;
 
 		if (webRtcServer)
 		{
 			webRtcTransportListenServer =
-				new FbsWebRtcTransport.WebRtcTransportListenServerT(webRtcServer.id);
+				new FbsWebRtcTransport.ListenServerT(webRtcServer.id);
 		}
 		else
 		{
-			const transportListenIps: FbsTransport.TransportListenIpT[] = [];
+			const fbsListenIps: FbsTransport.ListenIpT[] = [];
 
 			for (const listenIp of listenIps as any[])
 			{
-				const transportListenIp =
-					new FbsTransport.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
-
-				transportListenIps.push(transportListenIp);
+				fbsListenIps.push(
+					new FbsTransport.ListenIpT(listenIp.ip, listenIp.announcedIp));
 			}
 
 			webRtcTransportListenIndividual =
-				new FbsWebRtcTransport.WebRtcTransportListenIndividualT(transportListenIps, port);
+				new FbsWebRtcTransport.ListenIndividualT(fbsListenIps, port);
 		}
 
 		const baseTransportOptions = new FbsTransport.OptionsT(
@@ -478,8 +476,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const webRtcTransportOptions = new FbsRouter.WebRtcTransportOptionsT(
 			baseTransportOptions,
 			webRtcServer ?
-				FbsWebRtcTransport.WebRtcTransportListen.WebRtcTransportListenServer :
-				FbsWebRtcTransport.WebRtcTransportListen.WebRtcTransportListenIndividual,
+				FbsWebRtcTransport.Listen.ListenServer :
+				FbsWebRtcTransport.Listen.ListenIndividual,
 			webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual,
 			enableUdp,
 			enableTcp,
@@ -596,9 +594,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-		const transportListenIp =
-			new FbsTransport.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
-
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			undefined /* direct */,
 			undefined /* maxMessageSize */,
@@ -612,7 +607,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const plainTransportOptions = new FbsRouter.PlainTransportOptionsT(
 			baseTransportOptions,
-			transportListenIp,
+			new FbsTransport.ListenIpT(listenIp.ip, listenIp.announcedIp),
 			port,
 			rtcpMux,
 			comedia,
@@ -722,9 +717,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		/* Build Request. */
 
 		const builder = this.#channel.bufferBuilder;
-		const transportListenIp =
-			new FbsTransport.TransportListenIpT(listenIp.ip, listenIp.announcedIp);
-
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			undefined /* direct */,
 			undefined /* maxMessageSize */,
@@ -738,7 +730,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const pipeTransportOptions = new FbsRouter.PipeTransportOptionsT(
 			baseTransportOptions,
-			transportListenIp,
+			new FbsTransport.ListenIpT(listenIp.ip, listenIp.announcedIp),
 			port,
 			enableRtx,
 			enableSrtp

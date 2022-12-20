@@ -3,23 +3,23 @@ include "sctpParameters.fbs";
 
 namespace FBS.WebRtcTransport;
 
-table WebRtcTransportListenIndividual {
-  listen_ips:[FBS.Transport.TransportListenIp] (required);
+table ListenIndividual {
+  listen_ips:[FBS.Transport.ListenIp] (required);
   port:uint16;
 }
 
-table WebRtcTransportListenServer {
+table ListenServer {
   web_rtc_server_id:string (required);
 }
 
-union WebRtcTransportListen {
-  WebRtcTransportListenIndividual,
-  WebRtcTransportListenServer,
+union Listen {
+  ListenIndividual,
+  ListenServer,
 }
 
 table WebRtcTransportOptions {
   base:FBS.Transport.Options (required);
-  listen:WebRtcTransportListen (required);
+  listen:Listen (required);
   enable_udp:bool = true;
   enable_tcp:bool = false;
   prefer_udp:bool = false;

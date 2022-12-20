@@ -37,9 +37,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto* listenInfo =
-		  options->listen_as<FBS::WebRtcTransport::WebRtcTransportListenIndividual>();
-		const auto* listenIps = listenInfo->listenIps();
+		const auto* listenInfo = options->listen_as<FBS::WebRtcTransport::ListenIndividual>();
+		const auto* listenIps  = listenInfo->listenIps();
 
 		try
 		{
