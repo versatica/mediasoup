@@ -347,10 +347,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		/* Build Request. */
 
-		const builder = this.channel.bufferBuilder;
 		const requestOffset = new FbsRouter.CloseTransportRequestT(
 			this.internal.transportId
-		).pack(builder);
+		).pack(this.channel.bufferBuilder);
 
 		this.channel.request(
 			FbsRequest.Method.ROUTER_CLOSE_TRANSPORT,
@@ -563,10 +562,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		/* Build Request. */
 
-		const builder = this.channel.bufferBuilder;
 		const requestOffset = new FbsTransport.SetMaxIncomingBitrateRequestT(
 			bitrate
-		).pack(builder);
+		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE,
@@ -585,10 +583,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		/* Build Request. */
 
-		const builder = this.channel.bufferBuilder;
 		const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
 			bitrate
-		).pack(builder);
+		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE,
@@ -667,9 +664,8 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			kind, rtpParameters, routerRtpCapabilities, rtpMapping);
 
 		const producerId = id || uuidv4();
-		const builder = this.channel.bufferBuilder;
 		const requestOffset = createProduceRequest({
-			builder,
+			builder : this.channel.bufferBuilder,
 			producerId,
 			kind,
 			rtpParameters,
@@ -790,10 +786,8 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		}
 
 		const consumerId = uuidv4();
-		const builder = this.channel.bufferBuilder;
-
 		const consumeRequestOffset = createConsumeRequest({
-			builder,
+			builder: this.channel.bufferBuilder,
 			producer,
 			consumerId,
 			rtpParameters,
@@ -901,10 +895,8 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		}
 
 		const dataProducerId = id || uuidv4();
-		const builder = this.channel.bufferBuilder;
-
 		const requestOffset = createProduceDataRequest({
-			builder,
+			builder: this.channel.bufferBuilder,
 			dataProducerId,
 			type,
 			sctpStreamParameters,
