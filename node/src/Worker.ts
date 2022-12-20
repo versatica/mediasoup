@@ -627,10 +627,8 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		logger.debug('updateSettings()');
 
 		// Build the request.
-		const builder = this.#channel.bufferBuilder;
-
-		const requestOffset =
-			new FbsWorker.UpdateSettingsRequestT(logLevel, logTags).pack(builder);
+		const requestOffset = new FbsWorker.UpdateSettingsRequestT(logLevel, logTags)
+			.pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
 			FbsRequest.Method.WORKER_UPDATE_SETTINGS,
@@ -654,7 +652,6 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			throw new TypeError('if given, appData must be an object');
 
 		// Build the request.
-		const builder = this.#channel.bufferBuilder;
 		const fbsListenInfos:FbsWebRtcServer.ListenInfoT[] = [];
 
 		for (const listenInfo of listenInfos)
@@ -669,7 +666,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		const webRtcServerId = uuidv4();
 		const createWebRtcServerRequestOffset = new FbsRequest.CreateWebRtcServerRequestT(
-			webRtcServerId, fbsListenInfos).pack(builder);
+			webRtcServerId, fbsListenInfos).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
 			FbsRequest.Method.WORKER_CREATE_WEBRTC_SERVER,
@@ -713,9 +710,8 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		const routerId = uuidv4();
 
 		// Get flatbuffer builder.
-		const builder = this.#channel.bufferBuilder;
 		const createRouterRequestOffset =
-			new FbsRequest.CreateRouterRequestT(routerId).pack(builder);
+			new FbsRequest.CreateRouterRequestT(routerId).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(FbsRequest.Method.WORKER_CREATE_ROUTER,
 			FbsRequest.Body.FBS_Worker_CreateRouterRequest, createRouterRequestOffset);

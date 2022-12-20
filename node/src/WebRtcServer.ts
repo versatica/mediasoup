@@ -171,9 +171,8 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 		this.#closed = true;
 
 		// Build the request.
-		const builder = this.#channel.bufferBuilder;
 		const requestOffset = new CloseWebRtcServerRequestT(
-			this.#internal.webRtcServerId).pack(builder);
+			this.#internal.webRtcServerId).pack(this.#channel.bufferBuilder);
 
 		this.#channel.request(
 			Method.WORKER_WEBRTC_SERVER_CLOSE,

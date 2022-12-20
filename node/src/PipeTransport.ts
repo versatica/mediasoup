@@ -275,10 +275,8 @@ export class PipeTransport
 	{
 		logger.debug('connect()');
 
-		const builder = this.channel.bufferBuilder;
-
 		const requestOffset = createConnectRequest({
-			builder,
+			builder : this.channel.bufferBuilder,
 			ip,
 			port,
 			srtpParameters

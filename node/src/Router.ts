@@ -271,10 +271,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#closed = true;
 
-		// Get flatbuffer builder.
-		const builder = this.#channel.bufferBuilder;
 		const requestOffset = new FbsRequest.CloseRouterRequestT(
-			this.#internal.routerId).pack(builder);
+			this.#internal.routerId).pack(this.#channel.bufferBuilder);
 
 		this.#channel.request(
 			FbsRequest.Method.WORKER_CLOSE_ROUTER,
@@ -436,8 +434,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Build Request. */
 
-		const builder = this.#channel.bufferBuilder;
-
 		let webRtcTransportListenServer:
 			FbsWebRtcTransport.ListenServerT | undefined;
 		let webRtcTransportListenIndividual:
@@ -487,7 +483,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const requestOffset = new FbsRouter.CreateWebRtcTransportRequestT(
 			transportId, webRtcTransportOptions
-		).pack(builder);
+		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
 			webRtcServer
@@ -593,7 +589,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Build Request. */
 
-		const builder = this.#channel.bufferBuilder;
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			undefined /* direct */,
 			undefined /* maxMessageSize */,
@@ -617,7 +612,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const requestOffset = new FbsRouter.CreatePlainTransportRequestT(
 			transportId, plainTransportOptions
-		).pack(builder);
+		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_PLAIN_TRANSPORT,
@@ -716,7 +711,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Build Request. */
 
-		const builder = this.#channel.bufferBuilder;
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			undefined /* direct */,
 			undefined /* maxMessageSize */,
@@ -738,7 +732,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const requestOffset = new FbsRouter.CreatePipeTransportRequestT(
 			transportId, pipeTransportOptions
-		).pack(builder);
+		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_PIPE_TRANSPORT,
@@ -816,7 +810,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Build Request. */
 
-		const builder = this.#channel.bufferBuilder;
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			true /* direct */,
 			maxMessageSize,
@@ -834,7 +827,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const requestOffset = new FbsRouter.CreateDirectTransportRequestT(
 			transportId, directTransportOptions
-		).pack(builder);
+		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_DIRECT_TRANSPORT,
@@ -1198,7 +1191,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Build Request. */
 
-		const builder = this.#channel.bufferBuilder;
 		const activeRtpObserverOptions =
 			new FbsActiveSpeakerObserver.ActiveSpeakerObserverOptionsT(
 				interval
@@ -1208,7 +1200,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			new FbsRouter.CreateActiveSpeakerObserverRequestT(
 				rtpObserverId,
 				activeRtpObserverOptions
-			).pack(builder);
+			).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER,
@@ -1270,7 +1262,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		/* Build Request. */
 
-		const builder = this.#channel.bufferBuilder;
 		const audioLevelObserverOptions =
 			new FbsAudioLevelObserver.AudioLevelObserverOptionsT(
 				maxEntries,
@@ -1281,7 +1272,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const requestOffset = new FbsRouter.CreateAudioLevelObserverRequestT(
 			rtpObserverId,
 			audioLevelObserverOptions
-		).pack(builder);
+		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_AUDIO_LEVEL_OBSERVER,

@@ -245,10 +245,9 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 
 		/* Build Request. */
 
-		const builder = this.#channel.bufferBuilder;
 		const requestOffset = new FbsTransport.CloseDataConsumerRequestT(
 			this.#internal.dataConsumerId
-		).pack(builder);
+		).pack(this.#channel.bufferBuilder);
 
 		this.#channel.request(
 			FbsRequest.Method.TRANSPORT_CLOSE_DATA_CONSUMER,
@@ -339,10 +338,9 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 
 		/* Build Request. */
 
-		const builder = this.#channel.bufferBuilder;
 		const requestOffset = new FbsDataConsumer.SetBufferedAmountLowThresholdRequestT(
 			threshold
-		).pack(builder);
+		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
 			FbsRequest.Method.DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,

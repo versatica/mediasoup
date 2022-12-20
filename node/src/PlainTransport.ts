@@ -311,10 +311,8 @@ export class PlainTransport extends
 	{
 		logger.debug('connect()');
 
-		const builder = this.channel.bufferBuilder;
-
 		const requestOffset = createConnectRequest({
-			builder,
+			builder : this.channel.bufferBuilder,
 			ip,
 			port,
 			rtcpPort,
@@ -493,7 +491,7 @@ function createConnectRequest(
 		srtpParameters
 	}:
 	{
-		builder: flatbuffers.Builder;
+		builder : flatbuffers.Builder;
 		ip?: string;
 		port?: number;
 		rtcpPort?: number;

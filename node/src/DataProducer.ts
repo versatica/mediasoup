@@ -222,10 +222,9 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 
 		/* Build Request. */
 
-		const builder = this.#channel.bufferBuilder;
 		const requestOffset = new FbsTransport.CloseDataProducerRequestT(
 			this.#internal.dataProducerId
-		).pack(builder);
+		).pack(this.#channel.bufferBuilder);
 
 		this.#channel.request(
 			FbsRequest.Method.TRANSPORT_CLOSE_DATA_PRODUCER,

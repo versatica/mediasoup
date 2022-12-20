@@ -494,10 +494,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		/* Build Request. */
 
-		const builder = this.#channel.bufferBuilder;
 		const requestOffset = new FbsTransport.CloseConsumerRequestT(
 			this.#internal.consumerId
-		).pack(builder);
+		).pack(this.#channel.bufferBuilder);
 
 		this.#channel.request(
 			FbsRequest.Method.TRANSPORT_CLOSE_CONSUMER,
@@ -696,8 +695,8 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		if (typeof priority !== 'number' || priority < 0)
 			throw new TypeError('priority must be a positive number');
 
-		const builder = this.#channel.bufferBuilder;
-		const requestOffset = new FbsConsumer.SetPriorityRequestT(priority).pack(builder);
+		const requestOffset =
+			new FbsConsumer.SetPriorityRequestT(priority).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.CONSUMER_SET_PRIORITY,
@@ -754,10 +753,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		/* Build Request. */
 
-		const builder = this.#channel.bufferBuilder;
 		const requestOffset = new FbsConsumer.EnableTraceEventRequestT(
 			types
-		).pack(builder);
+		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
 			FbsRequest.Method.CONSUMER_ENABLE_TRACE_EVENT,

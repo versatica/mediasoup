@@ -1023,10 +1023,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		const { label, protocol } = dataProducer;
 		const dataConsumerId = uuidv4();
-		const builder = this.channel.bufferBuilder;
 
 		const requestOffset = createConsumeDataRequest({
-			builder,
+			builder : this.channel.bufferBuilder,
 			dataConsumerId,
 			dataProducerId,
 			type,
@@ -1096,10 +1095,9 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		/* Build Request. */
 
-		const builder = this.channel.bufferBuilder;
 		const requestOffset = new FbsTransport.EnableTraceEventRequestT(
 			types
-		).pack(builder);
+		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT,
@@ -1406,7 +1404,7 @@ function createProduceRequest({
 	keyFrameRequestDelay,
 	paused
 } : {
-	builder: flatbuffers.Builder;
+	builder : flatbuffers.Builder;
 	producerId: string;
 	kind: MediaKind;
 	rtpParameters: RtpParameters;
@@ -1439,7 +1437,7 @@ function createProduceDataRequest({
 	label,
 	protocol
 } : {
-	builder: flatbuffers.Builder;
+	builder : flatbuffers.Builder;
 	dataProducerId: string;
 	type: DataProducerType;
 	sctpStreamParameters?: SctpStreamParameters;
@@ -1487,7 +1485,7 @@ function createConsumeDataRequest({
 	label,
 	protocol
 } : {
-	builder: flatbuffers.Builder;
+	builder : flatbuffers.Builder;
 	dataConsumerId: string;
 	dataProducerId: string;
 	type: DataConsumerType;

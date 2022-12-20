@@ -158,10 +158,9 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		/* Build Request. */
 
-		const builder = this.channel.bufferBuilder;
 		const requestOffset = new FbsRouter.CloseRtpObserverRequestT(
 			this.internal.rtpObserverId
-		).pack(builder);
+		).pack(this.channel.bufferBuilder);
 
 		this.channel.request(
 			FbsRequest.Method.ROUTER_CLOSE_RTP_OBSERVER,
@@ -257,10 +256,9 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		if (!producer)
 			throw Error(`Producer with id "${producerId}" not found`);
 
-		const builder = this.channel.bufferBuilder;
 		const requestOffset = new FbsRtpObserver.AddProducerRequestT(
 			producerId
-		).pack(builder);
+		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.RTP_OBSERVER_ADD_PRODUCER,
@@ -285,10 +283,9 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		if (!producer)
 			throw Error(`Producer with id "${producerId}" not found`);
 
-		const builder = this.channel.bufferBuilder;
 		const requestOffset = new FbsRtpObserver.RemoveProducerRequestT(
 			producerId
-		).pack(builder);
+		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.RTP_OBSERVER_REMOVE_PRODUCER,
