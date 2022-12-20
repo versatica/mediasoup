@@ -211,7 +211,7 @@ Read the [Fuzzer](Fuzzer.md) documentation for detailed information.
 Runs all fuzzer cases.
 
 
-### `make docker-build`
+### `make docker`
 
 Builds a Linux image with fuzzer capable clang++.
 
@@ -225,4 +225,4 @@ $ ./scripts/get-dep.sh clang-fuzzer
 
 ### `make docker-run`
 
-Runs a container of the Docker image created with `make docker-build`. It automatically executes a `bash` session in the `/mediasoup` directory, which is a Docker volume that points to the real `mediasoup` directory.
+Runs a container of the Docker image created with `make docker`. It automatically executes a `bash` session in the `/mediasoup` directory, which is a Docker volume that points to the real `mediasoup` directory.
