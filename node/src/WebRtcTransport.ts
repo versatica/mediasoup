@@ -440,13 +440,11 @@ export class WebRtcTransport extends
 	{
 		logger.debug('connect()');
 
-		const builder = this.channel.bufferBuilder;
-		// Serialize DtlsParameters.
-		const dtlsParametersOffset = serializeDtlsParameters(builder, dtlsParameters);
-		// Create request.
-		const requestOffset = FbsWebRtcTransport.ConnectRequest.createConnectRequest(
-			builder,
-			dtlsParametersOffset);
+		const requestOffset = createConnectRequest({
+			builder : this.channel.bufferBuilder,
+			dtlsParameters
+		});
+
 		// Wait for response.
 		const response = await this.channel.request(
 			FbsRequest.Method.WEBRTC_TRANSPORT_CONNECT,
@@ -664,6 +662,26 @@ export function parseWebRtcTransportDumpResponse(
 		dtlsParameters : dtlsParameters,
 		dtlsState      : binary.dtlsState() as DtlsState
 	};
+}
+
+function createConnectRequest(
+	{
+		builder,
+		dtlsParameters
+	}:
+	{
+		builder : flatbuffers.Builder;
+		dtlsParameters: DtlsParameters;
+	}
+): number
+{
+	// Serialize DtlsParameters. This can throw.
+	const dtlsParametersOffset = serializeDtlsParameters(builder, dtlsParameters);
+
+	// Create request.
+	return FbsWebRtcTransport.ConnectRequest.createConnectRequest(
+		builder,
+		dtlsParametersOffset);
 }
 
 function parseGetStatsResponse(

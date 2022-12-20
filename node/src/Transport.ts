@@ -787,7 +787,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		const consumerId = uuidv4();
 		const consumeRequestOffset = createConsumeRequest({
-			builder: this.channel.bufferBuilder,
+			builder : this.channel.bufferBuilder,
 			producer,
 			consumerId,
 			rtpParameters,
@@ -896,7 +896,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		const dataProducerId = id || uuidv4();
 		const requestOffset = createProduceDataRequest({
-			builder: this.channel.bufferBuilder,
+			builder : this.channel.bufferBuilder,
 			dataProducerId,
 			type,
 			sctpStreamParameters,
