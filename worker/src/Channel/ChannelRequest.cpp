@@ -96,7 +96,17 @@ namespace Channel
 		this->data       = request;
 		this->id         = request->id();
 		this->method     = request->method();
-		this->methodCStr = method2String[this->method];
+
+		auto methodCStrIt = ChannelRequest::method2String.find(this->method);
+
+		if (methodCStrIt == ChannelRequest::method2String.end())
+		{
+			Error("unknown method");
+
+			MS_THROW_ERROR("unknown method '%" PRIu8 "'", this->method);
+		}
+
+		this->methodCStr = methodCStrIt->second;
 
 		// Handler ID is optional.
 		if (flatbuffers::IsFieldPresent(this->data, FBS::Request::Request::VT_HANDLERID))
