@@ -93,9 +93,9 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		this->data       = request;
-		this->id         = request->id();
-		this->method     = request->method();
+		this->data   = request;
+		this->id     = request->id();
+		this->method = request->method();
 
 		auto methodCStrIt = ChannelRequest::method2String.find(this->method);
 

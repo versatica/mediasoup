@@ -25,8 +25,8 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		this->data      = notification;
-		this->event     = notification->event();
+		this->data  = notification;
+		this->event = notification->event();
 
 		auto eventCStrIt = ChannelNotification::event2String.find(this->event);
 
