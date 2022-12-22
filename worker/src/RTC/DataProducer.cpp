@@ -147,17 +147,29 @@ namespace RTC
 			case Channel::ChannelNotification::Event::DATA_PRODUCER_SEND:
 			{
 				const auto* body = notification->data->body_as<FBS::DataProducer::SendNotification>();
-				auto len         = body->data()->size();
+				const uint8_t* data{ nullptr };
+				size_t len{ 0 };
+
+				if (body->data_type() == FBS::DataProducer::Data::String)
+				{
+					data = body->data_as_String()->value()->Data();
+					len  = body->data_as_String()->value()->size();
+				}
+				else
+				{
+					data = body->data_as_Binary()->value()->Data();
+					len  = body->data_as_Binary()->value()->size();
+				}
 
 				if (len > this->maxMessageSize)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%i]",
+					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
 					  this->maxMessageSize,
 					  len);
 				}
 
-				this->ReceiveMessage(body->ppid(), body->data()->Data(), len);
+				this->ReceiveMessage(body->ppid(), data, len);
 
 				// Increase receive transmission.
 				this->listener->OnDataProducerReceiveData(this, len);

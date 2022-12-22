@@ -206,16 +206,26 @@ namespace RTC
 				}
 
 				const auto* body = request->data->body_as<FBS::DataConsumer::SendRequest>();
+				const uint8_t* data{ nullptr };
+				size_t len{ 0 };
+
+				if (body->data_type() == FBS::DataConsumer::Data::String)
+				{
+					data = body->data_as_String()->value()->Data();
+					len  = body->data_as_String()->value()->size();
+				}
+				else
+				{
+					data = body->data_as_Binary()->value()->Data();
+					len  = body->data_as_Binary()->value()->size();
+				}
 
 				int ppid = body->ppid();
-
-				const auto* msg = body->data()->c_str();
-				auto len        = body->data()->size();
 
 				if (len > this->maxMessageSize)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%i]",
+					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
 					  this->maxMessageSize,
 					  len);
 				}
@@ -230,7 +240,7 @@ namespace RTC
 						    sctpSendBufferFull == true ? "sctpsendbufferfull" : "message send failed");
 				  });
 
-				SendMessage(ppid, reinterpret_cast<const uint8_t*>(msg), len, cb);
+				SendMessage(ppid, data, len, cb);
 
 				break;
 			}

@@ -338,9 +338,8 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 
 		/* Build Request. */
 
-		const requestOffset = new FbsDataConsumer.SetBufferedAmountLowThresholdRequestT(
-			threshold
-		).pack(this.#channel.bufferBuilder);
+		const requestOffset = FbsDataConsumer.SetBufferedAmountLowThresholdRequest.
+			createSetBufferedAmountLowThresholdRequest(this.#channel.bufferBuilder, threshold);
 
 		await this.#channel.request(
 			FbsRequest.Method.DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
@@ -390,10 +389,28 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			message = Buffer.alloc(1);
 
 		const builder = this.#channel.bufferBuilder;
-		const dataOffset = builder.createString(message);
+
+		let dataOffset = 0;
+
+		if (typeof message === 'string')
+		{
+			const messageOffset = builder.createString(message);
+
+			dataOffset = FbsDataConsumer.String.createString(builder, messageOffset);
+		}
+		else
+		{
+			const messageOffset = FbsDataConsumer.Binary.createValueVector(builder, message);
+
+			dataOffset = FbsDataConsumer.Binary.createBinary(builder, messageOffset);
+		}
+
 		const requestOffset = FbsDataConsumer.SendRequest.createSendRequest(
 			builder,
 			ppid,
+			typeof message === 'string' ?
+				FbsDataConsumer.Data.String :
+				FbsDataConsumer.Data.Binary,
 			dataOffset
 		);
 

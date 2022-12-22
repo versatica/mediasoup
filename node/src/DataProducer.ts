@@ -345,11 +345,29 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		else if (ppid === 57)
 			message = Buffer.alloc(1);
 
+		let dataOffset = 0;
+
 		const builder = this.#channel.bufferBuilder;
-		const dataOffset = builder.createString(message);
+
+		if (typeof message === 'string')
+		{
+			const messageOffset = builder.createString(message);
+
+			dataOffset = FbsDataProducer.String.createString(builder, messageOffset);
+		}
+		else
+		{
+			const messageOffset = FbsDataProducer.Binary.createValueVector(builder, message);
+
+			dataOffset = FbsDataProducer.Binary.createBinary(builder, messageOffset);
+		}
+
 		const notificationOffset = FbsDataProducer.SendNotification.createSendNotification(
 			builder,
 			ppid,
+			typeof message === 'string' ?
+				FbsDataProducer.Data.String :
+				FbsDataProducer.Data.Binary,
 			dataOffset
 		);
 
