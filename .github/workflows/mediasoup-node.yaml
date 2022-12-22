@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 # TMP. Debug CI error
 env:
-  DEBUG: *ERROR*
+  DEBUG: '*ERROR*'
 
 jobs:
   ci:
