@@ -2,6 +2,10 @@ name: mediasoup-node
 
 on: [push, pull_request]
 
+# TMP. Debug CI error
+env:
+  DEBUG: *ERROR*
+
 jobs:
   ci:
     strategy:
