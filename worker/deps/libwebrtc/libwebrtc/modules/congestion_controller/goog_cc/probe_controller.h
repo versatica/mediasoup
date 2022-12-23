@@ -74,6 +74,8 @@ struct ProbeControllerConfig {
   // Dont send a probe if min(estimate, network state estimate) is larger than
   // this fraction of the set max bitrate.
   FieldTrialParameter<double> skip_if_estimate_larger_than_fraction_of_max;
+  // Do not send probes if network is either overusing or underusing.
+  FieldTrialParameter<bool> not_probe_if_delay_increased;
 };
 
 // Reason that bandwidth estimate is limited. Bandwidth estimate can be limited
@@ -82,7 +84,8 @@ struct ProbeControllerConfig {
 enum class BandwidthLimitedCause {
   kLossLimitedBweIncreasing = 0,
   kLossLimitedBweDecreasing = 1,
-  kDelayBasedLimited = 2
+  kDelayBasedLimited = 2,
+  kDelayBasedLimitedDelayIncreased = 3,
 };
 
 // This class controls initiation of probing to estimate initial channel
@@ -132,7 +135,10 @@ class ProbeController {
 
   ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> Process(
       Timestamp at_time);
-
+  // Gets the value of field trial not_probe_if_delay_increased.
+  bool DontProbeIfDelayIncreased() {
+    return config_.not_probe_if_delay_increased;
+  }
  private:
   enum class State {
     // Initial state where no probing has been triggered yet.
@@ -171,10 +177,6 @@ class ProbeController {
   DataRate max_total_allocated_bitrate_ = DataRate::Zero();
 
   const bool in_rapid_recovery_experiment_;
-  // For WebRTC.BWE.MidCallProbing.* metric.
-  bool mid_call_probing_waiting_for_result_;
-  DataRate mid_call_probing_bitrate_ = DataRate::Zero();
-  DataRate mid_call_probing_succcess_threshold_ = DataRate::Zero();
   // RtcEventLog* event_log_;
 
   int32_t next_probe_cluster_id_ = 1;

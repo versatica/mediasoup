@@ -389,8 +389,7 @@ DataRate AimdRateControl::ClampBitrate(DataRate new_bitrate) const {
     }
     new_bitrate = std::min(upper_bound, new_bitrate);
   }
-  if (estimate_bounded_backoff_ && network_estimate_ &&
-      network_estimate_->link_capacity_lower.IsFinite() &&
+  if (network_estimate_ && network_estimate_->link_capacity_lower.IsFinite() &&
       new_bitrate < current_bitrate_) {
     new_bitrate = std::min(
         current_bitrate_,

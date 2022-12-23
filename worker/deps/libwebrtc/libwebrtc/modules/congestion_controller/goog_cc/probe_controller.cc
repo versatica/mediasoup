@@ -105,7 +105,8 @@ ProbeControllerConfig::ProbeControllerConfig(
       loss_limited_probe_scale("loss_limited_scale", 1.5),
       skip_if_estimate_larger_than_fraction_of_max(
           "skip_if_est_larger_than_fraction_of_max",
-          0.0) {
+          0.0),
+      not_probe_if_delay_increased("not_probe_if_delay_increased", false) {
   ParseFieldTrial({&first_exponential_probe_scale,
                    &second_exponential_probe_scale,
                    &further_exponential_probe_scale,
@@ -125,7 +126,8 @@ ProbeControllerConfig::ProbeControllerConfig(
                    &min_probe_packets_sent,
                    &limit_probe_target_rate_to_loss_bwe,
                    &loss_limited_probe_scale,
-                   &skip_if_estimate_larger_than_fraction_of_max},
+                   &skip_if_estimate_larger_than_fraction_of_max,
+                   &not_probe_if_delay_increased},
                   key_value_config->Lookup("WebRTC-Bwe-ProbingConfiguration"));
 
   // Specialized keys overriding subsets of WebRTC-Bwe-ProbingConfiguration
@@ -195,17 +197,6 @@ std::vector<ProbeClusterConfig> ProbeController::SetBitrates(
       // estimate then initiate probing.
       if (!estimated_bitrate_.IsZero() && old_max_bitrate < max_bitrate_ &&
           estimated_bitrate_ < max_bitrate_) {
-        // The assumption is that if we jump more than 20% in the bandwidth
-        // estimate or if the bandwidth estimate is within 90% of the new
-        // max bitrate then the probing attempt was successful.
-        mid_call_probing_succcess_threshold_ =
-            std::min(estimated_bitrate_ * 1.2, max_bitrate_ * 0.9);
-        mid_call_probing_waiting_for_result_ = true;
-        mid_call_probing_bitrate_ = max_bitrate_;
-
-        // RTC_HISTOGRAM_COUNTS_10000("WebRTC.BWE.MidCallProbing.Initiated",
-                                   // max_bitrate_bps_ / 1000);
-
         return InitiateProbing(at_time, {max_bitrate_}, false);
       }
       break;
@@ -295,15 +286,6 @@ std::vector<ProbeClusterConfig> ProbeController::SetEstimatedBitrate(
     bitrate_before_last_large_drop_ = estimated_bitrate_;
   }
   estimated_bitrate_ = bitrate;
-
-  if (mid_call_probing_waiting_for_result_ &&
-      bitrate >= mid_call_probing_succcess_threshold_) {
-    // RTC_HISTOGRAM_COUNTS_10000("WebRTC.BWE.MidCallProbing.Success",
-                               // mid_call_probing_bitrate_bps_ / 1000);
-    // RTC_HISTOGRAM_COUNTS_10000("WebRTC.BWE.MidCallProbing.ProbedKbps",
-                               // bitrate_bps / 1000);
-    mid_call_probing_waiting_for_result_ = false;
-  }
   if (state_ == State::kWaitingForProbingResult) {
     // Continue probing if probing results indicate channel has greater
     // capacity.
@@ -408,7 +390,6 @@ void ProbeController::Reset(Timestamp at_time) {
   Timestamp now = at_time;
   last_bwe_drop_probing_time_ = now;
   alr_end_time_.reset();
-  mid_call_probing_waiting_for_result_ = false;
   time_of_last_large_drop_ = now;
   bitrate_before_last_large_drop_ = DataRate::Zero();
   max_total_allocated_bitrate_ = DataRate::Zero();
@@ -459,8 +440,6 @@ bool ProbeController::TimeForNetworkStateProbe(Timestamp at_time) const {
 std::vector<ProbeClusterConfig> ProbeController::Process(Timestamp at_time) {
   if (at_time - time_last_probing_initiated_ >
       kMaxWaitingTimeForProbingResult) {
-    mid_call_probing_waiting_for_result_ = false;
-
     if (state_ == State::kWaitingForProbingResult) {
       MS_WARN_TAG(bwe, "kWaitingForProbingResult: timeout");
       state_ = State::kProbingComplete;
@@ -476,7 +455,6 @@ std::vector<ProbeClusterConfig> ProbeController::Process(Timestamp at_time) {
   }
   return std::vector<ProbeClusterConfig>();
 }
-
 std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     Timestamp now,
     std::vector<DataRate> bitrates_to_probe,
@@ -496,7 +474,6 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
       return {};
     }
   }
-
   DataRate max_probe_bitrate = max_bitrate_;
   if (max_total_allocated_bitrate_ > DataRate::Zero()) {
     // If a max allocated bitrate has been configured, allow probing up to 2x
@@ -523,7 +500,14 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
         break;
       case BandwidthLimitedCause::kDelayBasedLimited:
         break;
+      default:
+        break;
     }
+  }
+  if (config_.not_probe_if_delay_increased &&
+      bandwidth_limited_cause_ ==
+          BandwidthLimitedCause::kDelayBasedLimitedDelayIncreased) {
+    return {};
   }
   if (config_.network_state_estimate_probing_interval->IsFinite() &&
       network_estimate_ && network_estimate_->link_capacity_upper.IsFinite()) {

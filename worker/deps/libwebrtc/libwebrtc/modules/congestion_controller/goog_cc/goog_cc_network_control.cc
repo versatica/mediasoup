@@ -56,15 +56,22 @@ bool IsNotDisabled(const WebRtcKeyValueConfig* config, absl::string_view key) {
   return config->Lookup(key).find("Disabled") != 0;
 }
 BandwidthLimitedCause GetBandwidthLimitedCause(
-	LossBasedState loss_based_state) {
-	switch (loss_based_state) {
-		case LossBasedState::kDecreasing:
-			return BandwidthLimitedCause::kLossLimitedBweDecreasing;
-		case LossBasedState::kIncreasing:
-			return BandwidthLimitedCause::kLossLimitedBweIncreasing;
-		default:
-			return BandwidthLimitedCause::kDelayBasedLimited;
-	}
+    LossBasedState loss_based_state,
+    BandwidthUsage bandwidth_usage,
+    bool not_probe_if_delay_increased) {
+  if (not_probe_if_delay_increased &&
+      (bandwidth_usage == BandwidthUsage::kBwOverusing ||
+       bandwidth_usage == BandwidthUsage::kBwUnderusing)) {
+    return BandwidthLimitedCause::kDelayBasedLimitedDelayIncreased;
+  }
+  switch (loss_based_state) {
+    case LossBasedState::kDecreasing:
+      return BandwidthLimitedCause::kLossLimitedBweDecreasing;
+    case LossBasedState::kIncreasing:
+      return BandwidthLimitedCause::kLossLimitedBweIncreasing;
+    default:
+      return BandwidthLimitedCause::kDelayBasedLimited;
+  }
 }
 }  // namespace
 
@@ -92,7 +99,7 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
           new ProbeController(key_value_config_)),
       congestion_window_pushback_controller_(
           rate_control_settings_.UseCongestionWindowPushback()
-              ? absl::make_unique<CongestionWindowPushbackController>(
+              ? std::make_unique<CongestionWindowPushbackController>(
                     key_value_config_)
               : nullptr),
       bandwidth_estimation_(
@@ -544,8 +551,13 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
   bool recovered_from_overuse = false;
 
   DelayBasedBwe::Result result;
+	// MS_NOTE: I am not sure why we are passing here acknowledged_bitrate
+	// instead of bandwidth_estimation_->target_rate(), because, when we are
+	// backing off we in AIMD we should backoff from target rate rather than
+	// acknowledged_bitrate, otherwise we get big BW drops, bigger that default
+	// AIMD 0.85 backof factor
   result = delay_based_bwe_->IncomingPacketFeedbackVector(
-      report, bandwidth_estimation_->target_rate(), probe_bitrate, estimate_,
+      report, acknowledged_bitrate, probe_bitrate, estimate_,
       alr_start_time.has_value());
 
   if (result.updated) {
@@ -683,16 +695,19 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
 
     auto probes = probe_controller_->SetEstimatedBitrate(
         loss_based_target_rate,
-        GetBandwidthLimitedCause(bandwidth_estimation_->loss_based_state()),
+        GetBandwidthLimitedCause(
+            bandwidth_estimation_->loss_based_state(),
+            delay_based_bwe_->last_state(),
+            probe_controller_->DontProbeIfDelayIncreased()),
         at_time);
     update->probe_cluster_configs.insert(update->probe_cluster_configs.end(),
                                          probes.begin(), probes.end());
     update->pacer_config = GetPacingRates(at_time);
 
-    MS_DEBUG_DEV("bwe [at_time:%" PRIu64", pushback_target_bps:%lld, estimate_bps:%lld]",
+/*    MS_DEBUG_DEV("bwe [at_time:%" PRIu64", pushback_target_bps:%lld, estimate_bps:%lld]",
                  at_time.ms(),
                  last_pushback_target_rate_.bps(),
-                 last_raw_target_rate_.bps());
+                 last_raw_target_rate_.bps());*/
   }
 }
 

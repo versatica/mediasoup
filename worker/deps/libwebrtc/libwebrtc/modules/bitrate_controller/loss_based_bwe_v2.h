@@ -24,15 +24,17 @@
 #include "api/units/timestamp.h"
 #include "api/transport/webrtc_key_value_config.h"
 
-namespace webrtc {
+namespace webrtc
+{
 
-// State of the loss based estimate, which can be either increasing/decreasing
-// when network is loss limited, or equal to the delay based estimate.
-enum class LossBasedState {
-  kIncreasing = 0,
-  kDecreasing = 1,
-  kDelayBasedEstimate = 2
-};
+	// State of the loss based estimate, which can be either increasing/decreasing
+	// when network is loss limited, or equal to the delay based estimate.
+	enum class LossBasedState
+	{
+		kIncreasing         = 0,
+		kDecreasing         = 1,
+		kDelayBasedEstimate = 2
+	};
 
 class LossBasedBweV2 {
  public:
@@ -45,72 +47,73 @@ class LossBasedBweV2 {
   // `key_value_config` is not valid.
   explicit LossBasedBweV2(const WebRtcKeyValueConfig* key_value_config);
 
-  LossBasedBweV2(const LossBasedBweV2&) = delete;
-  LossBasedBweV2& operator=(const LossBasedBweV2&) = delete;
+		LossBasedBweV2(const LossBasedBweV2&)            = delete;
+		LossBasedBweV2& operator=(const LossBasedBweV2&) = delete;
 
-  ~LossBasedBweV2() = default;
+		~LossBasedBweV2() = default;
 
-  bool IsEnabled() const;
-  // Returns true iff a BWE can be calculated, i.e., the estimator has been
-  // initialized with a BWE and then has received enough `PacketResult`s.
-  bool IsReady() const;
+		bool IsEnabled() const;
+		// Returns true iff a BWE can be calculated, i.e., the estimator has been
+		// initialized with a BWE and then has received enough `PacketResult`s.
+		bool IsReady() const;
 
-  // Returns `DataRate::PlusInfinity` if no BWE can be calculated.
-  Result GetLossBasedResult() const;
-  void SetAcknowledgedBitrate(DataRate acknowledged_bitrate);
-  void SetBandwidthEstimate(DataRate bandwidth_estimate);
-  void SetMinMaxBitrate(DataRate min_bitrate, DataRate max_bitrate);
-  void UpdateBandwidthEstimate(
-      std::vector<PacketResult> packet_results,
-      DataRate delay_based_estimate,
-      BandwidthUsage delay_detector_state,
-			absl::optional<DataRate> probe_bitrate,
+		// Returns `DataRate::PlusInfinity` if no BWE can be calculated.
+		Result GetLossBasedResult() const;
+		void SetAcknowledgedBitrate(DataRate acknowledged_bitrate);
+		void SetBandwidthEstimate(DataRate bandwidth_estimate);
+		void SetMinMaxBitrate(DataRate min_bitrate, DataRate max_bitrate);
+		void UpdateBandwidthEstimate(
+		  std::vector<PacketResult> packet_results,
+		  DataRate delay_based_estimate,
+		  BandwidthUsage delay_detector_state,
+		  absl::optional<DataRate> probe_bitrate,
 		  DataRate upper_link_capacity);
 
- private:
-  struct ChannelParameters {
-    double inherent_loss = 0.0;
-    DataRate loss_limited_bandwidth = DataRate::MinusInfinity();
-  };
+	private:
+		struct ChannelParameters
+		{
+			double inherent_loss            = 0.0;
+			DataRate loss_limited_bandwidth = DataRate::MinusInfinity();
+		};
 
-  struct Config {
-    double bandwidth_rampup_upper_bound_factor = 0.0;
-    double rampup_acceleration_max_factor = 0.0;
-    TimeDelta rampup_acceleration_maxout_time = TimeDelta::Zero();
-    std::vector<double> candidate_factors;
-    double higher_bandwidth_bias_factor = 0.0;
-    double higher_log_bandwidth_bias_factor = 0.0;
-    double inherent_loss_lower_bound = 0.0;
-    double loss_threshold_of_high_bandwidth_preference = 0.0;
-    double bandwidth_preference_smoothing_factor = 0.0;
-    DataRate inherent_loss_upper_bound_bandwidth_balance =
-        DataRate::MinusInfinity();
-    double inherent_loss_upper_bound_offset = 0.0;
-    double initial_inherent_loss_estimate = 0.0;
-    int newton_iterations = 0;
-    double newton_step_size = 0.0;
-    bool append_acknowledged_rate_candidate = true;
-    bool append_delay_based_estimate_candidate = false;
-    TimeDelta observation_duration_lower_bound = TimeDelta::Zero();
-    int observation_window_size = 0;
-    double sending_rate_smoothing_factor = 0.0;
-    double instant_upper_bound_temporal_weight_factor = 0.0;
-    DataRate instant_upper_bound_bandwidth_balance = DataRate::MinusInfinity();
-    double instant_upper_bound_loss_offset = 0.0;
-    double temporal_weight_factor = 0.0;
-    double bandwidth_backoff_lower_bound_factor = 0.0;
-    bool trendline_integration_enabled = false;
-    int trendline_observations_window_size = 0;
-    double max_increase_factor = 0.0;
-    TimeDelta delayed_increase_window = TimeDelta::Zero();
-    bool use_acked_bitrate_only_when_overusing = false;
-    bool not_increase_if_inherent_loss_less_than_average_loss = false;
-    double high_loss_rate_threshold = 1.0;
-    DataRate bandwidth_cap_at_high_loss_rate = DataRate::MinusInfinity();
-    double slope_of_bwe_high_loss_func = 1000.0;
-    bool probe_integration_enabled = false;
-    bool bound_by_upper_link_capacity_when_loss_limited = false;
-  };
+		struct Config
+		{
+			double bandwidth_rampup_upper_bound_factor = 0.0;
+			double rampup_acceleration_max_factor      = 0.0;
+			TimeDelta rampup_acceleration_maxout_time  = TimeDelta::Zero();
+			std::vector<double> candidate_factors;
+			double higher_bandwidth_bias_factor                       = 0.0;
+			double higher_log_bandwidth_bias_factor                   = 0.0;
+			double inherent_loss_lower_bound                          = 0.0;
+			double loss_threshold_of_high_bandwidth_preference        = 0.0;
+			double bandwidth_preference_smoothing_factor              = 0.0;
+			DataRate inherent_loss_upper_bound_bandwidth_balance      = DataRate::MinusInfinity();
+			double inherent_loss_upper_bound_offset                   = 0.0;
+			double initial_inherent_loss_estimate                     = 0.0;
+			int newton_iterations                                     = 0;
+			double newton_step_size                                   = 0.0;
+			bool append_acknowledged_rate_candidate                   = true;
+			bool append_delay_based_estimate_candidate                = false;
+			TimeDelta observation_duration_lower_bound                = TimeDelta::Zero();
+			int observation_window_size                               = 0;
+			double sending_rate_smoothing_factor                      = 0.0;
+			double instant_upper_bound_temporal_weight_factor         = 0.0;
+			DataRate instant_upper_bound_bandwidth_balance            = DataRate::MinusInfinity();
+			double instant_upper_bound_loss_offset                    = 0.0;
+			double temporal_weight_factor                             = 0.0;
+			double bandwidth_backoff_lower_bound_factor               = 0.0;
+			bool trendline_integration_enabled                        = false;
+			int trendline_observations_window_size                    = 0;
+			double max_increase_factor                                = 0.0;
+			TimeDelta delayed_increase_window                         = TimeDelta::Zero();
+			bool use_acked_bitrate_only_when_overusing                = false;
+			bool not_increase_if_inherent_loss_less_than_average_loss = false;
+			double high_loss_rate_threshold                           = 1.0;
+			DataRate bandwidth_cap_at_high_loss_rate                  = DataRate::MinusInfinity();
+			double slope_of_bwe_high_loss_func                        = 1000.0;
+			bool probe_integration_enabled                            = false;
+			bool bound_by_upper_link_capacity_when_loss_limited       = false;
+		};
 
   struct Derivatives {
     double first = 0.0;
@@ -205,6 +208,6 @@ class LossBasedBweV2 {
 	Timestamp instant_loss_debounce_start = Timestamp::MinusInfinity();
 };
 
-}  // namespace webrtc
+} // namespace webrtc
 
-#endif  // MODULES_CONGESTION_CONTROLLER_GOOG_CC_LOSS_BASED_BWE_V2_H_
+#endif // MODULES_CONGESTION_CONTROLLER_GOOG_CC_LOSS_BASED_BWE_V2_H_

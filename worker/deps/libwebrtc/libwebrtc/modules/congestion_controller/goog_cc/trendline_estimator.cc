@@ -30,8 +30,8 @@ namespace {
 // Parameters for linear least squares fit of regression line to noisy data.
 constexpr double kDefaultTrendlineSmoothingCoeff = 0.9;
 constexpr double kDefaultTrendlineThresholdGain = 4.0;
-constexpr double kDefaultRSquaredUpperBound = 0.4;
-constexpr double kDefaultRSquaredLowerBound = 0.15;
+constexpr double kDefaultRSquaredUpperBound = 0.3;
+constexpr double kDefaultRSquaredLowerBound = 0.05;
 const char kBweWindowSizeInPacketsExperiment[] =
     "WebRTC-BweWindowSizeInPackets";
 
