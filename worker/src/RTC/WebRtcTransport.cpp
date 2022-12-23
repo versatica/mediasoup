@@ -73,11 +73,14 @@ namespace RTC
 					else
 						udpSocket = new RTC::UdpSocket(this, ip);
 
-					auto announcedIp = listenIp->announcedIp()->str();
+					std::string announcedIp;
+
+					if (flatbuffers::IsFieldPresent(listenIp, FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
+						announcedIp = listenIp->announcedIp()->str();
 
 					this->udpSockets[udpSocket] = announcedIp;
 
-					if (listenIp->announcedIp()->size() == 0)
+					if (announcedIp.size() == 0)
 						this->iceCandidates.emplace_back(udpSocket, icePriority);
 					else
 						this->iceCandidates.emplace_back(udpSocket, icePriority, announcedIp);
@@ -100,11 +103,14 @@ namespace RTC
 					else
 						tcpServer = new RTC::TcpServer(this, this, ip);
 
-					auto announcedIp = listenIp->announcedIp()->str();
+					std::string announcedIp;
+
+					if (flatbuffers::IsFieldPresent(listenIp, FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
+						announcedIp = listenIp->announcedIp()->str();
 
 					this->tcpServers[tcpServer] = announcedIp;
 
-					if (listenIp->announcedIp()->size() == 0)
+					if (announcedIp.size() == 0)
 						this->iceCandidates.emplace_back(tcpServer, icePriority);
 					else
 						this->iceCandidates.emplace_back(tcpServer, icePriority, announcedIp);
