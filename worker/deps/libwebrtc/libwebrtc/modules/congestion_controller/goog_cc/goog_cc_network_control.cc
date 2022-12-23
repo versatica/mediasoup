@@ -99,7 +99,7 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
           new ProbeController(key_value_config_)),
       congestion_window_pushback_controller_(
           rate_control_settings_.UseCongestionWindowPushback()
-              ? std::make_unique<CongestionWindowPushbackController>(
+              ? absl::make_unique<CongestionWindowPushbackController>(
                     key_value_config_)
               : nullptr),
       bandwidth_estimation_(
