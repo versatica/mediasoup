@@ -2140,7 +2140,7 @@ namespace RTC
 		  this->shared->channelNotifier->GetBufferBuilder(),
 		  FBS::Transport::TraceType::PROBATION,
 		  DepLibUV::GetTimeMs(),
-		  FBS::Transport::TraceDirection::OUT);
+		  FBS::Transport::TraceDirection::DIRECTION_OUT);
 
 		this->shared->channelNotifier->Emit(
 		  this->id,
@@ -2174,7 +2174,7 @@ namespace RTC
 		  this->shared->channelNotifier->GetBufferBuilder(),
 		  FBS::Transport::TraceType::BWE,
 		  DepLibUV::GetTimeMs(),
-		  FBS::Transport::TraceDirection::OUT,
+		  FBS::Transport::TraceDirection::DIRECTION_OUT,
 		  FBS::Transport::TraceInfo::BweTraceInfo,
 		  traceInfo.Union());
 

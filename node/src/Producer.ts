@@ -644,7 +644,7 @@ function parseTraceEventData(
 	return {
 		type      : fbstraceType2String(trace.type()),
 		timestamp : Number(trace.timestamp()),
-		direction : trace.direction() === FbsProducer.TraceDirection.IN ? 'in' : 'out',
+		direction : trace.direction() === FbsProducer.TraceDirection.DIRECTION_IN ? 'in' : 'out',
 		info      : info ? info.unpack() : undefined
 	};
 }

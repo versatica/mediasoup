@@ -59,9 +59,7 @@ namespace RTC
 		Utils::IP::NormalizeIp(this->listenIp.ip);
 
 		if (flatbuffers::IsFieldPresent(options->listenIp(), FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
-		{
 			this->listenIp.announcedIp.assign(options->listenIp()->announcedIp()->str());
-		}
 
 		this->rtcpMux = options->rtcpMux();
 		this->comedia = options->comedia();

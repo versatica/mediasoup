@@ -1269,7 +1269,7 @@ export function parseTransportTraceEventData(
 			return {
 				type      : 'bwe',
 				timestamp : Number(trace.timestamp()),
-				direction : trace.direction() === FbsTransport.TraceDirection.IN ? 'in' : 'out',
+				direction : trace.direction() === FbsTransport.TraceDirection.DIRECTION_IN ? 'in' : 'out',
 				info      : parseBweTraceInfo(info!)
 			};
 		}
@@ -1279,7 +1279,7 @@ export function parseTransportTraceEventData(
 			return {
 				type      : 'probation',
 				timestamp : Number(trace.timestamp()),
-				direction : trace.direction() === FbsTransport.TraceDirection.IN ? 'in' : 'out',
+				direction : trace.direction() === FbsTransport.TraceDirection.DIRECTION_IN ? 'in' : 'out',
 				info      : {}
 			};
 		}

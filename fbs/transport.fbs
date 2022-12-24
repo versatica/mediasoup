@@ -186,7 +186,8 @@ table SctpStateChangeNotification {
 }
 
 enum TraceType: uint8 { PROBATION = 0, BWE }
-enum TraceDirection: uint8 { IN = 0, OUT }
+// NOTE (windows): IN|OUT are macros defined in windef.h.
+enum TraceDirection: uint8 { DIRECTION_IN = 0, DIRECTION_OUT }
 
 union TraceInfo {
   BweTraceInfo,

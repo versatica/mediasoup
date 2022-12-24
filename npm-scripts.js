@@ -3,6 +3,7 @@
 const process = require('process');
 const os = require('os');
 const fs = require('fs');
+const path = require('path');
 const { execSync } = require('child_process');
 const { version } = require('./package.json');
 
@@ -15,6 +16,9 @@ const MAYOR_VERSION = version.split('.')[0];
 
 // make command to use.
 const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
+
+// flatbuffers version.
+const FLATBUFFERS_VERSION='22.11.23';
 
 console.log(`npm-scripts.js [INFO] running task "${task}"`);
 
@@ -246,6 +250,7 @@ function buildWorker()
 	executeCmd(`${MAKE} -C worker`);
 }
 
+// TMP: Do not clean subproject while troubleshooting flatbuffers on Windows.
 function cleanWorker()
 {
 	console.log('npm-scripts.js [INFO] cleanWorker()');
@@ -279,12 +284,22 @@ function flatcNode()
 	// Build flatc binary if needed.
 	executeCmd(`${MAKE} -C worker flatc`);
 
-	const flatc = 'worker/subprojects/flatbuffers-22.11.23/build/flatc';
+	const extension = isWindows ? '.exe' : '';
+	const flatc = path.resolve(path.join(
+		'worker', 'out', 'Release', 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
+	const src = path.resolve(path.join('fbs', '*'));
+	const out = path.resolve(path.join('node', 'src', 'fbs'));
 	const options = '--gen-object-api';
-	const out = 'node/src/fbs';
 	const command = `${flatc} --ts ${options} -o ${out} `;
 
-	executeCmd(`for file in fbs/*; do ${command} \$\{file\}; done`);
+	if (isWindows)
+	{
+		executeCmd(`for %f in (${src}) do ${command} %f`);
+	}
+	else
+	{
+		executeCmd(`for file in ${src}; do ${command} \$\{file\}; done`);
+	}
 }
 
 function flatcWorker()
@@ -294,12 +309,22 @@ function flatcWorker()
 	// Build flatc binary if needed.
 	executeCmd(`${MAKE} -C worker flatc`);
 
-	const flatc = 'worker/subprojects/flatbuffers-22.11.23/build/flatc';
+	const extension = isWindows ? '.exe' : '';
+	const flatc = path.resolve(path.join(
+		'worker', 'out', 'Release', 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
+	const src = path.resolve(path.join('fbs', '*'));
+	const out = path.resolve(path.join('worker', 'include', 'FBS'));
 	const options = '--cpp-field-case-style lower --reflect-names --scoped-enums';
-	const out = 'worker/include/FBS/';
 	const command = `${flatc} --cpp ${options} -o ${out} `;
 
-	executeCmd(`for file in fbs/*; do ${command} \$\{file\}; done`);
+	if (isWindows)
+	{
+		executeCmd(`for %f in (${src}) do ${command} %f`);
+	}
+	else
+	{
+		executeCmd(`for file in ${src}; do ${command} \$\{file\}; done`);
+	}
 }
 
 function testNode()

@@ -926,7 +926,7 @@ export function parseTraceEventData(
 	return {
 		type      : fbstraceType2String(trace.type()),
 		timestamp : Number(trace.timestamp()),
-		direction : trace.direction() === FbsConsumer.TraceDirection.IN ? 'in' : 'out',
+		direction : trace.direction() === FbsConsumer.TraceDirection.DIRECTION_IN ? 'in' : 'out',
 		info      : info ? info.unpack() : undefined
 	};
 }
