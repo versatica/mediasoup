@@ -656,6 +656,13 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		for (const listenInfo of listenInfos)
 		{
+			// NOTE: This check should not be needed since
+			// FbsWebRtcServer.ListenInfoT should throw.
+			// In absence of 'ip' it does not throw in Linux.
+			// TODO: Investigate the cause.
+			if (!listenInfo.ip)
+				throw new TypeError('missing ip');
+
 			fbsListenInfos.push(new FbsWebRtcServer.ListenInfoT(
 				listenInfo.protocol === 'udp' ? FbsTransportProtocol.UDP : FbsTransportProtocol.TCP,
 				listenInfo.ip,

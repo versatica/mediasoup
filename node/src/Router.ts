@@ -587,6 +587,15 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const transportId = uuidv4();
 
+		// NOTE: This check should not be needed since
+		// FbsTransport.OptionsT should throw.
+		// In absence of 'OS' or 'MIS' it does not throw in Linux.
+		// TODO: Investigate the cause.
+		if (!numSctpStreams.OS)
+			throw new TypeError('missing OS');
+		if (!numSctpStreams.MIS)
+			throw new TypeError('missing MIS');
+
 		/* Build Request. */
 
 		const baseTransportOptions = new FbsTransport.OptionsT(
@@ -599,6 +608,13 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			sctpSendBufferSize,
 			false /* isDataChannel */
 		);
+
+		// NOTE: This check should not be needed since
+		// FbsRouter.PlainTransportOptionsT should throw.
+		// In absence of 'ip' it does not throw in Linux.
+		// TODO: Investigate the cause.
+		if (!listenIp.ip)
+			throw new TypeError('missing ip');
 
 		const plainTransportOptions = new FbsRouter.PlainTransportOptionsT(
 			baseTransportOptions,
