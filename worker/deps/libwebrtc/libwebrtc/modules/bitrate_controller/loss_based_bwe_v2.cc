@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 #define MS_CLASS "webrtc::LossBasedBweV2"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/bitrate_controller/loss_based_bwe_v2.h"
 
@@ -198,13 +198,14 @@ LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult() const {
   }
 
 	auto instant_limit = GetInstantUpperBound();
-	MS_DEBUG_DEV("Using %s, Inherent Loss limit %f, %" PRIi64 ", Delay limit %" PRIi64 ", Instant Loss limit %" PRIi64 ", acknowledged bitrate %" PRIi64 "",
+/*	MS_DEBUG_DEV("Using %s, Inherent Loss limit %f, %" PRIi64 ", Delay limit %" PRIi64 ", Instant Loss limit %" PRIi64 ",average loss ratio is %f, acknowledged bitrate %" PRIi64 "",
 		           current_estimate_.loss_limited_bandwidth.bps() <= delay_based_estimate_.bps() ? "Loss" : "Delay",
 		           current_estimate_.inherent_loss,
 		           current_estimate_.loss_limited_bandwidth.bps(),
 		           delay_based_estimate_.IsFinite() ? delay_based_estimate_.bps() : 0,
 		           instant_limit.IsFinite() ? instant_limit.bps() : 0,
-		           IsValid(acknowledged_bitrate_) ? acknowledged_bitrate_->bps() : -1);
+		           GetAverageReportedLossRatio(),
+		           IsValid(acknowledged_bitrate_) ? acknowledged_bitrate_->bps() : -1);*/
 	if (IsValid(delay_based_estimate_)) {
 		result.bandwidth_estimate =
 			std::min({current_estimate_.loss_limited_bandwidth,
@@ -807,7 +808,7 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates()
     if (!can_increase_bitrate && candidate_factor > 1.0) {
       continue;
     }
-		MS_DEBUG_DEV("Pushing loss_limited_bandwidth candidate rate: %lld", (candidate_factor * current_estimate_.loss_limited_bandwidth).bps());
+		//MS_DEBUG_DEV("Pushing loss_limited_bandwidth candidate rate: %lld", (candidate_factor * current_estimate_.loss_limited_bandwidth).bps());
     bandwidths.push_back(candidate_factor *
                          current_estimate_.loss_limited_bandwidth);
   }
@@ -815,7 +816,7 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates()
   if (acknowledged_bitrate_.has_value() &&
       config_->append_acknowledged_rate_candidate &&
       TrendlineEsimateAllowEmergencyBackoff()) {
-		MS_DEBUG_DEV("Pushing acknowledged_bitrate_ candidate rate: %lld", (*acknowledged_bitrate_ * config_->bandwidth_backoff_lower_bound_factor).bps());
+		// MS_DEBUG_DEV("Pushing acknowledged_bitrate_ candidate rate: %lld", (*acknowledged_bitrate_ * config_->bandwidth_backoff_lower_bound_factor).bps());
     bandwidths.push_back(*acknowledged_bitrate_ *
                          config_->bandwidth_backoff_lower_bound_factor);
   }
@@ -824,7 +825,7 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates()
       config_->append_delay_based_estimate_candidate) {
     if (can_increase_bitrate &&
         delay_based_estimate_ > current_estimate_.loss_limited_bandwidth) {
-			MS_DEBUG_DEV("Pushing delay_based_estimate_ candidate rate: %lld", delay_based_estimate_.bps());
+			// MS_DEBUG_DEV("Pushing delay_based_estimate_ candidate rate: %lld", delay_based_estimate_.bps());
       bandwidths.push_back(delay_based_estimate_);
     }
   }
@@ -845,6 +846,7 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates()
                                   candidate_bandwidth_upper_bound));
     }
     candidate.inherent_loss = GetFeasibleInherentLoss(candidate);
+		// MS_DEBUG_DEV("candidate.loss_limited_bandwidth: %lld, candidate.inherent_loss: %f", candidate.loss_limited_bandwidth.bps(), candidate.inherent_loss);
     candidates[i] = candidate;
   }
   return candidates;
