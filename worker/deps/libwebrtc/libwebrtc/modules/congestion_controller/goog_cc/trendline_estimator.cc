@@ -30,8 +30,8 @@ namespace {
 // Parameters for linear least squares fit of regression line to noisy data.
 constexpr double kDefaultTrendlineSmoothingCoeff = 0.9;
 constexpr double kDefaultTrendlineThresholdGain = 4.0;
-constexpr double kDefaultRSquaredUpperBound = 0.3;
-constexpr double kDefaultRSquaredLowerBound = 0.05;
+constexpr double kDefaultRSquaredUpperBound = 0.2;
+constexpr double kDefaultRSquaredLowerBound = 0.1;
 const char kBweWindowSizeInPacketsExperiment[] =
     "WebRTC-BweWindowSizeInPackets";
 
@@ -312,7 +312,7 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
 
   // MS_NOTE: In case of positive slope we want to limit BW increase or even decrease
 	// in case we see that we have many outliers.
-	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < kDefaultRSquaredUpperBound) {
+/*	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < kDefaultRSquaredUpperBound) {
 		if (avg_r_squared < kDefaultRSquaredLowerBound) {
 			hypothesis_ = BandwidthUsage::kBwOverusing;
 			MS_DEBUG_DEV("OverUsing!");
@@ -325,7 +325,15 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
 		UpdateThreshold(modified_trend, now_ms);
 
 		return;
-	}
+	}*/
+/*	if (avg_r_squared < kDefaultRSquaredLowerBound) {
+		hypothesis_ = BandwidthUsage::kBwOverusing;
+		MS_DEBUG_DEV("OverUsing!");
+		prev_trend_ = trend;
+		UpdateThreshold(modified_trend, now_ms);
+		return ;
+	}*/
+
 
   if (modified_trend > threshold_) {
     if (time_over_using_ == -1) {
@@ -338,8 +346,8 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
       time_over_using_ += ts_delta;
     }
     overuse_counter_++;
-    //if (time_over_using_ > overusing_time_threshold_ && overuse_counter_ > 1) {
-		if (time_over_using_ > overusing_time_threshold_) {
+    if (time_over_using_ > overusing_time_threshold_ && overuse_counter_ > 1) {
+		//if (time_over_using_ > overusing_time_threshold_) {
       if (trend.slope >= prev_trend_.slope) {
         time_over_using_ = 0;
         overuse_counter_ = 0;

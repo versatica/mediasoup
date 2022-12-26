@@ -201,7 +201,9 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
         rate_control_.TimeToReduceFurther(at_time, *acked_bitrate)) {
       result.updated =
           UpdateEstimate(at_time, acked_bitrate, &result.target_bitrate);
-    } else if (!acked_bitrate && rate_control_.ValidEstimate() &&
+    }
+		// MS_NOTE: This is the job of loss estimator
+		/*else if (!acked_bitrate && rate_control_.ValidEstimate() &&
                rate_control_.InitialTimeToReduceFurther(at_time)) {
       // Overusing before we have a measured acknowledged bitrate. Reduce send
       // rate by 50% every 200 ms.
@@ -212,7 +214,7 @@ DelayBasedBwe::Result DelayBasedBwe::MaybeUpdateEstimate(
       result.updated = true;
       result.probe = false;
       result.target_bitrate = rate_control_.LatestEstimate();
-    }
+    }*/
   } else {
     if (probe_bitrate) {
       MS_DEBUG_DEV("probe bitrate: %lld", probe_bitrate.value().bps());

@@ -204,7 +204,7 @@ class LossBasedBweV2 {
 	double static constexpr kBwBalanceMultiplicator = 1.3;
 	double static constexpr kInstantLossDebounce = 3;
 	size_t instant_loss_debounce_counter_ = 0;
-	TimeDelta instant_loss_debounce_duration = TimeDelta::seconds(2);
+	TimeDelta instant_loss_debounce_duration = TimeDelta::seconds(5);
 	Timestamp instant_loss_debounce_start = Timestamp::MinusInfinity();
 };
 
