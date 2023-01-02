@@ -39,7 +39,7 @@ public:
 		std::string dtlsCertificateFile;
 		std::string dtlsPrivateKeyFile;
 		std::string libwebrtcFieldTrials{
-			"WebRTC-Bwe-AlrLimitedBackoff/Enabled/WebRTC-Bwe-LossBasedBweV2/BwRampupUpperBoundFactor:1.1,TrendlineIntegrationEnabled:true/"
+			"WebRTC-Bwe-AlrLimitedBackoff/Enabled/WebRTC-Bwe-LossBasedBweV2/BwRampupUpperBoundFactor:1.1,TrendlineIntegrationEnabled:true/WebRTC-Bwe-RobustThroughputEstimatorSettings/enabled/"
 		};
 	};
 

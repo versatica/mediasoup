@@ -557,7 +557,7 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
 	// acknowledged_bitrate, otherwise we get big BW drops, bigger that default
 	// AIMD 0.85 backof factor
   result = delay_based_bwe_->IncomingPacketFeedbackVector(
-      report, acknowledged_bitrate, probe_bitrate, estimate_,
+      report, bandwidth_estimation_->target_rate(), probe_bitrate, estimate_,
       alr_start_time.has_value());
 
   if (result.updated) {

@@ -46,9 +46,9 @@ struct RobustThroughputEstimatorSettings {
   // reasons), and never longer than max_window_duration (to avoid very old
   // packets influencing the estimate for example when sending is paused).
   unsigned window_packets = 20;
-  unsigned max_window_packets = 500;
+  unsigned max_window_packets = 50;
   TimeDelta min_window_duration = TimeDelta::Seconds<1>();
-  TimeDelta max_window_duration = TimeDelta::Seconds<5>();
+  TimeDelta max_window_duration = TimeDelta::Seconds<3>();
 
   // The estimator window requires at least `required_packets` packets
   // to produce an estimate.

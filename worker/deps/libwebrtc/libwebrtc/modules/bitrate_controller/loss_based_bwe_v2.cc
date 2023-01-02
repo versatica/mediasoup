@@ -410,7 +410,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
 	FieldTrialParameter<bool> append_delay_based_estimate_candidate("DelayBasedCandidate", true);
 	FieldTrialParameter<TimeDelta> observation_duration_lower_bound(
 		"ObservationDurationLowerBound", TimeDelta::ms(250));
-	FieldTrialParameter<int> observation_window_size("ObservationWindowSize", 20);
+	FieldTrialParameter<int> observation_window_size("ObservationWindowSize", 50);
 	FieldTrialParameter<double> sending_rate_smoothing_factor("SendingRateSmoothingFactor", 0.0);
 	FieldTrialParameter<double> instant_upper_bound_temporal_weight_factor(
 		"InstantUpperBoundTemporalWeightFactor", 0.9);
@@ -813,13 +813,13 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates()
                          current_estimate_.loss_limited_bandwidth);
   }
 
-  if (acknowledged_bitrate_.has_value() &&
+/*  if (acknowledged_bitrate_.has_value() &&
       config_->append_acknowledged_rate_candidate &&
       TrendlineEsimateAllowEmergencyBackoff()) {
 		// MS_DEBUG_DEV("Pushing acknowledged_bitrate_ candidate rate: %lld", (*acknowledged_bitrate_ * config_->bandwidth_backoff_lower_bound_factor).bps());
     bandwidths.push_back(*acknowledged_bitrate_ *
                          config_->bandwidth_backoff_lower_bound_factor);
-  }
+  }*/
 
   if (IsValid(delay_based_estimate_) &&
       config_->append_delay_based_estimate_candidate) {
@@ -1004,7 +1004,7 @@ void LossBasedBweV2::CalculateInstantUpperBound(DataRate sending_rate) {
 		DataRate current_estimate = current_estimate_.loss_limited_bandwidth;
 
 		instant_loss_debounce_counter_ += 1;
-		auto reduce_debounce_time = TimeDelta::ms(config_->observation_duration_lower_bound.ms() * 15);
+		auto reduce_debounce_time = TimeDelta::ms(config_->observation_duration_lower_bound.ms() * 20);
 		// MS_NOTE: Here we create debounce mechanism, that must help in
 		// bursts smoothening. Initially we reduce to 85% of previous BW estimate,
 		// if that will not help after debounce counter, we will reduce further with f

@@ -28,10 +28,10 @@ namespace webrtc {
 namespace {
 
 // Parameters for linear least squares fit of regression line to noisy data.
-constexpr double kDefaultTrendlineSmoothingCoeff = 0.9;
-constexpr double kDefaultTrendlineThresholdGain = 5.0;
-constexpr double kDefaultRSquaredUpperBound = 0.1;
-constexpr double kDefaultRSquaredLowerBound = 0.01;
+constexpr double kDefaultTrendlineSmoothingCoeff = 0.8;
+constexpr double kDefaultTrendlineThresholdGain = 4.0;
+constexpr double kDefaultRSquaredUpperBound = 0.2;
+constexpr double kDefaultRSquaredLowerBound = 0.05;
 const char kBweWindowSizeInPacketsExperiment[] =
     "WebRTC-BweWindowSizeInPackets";
 
@@ -270,7 +270,7 @@ void TrendlineEstimator::UpdateTrendline(double recv_delta_ms,
       }
     }
   }
-  MS_DEBUG_DEV("slope, r_squared, avg_r_squared [%f,  %f, %f]", trend.slope, trend.r_squared, avg_r_squared);
+
 
   Detect(result, send_delta_ms, arrival_time_ms, avg_r_squared);
 }
@@ -317,9 +317,11 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
 	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < kDefaultRSquaredUpperBound) {
 		if (avg_r_squared < kDefaultRSquaredLowerBound) {
 			hypothesis_ = BandwidthUsage::kBwOverusing;
+			MS_DEBUG_DEV("slope, r_squared, avg_r_squared [%f,  %f, %f]", trend.slope, trend.r_squared, avg_r_squared);
 			MS_DEBUG_DEV("OverUsing!");
 		} else  {
 			hypothesis_ = BandwidthUsage::kBwUnderusing;
+			MS_DEBUG_DEV("slope, r_squared, avg_r_squared [%f,  %f, %f]", trend.slope, trend.r_squared, avg_r_squared);
 			MS_DEBUG_DEV("HOLD");
 		}
 
@@ -341,7 +343,7 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
       time_over_using_ += ts_delta;
     }
     overuse_counter_++;
-    if (time_over_using_ > overusing_time_threshold_ && overuse_counter_ > 1) {
+    if (time_over_using_ > overusing_time_threshold_ && overuse_counter_ > 3) {
 		//if (time_over_using_ > overusing_time_threshold_) {
       if (trend.slope >= prev_trend_.slope) {
         time_over_using_ = 0;
