@@ -26,7 +26,7 @@ namespace webrtc {
 
 struct TrendlineEstimatorSettings {
   static constexpr char kKey[] = "WebRTC-Bwe-TrendlineEstimatorSettings";
-  static constexpr unsigned kDefaultTrendlineWindowSize = 20;
+  static constexpr unsigned kDefaultTrendlineWindowSize = 10;
 
   TrendlineEstimatorSettings() = delete;
   explicit TrendlineEstimatorSettings(const WebRtcKeyValueConfig* key_value_config);

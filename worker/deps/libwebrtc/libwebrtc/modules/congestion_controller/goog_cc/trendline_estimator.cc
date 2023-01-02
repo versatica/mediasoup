@@ -29,9 +29,9 @@ namespace {
 
 // Parameters for linear least squares fit of regression line to noisy data.
 constexpr double kDefaultTrendlineSmoothingCoeff = 0.9;
-constexpr double kDefaultTrendlineThresholdGain = 4.0;
-constexpr double kDefaultRSquaredUpperBound = 0.2;
-constexpr double kDefaultRSquaredLowerBound = 0.1;
+constexpr double kDefaultTrendlineThresholdGain = 5.0;
+constexpr double kDefaultRSquaredUpperBound = 0.1;
+constexpr double kDefaultRSquaredLowerBound = 0.01;
 const char kBweWindowSizeInPacketsExperiment[] =
     "WebRTC-BweWindowSizeInPackets";
 
@@ -255,9 +255,11 @@ void TrendlineEstimator::UpdateTrendline(double recv_delta_ms,
     //   trend == 0    ->  the delay does not change
     //   trend < 0     ->  the delay decreases, queues are being emptied
 		result = LinearFitSlope(delay_hist_).value_or(trend);
-		r_squared_hist_.emplace_back(result.r_squared);
-		if (r_squared_hist_.size() > settings_.window_size)
-			r_squared_hist_.pop_front();
+		if (result.slope > 0) {
+			r_squared_hist_.emplace_back(result.r_squared);
+			if (r_squared_hist_.size() > settings_.window_size)
+				r_squared_hist_.pop_front();
+		}
 		avg_r_squared = getAverage(r_squared_hist_);
     if (settings_.enable_cap) {
       absl::optional<double> cap = ComputeSlopeCap(delay_hist_, settings_);
@@ -312,7 +314,7 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
 
   // MS_NOTE: In case of positive slope we want to limit BW increase or even decrease
 	// in case we see that we have many outliers.
-/*	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < kDefaultRSquaredUpperBound) {
+	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < kDefaultRSquaredUpperBound) {
 		if (avg_r_squared < kDefaultRSquaredLowerBound) {
 			hypothesis_ = BandwidthUsage::kBwOverusing;
 			MS_DEBUG_DEV("OverUsing!");
@@ -325,14 +327,7 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
 		UpdateThreshold(modified_trend, now_ms);
 
 		return;
-	}*/
-/*	if (avg_r_squared < kDefaultRSquaredLowerBound) {
-		hypothesis_ = BandwidthUsage::kBwOverusing;
-		MS_DEBUG_DEV("OverUsing!");
-		prev_trend_ = trend;
-		UpdateThreshold(modified_trend, now_ms);
-		return ;
-	}*/
+	}
 
 
   if (modified_trend > threshold_) {

@@ -206,6 +206,7 @@ class LossBasedBweV2 {
 	size_t instant_loss_debounce_counter_ = 0;
 	TimeDelta instant_loss_debounce_duration = TimeDelta::seconds(5);
 	Timestamp instant_loss_debounce_start = Timestamp::MinusInfinity();
+	float kInstantLossReduceFactor = 0.9;
 };
 
 } // namespace webrtc

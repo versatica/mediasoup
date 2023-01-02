@@ -402,7 +402,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
 		"BandwidthPreferenceSmoothingFactor", 0.002);
 	FieldTrialParameter<DataRate> inherent_loss_upper_bound_bandwidth_balance(
 		"InherentLossUpperBoundBwBalance", DataRate::kbps(75.0));
-	FieldTrialParameter<double> inherent_loss_upper_bound_offset("InherentLossUpperBoundOffset", 0.05);
+	FieldTrialParameter<double> inherent_loss_upper_bound_offset("InherentLossUpperBoundOffset", 0.03);
 	FieldTrialParameter<double> initial_inherent_loss_estimate("InitialInherentLossEstimate", 0.01);
 	FieldTrialParameter<int> newton_iterations("NewtonIterations", 1);
 	FieldTrialParameter<double> newton_step_size("NewtonStepSize", 0.75);
@@ -416,11 +416,11 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
 		"InstantUpperBoundTemporalWeightFactor", 0.9);
 	FieldTrialParameter<DataRate> instant_upper_bound_bandwidth_balance(
 		"InstantUpperBoundBwBalance", DataRate::kbps(75.0));
-	FieldTrialParameter<double> instant_upper_bound_loss_offset("InstantUpperBoundLossOffset", 0.05);
+	FieldTrialParameter<double> instant_upper_bound_loss_offset("InstantUpperBoundLossOffset", 0.07);
 	FieldTrialParameter<double> temporal_weight_factor("TemporalWeightFactor", 0.9);
 	FieldTrialParameter<double> bandwidth_backoff_lower_bound_factor("BwBackoffLowerBoundFactor", 1.0);
 	FieldTrialParameter<bool> trendline_integration_enabled("TrendlineIntegrationEnabled", false);
-	FieldTrialParameter<int> trendline_observations_window_size("TrendlineObservationsWindowSize", 20);
+	FieldTrialParameter<int> trendline_observations_window_size("TrendlineObservationsWindowSize", 5);
 	FieldTrialParameter<double> max_increase_factor("MaxIncreaseFactor", 1.3);
 	FieldTrialParameter<TimeDelta> delayed_increase_window("DelayedIncreaseWindow", TimeDelta::ms(300));
 	FieldTrialParameter<bool> use_acked_bitrate_only_when_overusing(
@@ -1001,19 +1001,10 @@ void LossBasedBweV2::CalculateInstantUpperBound(DataRate sending_rate) {
 			average_reported_loss_ratio,
 			config_->instant_upper_bound_loss_offset);
 
-		DataRate current_estimate = DataRate::MinusInfinity();
-		if (IsValid(delay_based_estimate_))
-		{
-			current_estimate =
-				std::min({ current_estimate_.loss_limited_bandwidth, delay_based_estimate_ });
-		}
-		else
-		{
-			current_estimate = current_estimate_.loss_limited_bandwidth;
-		}
+		DataRate current_estimate = current_estimate_.loss_limited_bandwidth;
 
 		instant_loss_debounce_counter_ += 1;
-		auto reduce_debounce_time = TimeDelta::ms(config_->observation_duration_lower_bound.ms() * 10);
+		auto reduce_debounce_time = TimeDelta::ms(config_->observation_duration_lower_bound.ms() * 15);
 		// MS_NOTE: Here we create debounce mechanism, that must help in
 		// bursts smoothening. Initially we reduce to 85% of previous BW estimate,
 		// if that will not help after debounce counter, we will reduce further with f
@@ -1023,6 +1014,15 @@ void LossBasedBweV2::CalculateInstantUpperBound(DataRate sending_rate) {
 		{
 			instant_loss_debounce_start = now;
 			MS_DEBUG_DEV("First Instant Loss");
+
+			MS_DEBUG_DEV("Reducing current estimate %lld by factor %f", current_estimate.bps(), kInstantLossReduceFactor);
+
+			cached_instant_upper_bound_ = current_estimate * kInstantLossReduceFactor;
+
+			current_estimate_.loss_limited_bandwidth = cached_instant_upper_bound_.value();
+
+			MS_DEBUG_DEV("cached_instant_upper_bound_ %lld", cached_instant_upper_bound_->bps());
+			return ;
 		}
 
 		if ((now - instant_loss_debounce_start) < reduce_debounce_time && instant_loss_debounce_counter_ > 1)
@@ -1034,12 +1034,11 @@ void LossBasedBweV2::CalculateInstantUpperBound(DataRate sending_rate) {
 			return;
 		}
 
-		float reduce_factor = 0.9;
+		MS_DEBUG_DEV("Reducing current estimate %lld by factor %f", current_estimate.bps(), kInstantLossReduceFactor);
 
+		cached_instant_upper_bound_ = current_estimate * kInstantLossReduceFactor;
 
-		MS_DEBUG_DEV("Reducing current estimate %lld by factor %f", current_estimate.bps(), reduce_factor);
-
-		cached_instant_upper_bound_ = current_estimate * reduce_factor;
+		current_estimate_.loss_limited_bandwidth = cached_instant_upper_bound_.value();
 
 		MS_DEBUG_DEV("cached_instant_upper_bound_ %lld", cached_instant_upper_bound_->bps());
 
