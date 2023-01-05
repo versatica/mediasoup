@@ -316,13 +316,18 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
 	// in case we see that we have many outliers.
 	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < kDefaultRSquaredUpperBound) {
 		if (avg_r_squared < kDefaultRSquaredLowerBound) {
-			hypothesis_ = BandwidthUsage::kBwOverusing;
-			MS_DEBUG_DEV("slope, r_squared, avg_r_squared [%f,  %f, %f]", trend.slope, trend.r_squared, avg_r_squared);
-			MS_DEBUG_DEV("OverUsing!");
+			overuse_counter_++;
+			if (overuse_counter_ > 3) {
+				hypothesis_ = BandwidthUsage::kBwOverusing;
+				MS_DEBUG_DEV("slope, r_squared, avg_r_squared [%f,  %f, %f]", trend.slope, trend.r_squared, avg_r_squared);
+				MS_DEBUG_DEV("OverUsing!");
+				overuse_counter_ = 0;
+			}
 		} else  {
 			hypothesis_ = BandwidthUsage::kBwUnderusing;
 			MS_DEBUG_DEV("slope, r_squared, avg_r_squared [%f,  %f, %f]", trend.slope, trend.r_squared, avg_r_squared);
 			MS_DEBUG_DEV("HOLD");
+			overuse_counter_ = 0;
 		}
 
 		prev_trend_ = trend;
@@ -344,14 +349,12 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
     }
     overuse_counter_++;
     if (time_over_using_ > overusing_time_threshold_ && overuse_counter_ > 3) {
-		//if (time_over_using_ > overusing_time_threshold_) {
       if (trend.slope >= prev_trend_.slope) {
         time_over_using_ = 0;
         overuse_counter_ = 0;
 				hypothesis_ = BandwidthUsage::kBwOverusing;
 				if (hypothesis_ != prev_hypothesis)
 					MS_DEBUG_DEV("hypothesis_: BandwidthUsage::kBwOverusing");
-
       }
     }
   } else if (modified_trend < -threshold_) {

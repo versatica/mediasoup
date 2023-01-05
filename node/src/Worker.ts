@@ -70,7 +70,7 @@ export type WorkerSettings =
 	 *
 	 * NOTE: For advanced users only. An invalid value will make the worker crash.
 	 * Default value is
-	 * "WebRTC-Bwe-RobustThroughputEstimatorSettings/enabled:true/WebRTC-Bwe-AlrLimitedBackoff/Enabled/WebRTC-Bwe-LossBasedBweV2/SendingRateSmoothingFactor:0.6,InstantUpperBoundLossOffset:0.1/"
+	 * "WebRTC-Bwe-AlrLimitedBackoff/Enabled/WebRTC-Bwe-LossBasedBweV2/BwRampupUpperBoundFactor:1.1,TrendlineIntegrationEnabled:true/WebRTC-Bwe-RobustThroughputEstimatorSettings/enabled/"
 	 */
 	libwebrtcFieldTrials?: string;
 	/* eslint-enable max-len */

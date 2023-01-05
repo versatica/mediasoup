@@ -202,11 +202,11 @@ class LossBasedBweV2 {
 	DataRate max_bitrate_ = DataRate::PlusInfinity();
 	TimeDelta max_observation_duration_before_reset_ = TimeDelta::seconds(4);
 	double static constexpr kBwBalanceMultiplicator = 1.3;
-	double static constexpr kInstantLossDebounce = 3;
 	size_t instant_loss_debounce_counter_ = 0;
-	TimeDelta instant_loss_debounce_duration = TimeDelta::seconds(5);
-	Timestamp instant_loss_debounce_start = Timestamp::MinusInfinity();
-	float kInstantLossReduceFactor = 0.9;
+	TimeDelta kInstantLossDebounceDuration = TimeDelta::seconds(10);
+	Timestamp instant_loss_debounce_start_ = Timestamp::MinusInfinity();
+	Timestamp instant_loss_threshold_ = Timestamp::MinusInfinity();
+	float kInstantLossReduceFactor = 0.95;
 };
 
 } // namespace webrtc

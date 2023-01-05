@@ -163,8 +163,9 @@ void LossBasedBweV2::Reset() {
 	upper_link_capacity_ = DataRate::PlusInfinity();
 
 	instant_loss_debounce_counter_ = 0;
-	instant_loss_debounce_duration = TimeDelta::seconds(2);
-	instant_loss_debounce_start = Timestamp::MinusInfinity();
+	kInstantLossDebounceDuration   = TimeDelta::seconds(2);
+	instant_loss_debounce_start_   = Timestamp::MinusInfinity();
+	instant_loss_threshold_ = Timestamp::MinusInfinity();
 }
 
 bool LossBasedBweV2::IsEnabled() const {
@@ -987,10 +988,10 @@ void LossBasedBweV2::CalculateInstantUpperBound(DataRate sending_rate) {
 	DataRate instant_limit = max_bitrate_;
 	const double average_reported_loss_ratio = GetAverageReportedLossRatio();
 	auto now = Timestamp::ms(DepLibUV::GetTimeMsInt64());
-	if (instant_loss_debounce_start.IsFinite()) {
-		if (now - instant_loss_debounce_start > instant_loss_debounce_duration) {
-			instant_loss_debounce_counter_ = 0;
-			instant_loss_debounce_start = Timestamp::MinusInfinity();
+	if (instant_loss_debounce_start_.IsFinite()) {
+		if (average_reported_loss_ratio < config_->instant_upper_bound_loss_offset) {
+			instant_loss_debounce_start_ = Timestamp::MinusInfinity();
+			instant_loss_threshold_ = Timestamp::MinusInfinity();
 			MS_DEBUG_DEV("Resetting");
 		}
 	}
@@ -1003,94 +1004,90 @@ void LossBasedBweV2::CalculateInstantUpperBound(DataRate sending_rate) {
 
 		DataRate current_estimate = current_estimate_.loss_limited_bandwidth;
 
-		instant_loss_debounce_counter_ += 1;
-		auto reduce_debounce_time = TimeDelta::ms(config_->observation_duration_lower_bound.ms() * 20);
+		auto reduce_debounce_time = TimeDelta::ms(config_->observation_duration_lower_bound.ms() * 10);
 		// MS_NOTE: Here we create debounce mechanism, that must help in
-		// bursts smoothening. Initially we reduce to 85% of previous BW estimate,
-		// if that will not help after debounce counter, we will reduce further with f
-		// formula based on bw balance. If we do not continue to overshoot limit in half of the
-		// observation duration window size, we reset.
-		if (!instant_loss_debounce_start.IsFinite())
+		// bursts smoothening. We reduce by first time by 0.85 all further times
+		// we reduce by 0.95 for 10 seconds with throttling of 2.5 s. If that does not help
+		// we fall back to old mechanism with BW balance.
+		if (!instant_loss_debounce_start_.IsFinite())
 		{
-			instant_loss_debounce_start = now;
+			instant_loss_debounce_start_ = now;
+			instant_loss_threshold_ = now;
 			MS_DEBUG_DEV("First Instant Loss");
 
-			MS_DEBUG_DEV("Reducing current estimate %lld by factor %f", current_estimate.bps(), kInstantLossReduceFactor);
+			MS_DEBUG_DEV(
+				"Reducing current estimate %lld by factor %f",
+				current_estimate.bps(),
+				0.85);
+
+			cached_instant_upper_bound_ = current_estimate * 0.85;
+
+			current_estimate_.loss_limited_bandwidth = cached_instant_upper_bound_.value();
+
+			MS_DEBUG_DEV("cached_instant_upper_bound_ %lld", cached_instant_upper_bound_->bps());
+			return;
+		}
+
+		if ((now - instant_loss_threshold_) < reduce_debounce_time)
+		{
+			MS_DEBUG_DEV(
+				"Debouncing loss estimate decease as %lld < %lld",
+				(now - instant_loss_threshold_).ms(),
+				reduce_debounce_time.ms());
+			return;
+		} else if ((now - instant_loss_threshold_) > reduce_debounce_time && (now - instant_loss_debounce_start_ < kInstantLossDebounceDuration)) {
+			MS_DEBUG_DEV(
+				"Reducing current estimate %lld by factor %f", current_estimate.bps(), kInstantLossReduceFactor);
 
 			cached_instant_upper_bound_ = current_estimate * kInstantLossReduceFactor;
 
 			current_estimate_.loss_limited_bandwidth = cached_instant_upper_bound_.value();
 
 			MS_DEBUG_DEV("cached_instant_upper_bound_ %lld", cached_instant_upper_bound_->bps());
-			return ;
-		}
-
-		if ((now - instant_loss_debounce_start) < reduce_debounce_time && instant_loss_debounce_counter_ > 1)
-		{
-			MS_DEBUG_DEV(
-				"Debouncing loss estimate decease as %lld < %lld",
-				(now - instant_loss_debounce_start).ms(),
-				reduce_debounce_time.ms());
+			instant_loss_threshold_ = now;
 			return;
 		}
 
-		MS_DEBUG_DEV("Reducing current estimate %lld by factor %f", current_estimate.bps(), kInstantLossReduceFactor);
-
-		cached_instant_upper_bound_ = current_estimate * kInstantLossReduceFactor;
-
-		current_estimate_.loss_limited_bandwidth = cached_instant_upper_bound_.value();
-
-		MS_DEBUG_DEV("cached_instant_upper_bound_ %lld", cached_instant_upper_bound_->bps());
-
-		if (now - instant_loss_debounce_start > instant_loss_debounce_duration)
+		if (now - instant_loss_debounce_start_ > kInstantLossDebounceDuration)
 		{
-			instant_loss_debounce_counter_ = 0;
-			instant_loss_debounce_start    = Timestamp::MinusInfinity();
-			MS_DEBUG_DEV("Resetting");
-		}
-		else
-		{
-			instant_loss_debounce_start = now;
-			MS_DEBUG_DEV("Updating instant_loss_debounce_start");
-			return;
-		}
+			MS_DEBUG_DEV("Reducing by BW balance formula");
+			DataRate bandwidth_balance = config_->instant_upper_bound_bandwidth_balance;
 
-		DataRate bandwidth_balance = config_->instant_upper_bound_bandwidth_balance;
-
-		// MS_NOTE: In case of high sending rate the value of balance (75kbps) is too small,
-		// and leads to big BW drops even in the case of small loss ratio.
-		if (sending_rate.bps() > config_->instant_upper_bound_bandwidth_balance.bps() * 100)
-		{
-			bandwidth_balance = DataRate::bps((sending_rate.bps() / 100) * kBwBalanceMultiplicator);
-		}
-
-		instant_limit =
-			bandwidth_balance / (average_reported_loss_ratio - config_->instant_upper_bound_loss_offset);
-
-		MS_DEBUG_DEV(
-			"Instant Limit!, BW balance %" PRIi64 ", instant_limit %" PRIi64
-			", average_reported_loss_ratio %f, diff: %f, sending rate: %lld",
-			bandwidth_balance.bps(),
-			instant_limit.IsFinite() ? instant_limit.bps() : 0,
-			average_reported_loss_ratio,
-			average_reported_loss_ratio - config_->instant_upper_bound_loss_offset,
-			sending_rate.bps());
-
-		if (average_reported_loss_ratio > config_->high_loss_rate_threshold)
-		{
-			instant_limit = std::min(
-				instant_limit,
-				DataRate::kbps(std::max(
-				  static_cast<double>(min_bitrate_.kbps()),
-				  config_->bandwidth_cap_at_high_loss_rate.kbps() -
-				    config_->slope_of_bwe_high_loss_func * average_reported_loss_ratio)));
-		}
-
-		if (IsBandwidthLimitedDueToLoss())
-		{
-			if (IsValid(upper_link_capacity_) && config_->bound_by_upper_link_capacity_when_loss_limited)
+			// MS_NOTE: In case of high sending rate the value of balance (75kbps) is too small,
+			// and leads to big BW drops even in the case of small loss ratio.
+			if (sending_rate.bps() > config_->instant_upper_bound_bandwidth_balance.bps() * 100)
 			{
-				instant_limit = std::min(instant_limit, upper_link_capacity_);
+				bandwidth_balance = DataRate::bps((sending_rate.bps() / 100) * kBwBalanceMultiplicator);
+			}
+
+			instant_limit =
+				bandwidth_balance / (average_reported_loss_ratio - config_->instant_upper_bound_loss_offset);
+
+			MS_DEBUG_DEV(
+				"Instant Limit!, BW balance %" PRIi64 ", instant_limit %" PRIi64
+				", average_reported_loss_ratio %f, diff: %f, sending rate: %lld",
+				bandwidth_balance.bps(),
+				instant_limit.IsFinite() ? instant_limit.bps() : 0,
+				average_reported_loss_ratio,
+				average_reported_loss_ratio - config_->instant_upper_bound_loss_offset,
+				sending_rate.bps());
+
+			if (average_reported_loss_ratio > config_->high_loss_rate_threshold)
+			{
+				instant_limit = std::min(
+					instant_limit,
+					DataRate::kbps(std::max(
+					  static_cast<double>(min_bitrate_.kbps()),
+					  config_->bandwidth_cap_at_high_loss_rate.kbps() -
+					    config_->slope_of_bwe_high_loss_func * average_reported_loss_ratio)));
+			}
+
+			if (IsBandwidthLimitedDueToLoss())
+			{
+				if (IsValid(upper_link_capacity_) && config_->bound_by_upper_link_capacity_when_loss_limited)
+				{
+					instant_limit = std::min(instant_limit, upper_link_capacity_);
+				}
 			}
 		}
 	}
