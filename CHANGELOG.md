@@ -4,6 +4,7 @@
 ### NEXT
 
 * Require Node.js >= 16 (PR #973).
+* Update NPM deps.
 
 
 ### 3.11.4
