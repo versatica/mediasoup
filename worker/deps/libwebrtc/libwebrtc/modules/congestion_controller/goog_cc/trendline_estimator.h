@@ -141,6 +141,7 @@ class TrendlineEstimator : public DelayIncreaseDetectorInterface {
 	RegressionResult prev_trend_;
   double time_over_using_;
   int overuse_counter_;
+	int r_squared_overuse_counter_;
   BandwidthUsage hypothesis_;
   BandwidthUsage hypothesis_predicted_;
   NetworkStatePredictor* network_state_predictor_;

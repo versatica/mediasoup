@@ -30,8 +30,8 @@ namespace {
 // Parameters for linear least squares fit of regression line to noisy data.
 constexpr double kDefaultTrendlineSmoothingCoeff = 0.8;
 constexpr double kDefaultTrendlineThresholdGain = 4.0;
-constexpr double kDefaultRSquaredUpperBound = 0.15;
-constexpr double kDefaultRSquaredLowerBound = 0.03;
+constexpr double kDefaultRSquaredUpperBound = 0.2;
+constexpr double kDefaultRSquaredLowerBound = 0.02;
 const char kBweWindowSizeInPacketsExperiment[] =
     "WebRTC-BweWindowSizeInPackets";
 
@@ -202,6 +202,7 @@ TrendlineEstimator::TrendlineEstimator(
       prev_trend_(0.0, 0.0),
       time_over_using_(-1),
       overuse_counter_(0),
+	  	r_squared_overuse_counter_(0),
       hypothesis_(BandwidthUsage::kBwNormal),
       hypothesis_predicted_(BandwidthUsage::kBwNormal),
       network_state_predictor_(network_state_predictor) {
@@ -316,18 +317,18 @@ void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, doub
 	// in case we see that we have many outliers.
 	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < kDefaultRSquaredUpperBound) {
 		if (avg_r_squared < kDefaultRSquaredLowerBound) {
-			overuse_counter_++;
-			if (overuse_counter_ > 3) {
+			r_squared_overuse_counter_++;
+			if (r_squared_overuse_counter_ > 3) {
 				hypothesis_ = BandwidthUsage::kBwOverusing;
 				MS_DEBUG_DEV("slope, r_squared, avg_r_squared [%f,  %f, %f]", trend.slope, trend.r_squared, avg_r_squared);
 				MS_DEBUG_DEV("OverUsing!");
-				overuse_counter_ = 0;
+				r_squared_overuse_counter_ = 0;
 			}
 		} else  {
 			hypothesis_ = BandwidthUsage::kBwUnderusing;
 			MS_DEBUG_DEV("slope, r_squared, avg_r_squared [%f,  %f, %f]", trend.slope, trend.r_squared, avg_r_squared);
 			MS_DEBUG_DEV("HOLD");
-			overuse_counter_ = 0;
+			r_squared_overuse_counter_ = 0;
 		}
 
 		prev_trend_ = trend;
