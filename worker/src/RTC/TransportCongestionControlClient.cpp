@@ -478,18 +478,25 @@ namespace RTC
 	{
 		MS_DEBUG_DEV("< BWE Stats >: ");
 		MS_DEBUG_DEV("time: %lld", stats.time.ms());
-		MS_DEBUG_DEV("estimated_bitrate: %lld", stats.estimated_bitrate.value_or(webrtc::DataRate::Zero()).bps());
+		MS_DEBUG_DEV(
+		  "estimated_bitrate: %lld", stats.estimated_bitrate.value_or(webrtc::DataRate::Zero()).bps());
 		MS_DEBUG_DEV("trend.slope: %f", stats.trend.slope);
 		MS_DEBUG_DEV("trend.r_squared: %f", stats.trend.r_squared);
 		MS_DEBUG_DEV("rtt: %lld", stats.rtt.ms());
 		MS_DEBUG_DEV("rate control State: %d", stats.rate_control_state);
 		MS_DEBUG_DEV("alr: %d", stats.in_alr);
-		MS_DEBUG_DEV("acknowledged_bitrate: %lld",stats.acknowledged_bitrate.value_or(webrtc::DataRate::Zero()).bps());
+		MS_DEBUG_DEV(
+		  "acknowledged_bitrate: %lld",
+		  stats.acknowledged_bitrate.value_or(webrtc::DataRate::Zero()).bps());
 		MS_DEBUG_DEV("< Loss Estimator>: ");
 		MS_DEBUG_DEV("inherent_loss: %f", stats.loss_estimator_state.inherent_loss);
 		MS_DEBUG_DEV("avg_loss: %f", stats.loss_estimator_state.avg_loss);
-		MS_DEBUG_DEV("bandwidth_estimate: %lld", stats.loss_estimator_state.bandwidth_estimate.value_or(webrtc::DataRate::Zero()).bps());
-		MS_DEBUG_DEV("sending_rate: %lld", stats.loss_estimator_state.sending_rate.value_or(webrtc::DataRate::Zero()).bps());
+		MS_DEBUG_DEV(
+		  "bandwidth_estimate: %lld",
+		  stats.loss_estimator_state.bandwidth_estimate.value_or(webrtc::DataRate::Zero()).bps());
+		MS_DEBUG_DEV(
+		  "sending_rate: %lld",
+		  stats.loss_estimator_state.sending_rate.value_or(webrtc::DataRate::Zero()).bps());
 	}
 
 	void TransportCongestionControlClient::OnTargetTransferRate(webrtc::TargetTransferRate targetTransferRate)
