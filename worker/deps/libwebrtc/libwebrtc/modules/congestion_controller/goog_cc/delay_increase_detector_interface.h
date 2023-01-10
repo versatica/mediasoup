@@ -36,6 +36,19 @@ class DelayIncreaseDetectorInterface {
                       bool calculated_deltas) = 0;
 
   virtual BandwidthUsage State() const = 0;
+	struct RegressionResult {
+		RegressionResult(double slope,
+			               double r_squared)
+			: slope(slope),
+			  r_squared(r_squared) {}
+		RegressionResult()
+			: slope(0.0),
+			  r_squared(0.0) {}
+		double slope;
+		double r_squared;
+	};
+
+	virtual RegressionResult GetTrend() = 0;
 };
 
 }  // namespace webrtc

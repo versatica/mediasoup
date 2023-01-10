@@ -63,9 +63,8 @@ class AimdRateControl {
   double GetNearMaxIncreaseRateBpsPerSecond() const;
   // Returns the expected time between overuse signals (assuming steady state).
   TimeDelta GetExpectedBandwidthPeriod() const;
-
+	RateControlState GetRateControlState() const;
  private:
-  enum class RateControlState { kRcHold, kRcIncrease, kRcDecrease };
 
   friend class GoogCcStatePrinter;
   // Update the target bitrate based on, among other things, the current rate

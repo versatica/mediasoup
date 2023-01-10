@@ -15,6 +15,8 @@
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
+#include "modules/congestion_controller/goog_cc/delay_increase_detector_interface.h"
+#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 
 #include <absl/types/optional.h>
 #include <stdint.h>
@@ -36,6 +38,30 @@ struct BitrateAllocationLimits {
   // rate.
   DataRate max_padding_rate = DataRate::Zero();
 };
+
+struct LossEstimatorState {
+	~LossEstimatorState() = default;
+	absl::optional<DataRate> bandwidth_estimate = DataRate::Zero();
+	double inherent_loss;
+	double avg_loss;
+	absl::optional<DataRate> sending_rate = DataRate::Zero();
+};
+
+struct BweStats {
+	BweStats();
+	BweStats(const BweStats&);
+	~BweStats();
+	Timestamp time = Timestamp::PlusInfinity();
+	absl::optional<DataRate> estimated_bitrate;
+	absl::optional<DataRate> acknowledged_bitrate;
+	RateControlState rate_control_state;
+	DelayIncreaseDetectorInterface::RegressionResult trend;
+	TimeDelta rtt = TimeDelta::ms(0);
+	bool in_alr = false;
+	LossEstimatorState loss_estimator_state;
+};
+
+
 
 // Use StreamsConfig for information about streams that is required for specific
 // adjustments to the algorithms in network controllers. Especially useful

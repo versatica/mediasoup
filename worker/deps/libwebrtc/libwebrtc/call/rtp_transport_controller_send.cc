@@ -143,6 +143,12 @@ void RtpTransportControllerSend::RegisterTargetTransferRateObserver(
     MaybeCreateControllers();
 }
 
+void RtpTransportControllerSend::RegisterBweStatsTracer(webrtc::BweStatsTracer* tracer) {
+	MS_ASSERT(stats_tracer_ == nullptr, "stats_tracer already set");
+
+	stats_tracer_ = tracer;
+}
+
 void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
   MS_DEBUG_DEV("<<<<< network_available:%s", network_available ? "true" : "false");
 
@@ -242,6 +248,7 @@ void RtpTransportControllerSend::OnTransportFeedback(
     PostUpdates(controller_->OnTransportPacketsFeedback(*feedback_msg));
   pacer_.UpdateOutstandingData(
       transport_feedback_adapter_.GetOutstandingData().bytes());
+	stats_tracer_->OnBweStats(controller_->GetBweStats());
 }
 
 void RtpTransportControllerSend::OnRemoteNetworkEstimate(

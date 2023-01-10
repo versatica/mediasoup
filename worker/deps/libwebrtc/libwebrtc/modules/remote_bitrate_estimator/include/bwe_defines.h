@@ -41,7 +41,7 @@ enum BweNames {
   kBweNamesMax = 4
 };
 
-enum RateControlState { kRcHold, kRcIncrease, kRcDecrease };
+enum class RateControlState { kRcHold, kRcIncrease, kRcDecrease };
 
 struct RateControlInput {
   RateControlInput(BandwidthUsage bw_state,

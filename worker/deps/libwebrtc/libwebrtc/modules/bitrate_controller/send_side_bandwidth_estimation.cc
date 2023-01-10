@@ -282,6 +282,10 @@ void SendSideBandwidthEstimation::SetBitrates(
   }
 }
 
+LossEstimatorState SendSideBandwidthEstimation::GetLossEstimatorState() const {
+	return loss_based_bandwidth_estimator_v2_.GetState();
+}
+
 void SendSideBandwidthEstimation::SetSendBitrate(DataRate bitrate,
                                                  Timestamp at_time) {
   MS_DEBUG_DEV("bitrate: %lld", bitrate.bps());

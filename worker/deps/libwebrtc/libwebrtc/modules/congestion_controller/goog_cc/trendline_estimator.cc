@@ -52,7 +52,7 @@ size_t ReadTrendlineFilterWindowSize(const WebRtcKeyValueConfig* key_value_confi
 	return TrendlineEstimatorSettings::kDefaultTrendlineWindowSize;
 }
 
-absl::optional<TrendlineEstimator::RegressionResult> LinearFitSlope(
+absl::optional<DelayIncreaseDetectorInterface::RegressionResult> LinearFitSlope(
     const std::deque<TrendlineEstimator::PacketTiming>& packets) {
   // RTC_DCHECK(packets.size() >= 2);
   // Compute the "center of mass".
@@ -90,7 +90,7 @@ absl::optional<TrendlineEstimator::RegressionResult> LinearFitSlope(
 
 	double r_squared = r_numerator / r_denominator;
 
-  return TrendlineEstimator::RegressionResult(b1, r_squared);
+  return DelayIncreaseDetectorInterface::RegressionResult(b1, r_squared);
 }
 
 absl::optional<double> ComputeSlopeCap(
@@ -247,7 +247,7 @@ void TrendlineEstimator::UpdateTrendline(double recv_delta_ms,
 
   // Simple linear regression.
   auto trend = prev_trend_;
-	RegressionResult result;
+	DelayIncreaseDetectorInterface::RegressionResult result;
 	double avg_r_squared {0.0};
   if (delay_hist_.size() == settings_.window_size) {
     // Update trend_ if it is possible to fit a line to the data. The delay
@@ -262,6 +262,7 @@ void TrendlineEstimator::UpdateTrendline(double recv_delta_ms,
 				r_squared_hist_.pop_front();
 		}
 		avg_r_squared = getAverage(r_squared_hist_);
+		trend.r_squared = avg_r_squared;
     if (settings_.enable_cap) {
       absl::optional<double> cap = ComputeSlopeCap(delay_hist_, settings_);
       // We only use the cap to filter out overuse detections, not
@@ -296,7 +297,12 @@ BandwidthUsage TrendlineEstimator::State() const {
   return network_state_predictor_ ? hypothesis_predicted_ : hypothesis_;
 }
 
-void TrendlineEstimator::Detect(TrendlineEstimator::RegressionResult trend, double ts_delta, int64_t now_ms, double avg_r_squared) {
+DelayIncreaseDetectorInterface::RegressionResult TrendlineEstimator::GetTrend()
+{
+	return prev_trend_;
+}
+
+void TrendlineEstimator::Detect(DelayIncreaseDetectorInterface::RegressionResult trend, double ts_delta, int64_t now_ms, double avg_r_squared) {
   if (num_of_deltas_ < 2) {
     hypothesis_ = BandwidthUsage::kBwNormal;
     return;

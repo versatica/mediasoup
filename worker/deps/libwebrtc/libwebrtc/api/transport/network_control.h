@@ -32,6 +32,13 @@ class TargetTransferRateObserver {
   virtual void OnStartRateUpdate(DataRate) {}
 };
 
+class BweStatsTracer {
+public:
+	virtual ~BweStatsTracer() = default;
+	virtual void OnBweStats(BweStats) = 0;
+};
+
+
 // Configuration sent to factory create function. The parameters here are
 // optional to use for a network controller implementation.
 struct NetworkControllerConfig {
@@ -89,6 +96,7 @@ class NetworkControllerInterface {
       TransportPacketsFeedback) = 0;
   // Called with network state estimate updates.
   virtual NetworkControlUpdate OnNetworkStateEstimate(NetworkStateEstimate) = 0;
+	virtual BweStats GetBweStats() = 0;
 };
 
 // NetworkControllerFactoryInterface is an interface for creating a network

@@ -116,6 +116,7 @@ class SendSideBandwidthEstimation {
                                 BandwidthUsage delay_detector_state,
                                 absl::optional<DataRate> probe_bitrate,
                                 DataRate upper_link_capacity);
+	LossEstimatorState GetLossEstimatorState() const;
 
  private:
   friend class GoogCcStatePrinter;

@@ -98,18 +98,7 @@ class TrendlineEstimator : public DelayIncreaseDetectorInterface {
     double raw_delay_ms;
   };
 
-	struct RegressionResult {
-		RegressionResult(double slope,
-			               double r_squared)
-			: slope(slope),
-			  r_squared(r_squared) {}
-		RegressionResult()
-			: slope(0.0),
-			  r_squared(0.0) {}
-		double slope;
-		double r_squared;
-	};
-
+	DelayIncreaseDetectorInterface::RegressionResult GetTrend() override;
  private:
   friend class GoogCcStatePrinter;
   void Detect(RegressionResult trend, double ts_delta, int64_t now_ms, double avg_r_squared);
@@ -138,7 +127,7 @@ class TrendlineEstimator : public DelayIncreaseDetectorInterface {
   double threshold_;
   double prev_modified_trend_;
   int64_t last_update_ms_;
-	RegressionResult prev_trend_;
+	DelayIncreaseDetectorInterface::RegressionResult prev_trend_;
   double time_over_using_;
   int overuse_counter_;
 	int r_squared_overuse_counter_;

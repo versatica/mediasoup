@@ -52,6 +52,8 @@ class LossBasedBweV2 {
 
 		~LossBasedBweV2() = default;
 
+		LossEstimatorState GetState() const;
+
 		bool IsEnabled() const;
 		// Returns true iff a BWE can be calculated, i.e., the estimator has been
 		// initialized with a BWE and then has received enough `PacketResult`s.
@@ -207,6 +209,7 @@ class LossBasedBweV2 {
 	Timestamp instant_loss_debounce_start_ = Timestamp::MinusInfinity();
 	Timestamp instant_loss_threshold_ = Timestamp::MinusInfinity();
 	float kInstantLossReduceFactor = 0.95;
+	DataRate last_sending_rate_ = DataRate::PlusInfinity();
 };
 
 } // namespace webrtc

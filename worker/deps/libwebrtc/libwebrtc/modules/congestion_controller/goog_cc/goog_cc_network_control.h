@@ -69,6 +69,8 @@ class GoogCcNetworkController : public NetworkControllerInterface {
   NetworkControlUpdate OnNetworkStateEstimate(
       NetworkStateEstimate msg) override;
 
+	BweStats GetBweStats() override;
+
   NetworkControlUpdate GetNetworkState(Timestamp at_time) const;
 
  private:

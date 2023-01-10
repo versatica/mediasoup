@@ -122,6 +122,10 @@ void AimdRateControl::SetStartBitrate(DataRate start_bitrate) {
   bitrate_is_initialized_ = true;
 }
 
+RateControlState AimdRateControl::GetRateControlState() const {
+	return rate_control_state_;
+};
+
 void AimdRateControl::SetMinBitrate(DataRate min_bitrate) {
   MS_DEBUG_DEV("[min_bitrate:%" PRIi64 "]", min_bitrate.bps());
 

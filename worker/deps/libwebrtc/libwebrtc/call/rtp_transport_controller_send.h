@@ -61,6 +61,8 @@ class RtpTransportControllerSend final
   void SetPacingFactor(float pacing_factor) override;
   void RegisterTargetTransferRateObserver(
       TargetTransferRateObserver* observer) override;
+	void RegisterBweStatsTracer(
+		BweStatsTracer* tracer) override;
   void OnNetworkAvailability(bool network_available) override;
   RtcpBandwidthObserver* GetBandwidthObserver() override;
   void EnablePeriodicAlrProbing(bool enable) override;
@@ -101,6 +103,8 @@ class RtpTransportControllerSend final
   PacedSender pacer_;
 
   TargetTransferRateObserver* observer_;
+
+	BweStatsTracer* stats_tracer_;
 
   NetworkControllerFactoryInterface* const controller_factory_override_;
 

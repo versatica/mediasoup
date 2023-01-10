@@ -745,6 +745,15 @@ bool LossBasedBweV2::IsConfigValid() const {
   return valid;
 }
 
+LossEstimatorState LossBasedBweV2::GetState() const {
+	LossEstimatorState state;
+	state.inherent_loss = current_estimate_.inherent_loss;
+	state.avg_loss = GetAverageReportedLossRatio();
+	state.bandwidth_estimate = current_estimate_.loss_limited_bandwidth;
+	state.sending_rate = last_sending_rate_;
+	return state;
+}
+
 double LossBasedBweV2::GetAverageReportedLossRatio() const {
   if (num_observations_ <= 0) {
     return 0.0;
@@ -1194,21 +1203,21 @@ bool LossBasedBweV2::PushBackObservation(
   }
 
   last_send_time_most_recent_observation_ = last_send_time;
-	DataRate sending_rate = GetSendingRate(partial_observation_.size / observation_duration);
+	last_sending_rate_ = GetSendingRate(partial_observation_.size / observation_duration);
 
   Observation observation;
   observation.num_packets = partial_observation_.num_packets;
   observation.num_lost_packets = partial_observation_.num_lost_packets;
   observation.num_received_packets =
       observation.num_packets - observation.num_lost_packets;
-  observation.sending_rate = sending_rate;
+  observation.sending_rate = last_sending_rate_;
   observation.id = num_observations_++;
   observations_[observation.id % config_->observation_window_size] =
       observation;
 
   partial_observation_ = PartialObservation();
 
-  CalculateInstantUpperBound(sending_rate);
+  CalculateInstantUpperBound(last_sending_rate_);
 
 	// MS_NOTE Here we reset loss estimator if there was not traffic in
 	// max_observation_duration_before_reset_, otherwise, we will stuck
