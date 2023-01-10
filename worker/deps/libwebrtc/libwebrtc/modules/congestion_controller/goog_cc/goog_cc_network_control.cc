@@ -154,6 +154,7 @@ BweStats GoogCcNetworkController::GetBweStats()
 		stats.rtt = bandwidth_estimation_->round_trip_time();
 		stats.loss_estimator_state = bandwidth_estimation_->GetLossEstimatorState();
 		stats.in_alr = alr_detector_->GetApplicationLimitedRegionStartTime().has_value();
+		stats.probe_bitrate = probe_bitrate_estimator_->last_estimate();
 		return stats;
 }
 

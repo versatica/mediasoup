@@ -59,6 +59,7 @@ struct BweStats {
 	TimeDelta rtt = TimeDelta::ms(0);
 	bool in_alr = false;
 	LossEstimatorState loss_estimator_state;
+	absl::optional<DataRate> probe_bitrate;
 };
 
 

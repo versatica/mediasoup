@@ -488,6 +488,7 @@ namespace RTC
 		MS_DEBUG_DEV(
 		  "acknowledged_bitrate: %lld",
 		  stats.acknowledged_bitrate.value_or(webrtc::DataRate::Zero()).bps());
+		MS_DEBUG_DEV("probe_bitrate: %lld", stats.probe_bitrate.value_or(webrtc::DataRate::Zero()).bps());
 		MS_DEBUG_DEV("< Loss Estimator>: ");
 		MS_DEBUG_DEV("inherent_loss: %f", stats.loss_estimator_state.inherent_loss);
 		MS_DEBUG_DEV("avg_loss: %f", stats.loss_estimator_state.avg_loss);
