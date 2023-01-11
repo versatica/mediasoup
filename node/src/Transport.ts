@@ -56,7 +56,7 @@ export type TransportTuple =
 /**
  * Valid types for 'trace' event.
  */
-export type TransportTraceEventType = 'probation' | 'bwe';
+export type TransportTraceEventType = 'probation' | 'bwe' | 'bweStats';
 
 /**
  * 'trace' event data.

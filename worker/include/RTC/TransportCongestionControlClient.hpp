@@ -50,6 +50,9 @@ namespace RTC
 			  RTC::TransportCongestionControlClient* tccClient,
 			  RTC::RtpPacket* packet,
 			  const webrtc::PacedPacketInfo& pacingInfo) = 0;
+			virtual void OnTransportCongestionControlClientBweStats(
+			  const webrtc::BweStats& bweStats,
+			  RTC::TransportCongestionControlClient::Bitrates& bitrates) = 0;
 		};
 
 	public:

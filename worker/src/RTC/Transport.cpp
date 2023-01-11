@@ -440,6 +440,8 @@ namespace RTC
 			traceEventTypes.emplace_back("probation");
 		if (this->traceEventTypes.bwe)
 			traceEventTypes.emplace_back("bwe");
+		if (this->traceEventTypes.bweStats)
+			traceEventTypes.emplace_back("bweStats");
 
 		if (!traceEventTypes.empty())
 		{
@@ -1288,11 +1290,12 @@ namespace RTC
 						MS_THROW_TYPE_ERROR("wrong type (not a string)");
 
 					std::string typeStr = type.get<std::string>();
-
 					if (typeStr == "probation")
 						newTraceEventTypes.probation = true;
 					if (typeStr == "bwe")
 						newTraceEventTypes.bwe = true;
+					if (typeStr == "bweStats")
+						newTraceEventTypes.bweStats = true;
 				}
 
 				this->traceEventTypes = newTraceEventTypes;
@@ -2940,6 +2943,45 @@ namespace RTC
 
 		// May emit 'trace' event.
 		EmitTraceEventBweType(bitrates);
+	}
+
+	inline void Transport::OnTransportCongestionControlClientBweStats(
+	  const webrtc::BweStats& bweStats, RTC::TransportCongestionControlClient::Bitrates& bitrates)
+	{
+		MS_TRACE();
+
+		if (!this->traceEventTypes.bweStats)
+			return;
+
+		json data = json::object();
+
+		data["type"]      = "bweStats";
+		data["timestamp"] = bweStats.time.ms();
+		data["direction"] = "out";
+		data["info"]["estimatedBitrate"] =
+		  bweStats.estimated_bitrate.value_or(webrtc::DataRate::Zero()).bps();
+		data["info"]["delay"]["slope"]            = bweStats.trend.slope;
+		data["info"]["delay"]["rSquared"]         = bweStats.trend.r_squared;
+		data["info"]["delay"]["rtt"]              = bweStats.rtt.ms();
+		data["info"]["delay"]["rateControlState"] = bweStats.rate_control_state;
+		data["info"]["alr"]                       = bweStats.in_alr;
+		data["info"]["probe"]["estimatedBitrate"] =
+		  bweStats.probe_bitrate.value_or(webrtc::DataRate::Zero()).bps();
+		data["info"]["loss"]["inherent"] = bweStats.loss_estimator_state.inherent_loss;
+		data["info"]["loss"]["avg"]      = bweStats.loss_estimator_state.avg_loss;
+		data["info"]["loss"]["estimatedBitrate"] =
+		  bweStats.loss_estimator_state.bandwidth_estimate.value_or(webrtc::DataRate::Zero()).bps();
+		data["info"]["loss"]["sendingRate"] =
+		  bweStats.loss_estimator_state.sending_rate.value_or(webrtc::DataRate::Zero()).bps();
+		data["info"]["desiredBitrate"]          = bitrates.desiredBitrate;
+		data["info"]["effectiveDesiredBitrate"] = bitrates.effectiveDesiredBitrate;
+		data["info"]["minBitrate"]              = bitrates.minBitrate;
+		data["info"]["maxBitrate"]              = bitrates.maxBitrate;
+		data["info"]["startBitrate"]            = bitrates.startBitrate;
+		data["info"]["maxPaddingBitrate"]       = bitrates.maxPaddingBitrate;
+		data["info"]["availableBitrate"]        = bitrates.availableBitrate;
+
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(
