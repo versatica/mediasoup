@@ -149,8 +149,7 @@ BweStats GoogCcNetworkController::GetBweStats()
 		stats.time = Timestamp::ms(DepLibUV::GetTimeMsInt64());
 		stats.estimated_bitrate = bandwidth_estimation_->target_rate();
 		stats.acknowledged_bitrate = acknowledged_bitrate_estimator_->bitrate();
-		stats.rate_control_state = delay_based_bwe_->GetRateControlState();
-		stats.trend = delay_based_bwe_->GetTrend();
+		stats.delay = delay_based_bwe_->GetState();
 		stats.rtt = bandwidth_estimation_->round_trip_time();
 		stats.loss_estimator_state = bandwidth_estimation_->GetLossEstimatorState();
 		stats.in_alr = alr_detector_->GetApplicationLimitedRegionStartTime().has_value();

@@ -84,12 +84,7 @@ class DelayBasedBwe {
                           absl::optional<DataRate> link_capacity);
   DataRate last_estimate() const { return prev_bitrate_; }
   BandwidthUsage last_state() const { return prev_state_; }
-	RateControlState GetRateControlState() const {
-		return rate_control_.GetRateControlState();
-	}
-	DelayIncreaseDetectorInterface::RegressionResult GetTrend() const {
-		return active_delay_detector_->GetTrend();
-	}
+	DelayBasedBweState GetState() const;
  private:
   friend class GoogCcStatePrinter;
   void IncomingPacketFeedback(const PacketResult& packet_feedback,

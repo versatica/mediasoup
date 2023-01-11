@@ -297,11 +297,6 @@ BandwidthUsage TrendlineEstimator::State() const {
   return network_state_predictor_ ? hypothesis_predicted_ : hypothesis_;
 }
 
-DelayIncreaseDetectorInterface::RegressionResult TrendlineEstimator::GetTrend()
-{
-	return prev_trend_;
-}
-
 void TrendlineEstimator::Detect(DelayIncreaseDetectorInterface::RegressionResult trend, double ts_delta, int64_t now_ms, double avg_r_squared) {
   if (num_of_deltas_ < 2) {
     hypothesis_ = BandwidthUsage::kBwNormal;

@@ -2960,13 +2960,19 @@ namespace RTC
 		data["direction"] = "out";
 		data["info"]["estimatedBitrate"] =
 		  bweStats.estimated_bitrate.value_or(webrtc::DataRate::Zero()).bps();
-		data["info"]["delay"]["slope"]            = bweStats.trend.slope;
-		data["info"]["delay"]["rSquared"]         = bweStats.trend.r_squared;
-		data["info"]["delay"]["rtt"]              = bweStats.rtt.ms();
-		data["info"]["delay"]["rateControlState"] = bweStats.rate_control_state;
-		data["info"]["alr"]                       = bweStats.in_alr;
+		data["info"]["delay"]["slope"]              = bweStats.delay.trend.slope;
+		data["info"]["delay"]["rSquared"]           = bweStats.delay.trend.r_squared;
+		data["info"]["delay"]["threshold"]          = bweStats.delay.threshold;
+		data["info"]["delay"]["rtt"]                = bweStats.rtt.ms();
+		data["info"]["delay"]["rateControlState"]   = bweStats.delay.rate_control_state;
+		data["info"]["delay"]["delayDetectorState"] = bweStats.delay.delay_detector_state;
+		data["info"]["alr"]                         = bweStats.in_alr;
 		data["info"]["probe"]["estimatedBitrate"] =
 		  bweStats.probe_bitrate.value_or(webrtc::DataRate::Zero()).bps();
+		data["info"]["ackBitrate"] =
+		  bweStats.acknowledged_bitrate.value_or(webrtc::DataRate::Zero()).bps();
+
+		bweStats.probe_bitrate.value_or(webrtc::DataRate::Zero()).bps();
 		data["info"]["loss"]["inherent"] = bweStats.loss_estimator_state.inherent_loss;
 		data["info"]["loss"]["avg"]      = bweStats.loss_estimator_state.avg_loss;
 		data["info"]["loss"]["estimatedBitrate"] =
@@ -2979,7 +2985,6 @@ namespace RTC
 		data["info"]["maxBitrate"]              = bitrates.maxBitrate;
 		data["info"]["startBitrate"]            = bitrates.startBitrate;
 		data["info"]["maxPaddingBitrate"]       = bitrates.maxPaddingBitrate;
-		data["info"]["availableBitrate"]        = bitrates.availableBitrate;
 
 		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}

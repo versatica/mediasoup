@@ -49,6 +49,7 @@ class DelayIncreaseDetectorInterface {
 	};
 
 	virtual RegressionResult GetTrend() = 0;
+	virtual double GetThreshold() = 0;
 };
 
 }  // namespace webrtc

@@ -47,6 +47,13 @@ struct LossEstimatorState {
 	absl::optional<DataRate> sending_rate = DataRate::Zero();
 };
 
+struct DelayBasedBweState {
+	RateControlState rate_control_state;
+	DelayIncreaseDetectorInterface::RegressionResult trend;
+	BandwidthUsage delay_detector_state;
+	double threshold;
+};
+
 struct BweStats {
 	BweStats();
 	BweStats(const BweStats&);
@@ -54,8 +61,7 @@ struct BweStats {
 	Timestamp time = Timestamp::PlusInfinity();
 	absl::optional<DataRate> estimated_bitrate;
 	absl::optional<DataRate> acknowledged_bitrate;
-	RateControlState rate_control_state;
-	DelayIncreaseDetectorInterface::RegressionResult trend;
+	DelayBasedBweState delay;
 	TimeDelta rtt = TimeDelta::ms(0);
 	bool in_alr = false;
 	LossEstimatorState loss_estimator_state;

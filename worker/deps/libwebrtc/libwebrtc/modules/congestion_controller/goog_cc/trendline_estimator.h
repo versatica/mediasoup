@@ -98,7 +98,16 @@ class TrendlineEstimator : public DelayIncreaseDetectorInterface {
     double raw_delay_ms;
   };
 
-	DelayIncreaseDetectorInterface::RegressionResult GetTrend() override;
+	//DelayIncreaseDetectorInterface::RegressionResult GetTrend() override;
+	DelayIncreaseDetectorInterface::RegressionResult GetTrend() override
+	{
+		return prev_trend_;
+	}
+
+	double GetThreshold() override
+	{
+		return threshold_;
+	}
  private:
   friend class GoogCcStatePrinter;
   void Detect(RegressionResult trend, double ts_delta, int64_t now_ms, double avg_r_squared);

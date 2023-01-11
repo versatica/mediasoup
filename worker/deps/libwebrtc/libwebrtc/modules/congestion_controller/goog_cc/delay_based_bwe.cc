@@ -293,4 +293,14 @@ TimeDelta DelayBasedBwe::GetExpectedBwePeriod() const {
   return rate_control_.GetExpectedBandwidthPeriod();
 }
 
+DelayBasedBweState DelayBasedBwe::GetState() const
+{
+	DelayBasedBweState state;
+	state.rate_control_state = rate_control_.GetRateControlState();
+	state.delay_detector_state = prev_state_;
+	state.trend = active_delay_detector_->GetTrend();
+	state.threshold = active_delay_detector_->GetThreshold();
+	return state;
+}
+
 }  // namespace webrtc
