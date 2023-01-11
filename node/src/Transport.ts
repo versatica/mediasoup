@@ -79,7 +79,7 @@ export type TransportTraceEventBweStatsInfo = {
 		avg: number;
 		estimatedBitrate: number;
 		sendingRate: number;
-	}
+	};
 	alr: boolean;
 	ackBitrate: number;
 	desiredBitrate: number;
@@ -89,7 +89,7 @@ export type TransportTraceEventBweStatsInfo = {
 	startBitrate: number;
 	maxPaddingBitrate: number;
 	sendingRate: number;
-}
+};
 
 /**
  * 'trace' event data.
