@@ -2985,6 +2985,7 @@ namespace RTC
 		data["info"]["maxBitrate"]              = bitrates.maxBitrate;
 		data["info"]["startBitrate"]            = bitrates.startBitrate;
 		data["info"]["maxPaddingBitrate"]       = bitrates.maxPaddingBitrate;
+		data["info"]["sendingRate"]             = sendTransmission.GetRate(DepLibUV::GetTimeMsInt64());
 
 		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
