@@ -59,7 +59,7 @@ export type TransportTuple =
 export type TransportTraceEventType = 'probation' | 'bwe' | 'bweStats';
 
 /**
- * bweStats typings for trace event
+ * bweStats typings for trace event.
  */
 export type TransportTraceEventBweStatsInfo = {
 	estimatedBitrate: number;
