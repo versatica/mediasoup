@@ -14,5 +14,5 @@ jobs:
           period: 365
           charts: true
           disable-links: false
-          sort-by: 'TIME'
+          sort-by: 'REVIEWS'
           telemetry: false
