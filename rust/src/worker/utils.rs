@@ -2,15 +2,9 @@ mod channel_read_fn;
 mod channel_write_fn;
 
 use crate::worker::channel::BufferMessagesGuard;
-use crate::worker::{Channel, PayloadChannel, WorkerId};
-pub(super) use channel_read_fn::{
-    prepare_channel_read_fn, prepare_payload_channel_read_fn, PreparedChannelRead,
-    PreparedPayloadChannelRead,
-};
-pub(super) use channel_write_fn::{
-    prepare_channel_write_fn, prepare_payload_channel_write_fn, PreparedChannelWrite,
-    PreparedPayloadChannelWrite,
-};
+use crate::worker::{Channel, WorkerId};
+pub(super) use channel_read_fn::{prepare_channel_read_fn, PreparedChannelRead};
+pub(super) use channel_write_fn::{prepare_channel_write_fn, PreparedChannelWrite};
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
 use std::sync::atomic::AtomicBool;
@@ -39,7 +33,6 @@ pub enum ExitError {
 
 pub(super) struct WorkerRunResult {
     pub(super) channel: Channel,
-    pub(super) payload_channel: PayloadChannel,
     pub(super) buffer_worker_messages_guard: BufferMessagesGuard,
 }
 
@@ -55,8 +48,6 @@ where
 {
     let (channel, prepared_channel_read, prepared_channel_write) =
         Channel::new(Arc::clone(&worker_closed));
-    let (payload_channel, prepared_payload_channel_read, prepared_payload_channel_write) =
-        PayloadChannel::new(worker_closed);
     let buffer_worker_messages_guard = channel.buffer_messages_for(std::process::id().into());
 
     std::thread::Builder::new()
@@ -81,16 +72,6 @@ where
                     prepared_channel_read.deconstruct();
                 let (channel_write_fn, channel_write_ctx, _channel_read_callback) =
                     prepared_channel_write.deconstruct();
-                let (
-                    payload_channel_read_fn,
-                    payload_channel_read_ctx,
-                    _payload_channel_write_callback,
-                ) = prepared_payload_channel_read.deconstruct();
-                let (
-                    payload_channel_write_fn,
-                    payload_channel_write_ctx,
-                    _payload_channel_read_callback,
-                ) = prepared_payload_channel_write.deconstruct();
 
                 mediasoup_sys::mediasoup_worker_run(
                     argc,
@@ -104,10 +85,6 @@ where
                     channel_read_ctx,
                     channel_write_fn,
                     channel_write_ctx,
-                    payload_channel_read_fn,
-                    payload_channel_read_ctx,
-                    payload_channel_write_fn,
-                    payload_channel_write_ctx,
                 )
             };
 
@@ -122,7 +99,6 @@ where
 
     WorkerRunResult {
         channel,
-        payload_channel,
         buffer_worker_messages_guard,
     }
 }

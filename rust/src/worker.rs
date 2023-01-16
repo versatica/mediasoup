@@ -3,7 +3,6 @@
 
 mod channel;
 mod common;
-mod payload_channel;
 mod utils;
 
 use crate::data_structures::AppData;
@@ -19,13 +18,12 @@ pub use crate::worker::utils::ExitError;
 use crate::worker_manager::WorkerManager;
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
-pub(crate) use channel::Channel;
+pub(crate) use channel::{NotificationError, Channel};
 pub(crate) use common::{SubscriptionHandler, SubscriptionTarget};
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::FutureExt;
 use log::{debug, error, warn};
 use parking_lot::Mutex;
-pub(crate) use payload_channel::{NotificationError, PayloadChannel};
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
@@ -272,8 +270,7 @@ pub struct WorkerUpdateSettings {
 #[doc(hidden)]
 pub struct ChannelMessageHandlers {
     pub channel_request_handlers: Vec<Uuid>,
-    pub payload_channel_request_handlers: Vec<Uuid>,
-    pub payload_channel_notification_handlers: Vec<Uuid>,
+    pub channel_notification_handlers: Vec<Uuid>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -320,7 +317,6 @@ struct Handlers {
 struct Inner {
     id: WorkerId,
     channel: Channel,
-    payload_channel: PayloadChannel,
     executor: Arc<Executor<'static>>,
     handlers: Handlers,
     app_data: AppData,
@@ -406,7 +402,6 @@ impl Inner {
         let (mut status_sender, status_receiver) = async_oneshot::oneshot();
         let WorkerRunResult {
             channel,
-            payload_channel,
             buffer_worker_messages_guard,
         } = utils::run_worker_with_channels(
             id,
@@ -424,7 +419,6 @@ impl Inner {
         let mut inner = Self {
             id,
             channel,
-            payload_channel,
             executor,
             handlers,
             app_data,
@@ -523,7 +517,6 @@ impl Inner {
 
     fn setup_message_handling(&mut self) {
         let channel_receiver = self.channel.get_internal_message_receiver();
-        let payload_channel_receiver = self.payload_channel.get_internal_message_receiver();
         let id = self.id;
         let closed = Arc::clone(&self.closed);
         self.executor
@@ -547,20 +540,6 @@ impl Inner {
                 }
             })
             .detach();
-
-        self.executor
-            .spawn(async move {
-                while let Ok(message) = payload_channel_receiver.recv().await {
-                    match message {
-                        payload_channel::InternalMessage::UnexpectedData(data) => error!(
-                            "worker[id:{}] unexpected payload channel data: {}",
-                            id,
-                            String::from_utf8_lossy(&data)
-                        ),
-                    }
-                }
-            })
-            .detach();
     }
 
     fn close(&self) {
@@ -568,7 +547,6 @@ impl Inner {
 
         if !already_closed {
             let channel = self.channel.clone();
-            let payload_channel = self.payload_channel.clone();
 
             self.executor
                 .spawn(async move {
@@ -576,7 +554,6 @@ impl Inner {
 
                     // Drop channels in here after response from worker
                     drop(channel);
-                    drop(payload_channel);
                 })
                 .detach();
 
@@ -735,7 +712,6 @@ impl Worker {
             router_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
-            self.inner.payload_channel.clone(),
             rtp_capabilities,
             app_data,
             self.clone(),

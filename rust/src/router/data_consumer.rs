@@ -11,13 +11,14 @@ use crate::messages::{
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
+// TODO.
+// use std::borrow::Cow;
 use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -168,16 +169,12 @@ pub enum DataConsumerType {
 enum Notification {
     DataProducerClose,
     SctpSendBufferFull,
+    // TODO.
+    // Message { ppid: u32 },
     #[serde(rename_all = "camelCase")]
     BufferedAmountLow {
         buffered_amount: u32,
     },
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(tag = "event", rename_all = "lowercase", content = "data")]
-enum PayloadNotification {
-    Message { ppid: u32 },
 }
 
 #[derive(Default)]
@@ -201,7 +198,6 @@ struct Inner {
     direct: bool,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Arc<dyn Transport>,
@@ -345,7 +341,6 @@ impl DataConsumer {
         data_producer: DataProducer,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: PayloadChannel,
         app_data: AppData,
         transport: Arc<dyn Transport>,
         direct: bool,
@@ -386,6 +381,21 @@ impl DataConsumer {
                         Notification::SctpSendBufferFull => {
                             handlers.sctp_send_buffer_full.call_simple();
                         }
+                        /*
+                         * TODO.
+                        Notification::Message { ppid } => {
+                            match WebRtcMessage::new(ppid, Cow::from(_notification)) {
+                                Ok(message) => {
+                                    handlers.message.call(|callback| {
+                                        callback(&_notification);
+                                    });
+                                }
+                                Err(ppid) => {
+                                    error!("Bad ppid {}", ppid);
+                                }
+                            }
+                        }
+                        */
                         Notification::BufferedAmountLow { buffered_amount } => {
                             handlers.buffered_amount_low.call(|callback| {
                                 callback(buffered_amount);
@@ -394,32 +404,6 @@ impl DataConsumer {
                     },
                     Err(error) => {
                         error!("Failed to parse notification: {}", error);
-                    }
-                }
-            })
-        };
-
-        let payload_subscription_handler = {
-            let handlers = Arc::clone(&handlers);
-
-            payload_channel.subscribe_to_notifications(id.into(), move |message, payload| {
-                match serde_json::from_slice::<PayloadNotification>(message) {
-                    Ok(notification) => match notification {
-                        PayloadNotification::Message { ppid } => {
-                            match WebRtcMessage::new(ppid, Cow::from(payload)) {
-                                Ok(message) => {
-                                    handlers.message.call(|callback| {
-                                        callback(&message);
-                                    });
-                                }
-                                Err(ppid) => {
-                                    error!("Bad ppid {}", ppid);
-                                }
-                            }
-                        }
-                    },
-                    Err(error) => {
-                        error!("Failed to parse payload notification: {}", error);
                     }
                 }
             })
@@ -446,7 +430,6 @@ impl DataConsumer {
             direct,
             executor,
             channel,
-            payload_channel,
             handlers,
             app_data,
             transport,
@@ -454,7 +437,6 @@ impl DataConsumer {
             closed,
             _subscription_handlers: Mutex::new(vec![
                 subscription_handler,
-                payload_subscription_handler,
             ]),
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
@@ -667,17 +649,17 @@ impl DataConsumer {
     }
 }
 
+// TODO: used because 'payload' is not being used yet.
 impl DirectDataConsumer {
     /// Sends direct messages from the Rust process.
     pub async fn send(&self, message: WebRtcMessage<'_>) -> Result<(), RequestError> {
-        let (ppid, payload) = message.into_ppid_and_payload();
+        let (ppid, _payload) = message.into_ppid_and_payload();
 
         self.inner
-            .payload_channel
+            .channel
             .request(
                 self.inner.id,
                 DataConsumerSendRequest { ppid },
-                payload.into_owned(),
             )
             .await
     }

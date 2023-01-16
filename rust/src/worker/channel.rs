@@ -1,4 +1,4 @@
-use crate::messages::{Request, WorkerCloseRequest};
+use crate::messages::{Notification, Request, WorkerCloseRequest};
 use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
 use crate::worker::utils;
 use crate::worker::utils::{PreparedChannelRead, PreparedChannelWrite};
@@ -17,6 +17,7 @@ use std::fmt::{Debug, Display};
 use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
+use thiserror::Error;
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -36,6 +37,12 @@ pub(super) enum InternalMessage {
     /// Unknown
     #[serde(skip)]
     Unexpected(Vec<u8>),
+}
+
+#[derive(Debug, Error, Eq, PartialEq)]
+pub enum NotificationError {
+    #[error("Channel already closed")]
+    ChannelClosed,
 }
 
 #[allow(clippy::type_complexity)]
@@ -147,9 +154,22 @@ struct RequestsContainer {
     handlers: HashedMap<u32, async_oneshot::Sender<ResponseResult<Value>>>,
 }
 
+/*
+struct OutgoingMessageRequest {
+    message: Vec<u8>,
+    payload: Vec<u8>,
+}
+
+enum OutgoingMessage {
+    Request(Arc<AtomicTake<OutgoingMessageRequest>>),
+    Notification { message: Vec<u8>, payload: Vec<u8> },
+}
+*/
+
 struct OutgoingMessageBuffer {
     handle: Option<UvAsyncT>,
     messages: VecDeque<Arc<AtomicTake<Vec<u8>>>>,
+    // messages: VecDeque<OutgoingMessage>,
 }
 
 #[allow(clippy::type_complexity)]
@@ -433,6 +453,52 @@ impl Channel {
         }
     }
 
+    pub(crate) fn notify<N, HandlerId>(
+        &self,
+        handler_id: HandlerId,
+        notification: N,
+        // payload: Vec<u8>,
+    ) -> Result<(), NotificationError>
+    where
+        N: Notification<HandlerId = HandlerId>,
+        HandlerId: Display,
+    {
+        debug!("notify() [event:{}]", notification.as_event());
+
+        // TODO: Todo pre-allocate fixed size string sufficient for most cases by default
+        // TODO: Refactor to avoid extra allocation during JSON serialization if possible
+        let message = Arc::new(AtomicTake::new(
+            format!(
+                "n:{}:{handler_id}:{}",
+                notification.as_event(),
+                serde_json::to_string(&notification).unwrap()
+                )
+                .into_bytes(),
+        ));
+
+        {
+            let mut outgoing_message_buffer = self.inner.outgoing_message_buffer.lock();
+            outgoing_message_buffer
+                .messages
+                .push_back(Arc::clone(&message));
+                // .push_back(OutgoingMessage::Notification { message, payload });
+            if let Some(handle) = outgoing_message_buffer.handle {
+                if self.inner.worker_closed.load(Ordering::Acquire) {
+                    return Err(NotificationError::ChannelClosed);
+                }
+                unsafe {
+                    // Notify worker that there is something to read
+                    let ret = mediasoup_sys::uv_async_send(handle);
+                    if ret != 0 {
+                        error!("uv_async_send call failed with code {}", ret);
+                        return Err(NotificationError::ChannelClosed);
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
     pub(crate) fn subscribe_to_notifications<F>(
         &self,
         target_id: SubscriptionTarget,

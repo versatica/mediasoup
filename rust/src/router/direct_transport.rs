@@ -16,7 +16,7 @@ use crate::transport::{
     TransportTraceEventType,
 };
 use crate::worker::{
-    Channel, NotificationError, PayloadChannel, RequestError, SubscriptionHandler,
+    Channel, NotificationError, RequestError, SubscriptionHandler,
 };
 use async_executor::Executor;
 use async_trait::async_trait;
@@ -126,12 +126,8 @@ struct Handlers {
 #[serde(tag = "event", rename_all = "lowercase", content = "data")]
 enum Notification {
     Trace(TransportTraceEventData),
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(tag = "event", rename_all = "lowercase", content = "data")]
-enum PayloadNotification {
-    Rtcp,
+    // TODO.
+    // Rtcp,
 }
 
 struct Inner {
@@ -141,7 +137,6 @@ struct Inner {
     cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
     // Make sure router is not dropped until this transport is not dropped
@@ -401,10 +396,6 @@ impl TransportImpl for DirectTransport {
         &self.inner.channel
     }
 
-    fn payload_channel(&self) -> &PayloadChannel {
-        &self.inner.payload_channel
-    }
-
     fn executor(&self) -> &Arc<Executor<'static>> {
         &self.inner.executor
     }
@@ -427,7 +418,6 @@ impl DirectTransport {
         id: TransportId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: PayloadChannel,
         app_data: AppData,
         router: Router,
     ) -> Self {
@@ -444,28 +434,17 @@ impl DirectTransport {
                         Notification::Trace(trace_event_data) => {
                             handlers.trace.call_simple(&trace_event_data);
                         }
+                        /*
+                         * TODO.
+                        Notification::Rtcp => {
+                            handlers.rtcp.call(|callback| {
+                                callback(notification);
+                            });
+                        }
+                        */
                     },
                     Err(error) => {
                         error!("Failed to parse notification: {}", error);
-                    }
-                }
-            })
-        };
-
-        let payload_subscription_handler = {
-            let handlers = Arc::clone(&handlers);
-
-            payload_channel.subscribe_to_notifications(id.into(), move |message, payload| {
-                match serde_json::from_slice::<PayloadNotification>(message) {
-                    Ok(notification) => match notification {
-                        PayloadNotification::Rtcp => {
-                            handlers.rtcp.call(|callback| {
-                                callback(payload);
-                            });
-                        }
-                    },
-                    Err(error) => {
-                        error!("Failed to parse payload notification: {}", error);
                     }
                 }
             })
@@ -493,14 +472,12 @@ impl DirectTransport {
             cname_for_producers,
             executor,
             channel,
-            payload_channel,
             handlers,
             app_data,
             router,
             closed: AtomicBool::new(false),
             _subscription_handlers: Mutex::new(vec![
                 subscription_handler,
-                payload_subscription_handler,
             ]),
             _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
@@ -513,10 +490,10 @@ impl DirectTransport {
     /// Send a RTCP packet from the Rust process.
     ///
     /// * `rtcp_packet` - Bytes containing a valid RTCP packet (can be a compound packet).
-    pub fn send_rtcp(&self, rtcp_packet: Vec<u8>) -> Result<(), NotificationError> {
+    pub fn send_rtcp(&self, _rtcp_packet: Vec<u8>) -> Result<(), NotificationError> {
         self.inner
-            .payload_channel
-            .notify(self.id(), TransportSendRtcpNotification {}, rtcp_packet)
+            .channel
+            .notify(self.id(), TransportSendRtcpNotification {})
     }
 
     /// Callback is called when the direct transport receives a RTCP packet from its router.

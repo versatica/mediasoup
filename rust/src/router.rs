@@ -51,7 +51,7 @@ use crate::transport::{
     TransportId,
 };
 use crate::webrtc_transport::{WebRtcTransport, WebRtcTransportListen, WebRtcTransportOptions};
-use crate::worker::{Channel, PayloadChannel, RequestError, Worker};
+use crate::worker::{Channel, RequestError, Worker};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_lock::Mutex as AsyncMutex;
@@ -367,7 +367,6 @@ struct Inner {
     executor: Arc<Executor<'static>>,
     rtp_capabilities: RtpCapabilitiesFinalized,
     channel: Channel,
-    payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
     producers: Arc<RwLock<HashedMap<ProducerId, WeakProducer>>>,
@@ -441,7 +440,6 @@ impl Router {
         id: RouterId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: PayloadChannel,
         rtp_capabilities: RtpCapabilitiesFinalized,
         app_data: AppData,
         worker: Worker,
@@ -473,7 +471,6 @@ impl Router {
             executor,
             rtp_capabilities,
             channel,
-            payload_channel,
             handlers,
             producers,
             data_producers,
@@ -576,7 +573,6 @@ impl Router {
             transport_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
-            self.inner.payload_channel.clone(),
             direct_transport_options.app_data,
             self.clone(),
         );
@@ -637,7 +633,6 @@ impl Router {
             transport_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
-            self.inner.payload_channel.clone(),
             data,
             webrtc_transport_options.app_data,
             self.clone(),
@@ -703,7 +698,6 @@ impl Router {
             transport_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
-            self.inner.payload_channel.clone(),
             data,
             pipe_transport_options.app_data,
             self.clone(),
@@ -765,7 +759,6 @@ impl Router {
             transport_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
-            self.inner.payload_channel.clone(),
             data,
             plain_transport_options.app_data,
             self.clone(),

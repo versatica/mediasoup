@@ -93,23 +93,6 @@ impl<V: ?Sized> EventHandlers<Arc<dyn Fn(&V) + Send + Sync + 'static>> {
         }
     }
 }
-
-impl<V1: ?Sized, V2: ?Sized> EventHandlers<Arc<dyn Fn(&V1, &V2) + Send + Sync + 'static>> {
-    pub(super) fn call_callbacks_with_two_values(
-        &self,
-        target_id: &SubscriptionTarget,
-        value1: &V1,
-        value2: &V2,
-    ) {
-        let handlers = self.handlers.lock();
-        if let Some(list) = handlers.get(target_id) {
-            for callback in list.callbacks.values() {
-                callback(value1, value2);
-            }
-        }
-    }
-}
-
 #[derive(Clone)]
 pub(super) struct WeakEventHandlers<F> {
     handlers: Weak<Mutex<HashedMap<SubscriptionTarget, EventHandlersList<F>>>>,
