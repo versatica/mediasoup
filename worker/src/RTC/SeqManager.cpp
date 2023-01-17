@@ -7,43 +7,43 @@
 
 namespace RTC
 {
-	template<typename T>
-	bool SeqManager<T>::SeqLowerThan::operator()(const T lhs, const T rhs) const
+	template<typename T, unsigned int N>
+	bool SeqManager<T, N>::SeqLowerThan::operator()(const T lhs, const T rhs) const
 	{
 		return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
 		       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
 	}
 
-	template<typename T>
-	bool SeqManager<T>::SeqHigherThan::operator()(const T lhs, const T rhs) const
+	template<typename T, unsigned int N>
+	bool SeqManager<T, N>::SeqHigherThan::operator()(const T lhs, const T rhs) const
 	{
 		return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
 		       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
 	}
 
-	template<typename T>
-	const typename SeqManager<T>::SeqLowerThan SeqManager<T>::isSeqLowerThan{};
+	template<typename T, unsigned int N>
+	const typename SeqManager<T, N>::SeqLowerThan SeqManager<T, N>::isSeqLowerThan{};
 
-	template<typename T>
-	const typename SeqManager<T>::SeqHigherThan SeqManager<T>::isSeqHigherThan{};
+	template<typename T, unsigned int N>
+	const typename SeqManager<T, N>::SeqHigherThan SeqManager<T, N>::isSeqHigherThan{};
 
-	template<typename T>
-	bool SeqManager<T>::IsSeqLowerThan(const T lhs, const T rhs)
+	template<typename T, unsigned int N>
+	bool SeqManager<T, N>::IsSeqLowerThan(const T lhs, const T rhs)
 	{
 		return isSeqLowerThan(lhs, rhs);
 	}
 
-	template<typename T>
-	bool SeqManager<T>::IsSeqHigherThan(const T lhs, const T rhs)
+	template<typename T, unsigned int N>
+	bool SeqManager<T, N>::IsSeqHigherThan(const T lhs, const T rhs)
 	{
 		return isSeqHigherThan(lhs, rhs);
 	}
 
-	template<typename T>
-	void SeqManager<T>::Sync(T input)
+	template<typename T, unsigned int N>
+	void SeqManager<T, N>::Sync(T input)
 	{
 		// Update base.
-		this->base = this->maxOutput - input;
+		this->base = (this->maxOutput - input) & MaxValue;
 
 		// Update maxInput.
 		this->maxInput = input;
@@ -52,24 +52,24 @@ namespace RTC
 		this->dropped.clear();
 	}
 
-	template<typename T>
-	void SeqManager<T>::Drop(T input)
+	template<typename T, unsigned int N>
+	void SeqManager<T, N>::Drop(T input)
 	{
 		// Mark as dropped if 'input' is higher than anyone already processed.
-		if (SeqManager<T>::IsSeqHigherThan(input, this->maxInput))
+		if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 		{
 			this->dropped.insert(input);
 		}
 	}
 
-	template<typename T>
-	void SeqManager<T>::Offset(T offset)
+	template<typename T, unsigned int N>
+	void SeqManager<T, N>::Offset(T offset)
 	{
-		this->base += offset;
+		this->base = (this->base + offset) & MaxValue;
 	}
 
-	template<typename T>
-	bool SeqManager<T>::Input(const T input, T& output)
+	template<typename T, unsigned int N>
+	bool SeqManager<T, N>::Input(const T input, T& output)
 	{
 		auto base = this->base;
 
@@ -78,10 +78,10 @@ namespace RTC
 		{
 			// Delete dropped inputs older than input - MaxValue/2.
 			size_t droppedCount = this->dropped.size();
-			auto it             = this->dropped.lower_bound(input - MaxValue / 2);
-
+			size_t threshold    = (input - MaxValue / 2) & MaxValue;
+			auto it             = this->dropped.lower_bound(threshold);
 			this->dropped.erase(this->dropped.begin(), it);
-			this->base -= (droppedCount - this->dropped.size());
+			this->base = (this->base - (droppedCount - this->dropped.size())) & MaxValue;
 
 			// Count dropped entries before 'input' in order to adapt the base.
 			droppedCount = this->dropped.size();
@@ -100,10 +100,10 @@ namespace RTC
 				droppedCount -= std::distance(it, this->dropped.end());
 			}
 
-			base = this->base - droppedCount;
+			base = (this->base - droppedCount) & MaxValue;
 		}
 
-		output = input + base;
+		output = (input + base) & MaxValue;
 
 		T idelta = input - this->maxInput;
 		T odelta = output - this->maxOutput;
@@ -121,14 +121,14 @@ namespace RTC
 		return true;
 	}
 
-	template<typename T>
-	T SeqManager<T>::GetMaxInput() const
+	template<typename T, unsigned int N>
+	T SeqManager<T, N>::GetMaxInput() const
 	{
 		return this->maxInput;
 	}
 
-	template<typename T>
-	T SeqManager<T>::GetMaxOutput() const
+	template<typename T, unsigned int N>
+	T SeqManager<T, N>::GetMaxOutput() const
 	{
 		return this->maxOutput;
 	}
@@ -136,6 +136,7 @@ namespace RTC
 	// Explicit instantiation to have all SeqManager definitions in this file.
 	template class SeqManager<uint8_t>;
 	template class SeqManager<uint16_t>;
+	template class SeqManager<uint16_t, 15>; // For PictureID (15bits).
 	template class SeqManager<uint32_t>;
 
 } // namespace RTC

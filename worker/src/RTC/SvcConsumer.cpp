@@ -586,6 +586,7 @@ namespace RTC
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
+			this->encodingContext->SyncRequired();
 
 			this->syncRequired = false;
 		}

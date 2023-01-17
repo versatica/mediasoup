@@ -213,7 +213,7 @@ namespace RTC
 			// clang-format off
 			bool isOldPacket = (
 				this->payloadDescriptor->hasPictureId &&
-				RTC::SeqManager<uint16_t>::IsSeqLowerThan(
+				RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
 					this->payloadDescriptor->pictureId,
 					context->pictureIdManager.GetMaxInput())
 			);

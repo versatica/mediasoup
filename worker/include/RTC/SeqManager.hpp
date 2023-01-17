@@ -7,11 +7,11 @@
 
 namespace RTC
 {
-	template<typename T>
+	template<typename T, unsigned int N = 0>
 	class SeqManager
 	{
 	public:
-		static constexpr T MaxValue = std::numeric_limits<T>::max();
+		static constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
 
 	public:
 		struct SeqLowerThan

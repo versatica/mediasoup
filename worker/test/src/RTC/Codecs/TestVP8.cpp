@@ -292,4 +292,32 @@ SCENARIO("process VP8 payload descriptor", "[codecs][vp8]")
 		REQUIRE(forwarded->pictureId == 1);
 		REQUIRE(forwarded->tl0PictureIndex == 1);
 	}
+
+	SECTION("drop packets that belong to other temporal layers after rolling over pictureID")
+	{
+		RTC::Codecs::EncodingContext::Params params;
+		params.spatialLayers  = 0;
+		params.temporalLayers = 2;
+		Codecs::VP8::EncodingContext context(params);
+		context.SyncRequired();
+
+		context.SetCurrentTemporalLayer(0);
+		context.SetTargetTemporalLayer(0);
+
+		// Frame 1
+		auto forwarded = ProcessPacket(context, 32767, 0, 0);
+		REQUIRE(forwarded);
+		REQUIRE(forwarded->pictureId == 1);
+		REQUIRE(forwarded->tl0PictureIndex == 1);
+
+		// Frame 2
+		forwarded = ProcessPacket(context, 0, 0, 0);
+		REQUIRE(forwarded);
+		REQUIRE(forwarded->pictureId == 2);
+		REQUIRE(forwarded->tl0PictureIndex == 1);
+
+		// Frame 3
+		forwarded = ProcessPacket(context, 1, 0, 1);
+		REQUIRE_FALSE(forwarded);
+	}
 }
