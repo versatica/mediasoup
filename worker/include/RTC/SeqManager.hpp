@@ -7,7 +7,9 @@
 
 namespace RTC
 {
-	template<typename T, unsigned int N = 0>
+	// T is the base type (uint16_t, uint32_t, ...).
+	// N is the max number of bits used in T.
+	template<typename T, uint8_t N = 0>
 	class SeqManager
 	{
 	public:
@@ -27,6 +29,7 @@ namespace RTC
 	private:
 		static const SeqLowerThan isSeqLowerThan;
 		static const SeqHigherThan isSeqHigherThan;
+		static T Delta(const T lhs, const T rhs);
 
 	public:
 		static bool IsSeqLowerThan(const T lhs, const T rhs);

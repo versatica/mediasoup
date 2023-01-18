@@ -6,11 +6,13 @@
 
 using namespace RTC;
 
+constexpr uint16_t kMaxNumberFor15Bits = (1 << 15) - 1;
+
 template<typename T>
 struct TestSeqManagerInput
 {
-	TestSeqManagerInput(T input, T output, bool sync = false, bool drop = false, T offset = 0)
-	  : input(input), output(output), sync(sync), drop(drop), offset(offset)
+	TestSeqManagerInput(T input, T output, bool sync = false, bool drop = false, T offset = 0, int64_t maxInput = -1)
+	  : input(input), output(output), sync(sync), drop(drop), offset(offset), maxInput(maxInput)
 	{
 	}
 
@@ -19,9 +21,10 @@ struct TestSeqManagerInput
 	bool sync{ false };
 	bool drop{ false };
 	T offset{ 0 };
+	int64_t maxInput{ -1 };
 };
 
-template<typename T, unsigned int N>
+template<typename T, uint8_t N>
 void validate(SeqManager<T, N>& seqManager, std::vector<TestSeqManagerInput<T>>& inputs)
 {
 	for (auto& element : inputs)
@@ -44,6 +47,9 @@ void validate(SeqManager<T, N>& seqManager, std::vector<TestSeqManagerInput<T>>&
 
 			// Covert to string because otherwise Catch will print uint8_t as char.
 			REQUIRE(std::to_string(output) == std::to_string(element.output));
+			if (element.maxInput != -1) {
+				REQUIRE(std::to_string(element.maxInput) == std::to_string(seqManager.GetMaxInput()));
+			}
 		}
 	}
 }
@@ -545,17 +551,55 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 32762,  1,  true, false },
-			{ 32763,  2, false, false },
-			{ 32764,  3, false, false },
-			{ 32765,  0, false, true  },
-			{ 32766,  0, false, true  },
-			{ 32767,  4, false, false },
-			{     0,  5, false, false },
-			{     1,  6, false, false },
-			{     2,  7, false, false },
-			{     3,  8, false, false }
+			{ 32762,  1,  true, false, 0, 32762 },
+			{ 32763,  2, false, false, 0, 32763 },
+			{ 32764,  3, false, false, 0, 32764 },
+			{ 32765,  0, false, true,  0, 32765 },
+			{ 32766,  0, false, true,  0, 32766 },
+			{ 32767,  4, false, false, 0, 32767 },
+			{     0,  5, false, false, 0,     0 },
+			{     1,  6, false, false, 0,     1 },
+			{     2,  7, false, false, 0,     2 },
+			{     3,  8, false, false, 0,     3 }
 		};
+		// clang-format on
+
+		SeqManager<uint16_t, 15> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("should update all values during multiple roll overs")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 0, 1, true, false, 0, 0 },
+		};
+		for (uint16_t j = 0; j < 100; ++j) {
+			for (uint16_t i = 1; i < std::numeric_limits<uint16_t>::max(); ++i) {
+				uint16_t output = i + 1;
+				inputs.push_back({ i, output, false, false, 0, i });
+			}
+		}
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("should update all values during multiple roll overs (15 bits range)")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 0, 1, true, false, 0, 0 },
+		};
+		for (uint16_t j = 0; j < 100; ++j) {
+			for (uint16_t i = 1; i < kMaxNumberFor15Bits; ++i) {
+				uint16_t output = i + 1;
+				inputs.push_back({ i, output, false, false, 0, i });
+			}
+		}
 		// clang-format on
 
 		SeqManager<uint16_t, 15> seqManager;
