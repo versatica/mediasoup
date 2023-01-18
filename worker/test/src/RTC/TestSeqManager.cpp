@@ -11,7 +11,8 @@ constexpr uint16_t kMaxNumberFor15Bits = (1 << 15) - 1;
 template<typename T>
 struct TestSeqManagerInput
 {
-	TestSeqManagerInput(T input, T output, bool sync = false, bool drop = false, T offset = 0, int64_t maxInput = -1)
+	TestSeqManagerInput(
+	  T input, T output, bool sync = false, bool drop = false, T offset = 0, int64_t maxInput = -1)
 	  : input(input), output(output), sync(sync), drop(drop), offset(offset), maxInput(maxInput)
 	{
 	}
@@ -47,7 +48,8 @@ void validate(SeqManager<T, N>& seqManager, std::vector<TestSeqManagerInput<T>>&
 
 			// Covert to string because otherwise Catch will print uint8_t as char.
 			REQUIRE(std::to_string(output) == std::to_string(element.output));
-			if (element.maxInput != -1) {
+			if (element.maxInput != -1)
+			{
 				REQUIRE(std::to_string(element.maxInput) == std::to_string(seqManager.GetMaxInput()));
 			}
 		}
