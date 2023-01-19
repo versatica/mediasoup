@@ -61,17 +61,17 @@ SCENARIO("process VP9 payload descriptor", "[codecs][vp9]")
 		context.SetCurrentSpatialLayer(0);
 		context.SetTargetSpatialLayer(0);
 
-		// Frame 1
+		// Frame 1.
 		auto forwarded = ProcessVP9Packet(context, kMaxPictureId, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == kMaxPictureId);
 
-		// Frame 2
+		// Frame 2.
 		forwarded = ProcessVP9Packet(context, 0, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 0);
 
-		// Frame 3
+		// Frame 3.
 		forwarded = ProcessVP9Packet(context, 1, 1);
 		REQUIRE_FALSE(forwarded);
 	}
