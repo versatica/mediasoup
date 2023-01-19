@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.11.6
+
+* Fix wrong `PictureID` rolling over in VP9 and VP8 ([PR #984(https://github.com/versatica/mediasoup/pull/984) by @jcague).
+* Update NPM deps.
+
+
 ### 3.11.5
 
 * Require Node.js >= 16 ([PR #973(https://github.com/versatica/mediasoup/pull/973)).
