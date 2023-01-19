@@ -43,6 +43,7 @@ namespace RTC
 	T SeqManager<T, N>::Delta(const T lhs, const T rhs)
 	{
 		T value = (lhs > rhs) ? (lhs - rhs) : (MaxValue - rhs + lhs);
+
 		return value & MaxValue;
 	}
 
