@@ -5,7 +5,7 @@
 
 using namespace RTC;
 
-constexpr uint16_t kMaxPictureId = (1 << 15) - 1;
+constexpr uint16_t MaxPictureId = (1 << 15) - 1;
 
 Codecs::VP9::PayloadDescriptor* CreateVP9Packet(
   uint8_t* buffer, size_t bufferLen, uint16_t pictureId, uint8_t tlIndex)
@@ -62,9 +62,9 @@ SCENARIO("process VP9 payload descriptor", "[codecs][vp9]")
 		context.SetTargetSpatialLayer(0);
 
 		// Frame 1.
-		auto forwarded = ProcessVP9Packet(context, kMaxPictureId, 0);
+		auto forwarded = ProcessVP9Packet(context, MaxPictureId, 0);
 		REQUIRE(forwarded);
-		REQUIRE(forwarded->pictureId == kMaxPictureId);
+		REQUIRE(forwarded->pictureId == MaxPictureId);
 
 		// Frame 2.
 		forwarded = ProcessVP9Packet(context, 0, 0);

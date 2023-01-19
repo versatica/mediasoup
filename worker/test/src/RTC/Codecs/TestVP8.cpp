@@ -5,7 +5,7 @@
 
 using namespace RTC;
 
-constexpr uint16_t kMaxPictureId = (1 << 15) - 1;
+constexpr uint16_t MaxPictureId = (1 << 15) - 1;
 
 SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 {
@@ -307,7 +307,7 @@ SCENARIO("process VP8 payload descriptor", "[codecs][vp8]")
 		context.SetTargetTemporalLayer(0);
 
 		// Frame 1.
-		auto forwarded = ProcessPacket(context, kMaxPictureId, 0, 0);
+		auto forwarded = ProcessPacket(context, MaxPictureId, 0, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 1);
 		REQUIRE(forwarded->tl0PictureIndex == 1);
