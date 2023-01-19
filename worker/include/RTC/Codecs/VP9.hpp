@@ -113,7 +113,7 @@ namespace RTC
 				}
 
 			public:
-				RTC::SeqManager<uint16_t> pictureIdManager;
+				RTC::SeqManager<uint16_t, 15> pictureIdManager;
 				bool syncRequired{ false };
 			};
 

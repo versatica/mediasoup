@@ -258,7 +258,7 @@ namespace RTC
 				this->payloadDescriptor->hasPictureId &&
 				this->payloadDescriptor->hasTlIndex &&
 				this->payloadDescriptor->hasTl0PictureIndex &&
-				!RTC::SeqManager<uint16_t>::IsSeqLowerThan(
+				!RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
 					this->payloadDescriptor->pictureId,
 					context->pictureIdManager.GetMaxInput())
 			)
