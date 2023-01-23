@@ -41,6 +41,11 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
   MS_ASSERT(timestamp_delta != nullptr, "timestamp_delta is null");
   MS_ASSERT(arrival_time_delta_ms != nullptr, "arrival_time_delta_ms is null");
   MS_ASSERT(packet_size_delta != nullptr, "packet_size_delta is null");
+  // Ignore packets with invalid arrival time.
+  if (arrival_time_ms < 0) {
+    MS_WARN_TAG(bwe, "invalid arrival time %" PRIi64, arrival_time_ms);
+    return false;
+  }
   bool calculated_deltas = false;
   if (current_timestamp_group_.IsFirstPacket()) {
     // We don't have enough data to update the filter, so we store it until we
