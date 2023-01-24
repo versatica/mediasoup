@@ -271,14 +271,8 @@ void BitrateProber::ProbeSent(int64_t now_ms, size_t bytes) {
 int64_t BitrateProber::GetNextProbeTime(const ProbeCluster& cluster) {
   // RTC_CHECK_GT(cluster.pace_info.send_bitrate_bps, 0);
   // RTC_CHECK_GE(cluster.time_started_ms, 0);
-  if (cluster.pace_info.send_bitrate_bps <= 0) {
-    MS_ERROR("cluster.pace_info.send_bitrate_bps must be > 0");
-    return 0;
-  }
-  if (cluster.time_started_ms <= 0) {
-    MS_ERROR("cluster.time_started_ms must be > 0");
-    return 0;
-  }
+  MS_ASSERT(cluster.pace_info.send_bitrate_bps > 0, "cluster.pace_info.send_bitrate_bps must be > 0");
+  MS_ASSERT(cluster.time_started_ms > 0, "cluster.time_started_ms must be > 0");
 
   // Compute the time delta from the cluster start to ensure probe bitrate stays
   // close to the target bitrate. Result is in milliseconds.
