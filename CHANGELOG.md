@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* libwebrtc: Fix crash due to invalid `arrival_time` value ([PR #985(https://github.com/versatica/mediasoup/pull/985) by @ggarber).
+
+
 ### 3.11.6
 
 * Fix wrong `PictureID` rolling over in VP9 and VP8 ([PR #984(https://github.com/versatica/mediasoup/pull/984) by @jcague).
