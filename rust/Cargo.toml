@@ -20,6 +20,9 @@ include = [
 default-target = "x86_64-unknown-linux-gnu"
 targets = []
 
+[build-dependencies]
+flatc-rust = "*"
+
 [dependencies]
 async-channel = "1.7.1"
 async-executor = "1.4.1"
