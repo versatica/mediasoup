@@ -2308,7 +2308,14 @@ namespace RTC
 
 		this->tccClient->RescheduleNextAvailableBitrateEvent();
 
+		auto rtxSendBitrate = this->sendRtxTransmission.GetBitrate(DepLibUV::GetTimeMs());
+
 		MS_DEBUG_DEV("before layer-by-layer iterations [availableBitrate:%" PRIu32 "]", availableBitrate);
+		MS_DEBUG_DEV(
+		  "before layer-by-layer iterations [availableBitrate - sendRtxTransmission:%" PRIu32 "]",
+		  availableBitrate - rtxSendBitrate);
+
+		availableBitrate = availableBitrate - rtxSendBitrate;
 
 		// Redistribute the available bitrate by allowing Consumers to increase
 		// layer by layer. Initially try to spread the bitrate across all
@@ -2960,6 +2967,7 @@ namespace RTC
 		data["direction"] = "out";
 		data["info"]["estimatedBitrate"] =
 		  bweStats.estimated_bitrate.value_or(webrtc::DataRate::Zero()).bps();
+		data["info"]["availableOutgoingBitrate"]    = this->tccClient->GetAvailableBitrate();
 		data["info"]["delay"]["slope"]              = bweStats.delay.trend.slope;
 		data["info"]["delay"]["rSquared"]           = bweStats.delay.trend.r_squared;
 		data["info"]["delay"]["threshold"]          = bweStats.delay.threshold;

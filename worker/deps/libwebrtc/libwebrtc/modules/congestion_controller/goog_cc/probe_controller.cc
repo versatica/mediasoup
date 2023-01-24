@@ -9,7 +9,7 @@
  */
 
 #define MS_CLASS "webrtc::ProbeController"
-//#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
 #include "api/units/data_rate.h"
@@ -101,12 +101,12 @@ ProbeControllerConfig::ProbeControllerConfig(
       min_probe_packets_sent("min_probe_packets_sent", 5),
       min_probe_duration("min_probe_duration", TimeDelta::ms(15)),
       limit_probe_target_rate_to_loss_bwe("limit_probe_target_rate_to_loss_bwe",
-                                          true),
+                                          false),
       loss_limited_probe_scale("loss_limited_scale", 1.5),
       skip_if_estimate_larger_than_fraction_of_max(
           "skip_if_est_larger_than_fraction_of_max",
           0.0),
-      not_probe_if_delay_increased("not_probe_if_delay_increased", true) {
+      not_probe_if_delay_increased("not_probe_if_delay_increased", false) {
   ParseFieldTrial({&first_exponential_probe_scale,
                    &second_exponential_probe_scale,
                    &further_exponential_probe_scale,

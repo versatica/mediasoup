@@ -12,15 +12,16 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/trendline_estimator.h"
-
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "rtc_base/numerics/safe_minmax.h"
 
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 
 #include <absl/types/optional.h>
-#include <math.h>
 #include <algorithm>
+#include <math.h>
+#include <stdarg.h>
 #include <string>
 
 namespace webrtc {
@@ -30,8 +31,8 @@ namespace {
 // Parameters for linear least squares fit of regression line to noisy data.
 constexpr double kDefaultTrendlineSmoothingCoeff = 0.9;
 constexpr double kDefaultTrendlineThresholdGain = 4.0;
-constexpr double kDefaultRSquaredUpperBound = 0.95;
-constexpr double kDefaultRSquaredLowerBound = 0.01;
+constexpr double kDefaultRSquaredUpperBound = 0.20;
+constexpr double kDefaultRSquaredLowerBound = 0.02;
 const char kBweWindowSizeInPacketsExperiment[] =
     "WebRTC-BweWindowSizeInPackets";
 
@@ -131,7 +132,7 @@ double getAverage(std::deque<double> const& hist) {
 constexpr double kMaxAdaptOffsetMs = 15.0;
 constexpr double kOverUsingTimeThreshold = 10;
 constexpr int kMinNumDeltas = 60;
-constexpr int kDeltaCounterMax = 1000;
+constexpr int kDeltaCounterMax = 300;
 
 }  // namespace
 
@@ -256,13 +257,14 @@ void TrendlineEstimator::UpdateTrendline(double recv_delta_ms,
     //   trend == 0    ->  the delay does not change
     //   trend < 0     ->  the delay decreases, queues are being emptied
 		result = LinearFitSlope(delay_hist_).value_or(trend);
-		if (result.slope > 0) {
+		//if (result.slope > 0) {
 			r_squared_hist_.emplace_back(result.r_squared);
 			if (r_squared_hist_.size() > settings_.window_size)
 				r_squared_hist_.pop_front();
-		}
+		//}
 		avg_r_squared = getAverage(r_squared_hist_);
 		trend.r_squared = avg_r_squared;
+		result.r_squared = avg_r_squared;
     if (settings_.enable_cap) {
       absl::optional<double> cap = ComputeSlopeCap(delay_hist_, settings_);
       // We only use the cap to filter out overuse detections, not

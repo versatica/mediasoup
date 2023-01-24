@@ -60,7 +60,7 @@ class LossBasedBweV2 {
 		bool IsReady() const;
 
 		// Returns `DataRate::PlusInfinity` if no BWE can be calculated.
-		Result GetLossBasedResult() const;
+		Result GetLossBasedResult();
 		void SetAcknowledgedBitrate(DataRate acknowledged_bitrate);
 		void SetBandwidthEstimate(DataRate bandwidth_estimate);
 		void SetMinMaxBitrate(DataRate min_bitrate, DataRate max_bitrate);
@@ -208,8 +208,11 @@ class LossBasedBweV2 {
 	TimeDelta kInstantLossDebounceDuration = TimeDelta::seconds(10);
 	Timestamp instant_loss_debounce_start_ = Timestamp::MinusInfinity();
 	Timestamp instant_loss_threshold_ = Timestamp::MinusInfinity();
+
 	float kInstantLossReduceFactor = 0.95;
 	DataRate last_sending_rate_ = DataRate::PlusInfinity();
+	DataRate rate_before_last_instant_loss_ = DataRate::PlusInfinity();
+	Timestamp instant_loss_debounce_stop_ = Timestamp::MinusInfinity();
 };
 
 } // namespace webrtc

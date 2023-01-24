@@ -178,7 +178,7 @@ bool LossBasedBweV2::IsReady() const {
          num_observations_ > 0;
 }
 
-LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult() const {
+LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult() {
   Result result;
   result.state = current_state_;
   if (!IsReady()) {
@@ -207,6 +207,20 @@ LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult() const {
 		           instant_limit.IsFinite() ? instant_limit.bps() : 0,
 		           GetAverageReportedLossRatio(),
 		           IsValid(acknowledged_bitrate_) ? acknowledged_bitrate_->bps() : -1);*/
+	if (instant_loss_debounce_stop_.IsFinite() && (DepLibUV::GetTimeMsInt64() - instant_loss_debounce_stop_.ms()) < 500) {
+		auto decreased_rate = rate_before_last_instant_loss_ * 0.85;
+		MS_DEBUG_DEV("recently recovered from instant loss [rate_before_loss: %lld, recover_rate: %lld]",
+			           rate_before_last_instant_loss_.bps(),
+			           decreased_rate.bps()
+			           );
+
+		result.bandwidth_estimate = decreased_rate;
+		current_estimate_.loss_limited_bandwidth = decreased_rate;
+		return result;
+	} else if (instant_loss_debounce_stop_.IsFinite() && (DepLibUV::GetTimeMsInt64() - instant_loss_debounce_stop_.ms()) > 500) {
+		instant_loss_debounce_stop_ = Timestamp::MinusInfinity();
+	}
+
 	if (IsValid(delay_based_estimate_)) {
 		result.bandwidth_estimate =
 			std::min({current_estimate_.loss_limited_bandwidth,
@@ -311,9 +325,9 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
         current_estimate_.loss_limited_bandwidth;
   }
 
-	if (IsValid(delay_based_estimate_) && current_estimate_.inherent_loss > config_->inherent_loss_upper_bound_offset) {
+/*	if (IsValid(delay_based_estimate_) && current_estimate_.inherent_loss > config_->inherent_loss_upper_bound_offset) {
 		best_candidate.loss_limited_bandwidth = delay_based_estimate_;
-	}
+	}*/
 
   if (IsBandwidthLimitedDueToLoss()) {
     // Bound the estimate increase if:
@@ -750,7 +764,7 @@ LossEstimatorState LossBasedBweV2::GetState() const {
 	state.inherent_loss = current_estimate_.inherent_loss;
 	state.avg_loss = GetAverageReportedLossRatio();
 	state.bandwidth_estimate = current_estimate_.loss_limited_bandwidth;
-	state.sending_rate = last_sending_rate_;
+	state.sending_rate = last_sending_rate_.IsFinite() ? last_sending_rate_ : DataRate::bps(0);
 	return state;
 }
 
@@ -1001,6 +1015,7 @@ void LossBasedBweV2::CalculateInstantUpperBound(DataRate sending_rate) {
 		if (average_reported_loss_ratio < config_->instant_upper_bound_loss_offset) {
 			instant_loss_debounce_start_ = Timestamp::MinusInfinity();
 			instant_loss_threshold_ = Timestamp::MinusInfinity();
+			instant_loss_debounce_stop_ = now;
 			MS_DEBUG_DEV("Resetting");
 		}
 	}
@@ -1023,7 +1038,7 @@ void LossBasedBweV2::CalculateInstantUpperBound(DataRate sending_rate) {
 			instant_loss_debounce_start_ = now;
 			instant_loss_threshold_ = now;
 			MS_DEBUG_DEV("First Instant Loss");
-
+			rate_before_last_instant_loss_ = current_estimate;
 			MS_DEBUG_DEV(
 				"Reducing current estimate %lld by factor %f",
 				current_estimate.bps(),

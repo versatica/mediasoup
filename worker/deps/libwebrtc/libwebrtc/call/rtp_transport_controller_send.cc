@@ -61,6 +61,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
     : packet_router_(packet_router),
       pacer_(packet_router_),
       observer_(nullptr),
+	    stats_tracer_(nullptr),
       controller_factory_override_(controller_factory),
       process_interval_(controller_factory_override_->GetProcessInterval()),
       last_report_block_time_(Timestamp::ms(DepLibUV::GetTimeMsInt64())),

@@ -98,7 +98,6 @@ class TrendlineEstimator : public DelayIncreaseDetectorInterface {
     double raw_delay_ms;
   };
 
-	//DelayIncreaseDetectorInterface::RegressionResult GetTrend() override;
 	DelayIncreaseDetectorInterface::RegressionResult GetTrend() override
 	{
 		return prev_trend_;
