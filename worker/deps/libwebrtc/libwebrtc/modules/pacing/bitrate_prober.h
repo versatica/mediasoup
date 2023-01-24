@@ -66,7 +66,7 @@ class BitrateProber {
   int TimeUntilNextProbe(int64_t now_ms);
 
   // Information about the current probing cluster.
-  PacedPacketInfo CurrentCluster() const;
+  absl::optional<PacedPacketInfo> CurrentCluster() const;
 
   // Returns the minimum number of bytes that the prober recommends for
   // the next probe.

@@ -252,8 +252,14 @@ bool DelayBasedBwe::LatestEstimate(std::vector<uint32_t>* ssrcs,
   // thread.
   //RTC_DCHECK(ssrcs);
   //RTC_DCHECK(bitrate);
-  MS_ASSERT(ssrcs, "ssrcs must be != null");
-  MS_ASSERT(bitrate, "bitrate must be != null");
+  if (!ssrcs) {
+    MS_ERROR("ssrcs must be != null");
+    return false;
+  }
+  if (!bitrate) {
+    MS_ERROR("bitrate must be != null");
+    return false;
+  }
 
   if (!rate_control_.ValidEstimate())
     return false;

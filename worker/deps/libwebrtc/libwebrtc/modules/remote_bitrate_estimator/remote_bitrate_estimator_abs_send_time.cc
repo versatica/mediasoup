@@ -236,7 +236,11 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
     uint32_t send_time_24bits,
     size_t payload_size,
     uint32_t ssrc) {
-  MS_ASSERT(send_time_24bits < (1ul << 24), "invalid sendTime24bits value");
+  // RTC_CHECK(send_time_24bits < (1ul << 24));
+  if (send_time_24bits >= (1ul << 24)) {
+    MS_ERROR("invalid sendTime24bits value");
+    return;
+  }
 
   if (!uma_recorded_) {
     uma_recorded_ = true;
