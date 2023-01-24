@@ -40,19 +40,14 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
                                  int* packet_size_delta) {
   if (timestamp_delta == nullptr) {
     MS_ERROR("timestamp_delta is null");
-
     return false;
   }
-
   if (arrival_time_delta_ms == nullptr) {
     MS_ERROR("arrival_time_delta_ms is null");
-
     return false;
   }
-
   if (packet_size_delta == nullptr) {
     MS_ERROR("packet_size_delta is null");
-
     return false;
   }
 
