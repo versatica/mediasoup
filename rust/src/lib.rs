@@ -49,6 +49,7 @@
 //! and are a good place to start until we have demo apps built in Rust).
 
 pub mod data_structures;
+mod fbs;
 mod macros;
 mod messages;
 #[doc(hidden)]

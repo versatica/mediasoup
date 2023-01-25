@@ -10,6 +10,7 @@ fn main() {
     let schemas_path = fs::read_dir("../fbs").unwrap();
     let mut inputs_str: Vec<String> = vec![];
     let mut inputs_path: Vec<&Path> = vec![];
+    let extra = ["--gen-all", "--filename-suffix", "", "--rust-serialize"];
 
     for schema in schemas_path {
         inputs_str.push(schema.unwrap().path().to_string_lossy().to_string());
@@ -22,7 +23,8 @@ fn main() {
     // Generate flatbuffers code.
     flatc_rust::run(flatc_rust::Args {
         inputs: &inputs_path,
-        out_dir: Path::new("./flatbuffers/"),
+        out_dir: Path::new("./src/fbs/"),
+        extra: &extra,
         ..Default::default()
     }).expect("flatc");
 }
