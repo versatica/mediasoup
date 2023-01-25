@@ -394,6 +394,9 @@ namespace RTC
 			// Increase transmission counter.
 			this->transmissionCounter.Update(packet);
 
+			if (packet->GetPayloadLength() == 0)
+				return false;
+
 			// Not inactive anymore.
 			if (this->inactive)
 			{
