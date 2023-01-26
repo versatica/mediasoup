@@ -500,7 +500,7 @@ namespace RTC
 					continue;
 				}
 
-				requiredBitrate = producerRtpStream->GetLayerBitrate(nowMs, 0, temporalLayer);
+				requiredBitrate = producerRtpStream->GetBitrate(nowMs, 0, temporalLayer);
 
 				// This is simulcast so we must substract the bitrate of the current temporal
 				// spatial layer if this is the temporal layer 0 of a higher spatial layer.
