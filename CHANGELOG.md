@@ -1,9 +1,11 @@
 # Changelog
 
 
-### NEXT
+### 3.11.7
 
 * libwebrtc: Fix crash due to invalid `arrival_time` value ([PR #985(https://github.com/versatica/mediasoup/pull/985) by @ggarber).
+* libwebrtc: Replace `MS_ASSERT()` with `MS_ERROR()` ([PR #988(https://github.com/versatica/mediasoup/pull/988)).
+* Update NPM deps.
 
 
 ### 3.11.6
