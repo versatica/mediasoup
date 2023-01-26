@@ -423,8 +423,7 @@ namespace RTC
 					continue;
 				}
 
-				requiredBitrate =
-				  this->producerRtpStream->GetBitrate(nowMs, spatialLayer, temporalLayer);
+				requiredBitrate = this->producerRtpStream->GetBitrate(nowMs, spatialLayer, temporalLayer);
 
 				MS_DEBUG_DEV(
 				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
