@@ -64,7 +64,10 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
   int cluster_id = packet_feedback.sent_packet.pacing_info.probe_cluster_id;
 
   //RTC_DCHECK_NE(cluster_id, PacedPacketInfo::kNotAProbe);
-  MS_ASSERT(cluster_id != PacedPacketInfo::kNotAProbe, "cluster_id == kNotAProbe");
+  if (cluster_id == PacedPacketInfo::kNotAProbe) {
+    MS_ERROR("cluster_id == kNotAProbe");
+    return absl::nullopt;
+  }
 
   EraseOldClusters(packet_feedback.receive_time);
 
@@ -91,12 +94,14 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
       // packet_feedback.sent_packet.pacing_info.probe_cluster_min_probes, 0);
   // RTC_DCHECK_GT(packet_feedback.sent_packet.pacing_info.probe_cluster_min_bytes,
                 // 0);
-  MS_ASSERT(
-    packet_feedback.sent_packet.pacing_info.probe_cluster_min_probes > 0,
-    "probe_cluster_min_probes must be > 0");
-  MS_ASSERT(
-    packet_feedback.sent_packet.pacing_info.probe_cluster_min_bytes > 0,
-    "probe_cluster_min_bytes must be > 0");
+  if (packet_feedback.sent_packet.pacing_info.probe_cluster_min_probes <= 0) {
+    MS_ERROR("probe_cluster_min_probes must be > 0");
+    return absl::nullopt;
+  }
+  if (packet_feedback.sent_packet.pacing_info.probe_cluster_min_bytes <= 0) {
+    MS_ERROR("probe_cluster_min_bytes must be > 0");
+    return absl::nullopt;
+  }
 
   int min_probes =
       packet_feedback.sent_packet.pacing_info.probe_cluster_min_probes *

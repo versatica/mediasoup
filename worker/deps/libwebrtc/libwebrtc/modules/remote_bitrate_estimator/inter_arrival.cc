@@ -38,12 +38,23 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
                                  uint32_t* timestamp_delta, // send_delta.
                                  int64_t* arrival_time_delta_ms, // recv_delta.
                                  int* packet_size_delta) {
-  MS_ASSERT(timestamp_delta != nullptr, "timestamp_delta is null");
-  MS_ASSERT(arrival_time_delta_ms != nullptr, "arrival_time_delta_ms is null");
-  MS_ASSERT(packet_size_delta != nullptr, "packet_size_delta is null");
+  if (timestamp_delta == nullptr) {
+    MS_ERROR("timestamp_delta is null");
+    return false;
+  }
+  if (arrival_time_delta_ms == nullptr) {
+    MS_ERROR("arrival_time_delta_ms is null");
+    return false;
+  }
+  if (packet_size_delta == nullptr) {
+    MS_ERROR("packet_size_delta is null");
+    return false;
+  }
+
   // Ignore packets with invalid arrival time.
   if (arrival_time_ms < 0) {
     MS_WARN_TAG(bwe, "invalid arrival time %" PRIi64, arrival_time_ms);
+
     return false;
   }
   bool calculated_deltas = false;
@@ -94,7 +105,11 @@ bool InterArrival::ComputeDeltas(uint32_t timestamp,
         num_consecutive_reordered_packets_ = 0;
       }
 
-      MS_ASSERT(*arrival_time_delta_ms >= 0, "arrival_time_delta_ms is < 0");
+      if (*arrival_time_delta_ms < 0) {
+        MS_ERROR("arrival_time_delta_ms is < 0");
+
+        return false;
+      }
 
       *packet_size_delta = static_cast<int>(current_timestamp_group_.size) -
                            static_cast<int>(prev_timestamp_group_.size);
@@ -161,10 +176,12 @@ bool InterArrival::BelongsToBurst(int64_t arrival_time_ms,
     return false;
   }
 
-  MS_ASSERT(
-    current_timestamp_group_.complete_time_ms >= 0,
-    "current_timestamp_group_.complete_time_ms < 0 [current_timestamp_group_.complete_time_ms:%" PRIi64 "]",
-    current_timestamp_group_.complete_time_ms);
+  if (current_timestamp_group_.complete_time_ms < 0) {
+    MS_ERROR("current_timestamp_group_.complete_time_ms < 0 [current_timestamp_group_.complete_time_ms:%" PRIi64 "]",
+      current_timestamp_group_.complete_time_ms);
+
+    return false;
+  }
 
   int64_t arrival_time_delta_ms =
       arrival_time_ms - current_timestamp_group_.complete_time_ms;
