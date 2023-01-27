@@ -71,7 +71,7 @@ fn main() {
                 .expect("Failed to decode path")
                 .trim()
         );
-        println!("cargo:rustc-link-search={}", libpath);
+        println!("cargo:rustc-link-search={libpath}");
         println!("cargo:rustc-link-lib=dylib=c++");
         println!("cargo:rustc-link-lib=dylib=c++abi");
     }
