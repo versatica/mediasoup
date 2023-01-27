@@ -581,7 +581,7 @@ fn pipe_to_router_fails_if_both_routers_belong_to_the_same_worker() {
         {
             assert!(reason.contains("already exists [method:transport.produce]"));
         } else {
-            panic!("Unexpected result: {:?}", result);
+            panic!("Unexpected result: {result:?}");
         }
     });
 }

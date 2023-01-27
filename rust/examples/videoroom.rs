@@ -111,13 +111,13 @@ mod room {
                     settings
                 })
                 .await
-                .map_err(|error| format!("Failed to create worker: {}", error))?;
+                .map_err(|error| format!("Failed to create worker: {error}"))?;
             let router = worker
                 .create_router(RouterOptions::new(crate::media_codecs()))
                 .await
-                .map_err(|error| format!("Failed to create router: {}", error))?;
+                .map_err(|error| format!("Failed to create router: {error}"))?;
 
-            println!("Room {} created", id);
+            println!("Room {id} created");
 
             Ok(Self {
                 inner: Arc::new(Inner {
@@ -504,13 +504,13 @@ mod participant {
                 .router()
                 .create_webrtc_transport(transport_options.clone())
                 .await
-                .map_err(|error| format!("Failed to create producer transport: {}", error))?;
+                .map_err(|error| format!("Failed to create producer transport: {error}"))?;
 
             let consumer_transport = room
                 .router()
                 .create_webrtc_transport(transport_options)
                 .await
-                .map_err(|error| format!("Failed to create consumer transport: {}", error))?;
+                .map_err(|error| format!("Failed to create consumer transport: {error}"))?;
 
             Ok(Self {
                 id: ParticipantId::new(),
@@ -598,7 +598,7 @@ mod participant {
         }
 
         fn stopped(&mut self, _ctx: &mut Self::Context) {
-            println!("[participant_id {}] WebSocket connection closed", self.id);
+            println!("[participant_id {0}] WebSocket connection closed", self.id);
         }
     }
 
@@ -620,11 +620,11 @@ mod participant {
                         ctx.address().do_send(message);
                     }
                     Err(error) => {
-                        eprintln!("Failed to parse client message: {}\n{}", error, text);
+                        eprintln!("Failed to parse client message: {error}\n{text}");
                     }
                 },
                 Ok(ws::Message::Binary(bin)) => {
-                    eprintln!("Unexpected binary message: {:?}", bin);
+                    eprintln!("Unexpected binary message: {bin:?}");
                 }
                 Ok(ws::Message::Close(reason)) => {
                     ctx.close(reason);
@@ -660,12 +660,11 @@ mod participant {
                             Ok(_) => {
                                 address.do_send(ServerMessage::ConnectedProducerTransport);
                                 println!(
-                                    "[participant_id {}] Producer transport connected",
-                                    participant_id,
+                                    "[participant_id {participant_id}] Producer transport connected"
                                 );
                             }
                             Err(error) => {
-                                eprintln!("Failed to connect producer transport: {}", error);
+                                eprintln!("Failed to connect producer transport: {error}");
                                 address.do_send(InternalMessage::Stop);
                             }
                         }
@@ -695,14 +694,12 @@ mod participant {
                                 // get destroyed as soon as its instance goes out out scope
                                 address.do_send(InternalMessage::SaveProducer(producer));
                                 println!(
-                                    "[participant_id {}] {:?} producer created: {}",
-                                    participant_id, kind, id,
+                                    "[participant_id {participant_id}] {kind:?} producer created: {id}"
                                 );
                             }
                             Err(error) => {
                                 eprintln!(
-                                    "[participant_id {}] Failed to create {:?} producer: {}",
-                                    participant_id, kind, error
+                                    "[participant_id {participant_id}] Failed to create {kind:?} producer: {error}"
                                 );
                                 address.do_send(InternalMessage::Stop);
                             }
@@ -722,14 +719,12 @@ mod participant {
                             Ok(_) => {
                                 address.do_send(ServerMessage::ConnectedConsumerTransport);
                                 println!(
-                                    "[participant_id {}] Consumer transport connected",
-                                    participant_id,
+                                    "[participant_id {participant_id}] Consumer transport connected"
                                 );
                             }
                             Err(error) => {
                                 eprintln!(
-                                    "[participant_id {}] Failed to connect consumer transport: {}",
-                                    participant_id, error,
+                                    "[participant_id {participant_id}] Failed to connect consumer transport: {error}"
                                 );
                                 address.do_send(InternalMessage::Stop);
                             }
@@ -744,9 +739,8 @@ mod participant {
                         Some(rtp_capabilities) => rtp_capabilities,
                         None => {
                             eprintln!(
-                                "[participant_id {}] Client should send RTP capabilities before \
-                                consuming",
-                                participant_id,
+                                "[participant_id {participant_id}] Client should send RTP capabilities before \
+                                consuming"
                             );
                             return;
                         }
@@ -772,14 +766,12 @@ mod participant {
                                 // get destroyed as soon as its instance goes out out scope
                                 address.do_send(InternalMessage::SaveConsumer(consumer));
                                 println!(
-                                    "[participant_id {}] {:?} consumer created: {}",
-                                    participant_id, kind, id,
+                                    "[participant_id {participant_id}] {kind:?} consumer created: {id}"
                                 );
                             }
                             Err(error) => {
                                 eprintln!(
-                                    "[participant_id {}] Failed to create consumer: {}",
-                                    participant_id, error,
+                                    "[participant_id {participant_id}] Failed to create consumer: {error}"
                                 );
                                 address.do_send(InternalMessage::Stop);
                             }
@@ -904,7 +896,7 @@ async fn ws_index(
     let room = match room {
         Ok(room) => room,
         Err(error) => {
-            eprintln!("{}", error);
+            eprintln!("{error}");
 
             return Ok(HttpResponse::InternalServerError().finish());
         }
@@ -913,7 +905,7 @@ async fn ws_index(
     match ParticipantConnection::new(room).await {
         Ok(echo_server) => ws::start(echo_server, &request, stream),
         Err(error) => {
-            eprintln!("{}", error);
+            eprintln!("{error}");
 
             Ok(HttpResponse::InternalServerError().finish())
         }
