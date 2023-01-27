@@ -630,6 +630,11 @@ namespace RTC
 		auto nowMs = DepLibUV::GetTimeMs();
 		uint32_t desiredBitrate{ 0u };
 
+		// Let's iterate all streams of the Producer (from highest to lowest) and
+		// obtain their bitrate. Choose the highest one.
+		// NOTE: When the Producer enables a higher stream, initially the bitrate of
+		// it could be less than the bitrate of a lower stream. That's why we
+		// iterate all streams here anyway.
 		for (auto sIdx{ static_cast<int16_t>(this->producerRtpStreams.size() - 1) }; sIdx >= 0; --sIdx)
 		{
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
@@ -637,10 +642,10 @@ namespace RTC
 			if (!producerRtpStream)
 				continue;
 
-			desiredBitrate = producerRtpStream->GetBitrate(nowMs);
+			auto streamBitrate = producerRtpStream->GetBitrate(nowMs);
 
-			if (desiredBitrate)
-				break;
+			if (streamBitrate > desiredBitrate)
+				desiredBitrate = streamBitrate;
 		}
 
 		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
