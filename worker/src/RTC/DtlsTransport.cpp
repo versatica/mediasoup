@@ -647,7 +647,7 @@ namespace RTC
 		  localRole == Role::CLIENT || localRole == Role::SERVER,
 		  "local DTLS role must be 'client' or 'server'");
 
-		Role previousLocalRole = this->localRole;
+		const Role previousLocalRole = this->localRole;
 
 		if (localRole == previousLocalRole)
 		{
@@ -860,7 +860,7 @@ namespace RTC
 		MS_TRACE();
 
 		int err;
-		bool wasHandshakeDone = this->handshakeDone;
+		const bool wasHandshakeDone = this->handshakeDone;
 
 		err = SSL_get_error(this->ssl, returnCode);
 
@@ -1342,7 +1342,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		int w = where & -SSL_ST_MASK;
+		const int w = where & -SSL_ST_MASK;
 		const char* role;
 
 		if ((w & SSL_ST_CONNECT) != 0)

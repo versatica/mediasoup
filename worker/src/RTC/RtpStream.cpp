@@ -49,7 +49,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t nowMs = DepLibUV::GetTimeMs();
+		const uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		jsonObject["timestamp"]            = nowMs;
 		jsonObject["ssrc"]                 = this->params.ssrc;
@@ -113,7 +113,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t seq = packet->GetSequenceNumber();
+		const uint16_t seq = packet->GetSequenceNumber();
 
 		// If this is the first packet seen, initialize stuff.
 		if (!this->started)
@@ -174,8 +174,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t seq    = packet->GetSequenceNumber();
-		uint16_t udelta = seq - this->maxSeq;
+		const uint16_t seq    = packet->GetSequenceNumber();
+		const uint16_t udelta = seq - this->maxSeq;
 
 		// If the new packet sequence number is greater than the max seen but not
 		// "so much bigger", accept it.

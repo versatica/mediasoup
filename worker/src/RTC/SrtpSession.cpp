@@ -19,7 +19,7 @@ namespace RTC
 	void SrtpSession::ClassInit()
 	{
 		// Set libsrtp event handler.
-		srtp_err_status_t err =
+		const srtp_err_status_t err =
 		  srtp_install_event_handler(static_cast<srtp_event_handler_func_t*>(OnSrtpEvent));
 
 		if (DepLibSRTP::IsError(err))
@@ -127,7 +127,7 @@ namespace RTC
 		policy.next            = nullptr;
 
 		// Set the SRTP session.
-		srtp_err_status_t err = srtp_create(&this->session, &policy);
+		const srtp_err_status_t err = srtp_create(&this->session, &policy);
 
 		if (DepLibSRTP::IsError(err))
 			MS_THROW_ERROR("srtp_create() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -139,7 +139,7 @@ namespace RTC
 
 		if (this->session != nullptr)
 		{
-			srtp_err_status_t err = srtp_dealloc(this->session);
+			const srtp_err_status_t err = srtp_dealloc(this->session);
 
 			if (DepLibSRTP::IsError(err))
 				MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err));
@@ -160,7 +160,7 @@ namespace RTC
 
 		std::memcpy(EncryptBuffer, *data, *len);
 
-		srtp_err_status_t err = srtp_protect(this->session, static_cast<void*>(EncryptBuffer), len);
+		const srtp_err_status_t err = srtp_protect(this->session, static_cast<void*>(EncryptBuffer), len);
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -179,7 +179,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		srtp_err_status_t err = srtp_unprotect(this->session, static_cast<void*>(data), len);
+		const srtp_err_status_t err = srtp_unprotect(this->session, static_cast<void*>(data), len);
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -205,7 +205,8 @@ namespace RTC
 
 		std::memcpy(EncryptBuffer, *data, *len);
 
-		srtp_err_status_t err = srtp_protect_rtcp(this->session, static_cast<void*>(EncryptBuffer), len);
+		const srtp_err_status_t err =
+		  srtp_protect_rtcp(this->session, static_cast<void*>(EncryptBuffer), len);
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -224,7 +225,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		srtp_err_status_t err = srtp_unprotect_rtcp(this->session, static_cast<void*>(data), len);
+		const srtp_err_status_t err = srtp_unprotect_rtcp(this->session, static_cast<void*>(data), len);
 
 		if (DepLibSRTP::IsError(err))
 		{

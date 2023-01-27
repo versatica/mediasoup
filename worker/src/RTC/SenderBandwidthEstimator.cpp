@@ -83,8 +83,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto nowMs         = DepLibUV::GetTimeMs();
-		uint64_t elapsedMs = nowMs - this->cummulativeResult.GetStartedAtMs();
+		auto nowMs               = DepLibUV::GetTimeMs();
+		const uint64_t elapsedMs = nowMs - this->cummulativeResult.GetStartedAtMs();
 
 		// Drop ongoing cummulative result if too old.
 		if (elapsedMs > 1000u)
@@ -172,8 +172,8 @@ namespace RTC
 
 		auto previousAvailableBitrate = this->availableBitrate;
 
-		double ratio = static_cast<double>(cummulativeResult.GetReceiveBitrate()) /
-		               static_cast<double>(cummulativeResult.GetSendBitrate());
+		const double ratio = static_cast<double>(cummulativeResult.GetReceiveBitrate()) /
+		                     static_cast<double>(cummulativeResult.GetSendBitrate());
 		auto bitrate =
 		  std::min<uint32_t>(cummulativeResult.GetReceiveBitrate(), cummulativeResult.GetSendBitrate());
 

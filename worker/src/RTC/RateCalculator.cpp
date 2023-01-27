@@ -69,7 +69,7 @@ namespace RTC
 
 		RemoveOldData(nowMs);
 
-		float scale = this->scale / this->windowSizeMs;
+		const float scale = this->scale / this->windowSizeMs;
 
 		this->lastTime = nowMs;
 		this->lastRate = static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
@@ -85,7 +85,7 @@ namespace RTC
 		if (this->newestItemIndex < 0 || this->oldestItemIndex < 0)
 			return;
 
-		uint64_t newOldestTime = nowMs - this->windowSizeMs;
+		const uint64_t newOldestTime = nowMs - this->windowSizeMs;
 
 		// Oldest item already removed.
 		if (newOldestTime < this->oldestItemStartTime)

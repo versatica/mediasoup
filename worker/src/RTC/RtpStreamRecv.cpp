@@ -216,7 +216,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t nowMs = DepLibUV::GetTimeMs();
+		const uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
@@ -429,7 +429,7 @@ namespace RTC
 
 		report->SetSsrc(GetSsrc());
 
-		uint32_t prevPacketsLost = this->packetsLost;
+		const uint32_t prevPacketsLost = this->packetsLost;
 
 		// Calculate Packets Expected and Lost.
 		auto expected = GetExpectedPackets();
@@ -448,7 +448,7 @@ namespace RTC
 
 		this->receivedPrior = this->mediaTransmissionCounter.GetPacketCount();
 
-		int32_t lostInterval = expectedInterval - receivedInterval;
+		const int32_t lostInterval = expectedInterval - receivedInterval;
 
 		if (expectedInterval == 0 || lostInterval <= 0)
 			this->fractionLost = 0;
@@ -466,7 +466,7 @@ namespace RTC
 		else
 		{
 			// Recalculate packetsLost.
-			uint32_t newLostInterval = (worstRemoteFractionLost * expectedInterval) >> 8;
+			const uint32_t newLostInterval = (worstRemoteFractionLost * expectedInterval) >> 8;
 
 			this->reportedPacketLost += newLostInterval;
 
@@ -545,16 +545,16 @@ namespace RTC
 		/* Calculate RTT. */
 
 		// Get the NTP representation of the current timestamp.
-		uint64_t nowMs = DepLibUV::GetTimeMs();
-		auto ntp       = Utils::Time::TimeMs2Ntp(nowMs);
+		const uint64_t nowMs = DepLibUV::GetTimeMs();
+		auto ntp             = Utils::Time::TimeMs2Ntp(nowMs);
 
 		// Get the compact NTP representation of the current timestamp.
 		uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
 
 		compactNtp |= (ntp.fractions & 0xFFFF0000) >> 16;
 
-		uint32_t lastRr = ssrcInfo->GetLastReceiverReport();
-		uint32_t dlrr   = ssrcInfo->GetDelaySinceLastReceiverReport();
+		const uint32_t lastRr = ssrcInfo->GetLastReceiverReport();
+		const uint32_t dlrr   = ssrcInfo->GetDelaySinceLastReceiverReport();
 
 		// RTT in 1/2^16 second fractions.
 		uint32_t rtt{ 0 };
