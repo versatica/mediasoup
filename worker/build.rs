@@ -98,8 +98,8 @@ fn main() {
 
     #[cfg(target_os = "windows")]
     {
-        let dot_a = format!("{}/libmediasoup-worker.a", out_dir);
-        let dot_lib = format!("{}/mediasoup-worker.lib", out_dir);
+        let dot_a = format!("{out_dir}/libmediasoup-worker.a");
+        let dot_lib = format!("{out_dir}/mediasoup-worker.lib");
 
         // Meson builds `libmediasoup-worker.a` on Windows instead of `*.lib` file under MinGW
         if std::path::Path::new(&dot_a).exists() {
