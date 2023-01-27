@@ -42,8 +42,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t seq    = packet->GetSequenceNumber();
-		bool isKeyFrame = packet->IsKeyFrame();
+		uint16_t seq          = packet->GetSequenceNumber();
+		const bool isKeyFrame = packet->IsKeyFrame();
 
 		if (!this->started)
 		{
@@ -156,7 +156,7 @@ namespace RTC
 		// If the nack list is too large, remove packets from the nack list until
 		// the latest first packet of a keyframe. If the list is still too large,
 		// clear it and request a keyframe.
-		uint16_t numNewNacks = seqEnd - seqStart;
+		const uint16_t numNewNacks = seqEnd - seqStart;
 
 		if (static_cast<uint16_t>(this->nackList.size()) + numNewNacks > MaxNackPackets)
 		{
@@ -228,7 +228,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t nowMs = DepLibUV::GetTimeMs();
+		const uint64_t nowMs = DepLibUV::GetTimeMs();
 		std::vector<uint16_t> nackBatch;
 
 		auto it = this->nackList.begin();

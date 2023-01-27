@@ -709,7 +709,7 @@ namespace RTC
 			return;
 
 		// Whether this is the first packet after re-sync.
-		bool isSyncPacket = this->syncRequired;
+		const bool isSyncPacket = this->syncRequired;
 
 		// Sync sequence number and timestamp if required.
 		if (isSyncPacket && (this->spatialLayerToSync == -1 || this->spatialLayerToSync == spatialLayer))
@@ -750,8 +750,8 @@ namespace RTC
 				else
 					diffMs = -1 * (ntpMs1 - ntpMs2);
 
-				int64_t diffTs  = diffMs * this->rtpStream->GetClockRate() / 1000;
-				uint32_t newTs2 = ts2 - diffTs;
+				int64_t diffTs        = diffMs * this->rtpStream->GetClockRate() / 1000;
+				const uint32_t newTs2 = ts2 - diffTs;
 
 				// Apply offset. This is the difference that later must be removed from the
 				// sending RTP packet.
@@ -902,7 +902,7 @@ namespace RTC
 
 		// Update RTP seq number and timestamp based on NTP offset.
 		uint16_t seq;
-		uint32_t timestamp = packet->GetTimestamp() - this->tsOffset;
+		const uint32_t timestamp = packet->GetTimestamp() - this->tsOffset;
 
 		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
 

@@ -40,7 +40,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t seq = packet->GetSequenceNumber();
+		const uint16_t seq = packet->GetSequenceNumber();
 
 		// If this is the first packet seen, initialize stuff.
 		if (!this->started)
@@ -86,7 +86,7 @@ namespace RTC
 
 		report->SetSsrc(GetSsrc());
 
-		uint32_t prevPacketsLost = this->packetsLost;
+		const uint32_t prevPacketsLost = this->packetsLost;
 
 		// Calculate Packets Expected and Lost.
 		auto expected = GetExpectedPackets();
@@ -97,15 +97,15 @@ namespace RTC
 			this->packetsLost = 0u;
 
 		// Calculate Fraction Lost.
-		uint32_t expectedInterval = expected - this->expectedPrior;
+		const uint32_t expectedInterval = expected - this->expectedPrior;
 
 		this->expectedPrior = expected;
 
-		uint32_t receivedInterval = this->packetsCount - this->receivedPrior;
+		const uint32_t receivedInterval = this->packetsCount - this->receivedPrior;
 
 		this->receivedPrior = this->packetsCount;
 
-		int32_t lostInterval = expectedInterval - receivedInterval;
+		const int32_t lostInterval = expectedInterval - receivedInterval;
 
 		if (expectedInterval == 0 || lostInterval <= 0)
 			this->fractionLost = 0;
@@ -157,8 +157,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t seq    = packet->GetSequenceNumber();
-		uint16_t udelta = seq - this->maxSeq;
+		const uint16_t seq    = packet->GetSequenceNumber();
+		const uint16_t udelta = seq - this->maxSeq;
 
 		// If the new packet sequence number is greater than the max seen but not
 		// "so much bigger", accept it.

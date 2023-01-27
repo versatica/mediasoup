@@ -434,7 +434,7 @@ namespace RTC
 
 		auto paddedExtensionsTotalSize =
 		  static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(extensionsTotalSize)));
-		size_t padding = paddedExtensionsTotalSize - extensionsTotalSize;
+		const size_t padding = paddedExtensionsTotalSize - extensionsTotalSize;
 
 		extensionsTotalSize = paddedExtensionsTotalSize;
 
@@ -876,8 +876,8 @@ namespace RTC
 			// One-Byte extensions cannot have length 0.
 			while (ptr < extensionEnd)
 			{
-				uint8_t id = (*ptr & 0xF0) >> 4;
-				size_t len = static_cast<size_t>(*ptr & 0x0F) + 1;
+				const uint8_t id = (*ptr & 0xF0) >> 4;
+				const size_t len = static_cast<size_t>(*ptr & 0x0F) + 1;
 
 				// id=15 in One-Byte extensions means "stop parsing here".
 				if (id == 15u)
@@ -929,8 +929,8 @@ namespace RTC
 			// Two-Byte extensions can have length 0.
 			while (ptr + 1 < extensionEnd)
 			{
-				uint8_t id  = *ptr;
-				uint8_t len = *(ptr + 1);
+				const uint8_t id  = *ptr;
+				const uint8_t len = *(ptr + 1);
 
 				// Valid extension id.
 				if (id != 0u)

@@ -4,6 +4,7 @@ Checks: '*,-llvmlibc-*,-boost-use-to-string,-cert-*,-clang-analyzer-osx.*,-clang
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
 User: mediasoup
+FormatStyle: file
 CheckOptions:
   - key:             cppcoreguidelines-pro-bounds-constant-array-index.GslHeader
     value:           ''

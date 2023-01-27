@@ -3076,8 +3076,8 @@ namespace RTC
 		// RTCP timer.
 		if (timer == this->rtcpTimer)
 		{
-			auto interval  = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
-			uint64_t nowMs = DepLibUV::GetTimeMs();
+			auto interval        = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
+			const uint64_t nowMs = DepLibUV::GetTimeMs();
 
 			SendRtcp(nowMs);
 

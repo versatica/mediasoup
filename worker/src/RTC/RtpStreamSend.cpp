@@ -285,16 +285,16 @@ namespace RTC
 		/* Calculate RTT. */
 
 		// Get the NTP representation of the current timestamp.
-		uint64_t nowMs = DepLibUV::GetTimeMs();
-		auto ntp       = Utils::Time::TimeMs2Ntp(nowMs);
+		const uint64_t nowMs = DepLibUV::GetTimeMs();
+		auto ntp             = Utils::Time::TimeMs2Ntp(nowMs);
 
 		// Get the compact NTP representation of the current timestamp.
 		uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
 
 		compactNtp |= (ntp.fractions & 0xFFFF0000) >> 16;
 
-		uint32_t lastSr = report->GetLastSenderReport();
-		uint32_t dlsr   = report->GetDelaySinceLastSenderReport();
+		const uint32_t lastSr = report->GetLastSenderReport();
+		const uint32_t dlsr   = report->GetDelaySinceLastSenderReport();
 
 		// RTT in 1/2^16 second fractions.
 		uint32_t rtt{ 0 };
@@ -567,14 +567,14 @@ namespace RTC
 		}
 
 		// Look for each requested packet.
-		uint64_t nowMs      = DepLibUV::GetTimeMs();
-		uint16_t rtt        = (this->rtt != 0u ? this->rtt : DefaultRtt);
-		uint16_t currentSeq = seq;
+		const uint64_t nowMs = DepLibUV::GetTimeMs();
+		const uint16_t rtt   = (this->rtt != 0u ? this->rtt : DefaultRtt);
+		uint16_t currentSeq  = seq;
 		bool requested{ true };
 		size_t containerIdx{ 0 };
 
 		// Variables for debugging.
-		uint16_t origBitmask = bitmask;
+		const uint16_t origBitmask = bitmask;
 		uint16_t sentBitmask{ 0b0000000000000000 };
 		bool isFirstPacket{ true };
 		bool firstPacketSent{ false };
@@ -724,7 +724,7 @@ namespace RTC
 		this->sentPriorScore = totalSent;
 
 		// Calculate number of packets lost in this interval.
-		uint32_t totalLost = report->GetTotalLost() > 0 ? report->GetTotalLost() : 0;
+		const uint32_t totalLost = report->GetTotalLost() > 0 ? report->GetTotalLost() : 0;
 		uint32_t lost;
 
 		if (totalLost < this->lostPriorScore)
@@ -741,8 +741,8 @@ namespace RTC
 		this->repairedPriorScore = totalRepaired;
 
 		// Calculate number of packets retransmitted in this interval.
-		auto totatRetransmitted = this->packetsRetransmitted;
-		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPriorScore;
+		auto totatRetransmitted      = this->packetsRetransmitted;
+		const uint32_t retransmitted = totatRetransmitted - this->retransmittedPriorScore;
 
 		this->retransmittedPriorScore = totatRetransmitted;
 

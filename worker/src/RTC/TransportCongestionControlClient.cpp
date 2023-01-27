@@ -161,7 +161,7 @@ namespace RTC
 		}
 
 		// Notify the transport feedback adapter about the sent packet.
-		rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, nowMs);
+		rtc::SentPacket const sentPacket(packetInfo.transport_sequence_number, nowMs);
 		this->rtpTransportControllerSend->OnSentPacket(sentPacket, packetInfo.length);
 	}
 
@@ -214,8 +214,8 @@ namespace RTC
 		MS_TRACE();
 
 		// Update packet loss history.
-		size_t expected_packets = feedback->GetPacketStatusCount();
-		size_t lost_packets     = 0;
+		const size_t expected_packets = feedback->GetPacketStatusCount();
+		size_t lost_packets           = 0;
 		for (const auto& result : feedback->GetPacketResults())
 		{
 			if (!result.received)
@@ -411,7 +411,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t nowMs = DepLibUV::GetTimeMsInt64();
+		const uint64_t nowMs = DepLibUV::GetTimeMsInt64();
 		bool notify{ false };
 
 		// Ignore if first event.

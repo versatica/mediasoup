@@ -36,6 +36,7 @@ BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
 BreakStringLiterals: false
 ColumnLimit: 100
+QualifierAlignment: Left
 CommentPragmas: 'NOLINT'
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 2
