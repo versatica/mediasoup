@@ -105,8 +105,7 @@ fn main() {
         if std::path::Path::new(&dot_a).exists() {
             std::fs::copy(&dot_a, &dot_lib).unwrap_or_else(|error| {
                 panic!(
-                    "Failed to copy static library from {} to {}: {}",
-                    dot_a, dot_lib, error
+                    "Failed to copy static library from {dot_a} to {dot_lib}: {error}"
                 )
             });
         }
