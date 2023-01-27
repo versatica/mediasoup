@@ -60,7 +60,7 @@ where
     let buffer_worker_messages_guard = channel.buffer_messages_for(std::process::id().into());
 
     std::thread::Builder::new()
-        .name(format!("mediasoup-worker-{}", id))
+        .name(format!("mediasoup-worker-{id}"))
         .spawn(move || {
             if let Some(thread_initializer) = thread_initializer {
                 thread_initializer();
