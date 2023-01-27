@@ -14,9 +14,6 @@ jobs:
           - ubuntu-22.04
           - macos-12
           - windows-2022
-        rust:
-          - stable
-          # - nightly
 
     runs-on: ${{ matrix.os }}
 
@@ -24,20 +21,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          override: true
-          components: rustfmt, clippy
-
       - name: Configure cache
         uses: actions/cache@v2
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ matrix.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
 
       - name: cargo fmt
         uses: actions-rs/cargo@v1

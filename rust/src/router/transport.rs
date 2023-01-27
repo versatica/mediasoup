@@ -539,7 +539,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                         .next_mid_for_consumers()
                         .fetch_add(1, Ordering::Relaxed);
                     let mid = next_mid_for_consumers % 100_000_000;
-                    Some(format!("{}", mid))
+                    Some(format!("{mid}"))
                 })
             }
 
