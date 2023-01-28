@@ -685,12 +685,13 @@ namespace RTC
 
 		// Check whether this is the packet we are waiting for in order to update
 		// the current spatial layer.
-		if (this->currentSpatialLayer != this->targetSpatialLayer && spatialLayer == this->targetSpatialLayer)
+		if (
+			// clang-format off
+			this->currentSpatialLayer != this->targetSpatialLayer &&
+			spatialLayer == this->targetSpatialLayer &&
+			packet->IsKeyFrame())
+			// clang-format on
 		{
-			// Ignore if not a key frame.
-			if (!packet->IsKeyFrame())
-				return;
-
 			shouldSwitchCurrentSpatialLayer = true;
 
 			// Need to resync the stream.
