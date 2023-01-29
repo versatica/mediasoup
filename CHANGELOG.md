@@ -4,6 +4,7 @@
 ### NEXT
 
 * `SimulcastConsumer::GetDesiredBitrate()`: Choose the highest bitrate among all Producer streams ([PR #992](https://github.com/versatica/mediasoup/pull/992)).
+* Update NPM deps.
 
 
 ### 3.11.7
