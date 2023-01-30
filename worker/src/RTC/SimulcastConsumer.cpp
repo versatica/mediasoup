@@ -689,7 +689,8 @@ namespace RTC
 		if (
 			this->currentSpatialLayer != this->targetSpatialLayer &&
 			spatialLayer == this->targetSpatialLayer &&
-			packet->IsKeyFrame())
+			packet->IsKeyFrame()
+		)
 		// clang-format on
 		{
 			shouldSwitchCurrentSpatialLayer = true;
