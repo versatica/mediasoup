@@ -394,7 +394,7 @@ public:
 	{ \
 		if (Settings::configuration.logLevel >= LogLevel::LOG_ERROR || MS_LOG_DEV_LEVEL >= 1) \
 		{ \
-			int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "E" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
+			const int loggerWritten = std::snprintf(Logger::buffer, Logger::bufferSize, "E" _MS_LOG_STR_DESC desc, _MS_LOG_ARG, ##__VA_ARGS__); \
 			Logger::channel->SendLog(Logger::buffer, static_cast<uint32_t>(loggerWritten)); \
 		} \
 	} \
