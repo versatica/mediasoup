@@ -648,6 +648,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			mid,
 			preferredLayers,
 			ignoreDtx = false,
+			ignoreNack = true,
 			pipe = false,
 			appData
 		}: ConsumerOptions
@@ -673,6 +674,14 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		// This may throw.
 		const rtpParameters = ortc.getConsumerRtpParameters(
 			producer.consumableRtpParameters, rtpCapabilities!, pipe);
+
+		if (ignoreNack) {
+			rtpParameters.codecs.forEach(codec => {
+				if (codec.mimeType.toLowerCase() === 'audio/opus') {
+					codec.rtcpFeedback = codec.rtcpFeedback?.filter(fb => fb.type !== 'nack')
+				}
+			})
+		}
 
 		// Set MID.
 		if (!pipe)

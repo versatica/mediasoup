@@ -11,7 +11,8 @@ const supportedRtpCapabilities: RtpCapabilities =
 			channels     : 2,
 			rtcpFeedback :
 			[
-				{ type: 'transport-cc' }
+				{ type: 'transport-cc' },
+				{ type: 'nack' }
 			]
 		},
 		{
