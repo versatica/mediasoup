@@ -1,10 +1,10 @@
 # Changelog
 
 
-### NEXT
+### 3.11.8
 
 * `SimulcastConsumer::GetDesiredBitrate()`: Choose the highest bitrate among all Producer streams ([PR #992](https://github.com/versatica/mediasoup/pull/992)).
-* `SimulcastConsumer`: Fix frozen video when syncing keyframe is discarded due to too high RTP timestamp extra offset needed ([PR #999](https://github.com/versatica/mediasoup/pull/999)).
+* `SimulcastConsumer`: Fix frozen video when syncing keyframe is discarded due to too high RTP timestamp extra offset needed ([PR #999](https://github.com/versatica/mediasoup/pull/999), thanks to @satoren for properly reporting the issue and helping with the solution).
 * Update NPM deps.
 
 
