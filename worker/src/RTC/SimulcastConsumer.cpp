@@ -809,6 +809,10 @@ namespace RTC
 
 					this->keyFrameForTsOffsetRequested = true;
 
+					// Reset flags since we are discarding this key frame.
+					this->syncRequired       = false;
+					this->spatialLayerToSync = -1;
+
 					return;
 				}
 
