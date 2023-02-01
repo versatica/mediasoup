@@ -4,10 +4,10 @@ use std::path::Path;
 
 /// NOTE: flatc binary path must be present in PATH environment variable.
 fn main() {
-    println!("cargo:rerun-if-changed=../fbs/");
+    println!("cargo:rerun-if-changed=../worker/fbs/");
 
     // Retrieve a Vec<&Path> with the schema files.
-    let schemas_path = fs::read_dir("../fbs").unwrap();
+    let schemas_path = fs::read_dir("../worker/fbs").unwrap();
     let mut inputs_str: Vec<String> = vec![];
     let mut inputs_path: Vec<&Path> = vec![];
     let extra = ["--gen-all", "--filename-suffix", "", "--rust-serialize"];
