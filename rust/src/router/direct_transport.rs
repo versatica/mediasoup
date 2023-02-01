@@ -15,9 +15,7 @@ use crate::transport::{
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
     TransportTraceEventType,
 };
-use crate::worker::{
-    Channel, NotificationError, RequestError, SubscriptionHandler,
-};
+use crate::worker::{Channel, NotificationError, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
@@ -433,15 +431,14 @@ impl DirectTransport {
                     Ok(notification) => match notification {
                         Notification::Trace(trace_event_data) => {
                             handlers.trace.call_simple(&trace_event_data);
-                        }
-                        /*
-                         * TODO.
-                        Notification::Rtcp => {
-                            handlers.rtcp.call(|callback| {
-                                callback(notification);
-                            });
-                        }
-                        */
+                        } /*
+                           * TODO.
+                          Notification::Rtcp => {
+                              handlers.rtcp.call(|callback| {
+                                  callback(notification);
+                              });
+                          }
+                          */
                     },
                     Err(error) => {
                         error!("Failed to parse notification: {}", error);
@@ -476,9 +473,7 @@ impl DirectTransport {
             app_data,
             router,
             closed: AtomicBool::new(false),
-            _subscription_handlers: Mutex::new(vec![
-                subscription_handler,
-            ]),
+            _subscription_handlers: Mutex::new(vec![subscription_handler]),
             _on_router_close_handler: Mutex::new(on_router_close_handler),
         });
 

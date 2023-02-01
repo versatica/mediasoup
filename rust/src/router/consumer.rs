@@ -586,9 +586,7 @@ impl Consumer {
             transport,
             weak_producer: producer.downgrade(),
             closed,
-            _subscription_handlers: Mutex::new(vec![
-                subscription_handler,
-            ]),
+            _subscription_handlers: Mutex::new(vec![subscription_handler]),
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 

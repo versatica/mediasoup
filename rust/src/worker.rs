@@ -18,7 +18,7 @@ pub use crate::worker::utils::ExitError;
 use crate::worker_manager::WorkerManager;
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
-pub(crate) use channel::{NotificationError, Channel};
+pub(crate) use channel::{Channel, NotificationError};
 pub(crate) use common::{SubscriptionHandler, SubscriptionTarget};
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::FutureExt;

@@ -472,8 +472,8 @@ impl Channel {
                 "n:{}:{handler_id}:{}",
                 notification.as_event(),
                 serde_json::to_string(&notification).unwrap()
-                )
-                .into_bytes(),
+            )
+            .into_bytes(),
         ));
 
         {
@@ -481,7 +481,7 @@ impl Channel {
             outgoing_message_buffer
                 .messages
                 .push_back(Arc::clone(&message));
-                // .push_back(OutgoingMessage::Notification { message, payload });
+            // .push_back(OutgoingMessage::Notification { message, payload });
             if let Some(handle) = outgoing_message_buffer.handle {
                 if self.inner.worker_closed.load(Ordering::Acquire) {
                     return Err(NotificationError::ChannelClosed);

@@ -11,9 +11,7 @@ pub use crate::ortc::RtpMapping;
 use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{
-    Channel, NotificationError, RequestError, SubscriptionHandler,
-};
+use crate::worker::{Channel, NotificationError, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use hash_hasher::HashedMap;

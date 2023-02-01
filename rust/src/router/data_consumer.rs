@@ -435,9 +435,7 @@ impl DataConsumer {
             transport,
             weak_data_producer: data_producer.downgrade(),
             closed,
-            _subscription_handlers: Mutex::new(vec![
-                subscription_handler,
-            ]),
+            _subscription_handlers: Mutex::new(vec![subscription_handler]),
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 
@@ -657,10 +655,7 @@ impl DirectDataConsumer {
 
         self.inner
             .channel
-            .request(
-                self.inner.id,
-                DataConsumerSendRequest { ppid },
-            )
+            .request(self.inner.id, DataConsumerSendRequest { ppid })
             .await
     }
 }

@@ -1,4 +1,4 @@
-pub(super) use mediasoup_sys::{ ChannelReadCtx, ChannelReadFn };
+pub(super) use mediasoup_sys::{ChannelReadCtx, ChannelReadFn};
 use mediasoup_sys::{ChannelReadFreeFn, UvAsyncT};
 use std::mem;
 use std::os::raw::c_void;

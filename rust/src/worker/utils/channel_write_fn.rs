@@ -1,4 +1,4 @@
-pub(super) use mediasoup_sys::{ ChannelWriteCtx, ChannelWriteFn };
+pub(super) use mediasoup_sys::{ChannelWriteCtx, ChannelWriteFn};
 use std::os::raw::c_void;
 use std::slice;
 
