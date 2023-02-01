@@ -26,8 +26,8 @@ namespace RTC
 
 		size_t FeedbackPsSliItem::Serialize(uint8_t* buffer)
 		{
-			uint32_t compact = (this->first << 19) | (this->number << 6) | this->pictureId;
-			auto* header     = reinterpret_cast<Header*>(buffer);
+			const uint32_t compact = (this->first << 19) | (this->number << 6) | this->pictureId;
+			auto* header           = reinterpret_cast<Header*>(buffer);
 
 			header->compact = uint32_t{ htonl(compact) };
 			std::memcpy(buffer, header, HeaderSize);

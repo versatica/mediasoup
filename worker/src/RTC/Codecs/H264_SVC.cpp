@@ -58,7 +58,7 @@ namespace RTC
 			// there is no frame-marking or if there is but keyframe was not detected above.
 			if (!frameMarking || !payloadDescriptor->isKeyFrame)
 			{
-				uint8_t nal = *data & 0x1F;
+				const uint8_t nal = *data & 0x1F;
 
 				switch (nal)
 				{
@@ -121,7 +121,7 @@ namespace RTC
 					case 28:
 					case 29:
 					{
-						uint8_t startBit = *(data + 1) & 0x80;
+						const uint8_t startBit = *(data + 1) & 0x80;
 
 						if (startBit == 128)
 						{
@@ -145,7 +145,7 @@ namespace RTC
 		  std::unique_ptr<H264_SVC::PayloadDescriptor> payloadDescriptor,
 		  bool isStartBit)
 		{
-			uint8_t nal = *data & 0x1F;
+			const uint8_t nal = *data & 0x1F;
 
 			switch (nal)
 			{
@@ -286,7 +286,7 @@ namespace RTC
 			}
 
 			// clang-format off
-			bool isOldPacket = false;
+			const bool isOldPacket = false;
 
 			// Upgrade current spatial layer if needed.
 			if (context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())

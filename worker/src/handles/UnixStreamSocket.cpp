@@ -197,15 +197,15 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 		written = 0;
 	}
 
-	size_t pendingLen = len - written;
-	auto* writeData   = new UvWriteData(pendingLen);
+	const size_t pendingLen = len - written;
+	auto* writeData         = new UvWriteData(pendingLen);
 
 	writeData->req.data = static_cast<void*>(writeData);
 	std::memcpy(writeData->store, data + written, pendingLen);
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
-	int err = uv_write(
+	const int err = uv_write(
 	  &writeData->req,
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
 	  &buffer,

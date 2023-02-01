@@ -135,7 +135,7 @@ void TcpConnectionHandler::Setup(
 	MS_TRACE();
 
 	// Set the UV handle.
-	int err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
+	const int err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
 
 	if (err != 0)
 	{
@@ -205,7 +205,7 @@ void TcpConnectionHandler::Write(
 		return;
 	}
 
-	size_t totalLen = len1 + len2;
+	const size_t totalLen = len1 + len2;
 	uv_buf_t buffers[2];
 	int written{ 0 };
 	int err;
@@ -246,8 +246,8 @@ void TcpConnectionHandler::Write(
 		written = 0;
 	}
 
-	size_t pendingLen = totalLen - written;
-	auto* writeData   = new UvWriteData(pendingLen);
+	const size_t pendingLen = totalLen - written;
+	auto* writeData         = new UvWriteData(pendingLen);
 
 	writeData->req.data = static_cast<void*>(writeData);
 
@@ -269,7 +269,7 @@ void TcpConnectionHandler::Write(
 
 	writeData->cb = cb;
 
-	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
+	const uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
 	err = uv_write(
 	  &writeData->req,

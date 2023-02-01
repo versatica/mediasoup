@@ -23,10 +23,10 @@ namespace RTC
 			this->ssrc = Utils::Byte::Get4Bytes(data, 0);
 
 			// Read the 4 bytes block.
-			uint32_t compact = Utils::Byte::Get4Bytes(data, 4);
+			const uint32_t compact = Utils::Byte::Get4Bytes(data, 4);
 			// Read each component.
-			uint8_t exponent  = compact >> 26;            // 6 bits.
-			uint64_t mantissa = (compact >> 9) & 0x1ffff; // 17 bits.
+			const uint8_t exponent  = compact >> 26;            // 6 bits.
+			const uint64_t mantissa = (compact >> 9) & 0x1ffff; // 17 bits.
 
 			this->overhead = compact & 0x1ff; // 9 bits.
 			// Get the bitrate out of exponent and mantissa.
