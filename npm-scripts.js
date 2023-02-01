@@ -281,7 +281,7 @@ function flatcNode()
 	console.log('npm-scripts.js [INFO] flatcNode()');
 
 	// Build flatc if needed.
-	executeCmd(`${MAKE} -C worker flatc`);
+	executeCmd(`${MAKE} -C worker flatc-all`);
 
 	const extension = isWindows ? '.exe' : '';
 	const flatc = path.resolve(path.join(
@@ -299,6 +299,8 @@ function flatcNode()
 	{
 		executeCmd(`for file in ${src}; do ${command} \$\{file\}; done`);
 	}
+
+	cleanWorker();
 }
 
 function flatcWorker()

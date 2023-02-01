@@ -211,6 +211,8 @@ flatc:
 	$(FLATC) --cpp --cpp-field-case-style lower --reflect-names --scoped-enums \
 		-o ./include/FBS ./fbs/*
 
+flatc-all: setup flatc
+
 xcode: setup
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode
 
