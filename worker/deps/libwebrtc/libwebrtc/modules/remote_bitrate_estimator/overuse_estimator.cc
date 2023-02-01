@@ -108,11 +108,8 @@ void OveruseEstimator::Update(int64_t t_delta,
       E_[0][0] + E_[1][1] >= 0 &&
       E_[0][0] * E_[1][1] - E_[0][1] * E_[1][0] >= 0 && E_[0][0] >= 0;
 
-  MS_ASSERT(positive_semi_definite, "positive_semi_definite is not true");
-
   if (!positive_semi_definite) {
-    MS_ERROR("The over-use estimator's covariance matrix is no longer "
-           "semi-definite.");
+    MS_ERROR("the over-use estimator's covariance matrix is no longer semi-definite");
   }
 
   slope_ = slope_ + K[0] * residual;

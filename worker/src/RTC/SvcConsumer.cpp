@@ -554,7 +554,7 @@ namespace RTC
 			return;
 
 		// Whether this is the first packet after re-sync.
-		bool isSyncPacket = this->syncRequired;
+		const bool isSyncPacket = this->syncRequired;
 
 		// Sync sequence number and timestamp if required.
 		if (isSyncPacket)
@@ -563,6 +563,7 @@ namespace RTC
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
+			this->encodingContext->SyncRequired();
 
 			this->syncRequired = false;
 		}
@@ -571,7 +572,7 @@ namespace RTC
 		auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
 
 		bool marker{ false };
-		bool origMarker = packet->HasMarker();
+		const bool origMarker = packet->HasMarker();
 
 		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 		{

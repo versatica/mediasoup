@@ -86,7 +86,7 @@ endif
 	tidy \
 	fuzzer \
 	fuzzer-run-all \
-	docker-build \
+	docker \
 	docker-run
 
 default: mediasoup-worker
@@ -251,7 +251,7 @@ fuzzer: setup
 fuzzer-run-all:
 	LSAN_OPTIONS=verbosity=1:log_threads=1 $(BUILD_DIR)/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
 
-docker-build:
+docker:
 ifeq ($(DOCKER_NO_CACHE),true)
 	$(DOCKER) build -f Dockerfile --no-cache --tag mediasoup/docker:latest .
 else

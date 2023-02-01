@@ -58,9 +58,9 @@ inline static int onRecvSctpData(
 	}
 	else
 	{
-		uint16_t streamId = rcv.rcv_sid;
-		uint32_t ppid     = ntohl(rcv.rcv_ppid);
-		uint16_t ssn      = rcv.rcv_ssn;
+		const uint16_t streamId = rcv.rcv_sid;
+		uint32_t ppid           = ntohl(rcv.rcv_ppid);
+		const uint16_t ssn      = rcv.rcv_ssn;
 
 		MS_DEBUG_TAG(
 		  sctp,
@@ -191,7 +191,7 @@ namespace RTC
 		}
 
 		// Set SCTP_NODELAY.
-		uint32_t noDelay = 1;
+		const uint32_t noDelay = 1;
 
 		ret = usrsctp_setsockopt(this->socket, IPPROTO_SCTP, SCTP_NODELAY, &noDelay, sizeof(noDelay));
 
@@ -769,7 +769,7 @@ namespace RTC
 							static const size_t BufferSize{ 1024 };
 							thread_local static char buffer[BufferSize];
 
-							uint32_t len =
+							const uint32_t len =
 							  notification->sn_assoc_change.sac_length - sizeof(struct sctp_assoc_change);
 
 							for (uint32_t i{ 0 }; i < len; ++i)
@@ -838,7 +838,7 @@ namespace RTC
 							static const size_t BufferSize{ 1024 };
 							thread_local static char buffer[BufferSize];
 
-							uint32_t len =
+							const uint32_t len =
 							  notification->sn_assoc_change.sac_length - sizeof(struct sctp_assoc_change);
 
 							for (uint32_t i{ 0 }; i < len; ++i)
@@ -880,7 +880,8 @@ namespace RTC
 				static const size_t BufferSize{ 1024 };
 				thread_local static char buffer[BufferSize];
 
-				uint32_t len = notification->sn_remote_error.sre_length - sizeof(struct sctp_remote_error);
+				const uint32_t len =
+				  notification->sn_remote_error.sre_length - sizeof(struct sctp_remote_error);
 
 				for (uint32_t i{ 0 }; i < len; i++)
 				{
@@ -916,7 +917,7 @@ namespace RTC
 				static const size_t BufferSize{ 1024 };
 				thread_local static char buffer[BufferSize];
 
-				uint32_t len =
+				const uint32_t len =
 				  notification->sn_send_failed_event.ssfe_length - sizeof(struct sctp_send_failed_event);
 
 				for (uint32_t i{ 0 }; i < len; ++i)
@@ -941,7 +942,7 @@ namespace RTC
 			{
 				bool incoming{ false };
 				bool outgoing{ false };
-				uint16_t numStreams =
+				const uint16_t numStreams =
 				  (notification->sn_strreset_event.strreset_length - sizeof(struct sctp_stream_reset_event)) /
 				  sizeof(uint16_t);
 

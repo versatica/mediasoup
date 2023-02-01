@@ -1,164 +1,185 @@
 # Changelog
 
 
-### NEXT
+### 3.11.8
 
-* Require Node.js >= 16 (PR #973).
+* `SimulcastConsumer::GetDesiredBitrate()`: Choose the highest bitrate among all Producer streams ([PR #992](https://github.com/versatica/mediasoup/pull/992)).
+* `SimulcastConsumer`: Fix frozen video when syncing keyframe is discarded due to too high RTP timestamp extra offset needed ([PR #999](https://github.com/versatica/mediasoup/pull/999), thanks to @satoren for properly reporting the issue and helping with the solution).
+* Update NPM deps.
+
+
+### 3.11.7
+
+* libwebrtc: Fix crash due to invalid `arrival_time` value ([PR #985](https://github.com/versatica/mediasoup/pull/985) by @ggarber).
+* libwebrtc: Replace `MS_ASSERT()` with `MS_ERROR()` ([PR #988](https://github.com/versatica/mediasoup/pull/988)).
+* Update NPM deps.
+
+
+### 3.11.6
+
+* Fix wrong `PictureID` rolling over in VP9 and VP8 ([PR #984](https://github.com/versatica/mediasoup/pull/984) by @jcague).
+* Update NPM deps.
+
+
+### 3.11.5
+
+* Require Node.js >= 16 ([PR #973](https://github.com/versatica/mediasoup/pull/973)).
+* Fix wrong `Consumer` bandwidth estimation under `Producer` packet loss ([PR #962](https://github.com/versatica/mediasoup/pull/962) by @ggarber).
+* Update NPM deps.
 
 
 ### 3.11.4
 
-* Node: Migrate tests to TypeScript (PR #958).
-* Node: Remove compiled JavaScript from repository and compile TypeScript code on NPM `prepare` script on demand when installed via git (PR #954).
-* `Worker`: Add `RTC::Shared` singleton for RTC entities (PR #953).
+* Node: Migrate tests to TypeScript ([PR #958](https://github.com/versatica/mediasoup/pull/958)).
+* Node: Remove compiled JavaScript from repository and compile TypeScript code on NPM `prepare` script on demand when installed via git ([PR #954](https://github.com/versatica/mediasoup/pull/954)).
+* `Worker`: Add `RTC::Shared` singleton for RTC entities ([PR #953](https://github.com/versatica/mediasoup/pull/953)).
 * Update OpenSSL to 3.0.7.
 * Update NPM deps.
 
 
 ### 3.11.3
 
-* `ChannelMessageHandlers`: Make `RegisterHandler()` not remove the existing handler if another one with same `id` is given (PR #952).
+* `ChannelMessageHandlers`: Make `RegisterHandler()` not remove the existing handler if another one with same `id` is given ([PR #952](https://github.com/versatica/mediasoup/pull/952)).
 
 
 ### 3.11.2
 
-* Fix installation issue in Linux due to a bug in ninja latest version 1.11.1 (PR #948).
+* Fix installation issue in Linux due to a bug in ninja latest version 1.11.1 ([PR #948](https://github.com/versatica/mediasoup/pull/948)).
 
 
 ### 3.11.1
 
-* `ActiveSpeakerObserver`: Revert 'dominantspeaker' event changes in PR #941 to avoid breaking changes (PR #947).
+* `ActiveSpeakerObserver`: Revert 'dominantspeaker' event changes in [PR #941](https://github.com/versatica/mediasoup/pull/941) to avoid breaking changes ([PR #947](https://github.com/versatica/mediasoup/pull/947)).
 
 
 ### 3.11.0
 
-* `Transport`: Remove duplicate call to method (PR #931).
-* RTCP: Adjust maximum compound packet size (PR #934).
-* `DataConsumer`: Fix `bufferedAmount` type to be a number again (PR #936).
-* `ActiveSpeakerObserver`: Fix 'dominantspeaker' event by having a single `Producer` as argument rather than an array with a single `Producer` into it (PR #941).
-* `ActiveSpeakerObserver`: Fix memory leak (PR #942).
-* Fix some libwebrtc issues (PR #944).
-* Tests: Normalize hexadecimal data representation (PR #945).
+* `Transport`: Remove duplicate call to method ([PR #931](https://github.com/versatica/mediasoup/pull/931)).
+* RTCP: Adjust maximum compound packet size ([PR #934](https://github.com/versatica/mediasoup/pull/934)).
+* `DataConsumer`: Fix `bufferedAmount` type to be a number again ([PR #936](https://github.com/versatica/mediasoup/pull/936)).
+* `ActiveSpeakerObserver`: Fix 'dominantspeaker' event by having a single `Producer` as argument rather than an array with a single `Producer` into it ([PR #941](https://github.com/versatica/mediasoup/pull/941)).
+* `ActiveSpeakerObserver`: Fix memory leak ([PR #942](https://github.com/versatica/mediasoup/pull/942)).
+* Fix some libwebrtc issues ([PR #944](https://github.com/versatica/mediasoup/pull/944)).
+* Tests: Normalize hexadecimal data representation ([PR #945](https://github.com/versatica/mediasoup/pull/945)).
 * Update NPM deps.
-* `SctpAssociation`: Fix memory violation (PR #943).
+* `SctpAssociation`: Fix memory violation ([PR #943](https://github.com/versatica/mediasoup/pull/943)).
 
 
 ### 3.10.12
 
-* Fix worker crash due to `std::out_of_range` exception (PR #933).
+* Fix worker crash due to `std::out_of_range` exception ([PR #933](https://github.com/versatica/mediasoup/pull/933)).
 * Update NPM deps.
 
 
 ### 3.10.11
 
-* RTCP: Fix trailing space needed by `srtp_protect_rtcp()` (PR #929).
+* RTCP: Fix trailing space needed by `srtp_protect_rtcp()` ([PR #929](https://github.com/versatica/mediasoup/pull/929)).
 
 
 ### 3.10.10
 
-* Fix the JSON serialization for the payload channel `rtp` event (PR #926 by @mhammo).
+* Fix the JSON serialization for the payload channel `rtp` event ([PR #926](https://github.com/versatica/mediasoup/pull/926) by @mhammo).
 * Update NPM deps.
 
 
 ### 3.10.9
 
-* RTCP enhancements (PR #914).
+* RTCP enhancements ([PR #914](https://github.com/versatica/mediasoup/pull/914)).
 
 
 ### 3.10.8
 
-* `Consumer`: use a bitset instead of a set for supported payload types (PR #919).
-* RtpPacket: optimize UpdateMid() (PR #920).
-* Little optimizations and modernization (PR #916).
-* Fix SIGSEGV at `RTC::WebRtcTransport::OnIceServerTupleRemoved()` (PR #915, credits to @ybybwdwd).
-* `WebRtcServer`: Make `port` optional (if not given, a random available port from the `Worker` port range is used) (PR #908 by @satoren).
+* `Consumer`: use a bitset instead of a set for supported payload types ([PR #919](https://github.com/versatica/mediasoup/pull/919)).
+* RtpPacket: optimize UpdateMid() ([PR #920](https://github.com/versatica/mediasoup/pull/920)).
+* Little optimizations and modernization ([PR #916](https://github.com/versatica/mediasoup/pull/916)).
+* Fix SIGSEGV at `RTC::WebRtcTransport::OnIceServerTupleRemoved()` ([PR #915](https://github.com/versatica/mediasoup/pull/915), credits to @ybybwdwd).
+* `WebRtcServer`: Make `port` optional (if not given, a random available port from the `Worker` port range is used) ([PR #908](https://github.com/versatica/mediasoup/pull/908) by @satoren).
 
 
 ### 3.10.7
 
-* Forward `abs-capture-time` RTP extension also for audio packets (PR #911).
+* Forward `abs-capture-time` RTP extension also for audio packets ([PR #911](https://github.com/versatica/mediasoup/pull/911)).
 * Update NPM deps.
 
 
 ### 3.10.6
 
-* Node: Define TypeScript types for `internal` and `data` objects (PR #891).
-* `Channel` and `PayloadChannel`: Refactor `internal` with a single `handlerId` (PR #889).
-* `Channel` and `PayloadChannel`: Optimize message format and JSON generation (PR #893).
-* New C++ `ChannelMessageHandlers` class (PR #894).
-* Fix Rust support after recent changes (PR #898).
-* Modify `FeedbackRtpTransport` and tests to be compliant with latest libwebrtc code, make reference time to be unsigned (PR #899 by @penguinol and @sarumjanuch). 
+* Node: Define TypeScript types for `internal` and `data` objects ([PR #891](https://github.com/versatica/mediasoup/pull/891)).
+* `Channel` and `PayloadChannel`: Refactor `internal` with a single `handlerId` ([PR #889](https://github.com/versatica/mediasoup/pull/889)).
+* `Channel` and `PayloadChannel`: Optimize message format and JSON generation ([PR #893](https://github.com/versatica/mediasoup/pull/893)).
+* New C++ `ChannelMessageHandlers` class ([PR #894](https://github.com/versatica/mediasoup/pull/894)).
+* Fix Rust support after recent changes ([PR #898](https://github.com/versatica/mediasoup/pull/898)).
+* Modify `FeedbackRtpTransport` and tests to be compliant with latest libwebrtc code, make reference time to be unsigned ([PR #899](https://github.com/versatica/mediasoup/pull/899) by @penguinol and @sarumjanuch). 
 * Update NPM deps.
 
 
 ### 3.10.5
 
-* `RtpStreamSend`: Do not store too old RTP packets (PR #885).
-* Do not clone RTP packets if not needed (PR #850).
-* Log error details in channel socket. (PR #875 by @mstyura).
+* `RtpStreamSend`: Do not store too old RTP packets ([PR #885](https://github.com/versatica/mediasoup/pull/885)).
+* Log error details in channel socket. ([PR #875](https://github.com/versatica/mediasoup/pull/875) by @mstyura).
 
 ### 3.10.4
 
-* Do not clone RTP packets if not needed (PR #850).
-* Fix DTLS related crash (PR #867).
+* Do not clone RTP packets if not needed ([PR #850](https://github.com/versatica/mediasoup/pull/850)).
+* Fix DTLS related crash ([PR #867](https://github.com/versatica/mediasoup/pull/867)).
 * Update NPM deps. 
 
 
 ### 3.10.3
 
-* `SimpleConsumer`: Fix. Only process Opus codec (PR #865).
-* TypeScript: Improve `WebRtcTransportOptions` type to not allow `webRtcServer` and `listenIps`options at the same time (PR #852).
+* `SimpleConsumer`: Fix. Only process Opus codec ([PR #865](https://github.com/versatica/mediasoup/pull/865)).
+* TypeScript: Improve `WebRtcTransportOptions` type to not allow `webRtcServer` and `listenIps`options at the same time ([PR #852](https://github.com/versatica/mediasoup/pull/852)).
 
 
 ### 3.10.2
 
-* Fix release contents by including meson_options.txt (PR #863).
+* Fix release contents by including meson_options.txt ([PR #863](https://github.com/versatica/mediasoup/pull/863)).
 
 
 ### 3.10.1
 
-* `RtpStreamSend`: Memory optimizations (PR #840). Extracted from #675, by @nazar-pc.
-* `SimpleConsumer`: Opus DTX ignore capabilities (PR #846).
-* Update `libuv` to 1.44.1: Fixes `libuv` build (PR #857).
+* `RtpStreamSend`: Memory optimizations ([PR #840](https://github.com/versatica/mediasoup/pull/840)). Extracted from #675, by @nazar-pc.
+* `SimpleConsumer`: Opus DTX ignore capabilities ([PR #846](https://github.com/versatica/mediasoup/pull/846)).
+* Update `libuv` to 1.44.1: Fixes `libuv` build ([PR #857](https://github.com/versatica/mediasoup/pull/857)).
 * Update NPM deps.
 
 
 ### 3.10.0
 
-* `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port (PR #834).
-* More SRTP crypto suites (PR #837).
-* Improve `EnhancedEventEmitter` (PR #836).
-* `TransportCongestionControlClient`: Allow setting max outgoing bitrate before `tccClient` is created (PR #833).
+* `WebRtcServer`: A new class that brings to `WebRtcTransports` the ability to listen on a single UDP/TCP port ([PR #834](https://github.com/versatica/mediasoup/pull/834)).
+* More SRTP crypto suites ([PR #837](https://github.com/versatica/mediasoup/pull/837)).
+* Improve `EnhancedEventEmitter` ([PR #836](https://github.com/versatica/mediasoup/pull/836)).
+* `TransportCongestionControlClient`: Allow setting max outgoing bitrate before `tccClient` is created ([PR #833](https://github.com/versatica/mediasoup/pull/833)).
 * Update NPM deps and TypeScript version.
 
 
 ### 3.9.17
 
-* `RateCalculator`: Fix old buffer items cleanup (PR #830 by @dsdolzhenko).
+* `RateCalculator`: Fix old buffer items cleanup ([PR #830](https://github.com/versatica/mediasoup/pull/830) by @dsdolzhenko).
 * Update NPM deps and TypeScript version.
 
 
 ### 3.9.16
 
-* `SimulcastConsumer`: Fix spatial layer switch with unordered packets (PR #823 by @jcague).
+* `SimulcastConsumer`: Fix spatial layer switch with unordered packets ([PR #823](https://github.com/versatica/mediasoup/pull/823) by @jcague).
 * Update NPM deps and TypeScript version.
 
 
 ### 3.9.15
 
-* `RateCalculator`: Revert Fix old buffer items cleanup (PR #819 by @dsdolzhenko).
+* `RateCalculator`: Revert Fix old buffer items cleanup ([PR #819](https://github.com/versatica/mediasoup/pull/819) by @dsdolzhenko).
 
 
 ### 3.9.14
 
-* `NackGenerator`: Add a configurable delay before sending NACK (PR #827, credits to @penguinol).
-* `SimulcastConsumer`: Fix a race condition in SimulcastConsumer (PR #825 by @dsdolzhenko).
+* `NackGenerator`: Add a configurable delay before sending NACK ([PR #827](https://github.com/versatica/mediasoup/pull/827), credits to @penguinol).
+* `SimulcastConsumer`: Fix a race condition in SimulcastConsumer ([PR #825](https://github.com/versatica/mediasoup/pull/825) by @dsdolzhenko).
 * Add support for H264 SVC (#798 by @prtmD).
-* `RtpStreamSend`: Support receive RTCP-XR RRT and send RTCP-XR DLRR (PR #781 by @aggresss).
-* `RateCalculator`: Fix old buffer items cleanup (PR #819 by @dsdolzhenko).
-* `DirectTransport`: Create a buffer to process RTP packets (PR #730 by @rtctt).
+* `RtpStreamSend`: Support receive RTCP-XR RRT and send RTCP-XR DLRR ([PR #781](https://github.com/versatica/mediasoup/pull/781) by @aggresss).
+* `RateCalculator`: Fix old buffer items cleanup ([PR #819](https://github.com/versatica/mediasoup/pull/819) by @dsdolzhenko).
+* `DirectTransport`: Create a buffer to process RTP packets ([PR #730](https://github.com/versatica/mediasoup/pull/730) by @rtctt).
 * Node: Improve `appData` TypeScript syntax and initialization.
-* Allow setting max outgoing bitrate below the initial value (PR #826 by @ggarber).
+* Allow setting max outgoing bitrate below the initial value ([PR #826](https://github.com/versatica/mediasoup/pull/826) by @ggarber).
 * Update NPM deps and TypeScript version.
 
 
@@ -170,13 +191,13 @@
 
 ### 3.9.12
 
-* `DtlsTransport`: Make DTLS negotiation run immediately (PR #815).
+* `DtlsTransport`: Make DTLS negotiation run immediately ([PR #815](https://github.com/versatica/mediasoup/pull/815)).
 * Update NPM deps and TypeScript version.
 
 
 ### 3.9.11
 
-* Modify `SimulcastConsumer` to keep using layers without good scores (PR #804 by @ggarber).
+* Modify `SimulcastConsumer` to keep using layers without good scores ([PR #804](https://github.com/versatica/mediasoup/pull/804) by @ggarber).
 * Update NPM deps.
 
 
@@ -189,82 +210,82 @@
     * usrsctp snapshot 4e06feb01cadcd127d119486b98a4bd3d64aa1e7.
     * wingetopt 1.00.
 * Update NPM deps and TypeScript version.
-* Fix RTP marker bit not being reseted after mangling in each `Consumer` (PR #811 by @ggarber).
+* Fix RTP marker bit not being reseted after mangling in each `Consumer` ([PR #811](https://github.com/versatica/mediasoup/pull/811) by @ggarber).
 
 
 ### 3.9.9
 
-* Optimize RTP header extension handling (PR #786).
-* `RateCalculator`: Reset optimization (PR #785).
-* Fix frozen video due to double call to `Consumer::UserOnTransportDisconnected()` (PR #788, thanks to @ggarber for exposing this issue in PR #787).
+* Optimize RTP header extension handling ([PR #786](https://github.com/versatica/mediasoup/pull/786)).
+* `RateCalculator`: Reset optimization ([PR #785](https://github.com/versatica/mediasoup/pull/785)).
+* Fix frozen video due to double call to `Consumer::UserOnTransportDisconnected()` ([PR #788](https://github.com/versatica/mediasoup/pull/788), thanks to @ggarber for exposing this issue in [PR #787](https://github.com/versatica/mediasoup/pull/787)).
 
 
 ### 3.9.8
 
-* Fix VP9 kSVC forwarding logic to not forward lower unneded layers (PR #778 by @ggarber).
-* Fix update bandwidth estimation configuration and available bitrate when updating max outgoing bitrate (PR #779 by @ggarber).
-* Replace outdated `random-numbers` package by native `crypto.randomInt()` (PR #776 by @piranna).
+* Fix VP9 kSVC forwarding logic to not forward lower unneded layers ([PR #778](https://github.com/versatica/mediasoup/pull/778) by @ggarber).
+* Fix update bandwidth estimation configuration and available bitrate when updating max outgoing bitrate ([PR #779](https://github.com/versatica/mediasoup/pull/779) by @ggarber).
+* Replace outdated `random-numbers` package by native `crypto.randomInt()` ([PR #776](https://github.com/versatica/mediasoup/pull/776) by @piranna).
 * Update NPM deps and TypeScript version.
 
 
 ### 3.9.7
 
-* Typing event emitters in mediasoup Node (PR #764 by @unao).
+* Typing event emitters in mediasoup Node ([PR #764](https://github.com/versatica/mediasoup/pull/764) by @unao).
 * Update NPM deps.
 
 
 ### 3.9.6
 
-* TCC client optimizations for faster and more stable BWE (PR #712 by @ggarber).
-* Added support for RTP abs-capture-time header (PR #761 by @oto313).
+* TCC client optimizations for faster and more stable BWE ([PR #712](https://github.com/versatica/mediasoup/pull/712) by @ggarber).
+* Added support for RTP abs-capture-time header ([PR #761](https://github.com/versatica/mediasoup/pull/761) by @oto313).
 * Update NPM deps.
 
 
 ### 3.9.5
 
-* ICE renomination support (PR #756).
+* ICE renomination support ([PR #756](https://github.com/versatica/mediasoup/pull/756)).
 * Update `libuv` to 1.43.0.
 * Update NPM deps.
 
 
 ### 3.9.4
 
-* `Worker`: Fix bad printing of error messages from Worker (PR #750 by @j1elo).
+* `Worker`: Fix bad printing of error messages from Worker ([PR #750](https://github.com/versatica/mediasoup/pull/750) by @j1elo).
 * Update NPM deps.
 
 
 ### 3.9.3
 
-* Single H264/H265 codec configuration in `supportedRtpCapabilities` (PR #718).
-* Improve Windows support by not requiring MSVC configuration (PR #741).
+* Single H264/H265 codec configuration in `supportedRtpCapabilities` ([PR #718](https://github.com/versatica/mediasoup/pull/718)).
+* Improve Windows support by not requiring MSVC configuration ([PR #741](https://github.com/versatica/mediasoup/pull/741)).
 * Update NPM deps.
 
 
 ### 3.9.2
 
-* `pipeToRouter()`: Reuse same `PipeTransport` when possible (PR #697).
+* `pipeToRouter()`: Reuse same `PipeTransport` when possible ([PR #697](https://github.com/versatica/mediasoup/pull/697)).
 * Add `worker.died` boolean getter.
 * Update TypeScript version to 4.X.X and use `target: "esnext"` so transpilation of ECMAScript private fields (`#xxxxx`) don't use `WeakMaps` tricks but use standard syntax instead.
-* Use more than one core for compilation on Windows (PR #709).
-* `Consumer`: Modification of bitrate allocation algorithm (PR #708).
+* Use more than one core for compilation on Windows ([PR #709](https://github.com/versatica/mediasoup/pull/709)).
+* `Consumer`: Modification of bitrate allocation algorithm ([PR #708](https://github.com/versatica/mediasoup/pull/708)).
 * Update NPM deps.
 
 
 ### 3.9.1
 
-* NixOS friendly build process (PR #683).
-* `Worker`: Emit "died" event before observer "close" (PR #684).
-* Transport: Hide debug message for RTX RTCP-RR packets (PR #688).
+* NixOS friendly build process ([PR #683](https://github.com/versatica/mediasoup/pull/683)).
+* `Worker`: Emit "died" event before observer "close" ([PR #684](https://github.com/versatica/mediasoup/pull/684)).
+* Transport: Hide debug message for RTX RTCP-RR packets ([PR #688](https://github.com/versatica/mediasoup/pull/688)).
 * Update `libuv` to 1.42.0.
-* Improve Windows support (PR #692).
-* Avoid build commands when MEDIASOUP_WORKER_BIN is set (PR #695).
+* Improve Windows support ([PR #692](https://github.com/versatica/mediasoup/pull/692)).
+* Avoid build commands when MEDIASOUP_WORKER_BIN is set ([PR #695](https://github.com/versatica/mediasoup/pull/695)).
 * Update NPM deps.
 
 
 ### 3.9.0
 
-* Replaces GYP build system with fully-functional Meson build system (PR #622).
-* Worker communication optimization (aka removing netstring dependency) (PR #644).
+* Replaces GYP build system with fully-functional Meson build system ([PR #622](https://github.com/versatica/mediasoup/pull/622)).
+* Worker communication optimization (aka removing netstring dependency) ([PR #644](https://github.com/versatica/mediasoup/pull/644)).
 * Move TypeScript and compiled JavaScript code to a new `node` folder.
 * Use ES6 private fields.
 * Require Node.js version >= 12.
@@ -272,36 +293,36 @@
 
 ### 3.8.4
 
-* OPUS multi-channel (Surround sound) support (PR #647).
-* Add `packetLoss` stats to transport (PR #648 by @ggarber).
-* Fixes for active speaker observer (PR #655 by @ggarber).
-* Fix big endian issues (PR #639).
+* OPUS multi-channel (Surround sound) support ([PR #647](https://github.com/versatica/mediasoup/pull/647)).
+* Add `packetLoss` stats to transport ([PR #648](https://github.com/versatica/mediasoup/pull/648) by @ggarber).
+* Fixes for active speaker observer ([PR #655](https://github.com/versatica/mediasoup/pull/655) by @ggarber).
+* Fix big endian issues ([PR #639](https://github.com/versatica/mediasoup/pull/639)).
 * Update NPM deps.
 
 
 ### 3.8.3
 
-* Fix wrong `size_t*` to `int*` conversion in 64bit Big-Endian hosts (PR #637).
+* Fix wrong `size_t*` to `int*` conversion in 64bit Big-Endian hosts ([PR #637](https://github.com/versatica/mediasoup/pull/637)).
 
 
 ### 3.8.2
 
-* `ActiveSpeakerObserver`: Fix crash due to a `nullptr` (PR #634).
+* `ActiveSpeakerObserver`: Fix crash due to a `nullptr` ([PR #634](https://github.com/versatica/mediasoup/pull/634)).
 * Update NPM deps.
 
 
 ### 3.8.1
 
-* `SimulcastConsumer`: Fix RTP timestamp when switching layers (PR #626 by @penguinol).
+* `SimulcastConsumer`: Fix RTP timestamp when switching layers ([PR #626](https://github.com/versatica/mediasoup/pull/626) by @penguinol).
 * Update NPM deps.
 
 
 ### 3.8.0
 
 * Update `libuv` to 1.42.0.
-* Use non-ASM OpenSSL on Windows (PR #614).
-* Fix minor memory leak caused by non-virtual destructor (PR #625).
-* Dominant Speaker Event (PR #603 by @SteveMcFarlin).
+* Use non-ASM OpenSSL on Windows ([PR #614](https://github.com/versatica/mediasoup/pull/614)).
+* Fix minor memory leak caused by non-virtual destructor ([PR #625](https://github.com/versatica/mediasoup/pull/625)).
+* Dominant Speaker Event ([PR #603](https://github.com/versatica/mediasoup/pull/603) by @SteveMcFarlin).
 * Update NPM deps.
 
 
@@ -310,14 +331,14 @@
 * Update `libuv` to 1.41.0.
 * Update NPM deps.
 * C++:
-  - Move header includes (PR #608).
-  - Enhance debugging on channel request/notification error (PR #607).
+  - Move header includes ([PR #608](https://github.com/versatica/mediasoup/pull/608)).
+  - Enhance debugging on channel request/notification error ([PR #607](https://github.com/versatica/mediasoup/pull/607)).
 
 
 ### 3.7.18
 
-* Support for optional fixed port on transports (PR #593 by @nazar-pc).
-* Upgrade and optimize OpenSSL dependency (PR #598 by @vpalmisano):
+* Support for optional fixed port on transports ([PR #593](https://github.com/versatica/mediasoup/pull/593) by @nazar-pc).
+* Upgrade and optimize OpenSSL dependency ([PR #598](https://github.com/versatica/mediasoup/pull/598) by @vpalmisano):
   - OpenSSL upgraded to version 1.1.1k.
   - Enable the compilation of assembly extensions for OpenSSL.
   - Optimize the worker build (`-O3`) and disable the debug flag (`-g`).
@@ -332,7 +353,7 @@
 
 ### 3.7.16
 
-* Add `mid` option in `ConsumerOptions` to provide way to override MID (PR #586 by @mstyura).
+* Add `mid` option in `ConsumerOptions` to provide way to override MID ([PR #586](https://github.com/versatica/mediasoup/pull/586) by @mstyura).
 * Update NPM deps.
 
 
@@ -350,18 +371,18 @@
 
 ### 3.7.13
 
-* Fix build on FreeBSD (PR #585 by @smortex).
+* Fix build on FreeBSD ([PR #585](https://github.com/versatica/mediasoup/pull/585) by @smortex).
 
 
 ### 3.7.12
 
-* `mediasoup-worker`: Fix memory leaks on error exit (PR #581).
+* `mediasoup-worker`: Fix memory leaks on error exit ([PR #581](https://github.com/versatica/mediasoup/pull/581)).
 * Update NPM deps.
 
 
 ### 3.7.11
 
-* Fix `DepUsrSCTP::Checker::timer` not being freed on `Worker` close (PR #576). Thanks @nazar-pc for discovering this.
+* Fix `DepUsrSCTP::Checker::timer` not being freed on `Worker` close ([PR #576](https://github.com/versatica/mediasoup/pull/576)). Thanks @nazar-pc for discovering this.
 * Update NPM deps.
 
 
@@ -377,23 +398,23 @@
 
 ### 3.7.8
 
-* `PayloadChannel`: Copy received messages into a separate buffer to avoid memory corruption if the message is later modified (PR #570 by @aggresss).
+* `PayloadChannel`: Copy received messages into a separate buffer to avoid memory corruption if the message is later modified ([PR #570](https://github.com/versatica/mediasoup/pull/570) by @aggresss).
 
 
 ### 3.7.7
 
-* Thread and memory safety fixes needed for mediasoup-rust (PR #562 by @nazar-pc).
-* mediasoup-rust support on macOS (PR #567 by @nazar-pc).
+* Thread and memory safety fixes needed for mediasoup-rust ([PR #562](https://github.com/versatica/mediasoup/pull/562) by @nazar-pc).
+* mediasoup-rust support on macOS ([PR #567](https://github.com/versatica/mediasoup/pull/567) by @nazar-pc).
 * mediasoup-rust release 0.7.2.
 * Update NPM deps.
 
 
 ### 3.7.6
 
-* `Transport`: Implement new `setMaxOutgoingBitrate()` method (PR #555 by @t-mullen). 
+* `Transport`: Implement new `setMaxOutgoingBitrate()` method ([PR #555](https://github.com/versatica/mediasoup/pull/555) by @t-mullen). 
 * `SctpAssociation`: Don't warn if SCTP send buffer is full.
-* Rust: Update modules structure and other minor improvements for Rust version (PR #558).
-* `mediasoup-worker`: Avoid duplicated basenames so that libmediasoup-worker is compilable on macOS (PR #557).
+* Rust: Update modules structure and other minor improvements for Rust version ([PR #558](https://github.com/versatica/mediasoup/pull/558)).
+* `mediasoup-worker`: Avoid duplicated basenames so that libmediasoup-worker is compilable on macOS ([PR #557](https://github.com/versatica/mediasoup/pull/557)).
 * Update NPM deps.
 
 
@@ -404,7 +425,7 @@
 
 ### 3.7.4
 
-* Improve `RateCalculator` (PR #547 by @vpalmisano).
+* Improve `RateCalculator` ([PR #547](https://github.com/versatica/mediasoup/pull/547) by @vpalmisano).
 * Update NPM deps.
 
 
@@ -415,15 +436,15 @@
 
 ### 3.7.2
 
-* `RateCalculator` optimization (PR #538 by @vpalmisano).
+* `RateCalculator` optimization ([PR #538](https://github.com/versatica/mediasoup/pull/538) by @vpalmisano).
 * Update `Catch` to 2.13.5.
 * Update NPM deps.
 
 
 ### 3.7.1
 
-* `SimulcastConsumer`: Fix miscalculation when increasing layer (PR #541 by @penguinol).
-* Rust version with thread-based worker (PR #540).
+* `SimulcastConsumer`: Fix miscalculation when increasing layer ([PR #541](https://github.com/versatica/mediasoup/pull/541) by @penguinol).
+* Rust version with thread-based worker ([PR #540](https://github.com/versatica/mediasoup/pull/540)).
 * Update NPM deps.
 
 
@@ -440,12 +461,12 @@
 
 ### 3.6.36
 
-* `Producer`: Add new stats field 'rtxPacketsDiscarded' (PR #536).
+* `Producer`: Add new stats field 'rtxPacketsDiscarded' ([PR #536](https://github.com/versatica/mediasoup/pull/536)).
 
 
 ### 3.6.35
 
-* `XxxxConsumer.hpp`: make `IsActive()` return `true` (even if `Producer`'s score is 0) when DTX is enabled (PR #534 due to issue #532).
+* `XxxxConsumer.hpp`: make `IsActive()` return `true` (even if `Producer`'s score is 0) when DTX is enabled ([PR #534](https://github.com/versatica/mediasoup/pull/534) due to issue #532).
 * Update NPM deps.
 
 
@@ -456,7 +477,7 @@
 
 ### 3.6.33
 
-* Add missing `delete cb` that otherwise would leak (PR #527 based on PR #526 by @vpalmisano).
+* Add missing `delete cb` that otherwise would leak ([PR #527](https://github.com/versatica/mediasoup/pull/527) based on [PR #526](https://github.com/versatica/mediasoup/pull/526) by @vpalmisano).
 * `router.pipeToRouter()`: Fix possible inconsistency in `pipeProducer.paused` status (as discussed in this [thread](https://mediasoup.discourse.group/t/concurrency-architecture/2515/) in the mediasoup forum).
 * Update `nlohmann/json` to 3.9.1.
 * Update `usrsctp`.
@@ -477,7 +498,7 @@
 
 ### 3.6.30
 
-* Add `pipe` option to `transport.consume()`(PR #494).
+* Add `pipe` option to `transport.consume()`([PR #494](https://github.com/versatica/mediasoup/pull/494)).
   - So the receiver will get all streams from the `Producer`.
   - It works for any kind of transport (but `PipeTransport` which is always like this).
 * Update NPM deps.
@@ -498,7 +519,7 @@
 
 * Fix replacement of `__MEDIASOUP_VERSION__` in `lib/index.d.ts` (issue #483).
 * Update NPM deps.
-* `worker/scripts/configure.py`: Handle 'mips64' (PR #485).
+* `worker/scripts/configure.py`: Handle 'mips64' ([PR #485](https://github.com/versatica/mediasoup/pull/485)).
 
 
 ### 3.6.27
@@ -547,7 +568,7 @@
 ### 3.6.20
 
 * Remove `-fwrapv` when building mediasoup-worker in `Debug` mode (issue #460).
-* Add `MEDIASOUP_MAX_CORES` to limit `NUM_CORES` during mediasoup-worker build (PR #462).
+* Add `MEDIASOUP_MAX_CORES` to limit `NUM_CORES` during mediasoup-worker build ([PR #462](https://github.com/versatica/mediasoup/pull/462)).
 
 
 ### 3.6.19
@@ -559,7 +580,7 @@
 
 ### 3.6.18
 
-* Fix `ortc.getConsumerRtpParameters()` RTX codec comparison issue (PR #453).
+* Fix `ortc.getConsumerRtpParameters()` RTX codec comparison issue ([PR #453](https://github.com/versatica/mediasoup/pull/453)).
 * RtpObserver: expose `RtpObserverAddRemoveProducerOptions` for `addProducer()` and `removeProducer()` methods.
 
 
@@ -567,7 +588,7 @@
 
 * Update `libuv` to 1.39.0.
 * Update Node deps.
-* SimulcastConsumer: Prefer the highest spatial layer initially (PR #450).
+* SimulcastConsumer: Prefer the highest spatial layer initially ([PR #450](https://github.com/versatica/mediasoup/pull/450)).
 * RtpStreamRecv: Set RtpDataCounter window size to 6 secs if DTX (#451)
 
 
@@ -582,11 +603,11 @@
 
 * Avoid SRTP leak by deleting invalid SSRCs after STRP decryption (issue #437, thanks to @penguinol for reporting).
 * Update `usrsctp` dep.
-* DataConsumer 'bufferedAmount' implementation (PR #442).
+* DataConsumer 'bufferedAmount' implementation ([PR #442](https://github.com/versatica/mediasoup/pull/442)).
 
 ### 3.6.14
 
-* Fix `usrsctp` vulnerability (PR #439).
+* Fix `usrsctp` vulnerability ([PR #439](https://github.com/versatica/mediasoup/pull/439)).
 * Fix issue #435 (thanks to @penguinol for reporting).
 * `TransportCongestionControlClient.cpp`: Enable periodic ALR probing to recover faster from network issues.
 * Update NPM deps.
@@ -596,7 +617,7 @@
 
 ### 3.6.13
 
-* RTP on `DirectTransport` (issue #433, PR #434):
+* RTP on `DirectTransport` (issue #433, [PR #434](https://github.com/versatica/mediasoup/pull/434)):
   - New API `producer.send(rtpPacket: Buffer)`.
   - New API `consumer.on('rtp', (rtpPacket: Buffer)`.
   - New API `directTransport.sendRtcp(rtcpPacket: Buffer)`.
@@ -633,8 +654,8 @@
 ### 3.6.8
 
 * Fix SRTP leak due to streams not being removed when a `Producer` or `Consumer` is closed.
-  - PR #428 (fixes issues #426). 
-  - Credits to credits to @penguinol for reporting and initial work at PR #427.
+  - [PR #428](https://github.com/versatica/mediasoup/pull/428) (fixes issues #426). 
+  - Credits to credits to @penguinol for reporting and initial work at [PR #427](https://github.com/versatica/mediasoup/pull/427).
 * Update `nlohmann::json` C++ dep to 3.8.0.
 * C++: Enhance `const` correctness.
 * Update NPM deps.
@@ -643,9 +664,9 @@
 ### 3.6.7
 
 * `ConsumerScore`: Add `producerScores`, scores of all RTP streams in the producer ordered by encoding (just useful when the producer uses simulcast).
-  - PR #421 (fixes issues #420).
+  - [PR #421](https://github.com/versatica/mediasoup/pull/421) (fixes issues #420).
 * Hide worker executable console in Windows.
-  - PR #419 (credits to @BlueMagnificent).
+  - [PR #419](https://github.com/versatica/mediasoup/pull/419) (credits to @BlueMagnificent).
 * `RtpStream.cpp`: Fix wrong `std::round()` usage.
   - Issue #423.
 
@@ -665,7 +686,7 @@
 ### 3.6.4
 
 * `gyp`: Fix CLT version detection in OSX Catalina when XCode app is not installed.
-  - PR #413 (credits to @enimo).
+  - [PR #413](https://github.com/versatica/mediasoup/pull/413) (credits to @enimo).
 
 
 ### 3.6.3
@@ -687,7 +708,7 @@
 ### 3.6.0
 
 * SCTP/DataChannel termination:
-  - PR #409
+  - [PR #409](https://github.com/versatica/mediasoup/pull/409)
   - Allow the Node application to directly send text/binary messages to mediasoup-worker C++ process so others can consume them using `DataConsumers`.
   - And vice-versa: allow the Node application to directly consume in Node messages send by `DataProducers`.
 * Add `WorkerLogTag` TypeScript enum and also add a new 'message' tag into it.
@@ -713,13 +734,13 @@
 ### 3.5.12
 
 * `SeqManager.cpp`: Improve performance.
-  - PR #398 (credits to @penguinol).
+  - [PR #398](https://github.com/versatica/mediasoup/pull/398) (credits to @penguinol).
 
 
 ### 3.5.11
 
 * `SeqManager.cpp`: Fix a bug and improve performance.
-  - Fixes issue #395 via PR #396 (credits to @penguinol).
+  - Fixes issue #395 via [PR #396](https://github.com/versatica/mediasoup/pull/396) (credits to @penguinol).
 * Drop Node.js 8 support. Minimum supported Node.js version is now 10.
 * Upgrade `eslint` and `jest` major versions.
 
@@ -881,7 +902,7 @@
 
 ### 3.4.1
 
-* Improve mediasoup-worker build system by using `sh` instead of `bash` and default to 4 cores (thanks @smoke, PR #349).
+* Improve mediasoup-worker build system by using `sh` instead of `bash` and default to 4 cores (thanks @smoke, [PR #349](https://github.com/versatica/mediasoup/pull/349)).
 
 
 ### 3.4.0
@@ -1337,7 +1358,7 @@
 
 ### 2.1.0
 
-* Add `localIP` option for `room.createRtpStreamer()` and `transport.startMirroring()` [PR #199](https://github.com/versatica/mediasoup/pull/199).
+* Add `localIP` option for `room.createRtpStreamer()` and `transport.startMirroring()` [[PR #199](https://github.com/versatica/mediasoup/pull/199)](https://github.com/versatica/mediasoup/pull/199).
 
 
 ### 2.0.16

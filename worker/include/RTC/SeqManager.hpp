@@ -7,11 +7,13 @@
 
 namespace RTC
 {
-	template<typename T>
+	// T is the base type (uint16_t, uint32_t, ...).
+	// N is the max number of bits used in T.
+	template<typename T, uint8_t N = 0>
 	class SeqManager
 	{
 	public:
-		static constexpr T MaxValue = std::numeric_limits<T>::max();
+		static constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
 
 	public:
 		struct SeqLowerThan
@@ -27,6 +29,7 @@ namespace RTC
 	private:
 		static const SeqLowerThan isSeqLowerThan;
 		static const SeqHigherThan isSeqHigherThan;
+		static T Delta(const T lhs, const T rhs);
 
 	public:
 		static bool IsSeqLowerThan(const T lhs, const T rhs);

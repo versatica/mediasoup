@@ -71,7 +71,7 @@ switch (task)
 	{
 		deleteNodeLib();
 
-		const TscWatchClient = require('tsc-watch/client');
+		const { TscWatchClient } = require('tsc-watch/client');
 		const watch = new TscWatchClient();
 
 		watch.on('success', replaceVersion);

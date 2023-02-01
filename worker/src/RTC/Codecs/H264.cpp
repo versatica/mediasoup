@@ -17,7 +17,9 @@ namespace RTC
 			MS_TRACE();
 
 			if (len < 2)
+			{
 				return nullptr;
+			}
 
 			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
@@ -48,7 +50,9 @@ namespace RTC
 
 				// Detect key frame.
 				if (frameMarking->start && frameMarking->independent)
+				{
 					payloadDescriptor->isKeyFrame = true;
+				}
 			}
 
 			// NOTE: Unfortunately libwebrtc produces wrong Frame-Marking (without i=1 in
@@ -95,7 +99,9 @@ namespace RTC
 
 							// Check if there is room for the indicated NAL unit size.
 							if (len < (naluSize + sizeof(naluSize)))
+							{
 								break;
+							}
 
 							offset += naluSize + sizeof(naluSize);
 							len -= naluSize + sizeof(naluSize);
@@ -113,7 +119,9 @@ namespace RTC
 						uint8_t startBit = *(data + 1) & 0x80;
 
 						if (subnal == 7 && startBit == 128)
+						{
 							payloadDescriptor->isKeyFrame = true;
+						}
 
 						break;
 					}
@@ -138,7 +146,9 @@ namespace RTC
 			PayloadDescriptor* payloadDescriptor = H264::Parse(data, len, frameMarking, frameMarkingLen);
 
 			if (!payloadDescriptor)
+			{
 				return;
+			}
 
 			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
 
@@ -231,7 +241,9 @@ namespace RTC
 			}
 
 			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
+			{
 				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
+			}
 
 			return true;
 		}

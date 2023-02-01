@@ -505,7 +505,7 @@ namespace RTC
 			return;
 		}
 
-		size_t portIdx = static_cast<size_t>(port) - Settings::configuration.rtcMinPort;
+		const size_t portIdx = static_cast<size_t>(port) - Settings::configuration.rtcMinPort;
 
 		switch (transport)
 		{
@@ -564,7 +564,7 @@ namespace RTC
 				}
 
 				// Otherwise add an entry in the map and return it.
-				uint16_t numPorts =
+				const uint16_t numPorts =
 				  Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1;
 
 				// Emplace a new vector filled with numPorts false values, meaning that
@@ -591,7 +591,7 @@ namespace RTC
 				}
 
 				// Otherwise add an entry in the map and return it.
-				uint16_t numPorts =
+				const uint16_t numPorts =
 				  Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1;
 
 				// Emplace a new vector filled with numPorts false values, meaning that

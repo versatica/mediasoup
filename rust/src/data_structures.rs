@@ -377,8 +377,7 @@ impl<'de> Deserialize<'de> for DtlsFingerprint {
                         *v = u8::from_str_radix(&input[i * 3..(i * 3) + 2], 16).map_err(
                             |error| {
                                 format!(
-                                    "Failed to parse value {} as series of hex bytes: {}",
-                                    input, error,
+                                    "Failed to parse value {input} as series of hex bytes: {error}"
                                 )
                             },
                         )?;

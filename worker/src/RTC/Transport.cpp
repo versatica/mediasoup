@@ -2069,16 +2069,9 @@ namespace RTC
 				for (uint8_t i{ 1u }; i <= (baseAllocation ? 1u : priority); ++i)
 				{
 					uint32_t usedBitrate{ 0u };
+					bool considerLoss = (bweType == RTC::BweType::REMB);
 
-					switch (bweType)
-					{
-						case RTC::BweType::TRANSPORT_CC:
-							usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ false);
-							break;
-						case RTC::BweType::REMB:
-							usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ true);
-							break;
-					}
+					usedBitrate = consumer->IncreaseLayer(availableBitrate, considerLoss);
 
 					MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
 
@@ -2844,8 +2837,8 @@ namespace RTC
 		// RTCP timer.
 		if (timer == this->rtcpTimer)
 		{
-			auto interval  = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
-			uint64_t nowMs = DepLibUV::GetTimeMs();
+			auto interval        = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
+			const uint64_t nowMs = DepLibUV::GetTimeMs();
 
 			SendRtcp(nowMs);
 

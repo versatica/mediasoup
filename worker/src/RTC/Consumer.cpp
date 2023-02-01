@@ -215,7 +215,7 @@ namespace RTC
 					return;
 				}
 
-				bool wasActive = IsActive();
+				const bool wasActive = IsActive();
 
 				this->paused = true;
 
@@ -339,7 +339,7 @@ namespace RTC
 		if (this->producerPaused)
 			return;
 
-		bool wasActive = IsActive();
+		const bool wasActive = IsActive();
 
 		this->producerPaused = true;
 

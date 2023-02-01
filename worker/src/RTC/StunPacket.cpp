@@ -42,10 +42,10 @@ namespace RTC
 		 */
 
 		// Get type field.
-		uint16_t msgType = Utils::Byte::Get2Bytes(data, 0);
+		const uint16_t msgType = Utils::Byte::Get2Bytes(data, 0);
 
 		// Get length field.
-		uint16_t msgLength = Utils::Byte::Get2Bytes(data, 2);
+		const uint16_t msgLength = Utils::Byte::Get2Bytes(data, 2);
 
 		// length field must be total size minus header's 20 bytes, and must be multiple of 4 Bytes.
 		if ((static_cast<size_t>(msgLength) != len - 20) || ((msgLength & 0x03) != 0))
@@ -59,10 +59,11 @@ namespace RTC
 		}
 
 		// Get STUN method.
-		uint16_t msgMethod = (msgType & 0x000f) | ((msgType & 0x00e0) >> 1) | ((msgType & 0x3E00) >> 2);
+		const uint16_t msgMethod =
+		  (msgType & 0x000f) | ((msgType & 0x00e0) >> 1) | ((msgType & 0x3E00) >> 2);
 
 		// Get STUN class.
-		uint16_t msgClass = ((data[0] & 0x01) << 1) | ((data[1] & 0x10) >> 4);
+		const uint16_t msgClass = ((data[0] & 0x01) << 1) | ((data[1] & 0x10) >> 4);
 
 		// Create a new StunPacket (data + 8 points to the received TransactionID field).
 		auto* packet = new StunPacket(
@@ -101,7 +102,7 @@ namespace RTC
 			auto attrType = static_cast<Attribute>(Utils::Byte::Get2Bytes(data, pos));
 
 			// Get the attribute length.
-			uint16_t attrLength = Utils::Byte::Get2Bytes(data, pos + 2);
+			const uint16_t attrLength = Utils::Byte::Get2Bytes(data, pos + 2);
 
 			// Ensure the attribute length is not greater than the remaining size.
 			if ((pos + 4 + attrLength) > len)
@@ -273,9 +274,9 @@ namespace RTC
 						return nullptr;
 					}
 
-					uint8_t errorClass  = Utils::Byte::Get1Byte(attrValuePos, 2);
-					uint8_t errorNumber = Utils::Byte::Get1Byte(attrValuePos, 3);
-					auto errorCode      = static_cast<uint16_t>(errorClass * 100 + errorNumber);
+					const uint8_t errorClass  = Utils::Byte::Get1Byte(attrValuePos, 2);
+					const uint8_t errorNumber = Utils::Byte::Get1Byte(attrValuePos, 3);
+					auto errorCode            = static_cast<uint16_t>(errorClass * 100 + errorNumber);
 
 					packet->SetErrorCode(errorCode);
 
@@ -304,7 +305,8 @@ namespace RTC
 		{
 			// Compute the CRC32 of the received packet up to (but excluding) the
 			// FINGERPRINT attribute and XOR it with 0x5354554e.
-			uint32_t computedFingerprint = Utils::Crypto::GetCRC32(data, fingerprintAttrPos) ^ 0x5354554e;
+			const uint32_t computedFingerprint =
+			  Utils::Crypto::GetCRC32(data, fingerprintAttrPos) ^ 0x5354554e;
 
 			// Compare with the FINGERPRINT value in the packet.
 			if (fingerprint != computedFingerprint)
@@ -531,7 +533,7 @@ namespace RTC
 		   this->klass == Class::SUCCESS_RESPONSE);
 		bool addErrorCode        = ((this->errorCode != 0u) && this->klass == Class::ERROR_RESPONSE);
 		bool addMessageIntegrity = (this->klass != Class::ERROR_RESPONSE && !this->password.empty());
-		bool addFingerprint{ true }; // Do always.
+		const bool addFingerprint{ true }; // Do always.
 
 		// Update data pointer.
 		this->data = buffer;
@@ -789,7 +791,7 @@ namespace RTC
 		{
 			// Compute the CRC32 of the packet up to (but excluding) the FINGERPRINT
 			// attribute and XOR it with 0x5354554e.
-			uint32_t computedFingerprint = Utils::Crypto::GetCRC32(buffer, pos) ^ 0x5354554e;
+			const uint32_t computedFingerprint = Utils::Crypto::GetCRC32(buffer, pos) ^ 0x5354554e;
 
 			Utils::Byte::Set2Bytes(buffer, pos, static_cast<uint16_t>(Attribute::FINGERPRINT));
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);

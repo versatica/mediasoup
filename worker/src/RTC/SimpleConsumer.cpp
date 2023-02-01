@@ -314,7 +314,7 @@ namespace RTC
 			return;
 
 		// Whether this is the first packet after re-sync.
-		bool isSyncPacket = this->syncRequired;
+		const bool isSyncPacket = this->syncRequired;
 
 		// Sync sequence number and timestamp if required.
 		if (isSyncPacket)
