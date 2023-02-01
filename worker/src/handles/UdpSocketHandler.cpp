@@ -101,7 +101,7 @@ void UdpSocketHandler::Close()
 	this->uvHandle->data = nullptr;
 
 	// Don't read more.
-	int err = uv_udp_recv_stop(this->uvHandle);
+	const int err = uv_udp_recv_stop(this->uvHandle);
 
 	if (err != 0)
 		MS_ABORT("uv_udp_recv_stop() failed: %s", uv_strerror(err));
@@ -149,7 +149,7 @@ void UdpSocketHandler::Send(
 	// then build a uv_req_t and use uv_udp_send().
 
 	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data)), len);
-	int sent        = uv_udp_try_send(this->uvHandle, &buffer, 1, addr);
+	const int sent  = uv_udp_try_send(this->uvHandle, &buffer, 1, addr);
 
 	// Entire datagram was sent. Done.
 	if (sent == static_cast<int>(len))

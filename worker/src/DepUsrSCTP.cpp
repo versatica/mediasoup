@@ -236,8 +236,8 @@ void DepUsrSCTP::Checker::OnTimer(Timer* /*timer*/)
 {
 	MS_TRACE();
 
-	auto nowMs    = DepLibUV::GetTimeMs();
-	int elapsedMs = this->lastCalledAtMs ? static_cast<int>(nowMs - this->lastCalledAtMs) : 0;
+	auto nowMs          = DepLibUV::GetTimeMs();
+	const int elapsedMs = this->lastCalledAtMs ? static_cast<int>(nowMs - this->lastCalledAtMs) : 0;
 
 	usrsctp_handle_timers(elapsedMs);
 

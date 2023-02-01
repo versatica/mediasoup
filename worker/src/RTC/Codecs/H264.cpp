@@ -63,7 +63,7 @@ namespace RTC
 			// there is no frame-marking or if there is but keyframe was not detected above.
 			if (!frameMarking || !payloadDescriptor->isKeyFrame)
 			{
-				uint8_t nal = *data & 0x1F;
+				const uint8_t nal = *data & 0x1F;
 
 				switch (nal)
 				{
@@ -87,8 +87,8 @@ namespace RTC
 						// Iterate NAL units.
 						while (len >= 3)
 						{
-							auto naluSize  = Utils::Byte::Get2Bytes(data, offset);
-							uint8_t subnal = *(data + offset + sizeof(naluSize)) & 0x1F;
+							auto naluSize        = Utils::Byte::Get2Bytes(data, offset);
+							const uint8_t subnal = *(data + offset + sizeof(naluSize)) & 0x1F;
 
 							if (subnal == 7)
 							{
@@ -115,8 +115,8 @@ namespace RTC
 					case 28:
 					case 29:
 					{
-						uint8_t subnal   = *(data + 1) & 0x1F;
-						uint8_t startBit = *(data + 1) & 0x80;
+						const uint8_t subnal   = *(data + 1) & 0x1F;
+						const uint8_t startBit = *(data + 1) & 0x80;
 
 						if (subnal == 7 && startBit == 128)
 						{
