@@ -440,11 +440,12 @@ namespace RTC
 			this->packetsLost = 0u;
 
 		// Calculate Fraction Lost.
-		uint32_t expectedInterval = expected - this->expectedPrior;
+		const uint32_t expectedInterval = expected - this->expectedPrior;
 
 		this->expectedPrior = expected;
 
-		uint32_t receivedInterval = this->mediaTransmissionCounter.GetPacketCount() - this->receivedPrior;
+		const uint32_t receivedInterval =
+		  this->mediaTransmissionCounter.GetPacketCount() - this->receivedPrior;
 
 		this->receivedPrior = this->mediaTransmissionCounter.GetPacketCount();
 
@@ -669,14 +670,14 @@ namespace RTC
 		MS_TRACE();
 
 		// Calculate number of packets expected in this interval.
-		auto totalExpected = GetExpectedPackets();
-		uint32_t expected  = totalExpected - this->expectedPriorScore;
+		const auto totalExpected = GetExpectedPackets();
+		const uint32_t expected  = totalExpected - this->expectedPriorScore;
 
 		this->expectedPriorScore = totalExpected;
 
 		// Calculate number of packets received in this interval.
-		auto totalReceived = this->mediaTransmissionCounter.GetPacketCount();
-		uint32_t received  = totalReceived - this->receivedPriorScore;
+		const auto totalReceived = this->mediaTransmissionCounter.GetPacketCount();
+		const uint32_t received  = totalReceived - this->receivedPriorScore;
 
 		this->receivedPriorScore = totalReceived;
 
@@ -689,14 +690,14 @@ namespace RTC
 			lost = expected - received;
 
 		// Calculate number of packets repaired in this interval.
-		auto totalRepaired = this->packetsRepaired;
-		uint32_t repaired  = totalRepaired - this->repairedPriorScore;
+		const auto totalRepaired = this->packetsRepaired;
+		uint32_t repaired        = totalRepaired - this->repairedPriorScore;
 
 		this->repairedPriorScore = totalRepaired;
 
 		// Calculate number of packets retransmitted in this interval.
-		auto totatRetransmitted = this->packetsRetransmitted;
-		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPriorScore;
+		const auto totatRetransmitted = this->packetsRetransmitted;
+		uint32_t retransmitted        = totatRetransmitted - this->retransmittedPriorScore;
 
 		this->retransmittedPriorScore = totatRetransmitted;
 

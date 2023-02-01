@@ -223,7 +223,7 @@ namespace RTC
 			}
 
 			// clang-format off
-			const bool isOldPacket = (
+			bool isOldPacket = (
 				this->payloadDescriptor->hasPictureId &&
 				RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
 					this->payloadDescriptor->pictureId,

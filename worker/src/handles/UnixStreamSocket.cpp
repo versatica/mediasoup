@@ -146,7 +146,7 @@ void UnixStreamSocket::Close()
 	if (this->role == UnixStreamSocket::Role::PRODUCER && !this->hasError && !this->isClosedByPeer)
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
-		auto req  = new uv_shutdown_t;
+		auto* req = new uv_shutdown_t;
 		req->data = static_cast<void*>(this);
 		err       = uv_shutdown(
       req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
@@ -197,15 +197,15 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 		written = 0;
 	}
 
-	const size_t pendingLen = len - written;
-	auto* writeData         = new UvWriteData(pendingLen);
+	size_t pendingLen = len - written;
+	auto* writeData   = new UvWriteData(pendingLen);
 
 	writeData->req.data = static_cast<void*>(writeData);
 	std::memcpy(writeData->store, data + written, pendingLen);
 
 	buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
-	const int err = uv_write(
+	int err = uv_write(
 	  &writeData->req,
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
 	  &buffer,

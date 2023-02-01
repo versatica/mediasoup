@@ -122,7 +122,7 @@ namespace RTC
 		}
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		const size_t len    = packet->GetSize();
 
 		// Notify the Node DirectTransport.
 		this->shared->payloadChannelNotifier->Emit(consumer->id, "rtp", data, len);
@@ -142,7 +142,7 @@ namespace RTC
 		MS_TRACE();
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		const size_t len    = packet->GetSize();
 
 		// Notify the Node DirectTransport.
 		this->shared->payloadChannelNotifier->Emit(this->id, "rtcp", data, len);
@@ -158,7 +158,7 @@ namespace RTC
 		packet->Serialize(RTC::RTCP::Buffer);
 
 		const uint8_t* data = packet->GetData();
-		size_t len          = packet->GetSize();
+		const size_t len    = packet->GetSize();
 
 		// Notify the Node DirectTransport.
 		this->shared->payloadChannelNotifier->Emit(this->id, "rtcp", data, len);

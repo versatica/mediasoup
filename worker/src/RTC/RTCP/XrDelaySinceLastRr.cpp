@@ -94,7 +94,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const size_t length = static_cast<uint16_t>((SsrcInfo::BodySize * this->ssrcInfos.size() / 4));
+			size_t length = static_cast<uint16_t>((SsrcInfo::BodySize * this->ssrcInfos.size() / 4));
 
 			// Fill the common header.
 			this->header->blockType = static_cast<uint8_t>(this->type);

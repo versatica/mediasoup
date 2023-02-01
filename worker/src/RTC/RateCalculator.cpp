@@ -116,7 +116,7 @@ namespace RTC
 
 	void RtpDataCounter::Update(RTC::RtpPacket* packet)
 	{
-		uint64_t nowMs = DepLibUV::GetTimeMs();
+		const uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		this->packets++;
 		this->rate.Update(packet->GetSize(), nowMs);

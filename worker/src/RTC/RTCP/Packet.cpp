@@ -204,7 +204,7 @@ namespace RTC
 
 			this->header = reinterpret_cast<CommonHeader*>(buffer);
 
-			const size_t length = (GetSize() / 4) - 1;
+			size_t length = (GetSize() / 4) - 1;
 
 			// Fill the common header.
 			this->header->version    = 2;

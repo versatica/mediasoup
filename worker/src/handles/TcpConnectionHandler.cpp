@@ -103,7 +103,7 @@ void TcpConnectionHandler::Close()
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer
 		// before closing.
-		auto req  = new uv_shutdown_t;
+		auto* req = new uv_shutdown_t;
 		req->data = static_cast<void*>(this);
 		err       = uv_shutdown(
       req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
@@ -135,7 +135,7 @@ void TcpConnectionHandler::Setup(
 	MS_TRACE();
 
 	// Set the UV handle.
-	const int err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
+	int err = uv_tcp_init(DepLibUV::GetLoop(), this->uvHandle);
 
 	if (err != 0)
 	{
@@ -205,7 +205,7 @@ void TcpConnectionHandler::Write(
 		return;
 	}
 
-	const size_t totalLen = len1 + len2;
+	size_t totalLen = len1 + len2;
 	uv_buf_t buffers[2];
 	int written{ 0 };
 	int err;
@@ -246,8 +246,8 @@ void TcpConnectionHandler::Write(
 		written = 0;
 	}
 
-	const size_t pendingLen = totalLen - written;
-	auto* writeData         = new UvWriteData(pendingLen);
+	size_t pendingLen = totalLen - written;
+	auto* writeData   = new UvWriteData(pendingLen);
 
 	writeData->req.data = static_cast<void*>(writeData);
 
@@ -269,7 +269,7 @@ void TcpConnectionHandler::Write(
 
 	writeData->cb = cb;
 
-	const uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
+	uv_buf_t buffer = uv_buf_init(reinterpret_cast<char*>(writeData->store), pendingLen);
 
 	err = uv_write(
 	  &writeData->req,

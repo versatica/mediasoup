@@ -38,7 +38,7 @@ void DepLibUV::ClassInit()
 
 	DepLibUV::loop = new uv_loop_t;
 
-	const int err = uv_loop_init(DepLibUV::loop);
+	int err = uv_loop_init(DepLibUV::loop);
 
 	if (err != 0)
 		MS_ABORT("libuv loop initialization failed");
@@ -88,7 +88,7 @@ void DepLibUV::RunLoop()
 	// This should never happen.
 	MS_ASSERT(DepLibUV::loop != nullptr, "loop unset");
 
-	const int ret = uv_run(DepLibUV::loop, UV_RUN_DEFAULT);
+	int ret = uv_run(DepLibUV::loop, UV_RUN_DEFAULT);
 
 	MS_ASSERT(ret == 0, "uv_run() returned %s", uv_err_name(ret));
 }

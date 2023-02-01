@@ -347,7 +347,7 @@ namespace RTC
 					if (!type.is_string())
 						MS_THROW_TYPE_ERROR("wrong type (not a string)");
 
-					std::string typeStr = type.get<std::string>();
+					const std::string typeStr = type.get<std::string>();
 
 					if (typeStr == "rtp")
 						newTraceEventTypes.rtp = true;

@@ -117,7 +117,7 @@ void TcpServerHandler::AcceptTcpConnection(TcpConnectionHandler* connection)
 	}
 
 	// Accept the connection.
-	const int err = uv_accept(
+	int err = uv_accept(
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
 	  reinterpret_cast<uv_stream_t*>(connection->GetUvHandle()));
 

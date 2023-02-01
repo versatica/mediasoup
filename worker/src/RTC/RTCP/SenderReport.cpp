@@ -65,7 +65,7 @@ namespace RTC
 			auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
 
 			std::unique_ptr<SenderReportPacket> packet(new SenderReportPacket(header));
-			const size_t offset = Packet::CommonHeaderSize;
+			size_t offset = Packet::CommonHeaderSize;
 
 			SenderReport* report = SenderReport::Parse(data + offset, len - offset);
 

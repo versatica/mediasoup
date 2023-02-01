@@ -34,9 +34,9 @@ namespace RTC
 			// Copy the content.
 			std::memcpy(buffer + 8, this->header->value, GetLength());
 
-			const size_t offset = 8 + GetLength();
+			size_t offset = 8 + GetLength();
 			// 32 bits padding.
-			const size_t padding = (-offset) & 3;
+			size_t padding = (-offset) & 3;
 
 			for (size_t i{ 0 }; i < padding; ++i)
 			{

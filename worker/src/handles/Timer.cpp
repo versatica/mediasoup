@@ -27,7 +27,7 @@ Timer::Timer(Listener* listener) : listener(listener)
 	this->uvHandle       = new uv_timer_t;
 	this->uvHandle->data = static_cast<void*>(this);
 
-	const int err = uv_timer_init(DepLibUV::GetLoop(), this->uvHandle);
+	int err = uv_timer_init(DepLibUV::GetLoop(), this->uvHandle);
 
 	if (err != 0)
 	{
@@ -71,7 +71,7 @@ void Timer::Start(uint64_t timeout, uint64_t repeat)
 	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0)
 		Stop();
 
-	const int err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), timeout, repeat);
+	int err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), timeout, repeat);
 
 	if (err != 0)
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
@@ -84,7 +84,7 @@ void Timer::Stop()
 	if (this->closed)
 		MS_THROW_ERROR("closed");
 
-	const int err = uv_timer_stop(this->uvHandle);
+	int err = uv_timer_stop(this->uvHandle);
 
 	if (err != 0)
 		MS_THROW_ERROR("uv_timer_stop() failed: %s", uv_strerror(err));
@@ -103,7 +103,7 @@ void Timer::Reset()
 	if (this->repeat == 0u)
 		return;
 
-	const int err =
+	int err =
 	  uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), this->repeat, this->repeat);
 
 	if (err != 0)
@@ -120,7 +120,7 @@ void Timer::Restart()
 	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0)
 		Stop();
 
-	const int err =
+	int err =
 	  uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), this->timeout, this->repeat);
 
 	if (err != 0)

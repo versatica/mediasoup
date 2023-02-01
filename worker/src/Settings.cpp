@@ -328,7 +328,7 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 	// Reset logTags.
 	struct LogTags newLogTags;
 
-	for (auto& tag : tags)
+	for (const auto& tag : tags)
 	{
 		if (tag == "info")
 			newLogTags.info = true;
