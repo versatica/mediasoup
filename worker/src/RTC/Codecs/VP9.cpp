@@ -19,7 +19,9 @@ namespace RTC
 			MS_TRACE();
 
 			if (len < 1)
+			{
 				return nullptr;
+			}
 
 			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
@@ -37,14 +39,18 @@ namespace RTC
 			if (payloadDescriptor->i)
 			{
 				if (len < ++offset + 1)
+				{
 					return nullptr;
+				}
 
 				byte = data[offset];
 
 				if (byte >> 7 & 0x01)
 				{
 					if (len < ++offset + 1)
+					{
 						return nullptr;
+					}
 
 					payloadDescriptor->pictureId = (byte & 0x7F) << 8;
 					payloadDescriptor->pictureId += data[offset];
@@ -62,7 +68,9 @@ namespace RTC
 			if (payloadDescriptor->l)
 			{
 				if (len < ++offset + 1)
+				{
 					return nullptr;
+				}
 
 				byte = data[offset];
 
@@ -74,7 +82,9 @@ namespace RTC
 				payloadDescriptor->hasTlIndex           = true;
 
 				if (len < ++offset + 1)
+				{
 					return nullptr;
+				}
 
 				// Read TL0PICIDX if flexible mode is unset.
 				if (!payloadDescriptor->f)
@@ -113,7 +123,9 @@ namespace RTC
 			PayloadDescriptor* payloadDescriptor = VP9::Parse(data, len, frameMarking, frameMarkingLen);
 
 			if (!payloadDescriptor)
+			{
 				return;
+			}
 
 			if (payloadDescriptor->isKeyFrame)
 			{
@@ -285,10 +297,15 @@ namespace RTC
 			// * higher than current one
 			// * different than the current one when KSVC is enabled and this is not a keyframe
 			// (interframe p bit = 1)
+			// clang-format off
 			if (
 			  !isOldPacket &&
-			  (packetSpatialLayer > tmpSpatialLayer ||
-			   (context->IsKSvc() && this->payloadDescriptor->p && packetSpatialLayer != tmpSpatialLayer)))
+			  (
+			  	packetSpatialLayer > tmpSpatialLayer ||
+			  	(context->IsKSvc() && this->payloadDescriptor->p && packetSpatialLayer != tmpSpatialLayer)
+			  )
+			)
+			// clang-format on
 			{
 				return false;
 			}
@@ -345,12 +362,16 @@ namespace RTC
 
 				// Filter temporal layers higher than current one.
 				if (packetTemporalLayer > tmpTemporalLayer)
+				{
 					return false;
+				}
 			}
 
 			// Set marker bit if needed.
 			if (packetSpatialLayer == tmpSpatialLayer && this->payloadDescriptor->e)
+			{
 				marker = true;
+			}
 
 			// Update the pictureId manager.
 			if (this->payloadDescriptor->hasPictureId)
@@ -362,11 +383,15 @@ namespace RTC
 
 			// Update current spatial layer if needed.
 			if (tmpSpatialLayer != context->GetCurrentSpatialLayer())
+			{
 				context->SetCurrentSpatialLayer(tmpSpatialLayer);
+			}
 
 			// Update current temporal layer if needed.
 			if (tmpTemporalLayer != context->GetCurrentTemporalLayer())
+			{
 				context->SetCurrentTemporalLayer(tmpTemporalLayer);
+			}
 
 			return true;
 		}

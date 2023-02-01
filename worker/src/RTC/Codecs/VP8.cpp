@@ -20,7 +20,9 @@ namespace RTC
 			MS_TRACE();
 
 			if (len < 1)
+			{
 				return nullptr;
+			}
 
 			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
@@ -39,7 +41,9 @@ namespace RTC
 			else
 			{
 				if (len < ++offset + 1)
+				{
 					return nullptr;
+				}
 
 				byte = data[offset];
 
@@ -52,14 +56,18 @@ namespace RTC
 			if (payloadDescriptor->i)
 			{
 				if (len < ++offset + 1)
+				{
 					return nullptr;
+				}
 
 				byte = data[offset];
 
 				if ((byte >> 7) & 0x01)
 				{
 					if (len < ++offset + 1)
+					{
 						return nullptr;
+					}
 
 					payloadDescriptor->hasTwoBytesPictureId = true;
 					payloadDescriptor->pictureId            = (byte & 0x7F) << 8;
@@ -77,7 +85,9 @@ namespace RTC
 			if (payloadDescriptor->l)
 			{
 				if (len < ++offset + 1)
+				{
 					return nullptr;
+				}
 
 				payloadDescriptor->hasTl0PictureIndex = true;
 				payloadDescriptor->tl0PictureIndex    = data[offset];
@@ -86,7 +96,9 @@ namespace RTC
 			if (payloadDescriptor->t || payloadDescriptor->k)
 			{
 				if (len < ++offset + 1)
+				{
 					return nullptr;
+				}
 
 				byte = data[offset];
 
@@ -126,7 +138,9 @@ namespace RTC
 			PayloadDescriptor* payloadDescriptor = VP8::Parse(data, len, frameMarking, frameMarkingLen);
 
 			if (!payloadDescriptor)
+			{
 				return;
+			}
 
 			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
 
@@ -180,7 +194,9 @@ namespace RTC
 
 			// Nothing to do.
 			if (!this->extended)
+			{
 				return;
+			}
 
 			data += 2;
 
@@ -200,12 +216,16 @@ namespace RTC
 					data++;
 
 					if (pictureId > 127)
+					{
 						MS_DEBUG_TAG(rtp, "casting pictureId value to one byte");
+					}
 				}
 			}
 
 			if (this->l)
+			{
 				*data = tl0PictureIndex;
+			}
 		}
 
 		void VP8::PayloadDescriptor::Restore(uint8_t* data) const
@@ -337,7 +357,9 @@ namespace RTC
 			}
 
 			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
+			{
 				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
+			}
 
 			// clang-format off
 			if (
