@@ -1,8 +1,6 @@
 
 namespace FBS.Common;
 
-/* Common custom types */
-
 table StringString {
   key:string (required);
   value:string (required);
