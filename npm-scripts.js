@@ -47,7 +47,6 @@ switch (task)
 	{
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
-			flatcWorker();
 			buildWorker();
 
 			if (!process.env.MEDIASOUP_LOCAL_DEV)
@@ -281,9 +280,6 @@ function flatcNode()
 {
 	console.log('npm-scripts.js [INFO] flatcNode()');
 
-	// Build flatc binary if needed.
-	executeCmd(`${MAKE} -C worker flatc`);
-
 	const extension = isWindows ? '.exe' : '';
 	const flatc = path.resolve(path.join(
 		'worker', 'out', 'Release', 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
@@ -306,25 +302,7 @@ function flatcWorker()
 {
 	console.log('npm-scripts.js [INFO] flatcWorker()');
 
-	// Build flatc binary if needed.
 	executeCmd(`${MAKE} -C worker flatc`);
-
-	const extension = isWindows ? '.exe' : '';
-	const flatc = path.resolve(path.join(
-		'worker', 'out', 'Release', 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
-	const src = path.resolve(path.join('fbs', '*'));
-	const out = path.resolve(path.join('worker', 'include', 'FBS'));
-	const options = '--cpp-field-case-style lower --reflect-names --scoped-enums';
-	const command = `${flatc} --cpp ${options} -o ${out} `;
-
-	if (isWindows)
-	{
-		executeCmd(`for %f in (${src}) do ${command} %f`);
-	}
-	else
-	{
-		executeCmd(`for file in ${src}; do ${command} \$\{file\}; done`);
-	}
 }
 
 function testNode()
@@ -366,7 +344,6 @@ function checkRelease()
 	flatcNode();
 	buildTypescript(/* force */ true);
 	replaceVersion();
-	flatcWorker();
 	buildWorker();
 	lintNode();
 	lintWorker();

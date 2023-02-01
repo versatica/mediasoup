@@ -58,8 +58,6 @@ jobs:
     - if: ${{matrix.language}} == 'cpp'
       name: Build C++
       run: |
-        cd worker; make flatc; cd ..
-        node ./npm-scripts.js flatc:worker
         cd worker; make; cd ..
 
     # ℹ️ Command-line programs to run using the OS shell.
