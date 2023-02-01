@@ -27,6 +27,7 @@
     "worker/meson_options.txt",
     "worker/src",
     "worker/include",
+    "worker/fbs",
     "worker/test/src",
     "worker/test/include",
     "worker/fuzzer/src",
