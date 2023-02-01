@@ -280,6 +280,9 @@ function flatcNode()
 {
 	console.log('npm-scripts.js [INFO] flatcNode()');
 
+	// Build flatc if needed.
+	executeCmd(`${MAKE} -C worker flatc`);
+
 	const extension = isWindows ? '.exe' : '';
 	const flatc = path.resolve(path.join(
 		'worker', 'out', 'Release', 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
