@@ -37,5 +37,5 @@
 # JetBrains IDE stuff.
 /.idea
 
-# Packaged module
+# Packaged module.
 *.tgz
