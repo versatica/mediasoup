@@ -78,15 +78,15 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	SECTION("receive NACK and get retransmitted packets")
 	{
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
-		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, 1533790901);
+		auto* packet1 = CreateRtpPacket(rtpBuffer1, 21006, 1533790901);
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
-		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, 1533790901);
+		auto* packet2 = CreateRtpPacket(rtpBuffer2, 21007, 1533790901);
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
-		auto packet3 = CreateRtpPacket(rtpBuffer3, 21008, 1533793871);
+		auto* packet3 = CreateRtpPacket(rtpBuffer3, 21008, 1533793871);
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
-		auto packet4 = CreateRtpPacket(rtpBuffer4, 21009, 1533793871);
+		auto* packet4 = CreateRtpPacket(rtpBuffer4, 21009, 1533793871);
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
-		auto packet5 = CreateRtpPacket(rtpBuffer5, 21010, 1533796931);
+		auto* packet5 = CreateRtpPacket(rtpBuffer5, 21010, 1533796931);
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -143,15 +143,15 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	SECTION("receive NACK and get zero retransmitted packets if useNack is not set")
 	{
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
-		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, 1533790901);
+		auto* packet1 = CreateRtpPacket(rtpBuffer1, 21006, 1533790901);
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
-		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, 1533790901);
+		auto* packet2 = CreateRtpPacket(rtpBuffer2, 21007, 1533790901);
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
-		auto packet3 = CreateRtpPacket(rtpBuffer3, 21008, 1533793871);
+		auto* packet3 = CreateRtpPacket(rtpBuffer3, 21008, 1533793871);
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
-		auto packet4 = CreateRtpPacket(rtpBuffer4, 21009, 1533793871);
+		auto* packet4 = CreateRtpPacket(rtpBuffer4, 21009, 1533793871);
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
-		auto packet5 = CreateRtpPacket(rtpBuffer5, 21010, 1533796931);
+		auto* packet5 = CreateRtpPacket(rtpBuffer5, 21010, 1533796931);
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -196,15 +196,15 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	SECTION("receive NACK and get zero retransmitted packets for audio")
 	{
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
-		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, 1533790901);
+		auto* packet1 = CreateRtpPacket(rtpBuffer1, 21006, 1533790901);
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
-		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, 1533790901);
+		auto* packet2 = CreateRtpPacket(rtpBuffer2, 21007, 1533790901);
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
-		auto packet3 = CreateRtpPacket(rtpBuffer3, 21008, 1533793871);
+		auto* packet3 = CreateRtpPacket(rtpBuffer3, 21008, 1533793871);
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
-		auto packet4 = CreateRtpPacket(rtpBuffer4, 21009, 1533793871);
+		auto* packet4 = CreateRtpPacket(rtpBuffer4, 21009, 1533793871);
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
-		auto packet5 = CreateRtpPacket(rtpBuffer5, 21010, 1533796931);
+		auto* packet5 = CreateRtpPacket(rtpBuffer5, 21010, 1533796931);
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -249,9 +249,9 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	SECTION("receive NACK in different RtpStreamSend instances and get retransmitted packets")
 	{
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
-		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, 1533790901);
+		auto* packet1 = CreateRtpPacket(rtpBuffer1, 21006, 1533790901);
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
-		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, 1533790901);
+		auto* packet2 = CreateRtpPacket(rtpBuffer2, 21007, 1533790901);
 
 		// Create two RtpStreamSend instances.
 		TestRtpStreamListener testRtpStreamListener1;
@@ -326,8 +326,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		uint32_t diffTs    = RtpStreamSend::MaxRetransmissionDelay * clockRate / 1000;
 		uint32_t secondTs  = firstTs + diffTs;
 
-		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, firstTs);
-		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, secondTs - 1);
+		auto* packet1 = CreateRtpPacket(rtpBuffer1, 21006, firstTs);
+		auto* packet2 = CreateRtpPacket(rtpBuffer2, 21007, secondTs - 1);
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener1;
@@ -378,8 +378,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		uint32_t diffTs    = RtpStreamSend::MaxRetransmissionDelay * clockRate / 1000;
 		uint32_t secondTs  = firstTs + diffTs;
 
-		auto packet1 = CreateRtpPacket(rtpBuffer1, 21006, firstTs);
-		auto packet2 = CreateRtpPacket(rtpBuffer2, 21007, secondTs);
+		auto* packet1 = CreateRtpPacket(rtpBuffer1, 21006, firstTs);
+		auto* packet2 = CreateRtpPacket(rtpBuffer2, 21007, secondTs);
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener1;

@@ -23,7 +23,7 @@ namespace RTC
 		auto jsonRidTableIt  = jsonObject.find("ridTable");
 
 		// Add ssrcTable.
-		for (auto& kv : this->ssrcTable)
+		for (const auto& kv : this->ssrcTable)
 		{
 			auto ssrc      = kv.first;
 			auto* producer = kv.second;
@@ -32,19 +32,19 @@ namespace RTC
 		}
 
 		// Add midTable.
-		for (auto& kv : this->midTable)
+		for (const auto& kv : this->midTable)
 		{
-			auto& mid      = kv.first;
-			auto* producer = kv.second;
+			const auto& mid = kv.first;
+			auto* producer  = kv.second;
 
 			(*jsonMidTableIt)[mid] = producer->id;
 		}
 
 		// Add ridTable.
-		for (auto& kv : this->ridTable)
+		for (const auto& kv : this->ridTable)
 		{
-			auto& rid      = kv.first;
-			auto* producer = kv.second;
+			const auto& rid = kv.first;
+			auto* producer  = kv.second;
 
 			(*jsonRidTableIt)[rid] = producer->id;
 		}
@@ -57,7 +57,7 @@ namespace RTC
 		const auto& rtpParameters = producer->GetRtpParameters();
 
 		// Add entries into the ssrcTable.
-		for (auto& encoding : rtpParameters.encodings)
+		for (const auto& encoding : rtpParameters.encodings)
 		{
 			uint32_t ssrc;
 
@@ -99,7 +99,7 @@ namespace RTC
 		// Add entries into midTable.
 		if (!rtpParameters.mid.empty())
 		{
-			auto& mid = rtpParameters.mid;
+			const auto& mid = rtpParameters.mid;
 
 			if (this->midTable.find(mid) == this->midTable.end())
 			{
@@ -114,9 +114,9 @@ namespace RTC
 		}
 
 		// Add entries into ridTable.
-		for (auto& encoding : rtpParameters.encodings)
+		for (const auto& encoding : rtpParameters.encodings)
 		{
-			auto& rid = encoding.rid;
+			const auto& rid = encoding.rid;
 
 			if (rid.empty())
 				continue;

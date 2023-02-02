@@ -11,12 +11,12 @@
 #include <string>
 
 // Free send buffer threshold (in bytes) upon which send_cb will be executed.
-static uint32_t SendBufferThreshold{ 256u };
+static const uint32_t SendBufferThreshold{ 256u };
 
 /* SCTP events to which we are subscribing. */
 
 /* clang-format off */
-uint16_t EventTypes[] =
+const uint16_t EventTypes[] =
 {
 	SCTP_ADAPTATION_INDICATION,
 	SCTP_ASSOC_CHANGE,
@@ -59,7 +59,7 @@ inline static int onRecvSctpData(
 	else
 	{
 		const uint16_t streamId = rcv.rcv_sid;
-		uint32_t ppid           = ntohl(rcv.rcv_ppid);
+		const uint32_t ppid     = ntohl(rcv.rcv_ppid);
 		const uint16_t ssn      = rcv.rcv_ssn;
 
 		MS_DEBUG_TAG(
