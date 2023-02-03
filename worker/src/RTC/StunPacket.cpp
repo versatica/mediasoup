@@ -434,7 +434,7 @@ namespace RTC
 					return Authentication::BAD_REQUEST;
 
 				// Check that USERNAME attribute begins with our local username plus ":".
-				size_t localUsernameLen = localUsername.length();
+				const size_t localUsernameLen = localUsername.length();
 
 				if (
 				  this->username.length() <= localUsernameLen || this->username.at(localUsernameLen) != ':' ||
@@ -531,8 +531,9 @@ namespace RTC
 		bool addXorMappedAddress =
 		  ((this->xorMappedAddress != nullptr) && this->method == StunPacket::Method::BINDING &&
 		   this->klass == Class::SUCCESS_RESPONSE);
-		bool addErrorCode        = ((this->errorCode != 0u) && this->klass == Class::ERROR_RESPONSE);
-		bool addMessageIntegrity = (this->klass != Class::ERROR_RESPONSE && !this->password.empty());
+		const bool addErrorCode = ((this->errorCode != 0u) && this->klass == Class::ERROR_RESPONSE);
+		const bool addMessageIntegrity =
+		  (this->klass != Class::ERROR_RESPONSE && !this->password.empty());
 		const bool addFingerprint{ true }; // Do always.
 
 		// Update data pointer.
@@ -748,8 +749,8 @@ namespace RTC
 			Utils::Byte::Set2Bytes(buffer, pos, static_cast<uint16_t>(Attribute::ERROR_CODE));
 			Utils::Byte::Set2Bytes(buffer, pos + 2, 4);
 
-			auto codeClass     = static_cast<uint8_t>(this->errorCode / 100);
-			uint8_t codeNumber = static_cast<uint8_t>(this->errorCode) - (codeClass * 100);
+			auto codeClass           = static_cast<uint8_t>(this->errorCode / 100);
+			const uint8_t codeNumber = static_cast<uint8_t>(this->errorCode) - (codeClass * 100);
 
 			Utils::Byte::Set2Bytes(buffer, pos + 4, 0);
 			Utils::Byte::Set1Byte(buffer, pos + 6, codeClass);
