@@ -182,7 +182,7 @@ enum PayloadNotification {
 #[derive(Default)]
 #[allow(clippy::type_complexity)]
 struct Handlers {
-    message: Bag<Arc<dyn Fn(WebRtcMessage) + Send + Sync>>,
+    message: Bag<Arc<dyn Fn(&WebRtcMessage) + Send + Sync>>,
     sctp_send_buffer_full: Bag<Arc<dyn Fn() + Send + Sync>>,
     buffered_amount_low: Bag<Arc<dyn Fn(u32) + Send + Sync>>,
     data_producer_close: BagOnce<Box<dyn FnOnce() + Send>>,
@@ -408,7 +408,7 @@ impl DataConsumer {
                             match WebRtcMessage::new(ppid, Vec::from(payload)) {
                                 Ok(message) => {
                                     handlers.message.call(|callback| {
-                                        callback(message.clone());
+                                        callback(&message);
                                     });
                                 }
                                 Err(ppid) => {
@@ -588,7 +588,7 @@ impl DataConsumer {
     /// # Notes on usage
     /// Just available in direct transports, this is, those created via
     /// [`Router::create_direct_transport`](crate::router::Router::create_direct_transport).
-    pub fn on_message<F: Fn(WebRtcMessage) + Send + Sync + 'static>(
+    pub fn on_message<F: Fn(&WebRtcMessage) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId {
