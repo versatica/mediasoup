@@ -158,7 +158,9 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code
 
 * `make clean` and `make` must have been called first.
 * [PyYAML](https://pyyaml.org/) is required.
-  * In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
+  - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
+
+`MEDIASOUP_TIDY_CHECKS` environment variable with a comma separated list of checks overrides the checks defined in .clang-tidy file.
 
 ### `make fuzzer`
 
