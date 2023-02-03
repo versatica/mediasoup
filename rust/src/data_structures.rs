@@ -816,7 +816,7 @@ impl<'a> WebRtcMessage<'a> {
     pub fn into_owned(self) -> OwnedWebRtcMessage {
         match self {
             WebRtcMessage::String(string) => OwnedWebRtcMessage::String(string),
-            WebRtcMessage::Binary(binary) => OwnedWebRtcMessage::Binary(binary.to_vec()),
+            WebRtcMessage::Binary(binary) => OwnedWebRtcMessage::Binary(binary.into_owned()),
             WebRtcMessage::EmptyString => OwnedWebRtcMessage::EmptyString,
             WebRtcMessage::EmptyBinary => OwnedWebRtcMessage::EmptyBinary,
         }
