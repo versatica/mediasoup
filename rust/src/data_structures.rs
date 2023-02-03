@@ -768,18 +768,18 @@ pub enum TraceEventDirection {
 /// Container used for sending/receiving messages using `DirectTransport` data producers and data
 /// consumers.
 #[derive(Debug, Clone)]
-pub enum WebRtcMessage<'a> {
+pub enum WebRtcMessage {
     /// String
     String(String),
     /// Binary
-    Binary(Cow<'a, [u8]>),
+    Binary(Vec<u8>),
     /// EmptyString
     EmptyString,
     /// EmptyBinary
     EmptyBinary,
 }
 
-impl<'a> WebRtcMessage<'a> {
+impl WebRtcMessage {
     // +------------------------------------+-----------+
     // | Value                              | SCTP PPID |
     // +------------------------------------+-----------+
@@ -791,7 +791,7 @@ impl<'a> WebRtcMessage<'a> {
     // | WebRTC Binary Empty                | 57        |
     // +------------------------------------+-----------+
 
-    pub(crate) fn new(ppid: u32, payload: Cow<'a, [u8]>) -> Result<Self, u32> {
+    pub(crate) fn new(ppid: u32, payload: Vec<u8>) -> Result<Self, u32> {
         match ppid {
             51 => Ok(WebRtcMessage::String(
                 String::from_utf8(payload.to_vec()).unwrap(),
@@ -803,12 +803,12 @@ impl<'a> WebRtcMessage<'a> {
         }
     }
 
-    pub(crate) fn into_ppid_and_payload(self) -> (u32, Cow<'a, [u8]>) {
+    pub(crate) fn into_ppid_and_payload(self) -> (u32, Vec<u8>) {
         match self {
-            WebRtcMessage::String(string) => (51_u32, Cow::from(string.into_bytes())),
+            WebRtcMessage::String(string) => (51_u32, Vec::from(string.into_bytes())),
             WebRtcMessage::Binary(binary) => (53_u32, binary),
-            WebRtcMessage::EmptyString => (56_u32, Cow::from(b" ".as_ref())),
-            WebRtcMessage::EmptyBinary => (57_u32, Cow::from(vec![0_u8])),
+            WebRtcMessage::EmptyString => (56_u32, Vec::from(b" ".as_ref())),
+            WebRtcMessage::EmptyBinary => (57_u32, vec![0_u8]),
         }
     }
 }

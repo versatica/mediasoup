@@ -17,7 +17,6 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
 use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -183,7 +182,7 @@ enum PayloadNotification {
 #[derive(Default)]
 #[allow(clippy::type_complexity)]
 struct Handlers {
-    message: Bag<Arc<dyn Fn(WebRtcMessage<'_>) + Send + Sync>>,
+    message: Bag<Arc<dyn Fn(WebRtcMessage) + Send + Sync>>,
     sctp_send_buffer_full: Bag<Arc<dyn Fn() + Send + Sync>>,
     buffered_amount_low: Bag<Arc<dyn Fn(u32) + Send + Sync>>,
     data_producer_close: BagOnce<Box<dyn FnOnce() + Send>>,
@@ -406,7 +405,7 @@ impl DataConsumer {
                 match serde_json::from_slice::<PayloadNotification>(message) {
                     Ok(notification) => match notification {
                         PayloadNotification::Message { ppid } => {
-                            match WebRtcMessage::new(ppid, Cow::from(payload)) {
+                            match WebRtcMessage::new(ppid, Vec::from(payload)) {
                                 Ok(message) => {
                                     handlers.message.call(|callback| {
                                         callback(message.clone());
@@ -589,7 +588,7 @@ impl DataConsumer {
     /// # Notes on usage
     /// Just available in direct transports, this is, those created via
     /// [`Router::create_direct_transport`](crate::router::Router::create_direct_transport).
-    pub fn on_message<F: Fn(WebRtcMessage<'_>) + Send + Sync + 'static>(
+    pub fn on_message<F: Fn(WebRtcMessage) + Send + Sync + 'static>(
         &self,
         callback: F,
     ) -> HandlerId {
@@ -669,16 +668,12 @@ impl DataConsumer {
 
 impl DirectDataConsumer {
     /// Sends direct messages from the Rust process.
-    pub async fn send(&self, message: WebRtcMessage<'_>) -> Result<(), RequestError> {
+    pub async fn send(&self, message: WebRtcMessage) -> Result<(), RequestError> {
         let (ppid, payload) = message.into_ppid_and_payload();
 
         self.inner
             .payload_channel
-            .request(
-                self.inner.id,
-                DataConsumerSendRequest { ppid },
-                payload.into_owned(),
-            )
+            .request(self.inner.id, DataConsumerSendRequest { ppid }, payload)
             .await
     }
 }
