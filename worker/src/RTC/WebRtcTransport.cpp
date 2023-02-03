@@ -365,8 +365,8 @@ namespace RTC
 		{
 			jsonIceCandidatesIt->emplace_back(json::value_t::object);
 
-			auto& jsonEntry    = (*jsonIceCandidatesIt)[i];
-			auto& iceCandidate = this->iceCandidates[i];
+			auto& jsonEntry          = (*jsonIceCandidatesIt)[i];
+			const auto& iceCandidate = this->iceCandidates[i];
 
 			iceCandidate.FillJson(jsonEntry);
 		}
@@ -648,8 +648,8 @@ namespace RTC
 
 			case Channel::ChannelRequest::MethodId::TRANSPORT_RESTART_ICE:
 			{
-				std::string usernameFragment = Utils::Crypto::GetRandomString(32);
-				std::string password         = Utils::Crypto::GetRandomString(32);
+				const std::string usernameFragment = Utils::Crypto::GetRandomString(32);
+				const std::string password         = Utils::Crypto::GetRandomString(32);
 
 				this->iceServer->RestartIce(usernameFragment, password);
 

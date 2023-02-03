@@ -43,6 +43,7 @@ Checks: "*,\
  -modernize-use-trailing-return-type,\
  -readability-else-after-return,\
  -readability-function-cognitive-complexity,\
+ -readability-identifier-length,\
  -readability-implicit-bool-cast,\
  -readability-implicit-bool-conversion,\
  -readability-magic-numbers,\

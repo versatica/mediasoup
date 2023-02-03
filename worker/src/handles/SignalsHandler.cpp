@@ -56,7 +56,7 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 		MS_THROW_ERROR("closed");
 
 	int err;
-	auto uvHandle = new uv_signal_t;
+	auto* uvHandle = new uv_signal_t;
 
 	uvHandle->data = static_cast<void*>(this);
 

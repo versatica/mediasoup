@@ -25,8 +25,8 @@ namespace RTC
 		if (this->rtpParameters.encodings.size() != this->consumableRtpEncodings.size())
 			MS_THROW_TYPE_ERROR("number of rtpParameters.encodings and consumableRtpEncodings do not match");
 
-		auto& encoding   = this->rtpParameters.encodings[0];
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		auto& encoding         = this->rtpParameters.encodings[0];
+		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
@@ -226,7 +226,7 @@ namespace RTC
 			return;
 
 		// Whether this is the first packet after re-sync.
-		bool isSyncPacket = syncRequired;
+		const bool isSyncPacket = syncRequired;
 
 		// Sync sequence number and timestamp if required.
 		if (isSyncPacket)

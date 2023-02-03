@@ -543,7 +543,7 @@ namespace RTC
 		if (!extenValue)
 			return;
 
-		size_t midLen = mid.length();
+		const size_t midLen = mid.length();
 
 		// Here we assume that there is MidMaxLength available bytes, even if now
 		// they are padding bytes.

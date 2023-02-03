@@ -17,7 +17,7 @@ namespace RTC
 	// Probation RTP header.
 	// Caution: This must have an exact size for the RTP extensions to be added
 	// and must align extensions to 4 bytes.
-	static uint8_t ProbationPacketHeader[] =
+	static const uint8_t ProbationPacketHeader[] =
 	{
 		0b10010000, 0b01111111, 0, 0, // PayloadType: 127, Sequence Number: 0
 		0, 0, 0, 0,                   // Timestamp: 0

@@ -36,3 +36,6 @@
 /.vscode
 # JetBrains IDE stuff.
 /.idea
+
+# Packaged module.
+*.tgz

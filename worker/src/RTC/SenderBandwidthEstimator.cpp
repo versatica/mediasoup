@@ -95,8 +95,8 @@ namespace RTC
 			if (!result.received)
 				continue;
 
-			uint16_t wideSeq = result.sequenceNumber;
-			auto it          = this->sentInfos.find(wideSeq);
+			const uint16_t wideSeq = result.sequenceNumber;
+			auto it                = this->sentInfos.find(wideSeq);
 
 			if (it == this->sentInfos.end())
 			{

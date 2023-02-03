@@ -175,15 +175,15 @@ export type WorkerResourceUsage =
 	/* eslint-enable camelcase */
 };
 
-export type WorkerEvents = 
-{ 
+export type WorkerEvents =
+{
 	died: [Error];
 	// Private events.
 	'@success': [];
 	'@failure': [Error];
 };
 
-export type WorkerObserverEvents = 
+export type WorkerObserverEvents =
 {
 	close: [];
 	newwebrtcserver: [WebRtcServer];
@@ -655,7 +655,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		const data = { rtpCapabilities };
 		const router = new Router(
 			{
-				internal : 
+				internal :
 				{
 					routerId : reqData.routerId
 				},

@@ -1,6 +1,11 @@
 # Changelog
 
 
+### Next
+
+* Update libsrtp to 2.5.0.
+
+
 ### 3.11.8
 
 * `SimulcastConsumer::GetDesiredBitrate()`: Choose the highest bitrate among all Producer streams ([PR #992](https://github.com/versatica/mediasoup/pull/992)).

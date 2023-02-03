@@ -146,7 +146,7 @@ void UnixStreamSocket::Close()
 	if (this->role == UnixStreamSocket::Role::PRODUCER && !this->hasError && !this->isClosedByPeer)
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
-		auto req  = new uv_shutdown_t;
+		auto* req = new uv_shutdown_t;
 		req->data = static_cast<void*>(this);
 		err       = uv_shutdown(
       req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
