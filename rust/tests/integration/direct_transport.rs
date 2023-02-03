@@ -190,7 +190,7 @@ fn send_succeeds() {
             let last_recv_message_id = Arc::clone(&last_recv_message_id);
 
             move |message| {
-                let id: usize = match message {
+                let id: usize = match &message {
                     WebRtcMessage::String(string) => {
                         recv_message_bytes.fetch_add(string.as_bytes().len(), Ordering::SeqCst);
                         string.parse().unwrap()
@@ -208,9 +208,9 @@ fn send_succeeds() {
                 };
 
                 if id < num_messages / 2 {
-                    assert!(matches!(message, &WebRtcMessage::String(_)));
+                    assert!(matches!(message, WebRtcMessage::String(_)));
                 } else {
-                    assert!(matches!(message, &WebRtcMessage::Binary(_)));
+                    assert!(matches!(message, WebRtcMessage::Binary(_)));
                 }
 
                 last_recv_message_id.fetch_add(1, Ordering::SeqCst);
