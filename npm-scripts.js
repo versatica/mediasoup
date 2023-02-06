@@ -4,7 +4,7 @@ const process = require('process');
 const os = require('os');
 const fs = require('fs');
 const { execSync, spawnSync } = require('child_process');
-const { version } = require('./package.json');
+const { version, repository } = require('./package.json');
 
 const isFreeBSD = os.platform() === 'freebsd';
 const isWindows = os.platform() === 'win32';
@@ -16,6 +16,11 @@ const MAYOR_VERSION = version.split('.')[0];
 // make command to use.
 const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 
+const PREBUILD_DIR = 'out';
+const PREBUILD_TAR = `mediasoup-worker-${version}-${os.platform()}-${os.arch()}.tgz`;
+const PREBUILD_TAR_PATH =`${PREBUILD_DIR}/${PREBUILD_TAR}`;
+
+// eslint-disable-next-line no-console
 console.log(`npm-scripts.js [INFO] running task "${task}"`);
 
 switch (task)
@@ -43,14 +48,44 @@ switch (task)
 	{
 		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
-			buildWorker();
-
-			if (!process.env.MEDIASOUP_LOCAL_DEV)
+			// Attempt to download a prebuild binary
+			downloadPrebuild().catch((error) =>
 			{
-				cleanWorker();
-			}
+				console.error('Failed to download prebuilt binary, building instead', error.message);
+				// fallback to building locally
+				buildWorker();
+
+				if (!process.env.MEDIASOUP_LOCAL_DEV)
+				{
+					cleanWorker();
+				}
+			});
+
 		}
 
+		break;
+	}
+
+	case 'prebuild:package':
+	{
+		ensureDir(PREBUILD_DIR);
+		createTar([ 'worker/out/Release' ], PREBUILD_TAR_PATH);
+		break;
+	}
+
+	case 'prebuild:download':
+	{
+		downloadPrebuild().catch((error) =>
+		{
+			console.error(`Error fetching release: ${error.message}`);
+			process.exitCode = 1;
+		});
+		break;
+	}
+
+	case 'prebuild:unpackage':
+	{
+		extractTar(PREBUILD_TAR_PATH, 'worker');
 		break;
 	}
 
@@ -364,4 +399,63 @@ function installMsysMake()
 	}
 
 	executeCmd(`${String(res.stdout).trim()} worker\\scripts\\getmake.py`);
+}
+
+function ensureDir(dir)
+{
+	if (!fs.existsSync(dir))
+	{
+		fs.mkdirSync(dir, { recursive: true });
+	}
+}
+
+function createTar(files, dest)
+{
+	const tar = require('tar');
+
+	tar.create(
+		{
+			gzip : true
+		},
+		files
+	).pipe(fs.createWriteStream(dest));
+}
+
+function extractTar(source, cwd)
+{
+	const tar = require('tar');
+
+	fs.createReadStream(source).pipe(
+		tar.extract({
+			strip : 1,
+			cwd
+		})
+	);
+}
+
+function extractRemoteTar(tarUrl, cwd)
+{
+	const tar = require('tar');
+	const axios = require('axios');
+
+	return axios({ url: tarUrl, responseType: 'stream' })
+		.then((res) =>
+		{
+			return new Promise((resolve, reject) =>
+			{
+				const sink = res.data.pipe(
+					tar.x({ strip: 1, cwd })
+				);
+
+				sink.on('finish', () => resolve());
+				sink.on('error', (err) => reject(err));
+			});
+		});
+}
+
+function downloadPrebuild()
+{
+	const releaseBase = process.env.MEDIASOUP_WORKER_DOWNLOAD_BASE || `${repository.url.replace('.git', '')}/releases/download`;
+
+	return extractRemoteTar(`${releaseBase}/${version}/${PREBUILD_TAR}`, 'worker');
 }

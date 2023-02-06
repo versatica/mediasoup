@@ -50,6 +50,9 @@
   "scripts": {
     "prepare": "node npm-scripts.js prepare",
     "postinstall": "node npm-scripts.js postinstall",
+    "prebuild:package": "node npm-scripts.js prebuild:package",
+    "prebuild:unpackage": "node npm-scripts.js prebuild:unpackage",
+    "prebuild:download": "node npm-scripts.js prebuild:download",
     "typescript:build": "node npm-scripts.js typescript:build",
     "typescript:watch": "node npm-scripts.js typescript:watch",
     "worker:build": "node npm-scripts.js worker:build",
@@ -85,9 +88,11 @@
     "cacheDirectory": ".cache/jest"
   },
   "dependencies": {
+    "axios": "^1.2.1",
     "debug": "^4.3.4",
     "h264-profile-level-id": "^1.0.1",
     "supports-color": "^9.3.1",
+    "tar": "^6.1.12",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

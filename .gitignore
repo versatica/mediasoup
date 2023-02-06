@@ -14,7 +14,7 @@
 /target
 
 ## Worker.
-/worker/out
+out/
 /worker/scripts/node_modules
 # Vistual Studio generated Stuff.
 /worker/**/Debug

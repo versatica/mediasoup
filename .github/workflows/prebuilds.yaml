@@ -1,0 +1,42 @@
+name: prebuilds
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+jobs:
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - os: ubuntu-20.04
+          - os: macos-12
+          - os: windows-2022
+
+        node:
+          - 16
+
+    runs-on: ${{ matrix.build.os }}
+
+    env:
+      CC: ${{ matrix.build.cc }}
+      CXX: ${{ matrix.build.cxx }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      - run: npm install
+      # Publish prebuild binaries on tag
+      - run: npm run prebuild:package
+      - name: Upload prebuild
+        uses: softprops/action-gh-release@v1
+        with:
+          files: out/mediasoup-worker-*.tgz
