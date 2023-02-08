@@ -18,7 +18,7 @@ const MAYOR_VERSION = version.split('.')[0];
 const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 
 // flatbuffers version.
-const FLATBUFFERS_VERSION='22.11.23';
+const FLATBUFFERS_VERSION='23.1.21';
 
 console.log(`npm-scripts.js [INFO] running task "${task}"`);
 
