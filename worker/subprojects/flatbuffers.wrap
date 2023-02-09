@@ -1,12 +1,12 @@
 [wrap-file]
-directory = flatbuffers-23.1.21
-source_url = https://github.com/google/flatbuffers/archive/v23.1.21.tar.gz
-source_filename = flatbuffers-23.1.21.tar.gz
-source_hash = d84cb25686514348e615163b458ae0767001b24b42325f426fd56406fd384238
-patch_filename = flatbuffers_23.1.21-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/flatbuffers_23.1.21-1/get_patch
-patch_hash = 95d288ba3039c5c1f70aaa121f4fe04abcf9e7b595b3c53af24fe8385226d9de
-wrapdb_version = 23.1.21-1
+directory = flatbuffers-22.11.23
+source_url = https://github.com/google/flatbuffers/archive/v22.11.23.tar.gz
+source_filename = flatbuffers-22.11.23.tar.gz
+source_hash = 8e9bacc942db59ca89a383dd7923f3e69a377d6e579d1ba13557de1fdfddf56a
+patch_filename = flatbuffers_22.11.23-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/flatbuffers_22.11.23-1/get_patch
+patch_hash = d55f6a27639fd5aeb0bbbe9e59827e6288e4a15bfceeb150e550812b9ee268fc
+wrapdb_version = 22.11.23-1
 
 [provide]
 flatbuffers = flatbuffers_dep
