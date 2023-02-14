@@ -3,6 +3,7 @@ use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers
 use crate::worker::utils;
 use crate::worker::utils::{PreparedChannelRead, PreparedChannelWrite};
 use crate::worker::{RequestError, SubscriptionHandler};
+use crate::fbs::fbs::message;
 use atomic_take::AtomicTake;
 use hash_hasher::HashedMap;
 use log::{debug, error, trace, warn};
@@ -18,6 +19,7 @@ use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 use thiserror::Error;
+use planus::ReadAsRoot;
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -90,6 +92,36 @@ enum ChannelReceiveMessage {
 }
 
 fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
+
+    let message_ref = message::MessageRef::read_as_root(&bytes[4..]).unwrap();
+
+    match message_ref.data().unwrap() {
+        message::BodyRef::Log(data) => match data.data().unwrap().chars().next() {
+            // Debug log
+            Some('D') => ChannelReceiveMessage::Event(InternalMessage::Debug(
+                    String::from_utf8(Vec::from(&data.data().unwrap().as_bytes()[1..])).unwrap()
+            )),
+            // Warn log
+            Some('W') => ChannelReceiveMessage::Event(InternalMessage::Warn(
+                    String::from_utf8(Vec::from(&data.data().unwrap().as_bytes()[1..])).unwrap()
+            )),
+            // Error log
+            Some('E') => ChannelReceiveMessage::Event(InternalMessage::Error(
+                    String::from_utf8(Vec::from(&data.data().unwrap().as_bytes()[1..])).unwrap()
+            )),
+            // Dump log
+            Some('X') => ChannelReceiveMessage::Event(InternalMessage::Dump(
+                    String::from_utf8(Vec::from(&data.data().unwrap().as_bytes()[1..])).unwrap()
+            )),
+            // Unknown
+            _ => ChannelReceiveMessage::Event(InternalMessage::Unexpected(Vec::from(bytes))),
+        },
+        _ => {
+            ChannelReceiveMessage::Event(InternalMessage::Unexpected(Vec::from(bytes)))
+        }
+    }
+
+    /*
     match bytes[0] {
         // JSON message
         b'{' => serde_json::from_slice(bytes).unwrap(),
@@ -112,6 +144,7 @@ fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage {
         // Unknown
         _ => ChannelReceiveMessage::Event(InternalMessage::Unexpected(Vec::from(bytes))),
     }
+    */
 }
 
 struct ResponseError {
