@@ -14,6 +14,7 @@ pub use crate::ortc::{
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::Router;
 use crate::rtp_parameters::RtpEncodingParameters;
+use crate::sctp_parameters::SctpStreamParameters;
 use crate::worker::{Channel, PayloadChannel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
@@ -687,24 +688,33 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let sctp_stream_parameters = match r#type {
             DataConsumerType::Sctp => {
-                let mut sctp_stream_parameters = data_producer.sctp_stream_parameters();
-                if let Some(sctp_stream_parameters) = &mut sctp_stream_parameters {
-                    if let Some(stream_id) = self.allocate_sctp_stream_id() {
-                        sctp_stream_parameters.stream_id = stream_id;
-                    } else {
-                        return Err(ConsumeDataError::NoSctpStreamId);
-                    }
-                    if let Some(ordered) = ordered {
-                        sctp_stream_parameters.ordered = ordered;
-                    }
-                    if let Some(max_packet_life_time) = max_packet_life_time {
-                        sctp_stream_parameters.max_packet_life_time = Some(max_packet_life_time);
-                    }
-                    if let Some(max_retransmits) = max_retransmits {
-                        sctp_stream_parameters.max_retransmits = Some(max_retransmits);
-                    }
+                let stream_id = self
+                    .allocate_sctp_stream_id()
+                    .ok_or(ConsumeDataError::NoSctpStreamId)?;
+                let mut sctp_stream_parameters = data_producer.sctp_stream_parameters().map_or(
+                    SctpStreamParameters {
+                        stream_id,
+                        ordered: true,
+                        max_packet_life_time,
+                        max_retransmits,
+                    },
+                    |mut sctp_parameters| {
+                        sctp_parameters.stream_id = stream_id;
+
+                        sctp_parameters
+                    },
+                );
+                if let Some(ordered) = ordered {
+                    sctp_stream_parameters.ordered = ordered;
                 }
-                sctp_stream_parameters
+                if let Some(max_packet_life_time) = max_packet_life_time {
+                    sctp_stream_parameters.max_packet_life_time = Some(max_packet_life_time);
+                }
+                if let Some(max_retransmits) = max_retransmits {
+                    sctp_stream_parameters.max_retransmits = Some(max_retransmits);
+                }
+
+                Some(sctp_stream_parameters)
             }
             DataConsumerType::Direct => {
                 if ordered.is_some() || max_packet_life_time.is_some() || max_retransmits.is_some()
