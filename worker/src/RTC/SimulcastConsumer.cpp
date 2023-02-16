@@ -30,9 +30,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Ensure there are N > 1 encodings.
-		if (this->consumableRtpEncodings.size() <= 1u)
-			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size <= 1");
+		// We allow a single encoding in simulcast (so we can enable temporal layers
+		// with a single simulcast stream).
+		// NOTE: No need to check this->consumableRtpEncodings.size() > 0 here since
+		// it's already done in Consumer constructor.
 
 		auto& encoding = this->rtpParameters.encodings[0];
 
