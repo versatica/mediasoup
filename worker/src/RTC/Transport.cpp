@@ -26,8 +26,8 @@
 
 namespace RTC
 {
-	static size_t DefaultSctpSendBufferSize{ 262144 }; // 2^18.
-	static size_t MaxSctpSendBufferSize{ 268435456 };  // 2^28.
+	static const size_t DefaultSctpSendBufferSize{ 262144 }; // 2^18.
+	static const size_t MaxSctpSendBufferSize{ 268435456 };  // 2^28.
 
 	/* Instance methods. */
 
@@ -1127,7 +1127,7 @@ namespace RTC
 
 				for (const auto& type : *body->events())
 				{
-					std::string typeStr = type->str();
+					const auto typeStr = type->str();
 
 					if (typeStr == "probation")
 						newTraceEventTypes.probation = true;
@@ -2069,7 +2069,7 @@ namespace RTC
 				for (uint8_t i{ 1u }; i <= (baseAllocation ? 1u : priority); ++i)
 				{
 					uint32_t usedBitrate{ 0u };
-					bool considerLoss = (bweType == RTC::BweType::REMB);
+					const bool considerLoss = (bweType == RTC::BweType::REMB);
 
 					usedBitrate = consumer->IncreaseLayer(availableBitrate, considerLoss);
 
@@ -2274,7 +2274,7 @@ namespace RTC
 			// invoked *after* the WebRtcTransport has been closed (freed). To avoid
 			// invalid memory access we need to use weak_ptr. Same applies in other
 			// send callbacks.
-			std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr(this->senderBwe);
@@ -2363,7 +2363,7 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
@@ -2731,7 +2731,7 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;

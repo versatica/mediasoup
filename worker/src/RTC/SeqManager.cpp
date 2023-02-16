@@ -85,9 +85,9 @@ namespace RTC
 		if (!this->dropped.empty())
 		{
 			// Delete dropped inputs older than input - MaxValue/2.
-			size_t droppedCount = this->dropped.size();
-			size_t threshold    = (input - MaxValue / 2) & MaxValue;
-			auto it             = this->dropped.lower_bound(threshold);
+			size_t droppedCount    = this->dropped.size();
+			const size_t threshold = (input - MaxValue / 2) & MaxValue;
+			auto it                = this->dropped.lower_bound(threshold);
 			this->dropped.erase(this->dropped.begin(), it);
 			this->base = (this->base - (droppedCount - this->dropped.size())) & MaxValue;
 

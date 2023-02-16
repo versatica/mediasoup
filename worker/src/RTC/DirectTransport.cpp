@@ -146,7 +146,7 @@ namespace RTC
 			return;
 		}
 
-		auto data = this->shared->channelNotifier->GetBufferBuilder().CreateVector(
+		const auto data = this->shared->channelNotifier->GetBufferBuilder().CreateVector(
 		  packet->GetData(), packet->GetSize());
 
 		auto notification =
@@ -173,7 +173,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Notify the Node DirectTransport.
-		auto data = this->shared->channelNotifier->GetBufferBuilder().CreateVector(
+		const auto data = this->shared->channelNotifier->GetBufferBuilder().CreateVector(
 		  packet->GetData(), packet->GetSize());
 
 		auto notification = FBS::DirectTransport::CreateRtcpNotification(
@@ -195,7 +195,7 @@ namespace RTC
 
 		packet->Serialize(RTC::RTCP::Buffer);
 
-		auto data = this->shared->channelNotifier->GetBufferBuilder().CreateVector(
+		const auto data = this->shared->channelNotifier->GetBufferBuilder().CreateVector(
 		  packet->GetData(), packet->GetSize());
 
 		auto notification = FBS::DirectTransport::CreateRtcpNotification(

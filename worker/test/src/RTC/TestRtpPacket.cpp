@@ -338,7 +338,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions() == false);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
-		auto rtxPacket = packet->Clone();
+		auto* rtxPacket = packet->Clone();
 
 		delete packet;
 

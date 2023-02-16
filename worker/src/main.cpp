@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 		std::_Exit(EXIT_FAILURE);
 	}
 
-	std::string version = std::getenv("MEDIASOUP_VERSION");
+	const std::string version = std::getenv("MEDIASOUP_VERSION");
 
 	auto statusCode = mediasoup_worker_run(
 	  argc,

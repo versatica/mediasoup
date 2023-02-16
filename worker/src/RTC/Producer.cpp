@@ -435,7 +435,7 @@ namespace RTC
 
 				for (const auto& type : *body->events())
 				{
-					std::string typeStr = type->str();
+					const auto typeStr = type->str();
 
 					if (typeStr == "rtp")
 						newTraceEventTypes.rtp = true;
@@ -626,8 +626,8 @@ namespace RTC
 
 		if (it != this->mapSsrcRtpStream.end())
 		{
-			auto* rtpStream = it->second;
-			bool first      = rtpStream->GetSenderReportNtpMs() == 0;
+			auto* rtpStream  = it->second;
+			const bool first = rtpStream->GetSenderReportNtpMs() == 0;
 
 			rtpStream->ReceiveRtcpSenderReport(report);
 
@@ -727,7 +727,7 @@ namespace RTC
 			return;
 		}
 
-		uint32_t ssrc = it->second;
+		const uint32_t ssrc = it->second;
 
 		// If the current RTP packet is a key frame for the given mapped SSRC do
 		// nothing since we are gonna provide Consumers with the requested key frame
@@ -754,8 +754,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint32_t ssrc       = packet->GetSsrc();
-		uint8_t payloadType = packet->GetPayloadType();
+		const uint32_t ssrc       = packet->GetSsrc();
+		const uint8_t payloadType = packet->GetPayloadType();
 
 		// If stream found in media ssrcs map, return it.
 		{
@@ -786,11 +786,11 @@ namespace RTC
 		// First, look for an encoding with matching media or RTX ssrc value.
 		for (size_t i{ 0 }; i < this->rtpParameters.encodings.size(); ++i)
 		{
-			auto& encoding         = this->rtpParameters.encodings[i];
-			const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
-			const auto* rtxCodec   = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-			bool isMediaPacket     = (mediaCodec->payloadType == payloadType);
-			bool isRtxPacket       = (rtxCodec && rtxCodec->payloadType == payloadType);
+			auto& encoding           = this->rtpParameters.encodings[i];
+			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
+			const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+			const bool isMediaPacket = (mediaCodec->payloadType == payloadType);
+			const bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 			if (isMediaPacket && encoding.ssrc == ssrc)
 			{
@@ -842,10 +842,10 @@ namespace RTC
 				if (encoding.rid != rid)
 					continue;
 
-				const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
-				const auto* rtxCodec   = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-				bool isMediaPacket     = (mediaCodec->payloadType == payloadType);
-				bool isRtxPacket       = (rtxCodec && rtxCodec->payloadType == payloadType);
+				const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
+				const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+				const bool isMediaPacket = (mediaCodec->payloadType == payloadType);
+				const bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 				if (isMediaPacket)
 				{
@@ -916,11 +916,11 @@ namespace RTC
 		)
 		// clang-format on
 		{
-			auto& encoding         = this->rtpParameters.encodings[0];
-			const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
-			const auto* rtxCodec   = this->rtpParameters.GetRtxCodecForEncoding(encoding);
-			bool isMediaPacket     = (mediaCodec->payloadType == payloadType);
-			bool isRtxPacket       = (rtxCodec && rtxCodec->payloadType == payloadType);
+			auto& encoding           = this->rtpParameters.encodings[0];
+			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
+			const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
+			const bool isMediaPacket = (mediaCodec->payloadType == payloadType);
+			const bool isRtxPacket   = (rtxCodec && rtxCodec->payloadType == payloadType);
 
 			if (isMediaPacket)
 			{
@@ -979,7 +979,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint32_t ssrc = packet->GetSsrc();
+		const uint32_t ssrc = packet->GetSsrc();
 
 		MS_ASSERT(
 		  this->mapSsrcRtpStream.find(ssrc) == this->mapSsrcRtpStream.end(),
@@ -1108,8 +1108,8 @@ namespace RTC
 
 		// Mangle the payload type.
 		{
-			uint8_t payloadType = packet->GetPayloadType();
-			auto it             = this->rtpMapping.codecs.find(payloadType);
+			const uint8_t payloadType = packet->GetPayloadType();
+			auto it                   = this->rtpMapping.codecs.find(payloadType);
 
 			if (it == this->rtpMapping.codecs.end())
 			{
@@ -1118,14 +1118,14 @@ namespace RTC
 				return false;
 			}
 
-			uint8_t mappedPayloadType = it->second;
+			const uint8_t mappedPayloadType = it->second;
 
 			packet->SetPayloadType(mappedPayloadType);
 		}
 
 		// Mangle the SSRC.
 		{
-			uint32_t mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
+			const uint32_t mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
 
 			packet->SetSsrc(mappedSsrc);
 		}

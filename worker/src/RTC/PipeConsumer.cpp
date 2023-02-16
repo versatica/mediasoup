@@ -239,7 +239,7 @@ namespace RTC
 			return;
 
 		// Whether this is the first packet after re-sync.
-		bool isSyncPacket = syncRequired;
+		const bool isSyncPacket = syncRequired;
 
 		// Sync sequence number and timestamp if required.
 		if (isSyncPacket)

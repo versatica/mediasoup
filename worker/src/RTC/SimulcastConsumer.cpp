@@ -289,7 +289,7 @@ namespace RTC
 
 		MS_ASSERT(it != this->mapMappedSsrcSpatialLayer.end(), "unknown mappedSsrc");
 
-		int16_t spatialLayer = it->second;
+		const int16_t spatialLayer = it->second;
 
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 	}
@@ -302,7 +302,7 @@ namespace RTC
 
 		MS_ASSERT(it != this->mapMappedSsrcSpatialLayer.end(), "unknown mappedSsrc");
 
-		int16_t spatialLayer = it->second;
+		const int16_t spatialLayer = it->second;
 
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 
@@ -730,7 +730,7 @@ namespace RTC
 				else
 					diffMs = -1 * (ntpMs1 - ntpMs2);
 
-				int64_t diffTs        = diffMs * this->rtpStream->GetClockRate() / 1000;
+				const int64_t diffTs  = diffMs * this->rtpStream->GetClockRate() / 1000;
 				const uint32_t newTs2 = ts2 - diffTs;
 
 				// Apply offset. This is the difference that later must be removed from the
@@ -758,8 +758,8 @@ namespace RTC
 				// Apply an expected offset for a new frame in a 30fps stream.
 				static const uint8_t MsOffset{ 33u }; // (1 / 30 * 1000).
 
-				int64_t maxTsExtraOffset = MaxExtraOffsetMs * this->rtpStream->GetClockRate() / 1000;
-				uint32_t tsExtraOffset   = this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() +
+				const int64_t maxTsExtraOffset = MaxExtraOffsetMs * this->rtpStream->GetClockRate() / 1000;
+				uint32_t tsExtraOffset = this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() +
 				                         tsOffset + MsOffset * this->rtpStream->GetClockRate() / 1000;
 
 				// NOTE: Don't ask for a key frame if already done.

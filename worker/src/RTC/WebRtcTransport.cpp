@@ -570,8 +570,8 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_RESTART_ICE:
 			{
-				std::string usernameFragment = Utils::Crypto::GetRandomString(32);
-				std::string password         = Utils::Crypto::GetRandomString(32);
+				const std::string usernameFragment = Utils::Crypto::GetRandomString(32);
+				const std::string password         = Utils::Crypto::GetRandomString(32);
 
 				this->iceServer->RestartIce(usernameFragment, password);
 

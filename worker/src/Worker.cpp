@@ -113,7 +113,7 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 	std::vector<flatbuffers::Offset<flatbuffers::String>> routerIds;
 	for (const auto& kv : this->mapRouters)
 	{
-		auto& routerId = kv.first;
+		const auto& routerId = kv.first;
 
 		routerIds.push_back(builder.CreateString(routerId));
 	}

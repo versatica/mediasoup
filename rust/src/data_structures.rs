@@ -814,6 +814,30 @@ impl<'a> WebRtcMessage<'a> {
             WebRtcMessage::EmptyBinary => (57_u32, Cow::from(vec![0_u8])),
         }
     }
+
+    /// Convert to owned message
+    pub fn into_owned(self) -> OwnedWebRtcMessage {
+        match self {
+            WebRtcMessage::String(string) => OwnedWebRtcMessage::String(string),
+            WebRtcMessage::Binary(binary) => OwnedWebRtcMessage::Binary(binary.into_owned()),
+            WebRtcMessage::EmptyString => OwnedWebRtcMessage::EmptyString,
+            WebRtcMessage::EmptyBinary => OwnedWebRtcMessage::EmptyBinary,
+        }
+    }
+}
+
+/// Similar to WebRtcMessage but represents
+/// messages that have ownership over the data
+#[derive(Debug, Clone)]
+pub enum OwnedWebRtcMessage {
+    /// String
+    String(String),
+    /// Binary
+    Binary(Vec<u8>),
+    /// EmptyString
+    EmptyString,
+    /// EmptyBinary
+    EmptyBinary,
 }
 
 /// RTP packet info in trace event.

@@ -181,7 +181,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t nowMs = DepLibUV::GetTimeMs();
+		const uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		auto baseStats = RTC::RtpStream::FillBufferStats(builder);
 		auto stats     = FBS::RtpStream::CreateSendStats(
@@ -469,7 +469,7 @@ namespace RTC
 			// Processing RTP packet is older than first one.
 			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(packet->GetTimestamp(), storageItem->timestamp))
 			{
-				uint32_t diffTs{ storageItem->timestamp - packet->GetTimestamp() };
+				const uint32_t diffTs{ storageItem->timestamp - packet->GetTimestamp() };
 
 				// RTP packet is older than the retransmission buffer size.
 				if (static_cast<uint32_t>(diffTs * 1000 / this->params.clockRate) >= this->retransmissionBufferSize)
@@ -527,7 +527,7 @@ namespace RTC
 		for (size_t i{ 0 }; i < bufferSize && this->storageItemBuffer.GetBufferSize() != 0; ++i)
 		{
 			auto* storageItem = this->storageItemBuffer.GetFirst();
-			uint32_t diffTs{ packet->GetTimestamp() - storageItem->timestamp };
+			const uint32_t diffTs{ packet->GetTimestamp() - storageItem->timestamp };
 
 			// Processing RTP packet is older than first one.
 			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(packet->GetTimestamp(), storageItem->timestamp))
@@ -609,7 +609,7 @@ namespace RTC
 					if (!this->mid.empty())
 						packet->UpdateMid(mid);
 
-					uint32_t diffTs = this->maxPacketTs - packet->GetTimestamp();
+					const uint32_t diffTs = this->maxPacketTs - packet->GetTimestamp();
 
 					diffMs = diffTs * 1000 / this->params.clockRate;
 				}

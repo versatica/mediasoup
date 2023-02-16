@@ -265,7 +265,7 @@ namespace RTC
 			}
 
 			// 32 bits padding.
-			size_t padding = (-offset) & 3;
+			const size_t padding = (-offset) & 3;
 
 			for (size_t i{ 0u }; i < padding; ++i)
 			{
@@ -318,7 +318,7 @@ namespace RTC
 
 			// Deltas are represented as multiples of 250 us.
 			// NOTE: Read it as int 64 to detect long elapsed times.
-			int64_t delta64 = (timestamp - this->latestTimestamp) * 4;
+			const int64_t delta64 = (timestamp - this->latestTimestamp) * 4;
 
 			// clang-format off
 			if (
@@ -414,7 +414,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint16_t expected = this->packetStatusCount;
+			const uint16_t expected = this->packetStatusCount;
 			uint16_t lost{ 0u };
 
 			if (expected == 0u)

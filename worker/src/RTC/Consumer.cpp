@@ -276,7 +276,7 @@ namespace RTC
 
 				for (const auto& type : *body->events())
 				{
-					std::string typeStr = type->str();
+					const auto typeStr = type->str();
 
 					if (typeStr == "rtp")
 						newTraceEventTypes.rtp = true;
