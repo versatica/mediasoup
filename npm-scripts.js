@@ -258,7 +258,7 @@ function cleanWorker()
 
 	if (isWindows)
 	{
-		execute('rd /s /q worker\\out\\msys');
+		executeCmd('rd /s /q worker\\out\\msys');
 	}
 }
 
@@ -361,5 +361,5 @@ function installMsysMake()
 		}
 	}
 
-	execute(`${String(res.stdout).trim()} worker\\scripts\\getmake.py`);
+	executeCmd(`${String(res.stdout).trim()} worker\\scripts\\getmake.py`);
 }
