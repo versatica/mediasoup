@@ -777,7 +777,7 @@ pub(crate) fn get_consumer_rtp_parameters(
         // If there is simulcast, mangle spatial layers in scalabilityMode.
         if consumable_params.encodings.len() > 1 {
             scalability_mode = format!(
-                "S{}T{}",
+                "L{}T{}",
                 consumable_params.encodings.len(),
                 scalability_mode.temporal_layers()
             )
