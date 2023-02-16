@@ -1047,7 +1047,7 @@ fn dump_succeeds() {
                         .unwrap()
                         .rtx,
                     dtx: None,
-                    scalability_mode: "S4T1".parse().unwrap(),
+                    scalability_mode: "L4T1".parse().unwrap(),
                     scale_resolution_down_by: None,
                     rid: None,
                     max_bitrate: None,
