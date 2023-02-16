@@ -64,6 +64,7 @@ struct TransportOptions {
 #[derive(Serialize, Message)]
 #[serde(tag = "action")]
 #[rtype(result = "()")]
+#[allow(clippy::large_enum_variant)]
 enum ServerMessage {
     /// Initialization message with consumer/producer transport options and Router's RTP
     /// capabilities necessary to establish WebRTC transport connection client-side
@@ -190,11 +191,11 @@ impl SvcSimulcastConnection {
                 settings
             })
             .await
-            .map_err(|error| format!("Failed to create worker: {}", error))?;
+            .map_err(|error| format!("Failed to create worker: {error}"))?;
         let router = worker
             .create_router(RouterOptions::new(media_codecs()))
             .await
-            .map_err(|error| format!("Failed to create router: {}", error))?;
+            .map_err(|error| format!("Failed to create router: {error}"))?;
 
         // We know that for svc-simulcast example we'll need 2 transports, so we can create both
         // right away.
@@ -207,12 +208,12 @@ impl SvcSimulcastConnection {
         let producer_transport = router
             .create_webrtc_transport(transport_options.clone())
             .await
-            .map_err(|error| format!("Failed to create producer transport: {}", error))?;
+            .map_err(|error| format!("Failed to create producer transport: {error}"))?;
 
         let consumer_transport = router
             .create_webrtc_transport(transport_options)
             .await
-            .map_err(|error| format!("Failed to create consumer transport: {}", error))?;
+            .map_err(|error| format!("Failed to create consumer transport: {error}"))?;
 
         Ok(Self {
             client_rtp_capabilities: None,
@@ -278,11 +279,11 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for SvcSimulcastConne
                     ctx.address().do_send(message);
                 }
                 Err(error) => {
-                    eprintln!("Failed to parse client message: {}\n{}", error, text);
+                    eprintln!("Failed to parse client message: {text}\n{error}");
                 }
             },
             Ok(ws::Message::Binary(bin)) => {
-                eprintln!("Unexpected binary message: {:?}", bin);
+                eprintln!("Unexpected binary message: {bin:?}");
             }
             Ok(ws::Message::Close(reason)) => {
                 ctx.close(reason);
@@ -345,7 +346,7 @@ impl Handler<ClientMessage> for SvcSimulcastConnection {
                             println!("Producer transport connected");
                         }
                         Err(error) => {
-                            eprintln!("Failed to connect producer transport: {}", error);
+                            eprintln!("Failed to connect producer transport: {error}");
                             address.do_send(InternalMessage::Stop);
                         }
                     }
@@ -370,10 +371,10 @@ impl Handler<ClientMessage> for SvcSimulcastConnection {
                             // Producer is stored in a hashmap since if we don't do it, it will get
                             // destroyed as soon as its instance goes out out scope
                             address.do_send(InternalMessage::SaveProducer(producer));
-                            println!("{:?} producer created: {}", kind, id);
+                            println!("{kind:?} producer created: {id}");
                         }
                         Err(error) => {
-                            eprintln!("Failed to create {:?} producer: {}", kind, error);
+                            eprintln!("Failed to create {kind:?} producer: {error}");
                             address.do_send(InternalMessage::Stop);
                         }
                     }
@@ -393,7 +394,7 @@ impl Handler<ClientMessage> for SvcSimulcastConnection {
                             println!("Consumer transport connected");
                         }
                         Err(error) => {
-                            eprintln!("Failed to connect consumer transport: {}", error);
+                            eprintln!("Failed to connect consumer transport: {error}");
                             address.do_send(InternalMessage::Stop);
                         }
                     }
@@ -429,10 +430,10 @@ impl Handler<ClientMessage> for SvcSimulcastConnection {
                             // Consumer is stored in a hashmap since if we don't do it, it will get
                             // destroyed as soon as its instance goes out out scope
                             address.do_send(InternalMessage::SaveConsumer(consumer));
-                            println!("{:?} consumer created: {}", kind, id);
+                            println!("{kind:?} consumer created: {id}");
                         }
                         Err(error) => {
-                            eprintln!("Failed to create consumer: {}", error);
+                            eprintln!("Failed to create consumer: {error}");
                             address.do_send(InternalMessage::Stop);
                         }
                     }
@@ -508,7 +509,7 @@ async fn ws_index(
     match SvcSimulcastConnection::new(&worker_manager).await {
         Ok(svc_simulcast_connection) => ws::start(svc_simulcast_connection, &request, stream),
         Err(error) => {
-            eprintln!("{}", error);
+            eprintln!("{error}");
 
             Ok(HttpResponse::InternalServerError().finish())
         }

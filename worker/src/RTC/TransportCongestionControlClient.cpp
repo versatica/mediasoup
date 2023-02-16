@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::TransportCongestionControlClient"
 // #define MS_LOG_DEV_LEVEL 3
+#define USE_TREND_CALCULATOR
 
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "DepLibUV.hpp"
@@ -37,7 +38,7 @@ namespace RTC
 		webrtc::GoogCcFactoryConfig config;
 
 		// Provide RTCP feedback as well as Receiver Reports.
-		config.feedback_only = false;
+		config.feedback_only = true;
 
 		this->controllerFactory = new webrtc::GoogCcNetworkControllerFactory(std::move(config));
 	}
@@ -111,12 +112,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef USE_TREND_CALCULATOR
 		auto nowMs = DepLibUV::GetTimeMsInt64();
+#endif
 
 		this->bitrates.desiredBitrate          = 0u;
 		this->bitrates.effectiveDesiredBitrate = 0u;
 
+#ifdef USE_TREND_CALCULATOR
 		this->desiredBitrateTrend.ForceUpdate(0u, nowMs);
+#endif
+
 		this->rtpTransportControllerSend->OnNetworkAvailability(false);
 	}
 
@@ -155,7 +161,7 @@ namespace RTC
 		}
 
 		// Notify the transport feedback adapter about the sent packet.
-		rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, nowMs);
+		rtc::SentPacket const sentPacket(packetInfo.transport_sequence_number, nowMs);
 		this->rtpTransportControllerSend->OnSentPacket(sentPacket, packetInfo.length);
 	}
 
@@ -208,8 +214,8 @@ namespace RTC
 		MS_TRACE();
 
 		// Update packet loss history.
-		size_t expected_packets = feedback->GetPacketStatusCount();
-		size_t lost_packets     = 0;
+		const size_t expected_packets = feedback->GetPacketStatusCount();
+		size_t lost_packets           = 0;
 		for (const auto& result : feedback->GetPacketResults())
 		{
 			if (!result.received)
@@ -279,17 +285,27 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef USE_TREND_CALCULATOR
 		auto nowMs = DepLibUV::GetTimeMsInt64();
+#endif
 
 		// Manage it via trending and increase it a bit to avoid immediate oscillations.
+#ifdef USE_TREND_CALCULATOR
 		if (!force)
 			this->desiredBitrateTrend.Update(desiredBitrate, nowMs);
 		else
 			this->desiredBitrateTrend.ForceUpdate(desiredBitrate, nowMs);
+#endif
 
-		this->bitrates.desiredBitrate          = desiredBitrate;
+		this->bitrates.desiredBitrate = desiredBitrate;
+
+#ifdef USE_TREND_CALCULATOR
 		this->bitrates.effectiveDesiredBitrate = this->desiredBitrateTrend.GetValue();
-		this->bitrates.minBitrate              = RTC::TransportCongestionControlMinOutgoingBitrate;
+#else
+		this->bitrates.effectiveDesiredBitrate = desiredBitrate;
+#endif
+
+		this->bitrates.minBitrate = RTC::TransportCongestionControlMinOutgoingBitrate;
 		// NOTE: Setting 'startBitrate' to 'availableBitrate' has proven to generate
 		// more stable values.
 		this->bitrates.startBitrate = std::max<uint32_t>(
@@ -303,11 +319,19 @@ namespace RTC
 		auto currentMaxBitrate = this->bitrates.maxBitrate;
 		uint32_t newMaxBitrate = 0;
 
+#ifdef USE_TREND_CALCULATOR
 		if (this->desiredBitrateTrend.GetValue() > 0u)
+#else
+		if (this->bitrates.desiredBitrate > 0u)
+#endif
 		{
 			newMaxBitrate = std::max<uint32_t>(
 			  this->initialAvailableBitrate,
+#ifdef USE_TREND_CALCULATOR
 			  this->desiredBitrateTrend.GetValue() * MaxBitrateIncrementFactor);
+#else
+			  this->bitrates.desiredBitrate * MaxBitrateIncrementFactor);
+#endif
 
 			// If max bitrate requested didn't change by more than a small % keep the previous settings
 			// to avoid constant small fluctuations requiring extra probing and making the estimation
@@ -387,7 +411,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t nowMs = DepLibUV::GetTimeMsInt64();
+		const uint64_t nowMs = DepLibUV::GetTimeMsInt64();
 		bool notify{ false };
 
 		// Ignore if first event.

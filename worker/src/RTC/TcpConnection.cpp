@@ -62,7 +62,7 @@ namespace RTC
 			if (IsClosed())
 				return;
 
-			size_t dataLen = this->bufferDataLen - this->frameStart;
+			const size_t dataLen = this->bufferDataLen - this->frameStart;
 			size_t packetLen;
 
 			if (dataLen >= 2)

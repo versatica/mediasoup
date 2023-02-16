@@ -5,6 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include <usrsctp.h>
+#include <cstdio> // std::vsnprintf()
 #include <mutex>
 
 /* Static. */
@@ -40,7 +41,7 @@ inline static void sctpDebug(const char* format, ...)
 	va_list ap;
 
 	va_start(ap, format);
-	vsprintf(buffer, format, ap);
+	vsnprintf(buffer, sizeof(buffer), format, ap);
 
 	// Remove the artificial carriage return set by usrsctp.
 	buffer[std::strlen(buffer) - 1] = '\0';
@@ -235,8 +236,8 @@ void DepUsrSCTP::Checker::OnTimer(Timer* /*timer*/)
 {
 	MS_TRACE();
 
-	auto nowMs    = DepLibUV::GetTimeMs();
-	int elapsedMs = this->lastCalledAtMs ? static_cast<int>(nowMs - this->lastCalledAtMs) : 0;
+	auto nowMs          = DepLibUV::GetTimeMs();
+	const int elapsedMs = this->lastCalledAtMs ? static_cast<int>(nowMs - this->lastCalledAtMs) : 0;
 
 	usrsctp_handle_timers(elapsedMs);
 

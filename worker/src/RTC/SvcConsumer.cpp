@@ -2,12 +2,10 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/SvcConsumer.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
 #include "RTC/Codecs/Tools.hpp"
 
 namespace RTC
@@ -20,8 +18,12 @@ namespace RTC
 	/* Instance methods. */
 
 	SvcConsumer::SvcConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::SVC)
+	  RTC::Shared* shared,
+	  const std::string& id,
+	  const std::string& producerId,
+	  RTC::Consumer::Listener* listener,
+	  json& data)
+	  : RTC::Consumer::Consumer(shared, id, producerId, listener, data, RTC::RtpParameters::Type::SVC)
 	{
 		MS_TRACE();
 
@@ -105,7 +107,7 @@ namespace RTC
 		CreateRtpStream();
 
 		// NOTE: This may throw.
-		ChannelMessageHandlers::RegisterHandler(
+		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -116,7 +118,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->rtpStream;
 	}
@@ -575,7 +577,7 @@ namespace RTC
 			return;
 
 		// Whether this is the first packet after re-sync.
-		bool isSyncPacket = this->syncRequired;
+		const bool isSyncPacket = this->syncRequired;
 
 		// Sync sequence number and timestamp if required.
 		if (isSyncPacket)
@@ -584,6 +586,7 @@ namespace RTC
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
+			this->encodingContext->SyncRequired();
 
 			this->syncRequired = false;
 		}
@@ -592,7 +595,7 @@ namespace RTC
 		auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
 
 		bool marker{ false };
-		bool origMarker = packet->HasMarker();
+		const bool origMarker = packet->HasMarker();
 
 		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 		{
@@ -1076,7 +1079,7 @@ namespace RTC
 
 		FillJsonScore(data);
 
-		Channel::ChannelNotifier::Emit(this->id, "score", data);
+		this->shared->channelNotifier->Emit(this->id, "score", data);
 	}
 
 	inline void SvcConsumer::EmitLayersChange() const
@@ -1101,7 +1104,7 @@ namespace RTC
 			data = nullptr;
 		}
 
-		Channel::ChannelNotifier::Emit(this->id, "layerschange", data);
+		this->shared->channelNotifier->Emit(this->id, "layerschange", data);
 	}
 
 	inline void SvcConsumer::OnRtpStreamScore(

@@ -9,8 +9,6 @@ jobs:
         # Different Node versions on Ubuntu, the latest Node on other platforms
         ci:
           - os: ubuntu-22.04
-            node: 14
-          - os: ubuntu-22.04
             node: 16
           - os: ubuntu-22.04
             node: 18
@@ -22,15 +20,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.ci.node }}
 
       - name: Configure cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.npm
@@ -38,8 +36,6 @@ jobs:
           restore-keys: |
             ${{ matrix.ci.os }}-node-
 
-      - run: npm install
+      - run: npm ci
       - run: npm run lint:node
-        if: runner.os == 'Linux'
-      - run: npm run typescript:build
       - run: npm run test:node

@@ -89,7 +89,7 @@ namespace RTC
 		// Iterate all temporal layers of spatial layers previous to the given one.
 		for (uint8_t sIdx{ 0u }; sIdx < spatialLayer; ++sIdx)
 		{
-			for (uint8_t tIdx{ 0u }; tIdx < this->spatialLayerCounters[sIdx].size(); ++tIdx)
+			for (size_t tIdx{ 0u }; tIdx < this->spatialLayerCounters[sIdx].size(); ++tIdx)
 			{
 				auto& temporalLayerCounter = this->spatialLayerCounters[sIdx][tIdx];
 
@@ -118,7 +118,7 @@ namespace RTC
 
 		// clang-format off
 		for (
-			uint8_t tIdx{ 0u };
+			size_t tIdx{ 0u };
 			tIdx < this->spatialLayerCounters[spatialLayer].size();
 			++tIdx
 		)
@@ -216,7 +216,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint64_t nowMs = DepLibUV::GetTimeMs();
+		const uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
@@ -429,7 +429,7 @@ namespace RTC
 
 		report->SetSsrc(GetSsrc());
 
-		uint32_t prevPacketsLost = this->packetsLost;
+		const uint32_t prevPacketsLost = this->packetsLost;
 
 		// Calculate Packets Expected and Lost.
 		auto expected = GetExpectedPackets();
@@ -440,15 +440,16 @@ namespace RTC
 			this->packetsLost = 0u;
 
 		// Calculate Fraction Lost.
-		uint32_t expectedInterval = expected - this->expectedPrior;
+		const uint32_t expectedInterval = expected - this->expectedPrior;
 
 		this->expectedPrior = expected;
 
-		uint32_t receivedInterval = this->mediaTransmissionCounter.GetPacketCount() - this->receivedPrior;
+		const uint32_t receivedInterval =
+		  this->mediaTransmissionCounter.GetPacketCount() - this->receivedPrior;
 
 		this->receivedPrior = this->mediaTransmissionCounter.GetPacketCount();
 
-		int32_t lostInterval = expectedInterval - receivedInterval;
+		const int32_t lostInterval = expectedInterval - receivedInterval;
 
 		if (expectedInterval == 0 || lostInterval <= 0)
 			this->fractionLost = 0;
@@ -466,7 +467,7 @@ namespace RTC
 		else
 		{
 			// Recalculate packetsLost.
-			uint32_t newLostInterval = (worstRemoteFractionLost * expectedInterval) >> 8;
+			const uint32_t newLostInterval = (worstRemoteFractionLost * expectedInterval) >> 8;
 
 			this->reportedPacketLost += newLostInterval;
 
@@ -545,16 +546,16 @@ namespace RTC
 		/* Calculate RTT. */
 
 		// Get the NTP representation of the current timestamp.
-		uint64_t nowMs = DepLibUV::GetTimeMs();
-		auto ntp       = Utils::Time::TimeMs2Ntp(nowMs);
+		const uint64_t nowMs = DepLibUV::GetTimeMs();
+		auto ntp             = Utils::Time::TimeMs2Ntp(nowMs);
 
 		// Get the compact NTP representation of the current timestamp.
 		uint32_t compactNtp = (ntp.seconds & 0x0000FFFF) << 16;
 
 		compactNtp |= (ntp.fractions & 0xFFFF0000) >> 16;
 
-		uint32_t lastRr = ssrcInfo->GetLastReceiverReport();
-		uint32_t dlrr   = ssrcInfo->GetDelaySinceLastReceiverReport();
+		const uint32_t lastRr = ssrcInfo->GetLastReceiverReport();
+		const uint32_t dlrr   = ssrcInfo->GetDelaySinceLastReceiverReport();
 
 		// RTT in 1/2^16 second fractions.
 		uint32_t rtt{ 0 };
@@ -669,14 +670,14 @@ namespace RTC
 		MS_TRACE();
 
 		// Calculate number of packets expected in this interval.
-		auto totalExpected = GetExpectedPackets();
-		uint32_t expected  = totalExpected - this->expectedPriorScore;
+		const auto totalExpected = GetExpectedPackets();
+		const uint32_t expected  = totalExpected - this->expectedPriorScore;
 
 		this->expectedPriorScore = totalExpected;
 
 		// Calculate number of packets received in this interval.
-		auto totalReceived = this->mediaTransmissionCounter.GetPacketCount();
-		uint32_t received  = totalReceived - this->receivedPriorScore;
+		const auto totalReceived = this->mediaTransmissionCounter.GetPacketCount();
+		const uint32_t received  = totalReceived - this->receivedPriorScore;
 
 		this->receivedPriorScore = totalReceived;
 
@@ -689,14 +690,14 @@ namespace RTC
 			lost = expected - received;
 
 		// Calculate number of packets repaired in this interval.
-		auto totalRepaired = this->packetsRepaired;
-		uint32_t repaired  = totalRepaired - this->repairedPriorScore;
+		const auto totalRepaired = this->packetsRepaired;
+		uint32_t repaired        = totalRepaired - this->repairedPriorScore;
 
 		this->repairedPriorScore = totalRepaired;
 
 		// Calculate number of packets retransmitted in this interval.
-		auto totatRetransmitted = this->packetsRetransmitted;
-		uint32_t retransmitted  = totatRetransmitted - this->retransmittedPriorScore;
+		const auto totatRetransmitted = this->packetsRetransmitted;
+		uint32_t retransmitted        = totatRetransmitted - this->retransmittedPriorScore;
 
 		this->retransmittedPriorScore = totatRetransmitted;
 

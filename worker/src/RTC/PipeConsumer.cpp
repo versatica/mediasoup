@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/PipeConsumer.hpp"
-#include "ChannelMessageHandlers.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -13,8 +12,12 @@ namespace RTC
 	/* Instance methods. */
 
 	PipeConsumer::PipeConsumer(
-	  const std::string& id, const std::string& producerId, RTC::Consumer::Listener* listener, json& data)
-	  : RTC::Consumer::Consumer(id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
+	  RTC::Shared* shared,
+	  const std::string& id,
+	  const std::string& producerId,
+	  RTC::Consumer::Listener* listener,
+	  json& data)
+	  : RTC::Consumer::Consumer(shared, id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
 	{
 		MS_TRACE();
 
@@ -22,8 +25,8 @@ namespace RTC
 		if (this->rtpParameters.encodings.size() != this->consumableRtpEncodings.size())
 			MS_THROW_TYPE_ERROR("number of rtpParameters.encodings and consumableRtpEncodings do not match");
 
-		auto& encoding   = this->rtpParameters.encodings[0];
-		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		auto& encoding         = this->rtpParameters.encodings[0];
+		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
@@ -31,7 +34,7 @@ namespace RTC
 		CreateRtpStreams();
 
 		// NOTE: This may throw.
-		ChannelMessageHandlers::RegisterHandler(
+		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
 		  /*payloadChannelRequestHandler*/ nullptr,
@@ -42,7 +45,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		ChannelMessageHandlers::UnregisterHandler(this->id);
+		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
@@ -223,7 +226,7 @@ namespace RTC
 			return;
 
 		// Whether this is the first packet after re-sync.
-		bool isSyncPacket = syncRequired;
+		const bool isSyncPacket = syncRequired;
 
 		// Sync sequence number and timestamp if required.
 		if (isSyncPacket)

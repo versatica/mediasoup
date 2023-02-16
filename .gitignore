@@ -1,46 +1,41 @@
-/node_modules/
-/coverage/
-/NO_GIT/
+## Meson.
+/worker/subprojects/*
+!/worker/subprojects/*.wrap
 
-# Generated stuff.
-/worker/out/
+## Node.
+/node_modules
+/node/lib
 
+## Rust.
+/Cargo.lock
+/rust/examples-frontend/*/node_modules
+/rust/examples-frontend/*/package-lock.json
+/target
+
+## Worker.
+/worker/out
+/worker/scripts/node_modules
+# Vistual Studio generated Stuff.
+/worker/**/Debug
+/worker/**/Release
+/worker/.vs
 # clang-fuzzer stuff is too big.
 /worker/deps/clang-fuzzer
-
 # Ignore all fuzzer generated test inputs.
 /worker/fuzzer/new-corpus/*
 !/worker/fuzzer/new-corpus/.placeholder
 
-# Vim temporal files.
+## Others.
+/coverage
+/.cache
+/NO_GIT
 *.swp
 *.swo
-
-# Mac Stuff.
 .DS_Store
-
-# worker scripts node-modules.
-/worker/scripts/node_modules/
-
-# Vistual Studio generated Stuff.
-/worker/**/Debug/
-/worker/**/Release/
-/worker/.vs/
-
 # Vistual Studio Code stuff.
-/.vscode/
-
+/.vscode
 # JetBrains IDE stuff.
-/.idea/
+/.idea
 
-# Rust.
-/target
-/Cargo.lock
-
-# Rust examples.
-/rust/examples-frontend/*/node_modules
-/rust/examples-frontend/*/package-lock.json
-
-# Meson.
-/worker/subprojects/*
-!/worker/subprojects/*.wrap
+# Packaged module.
+*.tgz

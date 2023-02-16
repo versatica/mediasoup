@@ -5,8 +5,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "Channel/ChannelNotifier.hpp"
-#include "PayloadChannel/PayloadChannelNotifier.hpp"
 #include "RTC/BweType.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
@@ -27,14 +25,14 @@
 
 namespace RTC
 {
-	static size_t DefaultSctpSendBufferSize{ 262144 }; // 2^18.
-	static size_t MaxSctpSendBufferSize{ 268435456 };  // 2^28.
+	static const size_t DefaultSctpSendBufferSize{ 262144 }; // 2^18.
+	static const size_t MaxSctpSendBufferSize{ 268435456 };  // 2^28.
 
 	/* Instance methods. */
 
-	Transport::Transport(const std::string& id, Listener* listener, json& data)
-	  : id(id), listener(listener), recvRtxTransmission(1000u), sendRtxTransmission(1000u),
-	    sendProbationTransmission(100u)
+	Transport::Transport(RTC::Shared* shared, const std::string& id, Listener* listener, json& data)
+	  : id(id), shared(shared), listener(listener), recvRtxTransmission(1000u),
+	    sendRtxTransmission(1000u), sendProbationTransmission(100u)
 	{
 		MS_TRACE();
 
@@ -230,20 +228,6 @@ namespace RTC
 		// Delete the RTCP timer.
 		delete this->rtcpTimer;
 		this->rtcpTimer = nullptr;
-
-		// Delete Transport-CC client.
-		delete this->tccClient;
-		this->tccClient = nullptr;
-
-		// Delete Transport-CC server.
-		delete this->tccServer;
-		this->tccServer = nullptr;
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-		// Delete Sender BWE.
-		delete this->senderBwe;
-		this->senderBwe = nullptr;
-#endif
 	}
 
 	void Transport::CloseProducersAndConsumers()
@@ -638,7 +622,7 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("missing bitrate");
 				}
 
-				uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
+				const uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
 
 				if (bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
 				{
@@ -675,7 +659,7 @@ namespace RTC
 				SetNewProducerIdFromData(request->data, producerId);
 
 				// This may throw.
-				auto* producer = new RTC::Producer(producerId, this, request->data);
+				auto* producer = new RTC::Producer(this->shared, producerId, this, request->data);
 
 				// Insert the Producer into the RtpListener.
 				// This may throw. If so, delete the Producer and throw.
@@ -811,7 +795,8 @@ namespace RTC
 
 					if (createTccServer)
 					{
-						this->tccServer = new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize);
+						this->tccServer =
+						  std::make_shared<RTC::TransportCongestionControlServer>(this, bweType, RTC::MtuSize);
 
 						if (this->maxIncomingBitrate != 0u)
 							this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
@@ -862,7 +847,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMPLE:
 					{
 						// This may throw.
-						consumer = new RTC::SimpleConsumer(consumerId, producerId, this, request->data);
+						consumer =
+						  new RTC::SimpleConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -870,7 +856,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMULCAST:
 					{
 						// This may throw.
-						consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, request->data);
+						consumer =
+						  new RTC::SimulcastConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -878,7 +865,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::SVC:
 					{
 						// This may throw.
-						consumer = new RTC::SvcConsumer(consumerId, producerId, this, request->data);
+						consumer =
+						  new RTC::SvcConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -886,7 +874,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::PIPE:
 					{
 						// This may throw.
-						consumer = new RTC::PipeConsumer(consumerId, producerId, this, request->data);
+						consumer =
+						  new RTC::PipeConsumer(this->shared, consumerId, producerId, this, request->data);
 
 						break;
 					}
@@ -1012,7 +1001,7 @@ namespace RTC
 							consumer->SetExternallyManagedBitrate();
 						};
 
-						this->tccClient = new RTC::TransportCongestionControlClient(
+						this->tccClient = std::make_shared<RTC::TransportCongestionControlClient>(
 						  this, bweType, this->initialAvailableOutgoingBitrate, this->maxOutgoingBitrate);
 
 						if (IsConnected())
@@ -1059,8 +1048,8 @@ namespace RTC
 						consumer->SetExternallyManagedBitrate();
 					};
 
-					this->senderBwe =
-					  new RTC::SenderBandwidthEstimator(this, this->initialAvailableOutgoingBitrate);
+					this->senderBwe = std::make_shared<RTC::SenderBandwidthEstimator>(
+					  this, this->initialAvailableOutgoingBitrate);
 
 					if (IsConnected())
 						this->senderBwe->TransportConnected();
@@ -1092,8 +1081,8 @@ namespace RTC
 				SetNewDataProducerIdFromData(request->data, dataProducerId);
 
 				// This may throw.
-				auto* dataProducer =
-				  new RTC::DataProducer(dataProducerId, this->maxMessageSize, this, request->data);
+				auto* dataProducer = new RTC::DataProducer(
+				  this->shared, dataProducerId, this->maxMessageSize, this, request->data);
 
 				// Verify the type of the DataProducer.
 				switch (dataProducer->GetType())
@@ -1198,7 +1187,13 @@ namespace RTC
 
 				// This may throw.
 				auto* dataConsumer = new RTC::DataConsumer(
-				  dataConsumerId, dataProducerId, this->sctpAssociation, this, request->data, this->maxMessageSize);
+				  this->shared,
+				  dataConsumerId,
+				  dataProducerId,
+				  this->sctpAssociation,
+				  this,
+				  request->data,
+				  this->maxMessageSize);
 
 				// Verify the type of the DataConsumer.
 				switch (dataConsumer->GetType())
@@ -1292,7 +1287,7 @@ namespace RTC
 					if (!type.is_string())
 						MS_THROW_TYPE_ERROR("wrong type (not a string)");
 
-					std::string typeStr = type.get<std::string>();
+					const std::string typeStr = type.get<std::string>();
 
 					if (typeStr == "probation")
 						newTraceEventTypes.probation = true;
@@ -2241,33 +2236,39 @@ namespace RTC
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
+			auto rtcpAdded = consumer->GetRtcp(packet.get(), nowMs);
 
-			// Send the RTCP compound packet if it's full.
-			if (!consumer->GetRtcp(packet.get(), nowMs))
+			// RTCP data couldn't be added because the Compound packet is full.
+			// Send the RTCP compound packet and request for RTCP again.
+			if (!rtcpAdded)
 			{
 				SendRtcpCompoundPacket(packet.get());
 
 				// Create a new compount packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
-			}
 
-			consumer->GetRtcp(packet.get(), nowMs);
+				// Retrieve the RTCP again.
+				consumer->GetRtcp(packet.get(), nowMs);
+			}
 		}
 
 		for (auto& kv : this->mapProducers)
 		{
 			auto* producer = kv.second;
+			auto rtcpAdded = producer->GetRtcp(packet.get(), nowMs);
 
-			// Send the RTCP compound packet if it's full.
-			if (!producer->GetRtcp(packet.get(), nowMs))
+			// RTCP data couldn't be added because the Compound packet is full.
+			// Send the RTCP compound packet and request for RTCP again.
+			if (!rtcpAdded)
 			{
 				SendRtcpCompoundPacket(packet.get());
 
 				// Create a new compount packet.
 				packet.reset(new RTC::RTCP::CompoundPacket());
-			}
 
-			producer->GetRtcp(packet.get(), nowMs);
+				// Retrieve the RTCP again.
+				producer->GetRtcp(packet.get(), nowMs);
+			}
 		}
 
 		// Send the RTCP compound packet if there is any sender or receiver report.
@@ -2323,16 +2324,9 @@ namespace RTC
 				for (uint8_t i{ 1u }; i <= (baseAllocation ? 1u : priority); ++i)
 				{
 					uint32_t usedBitrate{ 0u };
+					const bool considerLoss = (bweType == RTC::BweType::REMB);
 
-					switch (bweType)
-					{
-						case RTC::BweType::TRANSPORT_CC:
-							usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ false);
-							break;
-						case RTC::BweType::REMB:
-							usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ true);
-							break;
-					}
+					usedBitrate = consumer->IncreaseLayer(availableBitrate, considerLoss);
 
 					MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
 
@@ -2398,7 +2392,7 @@ namespace RTC
 
 		packet->FillJson(data["info"]);
 
-		Channel::ChannelNotifier::Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::EmitTraceEventBweType(
@@ -2432,7 +2426,7 @@ namespace RTC
 				break;
 		}
 
-		Channel::ChannelNotifier::Emit(this->id, "trace", data);
+		this->shared->channelNotifier->Emit(this->id, "trace", data);
 	}
 
 	inline void Transport::OnProducerPaused(RTC::Producer* producer)
@@ -2514,7 +2508,6 @@ namespace RTC
 		{
 			this->transportWideCcSeq++;
 
-			auto* tccClient = this->tccClient;
 			webrtc::RtpPacketSendInfo packetInfo;
 
 			packetInfo.ssrc                      = packet->GetSsrc();
@@ -2527,8 +2520,15 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
+			// When using WebRtcServer, the lifecycle of a RTC::UdpSocket maybe longer
+			// than WebRtcTransport so there is a chance for the send callback to be
+			// invoked *after* the WebRtcTransport has been closed (freed). To avoid
+			// invalid memory access we need to use weak_ptr. Same applies in other
+			// send callbacks.
+			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			auto* senderBwe = this->senderBwe;
+			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr(this->senderBwe);
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
 			sentInfo.wideSeq     = this->transportWideCcSeq;
@@ -2536,25 +2536,41 @@ namespace RTC
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
 			auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo, senderBweWeakPtr, &sentInfo](bool sent)
 			  {
 				  if (sent)
 				  {
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  auto tccClient = tccClientWeakPtr.lock();
 
-					  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+					  if (tccClient)
+					  {
+						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
 
-					  senderBwe->RtpPacketSent(sentInfo);
+					  auto senderBwe = senderBweWeakPtr.lock();
+
+					  if (senderBwe)
+					  {
+						  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+						  senderBwe->RtpPacketSent(sentInfo);
+					  }
 				  }
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
 #else
 			const auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo](bool sent)
 			  {
 				  if (sent)
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+				  {
+					  auto tccClient = tccClientWeakPtr.lock();
+
+					  if (tccClient)
+					  {
+						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
+				  }
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
@@ -2586,7 +2602,6 @@ namespace RTC
 		{
 			this->transportWideCcSeq++;
 
-			auto* tccClient = this->tccClient;
 			webrtc::RtpPacketSendInfo packetInfo;
 
 			packetInfo.ssrc                      = packet->GetSsrc();
@@ -2599,8 +2614,10 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
+			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			auto* senderBwe = this->senderBwe;
+			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
 			sentInfo.wideSeq     = this->transportWideCcSeq;
@@ -2608,25 +2625,41 @@ namespace RTC
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
 			auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo, senderBweWeakPtr, &sentInfo](bool sent)
 			  {
 				  if (sent)
 				  {
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  auto tccClient = tccClientWeakPtr.lock();
 
-					  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+					  if (tccClient)
+					  {
+						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
 
-					  senderBwe->RtpPacketSent(sentInfo);
+					  auto senderBwe = senderBweWeakPtr.lock();
+
+					  if (senderBwe)
+					  {
+						  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+						  senderBwe->RtpPacketSent(sentInfo);
+					  }
 				  }
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
 #else
 			const auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo](bool sent)
 			  {
 				  if (sent)
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+				  {
+					  auto tccClient = tccClientWeakPtr.lock();
+
+					  if (tccClient)
+					  {
+						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
+				  }
 			  });
 
 			SendRtpPacket(consumer, packet, cb);
@@ -2755,7 +2788,7 @@ namespace RTC
 
 		data["sctpState"] = "connecting";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationConnected(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2778,7 +2811,7 @@ namespace RTC
 
 		data["sctpState"] = "connected";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationFailed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2801,7 +2834,7 @@ namespace RTC
 
 		data["sctpState"] = "failed";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationClosed(RTC::SctpAssociation* /*sctpAssociation*/)
@@ -2824,7 +2857,7 @@ namespace RTC
 
 		data["sctpState"] = "closed";
 
-		Channel::ChannelNotifier::Emit(this->id, "sctpstatechange", data);
+		this->shared->channelNotifier->Emit(this->id, "sctpstatechange", data);
 	}
 
 	inline void Transport::OnSctpAssociationSendData(
@@ -2937,8 +2970,10 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
+			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-			auto* senderBwe = this->senderBwe;
+			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
 			RTC::SenderBandwidthEstimator::SentInfo sentInfo;
 
 			sentInfo.wideSeq     = this->transportWideCcSeq;
@@ -2947,25 +2982,41 @@ namespace RTC
 			sentInfo.sendingAtMs = DepLibUV::GetTimeMs();
 
 			auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo, senderBwe, &sentInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo, senderBweWeakPtr, &sentInfo](bool sent)
 			  {
 				  if (sent)
 				  {
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  auto tccClient = tccClientWeakPtr.lock();
 
-					  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+					  if (tccClient)
+					  {
+						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
 
-					  senderBwe->RtpPacketSent(sentInfo);
+					  auto senderBwe = senderBweWeakPtr.lock();
+
+					  if (senderBwe)
+					  {
+						  sentInfo.sentAtMs = DepLibUV::GetTimeMs();
+						  senderBwe->RtpPacketSent(sentInfo);
+					  }
 				  }
 			  });
 
 			SendRtpPacket(nullptr, packet, cb);
 #else
 			const auto* cb = new onSendCallback(
-			  [tccClient, &packetInfo](bool sent)
+			  [tccClientWeakPtr, &packetInfo](bool sent)
 			  {
 				  if (sent)
-					  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+				  {
+					  auto tccClient = tccClientWeakPtr.lock();
+
+					  if (tccClient)
+					  {
+						  tccClient->PacketSent(packetInfo, DepLibUV::GetTimeMsInt64());
+					  }
+				  }
 			  });
 
 			SendRtpPacket(nullptr, packet, cb);
@@ -3025,8 +3076,8 @@ namespace RTC
 		// RTCP timer.
 		if (timer == this->rtcpTimer)
 		{
-			auto interval  = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
-			uint64_t nowMs = DepLibUV::GetTimeMs();
+			auto interval        = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
+			const uint64_t nowMs = DepLibUV::GetTimeMs();
 
 			SendRtcp(nowMs);
 

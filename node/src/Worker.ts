@@ -65,6 +65,16 @@ export type WorkerSettings =
 	dtlsPrivateKeyFile?: string;
 
 	/**
+	 * Field trials for libwebrtc.
+	 * @private
+	 *
+	 * NOTE: For advanced users only. An invalid value will make the worker crash.
+	 * Default value is
+	 * "WebRTC-Bwe-AlrLimitedBackoff/Enabled/".
+	 */
+	libwebrtcFieldTrials?: string;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: Record<string, unknown>;
@@ -165,15 +175,15 @@ export type WorkerResourceUsage =
 	/* eslint-enable camelcase */
 };
 
-export type WorkerEvents = 
-{ 
+export type WorkerEvents =
+{
 	died: [Error];
 	// Private events.
 	'@success': [];
 	'@failure': [Error];
 };
 
-export type WorkerObserverEvents = 
+export type WorkerObserverEvents =
 {
 	close: [];
 	newwebrtcserver: [WebRtcServer];
@@ -235,6 +245,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			rtcMaxPort,
 			dtlsCertificateFile,
 			dtlsPrivateKeyFile,
+			libwebrtcFieldTrials,
 			appData
 		}: WorkerSettings)
 	{
@@ -277,6 +288,9 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		if (typeof dtlsPrivateKeyFile === 'string' && dtlsPrivateKeyFile)
 			spawnArgs.push(`--dtlsPrivateKeyFile=${dtlsPrivateKeyFile}`);
+
+		if (typeof libwebrtcFieldTrials === 'string' && libwebrtcFieldTrials)
+			spawnArgs.push(`--libwebrtcFieldTrials=${libwebrtcFieldTrials}`);
 
 		logger.debug(
 			'spawning worker process: %s %s', spawnBin, spawnArgs.join(' '));
@@ -641,7 +655,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		const data = { rtpCapabilities };
 		const router = new Router(
 			{
-				internal : 
+				internal :
 				{
 					routerId : reqData.routerId
 				},

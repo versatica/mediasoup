@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "3.10.8",
+  "version": "3.11.8",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -25,10 +25,10 @@
     "worker/fuzzer/include",
     "worker/fuzzer/src",
     "worker/include",
-    "worker/scripts/*.py",
-    "worker/scripts/*.sh",
     "worker/scripts/*.js",
     "worker/scripts/*.json",
+    "worker/scripts/*.py",
+    "worker/scripts/*.sh",
     "worker/src",
     "worker/subprojects/*.wrap",
     "worker/test/include",
@@ -45,10 +45,11 @@
     "nodejs"
   ],
   "engines": {
-    "node": ">=12"
+    "node": ">=16"
   },
   "scripts": {
-    "install-clang-tools": "node npm-scripts.js install-clang-tools",
+    "prepare": "node npm-scripts.js prepare",
+    "postinstall": "node npm-scripts.js postinstall",
     "typescript:build": "node npm-scripts.js typescript:build",
     "typescript:watch": "node npm-scripts.js typescript:watch",
     "worker:build": "node npm-scripts.js worker:build",
@@ -57,37 +58,53 @@
     "lint:worker": "node npm-scripts.js lint:worker",
     "format:worker": "node npm-scripts.js format:worker",
     "test": "npm run test:node && npm run test:worker",
-    "test:node": "npm run worker:build && node npm-scripts.js test:node",
+    "test:node": "node npm-scripts.js test:node",
     "test:worker": "node npm-scripts.js test:worker",
-    "coverage": "npm run worker:build && node npm-scripts.js coverage",
-    "postinstall": "node npm-scripts.js postinstall",
+    "coverage:node": "node npm-scripts.js coverage:node",
+    "install-deps:node": "node npm-scripts.js install-deps:node",
+    "install-clang-tools": "node npm-scripts.js install-clang-tools",
+    "release:check": "node npm-scripts.js release:check",
     "release": "node npm-scripts.js release"
   },
   "jest": {
     "verbose": true,
     "testEnvironment": "node",
-    "testRegex": "node/tests/test.*\\.js"
+    "testRegex": "node/src/tests/test-.*\\.ts",
+    "transform": {
+      "^.*\\.ts$": [
+        "ts-jest",
+        {
+          "diagnostics": {
+            "ignoreCodes": [
+              "TS151001"
+            ]
+          }
+        }
+      ]
+    },
+    "cacheDirectory": ".cache/jest"
   },
   "dependencies": {
-    "@types/node": "^16.11.10",
     "debug": "^4.3.4",
     "h264-profile-level-id": "^1.0.1",
-    "supports-color": "^9.2.3",
-    "uuid": "^8.3.2"
+    "supports-color": "^9.3.1",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
-    "@types/uuid": "^8.3.4",
-    "@typescript-eslint/eslint-plugin": "^5.38.1",
-    "@typescript-eslint/parser": "^5.38.1",
-    "eslint": "^8.24.0",
-    "eslint-plugin-jest": "^26.8.7",
-    "jest": "^27.5.1",
-    "jest-tobetype": "^1.2.3",
-    "open-cli": "^7.0.1",
+    "@types/jest": "^29.4.0",
+    "@types/node": "^18.13.0",
+    "@types/uuid": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.52.0",
+    "@typescript-eslint/parser": "^5.52.0",
+    "eslint": "^8.34.0",
+    "eslint-plugin-jest": "^27.2.1",
+    "jest": "^29.4.2",
+    "open-cli": "^7.1.0",
     "pick-port": "^1.0.1",
     "sctp": "^1.0.0",
-    "tsc-watch": "^5.0.3",
-    "typescript": "^4.8.4"
+    "ts-jest": "^29.0.5",
+    "tsc-watch": "^6.0.0",
+    "typescript": "^4.9.5"
   }
 }

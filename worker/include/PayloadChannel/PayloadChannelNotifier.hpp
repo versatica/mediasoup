@@ -13,25 +13,26 @@ namespace PayloadChannel
 	class PayloadChannelNotifier
 	{
 	public:
-		static void ClassInit(PayloadChannel::PayloadChannelSocket* payloadChannel);
-		static void Emit(
-		  const std::string& targetId, const char* event, const uint8_t* payload, size_t payloadLen);
-		static void Emit(
+		explicit PayloadChannelNotifier(PayloadChannel::PayloadChannelSocket* payloadChannel);
+
+	public:
+		void Emit(const std::string& targetId, const char* event, const uint8_t* payload, size_t payloadLen);
+		void Emit(
 		  const std::string& targetId,
 		  const char* event,
 		  json& data,
 		  const uint8_t* payload,
 		  size_t payloadLen);
-		static void Emit(
+		void Emit(
 		  const std::string& targetId,
 		  const char* event,
 		  const std::string& data,
 		  const uint8_t* payload,
 		  size_t payloadLen);
 
-	public:
+	private:
 		// Passed by argument.
-		thread_local static PayloadChannel::PayloadChannelSocket* payloadChannel;
+		PayloadChannel::PayloadChannelSocket* payloadChannel{ nullptr };
 	};
 } // namespace PayloadChannel
 

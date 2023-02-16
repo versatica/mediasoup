@@ -39,13 +39,13 @@ namespace RTC
 		Utils::IP::NormalizeIp(ip);
 
 		int err;
-		int family = Utils::IP::GetFamily(ip);
+		const int family = Utils::IP::GetFamily(ip);
 		struct sockaddr_storage bindAddr; // NOLINT(cppcoreguidelines-pro-type-member-init)
 		size_t portIdx;
 		int flags{ 0 };
 		std::vector<bool>& ports = PortManager::GetPorts(transport, ip);
 		size_t attempt{ 0u };
-		size_t numAttempts = ports.size();
+		const size_t numAttempts = ports.size();
 		uv_handle_t* uvHandle{ nullptr };
 		uint16_t port;
 		std::string transportStr;
@@ -322,7 +322,7 @@ namespace RTC
 		Utils::IP::NormalizeIp(ip);
 
 		int err;
-		int family = Utils::IP::GetFamily(ip);
+		const int family = Utils::IP::GetFamily(ip);
 		struct sockaddr_storage bindAddr; // NOLINT(cppcoreguidelines-pro-type-member-init)
 		int flags{ 0 };
 		uv_handle_t* uvHandle{ nullptr };
@@ -505,7 +505,7 @@ namespace RTC
 			return;
 		}
 
-		size_t portIdx = static_cast<size_t>(port) - Settings::configuration.rtcMinPort;
+		const size_t portIdx = static_cast<size_t>(port) - Settings::configuration.rtcMinPort;
 
 		switch (transport)
 		{
@@ -564,7 +564,7 @@ namespace RTC
 				}
 
 				// Otherwise add an entry in the map and return it.
-				uint16_t numPorts =
+				const uint16_t numPorts =
 				  Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1;
 
 				// Emplace a new vector filled with numPorts false values, meaning that
@@ -591,7 +591,7 @@ namespace RTC
 				}
 
 				// Otherwise add an entry in the map and return it.
-				uint16_t numPorts =
+				const uint16_t numPorts =
 				  Settings::configuration.rtcMaxPort - Settings::configuration.rtcMinPort + 1;
 
 				// Emplace a new vector filled with numPorts false values, meaning that
