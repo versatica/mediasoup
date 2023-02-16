@@ -468,7 +468,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(typeof consumerRtpParameters.encodings?.[0].ssrc).toBe('number');
 	expect(typeof consumerRtpParameters.encodings?.[0].rtx).toBe('object');
 	expect(typeof consumerRtpParameters.encodings?.[0].rtx?.ssrc).toBe('number');
-	expect(consumerRtpParameters.encodings?.[0].scalabilityMode).toBe('S3T3');
+	expect(consumerRtpParameters.encodings?.[0].scalabilityMode).toBe('L3T3');
 	expect(consumerRtpParameters.encodings?.[0].maxBitrate).toBe(333333);
 
 	expect(consumerRtpParameters.headerExtensions).toEqual(

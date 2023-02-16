@@ -1065,7 +1065,7 @@ export function getConsumerRtpParameters(
 		{
 			const { temporalLayers } = parseScalabilityMode(scalabilityMode);
 
-			scalabilityMode = `S${consumableParams.encodings!.length}T${temporalLayers}`;
+			scalabilityMode = `L${consumableParams.encodings!.length}T${temporalLayers}`;
 		}
 
 		if (scalabilityMode)

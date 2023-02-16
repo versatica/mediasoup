@@ -730,7 +730,7 @@ test('consumer.dump() succeeds', async () =>
 				{
 					ssrc : videoConsumer.rtpParameters.encodings?.[0].rtx?.ssrc
 				},
-				scalabilityMode : 'S4T1'
+				scalabilityMode : 'L4T1'
 			}
 		]);
 	expect(Array.isArray(data.consumableRtpEncodings)).toBe(true);

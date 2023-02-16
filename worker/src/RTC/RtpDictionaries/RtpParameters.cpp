@@ -3,6 +3,7 @@
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/Codecs/Tools.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <absl/container/flat_hash_set.h>
 
@@ -38,11 +39,29 @@ namespace RTC
 		if (rtpParameters.encodings.size() == 1)
 		{
 			const auto& encoding = rtpParameters.encodings[0];
+			const auto* mediaCodec =
+			  rtpParameters.GetCodecForEncoding(const_cast<RTC::RtpEncodingParameters&>(encoding));
 
 			if (encoding.spatialLayers > 1 || encoding.temporalLayers > 1)
-				return RtpParameters::Type::SVC;
+			{
+				if (RTC::Codecs::Tools::IsValidTypeForCodec(RtpParameters::Type::SVC, mediaCodec->mimeType))
+				{
+					return RtpParameters::Type::SVC;
+				}
+				else if (RTC::Codecs::Tools::IsValidTypeForCodec(
+				           RtpParameters::Type::SIMULCAST, mediaCodec->mimeType))
+				{
+					return RtpParameters::Type::SIMULCAST;
+				}
+				else
+				{
+					return RtpParameters::Type::NONE;
+				}
+			}
 			else
+			{
 				return RtpParameters::Type::SIMPLE;
+			}
 		}
 		else if (rtpParameters.encodings.size() > 1)
 		{
