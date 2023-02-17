@@ -3,7 +3,7 @@
 const process = require('process');
 const os = require('os');
 const fs = require('fs');
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 const { version } = require('./package.json');
 
 const isFreeBSD = os.platform() === 'freebsd';
@@ -227,6 +227,21 @@ function buildWorker()
 {
 	console.log('npm-scripts.js [INFO] buildWorker()');
 
+	if (isWindows)
+	{
+		if (!fs.existsSync('worker/out/msys/bin/make.exe'))
+		{
+			installMsysMake();
+		}
+
+		const msysPath = `${process.cwd()}\\worker\\out\\msys\\bin`;
+
+		if (!process.env['PATH'].includes(msysPath))
+		{
+			process.env['PATH'] = `${msysPath};${process.env['PATH']}`;
+		}
+	}
+
 	executeCmd(`${MAKE} -C worker`);
 }
 
@@ -240,6 +255,11 @@ function cleanWorker()
 	executeCmd(`${MAKE} clean-subprojects -C worker`);
 	// Clean PIP/Meson/Ninja.
 	executeCmd(`${MAKE} clean-pip -C worker`);
+
+	if (isWindows)
+	{
+		executeCmd('rd /s /q worker\\out\\msys');
+	}
 }
 
 function lintNode()
@@ -322,4 +342,26 @@ function executeCmd(command, exitOnError = true)
 			console.log(`npm-scripts.js [INFO] executeCmd() failed, ignoring: ${error}`);
 		}
 	}
+}
+
+function installMsysMake()
+{
+	console.log('npm-scripts.js [INFO] installMsysMake()');
+
+	let res = spawnSync('where', [ 'python3.exe' ]);
+
+	if (res.status !== 0)
+	{
+		res = spawnSync('where', [ 'python.exe' ]);
+
+		if (res.status !== 0)
+		{
+			// eslint-disable-next-line no-console
+			console.error('`npm-scripts.js [ERROR] installMsysMake() cannot find Python executable');
+
+			process.exit(1);
+		}
+	}
+
+	executeCmd(`${String(res.stdout).trim()} worker\\scripts\\getmake.py`);
 }

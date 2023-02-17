@@ -6,8 +6,9 @@ OS="$(uname -s)"
 NUM_CORES=
 
 case "${OS}" in
-	Linux*|MINGW*)    NUM_CORES=$(nproc);;
+	Linux*)           NUM_CORES=$(nproc);;
 	Darwin*|FreeBSD)  NUM_CORES=$(sysctl -n hw.ncpu);;
+	MINGW*)           NUM_CORES=$NUMBER_OF_PROCESSORS;;
 	*)                NUM_CORES=1;;
 esac
 

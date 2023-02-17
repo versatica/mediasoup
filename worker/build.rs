@@ -77,7 +77,40 @@ fn main() {
     }
     #[cfg(target_os = "windows")]
     {
-        // Nothing special is needed so far
+        if !std::path::Path::new("worker/out/msys/bin/make.exe").exists() {
+            let python = if Command::new("where")
+                .arg("python3.exe")
+                .status()
+                .expect("Failed to start")
+                .success()
+            {
+                "python3"
+            } else {
+                "python"
+            };
+
+            if !Command::new(python)
+                .arg("scripts\\getmake.py")
+                .status()
+                .expect("Failed to start")
+                .success()
+            {
+                panic!("Failed to install MSYS/make")
+            }
+        }
+
+        env::set_var(
+            "PATH",
+            format!(
+                "{}\\worker\\out\\msys\\bin;{}",
+                env::current_dir()
+                    .unwrap()
+                    .into_os_string()
+                    .into_string()
+                    .unwrap(),
+                env::var("PATH").unwrap()
+            ),
+        );
     }
 
     // Build
