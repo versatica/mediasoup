@@ -502,7 +502,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             .get(0)
             .unwrap()
             .scalability_mode,
-        ScalabilityMode::S3T3,
+        ScalabilityMode::L3T3,
     );
     assert_eq!(
         consumer_rtp_parameters

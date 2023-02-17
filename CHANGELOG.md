@@ -3,6 +3,10 @@
 
 ### Next
 
+
+### 3.11.9
+
+* Allow simulcast with a single encoding (and N temporal layers) ([PR #1013](https://github.com/versatica/mediasoup/pull/1013)).
 * Update libsrtp to 2.5.0.
 * Update NPM deps.
 
