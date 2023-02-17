@@ -346,6 +346,8 @@ function executeCmd(command, exitOnError = true)
 
 function installMsysMake()
 {
+	console.log('npm-scripts.js [INFO] installMsysMake()');
+
 	let res = spawnSync('where', [ 'python3.exe' ]);
 
 	if (res.status !== 0)
