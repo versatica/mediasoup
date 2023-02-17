@@ -1,7 +1,9 @@
 # Changelog
 
 
-### Next
+### 3.11.10
+
+* Download and use MSYS/make locally for Windows postinstall ([PR #792](https://github.com/versatica/mediasoup/pull/792) by @snnz).
 
 
 ### 3.11.9
