@@ -421,7 +421,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -450,7 +452,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	transportClosed(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('transportClosed()');
 
@@ -501,7 +505,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		// Emit observer event.
 		if (!wasPaused)
+		{
 			this.#observer.safeEmit('pause');
+		}
 	}
 
 	/**
@@ -519,7 +525,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		// Emit observer event.
 		if (wasPaused && !this.#producerPaused)
+		{
 			this.#observer.safeEmit('resume');
+		}
 	}
 
 	/**
@@ -604,7 +612,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 				case 'producerclose':
 				{
 					if (this.#closed)
+					{
 						break;
+					}
 
 					this.#closed = true;
 
@@ -624,7 +634,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 				case 'producerpause':
 				{
 					if (this.#producerPaused)
+					{
 						break;
+					}
 
 					const wasPaused = this.#paused || this.#producerPaused;
 
@@ -634,7 +646,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 					// Emit observer event.
 					if (!wasPaused)
+					{
 						this.#observer.safeEmit('pause');
+					}
 
 					break;
 				}
@@ -642,7 +656,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 				case 'producerresume':
 				{
 					if (!this.#producerPaused)
+					{
 						break;
+					}
 
 					const wasPaused = this.#paused || this.#producerPaused;
 
@@ -652,7 +668,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 					// Emit observer event.
 					if (wasPaused && !this.#paused)
+					{
 						this.#observer.safeEmit('resume');
+					}
 
 					break;
 				}
@@ -713,7 +731,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 					case 'rtp':
 					{
 						if (this.#closed)
+						{
 							break;
+						}
 
 						const packet = payload;
 

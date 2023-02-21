@@ -269,28 +269,42 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		}
 
 		if (typeof logLevel === 'string' && logLevel)
+		{
 			spawnArgs.push(`--logLevel=${logLevel}`);
+		}
 
 		for (const logTag of (Array.isArray(logTags) ? logTags : []))
 		{
 			if (typeof logTag === 'string' && logTag)
+			{
 				spawnArgs.push(`--logTag=${logTag}`);
+			}
 		}
 
 		if (typeof rtcMinPort === 'number' && !Number.isNaN(rtcMinPort))
+		{
 			spawnArgs.push(`--rtcMinPort=${rtcMinPort}`);
+		}
 
 		if (typeof rtcMaxPort === 'number' && !Number.isNaN(rtcMaxPort))
+		{
 			spawnArgs.push(`--rtcMaxPort=${rtcMaxPort}`);
+		}
 
 		if (typeof dtlsCertificateFile === 'string' && dtlsCertificateFile)
+		{
 			spawnArgs.push(`--dtlsCertificateFile=${dtlsCertificateFile}`);
+		}
 
 		if (typeof dtlsPrivateKeyFile === 'string' && dtlsPrivateKeyFile)
+		{
 			spawnArgs.push(`--dtlsPrivateKeyFile=${dtlsPrivateKeyFile}`);
+		}
 
 		if (typeof libwebrtcFieldTrials === 'string' && libwebrtcFieldTrials)
+		{
 			spawnArgs.push(`--libwebrtcFieldTrials=${libwebrtcFieldTrials}`);
+		}
 
 		logger.debug(
 			'spawning worker process: %s %s', spawnBin, spawnArgs.join(' '));
@@ -427,7 +441,9 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			for (const line of buffer.toString('utf8').split('\n'))
 			{
 				if (line)
+				{
 					workerLogger.debug(`(stdout) ${line}`);
+				}
 			}
 		});
 
@@ -437,7 +453,9 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			for (const line of buffer.toString('utf8').split('\n'))
 			{
 				if (line)
+				{
 					workerLogger.error(`(stderr) ${line}`);
+				}
 			}
 		});
 	}
@@ -514,7 +532,9 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -605,7 +625,9 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		logger.debug('createWebRtcServer()');
 
 		if (appData && typeof appData !== 'object')
+		{
 			throw new TypeError('if given, appData must be an object');
+		}
 
 		const reqData =
 		{
@@ -643,7 +665,9 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		logger.debug('createRouter()');
 
 		if (appData && typeof appData !== 'object')
+		{
 			throw new TypeError('if given, appData must be an object');
+		}
 
 		// This may throw.
 		const rtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
@@ -677,7 +701,9 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 	private workerDied(error: Error): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug(`died() [error:${error}]`);
 

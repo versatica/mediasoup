@@ -297,7 +297,9 @@ test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () =
 	// Windows doesn't have some signals such as SIGPIPE, SIGALRM, SIGUSR1, SIGUSR2
 	// so we just skip this test in Windows.
 	if (os.platform() === 'win32')
+	{
 		return;
+	}
 
 	worker = await createWorker({ logLevel: 'warn' });
 

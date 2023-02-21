@@ -71,7 +71,9 @@ export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEven
 					const producer = this.getProducerById(data.producerId);
 
 					if (!producer)
+					{
 						break;
+					}
 
 					const dominantSpeaker: ActiveSpeakerObserverDominantSpeaker =
 					{

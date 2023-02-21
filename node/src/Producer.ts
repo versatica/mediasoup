@@ -346,7 +346,9 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -375,7 +377,9 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	transportClosed(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('transportClosed()');
 
@@ -426,7 +430,9 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		// Emit observer event.
 		if (!wasPaused)
+		{
 			this.#observer.safeEmit('pause');
+		}
 	}
 
 	/**
@@ -444,7 +450,9 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 
 		// Emit observer event.
 		if (wasPaused)
+		{
 			this.#observer.safeEmit('resume');
+		}
 	}
 
 	/**
