@@ -123,6 +123,11 @@ export type RouterInternal =
 	routerId: string;
 };
 
+type RouterData =
+{
+	rtpCapabilities: RtpCapabilities;
+};
+
 const logger = new Logger('Router');
 
 export class Router extends EnhancedEventEmitter<RouterEvents>
@@ -131,10 +136,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	readonly #internal: RouterInternal;
 
 	// Router data.
-	readonly #data:
-	{
-		rtpCapabilities: RtpCapabilities;
-	};
+	readonly #data: RouterData;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -181,7 +183,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		}:
 		{
 			internal: RouterInternal;
-			data: any;
+			data: RouterData;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;
