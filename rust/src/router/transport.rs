@@ -540,7 +540,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                 producer.consumable_rtp_parameters(),
                 &rtp_capabilities,
                 pipe,
-                computed_enable_nack
+                computed_enable_nack,
             )
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 

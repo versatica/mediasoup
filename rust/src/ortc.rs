@@ -644,7 +644,7 @@ pub(crate) fn get_consumer_rtp_parameters(
     consumable_params: &RtpParameters,
     caps: &RtpCapabilities,
     pipe: bool,
-    enable_nack: bool
+    enable_nack: bool,
 ) -> Result<RtpParameters, ConsumerRtpParametersError> {
     let mut consumer_params = RtpParameters {
         rtcp: consumable_params.rtcp.clone(),
