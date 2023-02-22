@@ -1109,13 +1109,21 @@ export function canConsume(
  *
  * It reduces encodings to just one and takes into account given RTP capabilities
  * to reduce codecs, codecs' RTCP feedback and header extensions, and also enables
- * or disabled RTX.
+ * or disables RTX.
  */
 export function getConsumerRtpParameters(
-	consumableParams: RtpParameters,
-	caps: RtpCapabilities,
-	pipe: boolean,
-	enableNack: boolean
+	{
+		consumableRtpParameters,
+		remoteRtpCapabilities,
+		pipe,
+		enableRtx
+	}:
+	{
+		consumableRtpParameters: RtpParameters;
+		remoteRtpCapabilities: RtpCapabilities;
+		pipe: boolean;
+		enableRtx: boolean;
+	}
 ): RtpParameters
 {
 	const consumerParams: RtpParameters =
@@ -1123,22 +1131,22 @@ export function getConsumerRtpParameters(
 		codecs           : [],
 		headerExtensions : [],
 		encodings        : [],
-		rtcp             : consumableParams.rtcp
+		rtcp             : consumableRtpParameters.rtcp
 	};
 
-	for (const capCodec of caps.codecs!)
+	for (const capCodec of remoteRtpCapabilities.codecs!)
 	{
 		validateRtpCodecCapability(capCodec);
 	}
 
 	const consumableCodecs =
-		utils.clone(consumableParams.codecs) as RtpCodecParameters[];
+		utils.clone(consumableRtpParameters.codecs) as RtpCodecParameters[];
 
 	let rtxSupported = false;
 
 	for (const codec of consumableCodecs)
 	{
-		const matchedCapCodec = caps.codecs!
+		const matchedCapCodec = remoteRtpCapabilities.codecs!
 			.find((capCodec) => matchCodecs(capCodec, codec, { strict: true }));
 
 		if (!matchedCapCodec)
@@ -1146,7 +1154,15 @@ export function getConsumerRtpParameters(
 			continue;
 		}
 
-		codec.rtcpFeedback = matchedCapCodec.rtcpFeedback;
+		if (!enableRtx && isRtxCodec(codec))
+		{
+			continue;
+		}
+
+		codec.rtcpFeedback = matchedCapCodec.rtcpFeedback!
+			.filter((fb) => (
+				(enableRtx || fb.type !== 'nack' || fb.parameter)
+			));
 
 		consumerParams.codecs.push(codec);
 	}
@@ -1179,9 +1195,9 @@ export function getConsumerRtpParameters(
 		throw new UnsupportedError('no compatible media codecs');
 	}
 
-	consumerParams.headerExtensions = consumableParams.headerExtensions!
+	consumerParams.headerExtensions = consumableRtpParameters.headerExtensions!
 		.filter((ext) => (
-			caps.headerExtensions!
+			remoteRtpCapabilities.headerExtensions!
 				.some((capExt) => (
 					capExt.preferredId === ext.id &&
 					capExt.uri === ext.uri
@@ -1225,17 +1241,6 @@ export function getConsumerRtpParameters(
 		}
 	}
 
-	// If enableNack is false, remove RTCP NACK support. If so, we remove all
-	// RTCP feedbacks with type 'nack' (including those whose parameter is 'pli').
-	if (!enableNack)
-	{
-		for (const codec of consumerParams.codecs)
-		{
-			codec.rtcpFeedback = codec.rtcpFeedback!
-				.filter((fb) => fb.type !== 'nack');
-		}
-	}
-
 	if (!pipe)
 	{
 		const consumerEncoding: RtpEncodingParameters =
@@ -1248,21 +1253,21 @@ export function getConsumerRtpParameters(
 			consumerEncoding.rtx = { ssrc: consumerEncoding.ssrc! + 1 };
 		}
 
-		// If any of the consumableParams.encodings has scalabilityMode, process it
-		// (assume all encodings have the same value).
+		// If any of the consumableRtpParameters.encodings has scalabilityMode,
+		// process it (assume all encodings have the same value).
 		const encodingWithScalabilityMode =
-			consumableParams.encodings!.find((encoding) => encoding.scalabilityMode);
+			consumableRtpParameters.encodings!.find((encoding) => encoding.scalabilityMode);
 
 		let scalabilityMode = encodingWithScalabilityMode
 			? encodingWithScalabilityMode.scalabilityMode
 			: undefined;
 
 		// If there is simulast, mangle spatial layers in scalabilityMode.
-		if (consumableParams.encodings!.length > 1)
+		if (consumableRtpParameters.encodings!.length > 1)
 		{
 			const { temporalLayers } = parseScalabilityMode(scalabilityMode);
 
-			scalabilityMode = `L${consumableParams.encodings!.length}T${temporalLayers}`;
+			scalabilityMode = `L${consumableRtpParameters.encodings!.length}T${temporalLayers}`;
 		}
 
 		if (scalabilityMode)
@@ -1273,7 +1278,7 @@ export function getConsumerRtpParameters(
 		// Use the maximum maxBitrate in any encoding and honor it in the Consumer's
 		// encoding.
 		const maxEncodingMaxBitrate =
-			consumableParams.encodings!.reduce((maxBitrate, encoding) => (
+			consumableRtpParameters.encodings!.reduce((maxBitrate, encoding) => (
 				encoding.maxBitrate && encoding.maxBitrate > maxBitrate
 					? encoding.maxBitrate
 					: maxBitrate
@@ -1290,7 +1295,7 @@ export function getConsumerRtpParameters(
 	else
 	{
 		const consumableEncodings =
-			utils.clone(consumableParams.encodings) as RtpEncodingParameters[];
+			utils.clone(consumableRtpParameters.encodings) as RtpEncodingParameters[];
 		const baseSsrc = utils.generateRandomNumber();
 		const baseRtxSsrc = utils.generateRandomNumber();
 
@@ -1323,8 +1328,14 @@ export function getConsumerRtpParameters(
  * enableRtx is false, it also removes RTX and NACK support.
  */
 export function getPipeConsumerRtpParameters(
-	consumableParams: RtpParameters,
-	enableRtx = false
+	{
+		consumableRtpParameters,
+		enableRtx
+	}:
+	{
+		consumableRtpParameters: RtpParameters;
+		enableRtx: boolean;
+	}
 ): RtpParameters
 {
 	const consumerParams: RtpParameters =
@@ -1332,11 +1343,11 @@ export function getPipeConsumerRtpParameters(
 		codecs           : [],
 		headerExtensions : [],
 		encodings        : [],
-		rtcp             : consumableParams.rtcp
+		rtcp             : consumableRtpParameters.rtcp
 	};
 
 	const consumableCodecs =
-		utils.clone(consumableParams.codecs) as RtpCodecParameters[];
+		utils.clone(consumableRtpParameters.codecs) as RtpCodecParameters[];
 
 	for (const codec of consumableCodecs)
 	{
@@ -1356,7 +1367,7 @@ export function getPipeConsumerRtpParameters(
 	}
 
 	// Reduce RTP extensions by disabling transport MID and BWE related ones.
-	consumerParams.headerExtensions = consumableParams.headerExtensions!
+	consumerParams.headerExtensions = consumableRtpParameters.headerExtensions!
 		.filter((ext) => (
 			ext.uri !== 'urn:ietf:params:rtp-hdrext:sdes:mid' &&
 			ext.uri !== 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time' &&
@@ -1364,7 +1375,7 @@ export function getPipeConsumerRtpParameters(
 		));
 
 	const consumableEncodings =
-		utils.clone(consumableParams.encodings) as RtpEncodingParameters[];
+		utils.clone(consumableRtpParameters.encodings) as RtpEncodingParameters[];
 	const baseSsrc = utils.generateRandomNumber();
 	const baseRtxSsrc = utils.generateRandomNumber();
 

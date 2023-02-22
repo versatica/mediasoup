@@ -82,7 +82,7 @@ pub struct ConsumerOptions {
     /// for audio codecs. If set to true, NACK will be enabled if both endpoints (mediasoup
     /// and the remote Consumer) support NACK for this codec. When it comes to audio codecs,
     /// just OPUS supports NACK.
-    pub enable_nack: Option<bool>,
+    pub enable_rtx: Option<bool>,
     /// Whether this Consumer should ignore DTX packets (only valid for Opus codec).
     /// If set, DTX packets are not forwarded to the remote Consumer.
     pub ignore_dtx: bool,
@@ -102,7 +102,7 @@ impl ConsumerOptions {
             paused: false,
             preferred_layers: None,
             ignore_dtx: false,
-            enable_nack: None,
+            enable_rtx: None,
             pipe: false,
             mid: None,
             app_data: AppData::default(),

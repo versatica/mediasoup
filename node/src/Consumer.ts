@@ -57,7 +57,7 @@ export type ConsumerOptions =
 	 * enabled if both endpoints (mediasoup and the remote Consumer) support NACK
 	 * for this codec. When it comes to audio codecs, just OPUS supports NACK.
 	 */
-	enableNack?: boolean;
+	enableRtx?: boolean;
 
 	/**
 	 * Whether this Consumer should ignore DTX packets (only valid for Opus codec).

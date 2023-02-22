@@ -508,7 +508,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             paused,
             mid,
             preferred_layers,
-            enable_nack,
+            enable_rtx,
             ignore_dtx,
             pipe,
             app_data,
@@ -525,7 +525,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let computed_enable_nack: bool;
 
-        if let Some(flag) = enable_nack {
+        if let Some(flag) = enable_rtx {
             computed_enable_nack = flag;
         } else if producer.kind() == MediaKind::Video {
             computed_enable_nack = true;

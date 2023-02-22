@@ -499,13 +499,13 @@ test('transport.consume() succeeds', async () =>
 			});
 }, 2000);
 
-test('transport.consume() setting enableNack succeeds', async () =>
+test('transport.consume() setting enableRtx succeeds', async () =>
 {
 	const audioConsumer2 = await transport2.consume(
 		{
 			producerId      : audioProducer.id,
 			rtpCapabilities : consumerDeviceCapabilities,
-			enableNack      : true
+			enableRtx       : true
 		});
 
 	expect(audioConsumer2.kind).toBe('audio');

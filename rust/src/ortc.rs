@@ -641,25 +641,25 @@ pub(crate) fn can_consume(
 /// codecs' RTCP feedback and header extensions, and also enables or disabled RTX.
 #[allow(clippy::suspicious_operation_groupings)]
 pub(crate) fn get_consumer_rtp_parameters(
-    consumable_params: &RtpParameters,
-    caps: &RtpCapabilities,
+    consumable_rtp_parameters: &RtpParameters,
+    remote_rtp_capabilities: &RtpCapabilities,
     pipe: bool,
-    enable_nack: bool,
+    enable_rtx: bool,
 ) -> Result<RtpParameters, ConsumerRtpParametersError> {
     let mut consumer_params = RtpParameters {
-        rtcp: consumable_params.rtcp.clone(),
+        rtcp: consumable_rtp_parameters.rtcp.clone(),
         ..RtpParameters::default()
     };
 
-    for cap_codec in &caps.codecs {
+    for cap_codec in &remote_rtp_capabilities.codecs {
         validate_rtp_codec_capability(cap_codec)
             .map_err(ConsumerRtpParametersError::InvalidCapabilities)?;
     }
 
     let mut rtx_supported = false;
 
-    for mut codec in consumable_params.codecs.clone() {
-        if let Some(matched_cap_codec) = caps
+    for mut codec in consumable_rtp_parameters.codecs.clone() {
+        if let Some(matched_cap_codec) = remote_rtp_capabilities
             .codecs
             .iter()
             .find(|cap_codec| match_codecs(cap_codec.deref().into(), (&codec).into(), true).is_ok())
@@ -698,11 +698,12 @@ pub(crate) fn get_consumer_rtp_parameters(
         return Err(ConsumerRtpParametersError::NoCompatibleMediaCodecs);
     }
 
-    consumer_params.header_extensions = consumable_params
+    consumer_params.header_extensions = consumable_rtp_parameters
         .header_extensions
         .iter()
         .filter(|ext| {
-            caps.header_extensions
+            remote_rtp_capabilities
+                .header_extensions
                 .iter()
                 .any(|cap_ext| cap_ext.preferred_id == ext.id && cap_ext.uri == ext.uri)
         })
@@ -738,9 +739,9 @@ pub(crate) fn get_consumer_rtp_parameters(
         }
     }
 
-    // If enable_nack is false, remove RTCP NACK support. If so, we remove all
+    // If enable_rtx is false, remove RTCP NACK support. If so, we remove all
     // RTCP feedbacks with type 'nack' (including those whose parameter is 'pli').
-    if !enable_nack {
+    if !enable_rtx {
         for codec in &mut consumer_params.codecs {
             codec
                 .rtcp_feedback_mut()
@@ -749,7 +750,7 @@ pub(crate) fn get_consumer_rtp_parameters(
     }
 
     if pipe {
-        for ((encoding, ssrc), rtx_ssrc) in consumable_params
+        for ((encoding, ssrc), rtx_ssrc) in consumable_rtp_parameters
             .encodings
             .iter()
             .zip(generate_ssrc()..)
@@ -777,19 +778,19 @@ pub(crate) fn get_consumer_rtp_parameters(
             });
         }
 
-        // If any of the consumable_params.encodings has scalability_mode, process it
+        // If any of the consumable_rtp_parameters.encodings has scalability_mode, process it
         // (assume all encodings have the same value).
-        let mut scalability_mode = consumable_params
+        let mut scalability_mode = consumable_rtp_parameters
             .encodings
             .get(0)
             .map(|encoding| encoding.scalability_mode.clone())
             .unwrap_or_default();
 
         // If there is simulcast, mangle spatial layers in scalabilityMode.
-        if consumable_params.encodings.len() > 1 {
+        if consumable_rtp_parameters.encodings.len() > 1 {
             scalability_mode = format!(
                 "L{}T{}",
-                consumable_params.encodings.len(),
+                consumable_rtp_parameters.encodings.len(),
                 scalability_mode.temporal_layers()
             )
             .parse()
@@ -799,7 +800,7 @@ pub(crate) fn get_consumer_rtp_parameters(
         consumer_encoding.scalability_mode = scalability_mode;
 
         // Use the maximum max_bitrate in any encoding and honor it in the Consumer's encoding.
-        consumer_encoding.max_bitrate = consumable_params
+        consumer_encoding.max_bitrate = consumable_rtp_parameters
             .encodings
             .iter()
             .map(|encoding| encoding.max_bitrate)
@@ -818,7 +819,7 @@ pub(crate) fn get_consumer_rtp_parameters(
 /// It keeps all original consumable encodings and removes support for BWE. If
 /// enableRtx is false, it also removes RTX and NACK support.
 pub(crate) fn get_pipe_consumer_rtp_parameters(
-    consumable_params: &RtpParameters,
+    consumable_rtp_parameters: &RtpParameters,
     enable_rtx: bool,
 ) -> RtpParameters {
     let mut consumer_params = RtpParameters {
@@ -826,10 +827,10 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         codecs: vec![],
         header_extensions: vec![],
         encodings: vec![],
-        rtcp: consumable_params.rtcp.clone(),
+        rtcp: consumable_rtp_parameters.rtcp.clone(),
     };
 
-    for codec in &consumable_params.codecs {
+    for codec in &consumable_rtp_parameters.codecs {
         if !enable_rtx && codec.is_rtx() {
             continue;
         }
@@ -845,7 +846,7 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
     }
 
     // Reduce RTP extensions by disabling transport MID and BWE related ones.
-    consumer_params.header_extensions = consumable_params
+    consumer_params.header_extensions = consumable_rtp_parameters
         .header_extensions
         .iter()
         .filter(|ext| {
@@ -859,7 +860,7 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         .cloned()
         .collect();
 
-    for ((encoding, ssrc), rtx_ssrc) in consumable_params
+    for ((encoding, ssrc), rtx_ssrc) in consumable_rtp_parameters
         .encodings
         .iter()
         .zip(generate_ssrc()..)

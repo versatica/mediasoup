@@ -660,7 +660,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			mid,
 			preferredLayers,
 			ignoreDtx = false,
-			enableNack,
+			enableRtx,
 			pipe = false,
 			appData
 		}: ConsumerOptions
@@ -691,22 +691,28 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			throw Error(`Producer with id "${producerId}" not found`);
 		}
 
-		// If enableNack is not given, set it to true if video and false if audio.
-		if (enableNack === undefined)
+		// If enableRtx is not given, set it to true if video and false if audio.
+		if (enableRtx === undefined)
 		{
 			if (producer.kind === 'video')
 			{
-				enableNack = true;
+				enableRtx = true;
 			}
 			else
 			{
-				enableNack = false;
+				enableRtx = false;
 			}
 		}
 
 		// This may throw.
 		const rtpParameters = ortc.getConsumerRtpParameters(
-			producer.consumableRtpParameters, rtpCapabilities!, pipe, enableNack);
+			{
+				consumableRtpParameters : producer.consumableRtpParameters,
+				remoteRtpCapabilities   : rtpCapabilities!,
+				pipe,
+				enableRtx
+			}
+		);
 
 		// Set MID.
 		if (!pipe)
