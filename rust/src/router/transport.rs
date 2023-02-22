@@ -13,7 +13,7 @@ pub use crate::ortc::{
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::Router;
-use crate::rtp_parameters::RtpEncodingParameters;
+use crate::rtp_parameters::{MediaKind, RtpEncodingParameters};
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::worker::{Channel, PayloadChannel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
@@ -508,6 +508,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             paused,
             mid,
             preferred_layers,
+            enable_nack,
             ignore_dtx,
             pipe,
             app_data,
@@ -522,6 +523,16 @@ pub(super) trait TransportImpl: TransportGeneric {
             }
         };
 
+        let computed_enable_nack: bool;
+
+        if let Some(flag) = enable_nack {
+            computed_enable_nack = flag;
+        } else if producer.kind() == MediaKind::Video {
+            computed_enable_nack = true;
+        } else {
+            computed_enable_nack = false;
+        }
+
         let rtp_parameters = if transport_type == TransportType::Pipe {
             ortc::get_pipe_consumer_rtp_parameters(producer.consumable_rtp_parameters(), rtx)
         } else {
@@ -529,6 +540,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                 producer.consumable_rtp_parameters(),
                 &rtp_capabilities,
                 pipe,
+                computed_enable_nack
             )
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 

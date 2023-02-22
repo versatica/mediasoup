@@ -1114,7 +1114,8 @@ export function canConsume(
 export function getConsumerRtpParameters(
 	consumableParams: RtpParameters,
 	caps: RtpCapabilities,
-	pipe: boolean
+	pipe: boolean,
+	enableNack: boolean
 ): RtpParameters
 {
 	const consumerParams: RtpParameters =
@@ -1221,6 +1222,17 @@ export function getConsumerRtpParameters(
 					fb.type !== 'transport-cc' &&
 					fb.type !== 'goog-remb'
 				));
+		}
+	}
+
+	// If enableNack is false, remove RTCP NACK support. If so, we remove all
+	// RTCP feedbacks with type 'nack' (including those whose parameter is 'pli').
+	if (!enableNack)
+	{
+		for (const codec of consumerParams.codecs)
+		{
+			codec.rtcpFeedback = codec.rtcpFeedback!
+				.filter((fb) => fb.type !== 'nack');
 		}
 	}
 

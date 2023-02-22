@@ -56,6 +56,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			},
 			rtcpFeedback :
 			[
+				{ type: 'nack', parameter: '' },
 				{ type: 'transport-cc', parameter: '' }
 			]
 		});
@@ -431,8 +432,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		]
 	};
 
-	const consumerRtpParameters =
-		ortc.getConsumerRtpParameters(consumableRtpParameters, remoteRtpCapabilities, false);
+	const consumerRtpParameters = ortc.getConsumerRtpParameters(
+		consumableRtpParameters,
+		remoteRtpCapabilities,
+		/* pipe */ false,
+		/* enableNack */ true
+	);
 
 	expect(consumerRtpParameters.codecs.length).toEqual(2);
 	expect(consumerRtpParameters.codecs[0]).toEqual(

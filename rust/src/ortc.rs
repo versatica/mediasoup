@@ -644,6 +644,7 @@ pub(crate) fn get_consumer_rtp_parameters(
     consumable_params: &RtpParameters,
     caps: &RtpCapabilities,
     pipe: bool,
+    enable_nack: bool
 ) -> Result<RtpParameters, ConsumerRtpParametersError> {
     let mut consumer_params = RtpParameters {
         rtcp: consumable_params.rtcp.clone(),
@@ -734,6 +735,16 @@ pub(crate) fn get_consumer_rtp_parameters(
             codec
                 .rtcp_feedback_mut()
                 .retain(|fb| !matches!(fb, RtcpFeedback::GoogRemb | RtcpFeedback::TransportCc));
+        }
+    }
+
+    // If enable_nack is false, remove RTCP NACK support. If so, we remove all
+    // RTCP feedbacks with type 'nack' (including those whose parameter is 'pli').
+    if !enable_nack {
+        for codec in &mut consumer_params.codecs {
+            codec
+                .rtcp_feedback_mut()
+                .retain(|fb| fb != &RtcpFeedback::Nack);
         }
     }
 
