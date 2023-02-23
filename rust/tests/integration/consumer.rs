@@ -712,10 +712,8 @@ fn consume_with_enable_rtx_succeeds() {
 
         let audio_consumer = transport_2
             .consume({
-                let mut options = ConsumerOptions::new(
-                    audio_producer.id(),
-                    consumer_device_capabilities.clone(),
-                );
+                let mut options =
+                    ConsumerOptions::new(audio_producer.id(), consumer_device_capabilities.clone());
                 options.enable_rtx = Some(true);
                 options
             })
