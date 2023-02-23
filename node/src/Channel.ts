@@ -31,9 +31,6 @@ export class Channel extends EnhancedEventEmitter
 	// Closed flag.
 	#closed = false;
 
-	// Worker PID.
-	readonly #pid: number;
-
 	// Unix Socket instance for sending messages to the worker process.
 	readonly #producerSocket: Duplex;
 
@@ -71,7 +68,6 @@ export class Channel extends EnhancedEventEmitter
 
 		logger.debug('constructor()');
 
-		this.#pid = pid;
 		this.#producerSocket = producerSocket as Duplex;
 		this.#consumerSocket = consumerSocket as Duplex;
 
@@ -161,7 +157,7 @@ export class Channel extends EnhancedEventEmitter
 
 							message.data(log);
 
-							this.processLog(log);
+							this.processLog(pid, log);
 
 							break;
 						}
@@ -465,7 +461,7 @@ export class Channel extends EnhancedEventEmitter
 		);
 	}
 
-	private processLog(log: Log): void
+	private processLog(pid: number, log: Log): void
 	{
 		const logData = log.data()!;
 
@@ -473,17 +469,17 @@ export class Channel extends EnhancedEventEmitter
 		{
 			// 'D' (a debug log).
 			case 'D':
-				logger.debug(`[pid:${this.#pid}] ${logData.slice(1)}`);
+				logger.debug(`[pid:${pid}] ${logData.slice(1)}`);
 				break;
 
 			// 'W' (a warn log).
 			case 'W':
-				logger.warn(`[pid:${this.#pid}] ${logData.slice(1)}`);
+				logger.warn(`[pid:${pid}] ${logData.slice(1)}`);
 				break;
 
 			// 'E' (a error log).
 			case 'E':
-				logger.error(`[pid:${this.#pid}] ${logData.slice(1)}`);
+				logger.error(`[pid:${pid}] ${logData.slice(1)}`);
 				break;
 
 			// 'X' (a dump log).
