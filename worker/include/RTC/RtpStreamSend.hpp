@@ -11,9 +11,9 @@ namespace RTC
 	{
 	public:
 		// Minimum retransmission buffer size (ms).
-		const static uint32_t MinRetransmissionDelay;
+		const static uint32_t MinRetransmissionDelayMs;
 		// Maximum retransmission buffer size (ms).
-		const static uint32_t MaxRetransmissionDelay;
+		const static uint32_t MaxRetransmissionDelayMs;
 
 	public:
 		class Listener : public RTC::RtpStream::Listener
@@ -46,7 +46,7 @@ namespace RTC
 		// Special container that stores `StorageItem*` elements addressable by
 		// their `uint16_t` sequence number, while only taking as little memory as
 		// necessary to store the range covering a maximum of
-		// `MaxRetransmissionDelay` milliseconds.
+		// MaxRetransmissionDelayMs milliseconds.
 		class StorageItemBuffer
 		{
 		public:

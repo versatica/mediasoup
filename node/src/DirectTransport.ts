@@ -90,7 +90,9 @@ export class DirectTransport extends
 	close(): void
 	{
 		if (this.closed)
+		{
 			return;
+		}
 
 		super.close();
 	}
@@ -104,7 +106,9 @@ export class DirectTransport extends
 	routerClosed(): void
 	{
 		if (this.closed)
+		{
 			return;
+		}
 
 		super.routerClosed();
 	}

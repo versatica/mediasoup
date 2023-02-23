@@ -218,7 +218,9 @@ export class Channel extends EnhancedEventEmitter
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -263,7 +265,9 @@ export class Channel extends EnhancedEventEmitter
 		logger.debug('notify() [event:%s]', Event[event]);
 
 		if (this.#closed)
+		{
 			throw new InvalidStateError('Channel closed');
+		}
 
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
 
@@ -357,7 +361,9 @@ export class Channel extends EnhancedEventEmitter
 		this.#bufferBuilder.clear();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN)
+		{
 			throw new Error('Channel request too big');
+		}
 
 		// This may throw if closed or remote side ended.
 		this.#producerSocket.write(buffer, 'binary');
@@ -371,14 +377,18 @@ export class Channel extends EnhancedEventEmitter
 				resolve : (data2) =>
 				{
 					if (!this.#sents.delete(id))
+					{
 						return;
+					}
 
 					pResolve(data2);
 				},
 				reject : (error) =>
 				{
 					if (!this.#sents.delete(id))
+					{
 						return;
+					}
 
 					pReject(error);
 				},

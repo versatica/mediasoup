@@ -332,14 +332,18 @@ export class WebRtcTransport extends
 	close(): void
 	{
 		if (this.closed)
+		{
 			return;
+		}
 
 		this.#data.iceState = 'closed';
 		this.#data.iceSelectedTuple = undefined;
 		this.#data.dtlsState = 'closed';
 
 		if (this.#data.sctpState)
+		{
 			this.#data.sctpState = 'closed';
+		}
 
 		super.close();
 	}
@@ -353,14 +357,18 @@ export class WebRtcTransport extends
 	routerClosed(): void
 	{
 		if (this.closed)
+		{
 			return;
+		}
 
 		this.#data.iceState = 'closed';
 		this.#data.iceSelectedTuple = undefined;
 		this.#data.dtlsState = 'closed';
 
 		if (this.#data.sctpState)
+		{
 			this.#data.sctpState = 'closed';
+		}
 
 		super.routerClosed();
 	}
@@ -373,14 +381,18 @@ export class WebRtcTransport extends
 	webRtcServerClosed(): void
 	{
 		if (this.closed)
+		{
 			return;
+		}
 
 		this.#data.iceState = 'closed';
 		this.#data.iceSelectedTuple = undefined;
 		this.#data.dtlsState = 'closed';
 
 		if (this.#data.sctpState)
+		{
 			this.#data.sctpState = 'closed';
+		}
 
 		super.listenServerClosed();
 	}
@@ -547,7 +559,9 @@ export class WebRtcTransport extends
 					this.#data.dtlsState = dtlsState;
 
 					if (dtlsState === 'connected')
+					{
 						this.#data.dtlsRemoteCert = notification.remoteCert()!;
+					}
 
 					this.safeEmit('dtlsstatechange', dtlsState);
 

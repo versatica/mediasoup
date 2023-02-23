@@ -483,7 +483,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -519,7 +521,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	transportClosed(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('transportClosed()');
 
@@ -598,7 +602,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		// Emit observer event.
 		if (!wasPaused)
+		{
 			this.#observer.safeEmit('pause');
+		}
 	}
 
 	/**
@@ -621,7 +627,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		// Emit observer event.
 		if (wasPaused && !this.#producerPaused)
+		{
 			this.#observer.safeEmit('resume');
+		}
 	}
 
 	/**
@@ -774,7 +782,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 				case Event.CONSUMER_PRODUCER_CLOSE:
 				{
 					if (this.#closed)
+					{
 						break;
+					}
 
 					this.#closed = true;
 
@@ -793,7 +803,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 				case Event.CONSUMER_PRODUCER_PAUSE:
 				{
 					if (this.#producerPaused)
+					{
 						break;
+					}
 
 					const wasPaused = this.#paused || this.#producerPaused;
 
@@ -803,7 +815,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 					// Emit observer event.
 					if (!wasPaused)
+					{
 						this.#observer.safeEmit('pause');
+					}
 
 					break;
 				}
@@ -811,7 +825,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 				case Event.CONSUMER_PRODUCER_RESUME:
 				{
 					if (!this.#producerPaused)
+					{
 						break;
+					}
 
 					const wasPaused = this.#paused || this.#producerPaused;
 
@@ -821,7 +837,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 					// Emit observer event.
 					if (wasPaused && !this.#paused)
+					{
 						this.#observer.safeEmit('resume');
+					}
 
 					break;
 				}

@@ -44,6 +44,7 @@ const eslintConfig =
 		'comma-style'               : 2,
 		'computed-property-spacing' : 2,
 		'constructor-super'         : 2,
+		'curly'                     : [ 2, 'all' ],
 		'func-call-spacing'         : 2,
 		'generator-star-spacing'    : 2,
 		'guard-for-in'              : 2,

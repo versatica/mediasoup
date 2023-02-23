@@ -54,7 +54,9 @@ export async function createWorker(
 	logger.debug('createWorker()');
 
 	if (appData && typeof appData !== 'object')
+	{
 		throw new TypeError('if given, appData must be an object');
+	}
 
 	const worker = new Worker(
 		{

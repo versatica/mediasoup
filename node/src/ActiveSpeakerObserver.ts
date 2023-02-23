@@ -80,7 +80,9 @@ export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEven
 					const producer = this.getProducerById(notification.producerId()!);
 
 					if (!producer)
+					{
 						break;
+					}
 
 					const dominantSpeaker: ActiveSpeakerObserverDominantSpeaker =
 					{

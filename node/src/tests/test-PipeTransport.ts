@@ -838,7 +838,9 @@ test('producer.close() is transmitted to pipe Consumer', async () =>
 	expect(videoProducer.closed).toBe(true);
 
 	if (!videoConsumer.closed)
+	{
 		await new Promise<void>((resolve) => videoConsumer.once('producerclose', resolve));
+	}
 
 	expect(videoConsumer.closed).toBe(true);
 }, 2000);
@@ -919,7 +921,9 @@ test('dataProducer.close() is transmitted to pipe DataConsumer', async () =>
 	expect(dataProducer.closed).toBe(true);
 
 	if (!dataConsumer.closed)
+	{
 		await new Promise<void>((resolve) => dataConsumer.once('dataproducerclose', resolve));
+	}
 
 	expect(dataConsumer.closed).toBe(true);
 }, 2000);
@@ -984,7 +988,9 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 	routerA.observer.on('newtransport', (transport) =>
 	{
 		if (transport.constructor.name !== 'PipeTransport')
+		{
 			return;
+		}
 
 		pipeTransportsA.set(transport.id, transport);
 
@@ -994,7 +1000,9 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 	routerB.observer.on('newtransport', (transport) =>
 	{
 		if (transport.constructor.name !== 'PipeTransport')
+		{
 			return;
+		}
 
 		pipeTransportsB.set(transport.id, transport);
 

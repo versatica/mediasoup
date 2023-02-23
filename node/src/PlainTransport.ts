@@ -218,10 +218,14 @@ export class PlainTransport extends
 	close(): void
 	{
 		if (this.closed)
+		{
 			return;
+		}
 
 		if (this.#data.sctpState)
+		{
 			this.#data.sctpState = 'closed';
+		}
 
 		super.close();
 	}
@@ -235,10 +239,14 @@ export class PlainTransport extends
 	routerClosed(): void
 	{
 		if (this.closed)
+		{
 			return;
+		}
 
 		if (this.#data.sctpState)
+		{
 			this.#data.sctpState = 'closed';
+		}
 
 		super.routerClosed();
 	}
@@ -334,14 +342,20 @@ export class PlainTransport extends
 
 		// Update data.
 		if (data.tuple())
+		{
 			this.#data.tuple = parseTuple(data.tuple()!);
+		}
 
 		if (data.rtcpTuple())
+		{
 			this.#data.rtcpTuple = parseTuple(data.rtcpTuple()!);
+		}
 
 		if (data.srtpParameters())
+		{
 			this.#data.srtpParameters = parseSrtpParameters(
 				data.srtpParameters()!);
+		}
 	}
 
 	private handleWorkerNotifications(): void
