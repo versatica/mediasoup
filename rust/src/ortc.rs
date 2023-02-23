@@ -670,7 +670,9 @@ pub(crate) fn get_consumer_rtp_parameters(
         {
             *codec.rtcp_feedback_mut() = matched_cap_codec.rtcp_feedback().clone();
 
-            codec.rtcp_feedback_mut().retain(|fb| enable_rtx || fb != &RtcpFeedback::Nack);
+            codec
+                .rtcp_feedback_mut()
+                .retain(|fb| enable_rtx || fb != &RtcpFeedback::Nack);
 
             consumer_params.codecs.push(codec);
         }
