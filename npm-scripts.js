@@ -37,7 +37,7 @@ switch (task)
 	// TypeScript to JavaScript.
 	case 'prepare':
 	{
-		flatcNode();
+		flatcNode(/* clean */ true);
 		buildTypescript(/* force */ false);
 
 		break;
@@ -276,7 +276,7 @@ function lintWorker()
 	executeCmd(`${MAKE} lint -C worker`);
 }
 
-function flatcNode()
+function flatcNode(clean = false)
 {
 	console.log('npm-scripts.js [INFO] flatcNode()');
 
@@ -300,7 +300,10 @@ function flatcNode()
 		executeCmd(`for file in ${src}; do ${command} \$\{file\}; done`);
 	}
 
-	cleanWorker();
+	if (clean)
+	{
+		cleanWorker();
+	}
 }
 
 function flatcWorker()
