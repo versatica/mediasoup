@@ -668,8 +668,10 @@ pub(crate) fn get_consumer_rtp_parameters(
             .iter()
             .find(|cap_codec| match_codecs(cap_codec.deref().into(), (&codec).into(), true).is_ok())
         {
+            // TODO: Remove this.
             // *codec.rtcp_feedback_mut() = matched_cap_codec.rtcp_feedback().clone();
 
+            // TODO: This doesn't compile. Fix it.
             *codec.rtcp_feedback_mut() = matched_cap_codec
                 .rtcp_feedback().clone()
                 .retain(|fb| enable_rtx || fb != &RtcpFeedback::Nack);
@@ -745,16 +747,6 @@ pub(crate) fn get_consumer_rtp_parameters(
             codec
                 .rtcp_feedback_mut()
                 .retain(|fb| !matches!(fb, RtcpFeedback::GoogRemb | RtcpFeedback::TransportCc));
-        }
-    }
-
-    // If enable_rtx is false, remove RTCP NACK support. If so, we remove all
-    // RTCP feedbacks with type 'nack' (including those whose parameter is 'pli').
-    if !enable_rtx {
-        for codec in &mut consumer_params.codecs {
-            codec
-                .rtcp_feedback_mut()
-                .retain(|fb| fb != &RtcpFeedback::Nack);
         }
     }
 
