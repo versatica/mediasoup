@@ -668,7 +668,12 @@ pub(crate) fn get_consumer_rtp_parameters(
             .iter()
             .find(|cap_codec| match_codecs(cap_codec.deref().into(), (&codec).into(), true).is_ok())
         {
-            *codec.rtcp_feedback_mut() = matched_cap_codec.rtcp_feedback().clone();
+            // *codec.rtcp_feedback_mut() = matched_cap_codec.rtcp_feedback().clone();
+
+            *codec.rtcp_feedback_mut() = matched_cap_codec
+                .rtcp_feedback().clone()
+                .retain(|fb| enable_rtx || fb != &RtcpFeedback::Nack);
+
             consumer_params.codecs.push(codec);
         }
     }
