@@ -305,7 +305,9 @@ export class PipeTransport
 
 		// Update data.
 		if (data.tuple())
+		{
 			this.#data.tuple = parseTuple(data.tuple()!);
+		}
 	}
 
 	/**
@@ -520,7 +522,9 @@ function createConsumeRequest({
 	ConsumeRequest.addType(builder, FbsTransport.Type.PIPE);
 
 	if (consumableRtpEncodingsOffset)
+	{
 		ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
+	}
 
 	return ConsumeRequest.endConsumeRequest(builder);
 }
@@ -561,11 +565,15 @@ function createConnectRequest(
 		FbsPipeTransport.ConnectRequest.addIp(builder, ipOffset);
 
 		if (typeof port === 'number')
+		{
 			FbsPipeTransport.ConnectRequest.addPort(builder, port);
+		}
 		if (srtpParameters)
+		{
 			FbsPipeTransport.ConnectRequest.addSrtpParameters(
 				builder, srtpParametersOffset
 			);
+		}
 
 		return FbsPipeTransport.ConnectRequest.endConnectRequest(builder);
 	}

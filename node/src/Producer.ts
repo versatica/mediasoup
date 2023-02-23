@@ -486,9 +486,13 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		logger.debug('enableTraceEvent()');
 
 		if (!Array.isArray(types))
+		{
 			throw new TypeError('types must be an array');
+		}
 		if (types.find((type) => typeof type !== 'string'))
+		{
 			throw new TypeError('every type must be a string');
+		}
 
 		/* Build Request. */
 

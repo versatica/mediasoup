@@ -301,7 +301,9 @@ export class Channel extends EnhancedEventEmitter
 		this.#bufferBuilder.clear();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN)
+		{
 			throw new Error('Channel request too big');
+		}
 
 		try
 		{
@@ -323,7 +325,9 @@ export class Channel extends EnhancedEventEmitter
 		handlerId?: string): Promise<Response>
 	{
 		if (this.#closed)
+		{
 			throw new InvalidStateError('Channel closed');
+		}
 
 		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
 

@@ -609,9 +609,13 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		// In absence of 'OS' or 'MIS' it does not throw in Linux.
 		// TODO: Investigate the cause.
 		if (!numSctpStreams.OS)
+		{
 			throw new TypeError('missing OS');
+		}
 		if (!numSctpStreams.MIS)
+		{
 			throw new TypeError('missing MIS');
+		}
 
 		/* Build Request. */
 
@@ -631,7 +635,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		// In absence of 'ip' it does not throw in Linux.
 		// TODO: Investigate the cause.
 		if (!listenIp.ip)
+		{
 			throw new TypeError('missing ip');
+		}
 
 		const plainTransportOptions = new FbsRouter.PlainTransportOptionsT(
 			baseTransportOptions,
@@ -839,9 +845,13 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		logger.debug('createDirectTransport()');
 
 		if (typeof maxMessageSize !== 'number' || maxMessageSize < 0)
+		{
 			throw new TypeError('if given, maxMessageSize must be a positive number');
+		}
 		else if (appData && typeof appData !== 'object')
+		{
 			throw new TypeError('if given, appData must be an object');
+		}
 
 		const transportId = uuidv4();
 
@@ -1252,7 +1262,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		logger.debug('createActiveSpeakerObserver()');
 
 		if (typeof interval !== 'number')
+		{
 			throw new TypeError('if given, interval must be an number');
+		}
 		if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
@@ -1321,11 +1333,17 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		logger.debug('createAudioLevelObserver()');
 
 		if (typeof maxEntries !== 'number' || maxEntries <= 0)
+		{
 			throw new TypeError('if given, maxEntries must be a positive number');
+		}
 		if (typeof threshold !== 'number' || threshold < -127 || threshold > 0)
+		{
 			throw new TypeError('if given, threshole must be a negative number greater than -127');
+		}
 		if (typeof interval !== 'number')
+		{
 			throw new TypeError('if given, interval must be an number');
+		}
 		if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');

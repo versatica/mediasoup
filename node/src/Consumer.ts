@@ -645,9 +645,13 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		logger.debug('setPreferredLayers()');
 
 		if (typeof spatialLayer !== 'number')
+		{
 			throw new TypeError('spatialLayer must be a number');
+		}
 		if (temporalLayer && typeof temporalLayer !== 'number')
+		{
 			throw new TypeError('if given, temporalLayer must be a number');
+		}
 
 		const builder = this.#channel.bufferBuilder;
 
@@ -655,7 +659,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		FbsConsumer.ConsumerLayers.addSpatialLayer(builder, spatialLayer);
 
 		if (temporalLayer !== undefined)
+		{
 			FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayer);
+		}
 
 		const preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
 		const requestOffset =
@@ -701,7 +707,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		logger.debug('setPriority()');
 
 		if (typeof priority !== 'number' || priority < 0)
+		{
 			throw new TypeError('priority must be a positive number');
+		}
 
 		const requestOffset =
 			new FbsConsumer.SetPriorityRequestT(priority).pack(this.#channel.bufferBuilder);
@@ -755,9 +763,13 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		logger.debug('enableTraceEvent()');
 
 		if (!Array.isArray(types))
+		{
 			throw new TypeError('types must be an array');
+		}
 		if (types.find((type) => typeof type !== 'string'))
+		{
 			throw new TypeError('every type must be a string');
+		}
 
 		/* Build Request. */
 
@@ -906,7 +918,9 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 				case Event.CONSUMER_RTP:
 				{
 					if (this.#closed)
+					{
 						break;
+					}
 
 					const notification = new FbsConsumer.RtpNotification();
 

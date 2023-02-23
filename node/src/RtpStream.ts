@@ -41,9 +41,13 @@ export function parseRtpStreamStats(binary: FbsRtpStream.Stats)
 	: RtpStreamRecvStats | RtpStreamSendStats
 {
 	if (binary.dataType() === FbsRtpStream.StatsData.RecvStats)
+	{
 		return parseRtpStreamRecvStats(binary);
+	}
 	else
+	{
 		return parseSendStreamStats(binary);
+	}
 }
 
 export function parseRtpStreamRecvStats(binary: FbsRtpStream.Stats): RtpStreamRecvStats

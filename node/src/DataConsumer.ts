@@ -501,7 +501,9 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 				case Event.DATACONSUMER_MESSAGE:
 				{
 					if (this.#closed)
+					{
 						break;
+					}
 
 					const notification = new FbsDataConsumer.MessageNotification();
 

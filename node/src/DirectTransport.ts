@@ -242,7 +242,9 @@ export class DirectTransport extends
 				case Event.DIRECTTRANSPORT_RTCP:
 				{
 					if (this.closed)
+					{
 						break;
+					}
 
 					const notification = new FbsDirectTransport.RtcpNotification();
 

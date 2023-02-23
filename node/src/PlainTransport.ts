@@ -534,13 +534,19 @@ function createConnectRequest(
 		FbsPlainTransport.ConnectRequest.addIp(builder, ipOffset);
 
 		if (typeof port === 'number')
+		{
 			FbsPlainTransport.ConnectRequest.addPort(builder, port);
+		}
 		if (typeof rtcpPort === 'number')
+		{
 			FbsPlainTransport.ConnectRequest.addRtcpPort(builder, rtcpPort);
+		}
 		if (srtpParameters)
+		{
 			FbsPlainTransport.ConnectRequest.addSrtpParameters(
 				builder, srtpParametersOffset
 			);
+		}
 
 		return FbsPlainTransport.ConnectRequest.endConnectRequest(builder);
 	}

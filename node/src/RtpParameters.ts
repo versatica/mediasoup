@@ -429,7 +429,9 @@ export function serializeRtpParameters(
 	let encodingsOffset: number | undefined;
 
 	if (rtpParameters.encodings)
+	{
 		encodingsOffset = serializeRtpEncodingParameters(builder, rtpParameters.encodings);
+	}
 
 	// RtcpParameters.
 	let rtcpOffset: number | undefined;
@@ -451,13 +453,19 @@ export function serializeRtpParameters(
 	FbsRtpParameters.addCodecs(builder, codecsOffset);
 
 	if (headerExtensions.length > 0)
+	{
 		FbsRtpParameters.addHeaderExtensions(builder, headerExtensionsOffset);
+	}
 
 	if (encodingsOffset)
+	{
 		FbsRtpParameters.addEncodings(builder, encodingsOffset);
+	}
 
 	if (rtcpOffset)
+	{
 		FbsRtpParameters.addRtcp(builder, rtcpOffset);
+	}
 
 	return FbsRtpParameters.endRtpParameters(builder);
 }
@@ -477,43 +485,59 @@ export function serializeRtpEncodingParameters(
 		let rtxOffset: number | undefined;
 
 		if (encoding.rtx)
+		{
 			rtxOffset = FbsRtx.createRtx(builder, encoding.rtx.ssrc);
+		}
 
 		// Prepare scalability mode.
 		let scalabilityModeOffset: number | undefined;
 
 		if (encoding.scalabilityMode)
+		{
 			scalabilityModeOffset = builder.createString(encoding.scalabilityMode);
+		}
 
 		// Start serialization.
 		FbsRtpEncodingParameters.startRtpEncodingParameters(builder);
 
 		// Add SSRC.
 		if (encoding.ssrc)
+		{
 			FbsRtpEncodingParameters.addSsrc(builder, encoding.ssrc);
+		}
 
 		// Add Rid.
 		FbsRtpEncodingParameters.addRid(builder, ridOffset);
 
 		// Add payload type.
 		if (encoding.codecPayloadType)
+		{
 			FbsRtpEncodingParameters.addCodecPayloadType(builder, encoding.codecPayloadType);
+		}
 
 		// Add RTX.
 		if (rtxOffset)
+		{
 			FbsRtpEncodingParameters.addRtx(builder, rtxOffset);
+		}
 
 		// Add DTX.
 		if (encoding.dtx !== undefined)
+		{
 			FbsRtpEncodingParameters.addDtx(builder, encoding.dtx);
+		}
 
 		// Add scalability ode.
 		if (scalabilityModeOffset)
+		{
 			FbsRtpEncodingParameters.addScalabilityMode(builder, scalabilityModeOffset);
+		}
 
 		// Add max bitrate.
 		if (encoding.maxBitrate !== undefined)
+		{
 			FbsRtpEncodingParameters.addMaxBitrate(builder, encoding.maxBitrate);
+		}
 
 		// End serialization.
 		encodings.push(FbsRtpEncodingParameters.endRtpEncodingParameters(builder));

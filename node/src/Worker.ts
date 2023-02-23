@@ -683,7 +683,9 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			// In absence of 'ip' it does not throw in Linux.
 			// TODO: Investigate the cause.
 			if (!listenInfo.ip)
+			{
 				throw new TypeError('missing ip');
+			}
 
 			fbsListenInfos.push(new FbsWebRtcServer.ListenInfoT(
 				listenInfo.protocol === 'udp' ? FbsTransportProtocol.UDP : FbsTransportProtocol.TCP,

@@ -46,9 +46,13 @@ export function serializeSrtpParameters(
 	// In absence of 'keyBase64' it does not throw in Linux.
 	// TODO: Investigate the cause.
 	if (!srtpParameters.cryptoSuite)
+	{
 		throw new TypeError('missing cryptoSuite');
+	}
 	if (!srtpParameters.keyBase64)
+	{
 		throw new TypeError('missing keyBase64');
+	}
 
 	return FbsTransport.SrtpParameters.createSrtpParameters(
 		builder, cryptoSuiteOffset, keyBase64Offset

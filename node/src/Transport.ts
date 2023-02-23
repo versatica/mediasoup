@@ -1121,9 +1121,13 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		logger.debug('enableTraceEvent()');
 
 		if (!Array.isArray(types))
+		{
 			throw new TypeError('types must be an array');
+		}
 		if (types.find((type) => typeof type !== 'string'))
+		{
 			throw new TypeError('every type must be a string');
+		}
 
 		/* Build Request. */
 
@@ -1417,12 +1421,16 @@ function createConsumeRequest({
 	);
 
 	if (consumableRtpEncodingsOffset)
+	{
 		ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
+	}
 
 	ConsumeRequest.addPaused(builder, paused);
 
 	if (preferredLayersOffset)
+	{
 		ConsumeRequest.addPreferredLayers(builder, preferredLayersOffset);
+	}
 
 	ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
 
