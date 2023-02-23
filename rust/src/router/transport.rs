@@ -523,15 +523,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             }
         };
 
-        let computed_enable_nack: bool;
-
-        if let Some(flag) = enable_rtx {
-            computed_enable_nack = flag;
-        } else if producer.kind() == MediaKind::Video {
-            computed_enable_nack = true;
-        } else {
-            computed_enable_nack = false;
-        }
+        let enable_rtx = enable_rtx.unwrap_or(producer.kind() == MediaKind::Video);
 
         let rtp_parameters = if transport_type == TransportType::Pipe {
             ortc::get_pipe_consumer_rtp_parameters(producer.consumable_rtp_parameters(), rtx)
@@ -540,7 +532,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                 producer.consumable_rtp_parameters(),
                 &rtp_capabilities,
                 pipe,
-                computed_enable_nack,
+                enable_rtx,
             )
             .map_err(ConsumeError::BadConsumerRtpParameters)?;
 
