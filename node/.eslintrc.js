@@ -6,8 +6,8 @@ const eslintConfig =
 {
 	env :
 	{
-		es2020 : true, // <- activate “es2020” globals (ie: BigInt).
-		node   : true
+		es6  : true,
+		node : true
 	},
 	plugins       : [],
 	settings      : {},
