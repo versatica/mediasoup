@@ -1146,15 +1146,15 @@ export function getConsumerRtpParameters(
 
 	for (const codec of consumableCodecs)
 	{
-		const matchedCapCodec = remoteRtpCapabilities.codecs!
-			.find((capCodec) => matchCodecs(capCodec, codec, { strict: true }));
-
-		if (!matchedCapCodec)
+		if (!enableRtx && isRtxCodec(codec))
 		{
 			continue;
 		}
 
-		if (!enableRtx && isRtxCodec(codec))
+		const matchedCapCodec = remoteRtpCapabilities.codecs!
+			.find((capCodec) => matchCodecs(capCodec, codec, { strict: true }));
+
+		if (!matchedCapCodec)
 		{
 			continue;
 		}

@@ -659,6 +659,10 @@ pub(crate) fn get_consumer_rtp_parameters(
     let mut rtx_supported = false;
 
     for mut codec in consumable_rtp_parameters.codecs.clone() {
+        if !enable_rtx && codec.is_rtx() {
+            continue;
+        }
+
         if let Some(matched_cap_codec) = remote_rtp_capabilities
             .codecs
             .iter()

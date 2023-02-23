@@ -499,7 +499,7 @@ test('transport.consume() succeeds', async () =>
 			});
 }, 2000);
 
-test('transport.consume() setting enableRtx succeeds', async () =>
+test('transport.consume() with enableRtx succeeds', async () =>
 {
 	const audioConsumer2 = await transport2.consume(
 		{
