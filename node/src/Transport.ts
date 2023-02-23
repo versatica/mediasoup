@@ -694,14 +694,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		// If enableRtx is not given, set it to true if video and false if audio.
 		if (enableRtx === undefined)
 		{
-			if (producer.kind === 'video')
-			{
-				enableRtx = true;
-			}
-			else
-			{
-				enableRtx = false;
-			}
+			enableRtx = producer.kind === 'video';
 		}
 
 		// This may throw.
