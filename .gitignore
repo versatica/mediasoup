@@ -11,7 +11,6 @@
 /Cargo.lock
 /rust/examples-frontend/*/node_modules
 /rust/examples-frontend/*/package-lock.json
-/rust/src/fbs
 /target
 
 ## Worker.
