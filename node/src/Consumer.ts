@@ -51,8 +51,9 @@ export type ConsumerOptions =
 	preferredLayers?: ConsumerLayers;
 
 	/**
-	 * Whether this Consumer should enable RTP retransmissions upon receipt of
-	 * RTCP NACK from the remote Consumer. If not set, it's by default true for
+	 * Whether this Consumer should enable RTP retransmissions, storing sent RTP
+	 * and processing the incoming RTCP NACK from the remote Consumer. 
+	 ....
 	 * video codecs and false for audio codecs. If set to true, NACK will be
 	 * enabled if both endpoints (mediasoup and the remote Consumer) support NACK
 	 * for this codec. When it comes to audio codecs, just OPUS supports NACK.
