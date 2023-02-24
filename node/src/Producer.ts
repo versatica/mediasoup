@@ -632,7 +632,7 @@ function parseProducerScore(
 ): ProducerScore
 {
 	return {
-		ssrc  : binary.score(),
+		ssrc  : binary.ssrc(),
 		rid   : binary.rid() ?? undefined,
 		score : binary.score()
 	};

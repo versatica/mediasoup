@@ -1,6 +1,10 @@
 // @ts-ignore
 import * as pickPort from 'pick-port';
+import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
+import { Notification, Body as NotificationBody, Event } from '../fbs/notification_generated';
+import * as FbsTransport from '../fbs/transport_generated';
+import * as FbsWebRtcTransport from '../fbs/webRtcTransport_generated';
 
 const { createWorker } = mediasoup;
 
@@ -416,7 +420,6 @@ test('transport.enableTraceEvent() with wrong arguments rejects with TypeError',
 		.toThrow(TypeError);
 }, 2000);
 
-/* TODO: What's the reationale for testing this is WebRtcTransport?.
 test('WebRtcTransport events succeed', async () =>
 {
 	// Private API.
@@ -425,11 +428,31 @@ test('WebRtcTransport events succeed', async () =>
 
 	transport.on('icestatechange', onIceStateChange);
 
-	channel.emit(transport.id, 'icestatechange', { iceState: 'completed' });
+	// Simulate a 'iceselectedtuplechange' notification coming through the channel.
+	const builder = new flatbuffers.Builder();
+	const iceStateChangeNotification = new FbsWebRtcTransport.IceStateChangeNotificationT(
+		FbsWebRtcTransport.IceState.COMPLETED);
+
+	let notificationOffset = Notification.createNotification(
+		builder,
+		builder.createString(transport.id),
+		Event.WEBRTCTRANSPORT_ICE_STATE_CHANGE,
+		NotificationBody.FBS_WebRtcTransport_IceStateChangeNotification,
+		iceStateChangeNotification.pack(builder)
+	);
+
+	builder.finish(notificationOffset);
+
+	let notification = Notification.getRootAsNotification(
+		new flatbuffers.ByteBuffer(builder.asUint8Array()));
+
+	channel.emit(transport.id, Event.WEBRTCTRANSPORT_ICE_STATE_CHANGE, notification);
 
 	expect(onIceStateChange).toHaveBeenCalledTimes(1);
 	expect(onIceStateChange).toHaveBeenCalledWith('completed');
 	expect(transport.iceState).toBe('completed');
+
+	builder.clear();
 
 	const onIceSelectedTuple = jest.fn();
 	const iceSelectedTuple =
@@ -442,30 +465,67 @@ test('WebRtcTransport events succeed', async () =>
 	};
 
 	transport.on('iceselectedtuplechange', onIceSelectedTuple);
-	channel.emit(transport.id, 'iceselectedtuplechange', { iceSelectedTuple });
+
+	// Simulate a 'icestatechange' notification coming through the channel.
+	const iceSelectedTupleChangeNotification =
+		new FbsWebRtcTransport.IceSelectedTupleChangeNotificationT(
+			new FbsTransport.TupleT(
+				iceSelectedTuple.localIp,
+				iceSelectedTuple.localPort,
+				iceSelectedTuple.remoteIp,
+				iceSelectedTuple.remotePort,
+				iceSelectedTuple.protocol)
+		);
+
+	notificationOffset = Notification.createNotification(
+		builder,
+		builder.createString(transport.id),
+		Event.WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
+		NotificationBody.FBS_WebRtcTransport_IceSelectedTupleChangeNotification,
+		iceSelectedTupleChangeNotification.pack(builder)
+	);
+
+	builder.finish(notificationOffset);
+
+	notification = Notification.getRootAsNotification(
+		new flatbuffers.ByteBuffer(builder.asUint8Array()));
+
+	channel.emit(
+		transport.id, Event.WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE, notification);
 
 	expect(onIceSelectedTuple).toHaveBeenCalledTimes(1);
 	expect(onIceSelectedTuple).toHaveBeenCalledWith(iceSelectedTuple);
 	expect(transport.iceSelectedTuple).toEqual(iceSelectedTuple);
 
+	builder.clear();
+
 	const onDtlsStateChange = jest.fn();
 
 	transport.on('dtlsstatechange', onDtlsStateChange);
-	channel.emit(transport.id, 'dtlsstatechange', { dtlsState: 'connecting' });
+
+	// Simulate a 'dtlsstatechange' notification coming through the channel.
+	const dtlsStateChangeNotification = new FbsWebRtcTransport.DtlsStateChangeNotificationT(
+		FbsWebRtcTransport.DtlsState.CONNECTING);
+
+	notificationOffset = Notification.createNotification(
+		builder,
+		builder.createString(transport.id),
+		Event.WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
+		NotificationBody.FBS_WebRtcTransport_DtlsStateChangeNotification,
+		dtlsStateChangeNotification.pack(builder)
+	);
+
+	builder.finish(notificationOffset);
+
+	notification = Notification.getRootAsNotification(
+		new flatbuffers.ByteBuffer(builder.asUint8Array()));
+
+	channel.emit(transport.id, Event.WEBRTCTRANSPORT_DTLS_STATE_CHANGE, notification);
 
 	expect(onDtlsStateChange).toHaveBeenCalledTimes(1);
 	expect(onDtlsStateChange).toHaveBeenCalledWith('connecting');
 	expect(transport.dtlsState).toBe('connecting');
-
-	channel.emit(
-		transport.id, 'dtlsstatechange', { dtlsState: 'connected', dtlsRemoteCert: 'ABCD' });
-
-	expect(onDtlsStateChange).toHaveBeenCalledTimes(2);
-	expect(onDtlsStateChange).toHaveBeenCalledWith('connected');
-	expect(transport.dtlsState).toBe('connected');
-	expect(transport.dtlsRemoteCert).toBe('ABCD');
 }, 2000);
-*/
 
 test('WebRtcTransport methods reject if closed', async () =>
 {

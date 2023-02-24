@@ -1,5 +1,8 @@
+import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { UnsupportedError } from '../errors';
+import { Notification, Body as NotificationBody, Event } from '../fbs/notification_generated';
+import * as FbsProducer from '../fbs/producer_generated';
 
 const { createWorker } = mediasoup;
 
@@ -685,7 +688,6 @@ test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', 
 		.toThrow(TypeError);
 }, 2000);
 
-/* TODO: Test incoming notifications.
 test('Producer emits "score"', async () =>
 {
 	// Private API.
@@ -694,20 +696,33 @@ test('Producer emits "score"', async () =>
 
 	videoProducer.on('score', onScore);
 
-	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 10 } ]);
-	channel.emit(videoProducer.id, 'score', [
-		{ ssrc: 11, score: 9 },
-		{ ssrc: 22, score: 8 }
+	// Simulate a 'score' notification coming through the channel.
+	const builder = new flatbuffers.Builder();
+	const producerScoreNotification = new FbsProducer.ScoreNotificationT([
+		new FbsProducer.ScoreT(/* ssrc */ 11, /* rid */ undefined, /* score */ 10),
+		new FbsProducer.ScoreT(/* ssrc */ 22, /* rid */ undefined, /* score */ 9)
 	]);
-	channel.emit(videoProducer.id, 'score', [
-		{ ssrc: 11, score: 9 },
-		{ ssrc: 22, score: 9 }
-	]);
+	const notificationOffset = Notification.createNotification(
+		builder,
+		builder.createString(videoProducer.id),
+		Event.PRODUCER_SCORE,
+		NotificationBody.FBS_Producer_ScoreNotification,
+		producerScoreNotification.pack(builder)
+	);
+
+	builder.finish(notificationOffset);
+
+	const notification = Notification.getRootAsNotification(
+		new flatbuffers.ByteBuffer(builder.asUint8Array()));
+
+	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
+	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
+	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
 
 	expect(onScore).toHaveBeenCalledTimes(3);
-	expect(videoProducer.score).toEqual([ { ssrc: 11, score: 9 }, { ssrc: 22, score: 9 } ]);
+	expect(videoProducer.score).toEqual(
+		[ { ssrc: 11, score: 10 }, { ssrc: 22, score: 9 } ]);
 }, 2000);
-*/
 
 test('producer.close() succeeds', async () =>
 {

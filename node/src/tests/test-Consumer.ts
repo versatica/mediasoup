@@ -1,5 +1,8 @@
+import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { UnsupportedError } from '../errors';
+import { Notification, Body as NotificationBody, Event } from '../fbs/notification_generated';
+import * as FbsConsumer from '../fbs/consumer_generated';
 
 const { createWorker } = mediasoup;
 
@@ -930,7 +933,6 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 	expect(audioConsumer.producerPaused).toBe(false);
 }, 2000);
 
-/* TODO: Test the internal notification event handler.
 test('Consumer emits "score"', async () =>
 {
 	// Private API.
@@ -939,14 +941,31 @@ test('Consumer emits "score"', async () =>
 
 	audioConsumer.on('score', onScore);
 
-	channel.emit(audioConsumer.id, 'score', { producer: 10, consumer: 9 });
-	channel.emit(audioConsumer.id, 'score', { producer: 9, consumer: 9 });
-	channel.emit(audioConsumer.id, 'score', { producer: 8, consumer: 8 });
+	// Simulate a 'score' notification coming through the channel.
+	const builder = new flatbuffers.Builder();
+	const consumerScore = new FbsConsumer.ConsumerScoreT(9, 10, [ 8 ]);
+	const consumerScoreNotification = new FbsConsumer.ScoreNotificationT(consumerScore);
+	const notificationOffset = Notification.createNotification(
+		builder,
+		builder.createString(audioConsumer.id),
+		Event.CONSUMER_SCORE,
+		NotificationBody.FBS_Consumer_ScoreNotification,
+		consumerScoreNotification.pack(builder)
+	);
+
+	builder.finish(notificationOffset);
+
+	const notification = Notification.getRootAsNotification(
+		new flatbuffers.ByteBuffer(builder.asUint8Array()));
+
+	channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
+	channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
+	channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
 
 	expect(onScore).toHaveBeenCalledTimes(3);
-	expect(audioConsumer.score).toEqual({ producer: 8, consumer: 8 });
+	expect(audioConsumer.score).toEqual(
+		{ score: 9, producerScore: 10, producerScores: [ 8 ] });
 }, 2000);
-*/
 
 test('consumer.close() succeeds', async () =>
 {
