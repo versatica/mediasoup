@@ -4,6 +4,7 @@
 #include "RTC/RtpStreamSend.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include "RTC/SeqManager.hpp"
 
 namespace RTC
@@ -19,10 +20,9 @@ namespace RTC
 
 	/* Class Static. */
 
-	// Minimum retransmission buffer size (ms).
 	const uint32_t RtpStreamSend::MinRetransmissionDelayMs{ 200u };
-	// Maximum retransmission buffer size (ms).
-	const uint32_t RtpStreamSend::MaxRetransmissionDelayMs{ 2000u };
+	const uint32_t RtpStreamSend::MaxRetransmissionDelayForVideoMs{ 2000u };
+	const uint32_t RtpStreamSend::MaxRetransmissionDelayForAudioMs{ 1000u };
 
 	void RtpStreamSend::StorageItem::Reset()
 	{
@@ -168,10 +168,33 @@ namespace RTC
 
 	RtpStreamSend::RtpStreamSend(
 	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, std::string& mid)
-	  : RTC::RtpStream::RtpStream(listener, params, 10), mid(mid),
-	    retransmissionBufferSize(RtpStreamSend::MaxRetransmissionDelayMs)
+	  : RTC::RtpStream::RtpStream(listener, params, 10), mid(mid)
 	{
 		MS_TRACE();
+
+		switch (params.mimeType.type)
+		{
+			case RTC::RtpCodecMimeType::Type::VIDEO:
+			{
+				this->maxRetransmissionDelayMs = RtpStreamSend::MaxRetransmissionDelayForVideoMs;
+				this->retransmissionBufferSize = RtpStreamSend::MaxRetransmissionDelayForVideoMs;
+
+				break;
+			}
+
+			case RTC::RtpCodecMimeType::Type::AUDIO:
+			{
+				this->maxRetransmissionDelayMs = RtpStreamSend::MaxRetransmissionDelayForAudioMs;
+				this->retransmissionBufferSize = RtpStreamSend::MaxRetransmissionDelayForAudioMs;
+
+				break;
+			}
+
+			case RTC::RtpCodecMimeType::Type::UNSET:
+			{
+				MS_ABORT("codec mimeType not set");
+			}
+		}
 	}
 
 	RtpStreamSend::~RtpStreamSend()
@@ -329,13 +352,13 @@ namespace RTC
 			this->hasRtt = true;
 		}
 
-		// Smoothly change retransmission buffer size towards RTT + 100ms, but not more than
-		// MaxRetransmissionDelayMs.
+		// Smoothly change retransmission buffer size towards RTT + 100ms, but not
+		// more than this->maxRetransmissionDelayMs.
 		auto newRetransmissionBufferSize = static_cast<uint32_t>(this->rtt + 100.0);
 		auto avgRetransmissionBufferSize =
 		  (this->retransmissionBufferSize * 7 + newRetransmissionBufferSize) / 8;
 		this->retransmissionBufferSize = std::max(
-		  std::min(avgRetransmissionBufferSize, RtpStreamSend::MaxRetransmissionDelayMs),
+		  std::min(avgRetransmissionBufferSize, this->maxRetransmissionDelayMs),
 		  RtpStreamSend::MinRetransmissionDelayMs);
 
 		this->packetsLost  = report->GetTotalLost();
@@ -543,7 +566,7 @@ namespace RTC
 		const auto bufferSize = this->storageItemBuffer.GetBufferSize();
 
 		// Go through all buffer items starting with the first and free all storage
-		// items that contain packets older than MaxRetransmissionDelayMs.
+		// items that contain packets older than this->maxRetransmissionDelayMs.
 		for (size_t i{ 0 }; i < bufferSize && this->storageItemBuffer.GetBufferSize() != 0; ++i)
 		{
 			auto* storageItem = this->storageItemBuffer.GetFirst();
@@ -645,8 +668,8 @@ namespace RTC
 				{
 					// Do nothing.
 				}
-				// Don't resend the packet if older than MaxRetransmissionDelayMs ms.
-				else if (diffMs > MaxRetransmissionDelayMs)
+				// Don't resend the packet if older than this->maxRetransmissionDelayMs ms.
+				else if (diffMs > this->maxRetransmissionDelayMs)
 				{
 					if (!tooOldPacketFound)
 					{
@@ -655,7 +678,7 @@ namespace RTC
 						  "ignoring retransmission for too old packet "
 						  "[seq:%" PRIu16 ", max age:%" PRIu32 "ms, packet age:%" PRIu32 "ms]",
 						  packet->GetSequenceNumber(),
-						  MaxRetransmissionDelayMs,
+						  this->maxRetransmissionDelayMs,
 						  diffMs);
 
 						tooOldPacketFound = true;

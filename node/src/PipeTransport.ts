@@ -307,7 +307,11 @@ export class PipeTransport
 
 		// This may throw.
 		const rtpParameters = ortc.getPipeConsumerRtpParameters(
-			producer.consumableRtpParameters, this.#data.rtx);
+			{
+				consumableRtpParameters : producer.consumableRtpParameters,
+				enableRtx               : this.#data.rtx
+			}
+		);
 
 		const reqData =
 		{
