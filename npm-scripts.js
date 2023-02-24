@@ -264,7 +264,6 @@ function buildWorker()
 	executeCmd(`${MAKE} -C worker`);
 }
 
-// TMP: Do not clean subproject while troubleshooting flatbuffers on Windows.
 function cleanWorker()
 {
 	console.log('npm-scripts.js [INFO] cleanWorker()');
@@ -278,7 +277,10 @@ function cleanWorker()
 
 	if (isWindows)
 	{
-		executeCmd('rd /s /q worker\\out\\msys');
+		if (fs.existsSync('worker/out/msys'))
+		{
+			executeCmd('rd /s /q worker\\out\\msys');
+		}
 	}
 }
 
