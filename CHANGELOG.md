@@ -3,6 +3,7 @@
 
 ### Next
 
+* Add support for RTCP NACK in OPUS ([PR #1015](https://github.com/versatica/mediasoup/pull/1015)).
 * Update NPM deps.
 
 
