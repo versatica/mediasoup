@@ -77,11 +77,11 @@ pub struct ConsumerOptions {
     /// Preferred spatial and temporal layer for simulcast or SVC media sources.
     /// If `None`, the highest ones are selected.
     pub preferred_layers: Option<ConsumerLayers>,
-    /// Whether this Consumer should enable RTP retransmissions upon receipt of RTCP NACK
-    /// from the remote Consumer. If not set, it's by default true for video codecs and false
-    /// for audio codecs. If set to true, NACK will be enabled if both endpoints (mediasoup
-    /// and the remote Consumer) support NACK for this codec. When it comes to audio codecs,
-    /// just OPUS supports NACK.
+    /// Whether this Consumer should enable RTP retransmissions, storing sent RTP and processing the
+    /// incoming RTCP NACK from the remote Consumer. If not set it's true by default for video codecs
+    /// and false for audio codecs. If set to true, NACK will be enabled if both endpoints (mediasoup
+    /// and the remote Consumer) support NACK for this codec. When it comes to audio codecs, just
+    ///  OPUS supports NACK.
     pub enable_rtx: Option<bool>,
     /// Whether this Consumer should ignore DTX packets (only valid for Opus codec).
     /// If set, DTX packets are not forwarded to the remote Consumer.
