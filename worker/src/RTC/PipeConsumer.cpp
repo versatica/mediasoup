@@ -64,15 +64,14 @@ namespace RTC
 		auto base = RTC::Consumer::FillBuffer(builder);
 
 		// Add rtpStreams.
-		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams;
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams(this->rtpStreams.size());
 
 		for (const auto* rtpStream : this->rtpStreams)
 		{
 			rtpStreams.emplace_back(rtpStream->FillBuffer(builder));
 		}
 
-		auto pipeConsumerDump =
-		  FBS::Consumer::CreatePipeConsumerDumpDirect(builder, base, &rtpStreams);
+		auto pipeConsumerDump = FBS::Consumer::CreatePipeConsumerDumpDirect(builder, base, &rtpStreams);
 
 		return FBS::Consumer::CreateDumpResponse(
 		  builder,
@@ -86,7 +85,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::vector<flatbuffers::Offset<FBS::RtpStream::Stats>> rtpStreams;
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Stats>> rtpStreams(this->rtpStreams.size());
 
 		// Add stats of our send streams.
 		for (auto* rtpStream : this->rtpStreams)

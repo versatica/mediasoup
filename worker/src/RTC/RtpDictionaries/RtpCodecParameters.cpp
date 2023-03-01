@@ -56,7 +56,8 @@ namespace RTC
 
 		auto parameters = this->parameters.FillBuffer(builder);
 
-		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtcpFeedback>> rtcpFeedback;
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtcpFeedback>> rtcpFeedback(
+		  this->rtcpFeedback.size());
 
 		for (const auto& fb : this->rtcpFeedback)
 		{

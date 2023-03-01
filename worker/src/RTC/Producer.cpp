@@ -261,7 +261,8 @@ namespace RTC
 		}
 
 		// Add rtpMapping.encodings.
-		std::vector<flatbuffers::Offset<FBS::RtpParameters::EncodingMapping>> encodings;
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::EncodingMapping>> encodings(
+		  this->rtpMapping.encodings.size());
 
 		for (const auto& encodingMapping : this->rtpMapping.encodings)
 		{

@@ -146,7 +146,8 @@ namespace RTC
 		auto rtpParameters = this->rtpParameters.FillBuffer(builder);
 
 		// Add consumableRtpEncodings.
-		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> consumableRtpEncodings;
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> consumableRtpEncodings(
+		  this->consumableRtpEncodings.size());
 
 		for (const auto& encoding : this->consumableRtpEncodings)
 		{
