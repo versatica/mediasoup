@@ -707,7 +707,8 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		}
 
 		const requestOffset =
-			new FbsConsumer.SetPriorityRequestT(priority).pack(this.#channel.bufferBuilder);
+			FbsConsumer.SetPriorityRequest.createSetPriorityRequest(
+				this.#channel.bufferBuilder, priority);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.CONSUMER_SET_PRIORITY,
