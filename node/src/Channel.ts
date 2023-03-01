@@ -287,6 +287,7 @@ export class Channel extends EnhancedEventEmitter
 			notificationOffset
 		);
 
+		// Finalizes the buffer and adds a 4 byte prefix with the size of the buffer.
 		this.#bufferBuilder.finishSizePrefixed(messageOffset);
 
 		// Create a new buffer with this data so multiple contiguous flatbuffers
@@ -351,6 +352,7 @@ export class Channel extends EnhancedEventEmitter
 			requestOffset
 		);
 
+		// Finalizes the buffer and adds a 4 byte prefix with the size of the buffer.
 		this.#bufferBuilder.finishSizePrefixed(messageOffset);
 
 		// Create a new buffer with this data so multiple contiguous flatbuffers
