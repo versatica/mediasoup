@@ -70,11 +70,11 @@ namespace RTC
 		MS_TRACE();
 
 		// Call the parent method.
-		auto baseDump = RTC::Consumer::FillBuffer(builder);
+		auto base = RTC::Consumer::FillBuffer(builder);
 		// Add rtpStream.
 		auto rtpStream = this->rtpStream->FillBuffer(builder);
 
-		auto simpleConsumerDump = FBS::Consumer::CreateSimpleConsumerDump(builder, baseDump, rtpStream);
+		auto simpleConsumerDump = FBS::Consumer::CreateSimpleConsumerDump(builder, base, rtpStream);
 
 		return FBS::Consumer::CreateDumpResponse(
 		  builder,

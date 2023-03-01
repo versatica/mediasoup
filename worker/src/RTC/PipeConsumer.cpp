@@ -61,7 +61,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Call the parent method.
-		auto baseDump = RTC::Consumer::FillBuffer(builder);
+		auto base = RTC::Consumer::FillBuffer(builder);
 
 		// Add rtpStreams.
 		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams;
@@ -72,7 +72,7 @@ namespace RTC
 		}
 
 		auto pipeConsumerDump =
-		  FBS::Consumer::CreatePipeConsumerDumpDirect(builder, baseDump, &rtpStreams);
+		  FBS::Consumer::CreatePipeConsumerDumpDirect(builder, base, &rtpStreams);
 
 		return FBS::Consumer::CreateDumpResponse(
 		  builder,
