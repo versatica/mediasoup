@@ -655,15 +655,10 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 
 		const builder = this.#channel.bufferBuilder;
 
-		FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
-		FbsConsumer.ConsumerLayers.addSpatialLayer(builder, spatialLayer);
-
-		if (temporalLayer !== undefined)
-		{
-			FbsConsumer.ConsumerLayers.addTemporalLayer(builder, temporalLayer);
-		}
-
-		const preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
+		const preferredLayersOffset = FbsConsumer.ConsumerLayers.createConsumerLayers(
+			builder,
+			spatialLayer,
+			temporalLayer !== undefined ? temporalLayer : null);
 		const requestOffset =
 			FbsConsumer.SetPreferredLayersRequest.createSetPreferredLayersRequest(
 				builder, preferredLayersOffset);
