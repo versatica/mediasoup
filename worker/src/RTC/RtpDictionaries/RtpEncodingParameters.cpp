@@ -49,7 +49,7 @@ namespace RTC
 		if (flatbuffers::IsFieldPresent(
 		      data, FBS::RtpParameters::RtpEncodingParameters::VT_SCALABILITYMODE))
 		{
-			std::string scalabilityMode = data->scalabilityMode()->str();
+			const std::string scalabilityMode = data->scalabilityMode()->str();
 
 			static const std::regex ScalabilityModeRegex(
 			  "^[LS]([1-9]\\d{0,1})T([1-9]\\d{0,1})(_KEY)?.*", std::regex_constants::ECMAScript);

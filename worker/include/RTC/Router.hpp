@@ -80,7 +80,7 @@ namespace RTC
 		  uint32_t mappedSsrc,
 		  uint8_t& worstRemoteFractionLost) override;
 		void OnTransportNewConsumer(
-		  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) override;
+		  RTC::Transport* transport, RTC::Consumer* consumer, const std::string& producerId) override;
 		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerProducerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerKeyFrameRequested(

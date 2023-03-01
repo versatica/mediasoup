@@ -217,7 +217,7 @@ namespace RTC
 					len  = body->data_as_Binary()->value()->size();
 				}
 
-				int ppid = body->ppid();
+				const int ppid = body->ppid();
 
 				if (len > this->maxMessageSize)
 				{
@@ -233,8 +233,7 @@ namespace RTC
 					  if (queued)
 						  request->Accept();
 					  else
-						  request->Error(
-						    sctpSendBufferFull ? "sctpsendbufferfull" : "message send failed");
+						  request->Error(sctpSendBufferFull ? "sctpsendbufferfull" : "message send failed");
 				  });
 
 				SendMessage(ppid, data, len, cb);

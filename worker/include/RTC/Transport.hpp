@@ -83,7 +83,7 @@ namespace RTC
 			  uint32_t mappedSsrc,
 			  uint8_t& worstRemoteFractionLost) = 0;
 			virtual void OnTransportNewConsumer(
-			  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) = 0;
+			  RTC::Transport* transport, RTC::Consumer* consumer, const std::string& producerId) = 0;
 			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
 			virtual void OnTransportConsumerProducerClosed(
 			  RTC::Transport* transport, RTC::Consumer* consumer) = 0;

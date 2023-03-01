@@ -94,7 +94,7 @@ namespace RTC
 					if (options->preferTcp())
 						iceLocalPreference += 1000;
 
-					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
+					const uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 					// This may throw.
 					RTC::TcpServer* tcpServer;

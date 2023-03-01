@@ -489,8 +489,7 @@ namespace RTC
 			case Channel::ChannelRequest::Method::TRANSPORT_SET_MAX_OUTGOING_BITRATE:
 			{
 				const auto* body = request->data->body_as<FBS::Transport::SetMaxOutgoingBitrateRequest>();
-
-				uint32_t bitrate = body->maxOutgoingBitrate();
+				const uint32_t bitrate = body->maxOutgoingBitrate();
 
 				if (bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
 				{
@@ -679,10 +678,9 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::TRANSPORT_CONSUME:
 			{
-				const auto* body = request->data->body_as<FBS::Transport::ConsumeRequest>();
-
-				std::string producerId = body->producerId()->str();
-				std::string consumerId = body->consumerId()->str();
+				const auto* body             = request->data->body_as<FBS::Transport::ConsumeRequest>();
+				const std::string producerId = body->producerId()->str();
+				const std::string consumerId = body->consumerId()->str();
 
 				if (this->mapConsumers.find(consumerId) != this->mapConsumers.end())
 					MS_THROW_ERROR("a Consumer with same consumerId already exists");
@@ -767,7 +765,7 @@ namespace RTC
 
 				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
 				{
-					flatbuffers::Optional<int16_t> preferredTemporalLayer{ preferredLayers.temporal };
+					const flatbuffers::Optional<int16_t> preferredTemporalLayer{ preferredLayers.temporal };
 					preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
 					  request->GetBufferBuilder(), preferredLayers.spatial, preferredTemporalLayer);
 				}

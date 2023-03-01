@@ -682,7 +682,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportNewConsumer(
-	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, std::string& producerId)
+	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, const std::string& producerId)
 	{
 		MS_TRACE();
 
