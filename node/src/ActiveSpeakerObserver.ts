@@ -74,11 +74,6 @@ export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEven
 
 					data!.body(notification);
 
-					if (!notification.producerId())
-					{
-						break;
-					}
-
 					const producer = this.getProducerById(notification.producerId()!);
 
 					if (!producer)

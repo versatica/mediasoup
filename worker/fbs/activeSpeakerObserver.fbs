@@ -7,5 +7,5 @@ table ActiveSpeakerObserverOptions {
 // Notifications from Worker.
 
 table DominantSpeakerNotification {
-  producer_id:string;
+  producer_id:string (required);
 }
