@@ -234,7 +234,7 @@ namespace RTC
 						  request->Accept();
 					  else
 						  request->Error(
-						    sctpSendBufferFull == true ? "sctpsendbufferfull" : "message send failed");
+						    sctpSendBufferFull ? "sctpsendbufferfull" : "message send failed");
 				  });
 
 				SendMessage(ppid, data, len, cb);

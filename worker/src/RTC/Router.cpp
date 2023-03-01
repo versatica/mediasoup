@@ -433,8 +433,6 @@ namespace RTC
 				MS_THROW_ERROR("unknown method '%s'", Channel::ChannelRequest::method2String[request->method]);
 			}
 		}
-
-		return;
 	}
 
 	void Router::CheckNoTransport(const std::string& transportId) const
