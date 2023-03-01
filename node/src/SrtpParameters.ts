@@ -44,7 +44,8 @@ export function serializeSrtpParameters(
 	// NOTE: This check should not be needed since
 	// FbsTransport.SrtpParameters.createSrtpParameters() should throw.
 	// In absence of 'keyBase64' it does not throw in Linux.
-	// TODO: Investigate the cause.
+	// TODO: Remove once https://github.com/google/flatbuffers/issues/7739
+	// is merged.
 	if (!srtpParameters.cryptoSuite)
 	{
 		throw new TypeError('missing cryptoSuite');

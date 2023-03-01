@@ -681,7 +681,8 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			// NOTE: This check should not be needed since
 			// FbsWebRtcServer.ListenInfoT should throw.
 			// In absence of 'ip' it does not throw in Linux.
-			// TODO: Investigate the cause.
+			// TODO: Remove once https://github.com/google/flatbuffers/issues/7739
+			// is merged.
 			if (!listenInfo.ip)
 			{
 				throw new TypeError('missing ip');

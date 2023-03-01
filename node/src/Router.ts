@@ -607,7 +607,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		// NOTE: This check should not be needed since
 		// FbsTransport.OptionsT should throw.
 		// In absence of 'OS' or 'MIS' it does not throw in Linux.
-		// TODO: Investigate the cause.
+		// TODO: Remove once https://github.com/google/flatbuffers/issues/7739
+		// is merged.
 		if (!numSctpStreams.OS)
 		{
 			throw new TypeError('missing OS');
@@ -633,7 +634,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		// NOTE: This check should not be needed since
 		// FbsRouter.PlainTransportOptionsT should throw.
 		// In absence of 'ip' it does not throw in Linux.
-		// TODO: Investigate the cause.
+		// TODO: Remove once https://github.com/google/flatbuffers/issues/7739
+		// is merged.
 		if (!listenIp.ip)
 		{
 			throw new TypeError('missing ip');

@@ -568,9 +568,8 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		/* Build Request. */
 
-		const requestOffset = new FbsTransport.SetMaxIncomingBitrateRequestT(
-			bitrate
-		).pack(this.channel.bufferBuilder);
+		const requestOffset = FbsTransport.SetMaxIncomingBitrateRequest
+			.createSetMaxIncomingBitrateRequest(this.channel.bufferBuilder, bitrate);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE,

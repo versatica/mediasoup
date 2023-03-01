@@ -444,7 +444,7 @@ export class PipeTransport
 }
 
 /*
- * flatbuffers helpers
+ * flatbuffers helpers.
  */
 
 export function parsePipeTransportDumpResponse(
