@@ -26,9 +26,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeDataRequest::VT_TYPE))
-			MS_THROW_TYPE_ERROR("missing type");
-
 		this->typeString = data->type()->str();
 
 		if (this->typeString == "sctp")
