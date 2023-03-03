@@ -174,8 +174,8 @@ namespace RTC
 		MS_TRACE();
 
 		// Add codecs.
-		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpCodecParameters>> codecs(
-		  this->codecs.size());
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpCodecParameters>> codecs;
+		codecs.reserve(this->codecs.size());
 
 		for (const auto& codec : this->codecs)
 		{
@@ -183,8 +183,8 @@ namespace RTC
 		}
 
 		// Add encodings.
-		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> encodings(
-		  this->encodings.size());
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> encodings;
+		encodings.reserve(this->encodings.size());
 
 		for (const auto& encoding : this->encodings)
 		{
@@ -192,8 +192,8 @@ namespace RTC
 		}
 
 		// Add headerExtensions.
-		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpHeaderExtensionParameters>> headerExtensions(
-		  this->headerExtensions.size());
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpHeaderExtensionParameters>> headerExtensions;
+		headerExtensions.reserve(this->headerExtensions.size());
 
 		for (const auto& headerExtension : this->headerExtensions)
 		{

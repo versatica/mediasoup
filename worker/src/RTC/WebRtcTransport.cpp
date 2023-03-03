@@ -272,8 +272,8 @@ namespace RTC
 		  this->iceServer->GetPassword().c_str(),
 		  true);
 
-		std::vector<flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate>> iceCandidates(
-		  this->iceCandidates.size());
+		std::vector<flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate>> iceCandidates;
+		iceCandidates.reserve(this->iceCandidates.size());
 
 		for (const auto& iceCandidate : this->iceCandidates)
 		{

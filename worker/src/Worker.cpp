@@ -101,17 +101,19 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
   flatbuffers::FlatBufferBuilder& builder) const
 {
 	// Add webRtcServerIds.
-	std::vector<flatbuffers::Offset<flatbuffers::String>> webRtcServerIds(this->mapWebRtcServers.size());
+	std::vector<flatbuffers::Offset<flatbuffers::String>> webRtcServerIds;
+	webRtcServerIds.reserve(this->mapWebRtcServers.size());
 
 	for (const auto& kv : this->mapWebRtcServers)
 	{
-		auto& webRtcServerId = kv.first;
+		const auto& webRtcServerId = kv.first;
 
 		webRtcServerIds.push_back(builder.CreateString(webRtcServerId));
 	}
 
 	// Add routerIds.
-	std::vector<flatbuffers::Offset<flatbuffers::String>> routerIds(this->mapRouters.size());
+	std::vector<flatbuffers::Offset<flatbuffers::String>> routerIds;
+	routerIds.reserve(this->mapRouters.size());
 
 	for (const auto& kv : this->mapRouters)
 	{

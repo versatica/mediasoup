@@ -68,7 +68,8 @@ namespace RTC
 		MS_TRACE();
 
 		// Add transportIds.
-		std::vector<flatbuffers::Offset<flatbuffers::String>> transportIds(this->mapTransports.size());
+		std::vector<flatbuffers::Offset<flatbuffers::String>> transportIds;
+		transportIds.reserve(this->mapTransports.size());
 
 		for (const auto& kv : this->mapTransports)
 		{
@@ -78,7 +79,8 @@ namespace RTC
 		}
 
 		// Add rtpObserverIds.
-		std::vector<flatbuffers::Offset<flatbuffers::String>> rtpObserverIds(this->mapRtpObservers.size());
+		std::vector<flatbuffers::Offset<flatbuffers::String>> rtpObserverIds;
+		rtpObserverIds.reserve(this->mapRtpObservers.size());
 
 		for (const auto& kv : this->mapRtpObservers)
 		{
@@ -88,15 +90,16 @@ namespace RTC
 		}
 
 		// Add mapProducerIdConsumerIds.
-		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapProducerIdConsumerIds(
-		  this->mapProducerConsumers.size());
+		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapProducerIdConsumerIds;
+		mapProducerIdConsumerIds.reserve(this->mapProducerConsumers.size());
 
 		for (const auto& kv : this->mapProducerConsumers)
 		{
 			auto* producer        = kv.first;
 			const auto& consumers = kv.second;
 
-			std::vector<flatbuffers::Offset<flatbuffers::String>> consumerIds(consumers.size());
+			std::vector<flatbuffers::Offset<flatbuffers::String>> consumerIds;
+			consumerIds.reserve(consumers.size());
 
 			for (auto* consumer : consumers)
 			{
@@ -108,8 +111,8 @@ namespace RTC
 		}
 
 		// Add mapConsumerIdProducerId.
-		std::vector<flatbuffers::Offset<FBS::Common::StringString>> mapConsumerIdProducerId(
-		  this->mapConsumerProducer.size());
+		std::vector<flatbuffers::Offset<FBS::Common::StringString>> mapConsumerIdProducerId;
+		mapConsumerIdProducerId.reserve(this->mapConsumerProducer.size());
 
 		for (const auto& kv : this->mapConsumerProducer)
 		{
@@ -121,15 +124,16 @@ namespace RTC
 		}
 
 		// Add mapProducerIdObserverIds.
-		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapProducerIdObserverIds(
-		  this->mapProducerRtpObservers.size());
+		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapProducerIdObserverIds;
+		mapProducerIdObserverIds.reserve(this->mapProducerRtpObservers.size());
 
 		for (const auto& kv : this->mapProducerRtpObservers)
 		{
 			auto* producer           = kv.first;
 			const auto& rtpObservers = kv.second;
 
-			std::vector<flatbuffers::Offset<flatbuffers::String>> observerIds(rtpObservers.size());
+			std::vector<flatbuffers::Offset<flatbuffers::String>> observerIds;
+			observerIds.reserve(rtpObservers.size());
 
 			for (auto* rtpObserver : rtpObservers)
 			{
@@ -141,15 +145,16 @@ namespace RTC
 		}
 
 		// Add mapDataProducerIdDataConsumerIds.
-		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapDataProducerIdDataConsumerIds(
-		  this->mapDataProducerDataConsumers.size());
+		std::vector<flatbuffers::Offset<FBS::Common::StringStringArray>> mapDataProducerIdDataConsumerIds;
+		mapDataProducerIdDataConsumerIds.reserve(this->mapDataProducerDataConsumers.size());
 
 		for (const auto& kv : this->mapDataProducerDataConsumers)
 		{
 			auto* dataProducer        = kv.first;
 			const auto& dataConsumers = kv.second;
 
-			std::vector<flatbuffers::Offset<flatbuffers::String>> dataConsumerIds(dataConsumers.size());
+			std::vector<flatbuffers::Offset<flatbuffers::String>> dataConsumerIds;
+			dataConsumerIds.reserve(dataConsumers.size());
 
 			for (auto* dataConsumer : dataConsumers)
 			{
@@ -161,8 +166,8 @@ namespace RTC
 		}
 
 		// Add mapDataConsumerIdDataProducerId.
-		std::vector<flatbuffers::Offset<FBS::Common::StringString>> mapDataConsumerIdDataProducerId(
-		  this->mapDataConsumerDataProducer.size());
+		std::vector<flatbuffers::Offset<FBS::Common::StringString>> mapDataConsumerIdDataProducerId;
+		mapDataConsumerIdDataProducerId.reserve(this->mapDataConsumerDataProducer.size());
 
 		for (const auto& kv : this->mapDataConsumerDataProducer)
 		{
