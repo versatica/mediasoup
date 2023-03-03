@@ -645,9 +645,11 @@ namespace RTC
 		if (this->params.clockRate == 0u)
 			return;
 
-		auto transit =
-		  static_cast<int>(DepLibUV::GetTimeMs() - (rtpTimestamp * 1000 / this->params.clockRate));
-		int d = transit - this->transit;
+		// NOTE: Based on https://github.com/versatica/mediasoup/issues/1018.
+		double transitFactor =
+		  static_cast<double>(rtpTimestamp) * 1000.0 / static_cast<double>(this->params.clockRate);
+		auto transit = static_cast<int>(DepLibUV::GetTimeMs() - transitFactor);
+		int d        = transit - this->transit;
 
 		// First transit calculation, save and return.
 		if (this->transit == 0)
