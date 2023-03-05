@@ -1,6 +1,11 @@
 # Changelog
 
 
+### Next
+
+* Update NPM deps.
+
+
 ### 3.11.12
 
 * Fix jitter calculation ([PR #1019](https://github.com/versatica/mediasoup/pull/1019), credits to @alexciarlillo and @snnz).
