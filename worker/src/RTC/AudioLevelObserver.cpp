@@ -156,7 +156,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		absl::btree_map<int8_t, RTC::Producer*> mapDBovsProducer;
+		absl::btree_map<RTC::Producer*, int8_t> mapDBovsProducer; 
 
 		for (auto& kv : this->mapProducerDBovs)
 		{
@@ -169,7 +169,7 @@ namespace RTC
 			auto avgDBov = -1 * static_cast<int8_t>(std::lround(dBovs.totalSum / dBovs.count));
 
 			if (avgDBov >= this->threshold)
-				mapDBovsProducer[avgDBov] = producer;
+				mapDBovsProducer[producer] = avgDBov;
 		}
 
 		// Clear the map.
@@ -189,8 +189,8 @@ namespace RTC
 
 				auto& jsonEntry = data[idx];
 
-				jsonEntry["producerId"] = rit->second->id;
-				jsonEntry["volume"]     = rit->first;
+				jsonEntry["producerId"] = rit->first->id;
+				jsonEntry["volume"]     = rit->second;
 			}
 
 			this->shared->channelNotifier->Emit(this->id, "volumes", data);
