@@ -156,7 +156,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		absl::btree_map<int8_t, RTC::Producer*> mapDBovsProducer;
+		absl::btree_multimap<int8_t, RTC::Producer*> mapDBovsProducer;
 
 		for (auto& kv : this->mapProducerDBovs)
 		{
@@ -164,12 +164,16 @@ namespace RTC
 			auto& dBovs    = kv.second;
 
 			if (dBovs.count < 10)
+			{
 				continue;
+			}
 
 			auto avgDBov = -1 * static_cast<int8_t>(std::lround(dBovs.totalSum / dBovs.count));
 
 			if (avgDBov >= this->threshold)
-				mapDBovsProducer[avgDBov] = producer;
+			{
+				mapDBovsProducer.insert({ avgDBov, producer });
+			}
 		}
 
 		// Clear the map.
@@ -198,7 +202,6 @@ namespace RTC
 		else if (!this->silence)
 		{
 			this->silence = true;
-
 			this->shared->channelNotifier->Emit(this->id, "silence");
 		}
 	}
