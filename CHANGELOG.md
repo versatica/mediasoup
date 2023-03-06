@@ -3,6 +3,7 @@
 
 ### Next
 
+* `AudioLevelObserver`: Use multimap rather than map to avoid conflict if various Producers generate same audio level ([PR #1021](https://github.com/versatica/mediasoup/pull/1021), issue reported by @buptlsp).
 * Update NPM deps.
 
 
