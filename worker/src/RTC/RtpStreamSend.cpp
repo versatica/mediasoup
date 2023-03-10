@@ -95,7 +95,9 @@ namespace RTC
 
 				// Packets can arrive out of order, add blank slots.
 				for (uint16_t i{ 1 }; i < addToBack; ++i)
+				{
 					this->buffer.push_back(nullptr);
+				}
 
 				this->buffer.push_back(storageItem);
 			}
@@ -109,7 +111,9 @@ namespace RTC
 
 			// Packets can arrive out of order, add blank slots.
 			for (uint16_t i{ 1 }; i < addToFront; ++i)
+			{
 				this->buffer.push_front(nullptr);
+			}
 
 			this->buffer.push_front(storageItem);
 			this->startSeq = seq;
@@ -304,12 +308,18 @@ namespace RTC
 		switch (messageType)
 		{
 			case RTC::RTCP::FeedbackPs::MessageType::PLI:
+			{
 				this->pliCount++;
+
 				break;
+			}
 
 			case RTC::RTCP::FeedbackPs::MessageType::FIR:
+			{
 				this->firCount++;
+
 				break;
+			}
 
 			default:;
 		}
