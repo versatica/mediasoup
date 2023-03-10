@@ -83,7 +83,7 @@ namespace RTC
 			// Packet arrived out of order, so we already have a slot allocated for it.
 			if (idx <= static_cast<uint16_t>(this->buffer.size() - 1))
 			{
-				MS_ASSERT(this->buffer[idx] == nullptr, "Must insert into empty slot");
+				MS_ASSERT(this->buffer[idx] == nullptr, "must insert into empty slot");
 
 				this->buffer[idx] = storageItem;
 			}
