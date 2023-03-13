@@ -86,9 +86,6 @@
         }
       ]
     },
-    "moduleNameMapper": {
-      "(.+)\\.js": "$1"
-    },
     "cacheDirectory": ".cache/jest"
   },
   "dependencies": {

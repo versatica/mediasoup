@@ -310,7 +310,7 @@ function flatcNode(clean = false)
 		'worker', 'out', 'Release', 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
 	const src = path.resolve(path.join('worker', 'fbs', '*'));
 	const out = path.resolve(path.join('node', 'src'));
-	const options = '--gen-object-api';
+	const options = '--ts-no-import-ext --gen-object-api';
 	const command = `${flatc} --ts ${options} -o ${out} `;
 
 	if (isWindows)
