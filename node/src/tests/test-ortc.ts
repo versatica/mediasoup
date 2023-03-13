@@ -56,6 +56,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			},
 			rtcpFeedback :
 			[
+				{ type: 'nack', parameter: '' },
 				{ type: 'transport-cc', parameter: '' }
 			]
 		});
@@ -430,8 +431,14 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		]
 	};
 
-	const consumerRtpParameters =
-		ortc.getConsumerRtpParameters(consumableRtpParameters, remoteRtpCapabilities, false);
+	const consumerRtpParameters = ortc.getConsumerRtpParameters(
+		{
+			consumableRtpParameters,
+			remoteRtpCapabilities,
+			pipe      : false,
+			enableRtx : true
+		}
+	);
 
 	expect(consumerRtpParameters.codecs.length).toEqual(2);
 	expect(consumerRtpParameters.codecs[0]).toEqual(
@@ -499,8 +506,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 			reducedSize : true
 		});
 
-	const pipeConsumerRtpParameters =
-		ortc.getPipeConsumerRtpParameters(consumableRtpParameters);
+	const pipeConsumerRtpParameters = ortc.getPipeConsumerRtpParameters(
+		{
+			consumableRtpParameters,
+			enableRtx : false
+		}
+	);
 
 	expect(pipeConsumerRtpParameters.codecs.length).toEqual(1);
 	expect(pipeConsumerRtpParameters.codecs[0]).toEqual(
