@@ -688,8 +688,18 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		}
 
 		const webRtcServerId = uuidv4();
-		const createWebRtcServerRequestOffset = new FbsWorker.CreateWebRtcServerRequestT(
-			webRtcServerId, fbsListenInfos).pack(this.#channel.bufferBuilder);
+
+		let createWebRtcServerRequestOffset;
+
+		try
+		{
+			createWebRtcServerRequestOffset = new FbsWorker.CreateWebRtcServerRequestT(
+				webRtcServerId, fbsListenInfos).pack(this.#channel.bufferBuilder);
+		}
+		catch (error)
+		{
+			throw new TypeError((error as Error).message);
+		}
 
 		await this.#channel.request(
 			FbsRequest.Method.WORKER_CREATE_WEBRTC_SERVER,

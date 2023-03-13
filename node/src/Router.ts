@@ -625,9 +625,18 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			srtpCryptoSuite
 		);
 
-		const requestOffset = new FbsRouter.CreatePlainTransportRequestT(
-			transportId, plainTransportOptions
-		).pack(this.#channel.bufferBuilder);
+		let requestOffset;
+
+		try
+		{
+			requestOffset = new FbsRouter.CreatePlainTransportRequestT(
+				transportId, plainTransportOptions
+			).pack(this.#channel.bufferBuilder);
+		}
+		catch (error)
+		{
+			throw new TypeError((error as Error).message);
+		}
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_PLAIN_TRANSPORT,
