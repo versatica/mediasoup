@@ -70,34 +70,59 @@ namespace RTC
 
 	void RtpStreamSend::StorageItemBuffer::Insert(uint16_t seq, StorageItem* storageItem)
 	{
+		MS_DUMP("--- [seq:%" PRIu16 "]", seq);
+
 		if (this->buffer.empty())
 		{
+			MS_DUMP("--- 1 [seq:%" PRIu16 "] buffer empty", seq);
+
 			this->startSeq = seq;
 			this->buffer.push_back(storageItem);
 		}
 		// Packet sequence number is higher than startSeq.
 		else if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(seq, this->startSeq))
 		{
+			MS_DUMP(
+				"--- 2 [seq:%" PRIu16 "] IsSeqHigherThan(%" PRIu16 "%" PRIu16 ")",
+				seq, seq, this->startSeq);
+
 			auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
 			// Packet arrived out of order, so we already have a slot allocated for it.
 			if (idx <= static_cast<uint16_t>(this->buffer.size() - 1))
 			{
-				MS_ASSERT(this->buffer[idx] == nullptr, "must insert into empty slot");
+				MS_DUMP("--- 2.a [seq:%" PRIu16 "] packet arrived out of order", seq);
+
+				MS_ASSERT(this->buffer.at(idx) == nullptr, "must insert into empty slot");
+
+				MS_DUMP("--- 2.a [seq:%" PRIu16 "] buffer[idx] = storageItem", seq);
 
 				this->buffer[idx] = storageItem;
 			}
 			else
 			{
+				MS_DUMP("--- 2.a [seq:%" PRIu16 "] packet in order", seq);
+
 				// Calculate how many elements would it be necessary to add when pushing new item
 				// to the back of the deque.
 				auto addToBack = static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1));
 
+				MS_DUMP("--- 2.b [seq:%" PRIu16 "] addToBack:%" PRIu16,
+					seq, addToBack);
+
 				// Packets can arrive out of order, add blank slots.
 				for (uint16_t i{ 1 }; i < addToBack; ++i)
 				{
+					MS_DUMP(
+						"--- 2.b [seq:%" PRIu16 "] buffer.push_back(nullptr)",
+						seq);
+
 					this->buffer.push_back(nullptr);
 				}
+
+				MS_DUMP(
+					"--- 2.b [seq:%" PRIu16 "] buffer.push_back(storageItem)",
+					seq);
 
 				this->buffer.push_back(storageItem);
 			}
@@ -105,19 +130,38 @@ namespace RTC
 		// Packet sequence number is the same or lower than startSeq.
 		else
 		{
+			MS_DUMP(
+				"--- 3 [seq:%" PRIu16 "] ! IsSeqHigherThan(%" PRIu16 ", %" PRIu16 ")",
+				seq, seq, this->startSeq);
+
 			// Calculate how many elements would it be necessary to add when pushing new item
 			// to the front of the deque.
 			auto addToFront = static_cast<uint16_t>(this->startSeq - seq);
 
+			MS_DUMP("--- 3 [seq:%" PRIu16 "] addToFront:%" PRIu16,
+				seq, addToFront);
+
 			// Packets can arrive out of order, add blank slots.
 			for (uint16_t i{ 1 }; i < addToFront; ++i)
 			{
+				MS_DUMP(
+					"--- 3 [seq:%" PRIu16 "] buffer.push_front(nullptr)",
+					seq);
+
 				this->buffer.push_front(nullptr);
 			}
+
+			MS_DUMP(
+				"--- 3 [seq:%" PRIu16 "] buffer.push_front(storageItem)",
+				seq);
 
 			this->buffer.push_front(storageItem);
 			this->startSeq = seq;
 		}
+
+		MS_DUMP(
+			"--- 4 [seq:%" PRIu16 "] buffer.size:%zu",
+			seq, this->buffer.size());
 
 		MS_ASSERT(
 		  this->buffer.size() <= MaxSeq,
@@ -494,6 +538,10 @@ namespace RTC
 	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
+
+		MS_DUMP(
+			"packet [seq:%" PRIu16 ", timestamp:%" PRIu32 ", now:%" PRIu64 "]",
+			packet->GetSequenceNumber(), packet->GetTimestamp(), DepLibUV::GetTimeMs());
 
 		MS_ASSERT(
 		  packet->GetSsrc() == this->params.ssrc, "RTP packet SSRC does not match the encodings SSRC");
