@@ -41,20 +41,6 @@ export function serializeSrtpParameters(
 	const cryptoSuiteOffset = builder.createString(srtpParameters.cryptoSuite);
 	const keyBase64Offset = builder.createString(srtpParameters.keyBase64);
 
-	// NOTE: This check should not be needed since
-	// FbsTransport.SrtpParameters.createSrtpParameters() should throw.
-	// In absence of 'keyBase64' it does not throw in Linux.
-	// TODO: Remove once https://github.com/google/flatbuffers/issues/7739
-	// is merged.
-	if (!srtpParameters.cryptoSuite)
-	{
-		throw new TypeError('missing cryptoSuite');
-	}
-	if (!srtpParameters.keyBase64)
-	{
-		throw new TypeError('missing keyBase64');
-	}
-
 	return FbsTransport.SrtpParameters.createSrtpParameters(
 		builder, cryptoSuiteOffset, keyBase64Offset
 	);
