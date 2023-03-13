@@ -255,7 +255,7 @@ export class PipeTransport
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsPipeTransport.GetStatsResponse();
 
 		response.body(data);
@@ -298,7 +298,7 @@ export class PipeTransport
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsPipeTransport.ConnectResponse();
 
 		response.body(data);
@@ -355,7 +355,7 @@ export class PipeTransport
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const consumeResponse = new FbsTransport.ConsumeResponse();
 
 		response.body(consumeResponse);

@@ -368,7 +368,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			this.#internal.routerId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const dump = new FbsRouter.DumpResponse();
 
 		response.body(dump);
@@ -445,7 +445,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const transportId = uuidv4();
 
 		/* Build Request. */
-
 		let webRtcTransportListenServer:
 			FbsWebRtcTransport.ListenServerT | undefined;
 		let webRtcTransportListenIndividual:
@@ -506,8 +505,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			this.#internal.routerId
 		);
 
-		/* Decode the response. */
-
+		/* Decode Response. */
 		const data = new FbsWebRtcTransport.DumpResponse();
 
 		response.body(data);
@@ -620,7 +618,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		}
 
 		/* Build Request. */
-
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			undefined /* direct */,
 			undefined /* maxMessageSize */,
@@ -663,8 +660,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			this.#internal.routerId
 		);
 
-		/* Decode the response. */
-
+		/* Decode Response. */
 		const data = new FbsPlainTransport.DumpResponse();
 
 		response.body(data);
@@ -756,7 +752,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const transportId = uuidv4();
 
 		/* Build Request. */
-
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			undefined /* direct */,
 			undefined /* maxMessageSize */,
@@ -787,8 +782,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			this.#internal.routerId
 		);
 
-		/* Decode the response. */
-
+		/* Decode Response. */
 		const data = new FbsPipeTransport.DumpResponse();
 
 		response.body(data);
@@ -859,7 +853,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const transportId = uuidv4();
 
 		/* Build Request. */
-
 		const baseTransportOptions = new FbsTransport.OptionsT(
 			true /* direct */,
 			maxMessageSize,
@@ -886,8 +879,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			this.#internal.routerId
 		);
 
-		/* Decode the response. */
-
+		/* Decode Response. */
 		const data = new FbsDirectTransport.DumpResponse();
 
 		response.body(data);
@@ -1276,7 +1268,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const rtpObserverId = uuidv4();
 
 		/* Build Request. */
-
 		const activeRtpObserverOptions =
 			new FbsActiveSpeakerObserver.ActiveSpeakerObserverOptionsT(
 				interval
@@ -1355,7 +1346,6 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		const rtpObserverId = uuidv4();
 
 		/* Build Request. */
-
 		const audioLevelObserverOptions =
 			new FbsAudioLevelObserver.AudioLevelObserverOptionsT(
 				maxEntries,

@@ -411,7 +411,7 @@ export class WebRtcTransport extends
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsWebRtcTransport.DumpResponse();
 
 		response.body(data);
@@ -435,7 +435,7 @@ export class WebRtcTransport extends
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsWebRtcTransport.GetStatsResponse();
 
 		response.body(data);
@@ -465,7 +465,7 @@ export class WebRtcTransport extends
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsWebRtcTransport.ConnectResponse();
 
 		response.body(data);
@@ -489,7 +489,7 @@ export class WebRtcTransport extends
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const restartIceResponse = new FbsTransport.RestartIceResponse();
 
 		response.body(restartIceResponse);

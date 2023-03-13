@@ -159,7 +159,6 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		this.channel.removeAllListeners(this.internal.rtpObserverId);
 
 		/* Build Request. */
-
 		const requestOffset = new FbsRouter.CloseRtpObserverRequestT(
 			this.internal.rtpObserverId
 		).pack(this.channel.bufferBuilder);

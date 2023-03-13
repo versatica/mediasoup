@@ -347,7 +347,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		this.channel.removeAllListeners(this.internal.transportId);
 
 		/* Build Request. */
-
 		const requestOffset = new FbsRouter.CloseTransportRequestT(
 			this.internal.transportId
 		).pack(this.channel.bufferBuilder);
@@ -566,7 +565,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		logger.debug('setMaxIncomingBitrate() [bitrate:%s]', bitrate);
 
 		/* Build Request. */
-
 		const requestOffset = FbsTransport.SetMaxIncomingBitrateRequest
 			.createSetMaxIncomingBitrateRequest(this.channel.bufferBuilder, bitrate);
 
@@ -586,7 +584,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		logger.debug('setMaxOutgoingBitrate() [bitrate:%s]', bitrate);
 
 		/* Build Request. */
-
 		const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
 			bitrate
 		).pack(this.channel.bufferBuilder);
@@ -691,7 +688,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const produceResponse = new FbsTransport.ProduceResponse();
 
 		response.body(produceResponse);
@@ -822,7 +819,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const consumeResponse = new FbsTransport.ConsumeResponse();
 
 		response.body(consumeResponse);
@@ -933,7 +930,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const produceResponse = new FbsDataProducer.DumpResponse();
 
 		response.body(produceResponse);
@@ -1067,7 +1064,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const consumeResponse = new FbsDataConsumer.DumpResponse();
 
 		response.body(consumeResponse);
@@ -1128,7 +1125,6 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		}
 
 		/* Build Request. */
-
 		const requestOffset = new FbsTransport.EnableTraceEventRequestT(
 			types
 		).pack(this.channel.bufferBuilder);

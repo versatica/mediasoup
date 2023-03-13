@@ -497,7 +497,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		this.#channel.removeAllListeners(this.#internal.consumerId);
 
 		/* Build Request. */
-
 		const requestOffset = new FbsTransport.CloseConsumerRequestT(
 			this.#internal.consumerId
 		).pack(this.#channel.bufferBuilder);
@@ -554,7 +553,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			this.#internal.consumerId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsConsumer.DumpResponse();
 
 		response.body(data);
@@ -576,7 +575,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			this.#internal.consumerId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsConsumer.GetStatsResponse();
 
 		response.body(data);
@@ -672,7 +671,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			this.#internal.consumerId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsConsumer.SetPreferredLayersResponse();
 
 		let preferredLayers: ConsumerLayers | undefined;
@@ -770,7 +769,6 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		}
 
 		/* Build Request. */
-
 		const requestOffset = new FbsConsumer.EnableTraceEventRequestT(
 			types
 		).pack(this.#channel.bufferBuilder);

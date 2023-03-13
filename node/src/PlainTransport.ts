@@ -265,7 +265,7 @@ export class PlainTransport extends
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsPlainTransport.DumpResponse();
 
 		response.body(data);
@@ -289,7 +289,7 @@ export class PlainTransport extends
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsPlainTransport.GetStatsResponse();
 
 		response.body(data);
@@ -335,7 +335,7 @@ export class PlainTransport extends
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsPlainTransport.ConnectResponse();
 
 		response.body(data);

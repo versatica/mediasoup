@@ -99,82 +99,82 @@ export type WorkerResourceUsage =
 	/**
 	 * User CPU time used (in ms).
 	 */
-	ru_utime: Number;
+	ru_utime: number;
 
 	/**
 	 * System CPU time used (in ms).
 	 */
-	ru_stime: Number;
+	ru_stime: number;
 
 	/**
 	 * Maximum resident set size.
 	 */
-	ru_maxrss: Number;
+	ru_maxrss: number;
 
 	/**
 	 * Integral shared memory size.
 	 */
-	ru_ixrss: Number;
+	ru_ixrss: number;
 
 	/**
 	 * Integral unshared data size.
 	 */
-	ru_idrss: Number;
+	ru_idrss: number;
 
 	/**
 	 * Integral unshared stack size.
 	 */
-	ru_isrss: Number;
+	ru_isrss: number;
 
 	/**
 	 * Page reclaims (soft page faults).
 	 */
-	ru_minflt: Number;
+	ru_minflt: number;
 
 	/**
 	 * Page faults (hard page faults).
 	 */
-	ru_majflt: Number;
+	ru_majflt: number;
 
 	/**
 	 * Swaps.
 	 */
-	ru_nswap: Number;
+	ru_nswap: number;
 
 	/**
 	 * Block input operations.
 	 */
-	ru_inblock: Number;
+	ru_inblock: number;
 
 	/**
 	 * Block output operations.
 	 */
-	ru_oublock: Number;
+	ru_oublock: number;
 
 	/**
 	 * IPC messages sent.
 	 */
-	ru_msgsnd: Number;
+	ru_msgsnd: number;
 
 	/**
 	 * IPC messages received.
 	 */
-	ru_msgrcv: Number;
+	ru_msgrcv: number;
 
 	/**
 	 * Signals received.
 	 */
-	ru_nsignals: Number;
+	ru_nsignals: number;
 
 	/**
 	 * Voluntary context switches.
 	 */
-	ru_nvcsw: Number;
+	ru_nvcsw: number;
 
 	/**
 	 * Involuntary context switches.
 	 */
-	ru_nivcsw: Number;
+	ru_nivcsw: number;
 
 	/* eslint-enable camelcase */
 };
@@ -184,7 +184,8 @@ export type WorkerDump =
 	pid : number;
 	webrtcServerIds : string[];
 	routerIds : string[];
-	channelMessageHandlers : {
+	channelMessageHandlers :
+	{
 		channelRequestHandlers : string[];
 		channelNotificationHandlers : string[];
 	};
@@ -586,7 +587,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			FbsRequest.Method.WORKER_DUMP
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const dump = new FbsWorker.DumpResponse();
 
 		response.body(dump);
@@ -605,7 +606,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 			FbsRequest.Method.WORKER_GET_RESOURCE_USAGE
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const resourceUsage = new FbsWorker.ResourceUsageResponse();
 
 		response.body(resourceUsage);

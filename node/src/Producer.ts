@@ -343,7 +343,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		this.#channel.removeAllListeners(this.#internal.producerId);
 
 		/* Build Request. */
-
 		const requestOffset = new FbsTransport.CloseProducerRequestT(
 			this.#internal.producerId
 		).pack(this.#channel.bufferBuilder);
@@ -400,7 +399,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			this.#internal.producerId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const dumpResponse = new FbsProducer.DumpResponse();
 
 		response.body(dumpResponse);
@@ -422,7 +421,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			this.#internal.producerId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsProducer.GetStatsResponse();
 
 		response.body(data);
@@ -497,7 +496,6 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		}
 
 		/* Build Request. */
-
 		const requestOffset = new FbsProducer.EnableTraceEventRequestT(
 			types
 		).pack(this.#channel.bufferBuilder);

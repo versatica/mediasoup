@@ -223,7 +223,6 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 		this.#channel.removeAllListeners(this.#internal.dataProducerId);
 
 		/* Build Request. */
-
 		const requestOffset = new FbsTransport.CloseDataProducerRequestT(
 			this.#internal.dataProducerId
 		).pack(this.#channel.bufferBuilder);
@@ -280,7 +279,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 			this.#internal.dataProducerId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const produceResponse = new FbsDataProducer.DumpResponse();
 
 		response.body(produceResponse);
@@ -302,7 +301,7 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 			this.#internal.dataProducerId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsDataProducer.GetStatsResponse();
 
 		response.body(data);

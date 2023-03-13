@@ -235,7 +235,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 		const response = await this.#channel.request(
 			Method.WEBRTC_SERVER_DUMP, undefined, undefined, this.#internal.webRtcServerId);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const dump = new FbsWebRtcServer.DumpResponse();
 
 		response.body(dump);

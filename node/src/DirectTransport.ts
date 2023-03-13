@@ -127,7 +127,7 @@ export class DirectTransport extends
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsDirectTransport.DumpResponse();
 
 		response.body(data);
@@ -151,7 +151,7 @@ export class DirectTransport extends
 			this.internal.transportId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsDirectTransport.GetStatsResponse();
 
 		response.body(data);

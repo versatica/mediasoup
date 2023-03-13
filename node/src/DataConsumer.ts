@@ -246,7 +246,6 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#channel.removeAllListeners(this.#internal.dataConsumerId);
 
 		/* Build Request. */
-
 		const requestOffset = new FbsTransport.CloseDataConsumerRequestT(
 			this.#internal.dataConsumerId
 		).pack(this.#channel.bufferBuilder);
@@ -303,7 +302,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			this.#internal.dataConsumerId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const dumpResponse = new FbsDataConsumer.DumpResponse();
 
 		response.body(dumpResponse);
@@ -325,7 +324,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			this.#internal.dataConsumerId
 		);
 
-		/* Decode the response. */
+		/* Decode Response. */
 		const data = new FbsDataConsumer.GetStatsResponse();
 
 		response.body(data);
@@ -341,7 +340,6 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		logger.debug('setBufferedAmountLowThreshold() [threshold:%s]', threshold);
 
 		/* Build Request. */
-
 		const requestOffset = FbsDataConsumer.SetBufferedAmountLowThresholdRequest.
 			createSetBufferedAmountLowThresholdRequest(this.#channel.bufferBuilder, threshold);
 
