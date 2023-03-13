@@ -305,9 +305,10 @@ function flatcNode(clean = false)
 	// Build flatc if needed.
 	executeCmd(`${MAKE} -C worker flatc-all`);
 
+	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	const extension = isWindows ? '.exe' : '';
 	const flatc = path.resolve(path.join(
-		'worker', 'out', 'Release', 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
+		'worker', 'out', buildType, 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
 	const src = path.resolve(path.join('worker', 'fbs', '*'));
 	const out = path.resolve(path.join('node', 'src'));
 	const options = '--ts-no-import-ext --gen-object-api';
