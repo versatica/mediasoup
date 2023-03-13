@@ -55,6 +55,7 @@ namespace RTC
 			~StorageItemBuffer();
 
 			StorageItem* GetFirst() const;
+			StorageItem* GetLast() const;
 			StorageItem* Get(uint16_t seq) const;
 			size_t GetBufferSize() const;
 			void Insert(uint16_t seq, StorageItem* storageItem);

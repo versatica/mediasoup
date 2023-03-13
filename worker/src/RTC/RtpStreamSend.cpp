@@ -46,6 +46,16 @@ namespace RTC
 		return storageItem;
 	}
 
+	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::GetLast() const
+	{
+		auto* storageItem = this->Get(this->startSeq + this->buffer.size() - 1);
+
+		MS_ASSERT(storageItem, "last storage item is missing");
+		MS_ASSERT(storageItem->packet, "storage item does not contain original packet");
+
+		return storageItem;
+	}
+
 	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::Get(uint16_t seq) const
 	{
 		if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, this->startSeq))
@@ -91,7 +101,7 @@ namespace RTC
 			// Packet arrived out of order, so we already have a slot allocated for it.
 			if (idx <= static_cast<uint16_t>(this->buffer.size() - 1))
 			{
-				MS_DUMP("--- 2.a [seq:%" PRIu16 "] packet arrived out of order", seq);
+				MS_DUMP("--- 2.a [seq:%" PRIu16 "] packet out of order", seq);
 
 				MS_ASSERT(this->buffer.at(idx) == nullptr, "must insert into empty slot");
 
@@ -101,7 +111,7 @@ namespace RTC
 			}
 			else
 			{
-				MS_DUMP("--- 2.a [seq:%" PRIu16 "] packet in order", seq);
+				MS_DUMP("--- 2.b [seq:%" PRIu16 "] packet in order", seq);
 
 				// Calculate how many elements would it be necessary to add when pushing new item
 				// to the back of the deque.
@@ -561,12 +571,13 @@ namespace RTC
 		// Check if RTP packet is too old to be stored.
 		if (this->storageItemBuffer.GetBufferSize() > 0)
 		{
-			auto* storageItem = this->storageItemBuffer.GetFirst();
+			auto* firstStorageItem = this->storageItemBuffer.GetFirst();
+			auto* lastStorageItem = this->storageItemBuffer.GetLast();
 
 			// Processing RTP packet is older than first one.
-			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(packet->GetTimestamp(), storageItem->timestamp))
+			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(packet->GetTimestamp(), firstStorageItem->timestamp))
 			{
-				const uint32_t diffTs{ storageItem->timestamp - packet->GetTimestamp() };
+				const uint32_t diffTs{ lastStorageItem->timestamp - packet->GetTimestamp() };
 
 				// RTP packet is older than the retransmission buffer size.
 				if (static_cast<uint32_t>(diffTs * 1000 / this->params.clockRate) >= this->retransmissionBufferSize)
