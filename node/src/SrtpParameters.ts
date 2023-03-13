@@ -1,5 +1,5 @@
 import * as flatbuffers from 'flatbuffers';
-import * as FbsTransport from './fbs/transport_generated';
+import * as FbsTransport from './fbs/transport';
 
 /**
  * SRTP parameters.

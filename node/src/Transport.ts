@@ -26,15 +26,14 @@ import {
 } from './DataConsumer';
 import { MediaKind, RtpCapabilities, RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
 import { parseSctpParametersDump, serializeSctpStreamParameters, SctpParameters, SctpStreamParameters } from './SctpParameters';
-import * as FbsRequest from './fbs/request_generated';
-import * as FbsResponse from './fbs/response_generated';
-import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
-import * as FbsConsumer from './fbs/consumer_generated';
-import * as FbsDataConsumer from './fbs/dataConsumer_generated';
-import * as FbsDataProducer from './fbs/dataProducer_generated';
-import * as FbsTransport from './fbs/transport_generated';
-import * as FbsRouter from './fbs/router_generated';
-import { SctpState as FbsSctpState } from './fbs/fbs/sctp-association/sctp-state';
+import * as FbsRequest from './fbs/request';
+import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
+import * as FbsConsumer from './fbs/consumer';
+import * as FbsDataConsumer from './fbs/data-consumer';
+import * as FbsDataProducer from './fbs/data-producer';
+import * as FbsTransport from './fbs/transport';
+import * as FbsRouter from './fbs/router';
+import { SctpState as FbsSctpState } from './fbs/sctp-association/sctp-state';
 
 export type TransportListenIp =
 {
@@ -824,7 +823,7 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		);
 
 		/* Decode the response. */
-		const consumeResponse = new FbsResponse.ConsumeResponse();
+		const consumeResponse = new FbsTransport.ConsumeResponse();
 
 		response.body(consumeResponse);
 
@@ -1405,7 +1404,7 @@ function createConsumeRequest({
 		preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
 	}
 
-	const ConsumeRequest = FbsRequest.ConsumeRequest;
+	const ConsumeRequest = FbsTransport.ConsumeRequest;
 
 	// Create Consume Request.
 	ConsumeRequest.startConsumeRequest(builder);

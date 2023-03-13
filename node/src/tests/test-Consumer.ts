@@ -1,8 +1,8 @@
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { UnsupportedError } from '../errors';
-import { Notification, Body as NotificationBody, Event } from '../fbs/notification_generated';
-import * as FbsConsumer from '../fbs/consumer_generated';
+import { Notification, Body as NotificationBody, Event } from '../fbs/notification';
+import * as FbsConsumer from '../fbs/consumer';
 
 const { createWorker } = mediasoup;
 

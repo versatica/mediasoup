@@ -4,11 +4,11 @@ import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
-import { Body as RequestBody, Method, Request } from './fbs/request_generated';
-import { Response } from './fbs/response_generated';
-import { Message, Type as MessageType, Body as MessageBody } from './fbs/message_generated';
-import { Notification, Body as NotificationBody, Event } from './fbs/notification_generated';
-import { Log } from './fbs/log_generated';
+import { Body as RequestBody, Method, Request } from './fbs/request';
+import { Response } from './fbs/response';
+import { Message, Type as MessageType, Body as MessageBody } from './fbs/message';
+import { Notification, Body as NotificationBody, Event } from './fbs/notification';
+import { Log } from './fbs/log';
 
 const littleEndian = os.endianness() == 'LE';
 const logger = new Logger('Channel');

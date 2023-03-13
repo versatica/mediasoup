@@ -2,9 +2,9 @@
 import * as pickPort from 'pick-port';
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
-import { Notification, Body as NotificationBody, Event } from '../fbs/notification_generated';
-import * as FbsTransport from '../fbs/transport_generated';
-import * as FbsWebRtcTransport from '../fbs/webRtcTransport_generated';
+import { Notification, Body as NotificationBody, Event } from '../fbs/notification';
+import * as FbsTransport from '../fbs/transport';
+import * as FbsWebRtcTransport from '../fbs/web-rtc-transport';
 
 const { createWorker } = mediasoup;
 

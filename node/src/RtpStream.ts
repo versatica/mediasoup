@@ -1,4 +1,5 @@
-import * as FbsRtpStream from './fbs/rtpStream_generated';
+import * as FbsRtpStream from './fbs/rtp-stream';
+import * as FbsRtpParameters from './fbs/rtp-parameters';
 
 export type RtpStreamRecvStats = BaseRtpStreamStats & {
 	type: string;
@@ -97,7 +98,7 @@ function parseBaseStreamStats(binary: FbsRtpStream.BaseStats): BaseRtpStreamStat
 		ssrc      : binary.ssrc(),
 		rtxSsrc   : binary.rtxSsrc() ?? undefined,
 		rid       : binary.rid() ?? undefined,
-		kind      : binary.kind() === FbsRtpStream.MediaKind.AUDIO ?
+		kind      : binary.kind() === FbsRtpParameters.MediaKind.AUDIO ?
 			'audio' :
 			'video',
 		mimeType             : binary.mimeType()!,

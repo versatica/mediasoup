@@ -3,8 +3,9 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { TransportProtocol } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';
-import { Body as RequestBody, Method, CloseWebRtcServerRequestT } from './fbs/request_generated';
-import * as FbsWebRtcServer from './fbs/webRtcServer_generated';
+import { Body as RequestBody, Method } from './fbs/request';
+import * as FbsWorker from './fbs/worker';
+import * as FbsWebRtcServer from './fbs/web-rtc-server';
 
 export type WebRtcServerListenInfo =
 {
@@ -173,7 +174,7 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 		this.#closed = true;
 
 		// Build the request.
-		const requestOffset = new CloseWebRtcServerRequestT(
+		const requestOffset = new FbsWorker.CloseWebRtcServerRequestT(
 			this.#internal.webRtcServerId).pack(this.#channel.bufferBuilder);
 
 		this.#channel.request(

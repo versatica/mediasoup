@@ -18,10 +18,10 @@ import {
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { parseSrtpParameters, serializeSrtpParameters, SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
-import { Event, Notification } from './fbs/notification_generated';
-import * as FbsRequest from './fbs/request_generated';
-import * as FbsTransport from './fbs/transport_generated';
-import * as FbsPlainTransport from './fbs/plainTransport_generated';
+import { Event, Notification } from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsTransport from './fbs/transport';
+import * as FbsPlainTransport from './fbs/plain-transport';
 
 export type PlainTransportOptions =
 {

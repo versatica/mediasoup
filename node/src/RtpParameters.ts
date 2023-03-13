@@ -14,7 +14,7 @@ import {
 	RtpParameters as FbsRtpParameters,
 	Rtx as FbsRtx,
 	Value as FbsValue
-} from './fbs/rtpParameters_generated';
+} from './fbs/rtp-parameters';
 import * as utils from './utils';
 
 /**

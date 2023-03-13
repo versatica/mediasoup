@@ -22,7 +22,7 @@ import {
 	SctpParameters,
 	SctpStreamParameters
 } from './SctpParameters';
-import * as FbsRtpParameters from './fbs/rtpParameters_generated';
+import * as FbsRtpParameters from './fbs/rtp-parameters';
 
 export type RtpMapping =
 {

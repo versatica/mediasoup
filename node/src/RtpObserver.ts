@@ -3,9 +3,9 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { RouterInternal } from './Router';
 import { Producer } from './Producer';
-import * as FbsRequest from './fbs/request_generated';
-import * as FbsRouter from './fbs/router_generated';
-import * as FbsRtpObserver from './fbs/rtpObserver_generated';
+import * as FbsRequest from './fbs/request';
+import * as FbsRouter from './fbs/router';
+import * as FbsRtpObserver from './fbs/rtp-observer';
 
 export type RtpObserverEvents =
 {

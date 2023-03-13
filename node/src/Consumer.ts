@@ -12,13 +12,15 @@ import {
 	parseRtpParameters
 } from './RtpParameters';
 import { parseRtpStreamStats, RtpStreamSendStats } from './RtpStream';
-import { Event, Notification } from './fbs/notification_generated';
-import * as FbsRequest from './fbs/request_generated';
-import * as FbsTransport from './fbs/transport_generated';
-import * as FbsConsumer from './fbs/consumer_generated';
-import * as FbsRtpStream from './fbs/rtpStream_generated';
-import * as FbsRtxStream from './fbs/rtxStream_generated';
-import { Type as FbsRtpParametersType } from './fbs/fbs/rtp-parameters/type';
+import { Event, Notification } from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsTransport from './fbs/transport';
+import * as FbsConsumer from './fbs/consumer';
+import * as FbsConsumerTraceInfo from './fbs/consumer/trace-info';
+import * as FbsRtpStream from './fbs/rtp-stream';
+import * as FbsRtxStream from './fbs/rtx-stream';
+import { Type as FbsRtpParametersType } from './fbs/rtp-parameters';
+import * as FbsRtpParameters from './fbs/rtp-parameters';
 import * as utils from './utils';
 
 export type ConsumerOptions =
@@ -946,7 +948,7 @@ export function parseTraceEventData(
 	{
 		const accessor = trace.info.bind(trace);
 
-		info = FbsConsumer.unionToTraceInfo(trace.infoType(), accessor);
+		info = FbsConsumerTraceInfo.unionToTraceInfo(trace.infoType(), accessor);
 
 		trace.info(info);
 	}
@@ -1055,7 +1057,7 @@ function parseBaseConsumerDump(data: FbsConsumer.BaseConsumerDump): BaseConsumer
 	return {
 		id         : data.id()!,
 		producerId : data.producerId()!,
-		kind       : data.kind() === FbsTransport.MediaKind.AUDIO ?
+		kind       : data.kind() === FbsRtpParameters.MediaKind.AUDIO ?
 			'audio' :
 			'video',
 		rtpParameters          : parseRtpParameters(data.rtpParameters()!),

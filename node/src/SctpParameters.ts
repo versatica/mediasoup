@@ -1,5 +1,5 @@
 import * as flatbuffers from 'flatbuffers';
-import * as FbsSctpParameters from './fbs/sctpParameters_generated';
+import * as FbsSctpParameters from './fbs/sctp-parameters';
 
 export type SctpCapabilities =
 {

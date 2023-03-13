@@ -3,10 +3,10 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { TransportInternal } from './Transport';
 import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
-import { Event, Notification } from './fbs/notification_generated';
-import * as FbsTransport from './fbs/transport_generated';
-import * as FbsRequest from './fbs/request_generated';
-import * as FbsDataConsumer from './fbs/dataConsumer_generated';
+import { Event, Notification } from './fbs/notification';
+import * as FbsTransport from './fbs/transport';
+import * as FbsRequest from './fbs/request';
+import * as FbsDataConsumer from './fbs/data-consumer';
 
 export type DataConsumerOptions =
 {

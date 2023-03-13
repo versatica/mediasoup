@@ -8,11 +8,11 @@ import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
-import { Event } from './fbs/notification_generated';
-import * as FbsRequest from './fbs/request_generated';
-import * as FbsWorker from './fbs/worker_generated';
-import * as FbsWebRtcServer from './fbs/webRtcServer_generated';
-import { Protocol as FbsTransportProtocol } from './fbs/fbs/transport/protocol';
+import { Event } from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsWorker from './fbs/worker';
+import * as FbsWebRtcServer from './fbs/web-rtc-server';
+import { Protocol as FbsTransportProtocol } from './fbs/transport/protocol';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
@@ -697,7 +697,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		}
 
 		const webRtcServerId = uuidv4();
-		const createWebRtcServerRequestOffset = new FbsRequest.CreateWebRtcServerRequestT(
+		const createWebRtcServerRequestOffset = new FbsWorker.CreateWebRtcServerRequestT(
 			webRtcServerId, fbsListenInfos).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
@@ -745,7 +745,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 
 		// Get flatbuffer builder.
 		const createRouterRequestOffset =
-			new FbsRequest.CreateRouterRequestT(routerId).pack(this.#channel.bufferBuilder);
+			new FbsWorker.CreateRouterRequestT(routerId).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(FbsRequest.Method.WORKER_CREATE_ROUTER,
 			FbsRequest.Body.FBS_Worker_CreateRouterRequest, createRouterRequestOffset);

@@ -18,7 +18,7 @@ const MAYOR_VERSION = version.split('.')[0];
 const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 
 // flatbuffers version.
-const FLATBUFFERS_VERSION='22.11.23';
+const FLATBUFFERS_VERSION='23.3.3';
 
 console.log(`npm-scripts.js [INFO] running task "${task}"`);
 
@@ -309,7 +309,7 @@ function flatcNode(clean = false)
 	const flatc = path.resolve(path.join(
 		'worker', 'out', 'Release', 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
 	const src = path.resolve(path.join('worker', 'fbs', '*'));
-	const out = path.resolve(path.join('node', 'src', 'fbs'));
+	const out = path.resolve(path.join('node', 'src'));
 	const options = '--gen-object-api';
 	const command = `${flatc} --ts ${options} -o ${out} `;
 

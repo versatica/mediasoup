@@ -3,12 +3,14 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
-import { Event, Notification } from './fbs/notification_generated';
+import { Event, Notification } from './fbs/notification';
 import { parseRtpStreamRecvStats, RtpStreamRecvStats } from './RtpStream';
-import * as FbsNotification from './fbs/notification_generated';
-import * as FbsRequest from './fbs/request_generated';
-import * as FbsTransport from './fbs/transport_generated';
-import * as FbsProducer from './fbs/producer_generated';
+import * as FbsNotification from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsTransport from './fbs/transport';
+import * as FbsProducer from './fbs/producer';
+import * as FbsProducerTraceInfo from './fbs/producer/trace-info';
+import * as FbsRtpParameters from './fbs/rtp-parameters';
 import * as utils from './utils';
 
 export type ProducerOptions =
@@ -606,7 +608,7 @@ export function parseProducerDump(
 {
 	return {
 		id            : data.id()!,
-		kind          : data.kind() === FbsTransport.MediaKind.AUDIO ? 'audio' : 'video',
+		kind          : data.kind() === FbsRtpParameters.MediaKind.AUDIO ? 'audio' : 'video',
 		type          : data.type()! as ProducerType,
 		rtpParameters : parseRtpParameters(data.rtpParameters()!),
 		// NOTE: optional values are represented with null instead of undefined.
@@ -648,7 +650,7 @@ function parseTraceEventData(
 	{
 		const accessor = trace.info.bind(trace);
 
-		info = FbsProducer.unionToTraceInfo(trace.infoType(), accessor);
+		info = FbsProducerTraceInfo.unionToTraceInfo(trace.infoType(), accessor);
 
 		trace.info(info);
 	}

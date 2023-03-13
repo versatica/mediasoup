@@ -19,12 +19,12 @@ import {
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import { Event, Notification } from './fbs/notification_generated';
-import * as FbsRequest from './fbs/request_generated';
-import * as FbsTransport from './fbs/transport_generated';
-import * as FbsWebRtcTransport from './fbs/webRtcTransport_generated';
-import { DtlsState as FbsDtlsState } from './fbs/fbs/web-rtc-transport/dtls-state';
-import { IceState as FbsIceState } from './fbs/fbs/web-rtc-transport/ice-state';
+import { Event, Notification } from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsTransport from './fbs/transport';
+import * as FbsWebRtcTransport from './fbs/web-rtc-transport';
+import { DtlsState as FbsDtlsState } from './fbs/web-rtc-transport/dtls-state';
+import { IceState as FbsIceState } from './fbs/web-rtc-transport/ice-state';
 import { Either, parseVector } from './utils';
 
 export type WebRtcTransportListenIndividual =

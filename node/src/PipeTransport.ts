@@ -23,12 +23,12 @@ import { Producer } from './Producer';
 import { RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { parseSrtpParameters, serializeSrtpParameters, SrtpParameters } from './SrtpParameters';
-import { MediaKind as FbsMediaKind } from './fbs/fbs/rtp-parameters/media-kind';
-import { Event, Notification } from './fbs/notification_generated';
-import * as FbsRequest from './fbs/request_generated';
-import * as FbsResponse from './fbs/response_generated';
-import * as FbsTransport from './fbs/transport_generated';
-import * as FbsPipeTransport from './fbs/pipeTransport_generated';
+import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
+import * as FbsRtpParameters from './fbs/rtp-parameters';
+import { Event, Notification } from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsTransport from './fbs/transport';
+import * as FbsPipeTransport from './fbs/pipe-transport';
 
 export type PipeTransportOptions =
 {
@@ -356,7 +356,7 @@ export class PipeTransport
 		);
 
 		/* Decode the response. */
-		const consumeResponse = new FbsResponse.ConsumeResponse();
+		const consumeResponse = new FbsTransport.ConsumeResponse();
 
 		response.body(consumeResponse);
 
@@ -510,7 +510,7 @@ function createConsumeRequest({
 		);
 	}
 
-	const ConsumeRequest = FbsRequest.ConsumeRequest;
+	const ConsumeRequest = FbsTransport.ConsumeRequest;
 
 	// Create Consume Request.
 	ConsumeRequest.startConsumeRequest(builder);
@@ -519,7 +519,7 @@ function createConsumeRequest({
 	ConsumeRequest.addKind(
 		builder, producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
 	ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
-	ConsumeRequest.addType(builder, FbsTransport.Type.PIPE);
+	ConsumeRequest.addType(builder, FbsRtpParameters.Type.PIPE);
 
 	if (consumableRtpEncodingsOffset)
 	{

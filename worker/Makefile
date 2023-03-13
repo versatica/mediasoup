@@ -21,7 +21,7 @@ INSTALL_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 BUILD_DIR ?= $(INSTALL_DIR)/build
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_VERSION ?= 0.61.5
-FLATC ?= $(BUILD_DIR)/subprojects/flatbuffers-22.11.23/flatc
+FLATC ?= $(BUILD_DIR)/subprojects/flatbuffers-23.3.3/flatc
 FLATC_OUT_DIR ?= ./include/FBS
 # `MESON_ARGS` can be used to provide extra configuration parameters to Meson,
 # such as adding defines or changing optimization options. For instance, use

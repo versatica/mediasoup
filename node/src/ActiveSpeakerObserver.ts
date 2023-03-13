@@ -7,8 +7,8 @@ import {
 	RtpObserverConstructorOptions
 } from './RtpObserver';
 import { Producer } from './Producer';
-import { Event, Notification } from './fbs/notification_generated';
-import * as FbsActiveSpeakerObserver from './fbs/activeSpeakerObserver_generated';
+import { Event, Notification } from './fbs/notification';
+import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
 
 export type ActiveSpeakerObserverOptions =
 {

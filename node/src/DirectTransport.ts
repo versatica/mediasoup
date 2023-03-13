@@ -12,11 +12,11 @@ import {
 	TransportConstructorOptions
 } from './Transport';
 import { SctpParameters } from './SctpParameters';
-import { Event, Notification } from './fbs/notification_generated';
-import * as FbsDirectTransport from './fbs/directTransport_generated';
-import * as FbsTransport from './fbs/transport_generated';
-import * as FbsNotification from './fbs/notification_generated';
-import * as FbsRequest from './fbs/request_generated';
+import { Event, Notification } from './fbs/notification';
+import * as FbsDirectTransport from './fbs/direct-transport';
+import * as FbsTransport from './fbs/transport';
+import * as FbsNotification from './fbs/notification';
+import * as FbsRequest from './fbs/request';
 
 export type DirectTransportOptions =
 {

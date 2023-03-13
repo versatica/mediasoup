@@ -18,16 +18,17 @@ import { ActiveSpeakerObserver, ActiveSpeakerObserverOptions } from './ActiveSpe
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
-import * as FbsActiveSpeakerObserver from './fbs/activeSpeakerObserver_generated';
-import * as FbsAudioLevelObserver from './fbs/audioLevelObserver_generated';
-import * as FbsRequest from './fbs/request_generated';
-import * as FbsRouter from './fbs/router_generated';
-import * as FbsPlainTransport from './fbs/plainTransport_generated';
-import * as FbsPipeTransport from './fbs/pipeTransport_generated';
-import * as FbsDirectTransport from './fbs/directTransport_generated';
-import * as FbsWebRtcTransport from './fbs/webRtcTransport_generated';
-import * as FbsTransport from './fbs/transport_generated';
-import * as FbsSctpParameters from './fbs/sctpParameters_generated';
+import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
+import * as FbsAudioLevelObserver from './fbs/audio-level-observer';
+import * as FbsRequest from './fbs/request';
+import * as FbsWorker from './fbs/worker';
+import * as FbsRouter from './fbs/router';
+import * as FbsPlainTransport from './fbs/plain-transport';
+import * as FbsPipeTransport from './fbs/pipe-transport';
+import * as FbsDirectTransport from './fbs/direct-transport';
+import * as FbsWebRtcTransport from './fbs/web-rtc-transport';
+import * as FbsTransport from './fbs/transport';
+import * as FbsSctpParameters from './fbs/sctp-parameters';
 
 export type RouterOptions =
 {
@@ -275,7 +276,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		this.#closed = true;
 
-		const requestOffset = new FbsRequest.CloseRouterRequestT(
+		const requestOffset = new FbsWorker.CloseRouterRequestT(
 			this.#internal.routerId).pack(this.#channel.bufferBuilder);
 
 		this.#channel.request(
@@ -480,7 +481,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			true /* isDataChannel */
 		);
 
-		const webRtcTransportOptions = new FbsRouter.WebRtcTransportOptionsT(
+		const webRtcTransportOptions = new FbsWebRtcTransport.WebRtcTransportOptionsT(
 			baseTransportOptions,
 			webRtcServer ?
 				FbsWebRtcTransport.Listen.ListenServer :
@@ -641,7 +642,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			throw new TypeError('missing ip');
 		}
 
-		const plainTransportOptions = new FbsRouter.PlainTransportOptionsT(
+		const plainTransportOptions = new FbsPlainTransport.PlainTransportOptionsT(
 			baseTransportOptions,
 			new FbsTransport.ListenIpT(listenIp.ip, listenIp.announcedIp),
 			port,
@@ -767,7 +768,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			false /* isDataChannel */
 		);
 
-		const pipeTransportOptions = new FbsRouter.PipeTransportOptionsT(
+		const pipeTransportOptions = new FbsPipeTransport.PipeTransportOptionsT(
 			baseTransportOptions,
 			new FbsTransport.ListenIpT(listenIp.ip, listenIp.announcedIp),
 			port,

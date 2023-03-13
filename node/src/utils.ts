@@ -1,6 +1,6 @@
 import { randomInt } from 'crypto';
 import { ProducerType } from './Producer';
-import { Type as FbsRtpParametersType } from './fbs/fbs/rtp-parameters/type';
+import { Type as FbsRtpParametersType } from './fbs/rtp-parameters';
 
 /**
  * Clones the given object/array.

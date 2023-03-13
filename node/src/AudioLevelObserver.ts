@@ -7,8 +7,8 @@ import {
 	RtpObserverConstructorOptions
 } from './RtpObserver';
 import { Producer } from './Producer';
-import { Event, Notification } from './fbs/notification_generated';
-import * as FbsAudioLevelObserver from './fbs/audioLevelObserver_generated';
+import { Event, Notification } from './fbs/notification';
+import * as FbsAudioLevelObserver from './fbs/audio-level-observer';
 import * as utils from './utils';
 
 export type AudioLevelObserverOptions =
