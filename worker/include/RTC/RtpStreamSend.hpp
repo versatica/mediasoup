@@ -27,7 +27,7 @@ namespace RTC
 		};
 
 	public:
-		struct StorageItem
+		struct RetransmissionItem
 		{
 			void Reset();
 
@@ -48,28 +48,29 @@ namespace RTC
 		};
 
 	private:
-		// Special container that stores `StorageItem*` elements addressable by
-		// their `uint16_t` sequence number, while only taking as little memory as
-		// necessary to store the range covering a maximum of
-		// MaxRetransmissionDelayForVideoMs or MaxRetransmissionDelayForAudioMs ms.
-		class StorageItemBuffer
+		// Special container that stores `RetransmissionItem`* elements addressable
+		// by their `uint16_t` sequence number, while only taking as little memory
+		// as necessary to store the range covering a maximum of
+		// `MaxRetransmissionDelayForVideoMs` or `MaxRetransmissionDelayForAudioMs`
+		// ms.
+		class RetransmissionBuffer
 		{
 		public:
-			explicit StorageItemBuffer(size_t maxEntries);
-			~StorageItemBuffer();
+			explicit RetransmissionBuffer(size_t maxEntries);
+			~RetransmissionBuffer();
 
-			size_t GetBufferSize() const;
-			StorageItem* GetOldest() const;
-			StorageItem* GetNewest() const;
-			StorageItem* Get(uint16_t seq) const;
-			void RemoveFirst();
+			size_t GetSize() const;
+			RetransmissionItem* GetOldest() const;
+			RetransmissionItem* GetNewest() const;
+			RetransmissionItem* Get(uint16_t seq) const;
+			void RemoveOldest();
 			void Clear();
-			void Insert(uint16_t seq, StorageItem* storageItem, uint32_t retransmissionDelayMs);
+			void Insert(uint16_t seq, RetransmissionItem* retransmissionItem, uint32_t retransmissionDelayMs);
 
 		private:
 			size_t maxEntries;
 			uint16_t startSeq{ 0u };
-			std::deque<StorageItem*> buffer;
+			std::deque<RetransmissionItem*> buffer;
 		};
 
 	public:
@@ -99,8 +100,7 @@ namespace RTC
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
-		void ClearOldPackets();
-		void ClearBuffer();
+		void ClearOldStoredPackets();
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
@@ -113,7 +113,7 @@ namespace RTC
 		uint32_t lostPriorScore{ 0u };
 		// Packets sent at last interval for score calculation.
 		uint32_t sentPriorScore{ 0u };
-		StorageItemBuffer storageItemBuffer;
+		RetransmissionBuffer retransmissionBuffer;
 		std::string mid;
 		uint32_t maxRetransmissionDelayMs;
 		uint32_t currentRetransmissionDelayMs;
