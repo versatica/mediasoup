@@ -36,22 +36,22 @@ namespace RTC
 		this->sentTimes      = 0;
 	}
 
-	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::GetFirst() const
+	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::GetOldest() const
 	{
 		auto* storageItem = this->Get(this->startSeq);
 
-		MS_ASSERT(storageItem, "first storage item is missing");
-		MS_ASSERT(storageItem->packet, "storage item does not contain original packet");
+		MS_ASSERT(storageItem, "oldest storage item is missing");
+		MS_ASSERT(storageItem->packet, "oldest storage item does not contain original packet");
 
 		return storageItem;
 	}
 
-	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::GetLast() const
+	RtpStreamSend::StorageItem* RtpStreamSend::StorageItemBuffer::GetNewest() const
 	{
 		auto* storageItem = this->Get(this->startSeq + this->buffer.size() - 1);
 
-		MS_ASSERT(storageItem, "last storage item is missing");
-		MS_ASSERT(storageItem->packet, "storage item does not contain original packet");
+		MS_ASSERT(storageItem, "newwest storage item is missing");
+		MS_ASSERT(storageItem->packet, "newest storage item does not contain original packet");
 
 		return storageItem;
 	}
@@ -562,14 +562,27 @@ namespace RTC
 		// Check if RTP packet is too old to be stored.
 		if (this->storageItemBuffer.GetBufferSize() > 0)
 		{
-			auto* firstStorageItem = this->storageItemBuffer.GetFirst();
-			auto* lastStorageItem  = this->storageItemBuffer.GetLast();
+			auto* newestStorageItem  = this->storageItemBuffer.GetNewest();
 
 			// Processing RTP packet is older than first one.
 			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(
-			      packet->GetTimestamp(), firstStorageItem->timestamp))
+			      packet->GetTimestamp(), newestStorageItem->timestamp))
 			{
-				const uint32_t diffTs{ lastStorageItem->timestamp - packet->GetTimestamp() };
+				// Packet has lower sequence number than newest stored packet but its
+				// timestamp is higher. This should not happen, so drop the packet.
+				if (packet->GetTimestamp() > newestStorageItem->timestamp)
+				{
+					MS_WARN_TAG(
+					  rtp,
+					  "packet has lower seq but higher timestamp than newest stored packet, dropping [ssrc:%" PRIu32 ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
+					  packet->GetSsrc(),
+					  packet->GetSequenceNumber(),
+					  packet->GetTimestamp());
+
+					return;
+				}
+
+				const uint32_t diffTs{ newestStorageItem->timestamp - packet->GetTimestamp() };
 
 				// RTP packet is older than the retransmission buffer size.
 				if (static_cast<uint32_t>(diffTs * 1000 / this->params.clockRate) >= this->retransmissionBufferSize)
@@ -628,7 +641,7 @@ namespace RTC
 		// items that contain packets older than this->maxRetransmissionDelayMs.
 		for (size_t i{ 0 }; i < bufferSize && this->storageItemBuffer.GetBufferSize() != 0; ++i)
 		{
-			auto* storageItem = this->storageItemBuffer.GetFirst();
+			auto* storageItem = this->storageItemBuffer.GetOldest();
 			const uint32_t diffTs{ packet->GetTimestamp() - storageItem->timestamp };
 
 			// Processing RTP packet is older than first one.
