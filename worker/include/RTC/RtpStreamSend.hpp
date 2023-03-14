@@ -3,11 +3,12 @@
 
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpStream.hpp"
+#include "handles/Timer.hpp"
 #include <deque>
 
 namespace RTC
 {
-	class RtpStreamSend : public RTC::RtpStream
+	class RtpStreamSend : public RTC::RtpStream, public Timer::Listener
 	{
 	public:
 		// Minimum retransmission buffer size (ms).
@@ -33,11 +34,13 @@ namespace RTC
 			// Original packet.
 			std::shared_ptr<RTC::RtpPacket> packet{ nullptr };
 			// Correct SSRC since original packet may not have the same.
-			uint32_t ssrc{ 0 };
+			uint32_t ssrc{ 0u };
 			// Correct sequence number since original packet may not have the same.
-			uint16_t sequenceNumber{ 0 };
+			uint16_t sequenceNumber{ 0u };
 			// Correct timestamp since original packet may not have the same.
-			uint32_t timestamp{ 0 };
+			uint32_t timestamp{ 0u };
+			// System time when this packet was received..
+			uint64_t receivedAtMs{ 0u };
 			// Last time this packet was resent.
 			uint64_t resentAtMs{ 0u };
 			// Number of times this packet was resent.
@@ -52,18 +55,20 @@ namespace RTC
 		class StorageItemBuffer
 		{
 		public:
+			explicit StorageItemBuffer(size_t maxEntries);
 			~StorageItemBuffer();
 
+			size_t GetBufferSize() const;
 			StorageItem* GetOldest() const;
 			StorageItem* GetNewest() const;
 			StorageItem* Get(uint16_t seq) const;
-			size_t GetBufferSize() const;
-			void Insert(uint16_t seq, StorageItem* storageItem);
 			void RemoveFirst();
 			void Clear();
+			void Insert(uint16_t seq, StorageItem* storageItem, uint32_t retransmissionDelayMs);
 
 		private:
-			uint16_t startSeq{ 0 };
+			size_t maxEntries;
+			uint16_t startSeq{ 0u };
 			std::deque<StorageItem*> buffer;
 		};
 
@@ -94,25 +99,33 @@ namespace RTC
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
-		void ClearOldPackets(const RtpPacket* packet);
+		void ClearOldPackets();
 		void ClearBuffer();
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
+		/* Pure virtual methods inherited from Timer. */
+	protected:
+		void OnTimer(Timer* timer) override;
+
 	private:
-		uint32_t lostPriorScore{ 0u }; // Packets lost at last interval for score calculation.
-		uint32_t sentPriorScore{ 0u }; // Packets sent at last interval for score calculation.
+		// Packets lost at last interval for score calculation.
+		uint32_t lostPriorScore{ 0u };
+		// Packets sent at last interval for score calculation.
+		uint32_t sentPriorScore{ 0u };
 		StorageItemBuffer storageItemBuffer;
 		std::string mid;
 		uint32_t maxRetransmissionDelayMs;
-		uint32_t retransmissionBufferSize;
+		uint32_t currentRetransmissionDelayMs;
 		uint16_t rtxSeq{ 0u };
 		RTC::RtpDataCounter transmissionCounter;
-		uint32_t lastRrTimestamp{ 0u };  // The middle 32 bits out of 64 in the NTP
-		                                 // timestamp received in the most recent
-		                                 // receiver reference timestamp.
-		uint64_t lastRrReceivedMs{ 0u }; // Wallclock time representing the most recent
-		                                 // receiver reference timestamp arrival.
+		// The middle 32 bits out of 64 in the NTP timestamp received in the most
+		// recent receiver reference timestamp.
+		uint32_t lastRrTimestamp{ 0u };
+		// Wallclock time representing the most recent receiver reference timestamp
+		// arrival.
+		uint64_t lastRrReceivedMs{ 0u };
+		Timer* clearBufferPeriodicTimer{ nullptr };
 	};
 } // namespace RTC
 
