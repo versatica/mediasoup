@@ -93,8 +93,7 @@ namespace RTC
 		else if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(seq, this->startSeq))
 		{
 			MS_DUMP(
-				"--- 2 [seq:%" PRIu16 "] IsSeqHigherThan(%" PRIu16 "%" PRIu16 ")",
-				seq, seq, this->startSeq);
+			  "--- 2 [seq:%" PRIu16 "] IsSeqHigherThan(%" PRIu16 "%" PRIu16 ")", seq, seq, this->startSeq);
 
 			auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
@@ -117,22 +116,17 @@ namespace RTC
 				// to the back of the deque.
 				auto addToBack = static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1));
 
-				MS_DUMP("--- 2.b [seq:%" PRIu16 "] addToBack:%" PRIu16,
-					seq, addToBack);
+				MS_DUMP("--- 2.b [seq:%" PRIu16 "] addToBack:%" PRIu16, seq, addToBack);
 
 				// Packets can arrive out of order, add blank slots.
 				for (uint16_t i{ 1 }; i < addToBack; ++i)
 				{
-					MS_DUMP(
-						"--- 2.b [seq:%" PRIu16 "] buffer.push_back(nullptr)",
-						seq);
+					MS_DUMP("--- 2.b [seq:%" PRIu16 "] buffer.push_back(nullptr)", seq);
 
 					this->buffer.push_back(nullptr);
 				}
 
-				MS_DUMP(
-					"--- 2.b [seq:%" PRIu16 "] buffer.push_back(storageItem)",
-					seq);
+				MS_DUMP("--- 2.b [seq:%" PRIu16 "] buffer.push_back(storageItem)", seq);
 
 				this->buffer.push_back(storageItem);
 			}
@@ -141,37 +135,29 @@ namespace RTC
 		else
 		{
 			MS_DUMP(
-				"--- 3 [seq:%" PRIu16 "] ! IsSeqHigherThan(%" PRIu16 ", %" PRIu16 ")",
-				seq, seq, this->startSeq);
+			  "--- 3 [seq:%" PRIu16 "] ! IsSeqHigherThan(%" PRIu16 ", %" PRIu16 ")", seq, seq, this->startSeq);
 
 			// Calculate how many elements would it be necessary to add when pushing new item
 			// to the front of the deque.
 			auto addToFront = static_cast<uint16_t>(this->startSeq - seq);
 
-			MS_DUMP("--- 3 [seq:%" PRIu16 "] addToFront:%" PRIu16,
-				seq, addToFront);
+			MS_DUMP("--- 3 [seq:%" PRIu16 "] addToFront:%" PRIu16, seq, addToFront);
 
 			// Packets can arrive out of order, add blank slots.
 			for (uint16_t i{ 1 }; i < addToFront; ++i)
 			{
-				MS_DUMP(
-					"--- 3 [seq:%" PRIu16 "] buffer.push_front(nullptr)",
-					seq);
+				MS_DUMP("--- 3 [seq:%" PRIu16 "] buffer.push_front(nullptr)", seq);
 
 				this->buffer.push_front(nullptr);
 			}
 
-			MS_DUMP(
-				"--- 3 [seq:%" PRIu16 "] buffer.push_front(storageItem)",
-				seq);
+			MS_DUMP("--- 3 [seq:%" PRIu16 "] buffer.push_front(storageItem)", seq);
 
 			this->buffer.push_front(storageItem);
 			this->startSeq = seq;
 		}
 
-		MS_DUMP(
-			"--- 4 [seq:%" PRIu16 "] buffer.size:%zu",
-			seq, this->buffer.size());
+		MS_DUMP("--- 4 [seq:%" PRIu16 "] buffer.size:%zu", seq, this->buffer.size());
 
 		MS_ASSERT(
 		  this->buffer.size() <= MaxSeq,
@@ -550,11 +536,16 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DUMP(
-			"packet [seq:%" PRIu16 ", timestamp:%" PRIu32 ", now:%" PRIu64 "]",
-			packet->GetSequenceNumber(), packet->GetTimestamp(), DepLibUV::GetTimeMs());
+		  "packet [seq:%" PRIu16 ", timestamp:%" PRIu32 ", now:%" PRIu64 "]",
+		  packet->GetSequenceNumber(),
+		  packet->GetTimestamp(),
+		  DepLibUV::GetTimeMs());
 
 		MS_ASSERT(
 		  packet->GetSsrc() == this->params.ssrc, "RTP packet SSRC does not match the encodings SSRC");
+
+		// Remove old packets.
+		this->ClearOldPackets(packet);
 
 		if (packet->GetSize() > RTC::MtuSize)
 		{
@@ -572,10 +563,11 @@ namespace RTC
 		if (this->storageItemBuffer.GetBufferSize() > 0)
 		{
 			auto* firstStorageItem = this->storageItemBuffer.GetFirst();
-			auto* lastStorageItem = this->storageItemBuffer.GetLast();
+			auto* lastStorageItem  = this->storageItemBuffer.GetLast();
 
 			// Processing RTP packet is older than first one.
-			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(packet->GetTimestamp(), firstStorageItem->timestamp))
+			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(
+			      packet->GetTimestamp(), firstStorageItem->timestamp))
 			{
 				const uint32_t diffTs{ lastStorageItem->timestamp - packet->GetTimestamp() };
 
@@ -586,8 +578,6 @@ namespace RTC
 				}
 			}
 		}
-
-		this->ClearOldPackets(packet);
 
 		auto seq          = packet->GetSequenceNumber();
 		auto* storageItem = this->storageItemBuffer.Get(seq);
