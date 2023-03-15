@@ -56,19 +56,25 @@ namespace RTC
 		class RetransmissionBuffer
 		{
 		public:
-			explicit RetransmissionBuffer(size_t maxEntries);
+			explicit RetransmissionBuffer(size_t maxEntries, uint32_t clockRate);
 			~RetransmissionBuffer();
 
 			size_t GetSize() const;
 			RetransmissionItem* GetOldest() const;
 			RetransmissionItem* GetNewest() const;
 			RetransmissionItem* Get(uint16_t seq) const;
-			void RemoveOldest();
+			void Insert(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
+			void ClearOld(uint32_t maxRetransmissionDelayMs);
 			void Clear();
-			void Insert(uint16_t seq, RetransmissionItem* retransmissionItem, uint32_t retransmissionDelayMs);
 
 		private:
+			void RemoveOldest();
+
+		private:
+			// Given as argument.
 			size_t maxEntries;
+			uint32_t clockRate;
+			// Others.
 			uint16_t startSeq{ 0u };
 			std::deque<RetransmissionItem*> buffer;
 		};
@@ -100,7 +106,6 @@ namespace RTC
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
-		void ClearOldStoredPackets();
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
@@ -116,7 +121,6 @@ namespace RTC
 		RetransmissionBuffer retransmissionBuffer;
 		std::string mid;
 		uint32_t maxRetransmissionDelayMs;
-		uint32_t currentRetransmissionDelayMs;
 		uint16_t rtxSeq{ 0u };
 		RTC::RtpDataCounter transmissionCounter;
 		// The middle 32 bits out of 64 in the NTP timestamp received in the most
