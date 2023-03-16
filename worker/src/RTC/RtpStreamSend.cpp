@@ -70,6 +70,8 @@ namespace RTC
 
 	void RtpStreamSend::StorageItemBuffer::Insert(uint16_t seq, StorageItem* storageItem)
 	{
+		auto bufferSize{ this->buffer.size() };
+
 		if (this->buffer.empty())
 		{
 			this->startSeq = seq;
@@ -81,7 +83,7 @@ namespace RTC
 			auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
 
 			// Packet arrived out of order, so we already have a slot allocated for it.
-			if (idx <= static_cast<uint16_t>(this->buffer.size() - 1))
+			if (idx <= static_cast<uint16_t>(bufferSize - 1))
 			{
 				MS_ASSERT(this->buffer[idx] == nullptr, "must insert into empty slot");
 
@@ -91,7 +93,7 @@ namespace RTC
 			{
 				// Calculate how many elements would it be necessary to add when pushing new item
 				// to the back of the deque.
-				auto addToBack = static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1));
+				auto addToBack = static_cast<uint16_t>(seq - (this->startSeq + bufferSize - 1));
 
 				// Packets can arrive out of order, add blank slots.
 				for (uint16_t i{ 1 }; i < addToBack; ++i)
@@ -102,21 +104,30 @@ namespace RTC
 				this->buffer.push_back(storageItem);
 			}
 		}
-		// Packet sequence number is the same or lower than startSeq.
 		else
 		{
-			// Calculate how many elements would it be necessary to add when pushing new item
-			// to the front of the deque.
-			auto addToFront = static_cast<uint16_t>(this->startSeq - seq);
-
-			// Packets can arrive out of order, add blank slots.
-			for (uint16_t i{ 1 }; i < addToFront; ++i)
+			// Buffer is already full
+			if (bufferSize == static_cast<size_t>(MaxSeq) + 1)
 			{
-				this->buffer.push_front(nullptr);
+				auto idx{ static_cast<uint16_t>(this->startSeq - seq) };
+				this->buffer[idx] = storageItem;
 			}
+			// Packet sequence number is the same or lower than startSeq.
+			else
+			{
+				// Calculate how many elements would it be necessary to add when pushing new item
+				// to the front of the deque.
+				auto addToFront = static_cast<uint16_t>(this->startSeq - seq);
 
-			this->buffer.push_front(storageItem);
-			this->startSeq = seq;
+				// Packets can arrive out of order, add blank slots.
+				for (uint16_t i{ 1 }; i < addToFront; ++i)
+				{
+					this->buffer.push_front(nullptr);
+				}
+
+				this->buffer.push_front(storageItem);
+				this->startSeq = seq;
+			}
 		}
 
 		MS_ASSERT(
