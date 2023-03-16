@@ -32,11 +32,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->params.useNack)
-		{
-			this->clearBufferPeriodicTimer = new Timer(this);
-		}
-
 		switch (params.mimeType.type)
 		{
 			case RTC::RtpCodecMimeType::Type::VIDEO:
@@ -58,11 +53,6 @@ namespace RTC
 				MS_ABORT("codec mimeType not set");
 			}
 		}
-
-		if (this->params.useNack)
-		{
-			this->clearBufferPeriodicTimer->Start(maxRetransmissionDelayMs);
-		}
 	}
 
 	RtpStreamSend::~RtpStreamSend()
@@ -71,8 +61,6 @@ namespace RTC
 
 		// Clear retransmission buffer.
 		this->retransmissionBuffer.Clear();
-
-		delete this->clearBufferPeriodicTimer;
 	}
 
 	void RtpStreamSend::FillJsonStats(json& jsonObject)
@@ -319,17 +307,11 @@ namespace RTC
 
 		// Clear retransmission buffer.
 		this->retransmissionBuffer.Clear();
-
-		// Stop periodic timer.
-		this->clearBufferPeriodicTimer->Stop();
 	}
 
 	void RtpStreamSend::Resume()
 	{
 		MS_TRACE();
-
-		// Restart periodic timer.
-		this->clearBufferPeriodicTimer->Restart();
 	}
 
 	uint32_t RtpStreamSend::GetBitrate(
@@ -380,80 +362,7 @@ namespace RTC
 			return;
 		}
 
-		this->retransmissionBuffer.Insert(packet, sharedPacket);
-
-		// TODO: This is previous code to be removed and implemented within Insert() method.
-
-		// Check if RTP packet is too old to be stored.
-		// if (this->retransmissionBuffer.GetSize() > 0)
-		// {
-		// 	auto* newestItem  = this->retransmissionBuffer.GetNewest();
-
-		// 	// Processing RTP packet is older than first one.
-		// 	if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(
-		// 	      packet->GetTimestamp(), newestItem->timestamp))
-		// 	{
-		// 		// Packet has lower sequence number than newest stored packet but its
-		// 		// timestamp is higher. This should not happen, so drop the packet.
-		// 		if (packet->GetTimestamp() > newestItem->timestamp)
-		// 		{
-		// 			MS_WARN_TAG(
-		// 			  rtp,
-		// 			  "packet has lower seq but higher timestamp than newest stored packet, dropping
-		// [ssrc:%" PRIu32 ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]", 			  packet->GetSsrc(),
-		// 			  packet->GetSequenceNumber(),
-		// 			  packet->GetTimestamp());
-
-		// 			return;
-		// 		}
-
-		// 		const uint32_t diffTs{ newestItem->timestamp - packet->GetTimestamp() };
-
-		// 		// RTP packet is older than the max retransmission delay.
-		// 		if (static_cast<uint32_t>(diffTs * 1000 / this->params.clockRate) >=
-		// this->maxRetransmissionDelayMs)
-		// 		{
-		// 			return;
-		// 		}
-		// 	}
-		// }
-
-		// auto seq          = packet->GetSequenceNumber();
-		// auto* item = this->retransmissionBuffer.Get(seq);
-
-		// // The buffer item is already used. Check whether we should replace its
-		// // storage with the new packet or just ignore it (if duplicated packet).
-		// if (item)
-		// {
-		// 	if (packet->GetTimestamp() == item->timestamp)
-		// 	{
-		// 		return;
-		// 	}
-
-		// 	// Reset the stored item (decrease RTP packet shared pointer counter).
-		// 	item->Reset();
-		// }
-		// // Allocate new buffer item.
-		// else
-		// {
-		// 	// Allocate a new item.
-		// 	item = new RetransmissionItem();
-
-		// 	this->retransmissionBuffer.Insert(seq, item);
-		// }
-
-		// // Only clone once and only if necessary.
-		// if (!sharedPacket.get())
-		// {
-		// 	sharedPacket.reset(packet->Clone());
-		// }
-
-		// // Store original packet and some extra info into the item.
-		// item->packet         = sharedPacket;
-		// item->ssrc           = packet->GetSsrc();
-		// item->sequenceNumber = packet->GetSequenceNumber();
-		// item->timestamp      = packet->GetTimestamp();
-		// item->receivedAtMs   = DepLibUV::GetTimeMs();
+		this->retransmissionBuffer.Insert(packet, sharedPacket, this->maxRetransmissionDelayMs);
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -707,16 +616,6 @@ namespace RTC
 		RtpStream::UpdateScore(score);
 	}
 
-	inline void RtpStreamSend::OnTimer(Timer* timer)
-	{
-		MS_TRACE();
-
-		if (timer == this->clearBufferPeriodicTimer)
-		{
-			this->retransmissionBuffer.ClearOld(this->maxRetransmissionDelayMs);
-		}
-	}
-
 	RtpStreamSend::RetransmissionBuffer::RetransmissionBuffer(uint16_t maxItems, uint32_t clockRate)
 	  : maxItems(maxItems), clockRate(clockRate)
 	{
@@ -762,7 +661,9 @@ namespace RTC
 	 * ordered by increasing seq but also that their timestamp are incremental).
 	 */
 	void RtpStreamSend::RetransmissionBuffer::Insert(
-	  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	  RTC::RtpPacket* packet,
+	  std::shared_ptr<RTC::RtpPacket>& sharedPacket,
+	  uint32_t maxRetransmissionDelayMs)
 	{
 		MS_TRACE();
 
@@ -783,8 +684,14 @@ namespace RTC
 			return;
 		}
 
+		// Clear old packets in the buffer.
+		ClearOld(maxRetransmissionDelayMs);
+
 		auto* oldestItem = GetOldest();
 		auto* newestItem = GetNewest();
+
+		MS_ASSERT(oldestItem != nullptr, "oldest item doesn't exist");
+		MS_ASSERT(newestItem != nullptr, "newest item doesn't exist");
 
 		// Packet arrived in order (its seq is higher than seq of the newest stored
 		// packet) so will become the newest one in the buffer.
@@ -832,7 +739,7 @@ namespace RTC
 		else if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, oldestItem->sequenceNumber))
 		{
 			// Ensure that packet is not too old to be stored.
-			if (IsPacketToOld(packet))
+			if (IsTooOld(timestamp, newestItem->timestamp, maxRetransmissionDelayMs))
 			{
 				return;
 			}
@@ -980,35 +887,29 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto newestItem = GetNewest();
+		const auto* newestItem = GetNewest();
 
 		if (!newestItem)
 		{
 			return;
 		}
 
-		// Time elapsed since newest packet was stored.
-		auto diffMs = DepLibUV::GetTimeMs() - newestItem->receivedAtMs;
-		auto diffTs = diffMs * this->clockRate / 1000;
-
-		// Min packet timestamp not considered old.
-		const auto minTimestamp = newestItem->timestamp - diffTs;
+		RtpStreamSend::RetransmissionItem* oldestItem{ nullptr };
 
 		// Go through all buffer items starting with the first and free all items
 		// that contain too old packets.
-		for (size_t i{ 0u }; this->buffer.size() > 0; ++i)
+		while ((oldestItem = GetOldest()))
 		{
-			auto* item = GetOldest();
-
-			// If current oldest stored packet is still valid for retransmission,exit
-			// the loop since we know that stored packets after it are guaranteed to
-			// be newer.
-			if (item->timestamp >= minTimestamp)
+			if (IsTooOld(oldestItem->timestamp, newestItem->timestamp, maxRetransmissionDelayMs))
+			{
+				RemoveOldest();
+			}
+			// If current oldest stored packet is not too old, exit the loop since we
+			// know that packets stored after it are guaranteed to be newer.
+			else
 			{
 				break;
 			}
-
-			RemoveOldest();
 		}
 	}
 
@@ -1086,14 +987,30 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
+		MS_ASSERT(
+		  numItems <= this->buffer.size(), "attempting to remove more items than current buffer size");
+
+		auto intendedBufferSize = this->buffer.size() - numItems;
+
+		while (this->buffer.size() > intendedBufferSize)
+		{
+			RemoveOldest();
+		}
 	}
 
-	bool RtpStreamSend::RetransmissionBuffer::IsPacketToOld(RTC::RtpPacket* packet) const
+	bool RtpStreamSend::RetransmissionBuffer::IsTooOld(
+	  uint32_t timestamp, uint32_t newestTimestamp, uint32_t maxRetransmissionDelayMs) const
 	{
 		MS_TRACE();
 
-		// TODO
+		if (RTC::SeqManager<uint32_t>::IsSeqHigherThan(timestamp, newestTimestamp))
+		{
+			return false;
+		}
+
+		const int64_t diffTs = newestTimestamp - timestamp;
+
+		return static_cast<uint32_t>(diffTs * 1000 / this->clockRate) > maxRetransmissionDelayMs;
 	}
 
 	RtpStreamSend::RetransmissionItem* RtpStreamSend::RetransmissionBuffer::FillItem(
@@ -1108,7 +1025,6 @@ namespace RTC
 		item->ssrc           = packet->GetSsrc();
 		item->sequenceNumber = packet->GetSequenceNumber();
 		item->timestamp      = packet->GetTimestamp();
-		item->receivedAtMs   = DepLibUV::GetTimeMs();
 
 		// Store original packet into the item. Only clone once and only if
 		// necessary.
@@ -1128,7 +1044,6 @@ namespace RTC
 		this->ssrc           = 0u;
 		this->sequenceNumber = 0u;
 		this->timestamp      = 0u;
-		this->receivedAtMs   = 0u;
 		this->resentAtMs     = 0u;
 		this->sentTimes      = 0u;
 	}

@@ -3,12 +3,11 @@
 
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpStream.hpp"
-#include "handles/Timer.hpp"
 #include <deque>
 
 namespace RTC
 {
-	class RtpStreamSend : public RTC::RtpStream, public Timer::Listener
+	class RtpStreamSend : public RTC::RtpStream
 	{
 	public:
 		// Minimum retransmission buffer size (ms).
@@ -39,8 +38,6 @@ namespace RTC
 			uint16_t sequenceNumber{ 0u };
 			// Correct timestamp since original packet may not have the same.
 			uint32_t timestamp{ 0u };
-			// System time when this packet was received..
-			uint64_t receivedAtMs{ 0u };
 			// Last time this packet was resent.
 			uint64_t resentAtMs{ 0u };
 			// Number of times this packet was resent.
@@ -60,7 +57,10 @@ namespace RTC
 			~RetransmissionBuffer();
 
 			RetransmissionItem* Get(uint16_t seq) const;
-			void Insert(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
+			void Insert(
+			  RTC::RtpPacket* packet,
+			  std::shared_ptr<RTC::RtpPacket>& sharedPacket,
+			  uint32_t maxRetransmissionDelayMs);
 			void ClearOld(uint32_t maxRetransmissionDelayMs);
 			void Clear();
 
@@ -69,7 +69,7 @@ namespace RTC
 			RetransmissionItem* GetNewest() const;
 			void RemoveOldest();
 			void RemoveAtLeast(uint16_t numItems);
-			bool IsPacketToOld(RTC::RtpPacket* packet) const;
+			bool IsTooOld(uint32_t timestamp, uint32_t newestTimestamp, uint32_t maxRetransmissionDelayMs) const;
 			RetransmissionItem* FillItem(
 			  RetransmissionItem* item,
 			  RTC::RtpPacket* packet,
@@ -114,10 +114,6 @@ namespace RTC
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
-		/* Pure virtual methods inherited from Timer. */
-	protected:
-		void OnTimer(Timer* timer) override;
-
 	private:
 		// Packets lost at last interval for score calculation.
 		uint32_t lostPriorScore{ 0u };
@@ -134,7 +130,6 @@ namespace RTC
 		// Wallclock time representing the most recent receiver reference timestamp
 		// arrival.
 		uint64_t lastRrReceivedMs{ 0u };
-		Timer* clearBufferPeriodicTimer{ nullptr };
 	};
 } // namespace RTC
 
