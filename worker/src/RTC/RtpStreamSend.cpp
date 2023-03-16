@@ -27,7 +27,8 @@ namespace RTC
 
 	RtpStreamSend::RtpStreamSend(
 	  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, std::string& mid)
-	  : RTC::RtpStream::RtpStream(listener, params, 10), retransmissionBuffer(MaxBufferEntries, params.clockRate), mid(mid)
+	  : RTC::RtpStream::RtpStream(listener, params, 10),
+	    retransmissionBuffer(MaxBufferEntries, params.clockRate), mid(mid)
 	{
 		MS_TRACE();
 
@@ -381,9 +382,6 @@ namespace RTC
 
 		this->retransmissionBuffer.Insert(packet, sharedPacket);
 
-
-
-
 		// TODO: This is previous code to be removed and implemented within Insert() method.
 
 		// Check if RTP packet is too old to be stored.
@@ -401,8 +399,8 @@ namespace RTC
 		// 		{
 		// 			MS_WARN_TAG(
 		// 			  rtp,
-		// 			  "packet has lower seq but higher timestamp than newest stored packet, dropping [ssrc:%" PRIu32 ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
-		// 			  packet->GetSsrc(),
+		// 			  "packet has lower seq but higher timestamp than newest stored packet, dropping
+		// [ssrc:%" PRIu32 ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]", 			  packet->GetSsrc(),
 		// 			  packet->GetSequenceNumber(),
 		// 			  packet->GetTimestamp());
 
@@ -412,7 +410,8 @@ namespace RTC
 		// 		const uint32_t diffTs{ newestItem->timestamp - packet->GetTimestamp() };
 
 		// 		// RTP packet is older than the max retransmission delay.
-		// 		if (static_cast<uint32_t>(diffTs * 1000 / this->params.clockRate) >= this->maxRetransmissionDelayMs)
+		// 		if (static_cast<uint32_t>(diffTs * 1000 / this->params.clockRate) >=
+		// this->maxRetransmissionDelayMs)
 		// 		{
 		// 			return;
 		// 		}
@@ -718,7 +717,8 @@ namespace RTC
 		}
 	}
 
-	RtpStreamSend::RetransmissionBuffer::RetransmissionBuffer(size_t maxEntries, uint32_t clockRate) : maxEntries(maxEntries), clockRate(clockRate)
+	RtpStreamSend::RetransmissionBuffer::RetransmissionBuffer(uint16_t maxItems, uint32_t clockRate)
+	  : maxItems(maxItems), clockRate(clockRate)
 	{
 		MS_TRACE();
 	}
@@ -728,27 +728,6 @@ namespace RTC
 		MS_TRACE();
 
 		Clear();
-	}
-
-	size_t RtpStreamSend::RetransmissionBuffer::GetSize() const
-	{
-		MS_TRACE();
-
-		return this->buffer.size();
-	}
-
-	RtpStreamSend::RetransmissionItem* RtpStreamSend::RetransmissionBuffer::GetOldest() const
-	{
-		MS_TRACE();
-
-		return this->Get(this->startSeq);
-	}
-
-	RtpStreamSend::RetransmissionItem* RtpStreamSend::RetransmissionBuffer::GetNewest() const
-	{
-		MS_TRACE();
-
-		return this->Get(this->startSeq + this->buffer.size() - 1);
 	}
 
 	RtpStreamSend::RetransmissionItem* RtpStreamSend::RetransmissionBuffer::Get(uint16_t seq) const
@@ -765,7 +744,7 @@ namespace RTC
 			return nullptr;
 		}
 
-		auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
+		auto idx = static_cast<uint16_t>(seq - this->startSeq);
 
 		if (idx > static_cast<uint16_t>(this->buffer.size() - 1))
 		{
@@ -775,137 +754,226 @@ namespace RTC
 		return this->buffer.at(idx);
 	}
 
-	void RtpStreamSend::RetransmissionBuffer::Insert(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	/**
+	 * This method tries to insert given packet into the buffer. Here we assume
+	 * that packet seq number is legitimate according to the content of the buffer.
+	 * We discard the packet if too old and also discard it if its timestamp does
+	 * not properly fit (by ensuring that elements in the buffer are not only
+	 * ordered by increasing seq but also that their timestamp are incremental).
+	 */
+	void RtpStreamSend::RetransmissionBuffer::Insert(
+	  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
 	{
 		MS_TRACE();
 
-		auto seq = packet->GetSequenceNumber();
-		auto* item = Get(seq);
+		auto ssrc      = packet->GetSsrc();
+		auto seq       = packet->GetSequenceNumber();
+		auto timestamp = packet->GetTimestamp();
 
-		MS_DUMP("--- [seq:%" PRIu16 "]", seq);
-
-		// The buffer item is already used. Ignore packet if it's duplicated.
-		if (item && packet->GetTimestamp() == item->timestamp)
+		// Buffer is empty, so just insert new item.
+		if (this->buffer.empty())
 		{
+			auto* item = new RetransmissionItem();
+
+			this->buffer.push_back(FillItem(item, packet, sharedPacket));
+
+			// Packet's seq number becomes startSeq.
+			this->startSeq = seq;
+
+			return;
+		}
+
+		auto* oldestItem = GetOldest();
+		auto* newestItem = GetNewest();
+
+		// Packet arrived in order (its seq is higher than seq of the newest stored
+		// packet) so will become the newest one in the buffer.
+		if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(seq, newestItem->sequenceNumber))
+		{
+			// Ensure that the timestamp of the packet is equal or higher than the
+			// timestamp of the newest stored packet.
+			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(timestamp, newestItem->timestamp))
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "packet has higher seq but less timestamp than newest stored packet, discarding it [ssrc:%" PRIu32
+				  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
+				  ssrc,
+				  seq,
+				  timestamp);
+
 				return;
+			}
+
+			// Calculate how many blank slots it would be necessary to add when
+			// pushing new item to the back of the buffer.
+			auto numBlankSlots = static_cast<uint16_t>(seq - newestItem->sequenceNumber - 1);
+
+			// We may have to remove oldest items not to exceed the maximum size of
+			// the buffer.
+			if (this->buffer.size() + numBlankSlots + 1 > this->maxItems)
+			{
+				RemoveAtLeast(this->buffer.size() + numBlankSlots + 1 - this->maxItems);
+			}
+
+			// Push blank slots to the back.
+			for (uint16_t i{ 0u }; i < numBlankSlots; ++i)
+			{
+				this->buffer.push_back(nullptr);
+			}
+
+			// Push the packet, which becomes the newest one in the buffer.
+			auto* item = new RetransmissionItem();
+
+			this->buffer.push_back(FillItem(item, packet, sharedPacket));
 		}
-
-		// TODO: Here we must validate that, if this packet is introduced in the
-		// buffer, its timestamp is higher than the timestamp of the immediate older
-		// packet (if any), and its timestamp is lower than the timestamp of the
-		// immediate newer packet (if any).
-		// And must also validate that the buffer is not full, and if so, remove
-		// oldest packet. But only if not a repeated packet.
-
-		// If the buffer item was already used we must replace its storage.
-		if (item)
+		// Packet arrived out order and its seq is less than seq of the oldest
+		// stored packet, so will become the oldest one in the buffer.
+		else if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, oldestItem->sequenceNumber))
 		{
-			// Reset the stored item (decrease RTP packet shared pointer counter).
-			item->Reset();
+			// Ensure that packet is not too old to be stored.
+			if (IsPacketToOld(packet))
+			{
+				return;
+			}
+
+			// Ensure that the timestamp of the packet is equal or less than the
+			// timestamp of the oldest stored packet.
+			if (RTC::SeqManager<uint32_t>::IsSeqHigherThan(timestamp, oldestItem->timestamp))
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "packet has less seq but higher timestamp than oldest stored packet, discarding it [ssrc:%" PRIu32
+				  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
+				  ssrc,
+				  seq,
+				  timestamp);
+
+				return;
+			}
+
+			// Calculate how many blank slots it would be necessary to add when
+			// pushing new item to the fton of the buffer.
+			auto numBlankSlots = static_cast<uint16_t>(oldestItem->sequenceNumber - seq - 1);
+
+			// If adding this packet (and needed blank slots) to the front makes the
+			// buffer exceed its max size, discard this packet.
+			if (this->buffer.size() + numBlankSlots + 1 > this->maxItems)
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "discarding received old packet to not exceed max buffer size [ssrc:%" PRIu32
+				  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
+				  ssrc,
+				  seq,
+				  timestamp);
+
+				return;
+			}
+
+			// Push blank slots to the front.
+			for (uint16_t i{ 0u }; i < numBlankSlots; ++i)
+			{
+				this->buffer.push_front(nullptr);
+			}
+
+			// Insert the packet, which becomes the oldest one in the buffer.
+			auto* item = new RetransmissionItem();
+
+			this->buffer.push_front(FillItem(item, packet, sharedPacket));
+
+			// Packet's seq number becomes startSeq.
+			this->startSeq = seq;
 		}
-		// Otherwise allocate a new item.
+		// Otherwise packet must be inserted between oldest and newest stored items
+		// so there is already an allocated slot for it.
 		else
 		{
+			// Let's check if an item already exist in same position. If so, assume
+			// it's duplicated.
+			auto* item = Get(seq);
+
+			if (item)
+			{
+				return;
+			}
+
+			// idx is the intended position of the received packet in the buffer.
+			auto idx = static_cast<uint16_t>(seq - this->startSeq);
+
+			// Validate that packet timestamp is equal or higher than the timestamp of
+			// the immediate older packet (if any).
+			for (auto idx2 = static_cast<int32_t>(idx - 1); idx2 >= 0; --idx2)
+			{
+				auto* olderItem = this->buffer.at(idx2);
+
+				// Blank slot, continue.
+				if (!olderItem)
+				{
+					continue;
+				}
+
+				// We are done.
+				if (timestamp >= olderItem->timestamp)
+				{
+					break;
+				}
+				else
+				{
+					MS_WARN_TAG(
+					  rtp,
+					  "packet timestamp is less than timestamp of immediate older packet in the buffer, discarding it [ssrc:%" PRIu32
+					  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
+					  ssrc,
+					  seq,
+					  timestamp);
+
+					return;
+				}
+			}
+
+			// Validate that packet timestamp is equal or less than the timestamp of
+			// the immediate newer packet (if any).
+			for (auto idx2 = static_cast<uint16_t>(idx + 1); idx2 < this->buffer.size(); ++idx2)
+			{
+				auto* newerItem = this->buffer.at(idx2);
+
+				// Blank slot, continue.
+				if (!newerItem)
+				{
+					continue;
+				}
+
+				// We are done.
+				if (timestamp <= newerItem->timestamp)
+				{
+					break;
+				}
+				else
+				{
+					MS_WARN_TAG(
+					  rtp,
+					  "packet timestamp is higher than timestamp of immediate newer packet in the buffer, discarding it [ssrc:%" PRIu32
+					  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
+					  ssrc,
+					  seq,
+					  timestamp);
+
+					return;
+				}
+			}
+
+			// Store the packet.
 			item = new RetransmissionItem();
+
+			this->buffer[idx] = FillItem(item, packet, sharedPacket);
 		}
-
-		// Store original packet and some extra info into the item.
-		item->packet         = sharedPacket;
-		item->ssrc           = packet->GetSsrc();
-		item->sequenceNumber = packet->GetSequenceNumber();
-		item->timestamp      = packet->GetTimestamp();
-		item->receivedAtMs   = DepLibUV::GetTimeMs();
-
-		// Store original packet into the item. Only clone once and only if
-		// necessary.
-		if (!sharedPacket.get())
-		{
-			sharedPacket.reset(packet->Clone());
-		}
-
-
-
-		// if (this->buffer.empty())
-		// {
-		// 	MS_DUMP("--- 1 [seq:%" PRIu16 "] buffer empty", seq);
-
-		// 	this->startSeq = seq;
-		// 	this->buffer.push_back(item);
-		// }
-		// // Packet sequence number is higher than startSeq.
-		// else if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(seq, this->startSeq))
-		// {
-		// 	MS_DUMP(
-		// 	  "--- 2 [seq:%" PRIu16 "] IsSeqHigherThan(%" PRIu16 "%" PRIu16 ")", seq, seq, this->startSeq);
-
-		// 	auto idx{ static_cast<uint16_t>(seq - this->startSeq) };
-
-		// 	// Packet arrived out of order, so we already have a slot allocated for it.
-		// 	if (idx <= static_cast<uint16_t>(this->buffer.size() - 1))
-		// 	{
-		// 		MS_DUMP("--- 2.a [seq:%" PRIu16 "] packet out of order", seq);
-
-		// 		MS_ASSERT(this->buffer.at(idx) == nullptr, "must insert into empty slot");
-
-		// 		MS_DUMP("--- 2.a [seq:%" PRIu16 "] buffer[idx] = item", seq);
-
-		// 		this->buffer[idx] = item;
-		// 	}
-		// 	else
-		// 	{
-		// 		MS_DUMP("--- 2.b [seq:%" PRIu16 "] packet in order", seq);
-
-		// 		// Calculate how many elements would it be necessary to add when pushing new item
-		// 		// to the back of the deque.
-		// 		auto addToBack = static_cast<uint16_t>(seq - (this->startSeq + this->buffer.size() - 1));
-
-		// 		MS_DUMP("--- 2.b [seq:%" PRIu16 "] addToBack:%" PRIu16, seq, addToBack);
-
-		// 		// Packets can arrive out of order, add blank slots.
-		// 		for (uint16_t i{ 1 }; i < addToBack; ++i)
-		// 		{
-		// 			MS_DUMP("--- 2.b [seq:%" PRIu16 "] buffer.push_back(nullptr)", seq);
-
-		// 			this->buffer.push_back(nullptr);
-		// 		}
-
-		// 		MS_DUMP("--- 2.b [seq:%" PRIu16 "] buffer.push_back(item)", seq);
-
-		// 		this->buffer.push_back(item);
-		// 	}
-		// }
-		// Packet sequence number is the same or lower than startSeq.
-		// else
-		// {
-		// 	MS_DUMP(
-		// 	  "--- 3 [seq:%" PRIu16 "] ! IsSeqHigherThan(%" PRIu16 ", %" PRIu16 ")", seq, seq, this->startSeq);
-
-		// 	// Calculate how many elements would it be necessary to add when pushing new item
-		// 	// to the front of the deque.
-		// 	auto addToFront = static_cast<uint16_t>(this->startSeq - seq);
-
-		// 	MS_DUMP("--- 3 [seq:%" PRIu16 "] addToFront:%" PRIu16, seq, addToFront);
-
-		// 	// Packets can arrive out of order, add blank slots.
-		// 	for (uint16_t i{ 1 }; i < addToFront; ++i)
-		// 	{
-		// 		MS_DUMP("--- 3 [seq:%" PRIu16 "] buffer.push_front(nullptr)", seq);
-
-		// 		this->buffer.push_front(nullptr);
-		// 	}
-
-		// 	MS_DUMP("--- 3 [seq:%" PRIu16 "] buffer.push_front(item)", seq);
-
-		// 	this->buffer.push_front(item);
-		// 	this->startSeq = seq;
-		// }
-
-		// MS_DUMP("--- 4 [seq:%" PRIu16 "] buffer.size:%zu", seq, this->buffer.size());
 
 		MS_ASSERT(
-		  this->buffer.size() <= this->maxEntries,
-		  "RetransmissionBuffer contains more than %zu entries",
-		  this->maxEntries);
+		  this->buffer.size() <= this->maxItems,
+		  "RetransmissionBuffer contains %zu items (more than %" PRIu16 " max items)",
+		  this->buffer.size(),
+		  this->maxItems);
 	}
 
 	void RtpStreamSend::RetransmissionBuffer::ClearOld(uint32_t maxRetransmissionDelayMs)
@@ -928,7 +996,7 @@ namespace RTC
 
 		// Go through all buffer items starting with the first and free all items
 		// that contain too old packets.
-		for (size_t i{ 0u }; GetSize() > 0; ++i)
+		for (size_t i{ 0u }; this->buffer.size() > 0; ++i)
 		{
 			auto* item = GetOldest();
 
@@ -965,6 +1033,21 @@ namespace RTC
 		this->startSeq = 0u;
 	}
 
+	RtpStreamSend::RetransmissionItem* RtpStreamSend::RetransmissionBuffer::GetOldest() const
+	{
+		MS_TRACE();
+
+		return this->Get(this->startSeq);
+	}
+
+	RtpStreamSend::RetransmissionItem* RtpStreamSend::RetransmissionBuffer::GetNewest() const
+	{
+		MS_TRACE();
+
+		return this->Get(this->startSeq + this->buffer.size() - 1);
+	}
+
+	// TODO: REMOVE PROBABLY
 	void RtpStreamSend::RetransmissionBuffer::RemoveOldest()
 	{
 		MS_TRACE();
@@ -997,6 +1080,44 @@ namespace RTC
 		{
 			this->startSeq = 0u;
 		}
+	}
+
+	void RtpStreamSend::RetransmissionBuffer::RemoveAtLeast(uint16_t numItems)
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	bool RtpStreamSend::RetransmissionBuffer::IsPacketToOld(RTC::RtpPacket* packet) const
+	{
+		MS_TRACE();
+
+		// TODO
+	}
+
+	RtpStreamSend::RetransmissionItem* RtpStreamSend::RetransmissionBuffer::FillItem(
+	  RtpStreamSend::RetransmissionItem* item,
+	  RTC::RtpPacket* packet,
+	  std::shared_ptr<RTC::RtpPacket>& sharedPacket) const
+	{
+		MS_TRACE();
+
+		// Store original packet and some extra info into the item.
+		item->packet         = sharedPacket;
+		item->ssrc           = packet->GetSsrc();
+		item->sequenceNumber = packet->GetSequenceNumber();
+		item->timestamp      = packet->GetTimestamp();
+		item->receivedAtMs   = DepLibUV::GetTimeMs();
+
+		// Store original packet into the item. Only clone once and only if
+		// necessary.
+		if (!sharedPacket.get())
+		{
+			sharedPacket.reset(packet->Clone());
+		}
+
+		return item;
 	}
 
 	void RtpStreamSend::RetransmissionItem::Reset()

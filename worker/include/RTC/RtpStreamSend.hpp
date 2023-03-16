@@ -56,23 +56,28 @@ namespace RTC
 		class RetransmissionBuffer
 		{
 		public:
-			explicit RetransmissionBuffer(size_t maxEntries, uint32_t clockRate);
+			explicit RetransmissionBuffer(uint16_t maxItems, uint32_t clockRate);
 			~RetransmissionBuffer();
 
-			size_t GetSize() const;
-			RetransmissionItem* GetOldest() const;
-			RetransmissionItem* GetNewest() const;
 			RetransmissionItem* Get(uint16_t seq) const;
 			void Insert(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
 			void ClearOld(uint32_t maxRetransmissionDelayMs);
 			void Clear();
 
 		private:
+			RetransmissionItem* GetOldest() const;
+			RetransmissionItem* GetNewest() const;
 			void RemoveOldest();
+			void RemoveAtLeast(uint16_t numItems);
+			bool IsPacketToOld(RTC::RtpPacket* packet) const;
+			RetransmissionItem* FillItem(
+			  RetransmissionItem* item,
+			  RTC::RtpPacket* packet,
+			  std::shared_ptr<RTC::RtpPacket>& sharedPacket) const;
 
 		private:
 			// Given as argument.
-			size_t maxEntries;
+			uint16_t maxItems;
 			uint32_t clockRate;
 			// Others.
 			uint16_t startSeq{ 0u };
