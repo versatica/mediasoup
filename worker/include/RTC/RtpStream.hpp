@@ -13,6 +13,7 @@
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpPacket.hpp"
 #include "RTC/RtxStream.hpp"
 #include <nlohmann/json.hpp>
 #include <string>

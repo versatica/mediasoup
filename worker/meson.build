@@ -84,6 +84,7 @@ common_sources = [
   'src/RTC/PortManager.cpp',
   'src/RTC/Producer.cpp',
   'src/RTC/RateCalculator.cpp',
+  'src/RTC/RetransmissionBuffer.cpp',
   'src/RTC/Router.cpp',
   'src/RTC/RtpListener.cpp',
   'src/RTC/RtpObserver.cpp',
