@@ -106,7 +106,7 @@ namespace RTC
 		}
 		else
 		{
-			// Buffer is already full
+			// Buffer is already full.
 			if (bufferSize == static_cast<size_t>(MaxSeq) + 1)
 			{
 				auto idx{ static_cast<uint16_t>(this->startSeq - seq) };
