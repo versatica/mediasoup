@@ -386,8 +386,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ERROR_STD("1");
-
 		// Ensure the container's first element is 0.
 		RetransmissionContainer[0] = nullptr;
 
@@ -413,15 +411,12 @@ namespace RTC
 		bool firstPacketSent{ false };
 		uint8_t bitmaskCounter{ 0 };
 
-		MS_ERROR_STD("2");
-
 		while (requested || bitmask != 0)
 		{
 			bool sent = false;
 
 			if (requested)
 			{
-				MS_ERROR_STD("3 [currentSeq:%" PRIu16 "]", currentSeq);
 				auto* item = this->retransmissionBuffer->Get(currentSeq);
 				std::shared_ptr<RTC::RtpPacket> packet{ nullptr };
 
@@ -429,11 +424,6 @@ namespace RTC
 				// requested packet's timestamp (in ms).
 				if (item)
 				{
-					MS_ERROR_STD(
-					  "4 item [currentSeq:%" PRIu16 ", item->packet?:%s]",
-					  currentSeq,
-					  item->packet ? "yes" : "no");
-
 					packet = item->packet;
 					// Put correct info into the packet.
 					packet->SetSsrc(item->ssrc);
@@ -450,7 +440,6 @@ namespace RTC
 				// Packet not found.
 				if (!item)
 				{
-					MS_ERROR_STD("4 no item [currentSeq:%" PRIu16 "]", currentSeq);
 					// Do nothing.
 				}
 				// Don't resent the packet if it was resent in the last RTT ms.
@@ -476,8 +465,6 @@ namespace RTC
 					{
 						// Increment RTX seq.
 						++this->rtxSeq;
-
-						MS_ERROR_STD("5 packet->RtxEncode() [currentSeq:%" PRIu16 "]", currentSeq);
 
 						packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
 					}
