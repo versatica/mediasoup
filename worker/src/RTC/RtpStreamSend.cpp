@@ -376,6 +376,12 @@ namespace RTC
 	//
 	// If RTX is used the stored packet will be RTX encoded now (if not already
 	// encoded in a previous resend).
+	//
+	// NOTE: This method doesn't verify whether requested stored packet is too
+	// old, why? Because, if we verified it, we would do it by comparing its
+	// timestamp with the newest one in the retransmission buffer. However we
+	// already clean old packets upon receipt of any new packet (see Insert()
+	// method in RetransmissionBuffer class).
 	void RtpStreamSend::FillRetransmissionContainer(uint16_t seq, uint16_t bitmask)
 	{
 		MS_TRACE();
