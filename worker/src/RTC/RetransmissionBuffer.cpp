@@ -295,7 +295,7 @@ namespace RTC
 
 			// Validate that packet timestamp is equal or less than the timestamp of
 			// the immediate newer packet (if any).
-			for (auto idx2 = static_cast<uint16_t>(idx + 1); idx2 < this->buffer.size(); ++idx2)
+			for (auto idx2 = static_cast<size_t>(idx + 1); idx2 < this->buffer.size(); ++idx2)
 			{
 				auto* newerItem = this->buffer.at(idx2);
 
