@@ -93,24 +93,31 @@ namespace RTC
 		// Passed by argument.
 		unsigned int sendNackDelayMs{ 0u };
 		// Others.
-		uint32_t expectedPrior{ 0u };      // Packets expected at last interval.
-		uint32_t expectedPriorScore{ 0u }; // Packets expected at last interval for score calculation.
-		uint32_t receivedPrior{ 0u };      // Packets received at last interval.
-		uint32_t receivedPriorScore{ 0u }; // Packets received at last interval for score calculation.
-		uint32_t lastSrTimestamp{ 0u };    // The middle 32 bits out of 64 in the NTP
-		                                   // timestamp received in the most recent
-		                                   // sender report.
-		uint64_t lastSrReceived{ 0u };     // Wallclock time representing the most recent
-		                                   // sender report arrival.
-		int32_t transit{ 0u };             // Relative transit time for prev packet.
+		// Packets expected at last interval.
+		uint32_t expectedPrior{ 0u };
+		// Packets expected at last interval for score calculation.
+		uint32_t expectedPriorScore{ 0u };
+		// Packets received at last interval.
+		uint32_t receivedPrior{ 0u };
+		// Packets received at last interval for score calculation.
+		uint32_t receivedPriorScore{ 0u };
+		// The middle 32 bits out of 64 in the NTP timestamp received in the most
+		// recent sender report.
+		uint32_t lastSrTimestamp{ 0u };
+		// Wallclock time representing the most recent sender report arrival.
+		uint64_t lastSrReceived{ 0u };
+		// Relative transit time for prev packet.
+		int32_t transit{ 0u };
 		uint32_t jitter{ 0u };
 		uint8_t firSeqNumber{ 0u };
 		uint32_t reportedPacketLost{ 0u };
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 		Timer* inactivityCheckPeriodicTimer{ nullptr };
 		bool inactive{ false };
-		TransmissionCounter transmissionCounter;      // Valid media + valid RTX.
-		RTC::RtpDataCounter mediaTransmissionCounter; // Just valid media.
+		// Valid media + valid RTX.
+		TransmissionCounter transmissionCounter;
+		// Just valid media.
+		RTC::RtpDataCounter mediaTransmissionCounter;
 	};
 } // namespace RTC
 

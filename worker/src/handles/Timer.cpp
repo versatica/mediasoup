@@ -43,7 +43,9 @@ Timer::~Timer()
 	MS_TRACE();
 
 	if (!this->closed)
+	{
 		Close();
+	}
 }
 
 void Timer::Close()
@@ -51,7 +53,9 @@ void Timer::Close()
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		return;
+	}
 
 	this->closed = true;
 
@@ -63,18 +67,24 @@ void Timer::Start(uint64_t timeout, uint64_t repeat)
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		MS_THROW_ERROR("closed");
+	}
 
 	this->timeout = timeout;
 	this->repeat  = repeat;
 
 	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0)
+	{
 		Stop();
+	}
 
 	const int err = uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), timeout, repeat);
 
 	if (err != 0)
+	{
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
+	}
 }
 
 void Timer::Stop()
@@ -82,12 +92,16 @@ void Timer::Stop()
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		MS_THROW_ERROR("closed");
+	}
 
 	const int err = uv_timer_stop(this->uvHandle);
 
 	if (err != 0)
+	{
 		MS_THROW_ERROR("uv_timer_stop() failed: %s", uv_strerror(err));
+	}
 }
 
 void Timer::Reset()
@@ -95,19 +109,27 @@ void Timer::Reset()
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		MS_THROW_ERROR("closed");
+	}
 
 	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) == 0)
+	{
 		return;
+	}
 
 	if (this->repeat == 0u)
+	{
 		return;
+	}
 
 	const int err =
 	  uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), this->repeat, this->repeat);
 
 	if (err != 0)
+	{
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
+	}
 }
 
 void Timer::Restart()
@@ -115,16 +137,22 @@ void Timer::Restart()
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		MS_THROW_ERROR("closed");
+	}
 
 	if (uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0)
+	{
 		Stop();
+	}
 
 	const int err =
 	  uv_timer_start(this->uvHandle, static_cast<uv_timer_cb>(onTimer), this->timeout, this->repeat);
 
 	if (err != 0)
+	{
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
+	}
 }
 
 inline void Timer::OnUvTimer()
