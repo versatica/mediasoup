@@ -45,7 +45,7 @@ namespace RTC
 		Item* GetOldest() const;
 		Item* GetNewest() const;
 		void RemoveOldest();
-		void RemoveFromFrontAtLeast(uint16_t numItems);
+		void RemoveOldest(uint16_t numItems);
 		void ClearTooOld();
 		bool IsTooOld(uint32_t timestamp, uint32_t newestTimestamp) const;
 		Item* FillItem(

@@ -140,14 +140,14 @@ namespace RTC
 				else
 				{
 					MS_DEBUG_DEV(
-					  "calling RemoveFromFrontAtLeast(%" PRIu16 ") [bufferSize:%zu, numBlankSlots:%" PRIu16
+					  "calling RemoveOldest(%" PRIu16 ") [bufferSize:%zu, numBlankSlots:%" PRIu16
 					  ", maxItems:%" PRIu16 "]",
 					  numItemsToRemove,
 					  this->buffer.size(),
 					  numBlankSlots,
 					  this->maxItems);
 
-					RemoveFromFrontAtLeast(numItemsToRemove);
+					RemoveOldest(numItemsToRemove);
 				}
 			}
 
@@ -245,6 +245,11 @@ namespace RTC
 
 			if (item)
 			{
+				MS_DEBUG_DEV(
+				  "packet already in the buffer, discarding [seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
+				  seq,
+				  timestamp);
+
 				return;
 			}
 
@@ -407,12 +412,23 @@ namespace RTC
 		this->buffer.pop_front();
 		this->startSeq++;
 
+		MS_DEBUG_DEV("removed 1 item from the front");
+
 		// Remove all nullptr elements from the beginning of the buffer.
 		// NOTE: Calling front on an empty container is undefined.
+		size_t numItemsRemoved{ 0u };
+
 		while (!this->buffer.empty() && this->buffer.front() == nullptr)
 		{
 			this->buffer.pop_front();
 			this->startSeq++;
+
+			++numItemsRemoved;
+		}
+
+		if (numItemsRemoved)
+		{
+			MS_DEBUG_DEV("removed 1 blank slot from the front");
 		}
 
 		// If we emptied the full buffer, reset startSeq.
@@ -422,7 +438,7 @@ namespace RTC
 		}
 	}
 
-	void RetransmissionBuffer::RemoveFromFrontAtLeast(uint16_t numItems)
+	void RetransmissionBuffer::RemoveOldest(uint16_t numItems)
 	{
 		MS_TRACE();
 
