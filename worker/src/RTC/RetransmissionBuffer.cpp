@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::RetransmissionBuffer"
-// TODO: Comment.
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RetransmissionBuffer.hpp"
 #include "Logger.hpp"
@@ -65,20 +64,10 @@ namespace RTC
 		auto seq       = packet->GetSequenceNumber();
 		auto timestamp = packet->GetTimestamp();
 
-		MS_ERROR_STD(
-		  "BEGIN | packet [seq:%" PRIu16 ", timestamp:%" PRIu32 ", buffer.size:%zu]",
-		  seq,
-		  timestamp,
-		  this->buffer.size());
-
 		// Buffer is empty, so just insert new item.
 		if (this->buffer.empty())
 		{
-			MS_ERROR_STD(
-			  "buffer empty [seq:%" PRIu16 ", timestamp:%" PRIu32 ", buffer.size:%zu]",
-			  seq,
-			  timestamp,
-			  this->buffer.size());
+			MS_DEBUG_DEV("buffer empty [seq:%" PRIu16 ", timestamp:%" PRIu32 "", seq, timestamp);
 
 			auto* item = new Item();
 
@@ -103,11 +92,7 @@ namespace RTC
 		// packet) so will become the newest one in the buffer.
 		if (RTC::SeqManager<uint16_t>::IsSeqHigherThan(seq, newestItem->sequenceNumber))
 		{
-			MS_ERROR_STD(
-			  "packet in order [seq:%" PRIu16 ", timestamp:%" PRIu32 ", buffer.size:%zu]",
-			  seq,
-			  timestamp,
-			  this->buffer.size());
+			MS_DEBUG_DEV("packet in order [seq:%" PRIu16 ", timestamp:%" PRIu32 "]", seq, timestamp);
 
 			// Ensure that the timestamp of the packet is equal or higher than the
 			// timestamp of the newest stored packet.
@@ -115,7 +100,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  rtp,
-				  "packet has higher seq but less timestamp than newest stored packet, discarding it [ssrc:%" PRIu32
+				  "packet has higher seq but less timestamp than newest packet in the buffer, discarding it [ssrc:%" PRIu32
 				  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
 				  ssrc,
 				  seq,
@@ -152,7 +137,7 @@ namespace RTC
 				}
 				else
 				{
-					MS_ERROR_STD(
+					MS_DEBUG_DEV(
 					  "calling RemoveFromFrontAtLeast(%" PRIu16 ") [bufferSize:%zu, numBlankSlots:%" PRIu16
 					  ", maxItems:%" PRIu16 "]",
 					  numItemsToRemove,
@@ -179,15 +164,18 @@ namespace RTC
 		// stored packet, so will become the oldest one in the buffer.
 		else if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, oldestItem->sequenceNumber))
 		{
-			MS_ERROR_STD(
-			  "packet out of order and oldest [seq:%" PRIu16 ", timestamp:%" PRIu32 ", buffer.size:%zu]",
+			MS_DEBUG_DEV(
+			  "packet out of order and older than oldest packet in the buffer [seq:%" PRIu16
+			  ", timestamp:%" PRIu32 "]",
 			  seq,
-			  timestamp,
-			  this->buffer.size());
+			  timestamp);
 
 			// Ensure that packet is not too old to be stored.
 			if (IsTooOld(timestamp, newestItem->timestamp))
 			{
+				MS_WARN_DEV(
+				  "packet too old, discarding it [seq:%" PRIu16 ", timestamp:%" PRIu32 "]", seq, timestamp);
+
 				return;
 			}
 
@@ -197,7 +185,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  rtp,
-				  "packet has less seq but higher timestamp than oldest stored packet, discarding it [ssrc:%" PRIu32
+				  "packet has less seq but higher timestamp than oldest packet in the buffer, discarding it [ssrc:%" PRIu32
 				  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
 				  ssrc,
 				  seq,
@@ -243,12 +231,11 @@ namespace RTC
 		// so there is already an allocated slot for it.
 		else
 		{
-			MS_ERROR_STD(
-			  "packet out of order and in between [seq:%" PRIu16 ", timestamp:%" PRIu32
-			  ", buffer.size:%zu]",
+			MS_DEBUG_DEV(
+			  "packet out of order and in between oldest and newest packets in the buffer [seq:%" PRIu16
+			  ", timestamp:%" PRIu32 "]",
 			  seq,
-			  timestamp,
-			  this->buffer.size());
+			  timestamp);
 
 			// Let's check if an item already exist in same position. If so, assume
 			// it's duplicated.
@@ -336,7 +323,7 @@ namespace RTC
 
 		MS_ASSERT(
 		  this->buffer.size() <= this->maxItems,
-		  "RetransmissionBuffer contains %zu items (more than %" PRIu16 " max items)",
+		  "buffer contains %zu items (more than %" PRIu16 " max items)",
 		  this->buffer.size(),
 		  this->maxItems);
 	}
@@ -403,7 +390,6 @@ namespace RTC
 		return this->Get(this->startSeq + this->buffer.size() - 1);
 	}
 
-	// TODO: REMOVE PROBABLY
 	void RetransmissionBuffer::RemoveOldest()
 	{
 		MS_TRACE();
@@ -444,10 +430,10 @@ namespace RTC
 
 		MS_ASSERT(
 		  numItems <= this->buffer.size(),
-		  "attempting to remove more items than current buffer size [bufferSize:%zu, numItems:%" PRIu16
-		  "]",
-		  this->buffer.size(),
-		  numItems);
+		  "attempting to remove more items than current buffer size [numItems:%" PRIu16
+		  ", bufferSize:%zu]",
+		  numItems,
+		  this->buffer.size());
 
 		auto intendedBufferSize = this->buffer.size() - numItems;
 
@@ -510,6 +496,7 @@ namespace RTC
 
 		// Store original packet into the item. Only clone once and only if
 		// necessary.
+		//
 		// NOTE: This must be done BEFORE assigning item->packet = sharedPacket,
 		// otherwise the value being copied in item->packet will remain nullptr.
 		// This is because we are copying an **empty** shared_ptr into another

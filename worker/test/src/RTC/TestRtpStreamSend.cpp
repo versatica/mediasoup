@@ -377,9 +377,9 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		uint32_t firstTs   = 1533790901;
 		uint32_t diffTs    = RtpStreamSend::MaxRetransmissionDelayForVideoMs * clockRate / 1000;
 		// Make second packet arrive more than MaxRetransmissionDelayForVideoMs later.
-		uint32_t secondTs  = firstTs + diffTs + 100;
+		uint32_t secondTs = firstTs + diffTs + 100;
 		// Send a third packet so it will clean old packets from the buffer.
-		uint32_t thirdTs  = firstTs + (2 * diffTs);
+		uint32_t thirdTs = firstTs + (2 * diffTs);
 
 		auto* packet1 = CreateRtpPacket(rtpBuffer1, 21006, firstTs);
 		auto* packet2 = CreateRtpPacket(rtpBuffer2, 21007, secondTs);
