@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RetransmissionBuffer"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RetransmissionBuffer.hpp"
 #include "Logger.hpp"
@@ -318,10 +318,6 @@ namespace RTC
 
 			this->buffer[idx] = FillItem(item, packet, sharedPacket);
 		}
-
-#if MS_LOG_DEV_LEVEL == 3
-		Dump();
-#endif
 
 		MS_ASSERT(
 		  this->buffer.size() <= this->maxItems,

@@ -81,10 +81,16 @@ SCENARIO("RetransmissionBuffer", "[rtp][rtx]")
 		myRetransmissionBuffer.Insert(10003, 1000000200);
 		myRetransmissionBuffer.Insert(10004, 1000000200);
 
-		myRetransmissionBuffer.AssertBuffer({ { true, 10001, 1000000000 },
-		                                      { true, 10002, 1000000000 },
-		                                      { true, 10003, 1000000200 },
-		                                      { true, 10004, 1000000200 } });
+		// clang-format off
+		myRetransmissionBuffer.AssertBuffer(
+			{
+				{ true, 10001, 1000000000 },
+				{ true, 10002, 1000000000 },
+				{ true, 10003, 1000000200 },
+				{ true, 10004, 1000000200 }
+			}
+		);
+		// clang-format on
 	}
 
 	SECTION("proper packets received out of order")
@@ -95,18 +101,24 @@ SCENARIO("RetransmissionBuffer", "[rtp][rtx]")
 
 		MyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
 
-		myRetransmissionBuffer.Insert(10004, 1000000200);
-		myRetransmissionBuffer.Insert(10001, 1000000000);
-		myRetransmissionBuffer.Insert(10003, 1000000200);
-		myRetransmissionBuffer.Insert(10002, 1000000000);
+		myRetransmissionBuffer.Insert(20004, 2000000200);
+		myRetransmissionBuffer.Insert(20001, 2000000000);
+		myRetransmissionBuffer.Insert(20003, 2000000200);
+		myRetransmissionBuffer.Insert(20002, 2000000000);
 
-		myRetransmissionBuffer.AssertBuffer({ { true, 10001, 1000000000 },
-		                                      { true, 10002, 1000000000 },
-		                                      { true, 10003, 1000000200 },
-		                                      { true, 10004, 1000000200 } });
+		// clang-format off
+		myRetransmissionBuffer.AssertBuffer(
+			{
+				{ true, 20001, 2000000000 },
+				{ true, 20002, 2000000000 },
+				{ true, 20003, 2000000200 },
+				{ true, 20004, 2000000200 }
+			}
+		);
+		// clang-format on
 	}
 
-	SECTION("too new packet makes buffer emptying")
+	SECTION("packet with too new sequence number produces buffer emptying")
 	{
 		uint16_t maxItems{ 4 };
 		uint32_t maxRetransmissionDelayMs{ 2000u };
@@ -114,11 +126,107 @@ SCENARIO("RetransmissionBuffer", "[rtp][rtx]")
 
 		MyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
 
-		myRetransmissionBuffer.Insert(10001, 1000000000);
-		myRetransmissionBuffer.Insert(10002, 1000000000);
-		myRetransmissionBuffer.Insert(10003, 1000000200);
-		myRetransmissionBuffer.Insert(11005, 2000000000);
+		myRetransmissionBuffer.Insert(30001, 3000000000);
+		myRetransmissionBuffer.Insert(30002, 3000000000);
+		myRetransmissionBuffer.Insert(30003, 3000000200);
+		myRetransmissionBuffer.Insert(40000, 3000003000);
 
-		myRetransmissionBuffer.AssertBuffer({ { true, 11005, 2000000000 } });
+		// clang-format off
+		myRetransmissionBuffer.AssertBuffer(
+			{
+				{ true, 40000, 3000003000 }
+			}
+		);
+		// clang-format on
+	}
+
+	SECTION("blank slots are properly created")
+	{
+		uint16_t maxItems{ 10 };
+		uint32_t maxRetransmissionDelayMs{ 2000u };
+		uint32_t clockRate{ 90000 };
+
+		MyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+
+		myRetransmissionBuffer.Insert(40002, 4000000002);
+		// Packet must be discarded since its timestamp is lower than in seq 40002.
+		myRetransmissionBuffer.Insert(40003, 4000000001);
+		// Must produce 1 blank slot.
+		myRetransmissionBuffer.Insert(40004, 4000000004);
+		// Discarded (duplicated).
+		myRetransmissionBuffer.Insert(40002, 4000000002);
+		// Must produce 4 blank slot.
+		myRetransmissionBuffer.Insert(40008, 4000000008);
+		myRetransmissionBuffer.Insert(40006, 4000000006);
+		// Must produce 1 blank slot at the front.
+		myRetransmissionBuffer.Insert(40000, 4000000000);
+
+		// clang-format off
+		myRetransmissionBuffer.AssertBuffer(
+			{
+				{ true, 40000, 4000000000 },
+				{ false, 0, 0 },
+				{ true, 40002, 4000000002 },
+				{ false, 0, 0 },
+				{ true, 40004, 4000000004 },
+				{ false, 0, 0 },
+				{ true, 40006, 4000000006 },
+				{ false, 0, 0 },
+				{ true, 40008, 4000000008 }
+			}
+		);
+		// clang-format on
+	}
+
+	SECTION("packet with too old sequence number is discarded")
+	{
+		uint16_t maxItems{ 4 };
+		uint32_t maxRetransmissionDelayMs{ 2000u };
+		uint32_t clockRate{ 90000 };
+
+		MyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+
+		myRetransmissionBuffer.Insert(10001, 1000000001);
+		myRetransmissionBuffer.Insert(10002, 1000000002);
+		myRetransmissionBuffer.Insert(10003, 1000000003);
+		// Too old seq.
+		myRetransmissionBuffer.Insert(40000, 1000000000);
+
+		// clang-format off
+		myRetransmissionBuffer.AssertBuffer(
+			{
+				{ true, 10001, 1000000001 },
+				{ true, 10002, 1000000002 },
+				{ true, 10003, 1000000003 }
+			}
+		);
+		// clang-format on
+	}
+
+	SECTION("packet with too old timestamp is discarded")
+	{
+		uint16_t maxItems{ 4 };
+		uint32_t maxRetransmissionDelayMs{ 2000u };
+		uint32_t clockRate{ 90000 };
+
+		MyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+
+		auto maxDiffTs = static_cast<uint32_t>(maxRetransmissionDelayMs * clockRate / 1000);
+
+		myRetransmissionBuffer.Insert(10001, 1000000001);
+		myRetransmissionBuffer.Insert(10002, 1000000002);
+		myRetransmissionBuffer.Insert(10003, 1000000003);
+		// Too old timestamp (subtract 100 to avoid math issues).
+		myRetransmissionBuffer.Insert(10000, 1000000003 - maxDiffTs - 100);
+
+		// clang-format off
+		myRetransmissionBuffer.AssertBuffer(
+			{
+				{ true, 10001, 1000000001 },
+				{ true, 10002, 1000000002 },
+				{ true, 10003, 1000000003 }
+			}
+		);
+		// clang-format on
 	}
 }

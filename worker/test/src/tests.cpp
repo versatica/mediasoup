@@ -19,14 +19,27 @@ int main(int argc, char* argv[])
 	if (std::getenv("MS_TEST_LOG_LEVEL"))
 	{
 		if (std::string(std::getenv("MS_TEST_LOG_LEVEL")) == "debug")
+		{
 			logLevel = LogLevel::LOG_DEBUG;
+		}
 		else if (std::string(std::getenv("MS_TEST_LOG_LEVEL")) == "warn")
+		{
 			logLevel = LogLevel::LOG_WARN;
+		}
 		else if (std::string(std::getenv("MS_TEST_LOG_LEVEL")) == "error")
+		{
 			logLevel = LogLevel::LOG_ERROR;
+		}
 	}
 
 	Settings::configuration.logLevel = logLevel;
+
+	// Fill logTags based by reading ENVs.
+	// TODO: Add more on demand.
+	if (std::getenv("MS_TEST_LOG_TAG_RTP"))
+	{
+		Settings::configuration.logTags.rtp = true;
+	}
 
 	// Initialize static stuff.
 	DepLibUV::ClassInit();
