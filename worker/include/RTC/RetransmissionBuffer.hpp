@@ -39,9 +39,9 @@ namespace RTC
 		Item* Get(uint16_t seq) const;
 		void Insert(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
 		void Clear();
+		void Dump() const;
 
 	private:
-		void Dump() const;
 		Item* GetOldest() const;
 		Item* GetNewest() const;
 		void RemoveOldest();
@@ -51,6 +51,10 @@ namespace RTC
 		Item* FillItem(
 		  Item* item, RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket) const;
 
+	protected:
+		// Make buffer protected for testing purposes.
+		std::deque<Item*> buffer;
+
 	private:
 		// Given as argument.
 		uint16_t maxItems;
@@ -58,7 +62,6 @@ namespace RTC
 		uint32_t clockRate;
 		// Others.
 		uint16_t startSeq{ 0u };
-		std::deque<Item*> buffer;
 	};
 } // namespace RTC
 

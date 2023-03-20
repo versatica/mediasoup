@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RetransmissionBuffer"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RetransmissionBuffer.hpp"
 #include "Logger.hpp"
@@ -64,10 +64,12 @@ namespace RTC
 		auto seq       = packet->GetSequenceNumber();
 		auto timestamp = packet->GetTimestamp();
 
+		MS_DEBUG_DEV("packet [seq:%" PRIu16 ", timestamp:%" PRIu32 "]", seq, timestamp);
+
 		// Buffer is empty, so just insert new item.
 		if (this->buffer.empty())
 		{
-			MS_DEBUG_DEV("buffer empty [seq:%" PRIu16 ", timestamp:%" PRIu32 "", seq, timestamp);
+			MS_DEBUG_DEV("buffer empty [seq:%" PRIu16 ", timestamp:%" PRIu32 "]", seq, timestamp);
 
 			auto* item = new Item();
 
