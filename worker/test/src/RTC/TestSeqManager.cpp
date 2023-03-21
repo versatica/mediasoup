@@ -577,6 +577,7 @@ SCENARIO("SeqManager", "[rtc]")
 		{
 			{ 0, 1, true, false, 0, 0 },
 		};
+
 		for (uint16_t j = 0; j < 100; ++j) {
 			for (uint16_t i = 1; i < std::numeric_limits<uint16_t>::max(); ++i) {
 				uint16_t output = i + 1;
@@ -596,12 +597,32 @@ SCENARIO("SeqManager", "[rtc]")
 		{
 			{ 0, 1, true, false, 0, 0 },
 		};
+
 		for (uint16_t j = 0; j < 100; ++j) {
 			for (uint16_t i = 1; i < kMaxNumberFor15Bits; ++i) {
 				uint16_t output = i + 1;
 				inputs.push_back({ i, output, false, false, 0, i });
 			}
 		}
+		// clang-format on
+
+		SeqManager<uint16_t, 15> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("should produce same output for same old input after drop (15 bits range)")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 10,  1, true,  false }, // sync.
+			{ 11,  2, false, false },
+			{ 12,  3, false, false },
+			{ 13,  4, false, false },
+			{ 14,  0, false, true  }, // drop.
+			{ 15,  5, false, false },
+			{ 12,  3, false, false }
+		};
 		// clang-format on
 
 		SeqManager<uint16_t, 15> seqManager;
