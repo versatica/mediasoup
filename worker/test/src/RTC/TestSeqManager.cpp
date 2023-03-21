@@ -31,10 +31,14 @@ void validate(SeqManager<T, N>& seqManager, std::vector<TestSeqManagerInput<T>>&
 	for (auto& element : inputs)
 	{
 		if (element.sync)
+		{
 			seqManager.Sync(element.input - 1);
+		}
 
 		if (element.offset)
+		{
 			seqManager.Offset(element.offset);
+		}
 
 		if (element.drop)
 		{
@@ -48,6 +52,7 @@ void validate(SeqManager<T, N>& seqManager, std::vector<TestSeqManagerInput<T>>&
 
 			// Covert to string because otherwise Catch will print uint8_t as char.
 			REQUIRE(std::to_string(output) == std::to_string(element.output));
+
 			if (element.maxInput != -1)
 			{
 				REQUIRE(std::to_string(element.maxInput) == std::to_string(seqManager.GetMaxInput()));
