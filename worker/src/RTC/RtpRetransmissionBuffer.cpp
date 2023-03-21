@@ -136,7 +136,11 @@ namespace RTC
 					  timestamp);
 
 					numBlankSlots = 0u;
+
 					Clear();
+
+					// After clearing the buffer, update startSeq.
+					this->startSeq = seq;
 				}
 				else
 				{
@@ -358,7 +362,11 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DUMP("<RtpRetransmissionBuffer>");
-		MS_DUMP("  buffer [size:%zu, maxSize:%" PRIu16 "]", this->buffer.size(), this->maxItems);
+		MS_DUMP(
+		  "  buffer [size:%zu, maxSize:%" PRIu16 ", startSeq:%" PRIu16 "]",
+		  this->buffer.size(),
+		  this->maxItems,
+		  this->startSeq);
 		if (this->buffer.size() > 0)
 		{
 			const auto* oldestItem = GetOldest();

@@ -229,4 +229,44 @@ SCENARIO("RtpRetransmissionBuffer", "[rtp][rtx]")
 		);
 		// clang-format on
 	}
+
+	SECTION("fuzzer generated packets")
+	{
+		uint16_t maxItems{ 2500u };
+		uint32_t maxRetransmissionDelayMs{ 2000u };
+		uint32_t clockRate{ 90000 };
+
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+
+		// These packets reproduce an already fixed crash reported here:
+		// https://github.com/versatica/mediasoup/issues/1027#issuecomment-1478464584
+		// I've commented first packets and just left those that produce the crash.
+
+		// myRetransmissionBuffer.Insert(14906, 976891962);
+		// myRetransmissionBuffer.Insert(14906, 976891962);
+		// myRetransmissionBuffer.Insert(14906, 976892730);
+		// myRetransmissionBuffer.Insert(13157, 862283031);
+		// myRetransmissionBuffer.Insert(13114, 859453491);
+		// myRetransmissionBuffer.Insert(14906, 976892264);
+		// myRetransmissionBuffer.Insert(14906, 976897098);
+		// myRetransmissionBuffer.Insert(13114, 859464290);
+		// myRetransmissionBuffer.Insert(14906, 976889088);
+		// myRetransmissionBuffer.Insert(13056, 855638184);
+		// myRetransmissionBuffer.Insert(14906, 976891950);
+		// myRetransmissionBuffer.Insert(17722, 1161443894);
+		// myRetransmissionBuffer.Insert(12846, 841888049);
+		// myRetransmissionBuffer.Insert(14906, 976905830);
+		// myRetransmissionBuffer.Insert(15677, 1027420485);
+		// myRetransmissionBuffer.Insert(33742, 2211317269);
+		// myRetransmissionBuffer.Insert(14906, 976892672);
+		// myRetransmissionBuffer.Insert(13102, 858665774);
+		// myRetransmissionBuffer.Insert(12850, 842150702);
+		// myRetransmissionBuffer.Insert(14906, 976891941);
+		// myRetransmissionBuffer.Insert(15677, 1027423549);
+		// myRetransmissionBuffer.Insert(12346, 809120580);
+		// myRetransmissionBuffer.Insert(12645, 828715313);
+		myRetransmissionBuffer.Insert(12645, 828702743);
+		myRetransmissionBuffer.Insert(33998, 2228092928);
+		myRetransmissionBuffer.Insert(33998, 2228092928);
+	}
 }
