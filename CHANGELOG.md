@@ -3,6 +3,7 @@
 
 ### NEXT
 
+* `RtpRetransmissionBuffer.cpp`: Fix crash and add fuzzer ([PR #1028](https://github.com/versatica/mediasoup/pull/1028).
 * Update NPM deps.
 
 

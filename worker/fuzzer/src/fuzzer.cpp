@@ -10,6 +10,7 @@
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "RTC/FuzzerRtpPacket.hpp"
+#include "RTC/FuzzerRtpRetransmissionBuffer.hpp"
 #include "RTC/FuzzerRtpStreamSend.hpp"
 #include "RTC/FuzzerStunPacket.hpp"
 #include "RTC/FuzzerTrendCalculator.hpp"
@@ -43,6 +44,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	{
 		Fuzzer::RTC::RtpPacket::Fuzz(data, len);
 		Fuzzer::RTC::RtpStreamSend::Fuzz(data, len);
+		Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(data, len);
 	}
 
 	if (fuzzRtcp)
