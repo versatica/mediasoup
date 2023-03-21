@@ -36,9 +36,6 @@ void Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 
 		retransmissionBuffer.Insert(packet, sharedPacket);
 
-		// TODO: REMOVE.
-		retransmissionBuffer.Dump();
-
 		len -= 4u;
 		offset += 4;
 	}
