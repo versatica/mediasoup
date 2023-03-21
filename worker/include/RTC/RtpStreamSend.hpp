@@ -2,16 +2,14 @@
 #define MS_RTC_RTP_STREAM_SEND_HPP
 
 #include "RTC/RateCalculator.hpp"
+#include "RTC/RetransmissionBuffer.hpp"
 #include "RTC/RtpStream.hpp"
-#include <deque>
 
 namespace RTC
 {
 	class RtpStreamSend : public RTC::RtpStream
 	{
 	public:
-		// Minimum retransmission buffer size (ms).
-		const static uint32_t MinRetransmissionDelayMs;
 		// Maximum retransmission buffer size for video (ms).
 		const static uint32_t MaxRetransmissionDelayForVideoMs;
 		// Maximum retransmission buffer size for audio (ms).
@@ -23,47 +21,6 @@ namespace RTC
 		public:
 			virtual void OnRtpStreamRetransmitRtpPacket(
 			  RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) = 0;
-		};
-
-	public:
-		struct StorageItem
-		{
-			void Reset();
-
-			// Original packet.
-			std::shared_ptr<RTC::RtpPacket> packet{ nullptr };
-			// Correct SSRC since original packet may not have the same.
-			uint32_t ssrc{ 0 };
-			// Correct sequence number since original packet may not have the same.
-			uint16_t sequenceNumber{ 0 };
-			// Correct timestamp since original packet may not have the same.
-			uint32_t timestamp{ 0 };
-			// Last time this packet was resent.
-			uint64_t resentAtMs{ 0u };
-			// Number of times this packet was resent.
-			uint8_t sentTimes{ 0u };
-		};
-
-	private:
-		// Special container that stores `StorageItem*` elements addressable by
-		// their `uint16_t` sequence number, while only taking as little memory as
-		// necessary to store the range covering a maximum of
-		// MaxRetransmissionDelayForVideoMs or MaxRetransmissionDelayForAudioMs ms.
-		class StorageItemBuffer
-		{
-		public:
-			~StorageItemBuffer();
-
-			StorageItem* GetFirst() const;
-			StorageItem* Get(uint16_t seq) const;
-			size_t GetBufferSize() const;
-			void Insert(uint16_t seq, StorageItem* storageItem);
-			void RemoveFirst();
-			void Clear();
-
-		private:
-			uint16_t startSeq{ 0 };
-			std::deque<StorageItem*> buffer;
 		};
 
 	public:
@@ -94,25 +51,24 @@ namespace RTC
 
 	private:
 		void StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
-		void ClearOldPackets(const RtpPacket* packet);
-		void ClearBuffer();
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
 	private:
-		uint32_t lostPriorScore{ 0u }; // Packets lost at last interval for score calculation.
-		uint32_t sentPriorScore{ 0u }; // Packets sent at last interval for score calculation.
-		StorageItemBuffer storageItemBuffer;
+		// Packets lost at last interval for score calculation.
+		uint32_t lostPriorScore{ 0u };
+		// Packets sent at last interval for score calculation.
+		uint32_t sentPriorScore{ 0u };
 		std::string mid;
-		uint32_t maxRetransmissionDelayMs;
-		uint32_t retransmissionBufferSize;
 		uint16_t rtxSeq{ 0u };
 		RTC::RtpDataCounter transmissionCounter;
-		uint32_t lastRrTimestamp{ 0u };  // The middle 32 bits out of 64 in the NTP
-		                                 // timestamp received in the most recent
-		                                 // receiver reference timestamp.
-		uint64_t lastRrReceivedMs{ 0u }; // Wallclock time representing the most recent
-		                                 // receiver reference timestamp arrival.
+		RTC::RetransmissionBuffer* retransmissionBuffer{ nullptr };
+		// The middle 32 bits out of 64 in the NTP timestamp received in the most
+		// recent receiver reference timestamp.
+		uint32_t lastRrTimestamp{ 0u };
+		// Wallclock time representing the most recent receiver reference timestamp
+		// arrival.
+		uint64_t lastRrReceivedMs{ 0u };
 	};
 } // namespace RTC
 

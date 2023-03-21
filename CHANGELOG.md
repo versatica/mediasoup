@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.11.14
+
+* Refactor RTP retransmission buffer in a separate and testable `RTC::RetransmissionBuffer` class ([PR #1023](https://github.com/versatica/mediasoup/pull/1023).
+* Update NPM deps.
+
+
 ### 3.11.13
 
 * `AudioLevelObserver`: Use multimap rather than map to avoid conflict if various Producers generate same audio level ([PR #1021](https://github.com/versatica/mediasoup/pull/1021), issue reported by @buptlsp).
