@@ -26,16 +26,22 @@ void Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 	auto* packet = ::RTC::RtpPacket::Parse(buffer, 12);
 	size_t offset{ 0u };
 
-	// Set 'random' sequence number and timestamp.
-	packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));
-	packet->SetTimestamp(Utils::Byte::Get4Bytes(data, offset));
+	while (len >= 4u)
+	{
+		std::shared_ptr<::RTC::RtpPacket> sharedPacket;
 
-	std::shared_ptr<::RTC::RtpPacket> sharedPacket;
+		// Set 'random' sequence number and timestamp.
+		packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));
+		packet->SetTimestamp(Utils::Byte::Get4Bytes(data, offset));
 
-	retransmissionBuffer.Insert(packet, sharedPacket);
+		retransmissionBuffer.Insert(packet, sharedPacket);
 
-	// TODO: REMOVE.
-	retransmissionBuffer.Dump();
+		// TODO: REMOVE.
+		retransmissionBuffer.Dump();
+
+		len -= 4u;
+		offset += 4;
+	}
 
 	delete packet;
 }
