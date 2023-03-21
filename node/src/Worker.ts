@@ -675,7 +675,7 @@ export class Worker extends EnhancedEventEmitter<WorkerEvents>
 		}
 
 		// Build the request.
-		const fbsListenInfos:FbsWebRtcServer.ListenInfoT[] = [];
+		const fbsListenInfos: FbsWebRtcServer.ListenInfoT[] = [];
 
 		for (const listenInfo of listenInfos)
 		{
