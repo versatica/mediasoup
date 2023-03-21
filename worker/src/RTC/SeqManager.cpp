@@ -10,15 +10,15 @@ namespace RTC
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::SeqLowerThan::operator()(const T lhs, const T rhs) const
 	{
-		return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
-		       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
+		return ((rhs > lhs) && (rhs - lhs <= SeqManager::MaxValue / 2)) ||
+		       ((lhs > rhs) && (lhs - rhs > SeqManager::MaxValue / 2));
 	}
 
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::SeqHigherThan::operator()(const T lhs, const T rhs) const
 	{
-		return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
-		       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
+		return ((lhs > rhs) && (lhs - rhs <= SeqManager::MaxValue / 2)) ||
+		       ((rhs > lhs) && (rhs - lhs > SeqManager::MaxValue / 2));
 	}
 
 	template<typename T, uint8_t N>
@@ -42,16 +42,16 @@ namespace RTC
 	template<typename T, uint8_t N>
 	T SeqManager<T, N>::Delta(const T lhs, const T rhs)
 	{
-		T value = (lhs > rhs) ? (lhs - rhs) : (MaxValue - rhs + lhs);
+		T value = (lhs > rhs) ? (lhs - rhs) : (SeqManager::MaxValue - rhs + lhs);
 
-		return value & MaxValue;
+		return value & SeqManager::MaxValue;
 	}
 
 	template<typename T, uint8_t N>
 	void SeqManager<T, N>::Sync(T input)
 	{
 		// Update base.
-		this->base = (this->maxOutput - input) & MaxValue;
+		this->base = (this->maxOutput - input) & SeqManager::MaxValue;
 
 		// Update maxInput.
 		this->maxInput = input;
@@ -73,7 +73,7 @@ namespace RTC
 	template<typename T, uint8_t N>
 	void SeqManager<T, N>::Offset(T offset)
 	{
-		this->base = (this->base + offset) & MaxValue;
+		this->base = (this->base + offset) & SeqManager::MaxValue;
 	}
 
 	template<typename T, uint8_t N>
@@ -86,10 +86,10 @@ namespace RTC
 		{
 			// Delete dropped inputs older than input - MaxValue/2.
 			size_t droppedCount    = this->dropped.size();
-			const size_t threshold = (input - MaxValue / 2) & MaxValue;
+			const size_t threshold = (input - SeqManager::MaxValue / 2) & SeqManager::MaxValue;
 			auto it                = this->dropped.lower_bound(threshold);
 			this->dropped.erase(this->dropped.begin(), it);
-			this->base = (this->base - (droppedCount - this->dropped.size())) & MaxValue;
+			this->base = (this->base - (droppedCount - this->dropped.size())) & SeqManager::MaxValue;
 
 			// Count dropped entries before 'input' in order to adapt the base.
 			droppedCount = this->dropped.size();
@@ -108,24 +108,24 @@ namespace RTC
 				droppedCount -= std::distance(it, this->dropped.end());
 			}
 
-			base = (this->base - droppedCount) & MaxValue;
+			base = (this->base - droppedCount) & SeqManager::MaxValue;
 		}
 
-		output = (input + base) & MaxValue;
+		output = (input + base) & SeqManager::MaxValue;
 
 		T idelta = SeqManager<T, N>::Delta(input, this->maxInput);
 		T odelta = SeqManager<T, N>::Delta(output, this->maxOutput);
 
 		// New input is higher than the maximum seen. But less than acceptable units higher.
 		// Keep it as the maximum seen. See Drop().
-		if (idelta < MaxValue / 2)
+		if (idelta < SeqManager::MaxValue / 2)
 		{
 			this->maxInput = input;
 		}
 
 		// New output is higher than the maximum seen. But less than acceptable units higher.
 		// Keep it as the maximum seen. See Sync().
-		if (odelta < MaxValue / 2)
+		if (odelta < SeqManager::MaxValue / 2)
 		{
 			this->maxOutput = output;
 		}
