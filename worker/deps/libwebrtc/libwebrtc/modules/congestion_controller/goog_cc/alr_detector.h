@@ -43,6 +43,7 @@ class AlrDetector {
   // Returns time in milliseconds when the current application-limited region
   // started or empty result if the sender is currently not application-limited.
   absl::optional<int64_t> GetApplicationLimitedRegionStartTime() const;
+  absl::optional<int64_t> GetApplicationLimitedRegionStartTime(int64_t at_time_ms);
 
   void UpdateBudgetWithElapsedTime(int64_t delta_time_ms);
   void UpdateBudgetWithBytesSent(size_t bytes_sent);

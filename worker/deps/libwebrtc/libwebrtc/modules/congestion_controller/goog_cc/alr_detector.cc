@@ -73,7 +73,7 @@ AlrDetector::~AlrDetector() {}
 void AlrDetector::OnBytesSent(size_t bytes_sent, int64_t send_time_ms) {
   if (!last_send_time_ms_.has_value()) {
     last_send_time_ms_ = send_time_ms;
-    // Since the duration for sending the bytes is unknwon, return without
+    // Since the duration for sending the bytes is unknown, return without
     // updating alr state.
     return;
   }
@@ -106,6 +106,21 @@ void AlrDetector::SetEstimatedBitrate(int bitrate_bps) {
 
 absl::optional<int64_t> AlrDetector::GetApplicationLimitedRegionStartTime()
     const {
+  return alr_started_time_ms_;
+}
+
+absl::optional<int64_t> AlrDetector::GetApplicationLimitedRegionStartTime(
+    int64_t at_time_ms) {
+  if (!alr_started_time_ms_ && *last_send_time_ms_) {
+    int64_t delta_time_ms = at_time_ms - *last_send_time_ms_;
+    // If ALR is stopped and we didn't sent any packets in the last for a while,
+    // force resuming the state.
+    if (delta_time_ms > 1000) {
+      MS_WARN_TAG(bwe, "large delta_time_ms: %ld, forcing alr state change",
+        delta_time_ms);
+      alr_started_time_ms_.emplace(at_time_ms);
+    }
+  }
   return alr_started_time_ms_;
 }
 
