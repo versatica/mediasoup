@@ -29,19 +29,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->buffer.empty())
+		const auto* oldestItem = GetOldest();
+
+		if (!oldestItem)
 		{
 			return nullptr;
 		}
-
-		auto* oldestItem = GetOldest();
 
 		if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, oldestItem->sequenceNumber))
 		{
 			return nullptr;
 		}
 
-		auto idx = static_cast<uint16_t>(seq - oldestItem->sequenceNumber);
+		const auto idx = static_cast<uint16_t>(seq - oldestItem->sequenceNumber);
 
 		if (idx > static_cast<uint16_t>(this->buffer.size() - 1))
 		{
@@ -63,9 +63,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto ssrc      = packet->GetSsrc();
-		auto seq       = packet->GetSequenceNumber();
-		auto timestamp = packet->GetTimestamp();
+		const auto ssrc      = packet->GetSsrc();
+		const auto seq       = packet->GetSequenceNumber();
+		const auto timestamp = packet->GetTimestamp();
 
 		MS_DEBUG_DEV("packet [seq:%" PRIu16 ", timestamp:%" PRIu32 "]", seq, timestamp);
 
@@ -84,8 +84,8 @@ namespace RTC
 		// Clear too old packets in the buffer.
 		ClearTooOld();
 
-		auto* oldestItem = GetOldest();
-		auto* newestItem = GetNewest();
+		const auto* oldestItem = GetOldest();
+		const auto* newestItem = GetNewest();
 
 		MS_ASSERT(oldestItem != nullptr, "oldest item doesn't exist");
 		MS_ASSERT(newestItem != nullptr, "newest item doesn't exist");
@@ -119,7 +119,7 @@ namespace RTC
 			// the buffer.
 			if (this->buffer.size() + numBlankSlots + 1 > this->maxItems)
 			{
-				auto numItemsToRemove =
+				const auto numItemsToRemove =
 				  static_cast<uint16_t>(this->buffer.size() + numBlankSlots + 1 - this->maxItems);
 
 				// If num of items to be removed exceed buffer size minus one (needed to
@@ -199,7 +199,7 @@ namespace RTC
 
 			// Calculate how many blank slots it would be necessary to add when
 			// pushing new item to the fton of the buffer.
-			auto numBlankSlots = static_cast<uint16_t>(oldestItem->sequenceNumber - seq - 1);
+			const auto numBlankSlots = static_cast<uint16_t>(oldestItem->sequenceNumber - seq - 1);
 
 			// If adding this packet (and needed blank slots) to the front makes the
 			// buffer exceed its max size, discard this packet.
@@ -252,13 +252,13 @@ namespace RTC
 			}
 
 			// idx is the intended position of the received packet in the buffer.
-			auto idx = static_cast<uint16_t>(seq - oldestItem->sequenceNumber);
+			const auto idx = static_cast<uint16_t>(seq - oldestItem->sequenceNumber);
 
 			// Validate that packet timestamp is equal or higher than the timestamp of
 			// the immediate older packet (if any).
 			for (auto idx2 = static_cast<int32_t>(idx - 1); idx2 >= 0; --idx2)
 			{
-				auto* olderItem = this->buffer.at(idx2);
+				const auto* olderItem = this->buffer.at(idx2);
 
 				// Blank slot, continue.
 				if (!olderItem)
@@ -289,7 +289,7 @@ namespace RTC
 			// the immediate newer packet (if any).
 			for (auto idx2 = static_cast<size_t>(idx + 1); idx2 < this->buffer.size(); ++idx2)
 			{
-				auto* newerItem = this->buffer.at(idx2);
+				const auto* newerItem = this->buffer.at(idx2);
 
 				// Blank slot, continue.
 				if (!newerItem)
@@ -448,7 +448,7 @@ namespace RTC
 		  numItems,
 		  this->buffer.size());
 
-		auto intendedBufferSize = this->buffer.size() - numItems;
+		const auto intendedBufferSize = this->buffer.size() - numItems;
 
 		while (this->buffer.size() > intendedBufferSize)
 		{
