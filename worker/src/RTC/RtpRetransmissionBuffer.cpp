@@ -34,12 +34,14 @@ namespace RTC
 			return nullptr;
 		}
 
-		if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, this->startSeq))
+		auto* oldestItem = GetOldest();
+
+		if (RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, oldestItem->sequenceNumber))
 		{
 			return nullptr;
 		}
 
-		auto idx = static_cast<uint16_t>(seq - this->startSeq);
+		auto idx = static_cast<uint16_t>(seq - oldestItem->sequenceNumber);
 
 		if (idx > static_cast<uint16_t>(this->buffer.size() - 1))
 		{
@@ -75,9 +77,6 @@ namespace RTC
 			auto* item = new Item();
 
 			this->buffer.push_back(FillItem(item, packet, sharedPacket));
-
-			// Packet's seq number becomes startSeq.
-			this->startSeq = seq;
 
 			return;
 		}
@@ -138,9 +137,6 @@ namespace RTC
 					numBlankSlots = 0u;
 
 					Clear();
-
-					// After clearing the buffer, update startSeq.
-					this->startSeq = seq;
 				}
 				else
 				{
@@ -230,9 +226,6 @@ namespace RTC
 			auto* item = new Item();
 
 			this->buffer.push_front(FillItem(item, packet, sharedPacket));
-
-			// Packet's seq number becomes startSeq.
-			this->startSeq = seq;
 		}
 		// Otherwise packet must be inserted between oldest and newest stored items
 		// so there is already an allocated slot for it.
@@ -259,7 +252,7 @@ namespace RTC
 			}
 
 			// idx is the intended position of the received packet in the buffer.
-			auto idx = static_cast<uint16_t>(seq - this->startSeq);
+			auto idx = static_cast<uint16_t>(seq - oldestItem->sequenceNumber);
 
 			// Validate that packet timestamp is equal or higher than the timestamp of
 			// the immediate older packet (if any).
@@ -354,7 +347,6 @@ namespace RTC
 		}
 
 		this->buffer.clear();
-		this->startSeq = 0u;
 	}
 
 	void RtpRetransmissionBuffer::Dump() const
@@ -362,11 +354,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DUMP("<RtpRetransmissionBuffer>");
-		MS_DUMP(
-		  "  buffer [size:%zu, maxSize:%" PRIu16 ", startSeq:%" PRIu16 "]",
-		  this->buffer.size(),
-		  this->maxItems,
-		  this->startSeq);
+		MS_DUMP("  buffer [size:%zu, maxSize:%" PRIu16 "]", this->buffer.size(), this->maxItems);
 		if (this->buffer.size() > 0)
 		{
 			const auto* oldestItem = GetOldest();
@@ -392,14 +380,24 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return this->Get(this->startSeq);
+		if (this->buffer.empty())
+		{
+			return nullptr;
+		}
+
+		return this->buffer.front();
 	}
 
 	RtpRetransmissionBuffer::Item* RtpRetransmissionBuffer::GetNewest() const
 	{
 		MS_TRACE();
 
-		return this->Get(this->startSeq + this->buffer.size() - 1);
+		if (this->buffer.empty())
+		{
+			return nullptr;
+		}
+
+		return this->buffer.back();
 	}
 
 	void RtpRetransmissionBuffer::RemoveOldest()
@@ -411,7 +409,7 @@ namespace RTC
 			return;
 		}
 
-		auto* item = this->buffer.at(0);
+		auto* item = this->buffer.front();
 
 		// Reset the stored item (decrease RTP packet shared pointer counter).
 		item->Reset();
@@ -419,7 +417,6 @@ namespace RTC
 		delete item;
 
 		this->buffer.pop_front();
-		this->startSeq++;
 
 		MS_DEBUG_DEV("removed 1 item from the front");
 
@@ -430,7 +427,6 @@ namespace RTC
 		while (!this->buffer.empty() && this->buffer.front() == nullptr)
 		{
 			this->buffer.pop_front();
-			this->startSeq++;
 
 			++numItemsRemoved;
 		}
@@ -438,12 +434,6 @@ namespace RTC
 		if (numItemsRemoved)
 		{
 			MS_DEBUG_DEV("removed 1 blank slot from the front");
-		}
-
-		// If we emptied the full buffer, reset startSeq.
-		if (this->buffer.empty())
-		{
-			this->startSeq = 0u;
 		}
 	}
 

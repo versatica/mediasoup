@@ -60,8 +60,6 @@ namespace RTC
 		uint16_t maxItems;
 		uint32_t maxRetransmissionDelayMs;
 		uint32_t clockRate;
-		// Others.
-		uint16_t startSeq{ 0u };
 	};
 } // namespace RTC
 
