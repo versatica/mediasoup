@@ -62,6 +62,11 @@ AlrDetector::AlrDetector(
           experiment_settings
               ? experiment_settings->alr_stop_budget_level_percent / 100.0
               : kDefaultStopBudgetLevelRatio),
+      alr_timeout_(
+          "alr_timeout",
+          experiment_settings
+              ? experiment_settings->alr_timeout
+              : kDefaultAlrTimeout),
       alr_budget_(0, true) {
   ParseFieldTrial({&bandwidth_usage_ratio_, &start_budget_level_ratio_,
                    &stop_budget_level_ratio_},
@@ -114,7 +119,7 @@ absl::optional<int64_t> AlrDetector::GetApplicationLimitedRegionStartTime(
   if (!alr_started_time_ms_ && *last_send_time_ms_) {
     int64_t delta_time_ms = at_time_ms - *last_send_time_ms_;
     // If ALR is stopped and we haven't sent any packets for a while, force start.
-    if (delta_time_ms > 1000) {
+    if (delta_time_ms > alr_timeout_) {
       MS_WARN_TAG(bwe, "large delta_time_ms: %ld, forcing alr state change",
         delta_time_ms);
       alr_started_time_ms_.emplace(at_time_ms);

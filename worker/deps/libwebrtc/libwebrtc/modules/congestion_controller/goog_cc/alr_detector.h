@@ -57,6 +57,7 @@ class AlrDetector {
   static constexpr double kDefaultBandwidthUsageRatio = 0.65;
   static constexpr double kDefaultStartBudgetLevelRatio = 0.80;
   static constexpr double kDefaultStopBudgetLevelRatio = 0.50;
+  static constexpr int    kDefaultAlrTimeout = 3000;
 
   AlrDetector(const WebRtcKeyValueConfig* key_value_config,
               absl::optional<AlrExperimentSettings> experiment_settings);
@@ -65,6 +66,7 @@ class AlrDetector {
   FieldTrialParameter<double>  bandwidth_usage_ratio_;
   FieldTrialParameter<double>  start_budget_level_ratio_;
   FieldTrialParameter<double>  stop_budget_level_ratio_;
+  FieldTrialParameter<int>     alr_timeout_;
 
   absl::optional<int64_t> last_send_time_ms_;
 
