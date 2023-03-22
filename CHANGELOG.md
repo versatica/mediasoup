@@ -1,9 +1,14 @@
 # Changelog
 
 
+### NEXT
+
+* `RtpRetransmissionBuffer`: Get rid of not necessary `startSeq` private member ([PR #1029](https://github.com/versatica/mediasoup/pull/1029).
+
+
 ### 3.11.15
 
-* `RtpRetransmissionBuffer.cpp`: Fix crash and add fuzzer ([PR #1028](https://github.com/versatica/mediasoup/pull/1028).
+* `RtpRetransmissionBuffer`: Fix crash and add fuzzer ([PR #1028](https://github.com/versatica/mediasoup/pull/1028).
 * Update NPM deps.
 
 
