@@ -4,6 +4,7 @@
 ### NEXT
 
 * `RtpRetransmissionBuffer`: Get rid of not necessary `startSeq` private member ([PR #1029](https://github.com/versatica/mediasoup/pull/1029).
+* Node: Upgrade TypeScript to 5.0.2.
 
 
 ### 3.11.15
