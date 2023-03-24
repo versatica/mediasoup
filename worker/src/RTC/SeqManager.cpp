@@ -40,14 +40,6 @@ namespace RTC
 	}
 
 	template<typename T, uint8_t N>
-	T SeqManager<T, N>::Delta(const T lhs, const T rhs)
-	{
-		T value = (lhs > rhs) ? (lhs - rhs) : (MaxValue - rhs + lhs);
-
-		return value & MaxValue;
-	}
-
-	template<typename T, uint8_t N>
 	void SeqManager<T, N>::Sync(T input)
 	{
 		// Update base.
@@ -84,47 +76,54 @@ namespace RTC
 		// There are dropped inputs. Synchronize.
 		if (!this->dropped.empty())
 		{
-			// Delete dropped inputs older than input - MaxValue/2.
-			size_t droppedCount    = this->dropped.size();
-			const size_t threshold = (input - MaxValue / 2) & MaxValue;
-			auto it                = this->dropped.lower_bound(threshold);
-			this->dropped.erase(this->dropped.begin(), it);
-			this->base = (this->base - (droppedCount - this->dropped.size())) & MaxValue;
-
-			// Count dropped entries before 'input' in order to adapt the base.
-			droppedCount = this->dropped.size();
-			it           = this->dropped.lower_bound(input);
-
-			if (it != this->dropped.end())
+			// Check whether this input was dropped.
+			if (this->dropped.find(input) != this->dropped.end())
 			{
-				// Check whether this input was dropped.
-				if (*it == input)
-				{
-					MS_DEBUG_DEV("trying to send a dropped input");
+				MS_DEBUG_DEV("trying to send a dropped input");
 
-					return false;
-				}
-
-				droppedCount -= std::distance(it, this->dropped.end());
+				return false;
 			}
 
-			base = (this->base - droppedCount) & MaxValue;
+			// Dropped entries count that must be considered for the output.
+			size_t count{ 0 };
+
+			/*
+			 * Consider values lower than input and those higher that input
+			 * which belong to a previous cycle.
+			 */
+			for (const auto& value : this->dropped)
+			{
+				// clang-format off
+				if
+				(
+					IsSeqLowerThan(value, input) ||
+					(
+					 (value > input && (value - input > MaxValue / 3)) ||
+					 (value < input && (input - value > MaxValue / 3))
+					)
+				)
+				// clang-format on
+				{
+					count++;
+				}
+			}
+
+			base = (this->base - count) & MaxValue;
 		}
 
 		output = (input + base) & MaxValue;
 
-		T idelta = SeqManager<T, N>::Delta(input, this->maxInput);
-		T odelta = SeqManager<T, N>::Delta(output, this->maxOutput);
-
 		// New input is higher than the maximum seen. But less than acceptable units higher.
 		// Keep it as the maximum seen. See Drop().
-		if (idelta < MaxValue / 2)
+		if (IsSeqHigherThan(input, this->maxInput))
 			this->maxInput = input;
 
 		// New output is higher than the maximum seen. But less than acceptable units higher.
 		// Keep it as the maximum seen. See Sync().
-		if (odelta < MaxValue / 2)
+		if (IsSeqHigherThan(output, this->maxOutput))
 			this->maxOutput = output;
+
+		ClearDropped();
 
 		return true;
 	}
@@ -141,8 +140,48 @@ namespace RTC
 		return this->maxOutput;
 	}
 
+	/*
+	 * Delete droped inputs greater than maxInput that belong to a previous
+	 * cycle.
+	 */
+	template<typename T, uint8_t N>
+	void SeqManager<T, N>::ClearDropped()
+	{
+		// Cleanup dropped values.
+		if (this->dropped.empty())
+		{
+			return;
+		}
+
+		const size_t threshold           = (this->maxInput + MaxValue / 3) & MaxValue;
+		const size_t previousDroppedSize = this->dropped.size();
+		const auto it1                   = this->dropped.upper_bound(this->maxInput);
+		const auto it2                   = this->dropped.lower_bound(threshold);
+
+		// There is no dropped value greater than this->maxInput.
+		if (it1 == this->dropped.end())
+		{
+			return;
+		}
+
+		// There is a single value in the reange.
+		if (it1 == it2)
+		{
+			this->dropped.erase(it1);
+		}
+		// There are many values in the range.
+		else
+		{
+			this->dropped.erase(it1, it2);
+		}
+
+		// Adapt base.
+		this->base = (this->base - (previousDroppedSize - this->dropped.size())) & MaxValue;
+	}
+
 	// Explicit instantiation to have all SeqManager definitions in this file.
 	template class SeqManager<uint8_t>;
+	template class SeqManager<uint8_t, 3>; // For testing.
 	template class SeqManager<uint16_t>;
 	template class SeqManager<uint16_t, 15>; // For PictureID (15 bits).
 	template class SeqManager<uint32_t>;

@@ -29,7 +29,6 @@ namespace RTC
 	private:
 		static const SeqLowerThan isSeqLowerThan;
 		static const SeqHigherThan isSeqHigherThan;
-		static T Delta(const T lhs, const T rhs);
 
 	public:
 		static bool IsSeqLowerThan(const T lhs, const T rhs);
@@ -45,6 +44,9 @@ namespace RTC
 		bool Input(const T input, T& output);
 		T GetMaxInput() const;
 		T GetMaxOutput() const;
+
+	private:
+		void ClearDropped();
 
 	private:
 		T base{ 0 };
