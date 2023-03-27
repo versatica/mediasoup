@@ -4,7 +4,7 @@
 ### NEXT
 
 * Fix `SeqManager`: Properly consider previous cycle dropped inputs ([PR #1032](https://github.com/versatica/mediasoup/pull/1032)).
-* `RtpRetransmissionBuffer`: Get rid of not necessary `startSeq` private member ([PR #1029](https://github.com/versatica/mediasoup/pull/1029).
+* `RtpRetransmissionBuffer`: Get rid of not necessary `startSeq` private member ([PR #1029](https://github.com/versatica/mediasoup/pull/1029)).
 * Node: Upgrade TypeScript to 5.0.2.
 
 
