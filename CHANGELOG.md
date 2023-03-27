@@ -3,7 +3,8 @@
 
 ### NEXT
 
-* `RtpRetransmissionBuffer`: Get rid of not necessary `startSeq` private member ([PR #1029](https://github.com/versatica/mediasoup/pull/1029).
+* Fix `SeqManager`: Properly consider previous cycle dropped inputs ([PR #1032](https://github.com/versatica/mediasoup/pull/1032)).
+* `RtpRetransmissionBuffer`: Get rid of not necessary `startSeq` private member ([PR #1029](https://github.com/versatica/mediasoup/pull/1029)).
 * Node: Upgrade TypeScript to 5.0.2.
 
 
@@ -15,7 +16,7 @@
 
 ### 3.11.14
 
-* Refactor RTP retransmission buffer in a separate and testable `RTC::RetransmissionBuffer` class ([PR #1023](https://github.com/versatica/mediasoup/pull/1023).
+* Refactor RTP retransmission buffer in a separate and testable `RTC::RetransmissionBuffer` class ([PR #1023](https://github.com/versatica/mediasoup/pull/1023)).
 * Update NPM deps.
 
 
