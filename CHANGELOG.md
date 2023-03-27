@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* Fix SeqManager: Properly consider previous cycle dropped inputs ([PR #1032](https://github.com/versatica/mediasoup/pull/1032)).
+* Fix `SeqManager`: Properly consider previous cycle dropped inputs ([PR #1032](https://github.com/versatica/mediasoup/pull/1032)).
 
 ### 3.11.14
 
