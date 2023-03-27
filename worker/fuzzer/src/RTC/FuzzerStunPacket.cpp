@@ -4,12 +4,16 @@
 void Fuzzer::RTC::StunPacket::Fuzz(const uint8_t* data, size_t len)
 {
 	if (!::RTC::StunPacket::IsStun(data, len))
+	{
 		return;
+	}
 
 	::RTC::StunPacket* packet = ::RTC::StunPacket::Parse(data, len);
 
 	if (!packet)
+	{
 		return;
+	}
 
 	// packet->Dump();
 	packet->GetClass();
