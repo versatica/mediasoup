@@ -164,7 +164,7 @@ namespace RTC
 			return;
 		}
 
-		// There is a single value in the reange.
+		// There is a single value in the range.
 		if (it1 == it2)
 		{
 			this->dropped.erase(it1);
