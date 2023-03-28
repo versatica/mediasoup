@@ -1,8 +1,9 @@
 name: Pull Request Stats
 
 on:
+  # Run it every Monday at 1PM UTC.
   schedule:
-    - cron: "0 13 * * 1" # Run it every Monday at 1PM UTC.
+    - cron: "0 13 * * 1"
 
 jobs:
   stats:

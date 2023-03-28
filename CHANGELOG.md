@@ -2,7 +2,8 @@
 
 ### NEXT
 
-* Github workflow: Remove deprecated Ubuntu version 18.04 ([PR #1033](https://github.com/versatica/mediasoup/pull/1033)).
+* GitHub CI: Remove deprecated Ubuntu version 18.04 ([PR #1033](https://github.com/versatica/mediasoup/pull/1033)).
+* GitHub CI: Cancel in progress workflows ([PR #1034](https://github.com/versatica/mediasoup/pull/1034)).
 
 
 ### 3.11.16
