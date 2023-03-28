@@ -426,6 +426,28 @@ namespace RTC
 				requiredBitrate =
 				  this->producerRtpStream->GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
 
+				// When using K-SVC we must subtract the bitrate of the current used layer
+				// if the new layer is the temporal layer 0 of an higher spatial layer.
+				//
+				// clang-format off
+				if (
+					this->encodingContext->IsKSvc() &&
+					requiredBitrate &&
+					temporalLayer == 0 &&
+					this->provisionalTargetSpatialLayer > -1 &&
+					spatialLayer > this->provisionalTargetSpatialLayer
+				)
+				// clang-format on
+				{
+					auto provisionalRequiredBitrate = this->producerRtpStream->GetBitrate(
+					  nowMs, this->provisionalTargetSpatialLayer, this->provisionalTargetTemporalLayer);
+
+					if (requiredBitrate > provisionalRequiredBitrate)
+						requiredBitrate -= provisionalRequiredBitrate;
+					else
+						requiredBitrate = 1u; // Don't set 0 since it would be ignored.
+				}
+
 				MS_DEBUG_DEV(
 				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
 				  ", required bitrate:%" PRIu32 "]",
