@@ -2,6 +2,12 @@ name: mediasoup-worker
 
 on: [push, pull_request]
 
+concurrency:
+  # Cancel a currently running workflow from the same PR, branch or tag when a
+  # new workflow is triggered.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ci:
     strategy:
@@ -31,7 +37,7 @@ jobs:
             cxx: cl
         # A single Node.js version should be fine for C++.
         node:
-          - 16
+          - 18
 
     runs-on: ${{ matrix.build.os }}
 
@@ -66,4 +72,5 @@ jobs:
 
       - run: npm run worker:build
       - run: npm run test:worker
+        # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'
