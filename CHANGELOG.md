@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+* Github workflow: Remove deprecated Ubuntu version 18.04 ([PR #1033](https://github.com/versatica/mediasoup/pull/1033)).
+
 
 ### 3.11.16
 
