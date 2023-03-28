@@ -347,7 +347,14 @@ test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () =>
 
 test('webRtcTransport.setMaxOutgoingBitrate() succeeds', async () =>
 {
-	await expect(transport.setMaxIncomingBitrate(100000))
+	await expect(transport.setMaxOutgoingBitrate(100000))
+		.resolves
+		.toBeUndefined();
+}, 2000);
+
+test('webRtcTransport.setMinOutgoingBitrate() succeeds', async () =>
+{
+	await expect(transport.setMinOutgoingBitrate(100000))
 		.resolves
 		.toBeUndefined();
 }, 2000);
@@ -497,6 +504,10 @@ test('WebRtcTransport methods reject if closed', async () =>
 		.toThrow(Error);
 
 	await expect(transport.setMaxOutgoingBitrate(200000))
+		.rejects
+		.toThrow(Error);
+
+	await expect(transport.setMinOutgoingBitrate(200000))
 		.rejects
 		.toThrow(Error);
 

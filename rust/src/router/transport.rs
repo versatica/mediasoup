@@ -7,6 +7,7 @@ use crate::messages::{
     TransportEnableTraceEventRequest, TransportGetStatsRequest, TransportProduceDataRequest,
     TransportProduceRequest, TransportSetMaxIncomingBitrateRequest,
     TransportSetMaxOutgoingBitrateRequest,
+    TransportSetMinOutgoingBitrateRequest,
 };
 pub use crate::ortc::{
     ConsumerRtpParametersError, RtpCapabilitiesError, RtpParametersError, RtpParametersMappingError,
@@ -384,6 +385,12 @@ pub(super) trait TransportImpl: TransportGeneric {
     async fn set_max_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
         self.channel()
             .request(self.id(), TransportSetMaxOutgoingBitrateRequest { bitrate })
+            .await
+    }
+
+    async fn set_min_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
+        self.channel()
+            .request(self.id(), TransportSetMinOutgoingBitrateRequest { bitrate })
             .await
     }
 

@@ -630,6 +630,12 @@ namespace RTC
 					  "bitrate must be >= %" PRIu32 " bps", RTC::TransportCongestionControlMinOutgoingBitrate);
 				}
 
+				if (this->minOutgoingBitrate != 0u && bitrate < this->minOutgoingBitrate)
+				{
+					MS_THROW_TYPE_ERROR(
+					  "bitrate must be >= minOutgoingBitrate (%" PRIu32 " bps)", this->minOutgoingBitrate);
+				}
+
 				if (this->tccClient)
 				{
 					// NOTE: This may throw so don't update things before calling this
@@ -644,6 +650,55 @@ namespace RTC
 				else
 				{
 					this->maxOutgoingBitrate = bitrate;
+				}
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::MethodId::TRANSPORT_SET_MIN_OUTGOING_BITRATE:
+			{
+				auto jsonBitrateIt = request->data.find("bitrate");
+
+				// clang-format off
+				if (
+					jsonBitrateIt == request->data.end() ||
+					!Utils::Json::IsPositiveInteger(*jsonBitrateIt)
+				)
+				// clang-format on
+				{
+					MS_THROW_TYPE_ERROR("missing bitrate");
+				}
+
+				const uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
+
+				if (bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
+				{
+					MS_THROW_TYPE_ERROR(
+					  "bitrate must be >= %" PRIu32 " bps", RTC::TransportCongestionControlMinOutgoingBitrate);
+				}
+
+				if (this->maxOutgoingBitrate != 0u && bitrate > this->maxOutgoingBitrate)
+				{
+					MS_THROW_TYPE_ERROR(
+					  "bitrate must be <= maxOutgoingBitrate (%" PRIu32 " bps)", this->maxOutgoingBitrate);
+				}
+
+				if (this->tccClient)
+				{
+					// NOTE: This may throw so don't update things before calling this
+					// method.
+					this->tccClient->SetMinOutgoingBitrate(bitrate);
+					this->minOutgoingBitrate = bitrate;
+
+					MS_DEBUG_TAG(bwe, "minimum outgoing bitrate set to %" PRIu32, this->minOutgoingBitrate);
+
+					ComputeOutgoingDesiredBitrate();
+				}
+				else
+				{
+					this->minOutgoingBitrate = bitrate;
 				}
 
 				request->Accept();
@@ -1002,7 +1057,11 @@ namespace RTC
 						};
 
 						this->tccClient = std::make_shared<RTC::TransportCongestionControlClient>(
-						  this, bweType, this->initialAvailableOutgoingBitrate, this->maxOutgoingBitrate);
+						  this,
+						  bweType,
+						  this->initialAvailableOutgoingBitrate,
+						  this->maxOutgoingBitrate,
+						  this->minOutgoingBitrate);
 
 						if (IsConnected())
 							this->tccClient->TransportConnected();

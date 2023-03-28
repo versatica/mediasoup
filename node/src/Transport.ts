@@ -86,8 +86,8 @@ export type TransportTraceEventData =
 
 export type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 
-export type TransportEvents = 
-{ 
+export type TransportEvents =
+{
 	routerclose: [];
 	listenserverclose: [];
 	trace: [TransportTraceEventData];
@@ -521,6 +521,19 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 
 		await this.channel.request(
 			'transport.setMaxOutgoingBitrate', this.internal.transportId, reqData);
+	}
+
+	/**
+	 * Set maximum outgoing bitrate for sending media.
+	 */
+	async setMinOutgoingBitrate(bitrate: number): Promise<void>
+	{
+		logger.debug('setMinOutgoingBitrate() [bitrate:%s]', bitrate);
+
+		const reqData = { bitrate };
+
+		await this.channel.request(
+			'transport.setMinOutgoingBitrate', this.internal.transportId, reqData);
 	}
 
 	/**

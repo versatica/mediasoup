@@ -597,6 +597,12 @@ request_response!(
 
 request_response!(
     TransportId,
+    "transport.setMinOutgoingBitrate",
+    TransportSetMinOutgoingBitrateRequest { bitrate: u32 },
+);
+
+request_response!(
+    TransportId,
     "transport.restartIce",
     TransportRestartIceRequest {},
     TransportRestartIceResponse {

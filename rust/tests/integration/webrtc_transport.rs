@@ -465,6 +465,28 @@ fn set_max_outgoing_bitrate_succeeds() {
 }
 
 #[test]
+fn set_min_outgoing_bitrate_succeeds() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                ListenIp {
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                },
+            )))
+            .await
+            .expect("Failed to create WebRTC transport");
+
+        transport
+            .set_min_outgoing_bitrate(100000)
+            .await
+            .expect("Failed to set min outgoing bitrate on WebRTC transport");
+    });
+}
+
+#[test]
 fn restart_ice_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
