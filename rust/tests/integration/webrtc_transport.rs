@@ -436,9 +436,15 @@ fn set_max_incoming_bitrate_succeeds() {
             .expect("Failed to create WebRTC transport");
 
         transport
-            .set_max_incoming_bitrate(100000)
+            .set_max_incoming_bitrate(1000000)
             .await
             .expect("Failed to set max incoming bitrate on WebRTC transport");
+
+        // Remove limit.
+        transport
+            .set_max_incoming_bitrate(0)
+            .await
+            .expect("Failed to remove limit in max incoming bitrate on WebRTC transport");
     });
 }
 
@@ -458,9 +464,109 @@ fn set_max_outgoing_bitrate_succeeds() {
             .expect("Failed to create WebRTC transport");
 
         transport
-            .set_max_outgoing_bitrate(100000)
+            .set_max_outgoing_bitrate(2000000)
             .await
             .expect("Failed to set max outgoing bitrate on WebRTC transport");
+
+        // Remove limit.
+        transport
+            .set_max_outgoing_bitrate(0)
+            .await
+            .expect("Failed to remove limit in max outgoing bitrate on WebRTC transport");
+    });
+}
+
+#[test]
+fn set_min_outgoing_bitrate_succeeds() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                ListenIp {
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                },
+            )))
+            .await
+            .expect("Failed to create WebRTC transport");
+
+        transport
+            .set_min_outgoing_bitrate(100000)
+            .await
+            .expect("Failed to set min outgoing bitrate on WebRTC transport");
+
+        // Remove limit.
+        transport
+            .set_min_outgoing_bitrate(0)
+            .await
+            .expect("Failed to remove limit in min outgoing bitrate on WebRTC transport");
+    });
+}
+
+#[test]
+fn set_max_outgoing_bitrate_fails_if_value_is_lower_than_current_min_limit() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                ListenIp {
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                },
+            )))
+            .await
+            .expect("Failed to create WebRTC transport");
+
+        transport
+            .set_min_outgoing_bitrate(3000000)
+            .await
+            .expect("Failed to set min outgoing bitrate on WebRTC transport");
+
+        assert!(matches!(
+            transport.set_max_outgoing_bitrate(2000000).await,
+            Err(RequestError::Response { .. }),
+        ));
+
+        // Remove limit.
+        transport
+            .set_min_outgoing_bitrate(0)
+            .await
+            .expect("Failed to remove limit in min outgoing bitrate on WebRTC transport");
+    });
+}
+
+#[test]
+fn set_min_outgoing_bitrate_fails_if_value_is_higher_than_current_max_limit() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
+                ListenIp {
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                },
+            )))
+            .await
+            .expect("Failed to create WebRTC transport");
+
+        transport
+            .set_max_outgoing_bitrate(2000000)
+            .await
+            .expect("Failed to set max outgoing bitrate on WebRTC transport");
+
+        assert!(matches!(
+            transport.set_min_outgoing_bitrate(3000000).await,
+            Err(RequestError::Response { .. }),
+        ));
+
+        // Remove limit.
+        transport
+            .set_max_outgoing_bitrate(0)
+            .await
+            .expect("Failed to remove limit in max outgoing bitrate on WebRTC transport");
     });
 }
 

@@ -27,11 +27,12 @@ namespace RTC
 	  RTC::TransportCongestionControlClient::Listener* listener,
 	  RTC::BweType bweType,
 	  uint32_t initialAvailableBitrate,
-	  uint32_t maxOutgoingBitrate)
+	  uint32_t maxOutgoingBitrate,
+	  uint32_t minOutgoingBitrate)
 	  : listener(listener), bweType(bweType),
 	    initialAvailableBitrate(std::max<uint32_t>(
 	      initialAvailableBitrate, RTC::TransportCongestionControlMinOutgoingBitrate)),
-	    maxOutgoingBitrate(maxOutgoingBitrate)
+	    maxOutgoingBitrate(maxOutgoingBitrate), minOutgoingBitrate(minOutgoingBitrate)
 	{
 		MS_TRACE();
 
@@ -281,6 +282,16 @@ namespace RTC
 		}
 	}
 
+	void TransportCongestionControlClient::SetMinOutgoingBitrate(uint32_t minBitrate)
+	{
+		this->minOutgoingBitrate = minBitrate;
+
+		ApplyBitrateUpdates();
+
+		this->bitrates.minBitrate = std::max<uint32_t>(
+		  this->minOutgoingBitrate, RTC::TransportCongestionControlMinOutgoingBitrate);
+	}
+
 	void TransportCongestionControlClient::SetDesiredBitrate(uint32_t desiredBitrate, bool force)
 	{
 		MS_TRACE();
@@ -305,7 +316,9 @@ namespace RTC
 		this->bitrates.effectiveDesiredBitrate = desiredBitrate;
 #endif
 
-		this->bitrates.minBitrate = RTC::TransportCongestionControlMinOutgoingBitrate;
+		this->bitrates.minBitrate = std::max<uint32_t>(
+		  this->minOutgoingBitrate, RTC::TransportCongestionControlMinOutgoingBitrate);
+
 		// NOTE: Setting 'startBitrate' to 'availableBitrate' has proven to generate
 		// more stable values.
 		this->bitrates.startBitrate = std::max<uint32_t>(
@@ -333,9 +346,10 @@ namespace RTC
 			  this->bitrates.desiredBitrate * MaxBitrateIncrementFactor);
 #endif
 
-			// If max bitrate requested didn't change by more than a small % keep the previous settings
-			// to avoid constant small fluctuations requiring extra probing and making the estimation
-			// less stable (requires constant redistribution of bitrate accross consumers).
+			// If max bitrate requested didn't change by more than a small % keep the
+			// previous settings to avoid constant small fluctuations requiring extra
+			// probing and making the estimation less stable (requires constant
+			// redistribution of bitrate accross consumers).
 			auto maxBitrateMargin = newMaxBitrate * MaxBitrateMarginFactor;
 			if (currentMaxBitrate > newMaxBitrate - maxBitrateMargin && currentMaxBitrate < newMaxBitrate + maxBitrateMargin)
 			{
@@ -357,6 +371,9 @@ namespace RTC
 			this->bitrates.maxPaddingBitrate = newMaxBitrate * MaxPaddingBitrateFactor;
 			this->bitrates.maxBitrate        = newMaxBitrate;
 		}
+
+		this->bitrates.minBitrate = std::max<uint32_t>(
+		  this->minOutgoingBitrate, RTC::TransportCongestionControlMinOutgoingBitrate);
 
 		MS_DEBUG_DEV(
 		  "[desiredBitrate:%" PRIu32 ", desiredBitrateTrend:%" PRIu32 ", startBitrate:%" PRIu32

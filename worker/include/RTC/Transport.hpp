@@ -329,6 +329,7 @@ namespace RTC
 		uint32_t initialAvailableOutgoingBitrate{ 600000u };
 		uint32_t maxIncomingBitrate{ 0u };
 		uint32_t maxOutgoingBitrate{ 0u };
+		uint32_t minOutgoingBitrate{ 0u };
 		struct TraceEventTypes traceEventTypes;
 	};
 } // namespace RTC
