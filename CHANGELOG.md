@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* `RtpRetransmissionBuffer`: consider the case of packet with newest timestamp but "old" seq number ([PR #1039](https://github.com/versatica/mediasoup/pull/1039)).
+* `RtpRetransmissionBuffer`: Consider the case of packet with newest timestamp but "old" seq number ([PR #1039](https://github.com/versatica/mediasoup/pull/1039)).
 
 
 ### 3.11.17
