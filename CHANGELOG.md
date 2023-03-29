@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.11.18
+
+* `RtpRetransmissionBuffer`: Consider the case of packet with newest timestamp but "old" seq number ([PR #1039](https://github.com/versatica/mediasoup/pull/1039)).
+
+
 ### 3.11.17
 
 * Add `transport.setMinOutgoingBitrate()` method ([PR #1038](https://github.com/versatica/mediasoup/pull/1038), credits to @ jcague).
