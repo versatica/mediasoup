@@ -61,6 +61,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
     : packet_router_(packet_router),
       pacer_(packet_router_),
       observer_(nullptr),
+	    stats_tracer_(nullptr),
       controller_factory_override_(controller_factory),
       process_interval_(controller_factory_override_->GetProcessInterval()),
       last_report_block_time_(Timestamp::ms(DepLibUV::GetTimeMsInt64())),
@@ -141,6 +142,12 @@ void RtpTransportControllerSend::RegisterTargetTransferRateObserver(
     observer_ = observer;
     observer_->OnStartRateUpdate(*initial_config_.constraints.starting_rate);
     MaybeCreateControllers();
+}
+
+void RtpTransportControllerSend::RegisterBweStatsTracer(webrtc::BweStatsTracer* tracer) {
+	MS_ASSERT(stats_tracer_ == nullptr, "stats_tracer already set");
+
+	stats_tracer_ = tracer;
 }
 
 void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
@@ -242,6 +249,7 @@ void RtpTransportControllerSend::OnTransportFeedback(
     PostUpdates(controller_->OnTransportPacketsFeedback(*feedback_msg));
   pacer_.UpdateOutstandingData(
       transport_feedback_adapter_.GetOutstandingData().bytes());
+	stats_tracer_->OnBweStats(controller_->GetBweStats());
 }
 
 void RtpTransportControllerSend::OnRemoteNetworkEstimate(

@@ -56,7 +56,40 @@ export type TransportTuple =
 /**
  * Valid types for 'trace' event.
  */
-export type TransportTraceEventType = 'probation' | 'bwe';
+export type TransportTraceEventType = 'probation' | 'bwe' | 'bweStats';
+
+/**
+ * bweStats typings for trace event.
+ */
+export type TransportTraceEventBweStatsInfo = {
+	estimatedBitrate: number;
+	delay: {
+		slope: number;
+		rSquared: number;
+		threshold: number;
+		rtt: number;
+		rateControlState: number;
+		delayDetectorState: number;
+	};
+	probe: {
+		estimatedBitrate: number;
+	};
+	loss: {
+		inherent: number;
+		avg: number;
+		estimatedBitrate: number;
+		sendingRate: number;
+	};
+	alr: boolean;
+	ackBitrate: number;
+	desiredBitrate: number;
+	effectiveDesiredBitrate: number;
+	minBitrate: number;
+	maxBitrate: number;
+	startBitrate: number;
+	maxPaddingBitrate: number;
+	sendingRate: number;
+};
 
 /**
  * 'trace' event data.
@@ -81,7 +114,7 @@ export type TransportTraceEventData =
 	/**
 	 * Per type information.
 	 */
-	info: any;
+	info: TransportTraceEventBweStatsInfo | any;
 };
 
 export type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';

@@ -63,16 +63,17 @@ export type WorkerSettings =
 	 * certificate is dynamically created.
 	 */
 	dtlsPrivateKeyFile?: string;
-
+	/* eslint-disable max-len */
 	/**
 	 * Field trials for libwebrtc.
 	 * @private
 	 *
 	 * NOTE: For advanced users only. An invalid value will make the worker crash.
 	 * Default value is
-	 * "WebRTC-Bwe-AlrLimitedBackoff/Enabled/".
+	 * "WebRTC-Bwe-AlrLimitedBackoff/Enabled/WebRTC-Bwe-LossBasedBweV2/BwRampupUpperBoundFactor:1.1,TrendlineIntegrationEnabled:true/WebRTC-Bwe-RobustThroughputEstimatorSettings/enabled/"
 	 */
 	libwebrtcFieldTrials?: string;
+	/* eslint-enable max-len */
 
 	/**
 	 * Custom application data.

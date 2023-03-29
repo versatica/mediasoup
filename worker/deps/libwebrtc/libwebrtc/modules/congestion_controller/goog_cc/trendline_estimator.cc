@@ -12,15 +12,16 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "modules/congestion_controller/goog_cc/trendline_estimator.h"
-
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "rtc_base/numerics/safe_minmax.h"
 
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 
 #include <absl/types/optional.h>
-#include <math.h>
 #include <algorithm>
+#include <math.h>
+#include <stdarg.h>
 #include <string>
 
 namespace webrtc {
@@ -28,14 +29,14 @@ namespace webrtc {
 namespace {
 
 // Parameters for linear least squares fit of regression line to noisy data.
-constexpr size_t kDefaultTrendlineWindowSize = 20;
-constexpr double kDefaultTrendlineSmoothingCoeff = 0.6;
+constexpr double kDefaultTrendlineSmoothingCoeff = 0.9;
 constexpr double kDefaultTrendlineThresholdGain = 4.0;
+constexpr double kDefaultRSquaredUpperBound = 0.20;
+constexpr double kDefaultRSquaredLowerBound = 0.02;
 const char kBweWindowSizeInPacketsExperiment[] =
     "WebRTC-BweWindowSizeInPackets";
 
-size_t ReadTrendlineFilterWindowSize(
-    const WebRtcKeyValueConfig* key_value_config) {
+size_t ReadTrendlineFilterWindowSize(const WebRtcKeyValueConfig* key_value_config) {
   std::string experiment_string =
       key_value_config->Lookup(kBweWindowSizeInPacketsExperiment);
   size_t window_size;
@@ -49,134 +50,245 @@ size_t ReadTrendlineFilterWindowSize(
   MS_WARN_DEV(
     "failed to parse parameters for BweWindowSizeInPackets"
     " experiment from field trial string, using default");
-  return kDefaultTrendlineWindowSize;
+	return TrendlineEstimatorSettings::kDefaultTrendlineWindowSize;
 }
 
-absl::optional<double> LinearFitSlope(
-    const std::deque<std::pair<double, double>>& points) {
-  //RTC_DCHECK(points.size() >= 2);
+absl::optional<DelayIncreaseDetectorInterface::RegressionResult> LinearFitSlope(
+    const std::deque<TrendlineEstimator::PacketTiming>& packets) {
+  // RTC_DCHECK(packets.size() >= 2);
   // Compute the "center of mass".
   double sum_x = 0;
   double sum_y = 0;
-  for (const auto& point : points) {
-    sum_x += point.first;
-    sum_y += point.second;
+  for (const auto& packet : packets) {
+    sum_x += packet.arrival_time_ms;
+    sum_y += packet.smoothed_delay_ms;
   }
-  double x_avg = sum_x / points.size();
-  double y_avg = sum_y / points.size();
+  double x_avg = sum_x / packets.size();
+  double y_avg = sum_y / packets.size();
   // Compute the slope k = \sum (x_i-x_avg)(y_i-y_avg) / \sum (x_i-x_avg)^2
   double numerator = 0;
   double denominator = 0;
-  for (const auto& point : points) {
-    numerator += (point.first - x_avg) * (point.second - y_avg);
-    denominator += (point.first - x_avg) * (point.first - x_avg);
+  for (const auto& packet : packets) {
+    double x = packet.arrival_time_ms;
+    double y = packet.smoothed_delay_ms;
+    numerator += (x - x_avg) * (y - y_avg);
+    denominator += (x - x_avg) * (x - x_avg);
   }
   if (denominator == 0)
     return absl::nullopt;
-  return numerator / denominator;
+	double b1 = numerator / denominator;
+	double b0 = y_avg - (b1 * x_avg);
+
+	// Compute the R squared
+	double r_numerator = 0;
+	double r_denominator = 0;
+	for (const auto& packet : packets) {
+		double x = packet.arrival_time_ms;
+		double y = packet.smoothed_delay_ms;
+		r_numerator += pow(((b0 + (b1 * x)) - y_avg), 2);
+		r_denominator += pow((y - y_avg), 2);
+	}
+
+	double r_squared = r_numerator / r_denominator;
+
+  return DelayIncreaseDetectorInterface::RegressionResult(b1, r_squared);
+}
+
+absl::optional<double> ComputeSlopeCap(
+    const std::deque<TrendlineEstimator::PacketTiming>& packets,
+    const TrendlineEstimatorSettings& settings) {
+  // RTC_DCHECK(1 <= settings.beginning_packets &&
+  //           settings.beginning_packets < packets.size());
+  // RTC_DCHECK(1 <= settings.end_packets &&
+	//           settings.end_packets < packets.size());
+  // RTC_DCHECK(settings.beginning_packets + settings.end_packets <=
+	//           packets.size());
+  TrendlineEstimator::PacketTiming early = packets[0];
+  for (size_t i = 1; i < settings.beginning_packets; ++i) {
+    if (packets[i].raw_delay_ms < early.raw_delay_ms)
+      early = packets[i];
+  }
+  size_t late_start = packets.size() - settings.end_packets;
+  TrendlineEstimator::PacketTiming late = packets[late_start];
+  for (size_t i = late_start + 1; i < packets.size(); ++i) {
+    if (packets[i].raw_delay_ms < late.raw_delay_ms)
+      late = packets[i];
+  }
+  if (late.arrival_time_ms - early.arrival_time_ms < 1) {
+    return absl::nullopt;
+  }
+  return (late.raw_delay_ms - early.raw_delay_ms) /
+             (late.arrival_time_ms - early.arrival_time_ms) +
+         settings.cap_uncertainty;
+}
+
+double getAverage(std::deque<double> const& hist) {
+	if (hist.empty()) {
+		return 0;
+	}
+	return std::accumulate(hist.begin(), hist.end(), 0.0) / hist.size();
 }
 
 constexpr double kMaxAdaptOffsetMs = 15.0;
-constexpr double kOverUsingTimeThreshold = 30;
+constexpr double kOverUsingTimeThreshold = 10;
 constexpr int kMinNumDeltas = 60;
-constexpr int kDeltaCounterMax = 1000;
+constexpr int kDeltaCounterMax = 300;
 
 }  // namespace
+
+constexpr char TrendlineEstimatorSettings::kKey[];
+
+TrendlineEstimatorSettings::TrendlineEstimatorSettings(
+    const WebRtcKeyValueConfig* key_value_config) {
+  if (key_value_config->Lookup(kBweWindowSizeInPacketsExperiment).find("Enabled") == 0) {
+    window_size = ReadTrendlineFilterWindowSize(key_value_config);
+  }
+  Parser()->Parse(key_value_config->Lookup(TrendlineEstimatorSettings::kKey));
+  if (window_size < 10 || 200 < window_size) {
+		MS_WARN_TAG(bwe, "window size must be between 10 and 200 packets");
+    window_size = kDefaultTrendlineWindowSize;
+  }
+	MS_DEBUG_DEV(
+		"using Trendline filter for delay change estimation with window size: %zu",
+		window_size);
+  if (enable_cap) {
+    if (beginning_packets < 1 || end_packets < 1 ||
+        beginning_packets > window_size || end_packets > window_size) {
+      MS_WARN_TAG(bwe, "size of beginning and end must be between 1 and %d", window_size);
+      enable_cap = false;
+      beginning_packets = end_packets = 0;
+      cap_uncertainty = 0.0;
+    }
+    if (beginning_packets + end_packets > window_size) {
+      MS_WARN_TAG(bwe, "size of beginning plus end can't exceed the window size");
+      enable_cap = false;
+      beginning_packets = end_packets = 0;
+      cap_uncertainty = 0.0;
+    }
+    if (cap_uncertainty < 0.0 || 0.025 < cap_uncertainty) {
+      MS_WARN_TAG(bwe, "cap uncertainty must be between 0 and 0.025");
+      cap_uncertainty = 0.0;
+    }
+  }
+}
+
+std::unique_ptr<StructParametersParser> TrendlineEstimatorSettings::Parser() {
+  return StructParametersParser::Create("sort", &enable_sort,  //
+                                        "cap", &enable_cap,    //
+                                        "beginning_packets",
+                                        &beginning_packets,                   //
+                                        "end_packets", &end_packets,          //
+                                        "cap_uncertainty", &cap_uncertainty,  //
+                                        "window_size", &window_size);
+}
 
 TrendlineEstimator::TrendlineEstimator(
     const WebRtcKeyValueConfig* key_value_config,
     NetworkStatePredictor* network_state_predictor)
-    : TrendlineEstimator(
-          key_value_config->Lookup(kBweWindowSizeInPacketsExperiment)
-                      .find("Enabled") == 0
-              ? ReadTrendlineFilterWindowSize(key_value_config)
-              : kDefaultTrendlineWindowSize,
-          kDefaultTrendlineSmoothingCoeff,
-          kDefaultTrendlineThresholdGain,
-          network_state_predictor) {}
-
-TrendlineEstimator::TrendlineEstimator(
-    size_t window_size,
-    double smoothing_coef,
-    double threshold_gain,
-    NetworkStatePredictor* network_state_predictor)
-    : window_size_(window_size),
-      smoothing_coef_(smoothing_coef),
-      threshold_gain_(threshold_gain),
+    : settings_(key_value_config),
+      smoothing_coef_(kDefaultTrendlineSmoothingCoeff),
+      threshold_gain_(kDefaultTrendlineThresholdGain),
       num_of_deltas_(0),
       first_arrival_time_ms_(-1),
       accumulated_delay_(0),
       smoothed_delay_(0),
       delay_hist_(),
+	  	r_squared_hist_(),
       k_up_(0.0087),
       k_down_(0.039),
       overusing_time_threshold_(kOverUsingTimeThreshold),
       threshold_(12.5),
       prev_modified_trend_(NAN),
       last_update_ms_(-1),
-      prev_trend_(0.0),
+      prev_trend_(0.0, 0.0),
       time_over_using_(-1),
       overuse_counter_(0),
+	  	r_squared_overuse_counter_(0),
       hypothesis_(BandwidthUsage::kBwNormal),
       hypothesis_predicted_(BandwidthUsage::kBwNormal),
       network_state_predictor_(network_state_predictor) {
-  MS_DEBUG_DEV(
-    "using Trendline filter for delay change estimation with window size: %zu",
-    window_size_);
 }
 
 TrendlineEstimator::~TrendlineEstimator() {}
+
+void TrendlineEstimator::UpdateTrendline(double recv_delta_ms,
+                                         double send_delta_ms,
+                                         int64_t send_time_ms,
+                                         int64_t arrival_time_ms,
+                                         size_t packet_size) {
+  const double delta_ms = recv_delta_ms - send_delta_ms;
+  ++num_of_deltas_;
+  num_of_deltas_ = std::min(num_of_deltas_, kDeltaCounterMax);
+  if (first_arrival_time_ms_ == -1)
+    first_arrival_time_ms_ = arrival_time_ms;
+
+  // Exponential backoff filter.
+  accumulated_delay_ += delta_ms;
+  // BWE_TEST_LOGGING_PLOT(1, "accumulated_delay_ms", arrival_time_ms,
+  //                      accumulated_delay_);
+  smoothed_delay_ = smoothing_coef_ * smoothed_delay_ +
+                    (1 - smoothing_coef_) * accumulated_delay_;
+  // BWE_TEST_LOGGING_PLOT(1, "smoothed_delay_ms", arrival_time_ms,
+  //                      smoothed_delay_);
+
+  // Maintain packet window
+  delay_hist_.emplace_back(
+      static_cast<double>(arrival_time_ms - first_arrival_time_ms_),
+      smoothed_delay_, accumulated_delay_);
+  if (settings_.enable_sort) {
+    for (size_t i = delay_hist_.size() - 1;
+         i > 0 &&
+         delay_hist_[i].arrival_time_ms < delay_hist_[i - 1].arrival_time_ms;
+         --i) {
+      std::swap(delay_hist_[i], delay_hist_[i - 1]);
+    }
+  }
+  if (delay_hist_.size() > settings_.window_size)
+    delay_hist_.pop_front();
+
+  // Simple linear regression.
+  auto trend = prev_trend_;
+	DelayIncreaseDetectorInterface::RegressionResult result;
+	double avg_r_squared {0.0};
+  if (delay_hist_.size() == settings_.window_size) {
+    // Update trend_ if it is possible to fit a line to the data. The delay
+    // trend can be seen as an estimate of (send_rate - capacity)/capacity.
+    // 0 < trend < 1   ->  the delay increases, queues are filling up
+    //   trend == 0    ->  the delay does not change
+    //   trend < 0     ->  the delay decreases, queues are being emptied
+		result = LinearFitSlope(delay_hist_).value_or(trend);
+		//if (result.slope > 0) {
+			r_squared_hist_.emplace_back(result.r_squared);
+			if (r_squared_hist_.size() > settings_.window_size)
+				r_squared_hist_.pop_front();
+		//}
+		avg_r_squared = getAverage(r_squared_hist_);
+		trend.r_squared = avg_r_squared;
+		result.r_squared = avg_r_squared;
+    if (settings_.enable_cap) {
+      absl::optional<double> cap = ComputeSlopeCap(delay_hist_, settings_);
+      // We only use the cap to filter out overuse detections, not
+      // to detect additional underuses.
+      if (trend.slope >= 0 && cap.has_value() && trend.slope > cap.value()) {
+        trend.slope = cap.value();
+      }
+    }
+  }
+
+
+  Detect(result, send_delta_ms, arrival_time_ms, avg_r_squared);
+}
 
 void TrendlineEstimator::Update(double recv_delta_ms,
                                 double send_delta_ms,
                                 int64_t send_time_ms,
                                 int64_t arrival_time_ms,
+                                size_t packet_size,
                                 bool calculated_deltas) {
   if (calculated_deltas) {
-    const double delta_ms = recv_delta_ms - send_delta_ms;
-    ++num_of_deltas_;
-    num_of_deltas_ = std::min(num_of_deltas_, kDeltaCounterMax);
-    if (first_arrival_time_ms_ == -1)
-      first_arrival_time_ms_ = arrival_time_ms;
-
-    // Exponential backoff filter.
-    accumulated_delay_ += delta_ms;
-    // BWE_TEST_LOGGING_PLOT(1, "accumulated_delay_ms", arrival_time_ms,
-                          // accumulated_delay_);
-    // smoothed_delay_ = smoothing_coef_ * smoothed_delay_ +
-                      // (1 - smoothing_coef_) * accumulated_delay_;
-    // MS_NOTE: Apply WEMA to the current delta_ms. Don't consider the
-    // accumulated delay. Tests show it behaves more robustly upon delta peaks.
-    smoothed_delay_ = smoothing_coef_ * delta_ms +
-                      (1 - smoothing_coef_) * smoothed_delay_;
-    // BWE_TEST_LOGGING_PLOT(1, "smoothed_delay_ms", arrival_time_ms,
-                          // smoothed_delay_);
-
-    // Simple linear regression.
-    delay_hist_.push_back(std::make_pair(
-        static_cast<double>(arrival_time_ms - first_arrival_time_ms_),
-        smoothed_delay_));
-    if (delay_hist_.size() > window_size_)
-      delay_hist_.pop_front();
-    double trend = prev_trend_;
-    if (delay_hist_.size() == window_size_) {
-      // Update trend_ if it is possible to fit a line to the data. The delay
-      // trend can be seen as an estimate of (send_rate - capacity)/capacity.
-      // 0 < trend < 1   ->  the delay increases, queues are filling up
-      //   trend == 0    ->  the delay does not change
-      //   trend < 0     ->  the delay decreases, queues are being emptied
-      trend = LinearFitSlope(delay_hist_).value_or(trend);
-    }
-
-    // BWE_TEST_LOGGING_PLOT(1, "trendline_slope", arrival_time_ms, trend);
-
-    MS_DEBUG_DEV("trend:%f, send_delta_ms:%f, recv_delta_ms:%f, delta_ms:%f arrival_time_ms:%" PRIi64 ", accumulated_delay_:%f, smoothed_delay_:%f", trend, send_delta_ms, recv_delta_ms, delta_ms, arrival_time_ms, accumulated_delay_, smoothed_delay_);
-    Detect(trend, send_delta_ms, arrival_time_ms);
+    UpdateTrendline(recv_delta_ms, send_delta_ms, send_time_ms, arrival_time_ms,
+                    packet_size);
   }
-  else {
-    MS_DEBUG_DEV("no calculated deltas");
-  }
-
   if (network_state_predictor_) {
     hypothesis_predicted_ = network_state_predictor_->Update(
         send_time_ms, arrival_time_ms, hypothesis_);
@@ -187,16 +299,48 @@ BandwidthUsage TrendlineEstimator::State() const {
   return network_state_predictor_ ? hypothesis_predicted_ : hypothesis_;
 }
 
-void TrendlineEstimator::Detect(double trend, double ts_delta, int64_t now_ms) {
+void TrendlineEstimator::Detect(DelayIncreaseDetectorInterface::RegressionResult trend, double ts_delta, int64_t now_ms, double avg_r_squared) {
   if (num_of_deltas_ < 2) {
     hypothesis_ = BandwidthUsage::kBwNormal;
     return;
   }
+
+	BandwidthUsage prev_hypothesis = hypothesis_;
+
   const double modified_trend =
-      std::min(num_of_deltas_, kMinNumDeltas) * trend * threshold_gain_;
+      std::min(num_of_deltas_, kMinNumDeltas) * trend.slope * threshold_gain_;
   prev_modified_trend_ = modified_trend;
   // BWE_TEST_LOGGING_PLOT(1, "T", now_ms, modified_trend);
   // BWE_TEST_LOGGING_PLOT(1, "threshold", now_ms, threshold_);
+	/*for (auto it = delay_hist_.crbegin(); it != delay_hist_.crend(); ++it) {
+		MS_DEBUG_DEV("arrival_time_ms - first_arrival_time_ms_:%f, smoothed_delay_:%f, raw_delay_:%f", it->arrival_time_ms, it->smoothed_delay_ms, it->raw_delay_ms);
+	}*/
+
+  // MS_NOTE: In case of positive slope we want to limit BW increase or even decrease
+	// in case we see that we have many outliers.
+	if (trend.slope > 0.0 && avg_r_squared > 0  && avg_r_squared < kDefaultRSquaredUpperBound) {
+		if (avg_r_squared < kDefaultRSquaredLowerBound) {
+			r_squared_overuse_counter_++;
+			if (r_squared_overuse_counter_ > 3) {
+				hypothesis_ = BandwidthUsage::kBwOverusing;
+				MS_DEBUG_DEV("slope, r_squared, avg_r_squared [%f,  %f, %f]", trend.slope, trend.r_squared, avg_r_squared);
+				MS_DEBUG_DEV("OverUsing!");
+				r_squared_overuse_counter_ = 0;
+			}
+		} else  {
+			hypothesis_ = BandwidthUsage::kBwUnderusing;
+			MS_DEBUG_DEV("slope, r_squared, avg_r_squared [%f,  %f, %f]", trend.slope, trend.r_squared, avg_r_squared);
+			MS_DEBUG_DEV("HOLD");
+			r_squared_overuse_counter_ = 0;
+		}
+
+		prev_trend_ = trend;
+		UpdateThreshold(modified_trend, now_ms);
+
+		return;
+	}
+
+
   if (modified_trend > threshold_) {
     if (time_over_using_ == -1) {
       // Initialize the timer. Assume that we've been
@@ -208,31 +352,27 @@ void TrendlineEstimator::Detect(double trend, double ts_delta, int64_t now_ms) {
       time_over_using_ += ts_delta;
     }
     overuse_counter_++;
-    if (time_over_using_ > overusing_time_threshold_ && overuse_counter_ > 1) {
-      if (trend >= prev_trend_) {
+    if (time_over_using_ > overusing_time_threshold_ && overuse_counter_ > 3) {
+      if (trend.slope >= prev_trend_.slope) {
         time_over_using_ = 0;
         overuse_counter_ = 0;
-        MS_DEBUG_DEV("hypothesis_: BandwidthUsage::kBwOverusing");
-
-#if MS_LOG_DEV_LEVEL == 3
-        for (auto& kv : delay_hist_) {
-          MS_DEBUG_DEV("arrival_time_ms - first_arrival_time_ms_:%f, smoothed_delay_:%f", kv.first, kv.second);
-        }
-#endif
-
-        hypothesis_ = BandwidthUsage::kBwOverusing;
+				hypothesis_ = BandwidthUsage::kBwOverusing;
+				if (hypothesis_ != prev_hypothesis)
+					MS_DEBUG_DEV("hypothesis_: BandwidthUsage::kBwOverusing");
       }
     }
   } else if (modified_trend < -threshold_) {
     time_over_using_ = -1;
     overuse_counter_ = 0;
     hypothesis_ = BandwidthUsage::kBwUnderusing;
-    MS_DEBUG_DEV("---- BandwidthUsage::kBwUnderusing ---");
+		if (hypothesis_ != prev_hypothesis)
+    	MS_DEBUG_DEV("---- BandwidthUsage::kBwUnderusing ---");
   } else {
     time_over_using_ = -1;
     overuse_counter_ = 0;
-    MS_DEBUG_DEV("---- BandwidthUsage::kBwNormal ---");
     hypothesis_ = BandwidthUsage::kBwNormal;
+		if (hypothesis_ != prev_hypothesis)
+			MS_DEBUG_DEV("---- BandwidthUsage::kBwNormal ---");
   }
   prev_trend_ = trend;
   UpdateThreshold(modified_trend, now_ms);

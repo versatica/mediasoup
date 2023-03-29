@@ -64,6 +64,7 @@ namespace RTC
 		  new webrtc::RtpTransportControllerSend(this, nullptr, this->controllerFactory, bitrateConfig);
 
 		this->rtpTransportControllerSend->RegisterTargetTransferRateObserver(this);
+		this->rtpTransportControllerSend->RegisterBweStatsTracer(this);
 
 		this->probationGenerator = new RTC::RtpProbationGenerator();
 
@@ -471,6 +472,11 @@ namespace RTC
 
 			this->listener->OnTransportCongestionControlClientBitrates(this, this->bitrates);
 		}
+	}
+
+	void TransportCongestionControlClient::OnBweStats(webrtc::BweStats stats)
+	{
+		this->listener->OnTransportCongestionControlClientBweStats(stats, this->bitrates);
 	}
 
 	void TransportCongestionControlClient::OnTargetTransferRate(webrtc::TargetTransferRate targetTransferRate)

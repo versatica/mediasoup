@@ -32,6 +32,13 @@ class TargetTransferRateObserver {
   virtual void OnStartRateUpdate(DataRate) {}
 };
 
+class BweStatsTracer {
+public:
+	virtual ~BweStatsTracer() = default;
+	virtual void OnBweStats(BweStats) = 0;
+};
+
+
 // Configuration sent to factory create function. The parameters here are
 // optional to use for a network controller implementation.
 struct NetworkControllerConfig {
@@ -72,7 +79,11 @@ class NetworkControllerInterface {
   // Called round trip time has been calculated by protocol specific mechanisms.
   virtual NetworkControlUpdate OnRoundTripTimeUpdate(RoundTripTimeUpdate) = 0;
   // Called when a packet is sent on the network.
-  virtual NetworkControlUpdate OnSentPacket(SentPacket) = 0;
+  virtual NetworkControlUpdate OnSentPacket(
+      SentPacket) = 0;
+  // Called when a packet is received from the remote client.
+  virtual NetworkControlUpdate OnReceivedPacket(
+      ReceivedPacket) = 0;
   // Called when the stream specific configuration has been updated.
   virtual NetworkControlUpdate OnStreamsConfig(StreamsConfig) = 0;
   // Called when target transfer rate constraints has been changed.
@@ -85,6 +96,7 @@ class NetworkControllerInterface {
       TransportPacketsFeedback) = 0;
   // Called with network state estimate updates.
   virtual NetworkControlUpdate OnNetworkStateEstimate(NetworkStateEstimate) = 0;
+	virtual BweStats GetBweStats() = 0;
 };
 
 // NetworkControllerFactoryInterface is an interface for creating a network
@@ -108,7 +120,11 @@ class NetworkStateEstimator {
   // Gets the current best estimate according to the estimator.
   virtual absl::optional<NetworkStateEstimate> GetCurrentEstimate() = 0;
   // Called with per packet feedback regarding receive time.
+  // Used when the NetworkStateEstimator runs in the sending endpoint.
   virtual void OnTransportPacketsFeedback(const TransportPacketsFeedback&) = 0;
+  // Called with per packet feedback regarding receive time.
+  // Used when the NetworkStateEstimator runs in the receiving endpoint.
+  virtual void OnReceivedPacket(const PacketResult&) {}
   // Called when the receiving or sending endpoint changes address.
   virtual void OnRouteChange(const NetworkRouteChange&) = 0;
   virtual ~NetworkStateEstimator() = default;

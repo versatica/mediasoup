@@ -36,6 +36,7 @@ struct NetworkRoute;
 namespace webrtc {
 
 class TargetTransferRateObserver;
+class BweStatsTracer;
 class Transport;
 class PacedSender;
 class PacketFeedbackObserver;
@@ -99,6 +100,8 @@ class RtpTransportControllerSendInterface {
       // PacketFeedbackObserver* observer) = 0;
   virtual void RegisterTargetTransferRateObserver(
       TargetTransferRateObserver* observer) = 0;
+	virtual void RegisterBweStatsTracer(
+		BweStatsTracer* tracer) = 0;
   virtual void OnNetworkAvailability(bool network_available) = 0;
   virtual RtcpBandwidthObserver* GetBandwidthObserver() = 0;
   virtual void EnablePeriodicAlrProbing(bool enable) = 0;

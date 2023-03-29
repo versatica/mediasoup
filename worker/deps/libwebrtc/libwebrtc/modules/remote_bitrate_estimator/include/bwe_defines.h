@@ -29,6 +29,8 @@ DataRate GetMinBitrate();
 
 static const int64_t kBitrateWindowMs = 1000;
 
+constexpr DataRate kCongestionControllerMinBitrate = DataRate::BitsPerSec<5000>();
+
 extern const char kBweTypeHistogram[];
 
 enum BweNames {
@@ -39,7 +41,7 @@ enum BweNames {
   kBweNamesMax = 4
 };
 
-enum RateControlState { kRcHold, kRcIncrease, kRcDecrease };
+enum class RateControlState { kRcHold, kRcIncrease, kRcDecrease };
 
 struct RateControlInput {
   RateControlInput(BandwidthUsage bw_state,

@@ -21,7 +21,8 @@ namespace RTC
 
 	class TransportCongestionControlClient : public webrtc::PacketRouter,
 	                                         public webrtc::TargetTransferRateObserver,
-	                                         public Timer::Listener
+	                                         public Timer::Listener,
+	                                         public webrtc::BweStatsTracer
 	{
 	public:
 		struct Bitrates
@@ -49,6 +50,9 @@ namespace RTC
 			  RTC::TransportCongestionControlClient* tccClient,
 			  RTC::RtpPacket* packet,
 			  const webrtc::PacedPacketInfo& pacingInfo) = 0;
+			virtual void OnTransportCongestionControlClientBweStats(
+			  const webrtc::BweStats& bweStats,
+			  RTC::TransportCongestionControlClient::Bitrates& bitrates) = 0;
 		};
 
 	public:
@@ -96,6 +100,9 @@ namespace RTC
 		/* Pure virtual methods inherited from webrtc::TargetTransferRateObserver. */
 	public:
 		void OnTargetTransferRate(webrtc::TargetTransferRate targetTransferRate) override;
+
+	public:
+		void OnBweStats(webrtc::BweStats) override;
 
 		/* Pure virtual methods inherited from webrtc::PacketRouter. */
 	public:

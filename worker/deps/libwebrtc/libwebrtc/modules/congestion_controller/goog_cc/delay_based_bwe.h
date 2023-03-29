@@ -19,7 +19,10 @@
 #include "modules/remote_bitrate_estimator/aimd_rate_control.h"
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "modules/remote_bitrate_estimator/inter_arrival.h"
+#include "modules/congestion_controller/goog_cc/inter_arrival_delta.h"
 #include "rtc_base/constructor_magic.h"
+#include "rtc_base/experiments/struct_parameters_parser.h"
+// #include "rtc_base/race_checker.h"
 
 #include <absl/types/optional.h>
 #include <stddef.h>
@@ -31,21 +34,39 @@
 namespace webrtc {
 class RtcEventLog;
 
+struct BweSeparateAudioPacketsSettings {
+  static constexpr char kKey[] = "WebRTC-Bwe-SeparateAudioPackets";
+
+  BweSeparateAudioPacketsSettings() = default;
+  explicit BweSeparateAudioPacketsSettings(
+      const WebRtcKeyValueConfig* key_value_config);
+
+  bool enabled = false;
+  int packet_threshold = 10;
+  TimeDelta time_threshold = TimeDelta::Seconds<1>();
+
+  std::unique_ptr<StructParametersParser> Parser();
+};
+
 class DelayBasedBwe {
  public:
   struct Result {
     Result();
-    Result(bool probe, DataRate target_bitrate);
-    ~Result();
+    ~Result() = default;
     bool updated;
     bool probe;
     DataRate target_bitrate = DataRate::Zero();
     bool recovered_from_overuse;
-    bool backoff_in_alr;
+    BandwidthUsage delay_detector_state;
   };
 
   explicit DelayBasedBwe(const WebRtcKeyValueConfig* key_value_config,
                          NetworkStatePredictor* network_state_predictor);
+
+  DelayBasedBwe() = delete;
+  DelayBasedBwe(const DelayBasedBwe&) = delete;
+  DelayBasedBwe& operator=(const DelayBasedBwe&) = delete;
+
   virtual ~DelayBasedBwe();
 
   Result IncomingPacketFeedbackVector(
@@ -59,11 +80,11 @@ class DelayBasedBwe {
   void SetStartBitrate(DataRate start_bitrate);
   void SetMinBitrate(DataRate min_bitrate);
   TimeDelta GetExpectedBwePeriod() const;
-  void SetAlrLimitedBackoffExperiment(bool enabled);
-
   DataRate TriggerOveruse(Timestamp at_time,
                           absl::optional<DataRate> link_capacity);
-
+  DataRate last_estimate() const { return prev_bitrate_; }
+  BandwidthUsage last_state() const { return prev_state_; }
+	DelayBasedBweState GetState() const;
  private:
   friend class GoogCcStatePrinter;
   void IncomingPacketFeedback(const PacketResult& packet_feedback,
@@ -77,22 +98,35 @@ class DelayBasedBwe {
       Timestamp at_time);
   // Updates the current remote rate estimate and returns true if a valid
   // estimate exists.
-  bool UpdateEstimate(Timestamp now,
+  bool UpdateEstimate(Timestamp at_time,
                       absl::optional<DataRate> acked_bitrate,
-                      DataRate* target_bitrate);
+                      DataRate* target_rate);
 
+  // rtc::RaceChecker network_race_;
+  // RtcEventLog* const event_log_;
   const WebRtcKeyValueConfig* const key_value_config_;
+
+  // Alternatively, run two separate overuse detectors for audio and video,
+  // and fall back to the audio one if we haven't seen a video packet in a
+  // while.
+  BweSeparateAudioPacketsSettings separate_audio_;
+  int64_t audio_packets_since_last_video_;
+  Timestamp last_video_packet_recv_time_;
+
   NetworkStatePredictor* network_state_predictor_;
-  std::unique_ptr<InterArrival> inter_arrival_;
-  std::unique_ptr<DelayIncreaseDetectorInterface> delay_detector_;
+  std::unique_ptr<InterArrival> video_inter_arrival_;
+  std::unique_ptr<InterArrivalDelta> video_inter_arrival_delta_;
+  std::unique_ptr<DelayIncreaseDetectorInterface> video_delay_detector_;
+  std::unique_ptr<InterArrival> audio_inter_arrival_;
+  std::unique_ptr<InterArrivalDelta> audio_inter_arrival_delta_;
+  std::unique_ptr<DelayIncreaseDetectorInterface> audio_delay_detector_;
+  DelayIncreaseDetectorInterface* active_delay_detector_;
+
   Timestamp last_seen_packet_;
   bool uma_recorded_;
   AimdRateControl rate_control_;
   DataRate prev_bitrate_;
   BandwidthUsage prev_state_;
-  bool alr_limited_backoff_enabled_;
-
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(DelayBasedBwe);
 };
 
 }  // namespace webrtc

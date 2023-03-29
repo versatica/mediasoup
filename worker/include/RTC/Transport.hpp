@@ -117,6 +117,7 @@ namespace RTC
 		{
 			bool probation{ false };
 			bool bwe{ false };
+			bool bweStats{ false };
 		};
 
 	public:
@@ -267,6 +268,9 @@ namespace RTC
 		  RTC::TransportCongestionControlClient* tccClient,
 		  RTC::RtpPacket* packet,
 		  const webrtc::PacedPacketInfo& pacingInfo) override;
+		void OnTransportCongestionControlClientBweStats(
+		  const webrtc::BweStats& bweStats,
+		  RTC::TransportCongestionControlClient::Bitrates& bitrates) override;
 
 		/* Pure virtual methods inherited from RTC::TransportCongestionControlServer::Listener. */
 	public:
