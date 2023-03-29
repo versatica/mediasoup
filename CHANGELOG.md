@@ -3,6 +3,7 @@
 
 ### NEXT
 
+* Add `transport.setMinOutgoingBitrate()` method ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX), credits to @ jcague).
 * `RTC::RetransmissionBuffer`: Increase `RetransmissionBufferMaxItems` from 2500 to 5000.
 
 

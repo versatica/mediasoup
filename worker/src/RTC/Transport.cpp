@@ -69,7 +69,9 @@ namespace RTC
 		if (jsonInitialAvailableOutgoingBitrateIt != data.end())
 		{
 			if (!Utils::Json::IsPositiveInteger(*jsonInitialAvailableOutgoingBitrateIt))
+			{
 				MS_THROW_TYPE_ERROR("wrong initialAvailableOutgoingBitrate (not a number)");
+			}
 
 			this->initialAvailableOutgoingBitrate = jsonInitialAvailableOutgoingBitrateIt->get<uint32_t>();
 		}
@@ -163,7 +165,9 @@ namespace RTC
 			bool isDataChannel{ false };
 
 			if (jsonIsDataChannelIt != data.end() && jsonIsDataChannelIt->is_boolean())
+			{
 				isDataChannel = jsonIsDataChannelIt->get<bool>();
+			}
 
 			// This may throw.
 			this->sctpAssociation = new RTC::SctpAssociation(
@@ -382,20 +386,30 @@ namespace RTC
 		auto jsonRtpHeaderExtensionsIt        = jsonObject.find("recvRtpHeaderExtensions");
 
 		if (this->recvRtpHeaderExtensionIds.mid != 0u)
+		{
 			(*jsonRtpHeaderExtensionsIt)["mid"] = this->recvRtpHeaderExtensionIds.mid;
+		}
 
 		if (this->recvRtpHeaderExtensionIds.rid != 0u)
+		{
 			(*jsonRtpHeaderExtensionsIt)["rid"] = this->recvRtpHeaderExtensionIds.rid;
+		}
 
 		if (this->recvRtpHeaderExtensionIds.rrid != 0u)
+		{
 			(*jsonRtpHeaderExtensionsIt)["rrid"] = this->recvRtpHeaderExtensionIds.rrid;
+		}
 
 		if (this->recvRtpHeaderExtensionIds.absSendTime != 0u)
+		{
 			(*jsonRtpHeaderExtensionsIt)["absSendTime"] = this->recvRtpHeaderExtensionIds.absSendTime;
+		}
 
 		if (this->recvRtpHeaderExtensionIds.transportWideCc01 != 0u)
+		{
 			(*jsonRtpHeaderExtensionsIt)["transportWideCc01"] =
 			  this->recvRtpHeaderExtensionIds.transportWideCc01;
+		}
 
 		// Add rtpListener.
 		this->rtpListener.FillJson(jsonObject["rtpListener"]);
@@ -437,9 +451,14 @@ namespace RTC
 		std::ostringstream traceEventTypesStream;
 
 		if (this->traceEventTypes.probation)
+		{
 			traceEventTypes.emplace_back("probation");
+		}
+
 		if (this->traceEventTypes.bwe)
+		{
 			traceEventTypes.emplace_back("bwe");
+		}
 
 		if (!traceEventTypes.empty())
 		{
@@ -535,23 +554,33 @@ namespace RTC
 
 		// Add availableOutgoingBitrate.
 		if (this->tccClient)
+		{
 			jsonObject["availableOutgoingBitrate"] = this->tccClient->GetAvailableBitrate();
+		}
 
 		// Add availableIncomingBitrate.
 		if (this->tccServer && this->tccServer->GetAvailableBitrate() != 0u)
+		{
 			jsonObject["availableIncomingBitrate"] = this->tccServer->GetAvailableBitrate();
+		}
 
 		// Add maxIncomingBitrate.
 		if (this->maxIncomingBitrate != 0u)
+		{
 			jsonObject["maxIncomingBitrate"] = this->maxIncomingBitrate;
+		}
 
 		// Add packetLossReceived.
 		if (this->tccServer)
+		{
 			jsonObject["rtpPacketLossReceived"] = this->tccServer->GetPacketLoss();
+		}
 
 		// Add packetLossSent.
 		if (this->tccClient)
+		{
 			jsonObject["rtpPacketLossSent"] = this->tccClient->GetPacketLoss();
+		}
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)
@@ -603,7 +632,9 @@ namespace RTC
 				request->Accept();
 
 				if (this->tccServer)
+				{
 					this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+				}
 
 				break;
 			}
@@ -624,10 +655,17 @@ namespace RTC
 
 				const uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
 
-				if (bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
+				if (bitrate > 0u && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
 				{
 					MS_THROW_TYPE_ERROR(
-					  "bitrate must be >= %" PRIu32 " bps", RTC::TransportCongestionControlMinOutgoingBitrate);
+					  "bitrate must be >= %" PRIu32 " or 0 (unlimited)",
+					  RTC::TransportCongestionControlMinOutgoingBitrate);
+				}
+				else if (bitrate > 0u && bitrate < this->minOutgoingBitrate)
+				{
+					MS_THROW_TYPE_ERROR(
+					  "bitrate must be >= current min outgoing bitrate (%" PRIu32 ") or 0 (unlimited)",
+					  this->minOutgoingBitrate);
 				}
 
 				if (this->tccClient)
@@ -644,6 +682,56 @@ namespace RTC
 				else
 				{
 					this->maxOutgoingBitrate = bitrate;
+				}
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::MethodId::TRANSPORT_SET_MIN_OUTGOING_BITRATE:
+			{
+				auto jsonBitrateIt = request->data.find("bitrate");
+
+				// clang-format off
+							if (
+								jsonBitrateIt == request->data.end() ||
+								!Utils::Json::IsPositiveInteger(*jsonBitrateIt)
+							)
+				// clang-format on
+				{
+					MS_THROW_TYPE_ERROR("missing bitrate");
+				}
+
+				const uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
+
+				if (bitrate > 0u && bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
+				{
+					MS_THROW_TYPE_ERROR(
+					  "bitrate must be >= %" PRIu32 " or 0 (unlimited)",
+					  RTC::TransportCongestionControlMinOutgoingBitrate);
+				}
+				else if (bitrate > 0u && this->maxOutgoingBitrate > 0 && bitrate > this->maxOutgoingBitrate)
+				{
+					MS_THROW_TYPE_ERROR(
+					  "bitrate must be <= current max outgoing bitrate (%" PRIu32 ") or 0 (unlimited)",
+					  this->maxOutgoingBitrate);
+				}
+
+				if (this->tccClient)
+				{
+					// NOTE: This may throw so don't update things before calling this
+					// method.
+					this->tccClient->SetMinOutgoingBitrate(bitrate);
+					this->minOutgoingBitrate = bitrate;
+
+					MS_DEBUG_TAG(bwe, "minimum outgoing bitrate set to %" PRIu32, this->minOutgoingBitrate);
+
+					ComputeOutgoingDesiredBitrate();
+				}
+				else
+				{
+					this->minOutgoingBitrate = bitrate;
 				}
 
 				request->Accept();
@@ -799,10 +887,14 @@ namespace RTC
 						  std::make_shared<RTC::TransportCongestionControlServer>(this, bweType, RTC::MtuSize);
 
 						if (this->maxIncomingBitrate != 0u)
+						{
 							this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+						}
 
 						if (IsConnected())
+						{
 							this->tccServer->TransportConnected();
+						}
 					}
 				}
 
@@ -828,7 +920,9 @@ namespace RTC
 				auto jsonTypeIt = request->data.find("type");
 
 				if (jsonTypeIt == request->data.end() || !jsonTypeIt->is_string())
+				{
 					MS_THROW_TYPE_ERROR("missing type");
+				}
 
 				// This may throw.
 				auto type = RTC::RtpParameters::GetType(jsonTypeIt->get<std::string>());
@@ -1002,17 +1096,25 @@ namespace RTC
 						};
 
 						this->tccClient = std::make_shared<RTC::TransportCongestionControlClient>(
-						  this, bweType, this->initialAvailableOutgoingBitrate, this->maxOutgoingBitrate);
+						  this,
+						  bweType,
+						  this->initialAvailableOutgoingBitrate,
+						  this->maxOutgoingBitrate,
+						  this->minOutgoingBitrate);
 
 						if (IsConnected())
+						{
 							this->tccClient->TransportConnected();
+						}
 					}
 				}
 
 				// If applicable, tell the new Consumer that we are gonna manage its
 				// bitrate.
 				if (this->tccClient)
+				{
 					consumer->SetExternallyManagedBitrate();
+				}
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 				// Create SenderBandwidthEstimator if:
@@ -1052,17 +1154,23 @@ namespace RTC
 					  this, this->initialAvailableOutgoingBitrate);
 
 					if (IsConnected())
+					{
 						this->senderBwe->TransportConnected();
+					}
 				}
 
 				// If applicable, tell the new Consumer that we are gonna manage its
 				// bitrate.
 				if (this->senderBwe)
+				{
 					consumer->SetExternallyManagedBitrate();
+				}
 #endif
 
 				if (IsConnected())
+				{
 					consumer->TransportConnected();
+				}
 
 				break;
 			}
@@ -1255,7 +1363,9 @@ namespace RTC
 				request->Accept(data);
 
 				if (IsConnected())
+				{
 					dataConsumer->TransportConnected();
+				}
 
 				if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
 				{
@@ -1277,7 +1387,9 @@ namespace RTC
 
 				// Disable all if no entries.
 				if (jsonTypesIt == request->data.end() || !jsonTypesIt->is_array())
+				{
 					MS_THROW_TYPE_ERROR("wrong types (not an array)");
+				}
 
 				// Reset traceEventTypes.
 				struct TraceEventTypes newTraceEventTypes;
@@ -1285,14 +1397,20 @@ namespace RTC
 				for (const auto& type : *jsonTypesIt)
 				{
 					if (!type.is_string())
+					{
 						MS_THROW_TYPE_ERROR("wrong type (not a string)");
+					}
 
 					const std::string typeStr = type.get<std::string>();
 
 					if (typeStr == "probation")
+					{
 						newTraceEventTypes.probation = true;
+					}
 					if (typeStr == "bwe")
+					{
 						newTraceEventTypes.bwe = true;
+					}
 				}
 
 				this->traceEventTypes = newTraceEventTypes;
@@ -1321,7 +1439,9 @@ namespace RTC
 					RecvStreamClosed(rtpStream->GetSsrc());
 
 					if (rtpStream->HasRtx())
+					{
 						RecvStreamClosed(rtpStream->GetRtxSsrc());
+					}
 				}
 
 				// Notify the listener.
@@ -1371,9 +1491,12 @@ namespace RTC
 
 				request->Accept();
 
-				// This may be the latest active Consumer with BWE. If so we have to stop probation.
+				// This may be the latest active Consumer with BWE. If so we have to stop
+				// probation.
 				if (this->tccClient)
+				{
 					ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
+				}
 
 				break;
 			}
@@ -1493,23 +1616,31 @@ namespace RTC
 
 		// Tell the SctpAssociation.
 		if (this->sctpAssociation)
+		{
 			this->sctpAssociation->TransportConnected();
+		}
 
 		// Start the RTCP timer.
 		this->rtcpTimer->Start(static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs / 2));
 
 		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
+		{
 			this->tccClient->TransportConnected();
+		}
 
 		// Tell the TransportCongestionControlServer.
 		if (this->tccServer)
+		{
 			this->tccServer->TransportConnected();
+		}
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 		// Tell the SenderBandwidthEstimator.
 		if (this->senderBwe)
+		{
 			this->senderBwe->TransportConnected();
+		}
 #endif
 	}
 
@@ -1538,16 +1669,22 @@ namespace RTC
 
 		// Tell the TransportCongestionControlClient.
 		if (this->tccClient)
+		{
 			this->tccClient->TransportDisconnected();
+		}
 
 		// Tell the TransportCongestionControlServer.
 		if (this->tccServer)
+		{
 			this->tccServer->TransportDisconnected();
+		}
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 		// Tell the SenderBandwidthEstimator.
 		if (this->senderBwe)
+		{
 			this->senderBwe->TransportDisconnected();
+		}
 #endif
 	}
 
@@ -1566,7 +1703,9 @@ namespace RTC
 
 		// Feed the TransportCongestionControlServer.
 		if (this->tccServer)
+		{
 			this->tccServer->IncomingPacket(nowMs, packet);
+		}
 
 		// Get the associated Producer.
 		RTC::Producer* producer = this->rtpListener.GetProducer(packet);
@@ -1679,7 +1818,9 @@ namespace RTC
 		auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
 
 		if (it == this->mapProducers.end())
+		{
 			MS_THROW_ERROR("Producer not found");
+		}
 
 		RTC::Producer* producer = it->second;
 
@@ -1719,7 +1860,9 @@ namespace RTC
 		auto it = this->mapConsumers.find(jsonConsumerIdIt->get<std::string>());
 
 		if (it == this->mapConsumers.end())
+		{
 			MS_THROW_ERROR("Consumer not found");
+		}
 
 		RTC::Consumer* consumer = it->second;
 
@@ -1733,7 +1876,9 @@ namespace RTC
 		auto mapSsrcConsumerIt = this->mapSsrcConsumer.find(ssrc);
 
 		if (mapSsrcConsumerIt == this->mapSsrcConsumer.end())
+		{
 			return nullptr;
+		}
 
 		auto* consumer = mapSsrcConsumerIt->second;
 
@@ -1747,7 +1892,9 @@ namespace RTC
 		auto mapRtxSsrcConsumerIt = this->mapRtxSsrcConsumer.find(ssrc);
 
 		if (mapRtxSsrcConsumerIt == this->mapRtxSsrcConsumer.end())
+		{
 			return nullptr;
+		}
 
 		auto* consumer = mapRtxSsrcConsumerIt->second;
 
@@ -1787,7 +1934,9 @@ namespace RTC
 		auto it = this->mapDataProducers.find(jsonDataProducerIdIt->get<std::string>());
 
 		if (it == this->mapDataProducers.end())
+		{
 			MS_THROW_ERROR("DataProducer not found");
+		}
 
 		RTC::DataProducer* dataProducer = it->second;
 
@@ -1827,7 +1976,9 @@ namespace RTC
 		auto it = this->mapDataConsumers.find(jsonDataConsumerIdIt->get<std::string>());
 
 		if (it == this->mapDataConsumers.end())
+		{
 			MS_THROW_ERROR("DataConsumer not found");
+		}
 
 		RTC::DataConsumer* dataConsumer = it->second;
 
@@ -2085,12 +2236,16 @@ namespace RTC
 						auto* feedback = static_cast<RTC::RTCP::FeedbackRtpTransportPacket*>(packet);
 
 						if (this->tccClient)
+						{
 							this->tccClient->ReceiveRtcpTransportFeedback(feedback);
+						}
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 						// Pass it to the SenderBandwidthEstimator client.
 						if (this->senderBwe)
+						{
 							this->senderBwe->ReceiveRtcpTransportFeedback(feedback);
+						}
 #endif
 
 						break;
@@ -2176,7 +2331,9 @@ namespace RTC
 
 								// SSRC should be filled in the sub-block.
 								if (ssrcInfo->GetSsrc() == 0)
+								{
 									ssrcInfo->SetSsrc(xr->GetSsrc());
+								}
 
 								auto* producer = this->rtpListener.GetProducer(ssrcInfo->GetSsrc());
 
@@ -2293,12 +2450,16 @@ namespace RTC
 			auto priority  = consumer->GetBitratePriority();
 
 			if (priority > 0u)
+			{
 				multimapPriorityConsumer.emplace(priority, consumer);
+			}
 		}
 
 		// Nobody wants bitrate. Exit.
 		if (multimapPriorityConsumer.empty())
+		{
 			return;
+		}
 
 		bool baseAllocation       = true;
 		uint32_t availableBitrate = this->tccClient->GetAvailableBitrate();
@@ -2334,13 +2495,17 @@ namespace RTC
 
 					// Exit the loop fast if used bitrate is 0.
 					if (usedBitrate == 0u)
+					{
 						break;
+					}
 				}
 			}
 
 			// If no Consumer used bitrate, exit the loop.
 			if (availableBitrate == previousAvailableBitrate)
+			{
 				break;
+			}
 
 			baseAllocation = false;
 		}
@@ -2382,7 +2547,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->traceEventTypes.probation)
+		{
 			return;
+		}
 
 		json data = json::object();
 
@@ -2401,7 +2568,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->traceEventTypes.bwe)
+		{
 			return;
+		}
 
 		json data = json::object();
 
@@ -2740,7 +2909,9 @@ namespace RTC
 
 		// This may be the latest active Consumer with BWE. If so we have to stop probation.
 		if (this->tccClient)
+		{
 			ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
+		}
 	}
 
 	inline void Transport::OnDataProducerMessageReceived(
@@ -2870,10 +3041,14 @@ namespace RTC
 		// its destructor is called first and then the parent Transport's destructor,
 		// and we would end here calling SendSctpData() which is an abstract method.
 		if (this->destroying)
+		{
 			return;
+		}
 
 		if (this->sctpAssociation)
+		{
 			SendSctpData(data, len);
+		}
 	}
 
 	inline void Transport::OnSctpAssociationMessageReceived(
@@ -2916,7 +3091,9 @@ namespace RTC
 			auto* dataConsumer = kv.second;
 
 			if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+			{
 				dataConsumer->SctpAssociationBufferedAmount(bufferedAmount);
+			}
 		}
 	}
 

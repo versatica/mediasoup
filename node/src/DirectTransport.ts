@@ -167,6 +167,16 @@ export class DirectTransport extends
 	}
 
 	/**
+	 * @override
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async setMinOutgoingBitrate(bitrate: number): Promise<void>
+	{
+		throw new UnsupportedError(
+			'setMinOutgoingBitrate() not implemented in DirectTransport');
+	}
+
+	/**
 	 * Send RTCP packet.
 	 */
 	sendRtcp(rtcpPacket: Buffer)
