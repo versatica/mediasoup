@@ -6,8 +6,7 @@ use crate::messages::{
     TransportConsumeDataRequest, TransportConsumeRequest, TransportDumpRequest,
     TransportEnableTraceEventRequest, TransportGetStatsRequest, TransportProduceDataRequest,
     TransportProduceRequest, TransportSetMaxIncomingBitrateRequest,
-    TransportSetMaxOutgoingBitrateRequest,
-    TransportSetMinOutgoingBitrateRequest,
+    TransportSetMaxOutgoingBitrateRequest, TransportSetMinOutgoingBitrateRequest,
 };
 pub use crate::ortc::{
     ConsumerRtpParametersError, RtpCapabilitiesError, RtpParametersError, RtpParametersMappingError,

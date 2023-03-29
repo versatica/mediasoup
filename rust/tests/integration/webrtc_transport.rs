@@ -525,9 +525,7 @@ fn set_max_outgoing_bitrate_fails_if_value_is_lower_than_current_min_limit() {
             .expect("Failed to set min outgoing bitrate on WebRTC transport");
 
         assert!(matches!(
-            transport
-                .set_max_outgoing_bitrate(2000000)
-                .await,
+            transport.set_max_outgoing_bitrate(2000000).await,
             Err(RequestError::Response { .. }),
         ));
 
@@ -560,9 +558,7 @@ fn set_min_outgoing_bitrate_fails_if_value_is_higher_than_current_max_limit() {
             .expect("Failed to set max outgoing bitrate on WebRTC transport");
 
         assert!(matches!(
-            transport
-                .set_min_outgoing_bitrate(3000000)
-                .await,
+            transport.set_min_outgoing_bitrate(3000000).await,
             Err(RequestError::Response { .. }),
         ));
 
