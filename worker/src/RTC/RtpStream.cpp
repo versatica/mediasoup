@@ -193,7 +193,7 @@ namespace RTC
 			this->maxSeq = seq;
 		}
 		// Too old packet received (older than the allowed misorder).
-		// Or to new packet (more than acceptable dropout).
+		// Or too new packet (more than acceptable dropout).
 		else if (udelta <= RtpSeqMod - MaxMisorder)
 		{
 			// The sequence number made a very large jump. If two sequential packets
