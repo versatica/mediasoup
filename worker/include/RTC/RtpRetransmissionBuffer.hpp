@@ -46,7 +46,7 @@ namespace RTC
 		Item* GetNewest() const;
 		void RemoveOldest();
 		void RemoveOldest(uint16_t numItems);
-		void ClearTooOld();
+		bool ClearTooOld(uint32_t newestTimestamp);
 		bool IsTooOld(uint32_t timestamp, uint32_t newestTimestamp) const;
 		Item* FillItem(
 		  Item* item, RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket) const;
