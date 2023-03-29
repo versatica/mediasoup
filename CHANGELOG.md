@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* `RTC::RetransmissionBuffer`: Increase `RetransmissionBufferMaxItems` from 2500 to 5000.
+
+
 ### 3.11.16
 
 * Fix `SeqManager`: Properly consider previous cycle dropped inputs ([PR #1032](https://github.com/versatica/mediasoup/pull/1032)).
