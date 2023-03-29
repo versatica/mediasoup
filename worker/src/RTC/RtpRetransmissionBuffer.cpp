@@ -86,9 +86,9 @@ namespace RTC
 
 		// Clear too old packets in the buffer.
 		// NOTE: Here we must consider the case in which, due for example to huge
-		// packet loss, received packet has higher timestamp than the newest packet
-		// in the buffer and, if so, use it to clear too old packets rather than
-		// the newest packet in the buffer.
+		// packet loss, received packet has higher timestamp but "older" seq number
+		// than the newest packet in the buffer and, if so, use it to clear too old
+		// packets rather than the newest packet in the buffer.
 		auto newestTimestamp =
 		  RTC::SeqManager<uint32_t>::IsSeqHigherThan(timestamp, newestItem->timestamp)
 		    ? timestamp
