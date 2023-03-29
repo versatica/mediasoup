@@ -5,6 +5,7 @@ mod channel;
 mod common;
 mod utils;
 
+use crate::fbs::fbs;
 use crate::data_structures::AppData;
 use crate::messages::{
     WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest,
@@ -483,21 +484,22 @@ impl Inner {
         let (sender, receiver) = async_oneshot::oneshot();
         let id = self.id;
         let sender = Mutex::new(Some(sender));
-        let _handler = self.channel.subscribe_to_notifications(
-            std::process::id().into(),
+        let _handler = self.channel.subscribe_to_fbs_notifications(
+            SubscriptionTarget::String(std::process::id().to_string()),
             move |notification| {
-                let result = match serde_json::from_slice(notification) {
-                    Ok(Notification::Running) => {
+                let result = match notification.event().unwrap() {
+                    fbs::notification::Event::WorkerRunning => {
                         debug!("worker thread running [id:{}]", id);
                         Ok(())
                     }
-                    Err(error) => Err(io::Error::new(
+                    _ => Err(io::Error::new(
                         io::ErrorKind::Other,
                         format!(
-                            "unexpected first notification from worker [id:{id}]: {notification:?}; error = {error}"
+                            "unexpected first notification from worker [id:{id}]"
                         ),
                     )),
                 };
+
                 let _ = sender
                     .lock()
                     .take()

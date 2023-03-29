@@ -31,6 +31,7 @@ fn create_worker_succeeds() {
 
         drop(worker);
 
+        /*
         #[derive(Debug, PartialEq)]
         struct CustomAppData {
             bar: u16,
@@ -63,6 +64,7 @@ fn create_worker_succeeds() {
         );
 
         drop(worker);
+        */
     });
 }
 

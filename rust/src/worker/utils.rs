@@ -48,7 +48,7 @@ where
 {
     let (channel, prepared_channel_read, prepared_channel_write) =
         Channel::new(Arc::clone(&worker_closed));
-    let buffer_worker_messages_guard = channel.buffer_messages_for(std::process::id().into());
+    let buffer_worker_messages_guard = channel.buffer_messages_for(super::common::SubscriptionTarget::String(std::process::id().to_string()));
 
     std::thread::Builder::new()
         .name(format!("mediasoup-worker-{id}"))
