@@ -7,7 +7,9 @@
 void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 {
 	if (!::RTC::RtpPacket::IsRtp(data, len))
+	{
 		return;
+	}
 
 	// We need to clone the given data into a separate buffer because setters
 	// below will try to write into packet memory.
@@ -31,7 +33,9 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	::RTC::RtpPacket* packet = ::RTC::RtpPacket::Parse(data2, len);
 
 	if (!packet)
+	{
 		return;
+	}
 
 	// packet->Dump();
 	packet->GetData();

@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_STREAM_SEND_HPP
 
 #include "RTC/RateCalculator.hpp"
-#include "RTC/RetransmissionBuffer.hpp"
+#include "RTC/RtpRetransmissionBuffer.hpp"
 #include "RTC/RtpStream.hpp"
 
 namespace RTC
@@ -62,7 +62,7 @@ namespace RTC
 		std::string mid;
 		uint16_t rtxSeq{ 0u };
 		RTC::RtpDataCounter transmissionCounter;
-		RTC::RetransmissionBuffer* retransmissionBuffer{ nullptr };
+		RTC::RtpRetransmissionBuffer* retransmissionBuffer{ nullptr };
 		// The middle 32 bits out of 64 in the NTP timestamp received in the most
 		// recent receiver reference timestamp.
 		uint32_t lastRrTimestamp{ 0u };

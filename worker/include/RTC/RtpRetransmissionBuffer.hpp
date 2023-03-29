@@ -11,7 +11,7 @@ namespace RTC
 	// sequence number, while only taking as little memory as necessary to store
 	// the range covering a maximum of `MaxRetransmissionDelayForVideoMs` or
 	//  `MaxRetransmissionDelayForAudioMs` ms.
-	class RetransmissionBuffer
+	class RtpRetransmissionBuffer
 	{
 	public:
 		struct Item
@@ -33,8 +33,8 @@ namespace RTC
 		};
 
 	public:
-		RetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate);
-		~RetransmissionBuffer();
+		RtpRetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate);
+		~RtpRetransmissionBuffer();
 
 		Item* Get(uint16_t seq) const;
 		void Insert(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
@@ -60,8 +60,6 @@ namespace RTC
 		uint16_t maxItems;
 		uint32_t maxRetransmissionDelayMs;
 		uint32_t clockRate;
-		// Others.
-		uint16_t startSeq{ 0u };
 	};
 } // namespace RTC
 

@@ -11,11 +11,11 @@ namespace RTC
 {
 	/* Static. */
 
-	// Limit retransmission buffer max size to 2500 items.
-	static constexpr size_t RetransmissionBufferMaxItems{ 2500u };
+	// Limit max number of items in the retransmission buffer.
+	static constexpr size_t RetransmissionBufferMaxItems{ 5000u };
 	// 17: 16 bit mask + the initial sequence number.
 	static constexpr size_t MaxRequestedPackets{ 17u };
-	thread_local static std::vector<RTC::RetransmissionBuffer::Item*> RetransmissionContainer(
+	thread_local static std::vector<RTC::RtpRetransmissionBuffer::Item*> RetransmissionContainer(
 	  MaxRequestedPackets + 1);
 	static constexpr uint32_t DefaultRtt{ 100u };
 
@@ -58,7 +58,7 @@ namespace RTC
 				}
 			}
 
-			this->retransmissionBuffer = new RTC::RetransmissionBuffer(
+			this->retransmissionBuffer = new RTC::RtpRetransmissionBuffer(
 			  RetransmissionBufferMaxItems, maxRetransmissionDelayMs, params.clockRate);
 		}
 	}

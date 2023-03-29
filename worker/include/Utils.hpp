@@ -169,18 +169,26 @@ namespace Utils
 		{
 			// If size is not multiple of 32 bits then pad it.
 			if (size & 0x03)
+			{
 				return (size & 0xFFFC) + 4;
+			}
 			else
+			{
 				return size;
+			}
 		}
 
 		static uint32_t PadTo4Bytes(uint32_t size)
 		{
 			// If size is not multiple of 32 bits then pad it.
 			if (size & 0x03)
+			{
 				return (size & 0xFFFFFFFC) + 4;
+			}
 			else
+			{
 				return size;
+			}
 		}
 	};
 
@@ -210,10 +218,14 @@ namespace Utils
 
 			// Special case.
 			if (max == 4294967295)
+			{
 				--max;
+			}
 
 			if (min > max)
+			{
 				min = max;
+			}
 
 			return (((Crypto::seed >> 4) & 0x7FFF7FFF) % (max - min + 1)) + min;
 		}
@@ -226,7 +238,9 @@ namespace Utils
 				                            'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
 			if (len > 64)
+			{
 				len = 64;
+			}
 
 			for (size_t i{ 0 }; i < len; ++i)
 			{
@@ -318,10 +332,12 @@ namespace Utils
 			// IsNewer(t2,t1)=false
 			// rather than having IsNewer(t1,t2) = IsNewer(t2,t1) = false.
 			if (static_cast<uint32_t>(timestamp - prevTimestamp) == 0x80000000)
+			{
 				return timestamp > prevTimestamp;
+			}
 
-			return timestamp != prevTimestamp &&
-			       static_cast<uint32_t>(timestamp - prevTimestamp) < 0x80000000;
+			return (
+			  timestamp != prevTimestamp && static_cast<uint32_t>(timestamp - prevTimestamp) < 0x80000000);
 		}
 
 		static uint32_t LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2)

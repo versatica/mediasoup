@@ -141,6 +141,8 @@ table Stats {
   available_outgoing_bitrate:uint64;
   available_incoming_bitrate:uint64;
   max_incoming_bitrate:uint64;
+  max_outgoing_bitrate:uint64;
+  min_outgoing_bitrate:uint64;
   rtp_packet_loss_received:uint64;
   rtp_packet_loss_sent:uint64;
 }
@@ -151,6 +153,10 @@ table SetMaxIncomingBitrateRequest {
 
 table SetMaxOutgoingBitrateRequest {
   max_outgoing_bitrate:uint32;
+}
+
+table SetMinOutgoingBitrateRequest {
+  min_outgoing_bitrate:uint32;
 }
 
 table EnableTraceEventRequest {

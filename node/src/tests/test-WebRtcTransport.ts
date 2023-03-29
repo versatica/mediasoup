@@ -344,14 +344,68 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 
 test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () =>
 {
-	await expect(transport.setMaxIncomingBitrate(100000))
+	await expect(transport.setMaxIncomingBitrate(1000000))
+		.resolves
+		.toBeUndefined();
+
+	// Remove limit.
+	await expect(transport.setMaxIncomingBitrate(0))
 		.resolves
 		.toBeUndefined();
 }, 2000);
 
 test('webRtcTransport.setMaxOutgoingBitrate() succeeds', async () =>
 {
-	await expect(transport.setMaxIncomingBitrate(100000))
+	await expect(transport.setMaxOutgoingBitrate(2000000))
+		.resolves
+		.toBeUndefined();
+
+	// Remove limit.
+	await expect(transport.setMaxOutgoingBitrate(0))
+		.resolves
+		.toBeUndefined();
+}, 2000);
+
+test('webRtcTransport.setMinOutgoingBitrate() succeeds', async () =>
+{
+	await expect(transport.setMinOutgoingBitrate(100000))
+		.resolves
+		.toBeUndefined();
+
+	// Remove limit.
+	await expect(transport.setMinOutgoingBitrate(0))
+		.resolves
+		.toBeUndefined();
+}, 2000);
+
+test('webRtcTransport.setMaxOutgoingBitrate() fails if value is lower than current min limit', async () =>
+{
+	await expect(transport.setMinOutgoingBitrate(3000000))
+		.resolves
+		.toBeUndefined();
+
+	await expect(transport.setMaxOutgoingBitrate(2000000))
+		.rejects
+		.toThrow(Error);
+
+	// Remove limit.
+	await expect(transport.setMinOutgoingBitrate(0))
+		.resolves
+		.toBeUndefined();
+}, 2000);
+
+test('webRtcTransport.setMinOutgoingBitrate() fails if value is higher than current max limit', async () =>
+{
+	await expect(transport.setMaxOutgoingBitrate(2000000))
+		.resolves
+		.toBeUndefined();
+
+	await expect(transport.setMinOutgoingBitrate(3000000))
+		.rejects
+		.toThrow(Error);
+
+	// Remove limit.
+	await expect(transport.setMaxOutgoingBitrate(0))
 		.resolves
 		.toBeUndefined();
 }, 2000);
@@ -559,6 +613,10 @@ test('WebRtcTransport methods reject if closed', async () =>
 		.toThrow(Error);
 
 	await expect(transport.setMaxOutgoingBitrate(200000))
+		.rejects
+		.toThrow(Error);
+
+	await expect(transport.setMinOutgoingBitrate(100000))
 		.rejects
 		.toThrow(Error);
 

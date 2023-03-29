@@ -40,6 +40,7 @@ namespace Channel
 		{ FBS::Request::Method::TRANSPORT_CONNECT,                               "transport.connect"                          },
 		{ FBS::Request::Method::TRANSPORT_SET_MAX_INCOMING_BITRATE,              "transport.setMaxIncomingBitrate"            },
 		{ FBS::Request::Method::TRANSPORT_SET_MAX_OUTGOING_BITRATE,              "transport.setMaxOutgoingBitrate"            },
+		{ FBS::Request::Method::TRANSPORT_SET_MIN_OUTGOING_BITRATE,              "transport.setMinOutgoingBitrate"            },
 		{ FBS::Request::Method::TRANSPORT_RESTART_ICE,                           "transport.restartIce"                       },
 		{ FBS::Request::Method::TRANSPORT_PRODUCE,                               "transport.produce"                          },
 		{ FBS::Request::Method::TRANSPORT_PRODUCE_DATA,                          "transport.produceData"                      },

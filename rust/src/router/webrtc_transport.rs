@@ -787,6 +787,14 @@ impl WebRtcTransport {
         self.set_max_outgoing_bitrate_impl(bitrate).await
     }
 
+    /// Set minimum outgoing bitrate for media streams sent by the remote endpoint over this
+    /// transport.
+    pub async fn set_min_outgoing_bitrate(&self, bitrate: u32) -> Result<(), RequestError> {
+        debug!("set_min_outgoing_bitrate() [bitrate:{}]", bitrate);
+
+        self.set_min_outgoing_bitrate_impl(bitrate).await
+    }
+
     /// Local ICE role. Due to the mediasoup ICE Lite design, this is always `Controlled`.
     #[must_use]
     pub fn ice_role(&self) -> IceRole {

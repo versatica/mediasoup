@@ -96,8 +96,8 @@ export type TransportTraceEventData =
 
 export type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
 
-export type TransportEvents = 
-{ 
+export type TransportEvents =
+{
 	routerclose: [];
 	listenserverclose: [];
 	trace: [TransportTraceEventData];
@@ -591,6 +591,26 @@ export class Transport<Events extends TransportEvents = TransportEvents,
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE,
 			FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest,
+			requestOffset,
+			this.internal.transportId
+		);
+	}
+
+	/**
+	 * Set minimum outgoing bitrate for sending media.
+	 */
+	async setMinOutgoingBitrate(bitrate: number): Promise<void>
+	{
+		logger.debug('setMinOutgoingBitrate() [bitrate:%s]', bitrate);
+
+		/* Build Request. */
+		const requestOffset = new FbsTransport.SetMinOutgoingBitrateRequestT(
+			bitrate
+		).pack(this.channel.bufferBuilder);
+
+		await this.channel.request(
+			FbsRequest.Method.TRANSPORT_SET_MIN_OUTGOING_BITRATE,
+			FbsRequest.Body.FBS_Transport_SetMinOutgoingBitrateRequest,
 			requestOffset,
 			this.internal.transportId
 		);

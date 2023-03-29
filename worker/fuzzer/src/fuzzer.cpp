@@ -10,6 +10,7 @@
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "RTC/FuzzerRtpPacket.hpp"
+#include "RTC/FuzzerRtpRetransmissionBuffer.hpp"
 #include "RTC/FuzzerRtpStreamSend.hpp"
 #include "RTC/FuzzerStunPacket.hpp"
 #include "RTC/FuzzerTrendCalculator.hpp"
@@ -19,11 +20,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-bool fuzzStun      = false;
-bool fuzzRtp       = false;
-bool fuzzRtcp      = false;
-bool fuzzRtpStream = false;
-bool fuzzUtils     = false;
+bool fuzzStun  = false;
+bool fuzzRtp   = false;
+bool fuzzRtcp  = false;
+bool fuzzUtils = false;
 
 int Init();
 
@@ -36,16 +36,21 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	unused++;
 
 	if (fuzzStun)
+	{
 		Fuzzer::RTC::StunPacket::Fuzz(data, len);
+	}
 
 	if (fuzzRtp)
+	{
 		Fuzzer::RTC::RtpPacket::Fuzz(data, len);
+		Fuzzer::RTC::RtpStreamSend::Fuzz(data, len);
+		Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(data, len);
+	}
 
 	if (fuzzRtcp)
+	{
 		Fuzzer::RTC::RTCP::Packet::Fuzz(data, len);
-
-	if (fuzzRtpStream)
-		Fuzzer::RTC::RtpStreamSend::Fuzz(data, len);
+	}
 
 	if (fuzzUtils)
 	{
@@ -64,11 +69,17 @@ int Init()
 	if (std::getenv("MS_FUZZ_LOG_LEVEL"))
 	{
 		if (std::string(std::getenv("MS_FUZZ_LOG_LEVEL")) == "debug")
+		{
 			logLevel = LogLevel::LOG_DEBUG;
+		}
 		else if (std::string(std::getenv("MS_FUZZ_LOG_LEVEL")) == "warn")
+		{
 			logLevel = LogLevel::LOG_WARN;
+		}
 		else if (std::string(std::getenv("MS_FUZZ_LOG_LEVEL")) == "error")
+		{
 			logLevel = LogLevel::LOG_ERROR;
+		}
 	}
 
 	// Select what to fuzz.
@@ -90,27 +101,20 @@ int Init()
 
 		fuzzRtcp = true;
 	}
-	if (std::getenv("MS_FUZZ_RTP_STREAM") && std::string(std::getenv("MS_FUZZ_RTP_STREAM")) == "1")
-	{
-		std::cout << "[fuzzer] RTP Stream fuzzers enabled" << std::endl;
-
-		fuzzRtpStream = true;
-	}
 	if (std::getenv("MS_FUZZ_UTILS") && std::string(std::getenv("MS_FUZZ_UTILS")) == "1")
 	{
 		std::cout << "[fuzzer] Utils fuzzers enabled" << std::endl;
 
 		fuzzUtils = true;
 	}
-	if (!fuzzUtils && !fuzzStun && !fuzzRtcp && !fuzzRtp && !fuzzRtpStream)
+	if (!fuzzUtils && !fuzzStun && !fuzzRtcp && !fuzzRtp)
 	{
 		std::cout << "[fuzzer] all fuzzers enabled" << std::endl;
 
-		fuzzStun      = true;
-		fuzzRtp       = true;
-		fuzzRtcp      = true;
-		fuzzRtpStream = true;
-		fuzzUtils     = true;
+		fuzzStun  = true;
+		fuzzRtp   = true;
+		fuzzRtcp  = true;
+		fuzzUtils = true;
 	}
 
 	Settings::configuration.logLevel = logLevel;

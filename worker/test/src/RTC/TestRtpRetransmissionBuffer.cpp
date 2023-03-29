@@ -1,14 +1,14 @@
 #include "common.hpp"
-#include "RTC/RetransmissionBuffer.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/RtpRetransmissionBuffer.hpp"
 #include <catch2/catch.hpp>
 #include <vector>
 
 using namespace RTC;
 
-// Class inheriting from RetransmissionBuffer so we can access its protected
+// Class inheriting from RtpRetransmissionBuffer so we can access its protected
 // buffer member.
-class MyRetransmissionBuffer : public RetransmissionBuffer
+class RtpMyRetransmissionBuffer : public RtpRetransmissionBuffer
 {
 public:
 	struct VerificationItem
@@ -19,8 +19,8 @@ public:
 	};
 
 public:
-	MyRetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate)
-	  : RetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate)
+	RtpMyRetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate)
+	  : RtpRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate)
 	{
 	}
 
@@ -43,7 +43,7 @@ public:
 
 		std::shared_ptr<RtpPacket> sharedPacket;
 
-		RetransmissionBuffer::Insert(packet, sharedPacket);
+		RtpRetransmissionBuffer::Insert(packet, sharedPacket);
 	}
 
 	void AssertBuffer(std::vector<VerificationItem> verificationBuffer)
@@ -66,7 +66,7 @@ public:
 	}
 };
 
-SCENARIO("RetransmissionBuffer", "[rtp][rtx]")
+SCENARIO("RtpRetransmissionBuffer", "[rtp][rtx]")
 {
 	SECTION("proper packets received in order")
 	{
@@ -74,7 +74,7 @@ SCENARIO("RetransmissionBuffer", "[rtp][rtx]")
 		uint32_t maxRetransmissionDelayMs{ 2000u };
 		uint32_t clockRate{ 90000 };
 
-		MyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
 
 		myRetransmissionBuffer.Insert(10001, 1000000000);
 		myRetransmissionBuffer.Insert(10002, 1000000000);
@@ -99,7 +99,7 @@ SCENARIO("RetransmissionBuffer", "[rtp][rtx]")
 		uint32_t maxRetransmissionDelayMs{ 2000u };
 		uint32_t clockRate{ 90000 };
 
-		MyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
 
 		myRetransmissionBuffer.Insert(20004, 2000000200);
 		myRetransmissionBuffer.Insert(20001, 2000000000);
@@ -124,7 +124,7 @@ SCENARIO("RetransmissionBuffer", "[rtp][rtx]")
 		uint32_t maxRetransmissionDelayMs{ 2000u };
 		uint32_t clockRate{ 90000 };
 
-		MyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
 
 		myRetransmissionBuffer.Insert(30001, 3000000000);
 		myRetransmissionBuffer.Insert(30002, 3000000000);
@@ -146,7 +146,7 @@ SCENARIO("RetransmissionBuffer", "[rtp][rtx]")
 		uint32_t maxRetransmissionDelayMs{ 2000u };
 		uint32_t clockRate{ 90000 };
 
-		MyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
 
 		myRetransmissionBuffer.Insert(40002, 4000000002);
 		// Packet must be discarded since its timestamp is lower than in seq 40002.
@@ -184,7 +184,7 @@ SCENARIO("RetransmissionBuffer", "[rtp][rtx]")
 		uint32_t maxRetransmissionDelayMs{ 2000u };
 		uint32_t clockRate{ 90000 };
 
-		MyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
 
 		myRetransmissionBuffer.Insert(10001, 1000000001);
 		myRetransmissionBuffer.Insert(10002, 1000000002);
@@ -209,7 +209,7 @@ SCENARIO("RetransmissionBuffer", "[rtp][rtx]")
 		uint32_t maxRetransmissionDelayMs{ 2000u };
 		uint32_t clockRate{ 90000 };
 
-		MyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
 
 		auto maxDiffTs = static_cast<uint32_t>(maxRetransmissionDelayMs * clockRate / 1000);
 
@@ -228,5 +228,45 @@ SCENARIO("RetransmissionBuffer", "[rtp][rtx]")
 			}
 		);
 		// clang-format on
+	}
+
+	SECTION("fuzzer generated packets")
+	{
+		uint16_t maxItems{ 2500u };
+		uint32_t maxRetransmissionDelayMs{ 2000u };
+		uint32_t clockRate{ 90000 };
+
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+
+		// These packets reproduce an already fixed crash reported here:
+		// https://github.com/versatica/mediasoup/issues/1027#issuecomment-1478464584
+		// I've commented first packets and just left those that produce the crash.
+
+		// myRetransmissionBuffer.Insert(14906, 976891962);
+		// myRetransmissionBuffer.Insert(14906, 976891962);
+		// myRetransmissionBuffer.Insert(14906, 976892730);
+		// myRetransmissionBuffer.Insert(13157, 862283031);
+		// myRetransmissionBuffer.Insert(13114, 859453491);
+		// myRetransmissionBuffer.Insert(14906, 976892264);
+		// myRetransmissionBuffer.Insert(14906, 976897098);
+		// myRetransmissionBuffer.Insert(13114, 859464290);
+		// myRetransmissionBuffer.Insert(14906, 976889088);
+		// myRetransmissionBuffer.Insert(13056, 855638184);
+		// myRetransmissionBuffer.Insert(14906, 976891950);
+		// myRetransmissionBuffer.Insert(17722, 1161443894);
+		// myRetransmissionBuffer.Insert(12846, 841888049);
+		// myRetransmissionBuffer.Insert(14906, 976905830);
+		// myRetransmissionBuffer.Insert(15677, 1027420485);
+		// myRetransmissionBuffer.Insert(33742, 2211317269);
+		// myRetransmissionBuffer.Insert(14906, 976892672);
+		// myRetransmissionBuffer.Insert(13102, 858665774);
+		// myRetransmissionBuffer.Insert(12850, 842150702);
+		// myRetransmissionBuffer.Insert(14906, 976891941);
+		// myRetransmissionBuffer.Insert(15677, 1027423549);
+		// myRetransmissionBuffer.Insert(12346, 809120580);
+		// myRetransmissionBuffer.Insert(12645, 828715313);
+		myRetransmissionBuffer.Insert(12645, 828702743);
+		myRetransmissionBuffer.Insert(33998, 2228092928);
+		myRetransmissionBuffer.Insert(33998, 2228092928);
 	}
 }
