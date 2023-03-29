@@ -553,8 +553,30 @@ namespace RTC
 		if (!IsActive())
 			return 0u;
 
-		auto nowMs              = DepLibUV::GetTimeMs();
-		uint32_t desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
+		auto nowMs = DepLibUV::GetTimeMs();
+		uint32_t desiredBitrate{ 0u };
+
+		if (this->encodingContext->IsKSvc())
+		{
+			// Let's iterate all spatial layers of the Producer (from highest to lowest) and
+			// obtain their bitrate. Choose the highest one.
+			// NOTE: When the Producer enables a higher stream, initially the bitrate of
+			// it could be less than the bitrate of a lower stream. That's why we
+			// iterate all streams here anyway.
+			for (auto spatialLayer{ this->producerRtpStream->GetSpatialLayers() - 1 }; spatialLayer >= 0;
+			     --spatialLayer)
+			{
+				auto spatialLayerBitrate =
+				  this->producerRtpStream->GetSpatialLayerBitrate(nowMs, spatialLayer);
+
+				if (spatialLayerBitrate > desiredBitrate)
+					desiredBitrate = spatialLayerBitrate;
+			}
+		}
+		else
+		{
+			desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
+		}
 
 		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
 		// greater than computed one, then use it.
