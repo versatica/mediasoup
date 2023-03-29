@@ -2,11 +2,17 @@ name: mediasoup-node
 
 on: [push, pull_request]
 
+concurrency:
+  # Cancel a currently running workflow from the same PR, branch or tag when a
+  # new workflow is triggered.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ci:
     strategy:
       matrix:
-        # Different Node versions on Ubuntu, the latest Node on other platforms
+        # Different Node versions on Ubuntu, the latest Node on other platforms.
         ci:
           - os: ubuntu-22.04
             node: 16
@@ -20,15 +26,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.ci.node }}
 
       - name: Configure cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.npm

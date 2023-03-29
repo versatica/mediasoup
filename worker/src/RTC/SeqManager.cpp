@@ -7,43 +7,43 @@
 
 namespace RTC
 {
-	template<typename T>
-	bool SeqManager<T>::SeqLowerThan::operator()(const T lhs, const T rhs) const
+	template<typename T, uint8_t N>
+	bool SeqManager<T, N>::SeqLowerThan::operator()(const T lhs, const T rhs) const
 	{
 		return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
 		       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
 	}
 
-	template<typename T>
-	bool SeqManager<T>::SeqHigherThan::operator()(const T lhs, const T rhs) const
+	template<typename T, uint8_t N>
+	bool SeqManager<T, N>::SeqHigherThan::operator()(const T lhs, const T rhs) const
 	{
 		return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
 		       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
 	}
 
-	template<typename T>
-	const typename SeqManager<T>::SeqLowerThan SeqManager<T>::isSeqLowerThan{};
+	template<typename T, uint8_t N>
+	const typename SeqManager<T, N>::SeqLowerThan SeqManager<T, N>::isSeqLowerThan{};
 
-	template<typename T>
-	const typename SeqManager<T>::SeqHigherThan SeqManager<T>::isSeqHigherThan{};
+	template<typename T, uint8_t N>
+	const typename SeqManager<T, N>::SeqHigherThan SeqManager<T, N>::isSeqHigherThan{};
 
-	template<typename T>
-	bool SeqManager<T>::IsSeqLowerThan(const T lhs, const T rhs)
+	template<typename T, uint8_t N>
+	bool SeqManager<T, N>::IsSeqLowerThan(const T lhs, const T rhs)
 	{
 		return isSeqLowerThan(lhs, rhs);
 	}
 
-	template<typename T>
-	bool SeqManager<T>::IsSeqHigherThan(const T lhs, const T rhs)
+	template<typename T, uint8_t N>
+	bool SeqManager<T, N>::IsSeqHigherThan(const T lhs, const T rhs)
 	{
 		return isSeqHigherThan(lhs, rhs);
 	}
 
-	template<typename T>
-	void SeqManager<T>::Sync(T input)
+	template<typename T, uint8_t N>
+	void SeqManager<T, N>::Sync(T input)
 	{
 		// Update base.
-		this->base = this->maxOutput - input;
+		this->base = (this->maxOutput - input) & MaxValue;
 
 		// Update maxInput.
 		this->maxInput = input;
@@ -52,90 +52,138 @@ namespace RTC
 		this->dropped.clear();
 	}
 
-	template<typename T>
-	void SeqManager<T>::Drop(T input)
+	template<typename T, uint8_t N>
+	void SeqManager<T, N>::Drop(T input)
 	{
 		// Mark as dropped if 'input' is higher than anyone already processed.
-		if (SeqManager<T>::IsSeqHigherThan(input, this->maxInput))
+		if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 		{
 			this->dropped.insert(input);
 		}
 	}
 
-	template<typename T>
-	void SeqManager<T>::Offset(T offset)
+	template<typename T, uint8_t N>
+	void SeqManager<T, N>::Offset(T offset)
 	{
-		this->base += offset;
+		this->base = (this->base + offset) & MaxValue;
 	}
 
-	template<typename T>
-	bool SeqManager<T>::Input(const T input, T& output)
+	template<typename T, uint8_t N>
+	bool SeqManager<T, N>::Input(const T input, T& output)
 	{
 		auto base = this->base;
 
 		// There are dropped inputs. Synchronize.
 		if (!this->dropped.empty())
 		{
-			// Delete dropped inputs older than input - MaxValue/2.
-			size_t droppedCount = this->dropped.size();
-			auto it             = this->dropped.lower_bound(input - MaxValue / 2);
-
-			this->dropped.erase(this->dropped.begin(), it);
-			this->base -= (droppedCount - this->dropped.size());
-
-			// Count dropped entries before 'input' in order to adapt the base.
-			droppedCount = this->dropped.size();
-			it           = this->dropped.lower_bound(input);
-
-			if (it != this->dropped.end())
+			// Check whether this input was dropped.
+			if (this->dropped.find(input) != this->dropped.end())
 			{
-				// Check whether this input was dropped.
-				if (*it == input)
-				{
-					MS_DEBUG_DEV("trying to send a dropped input");
+				MS_DEBUG_DEV("trying to send a dropped input");
 
-					return false;
-				}
-
-				droppedCount -= std::distance(it, this->dropped.end());
+				return false;
 			}
 
-			base = this->base - droppedCount;
+			// Dropped entries count that must be considered for the output.
+			size_t count{ 0 };
+
+			/*
+			 * Consider values lower than input and those higher that input
+			 * which belong to a previous cycle.
+			 */
+			for (const auto& value : this->dropped)
+			{
+				// clang-format off
+				if
+				(
+					IsSeqLowerThan(value, input) ||
+					(
+					 (value > input && (value - input > MaxValue / 3)) ||
+					 (value < input && (input - value > MaxValue / 3))
+					)
+				)
+				// clang-format on
+				{
+					count++;
+				}
+			}
+
+			base = (this->base - count) & MaxValue;
 		}
 
-		output = input + base;
-
-		T idelta = input - this->maxInput;
-		T odelta = output - this->maxOutput;
+		output = (input + base) & MaxValue;
 
 		// New input is higher than the maximum seen. But less than acceptable units higher.
 		// Keep it as the maximum seen. See Drop().
-		if (idelta < MaxValue / 2)
+		if (IsSeqHigherThan(input, this->maxInput))
 			this->maxInput = input;
 
 		// New output is higher than the maximum seen. But less than acceptable units higher.
 		// Keep it as the maximum seen. See Sync().
-		if (odelta < MaxValue / 2)
+		if (IsSeqHigherThan(output, this->maxOutput))
 			this->maxOutput = output;
+
+		ClearDropped();
 
 		return true;
 	}
 
-	template<typename T>
-	T SeqManager<T>::GetMaxInput() const
+	template<typename T, uint8_t N>
+	T SeqManager<T, N>::GetMaxInput() const
 	{
 		return this->maxInput;
 	}
 
-	template<typename T>
-	T SeqManager<T>::GetMaxOutput() const
+	template<typename T, uint8_t N>
+	T SeqManager<T, N>::GetMaxOutput() const
 	{
 		return this->maxOutput;
 	}
 
+	/*
+	 * Delete droped inputs greater than maxInput that belong to a previous
+	 * cycle.
+	 */
+	template<typename T, uint8_t N>
+	void SeqManager<T, N>::ClearDropped()
+	{
+		// Cleanup dropped values.
+		if (this->dropped.empty())
+		{
+			return;
+		}
+
+		const size_t threshold           = (this->maxInput + MaxValue / 3) & MaxValue;
+		const size_t previousDroppedSize = this->dropped.size();
+		const auto it1                   = this->dropped.upper_bound(this->maxInput);
+		const auto it2                   = this->dropped.lower_bound(threshold);
+
+		// There is no dropped value greater than this->maxInput.
+		if (it1 == this->dropped.end())
+		{
+			return;
+		}
+
+		// There is a single value in the range.
+		if (it1 == it2)
+		{
+			this->dropped.erase(it1);
+		}
+		// There are many values in the range.
+		else
+		{
+			this->dropped.erase(it1, it2);
+		}
+
+		// Adapt base.
+		this->base = (this->base - (previousDroppedSize - this->dropped.size())) & MaxValue;
+	}
+
 	// Explicit instantiation to have all SeqManager definitions in this file.
 	template class SeqManager<uint8_t>;
+	template class SeqManager<uint8_t, 3>; // For testing.
 	template class SeqManager<uint16_t>;
+	template class SeqManager<uint16_t, 15>; // For PictureID (15 bits).
 	template class SeqManager<uint32_t>;
 
 } // namespace RTC

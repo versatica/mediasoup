@@ -123,6 +123,11 @@ export type RouterInternal =
 	routerId: string;
 };
 
+type RouterData =
+{
+	rtpCapabilities: RtpCapabilities;
+};
+
 const logger = new Logger('Router');
 
 export class Router extends EnhancedEventEmitter<RouterEvents>
@@ -131,10 +136,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	readonly #internal: RouterInternal;
 
 	// Router data.
-	readonly #data:
-	{
-		rtpCapabilities: RtpCapabilities;
-	};
+	readonly #data: RouterData;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -181,7 +183,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		}:
 		{
 			internal: RouterInternal;
-			data: any;
+			data: RouterData;
 			channel: Channel;
 			payloadChannel: PayloadChannel;
 			appData?: Record<string, unknown>;
@@ -262,7 +264,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -307,7 +311,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	workerClosed(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('workerClosed()');
 
@@ -373,9 +379,13 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		logger.debug('createWebRtcTransport()');
 
 		if (!webRtcServer && !Array.isArray(listenIps))
+		{
 			throw new TypeError('missing webRtcServer and listenIps (one of them is mandatory)');
+		}
 		else if (appData && typeof appData !== 'object')
+		{
 			throw new TypeError('if given, appData must be an object');
+		}
 
 		if (listenIps)
 		{
@@ -454,7 +464,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		));
 
 		if (webRtcServer)
+		{
 			webRtcServer.handleWebRtcTransport(transport);
+		}
 
 		// Emit observer event.
 		this.#observer.safeEmit('newtransport', transport);
@@ -484,9 +496,13 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		logger.debug('createPlainTransport()');
 
 		if (!listenIp)
+		{
 			throw new TypeError('missing listenIp');
+		}
 		else if (appData && typeof appData !== 'object')
+		{
 			throw new TypeError('if given, appData must be an object');
+		}
 
 		if (typeof listenIp === 'string' && listenIp)
 		{
@@ -582,9 +598,13 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		logger.debug('createPipeTransport()');
 
 		if (!listenIp)
+		{
 			throw new TypeError('missing listenIp');
+		}
 		else if (appData && typeof appData !== 'object')
+		{
 			throw new TypeError('if given, appData must be an object');
+		}
 
 		if (typeof listenIp === 'string' && listenIp)
 		{
@@ -740,13 +760,21 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		logger.debug('pipeToRouter()');
 
 		if (!producerId && !dataProducerId)
+		{
 			throw new TypeError('missing producerId or dataProducerId');
+		}
 		else if (producerId && dataProducerId)
+		{
 			throw new TypeError('just producerId or dataProducerId can be given');
+		}
 		else if (!router)
+		{
 			throw new TypeError('Router not found');
+		}
 		else if (router === this)
+		{
 			throw new TypeError('cannot use this Router as destination');
+		}
 
 		let producer: Producer | undefined;
 		let dataProducer: DataProducer | undefined;
@@ -756,14 +784,18 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			producer = this.#producers.get(producerId);
 
 			if (!producer)
+			{
 				throw new TypeError('Producer not found');
+			}
 		}
 		else if (dataProducerId)
 		{
 			dataProducer = this.#dataProducers.get(dataProducerId);
 
 			if (!dataProducer)
+			{
 				throw new TypeError('DataProducer not found');
+			}
 		}
 
 		const pipeTransportPairKey = router.id;
@@ -842,10 +874,14 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 							error);
 
 						if (localPipeTransport)
+						{
 							localPipeTransport.close();
+						}
 
 						if (remotePipeTransport)
+						{
 							remotePipeTransport.close();
+						}
 
 						reject(error);
 					});
@@ -882,16 +918,22 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 				// Ensure that the producer has not been closed in the meanwhile.
 				if (producer.closed)
+				{
 					throw new InvalidStateError('original Producer closed');
+				}
 
 				// Ensure that producer.paused has not changed in the meanwhile and, if
 				// so, sync the pipeProducer.
 				if (pipeProducer.paused !== producer.paused)
 				{
 					if (producer.paused)
+					{
 						await pipeProducer.pause();
+					}
 					else
+					{
 						await pipeProducer.resume();
+					}
 				}
 
 				// Pipe events from the pipe Consumer to the pipe Producer.
@@ -911,10 +953,14 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 					error);
 
 				if (pipeConsumer)
+				{
 					pipeConsumer.close();
+				}
 
 				if (pipeProducer)
+				{
 					pipeProducer.close();
+				}
 
 				throw error;
 			}
@@ -942,7 +988,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 				// Ensure that the dataProducer has not been closed in the meanwhile.
 				if (dataProducer.closed)
+				{
 					throw new InvalidStateError('original DataProducer closed');
+				}
 
 				// Pipe events from the pipe DataConsumer to the pipe DataProducer.
 				pipeDataConsumer!.observer.on('close', () => pipeDataProducer!.close());
@@ -959,10 +1007,14 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 					error);
 
 				if (pipeDataConsumer)
+				{
 					pipeDataConsumer.close();
+				}
 
 				if (pipeDataProducer)
+				{
 					pipeDataProducer.close();
+				}
 
 				throw error;
 			}
@@ -1023,7 +1075,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		logger.debug('createActiveSpeakerObserver()');
 
 		if (appData && typeof appData !== 'object')
+		{
 			throw new TypeError('if given, appData must be an object');
+		}
 		
 		const reqData =
 		{
@@ -1075,7 +1129,9 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		logger.debug('createAudioLevelObserver()');
 
 		if (appData && typeof appData !== 'object')
+		{
 			throw new TypeError('if given, appData must be an object');
+		}
 
 		const reqData =
 		{

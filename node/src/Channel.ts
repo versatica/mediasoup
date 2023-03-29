@@ -188,7 +188,9 @@ export class Channel extends EnhancedEventEmitter
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -232,12 +234,16 @@ export class Channel extends EnhancedEventEmitter
 		logger.debug('request() [method:%s, id:%s]', method, id);
 
 		if (this.#closed)
+		{
 			throw new InvalidStateError('Channel closed');
+		}
 
 		const request = `${id}:${method}:${handlerId}:${JSON.stringify(data)}`;
 
 		if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
+		{
 			throw new Error('Channel request too big');
+		}
 
 		// This may throw if closed or remote side ended.
 		this.#producerSocket.write(
@@ -253,14 +259,18 @@ export class Channel extends EnhancedEventEmitter
 				resolve : (data2) =>
 				{
 					if (!this.#sents.delete(id))
+					{
 						return;
+					}
 
 					pResolve(data2);
 				},
 				reject : (error) =>
 				{
 					if (!this.#sents.delete(id))
+					{
 						return;
+					}
 
 					pReject(error);
 				},

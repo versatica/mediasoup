@@ -114,20 +114,20 @@ void Worker::FillJson(json& jsonObject) const
 	jsonObject["webRtcServerIds"] = json::array();
 	auto jsonWebRtcServerIdsIt    = jsonObject.find("webRtcServerIds");
 
-	for (auto& kv : this->mapWebRtcServers)
+	for (const auto& kv : this->mapWebRtcServers)
 	{
-		auto& WebRtcServerId = kv.first;
+		const auto& webRtcServerId = kv.first;
 
-		jsonWebRtcServerIdsIt->emplace_back(WebRtcServerId);
+		jsonWebRtcServerIdsIt->emplace_back(webRtcServerId);
 	}
 
 	// Add routerIds.
 	jsonObject["routerIds"] = json::array();
 	auto jsonRouterIdsIt    = jsonObject.find("routerIds");
 
-	for (auto& kv : this->mapRouters)
+	for (const auto& kv : this->mapRouters)
 	{
-		auto& routerId = kv.first;
+		const auto& routerId = kv.first;
 
 		jsonRouterIdsIt->emplace_back(routerId);
 	}

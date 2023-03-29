@@ -9,7 +9,7 @@
 #include <memory>     // std::addressof()
 #ifdef _WIN32
 #include <winsock2.h>
-// avoid uv/win.h: error C2628 'intptr_t' followed by 'int' is illegal.
+// Avoid uv/win.h: error C2628 'intptr_t' followed by 'int' is illegal.
 #if !defined(_SSIZE_T_) && !defined(_SSIZE_T_DEFINED)
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
@@ -25,15 +25,17 @@ typedef SSIZE_T ssize_t;
 
 using ChannelReadCtx    = void*;
 using ChannelReadFreeFn = void (*)(uint8_t*, uint32_t, size_t);
-// Returns `ChannelReadFree` on successful read that must be used to free `message`.
+// Returns `ChannelReadFree` on successful read that must be used to free
+// `message`.
 using ChannelReadFn = ChannelReadFreeFn (*)(
   uint8_t** /* message */,
   uint32_t* /* messageLen */,
   size_t* /* messageCtx */,
-  // This is `uv_async_t` handle that can be called later with `uv_async_send()` when there is more
-  // data to read.
+  // This is `uv_async_t` handle that can be called later with `uv_async_send()`
+  // when there is more data to read.
   const void* /* handle */,
-  ChannelReadCtx /* ctx */);
+  ChannelReadCtx /* ctx */
+);
 
 using ChannelWriteCtx = void*;
 using ChannelWriteFn =
@@ -41,7 +43,8 @@ using ChannelWriteFn =
 
 using PayloadChannelReadCtx    = void*;
 using PayloadChannelReadFreeFn = void (*)(uint8_t*, uint32_t, size_t);
-// Returns `PayloadChannelReadFree` on successful read that must be used to free `message` and `payload`.
+// Returns `PayloadChannelReadFree` on successful read that must be used to free
+// `message` and `payload`.
 using PayloadChannelReadFn = PayloadChannelReadFreeFn (*)(
   uint8_t** /* message */,
   uint32_t* /* messageLen */,
@@ -49,8 +52,8 @@ using PayloadChannelReadFn = PayloadChannelReadFreeFn (*)(
   uint8_t** /* payload */,
   uint32_t* /* payloadLen */,
   size_t* /* payloadCapacity */,
-  // This is `uv_async_t` handle that can be called later with `uv_async_send()` when there is more
-  // data to read.
+  // This is `uv_async_t` handle that can be called later with `uv_async_send()`
+  // when there is more data to read.
   const void* /* handle */,
   PayloadChannelReadCtx /* ctx */);
 

@@ -260,9 +260,15 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateExponentialProbing(
   //RTC_DCHECK(network_available_);
   //RTC_DCHECK(state_ == State::kInit);
   //RTC_DCHECK_GT(start_bitrate_bps_, 0);
-  MS_ASSERT(network_available_, "network not available");
-  MS_ASSERT(state_ == State::kInit, "state_ must be State::kInit");
-  MS_ASSERT(start_bitrate_ > DataRate::Zero(), "start_bitrate_bps_ must be > 0");
+  if (!network_available_) {
+    MS_ERROR("network not available");
+  }
+  if (state_ != State::kInit) {
+    MS_ERROR("state_ must be State::kInit");
+  }
+  if (start_bitrate_bps_ <= DataRate::Zero()) {
+    MS_ERROR("start_bitrate_bps_ must be > 0");
+  }
 
   // When probing at 1.8 Mbps ( 6x 300), this represents a threshold of
   // 1.2 Mbps to continue probing.

@@ -723,7 +723,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			auto packetsResults = feedback->GetPacketResults();
 
 			int deltasIt = 0;
-			for (auto const& delta : packetMeta.deltas)
+			for (const auto& delta : packetMeta.deltas)
 			{
 				auto resultDelta = packetsResults[deltasIt].delta;
 				REQUIRE(static_cast<int16_t>(resultDelta / 4) == delta);

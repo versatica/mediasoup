@@ -359,8 +359,8 @@ namespace RTC
 		// local usernameFragment) which is the first value in the attribute value
 		// before the ":" symbol.
 
-		auto& username  = packet->GetUsername();
-		size_t colonPos = username.find(':');
+		const auto& username  = packet->GetUsername();
+		const size_t colonPos = username.find(':');
 
 		// If no colon is found just return the whole USERNAME attribute anyway.
 		if (colonPos == std::string::npos)

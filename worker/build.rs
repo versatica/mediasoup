@@ -71,13 +71,46 @@ fn main() {
                 .expect("Failed to decode path")
                 .trim()
         );
-        println!("cargo:rustc-link-search={}", libpath);
+        println!("cargo:rustc-link-search={libpath}");
         println!("cargo:rustc-link-lib=dylib=c++");
         println!("cargo:rustc-link-lib=dylib=c++abi");
     }
     #[cfg(target_os = "windows")]
     {
-        // Nothing special is needed so far
+        if !std::path::Path::new("worker/out/msys/bin/make.exe").exists() {
+            let python = if Command::new("where")
+                .arg("python3.exe")
+                .status()
+                .expect("Failed to start")
+                .success()
+            {
+                "python3"
+            } else {
+                "python"
+            };
+
+            if !Command::new(python)
+                .arg("scripts\\getmake.py")
+                .status()
+                .expect("Failed to start")
+                .success()
+            {
+                panic!("Failed to install MSYS/make")
+            }
+        }
+
+        env::set_var(
+            "PATH",
+            format!(
+                "{}\\worker\\out\\msys\\bin;{}",
+                env::current_dir()
+                    .unwrap()
+                    .into_os_string()
+                    .into_string()
+                    .unwrap(),
+                env::var("PATH").unwrap()
+            ),
+        );
     }
 
     // Build
@@ -98,16 +131,13 @@ fn main() {
 
     #[cfg(target_os = "windows")]
     {
-        let dot_a = format!("{}/libmediasoup-worker.a", out_dir);
-        let dot_lib = format!("{}/mediasoup-worker.lib", out_dir);
+        let dot_a = format!("{out_dir}/libmediasoup-worker.a");
+        let dot_lib = format!("{out_dir}/mediasoup-worker.lib");
 
         // Meson builds `libmediasoup-worker.a` on Windows instead of `*.lib` file under MinGW
         if std::path::Path::new(&dot_a).exists() {
             std::fs::copy(&dot_a, &dot_lib).unwrap_or_else(|error| {
-                panic!(
-                    "Failed to copy static library from {} to {}: {}",
-                    dot_a, dot_lib, error
-                )
+                panic!("Failed to copy static library from {dot_a} to {dot_lib}: {error}");
             });
         }
 
@@ -143,5 +173,5 @@ fn main() {
     }
 
     println!("cargo:rustc-link-lib=static=mediasoup-worker");
-    println!("cargo:rustc-link-search=native={}", out_dir);
+    println!("cargo:rustc-link-search=native={out_dir}");
 }

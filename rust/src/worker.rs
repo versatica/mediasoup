@@ -500,8 +500,7 @@ impl Inner {
                     Err(error) => Err(io::Error::new(
                         io::ErrorKind::Other,
                         format!(
-                            "unexpected first notification from worker [id:{}]: {:?}; error = {}",
-                            id, notification, error
+                            "unexpected first notification from worker [id:{id}]: {notification:?}; error = {error}"
                         ),
                     )),
                 };
@@ -537,7 +536,7 @@ impl Inner {
                                 error!("[id:{}] {}", id, text)
                             }
                         }
-                        channel::InternalMessage::Dump(text) => eprintln!("{}", text),
+                        channel::InternalMessage::Dump(text) => eprintln!("{text}"),
                         channel::InternalMessage::Unexpected(data) => error!(
                             "worker[id:{}] unexpected channel data: {}",
                             id,

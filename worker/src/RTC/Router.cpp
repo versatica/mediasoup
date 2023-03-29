@@ -789,8 +789,8 @@ namespace RTC
 		// Get all streams in the Producer and provide the Consumer with them.
 		for (const auto& kv : producer->GetRtpStreams())
 		{
-			auto* rtpStream     = kv.first;
-			uint32_t mappedSsrc = kv.second;
+			auto* rtpStream           = kv.first;
+			const uint32_t mappedSsrc = kv.second;
 
 			consumer->ProducerRtpStream(rtpStream, mappedSsrc);
 		}

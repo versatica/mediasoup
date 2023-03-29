@@ -151,7 +151,9 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -180,7 +182,9 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 	routerClosed(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('routerClosed()');
 
@@ -211,7 +215,9 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		// Emit observer event.
 		if (!wasPaused)
+		{
 			this.#observer.safeEmit('pause');
+		}
 	}
 
 	/**
@@ -229,7 +235,9 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 
 		// Emit observer event.
 		if (wasPaused)
+		{
 			this.#observer.safeEmit('resume');
+		}
 	}
 
 	/**
@@ -242,7 +250,9 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		const producer = this.getProducerById(producerId);
 
 		if (!producer)
+		{
 			throw Error(`Producer with id "${producerId}" not found`);
+		}
 
 		const reqData = { producerId };
 
@@ -262,7 +272,9 @@ export class RtpObserver<E extends RtpObserverEvents = RtpObserverEvents>
 		const producer = this.getProducerById(producerId);
 
 		if (!producer)
+		{
 			throw Error(`Producer with id "${producerId}" not found`);
+		}
 
 		const reqData = { producerId };
 

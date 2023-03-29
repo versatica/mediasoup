@@ -119,7 +119,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			uint32_t ssrc = Utils::Byte::Get4Bytes(data, 0);
+			const uint32_t ssrc = Utils::Byte::Get4Bytes(data, 0);
 
 			std::unique_ptr<SdesChunk> chunk(new SdesChunk(ssrc));
 
@@ -156,7 +156,7 @@ namespace RTC
 			}
 
 			// 32 bits padding.
-			size_t padding = (-offset) & 3;
+			const size_t padding = (-offset) & 3;
 
 			for (size_t i{ 0 }; i < padding; ++i)
 			{

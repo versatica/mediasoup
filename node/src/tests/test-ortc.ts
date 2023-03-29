@@ -56,6 +56,7 @@ test('generateRouterRtpCapabilities() succeeds', () =>
 			},
 			rtcpFeedback :
 			[
+				{ type: 'nack', parameter: '' },
 				{ type: 'transport-cc', parameter: '' }
 			]
 		});
@@ -431,8 +432,14 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		]
 	};
 
-	const consumerRtpParameters =
-		ortc.getConsumerRtpParameters(consumableRtpParameters, remoteRtpCapabilities, false);
+	const consumerRtpParameters = ortc.getConsumerRtpParameters(
+		{
+			consumableRtpParameters,
+			remoteRtpCapabilities,
+			pipe      : false,
+			enableRtx : true
+		}
+	);
 
 	expect(consumerRtpParameters.codecs.length).toEqual(2);
 	expect(consumerRtpParameters.codecs[0]).toEqual(
@@ -469,7 +476,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(typeof consumerRtpParameters.encodings?.[0].ssrc).toBe('number');
 	expect(typeof consumerRtpParameters.encodings?.[0].rtx).toBe('object');
 	expect(typeof consumerRtpParameters.encodings?.[0].rtx?.ssrc).toBe('number');
-	expect(consumerRtpParameters.encodings?.[0].scalabilityMode).toBe('S3T3');
+	expect(consumerRtpParameters.encodings?.[0].scalabilityMode).toBe('L3T3');
 	expect(consumerRtpParameters.encodings?.[0].maxBitrate).toBe(333333);
 
 	expect(consumerRtpParameters.headerExtensions).toEqual(
@@ -501,8 +508,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 			mux         : true
 		});
 
-	const pipeConsumerRtpParameters =
-		ortc.getPipeConsumerRtpParameters(consumableRtpParameters);
+	const pipeConsumerRtpParameters = ortc.getPipeConsumerRtpParameters(
+		{
+			consumableRtpParameters,
+			enableRtx : false
+		}
+	);
 
 	expect(pipeConsumerRtpParameters.codecs.length).toEqual(1);
 	expect(pipeConsumerRtpParameters.codecs[0]).toEqual(

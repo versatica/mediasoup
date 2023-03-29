@@ -146,7 +146,9 @@ test('dataProducer.send() succeeds', async () =>
 			sentMessageBytes += Buffer.from(message).byteLength;
 
 			if (id === numMessages)
+			{
 				clearInterval(interval);
+			}
 		}, 0);
 
 		dataConsumer.on('message', (message, ppid) =>
@@ -163,9 +165,13 @@ test('dataProducer.send() succeeds', async () =>
 			}
 
 			if (id < numMessages / 2)
+			{
 				expect(ppid).toBe(51); // PPID of WebRTC DataChannel string.
+			}
 			else
+			{
 				expect(ppid).toBe(53); // PPID of WebRTC DataChannel binary.
+			}
 
 			expect(id).toBe(++lastRecvMessageId);
 		});

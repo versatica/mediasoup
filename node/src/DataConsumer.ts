@@ -233,7 +233,9 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -262,7 +264,9 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	transportClosed(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('transportClosed()');
 
@@ -346,9 +350,13 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 
 		// Ensure we honor PPIDs.
 		if (ppid === 56)
+		{
 			message = ' ';
+		}
 		else if (ppid === 57)
+		{
 			message = Buffer.alloc(1);
+		}
 
 		const requestData = String(ppid);
 
@@ -378,7 +386,9 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 				case 'dataproducerclose':
 				{
 					if (this.#closed)
+					{
 						break;
+					}
 
 					this.#closed = true;
 
@@ -427,7 +437,9 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 					case 'message':
 					{
 						if (this.#closed)
+						{
 							break;
+						}
 
 						const ppid = data.ppid as number;
 						const message = payload;

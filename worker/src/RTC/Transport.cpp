@@ -25,8 +25,8 @@
 
 namespace RTC
 {
-	static size_t DefaultSctpSendBufferSize{ 262144 }; // 2^18.
-	static size_t MaxSctpSendBufferSize{ 268435456 };  // 2^28.
+	static const size_t DefaultSctpSendBufferSize{ 262144 }; // 2^18.
+	static const size_t MaxSctpSendBufferSize{ 268435456 };  // 2^28.
 
 	/* Instance methods. */
 
@@ -624,7 +624,7 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("missing bitrate");
 				}
 
-				uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
+				const uint32_t bitrate = jsonBitrateIt->get<uint32_t>();
 
 				if (bitrate < RTC::TransportCongestionControlMinOutgoingBitrate)
 				{
@@ -1289,7 +1289,8 @@ namespace RTC
 					if (!type.is_string())
 						MS_THROW_TYPE_ERROR("wrong type (not a string)");
 
-					std::string typeStr = type.get<std::string>();
+					const std::string typeStr = type.get<std::string>();
+
 					if (typeStr == "probation")
 						newTraceEventTypes.probation = true;
 					if (typeStr == "bwe")
@@ -2334,16 +2335,9 @@ namespace RTC
 				for (uint8_t i{ 1u }; i <= (baseAllocation ? 1u : priority); ++i)
 				{
 					uint32_t usedBitrate{ 0u };
+					const bool considerLoss = (bweType == RTC::BweType::REMB);
 
-					switch (bweType)
-					{
-						case RTC::BweType::TRANSPORT_CC:
-							usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ false);
-							break;
-						case RTC::BweType::REMB:
-							usedBitrate = consumer->IncreaseLayer(availableBitrate, /*considerLoss*/ true);
-							break;
-					}
+					usedBitrate = consumer->IncreaseLayer(availableBitrate, considerLoss);
 
 					MS_ASSERT(usedBitrate <= availableBitrate, "Consumer used more layer bitrate than given");
 
@@ -2542,7 +2536,7 @@ namespace RTC
 			// invoked *after* the WebRtcTransport has been closed (freed). To avoid
 			// invalid memory access we need to use weak_ptr. Same applies in other
 			// send callbacks.
-			std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr(this->senderBwe);
@@ -2631,7 +2625,7 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
@@ -3033,7 +3027,7 @@ namespace RTC
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
-			std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
+			const std::weak_ptr<RTC::TransportCongestionControlClient> tccClientWeakPtr(this->tccClient);
 
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 			std::weak_ptr<RTC::SenderBandwidthEstimator> senderBweWeakPtr = this->senderBwe;
@@ -3139,8 +3133,8 @@ namespace RTC
 		// RTCP timer.
 		if (timer == this->rtcpTimer)
 		{
-			auto interval  = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
-			uint64_t nowMs = DepLibUV::GetTimeMs();
+			auto interval        = static_cast<uint64_t>(RTC::RTCP::MaxVideoIntervalMs);
+			const uint64_t nowMs = DepLibUV::GetTimeMs();
 
 			SendRtcp(nowMs);
 

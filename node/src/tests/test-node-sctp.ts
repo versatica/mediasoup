@@ -160,7 +160,9 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 			sentMessageBytes += data.byteLength;
 
 			if (id === numMessages)
+			{
 				clearInterval(interval);
+			}
 		}, 10);
 
 		sctpSocket.on('stream', onStream);

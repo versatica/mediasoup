@@ -152,7 +152,11 @@ const consumerDeviceCapabilities: mediasoup.types.RtpCapabilities =
 			kind                 : 'audio',
 			preferredPayloadType : 100,
 			clockRate            : 48000,
-			channels             : 2
+			channels             : 2,
+			rtcpFeedback         :
+			[
+				{ type: 'nack', parameter: '' }
+			]
 		},
 		{
 			mimeType             : 'video/H264',
@@ -495,6 +499,36 @@ test('transport.consume() succeeds', async () =>
 			});
 }, 2000);
 
+test('transport.consume() with enableRtx succeeds', async () =>
+{
+	const audioConsumer2 = await transport2.consume(
+		{
+			producerId      : audioProducer.id,
+			rtpCapabilities : consumerDeviceCapabilities,
+			enableRtx       : true
+		});
+
+	expect(audioConsumer2.kind).toBe('audio');
+	expect(audioConsumer2.rtpParameters.codecs.length).toBe(1);
+	expect(audioConsumer2.rtpParameters.codecs[0]).toEqual(
+		{
+			mimeType    : 'audio/opus',
+			payloadType : 100,
+			clockRate   : 48000,
+			channels    : 2,
+			parameters  :
+			{
+				useinbandfec : 1,
+				usedtx       : 1,
+				foo          : 222.222,
+				bar          : '333'
+			},
+			rtcpFeedback : [ { type: 'nack', parameter: '' } ]
+		});
+
+	audioConsumer2.close();
+}, 2000);
+
 test('transport.consume() can be created with user provided mid', async () => 
 {
 	const audioConsumer1 = await transport2.consume(
@@ -715,7 +749,7 @@ test('consumer.dump() succeeds', async () =>
 				{
 					ssrc : videoConsumer.rtpParameters.encodings?.[0].rtx?.ssrc
 				},
-				scalabilityMode : 'S4T1'
+				scalabilityMode : 'L4T1'
 			}
 		]);
 	expect(Array.isArray(data.consumableRtpEncodings)).toBe(true);

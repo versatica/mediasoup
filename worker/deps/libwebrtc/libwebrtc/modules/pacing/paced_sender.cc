@@ -99,7 +99,10 @@ bool PacedSender::Congested() const {
 
 void PacedSender::SetProbingEnabled(bool enabled) {
   // RTC_CHECK_EQ(0, packet_counter_);
-  MS_ASSERT(packet_counter_ == 0, "packet counter must be 0");
+  if (packet_counter_ != 0) {
+    MS_ERROR("packet counter must be 0");
+    return;
+  }
 
   prober_.SetEnabled(enabled);
 }
@@ -107,7 +110,10 @@ void PacedSender::SetProbingEnabled(bool enabled) {
 void PacedSender::SetPacingRates(uint32_t pacing_rate_bps,
                                  uint32_t padding_rate_bps) {
   // RTC_DCHECK(pacing_rate_bps > 0);
-  MS_ASSERT(pacing_rate_bps > 0, "pacing rate must be > 0");
+  if (pacing_rate_bps == 0) {
+    MS_ERROR("pacing rate must be > 0");
+    return;
+  }
 
   pacing_bitrate_kbps_ = pacing_rate_bps / 1000;
   padding_budget_.set_target_rate_kbps(padding_rate_bps / 1000);
@@ -121,7 +127,10 @@ void PacedSender::SetPacingRates(uint32_t pacing_rate_bps,
 void PacedSender::InsertPacket(size_t bytes) {
   // RTC_DCHECK(pacing_bitrate_kbps_ > 0)
   //     << "SetPacingRate must be called before InsertPacket.";
-  MS_ASSERT(pacing_bitrate_kbps_ > 0, "SetPacingRates() must be called before InsertPacket()");
+  if (pacing_bitrate_kbps_ <= 0) {
+    MS_ERROR("SetPacingRates() must be called before InsertPacket()");
+    return;
+  }
 
   prober_.OnIncomingPacket(bytes);
 
@@ -185,7 +194,7 @@ void PacedSender::Process() {
   PacedPacketInfo pacing_info;
   absl::optional<size_t> recommended_probe_size;
 
-  pacing_info = prober_.CurrentCluster();
+  pacing_info = prober_.CurrentCluster().value_or(PacedPacketInfo());
   recommended_probe_size = prober_.RecommendedMinProbeSize();
 
   size_t bytes_sent = 0;
@@ -266,7 +275,7 @@ PacedPacketInfo PacedSender::GetPacingInfo() {
   PacedPacketInfo pacing_info;
 
   if (prober_.IsProbing()) {
-    pacing_info = prober_.CurrentCluster();
+    pacing_info = prober_.CurrentCluster().value_or(PacedPacketInfo());;
   }
 
   return pacing_info;

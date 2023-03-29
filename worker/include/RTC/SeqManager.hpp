@@ -7,11 +7,13 @@
 
 namespace RTC
 {
-	template<typename T>
+	// T is the base type (uint16_t, uint32_t, ...).
+	// N is the max number of bits used in T.
+	template<typename T, uint8_t N = 0>
 	class SeqManager
 	{
 	public:
-		static constexpr T MaxValue = std::numeric_limits<T>::max();
+		static constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
 
 	public:
 		struct SeqLowerThan
@@ -42,6 +44,9 @@ namespace RTC
 		bool Input(const T input, T& output);
 		T GetMaxInput() const;
 		T GetMaxOutput() const;
+
+	private:
+		void ClearDropped();
 
 	private:
 		T base{ 0 };

@@ -6,11 +6,14 @@
 
 using namespace RTC;
 
+constexpr uint16_t kMaxNumberFor15Bits = (1 << 15) - 1;
+
 template<typename T>
 struct TestSeqManagerInput
 {
-	TestSeqManagerInput(T input, T output, bool sync = false, bool drop = false, T offset = 0)
-	  : input(input), output(output), sync(sync), drop(drop), offset(offset)
+	TestSeqManagerInput(
+	  T input, T output, bool sync = false, bool drop = false, T offset = 0, int64_t maxInput = -1)
+	  : input(input), output(output), sync(sync), drop(drop), offset(offset), maxInput(maxInput)
 	{
 	}
 
@@ -19,10 +22,11 @@ struct TestSeqManagerInput
 	bool sync{ false };
 	bool drop{ false };
 	T offset{ 0 };
+	int64_t maxInput{ -1 };
 };
 
-template<typename T>
-void validate(SeqManager<T>& seqManager, std::vector<TestSeqManagerInput<T>>& inputs)
+template<typename T, uint8_t N>
+void validate(SeqManager<T, N>& seqManager, std::vector<TestSeqManagerInput<T>>& inputs)
 {
 	for (auto& element : inputs)
 	{
@@ -44,15 +48,24 @@ void validate(SeqManager<T>& seqManager, std::vector<TestSeqManagerInput<T>>& in
 
 			// Covert to string because otherwise Catch will print uint8_t as char.
 			REQUIRE(std::to_string(output) == std::to_string(element.output));
+			if (element.maxInput != -1)
+			{
+				REQUIRE(std::to_string(element.maxInput) == std::to_string(seqManager.GetMaxInput()));
+			}
 		}
 	}
 }
 
-SCENARIO("SeqManager", "[rtc]")
+SCENARIO("SeqManager", "[rtc][SeqMananger]")
 {
 	SECTION("0 is greater than 65000")
 	{
 		REQUIRE(SeqManager<uint16_t>::IsSeqHigherThan(0, 65000) == true);
+	}
+
+	SECTION("0 is greater than 32500 in range 15")
+	{
+		REQUIRE(SeqManager<uint16_t, 15>::IsSeqHigherThan(0, 32500) == true);
 	}
 
 	SECTION("receive ordered numbers, no sync, no drop")
@@ -76,7 +89,9 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format on
 
 		SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t, 15> seqManager2;
 		validate(seqManager, inputs);
+		validate(seqManager2, inputs);
 	}
 
 	SECTION("receive ordered numbers, sync, no drop")
@@ -96,7 +111,9 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format on
 
 		SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t, 15> seqManager2;
 		validate(seqManager, inputs);
+		validate(seqManager2, inputs);
 	}
 
 	SECTION("receive ordered numbers, sync, drop")
@@ -121,7 +138,9 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format on
 
 		SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t, 15> seqManager2;
 		validate(seqManager, inputs);
+		validate(seqManager2, inputs);
 	}
 
 	SECTION("receive ordered wrapped numbers")
@@ -154,7 +173,9 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format on
 
 		SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t, 15> seqManager2;
 		validate(seqManager, inputs);
+		validate(seqManager2, inputs);
 	}
 
 	SECTION("receive mixed numbers with a big jump, drop before jump")
@@ -172,7 +193,9 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format on
 
 		SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t, 15> seqManager2;
 		validate(seqManager, inputs);
+		validate(seqManager2, inputs);
 	}
 
 	SECTION("receive mixed numbers with a big jump, drop after jump")
@@ -189,7 +212,9 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format on
 
 		SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t, 15> seqManager2;
 		validate(seqManager, inputs);
+		validate(seqManager2, inputs);
 	}
 
 	SECTION("drop, receive numbers newer and older than the one dropped")
@@ -206,7 +231,9 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format on
 
 		SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t, 15> seqManager2;
 		validate(seqManager, inputs);
+		validate(seqManager2, inputs);
 	}
 
 	SECTION("receive mixed numbers, sync, drop")
@@ -284,7 +311,9 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format on
 
 		SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t, 15> seqManager2;
 		validate(seqManager, inputs);
+		validate(seqManager2, inputs);
 	}
 
 	SECTION("drop many inputs at the beginning (using uint16_t)")
@@ -325,7 +354,9 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format on
 
 		SeqManager<uint16_t> seqManager;
+		SeqManager<uint16_t, 15> seqManager2;
 		validate(seqManager, inputs);
+		validate(seqManager2, inputs);
 	}
 
 	SECTION("drop many inputs at the beginning (using uint8_t)")
@@ -366,6 +397,64 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format on
 
 		SeqManager<uint8_t> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("receive mixed numbers, sync, drop in range 15")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{     0,  0, false, false },
+			{     1,  1, false, false },
+			{     2,  2, false, false },
+			{     3,  3, false, false },
+			{     7,  7, false, false },
+			{     6,  0, false,  true }, // drop.
+			{     8,  8, false, false },
+			{    10, 10, false, false },
+			{     9,  9, false, false },
+			{    11, 11, false, false },
+			{     0, 12,  true, false }, // sync.
+			{     2, 14, false, false },
+			{     3, 15, false, false },
+			{     4, 16, false, false },
+			{     5, 17, false, false },
+			{     6, 18, false, false },
+			{     7, 19, false, false },
+			{     8, 20, false, false },
+			{     9, 21, false, false },
+			{    10, 22, false, false },
+			{     9,  0, false,  true }, // drop.
+			{    61, 23,  true, false }, // sync.
+			{    62, 24, false, false },
+			{    63, 25, false, false },
+			{    64, 26, false, false },
+			{    65, 27, false, false },
+			{    11, 28,  true, false }, // sync.
+			{    12, 29, false, false },
+			{    13, 30, false, false },
+			{    14, 31, false, false },
+			{    15, 32, false, false },
+			{     1, 33,  true, false }, // sync.
+			{     2, 34, false, false },
+			{     3, 35, false, false },
+			{     4, 36, false, false },
+			{     5, 37, false, false },
+			{ 32767, 38,  true, false }, // sync.
+			{ 32768, 39, false, false },
+			{ 32769, 40, false, false },
+			{     0, 41,  true, false }, // sync.
+			{     1, 42, false, false },
+			{     3,  0, false,  true }, // drop.
+			{     4, 44, false, false },
+			{     5, 45, false, false },
+			{     6, 46, false, false },
+			{     7, 47, false, false }
+		};
+		// clang-format on
+
+		SeqManager<uint16_t, 15> seqManager;
 		validate(seqManager, inputs);
 	}
 
@@ -422,6 +511,142 @@ SCENARIO("SeqManager", "[rtc]")
 		// clang-format on
 
 		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("drop many inputs at the beginning (using uint16_t range 15 with high values)")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{     1,     1, false, false },
+			{     2,     0, false,  true }, // drop.
+			{     3,     0, false,  true }, // drop.
+			{     4,     0, false,  true }, // drop.
+			{     5,     0, false,  true }, // drop.
+			{     6,     0, false,  true }, // drop.
+			{     7,     0, false,  true }, // drop.
+			{     8,     0, false,  true }, // drop.
+			{     9,     0, false,  true }, // drop.
+			{ 16384, 16376, false, false },
+			{ 16385, 16377, false, false },
+			{ 16386, 16378, false, false },
+			{ 16387, 16379, false, false },
+			{ 16388, 16380, false, false },
+			{ 16389, 16381, false, false },
+			{ 16390, 16382, false, false },
+			{ 16391, 16383, false, false },
+			{ 16392, 16384, false, false },
+			{ 16393, 16385, false, false },
+			{ 16394, 16386, false, false },
+			{ 16395, 16387, false, false },
+			{ 16396, 16388, false, false }
+		};
+		// clang-format on
+
+		SeqManager<uint16_t, 15> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("sync and drop some input near max-value in a 15bit range")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 32762,  1,  true, false, 0, 32762 },
+			{ 32763,  2, false, false, 0, 32763 },
+			{ 32764,  3, false, false, 0, 32764 },
+			{ 32765,  0, false, true,  0, 32765 },
+			{ 32766,  0, false, true,  0, 32766 },
+			{ 32767,  4, false, false, 0, 32767 },
+			{     0,  5, false, false, 0,     0 },
+			{     1,  6, false, false, 0,     1 },
+			{     2,  7, false, false, 0,     2 },
+			{     3,  8, false, false, 0,     3 }
+		};
+		// clang-format on
+
+		SeqManager<uint16_t, 15> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("should update all values during multiple roll overs")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 0, 1, true, false, 0, 0 },
+		};
+		for (uint16_t j = 0; j < 3; ++j) {
+			for (uint16_t i = 1; i < std::numeric_limits<uint16_t>::max(); ++i) {
+				const uint16_t output = i + 1;
+				inputs.emplace_back( i, output, false, false, 0, i );
+			}
+		}
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("should update all values during multiple roll overs (15 bits range)")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 0, 1, true, false, 0, 0 },
+		};
+		for (uint16_t j = 0; j < 3; ++j) {
+			for (uint16_t i = 1; i < kMaxNumberFor15Bits; ++i) {
+				const uint16_t output = i + 1;
+				inputs.emplace_back( i, output, false, false, 0, i );
+			}
+		}
+		// clang-format on
+
+		SeqManager<uint16_t, 15> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("should produce same output for same old input before drop (15 bits range)")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 10,  1, true,  false }, // sync.
+			{ 11,  2, false, false },
+			{ 12,  3, false, false },
+			{ 13,  4, false, false },
+			{ 14,  0, false, true  }, // drop.
+			{ 15,  5, false, false },
+			{ 12,  3, false, false }
+		};
+		// clang-format on
+
+		SeqManager<uint16_t, 15> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("should properly clean previous cycle drops")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint8_t>> inputs =
+		{
+			{ 1, 1, false, false, 0 },
+			{ 2, 0, false, true,  0 }, // Drop.
+			{ 3, 2, false, false, 0 },
+			{ 4, 3, false, false, 0 },
+			{ 5, 4, false, false, 0 },
+			{ 6, 5, false, false, 0 },
+			{ 7, 6, false, false, 0 },
+			{ 0, 7, false, false, 0 },
+			{ 1, 0, false, false, 0 },
+			{ 2, 1, false, false, 0 },
+			{ 3, 2, false, false, 0 }
+		};
+		// clang-format on
+
+		SeqManager<uint8_t, 3> seqManager;
 		validate(seqManager, inputs);
 	}
 }

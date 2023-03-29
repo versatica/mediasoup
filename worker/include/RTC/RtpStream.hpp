@@ -13,6 +13,7 @@
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpPacket.hpp"
 #include "RTC/RtxStream.hpp"
 #include <nlohmann/json.hpp>
 #include <string>
@@ -180,12 +181,18 @@ namespace RTC
 		Params params;
 		// Others.
 		//   https://tools.ietf.org/html/rfc3550#appendix-A.1 stuff.
-		uint16_t maxSeq{ 0u };      // Highest seq. number seen.
-		uint32_t cycles{ 0u };      // Shifted count of seq. number cycles.
-		uint32_t baseSeq{ 0u };     // Base seq number.
-		uint32_t badSeq{ 0u };      // Last 'bad' seq number + 1.
-		uint32_t maxPacketTs{ 0u }; // Highest timestamp seen.
-		uint64_t maxPacketMs{ 0u }; // When the packet with highest timestammp was seen.
+		// Highest seq. number seen.
+		uint16_t maxSeq{ 0u };
+		// Shifted count of seq. number cycles.
+		uint32_t cycles{ 0u };
+		// Base seq number.
+		uint32_t baseSeq{ 0u };
+		// Last 'bad' seq number + 1.
+		uint32_t badSeq{ 0u };
+		// Highest timestamp seen.
+		uint32_t maxPacketTs{ 0u };
+		// When the packet with highest timestammp was seen.
+		uint64_t maxPacketMs{ 0u };
 		uint32_t packetsLost{ 0u };
 		uint8_t fractionLost{ 0u };
 		size_t packetsDiscarded{ 0u };
@@ -195,12 +202,14 @@ namespace RTC
 		size_t nackPacketCount{ 0u };
 		size_t pliCount{ 0u };
 		size_t firCount{ 0u };
-		size_t repairedPriorScore{ 0u }; // Packets repaired at last interval for score calculation.
-		size_t retransmittedPriorScore{
-			0u
-		}; // Packets retransmitted at last interval for score calculation.
-		uint64_t lastSenderReportNtpMs{ 0u }; // NTP timestamp in last Sender Report (in ms).
-		uint32_t lastSenderReportTs{ 0u };    // RTP timestamp in last Sender Report.
+		// Packets repaired at last interval for score calculation.
+		size_t repairedPriorScore{ 0u };
+		// Packets retransmitted at last interval for score calculation.
+		size_t retransmittedPriorScore{ 0u };
+		// NTP timestamp in last Sender Report (in ms).
+		uint64_t lastSenderReportNtpMs{ 0u };
+		// RTP timestamp in last Sender Report.
+		uint32_t lastSenderReportTs{ 0u };
 		float rtt{ 0 };
 		bool hasRtt{ false };
 		// Instance of RtxStream.

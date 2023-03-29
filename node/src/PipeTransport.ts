@@ -206,10 +206,14 @@ export class PipeTransport
 	close(): void
 	{
 		if (this.closed)
+		{
 			return;
+		}
 
 		if (this.#data.sctpState)
+		{
 			this.#data.sctpState = 'closed';
+		}
 
 		super.close();
 	}
@@ -223,10 +227,14 @@ export class PipeTransport
 	routerClosed(): void
 	{
 		if (this.closed)
+		{
 			return;
+		}
 
 		if (this.#data.sctpState)
+		{
 			this.#data.sctpState = 'closed';
+		}
 
 		super.routerClosed();
 	}
@@ -282,18 +290,28 @@ export class PipeTransport
 		logger.debug('consume()');
 
 		if (!producerId || typeof producerId !== 'string')
+		{
 			throw new TypeError('missing producerId');
+		}
 		else if (appData && typeof appData !== 'object')
+		{
 			throw new TypeError('if given, appData must be an object');
+		}
 
 		const producer = this.getProducerById(producerId);
 
 		if (!producer)
+		{
 			throw Error(`Producer with id "${producerId}" not found`);
+		}
 
 		// This may throw.
 		const rtpParameters = ortc.getPipeConsumerRtpParameters(
-			producer.consumableRtpParameters, this.#data.rtx);
+			{
+				consumableRtpParameters : producer.consumableRtpParameters,
+				enableRtx               : this.#data.rtx
+			}
+		);
 
 		const reqData =
 		{

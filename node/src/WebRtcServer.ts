@@ -162,7 +162,9 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -197,7 +199,9 @@ export class WebRtcServer extends EnhancedEventEmitter<WebRtcServerEvents>
 	workerClosed(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('workerClosed()');
 

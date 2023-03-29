@@ -210,7 +210,9 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -239,7 +241,9 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 	transportClosed(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('transportClosed()');
 
@@ -310,9 +314,13 @@ export class DataProducer extends EnhancedEventEmitter<DataProducerEvents>
 
 		// Ensure we honor PPIDs.
 		if (ppid === 56)
+		{
 			message = ' ';
+		}
 		else if (ppid === 57)
+		{
 			message = Buffer.alloc(1);
+		}
 
 		const notifData = String(ppid);
 

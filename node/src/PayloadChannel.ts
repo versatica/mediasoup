@@ -146,7 +146,9 @@ export class PayloadChannel extends EnhancedEventEmitter
 	close(): void
 	{
 		if (this.#closed)
+		{
 			return;
+		}
 
 		logger.debug('close()');
 
@@ -185,14 +187,20 @@ export class PayloadChannel extends EnhancedEventEmitter
 		logger.debug('notify() [event:%s]', event);
 
 		if (this.#closed)
+		{
 			throw new InvalidStateError('PayloadChannel closed');
+		}
 
 		const notification = `n:${event}:${handlerId}:${data}`;
 
 		if (Buffer.byteLength(notification) > MESSAGE_MAX_LEN)
+		{
 			throw new Error('PayloadChannel notification too big');
+		}
 		else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
+		{
 			throw new Error('PayloadChannel payload too big');
+		}
 
 		try
 		{
@@ -239,14 +247,20 @@ export class PayloadChannel extends EnhancedEventEmitter
 		logger.debug('request() [method:%s, id:%s]', method, id);
 
 		if (this.#closed)
+		{
 			throw new InvalidStateError('PayloadChannel closed');
+		}
 
 		const request = `r:${id}:${method}:${handlerId}:${data}`;
 
 		if (Buffer.byteLength(request) > MESSAGE_MAX_LEN)
+		{
 			throw new Error('PayloadChannel request too big');
+		}
 		else if (Buffer.byteLength(payload) > MESSAGE_MAX_LEN)
+		{
 			throw new Error('PayloadChannel payload too big');
+		}
 
 		// This may throw if closed or remote side ended.
 		this.#producerSocket.write(
@@ -265,14 +279,18 @@ export class PayloadChannel extends EnhancedEventEmitter
 				resolve : (data2) =>
 				{
 					if (!this.#sents.delete(id))
+					{
 						return;
+					}
 
 					pResolve(data2);
 				},
 				reject : (error) =>
 				{
 					if (!this.#sents.delete(id))
+					{
 						return;
+					}
 
 					pReject(error);
 				},
