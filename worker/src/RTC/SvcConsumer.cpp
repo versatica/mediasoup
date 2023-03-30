@@ -560,9 +560,9 @@ namespace RTC
 		{
 			// Let's iterate all spatial layers of the Producer (from highest to lowest) and
 			// obtain their bitrate. Choose the highest one.
-			// NOTE: When the Producer enables a higher stream, initially the bitrate of
-			// it could be less than the bitrate of a lower stream. That's why we
-			// iterate all streams here anyway.
+			// NOTE: When the Producer enables a higher spatial layer, initially the bitrate
+			// oft could be less than the bitrate of a lower one. That's why we iterate all
+			// spatial layers here anyway.
 			for (auto spatialLayer{ this->producerRtpStream->GetSpatialLayers() - 1 }; spatialLayer >= 0;
 			     --spatialLayer)
 			{
