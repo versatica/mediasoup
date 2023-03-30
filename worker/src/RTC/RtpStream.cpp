@@ -28,6 +28,7 @@ namespace RTC
 		MS_TRACE();
 
 		delete this->rtxStream;
+		this->rtxStream = nullptr;
 	}
 
 	void RtpStream::FillJson(json& jsonObject) const
