@@ -426,6 +426,28 @@ namespace RTC
 				requiredBitrate =
 				  this->producerRtpStream->GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
 
+				// When using K-SVC we must subtract the bitrate of the current used layer
+				// if the new layer is the temporal layer 0 of an higher spatial layer.
+				//
+				// clang-format off
+				if (
+					this->encodingContext->IsKSvc() &&
+					requiredBitrate &&
+					temporalLayer == 0 &&
+					this->provisionalTargetSpatialLayer > -1 &&
+					spatialLayer > this->provisionalTargetSpatialLayer
+				)
+				// clang-format on
+				{
+					auto provisionalRequiredBitrate = this->producerRtpStream->GetBitrate(
+					  nowMs, this->provisionalTargetSpatialLayer, this->provisionalTargetTemporalLayer);
+
+					if (requiredBitrate > provisionalRequiredBitrate)
+						requiredBitrate -= provisionalRequiredBitrate;
+					else
+						requiredBitrate = 1u; // Don't set 0 since it would be ignored.
+				}
+
 				MS_DEBUG_DEV(
 				  "testing layers %" PRIi16 ":%" PRIi16 " [virtual bitrate:%" PRIu32
 				  ", required bitrate:%" PRIu32 "]",
@@ -531,8 +553,31 @@ namespace RTC
 		if (!IsActive())
 			return 0u;
 
-		auto nowMs              = DepLibUV::GetTimeMs();
-		uint32_t desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
+		auto nowMs = DepLibUV::GetTimeMs();
+		uint32_t desiredBitrate{ 0u };
+
+		// When using K-SVC each spatial layer is independent of the others.
+		if (this->encodingContext->IsKSvc())
+		{
+			// Let's iterate all spatial layers of the Producer (from highest to lowest) and
+			// obtain their bitrate. Choose the highest one.
+			// NOTE: When the Producer enables a higher spatial layer, initially the bitrate
+			// oft could be less than the bitrate of a lower one. That's why we iterate all
+			// spatial layers here anyway.
+			for (auto spatialLayer{ this->producerRtpStream->GetSpatialLayers() - 1 }; spatialLayer >= 0;
+			     --spatialLayer)
+			{
+				auto spatialLayerBitrate =
+				  this->producerRtpStream->GetSpatialLayerBitrate(nowMs, spatialLayer);
+
+				if (spatialLayerBitrate > desiredBitrate)
+					desiredBitrate = spatialLayerBitrate;
+			}
+		}
+		else
+		{
+			desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
+		}
 
 		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
 		// greater than computed one, then use it.
