@@ -556,6 +556,7 @@ namespace RTC
 		auto nowMs = DepLibUV::GetTimeMs();
 		uint32_t desiredBitrate{ 0u };
 
+		// When using K-SVC each spatial layer is independent of the others.
 		if (this->encodingContext->IsKSvc())
 		{
 			// Let's iterate all spatial layers of the Producer (from highest to lowest) and
