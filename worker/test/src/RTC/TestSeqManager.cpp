@@ -649,4 +649,83 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 		SeqManager<uint8_t, 3> seqManager;
 		validate(seqManager, inputs);
 	}
+
+	SECTION("dropped inputs to be removed going out of range, 1.")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 36964, 36964, false, false,  0 },
+			{ 25923,     0, false, true,   0 }, // Drop.
+			{ 25701, 25701, false, false,  0 },
+			{ 17170,     0, false, true,   0 }, // Drop.
+			{ 25923, 25923, false, false,  0 },
+			{  4728,     0, false, true,   0 }, // Drop.
+			{ 17170, 17170, false, false,  0 },
+			{ 30738,     0, false, true,   0 }, // Drop.
+			{  4728,  4728, false, false,  0 },
+			{  4806,     0, false, true,   0 }, // Drop.
+			{ 30738, 30738, false, false,  0 },
+			{ 50886,     0, false, true,   0 }, // Drop.
+			{  4806,  4805, false, false,  0 }, // Previously dropped.
+			{ 50774,     0, false, true,   0 }, // Drop.
+			{ 50886, 50884, false, false,  0 }, // Previously dropped.
+			{ 22136,     0, false, true,   0 }, // Drop.
+			{ 50774, 50884, false, false,  0 }, // Previously dropped.
+			{ 30910,     0, false, true,   0 }, // Drop.
+			{ 22136, 22134, false, false,  0 },
+			{ 48862,     0, false, true,   0 }, // Drop.
+			{ 30910, 30909, false, false,  0 },
+			{ 56832,     0, false, true,   0 }, // Drop.
+			{ 48862, 48861, false, false,  0 },
+			{     2,     0, false, true,   0 }, // Drop.
+			{ 56832, 56828, false, false,  0 },
+			{   530,     0, false, true,   0 }, // Drop.
+			{     2, 65534, false, false,  0 },
+		};
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("dropped inputs to be removed go out of range, 2.")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 36960, 36960, false, false, 0 },
+			{  3328,     0, false, true,  0 }, // Drop.
+			{ 24589, 24588, false, false, 0 },
+			{   120,     0, false, true,  0 }, // Drop.
+			{  3328,  3326, false, false, 0 },
+			{ 30848,     0, false, true,  0 }, // Drop.
+			{   120,  3326, false, false, 0 }, // Previously dropped.
+		};
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("dropped inputs to be removed go out of range, 3.")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 36964, 36964, false, false, 0 },
+			{ 65396 ,    0, false, true,  0 }, // Drop.
+			{ 25855, 25854, false, false, 0 },
+			{ 29793 ,    0, false, true,  0 }, // Drop.
+			{ 65396, 65395, false, false, 0 },
+			{ 25087,    0,  false, true,  0 }, // Drop.
+			{ 29793, 29791, false, false, 0 },
+			{ 65535 ,    0, false, true,  0 }, // Drop.
+			{ 25087, 29791, false, false, 0 }, // Previously dropped.
+		};
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
 }

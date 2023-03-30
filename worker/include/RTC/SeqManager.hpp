@@ -49,6 +49,8 @@ namespace RTC
 		void ClearDropped();
 
 	private:
+		// Whether at least a sequence number has been inserted.
+		bool started{ false };
 		T base{ 0 };
 		T maxOutput{ 0 };
 		T maxInput{ 0 };
