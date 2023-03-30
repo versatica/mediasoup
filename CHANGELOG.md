@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* `RtpStreamSend`: Reset RTP retransmission buffer upon RTP sequence number reset ([PR #1041](https://github.com/versatica/mediasoup/pull/1041)).
+
+
 ### 3.11.19
 
 * `SvcConsumer`: Properly handle VP9 K-SVC bandwidth allocation ([PR #1036](https://github.com/versatica/mediasoup/pull/1036) by @vpalmisano).
