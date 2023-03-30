@@ -212,6 +212,9 @@ namespace RTC
 
 				this->maxPacketTs = packet->GetTimestamp();
 				this->maxPacketMs = DepLibUV::GetTimeMs();
+
+				// Notify the subclass about it.
+				UserOnSequenceNumberReset();
 			}
 			else
 			{

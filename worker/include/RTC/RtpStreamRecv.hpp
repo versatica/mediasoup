@@ -80,6 +80,10 @@ namespace RTC
 		void CalculateJitter(uint32_t rtpTimestamp);
 		void UpdateScore();
 
+		/* Pure virtual methods inherited from RTC::RtpStream. */
+	public:
+		void UserOnSequenceNumberReset() override;
+
 		/* Pure virtual methods inherited from Timer. */
 	protected:
 		void OnTimer(Timer* timer) override;
