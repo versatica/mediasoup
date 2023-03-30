@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RtpRetransmissionBuffer"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpRetransmissionBuffer.hpp"
 #include "Logger.hpp"

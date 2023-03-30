@@ -253,7 +253,8 @@ SCENARIO("RtpRetransmissionBuffer", "[rtp][rtx]")
 		// clang-format on
 	}
 
-	SECTION("packet with minimally newest timestamp is inserted as newest item despite its seq is old")
+	SECTION(
+	  "packet with lower seq than newest packet in the buffer and higher timestamp forces buffer emptying")
 	{
 		uint16_t maxItems{ 4 };
 		uint32_t maxRetransmissionDelayMs{ 2000u };
