@@ -52,7 +52,7 @@ namespace RTC
 					break;
 				}
 
-				case RTC::RtpCodecMimeType::Type::UNSET:
+				default:
 				{
 					MS_ABORT("codec mimeType not set");
 				}
