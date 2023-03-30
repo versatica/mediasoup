@@ -632,6 +632,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Clear retransmission buffer.
 		if (this->retransmissionBuffer)
 		{
 			this->retransmissionBuffer->Clear();
