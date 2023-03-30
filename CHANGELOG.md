@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.11.19
+
+* `SvcConsumer`: Properly handle VP9 K-SVC bandwidth allocation ([PR #1036](https://github.com/versatica/mediasoup/pull/1036) by @vpalmisano).
+
+
 ### 3.11.18
 
 * `RtpRetransmissionBuffer`: Consider the case of packet with newest timestamp but "old" seq number ([PR #1039](https://github.com/versatica/mediasoup/pull/1039)).
