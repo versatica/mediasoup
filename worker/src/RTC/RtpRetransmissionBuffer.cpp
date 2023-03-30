@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::RtpRetransmissionBuffer"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpRetransmissionBuffer.hpp"
 #include "Logger.hpp"
@@ -84,6 +84,29 @@ namespace RTC
 		auto* oldestItem = GetOldest();
 		auto* newestItem = GetNewest();
 
+		// Special case: Received packet has lower seq than newest packet in the
+		// buffer, however its timestamp is higher. If so, clear the whole buffer.
+		if (
+		  RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, newestItem->sequenceNumber) &&
+		  RTC::SeqManager<uint32_t>::IsSeqHigherThan(timestamp, newestItem->timestamp))
+		{
+			MS_WARN_TAG(
+			  rtp,
+			  "packet has lower seq but higher timestamp than newest packet in the buffer, emptying the buffer [ssrc:%" PRIu32
+			  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
+			  ssrc,
+			  seq,
+			  timestamp);
+
+			Clear();
+
+			auto* item = new Item();
+
+			this->buffer.push_back(FillItem(item, packet, sharedPacket));
+
+			return;
+		}
+
 		// Clear too old packets in the buffer.
 		// NOTE: Here we must consider the case in which, due for example to huge
 		// packet loss, received packet has higher timestamp but "older" seq number
@@ -101,7 +124,8 @@ namespace RTC
 			// Buffer content has been modified so we must check it again.
 			if (this->buffer.empty())
 			{
-				MS_DEBUG_DEV(
+				MS_WARN_TAG(
+				  rtp,
 				  "buffer empty after clearing too old packets [seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
 				  seq,
 				  timestamp);

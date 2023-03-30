@@ -253,6 +253,29 @@ SCENARIO("RtpRetransmissionBuffer", "[rtp][rtx]")
 		// clang-format on
 	}
 
+	SECTION("packet with minimally newest timestamp is inserted as newest item despite its seq is old")
+	{
+		uint16_t maxItems{ 4 };
+		uint32_t maxRetransmissionDelayMs{ 2000u };
+		uint32_t clockRate{ 90000 };
+
+		RtpMyRetransmissionBuffer myRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate);
+
+		myRetransmissionBuffer.Insert(33331, 1000000001);
+		myRetransmissionBuffer.Insert(33332, 1000000002);
+		myRetransmissionBuffer.Insert(33330, 1000000003);
+
+		myRetransmissionBuffer.Dump();
+
+		// clang-format off
+		myRetransmissionBuffer.AssertBuffer(
+			{
+				{ true, 33330, 1000000003 }
+			}
+		);
+		// clang-format on
+	}
+
 	SECTION("fuzzer generated packets")
 	{
 		uint16_t maxItems{ 2500u };
