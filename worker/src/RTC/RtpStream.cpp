@@ -28,6 +28,7 @@ namespace RTC
 		MS_TRACE();
 
 		delete this->rtxStream;
+		this->rtxStream = nullptr;
 	}
 
 	void RtpStream::FillJson(json& jsonObject) const
@@ -212,6 +213,9 @@ namespace RTC
 
 				this->maxPacketTs = packet->GetTimestamp();
 				this->maxPacketMs = DepLibUV::GetTimeMs();
+
+				// Notify the subclass about it.
+				UserOnSequenceNumberReset();
 			}
 			else
 			{

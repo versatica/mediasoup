@@ -627,4 +627,15 @@ namespace RTC
 
 		RtpStream::UpdateScore(score);
 	}
+
+	void RtpStreamSend::UserOnSequenceNumberReset()
+	{
+		MS_TRACE();
+
+		// Clear retransmission buffer.
+		if (this->retransmissionBuffer)
+		{
+			this->retransmissionBuffer->Clear();
+		}
+	}
 } // namespace RTC

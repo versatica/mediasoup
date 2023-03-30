@@ -175,6 +175,10 @@ namespace RTC
 	private:
 		void InitSeq(uint16_t seq);
 
+		/* Pure virtual method that must be implemented by the subclass. */
+	protected:
+		virtual void UserOnSequenceNumberReset() = 0;
+
 	protected:
 		// Given as argument.
 		RTC::RtpStream::Listener* listener{ nullptr };
