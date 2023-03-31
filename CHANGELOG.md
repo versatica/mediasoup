@@ -1,7 +1,7 @@
 # Changelog
 
 
-### NEXT
+### 3.11.20
 
 * `RtpStreamSend`: Reset RTP retransmission buffer upon RTP sequence number reset ([PR #1041](https://github.com/versatica/mediasoup/pull/1041)).
 * `RtpRetransmissionBuffer`: Handle corner case in which received packet has lower seq than newest packet in the buffer but higher timestamp  ([PR #1044](https://github.com/versatica/mediasoup/pull/1044)).
