@@ -117,7 +117,7 @@ namespace RTC
 		{
 			this->started = true;
 
-			this->maxInput = input;
+			this->maxInput  = input;
 			this->maxOutput = output;
 		}
 		else

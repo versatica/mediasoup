@@ -1,6 +1,6 @@
 #include "RTC/FuzzerSeqManager.hpp"
-#include "RTC/SeqManager.hpp"
 #include "Utils.hpp"
+#include "RTC/SeqManager.hpp"
 #include <iostream>
 
 void Fuzzer::RTC::SeqManager::Fuzz(const uint8_t* data, size_t len)
@@ -17,6 +17,6 @@ void Fuzzer::RTC::SeqManager::Fuzz(const uint8_t* data, size_t len)
 	for (size_t count = 0; count < 7; count++)
 	{
 		seqManager.Input(Utils::Byte::Get2Bytes(data, count), output);
-		seqManager.Drop(Utils::Byte::Get2Bytes(data, count+2));
+		seqManager.Drop(Utils::Byte::Get2Bytes(data, count + 2));
 	}
 }
