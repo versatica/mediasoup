@@ -11,8 +11,9 @@ import {
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
+import { AppData } from './types';
 
-export type PlainTransportOptions =
+export type PlainTransportOptions<PlainTransportAppData extends AppData = AppData> =
 {
 	/**
 	 * Listening IP address.
@@ -75,7 +76,7 @@ export type PlainTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: PlainTransportAppData;
 };
 
 export type PlainTransportStat =
@@ -123,10 +124,11 @@ export type PlainTransportObserverEvents = TransportObserverEvents &
 	sctpstatechange: [SctpState];	
 };
 
-type PlainTransportConstructorOptions = TransportConstructorOptions &
-{
-	data: PlainTransportData;
-};
+type PlainTransportConstructorOptions<PlainTransportAppData> =
+	TransportConstructorOptions<PlainTransportAppData> &
+	{
+		data: PlainTransportData;
+	};
 
 export type PlainTransportData =
 {
@@ -141,8 +143,8 @@ export type PlainTransportData =
 
 const logger = new Logger('PlainTransport');
 
-export class PlainTransport extends
-	Transport<PlainTransportEvents, PlainTransportObserverEvents>
+export class PlainTransport<PlainTransportAppData extends AppData = AppData>
+	extends Transport<PlainTransportEvents, PlainTransportObserverEvents, PlainTransportAppData>
 {
 	// PlainTransport data.
 	readonly #data: PlainTransportData;
@@ -150,7 +152,7 @@ export class PlainTransport extends
 	/**
 	 * @private
 	 */
-	constructor(options: PlainTransportConstructorOptions)
+	constructor(options: PlainTransportConstructorOptions<PlainTransportAppData>)
 	{
 		super(options);
 

@@ -18,3 +18,8 @@ export * from './SctpParameters';
 export * from './SrtpParameters';
 export * from './errors';
 export { ScalabilityMode } from './scalabilityModes';
+
+export type AppData =
+{
+	[key: string]: unknown;
+};

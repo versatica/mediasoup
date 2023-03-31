@@ -13,6 +13,10 @@ import {
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import { Either } from './utils';
+import { AppData } from './types';
+
+export type WebRtcTransportOptions<WebRtcTransportAppData extends AppData = AppData> =
+	WebRtcTransportOptionsBase<WebRtcTransportAppData> & WebRtcTransportListen;
 
 export type WebRtcTransportListenIndividual =
 {
@@ -40,7 +44,7 @@ export type WebRtcTransportListenServer =
 export type WebRtcTransportListen =
 	Either<WebRtcTransportListenIndividual, WebRtcTransportListenServer>;
 
-export type WebRtcTransportOptionsBase =
+export type WebRtcTransportOptionsBase<WebRtcTransportAppData> =
 {
 	/**
 	 * Listen in UDP. Default true.
@@ -92,10 +96,8 @@ export type WebRtcTransportOptionsBase =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: WebRtcTransportAppData;
 };
-
-export type WebRtcTransportOptions = WebRtcTransportOptionsBase & WebRtcTransportListen;
 
 export type IceParameters =
 {
@@ -186,10 +188,11 @@ export type WebRtcTransportObserverEvents = TransportObserverEvents &
 	sctpstatechange: [SctpState];
 };
 
-type WebRtcTransportConstructorOptions = TransportConstructorOptions &
-{
-	data: WebRtcTransportData;
-};
+type WebRtcTransportConstructorOptions<WebRtcTransportAppData> =
+	TransportConstructorOptions<WebRtcTransportAppData> &
+	{
+		data: WebRtcTransportData;
+	};
 
 export type WebRtcTransportData =
 {
@@ -207,8 +210,8 @@ export type WebRtcTransportData =
 
 const logger = new Logger('WebRtcTransport');
 
-export class WebRtcTransport extends
-	Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents>
+export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
+	extends Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents, WebRtcTransportAppData>
 {
 	// WebRtcTransport data.
 	readonly #data: WebRtcTransportData;
@@ -216,7 +219,7 @@ export class WebRtcTransport extends
 	/**
 	 * @private
 	 */
-	constructor(options: WebRtcTransportConstructorOptions)
+	constructor(options: WebRtcTransportConstructorOptions<WebRtcTransportAppData>)
 	{
 		super(options);
 

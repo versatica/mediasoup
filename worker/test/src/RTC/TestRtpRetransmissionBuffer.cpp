@@ -266,8 +266,6 @@ SCENARIO("RtpRetransmissionBuffer", "[rtp][rtx]")
 		myRetransmissionBuffer.Insert(33332, 1000000002);
 		myRetransmissionBuffer.Insert(33330, 1000000003);
 
-		myRetransmissionBuffer.Dump();
-
 		// clang-format off
 		myRetransmissionBuffer.AssertBuffer(
 			{
