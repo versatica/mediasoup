@@ -48,7 +48,11 @@ test('worker.createRouter() succeeds', async () =>
 
 	worker.observer.once('newrouter', onObserverNewRouter);
 
-	const router = await worker.createRouter({ mediaCodecs, appData: { foo: 123 } });
+	const router = await worker.createRouter<{ foo: number; bar?: string }>(
+		{
+			mediaCodecs,
+			appData : { foo: 123 }
+		});
 
 	expect(onObserverNewRouter).toHaveBeenCalledTimes(1);
 	expect(onObserverNewRouter).toHaveBeenCalledWith(router);
@@ -58,6 +62,8 @@ test('worker.createRouter() succeeds', async () =>
 	expect(Array.isArray(router.rtpCapabilities.codecs)).toBe(true);
 	expect(Array.isArray(router.rtpCapabilities.headerExtensions)).toBe(true);
 	expect(router.appData).toEqual({ foo: 123 });
+
+	expect(() => (router.appData = { foo: 222, bar: 'BBB' })).not.toThrow();
 
 	await expect(worker.dump())
 		.resolves
