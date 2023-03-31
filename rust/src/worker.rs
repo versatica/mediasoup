@@ -5,8 +5,8 @@ mod channel;
 mod common;
 mod utils;
 
-use crate::fbs::fbs;
 use crate::data_structures::AppData;
+use crate::fbs::fbs;
 use crate::messages::{
     WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest,
     WorkerDumpRequest, WorkerUpdateSettingsRequest,
@@ -494,9 +494,7 @@ impl Inner {
                     }
                     _ => Err(io::Error::new(
                         io::ErrorKind::Other,
-                        format!(
-                            "unexpected first notification from worker [id:{id}]"
-                        ),
+                        format!("unexpected first notification from worker [id:{id}]"),
                     )),
                 };
 

@@ -1,10 +1,10 @@
+use crate::fbs::fbs::notification;
 use hash_hasher::HashedMap;
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::Deserialize;
 use std::sync::{Arc, Weak};
 use uuid::Uuid;
-use crate::fbs::fbs::notification;
 
 struct EventHandlersList<F> {
     index: usize,
@@ -133,8 +133,8 @@ impl<F: Sized + Send + Sync + 'static> FBSEventHandlers<F> {
         })
     }
 
-    pub(super) fn downgrade(&self) -> WeakEventHandlers<F> {
-        WeakEventHandlers {
+    pub(super) fn downgrade(&self) -> FBSWeakEventHandlers<F> {
+        FBSWeakEventHandlers {
             handlers: Arc::downgrade(&self.handlers),
         }
     }
@@ -180,6 +180,19 @@ impl<F> WeakEventHandlers<F> {
         self.handlers
             .upgrade()
             .map(|handlers| EventHandlers { handlers })
+    }
+}
+
+#[derive(Clone)]
+pub(super) struct FBSWeakEventHandlers<F> {
+    handlers: Weak<Mutex<HashedMap<SubscriptionTarget, EventHandlersList<F>>>>,
+}
+
+impl<F> FBSWeakEventHandlers<F> {
+    pub(super) fn upgrade(&self) -> Option<FBSEventHandlers<F>> {
+        self.handlers
+            .upgrade()
+            .map(|handlers| FBSEventHandlers { handlers })
     }
 }
 
