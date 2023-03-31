@@ -356,6 +356,7 @@ executable(
     'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
     'fuzzer/src/RTC/FuzzerRtpRetransmissionBuffer.cpp',
     'fuzzer/src/RTC/FuzzerRtpStreamSend.cpp',
+    'fuzzer/src/RTC/FuzzerSeqManager.cpp',
     'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
     'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
     'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
