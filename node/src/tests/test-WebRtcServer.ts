@@ -21,7 +21,7 @@ test('worker.createWebRtcServer() succeeds', async () =>
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const port2 = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
 
-	const webRtcServer = await worker.createWebRtcServer(
+	const webRtcServer = await worker.createWebRtcServer<{ foo?: number }>(
 		{
 			listenInfos :
 			[

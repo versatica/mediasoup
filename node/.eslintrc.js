@@ -75,10 +75,10 @@ const eslintConfig =
 				beforeLineComment  : false
 			}
 		],
-		'max-len' : [ 2, 90,
+		'max-len' : [ 2, 100,
 			{
 				tabWidth               : 2,
-				comments               : 90,
+				comments               : 84,
 				ignoreUrls             : true,
 				ignoreStrings          : true,
 				ignoreTemplateLiterals : true,
