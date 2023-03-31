@@ -125,12 +125,16 @@ namespace RTC
 			// New input is higher than the maximum seen. But less than acceptable units higher.
 			// Keep it as the maximum seen. See Drop().
 			if (IsSeqHigherThan(input, this->maxInput))
+			{
 				this->maxInput = input;
+			}
 
 			// New output is higher than the maximum seen. But less than acceptable units higher.
 			// Keep it as the maximum seen. See Sync().
 			if (IsSeqHigherThan(output, this->maxOutput))
+			{
 				this->maxOutput = output;
+			}
 		}
 
 		ClearDropped();
