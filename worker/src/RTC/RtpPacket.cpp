@@ -142,9 +142,9 @@ namespace RTC
 		ParseExtensions();
 
 		// Initialize logger.
-		this->logger.timestamp     = DepLibUV::GetTimeMs();
-		this->logger.recvRtpTimestamp  = this->GetTimestamp();
-		this->logger.recvSeqNumber = this->GetSequenceNumber();
+		this->logger.timestamp        = DepLibUV::GetTimeMs();
+		this->logger.recvRtpTimestamp = this->GetTimestamp();
+		this->logger.recvSeqNumber    = this->GetSequenceNumber();
 	}
 
 	RtpPacket::~RtpPacket()

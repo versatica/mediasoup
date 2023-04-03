@@ -951,7 +951,7 @@ namespace RTC
 		packet->SetTimestamp(timestamp);
 
 		packet->logger.sendRtpTimestamp = timestamp;
-		packet->logger.sendSeqNumber = seq;
+		packet->logger.sendSeqNumber    = seq;
 
 		if (isSyncPacket)
 		{
