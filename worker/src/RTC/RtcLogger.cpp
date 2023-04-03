@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtcLogger.hpp"
+#include "Logger.hpp"
 
 namespace RTC
 {
@@ -27,12 +28,16 @@ namespace RTC
 
 		void RtpPacket::Sent()
 		{
+			MS_TRACE();
+
 			Log();
 			Clear();
 		}
 
 		void RtpPacket::Dropped(DropReason dropReason)
 		{
+			MS_TRACE();
+
 			this->dropped    = true;
 			this->dropReason = dropReason;
 
@@ -43,6 +48,8 @@ namespace RTC
 		void RtpPacket::Log() const
 		{
 #ifdef MS_RTC_LOGGER_RTP
+			MS_TRACE();
+
 			std::cout << "{"
 			          << "timestamp: " << this->timestamp << ", recvTransportId: '"
 			          << this->recvTransportId << "'"
@@ -62,6 +69,8 @@ namespace RTC
 
 		void RtpPacket::Clear()
 		{
+			MS_TRACE();
+
 			this->sendTransportId = "undefined";
 			this->routerId        = "undefined";
 			this->producerId      = "undefined";
