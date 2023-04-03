@@ -262,6 +262,7 @@ namespace RTC
 		packet->SetSsrc(ssrc);
 		packet->SetSequenceNumber(seq);
 
+		packet->logger.sendRtpTimestamp = packet->GetTimestamp();
 		packet->logger.sendSeqNumber = seq;
 
 		if (isSyncPacket)
