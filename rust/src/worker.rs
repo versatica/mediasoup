@@ -331,7 +331,7 @@ pub struct WorkerResourceUsage {
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum WorkerResourceError {
     /// Request to worker failed
-    #[error("Failed to get worker resource usage")]
+    #[error("Failed to get worker resource usage: {0}")]
     Request(RequestError),
 }
 
