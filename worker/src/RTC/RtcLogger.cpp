@@ -8,22 +8,23 @@ namespace RTC
 {
 	namespace RtcLogger
 	{
+		// clang-format off
 		absl::flat_hash_map<RtpPacket::DropReason, std::string> RtpPacket::dropReason2String = {
-			{ RtpPacket::DropReason::NONE, "None" },
-			{ RtpPacket::DropReason::PRODUCER_NOT_FOUND, "ProducerNotFound" },
-			{ RtpPacket::DropReason::RECV_RTP_STREAM_NOT_FOUND, "RecvRtpStreamNotFound" },
-			{ RtpPacket::DropReason::RECV_RTP_STREAM_DISCARDED, "RecvRtpStreamDiscarded" },
-			{ RtpPacket::DropReason::CONSUMER_INACTIVE, "ConsumerInactive" },
-			{ RtpPacket::DropReason::INVALID_TARGET_LAYER, "InvalidTargetLayer" },
-			{ RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE, "UnsupportedPayloadType" },
-			{ RtpPacket::DropReason::NOT_A_KEYFRAME, "NotAKeyframe" },
-			{ RtpPacket::DropReason::SPATIAL_LAYER_MISMATCH, "SpatialLayerMismatch" },
-			{ RtpPacket::DropReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED, "TooHighTimestampExtraNeeded" },
-			{ RtpPacket::DropReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH,
-			  "PacketPreviousToSpatialLayerSwitch" },
-			{ RtpPacket::DropReason::DROPPED_BY_CODEC, "DroppedByCodec" },
-			{ RtpPacket::DropReason::SEND_RTP_STREAM_DISCARDED, "SendRtpStreamDiscarded" },
+			{ RtpPacket::DropReason::NONE,                                    "None"                               },
+			{ RtpPacket::DropReason::PRODUCER_NOT_FOUND,                      "ProducerNotFound"                   },
+			{ RtpPacket::DropReason::RECV_RTP_STREAM_NOT_FOUND,               "RecvRtpStreamNotFound"              },
+			{ RtpPacket::DropReason::RECV_RTP_STREAM_DISCARDED,               "RecvRtpStreamDiscarded"             },
+			{ RtpPacket::DropReason::CONSUMER_INACTIVE,                       "ConsumerInactive"                   },
+			{ RtpPacket::DropReason::INVALID_TARGET_LAYER,                    "InvalidTargetLayer"                 },
+			{ RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE,                "UnsupportedPayloadType"             },
+			{ RtpPacket::DropReason::NOT_A_KEYFRAME,                          "NotAKeyframe"                       },
+			{ RtpPacket::DropReason::SPATIAL_LAYER_MISMATCH,                  "SpatialLayerMismatch"               },
+			{ RtpPacket::DropReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED,         "TooHighTimestampExtraNeeded"        },
+			{ RtpPacket::DropReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH, "PacketPreviousToSpatialLayerSwitch" },
+			{ RtpPacket::DropReason::DROPPED_BY_CODEC,                        "DroppedByCodec"                     },
+			{ RtpPacket::DropReason::SEND_RTP_STREAM_DISCARDED,               "SendRtpStreamDiscarded"             },
 		};
+		// clang-format on
 
 		void RtpPacket::Sent()
 		{
