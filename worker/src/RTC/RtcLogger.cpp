@@ -43,6 +43,7 @@ namespace RTC
 
 		void RtpPacket::Log() const
 		{
+#ifdef MS_RTC_LOGGER_RTP
 			std::cout << "{"
 			          << "timestamp: " << this->timestamp << ", recvTransportId: '"
 			          << this->recvTransportId << "'"
@@ -56,6 +57,7 @@ namespace RTC
 			          << ", dropped: " << (this->dropped ? "true" : "false") << ", dropReason: '"
 			          << dropReason2String[this->dropReason] << "'"
 			          << "}" << std::endl;
+#endif
 		}
 
 		void RtpPacket::Clear()
