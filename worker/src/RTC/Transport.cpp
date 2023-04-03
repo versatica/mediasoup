@@ -1692,6 +1692,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		packet->logger.recvTransportId = this->id;
+
 		// Apply the Transport RTP header extension ids so the RTP listener can use them.
 		packet->SetMidExtensionId(this->recvRtpHeaderExtensionIds.mid);
 		packet->SetRidExtensionId(this->recvRtpHeaderExtensionIds.rid);
@@ -1712,6 +1714,8 @@ namespace RTC
 
 		if (!producer)
 		{
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::PRODUCER_NOT_FOUND);
+
 			MS_WARN_TAG(
 			  rtp,
 			  "no suitable Producer for received RTP packet [ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]",
@@ -2662,6 +2666,9 @@ namespace RTC
 	inline void Transport::OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
+
+		packet->logger.sendTransportId = this->id;
+		packet->logger.Sent();
 
 		// Update abs-send-time if present.
 		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());

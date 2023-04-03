@@ -672,6 +672,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		packet->logger.producerId = this->id;
+
 		// Reset current packet.
 		this->currentRtpPacket = nullptr;
 
@@ -683,6 +685,8 @@ namespace RTC
 		if (!rtpStream)
 		{
 			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
+
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::RECV_RTP_STREAM_NOT_FOUND);
 
 			return ReceiveRtpPacketResult::DISCARDED;
 		}
@@ -705,6 +709,8 @@ namespace RTC
 				if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
 					NotifyNewRtpStream(rtpStream);
 
+				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::RECV_RTP_STREAM_DISCARDED);
+
 				return result;
 			}
 		}
@@ -716,7 +722,11 @@ namespace RTC
 
 			// Process the packet.
 			if (!rtpStream->ReceiveRtxPacket(packet))
+			{
+				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::RECV_RTP_STREAM_NOT_FOUND);
+
 				return result;
+			}
 		}
 		// Should not happen.
 		else

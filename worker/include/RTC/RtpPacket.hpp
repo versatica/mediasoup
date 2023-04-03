@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
+#include "RTC/RtcLogger.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <array>
 #include <nlohmann/json.hpp>
@@ -605,6 +606,9 @@ namespace RTC
 		void RestorePayload();
 
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
+
+	public:
+		RtcLogger::RtpPacket logger;
 
 	private:
 		void ParseExtensions();
