@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtcLogger.hpp"
-#include "Logger.hpp"
 
 namespace RTC
 {
