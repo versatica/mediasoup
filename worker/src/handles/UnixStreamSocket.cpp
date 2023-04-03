@@ -81,7 +81,6 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, UnixStreamSocket::
 		MS_THROW_ERROR_STD("uv_pipe_init() failed: %s", uv_strerror(err));
 	}
 
-	std::cout << "file descriptor: " << +fd << std::endl;
 	err = uv_pipe_open(this->uvHandle, fd);
 
 	if (err != 0)
