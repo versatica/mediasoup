@@ -46,7 +46,8 @@ namespace RTC
 			std::string routerId{ "undefined" };
 			std::string producerId{ "undefined" };
 			std::string consumerId{ "undefined" };
-			uint32_t rtpTimestamp;
+			uint32_t recvRtpTimestamp;
+			uint32_t sendRtpTimestamp;
 			uint16_t recvSeqNumber;
 			uint16_t sendSeqNumber;
 			bool dropped;

@@ -51,7 +51,8 @@ namespace RTC
 			          << ", routerId: '" << this->routerId << "'"
 			          << ", producerId: '" << this->producerId << "'"
 			          << ", consumerId: '" << this->consumerId << "'"
-			          << ", rtpTimestamp: " << this->rtpTimestamp
+			          << ", recvRtpTimestamp: " << this->recvRtpTimestamp
+			          << ", sendRtpTimestamp: " << this->sendRtpTimestamp
 			          << ", recvSeqNumber: " << this->recvSeqNumber
 			          << ", sendSeqNumber: " << this->sendSeqNumber
 			          << ", dropped: " << (this->dropped ? "true" : "false") << ", dropReason: '"

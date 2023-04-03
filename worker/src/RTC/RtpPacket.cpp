@@ -143,7 +143,7 @@ namespace RTC
 
 		// Initialize logger.
 		this->logger.timestamp     = DepLibUV::GetTimeMs();
-		this->logger.rtpTimestamp  = this->GetTimestamp();
+		this->logger.recvRtpTimestamp  = this->GetTimestamp();
 		this->logger.recvSeqNumber = this->GetSequenceNumber();
 	}
 
