@@ -9,7 +9,7 @@ mod utils;
 use crate::data_structures::AppData;
 use crate::messages::{
     WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest,
-    WorkerDumpRequest, WorkerUpdateSettingsRequest,
+    WorkerDumpRequest, WorkerResourceUsageRequest, WorkerUpdateSettingsRequest,
 };
 pub use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
@@ -286,6 +286,53 @@ pub struct WorkerDump {
     #[serde(rename = "webRtcServerIds")]
     pub webrtc_server_ids: Vec<WebRtcServerId>,
     pub channel_message_handlers: ChannelMessageHandlers,
+}
+
+
+/// Worker Resource Usage
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[non_exhaustive]
+pub struct WorkerResourceUsage {
+    // User CPU time used (in ms).
+    pub ru_utime: u64,
+    // System CPU time used (in ms).
+    pub ru_stime: u64,
+    // Maximum resident set size.
+    pub ru_maxrss: u64,
+    // Integral shared memory size.
+    pub ru_ixrss: u64,
+    // Integral unshared data size.
+    pub ru_idrss: u64,
+    // Integral unshared stack size.
+    pub ru_isrss: u64,
+    // Page reclaims (soft page faults).
+    pub ru_minflt: u64,
+    // Page faults (hard page faults).
+    pub ru_majflt: u64,
+    // Swaps.
+    pub ru_nswap: u64,
+    // Block input operations.
+    pub ru_inblock: u64,
+    // Block output operations.
+    pub ru_oublock: u64,
+    // IPC messages sent.
+    pub ru_msgsnd: u64,
+    // IPC messages received.
+    pub ru_msgrcv: u64,
+    // Signals received.
+    pub ru_nsignals: u64,
+    // Voluntary context switches.
+    pub ru_nvcsw: u64,
+    // Involuntary context switches.
+    pub ru_nivcsw: u64,
+}
+
+/// Error that caused [`Worker::get_resource_usage`] to fail.
+#[derive(Debug, Error, Eq, PartialEq)]
+pub enum WorkerResourceError {
+    /// Request to worker failed
+    #[error("Failed to get worker resource usage")]
+    Request(RequestError),
 }
 
 /// Error that caused [`Worker::create_webrtc_server`] to fail.
@@ -635,6 +682,17 @@ impl Worker {
     pub fn closed(&self) -> bool {
         self.inner.closed.load(Ordering::SeqCst)
     }
+
+    /// Get the current worker resource usage.
+    pub async fn get_resource_usage(&self) -> Result<WorkerResourceUsage, RequestError> {
+        debug!("get_resource_usage()");
+
+        self.inner
+            .channel
+            .request("", WorkerResourceUsageRequest {})
+            .await
+    }
+
 
     /// Dump Worker.
     #[doc(hidden)]
