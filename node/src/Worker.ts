@@ -687,7 +687,9 @@ export class Worker<WorkerAppData extends AppData = AppData>
 				listenInfo.protocol === 'udp' ? FbsTransportProtocol.UDP : FbsTransportProtocol.TCP,
 				listenInfo.ip,
 				listenInfo.announcedIp,
-				listenInfo.port)
+				listenInfo.port,
+				listenInfo.sendBufferSize,
+				listenInfo.recvBufferSize)
 			);
 		}
 

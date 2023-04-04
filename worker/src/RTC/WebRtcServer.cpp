@@ -67,6 +67,18 @@ namespace RTC
 						udpSocket = new RTC::UdpSocket(this, ip);
 
 					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedIp);
+
+					if (listenInfo->sendBufferSize() != 0)
+						udpSocket->SetSendBufferSize(listenInfo->sendBufferSize());
+
+					if (listenInfo->recvBufferSize() != 0)
+						udpSocket->SetRecvBufferSize(listenInfo->recvBufferSize());
+
+					MS_DEBUG_TAG(
+					  info,
+					  "UDP socket send buffer size: %d, recv buffer size: %d",
+					  udpSocket->GetSendBufferSize(),
+					  udpSocket->GetRecvBufferSize());
 				}
 				else if (listenInfo->protocol() == FBS::Transport::Protocol::TCP)
 				{
@@ -79,6 +91,18 @@ namespace RTC
 						tcpServer = new RTC::TcpServer(this, this, ip);
 
 					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedIp);
+
+					if (listenInfo->sendBufferSize() != 0)
+						tcpServer->SetSendBufferSize(listenInfo->sendBufferSize());
+
+					if (listenInfo->recvBufferSize() != 0)
+						tcpServer->SetRecvBufferSize(listenInfo->recvBufferSize());
+
+					MS_DEBUG_TAG(
+					  info,
+					  "TCP server send buffer size: %d, recv buffer size: %d",
+					  tcpServer->GetSendBufferSize(),
+					  tcpServer->GetRecvBufferSize());
 				}
 			}
 
