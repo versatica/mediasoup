@@ -213,7 +213,8 @@ namespace RTC
 
 		public:
 			AddPacketResult AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
-			void Finish(); // Just for locally generated packets.
+			// Just for locally generated packets.
+			void Finish();
 			bool IsFull()
 			{
 				// NOTE: Since AddPendingChunks() is called at the end, we cannot track
@@ -315,13 +316,16 @@ namespace RTC
 		private:
 			uint16_t baseSequenceNumber{ 0u };
 			uint32_t referenceTime{ 0 };
-			uint16_t latestSequenceNumber{ 0u }; // Just for locally generated packets.
-			uint64_t latestTimestamp{ 0u };      // Just for locally generated packets.
+			// Just for locally generated packets.
+			uint16_t latestSequenceNumber{ 0u };
+			// Just for locally generated packets.
+			uint64_t latestTimestamp{ 0u };
 			uint16_t packetStatusCount{ 0u };
 			uint8_t feedbackPacketCount{ 0u };
 			std::vector<Chunk*> chunks;
 			std::vector<int16_t> deltas;
-			Context context; // Just for locally generated packets.
+			// Just for locally generated packets.
+			Context context;
 			size_t deltasAndChunksSize{ 0u };
 			size_t size{ 0 };
 			bool isCorrect{ true };
