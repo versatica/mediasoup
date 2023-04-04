@@ -63,12 +63,6 @@ namespace RTC
 	}
 
 	template<typename T, uint8_t N>
-	void SeqManager<T, N>::Offset(T offset)
-	{
-		this->base = (this->base + offset) & MaxValue;
-	}
-
-	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::Input(const T input, T& output)
 	{
 		auto base = this->base;
