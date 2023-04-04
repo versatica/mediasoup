@@ -120,7 +120,9 @@ namespace RTC
 				uint16_t wideSeqNumber;
 
 				if (!packet->ReadTransportWideCc01(wideSeqNumber))
+				{
 					break;
+				}
 
 				// Update the RTCP media SSRC of the ongoing Transport-CC Feedback packet.
 				this->transportCcFeedbackSenderSsrc = 0u;
@@ -186,7 +188,9 @@ namespace RTC
 				uint32_t absSendTime;
 
 				if (!packet->ReadAbsSendTime(absSendTime))
+				{
 					break;
+				}
 
 				// NOTE: nowMs is uint64_t but we need to "convert" it to int64_t before
 				// we give it to libwebrtc lib (althought this is implicit in the
@@ -222,7 +226,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->transportCcFeedbackPacket->IsSerializable())
+		{
 			return;
+		}
 
 		auto latestWideSeqNumber = this->transportCcFeedbackPacket->GetLatestSequenceNumber();
 		auto latestTimestamp     = this->transportCcFeedbackPacket->GetLatestTimestamp();
@@ -232,17 +238,20 @@ namespace RTC
 		  this, this->transportCcFeedbackPacket.get());
 
 		// Update packet loss history.
-		const size_t expected_packets = this->transportCcFeedbackPacket->GetPacketStatusCount();
-		size_t lost_packets           = 0;
+		const size_t expectedPackets = this->transportCcFeedbackPacket->GetPacketStatusCount();
+		size_t lostPackets           = 0;
+
 		for (const auto& result : this->transportCcFeedbackPacket->GetPacketResults())
 		{
 			if (!result.received)
-				lost_packets += 1;
+			{
+				lostPackets += 1;
+			}
 		}
 
-		if (expected_packets > 0)
+		if (expectedPackets > 0)
 		{
-			this->UpdatePacketLoss(static_cast<double>(lost_packets) / expected_packets);
+			this->UpdatePacketLoss(static_cast<double>(lostPackets) / expectedPackets);
 		}
 
 		// Create a new feedback packet.
@@ -268,7 +277,9 @@ namespace RTC
 
 		// May fix unlimitedRembCounter.
 		if (this->unlimitedRembCounter > 0u && this->maxIncomingBitrate != 0u)
+		{
 			this->unlimitedRembCounter = 0u;
+		}
 
 		// In case this is the first unlimited REMB packet, send it fast.
 		// clang-format off
@@ -298,7 +309,9 @@ namespace RTC
 			this->limitationRembSentAtMs = nowMs;
 
 			if (this->unlimitedRembCounter > 0u)
+			{
 				this->unlimitedRembCounter--;
+			}
 		}
 	}
 
@@ -306,7 +319,9 @@ namespace RTC
 	{
 		// Add the score into the histogram.
 		if (this->packetLossHistory.size() == PacketLossHistogramLength)
+		{
 			this->packetLossHistory.pop_front();
+		}
 
 		this->packetLossHistory.push_back(packetLoss);
 
@@ -337,7 +352,9 @@ namespace RTC
 
 		// Limit announced bitrate if requested via API.
 		if (this->maxIncomingBitrate != 0u)
+		{
 			availableBitrate = std::min(availableBitrate, this->maxIncomingBitrate);
+		}
 
 #if MS_LOG_DEV_LEVEL == 3
 		std::ostringstream ssrcsStream;
@@ -369,6 +386,8 @@ namespace RTC
 		MS_TRACE();
 
 		if (timer == this->transportCcFeedbackSendPeriodicTimer)
+		{
 			SendTransportCcFeedback();
+		}
 	}
 } // namespace RTC
