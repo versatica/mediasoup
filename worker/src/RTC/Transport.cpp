@@ -45,8 +45,6 @@ namespace RTC
 		{
 			this->direct         = true;
 			this->maxMessageSize = options->maxMessageSize();
-
-			MS_ERROR("MaxMessageSize: %zu", this->maxMessageSize);
 		}
 
 		this->initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
