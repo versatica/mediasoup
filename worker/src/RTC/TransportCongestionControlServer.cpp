@@ -240,7 +240,10 @@ namespace RTC
 				lost_packets += 1;
 		}
 
-		this->UpdatePacketLoss(static_cast<double>(lost_packets) / expected_packets);
+		if (expected_packets > 0)
+		{
+			this->UpdatePacketLoss(static_cast<double>(lost_packets) / expected_packets);
+		}
 
 		// Create a new feedback packet.
 		this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
