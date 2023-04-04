@@ -221,6 +221,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->transportCcFeedbackPacket->Finish();
+
 		if (!this->transportCcFeedbackPacket->IsSerializable())
 			return;
 
