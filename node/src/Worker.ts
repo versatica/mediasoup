@@ -641,7 +641,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 
 		await this.#channel.request('worker.createWebRtcServer', undefined, reqData);
 
-		const webRtcServer = new WebRtcServer(
+		const webRtcServer = new WebRtcServer<WebRtcServerAppData>(
 			{
 				internal : { webRtcServerId: reqData.webRtcServerId },
 				channel  : this.#channel,
