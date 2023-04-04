@@ -30,6 +30,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			this->dropped = false;
+
 			Log();
 			Clear();
 		}
