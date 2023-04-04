@@ -43,6 +43,16 @@ export type WebRtcServerListenInfo =
 	 * Listening port.
 	 */
 	port?: number;
+
+	/**
+	 * Send buffer size (bytes).
+	 */
+	sendBufferSize?: number;
+
+	/**
+	 * Recv buffer size (bytes).
+	 */
+	recvBufferSize?: number;
 };
 
 export type WebRtcServerEvents =

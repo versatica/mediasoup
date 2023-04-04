@@ -221,6 +221,76 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	}
 }
 
+uint32_t UnixStreamSocket::GetSendBufferSize() const
+{
+	MS_TRACE();
+
+	int size{ 0 };
+	int err = uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
+
+	if (err)
+	{
+		MS_THROW_ERROR_STD("uv_send_buffer_size() failed: %s", uv_strerror(err));
+	}
+
+	return static_cast<uint32_t>(size);
+}
+
+void UnixStreamSocket::SetSendBufferSize(uint32_t size)
+{
+	MS_TRACE();
+
+	auto size_int = static_cast<int>(size);
+
+	if (size_int <= 0)
+	{
+		MS_THROW_TYPE_ERROR_STD("invalid size: %d", size_int);
+	}
+
+	int err =
+	  uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size_int));
+
+	if (err)
+	{
+		MS_THROW_ERROR_STD("uv_send_buffer_size() failed: %s", uv_strerror(err));
+	}
+}
+
+uint32_t UnixStreamSocket::GetRecvBufferSize() const
+{
+	MS_TRACE();
+
+	int size{ 0 };
+	int err = uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
+
+	if (err)
+	{
+		MS_THROW_ERROR_STD("uv_recv_buffer_size() failed: %s", uv_strerror(err));
+	}
+
+	return static_cast<uint32_t>(size);
+}
+
+void UnixStreamSocket::SetRecvBufferSize(uint32_t size)
+{
+	MS_TRACE();
+
+	auto size_int = static_cast<int>(size);
+
+	if (size_int <= 0)
+	{
+		MS_THROW_TYPE_ERROR_STD("invalid size: %d", size_int);
+	}
+
+	int err =
+	  uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size_int));
+
+	if (err)
+	{
+		MS_THROW_ERROR_STD("uv_recv_buffer_size() failed: %s", uv_strerror(err));
+	}
+}
+
 inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE_STD();

@@ -47,6 +47,10 @@ public:
 		return this->closed;
 	}
 	void Write(const uint8_t* data, size_t len);
+	uint32_t GetSendBufferSize() const;
+	void SetSendBufferSize(uint32_t size);
+	uint32_t GetRecvBufferSize() const;
+	void SetRecvBufferSize(uint32_t size);
 
 	/* Callbacks fired by UV events. */
 public:

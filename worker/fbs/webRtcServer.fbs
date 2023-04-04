@@ -7,6 +7,8 @@ table ListenInfo {
   ip:string (required);
   announced_ip:string;
   port:uint16 = 0;
+  send_buffer_size:uint32 = 0;
+  recv_buffer_size:uint32 = 0;
 }
 
 table IpPort {
