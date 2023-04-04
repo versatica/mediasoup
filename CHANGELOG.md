@@ -1,6 +1,11 @@
 # Changelog
 
 
+### Next
+
+* Add `sendBufferSize` and `recvBufferSize` to `WebRtcServerOptions.listenInfos` ([PR #1052](https://github.com/versatica/mediasoup/pull/1052)).
+
+
 ### 3.11.21
 
 * Fix check division by zero in transport congestion control ([PR #1049](https://github.com/versatica/mediasoup/pull/1049) by @ggarber).
