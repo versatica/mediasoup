@@ -5,15 +5,16 @@ import { TransportInternal } from './Transport';
 import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
 import { Event, Notification } from './fbs/notification';
 import { parseRtpStreamRecvStats, RtpStreamRecvStats } from './RtpStream';
+import { AppData } from './types';
+import * as utils from './utils';
 import * as FbsNotification from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
 import * as FbsProducer from './fbs/producer';
 import * as FbsProducerTraceInfo from './fbs/producer/trace-info';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
-import * as utils from './utils';
 
-export type ProducerOptions =
+export type ProducerOptions<ProducerAppData extends AppData = AppData> =
 {
 	/**
 	 * Producer id (just for Router.pipeToRouter() method).
@@ -44,7 +45,7 @@ export type ProducerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: ProducerAppData;
 };
 
 /**
@@ -167,7 +168,8 @@ type ProducerData =
 
 const logger = new Logger('Producer');
 
-export class Producer extends EnhancedEventEmitter<ProducerEvents>
+export class Producer<ProducerAppData extends AppData = AppData>
+	extends EnhancedEventEmitter<ProducerEvents>
 {
 	// Internal data.
 	readonly #internal: ProducerInternal;
@@ -182,7 +184,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData: Record<string, unknown>;
+	#appData: ProducerAppData;
 
 	// Paused flag.
 	#paused = false;
@@ -208,7 +210,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 			internal: ProducerInternal;
 			data: ProducerData;
 			channel: Channel;
-			appData?: Record<string, unknown>;
+			appData?: ProducerAppData;
 			paused: boolean;
 		}
 	)
@@ -220,7 +222,7 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#appData = appData || {};
+		this.#appData = appData || {} as ProducerAppData;
 		this.#paused = paused;
 
 		this.handleWorkerNotifications();
@@ -295,17 +297,17 @@ export class Producer extends EnhancedEventEmitter<ProducerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): Record<string, unknown>
+	get appData(): ProducerAppData
 	{
 		return this.#appData;
 	}
 
 	/**
-	 * Invalid setter.
+	 * App custom data setter.
 	 */
-	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
+	set appData(appData: ProducerAppData)
 	{
-		throw new Error('cannot override appData object');
+		this.#appData = appData;
 	}
 
 	/**

@@ -19,13 +19,17 @@ import {
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
+import { AppData } from './types';
+import { Either, parseVector } from './utils';
 import { Event, Notification } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
 import * as FbsWebRtcTransport from './fbs/web-rtc-transport';
 import { DtlsState as FbsDtlsState } from './fbs/web-rtc-transport/dtls-state';
 import { IceState as FbsIceState } from './fbs/web-rtc-transport/ice-state';
-import { Either, parseVector } from './utils';
+
+export type WebRtcTransportOptions<WebRtcTransportAppData extends AppData = AppData> =
+	WebRtcTransportOptionsBase<WebRtcTransportAppData> & WebRtcTransportListen;
 
 export type WebRtcTransportListenIndividual =
 {
@@ -53,7 +57,7 @@ export type WebRtcTransportListenServer =
 export type WebRtcTransportListen =
 	Either<WebRtcTransportListenIndividual, WebRtcTransportListenServer>;
 
-export type WebRtcTransportOptionsBase =
+export type WebRtcTransportOptionsBase<WebRtcTransportAppData> =
 {
 	/**
 	 * Listen in UDP. Default true.
@@ -105,10 +109,8 @@ export type WebRtcTransportOptionsBase =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: WebRtcTransportAppData;
 };
-
-export type WebRtcTransportOptions = WebRtcTransportOptionsBase & WebRtcTransportListen;
 
 export type IceParameters =
 {
@@ -177,10 +179,11 @@ export type WebRtcTransportObserverEvents = TransportObserverEvents &
 	sctpstatechange: [SctpState];
 };
 
-type WebRtcTransportConstructorOptions = TransportConstructorOptions &
-{
-	data: WebRtcTransportData;
-};
+type WebRtcTransportConstructorOptions<WebRtcTransportAppData> =
+	TransportConstructorOptions<WebRtcTransportAppData> &
+	{
+		data: WebRtcTransportData;
+	};
 
 export type WebRtcTransportData =
 {
@@ -210,8 +213,8 @@ type WebRtcTransportDump = BaseTransportDump &
 
 const logger = new Logger('WebRtcTransport');
 
-export class WebRtcTransport extends
-	Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents>
+export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
+	extends Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents, WebRtcTransportAppData>
 {
 	// WebRtcTransport data.
 	readonly #data: WebRtcTransportData;
@@ -219,7 +222,7 @@ export class WebRtcTransport extends
 	/**
 	 * @private
 	 */
-	constructor(options: WebRtcTransportConstructorOptions)
+	constructor(options: WebRtcTransportConstructorOptions<WebRtcTransportAppData>)
 	{
 		super(options);
 

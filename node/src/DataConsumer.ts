@@ -3,12 +3,13 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { TransportInternal } from './Transport';
 import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
+import { AppData } from './types';
 import { Event, Notification } from './fbs/notification';
 import * as FbsTransport from './fbs/transport';
 import * as FbsRequest from './fbs/request';
 import * as FbsDataConsumer from './fbs/data-consumer';
 
-export type DataConsumerOptions =
+export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
 {
 	/**
 	 * The id of the DataProducer to consume.
@@ -42,7 +43,7 @@ export type DataConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: DataConsumerAppData;
 };
 
 export type DataConsumerStat =
@@ -98,7 +99,8 @@ type DataConsumerData =
 
 const logger = new Logger('DataConsumer');
 
-export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
+export class DataConsumer<DataConsumerAppData extends AppData = AppData>
+	extends EnhancedEventEmitter<DataConsumerEvents>
 {
 	// Internal data.
 	readonly #internal: DataConsumerInternal;
@@ -113,7 +115,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData: Record<string, unknown>;
+	#appData: DataConsumerAppData;
 
 	// Observer instance.
 	readonly #observer = new EnhancedEventEmitter<DataConsumerObserverEvents>();
@@ -132,7 +134,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 			internal: DataConsumerInternal;
 			data: DataConsumerData;
 			channel: Channel;
-			appData?: Record<string, unknown>;
+			appData?: DataConsumerAppData;
 		}
 	)
 	{
@@ -143,7 +145,7 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#appData = appData || {};
+		this.#appData = appData || {} as DataConsumerAppData;
 
 		this.handleWorkerNotifications();
 	}
@@ -207,17 +209,17 @@ export class DataConsumer extends EnhancedEventEmitter<DataConsumerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): Record<string, unknown>
+	get appData(): DataConsumerAppData
 	{
 		return this.#appData;
 	}
 
 	/**
-	 * Invalid setter.
+	 * App custom data setter.
 	 */
-	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
+	set appData(appData: DataConsumerAppData)
 	{
-		throw new Error('cannot override appData object');
+		this.#appData = appData;
 	}
 
 	/**

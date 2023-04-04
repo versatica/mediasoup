@@ -18,6 +18,7 @@ import { ActiveSpeakerObserver, ActiveSpeakerObserverOptions } from './ActiveSpe
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
+import { AppData } from './types';
 import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
 import * as FbsAudioLevelObserver from './fbs/audio-level-observer';
 import * as FbsRequest from './fbs/request';
@@ -30,7 +31,7 @@ import * as FbsWebRtcTransport from './fbs/web-rtc-transport';
 import * as FbsTransport from './fbs/transport';
 import * as FbsSctpParameters from './fbs/sctp-parameters';
 
-export type RouterOptions =
+export type RouterOptions<RouterAppData extends AppData = AppData> =
 {
 	/**
 	 * Router media codecs.
@@ -40,7 +41,7 @@ export type RouterOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: RouterAppData;
 };
 
 export type PipeToRouterOptions =
@@ -140,7 +141,8 @@ type RouterData =
 
 const logger = new Logger('Router');
 
-export class Router extends EnhancedEventEmitter<RouterEvents>
+export class Router<RouterAppData extends AppData = AppData>
+	extends EnhancedEventEmitter<RouterEvents>
 {
 	// Internal data.
 	readonly #internal: RouterInternal;
@@ -155,7 +157,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData: Record<string, unknown>;
+	#appData: RouterAppData;
 
 	// Transports map.
 	readonly #transports: Map<string, Transport> = new Map();
@@ -191,7 +193,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			internal: RouterInternal;
 			data: RouterData;
 			channel: Channel;
-			appData?: Record<string, unknown>;
+			appData?: RouterAppData;
 		}
 	)
 	{
@@ -202,7 +204,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#appData = appData || {};
+		this.#appData = appData || {} as RouterAppData;
 	}
 
 	/**
@@ -232,17 +234,17 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): Record<string, unknown>
+	get appData(): RouterAppData
 	{
 		return this.#appData;
 	}
 
 	/**
-	 * Invalid setter.
+	 * App custom data setter.
 	 */
-	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
+	set appData(appData: RouterAppData)
 	{
-		throw new Error('cannot override appData object');
+		this.#appData = appData;
 	}
 
 	/**
@@ -379,7 +381,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	/**
 	 * Create a WebRtcTransport.
 	 */
-	async createWebRtcTransport(
+	async createWebRtcTransport<WebRtcTransportAppData extends AppData = AppData>(
 		{
 			webRtcServer,
 			listenIps,
@@ -394,8 +396,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			maxSctpMessageSize = 262144,
 			sctpSendBufferSize = 262144,
 			appData
-		}: WebRtcTransportOptions
-	): Promise<WebRtcTransport>
+		}: WebRtcTransportOptions<WebRtcTransportAppData>
+	): Promise<WebRtcTransport<WebRtcTransportAppData>>
 	{
 		logger.debug('createWebRtcTransport()');
 
@@ -512,7 +514,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const webRtcTransportData = parseWebRtcTransportDumpResponse(data);
 
-		const transport = new WebRtcTransport(
+		const transport = new WebRtcTransport<WebRtcTransportAppData>(
 			{
 				internal :
 				{
@@ -557,7 +559,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	/**
 	 * Create a PlainTransport.
 	 */
-	async createPlainTransport(
+	async createPlainTransport<PlainTransportAppData extends AppData = AppData>(
 		{
 			listenIp,
 			port,
@@ -570,8 +572,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			enableSrtp = false,
 			srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
 			appData
-		}: PlainTransportOptions
-	): Promise<PlainTransport>
+		}: PlainTransportOptions<PlainTransportAppData>
+	): Promise<PlainTransport<PlainTransportAppData>>
 	{
 		logger.debug('createPlainTransport()');
 
@@ -652,7 +654,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const plainTransportData = parsePlainTransportDumpResponse(data);
 
-		const transport = new PlainTransport(
+		const transport = new PlainTransport<PlainTransportAppData>(
 			{
 				internal :
 				{
@@ -692,7 +694,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	/**
 	 * Create a PipeTransport.
 	 */
-	async createPipeTransport(
+	async createPipeTransport<PipeTransportAppData extends AppData = AppData>(
 		{
 			listenIp,
 			port,
@@ -703,8 +705,8 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			enableRtx = false,
 			enableSrtp = false,
 			appData
-		}: PipeTransportOptions
-	): Promise<PipeTransport>
+		}: PipeTransportOptions<PipeTransportAppData>
+	): Promise<PipeTransport<PipeTransportAppData>>
 	{
 		logger.debug('createPipeTransport()');
 
@@ -774,7 +776,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const plainTransportData = parsePipeTransportDumpResponse(data);
 
-		const transport = new PipeTransport(
+		const transport = new PipeTransport<PipeTransportAppData>(
 			{
 				internal :
 				{
@@ -814,15 +816,15 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	/**
 	 * Create a DirectTransport.
 	 */
-	async createDirectTransport(
+	async createDirectTransport<DirectTransportAppData extends AppData = AppData>(
 		{
 			maxMessageSize = 262144,
 			appData
-		}: DirectTransportOptions =
+		}: DirectTransportOptions<DirectTransportAppData> =
 		{
 			maxMessageSize : 262144
 		}
-	): Promise<DirectTransport>
+	): Promise<DirectTransport<DirectTransportAppData>>
 	{
 		logger.debug('createDirectTransport()');
 
@@ -871,7 +873,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 
 		const directTransportData = parseDirectTransportDumpResponse(data);
 
-		const transport = new DirectTransport(
+		const transport = new DirectTransport<DirectTransportAppData>(
 			{
 				internal :
 				{
@@ -1232,12 +1234,12 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	/**
 	 * Create an ActiveSpeakerObserver
 	 */
-	async createActiveSpeakerObserver(
+	async createActiveSpeakerObserver<ActiveSpeakerObserverAppData extends AppData = AppData>(
 		{
 			interval = 300,
 			appData
-		}: ActiveSpeakerObserverOptions = {}
-	): Promise<ActiveSpeakerObserver>
+		}: ActiveSpeakerObserverOptions<ActiveSpeakerObserverAppData> = {}
+	): Promise<ActiveSpeakerObserver<ActiveSpeakerObserverAppData>>
 	{
 		logger.debug('createActiveSpeakerObserver()');
 
@@ -1271,7 +1273,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			this.#internal.routerId
 		);
 
-		const activeSpeakerObserver = new ActiveSpeakerObserver(
+		const activeSpeakerObserver = new ActiveSpeakerObserver<ActiveSpeakerObserverAppData>(
 			{
 				internal :
 				{
@@ -1300,14 +1302,14 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 	/**
 	 * Create an AudioLevelObserver.
 	 */
-	async createAudioLevelObserver(
+	async createAudioLevelObserver<AudioLevelObserverAppData extends AppData = AppData>(
 		{
 			maxEntries = 1,
 			threshold = -80,
 			interval = 1000,
 			appData
-		}: AudioLevelObserverOptions = {}
-	): Promise<AudioLevelObserver>
+		}: AudioLevelObserverOptions<AudioLevelObserverAppData> = {}
+	): Promise<AudioLevelObserver<AudioLevelObserverAppData>>
 	{
 		logger.debug('createAudioLevelObserver()');
 
@@ -1350,7 +1352,7 @@ export class Router extends EnhancedEventEmitter<RouterEvents>
 			this.#internal.routerId
 		);
 
-		const audioLevelObserver = new AudioLevelObserver(
+		const audioLevelObserver = new AudioLevelObserver<AudioLevelObserverAppData>(
 			{
 				internal :
 				{

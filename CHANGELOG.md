@@ -1,6 +1,25 @@
 # Changelog
 
 
+### 3.11.21
+
+* Fix check division by zero in transport congestion control ([PR #1049](https://github.com/versatica/mediasoup/pull/1049) by @ggarber).
+* Fix lost pending statuses in transport CC feedback ([PR #1050](https://github.com/versatica/mediasoup/pull/1050) by @ggarber).
+
+
+### 3.11.20
+
+* `RtpStreamSend`: Reset RTP retransmission buffer upon RTP sequence number reset ([PR #1041](https://github.com/versatica/mediasoup/pull/1041)).
+* `RtpRetransmissionBuffer`: Handle corner case in which received packet has lower seq than newest packet in the buffer but higher timestamp  ([PR #1044](https://github.com/versatica/mediasoup/pull/1044)).
+* `SeqManager`: Fix crash and add fuzzer ([PR #1045](https://github.com/versatica/mediasoup/pull/1045)).
+* Node: Make `appData` TS typed and writable ([PR #1046](https://github.com/versatica/mediasoup/pull/1046), credits to @mango-martin).
+
+
+### 3.11.19
+
+* `SvcConsumer`: Properly handle VP9 K-SVC bandwidth allocation ([PR #1036](https://github.com/versatica/mediasoup/pull/1036) by @vpalmisano).
+
+
 ### 3.11.18
 
 * `RtpRetransmissionBuffer`: Consider the case of packet with newest timestamp but "old" seq number ([PR #1039](https://github.com/versatica/mediasoup/pull/1039)).

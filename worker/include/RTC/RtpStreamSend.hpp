@@ -54,6 +54,10 @@ namespace RTC
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
+		/* Pure virtual methods inherited from RTC::RtpStream. */
+	public:
+		void UserOnSequenceNumberReset() override;
+
 	private:
 		// Packets lost at last interval for score calculation.
 		uint32_t lostPriorScore{ 0u };

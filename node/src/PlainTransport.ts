@@ -17,13 +17,19 @@ import {
 	SctpState
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import { parseSrtpParameters, serializeSrtpParameters, SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
+import {
+	parseSrtpParameters,
+	serializeSrtpParameters,
+	SrtpParameters,
+	SrtpCryptoSuite
+} from './SrtpParameters';
+import { AppData } from './types';
 import { Event, Notification } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
 import * as FbsPlainTransport from './fbs/plain-transport';
 
-export type PlainTransportOptions =
+export type PlainTransportOptions<PlainTransportAppData extends AppData = AppData> =
 {
 	/**
 	 * Listening IP address.
@@ -86,7 +92,7 @@ export type PlainTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: PlainTransportAppData;
 };
 
 export type PlainTransportStat = BaseTransportStats &
@@ -112,10 +118,11 @@ export type PlainTransportObserverEvents = TransportObserverEvents &
 	sctpstatechange: [SctpState];	
 };
 
-type PlainTransportConstructorOptions = TransportConstructorOptions &
-{
-	data: PlainTransportData;
-};
+type PlainTransportConstructorOptions<PlainTransportAppData> =
+	TransportConstructorOptions<PlainTransportAppData> &
+	{
+		data: PlainTransportData;
+	};
 
 export type PlainTransportData =
 {
@@ -139,8 +146,8 @@ type PlainTransportDump = BaseTransportDump &
 
 const logger = new Logger('PlainTransport');
 
-export class PlainTransport extends
-	Transport<PlainTransportEvents, PlainTransportObserverEvents>
+export class PlainTransport<PlainTransportAppData extends AppData = AppData>
+	extends Transport<PlainTransportEvents, PlainTransportObserverEvents, PlainTransportAppData>
 {
 	// PlainTransport data.
 	readonly #data: PlainTransportData;
@@ -148,7 +155,7 @@ export class PlainTransport extends
 	/**
 	 * @private
 	 */
-	constructor(options: PlainTransportConstructorOptions)
+	constructor(options: PlainTransportConstructorOptions<PlainTransportAppData>)
 	{
 		super(options);
 

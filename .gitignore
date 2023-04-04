@@ -1,6 +1,7 @@
 ## Meson.
 /worker/subprojects/*
 !/worker/subprojects/*.wrap
+!/worker/subprojects/.clang-tidy
 
 ## Node.
 /node_modules

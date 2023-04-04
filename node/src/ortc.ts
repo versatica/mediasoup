@@ -437,9 +437,8 @@ export function validateRtpCodecParameters(codec: RtpCodecParameters): void
 }
 
 /**
- * Validates RtpHeaderExtensionParameteters. It may modify given data by adding missing
- * fields with default values.
- * It throws if invalid.
+ * Validates RtpHeaderExtensionParameteters. It may modify given data by adding
+ * missing fields with default values. It throws if invalid.
  */
 export function validateRtpHeaderExtensionParameters(
 	ext: RtpHeaderExtensionParameters

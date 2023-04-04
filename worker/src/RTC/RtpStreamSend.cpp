@@ -52,7 +52,7 @@ namespace RTC
 					break;
 				}
 
-				case RTC::RtpCodecMimeType::Type::UNSET:
+				default:
 				{
 					MS_ABORT("codec mimeType not set");
 				}
@@ -630,5 +630,16 @@ namespace RTC
 #endif
 
 		RtpStream::UpdateScore(score);
+	}
+
+	void RtpStreamSend::UserOnSequenceNumberReset()
+	{
+		MS_TRACE();
+
+		// Clear retransmission buffer.
+		if (this->retransmissionBuffer)
+		{
+			this->retransmissionBuffer->Clear();
+		}
 	}
 } // namespace RTC

@@ -7,17 +7,18 @@ import {
 	RtpObserverConstructorOptions
 } from './RtpObserver';
 import { Producer } from './Producer';
+import { AppData } from './types';
 import { Event, Notification } from './fbs/notification';
 import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
 
-export type ActiveSpeakerObserverOptions =
+export type ActiveSpeakerObserverOptions<ActiveSpeakerObserverAppData extends AppData = AppData> =
 {
 	interval?: number;
 
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: ActiveSpeakerObserverAppData;
 };
 
 export type ActiveSpeakerObserverDominantSpeaker =
@@ -38,16 +39,18 @@ export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents &
 	dominantspeaker: [ActiveSpeakerObserverDominantSpeaker];
 };
 
-type RtpObserverObserverConstructorOptions = RtpObserverConstructorOptions;
+type RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData> =
+	RtpObserverConstructorOptions<ActiveSpeakerObserverAppData>;
 
 const logger = new Logger('ActiveSpeakerObserver');
 
-export class ActiveSpeakerObserver extends RtpObserver<ActiveSpeakerObserverEvents>
+export class ActiveSpeakerObserver<ActiveSpeakerObserverAppData extends AppData = AppData>
+	extends RtpObserver<ActiveSpeakerObserverEvents, ActiveSpeakerObserverAppData>
 {
 	/**
 	 * @private
 	 */
-	constructor(options: RtpObserverObserverConstructorOptions)
+	constructor(options: RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData>)
 	{
 		super(options);
 

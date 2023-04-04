@@ -12,6 +12,8 @@ import {
 	parseRtpParameters
 } from './RtpParameters';
 import { parseRtpStreamStats, RtpStreamSendStats } from './RtpStream';
+import { AppData } from './types';
+import * as utils from './utils';
 import { Event, Notification } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
@@ -21,9 +23,8 @@ import * as FbsRtpStream from './fbs/rtp-stream';
 import * as FbsRtxStream from './fbs/rtx-stream';
 import { Type as FbsRtpParametersType } from './fbs/rtp-parameters';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
-import * as utils from './utils';
 
-export type ConsumerOptions =
+export type ConsumerOptions<ConsumerAppData extends AppData = AppData> =
 {
 	/**
 	 * The id of the Producer to consume.
@@ -88,7 +89,7 @@ export type ConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: ConsumerAppData;
 };
 
 /**
@@ -281,7 +282,8 @@ type RtxStreamDump = {
 
 const logger = new Logger('Consumer');
 
-export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
+export class Consumer<ConsumerAppData extends AppData = AppData>
+	extends EnhancedEventEmitter<ConsumerEvents>
 {
 	// Internal data.
 	readonly #internal: ConsumerInternal;
@@ -296,7 +298,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	#closed = false;
 
 	// Custom app data.
-	readonly #appData: Record<string, unknown>;
+	#appData: ConsumerAppData;
 
 	// Paused flag.
 	#paused = false;
@@ -337,7 +339,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 			internal: ConsumerInternal;
 			data: ConsumerData;
 			channel: Channel;
-			appData?: Record<string, unknown>;
+			appData?: ConsumerAppData;
 			paused: boolean;
 			producerPaused: boolean;
 			score?: ConsumerScore;
@@ -351,7 +353,7 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#appData = appData || {};
+		this.#appData = appData || {} as ConsumerAppData;
 		this.#paused = paused;
 		this.#producerPaused = producerPaused;
 		this.#score = score;
@@ -459,17 +461,17 @@ export class Consumer extends EnhancedEventEmitter<ConsumerEvents>
 	/**
 	 * App custom data.
 	 */
-	get appData(): Record<string, unknown>
+	get appData(): ConsumerAppData
 	{
 		return this.#appData;
 	}
 
 	/**
-	 * Invalid setter.
+	 * App custom data setter.
 	 */
-	set appData(appData: Record<string, unknown>) // eslint-disable-line no-unused-vars
+	set appData(appData: ConsumerAppData)
 	{
-		throw new Error('cannot override appData object');
+		this.#appData = appData;
 	}
 
 	/**

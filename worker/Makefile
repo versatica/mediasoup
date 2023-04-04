@@ -232,9 +232,9 @@ format:
 test: setup
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-test
+ifeq ($(OS),Windows_NT)
 	# On Windows lcov doesn't work (at least not yet) and we need to add `.exe` to
 	# the binary path.
-ifeq ($(OS),Windows_NT)
 	$(BUILD_DIR)/mediasoup-worker-test.exe --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 else
 	$(LCOV) --directory ./ --zerocounters

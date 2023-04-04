@@ -5,6 +5,7 @@ import * as utils from './utils';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { RtpCapabilities } from './RtpParameters';
 import * as types from './types';
+import { AppData } from './types';
 
 /**
  * Expose all types.
@@ -38,7 +39,7 @@ export { observer };
 /**
  * Create a Worker.
  */
-export async function createWorker(
+export async function createWorker<WorkerAppData extends AppData = AppData>(
 	{
 		logLevel = 'error',
 		logTags,
@@ -48,8 +49,8 @@ export async function createWorker(
 		dtlsPrivateKeyFile,
 		libwebrtcFieldTrials,
 		appData
-	}: WorkerSettings = {}
-): Promise<Worker>
+	}: WorkerSettings<WorkerAppData> = {}
+): Promise<Worker<WorkerAppData>>
 {
 	logger.debug('createWorker()');
 
@@ -58,7 +59,7 @@ export async function createWorker(
 		throw new TypeError('if given, appData must be an object');
 	}
 
-	const worker = new Worker(
+	const worker = new Worker<WorkerAppData>(
 		{
 			logLevel,
 			logTags,

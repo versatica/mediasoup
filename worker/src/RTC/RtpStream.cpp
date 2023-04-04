@@ -28,6 +28,7 @@ namespace RTC
 		MS_TRACE();
 
 		delete this->rtxStream;
+		this->rtxStream = nullptr;
 	}
 
 	flatbuffers::Offset<FBS::RtpStream::Dump> RtpStream::FillBuffer(
@@ -213,6 +214,9 @@ namespace RTC
 
 				this->maxPacketTs = packet->GetTimestamp();
 				this->maxPacketMs = DepLibUV::GetTimeMs();
+
+				// Notify the subclass about it.
+				UserOnSequenceNumberReset();
 			}
 			else
 			{

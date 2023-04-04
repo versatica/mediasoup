@@ -843,6 +843,13 @@ namespace RTC
 		RtpStream::UpdateScore(score);
 	}
 
+	void RtpStreamRecv::UserOnSequenceNumberReset()
+	{
+		MS_TRACE();
+
+		// Nothing to do.
+	}
+
 	inline void RtpStreamRecv::OnTimer(Timer* timer)
 	{
 		MS_TRACE();

@@ -22,7 +22,12 @@ import { Consumer, ConsumerType } from './Consumer';
 import { Producer } from './Producer';
 import { RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import { parseSrtpParameters, serializeSrtpParameters, SrtpParameters } from './SrtpParameters';
+import {
+	parseSrtpParameters,
+	serializeSrtpParameters,
+	SrtpParameters
+} from './SrtpParameters';
+import { AppData } from './types';
 import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 import { Event, Notification } from './fbs/notification';
@@ -30,7 +35,7 @@ import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
 import * as FbsPipeTransport from './fbs/pipe-transport';
 
-export type PipeTransportOptions =
+export type PipeTransportOptions<PipeTransportAppData extends AppData = AppData> =
 {
 	/**
 	 * Listening IP address.
@@ -82,7 +87,7 @@ export type PipeTransportOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: PipeTransportAppData;
 };
 
 export type PipeTransportStat = BaseTransportStats &
@@ -91,7 +96,7 @@ export type PipeTransportStat = BaseTransportStats &
 	tuple: TransportTuple;
 };
 
-export type PipeConsumerOptions =
+export type PipeConsumerOptions<ConsumerAppData> =
 {
 	/**
 	 * The id of the Producer to consume.
@@ -101,7 +106,7 @@ export type PipeConsumerOptions =
 	/**
 	 * Custom application data.
 	 */
-	appData?: Record<string, unknown>;
+	appData?: ConsumerAppData;
 };
 
 export type PipeTransportEvents = TransportEvents &
@@ -114,10 +119,11 @@ export type PipeTransportObserverEvents = TransportObserverEvents &
 	sctpstatechange: [SctpState];
 };
 
-type PipeTransportConstructorOptions = TransportConstructorOptions &
-{
-	data: PipeTransportData;
-};
+type PipeTransportConstructorOptions<PipeTransportAppData> =
+	TransportConstructorOptions<PipeTransportAppData> &
+	{
+		data: PipeTransportData;
+	};
 
 export type PipeTransportData =
 {
@@ -137,8 +143,8 @@ export type PipeTransportDump = BaseTransportDump &
 
 const logger = new Logger('PipeTransport');
 
-export class PipeTransport
-	extends Transport<PipeTransportEvents, PipeTransportObserverEvents>
+export class PipeTransport<PipeTransportAppData extends AppData = AppData>
+	extends Transport<PipeTransportEvents, PipeTransportObserverEvents, PipeTransportAppData>
 {
 	// PipeTransport data.
 	readonly #data: PipeTransportData;
@@ -146,7 +152,7 @@ export class PipeTransport
 	/**
 	 * @private
 	 */
-	constructor(options: PipeTransportConstructorOptions)
+	constructor(options: PipeTransportConstructorOptions<PipeTransportAppData>)
 	{
 		super(options);
 
@@ -315,7 +321,12 @@ export class PipeTransport
 	 *
 	 * @override
 	 */
-	async consume({ producerId, appData }: PipeConsumerOptions): Promise<Consumer>
+	async consume<ConsumerAppData extends AppData = AppData>(
+		{
+			producerId,
+			appData
+		}: PipeConsumerOptions<ConsumerAppData>
+	): Promise<Consumer<ConsumerAppData>>
 	{
 		logger.debug('consume()');
 
@@ -374,7 +385,7 @@ export class PipeTransport
 			type : 'pipe' as ConsumerType
 		};
 
-		const consumer = new Consumer(
+		const consumer = new Consumer<ConsumerAppData>(
 			{
 				internal :
 				{
