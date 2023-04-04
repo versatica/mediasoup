@@ -201,6 +201,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		packet->logger.consumerId = this->id;
+
 		if (!IsActive())
 		{
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::CONSUMER_INACTIVE);
