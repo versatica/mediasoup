@@ -11,9 +11,8 @@ constexpr uint16_t kMaxNumberFor15Bits = (1 << 15) - 1;
 template<typename T>
 struct TestSeqManagerInput
 {
-	TestSeqManagerInput(
-	  T input, T output, bool sync = false, bool drop = false, T offset = 0, int64_t maxInput = -1)
-	  : input(input), output(output), sync(sync), drop(drop), offset(offset), maxInput(maxInput)
+	TestSeqManagerInput(T input, T output, bool sync = false, bool drop = false, int64_t maxInput = -1)
+	  : input(input), output(output), sync(sync), drop(drop), maxInput(maxInput)
 	{
 	}
 
@@ -21,7 +20,6 @@ struct TestSeqManagerInput
 	T output{ 0 };
 	bool sync{ false };
 	bool drop{ false };
-	T offset{ 0 };
 	int64_t maxInput{ -1 };
 };
 
@@ -31,10 +29,9 @@ void validate(SeqManager<T, N>& seqManager, std::vector<TestSeqManagerInput<T>>&
 	for (auto& element : inputs)
 	{
 		if (element.sync)
+		{
 			seqManager.Sync(element.input - 1);
-
-		if (element.offset)
-			seqManager.Offset(element.offset);
+		}
 
 		if (element.drop)
 		{
@@ -299,14 +296,14 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{  0,  0, false, false     },
-			{  1,  1, false, false     },
-			{  2,  2, false, false     },
-			{ 80, 23,  true, false, 20 },
-			{ 81, 24, false, false     },
-			{ 82, 25, false, false     },
-			{ 83, 26, false, false     },
-			{ 84, 27, false, false     }
+			{  0,  0, false, false },
+			{  1,  1, false, false },
+			{  2,  2, false, false },
+			{ 80,  3,  true, false },
+			{ 81,  4, false, false },
+			{ 82,  5, false, false },
+			{ 83,  6, false, false },
+			{ 84,  7, false, false }
 		};
 		// clang-format on
 
@@ -553,16 +550,16 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 32762,  1,  true, false, 0, 32762 },
-			{ 32763,  2, false, false, 0, 32763 },
-			{ 32764,  3, false, false, 0, 32764 },
-			{ 32765,  0, false, true,  0, 32765 },
-			{ 32766,  0, false, true,  0, 32766 },
-			{ 32767,  4, false, false, 0, 32767 },
-			{     0,  5, false, false, 0,     0 },
-			{     1,  6, false, false, 0,     1 },
-			{     2,  7, false, false, 0,     2 },
-			{     3,  8, false, false, 0,     3 }
+			{ 32762,  1,  true, false, 32762 },
+			{ 32763,  2, false, false, 32763 },
+			{ 32764,  3, false, false, 32764 },
+			{ 32765,  0, false, true,  32765 },
+			{ 32766,  0, false, true,  32766 },
+			{ 32767,  4, false, false, 32767 },
+			{     0,  5, false, false,     0 },
+			{     1,  6, false, false,     1 },
+			{     2,  7, false, false,     2 },
+			{     3,  8, false, false,     3 }
 		};
 		// clang-format on
 
@@ -575,12 +572,12 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 1, true, false, 0, 0 },
+			{ 0, 1, true, false, 0 },
 		};
 		for (uint16_t j = 0; j < 3; ++j) {
 			for (uint16_t i = 1; i < std::numeric_limits<uint16_t>::max(); ++i) {
 				const uint16_t output = i + 1;
-				inputs.emplace_back( i, output, false, false, 0, i );
+				inputs.emplace_back( i, output, false, false, i );
 			}
 		}
 		// clang-format on
@@ -594,12 +591,12 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 0, 1, true, false, 0, 0 },
+			{ 0, 1, true, false, 0, },
 		};
 		for (uint16_t j = 0; j < 3; ++j) {
 			for (uint16_t i = 1; i < kMaxNumberFor15Bits; ++i) {
 				const uint16_t output = i + 1;
-				inputs.emplace_back( i, output, false, false, 0, i );
+				inputs.emplace_back( i, output, false, false, i );
 			}
 		}
 		// clang-format on
@@ -632,17 +629,17 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint8_t>> inputs =
 		{
-			{ 1, 1, false, false, 0 },
-			{ 2, 0, false, true,  0 }, // Drop.
-			{ 3, 2, false, false, 0 },
-			{ 4, 3, false, false, 0 },
-			{ 5, 4, false, false, 0 },
-			{ 6, 5, false, false, 0 },
-			{ 7, 6, false, false, 0 },
-			{ 0, 7, false, false, 0 },
-			{ 1, 0, false, false, 0 },
-			{ 2, 1, false, false, 0 },
-			{ 3, 2, false, false, 0 }
+			{ 1, 1, false, false },
+			{ 2, 0, false, true  }, // Drop.
+			{ 3, 2, false, false },
+			{ 4, 3, false, false },
+			{ 5, 4, false, false },
+			{ 6, 5, false, false },
+			{ 7, 6, false, false },
+			{ 0, 7, false, false },
+			{ 1, 0, false, false },
+			{ 2, 1, false, false },
+			{ 3, 2, false, false }
 		};
 		// clang-format on
 
@@ -655,33 +652,33 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 36964, 36964, false, false,  0 },
-			{ 25923,     0, false, true,   0 }, // Drop.
-			{ 25701, 25701, false, false,  0 },
-			{ 17170,     0, false, true,   0 }, // Drop.
-			{ 25923, 25923, false, false,  0 },
-			{  4728,     0, false, true,   0 }, // Drop.
-			{ 17170, 17170, false, false,  0 },
-			{ 30738,     0, false, true,   0 }, // Drop.
-			{  4728,  4728, false, false,  0 },
-			{  4806,     0, false, true,   0 }, // Drop.
-			{ 30738, 30738, false, false,  0 },
-			{ 50886,     0, false, true,   0 }, // Drop.
-			{  4806,  4805, false, false,  0 }, // Previously dropped.
-			{ 50774,     0, false, true,   0 }, // Drop.
-			{ 50886, 50884, false, false,  0 }, // Previously dropped.
-			{ 22136,     0, false, true,   0 }, // Drop.
-			{ 50774, 50884, false, false,  0 }, // Previously dropped.
-			{ 30910,     0, false, true,   0 }, // Drop.
-			{ 22136, 22134, false, false,  0 },
-			{ 48862,     0, false, true,   0 }, // Drop.
-			{ 30910, 30909, false, false,  0 },
-			{ 56832,     0, false, true,   0 }, // Drop.
-			{ 48862, 48861, false, false,  0 },
-			{     2,     0, false, true,   0 }, // Drop.
-			{ 56832, 56828, false, false,  0 },
-			{   530,     0, false, true,   0 }, // Drop.
-			{     2, 65534, false, false,  0 },
+			{ 36964, 36964, false, false },
+			{ 25923,     0, false, true  }, // Drop.
+			{ 25701, 25701, false, false },
+			{ 17170,     0, false, true  }, // Drop.
+			{ 25923, 25923, false, false },
+			{  4728,     0, false, true  }, // Drop.
+			{ 17170, 17170, false, false },
+			{ 30738,     0, false, true  }, // Drop.
+			{  4728,  4728, false, false },
+			{  4806,     0, false, true  }, // Drop.
+			{ 30738, 30738, false, false },
+			{ 50886,     0, false, true  }, // Drop.
+			{  4806,  4805, false, false }, // Previously dropped.
+			{ 50774,     0, false, true  }, // Drop.
+			{ 50886, 50884, false, false }, // Previously dropped.
+			{ 22136,     0, false, true  }, // Drop.
+			{ 50774, 50884, false, false }, // Previously dropped.
+			{ 30910,     0, false, true  }, // Drop.
+			{ 22136, 22134, false, false },
+			{ 48862,     0, false, true  }, // Drop.
+			{ 30910, 30909, false, false },
+			{ 56832,     0, false, true  }, // Drop.
+			{ 48862, 48861, false, false },
+			{     2,     0, false, true  }, // Drop.
+			{ 56832, 56828, false, false },
+			{   530,     0, false, true  }, // Drop.
+			{     2, 65534, false, false },
 		};
 		// clang-format on
 
@@ -694,13 +691,13 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 36960, 36960, false, false, 0 },
-			{  3328,     0, false, true,  0 }, // Drop.
-			{ 24589, 24588, false, false, 0 },
-			{   120,     0, false, true,  0 }, // Drop.
-			{  3328,  3326, false, false, 0 },
-			{ 30848,     0, false, true,  0 }, // Drop.
-			{   120,  3326, false, false, 0 }, // Previously dropped.
+			{ 36960, 36960, false, false },
+			{  3328,     0, false, true  }, // Drop.
+			{ 24589, 24588, false, false },
+			{   120,     0, false, true  }, // Drop.
+			{  3328,  3326, false, false },
+			{ 30848,     0, false, true  }, // Drop.
+			{   120,  3326, false, false }, // Previously dropped.
 		};
 		// clang-format on
 
@@ -713,15 +710,15 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 		// clang-format off
 		std::vector<TestSeqManagerInput<uint16_t>> inputs =
 		{
-			{ 36964, 36964, false, false, 0 },
-			{ 65396 ,    0, false, true,  0 }, // Drop.
-			{ 25855, 25854, false, false, 0 },
-			{ 29793 ,    0, false, true,  0 }, // Drop.
-			{ 65396, 65395, false, false, 0 },
-			{ 25087,    0,  false, true,  0 }, // Drop.
-			{ 29793, 29791, false, false, 0 },
-			{ 65535 ,    0, false, true,  0 }, // Drop.
-			{ 25087, 29791, false, false, 0 }, // Previously dropped.
+			{ 36964, 36964, false, false },
+			{ 65396 ,    0, false, true  }, // Drop.
+			{ 25855, 25854, false, false },
+			{ 29793 ,    0, false, true  }, // Drop.
+			{ 65396, 65395, false, false },
+			{ 25087,    0,  false, true  }, // Drop.
+			{ 29793, 29791, false, false },
+			{ 65535 ,    0, false, true  }, // Drop.
+			{ 25087, 29791, false, false }, // Previously dropped.
 		};
 		// clang-format on
 

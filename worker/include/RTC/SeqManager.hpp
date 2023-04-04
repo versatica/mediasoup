@@ -40,7 +40,6 @@ namespace RTC
 	public:
 		void Sync(T input);
 		void Drop(T input);
-		void Offset(T offset);
 		bool Input(const T input, T& output);
 		T GetMaxInput() const;
 		T GetMaxOutput() const;
