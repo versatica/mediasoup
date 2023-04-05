@@ -548,7 +548,7 @@ namespace RTC
 		DTLS_set_timer_cb(this->ssl, onSslDtlsTimer);
 
 		// Set the DTLS timer.
-		this->timer = new Timer(this);
+		this->timer = new TimerHandle(this);
 
 		return;
 
@@ -1409,7 +1409,7 @@ namespace RTC
 		// receipt of a close alert does not work (the flag is set after this callback).
 	}
 
-	inline void DtlsTransport::OnTimer(Timer* /*timer*/)
+	inline void DtlsTransport::OnTimer(TimerHandle* /*timer*/)
 	{
 		MS_TRACE();
 

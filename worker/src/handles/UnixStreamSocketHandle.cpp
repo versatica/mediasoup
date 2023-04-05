@@ -3,10 +3,10 @@
  * Channel.
  */
 
-#define MS_CLASS "UnixStreamSocket"
+#define MS_CLASS "UnixStreamSocketHandle"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "handles/UnixStreamSocket.hpp"
+#include "handles/UnixStreamSocketHandle.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -16,7 +16,7 @@
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	auto* socket = static_cast<UnixStreamSocket*>(handle->data);
+	auto* socket = static_cast<UnixStreamSocketHandle*>(handle->data);
 
 	if (socket)
 	{
@@ -26,7 +26,7 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 
 inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
-	auto* socket = static_cast<UnixStreamSocket*>(handle->data);
+	auto* socket = static_cast<UnixStreamSocketHandle*>(handle->data);
 
 	if (socket)
 	{
@@ -36,11 +36,11 @@ inline static void onRead(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
 
 inline static void onWrite(uv_write_t* req, int status)
 {
-	auto* writeData = static_cast<UnixStreamSocket::UvWriteData*>(req->data);
+	auto* writeData = static_cast<UnixStreamSocketHandle::UvWriteData*>(req->data);
 	auto* handle    = req->handle;
-	auto* socket    = static_cast<UnixStreamSocket*>(handle->data);
+	auto* socket    = static_cast<UnixStreamSocketHandle*>(handle->data);
 
-	// Just notify the UnixStreamSocket when error.
+	// Just notify the UnixStreamSocketHandle when error.
 	if (socket && status != 0)
 	{
 		socket->OnUvWriteError(status);
@@ -67,7 +67,8 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 
 /* Instance methods. */
 
-UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, UnixStreamSocket::Role role)
+UnixStreamSocketHandle::UnixStreamSocketHandle(
+  int fd, size_t bufferSize, UnixStreamSocketHandle::Role role)
   : bufferSize(bufferSize), role(role)
 {
 	MS_TRACE_STD();
@@ -96,7 +97,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, UnixStreamSocket::
 		MS_THROW_ERROR_STD("uv_pipe_open() failed: %s", uv_strerror(err));
 	}
 
-	if (this->role == UnixStreamSocket::Role::CONSUMER)
+	if (this->role == UnixStreamSocketHandle::Role::CONSUMER)
 	{
 		// Start reading.
 		err = uv_read_start(
@@ -115,7 +116,7 @@ UnixStreamSocket::UnixStreamSocket(int fd, size_t bufferSize, UnixStreamSocket::
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
 }
 
-UnixStreamSocket::~UnixStreamSocket()
+UnixStreamSocketHandle::~UnixStreamSocketHandle()
 {
 	MS_TRACE_STD();
 
@@ -127,7 +128,7 @@ UnixStreamSocket::~UnixStreamSocket()
 	}
 }
 
-void UnixStreamSocket::Close()
+void UnixStreamSocketHandle::Close()
 {
 	MS_TRACE_STD();
 
@@ -140,10 +141,10 @@ void UnixStreamSocket::Close()
 
 	this->closed = true;
 
-	// Tell the UV handle that the UnixStreamSocket has been closed.
+	// Tell the UV handle that the UnixStreamSocketHandle has been closed.
 	this->uvHandle->data = nullptr;
 
-	if (this->role == UnixStreamSocket::Role::CONSUMER)
+	if (this->role == UnixStreamSocketHandle::Role::CONSUMER)
 	{
 		// Don't read more.
 		err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
@@ -155,7 +156,7 @@ void UnixStreamSocket::Close()
 	}
 
 	// If there is no error and the peer didn't close its pipe side then close gracefully.
-	if (this->role == UnixStreamSocket::Role::PRODUCER && !this->hasError && !this->isClosedByPeer)
+	if (this->role == UnixStreamSocketHandle::Role::PRODUCER && !this->hasError && !this->isClosedByPeer)
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
 		auto* req = new uv_shutdown_t;
@@ -175,7 +176,7 @@ void UnixStreamSocket::Close()
 	}
 }
 
-void UnixStreamSocket::Write(const uint8_t* data, size_t len)
+void UnixStreamSocketHandle::Write(const uint8_t* data, size_t len)
 {
 	MS_TRACE_STD();
 
@@ -239,7 +240,7 @@ void UnixStreamSocket::Write(const uint8_t* data, size_t len)
 	}
 }
 
-uint32_t UnixStreamSocket::GetSendBufferSize() const
+uint32_t UnixStreamSocketHandle::GetSendBufferSize() const
 {
 	MS_TRACE();
 
@@ -254,7 +255,7 @@ uint32_t UnixStreamSocket::GetSendBufferSize() const
 	return static_cast<uint32_t>(size);
 }
 
-void UnixStreamSocket::SetSendBufferSize(uint32_t size)
+void UnixStreamSocketHandle::SetSendBufferSize(uint32_t size)
 {
 	MS_TRACE();
 
@@ -274,7 +275,7 @@ void UnixStreamSocket::SetSendBufferSize(uint32_t size)
 	}
 }
 
-uint32_t UnixStreamSocket::GetRecvBufferSize() const
+uint32_t UnixStreamSocketHandle::GetRecvBufferSize() const
 {
 	MS_TRACE();
 
@@ -289,7 +290,7 @@ uint32_t UnixStreamSocket::GetRecvBufferSize() const
 	return static_cast<uint32_t>(size);
 }
 
-void UnixStreamSocket::SetRecvBufferSize(uint32_t size)
+void UnixStreamSocketHandle::SetRecvBufferSize(uint32_t size)
 {
 	MS_TRACE();
 
@@ -309,7 +310,7 @@ void UnixStreamSocket::SetRecvBufferSize(uint32_t size)
 	}
 }
 
-inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
+inline void UnixStreamSocketHandle::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE_STD();
 
@@ -335,7 +336,7 @@ inline void UnixStreamSocket::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* 
 	}
 }
 
-inline void UnixStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
+inline void UnixStreamSocketHandle::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 {
 	MS_TRACE_STD();
 
@@ -379,7 +380,7 @@ inline void UnixStreamSocket::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/)
 	}
 }
 
-inline void UnixStreamSocket::OnUvWriteError(int error)
+inline void UnixStreamSocketHandle::OnUvWriteError(int error)
 {
 	MS_TRACE_STD();
 

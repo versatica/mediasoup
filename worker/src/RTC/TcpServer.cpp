@@ -12,7 +12,7 @@ namespace RTC
 
 	TcpServer::TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip)
 	  : // This may throw.
-	    ::TcpServerHandler::TcpServerHandler(RTC::PortManager::BindTcp(ip)), listener(listener),
+	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip)), listener(listener),
 	    connListener(connListener)
 	{
 		MS_TRACE();
@@ -21,7 +21,7 @@ namespace RTC
 	TcpServer::TcpServer(
 	  Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip, uint16_t port)
 	  : // This may throw.
-	    ::TcpServerHandler::TcpServerHandler(RTC::PortManager::BindTcp(ip, port)), listener(listener),
+	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip, port)), listener(listener),
 	    connListener(connListener), fixedPort(true)
 	{
 		MS_TRACE();
@@ -48,7 +48,7 @@ namespace RTC
 		AcceptTcpConnection(connection);
 	}
 
-	void TcpServer::UserOnTcpConnectionClosed(::TcpConnectionHandler* connection)
+	void TcpServer::UserOnTcpConnectionClosed(::TcpConnectionHandle* connection)
 	{
 		MS_TRACE();
 

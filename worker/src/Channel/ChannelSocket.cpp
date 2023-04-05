@@ -318,7 +318,8 @@ namespace Channel
 	/* Instance methods. */
 
 	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
-	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
+	  : ::UnixStreamSocketHandle(fd, bufferSize, ::UnixStreamSocketHandle::Role::CONSUMER),
+	    listener(listener)
 	{
 		MS_TRACE_STD();
 	}
@@ -388,7 +389,7 @@ namespace Channel
 	/* Instance methods. */
 
 	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
-	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::PRODUCER)
+	  : ::UnixStreamSocketHandle(fd, bufferSize, ::UnixStreamSocketHandle::Role::PRODUCER)
 	{
 		MS_TRACE_STD();
 	}
