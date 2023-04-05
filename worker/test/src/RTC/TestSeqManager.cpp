@@ -670,15 +670,15 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 			{ 22136,     0, false, true  }, // Drop.
 			{ 50774, 50884, false, false }, // Previously dropped.
 			{ 30910,     0, false, true  }, // Drop.
-			{ 22136, 22134, false, false },
+			{ 22136, 22135, false, false },
 			{ 48862,     0, false, true  }, // Drop.
 			{ 30910, 30909, false, false },
 			{ 56832,     0, false, true  }, // Drop.
 			{ 48862, 48861, false, false },
 			{     2,     0, false, true  }, // Drop.
-			{ 56832, 56828, false, false },
+			{ 56832, 48861, false, false }, // Previously dropped.
 			{   530,     0, false, true  }, // Drop.
-			{     2, 65534, false, false },
+			{     2, 48861, false, false }, // Previously dropped.
 		};
 		// clang-format on
 
