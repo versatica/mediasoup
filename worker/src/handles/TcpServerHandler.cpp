@@ -17,7 +17,9 @@ inline static void onConnection(uv_stream_t* handle, int status)
 	auto* server = static_cast<TcpServerHandler*>(handle->data);
 
 	if (server)
+	{
 		server->OnUvConnection(status);
+	}
 }
 
 inline static void onClose(uv_handle_t* handle)
@@ -62,7 +64,9 @@ TcpServerHandler::~TcpServerHandler()
 	MS_TRACE();
 
 	if (!this->closed)
+	{
 		Close();
+	}
 }
 
 void TcpServerHandler::Close()
@@ -70,7 +74,9 @@ void TcpServerHandler::Close()
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		return;
+	}
 
 	this->closed = true;
 
@@ -196,7 +202,9 @@ void TcpServerHandler::AcceptTcpConnection(TcpConnectionHandler* connection)
 	  reinterpret_cast<uv_stream_t*>(connection->GetUvHandle()));
 
 	if (err != 0)
+	{
 		MS_ABORT("uv_accept() failed: %s", uv_strerror(err));
+	}
 
 	// Start receiving data.
 	try
@@ -257,7 +265,9 @@ inline void TcpServerHandler::OnUvConnection(int status)
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		return;
+	}
 
 	if (status != 0)
 	{
