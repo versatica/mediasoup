@@ -52,20 +52,37 @@ namespace RTC
 #ifdef MS_RTC_LOGGER_RTP
 			MS_TRACE();
 
-			std::cout << "{"
-			          << "timestamp: " << this->timestamp << ", recvTransportId: '"
-			          << this->recvTransportId << "'"
-			          << ", sendTransportId: '" << this->sendTransportId << "'"
-			          << ", routerId: '" << this->routerId << "'"
-			          << ", producerId: '" << this->producerId << "'"
-			          << ", consumerId: '" << this->consumerId << "'"
-			          << ", recvRtpTimestamp: " << this->recvRtpTimestamp
-			          << ", sendRtpTimestamp: " << this->sendRtpTimestamp
-			          << ", recvSeqNumber: " << this->recvSeqNumber
-			          << ", sendSeqNumber: " << this->sendSeqNumber
-			          << ", dropped: " << (this->dropped ? "true" : "false") << ", dropReason: '"
-			          << dropReason2String[this->dropReason] << "'"
-			          << "}" << std::endl;
+			std::cout << "{";
+			std::cout << "\"timestamp\": " << this->timestamp;
+
+			if (!this->recvTransportId.empty())
+			{
+				std::cout << ", \"recvTransportId\": \"" << this->recvTransportId << "\"";
+			}
+			if (!this->sendTransportId.empty())
+			{
+				std::cout << ", \"sendTransportId\": \"" << this->sendTransportId << "\"";
+			}
+			if (!this->routerId.empty())
+			{
+				std::cout << ", \"routerId\": \"" << this->routerId << "\"";
+			}
+			if (!this->producerId.empty())
+			{
+				std::cout << ", \"producerId\": \"" << this->producerId << "\"";
+			}
+			if (!this->consumerId.empty())
+			{
+				std::cout << ", \"consumerId\": \"" << this->consumerId << "\"";
+			}
+
+			std::cout << ", \"recvRtpTimestamp\": " << this->recvRtpTimestamp;
+			std::cout << ", \"sendRtpTimestamp\": " << this->sendRtpTimestamp;
+			std::cout << ", \"recvSeqNumber\": " << this->recvSeqNumber;
+			std::cout << ", \"sendSeqNumber\": " << this->sendSeqNumber;
+			std::cout << ", \"dropped\": " << (this->dropped ? "true" : "false");
+			std::cout << ", \"dropReason\": '" << dropReason2String[this->dropReason] << "'";
+			std::cout << "}" << std::endl;
 #endif
 		}
 

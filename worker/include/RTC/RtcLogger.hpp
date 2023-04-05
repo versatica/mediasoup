@@ -41,11 +41,11 @@ namespace RTC
 
 		public:
 			uint64_t timestamp;
-			std::string recvTransportId{ "undefined" };
-			std::string sendTransportId{ "undefined" };
-			std::string routerId{ "undefined" };
-			std::string producerId{ "undefined" };
-			std::string consumerId{ "undefined" };
+			std::string recvTransportId{};
+			std::string sendTransportId{};
+			std::string routerId{};
+			std::string producerId{};
+			std::string consumerId{};
 			uint32_t recvRtpTimestamp;
 			uint32_t sendRtpTimestamp;
 			uint16_t recvSeqNumber;
