@@ -19,7 +19,9 @@ inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* 
 	auto* socket = static_cast<UdpSocketHandler*>(handle->data);
 
 	if (socket)
+	{
 		socket->OnUvRecvAlloc(suggestedSize, buf);
+	}
 }
 
 inline static void onRecv(
@@ -28,7 +30,9 @@ inline static void onRecv(
 	auto* socket = static_cast<UdpSocketHandler*>(handle->data);
 
 	if (socket)
+	{
 		socket->OnUvRecv(nread, buf, addr, flags);
+	}
 }
 
 inline static void onSend(uv_udp_send_t* req, int status)
@@ -39,7 +43,9 @@ inline static void onSend(uv_udp_send_t* req, int status)
 	auto* cb       = sendData->cb;
 
 	if (socket)
+	{
 		socket->OnUvSend(status, cb);
+	}
 
 	// Delete the UvSendData struct (it will delete the store and cb too).
 	delete sendData;
@@ -85,7 +91,9 @@ UdpSocketHandler::~UdpSocketHandler()
 	MS_TRACE();
 
 	if (!this->closed)
+	{
 		Close();
+	}
 }
 
 void UdpSocketHandler::Close()
@@ -93,7 +101,9 @@ void UdpSocketHandler::Close()
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		return;
+	}
 
 	this->closed = true;
 
@@ -104,7 +114,9 @@ void UdpSocketHandler::Close()
 	const int err = uv_udp_recv_stop(this->uvHandle);
 
 	if (err != 0)
+	{
 		MS_ABORT("uv_udp_recv_stop() failed: %s", uv_strerror(err));
+	}
 
 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 }
@@ -204,7 +216,9 @@ void UdpSocketHandler::Send(
 		MS_WARN_DEV("uv_udp_send() failed: %s", uv_strerror(err));
 
 		if (cb)
+		{
 			(*cb)(false);
+		}
 
 		// Delete the UvSendData struct (it will delete the store and cb too).
 		delete sendData;
@@ -328,7 +342,9 @@ inline void UdpSocketHandler::OnUvRecv(
 
 	// NOTE: Ignore if there is nothing to read or if it was an empty datagram.
 	if (nread == 0)
+	{
 		return;
+	}
 
 	// Check flags.
 	if ((flags & UV_UDP_PARTIAL) != 0u)
@@ -363,7 +379,9 @@ inline void UdpSocketHandler::OnUvSend(int status, UdpSocketHandler::onSendCallb
 	if (status == 0)
 	{
 		if (cb)
+		{
 			(*cb)(true);
+		}
 	}
 	else
 	{
@@ -372,6 +390,8 @@ inline void UdpSocketHandler::OnUvSend(int status, UdpSocketHandler::onSendCallb
 #endif
 
 		if (cb)
+		{
 			(*cb)(false);
+		}
 	}
 }
