@@ -160,9 +160,7 @@ namespace RTC
 
 		const size_t previousDroppedSize = this->dropped.size();
 
-		auto it = this->dropped.begin();
-
-		for (; it != this->dropped.end();)
+		for (auto it = this->dropped.begin(); it != this->dropped.end();)
 		{
 			auto value = *it;
 
