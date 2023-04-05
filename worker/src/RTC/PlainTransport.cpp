@@ -59,7 +59,19 @@ namespace RTC
 		Utils::IP::NormalizeIp(this->listenIp.ip);
 
 		if (flatbuffers::IsFieldPresent(options->listenIp(), FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
+		{
 			this->listenIp.announcedIp.assign(options->listenIp()->announcedIp()->str());
+		}
+
+		if (flatbuffers::IsFieldPresent(options->listenIp(), FBS::Transport::ListenIp::VT_UDPSENDBUFFERSIZE))
+		{
+			this->listenIp.sendBufferSize = options->listenIp()->udpSendBufferSize();
+		}
+
+		if (flatbuffers::IsFieldPresent(options->listenIp(), FBS::Transport::ListenIp::VT_UDPRECVBUFFERSIZE))
+		{
+			this->listenIp.recvBufferSize = options->listenIp()->udpRecvBufferSize();
+		}
 
 		this->rtcpMux = options->rtcpMux();
 		this->comedia = options->comedia();
@@ -68,13 +80,17 @@ namespace RTC
 		{
 			if (!flatbuffers::IsFieldPresent(
 			      options, FBS::PlainTransport::PlainTransportOptions::VT_SRTPCRYPTOSUITE))
+			{
 				MS_THROW_TYPE_ERROR("missing srtpCryptoSuite)");
+			}
 
 			// Ensure it's a crypto suite supported by us.
 			auto it = PlainTransport::string2SrtpCryptoSuite.find(options->srtpCryptoSuite()->str());
 
 			if (it == PlainTransport::string2SrtpCryptoSuite.end())
+			{
 				MS_THROW_TYPE_ERROR("invalid/unsupported srtpCryptoSuite");
+			}
 
 			// NOTE: The SRTP crypto suite may change later on connect().
 			this->srtpCryptoSuite = it->second;
@@ -117,15 +133,49 @@ namespace RTC
 		{
 			// This may throw.
 			if (options->port() != 0)
+			{
 				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip, options->port());
+			}
 			else
+			{
 				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
+			}
+
+			if (this->listenIp.sendBufferSize != 0)
+			{
+				// NOTE: This may throw.
+				udpSocket->SetSendBufferSize(this->listenIp.sendBufferSize);
+			}
+
+			if (this->listenIp.recvBufferSize != 0)
+			{
+				// NOTE: This may throw.
+				udpSocket->SetRecvBufferSize(this->listenIp.recvBufferSize);
+			}
 
 			if (!this->rtcpMux)
 			{
 				// This may throw.
 				this->rtcpUdpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
+
+				if (this->listenIp.sendBufferSize != 0)
+				{
+					// NOTE: This may throw.
+					rtcpUdpSocket->SetSendBufferSize(this->listenIp.sendBufferSize);
+				}
+
+				if (this->listenIp.recvBufferSize != 0)
+				{
+					// NOTE: This may throw.
+					rtcpUdpSocket->SetRecvBufferSize(this->listenIp.recvBufferSize);
+				}
 			}
+
+			MS_DEBUG_TAG(
+			  info,
+			  "UDP socket buffer sizes [send:%" PRIu32 ", recv:%" PRIu32 "]",
+			  udpSocket->GetSendBufferSize(),
+			  udpSocket->GetRecvBufferSize());
 
 			// NOTE: This may throw.
 			this->shared->channelMessageRegistrator->RegisterHandler(
@@ -187,9 +237,13 @@ namespace RTC
 			std::string localIp;
 
 			if (this->listenIp.announcedIp.empty())
+			{
 				localIp = this->udpSocket->GetLocalIp();
+			}
 			else
+			{
 				localIp = this->listenIp.announcedIp;
+			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
 			  builder, localIp.c_str(), this->udpSocket->GetLocalPort(), "", 0, "udp");
@@ -209,9 +263,13 @@ namespace RTC
 				std::string localIp;
 
 				if (this->listenIp.announcedIp.empty())
+				{
 					localIp = this->rtcpUdpSocket->GetLocalIp();
+				}
 				else
+				{
 					localIp = this->listenIp.announcedIp;
+				}
 
 				rtcpTuple = FBS::Transport::CreateTupleDirect(
 				  builder, localIp.c_str(), this->rtcpUdpSocket->GetLocalPort(), "", 0, "udp");
@@ -253,9 +311,13 @@ namespace RTC
 			std::string localIp;
 
 			if (this->listenIp.announcedIp.empty())
+			{
 				localIp = this->udpSocket->GetLocalIp();
+			}
 			else
+			{
 				localIp = this->listenIp.announcedIp;
+			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
 					builder,
@@ -276,7 +338,9 @@ namespace RTC
 		flatbuffers::Offset<FBS::Transport::Tuple> rtcpTuple;
 
 		if (!this->rtcpMux && this->rtcpTuple)
+		{
 			rtcpTuple = this->rtcpTuple->FillBuffer(builder);
+		}
 
 		// Base Transport stats.
 		auto base = Transport::FillBufferStats(builder);
@@ -318,7 +382,9 @@ namespace RTC
 			{
 				// Ensure this method is not called twice.
 				if (this->connectCalled)
+				{
 					MS_THROW_ERROR("connect() already called");
+				}
 
 				try
 				{
@@ -349,7 +415,9 @@ namespace RTC
 						  PlainTransport::string2SrtpCryptoSuite.find(srtpParameters->cryptoSuite()->str());
 
 						if (it == PlainTransport::string2SrtpCryptoSuite.end())
+						{
 							MS_THROW_TYPE_ERROR("invalid/unsupported srtpParameters.cryptoSuite");
+						}
 
 						// Update out SRTP crypto suite with the one used by the remote.
 						auto previousSrtpCryptoSuite = this->srtpCryptoSuite;
@@ -399,7 +467,9 @@ namespace RTC
 						auto* srtpKey = Utils::String::Base64Decode(srtpKeyBase64, outLen);
 
 						if (outLen != this->srtpMasterLength)
+						{
 							MS_THROW_TYPE_ERROR("invalid decoded SRTP key length");
+						}
 
 						auto* srtpLocalKey  = new uint8_t[this->srtpMasterLength];
 						auto* srtpRemoteKey = new uint8_t[this->srtpMasterLength];
@@ -446,7 +516,9 @@ namespace RTC
 					if (!this->comedia)
 					{
 						if (!flatbuffers::IsFieldPresent(body, FBS::PlainTransport::ConnectRequest::VT_IP))
+						{
 							MS_THROW_TYPE_ERROR("missing ip");
+						}
 
 						ip = body->ip()->str();
 
@@ -463,14 +535,18 @@ namespace RTC
 						if (body->rtcpPort().has_value())
 						{
 							if (this->rtcpMux)
+							{
 								MS_THROW_TYPE_ERROR("cannot set rtcpPort with rtcpMux enabled");
+							}
 
 							rtcpPort = body->rtcpPort().value();
 						}
 						else
 						{
 							if (!this->rtcpMux)
+							{
 								MS_THROW_TYPE_ERROR("missing rtcpPort (required with rtcpMux disabled)");
+							}
 						}
 
 						int err;
@@ -485,7 +561,9 @@ namespace RTC
 								  reinterpret_cast<struct sockaddr_in*>(&this->remoteAddrStorage));
 
 								if (err != 0)
+								{
 									MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
+								}
 
 								break;
 							}
@@ -498,7 +576,9 @@ namespace RTC
 								  reinterpret_cast<struct sockaddr_in6*>(&this->remoteAddrStorage));
 
 								if (err != 0)
+								{
 									MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
+								}
 
 								break;
 							}
@@ -514,7 +594,9 @@ namespace RTC
 						  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
 
 						if (!this->listenIp.announcedIp.empty())
+						{
 							this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+						}
 
 						if (!this->rtcpMux)
 						{
@@ -528,7 +610,9 @@ namespace RTC
 									  reinterpret_cast<struct sockaddr_in*>(&this->rtcpRemoteAddrStorage));
 
 									if (err != 0)
+									{
 										MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
+									}
 
 									break;
 								}
@@ -541,7 +625,9 @@ namespace RTC
 									  reinterpret_cast<struct sockaddr_in6*>(&this->rtcpRemoteAddrStorage));
 
 									if (err != 0)
+									{
 										MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
+									}
 
 									break;
 								}
@@ -558,7 +644,9 @@ namespace RTC
 							  reinterpret_cast<struct sockaddr*>(&this->rtcpRemoteAddrStorage));
 
 							if (!this->listenIp.announcedIp.empty())
+							{
 								this->rtcpTuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+							}
 						}
 					}
 				}
@@ -587,10 +675,14 @@ namespace RTC
 				flatbuffers::Offset<FBS::Transport::SrtpParameters> srtpParametersOffset;
 
 				if (this->tuple)
+				{
 					tupleOffset = this->tuple->FillBuffer(request->GetBufferBuilder());
+				}
 
 				if (!this->rtcpMux && this->rtcpTuple)
+				{
 					rtcpTupleOffset = this->rtcpTuple->FillBuffer(request->GetBufferBuilder());
+				}
 
 				if (HasSrtp())
 				{
@@ -688,20 +780,28 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		const uint8_t* data = packet->GetData();
 		auto intLen         = static_cast<int>(packet->GetSize());
 
 		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &intLen))
+		{
 			return;
+		}
 
 		auto len = static_cast<size_t>(intLen);
 
 		if (this->rtcpMux)
+		{
 			this->tuple->Send(data, len);
+		}
 		else if (this->rtcpTuple)
+		{
 			this->rtcpTuple->Send(data, len);
+		}
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -712,7 +812,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		packet->Serialize(RTC::RTCP::Buffer);
 
@@ -720,14 +822,20 @@ namespace RTC
 		auto intLen         = static_cast<int>(packet->GetSize());
 
 		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &intLen))
+		{
 			return;
+		}
 
 		auto len = static_cast<size_t>(intLen);
 
 		if (this->rtcpMux)
+		{
 			this->tuple->Send(data, len);
+		}
 		else if (this->rtcpTuple)
+		{
 			this->rtcpTuple->Send(data, len);
+		}
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
@@ -746,7 +854,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		this->tuple->Send(data, len);
 
@@ -808,7 +918,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (HasSrtp() && !IsSrtpReady())
+		{
 			return;
+		}
 
 		// Decrypt the SRTP packet.
 		auto intLen = static_cast<int>(len);
@@ -867,7 +979,9 @@ namespace RTC
 			this->tuple = new RTC::TransportTuple(tuple);
 
 			if (!this->listenIp.announcedIp.empty())
+			{
 				this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+			}
 
 			// If not yet connected do it now.
 			if (!wasConnected)
@@ -902,7 +1016,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (HasSrtp() && !IsSrtpReady())
+		{
 			return;
+		}
 
 		// Decrypt the SRTCP packet.
 		auto intLen = static_cast<int>(len);
@@ -930,7 +1046,9 @@ namespace RTC
 			this->tuple = new RTC::TransportTuple(tuple);
 
 			if (!this->listenIp.announcedIp.empty())
+			{
 				this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+			}
 
 			// If not yet connected do it now.
 			if (!wasConnected)
@@ -957,7 +1075,9 @@ namespace RTC
 			this->rtcpTuple = new RTC::TransportTuple(tuple);
 
 			if (!this->listenIp.announcedIp.empty())
+			{
 				this->rtcpTuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+			}
 
 			// Notify the Node PlainTransport.
 			EmitRtcpTuple();
@@ -1012,7 +1132,9 @@ namespace RTC
 			this->tuple = new RTC::TransportTuple(tuple);
 
 			if (!this->listenIp.announcedIp.empty())
+			{
 				this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+			}
 
 			// If not yet connected do it now.
 			if (!wasConnected)

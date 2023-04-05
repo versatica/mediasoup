@@ -17,6 +17,8 @@ namespace RTC
 		{
 			std::string ip;
 			std::string announcedIp;
+			uint32_t sendBufferSize{ 0u };
+			uint32_t recvBufferSize{ 0u };
 		};
 
 	private:

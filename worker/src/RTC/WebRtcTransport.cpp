@@ -45,9 +45,13 @@ namespace RTC
 			uint16_t iceLocalPreferenceDecrement{ 0 };
 
 			if (options->enableUdp() && options->enableTcp())
+			{
 				this->iceCandidates.reserve(2 * listenIps->size());
+			}
 			else
+			{
 				this->iceCandidates.reserve(listenIps->size());
+			}
 
 			for (const auto* listenIp : *listenIps)
 			{
@@ -62,28 +66,58 @@ namespace RTC
 					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
 
 					if (options->preferUdp())
+					{
 						iceLocalPreference += 1000;
+					}
 
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
-					// This may throw.
 					RTC::UdpSocket* udpSocket;
+
 					if (listenInfo->port() != 0)
+					{
 						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port());
+					}
 					else
+					{
 						udpSocket = new RTC::UdpSocket(this, ip);
+					}
 
 					std::string announcedIp;
 
 					if (flatbuffers::IsFieldPresent(listenIp, FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
+					{
 						announcedIp = listenIp->announcedIp()->str();
+					}
 
 					this->udpSockets[udpSocket] = announcedIp;
 
 					if (announcedIp.size() == 0)
+					{
 						this->iceCandidates.emplace_back(udpSocket, icePriority);
+					}
 					else
+					{
 						this->iceCandidates.emplace_back(udpSocket, icePriority, announcedIp);
+					}
+
+					if (listenIp->udpSendBufferSize() != 0)
+					{
+						// NOTE: This may throw.
+						udpSocket->SetSendBufferSize(listenIp->udpSendBufferSize());
+					}
+
+					if (listenIp->udpRecvBufferSize() != 0)
+					{
+						// NOTE: This may throw.
+						udpSocket->SetRecvBufferSize(listenIp->udpRecvBufferSize());
+					}
+
+					MS_DEBUG_TAG(
+					  info,
+					  "UDP socket buffer sizes [send:%" PRIu32 ", recv:%" PRIu32 "]",
+					  udpSocket->GetSendBufferSize(),
+					  udpSocket->GetRecvBufferSize());
 				}
 
 				if (options->enableTcp())
@@ -92,28 +126,58 @@ namespace RTC
 					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
 
 					if (options->preferTcp())
+					{
 						iceLocalPreference += 1000;
+					}
 
 					const uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
-					// This may throw.
 					RTC::TcpServer* tcpServer;
+
 					if (listenInfo->port() != 0)
+					{
 						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port());
+					}
 					else
+					{
 						tcpServer = new RTC::TcpServer(this, this, ip);
+					}
 
 					std::string announcedIp;
 
 					if (flatbuffers::IsFieldPresent(listenIp, FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
+					{
 						announcedIp = listenIp->announcedIp()->str();
+					}
 
 					this->tcpServers[tcpServer] = announcedIp;
 
 					if (announcedIp.size() == 0)
+					{
 						this->iceCandidates.emplace_back(tcpServer, icePriority);
+					}
 					else
+					{
 						this->iceCandidates.emplace_back(tcpServer, icePriority, announcedIp);
+					}
+
+					if (listenIp->tcpSendBufferSize() != 0)
+					{
+						// NOTE: This may throw.
+						tcpServer->SetSendBufferSize(listenIp->tcpSendBufferSize());
+					}
+
+					if (listenIp->tcpRecvBufferSize() != 0)
+					{
+						// NOTE: This may throw.
+						tcpServer->SetRecvBufferSize(listenIp->tcpRecvBufferSize());
+					}
+
+					MS_DEBUG_TAG(
+					  info,
+					  "TCP sockets buffer sizes [send:%" PRIu32 ", recv:%" PRIu32 "]",
+					  tcpServer->GetSendBufferSize(),
+					  tcpServer->GetRecvBufferSize());
 				}
 
 				// Decrement initial ICE local preference for next IP.
@@ -183,7 +247,9 @@ namespace RTC
 		try
 		{
 			if (iceCandidates.empty())
+			{
 				MS_THROW_TYPE_ERROR("empty iceCandidates");
+			}
 
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(
@@ -257,7 +323,9 @@ namespace RTC
 
 		// Notify the webRtcTransportListener.
 		if (this->webRtcTransportListener)
+		{
 			this->webRtcTransportListener->OnWebRtcTransportClosed(this);
+		}
 	}
 
 	flatbuffers::Offset<FBS::WebRtcTransport::DumpResponse> WebRtcTransport::FillBuffer(
@@ -303,7 +371,9 @@ namespace RTC
 		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
 
 		if (this->iceServer->GetSelectedTuple())
+		{
 			iceSelectedTuple = this->iceServer->GetSelectedTuple()->FillBuffer(builder);
+		}
 
 		// Add dtlsParameters.fingerprints.
 		std::vector<flatbuffers::Offset<FBS::WebRtcTransport::Fingerprint>> fingerprints;
@@ -405,7 +475,9 @@ namespace RTC
 		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
 
 		if (this->iceServer->GetSelectedTuple())
+		{
 			iceSelectedTuple = this->iceServer->GetSelectedTuple()->FillBuffer(builder);
+		}
 
 		std::string dtlsState;
 
@@ -470,7 +542,9 @@ namespace RTC
 			{
 				// Ensure this method is not called twice.
 				if (this->connectCalled)
+				{
 					MS_THROW_ERROR("connect() already called");
+				}
 
 				const auto* body           = request->data->body_as<FBS::WebRtcTransport::ConnectRequest>();
 				const auto* dtlsParameters = body->dtlsParameters();
@@ -505,7 +579,9 @@ namespace RTC
 					dtlsRemoteRole = RTC::DtlsTransport::StringToRole(dtlsParameters->role()->str());
 
 					if (dtlsRemoteRole == RTC::DtlsTransport::Role::NONE)
+					{
 						MS_THROW_TYPE_ERROR("invalid dtlsParameters.role value");
+					}
 				}
 				else
 				{
@@ -675,7 +751,9 @@ namespace RTC
 		// Do nothing if we have the same local DTLS role as the DTLS transport.
 		// NOTE: local role in DTLS transport can be NONE, but not ours.
 		if (this->dtlsTransport->GetLocalRole() == this->dtlsRole)
+		{
 			return;
+		}
 
 		// Check our local DTLS role.
 		switch (this->dtlsRole)
@@ -808,7 +886,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		const uint8_t* data = packet->GetData();
 		auto intLen         = static_cast<int>(packet->GetSize());
@@ -822,7 +902,9 @@ namespace RTC
 		}
 
 		if (!this->srtpSendSession->EncryptRtcp(&data, &intLen))
+		{
 			return;
+		}
 
 		auto len = static_cast<size_t>(intLen);
 
@@ -837,7 +919,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		packet->Serialize(RTC::RTCP::Buffer);
 
@@ -853,7 +937,9 @@ namespace RTC
 		}
 
 		if (!this->srtpSendSession->EncryptRtcp(&data, &intLen))
+		{
 			return;
+		}
 
 		auto len = static_cast<size_t>(intLen);
 
@@ -1097,7 +1183,9 @@ namespace RTC
 		auto intLen = static_cast<int>(len);
 
 		if (!this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &intLen))
+		{
 			return;
+		}
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, static_cast<size_t>(intLen));
 

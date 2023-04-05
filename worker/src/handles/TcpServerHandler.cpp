@@ -132,6 +132,8 @@ void TcpServerHandler::SetSendBufferSize(uint32_t size)
 	{
 		MS_THROW_ERROR("uv_send_buffer_size() failed: %s", uv_strerror(err));
 	}
+
+	this->sendBufferSize = size;
 }
 
 uint32_t TcpServerHandler::GetRecvBufferSize() const
@@ -167,6 +169,8 @@ void TcpServerHandler::SetRecvBufferSize(uint32_t size)
 	{
 		MS_THROW_ERROR("uv_recv_buffer_size() failed: %s", uv_strerror(err));
 	}
+
+	this->recvBufferSize = size;
 }
 
 void TcpServerHandler::AcceptTcpConnection(TcpConnectionHandler* connection)
@@ -199,6 +203,18 @@ void TcpServerHandler::AcceptTcpConnection(TcpConnectionHandler* connection)
 	{
 		// NOTE: This may throw.
 		connection->Start();
+
+		if (this->sendBufferSize != 0)
+		{
+			// NOTE: This may throw.
+			connection->SetSendBufferSize(this->sendBufferSize);
+		}
+
+		if (this->recvBufferSize != 0)
+		{
+			// NOTE: This may throw.
+			connection->SetRecvBufferSize(this->recvBufferSize);
+		}
 	}
 	catch (const MediaSoupError& error)
 	{

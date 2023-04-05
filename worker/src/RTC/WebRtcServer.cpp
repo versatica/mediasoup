@@ -36,9 +36,13 @@ namespace RTC
 		MS_TRACE();
 
 		if (listenInfos->size() == 0)
+		{
 			MS_THROW_TYPE_ERROR("wrong listenInfos (empty array)");
+		}
 		else if (listenInfos->size() > 8)
+		{
 			MS_THROW_TYPE_ERROR("wrong listenInfos (too many entries)");
+		}
 
 		try
 		{
@@ -58,49 +62,67 @@ namespace RTC
 
 				if (listenInfo->protocol() == FBS::Transport::Protocol::UDP)
 				{
-					// This may throw.
 					RTC::UdpSocket* udpSocket;
 
 					if (listenInfo->port() != 0)
+					{
 						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port());
+					}
 					else
+					{
 						udpSocket = new RTC::UdpSocket(this, ip);
+					}
 
 					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedIp);
 
 					if (listenInfo->sendBufferSize() != 0)
+					{
+						// NOTE: This may throw.
 						udpSocket->SetSendBufferSize(listenInfo->sendBufferSize());
+					}
 
 					if (listenInfo->recvBufferSize() != 0)
+					{
+						// NOTE: This may throw.
 						udpSocket->SetRecvBufferSize(listenInfo->recvBufferSize());
+					}
 
 					MS_DEBUG_TAG(
 					  info,
-					  "UDP socket send buffer size: %d, recv buffer size: %d",
+					  "UDP socket buffer sizes [send:%" PRIu32 ", recv:%" PRIu32 "]",
 					  udpSocket->GetSendBufferSize(),
 					  udpSocket->GetRecvBufferSize());
 				}
 				else if (listenInfo->protocol() == FBS::Transport::Protocol::TCP)
 				{
-					// This may throw.
 					RTC::TcpServer* tcpServer;
 
 					if (listenInfo->port() != 0)
+					{
 						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port());
+					}
 					else
+					{
 						tcpServer = new RTC::TcpServer(this, this, ip);
+					}
 
 					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedIp);
 
 					if (listenInfo->sendBufferSize() != 0)
+					{
+						// NOTE: This may throw.
 						tcpServer->SetSendBufferSize(listenInfo->sendBufferSize());
+					}
 
 					if (listenInfo->recvBufferSize() != 0)
+					{
+						// NOTE: This may throw.
 						tcpServer->SetRecvBufferSize(listenInfo->recvBufferSize());
+					}
 
 					MS_DEBUG_TAG(
 					  info,
-					  "TCP server send buffer size: %d, recv buffer size: %d",
+					  "TCP sockets buffer sizes [send:%" PRIu32 ", recv:%" PRIu32 "]",
 					  tcpServer->GetSendBufferSize(),
 					  tcpServer->GetRecvBufferSize());
 				}
@@ -255,28 +277,40 @@ namespace RTC
 				uint16_t iceLocalPreference = IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
 
 				if (preferUdp)
+				{
 					iceLocalPreference += 1000;
+				}
 
 				uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 				if (item.announcedIp.empty())
+				{
 					iceCandidates.emplace_back(item.udpSocket, icePriority);
+				}
 				else
+				{
 					iceCandidates.emplace_back(item.udpSocket, icePriority, item.announcedIp);
+				}
 			}
 			else if (item.tcpServer && enableTcp)
 			{
 				uint16_t iceLocalPreference = IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
 
 				if (preferTcp)
+				{
 					iceLocalPreference += 1000;
+				}
 
 				uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 				if (item.announcedIp.empty())
+				{
 					iceCandidates.emplace_back(item.tcpServer, icePriority);
+				}
 				else
+				{
 					iceCandidates.emplace_back(item.tcpServer, icePriority, item.announcedIp);
+				}
 			}
 
 			// Decrement initial ICE local preference for next IP.
@@ -301,7 +335,9 @@ namespace RTC
 
 		// If no colon is found just return the whole USERNAME attribute anyway.
 		if (colonPos == std::string::npos)
+		{
 			return username;
+		}
 
 		return username.substr(0, colonPos);
 	}
@@ -488,7 +524,9 @@ namespace RTC
 		auto it = this->mapTupleWebRtcTransport.find(tuple.hash);
 
 		if (it == this->mapTupleWebRtcTransport.end())
+		{
 			return;
+		}
 
 		auto* webRtcTransport = it->second;
 

@@ -433,8 +433,12 @@ export class Router<RouterAppData extends AppData = AppData>
 				else if (typeof listenIp === 'object')
 				{
 					return {
-						ip          : listenIp.ip,
-						announcedIp : listenIp.announcedIp || undefined
+						ip                : listenIp.ip,
+						announcedIp       : listenIp.announcedIp,
+						udpSendBufferSize : listenIp.udpSendBufferSize,
+						udpRecvBufferSize : listenIp.udpRecvBufferSize,
+						tcpSendBufferSize : listenIp.tcpSendBufferSize,
+						tcpRecvBufferSize : listenIp.tcpRecvBufferSize
 					};
 				}
 				else
@@ -463,8 +467,14 @@ export class Router<RouterAppData extends AppData = AppData>
 
 			for (const listenIp of listenIps as any[])
 			{
-				fbsListenIps.push(
-					new FbsTransport.ListenIpT(listenIp.ip, listenIp.announcedIp));
+				fbsListenIps.push(new FbsTransport.ListenIpT(
+					listenIp.ip,
+					listenIp.announcedIp,
+					listenIp.udpSendBufferSize,
+					listenIp.udpRecvBufferSize,
+					listenIp.tcpSendBufferSize,
+					listenIp.tcpRecvBufferSize
+				));
 			}
 
 			webRtcTransportListenIndividual =
@@ -594,8 +604,12 @@ export class Router<RouterAppData extends AppData = AppData>
 		{
 			listenIp =
 			{
-				ip          : listenIp.ip,
-				announcedIp : listenIp.announcedIp || undefined
+				ip                : listenIp.ip,
+				announcedIp       : listenIp.announcedIp,
+				udpSendBufferSize : listenIp.udpSendBufferSize,
+				udpRecvBufferSize : listenIp.udpRecvBufferSize,
+				tcpSendBufferSize : listenIp.tcpSendBufferSize,
+				tcpRecvBufferSize : listenIp.tcpRecvBufferSize
 			};
 		}
 		else
@@ -619,7 +633,14 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		const plainTransportOptions = new FbsPlainTransport.PlainTransportOptionsT(
 			baseTransportOptions,
-			new FbsTransport.ListenIpT(listenIp.ip, listenIp.announcedIp),
+			new FbsTransport.ListenIpT(
+				listenIp.ip,
+				listenIp.announcedIp,
+				listenIp.udpSendBufferSize,
+				listenIp.udpRecvBufferSize,
+				listenIp.tcpSendBufferSize,
+				listenIp.tcpRecvBufferSize
+			),
 			port,
 			rtcpMux,
 			comedia,
@@ -727,8 +748,12 @@ export class Router<RouterAppData extends AppData = AppData>
 		{
 			listenIp =
 			{
-				ip          : listenIp.ip,
-				announcedIp : listenIp.announcedIp || undefined
+				ip                : listenIp.ip,
+				announcedIp       : listenIp.announcedIp,
+				udpSendBufferSize : listenIp.udpSendBufferSize,
+				udpRecvBufferSize : listenIp.udpRecvBufferSize,
+				tcpSendBufferSize : listenIp.tcpSendBufferSize,
+				tcpRecvBufferSize : listenIp.tcpRecvBufferSize
 			};
 		}
 		else
@@ -752,7 +777,14 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		const pipeTransportOptions = new FbsPipeTransport.PipeTransportOptionsT(
 			baseTransportOptions,
-			new FbsTransport.ListenIpT(listenIp.ip, listenIp.announcedIp),
+			new FbsTransport.ListenIpT(
+				listenIp.ip,
+				listenIp.announcedIp,
+				listenIp.udpSendBufferSize,
+				listenIp.udpRecvBufferSize,
+				listenIp.tcpSendBufferSize,
+				listenIp.tcpRecvBufferSize
+			),
 			port,
 			enableRtx,
 			enableSrtp
