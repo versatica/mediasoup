@@ -39,6 +39,10 @@ public:
 	{
 		return this->connections.size();
 	}
+	// NOTE: These methods store the given buffer size into private members to be
+	// later applied to every new TCP connection. They also apply given buffer
+	// size to the TCP server itself, which is not useful. However it will early
+	// throw in case given value is invalid or not allowed due to OS limits.
 	uint32_t GetSendBufferSize() const;
 	void SetSendBufferSize(uint32_t size);
 	uint32_t GetRecvBufferSize() const;
@@ -74,6 +78,8 @@ private:
 	// Others.
 	absl::flat_hash_set<TcpConnectionHandle*> connections;
 	bool closed{ false };
+	uint32_t sendBufferSize{ 0u };
+	uint32_t recvBufferSize{ 0u };
 };
 
 #endif

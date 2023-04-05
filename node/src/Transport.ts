@@ -59,6 +59,26 @@ export type TransportListenIp =
 	 * private IP).
 	 */
 	announcedIp?: string;
+
+	/**
+	 * UDP send buffer size (bytes).
+	 */
+	udpSendBufferSize?: number;
+
+	/**
+	 * UDP recv buffer size (bytes).
+	 */
+	udpRecvBufferSize?: number;
+
+	/**
+	 * TCP send buffer size (bytes).
+	 */
+	tcpSendBufferSize?: number;
+
+	/**
+	 * TCP recv buffer size (bytes).
+	 */
+	tcpRecvBufferSize?: number;
 };
 
 /**

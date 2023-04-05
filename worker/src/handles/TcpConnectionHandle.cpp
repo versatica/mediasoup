@@ -326,6 +326,76 @@ void TcpConnectionHandle::ErrorReceiving()
 	this->listener->OnTcpConnectionClosed(this);
 }
 
+uint32_t TcpConnectionHandle::GetSendBufferSize() const
+{
+	MS_TRACE();
+
+	int size{ 0 };
+	int err = uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
+
+	if (err)
+	{
+		MS_THROW_ERROR("uv_send_buffer_size() failed: %s", uv_strerror(err));
+	}
+
+	return static_cast<uint32_t>(size);
+}
+
+void TcpConnectionHandle::SetSendBufferSize(uint32_t size)
+{
+	MS_TRACE();
+
+	auto size_int = static_cast<int>(size);
+
+	if (size_int <= 0)
+	{
+		MS_THROW_TYPE_ERROR("invalid size: %d", size_int);
+	}
+
+	int err =
+	  uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size_int));
+
+	if (err)
+	{
+		MS_THROW_ERROR("uv_send_buffer_size() failed: %s", uv_strerror(err));
+	}
+}
+
+uint32_t TcpConnectionHandle::GetRecvBufferSize() const
+{
+	MS_TRACE();
+
+	int size{ 0 };
+	int err = uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
+
+	if (err)
+	{
+		MS_THROW_ERROR("uv_recv_buffer_size() failed: %s", uv_strerror(err));
+	}
+
+	return static_cast<uint32_t>(size);
+}
+
+void TcpConnectionHandle::SetRecvBufferSize(uint32_t size)
+{
+	MS_TRACE();
+
+	auto size_int = static_cast<int>(size);
+
+	if (size_int <= 0)
+	{
+		MS_THROW_TYPE_ERROR("invalid size: %d", size_int);
+	}
+
+	int err =
+	  uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size_int));
+
+	if (err)
+	{
+		MS_THROW_ERROR("uv_recv_buffer_size() failed: %s", uv_strerror(err));
+	}
+}
+
 bool TcpConnectionHandle::SetPeerAddress()
 {
 	MS_TRACE();
