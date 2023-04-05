@@ -666,11 +666,11 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 			{ 50886,     0, false, true  }, // Drop.
 			{  4806,  4805, false, false }, // Previously dropped.
 			{ 50774,     0, false, true  }, // Drop.
-			{ 50886, 50884, false, false }, // Previously dropped.
+			{ 50886,  4805, false, false }, // Previously dropped.
 			{ 22136,     0, false, true  }, // Drop.
-			{ 50774, 50884, false, false }, // Previously dropped.
+			{ 50774, 50773, false, false },
 			{ 30910,     0, false, true  }, // Drop.
-			{ 22136, 22135, false, false },
+			{ 22136, 50773, false, false }, // Previously dropped.
 			{ 48862,     0, false, true  }, // Drop.
 			{ 30910, 30909, false, false },
 			{ 56832,     0, false, true  }, // Drop.
@@ -695,9 +695,9 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 			{  3328,     0, false, true  }, // Drop.
 			{ 24589, 24588, false, false },
 			{   120,     0, false, true  }, // Drop.
-			{  3328,  3326, false, false },
+			{  3328, 24588, false, false }, // Previously dropped.
 			{ 30848,     0, false, true  }, // Drop.
-			{   120,  3326, false, false }, // Previously dropped.
+			{   120,   120, false, false },
 		};
 		// clang-format on
 
@@ -714,11 +714,11 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 			{ 65396 ,    0, false, true  }, // Drop.
 			{ 25855, 25854, false, false },
 			{ 29793 ,    0, false, true  }, // Drop.
-			{ 65396, 65395, false, false },
+			{ 65396, 25854, false, false }, // Previously dropped.
 			{ 25087,    0,  false, true  }, // Drop.
-			{ 29793, 29791, false, false },
+			{ 29793, 25854, false, false }, // Previously dropped.
 			{ 65535 ,    0, false, true  }, // Drop.
-			{ 25087, 29791, false, false }, // Previously dropped.
+			{ 25087, 25086, false, false },
 		};
 		// clang-format on
 
