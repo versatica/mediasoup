@@ -215,14 +215,21 @@ namespace RTC
 		MS_TRACE();
 
 		// Update packet loss history.
-		const size_t expected_packets = feedback->GetPacketStatusCount();
-		size_t lost_packets           = 0;
+		const size_t expectedPackets = feedback->GetPacketStatusCount();
+		size_t lostPackets           = 0;
+
 		for (const auto& result : feedback->GetPacketResults())
 		{
 			if (!result.received)
-				lost_packets += 1;
+			{
+				lostPackets += 1;
+			}
 		}
-		this->UpdatePacketLoss(static_cast<double>(lost_packets) / expected_packets);
+
+		if (expectedPackets > 0)
+		{
+			this->UpdatePacketLoss(static_cast<double>(lostPackets) / expectedPackets);
+		}
 
 		if (this->rtpTransportControllerSend == nullptr)
 		{
@@ -236,7 +243,9 @@ namespace RTC
 	{
 		// Add the score into the histogram.
 		if (this->packetLossHistory.size() == PacketLossHistogramLength)
+		{
 			this->packetLossHistory.pop_front();
+		}
 
 		this->packetLossHistory.push_back(packetLoss);
 
@@ -303,9 +312,13 @@ namespace RTC
 		// Manage it via trending and increase it a bit to avoid immediate oscillations.
 #ifdef USE_TREND_CALCULATOR
 		if (!force)
+		{
 			this->desiredBitrateTrend.Update(desiredBitrate, nowMs);
+		}
 		else
+		{
 			this->desiredBitrateTrend.ForceUpdate(desiredBitrate, nowMs);
+		}
 #endif
 
 		this->bitrates.desiredBitrate = desiredBitrate;
@@ -512,9 +525,13 @@ namespace RTC
 		// Update availableBitrate.
 		// NOTE: Just in case.
 		if (targetTransferRate.target_rate.bps() > std::numeric_limits<uint32_t>::max())
+		{
 			this->bitrates.availableBitrate = std::numeric_limits<uint32_t>::max();
+		}
 		else
+		{
 			this->bitrates.availableBitrate = static_cast<uint32_t>(targetTransferRate.target_rate.bps());
+		}
 
 		MS_DEBUG_DEV("new available bitrate:%" PRIu32, this->bitrates.availableBitrate);
 

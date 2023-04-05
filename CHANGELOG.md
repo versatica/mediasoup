@@ -1,6 +1,12 @@
 # Changelog
 
 
+### 3.11.21
+
+* Fix check division by zero in transport congestion control ([PR #1049](https://github.com/versatica/mediasoup/pull/1049) by @ggarber).
+* Fix lost pending statuses in transport CC feedback ([PR #1050](https://github.com/versatica/mediasoup/pull/1050) by @ggarber).
+
+
 ### 3.11.20
 
 * `RtpStreamSend`: Reset RTP retransmission buffer upon RTP sequence number reset ([PR #1041](https://github.com/versatica/mediasoup/pull/1041)).
