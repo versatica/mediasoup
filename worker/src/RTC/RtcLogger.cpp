@@ -90,9 +90,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->sendTransportId = "undefined";
-			this->routerId        = "undefined";
-			this->producerId      = "undefined";
+			this->sendTransportId = {};
+			this->routerId        = {};
+			this->producerId      = {};
 			this->sendSeqNumber   = { 0 };
 			this->dropped         = { false };
 			this->dropReason      = { DropReason::NONE };
