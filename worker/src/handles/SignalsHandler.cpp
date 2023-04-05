@@ -30,7 +30,9 @@ SignalsHandler::~SignalsHandler()
 	MS_TRACE();
 
 	if (!this->closed)
+	{
 		Close();
+	}
 }
 
 void SignalsHandler::Close()
@@ -38,7 +40,9 @@ void SignalsHandler::Close()
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		return;
+	}
 
 	this->closed = true;
 
@@ -53,7 +57,9 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		MS_THROW_ERROR("closed");
+	}
 
 	int err;
 	auto* uvHandle = new uv_signal_t;
@@ -72,7 +78,9 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 	err = uv_signal_start(uvHandle, static_cast<uv_signal_cb>(onSignal), signum);
 
 	if (err != 0)
+	{
 		MS_THROW_ERROR("uv_signal_start() failed for signal %s: %s", name.c_str(), uv_strerror(err));
+	}
 
 	// Enter the UV handle into the vector.
 	this->uvHandles.push_back(uvHandle);
