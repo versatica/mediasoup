@@ -73,7 +73,7 @@ namespace RTC
 		// videos are muted or using screensharing with still images)
 		this->rtpTransportControllerSend->EnablePeriodicAlrProbing(true);
 
-		this->processTimer = new Timer(this);
+		this->processTimer = new TimerHandle(this);
 
 		// clang-format off
 		this->processTimer->Start(std::min(
@@ -556,7 +556,7 @@ namespace RTC
 		return this->probationGenerator->GetNextPacket(size);
 	}
 
-	void TransportCongestionControlClient::OnTimer(Timer* timer)
+	void TransportCongestionControlClient::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
 

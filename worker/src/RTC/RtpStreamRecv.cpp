@@ -203,7 +203,7 @@ namespace RTC
 
 		// Run the RTP inactivity periodic timer (use a different timeout if DTX is
 		// enabled).
-		this->inactivityCheckPeriodicTimer = new Timer(this);
+		this->inactivityCheckPeriodicTimer = new TimerHandle(this);
 		this->inactive                     = false;
 
 		if (!this->params.useDtx)
@@ -850,7 +850,7 @@ namespace RTC
 		// Nothing to do.
 	}
 
-	inline void RtpStreamRecv::OnTimer(Timer* timer)
+	inline void RtpStreamRecv::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
 

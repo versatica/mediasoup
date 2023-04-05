@@ -4,12 +4,12 @@
 #include "common.hpp"
 #include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
-#include "handles/UnixStreamSocket.hpp"
+#include "handles/UnixStreamSocketHandle.hpp"
 #include <string>
 
 namespace Channel
 {
-	class ConsumerSocket : public ::UnixStreamSocket
+	class ConsumerSocket : public ::UnixStreamSocketHandle
 	{
 	public:
 		class Listener
@@ -26,7 +26,7 @@ namespace Channel
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
 		~ConsumerSocket();
 
-		/* Pure virtual methods inherited from ::UnixStreamSocket. */
+		/* Pure virtual methods inherited from ::UnixStreamSocketHandle. */
 	public:
 		void UserOnUnixStreamRead() override;
 		void UserOnUnixStreamSocketClosed() override;
@@ -36,12 +36,12 @@ namespace Channel
 		Listener* listener{ nullptr };
 	};
 
-	class ProducerSocket : public ::UnixStreamSocket
+	class ProducerSocket : public ::UnixStreamSocketHandle
 	{
 	public:
 		ProducerSocket(int fd, size_t bufferSize);
 
-		/* Pure virtual methods inherited from ::UnixStreamSocket. */
+		/* Pure virtual methods inherited from ::UnixStreamSocketHandle. */
 	public:
 		void UserOnUnixStreamRead() override
 		{

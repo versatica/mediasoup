@@ -1,7 +1,7 @@
-#define MS_CLASS "Timer"
+#define MS_CLASS "TimerHandle"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "handles/Timer.hpp"
+#include "handles/TimerHandle.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -10,7 +10,7 @@
 
 inline static void onTimer(uv_timer_t* handle)
 {
-	static_cast<Timer*>(handle->data)->OnUvTimer();
+	static_cast<TimerHandle*>(handle->data)->OnUvTimer();
 }
 
 inline static void onClose(uv_handle_t* handle)
@@ -20,7 +20,7 @@ inline static void onClose(uv_handle_t* handle)
 
 /* Instance methods. */
 
-Timer::Timer(Listener* listener) : listener(listener)
+TimerHandle::TimerHandle(Listener* listener) : listener(listener)
 {
 	MS_TRACE();
 
@@ -38,7 +38,7 @@ Timer::Timer(Listener* listener) : listener(listener)
 	}
 }
 
-Timer::~Timer()
+TimerHandle::~TimerHandle()
 {
 	MS_TRACE();
 
@@ -48,7 +48,7 @@ Timer::~Timer()
 	}
 }
 
-void Timer::Close()
+void TimerHandle::Close()
 {
 	MS_TRACE();
 
@@ -62,7 +62,7 @@ void Timer::Close()
 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 }
 
-void Timer::Start(uint64_t timeout, uint64_t repeat)
+void TimerHandle::Start(uint64_t timeout, uint64_t repeat)
 {
 	MS_TRACE();
 
@@ -87,7 +87,7 @@ void Timer::Start(uint64_t timeout, uint64_t repeat)
 	}
 }
 
-void Timer::Stop()
+void TimerHandle::Stop()
 {
 	MS_TRACE();
 
@@ -104,7 +104,7 @@ void Timer::Stop()
 	}
 }
 
-void Timer::Reset()
+void TimerHandle::Reset()
 {
 	MS_TRACE();
 
@@ -132,7 +132,7 @@ void Timer::Reset()
 	}
 }
 
-void Timer::Restart()
+void TimerHandle::Restart()
 {
 	MS_TRACE();
 
@@ -155,7 +155,7 @@ void Timer::Restart()
 	}
 }
 
-inline void Timer::OnUvTimer()
+inline void TimerHandle::OnUvTimer()
 {
 	MS_TRACE();
 

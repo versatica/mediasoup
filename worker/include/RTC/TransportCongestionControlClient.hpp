@@ -8,7 +8,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpProbationGenerator.hpp"
 #include "RTC/TrendCalculator.hpp"
-#include "handles/Timer.hpp"
+#include "handles/TimerHandle.hpp"
 #include <libwebrtc/api/transport/goog_cc_factory.h>
 #include <libwebrtc/api/transport/network_types.h>
 #include <libwebrtc/call/rtp_transport_controller_send.h>
@@ -21,7 +21,7 @@ namespace RTC
 
 	class TransportCongestionControlClient : public webrtc::PacketRouter,
 	                                         public webrtc::TargetTransferRateObserver,
-	                                         public Timer::Listener
+	                                         public TimerHandle::Listener
 	{
 	public:
 		struct Bitrates
@@ -104,9 +104,9 @@ namespace RTC
 		void SendPacket(RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo) override;
 		RTC::RtpPacket* GeneratePadding(size_t size) override;
 
-		/* Pure virtual methods inherited from RTC::Timer. */
+		/* Pure virtual methods inherited from RTC::TimerHandle. */
 	public:
-		void OnTimer(Timer* timer) override;
+		void OnTimer(TimerHandle* timer) override;
 
 	private:
 		// Passed by argument.
@@ -115,7 +115,7 @@ namespace RTC
 		webrtc::NetworkControllerFactoryInterface* controllerFactory{ nullptr };
 		webrtc::RtpTransportControllerSend* rtpTransportControllerSend{ nullptr };
 		RTC::RtpProbationGenerator* probationGenerator{ nullptr };
-		Timer* processTimer{ nullptr };
+		TimerHandle* processTimer{ nullptr };
 		// Others.
 		RTC::BweType bweType;
 		uint32_t initialAvailableBitrate{ 0u };

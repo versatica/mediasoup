@@ -6,14 +6,14 @@
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "handles/Timer.hpp"
+#include "handles/TimerHandle.hpp"
 #include <libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h>
 #include <deque>
 
 namespace RTC
 {
 	class TransportCongestionControlServer : public webrtc::RemoteBitrateEstimator::Listener,
-	                                         public Timer::Listener
+	                                         public TimerHandle::Listener
 	{
 	public:
 		class Listener
@@ -67,15 +67,15 @@ namespace RTC
 		  const std::vector<uint32_t>& ssrcs,
 		  uint32_t availableBitrate) override;
 
-		/* Pure virtual methods inherited from Timer::Listener. */
+		/* Pure virtual methods inherited from TimerHandle::Listener. */
 	public:
-		void OnTimer(Timer* timer) override;
+		void OnTimer(TimerHandle* timer) override;
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
-		Timer* transportCcFeedbackSendPeriodicTimer{ nullptr };
+		TimerHandle* transportCcFeedbackSendPeriodicTimer{ nullptr };
 		std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> transportCcFeedbackPacket;
 		webrtc::RemoteBitrateEstimatorAbsSendTime* rembServer{ nullptr };
 		// Others.

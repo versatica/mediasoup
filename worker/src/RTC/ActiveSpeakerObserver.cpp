@@ -110,7 +110,7 @@ namespace RTC
 		else if (this->interval > 5000)
 			this->interval = 5000;
 
-		this->periodicTimer = new Timer(this);
+		this->periodicTimer = new TimerHandle(this);
 
 		this->periodicTimer->Start(interval, interval);
 
@@ -245,7 +245,7 @@ namespace RTC
 		this->periodicTimer->Restart();
 	}
 
-	void ActiveSpeakerObserver::OnTimer(Timer* timer)
+	void ActiveSpeakerObserver::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
 

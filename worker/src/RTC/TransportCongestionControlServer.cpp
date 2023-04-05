@@ -38,7 +38,7 @@ namespace RTC
 				this->transportCcFeedbackPacket->SetFeedbackPacketCount(this->transportCcFeedbackPacketCount);
 
 				// Create the feedback send periodic timer.
-				this->transportCcFeedbackSendPeriodicTimer = new Timer(this);
+				this->transportCcFeedbackSendPeriodicTimer = new TimerHandle(this);
 
 				break;
 			}
@@ -383,7 +383,7 @@ namespace RTC
 		this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, &packet);
 	}
 
-	inline void TransportCongestionControlServer::OnTimer(Timer* timer)
+	inline void TransportCongestionControlServer::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
 

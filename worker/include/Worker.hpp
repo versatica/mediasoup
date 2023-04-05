@@ -8,13 +8,13 @@
 #include "RTC/Router.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/WebRtcServer.hpp"
-#include "handles/SignalsHandler.hpp"
+#include "handles/SignalHandle.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <flatbuffers/flatbuffer_builder.h>
 #include <string>
 
 class Worker : public Channel::ChannelSocket::Listener,
-               public SignalsHandler::Listener,
+               public SignalHandle::Listener,
                public RTC::Router::Listener
 {
 public:
@@ -41,9 +41,9 @@ public:
 public:
 	void OnChannelClosed(Channel::ChannelSocket* channel) override;
 
-	/* Methods inherited from SignalsHandler::Listener. */
+	/* Methods inherited from SignalHandle::Listener. */
 public:
-	void OnSignal(SignalsHandler* signalsHandler, int signum) override;
+	void OnSignal(SignalHandle* signalsHandler, int signum) override;
 
 	/* Pure virtual methods inherited from RTC::Router::Listener. */
 public:
@@ -53,7 +53,7 @@ private:
 	// Passed by argument.
 	Channel::ChannelSocket* channel{ nullptr };
 	// Allocated by this.
-	SignalsHandler* signalsHandler{ nullptr };
+	SignalHandle* signalHandle{ nullptr };
 	RTC::Shared* shared{ nullptr };
 	absl::flat_hash_map<std::string, RTC::WebRtcServer*> mapWebRtcServers;
 	absl::flat_hash_map<std::string, RTC::Router*> mapRouters;

@@ -3,7 +3,7 @@
 
 ### Next
 
-* Add `sendBufferSize` and `recvBufferSize` to `WebRtcServerOptions.listenInfos` ([PR #1052](https://github.com/versatica/mediasoup/pull/1052)).
+* Allow passing `sendBufferSize` and `recvBufferSize` when creating transports ([PR #1052](https://github.com/versatica/mediasoup/pull/1052)).
 
 
 ### 3.11.21
