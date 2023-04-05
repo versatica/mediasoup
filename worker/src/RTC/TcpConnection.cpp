@@ -16,7 +16,7 @@ namespace RTC
 	/* Instance methods. */
 
 	TcpConnection::TcpConnection(Listener* listener, size_t bufferSize)
-	  : ::TcpConnectionHandler::TcpConnectionHandler(bufferSize), listener(listener)
+	  : ::TcpConnectionHandle::TcpConnectionHandle(bufferSize), listener(listener)
 	{
 		MS_TRACE();
 	}
@@ -154,7 +154,7 @@ namespace RTC
 		}
 	}
 
-	void TcpConnection::Send(const uint8_t* data, size_t len, ::TcpConnectionHandler::onSendCallback* cb)
+	void TcpConnection::Send(const uint8_t* data, size_t len, ::TcpConnectionHandle::onSendCallback* cb)
 	{
 		MS_TRACE();
 
@@ -163,6 +163,6 @@ namespace RTC
 		uint8_t frameLen[2];
 
 		Utils::Byte::Set2Bytes(frameLen, 0, len);
-		::TcpConnectionHandler::Write(frameLen, 2, data, len, cb);
+		::TcpConnectionHandle::Write(frameLen, 2, data, len, cb);
 	}
 } // namespace RTC

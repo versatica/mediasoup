@@ -1,7 +1,7 @@
-#define MS_CLASS "TcpServerHandler"
+#define MS_CLASS "TcpServerHandle"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "handles/TcpServerHandler.hpp"
+#include "handles/TcpServerHandle.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -14,7 +14,7 @@ static constexpr int ListenBacklog{ 512 };
 
 inline static void onConnection(uv_stream_t* handle, int status)
 {
-	auto* server = static_cast<TcpServerHandler*>(handle->data);
+	auto* server = static_cast<TcpServerHandle*>(handle->data);
 
 	if (server)
 	{
@@ -30,7 +30,7 @@ inline static void onClose(uv_handle_t* handle)
 /* Instance methods. */
 
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-TcpServerHandler::TcpServerHandler(uv_tcp_t* uvHandle) : uvHandle(uvHandle)
+TcpServerHandle::TcpServerHandle(uv_tcp_t* uvHandle) : uvHandle(uvHandle)
 {
 	MS_TRACE();
 
@@ -59,7 +59,7 @@ TcpServerHandler::TcpServerHandler(uv_tcp_t* uvHandle) : uvHandle(uvHandle)
 	}
 }
 
-TcpServerHandler::~TcpServerHandler()
+TcpServerHandle::~TcpServerHandle()
 {
 	MS_TRACE();
 
@@ -69,7 +69,7 @@ TcpServerHandler::~TcpServerHandler()
 	}
 }
 
-void TcpServerHandler::Close()
+void TcpServerHandle::Close()
 {
 	MS_TRACE();
 
@@ -80,7 +80,7 @@ void TcpServerHandler::Close()
 
 	this->closed = true;
 
-	// Tell the UV handle that the TcpServerHandler has been closed.
+	// Tell the UV handle that the TcpServerHandle has been closed.
 	this->uvHandle->data = nullptr;
 
 	MS_DEBUG_DEV("closing %zu active connections", this->connections.size());
@@ -93,19 +93,19 @@ void TcpServerHandler::Close()
 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 }
 
-void TcpServerHandler::Dump() const
+void TcpServerHandle::Dump() const
 {
-	MS_DUMP("<TcpServerHandler>");
+	MS_DUMP("<TcpServerHandle>");
 	MS_DUMP(
 	  "  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
 	  this->localIp.c_str(),
 	  static_cast<uint16_t>(this->localPort),
 	  (!this->closed) ? "open" : "closed",
 	  this->connections.size());
-	MS_DUMP("</TcpServerHandler>");
+	MS_DUMP("</TcpServerHandle>");
 }
 
-uint32_t TcpServerHandler::GetSendBufferSize() const
+uint32_t TcpServerHandle::GetSendBufferSize() const
 {
 	MS_TRACE();
 
@@ -120,7 +120,7 @@ uint32_t TcpServerHandler::GetSendBufferSize() const
 	return static_cast<uint32_t>(size);
 }
 
-void TcpServerHandler::SetSendBufferSize(uint32_t size)
+void TcpServerHandle::SetSendBufferSize(uint32_t size)
 {
 	MS_TRACE();
 
@@ -142,7 +142,7 @@ void TcpServerHandler::SetSendBufferSize(uint32_t size)
 	this->sendBufferSize = size;
 }
 
-uint32_t TcpServerHandler::GetRecvBufferSize() const
+uint32_t TcpServerHandle::GetRecvBufferSize() const
 {
 	MS_TRACE();
 
@@ -157,7 +157,7 @@ uint32_t TcpServerHandler::GetRecvBufferSize() const
 	return static_cast<uint32_t>(size);
 }
 
-void TcpServerHandler::SetRecvBufferSize(uint32_t size)
+void TcpServerHandle::SetRecvBufferSize(uint32_t size)
 {
 	MS_TRACE();
 
@@ -179,11 +179,11 @@ void TcpServerHandler::SetRecvBufferSize(uint32_t size)
 	this->recvBufferSize = size;
 }
 
-void TcpServerHandler::AcceptTcpConnection(TcpConnectionHandler* connection)
+void TcpServerHandle::AcceptTcpConnection(TcpConnectionHandle* connection)
 {
 	MS_TRACE();
 
-	MS_ASSERT(connection != nullptr, "TcpConnectionHandler pointer was not allocated by the user");
+	MS_ASSERT(connection != nullptr, "TcpConnectionHandle pointer was not allocated by the user");
 
 	try
 	{
@@ -235,7 +235,7 @@ void TcpServerHandler::AcceptTcpConnection(TcpConnectionHandler* connection)
 	this->connections.insert(connection);
 }
 
-bool TcpServerHandler::SetLocalAddress()
+bool TcpServerHandle::SetLocalAddress()
 {
 	MS_TRACE();
 
@@ -260,7 +260,7 @@ bool TcpServerHandler::SetLocalAddress()
 	return true;
 }
 
-inline void TcpServerHandler::OnUvConnection(int status)
+inline void TcpServerHandle::OnUvConnection(int status)
 {
 	MS_TRACE();
 
@@ -280,13 +280,13 @@ inline void TcpServerHandler::OnUvConnection(int status)
 	UserOnTcpConnectionAlloc();
 }
 
-inline void TcpServerHandler::OnTcpConnectionClosed(TcpConnectionHandler* connection)
+inline void TcpServerHandle::OnTcpConnectionClosed(TcpConnectionHandle* connection)
 {
 	MS_TRACE();
 
 	MS_DEBUG_DEV("TCP connection closed");
 
-	// Remove the TcpConnectionHandler from the set.
+	// Remove the TcpConnectionHandle from the set.
 	this->connections.erase(connection);
 
 	// Notify the subclass.

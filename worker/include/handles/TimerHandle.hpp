@@ -1,10 +1,10 @@
-#ifndef MS_TIMER_HPP
-#define MS_TIMER_HPP
+#ifndef MS_TIMER_HANDLE_HPP
+#define MS_TIMER_HANDLE_HPP
 
 #include "common.hpp"
 #include <uv.h>
 
-class Timer
+class TimerHandle
 {
 public:
 	class Listener
@@ -13,14 +13,14 @@ public:
 		virtual ~Listener() = default;
 
 	public:
-		virtual void OnTimer(Timer* timer) = 0;
+		virtual void OnTimer(TimerHandle* timer) = 0;
 	};
 
 public:
-	explicit Timer(Listener* listener);
-	Timer& operator=(const Timer&) = delete;
-	Timer(const Timer&)            = delete;
-	~Timer();
+	explicit TimerHandle(Listener* listener);
+	TimerHandle& operator=(const TimerHandle&) = delete;
+	TimerHandle(const TimerHandle&)            = delete;
+	~TimerHandle();
 
 public:
 	void Close();
