@@ -38,6 +38,12 @@ if get_option('ms_log_file_line')
   ]
 endif
 
+if get_option('ms_rtc_logger_rtp')
+  cpp_args += [
+    '-DMS_RTC_LOGGER_RTP',
+  ]
+endif
+
 common_sources = [
   'src/lib.cpp',
   'src/DepLibSRTP.cpp',
@@ -85,6 +91,7 @@ common_sources = [
   'src/RTC/Producer.cpp',
   'src/RTC/RateCalculator.cpp',
   'src/RTC/Router.cpp',
+  'src/RTC/RtcLogger.cpp',
   'src/RTC/RtpListener.cpp',
   'src/RTC/RtpObserver.cpp',
   'src/RTC/RtpPacket.cpp',

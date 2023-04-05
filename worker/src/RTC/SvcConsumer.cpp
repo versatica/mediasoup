@@ -593,8 +593,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		packet->logger.consumerId = this->id;
+
 		if (!IsActive())
+		{
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::CONSUMER_INACTIVE);
+
 			return;
+		}
 
 		// clang-format off
 		if (
@@ -603,6 +609,8 @@ namespace RTC
 		)
 		// clang-format on
 		{
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::INVALID_TARGET_LAYER);
+
 			return;
 		}
 
@@ -614,12 +622,18 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE);
+
 			return;
 		}
 
 		// If we need to sync and this is not a key frame, ignore the packet.
 		if (this->syncRequired && !packet->IsKeyFrame())
+		{
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
+
 			return;
+		}
 
 		// Whether this is the first packet after re-sync.
 		const bool isSyncPacket = this->syncRequired;
@@ -645,6 +659,8 @@ namespace RTC
 		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 		{
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::DROPPED_BY_CODEC);
 
 			return;
 		}
@@ -672,6 +688,9 @@ namespace RTC
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
+
+		packet->logger.sendRtpTimestamp = packet->GetTimestamp();
+		packet->logger.sendSeqNumber    = seq;
 
 		if (marker)
 		{

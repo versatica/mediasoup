@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpPacket.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include <cstring>  // std::memcpy(), std::memmove(), std::memset()
 #include <iterator> // std::ostream_iterator
@@ -139,6 +140,14 @@ namespace RTC
 
 		// Parse RFC 5285 header extension.
 		ParseExtensions();
+
+// Avoid retrieving the time if RTC logger is disabled.
+#ifdef MS_RTC_LOGGER_RTP
+		// Initialize logger.
+		this->logger.timestamp        = DepLibUV::GetTimeMs();
+		this->logger.recvRtpTimestamp = this->GetTimestamp();
+		this->logger.recvSeqNumber    = this->GetSequenceNumber();
+#endif
 	}
 
 	RtpPacket::~RtpPacket()

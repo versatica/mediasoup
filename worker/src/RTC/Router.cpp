@@ -706,6 +706,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		packet->logger.routerId = this->id;
+
 		auto& consumers = this->mapProducerConsumers.at(producer);
 
 		if (!consumers.empty())

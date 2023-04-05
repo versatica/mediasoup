@@ -265,8 +265,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		packet->logger.consumerId = this->id;
+
 		if (!IsActive())
+		{
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::CONSUMER_INACTIVE);
+
 			return;
+		}
 
 		auto payloadType = packet->GetPayloadType();
 
@@ -275,6 +281,8 @@ namespace RTC
 		if (!this->supportedCodecPayloadTypes[payloadType])
 		{
 			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE);
 
 			return;
 		}
@@ -292,13 +300,19 @@ namespace RTC
 
 			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::DROPPED_BY_CODEC);
+
 			return;
 		}
 
 		// If we need to sync, support key frames and this is not a key frame, ignore
 		// the packet.
 		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
+		{
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
+
 			return;
+		}
 
 		// Whether this is the first packet after re-sync.
 		const bool isSyncPacket = this->syncRequired;
@@ -326,6 +340,9 @@ namespace RTC
 		// Rewrite packet.
 		packet->SetSsrc(this->rtpParameters.encodings[0].ssrc);
 		packet->SetSequenceNumber(seq);
+
+		packet->logger.sendRtpTimestamp = packet->GetTimestamp();
+		packet->logger.sendSeqNumber    = seq;
 
 		if (isSyncPacket)
 		{
