@@ -342,7 +342,7 @@ namespace RTC
 		packet->SetSequenceNumber(seq);
 
 		packet->logger.sendRtpTimestamp = packet->GetTimestamp();
-		packet->logger.sendSeqNumber = seq;
+		packet->logger.sendSeqNumber    = seq;
 
 		if (isSyncPacket)
 		{
