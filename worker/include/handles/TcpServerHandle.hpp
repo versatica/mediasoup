@@ -52,7 +52,7 @@ private:
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:
-	virtual void UserOnTcpConnectionAlloc()                                  = 0;
+	virtual void UserOnTcpConnectionAlloc()                                 = 0;
 	virtual void UserOnTcpConnectionClosed(TcpConnectionHandle* connection) = 0;
 
 	/* Callbacks fired by UV events. */

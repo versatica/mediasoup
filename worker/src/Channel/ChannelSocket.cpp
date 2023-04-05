@@ -322,7 +322,8 @@ namespace Channel
 	/* Instance methods. */
 
 	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
-	  : ::UnixStreamSocketHandle(fd, bufferSize, ::UnixStreamSocketHandle::Role::CONSUMER), listener(listener)
+	  : ::UnixStreamSocketHandle(fd, bufferSize, ::UnixStreamSocketHandle::Role::CONSUMER),
+	    listener(listener)
 	{
 		MS_TRACE_STD();
 	}
