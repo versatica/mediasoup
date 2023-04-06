@@ -90,10 +90,7 @@ namespace RTC
 			// Dropped entries count that must be considered for the output.
 			size_t count{ 0 };
 
-			/*
-			 * Consider values lower than input and those higher that input
-			 * which belong to a previous cycle.
-			 */
+			// Consider values lower than input.
 			for (const auto& value : this->dropped)
 			{
 				if (IsSeqLowerThan(value, input))
@@ -116,15 +113,13 @@ namespace RTC
 		}
 		else
 		{
-			// New input is higher than the maximum seen. But less than acceptable units higher.
-			// Keep it as the maximum seen. See Drop().
+			// New input is higher than the maximum seen.
 			if (IsSeqHigherThan(input, this->maxInput))
 			{
 				this->maxInput = input;
 			}
 
-			// New output is higher than the maximum seen. But less than acceptable units higher.
-			// Keep it as the maximum seen. See Sync().
+			// New output is higher than the maximum seen.
 			if (IsSeqHigherThan(output, this->maxOutput))
 			{
 				this->maxOutput = output;
@@ -147,7 +142,7 @@ namespace RTC
 	}
 
 	/*
-	 * Delete droped inputs greater than maxInput that belong to a previous
+	 * Delete droped inputs greater than maxInput, which belong to a previous
 	 * cycle.
 	 */
 	template<typename T, uint8_t N>
