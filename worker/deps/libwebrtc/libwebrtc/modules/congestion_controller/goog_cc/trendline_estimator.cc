@@ -89,7 +89,7 @@ absl::optional<double> ComputeSlopeCap(
 }
 
 constexpr double kMaxAdaptOffsetMs = 15.0;
-constexpr double kOverUsingTimeThreshold = 30;
+constexpr double kOverUsingTimeThreshold = 10;
 constexpr int kMinNumDeltas = 60;
 constexpr int kDeltaCounterMax = 1000;
 
