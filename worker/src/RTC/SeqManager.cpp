@@ -71,7 +71,7 @@ namespace RTC
 		// There are dropped inputs. Synchronize.
 		if (!this->dropped.empty())
 		{
-			// Set maxInput here if needed before calling ClearDropped.
+			// Set maxInput here if needed before calling ClearDropped().
 			if (this->started && IsSeqHigherThan(input, this->maxInput))
 			{
 				this->maxInput = input;
