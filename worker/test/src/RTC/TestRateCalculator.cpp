@@ -1,6 +1,6 @@
 #include "common.hpp"
-#include "DepLibUV.hpp"
 #include "RTC/RateCalculator.hpp"
+#include "handles/Timer.hpp"
 #include <catch2/catch.hpp>
 #include <vector>
 
@@ -25,7 +25,7 @@ void validate(RateCalculator& rate, uint64_t timeBase, std::vector<data>& input)
 
 SCENARIO("Bitrate calculator", "[rtp][bitrate]")
 {
-	uint64_t nowMs = DepLibUV::GetTimeMs();
+	uint64_t nowMs = GetTimeMs();
 
 	SECTION("receive single item per 1000 ms")
 	{

@@ -2,7 +2,6 @@
 #define MS_RTC_RATE_CALCULATOR_HPP
 
 #include "common.hpp"
-#include "DepLibUV.hpp"
 #include "RTC/RtpPacket.hpp"
 
 namespace RTC

@@ -334,6 +334,7 @@ mediasoup_worker_test = executable(
   cpp_args: cpp_args + [
     '-DMS_LOG_STD',
     '-DMS_TEST',
+    '-DFAKE_TIMERS',
   ],
 )
 
