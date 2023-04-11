@@ -60,6 +60,8 @@ namespace RTC
 		{
 			this->maxInput = input;
 			this->dropped.insert(input);
+
+			ClearDropped();
 		}
 	}
 
@@ -68,10 +70,15 @@ namespace RTC
 	{
 		auto base = this->base;
 
-		// There are dropped inputs. Synchronize.
-		if (!this->dropped.empty())
+		// No dropped inputs to consider.
+		if (this->dropped.empty())
 		{
-			// Set maxInput here if needed before calling ClearDropped().
+			goto done;
+		}
+		// Dropped inputs present, cleanup and update base.
+		else
+		{
+			// Set 'maxInput' here if needed before calling ClearDropped().
 			if (this->started && IsSeqHigherThan(input, this->maxInput))
 			{
 				this->maxInput = input;
@@ -79,29 +86,36 @@ namespace RTC
 
 			ClearDropped();
 
-			// Check whether this input was dropped.
-			if (this->dropped.find(input) != this->dropped.end())
-			{
-				MS_DEBUG_DEV("trying to send a dropped input");
-
-				return false;
-			}
-
-			// Dropped entries count that must be considered for the output.
-			size_t count{ 0 };
-
-			// Consider values lower than input.
-			for (const auto& value : this->dropped)
-			{
-				if (IsSeqLowerThan(value, input))
-				{
-					count++;
-				}
-			}
-
-			base = (this->base - count) & MaxValue;
+			base = this->base;
 		}
 
+		// No dropped inputs to consider after cleanup.
+		if (this->dropped.empty())
+		{
+			goto done;
+		}
+		// This input was dropped.
+		else if (this->dropped.find(input) != this->dropped.end())
+		{
+			MS_DEBUG_DEV("trying to send a dropped input");
+
+			return false;
+		}
+		// There are dropped inputs, calculate 'base' for this input.
+		else
+		{
+			// Get the first dropped input which is higher than or equal 'input'.
+			auto it = this->dropped.lower_bound(input);
+
+			// There are dropped inputs lower than 'input'.
+			if (it != this->dropped.begin())
+			{
+				auto count = std::distance(this->dropped.begin(), it);
+				base       = (this->base - count) & MaxValue;
+			}
+		}
+
+	done:
 		output = (input + base) & MaxValue;
 
 		if (!this->started)
