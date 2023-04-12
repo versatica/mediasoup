@@ -184,7 +184,7 @@ namespace Channel
 
 			// TMP: For debugging.
 			auto s = flatbuffers::FlatBufferToString(
-				reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+			  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
 			MS_ERROR("%s", s.c_str());
 
 			if (message->type() == FBS::Message::Type::REQUEST)
