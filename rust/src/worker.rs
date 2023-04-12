@@ -624,7 +624,7 @@ impl Worker {
     }
 
     /// Updates the worker settings in runtime. Just a subset of the worker settings can be updated.
-    pub async fn update_settings(&self, _data: WorkerUpdateSettings) -> Result<(), RequestError> {
+    pub async fn update_settings(&self, data: WorkerUpdateSettings) -> Result<(), RequestError> {
         debug!("update_settings()");
 
         let body: UnionOffset<fbs::request::Body>;
@@ -632,8 +632,13 @@ impl Worker {
         {
             let mut builder = self.inner.channel.builder.lock();
 
-            // TODO: Use default settings for now.
-            let settings = fbs::worker::UpdateSettingsRequest::default();
+            let settings = fbs::worker::UpdateSettingsRequest::create(
+                &mut builder,
+                data.log_level.unwrap_or_default().as_str(),
+                data.log_tags
+                    .map(|tags| tags.iter().map(|tag| tag.as_str()).collect::<Vec<&str>>()),
+            );
+
             body = fbs::request::Body::create_update_settings_request(&mut builder, settings);
         }
 
