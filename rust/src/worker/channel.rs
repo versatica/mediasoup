@@ -1,4 +1,4 @@
-use crate::fbs::fbs::{message, notification, response};
+use crate::fbs::fbs::{message, notification, request, response};
 use crate::messages::{Notification, Request, WorkerCloseRequest};
 use crate::worker::common::{
     EventHandlers, FBSEventHandlers, FBSWeakEventHandlers, SubscriptionTarget, WeakEventHandlers,
@@ -12,12 +12,14 @@ use log::{debug, error, trace};
 use lru::LruCache;
 use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
-use planus::ReadAsRoot;
+use planus::UnionOffset;
+use planus::{Builder, ReadAsRoot};
 use serde::Deserialize;
 use serde_json::Value;
 use std::any::TypeId;
 use std::collections::VecDeque;
 use std::fmt::{Debug, Display};
+use std::io::copy;
 use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -162,6 +164,13 @@ struct RequestsContainer {
     handlers: HashedMap<u32, async_oneshot::Sender<ResponseResult<Value>>>,
 }
 
+/* TODO: Remove.
+impl Drop for RequestsContainer {
+    fn drop(&mut self) {
+        panic!();
+    }
+}
+*/
 /*
 struct OutgoingMessageRequest {
     message: Vec<u8>,
@@ -182,6 +191,7 @@ struct OutgoingMessageBuffer {
 
 #[allow(clippy::type_complexity)]
 struct Inner {
+    builder: Arc<Mutex<Builder>>,
     outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
@@ -259,6 +269,9 @@ impl Channel {
             move |message| {
                 trace!("received raw message: {}", String::from_utf8_lossy(message));
 
+                // TODO: Remove. Just use it here so it does not go out of scope.
+                requests_container.lock();
+
                 match deserialize_message(message) {
                     ChannelReceiveMessage::Notification(notification) => {
                         let target_id: SubscriptionTarget = SubscriptionTarget::String(
@@ -320,7 +333,9 @@ impl Channel {
             }
         });
 
+        let builder = Arc::new(Mutex::new(Builder::new()));
         let inner = Arc::new(Inner {
+            builder,
             outgoing_message_buffer,
             internal_message_receiver,
             requests_container_weak,
@@ -489,6 +504,134 @@ impl Channel {
                     } else {
                         Err(RequestError::ChannelClosed)
                     }
+                } else {
+                    Err(RequestError::Response { reason })
+                }
+            }
+        }
+    }
+
+    pub(crate) async fn request_fbs<HandlerId>(
+        &self,
+        handler_id: HandlerId,
+        method: request::Method,
+        body: Option<UnionOffset<request::Body>>,
+    ) -> Result<response::Response, RequestError>
+    // ) -> Result<R::Response, RequestError>
+    where
+        HandlerId: Display,
+    {
+        let id;
+        let (result_sender, result_receiver) = async_oneshot::oneshot();
+
+        {
+            let requests_container = match self.inner.requests_container_weak.upgrade() {
+                Some(requests_container_lock) => requests_container_lock,
+                None => {
+                    return Err(RequestError::ChannelClosed);
+                }
+            };
+            let mut requests_container_lock = requests_container.lock();
+
+            id = requests_container_lock.next_id;
+
+            requests_container_lock.next_id = requests_container_lock.next_id.wrapping_add(1);
+            requests_container_lock.handlers.insert(id, result_sender);
+        }
+
+        // debug!("request() [method:{:?}, id:{}]: {:?}", method, id, body);
+        debug!("request() [method:{:?}, id:{}]", method, id);
+
+        // TODO: Todo pre-allocate fixed size buffer sufficient for most cases by default
+        let mut copied: Vec<u8> = vec![];
+
+        {
+            let mut builder_lock = self.inner.builder.lock();
+
+            let request = request::Request::create(
+                &mut builder_lock,
+                id,
+                method,
+                handler_id.to_string(),
+                body,
+            );
+
+            let message_body = message::Body::create_request(&mut builder_lock, request);
+            let message =
+                message::Message::create(&mut builder_lock, message::Type::Request, message_body);
+
+            let mut data = builder_lock.finish(message, None);
+
+            copy(&mut data, &mut copied).unwrap();
+
+            // Clear the builder.
+            builder_lock.clear();
+        }
+
+        let buffer = Arc::new(AtomicTake::new(copied));
+
+        {
+            let mut outgoing_message_buffer = self.inner.outgoing_message_buffer.lock();
+            outgoing_message_buffer
+                .messages
+                .push_back(Arc::clone(&buffer));
+            if let Some(handle) = outgoing_message_buffer.handle {
+                if self.inner.worker_closed.load(Ordering::Acquire) {
+                    // Forbid all requests after worker closing except one worker closing request
+                    if method != request::Method::WorkerClose {
+                        return Err(RequestError::ChannelClosed);
+                    }
+                }
+                unsafe {
+                    // Notify worker that there is something to read
+                    let ret = mediasoup_sys::uv_async_send(handle);
+                    if ret != 0 {
+                        error!("uv_async_send call failed with code {}", ret);
+
+                        return Err(RequestError::ChannelClosed);
+                    }
+                }
+            }
+        }
+
+        // Drop guard to make sure to drop pending request when future is cancelled
+        let request_drop_guard = RequestDropGuard {
+            id,
+            message: buffer,
+            channel: self,
+            removed: false,
+        };
+
+        let response_result_fut = result_receiver.await;
+
+        request_drop_guard.remove();
+
+        let response_result = match response_result_fut {
+            Ok(response_result) => response_result,
+            Err(_closed) => Err(ResponseError {
+                reason: String::from("ChannelClosed"),
+            }),
+        };
+
+        match response_result {
+            Ok(data) => {
+                // debug!("request succeeded [method:{}, id:{}]", method, id);
+                debug!("request succeeded [method:{:?}, id:{}]", method, id);
+
+                // Default will work for `()` response
+                serde_json::from_value(data.unwrap_or_default()).map_err(|error| {
+                    RequestError::FailedToParse {
+                        error: error.to_string(),
+                    }
+                })
+            }
+            Err(ResponseError { reason }) => {
+                debug!(
+                    "request failed [method:{:?}, id:{}]: {}",
+                    method, id, reason
+                );
+                if reason.contains("not found") {
+                    Err(RequestError::ChannelClosed)
                 } else {
                     Err(RequestError::Response { reason })
                 }

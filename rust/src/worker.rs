@@ -8,8 +8,8 @@ mod utils;
 use crate::data_structures::AppData;
 use crate::fbs::fbs;
 use crate::messages::{
-    WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest,
-    WorkerDumpRequest, WorkerUpdateSettingsRequest,
+    WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest, WorkerDumpRequest,
+    WorkerUpdateSettingsRequest,
 };
 pub use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
@@ -549,7 +549,9 @@ impl Inner {
 
             self.executor
                 .spawn(async move {
-                    let _ = channel.request("", WorkerCloseRequest {}).await;
+                    let _ = channel
+                        .request_fbs("", fbs::request::Method::WorkerClose, None)
+                        .await;
 
                     // Drop channels in here after response from worker
                     drop(channel);
