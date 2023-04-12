@@ -8,12 +8,11 @@ use crate::worker::utils::{PreparedChannelRead, PreparedChannelWrite};
 use crate::worker::{RequestError, SubscriptionHandler};
 use atomic_take::AtomicTake;
 use hash_hasher::HashedMap;
-use log::{debug, error, trace};
+use log::{debug, error, trace, warn};
 use lru::LruCache;
 use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
-use planus::UnionOffset;
-use planus::{Builder, ReadAsRoot};
+use planus::{Builder, ReadAsRoot, UnionOffset};
 use serde::Deserialize;
 use serde_json::Value;
 use std::any::TypeId;
@@ -129,6 +128,7 @@ struct ResponseError {
 }
 
 type ResponseResult<T> = Result<Option<T>, ResponseError>;
+type FBSResponseResult = Result<Option<response::Body>, ResponseError>;
 
 struct RequestDropGuard<'a> {
     id: u32,
@@ -149,6 +149,10 @@ impl<'a> Drop for RequestDropGuard<'a> {
         if let Some(requests_container) = self.channel.inner.requests_container_weak.upgrade() {
             requests_container.lock().handlers.remove(&self.id);
         }
+        // Remove request handler from the container
+        if let Some(requests_container) = self.channel.inner.fbs_requests_container_weak.upgrade() {
+            requests_container.lock().handlers.remove(&self.id);
+        }
     }
 }
 
@@ -162,6 +166,12 @@ impl<'a> RequestDropGuard<'a> {
 struct RequestsContainer {
     next_id: u32,
     handlers: HashedMap<u32, async_oneshot::Sender<ResponseResult<Value>>>,
+}
+
+#[derive(Default)]
+struct FBSRequestsContainer {
+    next_id: u32,
+    handlers: HashedMap<u32, async_oneshot::Sender<FBSResponseResult>>,
 }
 
 /* TODO: Remove.
@@ -195,6 +205,7 @@ struct Inner {
     outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
+    fbs_requests_container_weak: Weak<Mutex<FBSRequestsContainer>>,
     buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
     fbs_buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
     event_handlers_weak: WeakEventHandlers<Arc<dyn Fn(&[u8]) + Send + Sync + 'static>>,
@@ -214,6 +225,7 @@ impl Drop for Inner {
 #[derive(Clone)]
 pub(crate) struct Channel {
     inner: Arc<Inner>,
+    pub builder: Arc<Mutex<Builder>>,
 }
 
 impl Channel {
@@ -226,6 +238,8 @@ impl Channel {
         }));
         let requests_container = Arc::<Mutex<RequestsContainer>>::default();
         let requests_container_weak = Arc::downgrade(&requests_container);
+        let fbs_requests_container = Arc::<Mutex<FBSRequestsContainer>>::default();
+        let fbs_requests_container_weak = Arc::downgrade(&fbs_requests_container);
         let buffered_notifications_for =
             Arc::<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>::default();
         let fbs_buffered_notifications_for =
@@ -269,9 +283,6 @@ impl Channel {
             move |message| {
                 trace!("received raw message: {}", String::from_utf8_lossy(message));
 
-                // TODO: Remove. Just use it here so it does not go out of scope.
-                requests_container.lock();
-
                 match deserialize_message(message) {
                     ChannelReceiveMessage::Notification(notification) => {
                         let target_id: SubscriptionTarget = SubscriptionTarget::String(
@@ -301,44 +312,56 @@ impl Channel {
                         fbs_event_handlers
                             .call_callbacks_with_single_value(&target_id, notification);
                     }
-                    /*
-                    ChannelReceiveMessage::ResponseSuccess { id, data, .. } => {
-                        let sender = requests_container.lock().handlers.remove(&id);
+                    ChannelReceiveMessage::Response(response) => {
+                        let sender = fbs_requests_container
+                            .lock()
+                            .handlers
+                            .remove(&response.id().unwrap());
                         if let Some(mut sender) = sender {
-                            let _ = sender.send(Ok(data));
+                            // Request did not succeed.
+                            if let Ok(Some(error)) = response.error() {
+                                let _ = sender.send(Err(ResponseError {
+                                    reason: error.to_string(),
+                                }));
+                            }
+                            // Request succeeded.
+                            else {
+                                match response.body().expect("failed accessing response body") {
+                                    // Response has body.
+                                    Some(body_ref) => {
+                                        let _ = sender.send(Ok(Some(
+                                            body_ref
+                                                .try_into()
+                                                .expect("failed to retrieve response body"),
+                                        )));
+                                    }
+                                    // Response does not have body.
+                                    None => {
+                                        let _ = sender.send(Ok(None));
+                                    }
+                                }
+                            }
                         } else {
                             warn!(
                                 "received success response does not match any sent request [id:{}]",
-                                id,
+                                response.id().unwrap(),
                             );
                         }
                     }
-                    ChannelReceiveMessage::ResponseError { id, reason } => {
-                        let sender = requests_container.lock().handlers.remove(&id);
-                        if let Some(mut sender) = sender {
-                            let _ = sender.send(Err(ResponseError { reason }));
-                        } else {
-                            warn!(
-                                "received error response does not match any sent request [id:{}]",
-                                id,
-                            );
-                        }
-                    }
-                    */
                     ChannelReceiveMessage::Event(event_message) => {
                         let _ = internal_message_sender.try_send(event_message);
                     }
-                    _ => todo!(),
                 }
             }
         });
 
         let builder = Arc::new(Mutex::new(Builder::new()));
         let inner = Arc::new(Inner {
-            builder,
+            builder: builder.clone(),
             outgoing_message_buffer,
             internal_message_receiver,
             requests_container_weak,
+            fbs_requests_container_weak,
             buffered_notifications_for,
             fbs_buffered_notifications_for,
             event_handlers_weak,
@@ -348,7 +371,7 @@ impl Channel {
         });
 
         (
-            Self { inner },
+            Self { inner, builder },
             prepared_channel_read,
             prepared_channel_write,
         )
@@ -516,7 +539,7 @@ impl Channel {
         handler_id: HandlerId,
         method: request::Method,
         body: Option<UnionOffset<request::Body>>,
-    ) -> Result<response::Response, RequestError>
+    ) -> Result<Option<response::Body>, RequestError>
     // ) -> Result<R::Response, RequestError>
     where
         HandlerId: Display,
@@ -525,7 +548,7 @@ impl Channel {
         let (result_sender, result_receiver) = async_oneshot::oneshot();
 
         {
-            let requests_container = match self.inner.requests_container_weak.upgrade() {
+            let requests_container = match self.inner.fbs_requests_container_weak.upgrade() {
                 Some(requests_container_lock) => requests_container_lock,
                 None => {
                     return Err(RequestError::ChannelClosed);
@@ -615,15 +638,9 @@ impl Channel {
 
         match response_result {
             Ok(data) => {
-                // debug!("request succeeded [method:{}, id:{}]", method, id);
                 debug!("request succeeded [method:{:?}, id:{}]", method, id);
 
-                // Default will work for `()` response
-                serde_json::from_value(data.unwrap_or_default()).map_err(|error| {
-                    RequestError::FailedToParse {
-                        error: error.to_string(),
-                    }
-                })
+                Ok(data)
             }
             Err(ResponseError { reason }) => {
                 debug!(

@@ -9,7 +9,6 @@ use crate::data_structures::AppData;
 use crate::fbs::fbs;
 use crate::messages::{
     WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest, WorkerDumpRequest,
-    WorkerUpdateSettingsRequest,
 };
 pub use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
@@ -25,6 +24,7 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::FutureExt;
 use log::{debug, error, warn};
 use parking_lot::Mutex;
+use planus::UnionOffset;
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
@@ -624,13 +624,28 @@ impl Worker {
     }
 
     /// Updates the worker settings in runtime. Just a subset of the worker settings can be updated.
-    pub async fn update_settings(&self, data: WorkerUpdateSettings) -> Result<(), RequestError> {
+    pub async fn update_settings(&self, _data: WorkerUpdateSettings) -> Result<(), RequestError> {
         debug!("update_settings()");
 
-        self.inner
+        let body: UnionOffset<fbs::request::Body>;
+
+        {
+            let mut builder = self.inner.channel.builder.lock();
+
+            // TODO: Use default settings for now.
+            let settings = fbs::worker::UpdateSettingsRequest::default();
+            body = fbs::request::Body::create_update_settings_request(&mut builder, settings);
+        }
+
+        match self
+            .inner
             .channel
-            .request("", WorkerUpdateSettingsRequest { data })
+            .request_fbs("", fbs::request::Method::WorkerUpdateSettings, Some(body))
             .await
+        {
+            Ok(_) => Ok(()),
+            Err(error) => Err(error),
+        }
     }
 
     /// Create a WebRtcServer.
