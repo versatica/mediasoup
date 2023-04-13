@@ -8,13 +8,21 @@ namespace FBS.Transport;
 
 enum Protocol: uint8 { UDP = 1, TCP }
 
+table ListenInfo {
+  protocol:FBS.Transport.Protocol=UDP;
+  ip:string (required);
+  announced_ip:string;
+  port:uint16 = 0;
+  send_buffer_size:uint32 = 0;
+  recv_buffer_size:uint32 = 0;
+}
+
+/**
+ * @deprecated
+ */
 table ListenIp {
   ip:string (required);
   announced_ip:string;
-  udp_send_buffer_size:uint32 = 0;
-  udp_recv_buffer_size:uint32 = 0;
-  tcp_send_buffer_size:uint32 = 0;
-  tcp_recv_buffer_size:uint32 = 0;
 }
 
 table RestartIceResponse {

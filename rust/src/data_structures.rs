@@ -44,6 +44,34 @@ impl AppData {
     }
 }
 
+/// Listening protocol, IP and port for [`WebRtcServer`] to listen on.
+///
+/// # Notes on usage
+/// If you use "0.0.0.0" or "::" as ip value, then you need to also provide `announced_ip`.
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListenInfo {
+    /// Network protocol.
+    pub protocol: Protocol,
+    /// Listening IPv4 or IPv6.
+    pub ip: IpAddr,
+    /// Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with private IP).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub announced_ip: Option<IpAddr>,
+    /// Listening port.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port: Option<u16>,
+    /// Send buffer size (bytes).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub send_buffer_size: Option<u32>,
+    /// Recv buffer size (bytes).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recv_buffer_size: Option<u32>,
+}
+
+/// @deprecated
+/// Use ListenInfo instead.
+///
 /// IP to listen on.
 ///
 /// # Notes on usage
