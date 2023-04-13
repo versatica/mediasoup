@@ -4,7 +4,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { InvalidStateError } from './errors';
 import { Channel } from './Channel';
-import { Transport, TransportListenIp } from './Transport';
+import { Transport, TransportListenInfo, TransportListenIp } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions, parseWebRtcTransportDumpResponse } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions, parsePlainTransportDumpResponse } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions, parsePipeTransportDumpResponse } from './PipeTransport';
@@ -18,7 +18,7 @@ import { ActiveSpeakerObserver, ActiveSpeakerObserverOptions } from './ActiveSpe
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
-import { AppData } from './types';
+import { AppData, Either } from './types';
 import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
 import * as FbsAudioLevelObserver from './fbs/audio-level-observer';
 import * as FbsRequest from './fbs/request';
@@ -44,6 +44,22 @@ export type RouterOptions<RouterAppData extends AppData = AppData> =
 	appData?: RouterAppData;
 };
 
+type PipeToRouterListenInfo =
+{
+	listenInfo: TransportListenInfo;
+};
+
+type PipeToRouterListenIp =
+{
+	/**
+	 * IP used in the PipeTransport pair. Default '127.0.0.1'.
+	 */
+	listenIp?: TransportListenIp | string;
+};
+
+type PipeToRouterListen =
+	Either<PipeToRouterListenInfo, PipeToRouterListenIp>;
+
 export type PipeToRouterOptions =
 {
 	/**
@@ -60,11 +76,6 @@ export type PipeToRouterOptions =
 	 * Target Router instance.
 	 */
 	router: Router;
-
-	/**
-	 * IP used in the PipeTransport pair. Default '127.0.0.1'.
-	 */
-	listenIp?: TransportListenIp | string;
 
 	/**
 	 * Create a SCTP association. Default true.
@@ -85,7 +96,7 @@ export type PipeToRouterOptions =
 	 * Enable SRTP.
 	 */
 	enableSrtp?: boolean;
-};
+} & PipeToRouterListen;
 
 export type PipeToRouterResult =
 {
@@ -384,6 +395,7 @@ export class Router<RouterAppData extends AppData = AppData>
 	async createWebRtcTransport<WebRtcTransportAppData extends AppData = AppData>(
 		{
 			webRtcServer,
+			listenInfos,
 			listenIps,
 			port,
 			enableUdp = true,
@@ -401,9 +413,13 @@ export class Router<RouterAppData extends AppData = AppData>
 	{
 		logger.debug('createWebRtcTransport()');
 
-		if (!webRtcServer && !Array.isArray(listenIps))
+		if (!webRtcServer && !Array.isArray(listenInfos) && !Array.isArray(listenIps))
 		{
-			throw new TypeError('missing webRtcServer and listenIps (one of them is mandatory)');
+			throw new TypeError('missing webRtcServer and listenInfos and listenIps (one of them is mandatory)');
+		}
+		else if (Number(Boolean(webRtcServer)) + Number(Boolean(listenInfos)) + Number(Boolean(listenIps)) !== 1)
+		{
+			throw new TypeError('only one of webRtcServer, listenInfos and listenIps must be given');
 		}
 		else if (
 			numSctpStreams &&
@@ -419,29 +435,48 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		if (listenIps)
 		{
-			if (listenIps.length === 0)
-			{
-				throw new TypeError('empty listenIps array provided');
-			}
-
+			// Normalize IP strings to TransportListenIp objects.
 			listenIps = listenIps.map((listenIp) =>
 			{
-				if (typeof listenIp === 'string' && listenIp)
+				if (typeof listenIp === 'string')
 				{
 					return { ip: listenIp };
 				}
-				else if (typeof listenIp === 'object')
+				else
 				{
 					return {
 						ip          : listenIp.ip,
 						announcedIp : listenIp.announcedIp
 					};
 				}
-				else
-				{
-					throw new TypeError('wrong listenIp');
-				}
 			});
+
+			listenInfos = [];
+
+			if (enableUdp && !enableTcp)
+			{
+				for (const listenIp of listenIps as TransportListenIp[])
+				{
+					listenInfos.push(
+						{
+							protocol    : 'udp',
+							ip          : listenIp.ip,
+							announcedIp : listenIp.announcedIp
+						})
+				}
+			}
+			else if (enableTcp && !enableUdp)
+			{
+				for (const listenIp of listenIps as TransportListenIp[])
+				{
+					listenInfos.push(
+						{
+							protocol    : 'udp',
+							ip          : listenIp.ip,
+							announcedIp : listenIp.announcedIp
+						})
+				}
+			}
 		}
 
 		const transportId = uuidv4();
@@ -459,18 +494,18 @@ export class Router<RouterAppData extends AppData = AppData>
 		}
 		else
 		{
-			const fbsListenIps: FbsTransport.ListenIpT[] = [];
+			const fbsListenInfos: FbsTransport.ListenInfoT[] = [];
 
 			for (const listenIp of listenIps as any[])
 			{
-				fbsListenIps.push(new FbsTransport.ListenIpT(
+				fbsListenInfos.push(new FbsTransport.ListenInfoT(
 					listenIp.ip,
 					listenIp.announcedIp
 				));
 			}
 
 			webRtcTransportListenIndividual =
-				new FbsWebRtcTransport.ListenIndividualT(fbsListenIps, port);
+				new FbsWebRtcTransport.ListenIndividualT(fbsListenInfos);
 		}
 
 		const baseTransportOptions = new FbsTransport.OptionsT(
@@ -489,11 +524,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			webRtcServer ?
 				FbsWebRtcTransport.Listen.ListenServer :
 				FbsWebRtcTransport.Listen.ListenIndividual,
-			webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual,
-			enableUdp,
-			enableTcp,
-			preferUdp,
-			preferTcp
+			webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual
 		);
 
 		const requestOffset = new FbsRouter.CreateWebRtcTransportRequestT(
@@ -926,7 +957,8 @@ export class Router<RouterAppData extends AppData = AppData>
 			producerId,
 			dataProducerId,
 			router,
-			listenIp = '127.0.0.1',
+			listenInfo,
+			listenIp,
 			enableSctp = true,
 			numSctpStreams = { OS: 1024, MIS: 1024 },
 			enableRtx = false,
@@ -935,6 +967,11 @@ export class Router<RouterAppData extends AppData = AppData>
 	): Promise<PipeToRouterResult>
 	{
 		logger.debug('pipeToRouter()');
+
+		if (!listenInfo && !listenIp)
+		{
+			listenIp = '127.0.0.1';
+		}
 
 		if (!producerId && !dataProducerId)
 		{
@@ -995,9 +1032,9 @@ export class Router<RouterAppData extends AppData = AppData>
 				Promise.all(
 					[
 						this.createPipeTransport(
-							{ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }),
+							{ listenInfo, listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }),
 						router.createPipeTransport(
-							{ listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp })
+							{ listenInfo, listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp })
 					])
 					.then((pipeTransports) =>
 					{

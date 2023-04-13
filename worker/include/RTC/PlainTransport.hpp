@@ -14,15 +14,6 @@ namespace RTC
 	class PlainTransport : public RTC::Transport, public RTC::UdpSocket::Listener
 	{
 	private:
-		struct ListenIp
-		{
-			std::string ip;
-			std::string announcedIp;
-			uint32_t sendBufferSize{ 0u };
-			uint32_t recvBufferSize{ 0u };
-		};
-
-	private:
 		static absl::flat_hash_map<std::string, RTC::SrtpSession::CryptoSuite> string2SrtpCryptoSuite;
 		static absl::flat_hash_map<RTC::SrtpSession::CryptoSuite, std::string> srtpCryptoSuite2String;
 
@@ -85,7 +76,7 @@ namespace RTC
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
-		ListenIp listenIp;
+		ListenInfo listenInfo;
 		bool rtcpMux{ true };
 		bool comedia{ false };
 		struct sockaddr_storage remoteAddrStorage;
