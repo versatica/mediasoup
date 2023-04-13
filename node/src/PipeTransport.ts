@@ -11,6 +11,7 @@ import {
 	parseTuple,
 	parseTransportTraceEventData,
 	Transport,
+	TransportListenInfo,
 	TransportListenIp,
 	TransportTuple,
 	TransportEvents,
@@ -27,7 +28,7 @@ import {
 	serializeSrtpParameters,
 	SrtpParameters
 } from './SrtpParameters';
-import { AppData } from './types';
+import { AppData, Either } from './types';
 import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 import { Event, Notification } from './fbs/notification';
@@ -35,7 +36,15 @@ import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
 import * as FbsPipeTransport from './fbs/pipe-transport';
 
-export type PipeTransportOptions<PipeTransportAppData extends AppData = AppData> =
+type PipeTransportListenInfo =
+{
+	/**
+	 * Listening info.
+	 */
+	listenInfo: TransportListenInfo;
+};
+
+type PipeTransportListenIp =
 {
 	/**
 	 * Listening IP address.
@@ -47,7 +56,12 @@ export type PipeTransportOptions<PipeTransportAppData extends AppData = AppData>
 	 * range.
 	 */
 	port?: number;
+};
 
+type PipeTransportListen = Either<PipeTransportListenInfo, PipeTransportListenIp>;
+
+export type PipeTransportOptions<PipeTransportAppData extends AppData = AppData> =
+{
 	/**
 	 * Create a SCTP association. Default false.
 	 */
@@ -88,7 +102,7 @@ export type PipeTransportOptions<PipeTransportAppData extends AppData = AppData>
 	 * Custom application data.
 	 */
 	appData?: PipeTransportAppData;
-};
+} & PipeTransportListen;
 
 export type PipeTransportStat = BaseTransportStats &
 {

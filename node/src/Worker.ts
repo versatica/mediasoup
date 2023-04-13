@@ -684,7 +684,9 @@ export class Worker<WorkerAppData extends AppData = AppData>
 		for (const listenInfo of listenInfos)
 		{
 			fbsListenInfos.push(new FbsTransport.ListenInfoT(
-				listenInfo.protocol === 'udp' ? FbsTransportProtocol.UDP : FbsTransportProtocol.TCP,
+				listenInfo.protocol === 'udp'
+					? FbsTransportProtocol.UDP
+					: FbsTransportProtocol.TCP,
 				listenInfo.ip,
 				listenInfo.announcedIp,
 				listenInfo.port,

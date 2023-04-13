@@ -4,7 +4,12 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { InvalidStateError } from './errors';
 import { Channel } from './Channel';
-import { Transport, TransportListenInfo, TransportListenIp } from './Transport';
+import {
+	Transport,
+	TransportListenInfo,
+	TransportListenIp,
+	TransportProtocol
+} from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions, parseWebRtcTransportDumpResponse } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions, parsePlainTransportDumpResponse } from './PlainTransport';
 import { PipeTransport, PipeTransportOptions, parsePipeTransportDumpResponse } from './PipeTransport';
@@ -24,11 +29,12 @@ import * as FbsAudioLevelObserver from './fbs/audio-level-observer';
 import * as FbsRequest from './fbs/request';
 import * as FbsWorker from './fbs/worker';
 import * as FbsRouter from './fbs/router';
+import * as FbsTransport from './fbs/transport';
+import { Protocol as FbsTransportProtocol } from './fbs/transport/protocol';
+import * as FbsWebRtcTransport from './fbs/web-rtc-transport';
 import * as FbsPlainTransport from './fbs/plain-transport';
 import * as FbsPipeTransport from './fbs/pipe-transport';
 import * as FbsDirectTransport from './fbs/direct-transport';
-import * as FbsWebRtcTransport from './fbs/web-rtc-transport';
-import * as FbsTransport from './fbs/transport';
 import * as FbsSctpParameters from './fbs/sctp-parameters';
 
 export type RouterOptions<RouterAppData extends AppData = AppData> =
@@ -415,9 +421,9 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		if (!webRtcServer && !Array.isArray(listenInfos) && !Array.isArray(listenIps))
 		{
-			throw new TypeError('missing webRtcServer and listenInfos and listenIps (one of them is mandatory)');
+			throw new TypeError('missing webRtcServer, listenInfos and listenIps (one of them is mandatory)');
 		}
-		else if (Number(Boolean(webRtcServer)) + Number(Boolean(listenInfos)) + Number(Boolean(listenIps)) !== 1)
+		else if (webRtcServer && listenInfos && listenIps)
 		{
 			throw new TypeError('only one of webRtcServer, listenInfos and listenIps must be given');
 		}
@@ -433,6 +439,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			throw new TypeError('if given, appData must be an object');
 		}
 
+		// Convert deprecated TransportListenIps to TransportListenInfos.
 		if (listenIps)
 		{
 			// Normalize IP strings to TransportListenIp objects.
@@ -444,37 +451,44 @@ export class Router<RouterAppData extends AppData = AppData>
 				}
 				else
 				{
-					return {
-						ip          : listenIp.ip,
-						announcedIp : listenIp.announcedIp
-					};
+					return listenIp;
 				}
 			});
 
 			listenInfos = [];
 
-			if (enableUdp && !enableTcp)
+			const orderedProtocols: TransportProtocol[] = [];
+
+			if (enableUdp && (!enableTcp || preferUdp))
 			{
-				for (const listenIp of listenIps as TransportListenIp[])
+				orderedProtocols.push('udp');
+
+				if (enableTcp)
 				{
-					listenInfos.push(
-						{
-							protocol    : 'udp',
-							ip          : listenIp.ip,
-							announcedIp : listenIp.announcedIp
-						})
+					orderedProtocols.push('tcp');
 				}
 			}
-			else if (enableTcp && !enableUdp)
+			else if (enableTcp && (!enableUdp || (preferTcp && !preferUdp)))
 			{
-				for (const listenIp of listenIps as TransportListenIp[])
+				orderedProtocols.push('tcp');
+
+				if (enableUdp)
+				{
+					orderedProtocols.push('udp');
+				}
+			}
+
+			for (const listenIp of listenIps as TransportListenIp[])
+			{
+				for (const protocol of orderedProtocols)
 				{
 					listenInfos.push(
 						{
-							protocol    : 'udp',
+							protocol    : protocol,
 							ip          : listenIp.ip,
-							announcedIp : listenIp.announcedIp
-						})
+							announcedIp : listenIp.announcedIp,
+							port        : port
+						});
 				}
 			}
 		}
@@ -496,11 +510,17 @@ export class Router<RouterAppData extends AppData = AppData>
 		{
 			const fbsListenInfos: FbsTransport.ListenInfoT[] = [];
 
-			for (const listenIp of listenIps as any[])
+			for (const listenInfo of listenInfos!)
 			{
 				fbsListenInfos.push(new FbsTransport.ListenInfoT(
-					listenIp.ip,
-					listenIp.announcedIp
+					listenInfo.protocol === 'udp'
+						? FbsTransportProtocol.UDP
+						: FbsTransportProtocol.TCP,
+					listenInfo.ip,
+					listenInfo.announcedIp,
+					listenInfo.port,
+					listenInfo.sendBufferSize,
+					listenInfo.recvBufferSize
 				));
 			}
 
@@ -594,6 +614,7 @@ export class Router<RouterAppData extends AppData = AppData>
 	 */
 	async createPlainTransport<PlainTransportAppData extends AppData = AppData>(
 		{
+			listenInfo,
 			listenIp,
 			port,
 			rtcpMux = true,
@@ -610,30 +631,35 @@ export class Router<RouterAppData extends AppData = AppData>
 	{
 		logger.debug('createPlainTransport()');
 
-		if (!listenIp)
+		if (!listenInfo && !listenIp)
 		{
-			throw new TypeError('missing listenIp');
+			throw new TypeError('missing listenInfo and listenIp (one of them is mandatory)');
+		}
+		else if (listenInfo && listenIp)
+		{
+			throw new TypeError('only one of listenInfo and listenIp must be given');
 		}
 		else if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
 		}
 
-		if (typeof listenIp === 'string' && listenIp)
+		// Convert deprecated TransportListenIps to TransportListenInfos.
+		if (listenIp)
 		{
-			listenIp = { ip: listenIp };
-		}
-		else if (typeof listenIp === 'object')
-		{
-			listenIp =
+			// Normalize IP string to TransportListenIp object.
+			if (typeof listenIp === 'string')
 			{
+				listenIp = { ip: listenIp };
+			}
+
+			listenInfo =
+			{
+				protocol    : 'udp',
 				ip          : listenIp.ip,
-				announcedIp : listenIp.announcedIp
+				announcedIp : listenIp.announcedIp,
+				port        : port
 			};
-		}
-		else
-		{
-			throw new TypeError('wrong listenIp');
 		}
 
 		const transportId = uuidv4();
@@ -652,11 +678,16 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		const plainTransportOptions = new FbsPlainTransport.PlainTransportOptionsT(
 			baseTransportOptions,
-			new FbsTransport.ListenIpT(
-				listenIp.ip,
-				listenIp.announcedIp
+			new FbsTransport.ListenInfoT(
+				listenInfo!.protocol === 'udp'
+					? FbsTransportProtocol.UDP
+					: FbsTransportProtocol.TCP,
+				listenInfo!.ip,
+				listenInfo!.announcedIp,
+				listenInfo!.port,
+				listenInfo!.sendBufferSize,
+				listenInfo!.recvBufferSize
 			),
-			port,
 			rtcpMux,
 			comedia,
 			enableSrtp,
@@ -732,6 +763,7 @@ export class Router<RouterAppData extends AppData = AppData>
 	 */
 	async createPipeTransport<PipeTransportAppData extends AppData = AppData>(
 		{
+			listenInfo,
 			listenIp,
 			port,
 			enableSctp = false,
@@ -746,30 +778,35 @@ export class Router<RouterAppData extends AppData = AppData>
 	{
 		logger.debug('createPipeTransport()');
 
-		if (!listenIp)
+		if (!listenInfo && !listenIp)
 		{
-			throw new TypeError('missing listenIp');
+			throw new TypeError('missing listenInfo and listenIp (one of them is mandatory)');
+		}
+		else if (listenInfo && listenIp)
+		{
+			throw new TypeError('only one of listenInfo and listenIp must be given');
 		}
 		else if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
 		}
 
-		if (typeof listenIp === 'string' && listenIp)
+		// Convert deprecated TransportListenIps to TransportListenInfos.
+		if (listenIp)
 		{
-			listenIp = { ip: listenIp };
-		}
-		else if (typeof listenIp === 'object')
-		{
-			listenIp =
+			// Normalize IP string to TransportListenIp object.
+			if (typeof listenIp === 'string')
 			{
+				listenIp = { ip: listenIp };
+			}
+
+			listenInfo =
+			{
+				protocol    : 'udp',
 				ip          : listenIp.ip,
-				announcedIp : listenIp.announcedIp
+				announcedIp : listenIp.announcedIp,
+				port        : port
 			};
-		}
-		else
-		{
-			throw new TypeError('wrong listenIp');
 		}
 
 		const transportId = uuidv4();
@@ -788,11 +825,16 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		const pipeTransportOptions = new FbsPipeTransport.PipeTransportOptionsT(
 			baseTransportOptions,
-			new FbsTransport.ListenIpT(
-				listenIp.ip,
-				listenIp.announcedIp
+			new FbsTransport.ListenInfoT(
+				listenInfo!.protocol === 'udp'
+					? FbsTransportProtocol.UDP
+					: FbsTransportProtocol.TCP,
+				listenInfo!.ip,
+				listenInfo!.announcedIp,
+				listenInfo!.port,
+				listenInfo!.sendBufferSize,
+				listenInfo!.recvBufferSize
 			),
-			port,
 			enableRtx,
 			enableSrtp
 		);
@@ -970,10 +1012,18 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		if (!listenInfo && !listenIp)
 		{
-			listenIp = '127.0.0.1';
+			listenInfo =
+			{
+				protocol : 'udp',
+				ip       : '127.0.0.1'
+			};
 		}
 
-		if (!producerId && !dataProducerId)
+		if (listenInfo && listenIp)
+		{
+			throw new TypeError('only one of listenInfo and listenIp must be given');
+		}
+		else if (!producerId && !dataProducerId)
 		{
 			throw new TypeError('missing producerId or dataProducerId');
 		}
@@ -988,6 +1038,23 @@ export class Router<RouterAppData extends AppData = AppData>
 		else if (router === this)
 		{
 			throw new TypeError('cannot use this Router as destination');
+		}
+
+		// Convert deprecated TransportListenIps to TransportListenInfos.
+		if (listenIp)
+		{
+			// Normalize IP string to TransportListenIp object.
+			if (typeof listenIp === 'string')
+			{
+				listenIp = { ip: listenIp };
+			}
+
+			listenInfo =
+			{
+				protocol    : 'udp',
+				ip          : listenIp.ip,
+				announcedIp : listenIp.announcedIp
+			};
 		}
 
 		let producer: Producer | undefined;
@@ -1032,9 +1099,21 @@ export class Router<RouterAppData extends AppData = AppData>
 				Promise.all(
 					[
 						this.createPipeTransport(
-							{ listenInfo, listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp }),
+							{
+								listenInfo : listenInfo!,
+								enableSctp,
+								numSctpStreams,
+								enableRtx,
+								enableSrtp
+							}),
 						router.createPipeTransport(
-							{ listenInfo, listenIp, enableSctp, numSctpStreams, enableRtx, enableSrtp })
+							{
+								listenInfo : listenInfo!,
+								enableSctp,
+								numSctpStreams,
+								enableRtx,
+								enableSrtp
+							})
 					])
 					.then((pipeTransports) =>
 					{
