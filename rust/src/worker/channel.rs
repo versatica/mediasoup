@@ -201,7 +201,6 @@ struct OutgoingMessageBuffer {
 
 #[allow(clippy::type_complexity)]
 struct Inner {
-    builder: Arc<Mutex<Builder>>,
     outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
     requests_container_weak: Weak<Mutex<RequestsContainer>>,
@@ -225,7 +224,6 @@ impl Drop for Inner {
 #[derive(Clone)]
 pub(crate) struct Channel {
     inner: Arc<Inner>,
-    pub builder: Arc<Mutex<Builder>>,
 }
 
 impl Channel {
@@ -355,9 +353,7 @@ impl Channel {
             }
         });
 
-        let builder = Arc::new(Mutex::new(Builder::new()));
         let inner = Arc::new(Inner {
-            builder: builder.clone(),
             outgoing_message_buffer,
             internal_message_receiver,
             requests_container_weak,
@@ -371,7 +367,7 @@ impl Channel {
         });
 
         (
-            Self { inner, builder },
+            Self { inner },
             prepared_channel_read,
             prepared_channel_write,
         )
@@ -536,11 +532,11 @@ impl Channel {
 
     pub(crate) async fn request_fbs<HandlerId>(
         &self,
+        mut builder: Builder,
         handler_id: HandlerId,
         method: request::Method,
         body: Option<UnionOffset<request::Body>>,
     ) -> Result<Option<response::Body>, RequestError>
-    // ) -> Result<R::Response, RequestError>
     where
         HandlerId: Display,
     {
@@ -562,34 +558,20 @@ impl Channel {
             requests_container_lock.handlers.insert(id, result_sender);
         }
 
-        // debug!("request() [method:{:?}, id:{}]: {:?}", method, id, body);
         debug!("request() [method:{:?}, id:{}]", method, id);
 
-        // TODO: Todo pre-allocate fixed size buffer sufficient for most cases by default
+        // TODO: Can't we use directly the buffer of the builder, since we own it?.
         let mut copied: Vec<u8> = vec![];
 
-        {
-            let mut builder_lock = self.inner.builder.lock();
+        let request =
+            request::Request::create(&mut builder, id, method, handler_id.to_string(), body);
 
-            let request = request::Request::create(
-                &mut builder_lock,
-                id,
-                method,
-                handler_id.to_string(),
-                body,
-            );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
 
-            let message_body = message::Body::create_request(&mut builder_lock, request);
-            let message =
-                message::Message::create(&mut builder_lock, message::Type::Request, message_body);
+        let mut data = builder.finish(message, None);
 
-            let mut data = builder_lock.finish(message, None);
-
-            copy(&mut data, &mut copied).unwrap();
-
-            // Clear the builder.
-            builder_lock.clear();
-        }
+        copy(&mut data, &mut copied).unwrap();
 
         let buffer = Arc::new(AtomicTake::new(copied));
 
