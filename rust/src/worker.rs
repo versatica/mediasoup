@@ -665,7 +665,7 @@ impl Worker {
         &self,
         webrtc_server_options: WebRtcServerOptions,
     ) -> Result<WebRtcServer, CreateWebRtcServerError> {
-        debug!("create_router()");
+        debug!("create_webrtc_server()");
 
         let WebRtcServerOptions {
             listen_infos,
@@ -728,9 +728,18 @@ impl Worker {
 
         let _buffer_guard = self.inner.channel.buffer_messages_for(router_id.into());
 
+        let mut builder = Builder::new();
+        let data = fbs::worker::CreateRouterRequest::create(&mut builder, router_id.to_string());
+        let body = fbs::request::Body::create_create_router_request(&mut builder, data);
+
         self.inner
             .channel
-            .request("", WorkerCreateRouterRequest { router_id })
+            .request_fbs(
+                builder,
+                "",
+                fbs::request::Method::WorkerCreateRouter,
+                Some(body),
+            )
             .await
             .map_err(CreateRouterError::Request)?;
 
