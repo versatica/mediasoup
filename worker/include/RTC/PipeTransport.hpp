@@ -13,13 +13,6 @@ namespace RTC
 	class PipeTransport : public RTC::Transport, public RTC::UdpSocket::Listener
 	{
 	private:
-		struct ListenIp
-		{
-			std::string ip;
-			std::string announcedIp;
-		};
-
-	private:
 		static RTC::SrtpSession::CryptoSuite srtpCryptoSuite;
 		static std::string srtpCryptoSuiteString;
 		static size_t srtpMasterLength;
@@ -81,7 +74,7 @@ namespace RTC
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
-		ListenIp listenIp;
+		ListenInfo listenInfo;
 		struct sockaddr_storage remoteAddrStorage;
 		bool rtx{ false };
 		std::string srtpKey;

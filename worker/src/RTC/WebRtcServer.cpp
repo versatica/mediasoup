@@ -30,18 +30,26 @@ namespace RTC
 	WebRtcServer::WebRtcServer(
 	  RTC::Shared* shared,
 	  const std::string& id,
-	  const flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::ListenInfo>>* listenInfos)
+	  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::ListenInfo>>* listenInfos)
 	  : id(id), shared(shared)
 	{
 		MS_TRACE();
 
 		if (listenInfos->size() == 0)
+		{
 			MS_THROW_TYPE_ERROR("wrong listenInfos (empty array)");
+		}
 		else if (listenInfos->size() > 8)
+		{
 			MS_THROW_TYPE_ERROR("wrong listenInfos (too many entries)");
+		}
 
 		try
 		{
+			uint16_t iceLocalPreferenceDecrement{ 0u };
+
+			this->iceCandidates.reserve(listenInfos->size());
+
 			for (const auto* listenInfo : *listenInfos)
 			{
 				auto ip = listenInfo->ip()->str();
@@ -51,10 +59,14 @@ namespace RTC
 
 				std::string announcedIp;
 
-				if (flatbuffers::IsFieldPresent(listenInfo, FBS::WebRtcServer::ListenInfo::VT_ANNOUNCEDIP))
+				if (flatbuffers::IsFieldPresent(listenInfo, FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
 				{
 					announcedIp = listenInfo->announcedIp()->str();
 				}
+
+				const uint16_t iceLocalPreference =
+				  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
+				const uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 				if (listenInfo->protocol() == FBS::Transport::Protocol::UDP)
 				{
@@ -62,17 +74,34 @@ namespace RTC
 					RTC::UdpSocket* udpSocket;
 
 					if (listenInfo->port() != 0)
+					{
 						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port());
+					}
 					else
+					{
 						udpSocket = new RTC::UdpSocket(this, ip);
+					}
 
 					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedIp);
 
+					if (announcedIp.size() == 0)
+					{
+						this->iceCandidates.emplace_back(udpSocket, icePriority);
+					}
+					else
+					{
+						this->iceCandidates.emplace_back(udpSocket, icePriority, announcedIp);
+					}
+
 					if (listenInfo->sendBufferSize() != 0)
+					{
 						udpSocket->SetSendBufferSize(listenInfo->sendBufferSize());
+					}
 
 					if (listenInfo->recvBufferSize() != 0)
+					{
 						udpSocket->SetRecvBufferSize(listenInfo->recvBufferSize());
+					}
 
 					MS_DEBUG_TAG(
 					  info,
@@ -86,17 +115,34 @@ namespace RTC
 					RTC::TcpServer* tcpServer;
 
 					if (listenInfo->port() != 0)
+					{
 						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port());
+					}
 					else
+					{
 						tcpServer = new RTC::TcpServer(this, this, ip);
+					}
 
 					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedIp);
 
+					if (announcedIp.size() == 0)
+					{
+						this->iceCandidates.emplace_back(tcpServer, icePriority);
+					}
+					else
+					{
+						this->iceCandidates.emplace_back(tcpServer, icePriority, announcedIp);
+					}
+
 					if (listenInfo->sendBufferSize() != 0)
+					{
 						tcpServer->SetSendBufferSize(listenInfo->sendBufferSize());
+					}
 
 					if (listenInfo->recvBufferSize() != 0)
+					{
 						tcpServer->SetRecvBufferSize(listenInfo->recvBufferSize());
+					}
 
 					MS_DEBUG_TAG(
 					  info,
@@ -104,6 +150,9 @@ namespace RTC
 					  tcpServer->GetSendBufferSize(),
 					  tcpServer->GetRecvBufferSize());
 				}
+
+				// Decrement initial ICE local preference for next IP.
+				iceLocalPreferenceDecrement += 100;
 			}
 
 			// NOTE: This may throw.
@@ -240,50 +289,11 @@ namespace RTC
 		}
 	}
 
-	std::vector<RTC::IceCandidate> WebRtcServer::GetIceCandidates(
-	  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp)
+	const std::vector<RTC::IceCandidate>& WebRtcServer::GetIceCandidates() const
 	{
 		MS_TRACE();
 
-		std::vector<RTC::IceCandidate> iceCandidates;
-		uint16_t iceLocalPreferenceDecrement{ 0 };
-
-		for (auto& item : this->udpSocketOrTcpServers)
-		{
-			if (item.udpSocket && enableUdp)
-			{
-				uint16_t iceLocalPreference = IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
-
-				if (preferUdp)
-					iceLocalPreference += 1000;
-
-				uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
-
-				if (item.announcedIp.empty())
-					iceCandidates.emplace_back(item.udpSocket, icePriority);
-				else
-					iceCandidates.emplace_back(item.udpSocket, icePriority, item.announcedIp);
-			}
-			else if (item.tcpServer && enableTcp)
-			{
-				uint16_t iceLocalPreference = IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
-
-				if (preferTcp)
-					iceLocalPreference += 1000;
-
-				uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
-
-				if (item.announcedIp.empty())
-					iceCandidates.emplace_back(item.tcpServer, icePriority);
-				else
-					iceCandidates.emplace_back(item.tcpServer, icePriority, item.announcedIp);
-			}
-
-			// Decrement initial ICE local preference for next IP.
-			iceLocalPreferenceDecrement += 100;
-		}
-
-		return iceCandidates;
+		return this->iceCandidates;
 	}
 
 	inline std::string WebRtcServer::GetLocalIceUsernameFragmentFromReceivedStunPacket(
@@ -301,7 +311,9 @@ namespace RTC
 
 		// If no colon is found just return the whole USERNAME attribute anyway.
 		if (colonPos == std::string::npos)
+		{
 			return username;
+		}
 
 		return username.substr(0, colonPos);
 	}
@@ -488,7 +500,9 @@ namespace RTC
 		auto it = this->mapTupleWebRtcTransport.find(tuple.hash);
 
 		if (it == this->mapTupleWebRtcTransport.end())
+		{
 			return;
+		}
 
 		auto* webRtcTransport = it->second;
 

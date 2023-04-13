@@ -82,8 +82,8 @@ export type TransportListenInfo =
 };
 
 /**
- * @deprecated
  * Use TransportListenInfo instead.
+ * @deprecated
  */
 export type TransportListenIp =
 {

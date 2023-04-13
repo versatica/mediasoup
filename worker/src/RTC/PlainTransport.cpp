@@ -53,13 +53,32 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->listenIp.ip.assign(options->listenIp()->ip()->str());
+		if (options->listenInfo()->protocol() != FBS::Transport::Protocol::UDP)
+		{
+			MS_THROW_TYPE_ERROR("unsupported listen protocol");
+		}
+
+		this->listenInfo.ip.assign(options->listenInfo()->ip()->str());
 
 		// This may throw.
-		Utils::IP::NormalizeIp(this->listenIp.ip);
+		Utils::IP::NormalizeIp(this->listenInfo.ip);
 
-		if (flatbuffers::IsFieldPresent(options->listenIp(), FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
-			this->listenIp.announcedIp.assign(options->listenIp()->announcedIp()->str());
+		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
+		{
+			this->listenInfo.announcedIp.assign(options->listenInfo()->announcedIp()->str());
+		}
+
+		this->listenInfo.port = options->listenInfo()->port();
+
+		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_SENDBUFFERSIZE))
+		{
+			this->listenInfo.sendBufferSize = options->listenInfo()->sendBufferSize();
+		}
+
+		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_RECVBUFFERSIZE))
+		{
+			this->listenInfo.recvBufferSize = options->listenInfo()->recvBufferSize();
+		}
 
 		this->rtcpMux = options->rtcpMux();
 		this->comedia = options->comedia();
@@ -116,15 +135,43 @@ namespace RTC
 		try
 		{
 			// This may throw.
-			if (options->port() != 0)
-				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip, options->port());
+			if (this->listenInfo.port != 0)
+			{
+				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip, this->listenInfo.port);
+			}
 			else
-				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
+			{
+				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip);
+			}
+
+			if (this->listenInfo.sendBufferSize != 0)
+			{
+				// NOTE: This may throw.
+				udpSocket->SetSendBufferSize(this->listenInfo.sendBufferSize);
+			}
+
+			if (this->listenInfo.recvBufferSize != 0)
+			{
+				// NOTE: This may throw.
+				udpSocket->SetRecvBufferSize(this->listenInfo.recvBufferSize);
+			}
 
 			if (!this->rtcpMux)
 			{
 				// This may throw.
-				this->rtcpUdpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
+				this->rtcpUdpSocket = new RTC::UdpSocket(this, this->listenInfo.ip);
+
+				if (this->listenInfo.sendBufferSize != 0)
+				{
+					// NOTE: This may throw.
+					rtcpUdpSocket->SetSendBufferSize(this->listenInfo.sendBufferSize);
+				}
+
+				if (this->listenInfo.recvBufferSize != 0)
+				{
+					// NOTE: This may throw.
+					rtcpUdpSocket->SetRecvBufferSize(this->listenInfo.recvBufferSize);
+				}
 			}
 
 			// NOTE: This may throw.
@@ -186,10 +233,14 @@ namespace RTC
 		{
 			std::string localIp;
 
-			if (this->listenIp.announcedIp.empty())
+			if (this->listenInfo.announcedIp.empty())
+			{
 				localIp = this->udpSocket->GetLocalIp();
+			}
 			else
-				localIp = this->listenIp.announcedIp;
+			{
+				localIp = this->listenInfo.announcedIp;
+			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
 			  builder, localIp.c_str(), this->udpSocket->GetLocalPort(), "", 0, "udp");
@@ -208,10 +259,14 @@ namespace RTC
 			{
 				std::string localIp;
 
-				if (this->listenIp.announcedIp.empty())
+				if (this->listenInfo.announcedIp.empty())
+				{
 					localIp = this->rtcpUdpSocket->GetLocalIp();
+				}
 				else
-					localIp = this->listenIp.announcedIp;
+				{
+					localIp = this->listenInfo.announcedIp;
+				}
 
 				rtcpTuple = FBS::Transport::CreateTupleDirect(
 				  builder, localIp.c_str(), this->rtcpUdpSocket->GetLocalPort(), "", 0, "udp");
@@ -252,10 +307,15 @@ namespace RTC
 		{
 			std::string localIp;
 
-			if (this->listenIp.announcedIp.empty())
+
+			if (this->listenInfo.announcedIp.empty())
+			{
 				localIp = this->udpSocket->GetLocalIp();
+			}
 			else
-				localIp = this->listenIp.announcedIp;
+			{
+				localIp = this->listenInfo.announcedIp;
+			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
 					builder,
@@ -513,8 +573,10 @@ namespace RTC
 						this->tuple = new RTC::TransportTuple(
 						  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
 
-						if (!this->listenIp.announcedIp.empty())
-							this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+						if (!this->listenInfo.announcedIp.empty())
+						{
+							this->tuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
+						}
 
 						if (!this->rtcpMux)
 						{
@@ -557,8 +619,10 @@ namespace RTC
 							  this->rtcpUdpSocket,
 							  reinterpret_cast<struct sockaddr*>(&this->rtcpRemoteAddrStorage));
 
-							if (!this->listenIp.announcedIp.empty())
-								this->rtcpTuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+							if (!this->listenInfo.announcedIp.empty())
+							{
+								this->rtcpTuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
+							}
 						}
 					}
 				}
@@ -866,8 +930,10 @@ namespace RTC
 
 			this->tuple = new RTC::TransportTuple(tuple);
 
-			if (!this->listenIp.announcedIp.empty())
-				this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+			if (!this->listenInfo.announcedIp.empty())
+			{
+				this->tuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
+			}
 
 			// If not yet connected do it now.
 			if (!wasConnected)
@@ -929,8 +995,10 @@ namespace RTC
 
 			this->tuple = new RTC::TransportTuple(tuple);
 
-			if (!this->listenIp.announcedIp.empty())
-				this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+			if (!this->listenInfo.announcedIp.empty())
+			{
+				this->tuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
+			}
 
 			// If not yet connected do it now.
 			if (!wasConnected)
@@ -956,8 +1024,10 @@ namespace RTC
 
 			this->rtcpTuple = new RTC::TransportTuple(tuple);
 
-			if (!this->listenIp.announcedIp.empty())
-				this->rtcpTuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+			if (!this->listenInfo.announcedIp.empty())
+			{
+				this->rtcpTuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
+			}
 
 			// Notify the Node PlainTransport.
 			EmitRtcpTuple();
@@ -1011,8 +1081,10 @@ namespace RTC
 
 			this->tuple = new RTC::TransportTuple(tuple);
 
-			if (!this->listenIp.announcedIp.empty())
-				this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+			if (!this->listenInfo.announcedIp.empty())
+			{
+				this->tuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
+			}
 
 			// If not yet connected do it now.
 			if (!wasConnected)
