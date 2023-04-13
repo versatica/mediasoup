@@ -95,6 +95,17 @@ table SctpListener {
   stream_id_table:[FBS.Common.Uint16String] (required);
 }
 
+table Options {
+  direct:bool = false;
+  max_message_size:uint32;
+  initial_available_outgoing_bitrate:uint32;
+  enable_sctp:bool = false;
+  num_sctp_streams:FBS.SctpParameters.NumSctpStreams;
+  max_sctp_message_size:uint32;
+  sctp_send_buffer_size:uint32;
+  is_data_channel:bool = false;
+}
+
 table Dump {
   id:string (required);
   direct:bool=false;
@@ -111,17 +122,6 @@ table Dump {
   sctp_state:string;
   sctp_listener: SctpListener;
   trace_event_types:[string] (required);
-}
-
-table Options {
-  direct:bool = false;
-  max_message_size:uint32;
-  initial_available_outgoing_bitrate:uint32;
-  enable_sctp:bool = false;
-  num_sctp_streams:FBS.SctpParameters.NumSctpStreams;
-  max_sctp_message_size:uint32;
-  sctp_send_buffer_size:uint32;
-  is_data_channel:bool = false;
 }
 
 table Stats {

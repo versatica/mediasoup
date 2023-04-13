@@ -38,12 +38,6 @@ type WebRtcTransportListenIndividual1 =
 	 * Listening info.
 	 */
 	listenInfos: TransportListenInfo[];
-
-	/**
-	 * Fixed port to listen on instead of selecting automatically from Worker's port
-	 * range.
-	 */
-	port?: number;
 };
 
 type WebRtcTransportListenIndividual2 =
@@ -69,12 +63,10 @@ type WebRtcTransportListenServer =
 	webRtcServer: WebRtcServer;
 };
 
-console.log('TODO: FIX AND UNCOMMENT THIS');
-// type WebRtcTransportListen =
-// 	Either<WebRtcTransportListenIndividual1, WebRtcTransportListenIndividual2, WebRtcTransportListenServer>;
-
-type WebRtcTransportListen =
-	Either<WebRtcTransportListenIndividual2, WebRtcTransportListenServer>;
+type WebRtcTransportListen = Either<
+	Either<WebRtcTransportListenIndividual1, WebRtcTransportListenIndividual2>,
+	WebRtcTransportListenServer
+>;
 
 export type WebRtcTransportOptionsBase<WebRtcTransportAppData> =
 {

@@ -9,6 +9,7 @@ import {
 	parseBaseTransportStats,
 	parseTransportTraceEventData,
 	Transport,
+	TransportListenInfo,
 	TransportListenIp,
 	TransportTuple,
 	TransportEvents,
@@ -23,13 +24,21 @@ import {
 	SrtpParameters,
 	SrtpCryptoSuite
 } from './SrtpParameters';
-import { AppData } from './types';
+import { AppData, Either } from './types';
 import { Event, Notification } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
 import * as FbsPlainTransport from './fbs/plain-transport';
 
-export type PlainTransportOptions<PlainTransportAppData extends AppData = AppData> =
+type PlainTransportListenInfo =
+{
+	/**
+	 * Listening info.
+	 */
+	listenInfo: TransportListenInfo;
+};
+
+type PlainTransportListenIp =
 {
 	/**
 	 * Listening IP address.
@@ -41,7 +50,12 @@ export type PlainTransportOptions<PlainTransportAppData extends AppData = AppDat
 	 * range.
 	 */
 	port?: number;
+};
 
+type PlainTransportListen = Either<PlainTransportListenInfo, PlainTransportListenIp>;
+
+export type PlainTransportOptions<PlainTransportAppData extends AppData = AppData> =
+{
 	/**
 	 * Use RTCP-mux (RTP and RTCP in the same port). Default true.
 	 */
@@ -93,7 +107,7 @@ export type PlainTransportOptions<PlainTransportAppData extends AppData = AppDat
 	 * Custom application data.
 	 */
 	appData?: PlainTransportAppData;
-};
+} & PlainTransportListen;
 
 export type PlainTransportStat = BaseTransportStats &
 {
