@@ -434,7 +434,7 @@ export class Router<RouterAppData extends AppData = AppData>
 				{
 					return {
 						ip          : listenIp.ip,
-						announcedIp : listenIp.announcedIp || undefined
+						announcedIp : listenIp.announcedIp
 					};
 				}
 				else
@@ -595,7 +595,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			listenIp =
 			{
 				ip          : listenIp.ip,
-				announcedIp : listenIp.announcedIp || undefined
+				announcedIp : listenIp.announcedIp
 			};
 		}
 		else
@@ -728,7 +728,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			listenIp =
 			{
 				ip          : listenIp.ip,
-				announcedIp : listenIp.announcedIp || undefined
+				announcedIp : listenIp.announcedIp
 			};
 		}
 		else
