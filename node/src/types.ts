@@ -33,6 +33,3 @@ type Only<T, U> =
 };
 
 export type Either<T, U> = Only<T, U> | Only<U, T>;
-
-console.log('FIX THIS');
-export type Either3<T, U, W> = Only<T, U> | Only<U, T>;
