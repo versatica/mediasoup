@@ -433,12 +433,8 @@ export class Router<RouterAppData extends AppData = AppData>
 				else if (typeof listenIp === 'object')
 				{
 					return {
-						ip                : listenIp.ip,
-						announcedIp       : listenIp.announcedIp,
-						udpSendBufferSize : listenIp.udpSendBufferSize,
-						udpRecvBufferSize : listenIp.udpRecvBufferSize,
-						tcpSendBufferSize : listenIp.tcpSendBufferSize,
-						tcpRecvBufferSize : listenIp.tcpRecvBufferSize
+						ip          : listenIp.ip,
+						announcedIp : listenIp.announcedIp
 					};
 				}
 				else
@@ -469,11 +465,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			{
 				fbsListenIps.push(new FbsTransport.ListenIpT(
 					listenIp.ip,
-					listenIp.announcedIp,
-					listenIp.udpSendBufferSize,
-					listenIp.udpRecvBufferSize,
-					listenIp.tcpSendBufferSize,
-					listenIp.tcpRecvBufferSize
+					listenIp.announcedIp
 				));
 			}
 
@@ -604,12 +596,8 @@ export class Router<RouterAppData extends AppData = AppData>
 		{
 			listenIp =
 			{
-				ip                : listenIp.ip,
-				announcedIp       : listenIp.announcedIp,
-				udpSendBufferSize : listenIp.udpSendBufferSize,
-				udpRecvBufferSize : listenIp.udpRecvBufferSize,
-				tcpSendBufferSize : listenIp.tcpSendBufferSize,
-				tcpRecvBufferSize : listenIp.tcpRecvBufferSize
+				ip          : listenIp.ip,
+				announcedIp : listenIp.announcedIp
 			};
 		}
 		else
@@ -635,11 +623,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			baseTransportOptions,
 			new FbsTransport.ListenIpT(
 				listenIp.ip,
-				listenIp.announcedIp,
-				listenIp.udpSendBufferSize,
-				listenIp.udpRecvBufferSize,
-				listenIp.tcpSendBufferSize,
-				listenIp.tcpRecvBufferSize
+				listenIp.announcedIp
 			),
 			port,
 			rtcpMux,
@@ -748,12 +732,8 @@ export class Router<RouterAppData extends AppData = AppData>
 		{
 			listenIp =
 			{
-				ip                : listenIp.ip,
-				announcedIp       : listenIp.announcedIp,
-				udpSendBufferSize : listenIp.udpSendBufferSize,
-				udpRecvBufferSize : listenIp.udpRecvBufferSize,
-				tcpSendBufferSize : listenIp.tcpSendBufferSize,
-				tcpRecvBufferSize : listenIp.tcpRecvBufferSize
+				ip          : listenIp.ip,
+				announcedIp : listenIp.announcedIp
 			};
 		}
 		else
@@ -779,11 +759,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			baseTransportOptions,
 			new FbsTransport.ListenIpT(
 				listenIp.ip,
-				listenIp.announcedIp,
-				listenIp.udpSendBufferSize,
-				listenIp.udpRecvBufferSize,
-				listenIp.tcpSendBufferSize,
-				listenIp.tcpRecvBufferSize
+				listenIp.announcedIp
 			),
 			port,
 			enableRtx,

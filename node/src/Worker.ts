@@ -12,7 +12,7 @@ import { AppData } from './types';
 import { Event } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsWorker from './fbs/worker';
-import * as FbsWebRtcServer from './fbs/web-rtc-server';
+import * as FbsTransport from './fbs/transport';
 import { Protocol as FbsTransportProtocol } from './fbs/transport/protocol';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
@@ -679,11 +679,11 @@ export class Worker<WorkerAppData extends AppData = AppData>
 		}
 
 		// Build the request.
-		const fbsListenInfos: FbsWebRtcServer.ListenInfoT[] = [];
+		const fbsListenInfos: FbsTransport.ListenInfoT[] = [];
 
 		for (const listenInfo of listenInfos)
 		{
-			fbsListenInfos.push(new FbsWebRtcServer.ListenInfoT(
+			fbsListenInfos.push(new FbsTransport.ListenInfoT(
 				listenInfo.protocol === 'udp' ? FbsTransportProtocol.UDP : FbsTransportProtocol.TCP,
 				listenInfo.ip,
 				listenInfo.announcedIp,

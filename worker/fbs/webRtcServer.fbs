@@ -2,15 +2,6 @@ include "transport.fbs";
 
 namespace FBS.WebRtcServer;
 
-table ListenInfo {
-  protocol:FBS.Transport.Protocol=UDP;
-  ip:string (required);
-  announced_ip:string;
-  port:uint16 = 0;
-  send_buffer_size:uint32 = 0;
-  recv_buffer_size:uint32 = 0;
-}
-
 table IpPort {
   ip:string (required);
   port:uint16;

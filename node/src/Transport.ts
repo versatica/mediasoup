@@ -47,8 +47,13 @@ import * as FbsTransport from './fbs/transport';
 import * as FbsRouter from './fbs/router';
 import { SctpState as FbsSctpState } from './fbs/sctp-association/sctp-state';
 
-export type TransportListenIp =
+export type TransportListenInfo =
 {
+	/**
+	 * Network protocol.
+	 */
+	protocol: TransportProtocol;
+
 	/**
 	 * Listening IPv4 or IPv6.
 	 */
@@ -61,24 +66,37 @@ export type TransportListenIp =
 	announcedIp?: string;
 
 	/**
-	 * UDP send buffer size (bytes).
+	 * Listening port.
 	 */
-	udpSendBufferSize?: number;
+	port?: number;
 
 	/**
-	 * UDP recv buffer size (bytes).
+	 * Send buffer size (bytes).
 	 */
-	udpRecvBufferSize?: number;
+	sendBufferSize?: number;
 
 	/**
-	 * TCP send buffer size (bytes).
+	 * Recv buffer size (bytes).
 	 */
-	tcpSendBufferSize?: number;
+	recvBufferSize?: number;
+};
+
+/**
+ * @deprecated
+ * Use TransportListenInfo instead.
+ */
+export type TransportListenIp =
+{
+	/**
+	 * Listening IPv4 or IPv6.
+	 */
+	ip: string;
 
 	/**
-	 * TCP recv buffer size (bytes).
+	 * Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with
+	 * private IP).
 	 */
-	tcpRecvBufferSize?: number;
+	announcedIp?: string;
 };
 
 /**
