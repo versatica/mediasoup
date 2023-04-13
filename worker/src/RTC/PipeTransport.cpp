@@ -31,26 +31,38 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->listenIp.ip.assign(options->listenIp()->ip()->str());
+		if (options->listenInfo()->protocol() != FBS::Transport::Protocol::UDP)
+		{
+			MS_THROW_TYPE_ERROR("unsupported listen protocol");
+		}
+
+		this->listenInfo.ip.assign(options->listenInfo()->ip()->str());
 
 		// This may throw.
-		Utils::IP::NormalizeIp(this->listenIp.ip);
+		Utils::IP::NormalizeIp(this->listenInfo.ip);
 
-		if (flatbuffers::IsFieldPresent(options->listenIp(), FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
+		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
 		{
-			this->listenIp.announcedIp.assign(options->listenIp()->announcedIp()->str());
+			this->listenInfo.announcedIp.assign(options->listenInfo()->announcedIp()->str());
+		}
+
+		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
+		{
+			this->listenInfo.announcedIp.assign(options->listenInfo()->announcedIp()->str());
+		}
+
+		this->listenInfo.port = options->listenInfo()->port();
+
+		if (flatbuffers::IsFieldPresent(
+		      options->listenInfo(), FBS::Transport::ListenInfo::VT_SENDBUFFERSIZE))
+		{
+			this->listenInfo.sendBufferSize = options->listenInfo()->sendBufferSize();
 		}
 
 		if (flatbuffers::IsFieldPresent(
-		      options->listenIp(), FBS::Transport::ListenIp::VT_UDPSENDBUFFERSIZE))
+		      options->listenInfo(), FBS::Transport::ListenInfo::VT_RECVBUFFERSIZE))
 		{
-			this->listenIp.sendBufferSize = options->listenIp()->udpSendBufferSize();
-		}
-
-		if (flatbuffers::IsFieldPresent(
-		      options->listenIp(), FBS::Transport::ListenIp::VT_UDPRECVBUFFERSIZE))
-		{
-			this->listenIp.recvBufferSize = options->listenIp()->udpRecvBufferSize();
+			this->listenInfo.recvBufferSize = options->listenInfo()->recvBufferSize();
 		}
 
 		this->rtx = options->enableRtx();
@@ -64,25 +76,25 @@ namespace RTC
 		try
 		{
 			// This may throw.
-			if (options->port() != 0)
+			if (this->listenInfo.port != 0)
 			{
-				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip, options->port());
+				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip, this->listenInfo.port);
 			}
 			else
 			{
-				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
+				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip);
 			}
 
-			if (this->listenIp.sendBufferSize != 0)
+			if (this->listenInfo.sendBufferSize != 0)
 			{
 				// NOTE: This may throw.
-				udpSocket->SetSendBufferSize(this->listenIp.sendBufferSize);
+				udpSocket->SetSendBufferSize(this->listenInfo.sendBufferSize);
 			}
 
-			if (this->listenIp.recvBufferSize != 0)
+			if (this->listenInfo.recvBufferSize != 0)
 			{
 				// NOTE: This may throw.
-				udpSocket->SetRecvBufferSize(this->listenIp.recvBufferSize);
+				udpSocket->SetRecvBufferSize(this->listenInfo.recvBufferSize);
 			}
 
 			MS_DEBUG_TAG(
@@ -143,13 +155,13 @@ namespace RTC
 		{
 			std::string localIp;
 
-			if (this->listenIp.announcedIp.empty())
+			if (this->listenInfo.announcedIp.empty())
 			{
 				localIp = this->udpSocket->GetLocalIp();
 			}
 			else
 			{
-				localIp = this->listenIp.announcedIp;
+				localIp = this->listenInfo.announcedIp;
 			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
@@ -187,13 +199,13 @@ namespace RTC
 		{
 			std::string localIp;
 
-			if (this->listenIp.announcedIp.empty())
+			if (this->listenInfo.announcedIp.empty())
 			{
 				localIp = this->udpSocket->GetLocalIp();
 			}
 			else
 			{
-				localIp = this->listenIp.announcedIp;
+				localIp = this->listenInfo.announcedIp;
 			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
@@ -393,9 +405,9 @@ namespace RTC
 					this->tuple = new RTC::TransportTuple(
 					  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
 
-					if (!this->listenIp.announcedIp.empty())
+					if (!this->listenInfo.announcedIp.empty())
 					{
-						this->tuple->SetLocalAnnouncedIp(this->listenIp.announcedIp);
+						this->tuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
 					}
 				}
 				catch (const MediaSoupError& error)

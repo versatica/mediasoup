@@ -4,8 +4,7 @@ namespace FBS.PipeTransport;
 
 table PipeTransportOptions {
   base:FBS.Transport.Options (required);
-  listen_ip:FBS.Transport.ListenIp (required);
-  port:uint16;
+  listen_info:FBS.Transport.ListenInfo (required);
   enable_rtx:bool;
   enable_srtp:bool;
 }

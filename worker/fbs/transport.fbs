@@ -17,14 +17,6 @@ table ListenInfo {
   recv_buffer_size:uint32 = 0;
 }
 
-/**
- * @deprecated
- */
-table ListenIp {
-  ip:string (required);
-  announced_ip:string;
-}
-
 table RestartIceResponse {
   username_fragment:string (required);
   password:string (required);

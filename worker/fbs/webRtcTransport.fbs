@@ -4,8 +4,7 @@ include "sctpParameters.fbs";
 namespace FBS.WebRtcTransport;
 
 table ListenIndividual {
-  listen_ips:[FBS.Transport.ListenIp] (required);
-  port:uint16;
+  listen_infos:[FBS.Transport.ListenInfo] (required);
 }
 
 table ListenServer {
@@ -20,10 +19,6 @@ union Listen {
 table WebRtcTransportOptions {
   base:FBS.Transport.Options (required);
   listen:Listen (required);
-  enable_udp:bool = true;
-  enable_tcp:bool = false;
-  prefer_udp:bool = false;
-  prefer_tcp:bool = false;
 }
 
 table Fingerprint {

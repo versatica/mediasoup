@@ -108,6 +108,16 @@ namespace RTC
 			virtual void OnTransportListenServerClosed(RTC::Transport* transport) = 0;
 		};
 
+	public:
+		struct ListenInfo
+		{
+			std::string ip;
+			std::string announcedIp;
+			uint16_t port{ 0u };
+			uint32_t sendBufferSize{ 0u };
+			uint32_t recvBufferSize{ 0u };
+		};
+
 	private:
 		struct TraceEventTypes
 		{

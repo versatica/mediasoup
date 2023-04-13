@@ -37,41 +37,34 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const auto* listenInfo = options->listen_as<FBS::WebRtcTransport::ListenIndividual>();
-		const auto* listenIps  = listenInfo->listenIps();
-
 		try
 		{
-			uint16_t iceLocalPreferenceDecrement{ 0 };
+			const auto* listenIndividual = options->listen_as<FBS::WebRtcTransport::ListenIndividual>();
+			const auto* listenInfos      = listenIndividual->listenInfos();
+			uint16_t iceLocalPreferenceDecrement{ 0u };
 
-			if (options->enableUdp() && options->enableTcp())
-			{
-				this->iceCandidates.reserve(2 * listenIps->size());
-			}
-			else
-			{
-				this->iceCandidates.reserve(listenIps->size());
-			}
+			this->iceCandidates.reserve(listenInfos->size());
 
-			for (const auto* listenIp : *listenIps)
+			for (const auto* listenInfo : *listenInfos)
 			{
-				auto ip = listenIp->ip()->str();
+				auto ip = listenInfo->ip()->str();
 
 				// This may throw.
 				Utils::IP::NormalizeIp(ip);
 
-				if (options->enableUdp())
+				std::string announcedIp;
+
+				if (flatbuffers::IsFieldPresent(listenInfo, FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
 				{
-					uint16_t iceLocalPreference =
-					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
+					announcedIp = listenInfo->announcedIp()->str();
+				}
 
-					if (options->preferUdp())
-					{
-						iceLocalPreference += 1000;
-					}
+				const uint16_t iceLocalPreference =
+				  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
+				const uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
-					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
-
+				if (listenInfo->protocol() == FBS::Transport::Protocol::UDP)
+				{
 					RTC::UdpSocket* udpSocket;
 
 					if (listenInfo->port() != 0)
@@ -81,13 +74,6 @@ namespace RTC
 					else
 					{
 						udpSocket = new RTC::UdpSocket(this, ip);
-					}
-
-					std::string announcedIp;
-
-					if (flatbuffers::IsFieldPresent(listenIp, FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
-					{
-						announcedIp = listenIp->announcedIp()->str();
 					}
 
 					this->udpSockets[udpSocket] = announcedIp;
@@ -101,16 +87,16 @@ namespace RTC
 						this->iceCandidates.emplace_back(udpSocket, icePriority, announcedIp);
 					}
 
-					if (listenIp->udpSendBufferSize() != 0)
+					if (listenInfo->sendBufferSize() != 0)
 					{
 						// NOTE: This may throw.
-						udpSocket->SetSendBufferSize(listenIp->udpSendBufferSize());
+						udpSocket->SetSendBufferSize(listenInfo->sendBufferSize());
 					}
 
-					if (listenIp->udpRecvBufferSize() != 0)
+					if (listenInfo->recvBufferSize() != 0)
 					{
 						// NOTE: This may throw.
-						udpSocket->SetRecvBufferSize(listenIp->udpRecvBufferSize());
+						udpSocket->SetRecvBufferSize(listenInfo->recvBufferSize());
 					}
 
 					MS_DEBUG_TAG(
@@ -119,19 +105,8 @@ namespace RTC
 					  udpSocket->GetSendBufferSize(),
 					  udpSocket->GetRecvBufferSize());
 				}
-
-				if (options->enableTcp())
+				else if (listenInfo->protocol() == FBS::Transport::Protocol::TCP)
 				{
-					uint16_t iceLocalPreference =
-					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
-
-					if (options->preferTcp())
-					{
-						iceLocalPreference += 1000;
-					}
-
-					const uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
-
 					RTC::TcpServer* tcpServer;
 
 					if (listenInfo->port() != 0)
@@ -141,13 +116,6 @@ namespace RTC
 					else
 					{
 						tcpServer = new RTC::TcpServer(this, this, ip);
-					}
-
-					std::string announcedIp;
-
-					if (flatbuffers::IsFieldPresent(listenIp, FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
-					{
-						announcedIp = listenIp->announcedIp()->str();
 					}
 
 					this->tcpServers[tcpServer] = announcedIp;
@@ -161,16 +129,16 @@ namespace RTC
 						this->iceCandidates.emplace_back(tcpServer, icePriority, announcedIp);
 					}
 
-					if (listenIp->tcpSendBufferSize() != 0)
+					if (listenInfo->sendBufferSize() != 0)
 					{
 						// NOTE: This may throw.
-						tcpServer->SetSendBufferSize(listenIp->tcpSendBufferSize());
+						tcpServer->SetSendBufferSize(listenInfo->sendBufferSize());
 					}
 
-					if (listenIp->tcpRecvBufferSize() != 0)
+					if (listenInfo->recvBufferSize() != 0)
 					{
 						// NOTE: This may throw.
-						tcpServer->SetRecvBufferSize(listenIp->tcpRecvBufferSize());
+						tcpServer->SetRecvBufferSize(listenInfo->recvBufferSize());
 					}
 
 					MS_DEBUG_TAG(
@@ -237,7 +205,7 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  WebRtcTransportListener* webRtcTransportListener,
-	  std::vector<RTC::IceCandidate>& iceCandidates,
+	  const std::vector<RTC::IceCandidate>& iceCandidates,
 	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
 	  : RTC::Transport::Transport(shared, id, listener, options->base()),
 	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
@@ -276,8 +244,6 @@ namespace RTC
 
 			delete this->iceServer;
 			this->iceServer = nullptr;
-
-			this->iceCandidates.clear();
 
 			throw;
 		}

@@ -23,3 +23,16 @@ export type AppData =
 {
 	[key: string]: unknown;
 };
+
+type Only<T, U> =
+{
+	[P in keyof T]: T[P];
+} &
+{
+	[P in keyof U]?: never;
+};
+
+export type Either<T, U> = Only<T, U> | Only<U, T>;
+
+console.log('FIX THIS');
+export type Either3<T, U, W> = Only<T, U> | Only<U, T>;

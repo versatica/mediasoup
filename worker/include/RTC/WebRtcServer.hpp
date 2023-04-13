@@ -42,14 +42,13 @@ namespace RTC
 		WebRtcServer(
 		  RTC::Shared* shared,
 		  const std::string& id,
-		  const flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::ListenInfo>>* listenInfos);
+		  const flatbuffers::Vector<flatbuffers::Offset<FBS::Transport::ListenInfo>>* listenInfos);
 		~WebRtcServer();
 
 	public:
 		flatbuffers::Offset<FBS::WebRtcServer::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
-		std::vector<RTC::IceCandidate> GetIceCandidates(
-		  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp);
+		const std::vector<RTC::IceCandidate>& GetIceCandidates() const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
@@ -103,6 +102,8 @@ namespace RTC
 		absl::flat_hash_map<std::string, RTC::WebRtcTransport*> mapLocalIceUsernameFragmentWebRtcTransport;
 		// Map of WebRtcTransports indexed by TransportTuple.hash.
 		absl::flat_hash_map<uint64_t, RTC::WebRtcTransport*> mapTupleWebRtcTransport;
+		// ICE candidates.
+		std::vector<RTC::IceCandidate> iceCandidates;
 	};
 } // namespace RTC
 
