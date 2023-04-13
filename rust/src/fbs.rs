@@ -2,7 +2,6 @@ pub use root::*;
 
 const _: () = ::planus::check_version_compatibility("planus-0.3.1");
 
-#[allow(clippy::all)]
 #[no_implicit_prelude]
 mod root {
     pub mod fbs {
@@ -212,43 +211,26 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct DominantSpeakerNotification {
-                pub producer_id: ::core::option::Option<::planus::alloc::string::String>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for DominantSpeakerNotification {
-                fn default() -> Self {
-                    Self {
-                        producer_id: ::core::default::Default::default(),
-                    }
-                }
+                pub producer_id: ::planus::alloc::string::String,
             }
 
             impl DominantSpeakerNotification {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_producer_id: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
-                    >,
+                    field_producer_id: impl ::planus::WriteAs<::planus::Offset<str>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_producer_id = field_producer_id.prepare(builder);
 
                     let mut table_writer =
                         ::planus::table_writer::TableWriter::<4, 4>::new(builder);
 
-                    if prepared_producer_id.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<str>>(2);
-                    }
+                    table_writer.calculate_size::<::planus::Offset<str>>(2);
 
                     table_writer.finish_calculating();
 
                     unsafe {
-                        if let ::core::option::Option::Some(prepared_producer_id) =
-                            prepared_producer_id
-                        {
-                            table_writer.write::<_, _, 4>(0, &prepared_producer_id);
-                        }
+                        table_writer.write::<_, _, 4>(0, &prepared_producer_id);
                     }
 
                     table_writer.finish()
@@ -295,23 +277,16 @@ mod root {
             pub struct DominantSpeakerNotificationRef<'a>(::planus::table_reader::Table<'a>);
 
             impl<'a> DominantSpeakerNotificationRef<'a> {
-                pub fn producer_id(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
-                {
+                pub fn producer_id(&self) -> ::planus::Result<&'a ::core::primitive::str> {
                     self.0
-                        .access(0, "DominantSpeakerNotification", "producer_id")
+                        .access_required(0, "DominantSpeakerNotification", "producer_id")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for DominantSpeakerNotificationRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("DominantSpeakerNotificationRef");
-                    if let ::core::option::Option::Some(field_producer_id) =
-                        self.producer_id().transpose()
-                    {
-                        f.field("producer_id", &field_producer_id);
-                    }
+                    f.field("producer_id", &self.producer_id());
                     f.finish()
                 }
             }
@@ -324,15 +299,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: DominantSpeakerNotificationRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        producer_id: if let ::core::option::Option::Some(producer_id) =
-                            value.producer_id()?
-                        {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
-                                producer_id,
-                            )?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        producer_id: ::core::convert::TryInto::try_into(value.producer_id()?)?,
                     })
                 }
             }
@@ -22365,6 +22332,8 @@ mod root {
                 pub available_outgoing_bitrate: u64,
                 pub available_incoming_bitrate: u64,
                 pub max_incoming_bitrate: u64,
+                pub max_outgoing_bitrate: u64,
+                pub min_outgoing_bitrate: u64,
                 pub rtp_packet_loss_received: u64,
                 pub rtp_packet_loss_sent: u64,
             }
@@ -22395,6 +22364,8 @@ mod root {
                     field_available_outgoing_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
                     field_available_incoming_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
                     field_max_incoming_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_max_outgoing_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_min_outgoing_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
                     field_rtp_packet_loss_received: impl ::planus::WriteAsDefault<u64, u64>,
                     field_rtp_packet_loss_sent: impl ::planus::WriteAsDefault<u64, u64>,
                 ) -> ::planus::Offset<Self> {
@@ -22443,6 +22414,12 @@ mod root {
                     let prepared_max_incoming_bitrate =
                         field_max_incoming_bitrate.prepare(builder, &0);
 
+                    let prepared_max_outgoing_bitrate =
+                        field_max_outgoing_bitrate.prepare(builder, &0);
+
+                    let prepared_min_outgoing_bitrate =
+                        field_min_outgoing_bitrate.prepare(builder, &0);
+
                     let prepared_rtp_packet_loss_received =
                         field_rtp_packet_loss_received.prepare(builder, &0);
 
@@ -22450,7 +22427,7 @@ mod root {
                         field_rtp_packet_loss_sent.prepare(builder, &0);
 
                     let mut table_writer =
-                        ::planus::table_writer::TableWriter::<46, 168>::new(builder);
+                        ::planus::table_writer::TableWriter::<50, 184>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
                     if prepared_timestamp.is_some() {
@@ -22510,11 +22487,17 @@ mod root {
                     if prepared_max_incoming_bitrate.is_some() {
                         table_writer.calculate_size::<u64>(40);
                     }
-                    if prepared_rtp_packet_loss_received.is_some() {
+                    if prepared_max_outgoing_bitrate.is_some() {
                         table_writer.calculate_size::<u64>(42);
                     }
-                    if prepared_rtp_packet_loss_sent.is_some() {
+                    if prepared_min_outgoing_bitrate.is_some() {
                         table_writer.calculate_size::<u64>(44);
+                    }
+                    if prepared_rtp_packet_loss_received.is_some() {
+                        table_writer.calculate_size::<u64>(46);
+                    }
+                    if prepared_rtp_packet_loss_sent.is_some() {
+                        table_writer.calculate_size::<u64>(48);
                     }
 
                     table_writer.finish_calculating();
@@ -22609,15 +22592,25 @@ mod root {
                         {
                             table_writer.write::<_, _, 8>(19, &prepared_max_incoming_bitrate);
                         }
+                        if let ::core::option::Option::Some(prepared_max_outgoing_bitrate) =
+                            prepared_max_outgoing_bitrate
+                        {
+                            table_writer.write::<_, _, 8>(20, &prepared_max_outgoing_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_min_outgoing_bitrate) =
+                            prepared_min_outgoing_bitrate
+                        {
+                            table_writer.write::<_, _, 8>(21, &prepared_min_outgoing_bitrate);
+                        }
                         if let ::core::option::Option::Some(prepared_rtp_packet_loss_received) =
                             prepared_rtp_packet_loss_received
                         {
-                            table_writer.write::<_, _, 8>(20, &prepared_rtp_packet_loss_received);
+                            table_writer.write::<_, _, 8>(22, &prepared_rtp_packet_loss_received);
                         }
                         if let ::core::option::Option::Some(prepared_rtp_packet_loss_sent) =
                             prepared_rtp_packet_loss_sent
                         {
-                            table_writer.write::<_, _, 8>(21, &prepared_rtp_packet_loss_sent);
+                            table_writer.write::<_, _, 8>(23, &prepared_rtp_packet_loss_sent);
                         }
                         table_writer.write::<_, _, 4>(0, &prepared_transport_id);
                         if let ::core::option::Option::Some(prepared_sctp_state) =
@@ -22674,6 +22667,8 @@ mod root {
                         &self.available_outgoing_bitrate,
                         &self.available_incoming_bitrate,
                         &self.max_incoming_bitrate,
+                        &self.max_outgoing_bitrate,
+                        &self.min_outgoing_bitrate,
                         &self.rtp_packet_loss_received,
                         &self.rtp_packet_loss_sent,
                     )
@@ -22815,10 +22810,26 @@ mod root {
                     )
                 }
 
+                pub fn max_outgoing_bitrate(&self) -> ::planus::Result<u64> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(20, "Stats", "max_outgoing_bitrate")?
+                            .unwrap_or(0),
+                    )
+                }
+
+                pub fn min_outgoing_bitrate(&self) -> ::planus::Result<u64> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(21, "Stats", "min_outgoing_bitrate")?
+                            .unwrap_or(0),
+                    )
+                }
+
                 pub fn rtp_packet_loss_received(&self) -> ::planus::Result<u64> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(20, "Stats", "rtp_packet_loss_received")?
+                            .access(22, "Stats", "rtp_packet_loss_received")?
                             .unwrap_or(0),
                     )
                 }
@@ -22826,7 +22837,7 @@ mod root {
                 pub fn rtp_packet_loss_sent(&self) -> ::planus::Result<u64> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(21, "Stats", "rtp_packet_loss_sent")?
+                            .access(23, "Stats", "rtp_packet_loss_sent")?
                             .unwrap_or(0),
                     )
                 }
@@ -22865,6 +22876,8 @@ mod root {
                         &self.available_incoming_bitrate(),
                     );
                     f.field("max_incoming_bitrate", &self.max_incoming_bitrate());
+                    f.field("max_outgoing_bitrate", &self.max_outgoing_bitrate());
+                    f.field("min_outgoing_bitrate", &self.min_outgoing_bitrate());
                     f.field("rtp_packet_loss_received", &self.rtp_packet_loss_received());
                     f.field("rtp_packet_loss_sent", &self.rtp_packet_loss_sent());
                     f.finish()
@@ -22932,6 +22945,12 @@ mod root {
                         )?,
                         max_incoming_bitrate: ::core::convert::TryInto::try_into(
                             value.max_incoming_bitrate()?,
+                        )?,
+                        max_outgoing_bitrate: ::core::convert::TryInto::try_into(
+                            value.max_outgoing_bitrate()?,
+                        )?,
+                        min_outgoing_bitrate: ::core::convert::TryInto::try_into(
+                            value.min_outgoing_bitrate()?,
                         )?,
                         rtp_packet_loss_received: ::core::convert::TryInto::try_into(
                             value.rtp_packet_loss_received()?,
@@ -23404,6 +23423,206 @@ mod root {
                     .map_err(|error_kind| {
                         error_kind.with_error_location(
                             "[SetMaxOutgoingBitrateRequestRef]",
+                            "read_as_root",
+                            0,
+                        )
+                    })
+                }
+            }
+
+            #[derive(
+                Clone,
+                Debug,
+                PartialEq,
+                PartialOrd,
+                Eq,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            pub struct SetMinOutgoingBitrateRequest {
+                pub min_outgoing_bitrate: u32,
+            }
+
+            #[allow(clippy::derivable_impls)]
+            impl ::core::default::Default for SetMinOutgoingBitrateRequest {
+                fn default() -> Self {
+                    Self {
+                        min_outgoing_bitrate: 0,
+                    }
+                }
+            }
+
+            impl SetMinOutgoingBitrateRequest {
+                #[allow(clippy::too_many_arguments)]
+                pub fn create(
+                    builder: &mut ::planus::Builder,
+                    field_min_outgoing_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
+                ) -> ::planus::Offset<Self> {
+                    let prepared_min_outgoing_bitrate =
+                        field_min_outgoing_bitrate.prepare(builder, &0);
+
+                    let mut table_writer =
+                        ::planus::table_writer::TableWriter::<4, 4>::new(builder);
+
+                    if prepared_min_outgoing_bitrate.is_some() {
+                        table_writer.calculate_size::<u32>(2);
+                    }
+
+                    table_writer.finish_calculating();
+
+                    unsafe {
+                        if let ::core::option::Option::Some(prepared_min_outgoing_bitrate) =
+                            prepared_min_outgoing_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(0, &prepared_min_outgoing_bitrate);
+                        }
+                    }
+
+                    table_writer.finish()
+                }
+            }
+
+            impl ::planus::WriteAs<::planus::Offset<SetMinOutgoingBitrateRequest>>
+                for SetMinOutgoingBitrateRequest
+            {
+                type Prepared = ::planus::Offset<Self>;
+
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetMinOutgoingBitrateRequest> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl ::planus::WriteAsOptional<::planus::Offset<SetMinOutgoingBitrateRequest>>
+                for SetMinOutgoingBitrateRequest
+            {
+                type Prepared = ::planus::Offset<Self>;
+
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<SetMinOutgoingBitrateRequest>>
+                {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl ::planus::WriteAsOffset<SetMinOutgoingBitrateRequest> for SetMinOutgoingBitrateRequest {
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetMinOutgoingBitrateRequest> {
+                    SetMinOutgoingBitrateRequest::create(builder, &self.min_outgoing_bitrate)
+                }
+            }
+
+            #[derive(Copy, Clone)]
+            pub struct SetMinOutgoingBitrateRequestRef<'a>(::planus::table_reader::Table<'a>);
+
+            impl<'a> SetMinOutgoingBitrateRequestRef<'a> {
+                pub fn min_outgoing_bitrate(&self) -> ::planus::Result<u32> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(0, "SetMinOutgoingBitrateRequest", "min_outgoing_bitrate")?
+                            .unwrap_or(0),
+                    )
+                }
+            }
+
+            impl<'a> ::core::fmt::Debug for SetMinOutgoingBitrateRequestRef<'a> {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    let mut f = f.debug_struct("SetMinOutgoingBitrateRequestRef");
+                    f.field("min_outgoing_bitrate", &self.min_outgoing_bitrate());
+                    f.finish()
+                }
+            }
+
+            impl<'a> ::core::convert::TryFrom<SetMinOutgoingBitrateRequestRef<'a>>
+                for SetMinOutgoingBitrateRequest
+            {
+                type Error = ::planus::Error;
+
+                #[allow(unreachable_code)]
+                fn try_from(value: SetMinOutgoingBitrateRequestRef<'a>) -> ::planus::Result<Self> {
+                    ::core::result::Result::Ok(Self {
+                        min_outgoing_bitrate: ::core::convert::TryInto::try_into(
+                            value.min_outgoing_bitrate()?,
+                        )?,
+                    })
+                }
+            }
+
+            impl<'a> ::planus::TableRead<'a> for SetMinOutgoingBitrateRequestRef<'a> {
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
+                        buffer, offset,
+                    )?))
+                }
+            }
+
+            impl<'a> ::planus::VectorReadInner<'a> for SetMinOutgoingBitrateRequestRef<'a> {
+                type Error = ::planus::Error;
+                const STRIDE: usize = 4;
+
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[SetMinOutgoingBitrateRequestRef]",
+                            "get",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<::planus::Offset<SetMinOutgoingBitrateRequest>>
+                for SetMinOutgoingBitrateRequest
+            {
+                type Value = ::planus::Offset<SetMinOutgoingBitrateRequest>;
+                const STRIDE: usize = 4;
+                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
+                    ::planus::WriteAs::prepare(self, builder)
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[::planus::Offset<SetMinOutgoingBitrateRequest>],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - (Self::STRIDE * i) as u32,
+                        );
+                    }
+                }
+            }
+
+            impl<'a> ::planus::ReadAsRoot<'a> for SetMinOutgoingBitrateRequestRef<'a> {
+                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(
+                        ::planus::SliceWithStartOffset {
+                            buffer: slice,
+                            offset_from_start: 0,
+                        },
+                        0,
+                    )
+                    .map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[SetMinOutgoingBitrateRequestRef]",
                             "read_as_root",
                             0,
                         )
@@ -27604,43 +27823,44 @@ mod root {
                 TransportConnect = 21,
                 TransportSetMaxIncomingBitrate = 22,
                 TransportSetMaxOutgoingBitrate = 23,
-                TransportRestartIce = 24,
-                TransportProduce = 25,
-                TransportProduceData = 26,
-                TransportConsume = 27,
-                TransportConsumeData = 28,
-                TransportEnableTraceEvent = 29,
-                TransportCloseProducer = 30,
-                TransportCloseConsumer = 31,
-                TransportCloseDataProducer = 32,
-                TransportCloseDataConsumer = 33,
-                PlainTransportConnect = 34,
-                PipeTransportConnect = 35,
-                WebrtcTransportConnect = 36,
-                ProducerDump = 37,
-                ProducerGetStats = 38,
-                ProducerPause = 39,
-                ProducerResume = 40,
-                ProducerEnableTraceEvent = 41,
-                ConsumerDump = 42,
-                ConsumerGetStats = 43,
-                ConsumerPause = 44,
-                ConsumerResume = 45,
-                ConsumerSetPreferredLayers = 46,
-                ConsumerSetPriority = 47,
-                ConsumerRequestKeyFrame = 48,
-                ConsumerEnableTraceEvent = 49,
-                DataProducerDump = 50,
-                DataProducerGetStats = 51,
-                DataConsumerDump = 52,
-                DataConsumerGetStats = 53,
-                DataConsumerGetBufferedAmount = 54,
-                DataConsumerSetBufferedAmountLowThreshold = 55,
-                DataConsumerSend = 56,
-                RtpObserverPause = 57,
-                RtpObserverResume = 58,
-                RtpObserverAddProducer = 59,
-                RtpObserverRemoveProducer = 60,
+                TransportSetMinOutgoingBitrate = 24,
+                TransportRestartIce = 25,
+                TransportProduce = 26,
+                TransportProduceData = 27,
+                TransportConsume = 28,
+                TransportConsumeData = 29,
+                TransportEnableTraceEvent = 30,
+                TransportCloseProducer = 31,
+                TransportCloseConsumer = 32,
+                TransportCloseDataProducer = 33,
+                TransportCloseDataConsumer = 34,
+                PlainTransportConnect = 35,
+                PipeTransportConnect = 36,
+                WebrtcTransportConnect = 37,
+                ProducerDump = 38,
+                ProducerGetStats = 39,
+                ProducerPause = 40,
+                ProducerResume = 41,
+                ProducerEnableTraceEvent = 42,
+                ConsumerDump = 43,
+                ConsumerGetStats = 44,
+                ConsumerPause = 45,
+                ConsumerResume = 46,
+                ConsumerSetPreferredLayers = 47,
+                ConsumerSetPriority = 48,
+                ConsumerRequestKeyFrame = 49,
+                ConsumerEnableTraceEvent = 50,
+                DataProducerDump = 51,
+                DataProducerGetStats = 52,
+                DataConsumerDump = 53,
+                DataConsumerGetStats = 54,
+                DataConsumerGetBufferedAmount = 55,
+                DataConsumerSetBufferedAmountLowThreshold = 56,
+                DataConsumerSend = 57,
+                RtpObserverPause = 58,
+                RtpObserverResume = 59,
+                RtpObserverAddProducer = 60,
+                RtpObserverRemoveProducer = 61,
             }
 
             impl ::core::convert::TryFrom<u8> for Method {
@@ -27677,45 +27897,46 @@ mod root {
                         21 => ::core::result::Result::Ok(Method::TransportConnect),
                         22 => ::core::result::Result::Ok(Method::TransportSetMaxIncomingBitrate),
                         23 => ::core::result::Result::Ok(Method::TransportSetMaxOutgoingBitrate),
-                        24 => ::core::result::Result::Ok(Method::TransportRestartIce),
-                        25 => ::core::result::Result::Ok(Method::TransportProduce),
-                        26 => ::core::result::Result::Ok(Method::TransportProduceData),
-                        27 => ::core::result::Result::Ok(Method::TransportConsume),
-                        28 => ::core::result::Result::Ok(Method::TransportConsumeData),
-                        29 => ::core::result::Result::Ok(Method::TransportEnableTraceEvent),
-                        30 => ::core::result::Result::Ok(Method::TransportCloseProducer),
-                        31 => ::core::result::Result::Ok(Method::TransportCloseConsumer),
-                        32 => ::core::result::Result::Ok(Method::TransportCloseDataProducer),
-                        33 => ::core::result::Result::Ok(Method::TransportCloseDataConsumer),
-                        34 => ::core::result::Result::Ok(Method::PlainTransportConnect),
-                        35 => ::core::result::Result::Ok(Method::PipeTransportConnect),
-                        36 => ::core::result::Result::Ok(Method::WebrtcTransportConnect),
-                        37 => ::core::result::Result::Ok(Method::ProducerDump),
-                        38 => ::core::result::Result::Ok(Method::ProducerGetStats),
-                        39 => ::core::result::Result::Ok(Method::ProducerPause),
-                        40 => ::core::result::Result::Ok(Method::ProducerResume),
-                        41 => ::core::result::Result::Ok(Method::ProducerEnableTraceEvent),
-                        42 => ::core::result::Result::Ok(Method::ConsumerDump),
-                        43 => ::core::result::Result::Ok(Method::ConsumerGetStats),
-                        44 => ::core::result::Result::Ok(Method::ConsumerPause),
-                        45 => ::core::result::Result::Ok(Method::ConsumerResume),
-                        46 => ::core::result::Result::Ok(Method::ConsumerSetPreferredLayers),
-                        47 => ::core::result::Result::Ok(Method::ConsumerSetPriority),
-                        48 => ::core::result::Result::Ok(Method::ConsumerRequestKeyFrame),
-                        49 => ::core::result::Result::Ok(Method::ConsumerEnableTraceEvent),
-                        50 => ::core::result::Result::Ok(Method::DataProducerDump),
-                        51 => ::core::result::Result::Ok(Method::DataProducerGetStats),
-                        52 => ::core::result::Result::Ok(Method::DataConsumerDump),
-                        53 => ::core::result::Result::Ok(Method::DataConsumerGetStats),
-                        54 => ::core::result::Result::Ok(Method::DataConsumerGetBufferedAmount),
-                        55 => ::core::result::Result::Ok(
+                        24 => ::core::result::Result::Ok(Method::TransportSetMinOutgoingBitrate),
+                        25 => ::core::result::Result::Ok(Method::TransportRestartIce),
+                        26 => ::core::result::Result::Ok(Method::TransportProduce),
+                        27 => ::core::result::Result::Ok(Method::TransportProduceData),
+                        28 => ::core::result::Result::Ok(Method::TransportConsume),
+                        29 => ::core::result::Result::Ok(Method::TransportConsumeData),
+                        30 => ::core::result::Result::Ok(Method::TransportEnableTraceEvent),
+                        31 => ::core::result::Result::Ok(Method::TransportCloseProducer),
+                        32 => ::core::result::Result::Ok(Method::TransportCloseConsumer),
+                        33 => ::core::result::Result::Ok(Method::TransportCloseDataProducer),
+                        34 => ::core::result::Result::Ok(Method::TransportCloseDataConsumer),
+                        35 => ::core::result::Result::Ok(Method::PlainTransportConnect),
+                        36 => ::core::result::Result::Ok(Method::PipeTransportConnect),
+                        37 => ::core::result::Result::Ok(Method::WebrtcTransportConnect),
+                        38 => ::core::result::Result::Ok(Method::ProducerDump),
+                        39 => ::core::result::Result::Ok(Method::ProducerGetStats),
+                        40 => ::core::result::Result::Ok(Method::ProducerPause),
+                        41 => ::core::result::Result::Ok(Method::ProducerResume),
+                        42 => ::core::result::Result::Ok(Method::ProducerEnableTraceEvent),
+                        43 => ::core::result::Result::Ok(Method::ConsumerDump),
+                        44 => ::core::result::Result::Ok(Method::ConsumerGetStats),
+                        45 => ::core::result::Result::Ok(Method::ConsumerPause),
+                        46 => ::core::result::Result::Ok(Method::ConsumerResume),
+                        47 => ::core::result::Result::Ok(Method::ConsumerSetPreferredLayers),
+                        48 => ::core::result::Result::Ok(Method::ConsumerSetPriority),
+                        49 => ::core::result::Result::Ok(Method::ConsumerRequestKeyFrame),
+                        50 => ::core::result::Result::Ok(Method::ConsumerEnableTraceEvent),
+                        51 => ::core::result::Result::Ok(Method::DataProducerDump),
+                        52 => ::core::result::Result::Ok(Method::DataProducerGetStats),
+                        53 => ::core::result::Result::Ok(Method::DataConsumerDump),
+                        54 => ::core::result::Result::Ok(Method::DataConsumerGetStats),
+                        55 => ::core::result::Result::Ok(Method::DataConsumerGetBufferedAmount),
+                        56 => ::core::result::Result::Ok(
                             Method::DataConsumerSetBufferedAmountLowThreshold,
                         ),
-                        56 => ::core::result::Result::Ok(Method::DataConsumerSend),
-                        57 => ::core::result::Result::Ok(Method::RtpObserverPause),
-                        58 => ::core::result::Result::Ok(Method::RtpObserverResume),
-                        59 => ::core::result::Result::Ok(Method::RtpObserverAddProducer),
-                        60 => ::core::result::Result::Ok(Method::RtpObserverRemoveProducer),
+                        57 => ::core::result::Result::Ok(Method::DataConsumerSend),
+                        58 => ::core::result::Result::Ok(Method::RtpObserverPause),
+                        59 => ::core::result::Result::Ok(Method::RtpObserverResume),
+                        60 => ::core::result::Result::Ok(Method::RtpObserverAddProducer),
+                        61 => ::core::result::Result::Ok(Method::RtpObserverRemoveProducer),
 
                         _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
                             tag: value as i128,
@@ -27889,6 +28110,9 @@ mod root {
                 SetMaxOutgoingBitrateRequest(
                     ::planus::alloc::boxed::Box<super::transport::SetMaxOutgoingBitrateRequest>,
                 ),
+                SetMinOutgoingBitrateRequest(
+                    ::planus::alloc::boxed::Box<super::transport::SetMinOutgoingBitrateRequest>,
+                ),
                 ProduceRequest(::planus::alloc::boxed::Box<super::transport::ProduceRequest>),
                 ConsumeRequest(::planus::alloc::boxed::Box<super::transport::ConsumeRequest>),
                 ProduceDataRequest(
@@ -28043,88 +28267,95 @@ mod root {
                     ::planus::UnionOffset::new(15, value.prepare(builder).downcast())
                 }
 
+                pub fn create_set_min_outgoing_bitrate_request(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::transport::SetMinOutgoingBitrateRequest>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(16, value.prepare(builder).downcast())
+                }
+
                 pub fn create_produce_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::ProduceRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(16, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(17, value.prepare(builder).downcast())
                 }
 
                 pub fn create_consume_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::ConsumeRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(17, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(18, value.prepare(builder).downcast())
                 }
 
                 pub fn create_produce_data_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::ProduceDataRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(18, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(19, value.prepare(builder).downcast())
                 }
 
                 pub fn create_consume_data_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::ConsumeDataRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(19, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(20, value.prepare(builder).downcast())
                 }
 
                 pub fn create_enable_trace_event_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::EnableTraceEventRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(20, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(21, value.prepare(builder).downcast())
                 }
 
                 pub fn create_close_producer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::CloseProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(21, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(22, value.prepare(builder).downcast())
                 }
 
                 pub fn create_close_consumer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::CloseConsumerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(22, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(23, value.prepare(builder).downcast())
                 }
 
                 pub fn create_close_data_producer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::CloseDataProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(23, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(24, value.prepare(builder).downcast())
                 }
 
                 pub fn create_close_data_consumer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::CloseDataConsumerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(24, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(25, value.prepare(builder).downcast())
                 }
 
                 pub fn create_connect_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(25, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(26, value.prepare(builder).downcast())
                 }
 
                 pub fn create_set_preferred_layers_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(26, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(27, value.prepare(builder).downcast())
                 }
 
                 pub fn create_set_priority_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(27, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(28, value.prepare(builder).downcast())
                 }
 
                 pub fn create_set_buffered_amount_low_threshold_request(
@@ -28133,28 +28364,28 @@ mod root {
                         super::data_consumer::SetBufferedAmountLowThresholdRequest,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(28, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(29, value.prepare(builder).downcast())
                 }
 
                 pub fn create_send_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(29, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(30, value.prepare(builder).downcast())
                 }
 
                 pub fn create_add_producer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(30, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(31, value.prepare(builder).downcast())
                 }
 
                 pub fn create_remove_producer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(31, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(32, value.prepare(builder).downcast())
                 }
             }
 
@@ -28205,6 +28436,9 @@ mod root {
                         }
                         Self::SetMaxOutgoingBitrateRequest(value) => {
                             Self::create_set_max_outgoing_bitrate_request(builder, value)
+                        }
+                        Self::SetMinOutgoingBitrateRequest(value) => {
+                            Self::create_set_min_outgoing_bitrate_request(builder, value)
                         }
                         Self::ProduceRequest(value) => Self::create_produce_request(builder, value),
                         Self::ConsumeRequest(value) => Self::create_consume_request(builder, value),
@@ -28280,6 +28514,7 @@ mod root {
                 CloseRtpObserverRequest(super::router::CloseRtpObserverRequestRef<'a>),
                 SetMaxIncomingBitrateRequest(super::transport::SetMaxIncomingBitrateRequestRef<'a>),
                 SetMaxOutgoingBitrateRequest(super::transport::SetMaxOutgoingBitrateRequestRef<'a>),
+                SetMinOutgoingBitrateRequest(super::transport::SetMinOutgoingBitrateRequestRef<'a>),
                 ProduceRequest(super::transport::ProduceRequestRef<'a>),
                 ConsumeRequest(super::transport::ConsumeRequestRef<'a>),
                 ProduceDataRequest(super::transport::ProduceDataRequestRef<'a>),
@@ -28393,6 +28628,12 @@ mod root {
 
                         BodyRef::SetMaxOutgoingBitrateRequest(value) => {
                             Body::SetMaxOutgoingBitrateRequest(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::SetMinOutgoingBitrateRequest(value) => {
+                            Body::SetMinOutgoingBitrateRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -28550,54 +28791,57 @@ mod root {
                         15 => ::core::result::Result::Ok(Self::SetMaxOutgoingBitrateRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        16 => ::core::result::Result::Ok(Self::ProduceRequest(
+                        16 => ::core::result::Result::Ok(Self::SetMinOutgoingBitrateRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        17 => ::core::result::Result::Ok(Self::ConsumeRequest(
+                        17 => ::core::result::Result::Ok(Self::ProduceRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        18 => ::core::result::Result::Ok(Self::ProduceDataRequest(
+                        18 => ::core::result::Result::Ok(Self::ConsumeRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        19 => ::core::result::Result::Ok(Self::ConsumeDataRequest(
+                        19 => ::core::result::Result::Ok(Self::ProduceDataRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        20 => ::core::result::Result::Ok(Self::EnableTraceEventRequest(
+                        20 => ::core::result::Result::Ok(Self::ConsumeDataRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        21 => ::core::result::Result::Ok(Self::CloseProducerRequest(
+                        21 => ::core::result::Result::Ok(Self::EnableTraceEventRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        22 => ::core::result::Result::Ok(Self::CloseConsumerRequest(
+                        22 => ::core::result::Result::Ok(Self::CloseProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        23 => ::core::result::Result::Ok(Self::CloseDataProducerRequest(
+                        23 => ::core::result::Result::Ok(Self::CloseConsumerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        24 => ::core::result::Result::Ok(Self::CloseDataConsumerRequest(
+                        24 => ::core::result::Result::Ok(Self::CloseDataProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        25 => ::core::result::Result::Ok(Self::ConnectRequest(
+                        25 => ::core::result::Result::Ok(Self::CloseDataConsumerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        26 => ::core::result::Result::Ok(Self::SetPreferredLayersRequest(
+                        26 => ::core::result::Result::Ok(Self::ConnectRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        27 => ::core::result::Result::Ok(Self::SetPriorityRequest(
+                        27 => ::core::result::Result::Ok(Self::SetPreferredLayersRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        28 => {
+                        28 => ::core::result::Result::Ok(Self::SetPriorityRequest(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        29 => {
                             ::core::result::Result::Ok(Self::SetBufferedAmountLowThresholdRequest(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ))
                         }
-                        29 => ::core::result::Result::Ok(Self::SendRequest(
+                        30 => ::core::result::Result::Ok(Self::SendRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        30 => ::core::result::Result::Ok(Self::AddProducerRequest(
+                        31 => ::core::result::Result::Ok(Self::AddProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        31 => ::core::result::Result::Ok(Self::RemoveProducerRequest(
+                        32 => ::core::result::Result::Ok(Self::RemoveProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         _ => ::core::result::Result::Err(
