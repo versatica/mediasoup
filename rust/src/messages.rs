@@ -160,15 +160,6 @@ request_response!(
 
 request_response!(
     &'static str,
-    "worker.updateSettings",
-    WorkerUpdateSettingsRequest {
-        #[serde(flatten)]
-        data: WorkerUpdateSettings,
-    },
-);
-
-request_response!(
-    &'static str,
     "worker.createWebRtcServer",
     WorkerCreateWebRtcServerRequest {
         #[serde(rename = "webRtcServerId")]
