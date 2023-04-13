@@ -180,12 +180,12 @@ namespace Channel
 		// freed later.
 		if (free)
 		{
-			auto* message = FBS::Message::GetMessage(msg);
+			const auto* message = FBS::Message::GetMessage(msg);
 
 			// TMP: For debugging.
-			// auto s = flatbuffers::FlatBufferToString(
-			//   reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
-			// MS_ERROR("%s", s.c_str());
+			auto s = flatbuffers::FlatBufferToString(
+			  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+			MS_ERROR("%s", s.c_str());
 
 			if (message->type() == FBS::Message::Type::REQUEST)
 			{

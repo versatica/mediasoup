@@ -6,9 +6,9 @@ mod common;
 mod utils;
 
 use crate::data_structures::AppData;
+use crate::fbs::fbs;
 use crate::messages::{
-    WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest,
-    WorkerDumpRequest, WorkerUpdateSettingsRequest,
+    WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest, WorkerDumpRequest,
 };
 pub use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
@@ -24,6 +24,7 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::FutureExt;
 use log::{debug, error, warn};
 use parking_lot::Mutex;
+use planus::UnionOffset;
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
@@ -483,21 +484,20 @@ impl Inner {
         let (sender, receiver) = async_oneshot::oneshot();
         let id = self.id;
         let sender = Mutex::new(Some(sender));
-        let _handler = self.channel.subscribe_to_notifications(
-            std::process::id().into(),
+        let _handler = self.channel.subscribe_to_fbs_notifications(
+            SubscriptionTarget::String(std::process::id().to_string()),
             move |notification| {
-                let result = match serde_json::from_slice(notification) {
-                    Ok(Notification::Running) => {
+                let result = match notification.event().unwrap() {
+                    fbs::notification::Event::WorkerRunning => {
                         debug!("worker thread running [id:{}]", id);
                         Ok(())
                     }
-                    Err(error) => Err(io::Error::new(
+                    _ => Err(io::Error::new(
                         io::ErrorKind::Other,
-                        format!(
-                            "unexpected first notification from worker [id:{id}]: {notification:?}; error = {error}"
-                        ),
+                        format!("unexpected first notification from worker [id:{id}]"),
                     )),
                 };
+
                 let _ = sender
                     .lock()
                     .take()
@@ -549,7 +549,9 @@ impl Inner {
 
             self.executor
                 .spawn(async move {
-                    let _ = channel.request("", WorkerCloseRequest {}).await;
+                    let _ = channel
+                        .request_fbs("", fbs::request::Method::WorkerClose, None)
+                        .await;
 
                     // Drop channels in here after response from worker
                     drop(channel);
@@ -625,10 +627,30 @@ impl Worker {
     pub async fn update_settings(&self, data: WorkerUpdateSettings) -> Result<(), RequestError> {
         debug!("update_settings()");
 
-        self.inner
+        let body: UnionOffset<fbs::request::Body>;
+
+        {
+            let mut builder = self.inner.channel.builder.lock();
+
+            let settings = fbs::worker::UpdateSettingsRequest::create(
+                &mut builder,
+                data.log_level.unwrap_or_default().as_str(),
+                data.log_tags
+                    .map(|tags| tags.iter().map(|tag| tag.as_str()).collect::<Vec<&str>>()),
+            );
+
+            body = fbs::request::Body::create_update_settings_request(&mut builder, settings);
+        }
+
+        match self
+            .inner
             .channel
-            .request("", WorkerUpdateSettingsRequest { data })
+            .request_fbs("", fbs::request::Method::WorkerUpdateSettings, Some(body))
             .await
+        {
+            Ok(_) => Ok(()),
+            Err(error) => Err(error),
+        }
     }
 
     /// Create a WebRtcServer.
