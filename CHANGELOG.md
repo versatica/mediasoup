@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* `SeqManager`: Properly remove old dropped entries ([PR #1054](https://github.com/versatica/mediasoup/pull/1054)).
+
+
 ### 3.11.21
 
 * Fix check division by zero in transport congestion control ([PR #1049](https://github.com/versatica/mediasoup/pull/1049) by @ggarber).

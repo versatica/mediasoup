@@ -58,7 +58,10 @@ namespace RTC
 		// Mark as dropped if 'input' is higher than anyone already processed.
 		if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 		{
+			this->maxInput = input;
 			this->dropped.insert(input);
+
+			ClearDropped();
 		}
 	}
 
@@ -67,44 +70,52 @@ namespace RTC
 	{
 		auto base = this->base;
 
-		// There are dropped inputs. Synchronize.
-		if (!this->dropped.empty())
+		// No dropped inputs to consider.
+		if (this->dropped.empty())
 		{
-			// Check whether this input was dropped.
-			if (this->dropped.find(input) != this->dropped.end())
+			goto done;
+		}
+		// Dropped inputs present, cleanup and update base.
+		else
+		{
+			// Set 'maxInput' here if needed before calling ClearDropped().
+			if (this->started && IsSeqHigherThan(input, this->maxInput))
 			{
-				MS_DEBUG_DEV("trying to send a dropped input");
-
-				return false;
+				this->maxInput = input;
 			}
 
-			// Dropped entries count that must be considered for the output.
-			size_t count{ 0 };
+			ClearDropped();
 
-			/*
-			 * Consider values lower than input and those higher that input
-			 * which belong to a previous cycle.
-			 */
-			for (const auto& value : this->dropped)
-			{
-				// clang-format off
-				if
-				(
-					IsSeqLowerThan(value, input) ||
-					(
-					 (value > input && (value - input > MaxValue / 3)) ||
-					 (value < input && (input - value > MaxValue / 3))
-					)
-				)
-				// clang-format on
-				{
-					count++;
-				}
-			}
-
-			base = (this->base - count) & MaxValue;
+			base = this->base;
 		}
 
+		// No dropped inputs to consider after cleanup.
+		if (this->dropped.empty())
+		{
+			goto done;
+		}
+		// This input was dropped.
+		else if (this->dropped.find(input) != this->dropped.end())
+		{
+			MS_DEBUG_DEV("trying to send a dropped input");
+
+			return false;
+		}
+		// There are dropped inputs, calculate 'base' for this input.
+		else
+		{
+			// Get the first dropped input which is higher than or equal 'input'.
+			auto it = this->dropped.lower_bound(input);
+
+			// There are dropped inputs lower than 'input'.
+			if (it != this->dropped.begin())
+			{
+				auto count = std::distance(this->dropped.begin(), it);
+				base       = (this->base - count) & MaxValue;
+			}
+		}
+
+	done:
 		output = (input + base) & MaxValue;
 
 		if (!this->started)
@@ -116,22 +127,18 @@ namespace RTC
 		}
 		else
 		{
-			// New input is higher than the maximum seen. But less than acceptable units higher.
-			// Keep it as the maximum seen. See Drop().
+			// New input is higher than the maximum seen.
 			if (IsSeqHigherThan(input, this->maxInput))
 			{
 				this->maxInput = input;
 			}
 
-			// New output is higher than the maximum seen. But less than acceptable units higher.
-			// Keep it as the maximum seen. See Sync().
+			// New output is higher than the maximum seen.
 			if (IsSeqHigherThan(output, this->maxOutput))
 			{
 				this->maxOutput = output;
 			}
 		}
-
-		ClearDropped();
 
 		return true;
 	}
@@ -149,7 +156,7 @@ namespace RTC
 	}
 
 	/*
-	 * Delete droped inputs greater than maxInput that belong to a previous
+	 * Delete droped inputs greater than maxInput, which belong to a previous
 	 * cycle.
 	 */
 	template<typename T, uint8_t N>
@@ -161,37 +168,19 @@ namespace RTC
 			return;
 		}
 
-		const size_t threshold           = (this->maxInput + MaxValue / 3) & MaxValue;
 		const size_t previousDroppedSize = this->dropped.size();
-		const auto it1                   = this->dropped.upper_bound(this->maxInput);
-		const auto it2                   = this->dropped.lower_bound(threshold);
 
-		// There is no dropped value greater than this->maxInput.
-		if (it1 == this->dropped.end())
+		for (auto it = this->dropped.begin(); it != this->dropped.end();)
 		{
-			return;
-		}
+			auto value = *it;
 
-		// There is a single value in the range.
-		if (it1 == it2)
-		{
-			this->dropped.erase(it1);
-		}
-		// There are many values in the range.
-		else
-		{
-			// Measure the distance of it1 and it2 to the beggining of dropped.
-			auto distanceIt1 = std::distance(this->dropped.begin(), it1);
-			auto distanceIt2 = std::distance(this->dropped.begin(), it2);
-
-			// it2 goes out of range, only it1 is within the range.
-			if (distanceIt2 < distanceIt1)
+			if (isSeqHigherThan(value, this->maxInput))
 			{
-				this->dropped.erase(it1);
+				it = this->dropped.erase(it);
 			}
 			else
 			{
-				this->dropped.erase(it1, it2);
+				break;
 			}
 		}
 
