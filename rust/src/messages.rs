@@ -197,14 +197,6 @@ request_response!(
 
 request_response!(
     &'static str,
-    "worker.createRouter",
-    WorkerCreateRouterRequest {
-        router_id: RouterId,
-    },
-);
-
-request_response!(
-    &'static str,
     "worker.closeRouter",
     RouterCloseRequest {
         router_id: RouterId,

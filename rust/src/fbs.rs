@@ -2,6 +2,7 @@ pub use root::*;
 
 const _: () = ::planus::check_version_compatibility("planus-0.3.1");
 
+#[allow(clippy::all)]
 #[no_implicit_prelude]
 mod root {
     pub mod fbs {
