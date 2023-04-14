@@ -1,6 +1,6 @@
 use futures_lite::future;
 use hash_hasher::HashedSet;
-use mediasoup::data_structures::{AppData, ListenIp, Protocol, SctpState, TransportTuple};
+use mediasoup::data_structures::{AppData, ListenInfo, Protocol, SctpState, TransportTuple};
 use mediasoup::plain_transport::{PlainTransportOptions, PlainTransportRemoteParameters};
 use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
@@ -89,9 +89,13 @@ fn create_succeeds() {
         {
             let transport = router
                 .create_plain_transport({
-                    let mut plain_transport_options = PlainTransportOptions::new(ListenIp {
+                    let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                        protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: Some("4.4.4.4".parse().unwrap()),
+                        port: None,
+                        send_buffer_size: None,
+                        recv_buffer_size: None,
                     });
                     plain_transport_options.rtcp_mux = false;
 
@@ -123,9 +127,13 @@ fn create_succeeds() {
 
             let transport1 = router
                 .create_plain_transport({
-                    let mut plain_transport_options = PlainTransportOptions::new(ListenIp {
+                    let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                        protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: Some("9.9.9.1".parse().unwrap()),
+                        port: None,
+                        send_buffer_size: None,
+                        recv_buffer_size: None,
                     });
                     plain_transport_options.rtcp_mux = true;
                     plain_transport_options.enable_sctp = true;
@@ -191,9 +199,13 @@ fn create_succeeds() {
         {
             let transport2 = router
                 .create_plain_transport({
-                    let mut plain_transport_options = PlainTransportOptions::new(ListenIp {
+                    let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                        protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
+                        port: None,
+                        send_buffer_size: None,
+                        recv_buffer_size: None,
                     });
                     plain_transport_options.rtcp_mux = false;
 
@@ -251,11 +263,14 @@ fn create_with_fixed_port_succeeds() {
 
         let transport = router
             .create_plain_transport({
-                let mut plain_transport_options = PlainTransportOptions::new(ListenIp {
+                let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    port: Some(port),
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 });
-                plain_transport_options.port = Some(port);
 
                 plain_transport_options
             })
@@ -273,9 +288,13 @@ fn weak() {
 
         let transport = router
             .create_plain_transport({
-                let mut plain_transport_options = PlainTransportOptions::new(ListenIp {
+                let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 });
                 plain_transport_options.rtcp_mux = false;
 
@@ -302,9 +321,13 @@ fn create_enable_srtp_succeeds() {
         // Use default cryptoSuite: 'AES_CM_128_HMAC_SHA1_80'.
         let transport1 = router
             .create_plain_transport({
-                let mut plain_transport_options = PlainTransportOptions::new(ListenIp {
+                let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 });
                 plain_transport_options.enable_srtp = true;
 
@@ -363,9 +386,13 @@ fn create_non_bindable_ip() {
 
         assert!(matches!(
             router
-                .create_plain_transport(PlainTransportOptions::new(ListenIp {
+                .create_plain_transport(PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: "8.8.8.8".parse().unwrap(),
                     announced_ip: None,
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 }))
                 .await,
             Err(RequestError::Response { .. }),
@@ -380,9 +407,13 @@ fn get_stats_succeeds() {
 
         let transport = router
             .create_plain_transport({
-                let mut plain_transport_options = PlainTransportOptions::new(ListenIp {
+                let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 });
                 plain_transport_options.rtcp_mux = false;
 
@@ -436,9 +467,13 @@ fn connect_succeeds() {
 
         let transport = router
             .create_plain_transport({
-                let mut plain_transport_options = PlainTransportOptions::new(ListenIp {
+                let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 });
                 plain_transport_options.rtcp_mux = false;
 
@@ -507,9 +542,13 @@ fn connect_wrong_arguments() {
 
         let transport = router
             .create_plain_transport({
-                let mut plain_transport_options = PlainTransportOptions::new(ListenIp {
+                let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 });
                 plain_transport_options.rtcp_mux = false;
 
@@ -543,9 +582,13 @@ fn close_event() {
 
         let transport = router
             .create_plain_transport({
-                let mut plain_transport_options = PlainTransportOptions::new(ListenIp {
+                let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 });
                 plain_transport_options.rtcp_mux = false;
 

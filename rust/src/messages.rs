@@ -7,8 +7,8 @@ use crate::consumer::{
 use crate::data_consumer::{DataConsumerDump, DataConsumerId, DataConsumerStat, DataConsumerType};
 use crate::data_producer::{DataProducerDump, DataProducerId, DataProducerStat, DataProducerType};
 use crate::data_structures::{
-    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenIp,
-    SctpState, TransportTuple,
+    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
+    ListenInfo, SctpState, TransportTuple,
 };
 use crate::direct_transport::DirectTransportOptions;
 use crate::ortc::RtpMapping;
@@ -24,8 +24,10 @@ use crate::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameter
 use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{TransportId, TransportTraceEventType};
 use crate::webrtc_server::{WebRtcServerDump, WebRtcServerId, WebRtcServerListenInfos};
-use crate::webrtc_transport::{TransportListenIps, WebRtcTransportListen, WebRtcTransportOptions};
-use crate::worker::WorkerDump;
+use crate::webrtc_transport::{
+    WebRtcTransportListen, WebRtcTransportListenInfos, WebRtcTransportOptions,
+};
+use crate::worker::{WorkerDump, WorkerUpdateSettings};
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -234,9 +236,7 @@ request_response!(
 enum RouterCreateWebrtcTransportListen {
     #[serde(rename_all = "camelCase")]
     Individual {
-        listen_ips: TransportListenIps,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        port: Option<u16>,
+        listen_infos: WebRtcTransportListenInfos,
     },
     Server {
         #[serde(rename = "webRtcServerId")]
@@ -250,10 +250,6 @@ pub(crate) struct RouterCreateWebrtcTransportRequest {
     transport_id: TransportId,
     #[serde(flatten)]
     listen: RouterCreateWebrtcTransportListen,
-    enable_udp: bool,
-    enable_tcp: bool,
-    prefer_udp: bool,
-    prefer_tcp: bool,
     initial_available_outgoing_bitrate: u32,
     enable_sctp: bool,
     num_sctp_streams: NumSctpStreams,
@@ -270,10 +266,9 @@ impl RouterCreateWebrtcTransportRequest {
         Self {
             transport_id,
             listen: match &webrtc_transport_options.listen {
-                WebRtcTransportListen::Individual { listen_ips, port } => {
+                WebRtcTransportListen::Individual { listen_infos } => {
                     RouterCreateWebrtcTransportListen::Individual {
-                        listen_ips: listen_ips.clone(),
-                        port: *port,
+                        listen_infos: listen_infos.clone(),
                     }
                 }
                 WebRtcTransportListen::Server { webrtc_server } => {
@@ -282,10 +277,6 @@ impl RouterCreateWebrtcTransportRequest {
                     }
                 }
             },
-            enable_udp: webrtc_transport_options.enable_udp,
-            enable_tcp: webrtc_transport_options.enable_tcp,
-            prefer_udp: webrtc_transport_options.prefer_udp,
-            prefer_tcp: webrtc_transport_options.prefer_tcp,
             initial_available_outgoing_bitrate: webrtc_transport_options
                 .initial_available_outgoing_bitrate,
             enable_sctp: webrtc_transport_options.enable_sctp,
@@ -330,9 +321,7 @@ impl Request for RouterCreateWebrtcTransportRequest {
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreatePlainTransportData {
     transport_id: TransportId,
-    listen_ip: ListenIp,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    port: Option<u16>,
+    listen_info: ListenInfo,
     rtcp_mux: bool,
     comedia: bool,
     enable_sctp: bool,
@@ -351,8 +340,7 @@ impl RouterCreatePlainTransportData {
     ) -> Self {
         Self {
             transport_id,
-            listen_ip: plain_transport_options.listen_ip,
-            port: plain_transport_options.port,
+            listen_info: plain_transport_options.listen_info,
             rtcp_mux: plain_transport_options.rtcp_mux,
             comedia: plain_transport_options.comedia,
             enable_sctp: plain_transport_options.enable_sctp,
@@ -389,9 +377,7 @@ request_response!(
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreatePipeTransportData {
     transport_id: TransportId,
-    listen_ip: ListenIp,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    port: Option<u16>,
+    listen_info: ListenInfo,
     enable_sctp: bool,
     num_sctp_streams: NumSctpStreams,
     max_sctp_message_size: u32,
@@ -408,8 +394,7 @@ impl RouterCreatePipeTransportData {
     ) -> Self {
         Self {
             transport_id,
-            listen_ip: pipe_transport_options.listen_ip,
-            port: pipe_transport_options.port,
+            listen_info: pipe_transport_options.listen_info,
             enable_sctp: pipe_transport_options.enable_sctp,
             num_sctp_streams: pipe_transport_options.num_sctp_streams,
             max_sctp_message_size: pipe_transport_options.max_sctp_message_size,
