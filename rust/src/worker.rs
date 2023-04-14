@@ -8,7 +8,7 @@ mod utils;
 use crate::data_structures::AppData;
 use crate::fbs::fbs;
 use crate::messages::{
-    WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest, WorkerDumpRequest,
+    WorkerCreateWebRtcServerRequest, WorkerDumpRequest,
 };
 pub use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
@@ -24,7 +24,7 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::FutureExt;
 use log::{debug, error, warn};
 use parking_lot::Mutex;
-use planus::UnionOffset;
+use planus::Builder;
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
@@ -547,10 +547,12 @@ impl Inner {
         if !already_closed {
             let channel = self.channel.clone();
 
+            let builder = Builder::new();
+
             self.executor
                 .spawn(async move {
                     let _ = channel
-                        .request_fbs("", fbs::request::Method::WorkerClose, None)
+                        .request_fbs(builder, "", fbs::request::Method::WorkerClose, None)
                         .await;
 
                     // Drop channels in here after response from worker
@@ -627,25 +629,24 @@ impl Worker {
     pub async fn update_settings(&self, data: WorkerUpdateSettings) -> Result<(), RequestError> {
         debug!("update_settings()");
 
-        let body: UnionOffset<fbs::request::Body>;
-
-        {
-            let mut builder = self.inner.channel.builder.lock();
-
-            let settings = fbs::worker::UpdateSettingsRequest::create(
-                &mut builder,
-                data.log_level.unwrap_or_default().as_str(),
-                data.log_tags
-                    .map(|tags| tags.iter().map(|tag| tag.as_str()).collect::<Vec<&str>>()),
-            );
-
-            body = fbs::request::Body::create_update_settings_request(&mut builder, settings);
-        }
+        let mut builder = Builder::new();
+        let settings = fbs::worker::UpdateSettingsRequest::create(
+            &mut builder,
+            data.log_level.unwrap_or_default().as_str(),
+            data.log_tags
+                .map(|tags| tags.iter().map(|tag| tag.as_str()).collect::<Vec<&str>>()),
+        );
+        let body = fbs::request::Body::create_update_settings_request(&mut builder, settings);
 
         match self
             .inner
             .channel
-            .request_fbs("", fbs::request::Method::WorkerUpdateSettings, Some(body))
+            .request_fbs(
+                builder,
+                "",
+                fbs::request::Method::WorkerUpdateSettings,
+                Some(body),
+            )
             .await
         {
             Ok(_) => Ok(()),
@@ -660,7 +661,7 @@ impl Worker {
         &self,
         webrtc_server_options: WebRtcServerOptions,
     ) -> Result<WebRtcServer, CreateWebRtcServerError> {
-        debug!("create_router()");
+        debug!("create_webrtc_server()");
 
         let WebRtcServerOptions {
             listen_infos,
@@ -723,9 +724,18 @@ impl Worker {
 
         let _buffer_guard = self.inner.channel.buffer_messages_for(router_id.into());
 
+        let mut builder = Builder::new();
+        let data = fbs::worker::CreateRouterRequest::create(&mut builder, router_id.to_string());
+        let body = fbs::request::Body::create_create_router_request(&mut builder, data);
+
         self.inner
             .channel
-            .request("", WorkerCreateRouterRequest { router_id })
+            .request_fbs(
+                builder,
+                "",
+                fbs::request::Method::WorkerCreateRouter,
+                Some(body),
+            )
             .await
             .map_err(CreateRouterError::Request)?;
 

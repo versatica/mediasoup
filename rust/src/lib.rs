@@ -50,6 +50,7 @@
 
 pub mod data_structures;
 #[allow(missing_docs)]
+#[allow(clippy::all)]
 pub mod fbs;
 mod macros;
 mod messages;
