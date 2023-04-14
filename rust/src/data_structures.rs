@@ -69,23 +69,6 @@ pub struct ListenInfo {
     pub recv_buffer_size: Option<u32>,
 }
 
-/// @deprecated
-/// Use ListenInfo instead.
-///
-/// IP to listen on.
-///
-/// # Notes on usage
-/// If you use "0.0.0.0" or "::" as ip value, then you need to also provide `announced_ip`.
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ListenIp {
-    /// Listening IPv4 or IPv6.
-    pub ip: IpAddr,
-    /// Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with private IP).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub announced_ip: Option<IpAddr>,
-}
-
 /// ICE role.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]

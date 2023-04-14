@@ -5,7 +5,7 @@ use hash_hasher::{HashedMap, HashedSet};
 use mediasoup::consumer::{
     ConsumableRtpEncoding, ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType,
 };
-use mediasoup::data_structures::{AppData, ListenIp};
+use mediasoup::data_structures::{AppData, ListenInfo, Protocol};
 use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{Router, RouterOptions};
@@ -18,7 +18,9 @@ use mediasoup::rtp_parameters::{
 };
 use mediasoup::scalability_modes::ScalabilityMode;
 use mediasoup::transport::ConsumeError;
-use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
+use mediasoup::webrtc_transport::{
+    WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
+};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use parking_lot::Mutex;
@@ -346,10 +348,15 @@ async fn init() -> (
         .await
         .expect("Failed to create router");
 
-    let transport_options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
-        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-        announced_ip: None,
-    }));
+    let transport_options =
+        WebRtcTransportOptions::new(WebRtcTransportListenInfos::new(ListenInfo {
+            protocol: Protocol::Udp,
+            ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+            announced_ip: None,
+            port: None,
+            send_buffer_size: None,
+            recv_buffer_size: None,
+        }));
 
     let transport_1 = router
         .create_webrtc_transport(transport_options.clone())
