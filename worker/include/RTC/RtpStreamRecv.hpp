@@ -45,7 +45,8 @@ namespace RTC
 		RtpStreamRecv(
 		  RTC::RtpStreamRecv::Listener* listener,
 		  RTC::RtpStream::Params& params,
-		  unsigned int sendNackDelayMs);
+		  unsigned int sendNackDelayMs,
+		  bool useRtpInactivityCheck);
 		~RtpStreamRecv();
 
 		void FillJsonStats(json& jsonObject) override;
@@ -96,6 +97,7 @@ namespace RTC
 	private:
 		// Passed by argument.
 		unsigned int sendNackDelayMs{ 0u };
+		bool useRtpInactivityCheck{ false };
 		// Others.
 		// Packets expected at last interval.
 		uint32_t expectedPrior{ 0u };

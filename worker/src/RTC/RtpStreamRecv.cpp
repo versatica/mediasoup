@@ -189,8 +189,12 @@ namespace RTC
 	/* Instance methods. */
 
 	RtpStreamRecv::RtpStreamRecv(
-	  RTC::RtpStreamRecv::Listener* listener, RTC::RtpStream::Params& params, unsigned int sendNackDelayMs)
+	  RTC::RtpStreamRecv::Listener* listener,
+	  RTC::RtpStream::Params& params,
+	  unsigned int sendNackDelayMs,
+	  bool useRtpInactivityCheck)
 	  : RTC::RtpStream::RtpStream(listener, params, 10), sendNackDelayMs(sendNackDelayMs),
+	    useRtpInactivityCheck(useRtpInactivityCheck),
 	    transmissionCounter(
 	      params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500)
 	{
@@ -201,18 +205,16 @@ namespace RTC
 			this->nackGenerator.reset(new RTC::NackGenerator(this, this->sendNackDelayMs));
 		}
 
-		// Run the RTP inactivity periodic timer (use a different timeout if DTX is
-		// enabled).
-		this->inactivityCheckPeriodicTimer = new Timer(this);
-		this->inactive                     = false;
+		this->inactive = false;
 
-		if (!this->params.useDtx)
+		if (this->useRtpInactivityCheck)
 		{
-			this->inactivityCheckPeriodicTimer->Start(InactivityCheckInterval);
-		}
-		else
-		{
-			this->inactivityCheckPeriodicTimer->Start(InactivityCheckIntervalWithDtx);
+			// Run the RTP inactivity periodic timer (use a different timeout if DTX is
+			// enabled).
+			this->inactivityCheckPeriodicTimer = new Timer(this);
+
+			this->inactivityCheckPeriodicTimer->Start(
+			  this->params.useDtx ? InactivityCheckIntervalWithDtx : InactivityCheckInterval);
 		}
 	}
 
@@ -222,6 +224,7 @@ namespace RTC
 
 		// Close the RTP inactivity check periodic timer.
 		delete this->inactivityCheckPeriodicTimer;
+		this->inactivityCheckPeriodicTimer = nullptr;
 	}
 
 	void RtpStreamRecv::FillJsonStats(json& jsonObject)

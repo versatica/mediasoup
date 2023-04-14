@@ -1223,8 +1223,11 @@ namespace RTC
 			}
 		}
 
+		// Only perform RTP inactivity check on simulcast.
+		auto useRtpInactivityCheck = this->type == RtpParameters::Type::SIMULCAST;
+
 		// Create a RtpStreamRecv for receiving a media stream.
-		auto* rtpStream = new RTC::RtpStreamRecv(this, params, SendNackDelay);
+		auto* rtpStream = new RTC::RtpStreamRecv(this, params, SendNackDelay, useRtpInactivityCheck);
 
 		// Insert into the maps.
 		this->mapSsrcRtpStream[ssrc]              = rtpStream;

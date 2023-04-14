@@ -3,6 +3,7 @@
 
 ### NEXT
 
+* `RtpStreamRecv`: Only perform RTP inactivity check on simulcast streams ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 * `SeqManager`: Properly remove old dropped entries ([PR #1054](https://github.com/versatica/mediasoup/pull/1054)).
 * libwebrtc: Upgrade trendline estimator to improve low bandwidth conditions ([PR #1055](https://github.com/versatica/mediasoup/pull/1055) by @ggarber).
 * libwebrtc: Fix bandwidth probation dead state ([PR #1031](https://github.com/versatica/mediasoup/pull/1031) by @vpalmisano).
