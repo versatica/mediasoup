@@ -271,7 +271,7 @@ fn create_with_fixed_port_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
 
-        let port1 = pick_unused_port().unwrap();
+        let port = pick_unused_port().unwrap();
 
         let transport = router
             .create_webrtc_transport({
@@ -280,25 +280,17 @@ fn create_with_fixed_port_succeeds() {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: Some("9.9.9.1".parse().unwrap()),
-                        port: None,
+                        port: Some(port),
                         send_buffer_size: None,
                         recv_buffer_size: None,
                     }));
-                match &mut options.listen {
-                    WebRtcTransportListen::Individual { .. } => {
-                        options.listen.listen_infos[0].port.replace(port1);
-                    }
-                    WebRtcTransportListen::Server { .. } => {
-                        unreachable!();
-                    }
-                }
 
                 options
             })
             .await
             .expect("Failed to create WebRTC transport");
 
-        assert_eq!(transport.ice_candidates().get(0).unwrap().port, port1);
+        assert_eq!(transport.ice_candidates().get(0).unwrap().port, port);
     });
 }
 
