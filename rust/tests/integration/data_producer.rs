@@ -2,13 +2,15 @@ use async_io::Timer;
 use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
 use mediasoup::data_producer::{DataProducerOptions, DataProducerType};
-use mediasoup::data_structures::{AppData, ListenIp};
+use mediasoup::data_structures::{AppData, ListenInfo, Protocol};
 use mediasoup::plain_transport::{PlainTransport, PlainTransportOptions};
 use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
 use mediasoup::sctp_parameters::SctpStreamParameters;
 use mediasoup::transport::ProduceDataError;
-use mediasoup::webrtc_transport::{TransportListenIps, WebRtcTransport, WebRtcTransportOptions};
+use mediasoup::webrtc_transport::{
+    WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
+};
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
 use std::env;
@@ -47,9 +49,13 @@ async fn init() -> (Worker, Router, WebRtcTransport, PlainTransport) {
     let transport1 = router
         .create_webrtc_transport({
             let mut transport_options =
-                WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
+                WebRtcTransportOptions::new(WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 }));
 
             transport_options.enable_sctp = true;
@@ -61,9 +67,13 @@ async fn init() -> (Worker, Router, WebRtcTransport, PlainTransport) {
 
     let transport2 = router
         .create_plain_transport({
-            let mut transport_options = PlainTransportOptions::new(ListenIp {
+            let mut transport_options = PlainTransportOptions::new(ListenInfo {
+                protocol: Protocol::Udp,
                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_ip: None,
+                port: None,
+                send_buffer_size: None,
+                recv_buffer_size: None,
             });
 
             transport_options.enable_sctp = true;
