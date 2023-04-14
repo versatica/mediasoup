@@ -12,8 +12,7 @@ use mediasoup::rtp_parameters::{
 use mediasoup::sctp_parameters::{NumSctpStreams, SctpParameters};
 use mediasoup::transport::TransportTraceEventType;
 use mediasoup::webrtc_transport::{
-    WebRtcTransportListen, WebRtcTransportListenInfos, WebRtcTransportOptions,
-    WebRtcTransportRemoteParameters,
+    WebRtcTransportListenInfos, WebRtcTransportOptions, WebRtcTransportRemoteParameters,
 };
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
@@ -275,7 +274,7 @@ fn create_with_fixed_port_succeeds() {
 
         let transport = router
             .create_webrtc_transport({
-                let mut options =
+                let options =
                     WebRtcTransportOptions::new(WebRtcTransportListenInfos::new(ListenInfo {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),

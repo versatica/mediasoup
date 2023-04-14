@@ -634,7 +634,7 @@ fn create_with_fixed_port_succeeds() {
 
         let pipe_transport = router1
             .create_pipe_transport({
-                let mut options = PipeTransportOptions::new(ListenInfo {
+                let options = PipeTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
