@@ -11,6 +11,7 @@ using namespace RTC;
 // 17: 16 bit mask + the initial sequence number.
 static constexpr size_t MaxRequestedPackets{ 17 };
 static constexpr unsigned int SendNackDelay{ 0u }; // In ms.
+static const bool UseRtpInactivityCheck{ false };
 
 SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 {
@@ -141,7 +142,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 	SECTION("NACK one packet")
 	{
 		RtpStreamRecvListener listener;
-		RtpStreamRecv rtpStream(&listener, params, SendNackDelay);
+		RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(1);
 		rtpStream.ReceivePacket(packet);
@@ -170,7 +171,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 	SECTION("wrapping sequence numbers")
 	{
 		RtpStreamRecvListener listener;
-		RtpStreamRecv rtpStream(&listener, params, SendNackDelay);
+		RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(0xfffe);
 		rtpStream.ReceivePacket(packet);
@@ -190,7 +191,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 	SECTION("require key frame")
 	{
 		RtpStreamRecvListener listener;
-		RtpStreamRecv rtpStream(&listener, params, SendNackDelay);
+		RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(1);
 		rtpStream.ReceivePacket(packet);
