@@ -92,7 +92,7 @@ enum ChannelReceiveMessage<'a> {
     Event(InternalMessage),
 }
 
-fn deserialize_message<'a>(bytes: &'a [u8]) -> ChannelReceiveMessage<'_> {
+fn deserialize_message<'a, 'b>(bytes: &'b [u8]) -> ChannelReceiveMessage<'_> {
     let message_ref = message::MessageRef::read_as_root(&bytes[4..]).unwrap();
 
     match message_ref.data().unwrap() {
