@@ -56,8 +56,7 @@ beforeEach(async () =>
 {
 	transport = await router.createWebRtcTransport(
 		{
-			listenIps : [ { ip: '127.0.0.1', announcedIp: '9.9.9.1' } ],
-			enableTcp : false
+			listenInfos : [ { protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' } ]
 		});
 });
 
@@ -76,11 +75,14 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	// Create a separate transport here.
 	const transport1 = await router.createWebRtcTransport(
 		{
-			listenIps :
+			listenInfos :
 			[
-				{ ip: '127.0.0.1', announcedIp: '9.9.9.1' },
-				{ ip: '0.0.0.0', announcedIp: '9.9.9.2' },
-				{ ip: '127.0.0.1', announcedIp: undefined }
+				{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
+				{ protocol: 'tcp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
+				{ protocol: 'udp', ip: '0.0.0.0', announcedIp: '9.9.9.2' },
+				{ protocol: 'tcp', ip: '0.0.0.0', announcedIp: '9.9.9.2' },
+				{ protocol: 'udp', ip: '127.0.0.1', announcedIp: undefined },
+				{ protocol: 'tcp', ip: '127.0.0.1', announcedIp: undefined }
 			],
 			enableTcp          : true,
 			preferUdp          : true,
@@ -173,7 +175,9 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(transport1.closed).toBe(true);
 
 	const anotherTransport = await router.createWebRtcTransport(
-		{ listenIps: [ '127.0.0.1' ] });
+		{
+			listenInfos : [ { protocol: 'udp', ip: '127.0.0.1' } ]
+		});
 
 	expect(typeof anotherTransport).toBe('object');
 }, 2000);
@@ -191,6 +195,11 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 	await expect(router.createWebRtcTransport({ listenIps: [ 123 ] }))
 		.rejects
 		.toThrow(Error);
+
+	// @ts-ignore
+	await expect(router.createWebRtcTransport({ listenInfos: '127.0.0.1' }))
+		.rejects
+		.toThrow(TypeError);
 
 	// @ts-ignore
 	await expect(router.createWebRtcTransport({ listenIps: '127.0.0.1' }))
@@ -219,7 +228,10 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 
 test('router.createWebRtcTransport() with non bindable IP rejects with Error', async () =>
 {
-	await expect(router.createWebRtcTransport({ listenIps: [ '8.8.8.8' ] }))
+	await expect(router.createWebRtcTransport(
+		{
+			listenInfos : [ { protocol: 'udp', ip: '8.8.8.8' } ]
+		}))
 		.rejects
 		.toThrow(Error);
 }, 2000);
@@ -629,8 +641,7 @@ test('router.createWebRtcTransport() with fixed port succeeds', async () =>
 	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const webRtcTransport = await router.createWebRtcTransport(
 		{
-			listenIps : [ '127.0.0.1' ],
-			port
+			listenInfos : [ { protocol: 'udp', ip: '127.0.0.1', port } ]
 		});
 
 	expect(webRtcTransport.iceCandidates[0].port).toEqual(port);
