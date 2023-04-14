@@ -29107,145 +29107,386 @@ mod root {
         }
         pub mod response {
             #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
+                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub enum Body {
-                DumpResponse(::planus::alloc::boxed::Box<super::data_consumer::DumpResponse>),
-                ResourceUsageResponse(
+                FbsWorkerDumpResponse(::planus::alloc::boxed::Box<super::worker::DumpResponse>),
+                FbsWorkerResourceUsageResponse(
                     ::planus::alloc::boxed::Box<super::worker::ResourceUsageResponse>,
                 ),
-                ProduceResponse(::planus::alloc::boxed::Box<super::transport::ProduceResponse>),
-                ConsumeResponse(::planus::alloc::boxed::Box<super::transport::ConsumeResponse>),
-                RestartIceResponse(
+                FbsWebRtcServerDumpResponse(
+                    ::planus::alloc::boxed::Box<super::web_rtc_server::DumpResponse>,
+                ),
+                FbsRouterDumpResponse(::planus::alloc::boxed::Box<super::router::DumpResponse>),
+                FbsTransportProduceResponse(
+                    ::planus::alloc::boxed::Box<super::transport::ProduceResponse>,
+                ),
+                FbsTransportConsumeResponse(
+                    ::planus::alloc::boxed::Box<super::transport::ConsumeResponse>,
+                ),
+                FbsTransportRestartIceResponse(
                     ::planus::alloc::boxed::Box<super::transport::RestartIceResponse>,
                 ),
-                ConnectResponse(
+                FbsPlainTransportConnectResponse(
+                    ::planus::alloc::boxed::Box<super::plain_transport::ConnectResponse>,
+                ),
+                FbsPlainTransportDumpResponse(
+                    ::planus::alloc::boxed::Box<super::plain_transport::DumpResponse>,
+                ),
+                FbsPlainTransportGetStatsResponse(
+                    ::planus::alloc::boxed::Box<super::plain_transport::GetStatsResponse>,
+                ),
+                FbsPipeTransportConnectResponse(
+                    ::planus::alloc::boxed::Box<super::pipe_transport::ConnectResponse>,
+                ),
+                FbsPipeTransportDumpResponse(
+                    ::planus::alloc::boxed::Box<super::pipe_transport::DumpResponse>,
+                ),
+                FbsPipeTransportGetStatsResponse(
+                    ::planus::alloc::boxed::Box<super::pipe_transport::GetStatsResponse>,
+                ),
+                FbsDirectTransportDumpResponse(
+                    ::planus::alloc::boxed::Box<super::direct_transport::DumpResponse>,
+                ),
+                FbsDirectTransportGetStatsResponse(
+                    ::planus::alloc::boxed::Box<super::direct_transport::GetStatsResponse>,
+                ),
+                FbsWebRtcTransportConnectResponse(
                     ::planus::alloc::boxed::Box<super::web_rtc_transport::ConnectResponse>,
                 ),
-                GetStatsResponse(
-                    ::planus::alloc::boxed::Box<super::data_consumer::GetStatsResponse>,
+                FbsWebRtcTransportDumpResponse(
+                    ::planus::alloc::boxed::Box<super::web_rtc_transport::DumpResponse>,
                 ),
-                SetPreferredLayersResponse(
+                FbsWebRtcTransportGetStatsResponse(
+                    ::planus::alloc::boxed::Box<super::web_rtc_transport::GetStatsResponse>,
+                ),
+                FbsProducerDumpResponse(::planus::alloc::boxed::Box<super::producer::DumpResponse>),
+                FbsProducerGetStatsResponse(
+                    ::planus::alloc::boxed::Box<super::producer::GetStatsResponse>,
+                ),
+                FbsConsumerDumpResponse(::planus::alloc::boxed::Box<super::consumer::DumpResponse>),
+                FbsConsumerGetStatsResponse(
+                    ::planus::alloc::boxed::Box<super::consumer::GetStatsResponse>,
+                ),
+                FbsConsumerSetPreferredLayersResponse(
                     ::planus::alloc::boxed::Box<super::consumer::SetPreferredLayersResponse>,
                 ),
-                SetPriorityResponse(
+                FbsConsumerSetPriorityResponse(
                     ::planus::alloc::boxed::Box<super::consumer::SetPriorityResponse>,
                 ),
-                GetBufferedAmountResponse(
+                FbsDataProducerDumpResponse(
+                    ::planus::alloc::boxed::Box<super::data_producer::DumpResponse>,
+                ),
+                FbsDataProducerGetStatsResponse(
+                    ::planus::alloc::boxed::Box<super::data_producer::GetStatsResponse>,
+                ),
+                FbsDataConsumerGetBufferedAmountResponse(
                     ::planus::alloc::boxed::Box<super::data_consumer::GetBufferedAmountResponse>,
+                ),
+                FbsDataConsumerDumpResponse(
+                    ::planus::alloc::boxed::Box<super::data_consumer::DumpResponse>,
+                ),
+                FbsDataConsumerGetStatsResponse(
+                    ::planus::alloc::boxed::Box<super::data_consumer::GetStatsResponse>,
                 ),
             }
 
             impl Body {
-                pub fn create_dump_response(
+                pub fn create_fbs_worker_dump_response(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::data_consumer::DumpResponse>,
+                    value: impl ::planus::WriteAsOffset<super::worker::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(1, value.prepare(builder).downcast())
                 }
 
-                pub fn create_resource_usage_response(
+                pub fn create_fbs_worker_resource_usage_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::worker::ResourceUsageResponse>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(2, value.prepare(builder).downcast())
                 }
 
-                pub fn create_produce_response(
+                pub fn create_fbs_web_rtc_server_dump_response(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::transport::ProduceResponse>,
+                    value: impl ::planus::WriteAsOffset<super::web_rtc_server::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(3, value.prepare(builder).downcast())
                 }
 
-                pub fn create_consume_response(
+                pub fn create_fbs_router_dump_response(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::transport::ConsumeResponse>,
+                    value: impl ::planus::WriteAsOffset<super::router::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(4, value.prepare(builder).downcast())
                 }
 
-                pub fn create_restart_ice_response(
+                pub fn create_fbs_transport_produce_response(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::transport::RestartIceResponse>,
+                    value: impl ::planus::WriteAsOffset<super::transport::ProduceResponse>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(5, value.prepare(builder).downcast())
                 }
 
-                pub fn create_connect_response(
+                pub fn create_fbs_transport_consume_response(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::web_rtc_transport::ConnectResponse>,
+                    value: impl ::planus::WriteAsOffset<super::transport::ConsumeResponse>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(6, value.prepare(builder).downcast())
                 }
 
-                pub fn create_get_stats_response(
+                pub fn create_fbs_transport_restart_ice_response(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::data_consumer::GetStatsResponse>,
+                    value: impl ::planus::WriteAsOffset<super::transport::RestartIceResponse>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(7, value.prepare(builder).downcast())
                 }
 
-                pub fn create_set_preferred_layers_response(
+                pub fn create_fbs_plain_transport_connect_response(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::consumer::SetPreferredLayersResponse>,
+                    value: impl ::planus::WriteAsOffset<super::plain_transport::ConnectResponse>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(8, value.prepare(builder).downcast())
                 }
 
-                pub fn create_set_priority_response(
+                pub fn create_fbs_plain_transport_dump_response(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::consumer::SetPriorityResponse>,
+                    value: impl ::planus::WriteAsOffset<super::plain_transport::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(9, value.prepare(builder).downcast())
                 }
 
-                pub fn create_get_buffered_amount_response(
+                pub fn create_fbs_plain_transport_get_stats_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::plain_transport::GetStatsResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(10, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_pipe_transport_connect_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::pipe_transport::ConnectResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(11, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_pipe_transport_dump_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::pipe_transport::DumpResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(12, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_pipe_transport_get_stats_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::pipe_transport::GetStatsResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(13, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_direct_transport_dump_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::direct_transport::DumpResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(14, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_direct_transport_get_stats_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::direct_transport::GetStatsResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(15, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_web_rtc_transport_connect_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::web_rtc_transport::ConnectResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(16, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_web_rtc_transport_dump_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::web_rtc_transport::DumpResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(17, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_web_rtc_transport_get_stats_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::web_rtc_transport::GetStatsResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(18, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_producer_dump_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::producer::DumpResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(19, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_producer_get_stats_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::producer::GetStatsResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(20, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_consumer_dump_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::consumer::DumpResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(21, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_consumer_get_stats_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::consumer::GetStatsResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(22, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_consumer_set_preferred_layers_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::consumer::SetPreferredLayersResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(23, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_consumer_set_priority_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::consumer::SetPriorityResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(24, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_data_producer_dump_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::data_producer::DumpResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(25, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_data_producer_get_stats_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::data_producer::GetStatsResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(26, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_data_consumer_get_buffered_amount_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::GetBufferedAmountResponse>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(10, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(27, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_data_consumer_dump_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::data_consumer::DumpResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(28, value.prepare(builder).downcast())
+                }
+
+                pub fn create_fbs_data_consumer_get_stats_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::data_consumer::GetStatsResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(29, value.prepare(builder).downcast())
                 }
             }
 
             impl ::planus::WriteAsUnion<Body> for Body {
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Self> {
                     match self {
-                        Self::DumpResponse(value) => Self::create_dump_response(builder, value),
-                        Self::ResourceUsageResponse(value) => {
-                            Self::create_resource_usage_response(builder, value)
+                        Self::FbsWorkerDumpResponse(value) => {
+                            Self::create_fbs_worker_dump_response(builder, value)
                         }
-                        Self::ProduceResponse(value) => {
-                            Self::create_produce_response(builder, value)
+                        Self::FbsWorkerResourceUsageResponse(value) => {
+                            Self::create_fbs_worker_resource_usage_response(builder, value)
                         }
-                        Self::ConsumeResponse(value) => {
-                            Self::create_consume_response(builder, value)
+                        Self::FbsWebRtcServerDumpResponse(value) => {
+                            Self::create_fbs_web_rtc_server_dump_response(builder, value)
                         }
-                        Self::RestartIceResponse(value) => {
-                            Self::create_restart_ice_response(builder, value)
+                        Self::FbsRouterDumpResponse(value) => {
+                            Self::create_fbs_router_dump_response(builder, value)
                         }
-                        Self::ConnectResponse(value) => {
-                            Self::create_connect_response(builder, value)
+                        Self::FbsTransportProduceResponse(value) => {
+                            Self::create_fbs_transport_produce_response(builder, value)
                         }
-                        Self::GetStatsResponse(value) => {
-                            Self::create_get_stats_response(builder, value)
+                        Self::FbsTransportConsumeResponse(value) => {
+                            Self::create_fbs_transport_consume_response(builder, value)
                         }
-                        Self::SetPreferredLayersResponse(value) => {
-                            Self::create_set_preferred_layers_response(builder, value)
+                        Self::FbsTransportRestartIceResponse(value) => {
+                            Self::create_fbs_transport_restart_ice_response(builder, value)
                         }
-                        Self::SetPriorityResponse(value) => {
-                            Self::create_set_priority_response(builder, value)
+                        Self::FbsPlainTransportConnectResponse(value) => {
+                            Self::create_fbs_plain_transport_connect_response(builder, value)
                         }
-                        Self::GetBufferedAmountResponse(value) => {
-                            Self::create_get_buffered_amount_response(builder, value)
+                        Self::FbsPlainTransportDumpResponse(value) => {
+                            Self::create_fbs_plain_transport_dump_response(builder, value)
+                        }
+                        Self::FbsPlainTransportGetStatsResponse(value) => {
+                            Self::create_fbs_plain_transport_get_stats_response(builder, value)
+                        }
+                        Self::FbsPipeTransportConnectResponse(value) => {
+                            Self::create_fbs_pipe_transport_connect_response(builder, value)
+                        }
+                        Self::FbsPipeTransportDumpResponse(value) => {
+                            Self::create_fbs_pipe_transport_dump_response(builder, value)
+                        }
+                        Self::FbsPipeTransportGetStatsResponse(value) => {
+                            Self::create_fbs_pipe_transport_get_stats_response(builder, value)
+                        }
+                        Self::FbsDirectTransportDumpResponse(value) => {
+                            Self::create_fbs_direct_transport_dump_response(builder, value)
+                        }
+                        Self::FbsDirectTransportGetStatsResponse(value) => {
+                            Self::create_fbs_direct_transport_get_stats_response(builder, value)
+                        }
+                        Self::FbsWebRtcTransportConnectResponse(value) => {
+                            Self::create_fbs_web_rtc_transport_connect_response(builder, value)
+                        }
+                        Self::FbsWebRtcTransportDumpResponse(value) => {
+                            Self::create_fbs_web_rtc_transport_dump_response(builder, value)
+                        }
+                        Self::FbsWebRtcTransportGetStatsResponse(value) => {
+                            Self::create_fbs_web_rtc_transport_get_stats_response(builder, value)
+                        }
+                        Self::FbsProducerDumpResponse(value) => {
+                            Self::create_fbs_producer_dump_response(builder, value)
+                        }
+                        Self::FbsProducerGetStatsResponse(value) => {
+                            Self::create_fbs_producer_get_stats_response(builder, value)
+                        }
+                        Self::FbsConsumerDumpResponse(value) => {
+                            Self::create_fbs_consumer_dump_response(builder, value)
+                        }
+                        Self::FbsConsumerGetStatsResponse(value) => {
+                            Self::create_fbs_consumer_get_stats_response(builder, value)
+                        }
+                        Self::FbsConsumerSetPreferredLayersResponse(value) => {
+                            Self::create_fbs_consumer_set_preferred_layers_response(builder, value)
+                        }
+                        Self::FbsConsumerSetPriorityResponse(value) => {
+                            Self::create_fbs_consumer_set_priority_response(builder, value)
+                        }
+                        Self::FbsDataProducerDumpResponse(value) => {
+                            Self::create_fbs_data_producer_dump_response(builder, value)
+                        }
+                        Self::FbsDataProducerGetStatsResponse(value) => {
+                            Self::create_fbs_data_producer_get_stats_response(builder, value)
+                        }
+                        Self::FbsDataConsumerGetBufferedAmountResponse(value) => {
+                            Self::create_fbs_data_consumer_get_buffered_amount_response(
+                                builder, value,
+                            )
+                        }
+                        Self::FbsDataConsumerDumpResponse(value) => {
+                            Self::create_fbs_data_consumer_dump_response(builder, value)
+                        }
+                        Self::FbsDataConsumerGetStatsResponse(value) => {
+                            Self::create_fbs_data_consumer_get_stats_response(builder, value)
                         }
                     }
                 }
@@ -29262,16 +29503,43 @@ mod root {
 
             #[derive(Copy, Clone, Debug)]
             pub enum BodyRef<'a> {
-                DumpResponse(super::data_consumer::DumpResponseRef<'a>),
-                ResourceUsageResponse(super::worker::ResourceUsageResponseRef<'a>),
-                ProduceResponse(super::transport::ProduceResponseRef<'a>),
-                ConsumeResponse(super::transport::ConsumeResponseRef<'a>),
-                RestartIceResponse(super::transport::RestartIceResponseRef<'a>),
-                ConnectResponse(super::web_rtc_transport::ConnectResponseRef<'a>),
-                GetStatsResponse(super::data_consumer::GetStatsResponseRef<'a>),
-                SetPreferredLayersResponse(super::consumer::SetPreferredLayersResponseRef<'a>),
-                SetPriorityResponse(super::consumer::SetPriorityResponseRef<'a>),
-                GetBufferedAmountResponse(super::data_consumer::GetBufferedAmountResponseRef<'a>),
+                FbsWorkerDumpResponse(super::worker::DumpResponseRef<'a>),
+                FbsWorkerResourceUsageResponse(super::worker::ResourceUsageResponseRef<'a>),
+                FbsWebRtcServerDumpResponse(super::web_rtc_server::DumpResponseRef<'a>),
+                FbsRouterDumpResponse(super::router::DumpResponseRef<'a>),
+                FbsTransportProduceResponse(super::transport::ProduceResponseRef<'a>),
+                FbsTransportConsumeResponse(super::transport::ConsumeResponseRef<'a>),
+                FbsTransportRestartIceResponse(super::transport::RestartIceResponseRef<'a>),
+                FbsPlainTransportConnectResponse(super::plain_transport::ConnectResponseRef<'a>),
+                FbsPlainTransportDumpResponse(super::plain_transport::DumpResponseRef<'a>),
+                FbsPlainTransportGetStatsResponse(super::plain_transport::GetStatsResponseRef<'a>),
+                FbsPipeTransportConnectResponse(super::pipe_transport::ConnectResponseRef<'a>),
+                FbsPipeTransportDumpResponse(super::pipe_transport::DumpResponseRef<'a>),
+                FbsPipeTransportGetStatsResponse(super::pipe_transport::GetStatsResponseRef<'a>),
+                FbsDirectTransportDumpResponse(super::direct_transport::DumpResponseRef<'a>),
+                FbsDirectTransportGetStatsResponse(
+                    super::direct_transport::GetStatsResponseRef<'a>,
+                ),
+                FbsWebRtcTransportConnectResponse(super::web_rtc_transport::ConnectResponseRef<'a>),
+                FbsWebRtcTransportDumpResponse(super::web_rtc_transport::DumpResponseRef<'a>),
+                FbsWebRtcTransportGetStatsResponse(
+                    super::web_rtc_transport::GetStatsResponseRef<'a>,
+                ),
+                FbsProducerDumpResponse(super::producer::DumpResponseRef<'a>),
+                FbsProducerGetStatsResponse(super::producer::GetStatsResponseRef<'a>),
+                FbsConsumerDumpResponse(super::consumer::DumpResponseRef<'a>),
+                FbsConsumerGetStatsResponse(super::consumer::GetStatsResponseRef<'a>),
+                FbsConsumerSetPreferredLayersResponse(
+                    super::consumer::SetPreferredLayersResponseRef<'a>,
+                ),
+                FbsConsumerSetPriorityResponse(super::consumer::SetPriorityResponseRef<'a>),
+                FbsDataProducerDumpResponse(super::data_producer::DumpResponseRef<'a>),
+                FbsDataProducerGetStatsResponse(super::data_producer::GetStatsResponseRef<'a>),
+                FbsDataConsumerGetBufferedAmountResponse(
+                    super::data_consumer::GetBufferedAmountResponseRef<'a>,
+                ),
+                FbsDataConsumerDumpResponse(super::data_consumer::DumpResponseRef<'a>),
+                FbsDataConsumerGetStatsResponse(super::data_consumer::GetStatsResponseRef<'a>),
             }
 
             impl<'a> ::core::convert::TryFrom<BodyRef<'a>> for Body {
@@ -29279,62 +29547,192 @@ mod root {
 
                 fn try_from(value: BodyRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(match value {
-                        BodyRef::DumpResponse(value) => {
-                            Body::DumpResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::FbsWorkerDumpResponse(value) => {
+                            Body::FbsWorkerDumpResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::ResourceUsageResponse(value) => {
-                            Body::ResourceUsageResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::FbsWorkerResourceUsageResponse(value) => {
+                            Body::FbsWorkerResourceUsageResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::ProduceResponse(value) => {
-                            Body::ProduceResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::FbsWebRtcServerDumpResponse(value) => {
+                            Body::FbsWebRtcServerDumpResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::ConsumeResponse(value) => {
-                            Body::ConsumeResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::FbsRouterDumpResponse(value) => {
+                            Body::FbsRouterDumpResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::RestartIceResponse(value) => {
-                            Body::RestartIceResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::FbsTransportProduceResponse(value) => {
+                            Body::FbsTransportProduceResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::ConnectResponse(value) => {
-                            Body::ConnectResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::FbsTransportConsumeResponse(value) => {
+                            Body::FbsTransportConsumeResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::GetStatsResponse(value) => {
-                            Body::GetStatsResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::FbsTransportRestartIceResponse(value) => {
+                            Body::FbsTransportRestartIceResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::SetPreferredLayersResponse(value) => {
-                            Body::SetPreferredLayersResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::FbsPlainTransportConnectResponse(value) => {
+                            Body::FbsPlainTransportConnectResponse(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::FbsPlainTransportDumpResponse(value) => {
+                            Body::FbsPlainTransportDumpResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::SetPriorityResponse(value) => {
-                            Body::SetPriorityResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::FbsPlainTransportGetStatsResponse(value) => {
+                            Body::FbsPlainTransportGetStatsResponse(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::FbsPipeTransportConnectResponse(value) => {
+                            Body::FbsPipeTransportConnectResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::GetBufferedAmountResponse(value) => {
-                            Body::GetBufferedAmountResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::FbsPipeTransportDumpResponse(value) => {
+                            Body::FbsPipeTransportDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::FbsPipeTransportGetStatsResponse(value) => {
+                            Body::FbsPipeTransportGetStatsResponse(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::FbsDirectTransportDumpResponse(value) => {
+                            Body::FbsDirectTransportDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::FbsDirectTransportGetStatsResponse(value) => {
+                            Body::FbsDirectTransportGetStatsResponse(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::FbsWebRtcTransportConnectResponse(value) => {
+                            Body::FbsWebRtcTransportConnectResponse(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::FbsWebRtcTransportDumpResponse(value) => {
+                            Body::FbsWebRtcTransportDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::FbsWebRtcTransportGetStatsResponse(value) => {
+                            Body::FbsWebRtcTransportGetStatsResponse(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::FbsProducerDumpResponse(value) => {
+                            Body::FbsProducerDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::FbsProducerGetStatsResponse(value) => {
+                            Body::FbsProducerGetStatsResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::FbsConsumerDumpResponse(value) => {
+                            Body::FbsConsumerDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::FbsConsumerGetStatsResponse(value) => {
+                            Body::FbsConsumerGetStatsResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::FbsConsumerSetPreferredLayersResponse(value) => {
+                            Body::FbsConsumerSetPreferredLayersResponse(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::FbsConsumerSetPriorityResponse(value) => {
+                            Body::FbsConsumerSetPriorityResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::FbsDataProducerDumpResponse(value) => {
+                            Body::FbsDataProducerDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::FbsDataProducerGetStatsResponse(value) => {
+                            Body::FbsDataProducerGetStatsResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::FbsDataConsumerGetBufferedAmountResponse(value) => {
+                            Body::FbsDataConsumerGetBufferedAmountResponse(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::FbsDataConsumerDumpResponse(value) => {
+                            Body::FbsDataConsumerDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::FbsDataConsumerGetStatsResponse(value) => {
+                            Body::FbsDataConsumerGetStatsResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -29349,34 +29747,95 @@ mod root {
                     tag: u8,
                 ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
                     match tag {
-                        1 => ::core::result::Result::Ok(Self::DumpResponse(
+                        1 => ::core::result::Result::Ok(Self::FbsWorkerDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        2 => ::core::result::Result::Ok(Self::ResourceUsageResponse(
+                        2 => ::core::result::Result::Ok(Self::FbsWorkerResourceUsageResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        3 => ::core::result::Result::Ok(Self::ProduceResponse(
+                        3 => ::core::result::Result::Ok(Self::FbsWebRtcServerDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        4 => ::core::result::Result::Ok(Self::ConsumeResponse(
+                        4 => ::core::result::Result::Ok(Self::FbsRouterDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        5 => ::core::result::Result::Ok(Self::RestartIceResponse(
+                        5 => ::core::result::Result::Ok(Self::FbsTransportProduceResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        6 => ::core::result::Result::Ok(Self::ConnectResponse(
+                        6 => ::core::result::Result::Ok(Self::FbsTransportConsumeResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        7 => ::core::result::Result::Ok(Self::GetStatsResponse(
+                        7 => ::core::result::Result::Ok(Self::FbsTransportRestartIceResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        8 => ::core::result::Result::Ok(Self::SetPreferredLayersResponse(
+                        8 => ::core::result::Result::Ok(Self::FbsPlainTransportConnectResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        9 => ::core::result::Result::Ok(Self::SetPriorityResponse(
+                        9 => ::core::result::Result::Ok(Self::FbsPlainTransportDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        10 => ::core::result::Result::Ok(Self::GetBufferedAmountResponse(
+                        10 => ::core::result::Result::Ok(Self::FbsPlainTransportGetStatsResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        11 => ::core::result::Result::Ok(Self::FbsPipeTransportConnectResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        12 => ::core::result::Result::Ok(Self::FbsPipeTransportDumpResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        13 => ::core::result::Result::Ok(Self::FbsPipeTransportGetStatsResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        14 => ::core::result::Result::Ok(Self::FbsDirectTransportDumpResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        15 => ::core::result::Result::Ok(Self::FbsDirectTransportGetStatsResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        16 => ::core::result::Result::Ok(Self::FbsWebRtcTransportConnectResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        17 => ::core::result::Result::Ok(Self::FbsWebRtcTransportDumpResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        18 => ::core::result::Result::Ok(Self::FbsWebRtcTransportGetStatsResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        19 => ::core::result::Result::Ok(Self::FbsProducerDumpResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        20 => ::core::result::Result::Ok(Self::FbsProducerGetStatsResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        21 => ::core::result::Result::Ok(Self::FbsConsumerDumpResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        22 => ::core::result::Result::Ok(Self::FbsConsumerGetStatsResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        23 => {
+                            ::core::result::Result::Ok(Self::FbsConsumerSetPreferredLayersResponse(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ))
+                        }
+                        24 => ::core::result::Result::Ok(Self::FbsConsumerSetPriorityResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        25 => ::core::result::Result::Ok(Self::FbsDataProducerDumpResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        26 => ::core::result::Result::Ok(Self::FbsDataProducerGetStatsResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        27 => ::core::result::Result::Ok(
+                            Self::FbsDataConsumerGetBufferedAmountResponse(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ),
+                        ),
+                        28 => ::core::result::Result::Ok(Self::FbsDataConsumerDumpResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        29 => ::core::result::Result::Ok(Self::FbsDataConsumerGetStatsResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         _ => ::core::result::Result::Err(
@@ -29387,15 +29846,7 @@ mod root {
             }
 
             #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
+                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub struct Response {
                 pub id: u32,
