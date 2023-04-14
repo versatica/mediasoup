@@ -1,7 +1,7 @@
 # Changelog
 
 
-### NEXT
+### 3.11.22
 
 * `RtpStreamRecv`: Only perform RTP inactivity check on simulcast streams ([PR #1061](https://github.com/versatica/mediasoup/pull/1061)).
 * `SeqManager`: Properly remove old dropped entries ([PR #1054](https://github.com/versatica/mediasoup/pull/1054)).
