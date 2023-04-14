@@ -214,9 +214,9 @@ fn create_succeeds() {
                 assert_eq!(ice_candidates[4].r#type, IceCandidateType::Host);
                 assert_eq!(ice_candidates[4].tcp_type, None);
                 assert!(ice_candidates[0].priority > ice_candidates[1].priority);
-                assert!(ice_candidates[2].priority > ice_candidates[1].priority);
+                assert!(ice_candidates[1].priority > ice_candidates[2].priority);
                 assert!(ice_candidates[2].priority > ice_candidates[3].priority);
-                assert!(ice_candidates[4].priority > ice_candidates[3].priority);
+                assert!(ice_candidates[3].priority > ice_candidates[4].priority);
                 assert!(ice_candidates[4].priority > ice_candidates[5].priority);
             }
 

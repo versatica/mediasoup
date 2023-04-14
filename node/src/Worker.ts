@@ -697,17 +697,9 @@ export class Worker<WorkerAppData extends AppData = AppData>
 
 		const webRtcServerId = uuidv4();
 
-		let createWebRtcServerRequestOffset;
-
-		try
-		{
-			createWebRtcServerRequestOffset = new FbsWorker.CreateWebRtcServerRequestT(
-				webRtcServerId, fbsListenInfos).pack(this.#channel.bufferBuilder);
-		}
-		catch (error)
-		{
-			throw new TypeError((error as Error).message);
-		}
+		const createWebRtcServerRequestOffset = new FbsWorker.CreateWebRtcServerRequestT(
+			webRtcServerId, fbsListenInfos
+		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
 			FbsRequest.Method.WORKER_CREATE_WEBRTC_SERVER,

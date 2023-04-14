@@ -172,15 +172,19 @@ test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', 
 		.rejects
 		.toThrow(TypeError);
 
+	// TODO: Ideally this should reject with TypeError. See:
+	// https://github.com/versatica/mediasoup/pull/927#issuecomment-1507188359
 	// @ts-ignore
 	await expect(worker.createWebRtcServer({ listenInfos: 'NOT-AN-ARRAY' }))
 		.rejects
-		.toThrow(TypeError);
+		.toThrow(Error);
 
+	// TODO: Ideally this should reject with TypeError. See:
+	// https://github.com/versatica/mediasoup/pull/927#issuecomment-1507188359
 	// @ts-ignore
 	await expect(worker.createWebRtcServer({ listenInfos: [ 'NOT-AN-OBJECT' ] }))
 		.rejects
-		.toThrow(TypeError);
+		.toThrow(Error);
 
 	// Empty listenInfos so should fail.
 	await expect(worker.createWebRtcServer({ listenInfos: [] }))
@@ -356,8 +360,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 	const transport = await router.createWebRtcTransport(
 		{
 			webRtcServer,
-			enableTcp : false,
-			appData   : { foo: 'bar' }
+			appData : { foo: 'bar' }
 		});
 
 	await expect(router.dump())
@@ -374,12 +377,17 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 
 	const iceCandidates = transport.iceCandidates;
 
-	expect(iceCandidates.length).toBe(1);
+	expect(iceCandidates.length).toBe(2);
 	expect(iceCandidates[0].ip).toBe('127.0.0.1');
 	expect(iceCandidates[0].port).toBe(port1);
 	expect(iceCandidates[0].protocol).toBe('udp');
 	expect(iceCandidates[0].type).toBe('host');
 	expect(iceCandidates[0].tcpType).toBeUndefined();
+	expect(iceCandidates[1].ip).toBe('127.0.0.1');
+	expect(iceCandidates[1].port).toBe(port2);
+	expect(iceCandidates[1].protocol).toBe('tcp');
+	expect(iceCandidates[1].type).toBe('host');
+	expect(iceCandidates[1].tcpType).toBe('passive');
 
 	expect(transport.iceState).toBe('new');
 	expect(transport.iceSelectedTuple).toBeUndefined();
@@ -460,9 +468,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 	const transport = await router.createWebRtcTransport(
 		{
 			webRtcServer,
-			enableUdp : false,
-			enableTcp : true,
-			appData   : { foo: 'bar' }
+			appData : { foo: 'bar' }
 		});
 
 	expect(onObserverWebRtcTransportHandled).toHaveBeenCalledTimes(1);
@@ -478,12 +484,17 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 
 	const iceCandidates = transport.iceCandidates;
 
-	expect(iceCandidates.length).toBe(1);
+	expect(iceCandidates.length).toBe(2);
 	expect(iceCandidates[0].ip).toBe('127.0.0.1');
-	expect(iceCandidates[0].port).toBe(port2);
-	expect(iceCandidates[0].protocol).toBe('tcp');
+	expect(iceCandidates[0].port).toBe(port1);
+	expect(iceCandidates[0].protocol).toBe('udp');
 	expect(iceCandidates[0].type).toBe('host');
-	expect(iceCandidates[0].tcpType).toBe('passive');
+	expect(iceCandidates[0].tcpType).toBeUndefined();
+	expect(iceCandidates[1].ip).toBe('127.0.0.1');
+	expect(iceCandidates[1].port).toBe(port2);
+	expect(iceCandidates[1].protocol).toBe('tcp');
+	expect(iceCandidates[1].type).toBe('host');
+	expect(iceCandidates[1].tcpType).toBe('passive');
 
 	expect(transport.iceState).toBe('new');
 	expect(transport.iceSelectedTuple).toBeUndefined();

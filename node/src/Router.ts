@@ -694,18 +694,9 @@ export class Router<RouterAppData extends AppData = AppData>
 			srtpCryptoSuite
 		);
 
-		let requestOffset;
-
-		try
-		{
-			requestOffset = new FbsRouter.CreatePlainTransportRequestT(
-				transportId, plainTransportOptions
-			).pack(this.#channel.bufferBuilder);
-		}
-		catch (error)
-		{
-			throw new TypeError((error as Error).message);
-		}
+		const requestOffset = new FbsRouter.CreatePlainTransportRequestT(
+			transportId, plainTransportOptions
+		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_PLAIN_TRANSPORT,
