@@ -4,10 +4,6 @@
 #include "Channel/ChannelRequest.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
-#include "FBS/message_generated.h"
-#include "FBS/request_generated.h"
-#include <flatbuffers/minireflect.h>
 
 namespace Channel
 {
@@ -81,9 +77,6 @@ namespace Channel
 	};
 	// clang-format on
 
-	/* Class methods. */
-	flatbuffers::FlatBufferBuilder ChannelRequest::bufferBuilder;
-
 	/* Instance methods. */
 
 	/**
@@ -122,11 +115,11 @@ namespace Channel
 
 		this->replied = true;
 
-		auto& builder = ChannelRequest::bufferBuilder;
+		auto& builder = this->bufferBuilder;
 		auto response =
 		  FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
 
-		Send(response);
+		this->SendResponse(response);
 	}
 
 	void ChannelRequest::Error(const char* reason)
@@ -137,11 +130,11 @@ namespace Channel
 
 		this->replied = true;
 
-		auto& builder = ChannelRequest::bufferBuilder;
+		auto& builder = this->bufferBuilder;
 		auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "Error" /*Error*/, reason);
 
-		Send(response);
+		this->SendResponse(response);
 	}
 
 	void ChannelRequest::TypeError(const char* reason)
@@ -152,11 +145,11 @@ namespace Channel
 
 		this->replied = true;
 
-		auto& builder = ChannelRequest::bufferBuilder;
+		auto& builder = this->bufferBuilder;
 		auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "TypeError" /*Error*/, reason);
 
-		Send(response);
+		this->SendResponse(response);
 	}
 
 	void ChannelRequest::Send(uint8_t* buffer, size_t size)
@@ -164,9 +157,9 @@ namespace Channel
 		this->channel->Send(buffer, size);
 	}
 
-	void ChannelRequest::Send(const flatbuffers::Offset<FBS::Response::Response>& response)
+	void ChannelRequest::SendResponse(const flatbuffers::Offset<FBS::Response::Response>& response)
 	{
-		auto& builder = ChannelRequest::bufferBuilder;
+		auto& builder = this->bufferBuilder;
 		auto message  = FBS::Message::CreateMessage(
       builder,
       FBS::Message::Type::RESPONSE,

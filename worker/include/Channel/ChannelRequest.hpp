@@ -24,15 +24,12 @@ namespace Channel
 		static absl::flat_hash_map<FBS::Request::Method, const char*> method2String;
 
 	public:
-		static flatbuffers::FlatBufferBuilder bufferBuilder;
-
-	public:
 		ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request);
 		~ChannelRequest() = default;
 
-		flatbuffers::FlatBufferBuilder& GetBufferBuilder() const
+		flatbuffers::FlatBufferBuilder& GetBufferBuilder()
 		{
-			return bufferBuilder;
+			return this->bufferBuilder;
 		}
 		void Accept();
 		template<class Body>
@@ -42,7 +39,7 @@ namespace Channel
 
 			this->replied = true;
 
-			auto& builder = ChannelRequest::bufferBuilder;
+			auto& builder = this->bufferBuilder;
 			auto response = FBS::Response::CreateResponse(builder, this->id, true, type, body.Union());
 
 			auto message = FBS::Message::CreateMessage(
@@ -60,13 +57,14 @@ namespace Channel
 
 	private:
 		void Send(uint8_t* buffer, size_t size);
-		void Send(const flatbuffers::Offset<FBS::Response::Response>& reponse);
+		void SendResponse(const flatbuffers::Offset<FBS::Response::Response>& response);
 
 	public:
 		// Passed by argument.
 		Channel::ChannelSocket* channel{ nullptr };
 		const FBS::Request::Request* data{ nullptr };
 		// Others.
+		flatbuffers::FlatBufferBuilder bufferBuilder{};
 		uint32_t id{ 0u };
 		Method method;
 		const char* methodCStr;
