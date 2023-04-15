@@ -1,4 +1,4 @@
-use crate::fbs::fbs::notification;
+use crate::fbs::notification;
 use hash_hasher::HashedMap;
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
