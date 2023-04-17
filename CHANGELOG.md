@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.11.23
+
+* Node: Fix `appData` for `Transport` and `RtpObserver` parent classes  ([PR #1066](https://github.com/versatica/mediasoup/pull/1066)).
+
+
 ### 3.11.22
 
 * `RtpStreamRecv`: Only perform RTP inactivity check on simulcast streams ([PR #1061](https://github.com/versatica/mediasoup/pull/1061)).
