@@ -32,7 +32,7 @@ import { IceState as FbsIceState } from './fbs/web-rtc-transport/ice-state';
 export type WebRtcTransportOptions<WebRtcTransportAppData extends AppData = AppData> =
 	WebRtcTransportOptionsBase<WebRtcTransportAppData> & WebRtcTransportListen;
 
-type WebRtcTransportListenIndividual1 =
+type WebRtcTransportListenIndividualListenInfo =
 {
 	/**
 	 * Listening info.
@@ -40,7 +40,7 @@ type WebRtcTransportListenIndividual1 =
 	listenInfos: TransportListenInfo[];
 };
 
-type WebRtcTransportListenIndividual2 =
+type WebRtcTransportListenIndividualListenIp =
 {
 	/**
 	 * Listening IP address or addresses in order of preference (first one is the
@@ -64,7 +64,7 @@ type WebRtcTransportListenServer =
 };
 
 type WebRtcTransportListen = Either<
-	Either<WebRtcTransportListenIndividual1, WebRtcTransportListenIndividual2>,
+	Either<WebRtcTransportListenIndividualListenInfo, WebRtcTransportListenIndividualListenIp>,
 	WebRtcTransportListenServer
 >;
 
