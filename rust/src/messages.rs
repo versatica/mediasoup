@@ -27,7 +27,7 @@ use crate::webrtc_server::{WebRtcServerDump, WebRtcServerId, WebRtcServerListenI
 use crate::webrtc_transport::{
     WebRtcTransportListen, WebRtcTransportListenInfos, WebRtcTransportOptions,
 };
-use crate::worker::{WorkerDump, WorkerUpdateSettings};
+use crate::worker::WorkerDump;
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};

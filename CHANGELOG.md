@@ -1,6 +1,11 @@
 # Changelog
 
 
+### Next
+
+* Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1065](https://github.com/versatica/mediasoup/pull/1065)).
+
+
 ### 3.11.22
 
 * `RtpStreamRecv`: Only perform RTP inactivity check on simulcast streams ([PR #1061](https://github.com/versatica/mediasoup/pull/1061)).
