@@ -211,7 +211,7 @@ export type WebRtcTransportData =
 const logger = new Logger('WebRtcTransport');
 
 export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
-	extends Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents, WebRtcTransportAppData>
+	extends Transport<WebRtcTransportAppData, WebRtcTransportEvents, WebRtcTransportObserverEvents>
 {
 	// WebRtcTransport data.
 	readonly #data: WebRtcTransportData;
