@@ -43,7 +43,7 @@ type RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData> =
 const logger = new Logger('ActiveSpeakerObserver');
 
 export class ActiveSpeakerObserver<ActiveSpeakerObserverAppData extends AppData = AppData>
-	extends RtpObserver<ActiveSpeakerObserverEvents, ActiveSpeakerObserverAppData>
+	extends RtpObserver<ActiveSpeakerObserverAppData, ActiveSpeakerObserverEvents>
 {
 	/**
 	 * @private

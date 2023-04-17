@@ -47,8 +47,8 @@ export type RtpObserverAddRemoveProducerOptions =
 };
 
 export class RtpObserver
-	<Events extends RtpObserverEvents = RtpObserverEvents,
-	RtpObserverAppData extends AppData = AppData>
+	<RtpObserverAppData extends AppData = AppData,
+	Events extends RtpObserverEvents = RtpObserverEvents>
 	extends EnhancedEventEmitter<Events>
 {
 	// Internal data.
