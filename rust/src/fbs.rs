@@ -1,9 +1,12 @@
-pub use root::*;
+//! Flatbuffers data structures compiled from `.fbs` files
+pub use root::fbs::*;
 
 const _: () = ::planus::check_version_compatibility("planus-0.3.1");
 
 #[no_implicit_prelude]
 mod root {
+    #[allow(missing_docs)]
+    #[allow(clippy::all)]
     pub mod fbs {
         pub mod active_speaker_observer {
             #[derive(

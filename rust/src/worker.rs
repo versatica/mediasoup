@@ -6,7 +6,7 @@ mod common;
 mod utils;
 
 use crate::data_structures::AppData;
-use crate::fbs::fbs;
+use crate::fbs;
 use crate::messages::{WorkerCreateWebRtcServerRequest, WorkerDumpRequest};
 pub use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};

@@ -1,4 +1,4 @@
-use crate::fbs::fbs::{message, notification, request, response};
+use crate::fbs::{message, notification, request, response};
 use crate::messages::{Notification, Request, WorkerCloseRequest};
 use crate::worker::common::{
     EventHandlers, FBSEventHandlers, FBSWeakEventHandlers, SubscriptionTarget, WeakEventHandlers,
@@ -18,7 +18,6 @@ use serde_json::Value;
 use std::any::TypeId;
 use std::collections::VecDeque;
 use std::fmt::{Debug, Display};
-use std::io::copy;
 use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
@@ -92,7 +91,7 @@ enum ChannelReceiveMessage<'a> {
     Event(InternalMessage),
 }
 
-fn deserialize_message<'a>(bytes: &'a [u8]) -> ChannelReceiveMessage<'_> {
+fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage<'_> {
     let message_ref = message::MessageRef::read_as_root(&bytes[4..]).unwrap();
 
     match message_ref.data().unwrap() {
@@ -560,20 +559,15 @@ impl Channel {
 
         debug!("request() [method:{:?}, id:{}]", method, id);
 
-        // TODO: Can't we use directly the buffer of the builder, since we own it?.
-        let mut copied: Vec<u8> = vec![];
-
         let request =
             request::Request::create(&mut builder, id, method, handler_id.to_string(), body);
 
         let message_body = message::Body::create_request(&mut builder, request);
         let message = message::Message::create(&mut builder, message::Type::Request, message_body);
 
-        let mut data = builder.finish(message, None);
+        let data = builder.finish(message, None).to_vec();
 
-        copy(&mut data, &mut copied).unwrap();
-
-        let buffer = Arc::new(AtomicTake::new(copied));
+        let buffer = Arc::new(AtomicTake::new(data));
 
         {
             let mut outgoing_message_buffer = self.inner.outgoing_message_buffer.lock();
