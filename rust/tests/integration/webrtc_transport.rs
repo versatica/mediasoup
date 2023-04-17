@@ -274,17 +274,14 @@ fn create_with_fixed_port_succeeds() {
 
         let transport = router
             .create_webrtc_transport({
-                let options =
-                    WebRtcTransportOptions::new(WebRtcTransportListenInfos::new(ListenInfo {
-                        protocol: Protocol::Udp,
-                        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: Some("9.9.9.1".parse().unwrap()),
-                        port: Some(port),
-                        send_buffer_size: None,
-                        recv_buffer_size: None,
-                    }));
-
-                options
+                WebRtcTransportOptions::new(WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    port: Some(port),
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }))
             })
             .await
             .expect("Failed to create WebRTC transport");
