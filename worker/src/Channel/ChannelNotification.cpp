@@ -4,7 +4,6 @@
 #include "Channel/ChannelNotification.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 
 namespace Channel
 {
