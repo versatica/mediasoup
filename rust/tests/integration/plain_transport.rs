@@ -263,16 +263,14 @@ fn create_with_fixed_port_succeeds() {
 
         let transport = router
             .create_plain_transport({
-                let options = PlainTransportOptions::new(ListenInfo {
+                PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
                     port: Some(port),
                     send_buffer_size: None,
                     recv_buffer_size: None,
-                });
-
-                options
+                })
             })
             .await
             .expect("Failed to create Plain transport");

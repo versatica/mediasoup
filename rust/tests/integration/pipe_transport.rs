@@ -634,16 +634,14 @@ fn create_with_fixed_port_succeeds() {
 
         let pipe_transport = router1
             .create_pipe_transport({
-                let options = PipeTransportOptions::new(ListenInfo {
+                PipeTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: Some(port),
                     send_buffer_size: None,
                     recv_buffer_size: None,
-                });
-
-                options
+                })
             })
             .await
             .expect("Failed to create Pipe transport");
