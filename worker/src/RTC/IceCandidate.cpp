@@ -8,51 +8,60 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	void IceCandidate::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate> IceCandidate::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add foundation.
-		jsonObject["foundation"] = this->foundation;
+		std::string protocol;
 
-		// Add priority.
-		jsonObject["priority"] = this->priority;
-
-		// Add ip.
-		jsonObject["ip"] = this->ip;
-
-		// Add protocol.
 		switch (this->protocol)
 		{
 			case Protocol::UDP:
-				jsonObject["protocol"] = "udp";
+				protocol = "udp";
 				break;
 
 			case Protocol::TCP:
-				jsonObject["protocol"] = "tcp";
+				protocol = "tcp";
 				break;
 		}
 
-		// Add port.
-		jsonObject["port"] = this->port;
+		std::string type;
 
-		// Add type.
 		switch (this->type)
 		{
 			case CandidateType::HOST:
-				jsonObject["type"] = "host";
+				type = "host";
 				break;
 		}
 
-		// Add tcpType.
+		std::string tcpType;
+
 		if (this->protocol == Protocol::TCP)
 		{
 			switch (this->tcpType)
 			{
 				case TcpCandidateType::PASSIVE:
-					jsonObject["tcpType"] = "passive";
+					tcpType = "passive";
 					break;
 			}
 		}
+
+		return FBS::WebRtcTransport::CreateIceCandidateDirect(
+		  builder,
+		  // foundation.
+		  this->foundation.c_str(),
+		  // priority.
+		  this->priority,
+		  // ip.
+		  this->ip.c_str(),
+		  // protocol.
+		  protocol.c_str(),
+		  // port.
+		  this->port,
+		  // type.
+		  type.c_str(),
+		  // tcpType.
+		  tcpType.c_str());
 	}
 } // namespace RTC

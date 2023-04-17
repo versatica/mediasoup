@@ -2,13 +2,11 @@
 #define MS_RTC_RTP_DICTIONARIES_HPP
 
 #include "common.hpp"
+#include "FBS/rtpParameters_generated.h"
 #include "RTC/Parameters.hpp"
 #include <absl/container/flat_hash_map.h>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -155,9 +153,10 @@ namespace RTC
 	{
 	public:
 		RtcpFeedback() = default;
-		explicit RtcpFeedback(json& data);
+		explicit RtcpFeedback(const FBS::RtpParameters::RtcpFeedback* data);
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::RtpParameters::RtcpFeedback> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	public:
 		std::string type;
@@ -168,9 +167,10 @@ namespace RTC
 	{
 	public:
 		RtpCodecParameters() = default;
-		explicit RtpCodecParameters(json& data);
+		explicit RtpCodecParameters(const FBS::RtpParameters::RtpCodecParameters* data);
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::RtpParameters::RtpCodecParameters> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	private:
 		void CheckCodec();
@@ -188,9 +188,9 @@ namespace RTC
 	{
 	public:
 		RtpRtxParameters() = default;
-		explicit RtpRtxParameters(json& data);
+		explicit RtpRtxParameters(const FBS::RtpParameters::Rtx* data);
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::RtpParameters::Rtx> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
 	public:
 		uint32_t ssrc{ 0u };
@@ -200,9 +200,10 @@ namespace RTC
 	{
 	public:
 		RtpEncodingParameters() = default;
-		explicit RtpEncodingParameters(json& data);
+		explicit RtpEncodingParameters(const FBS::RtpParameters::RtpEncodingParameters* data);
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	public:
 		uint32_t ssrc{ 0u };
@@ -224,9 +225,11 @@ namespace RTC
 	{
 	public:
 		RtpHeaderExtensionParameters() = default;
-		explicit RtpHeaderExtensionParameters(json& data);
+		explicit RtpHeaderExtensionParameters(
+		  const FBS::RtpParameters::RtpHeaderExtensionParameters* const data);
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::RtpParameters::RtpHeaderExtensionParameters> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	public:
 		std::string uri;
@@ -240,13 +243,13 @@ namespace RTC
 	{
 	public:
 		RtcpParameters() = default;
-		explicit RtcpParameters(json& data);
+		explicit RtcpParameters(const FBS::RtpParameters::RtcpParameters* data);
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::RtpParameters::RtcpParameters> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	public:
 		std::string cname;
-		uint32_t ssrc{ 0u };
 		bool reducedSize{ true };
 	};
 
@@ -274,9 +277,10 @@ namespace RTC
 
 	public:
 		RtpParameters() = default;
-		explicit RtpParameters(json& data);
+		explicit RtpParameters(const FBS::RtpParameters::RtpParameters* data);
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::RtpParameters::RtpParameters> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		const RTC::RtpCodecParameters* GetCodecForEncoding(RtpEncodingParameters& encoding) const;
 		const RTC::RtpCodecParameters* GetRtxCodecForEncoding(RtpEncodingParameters& encoding) const;
 

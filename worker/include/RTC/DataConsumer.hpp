@@ -4,11 +4,8 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "PayloadChannel/PayloadChannelRequest.hpp"
-#include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include "RTC/Shared.hpp"
-#include <nlohmann/json.hpp>
 #include <string>
 
 namespace RTC
@@ -17,8 +14,7 @@ namespace RTC
 	// (this is to avoid circular dependencies).
 	class SctpAssociation;
 
-	class DataConsumer : public Channel::ChannelSocket::RequestHandler,
-	                     public PayloadChannel::PayloadChannelSocket::RequestHandler
+	class DataConsumer : public Channel::ChannelSocket::RequestHandler
 	{
 	protected:
 		using onQueuedCallback = const std::function<void(bool queued, bool sctpSendBufferFull)>;
@@ -53,13 +49,15 @@ namespace RTC
 		  const std::string& dataProducerId,
 		  RTC::SctpAssociation* sctpAssociation,
 		  RTC::DataConsumer::Listener* listener,
-		  json& data,
+		  const FBS::Transport::ConsumeDataRequest* data,
 		  size_t maxMessageSize);
 		virtual ~DataConsumer();
 
 	public:
-		void FillJson(json& jsonObject) const;
-		void FillJsonStats(json& jsonArray) const;
+		flatbuffers::Offset<FBS::DataConsumer::DumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
+		flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		Type GetType() const
 		{
 			return this->type;
@@ -90,10 +88,6 @@ namespace RTC
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
-
-		/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
-	public:
-		void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
 
 	public:
 		// Passed by argument.

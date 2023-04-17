@@ -317,65 +317,6 @@ namespace RTC
 		MS_DUMP("</RtpPacket>");
 	}
 
-	void RtpPacket::FillJson(json& jsonObject) const
-	{
-		MS_TRACE();
-
-		// Add payloadType.
-		jsonObject["payloadType"] = GetPayloadType();
-
-		// Add sequenceNumber.
-		jsonObject["sequenceNumber"] = GetSequenceNumber();
-
-		// Add timestamp.
-		jsonObject["timestamp"] = GetTimestamp();
-
-		// Add marker.
-		jsonObject["marker"] = HasMarker();
-
-		// Add ssrc.
-		jsonObject["ssrc"] = GetSsrc();
-
-		// Add isKeyFrame.
-		jsonObject["isKeyFrame"] = IsKeyFrame();
-
-		// Add size.
-		jsonObject["size"] = GetSize();
-
-		// Add payloadSize.
-		jsonObject["payloadSize"] = GetPayloadLength();
-
-		// Add spatialLayer.
-		jsonObject["spatialLayer"] = GetSpatialLayer();
-
-		// Add temporalLayer.
-		jsonObject["temporalLayer"] = GetTemporalLayer();
-
-		// Add mid.
-		std::string mid;
-
-		if (this->midExtensionId != 0u && ReadMid(mid))
-			jsonObject["mid"] = mid;
-
-		// Add rid.
-		std::string rid;
-
-		if (this->ridExtensionId != 0u && ReadRid(rid))
-			jsonObject["rid"] = rid;
-
-		// Add rrid.
-		std::string rrid;
-
-		if (this->rridExtensionId != 0u && ReadRid(rrid))
-			jsonObject["rrid"] = rrid;
-
-		// Add wideSequenceNumber.
-		uint16_t wideSequenceNumber;
-
-		if (this->transportWideCc01ExtensionId != 0u && ReadTransportWideCc01(wideSequenceNumber))
-			jsonObject["wideSequenceNumber"] = wideSequenceNumber;
-	}
-
 	void RtpPacket::SetExtensions(uint8_t type, const std::vector<GenericExtension>& extensions)
 	{
 		MS_ASSERT(type == 1u || type == 2u, "type must be 1 or 2");

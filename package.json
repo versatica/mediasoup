@@ -22,6 +22,7 @@
   "files": [
     "node/lib",
     "worker/deps/libwebrtc",
+    "worker/fbs",
     "worker/fuzzer/include",
     "worker/fuzzer/src",
     "worker/include",
@@ -57,6 +58,9 @@
     "lint:node": "node npm-scripts.js lint:node",
     "lint:worker": "node npm-scripts.js lint:worker",
     "format:worker": "node npm-scripts.js format:worker",
+    "flatc": "npm run flatc:node && npm run flatc:worker",
+    "flatc:node": "node npm-scripts.js flatc:node",
+    "flatc:worker": "node npm-scripts.js flatc:worker",
     "test": "npm run test:node && npm run test:worker",
     "test:node": "node npm-scripts.js test:node",
     "test:worker": "node npm-scripts.js test:worker",
@@ -86,6 +90,7 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
+    "flatbuffers": "^23.3.3",
     "h264-profile-level-id": "^1.0.1",
     "supports-color": "^9.3.1",
     "uuid": "^9.0.0"

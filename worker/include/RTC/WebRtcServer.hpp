@@ -12,7 +12,7 @@
 #include "RTC/WebRtcTransport.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <nlohmann/json.hpp>
+#include <flatbuffers/flatbuffers.h>
 #include <string>
 #include <vector>
 
@@ -24,15 +24,6 @@ namespace RTC
 	                     public RTC::WebRtcTransport::WebRtcTransportListener,
 	                     public Channel::ChannelSocket::RequestHandler
 	{
-	private:
-		struct ListenInfo
-		{
-			RTC::TransportTuple::Protocol protocol;
-			std::string ip;
-			std::string announcedIp;
-			uint16_t port;
-		};
-
 	private:
 		struct UdpSocketOrTcpServer
 		{
@@ -48,11 +39,15 @@ namespace RTC
 		};
 
 	public:
-		WebRtcServer(RTC::Shared* shared, const std::string& id, json& data);
+		WebRtcServer(
+		  RTC::Shared* shared,
+		  const std::string& id,
+		  const flatbuffers::Vector<flatbuffers::Offset<FBS::WebRtcServer::ListenInfo>>* listenInfos);
 		~WebRtcServer();
 
 	public:
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::WebRtcServer::DumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		std::vector<RTC::IceCandidate> GetIceCandidates(
 		  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp);
 

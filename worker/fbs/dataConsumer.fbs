@@ -1,0 +1,59 @@
+include "common.fbs";
+include "sctpParameters.fbs";
+
+namespace FBS.DataConsumer;
+
+table GetBufferedAmountResponse {
+  buffered_amount:uint32;
+}
+
+table SetBufferedAmountLowThresholdRequest {
+  threshold:uint32;
+}
+
+table DumpResponse {
+  id:string (required);
+  data_producer_id:string (required);
+  type:string (required);
+  sctp_stream_parameters: FBS.SctpParameters.SctpStreamParameters;
+  label:string (required);
+  protocol:string (required);
+}
+
+table GetStatsResponse {
+  timestamp:uint64;
+  label:string (required);
+  protocol:string (required);
+  messages_sent:uint64;
+  bytes_sent:uint64;
+  buffered_amount:uint32;
+}
+
+table String {
+  value:string (required);
+}
+
+table Binary {
+  value:[uint8] (required);
+}
+
+union Data {
+  String,
+  Binary
+}
+
+table SendRequest {
+  ppid:uint8;
+  data:Data (required);
+}
+
+// Notifications from Worker.
+
+table BufferedAmountLowNotification {
+  buffered_amount:uint32;
+}
+
+table MessageNotification {
+  ppid:uint32;
+  data:[ubyte] (required);
+}

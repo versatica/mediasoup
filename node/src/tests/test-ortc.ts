@@ -338,8 +338,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(consumableRtpParameters.rtcp).toEqual(
 		{
 			cname       : rtpParameters.rtcp?.cname,
-			reducedSize : true,
-			mux         : true
+			reducedSize : true
 		});
 
 	const remoteRtpCapabilities: mediasoup.types.RtpCapabilities =
@@ -504,8 +503,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(consumerRtpParameters.rtcp).toEqual(
 		{
 			cname       : rtpParameters.rtcp?.cname,
-			reducedSize : true,
-			mux         : true
+			reducedSize : true
 		});
 
 	const pipeConsumerRtpParameters = ortc.getPipeConsumerRtpParameters(
@@ -551,8 +549,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(pipeConsumerRtpParameters.rtcp).toEqual(
 		{
 			cname       : rtpParameters.rtcp?.cname,
-			reducedSize : true,
-			mux         : true
+			reducedSize : true
 		});
 });
 

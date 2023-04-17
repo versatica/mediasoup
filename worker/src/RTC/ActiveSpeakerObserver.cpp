@@ -95,19 +95,15 @@ namespace RTC
 	}
 
 	ActiveSpeakerObserver::ActiveSpeakerObserver(
-	  RTC::Shared* shared, const std::string& id, RTC::RtpObserver::Listener* listener, json& data)
+	  RTC::Shared* shared,
+	  const std::string& id,
+	  RTC::RtpObserver::Listener* listener,
+	  const FBS::ActiveSpeakerObserver::ActiveSpeakerObserverOptions* options)
 	  : RTC::RtpObserver(shared, id, listener)
 	{
 		MS_TRACE();
 
-		auto jsonIntervalIt = data.find("interval");
-
-		if (jsonIntervalIt == data.end() || !jsonIntervalIt->is_number())
-		{
-			MS_THROW_TYPE_ERROR("missing interval");
-		}
-
-		this->interval = jsonIntervalIt->get<int16_t>();
+		this->interval = options->interval();
 
 		if (this->interval < 100)
 			this->interval = 100;
@@ -122,8 +118,7 @@ namespace RTC
 		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
-		  /*payloadChannelRequestHandler*/ nullptr,
-		  /*payloadChannelNotificationHandler*/ nullptr);
+		  /*channelNotificationHandler*/ nullptr);
 	}
 
 	ActiveSpeakerObserver::~ActiveSpeakerObserver()
@@ -275,10 +270,14 @@ namespace RTC
 
 		if (!this->mapProducerSpeakers.empty() && CalculateActiveSpeaker())
 		{
-			json data          = json::object();
-			data["producerId"] = this->dominantId;
+			auto notification = FBS::ActiveSpeakerObserver::CreateDominantSpeakerNotificationDirect(
+			  this->shared->channelNotifier->GetBufferBuilder(), this->dominantId.c_str());
 
-			this->shared->channelNotifier->Emit(this->id, "dominantspeaker", data);
+			this->shared->channelNotifier->Emit(
+			  this->id,
+			  FBS::Notification::Event::ACTIVESPEAKEROBSERVER_DOMINANT_SPEAKER,
+			  FBS::Notification::Body::FBS_ActiveSpeakerObserver_DominantSpeakerNotification,
+			  notification);
 		}
 	}
 
@@ -324,7 +323,7 @@ namespace RTC
 			{
 				auto* producerSpeaker = kv.second;
 				auto* speaker         = producerSpeaker->speaker;
-				auto& id              = producerSpeaker->producer->id;
+				const auto& id        = producerSpeaker->producer->id;
 
 				if (id == this->dominantId || speaker->paused)
 				{
@@ -370,7 +369,7 @@ namespace RTC
 		{
 			auto* producerSpeaker = kv.second;
 			auto* speaker         = producerSpeaker->speaker;
-			auto& id              = producerSpeaker->producer->id;
+			const auto& id        = producerSpeaker->producer->id;
 			uint64_t idle         = now - speaker->lastLevelChangeTime;
 
 			if (SpeakerIdleTimeout < idle && (this->dominantId.empty() || id != this->dominantId))

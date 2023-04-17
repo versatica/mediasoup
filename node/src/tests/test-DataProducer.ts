@@ -58,13 +58,14 @@ test('transport1.produceData() succeeds', async () =>
 	expect(dataProducer1.protocol).toBe('bar');
 	expect(dataProducer1.appData).toEqual({ foo: 1, bar: '2' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapDataProducerIdDataConsumerIds : { [dataProducer1.id]: [] },
-				mapDataConsumerIdDataProducerId  : {}
-			});
+	const dump = await router.dump();
+
+	expect(dump.mapDataProducerIdDataConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: dataProducer1.id, values: [ ] }
+		]));
+
+	expect(dump.mapDataConsumerIdDataProducerId.length).toBe(0);
 
 	await expect(transport1.dump())
 		.resolves
@@ -108,13 +109,14 @@ test('transport2.produceData() succeeds', async () =>
 	expect(dataProducer2.protocol).toBe('bar');
 	expect(dataProducer2.appData).toEqual({ foo: 1, bar: '2' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapDataProducerIdDataConsumerIds : { [dataProducer2.id]: [] },
-				mapDataConsumerIdDataProducerId  : {}
-			});
+	const dump = await router.dump();
+
+	expect(dump.mapDataProducerIdDataConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: dataProducer2.id, values: [ ] }
+		]));
+
+	expect(dump.mapDataConsumerIdDataProducerId.length).toBe(0);
 
 	await expect(transport2.dump())
 		.resolves
@@ -179,10 +181,10 @@ test('dataProducer.dump() succeeds', async () =>
 	expect(data.id).toBe(dataProducer1.id);
 	expect(data.type).toBe('sctp');
 	expect(typeof data.sctpStreamParameters).toBe('object');
-	expect(data.sctpStreamParameters.streamId).toBe(666);
-	expect(data.sctpStreamParameters.ordered).toBe(true);
-	expect(data.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
-	expect(data.sctpStreamParameters.maxRetransmits).toBeUndefined();
+	expect(data.sctpStreamParameters!.streamId).toBe(666);
+	expect(data.sctpStreamParameters!.ordered).toBe(true);
+	expect(data.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
+	expect(data.sctpStreamParameters!.maxRetransmits).toBeUndefined();
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
 
@@ -191,10 +193,10 @@ test('dataProducer.dump() succeeds', async () =>
 	expect(data.id).toBe(dataProducer2.id);
 	expect(data.type).toBe('sctp');
 	expect(typeof data.sctpStreamParameters).toBe('object');
-	expect(data.sctpStreamParameters.streamId).toBe(777);
-	expect(data.sctpStreamParameters.ordered).toBe(false);
-	expect(data.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
-	expect(data.sctpStreamParameters.maxRetransmits).toBe(3);
+	expect(data.sctpStreamParameters!.streamId).toBe(777);
+	expect(data.sctpStreamParameters!.ordered).toBe(false);
+	expect(data.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
+	expect(data.sctpStreamParameters!.maxRetransmits).toBe(3);
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
 }, 2000);

@@ -6,6 +6,8 @@
 ## Node.
 /node_modules
 /node/lib
+# Flatc generated files.
+/node/src/fbs
 
 ## Rust.
 /Cargo.lock
@@ -16,6 +18,8 @@
 ## Worker.
 /worker/out
 /worker/scripts/node_modules
+# Flatc generated files.
+/worker/include/FBS
 # Vistual Studio generated Stuff.
 /worker/**/Debug
 /worker/**/Release

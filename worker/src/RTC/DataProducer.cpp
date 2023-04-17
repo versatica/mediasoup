@@ -17,20 +17,12 @@ namespace RTC
 	  const std::string& id,
 	  size_t maxMessageSize,
 	  RTC::DataProducer::Listener* listener,
-	  json& data)
+	  const FBS::Transport::ProduceDataRequest* data)
 	  : id(id), shared(shared), maxMessageSize(maxMessageSize), listener(listener)
 	{
 		MS_TRACE();
 
-		auto jsonTypeIt                 = data.find("type");
-		auto jsonSctpStreamParametersIt = data.find("sctpStreamParameters");
-		auto jsonLabelIt                = data.find("label");
-		auto jsonProtocolIt             = data.find("protocol");
-
-		if (jsonTypeIt == data.end() || !jsonTypeIt->is_string())
-			MS_THROW_TYPE_ERROR("missing type");
-
-		this->typeString = jsonTypeIt->get<std::string>();
+		this->typeString = data->type()->str();
 
 		if (this->typeString == "sctp")
 			this->type = DataProducer::Type::SCTP;
@@ -41,32 +33,27 @@ namespace RTC
 
 		if (this->type == DataProducer::Type::SCTP)
 		{
-			// clang-format off
-			if (
-				jsonSctpStreamParametersIt == data.end() ||
-				!jsonSctpStreamParametersIt->is_object()
-			)
-			// clang-format on
+			if (!flatbuffers::IsFieldPresent(
+			      data, FBS::Transport::ProduceDataRequest::VT_SCTPSTREAMPARAMETERS))
 			{
 				MS_THROW_TYPE_ERROR("missing sctpStreamParameters");
 			}
 
 			// This may throw.
-			this->sctpStreamParameters = RTC::SctpStreamParameters(*jsonSctpStreamParametersIt);
+			this->sctpStreamParameters = RTC::SctpStreamParameters(data->sctpStreamParameters());
 		}
 
-		if (jsonLabelIt != data.end() && jsonLabelIt->is_string())
-			this->label = jsonLabelIt->get<std::string>();
+		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ProduceDataRequest::VT_LABEL))
+			this->label = data->label()->str();
 
-		if (jsonProtocolIt != data.end() && jsonProtocolIt->is_string())
-			this->protocol = jsonProtocolIt->get<std::string>();
+		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ProduceDataRequest::VT_PROTOCOL))
+			this->protocol = data->protocol()->str();
 
 		// NOTE: This may throw.
 		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
-		  /*payloadChannelRequestHandler*/ nullptr,
-		  /*payloadChannelNotificationHandler*/ this);
+		  /*channelNotificationHandler*/ this);
 	}
 
 	DataProducer::~DataProducer()
@@ -76,124 +63,110 @@ namespace RTC
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 	}
 
-	void DataProducer::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::DataProducer::DumpResponse> DataProducer::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add id.
-		jsonObject["id"] = this->id;
-
-		// Add type.
-		jsonObject["type"] = this->typeString;
+		flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> sctpStreamParametersOffset;
 
 		// Add sctpStreamParameters.
 		if (this->type == DataProducer::Type::SCTP)
 		{
-			this->sctpStreamParameters.FillJson(jsonObject["sctpStreamParameters"]);
+			sctpStreamParametersOffset = this->sctpStreamParameters.FillBuffer(builder);
 		}
 
-		// Add label.
-		jsonObject["label"] = this->label;
-
-		// Add protocol.
-		jsonObject["protocol"] = this->protocol;
+		return FBS::DataProducer::CreateDumpResponseDirect(
+		  builder,
+		  this->id.c_str(),
+		  this->typeString.c_str(),
+		  sctpStreamParametersOffset,
+		  this->label.c_str(),
+		  this->protocol.c_str());
 	}
 
-	void DataProducer::FillJsonStats(json& jsonArray) const
+	flatbuffers::Offset<FBS::DataProducer::GetStatsResponse> DataProducer::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		jsonArray.emplace_back(json::value_t::object);
-		auto& jsonObject = jsonArray[0];
-
-		// Add type.
-		jsonObject["type"] = "data-producer";
-
-		// Add timestamp.
-		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
-
-		// Add label.
-		jsonObject["label"] = this->label;
-
-		// Add protocol.
-		jsonObject["protocol"] = this->protocol;
-
-		// Add messagesReceived.
-		jsonObject["messagesReceived"] = this->messagesReceived;
-
-		// Add bytesReceived.
-		jsonObject["bytesReceived"] = this->bytesReceived;
+		return FBS::DataProducer::CreateGetStatsResponseDirect(
+		  builder,
+		  // timestamp.
+		  DepLibUV::GetTimeMs(),
+		  // label.
+		  this->label.c_str(),
+		  // protocol.
+		  this->protocol.c_str(),
+		  // messagesReceived.
+		  this->messagesReceived,
+		  // bytesReceived.
+		  this->bytesReceived);
 	}
 
 	void DataProducer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::DATA_PRODUCER_DUMP:
+			case Channel::ChannelRequest::Method::DATA_PRODUCER_DUMP:
 			{
-				json data = json::object();
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				FillJson(data);
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_DataProducer_DumpResponse, dumpOffset);
 
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::DATA_PRODUCER_GET_STATS:
+			case Channel::ChannelRequest::Method::DATA_PRODUCER_GET_STATS:
 			{
-				json data = json::array();
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
-				FillJsonStats(data);
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_DataProducer_GetStatsResponse, responseOffset);
 
 				break;
 			}
 
 			default:
 			{
-				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+				MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
 			}
 		}
 	}
 
-	void DataProducer::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
+	void DataProducer::HandleNotification(Channel::ChannelNotification* notification)
 	{
 		MS_TRACE();
 
-		switch (notification->eventId)
+		switch (notification->event)
 		{
-			case PayloadChannel::PayloadChannelNotification::EventId::DATA_PRODUCER_SEND:
+			case Channel::ChannelNotification::Event::DATA_PRODUCER_SEND:
 			{
-				int ppid;
+				const auto* body = notification->data->body_as<FBS::DataProducer::SendNotification>();
+				const uint8_t* data{ nullptr };
+				size_t len{ 0 };
 
-				// This may throw.
-				// NOTE: If this throws we have to catch the error and throw a MediaSoupError
-				// intead, otherwise the process would crash.
-				try
+				if (body->data_type() == FBS::DataProducer::Data::String)
 				{
-					ppid = std::stoi(notification->data);
+					data = body->data_as_String()->value()->Data();
+					len  = body->data_as_String()->value()->size();
 				}
-				catch (const std::exception& error)
+				else
 				{
-					MS_THROW_TYPE_ERROR("invalid PPID value: %s", error.what());
+					data = body->data_as_Binary()->value()->Data();
+					len  = body->data_as_Binary()->value()->size();
 				}
-
-				const auto* msg = notification->payload;
-				auto len        = notification->payloadLen;
 
 				if (len > this->maxMessageSize)
 				{
 					MS_THROW_TYPE_ERROR(
 					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
-					  len,
-					  this->maxMessageSize);
+					  this->maxMessageSize,
+					  len);
 				}
 
-				this->ReceiveMessage(ppid, msg, len);
+				this->ReceiveMessage(body->ppid(), data, len);
 
 				// Increase receive transmission.
 				this->listener->OnDataProducerReceiveData(this, len);
@@ -203,7 +176,7 @@ namespace RTC
 
 			default:
 			{
-				MS_ERROR("unknown event '%s'", notification->event.c_str());
+				MS_ERROR("unknown event '%s'", notification->eventCStr);
 			}
 		}
 	}

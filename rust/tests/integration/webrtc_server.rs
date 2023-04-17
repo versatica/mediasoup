@@ -101,8 +101,7 @@ fn create_webrtc_server_succeeds() {
             worker_dump.channel_message_handlers,
             ChannelMessageHandlers {
                 channel_request_handlers: vec![webrtc_server.id().into()],
-                payload_channel_request_handlers: vec![],
-                payload_channel_notification_handlers: vec![]
+                channel_notification_handlers: vec![]
             }
         );
 

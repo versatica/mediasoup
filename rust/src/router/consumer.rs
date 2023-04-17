@@ -12,7 +12,7 @@ use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters}
 use crate::scalability_modes::ScalabilityMode;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
@@ -341,15 +341,11 @@ enum Notification {
     ProducerClose,
     ProducerPause,
     ProducerResume,
+    // TODO.
+    // Rtp,
     Score(ConsumerScore),
     LayersChange(Option<ConsumerLayers>),
     Trace(ConsumerTraceEventData),
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(tag = "event", rename_all = "lowercase", content = "data")]
-enum PayloadNotification {
-    Rtp,
 }
 
 #[derive(Default)]
@@ -468,7 +464,6 @@ impl Consumer {
         paused: bool,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: &PayloadChannel,
         producer_paused: bool,
         score: ConsumerScore,
         preferred_layers: Option<ConsumerLayers>,
@@ -541,6 +536,14 @@ impl Consumer {
                                 handlers.resume.call_simple();
                             }
                         }
+                        /*
+                         * TODO.
+                        Notification::Rtp => {
+                            handlers.rtp.call(|callback| {
+                                callback(notification);
+                            });
+                        }
+                        */
                         Notification::Score(consumer_score) => {
                             *score.lock() = consumer_score.clone();
                             handlers.score.call_simple(&consumer_score);
@@ -555,25 +558,6 @@ impl Consumer {
                     },
                     Err(error) => {
                         error!("Failed to parse notification: {}", error);
-                    }
-                }
-            })
-        };
-
-        let payload_subscription_handler = {
-            let handlers = Arc::clone(&handlers);
-
-            payload_channel.subscribe_to_notifications(id.into(), move |message, payload| {
-                match serde_json::from_slice::<PayloadNotification>(message) {
-                    Ok(notification) => match notification {
-                        PayloadNotification::Rtp => {
-                            handlers.rtp.call(|callback| {
-                                callback(payload);
-                            });
-                        }
-                    },
-                    Err(error) => {
-                        error!("Failed to parse payload notification: {}", error);
                     }
                 }
             })
@@ -609,10 +593,7 @@ impl Consumer {
             transport,
             weak_producer: producer.downgrade(),
             closed,
-            _subscription_handlers: Mutex::new(vec![
-                subscription_handler,
-                payload_subscription_handler,
-            ]),
+            _subscription_handlers: Mutex::new(vec![subscription_handler]),
             _on_transport_close_handler: Mutex::new(on_transport_close_handler),
         });
 

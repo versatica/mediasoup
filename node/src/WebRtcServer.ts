@@ -4,6 +4,9 @@ import { Channel } from './Channel';
 import { TransportProtocol } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';
 import { AppData } from './types';
+import { Body as RequestBody, Method } from './fbs/request';
+import * as FbsWorker from './fbs/worker';
+import * as FbsWebRtcServer from './fbs/web-rtc-server';
 
 export type WebRtcServerOptions<WebRtcServerAppData extends AppData = AppData> =
 {
@@ -172,9 +175,14 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 
 		this.#closed = true;
 
-		const reqData = { webRtcServerId: this.#internal.webRtcServerId };
+		// Build the request.
+		const requestOffset = new FbsWorker.CloseWebRtcServerRequestT(
+			this.#internal.webRtcServerId).pack(this.#channel.bufferBuilder);
 
-		this.#channel.request('worker.closeWebRtcServer', undefined, reqData)
+		this.#channel.request(
+			Method.WORKER_WEBRTC_SERVER_CLOSE,
+			RequestBody.FBS_Worker_CloseWebRtcServerRequest,
+			requestOffset)
 			.catch(() => {});
 
 		// Close every WebRtcTransport.
@@ -226,7 +234,15 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('webRtcServer.dump', this.#internal.webRtcServerId);
+		const response = await this.#channel.request(
+			Method.WEBRTC_SERVER_DUMP, undefined, undefined, this.#internal.webRtcServerId);
+
+		/* Decode Response. */
+		const dump = new FbsWebRtcServer.DumpResponse();
+
+		response.body(dump);
+
+		return dump.unpack();
 	}
 
 	/**

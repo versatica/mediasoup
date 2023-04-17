@@ -3,6 +3,7 @@
 const process = require('process');
 const os = require('os');
 const fs = require('fs');
+const path = require('path');
 const { execSync, spawnSync } = require('child_process');
 const { version } = require('./package.json');
 
@@ -15,6 +16,9 @@ const MAYOR_VERSION = version.split('.')[0];
 
 // make command to use.
 const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
+
+// flatbuffers version.
+const FLATBUFFERS_VERSION='23.3.3';
 
 console.log(`npm-scripts.js [INFO] running task "${task}"`);
 
@@ -29,12 +33,12 @@ switch (task)
 	//   its dependencies and devDependencies will be installed, and the `prepare`
 	//   script will be run, before the package is packaged and installed.
 	//
-	// So here we compile TypeScript and flatbuffers to JavaScript.
+	// So here we generate flatbuffers definitions for TypeScript and compile
+	// TypeScript to JavaScript.
 	case 'prepare':
 	{
+		flatcNode(/* clean */ true);
 		buildTypescript(/* force */ false);
-
-		// TODO: Compile flatbuffers.
 
 		break;
 	}
@@ -100,6 +104,20 @@ switch (task)
 	case 'format:worker':
 	{
 		executeCmd(`${MAKE} format -C worker`);
+
+		break;
+	}
+
+	case 'flatc:node':
+	{
+		flatcNode();
+
+		break;
+	}
+
+	case 'flatc:worker':
+	{
+		flatcWorker();
 
 		break;
 	}
@@ -218,6 +236,7 @@ function buildTypescript(force = false)
 
 	console.log('npm-scripts.js [INFO] buildTypescript()');
 
+	// Clean lib folder.
 	deleteNodeLib();
 
 	executeCmd('tsc --project node');
@@ -258,7 +277,10 @@ function cleanWorker()
 
 	if (isWindows)
 	{
-		executeCmd('rd /s /q worker\\out\\msys');
+		if (fs.existsSync('worker/out/msys'))
+		{
+			executeCmd('rd /s /q worker\\out\\msys');
+		}
 	}
 }
 
@@ -266,7 +288,7 @@ function lintNode()
 {
 	console.log('npm-scripts.js [INFO] lintNode()');
 
-	executeCmd('eslint -c node/.eslintrc.js --max-warnings 0 node/src node/.eslintrc.js npm-scripts.js worker/scripts/gulpfile.js');
+	executeCmd('eslint --ignore-path node/.eslintignore -c node/.eslintrc.js --max-warnings 0 node/src node/.eslintrc.js npm-scripts.js worker/scripts/gulpfile.js');
 }
 
 function lintWorker()
@@ -274,6 +296,44 @@ function lintWorker()
 	console.log('npm-scripts.js [INFO] lintWorker()');
 
 	executeCmd(`${MAKE} lint -C worker`);
+}
+
+function flatcNode(clean = false)
+{
+	console.log('npm-scripts.js [INFO] flatcNode()');
+
+	// Build flatc if needed.
+	executeCmd(`${MAKE} -C worker flatc-all`);
+
+	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
+	const extension = isWindows ? '.exe' : '';
+	const flatc = path.resolve(path.join(
+		'worker', 'out', buildType, 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
+	const src = path.resolve(path.join('worker', 'fbs', '*'));
+	const out = path.resolve(path.join('node', 'src'));
+	const options = '--ts-no-import-ext --gen-object-api';
+	const command = `${flatc} --ts ${options} -o ${out} `;
+
+	if (isWindows)
+	{
+		executeCmd(`for %f in (${src}) do ${command} %f`);
+	}
+	else
+	{
+		executeCmd(`for file in ${src}; do ${command} \$\{file\}; done`);
+	}
+
+	if (clean)
+	{
+		cleanWorker();
+	}
+}
+
+function flatcWorker()
+{
+	console.log('npm-scripts.js [INFO] flatcWorker()');
+
+	executeCmd(`${MAKE} -C worker flatc`);
 }
 
 function testNode()
@@ -312,6 +372,7 @@ function checkRelease()
 	console.log('npm-scripts.js [INFO] checkRelease()');
 
 	installNodeDeps();
+	flatcNode();
 	buildTypescript(/* force */ true);
 	replaceVersion();
 	buildWorker();

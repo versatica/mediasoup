@@ -23,65 +23,25 @@ namespace RTC
 
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	PipeTransport::PipeTransport(
-	  RTC::Shared* shared, const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(shared, id, listener, data)
+	  RTC::Shared* shared,
+	  const std::string& id,
+	  RTC::Transport::Listener* listener,
+	  const FBS::PipeTransport::PipeTransportOptions* options)
+	  : RTC::Transport::Transport(shared, id, listener, options->base())
 	{
 		MS_TRACE();
 
-		auto jsonListenIpIt = data.find("listenIp");
-
-		if (jsonListenIpIt == data.end())
-			MS_THROW_TYPE_ERROR("missing listenIp");
-		else if (!jsonListenIpIt->is_object())
-			MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
-
-		auto jsonIpIt = jsonListenIpIt->find("ip");
-
-		if (jsonIpIt == jsonListenIpIt->end())
-			MS_THROW_TYPE_ERROR("missing listenIp.ip");
-		else if (!jsonIpIt->is_string())
-			MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string)");
-
-		this->listenIp.ip.assign(jsonIpIt->get<std::string>());
+		this->listenIp.ip.assign(options->listenIp()->ip()->str());
 
 		// This may throw.
 		Utils::IP::NormalizeIp(this->listenIp.ip);
 
-		auto jsonAnnouncedIpIt = jsonListenIpIt->find("announcedIp");
+		if (flatbuffers::IsFieldPresent(options->listenIp(), FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
+			this->listenIp.announcedIp.assign(options->listenIp()->announcedIp()->str());
 
-		if (jsonAnnouncedIpIt != jsonListenIpIt->end())
-		{
-			if (!jsonAnnouncedIpIt->is_string())
-				MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string");
+		this->rtx = options->enableRtx();
 
-			this->listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
-		}
-
-		uint16_t port{ 0 };
-		auto jsonPortIt = data.find("port");
-
-		if (jsonPortIt != data.end())
-		{
-			if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
-				MS_THROW_TYPE_ERROR("wrong port (not a positive number)");
-
-			port = jsonPortIt->get<uint16_t>();
-		}
-
-		auto jsonEnableRtxIt = data.find("enableRtx");
-
-		if (jsonEnableRtxIt != data.end() && jsonEnableRtxIt->is_boolean())
-			this->rtx = jsonEnableRtxIt->get<bool>();
-
-		auto jsonEnableSrtpIt = data.find("enableSrtp");
-
-		// clang-format off
-		if (
-			jsonEnableSrtpIt != data.end() &&
-			jsonEnableSrtpIt->is_boolean() &&
-			jsonEnableSrtpIt->get<bool>()
-		)
-		// clang-format on
+		if (options->enableSrtp())
 		{
 			this->srtpKey       = Utils::Crypto::GetRandomString(PipeTransport::srtpMasterLength);
 			this->srtpKeyBase64 = Utils::String::Base64Encode(this->srtpKey);
@@ -90,8 +50,8 @@ namespace RTC
 		try
 		{
 			// This may throw.
-			if (port != 0)
-				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip, port);
+			if (options->port() != 0)
+				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip, options->port());
 			else
 				this->udpSocket = new RTC::UdpSocket(this, this->listenIp.ip);
 
@@ -99,8 +59,7 @@ namespace RTC
 			this->shared->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
-			  /*payloadChannelRequestHandler*/ this,
-			  /*payloadChannelNotificationHandler*/ this);
+			  /*channelNotificationHandler*/ this);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -132,85 +91,112 @@ namespace RTC
 		this->srtpRecvSession = nullptr;
 	}
 
-	void PipeTransport::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::PipeTransport::DumpResponse> PipeTransport::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
-
-		// Call the parent method.
-		RTC::Transport::FillJson(jsonObject);
 
 		// Add tuple.
+		flatbuffers::Offset<FBS::Transport::Tuple> tuple;
+
 		if (this->tuple)
 		{
-			this->tuple->FillJson(jsonObject["tuple"]);
+			tuple = this->tuple->FillBuffer(builder);
 		}
 		else
 		{
-			jsonObject["tuple"] = json::object();
-			auto jsonTupleIt    = jsonObject.find("tuple");
+			std::string localIp;
 
 			if (this->listenIp.announcedIp.empty())
-				(*jsonTupleIt)["localIp"] = this->udpSocket->GetLocalIp();
+				localIp = this->udpSocket->GetLocalIp();
 			else
-				(*jsonTupleIt)["localIp"] = this->listenIp.announcedIp;
+				localIp = this->listenIp.announcedIp;
 
-			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
-			(*jsonTupleIt)["protocol"]  = "udp";
+			tuple = FBS::Transport::CreateTupleDirect(
+			  builder, localIp.c_str(), this->udpSocket->GetLocalPort(), "", 0, "udp");
 		}
-
-		// Add rtx.
-		jsonObject["rtx"] = this->rtx;
 
 		// Add srtpParameters.
+		flatbuffers::Offset<FBS::Transport::SrtpParameters> srtpParameters;
+
 		if (HasSrtp())
 		{
-			jsonObject["srtpParameters"] = json::object();
-			auto jsonSrtpParametersIt    = jsonObject.find("srtpParameters");
-
-			(*jsonSrtpParametersIt)["cryptoSuite"] = PipeTransport::srtpCryptoSuiteString;
-			(*jsonSrtpParametersIt)["keyBase64"]   = this->srtpKeyBase64;
+			srtpParameters = FBS::Transport::CreateSrtpParametersDirect(
+			  builder, PipeTransport::srtpCryptoSuiteString.c_str(), this->srtpKeyBase64.c_str());
 		}
+
+		// Add base transport dump.
+		auto base = Transport::FillBuffer(builder);
+
+		return FBS::PipeTransport::CreateDumpResponse(builder, base, tuple, this->rtx, srtpParameters);
 	}
 
-	void PipeTransport::FillJsonStats(json& jsonArray)
+	flatbuffers::Offset<FBS::PipeTransport::GetStatsResponse> PipeTransport::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
-		// Call the parent method.
-		RTC::Transport::FillJsonStats(jsonArray);
-
-		auto& jsonObject = jsonArray[0];
-
-		// Add type.
-		jsonObject["type"] = "pipe-transport";
+		// Add tuple.
+		flatbuffers::Offset<FBS::Transport::Tuple> tuple;
 
 		if (this->tuple)
 		{
-			this->tuple->FillJson(jsonObject["tuple"]);
+			tuple = this->tuple->FillBuffer(builder);
 		}
 		else
 		{
-			// Add tuple.
-			jsonObject["tuple"] = json::object();
-			auto jsonTupleIt    = jsonObject.find("tuple");
+			std::string localIp;
 
 			if (this->listenIp.announcedIp.empty())
-				(*jsonTupleIt)["localIp"] = this->udpSocket->GetLocalIp();
+				localIp = this->udpSocket->GetLocalIp();
 			else
-				(*jsonTupleIt)["localIp"] = this->listenIp.announcedIp;
+				localIp = this->listenIp.announcedIp;
 
-			(*jsonTupleIt)["localPort"] = this->udpSocket->GetLocalPort();
-			(*jsonTupleIt)["protocol"]  = "udp";
+			tuple = FBS::Transport::CreateTupleDirect(
+			  builder,
+			  // localIp.
+			  localIp.c_str(),
+			  // localPort,
+			  this->udpSocket->GetLocalPort(),
+			  // remoteIp.
+			  nullptr,
+			  // remotePort.
+			  0,
+			  // protocol.
+			  "udp");
 		}
+
+		// Base Transport stats.
+		auto base = Transport::FillBufferStats(builder);
+
+		return FBS::PipeTransport::CreateGetStatsResponse(builder, base, tuple);
 	}
 
 	void PipeTransport::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
+			{
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_PipeTransport_GetStatsResponse, responseOffset);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
+			{
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_PipeTransport_DumpResponse, dumpOffset);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::PIPE_TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->tuple)
@@ -222,56 +208,32 @@ namespace RTC
 					uint16_t port{ 0u };
 					std::string srtpKeyBase64;
 
-					auto jsonSrtpParametersIt = request->data.find("srtpParameters");
+					const auto* body = request->data->body_as<FBS::PipeTransport::ConnectRequest>();
 
-					if (!HasSrtp() && jsonSrtpParametersIt != request->data.end())
+					auto srtpParametersPresent =
+					  flatbuffers::IsFieldPresent(body, FBS::PipeTransport::ConnectRequest::VT_SRTPPARAMETERS);
+
+					if (!HasSrtp() && srtpParametersPresent)
 					{
 						MS_THROW_TYPE_ERROR("invalid srtpParameters (SRTP not enabled)");
 					}
 					else if (HasSrtp())
 					{
-						// clang-format off
-						if (
-							jsonSrtpParametersIt == request->data.end() ||
-							!jsonSrtpParametersIt->is_object()
-						)
-						// clang-format on
+						if (!srtpParametersPresent)
 						{
 							MS_THROW_TYPE_ERROR("missing srtpParameters (SRTP enabled)");
 						}
 
-						auto jsonCryptoSuiteIt = jsonSrtpParametersIt->find("cryptoSuite");
-
-						// clang-format off
-						if (
-							jsonCryptoSuiteIt == jsonSrtpParametersIt->end() ||
-							!jsonCryptoSuiteIt->is_string()
-						)
-						// clang-format on
-						{
-							MS_THROW_TYPE_ERROR("missing srtpParameters.cryptoSuite)");
-						}
+						const auto* srtpParameters = body->srtpParameters();
 
 						// NOTE: We just use AEAD_AES_256_GCM as SRTP crypto suite in
 						// PipeTransport.
-						if (jsonCryptoSuiteIt->get<std::string>() != PipeTransport::srtpCryptoSuiteString)
+						if (srtpParameters->cryptoSuite()->str() != PipeTransport::srtpCryptoSuiteString)
 						{
 							MS_THROW_TYPE_ERROR("invalid/unsupported srtpParameters.cryptoSuite");
 						}
 
-						auto jsonKeyBase64It = jsonSrtpParametersIt->find("keyBase64");
-
-						// clang-format off
-						if (
-							jsonKeyBase64It == jsonSrtpParametersIt->end() ||
-							!jsonKeyBase64It->is_string()
-						)
-						// clang-format on
-						{
-							MS_THROW_TYPE_ERROR("missing srtpParameters.keyBase64)");
-						}
-
-						srtpKeyBase64 = jsonKeyBase64It->get<std::string>();
+						srtpKeyBase64 = srtpParameters->keyBase64()->str();
 
 						size_t outLen;
 						// This may throw.
@@ -322,29 +284,20 @@ namespace RTC
 						delete[] srtpRemoteKey;
 					}
 
-					auto jsonIpIt = request->data.find("ip");
-
-					if (jsonIpIt == request->data.end() || !jsonIpIt->is_string())
+					if (!flatbuffers::IsFieldPresent(body, FBS::PipeTransport::ConnectRequest::VT_IP))
 						MS_THROW_TYPE_ERROR("missing ip");
 
-					ip = jsonIpIt->get<std::string>();
+					ip = body->ip()->str();
 
 					// This may throw.
 					Utils::IP::NormalizeIp(ip);
 
-					auto jsonPortIt = request->data.find("port");
-
-					// clang-format off
-					if (
-						jsonPortIt == request->data.end() ||
-						!Utils::Json::IsPositiveInteger(*jsonPortIt)
-					)
-					// clang-format on
+					if (!body->port().has_value())
 					{
 						MS_THROW_TYPE_ERROR("missing port");
 					}
 
-					port = jsonPortIt->get<uint16_t>();
+					port = body->port().value();
 
 					int err;
 
@@ -403,12 +356,12 @@ namespace RTC
 					throw;
 				}
 
-				// Tell the caller about the selected local DTLS role.
-				json data = json::object();
+				auto tupleOffset = this->tuple->FillBuffer(request->GetBufferBuilder());
 
-				this->tuple->FillJson(data["tuple"]);
+				auto responseOffset =
+				  FBS::PipeTransport::CreateConnectResponse(request->GetBufferBuilder(), tupleOffset);
 
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_PipeTransport_ConnectResponse, responseOffset);
 
 				// Assume we are connected (there is no much more we can do to know it)
 				// and tell the parent class.
@@ -425,7 +378,7 @@ namespace RTC
 		}
 	}
 
-	void PipeTransport::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
+	void PipeTransport::HandleNotification(Channel::ChannelNotification* notification)
 	{
 		MS_TRACE();
 

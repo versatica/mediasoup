@@ -3,14 +3,11 @@
 
 mod channel;
 mod common;
-mod payload_channel;
 mod utils;
 
 use crate::data_structures::AppData;
-use crate::messages::{
-    WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest,
-    WorkerDumpRequest, WorkerUpdateSettingsRequest,
-};
+use crate::fbs;
+use crate::messages::{WorkerCreateWebRtcServerRequest, WorkerDumpRequest};
 pub use crate::ortc::RtpCapabilitiesError;
 use crate::router::{Router, RouterId, RouterOptions};
 use crate::webrtc_server::{WebRtcServer, WebRtcServerId, WebRtcServerOptions};
@@ -19,13 +16,13 @@ pub use crate::worker::utils::ExitError;
 use crate::worker_manager::WorkerManager;
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
-pub(crate) use channel::Channel;
+pub(crate) use channel::{Channel, NotificationError};
 pub(crate) use common::{SubscriptionHandler, SubscriptionTarget};
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::FutureExt;
 use log::{debug, error, warn};
 use parking_lot::Mutex;
-pub(crate) use payload_channel::{NotificationError, PayloadChannel};
+use planus::Builder;
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;
 use std::path::PathBuf;
@@ -272,8 +269,7 @@ pub struct WorkerUpdateSettings {
 #[doc(hidden)]
 pub struct ChannelMessageHandlers {
     pub channel_request_handlers: Vec<Uuid>,
-    pub payload_channel_request_handlers: Vec<Uuid>,
-    pub payload_channel_notification_handlers: Vec<Uuid>,
+    pub channel_notification_handlers: Vec<Uuid>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -320,7 +316,6 @@ struct Handlers {
 struct Inner {
     id: WorkerId,
     channel: Channel,
-    payload_channel: PayloadChannel,
     executor: Arc<Executor<'static>>,
     handlers: Handlers,
     app_data: AppData,
@@ -406,7 +401,6 @@ impl Inner {
         let (mut status_sender, status_receiver) = async_oneshot::oneshot();
         let WorkerRunResult {
             channel,
-            payload_channel,
             buffer_worker_messages_guard,
         } = utils::run_worker_with_channels(
             id,
@@ -424,7 +418,6 @@ impl Inner {
         let mut inner = Self {
             id,
             channel,
-            payload_channel,
             executor,
             handlers,
             app_data,
@@ -489,21 +482,20 @@ impl Inner {
         let (sender, receiver) = async_oneshot::oneshot();
         let id = self.id;
         let sender = Mutex::new(Some(sender));
-        let _handler = self.channel.subscribe_to_notifications(
-            std::process::id().into(),
+        let _handler = self.channel.subscribe_to_fbs_notifications(
+            SubscriptionTarget::String(std::process::id().to_string()),
             move |notification| {
-                let result = match serde_json::from_slice(notification) {
-                    Ok(Notification::Running) => {
+                let result = match notification.event().unwrap() {
+                    fbs::notification::Event::WorkerRunning => {
                         debug!("worker thread running [id:{}]", id);
                         Ok(())
                     }
-                    Err(error) => Err(io::Error::new(
+                    _ => Err(io::Error::new(
                         io::ErrorKind::Other,
-                        format!(
-                            "unexpected first notification from worker [id:{id}]: {notification:?}; error = {error}"
-                        ),
+                        format!("unexpected first notification from worker [id:{id}]"),
                     )),
                 };
+
                 let _ = sender
                     .lock()
                     .take()
@@ -522,7 +514,6 @@ impl Inner {
 
     fn setup_message_handling(&mut self) {
         let channel_receiver = self.channel.get_internal_message_receiver();
-        let payload_channel_receiver = self.payload_channel.get_internal_message_receiver();
         let id = self.id;
         let closed = Arc::clone(&self.closed);
         self.executor
@@ -546,20 +537,6 @@ impl Inner {
                 }
             })
             .detach();
-
-        self.executor
-            .spawn(async move {
-                while let Ok(message) = payload_channel_receiver.recv().await {
-                    match message {
-                        payload_channel::InternalMessage::UnexpectedData(data) => error!(
-                            "worker[id:{}] unexpected payload channel data: {}",
-                            id,
-                            String::from_utf8_lossy(&data)
-                        ),
-                    }
-                }
-            })
-            .detach();
     }
 
     fn close(&self) {
@@ -567,15 +544,17 @@ impl Inner {
 
         if !already_closed {
             let channel = self.channel.clone();
-            let payload_channel = self.payload_channel.clone();
+
+            let builder = Builder::new();
 
             self.executor
                 .spawn(async move {
-                    let _ = channel.request("", WorkerCloseRequest {}).await;
+                    let _ = channel
+                        .request_fbs(builder, "", fbs::request::Method::WorkerClose, None)
+                        .await;
 
                     // Drop channels in here after response from worker
                     drop(channel);
-                    drop(payload_channel);
                 })
                 .detach();
 
@@ -648,10 +627,29 @@ impl Worker {
     pub async fn update_settings(&self, data: WorkerUpdateSettings) -> Result<(), RequestError> {
         debug!("update_settings()");
 
-        self.inner
+        let mut builder = Builder::new();
+        let settings = fbs::worker::UpdateSettingsRequest::create(
+            &mut builder,
+            data.log_level.unwrap_or_default().as_str(),
+            data.log_tags
+                .map(|tags| tags.iter().map(|tag| tag.as_str()).collect::<Vec<&str>>()),
+        );
+        let body = fbs::request::Body::create_update_settings_request(&mut builder, settings);
+
+        match self
+            .inner
             .channel
-            .request("", WorkerUpdateSettingsRequest { data })
+            .request_fbs(
+                builder,
+                "",
+                fbs::request::Method::WorkerUpdateSettings,
+                Some(body),
+            )
             .await
+        {
+            Ok(_) => Ok(()),
+            Err(error) => Err(error),
+        }
     }
 
     /// Create a WebRtcServer.
@@ -661,7 +659,7 @@ impl Worker {
         &self,
         webrtc_server_options: WebRtcServerOptions,
     ) -> Result<WebRtcServer, CreateWebRtcServerError> {
-        debug!("create_router()");
+        debug!("create_webrtc_server()");
 
         let WebRtcServerOptions {
             listen_infos,
@@ -724,9 +722,18 @@ impl Worker {
 
         let _buffer_guard = self.inner.channel.buffer_messages_for(router_id.into());
 
+        let mut builder = Builder::new();
+        let data = fbs::worker::CreateRouterRequest::create(&mut builder, router_id.to_string());
+        let body = fbs::request::Body::create_create_router_request(&mut builder, data);
+
         self.inner
             .channel
-            .request("", WorkerCreateRouterRequest { router_id })
+            .request_fbs(
+                builder,
+                "",
+                fbs::request::Method::WorkerCreateRouter,
+                Some(body),
+            )
             .await
             .map_err(CreateRouterError::Request)?;
 
@@ -734,7 +741,6 @@ impl Worker {
             router_id,
             Arc::clone(&self.inner.executor),
             self.inner.channel.clone(),
-            self.inner.payload_channel.clone(),
             rtp_capabilities,
             app_data,
             self.clone(),

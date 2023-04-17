@@ -170,43 +170,4 @@ namespace Utils
 
 		return Base64Decode(data, str.size(), outLen);
 	}
-
-	std::vector<std::string> Utils::String::Split(const std::string& str, char separator, size_t limit)
-	{
-		std::vector<std::string> items;
-		size_t pos = 0;
-
-		while (pos < str.length())
-		{
-			auto found = str.find(separator, pos);
-
-			std::string item;
-			if (found != std::string::npos)
-			{
-				item = str.substr(pos, found - pos);
-				items.push_back(item);
-			}
-			else
-			{
-				item = str.substr(pos, str.size());
-				items.push_back(item);
-
-				break;
-			}
-
-			// Escape the separator character.
-			pos += item.length() + 1;
-
-			// Limit reached, add the remaining buffer to the last item.
-			if (limit != 0 && items.size() >= limit)
-			{
-				item = str.substr(pos, str.size());
-				items.push_back(item);
-
-				break;
-			}
-		}
-
-		return items;
-	}
 } // namespace Utils

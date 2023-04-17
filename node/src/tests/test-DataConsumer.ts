@@ -71,13 +71,17 @@ test('transport.consumeData() succeeds', async () =>
 	expect(dataConsumer1.protocol).toBe('bar');
 	expect(dataConsumer1.appData).toEqual({ baz: 'LOL' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapDataProducerIdDataConsumerIds : { [dataProducer.id]: [ dataConsumer1.id ] },
-				mapDataConsumerIdDataProducerId  : { [dataConsumer1.id]: dataProducer.id }
-			});
+	const dump = await router.dump();
+
+	expect(dump.mapDataProducerIdDataConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: dataProducer.id, values: [ dataConsumer1.id ] }
+		]));
+
+	expect(dump.mapDataConsumerIdDataProducerId)
+		.toEqual(expect.arrayContaining([
+			{ key: dataConsumer1.id, value: dataProducer.id }
+		]));
 
 	await expect(transport2.dump())
 		.resolves
@@ -97,11 +101,11 @@ test('dataConsumer.dump() succeeds', async () =>
 	expect(data.dataProducerId).toBe(dataConsumer1.dataProducerId);
 	expect(data.type).toBe('sctp');
 	expect(typeof data.sctpStreamParameters).toBe('object');
-	expect(data.sctpStreamParameters.streamId)
+	expect(data.sctpStreamParameters!.streamId)
 		.toBe(dataConsumer1.sctpStreamParameters?.streamId);
-	expect(data.sctpStreamParameters.ordered).toBe(false);
-	expect(data.sctpStreamParameters.maxPacketLifeTime).toBe(4000);
-	expect(data.sctpStreamParameters.maxRetransmits).toBeUndefined();
+	expect(data.sctpStreamParameters!.ordered).toBe(false);
+	expect(data.sctpStreamParameters!.maxPacketLifeTime).toBe(4000);
+	expect(data.sctpStreamParameters!.maxRetransmits).toBeUndefined();
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
 }, 2000);
@@ -193,13 +197,17 @@ test('dataConsumer.close() succeeds', async () =>
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataConsumer1.closed).toBe(true);
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapDataProducerIdDataConsumerIds : { [dataProducer.id]: [ dataConsumer2.id ] },
-				mapDataConsumerIdDataProducerId  : { [dataConsumer2.id]: dataProducer.id }
-			});
+	const dump = await router.dump();
+
+	expect(dump.mapDataProducerIdDataConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: dataProducer.id, values: [ dataConsumer2.id ] }
+		]));
+
+	expect(dump.mapDataConsumerIdDataProducerId)
+		.toEqual(expect.arrayContaining([
+			{ key: dataConsumer2.id, value: dataProducer.id }
+		]));
 
 	await expect(transport2.dump())
 		.resolves

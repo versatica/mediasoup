@@ -16,7 +16,7 @@ use crate::transport::{
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
     TransportTraceEventType,
 };
-use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
@@ -188,7 +188,6 @@ struct Inner {
     cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     data: Arc<PipeTransportData>,
     app_data: AppData,
@@ -437,10 +436,6 @@ impl TransportImpl for PipeTransport {
         &self.inner.channel
     }
 
-    fn payload_channel(&self) -> &PayloadChannel {
-        &self.inner.payload_channel
-    }
-
     fn executor(&self) -> &Arc<Executor<'static>> {
         &self.inner.executor
     }
@@ -463,7 +458,6 @@ impl PipeTransport {
         id: TransportId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: PayloadChannel,
         data: PipeTransportData,
         app_data: AppData,
         router: Router,
@@ -528,7 +522,6 @@ impl PipeTransport {
             cname_for_producers,
             executor,
             channel,
-            payload_channel,
             handlers,
             data,
             app_data,

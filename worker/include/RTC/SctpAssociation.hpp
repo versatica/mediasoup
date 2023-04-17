@@ -6,9 +6,6 @@
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
 #include <usrsctp.h>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -81,7 +78,8 @@ namespace RTC
 		~SctpAssociation();
 
 	public:
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::SctpParameters::SctpParameters> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		void TransportConnected();
 		SctpState GetState() const
 		{

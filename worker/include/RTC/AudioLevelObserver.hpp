@@ -5,9 +5,6 @@
 #include "RTC/Shared.hpp"
 #include "handles/Timer.hpp"
 #include <absl/container/flat_hash_map.h>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -22,7 +19,10 @@ namespace RTC
 
 	public:
 		AudioLevelObserver(
-		  RTC::Shared* shared, const std::string& id, RTC::RtpObserver::Listener* listener, json& data);
+		  RTC::Shared* shared,
+		  const std::string& id,
+		  RTC::RtpObserver::Listener* listener,
+		  const FBS::AudioLevelObserver::AudioLevelObserverOptions* options);
 		~AudioLevelObserver() override;
 
 	public:

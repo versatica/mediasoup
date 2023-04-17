@@ -1,10 +1,13 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
-import { SctpStreamParameters } from './SctpParameters';
+import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
 import { AppData } from './types';
+import * as FbsTransport from './fbs/transport';
+import * as FbsNotification from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsDataProducer from './fbs/data-producer';
 
 export type DataProducerOptions<DataProducerAppData extends AppData = AppData> =
 {
@@ -62,6 +65,10 @@ export type DataProducerObserverEvents =
 	close: [];
 };
 
+type DataProducerDump = DataProducerData & {
+	id: string;
+};
+
 type DataProducerInternal = TransportInternal &
 {
 	dataProducerId: string;
@@ -89,9 +96,6 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 	// Channel instance.
 	readonly #channel: Channel;
 
-	// PayloadChannel instance.
-	readonly #payloadChannel: PayloadChannel;
-
 	// Closed flag.
 	#closed = false;
 
@@ -109,14 +113,12 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 			internal,
 			data,
 			channel,
-			payloadChannel,
 			appData
 		}:
 		{
 			internal: DataProducerInternal;
 			data: DataProducerData;
 			channel: Channel;
-			payloadChannel: PayloadChannel;
 			appData?: DataProducerAppData;
 		}
 	)
@@ -128,7 +130,6 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {} as DataProducerAppData;
 
 		this.handleWorkerNotifications();
@@ -222,12 +223,18 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.dataProducerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
 
-		const reqData = { dataProducerId: this.#internal.dataProducerId };
+		/* Build Request. */
+		const requestOffset = new FbsTransport.CloseDataProducerRequestT(
+			this.#internal.dataProducerId
+		).pack(this.#channel.bufferBuilder);
 
-		this.#channel.request('transport.closeDataProducer', this.#internal.transportId, reqData)
-			.catch(() => {});
+		this.#channel.request(
+			FbsRequest.Method.TRANSPORT_CLOSE_DATA_PRODUCER,
+			FbsRequest.Body.FBS_Transport_CloseDataProducerRequest,
+			requestOffset,
+			this.#internal.transportId
+		).catch(() => {});
 
 		this.emit('@close');
 
@@ -253,7 +260,6 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.dataProducerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.dataProducerId);
 
 		this.safeEmit('transportclose');
 
@@ -264,11 +270,23 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 	/**
 	 * Dump DataProducer.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<DataProducerDump>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('dataProducer.dump', this.#internal.dataProducerId);
+		const response = await this.#channel.request(
+			FbsRequest.Method.DATA_PRODUCER_DUMP,
+			undefined,
+			undefined,
+			this.#internal.dataProducerId
+		);
+
+		/* Decode Response. */
+		const produceResponse = new FbsDataProducer.DumpResponse();
+
+		response.body(produceResponse);
+
+		return parseDataProducerDump(produceResponse);
 	}
 
 	/**
@@ -278,7 +296,19 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('dataProducer.getStats', this.#internal.dataProducerId);
+		const response = await this.#channel.request(
+			FbsRequest.Method.DATA_PRODUCER_GET_STATS,
+			undefined,
+			undefined,
+			this.#internal.dataProducerId
+		);
+
+		/* Decode Response. */
+		const data = new FbsDataProducer.GetStatsResponse();
+
+		response.body(data);
+
+		return [ parseDataProducerStats(data) ];
 	}
 
 	/**
@@ -324,14 +354,71 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 			message = Buffer.alloc(1);
 		}
 
-		const notifData = String(ppid);
+		let dataOffset = 0;
 
-		this.#payloadChannel.notify(
-			'dataProducer.send', this.#internal.dataProducerId, notifData, message);
+		const builder = this.#channel.bufferBuilder;
+
+		if (typeof message === 'string')
+		{
+			const messageOffset = builder.createString(message);
+
+			dataOffset = FbsDataProducer.String.createString(builder, messageOffset);
+		}
+		else
+		{
+			const messageOffset = FbsDataProducer.Binary.createValueVector(builder, message);
+
+			dataOffset = FbsDataProducer.Binary.createBinary(builder, messageOffset);
+		}
+
+		const notificationOffset = FbsDataProducer.SendNotification.createSendNotification(
+			builder,
+			ppid,
+			typeof message === 'string' ?
+				FbsDataProducer.Data.String :
+				FbsDataProducer.Data.Binary,
+			dataOffset
+		);
+
+		this.#channel.notify(
+			FbsNotification.Event.DATA_PRODUCER_SEND,
+			FbsNotification.Body.FBS_DataProducer_SendNotification,
+			notificationOffset,
+			this.#internal.dataProducerId
+		);
 	}
 
 	private handleWorkerNotifications(): void
 	{
 		// No need to subscribe to any event.
 	}
+}
+
+export function parseDataProducerDump(
+	data: FbsDataProducer.DumpResponse
+): DataProducerDump
+{
+	return {
+		id                   : data.id()!,
+		type                 : data.type()! as DataProducerType,
+		sctpStreamParameters : data.sctpStreamParameters() !== null ?
+			parseSctpStreamParameters(data.sctpStreamParameters()!) :
+			undefined,
+		label    : data.label()!,
+		protocol : data.protocol()!
+	};
+}
+
+function parseDataProducerStats(
+	binary: FbsDataProducer.GetStatsResponse
+):DataProducerStat
+{
+	return {
+		type             : 'data-producer',
+		timestamp        : Number(binary.timestamp()),
+		label            : binary.label()!,
+		protocol         : binary.protocol()!,
+		messagesReceived : Number(binary.messagesReceived()),
+		bytesReceived    : Number(binary.bytesReceived())
+	};
 }

@@ -9,44 +9,40 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	void TransportTuple::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::Transport::Tuple> TransportTuple::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
 		int family;
-		std::string ip;
-		uint16_t port;
+		std::string localIp;
+		uint16_t localPort;
 
-		Utils::IP::GetAddressInfo(GetLocalAddress(), family, ip, port);
+		Utils::IP::GetAddressInfo(GetLocalAddress(), family, localIp, localPort);
 
-		// Add localIp.
-		if (this->localAnnouncedIp.empty())
-			jsonObject["localIp"] = ip;
-		else
-			jsonObject["localIp"] = this->localAnnouncedIp;
+		localIp = this->localAnnouncedIp.empty() ? localIp : this->localAnnouncedIp;
 
-		// Add localPort.
-		jsonObject["localPort"] = port;
+		std::string remoteIp;
+		uint16_t remotePort;
 
-		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, ip, port);
+		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, remoteIp, remotePort);
 
-		// Add remoteIp.
-		jsonObject["remoteIp"] = ip;
-
-		// Add remotePort.
-		jsonObject["remotePort"] = port;
+		std::string protocol;
 
 		// Add protocol.
 		switch (GetProtocol())
 		{
 			case Protocol::UDP:
-				jsonObject["protocol"] = "udp";
+				protocol = "udp";
 				break;
 
 			case Protocol::TCP:
-				jsonObject["protocol"] = "tcp";
+				protocol = "tcp";
 				break;
 		}
+
+		return FBS::Transport::CreateTupleDirect(
+		  builder, localIp.c_str(), localPort, remoteIp.c_str(), remotePort, protocol.c_str());
 	}
 
 	void TransportTuple::Dump() const

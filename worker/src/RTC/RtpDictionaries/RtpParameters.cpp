@@ -38,7 +38,7 @@ namespace RTC
 
 		if (rtpParameters.encodings.size() == 1)
 		{
-			auto& encoding = rtpParameters.encodings[0];
+			const auto& encoding = rtpParameters.encodings[0];
 			const auto* mediaCodec =
 			  rtpParameters.GetCodecForEncoding(const_cast<RTC::RtpEncodingParameters&>(encoding));
 
@@ -104,35 +104,22 @@ namespace RTC
 
 	/* Instance methods. */
 
-	RtpParameters::RtpParameters(json& data)
+	RtpParameters::RtpParameters(const FBS::RtpParameters::RtpParameters* data)
 	{
 		MS_TRACE();
 
-		if (!data.is_object())
-			MS_THROW_TYPE_ERROR("data is not an object");
-
-		auto jsonMidIt              = data.find("mid");
-		auto jsonCodecsIt           = data.find("codecs");
-		auto jsonEncodingsIt        = data.find("encodings");
-		auto jsonHeaderExtensionsIt = data.find("headerExtensions");
-		auto jsonRtcpIt             = data.find("rtcp");
-
 		// mid is optional.
-		if (jsonMidIt != data.end() && jsonMidIt->is_string())
+		if (data->mid())
 		{
-			this->mid = jsonMidIt->get<std::string>();
+			this->mid = data->mid()->str();
 
 			if (this->mid.empty())
 				MS_THROW_TYPE_ERROR("empty mid");
 		}
 
-		// codecs is mandatory.
-		if (jsonCodecsIt == data.end() || !jsonCodecsIt->is_array())
-			MS_THROW_TYPE_ERROR("missing codecs");
+		this->codecs.reserve(data->codecs()->size());
 
-		this->codecs.reserve(jsonCodecsIt->size());
-
-		for (auto& entry : *jsonCodecsIt)
+		for (const auto* entry : *data->codecs())
 		{
 			// This may throw due the constructor of RTC::RtpCodecParameters.
 			this->codecs.emplace_back(entry);
@@ -142,12 +129,12 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("empty codecs");
 
 		// encodings is mandatory.
-		if (jsonEncodingsIt == data.end() || !jsonEncodingsIt->is_array())
+		if (!flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpParameters::VT_ENCODINGS))
 			MS_THROW_TYPE_ERROR("missing encodings");
 
-		this->encodings.reserve(jsonEncodingsIt->size());
+		this->encodings.reserve(data->encodings()->size());
 
-		for (auto& entry : *jsonEncodingsIt)
+		for (const auto* entry : *data->encodings())
 		{
 			// This may throw due the constructor of RTC::RtpEncodingParameters.
 			this->encodings.emplace_back(entry);
@@ -157,11 +144,11 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("empty encodings");
 
 		// headerExtensions is optional.
-		if (jsonHeaderExtensionsIt != data.end() && jsonHeaderExtensionsIt->is_array())
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpParameters::VT_HEADEREXTENSIONS))
 		{
-			this->headerExtensions.reserve(jsonHeaderExtensionsIt->size());
+			this->headerExtensions.reserve(data->headerExtensions()->size());
 
-			for (auto& entry : *jsonHeaderExtensionsIt)
+			for (const auto* entry : *data->headerExtensions())
 			{
 				// This may throw due the constructor of RTC::RtpHeaderExtensionParameters.
 				this->headerExtensions.emplace_back(entry);
@@ -169,10 +156,10 @@ namespace RTC
 		}
 
 		// rtcp is optional.
-		if (jsonRtcpIt != data.end() && jsonRtcpIt->is_object())
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpParameters::VT_RTCP))
 		{
 			// This may throw.
-			this->rtcp    = RTC::RtcpParameters(*jsonRtcpIt);
+			this->rtcp    = RTC::RtcpParameters(data->rtcp());
 			this->hasRtcp = true;
 		}
 
@@ -181,61 +168,46 @@ namespace RTC
 		ValidateEncodings();
 	}
 
-	void RtpParameters::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtpParameters::RtpParameters> RtpParameters::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add mid.
-		if (!this->mid.empty())
-			jsonObject["mid"] = this->mid;
-
 		// Add codecs.
-		jsonObject["codecs"] = json::array();
-		auto jsonCodecsIt    = jsonObject.find("codecs");
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpCodecParameters>> codecs;
+		codecs.reserve(this->codecs.size());
 
-		for (size_t i{ 0 }; i < this->codecs.size(); ++i)
+		for (const auto& codec : this->codecs)
 		{
-			jsonCodecsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonCodecsIt)[i];
-			auto& codec     = this->codecs[i];
-
-			codec.FillJson(jsonEntry);
+			codecs.emplace_back(codec.FillBuffer(builder));
 		}
 
 		// Add encodings.
-		jsonObject["encodings"] = json::array();
-		auto jsonEncodingsIt    = jsonObject.find("encodings");
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> encodings;
+		encodings.reserve(this->encodings.size());
 
-		for (size_t i{ 0 }; i < this->encodings.size(); ++i)
+		for (const auto& encoding : this->encodings)
 		{
-			jsonEncodingsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonEncodingsIt)[i];
-			auto& encoding  = this->encodings[i];
-
-			encoding.FillJson(jsonEntry);
+			encodings.emplace_back(encoding.FillBuffer(builder));
 		}
 
 		// Add headerExtensions.
-		jsonObject["headerExtensions"] = json::array();
-		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpHeaderExtensionParameters>> headerExtensions;
+		headerExtensions.reserve(this->headerExtensions.size());
 
-		for (size_t i{ 0 }; i < this->headerExtensions.size(); ++i)
+		for (const auto& headerExtension : this->headerExtensions)
 		{
-			jsonHeaderExtensionsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry       = (*jsonHeaderExtensionsIt)[i];
-			auto& headerExtension = this->headerExtensions[i];
-
-			headerExtension.FillJson(jsonEntry);
+			headerExtensions.emplace_back(headerExtension.FillBuffer(builder));
 		}
 
 		// Add rtcp.
+		flatbuffers::Offset<FBS::RtpParameters::RtcpParameters> rtcp;
+
 		if (this->hasRtcp)
-			this->rtcp.FillJson(jsonObject["rtcp"]);
-		else
-			jsonObject["rtcp"] = json::object();
+			rtcp = this->rtcp.FillBuffer(builder);
+
+		return FBS::RtpParameters::CreateRtpParametersDirect(
+		  builder, mid.c_str(), &codecs, &headerExtensions, &encodings, rtcp);
 	}
 
 	const RTC::RtpCodecParameters* RtpParameters::GetCodecForEncoding(RtpEncodingParameters& encoding) const
@@ -247,7 +219,7 @@ namespace RTC
 
 		for (; it != this->codecs.end(); ++it)
 		{
-			auto& codec = *it;
+			const auto& codec = *it;
 
 			if (codec.payloadType == payloadType)
 				return std::addressof(codec);

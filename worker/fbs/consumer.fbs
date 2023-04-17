@@ -1,0 +1,144 @@
+include "rtpParameters.fbs";
+include "rtpStream.fbs";
+
+namespace FBS.Consumer;
+
+table ConsumerLayers {
+  spatial_layer:int16;
+  temporal_layer:int16 = null;
+}
+
+table ConsumerScore {
+  score:uint8;
+  producer_score:uint8;
+  producer_scores:[uint8];
+}
+
+table SetPreferredLayersRequest {
+  preferred_layers:ConsumerLayers (required);
+}
+
+table SetPreferredLayersResponse {
+  preferred_layers:ConsumerLayers;
+}
+
+table SetPriorityRequest {
+  priority:uint8;
+}
+
+table SetPriorityResponse {
+  priority:uint8;
+}
+
+table EnableTraceEventRequest {
+  events:[string] (required);
+}
+
+union DumpData {
+  SimpleConsumerDump,
+  SimulcastConsumerDump,
+  SvcConsumerDump,
+  PipeConsumerDump,
+}
+
+table DumpResponse {
+  data: DumpData;
+  type:FBS.RtpParameters.Type;
+}
+
+table BaseConsumerDump {
+  id:string (required);
+  producer_id:string (required);
+  kind:FBS.RtpParameters.MediaKind;
+  rtp_parameters:FBS.RtpParameters.RtpParameters (required);
+  consumable_rtp_encodings:[FBS.RtpParameters.RtpEncodingParameters];
+  supported_codec_payload_types:[uint8];
+  trace_event_types:[string] (required);
+  paused:bool = false;
+  producer_paused:bool = false;
+  priority:uint8;
+}
+
+table SimpleConsumerDump {
+  base:BaseConsumerDump (required);
+  rtp_stream:FBS.RtpStream.Dump (required);
+}
+
+table SimulcastConsumerDump {
+  base:BaseConsumerDump (required);
+  rtp_stream:FBS.RtpStream.Dump (required);
+  preferred_spatial_layer:int16;
+  target_spatial_layer:int16;
+  current_spatial_layer:int16;
+  preferred_temporal_layer:int16;
+  target_temporal_layer:int16;
+  current_temporal_layer:int16;
+}
+
+table SvcConsumerDump {
+  base:BaseConsumerDump (required);
+  rtp_stream:FBS.RtpStream.Dump (required);
+  preferred_spatial_layer:int16;
+  target_spatial_layer:int16;
+  current_spatial_layer:int16;
+  preferred_temporal_layer:int16;
+  target_temporal_layer:int16;
+  current_temporal_layer:int16;
+}
+
+table PipeConsumerDump {
+  base:BaseConsumerDump (required);
+  rtp_streams:[FBS.RtpStream.Dump] (required);
+}
+
+table GetStatsResponse {
+  stats:[FBS.RtpStream.Stats];
+}
+
+// Notifications from Worker.
+
+table LayersChangeNotification {
+  layers:ConsumerLayers;
+}
+
+table RtpNotification {
+  data:[ubyte] (required);
+}
+
+table ScoreNotification {
+  score:ConsumerScore (required);
+}
+
+enum TraceType: uint8 { KEYFRAME = 0, FIR, NACK, PLI, RTP,  }
+// NOTE (windows): IN|OUT are macros defined in windef.h.
+enum TraceDirection: uint8 { DIRECTION_IN = 0, DIRECTION_OUT }
+
+union TraceInfo {
+  KeyFrameTraceInfo,
+  FirTraceInfo,
+  PliTraceInfo,
+  RtpTraceInfo,
+}
+
+table KeyFrameTraceInfo {
+  is_rtx:bool;
+}
+
+table FirTraceInfo {
+  ssrc:uint32;
+}
+
+table PliTraceInfo {
+  ssrc:uint32;
+}
+
+table RtpTraceInfo {
+  is_rtx:bool;
+}
+
+table TraceNotification {
+  type: TraceType;
+  timestamp: uint64;
+  direction: TraceDirection;
+  info: TraceInfo;
+}
