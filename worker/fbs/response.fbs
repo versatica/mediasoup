@@ -1,0 +1,50 @@
+include "worker.fbs";
+include "router.fbs";
+include "webRtcServer.fbs";
+include "transport.fbs";
+include "producer.fbs";
+include "consumer.fbs";
+include "dataProducer.fbs";
+include "dataConsumer.fbs";
+
+namespace FBS.Response;
+
+union Body {
+  FBS_Worker_DumpResponse: FBS.Worker.DumpResponse,
+  FBS_Worker_ResourceUsageResponse: FBS.Worker.ResourceUsageResponse,
+  FBS_WebRtcServer_DumpResponse: FBS.WebRtcServer.DumpResponse,
+  FBS_Router_DumpResponse: FBS.Router.DumpResponse,
+  FBS_Transport_ProduceResponse: FBS.Transport.ProduceResponse,
+  FBS_Transport_ConsumeResponse: FBS.Transport.ConsumeResponse,
+  FBS_Transport_RestartIceResponse: FBS.Transport.RestartIceResponse,
+  FBS_PlainTransport_ConnectResponse: FBS.PlainTransport.ConnectResponse,
+  FBS_PlainTransport_DumpResponse: FBS.PlainTransport.DumpResponse,
+  FBS_PlainTransport_GetStatsResponse: FBS.PlainTransport.GetStatsResponse,
+  FBS_PipeTransport_ConnectResponse: FBS.PipeTransport.ConnectResponse,
+  FBS_PipeTransport_DumpResponse: FBS.PipeTransport.DumpResponse,
+  FBS_PipeTransport_GetStatsResponse: FBS.PipeTransport.GetStatsResponse,
+  FBS_DirectTransport_DumpResponse: FBS.DirectTransport.DumpResponse,
+  FBS_DirectTransport_GetStatsResponse: FBS.DirectTransport.GetStatsResponse,
+  FBS_WebRtcTransport_ConnectResponse: FBS.WebRtcTransport.ConnectResponse,
+  FBS_WebRtcTransport_DumpResponse: FBS.WebRtcTransport.DumpResponse,
+  FBS_WebRtcTransport_GetStatsResponse: FBS.WebRtcTransport.GetStatsResponse,
+  FBS_Producer_DumpResponse: FBS.Producer.DumpResponse,
+  FBS_Producer_GetStatsResponse: FBS.Producer.GetStatsResponse,
+  FBS_Consumer_DumpResponse: FBS.Consumer.DumpResponse,
+  FBS_Consumer_GetStatsResponse: FBS.Consumer.GetStatsResponse,
+  FBS_Consumer_SetPreferredLayersResponse: FBS.Consumer.SetPreferredLayersResponse,
+  FBS_Consumer_SetPriorityResponse: FBS.Consumer.SetPriorityResponse,
+  FBS_DataProducer_DumpResponse: FBS.DataProducer.DumpResponse,
+  FBS_DataProducer_GetStatsResponse: FBS.DataProducer.GetStatsResponse,
+  FBS_DataConsumer_GetBufferedAmountResponse: FBS.DataConsumer.GetBufferedAmountResponse,
+  FBS_DataConsumer_DumpResponse: FBS.DataConsumer.DumpResponse,
+  FBS_DataConsumer_GetStatsResponse: FBS.DataConsumer.GetStatsResponse,
+}
+
+table Response {
+  id:uint32;
+  accepted:bool;
+  body:Body;
+  error:string;
+  reason:string;
+}

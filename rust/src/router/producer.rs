@@ -11,9 +11,7 @@ pub use crate::ortc::RtpMapping;
 use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{
-    Channel, NotificationError, PayloadChannel, RequestError, SubscriptionHandler,
-};
+use crate::worker::{Channel, NotificationError, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use hash_hasher::HashedMap;
@@ -299,7 +297,6 @@ struct Inner {
     score: Arc<Mutex<Vec<ProducerScore>>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Arc<dyn Transport>,
@@ -441,7 +438,6 @@ impl Producer {
         paused: bool,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: PayloadChannel,
         app_data: AppData,
         transport: Arc<dyn Transport>,
         direct: bool,
@@ -503,7 +499,6 @@ impl Producer {
             score,
             executor,
             channel,
-            payload_channel,
             handlers,
             app_data,
             transport,
@@ -745,10 +740,10 @@ impl Producer {
 
 impl DirectProducer {
     /// Sends a RTP packet from the Rust process.
-    pub fn send(&self, rtp_packet: Vec<u8>) -> Result<(), NotificationError> {
+    pub fn send(&self, _rtp_packet: Vec<u8>) -> Result<(), NotificationError> {
         self.inner
-            .payload_channel
-            .notify(self.inner.id, ProducerSendNotification {}, rtp_packet)
+            .channel
+            .notify(self.inner.id, ProducerSendNotification {})
     }
 }
 

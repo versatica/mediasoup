@@ -11,8 +11,4 @@ extern "C" int mediasoup_worker_run(
   ChannelReadFn channelReadFn,
   ChannelReadCtx channelReadCtx,
   ChannelWriteFn channelWriteFn,
-  ChannelWriteCtx channelWriteCtx,
-  PayloadChannelReadFn payloadChannelReadFn,
-  PayloadChannelReadCtx payloadChannelReadCtx,
-  PayloadChannelWriteFn payloadChannelWriteFn,
-  PayloadChannelWriteCtx payloadChannelWriteCtx);
+  ChannelWriteCtx channelWriteCtx);

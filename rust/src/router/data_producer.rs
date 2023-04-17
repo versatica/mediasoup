@@ -9,7 +9,7 @@ use crate::messages::{
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, NotificationError, PayloadChannel, RequestError};
+use crate::worker::{Channel, NotificationError, RequestError};
 use async_executor::Executor;
 use event_listener_primitives::{BagOnce, HandlerId};
 use log::{debug, error};
@@ -137,7 +137,6 @@ struct Inner {
     direct: bool,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     app_data: AppData,
     transport: Arc<dyn Transport>,
@@ -269,7 +268,6 @@ impl DataProducer {
         protocol: String,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: PayloadChannel,
         app_data: AppData,
         transport: Arc<dyn Transport>,
         direct: bool,
@@ -299,7 +297,6 @@ impl DataProducer {
             direct,
             executor,
             channel,
-            payload_channel,
             handlers,
             app_data,
             transport,
@@ -431,12 +428,12 @@ impl DataProducer {
 impl DirectDataProducer {
     /// Sends direct messages from the Rust to the worker.
     pub fn send(&self, message: WebRtcMessage<'_>) -> Result<(), NotificationError> {
-        let (ppid, payload) = message.into_ppid_and_payload();
+        let (ppid, _payload) = message.into_ppid_and_payload();
 
-        self.inner.payload_channel.notify(
+        self.inner.channel.notify(
             self.inner.id,
             DataProducerSendNotification { ppid },
-            payload.into_owned(),
+            // payload.into_owned(),
         )
     }
 }

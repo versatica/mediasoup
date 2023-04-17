@@ -7,11 +7,8 @@
 #include "RTC/RtcLogger.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <array>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -147,8 +144,6 @@ namespace RTC
 		~RtpPacket();
 
 		void Dump() const;
-
-		void FillJson(json& jsonObject) const;
 
 		const uint8_t* GetData() const
 		{

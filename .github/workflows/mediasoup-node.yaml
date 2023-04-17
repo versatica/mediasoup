@@ -16,13 +16,26 @@ jobs:
         ci:
           - os: ubuntu-22.04
             node: 16
+            cc: gcc
+            cxx: g++
           - os: ubuntu-22.04
             node: 18
+            cc: gcc
+            cxx: g++
           - os: macos-12
             node: 18
+            cc: clang
+            cxx: clang++
           - os: windows-2022
             node: 18
+            cc: cl
+            cxx: cl
+
     runs-on: ${{ matrix.ci.os }}
+
+    env:
+      CC: ${{ matrix.ci.cc }}
+      CXX: ${{ matrix.ci.cxx }}
 
     steps:
       - name: Checkout

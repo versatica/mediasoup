@@ -19,22 +19,14 @@ namespace RTC
 	  const std::string& dataProducerId,
 	  RTC::SctpAssociation* sctpAssociation,
 	  RTC::DataConsumer::Listener* listener,
-	  json& data,
+	  const FBS::Transport::ConsumeDataRequest* data,
 	  size_t maxMessageSize)
 	  : id(id), dataProducerId(dataProducerId), shared(shared), sctpAssociation(sctpAssociation),
 	    listener(listener), maxMessageSize(maxMessageSize)
 	{
 		MS_TRACE();
 
-		auto jsonTypeIt                 = data.find("type");
-		auto jsonSctpStreamParametersIt = data.find("sctpStreamParameters");
-		auto jsonLabelIt                = data.find("label");
-		auto jsonProtocolIt             = data.find("protocol");
-
-		if (jsonTypeIt == data.end() || !jsonTypeIt->is_string())
-			MS_THROW_TYPE_ERROR("missing type");
-
-		this->typeString = jsonTypeIt->get<std::string>();
+		this->typeString = data->type()->str();
 
 		if (this->typeString == "sctp")
 			this->type = DataConsumer::Type::SCTP;
@@ -45,32 +37,27 @@ namespace RTC
 
 		if (this->type == DataConsumer::Type::SCTP)
 		{
-			// clang-format off
-			if (
-				jsonSctpStreamParametersIt == data.end() ||
-				!jsonSctpStreamParametersIt->is_object()
-			)
-			// clang-format on
+			if (!flatbuffers::IsFieldPresent(
+			      data, FBS::Transport::ConsumeDataRequest::VT_SCTPSTREAMPARAMETERS))
 			{
 				MS_THROW_TYPE_ERROR("missing sctpStreamParameters");
 			}
 
 			// This may throw.
-			this->sctpStreamParameters = RTC::SctpStreamParameters(*jsonSctpStreamParametersIt);
+			this->sctpStreamParameters = RTC::SctpStreamParameters(data->sctpStreamParameters());
 		}
 
-		if (jsonLabelIt != data.end() && jsonLabelIt->is_string())
-			this->label = jsonLabelIt->get<std::string>();
+		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeDataRequest::VT_LABEL))
+			this->label = data->label()->str();
 
-		if (jsonProtocolIt != data.end() && jsonProtocolIt->is_string())
-			this->protocol = jsonProtocolIt->get<std::string>();
+		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeDataRequest::VT_PROTOCOL))
+			this->protocol = data->protocol()->str();
 
 		// NOTE: This may throw.
 		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
-		  /*payloadChannelRequestHandler*/ this,
-		  /*payloadChannelNotificationHandler*/ nullptr);
+		  /*channelNotificationHandler*/ nullptr);
 	}
 
 	DataConsumer::~DataConsumer()
@@ -80,93 +67,75 @@ namespace RTC
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 	}
 
-	void DataConsumer::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::DataConsumer::DumpResponse> DataConsumer::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add id.
-		jsonObject["id"] = this->id;
-
-		// Add type.
-		jsonObject["type"] = this->typeString;
-
-		// Add dataProducerId.
-		jsonObject["dataProducerId"] = this->dataProducerId;
+		flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> sctpStreamParametersOffset;
 
 		// Add sctpStreamParameters.
 		if (this->type == DataConsumer::Type::SCTP)
 		{
-			this->sctpStreamParameters.FillJson(jsonObject["sctpStreamParameters"]);
+			sctpStreamParametersOffset = this->sctpStreamParameters.FillBuffer(builder);
 		}
 
-		// Add label.
-		jsonObject["label"] = this->label;
-
-		// Add protocol.
-		jsonObject["protocol"] = this->protocol;
-
-		// Add bufferedAmountLowThreshold.
-		jsonObject["bufferedAmountLowThreshold"] = this->bufferedAmountLowThreshold;
+		return FBS::DataConsumer::CreateDumpResponseDirect(
+		  builder,
+		  this->id.c_str(),
+		  this->dataProducerId.c_str(),
+		  this->typeString.c_str(),
+		  sctpStreamParametersOffset,
+		  this->label.c_str(),
+		  this->protocol.c_str());
 	}
 
-	void DataConsumer::FillJsonStats(json& jsonArray) const
+	flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> DataConsumer::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		jsonArray.emplace_back(json::value_t::object);
-		auto& jsonObject = jsonArray[0];
-
-		// Add type.
-		jsonObject["type"] = "data-consumer";
-
-		// Add timestamp.
-		jsonObject["timestamp"] = DepLibUV::GetTimeMs();
-
-		// Add label.
-		jsonObject["label"] = this->label;
-
-		// Add protocol.
-		jsonObject["protocol"] = this->protocol;
-
-		// Add messagesSent.
-		jsonObject["messagesSent"] = this->messagesSent;
-
-		// Add bytesSent.
-		jsonObject["bytesSent"] = this->bytesSent;
-
-		// Add bufferedAmount.
-		jsonObject["bufferedAmount"] = this->bufferedAmount;
+		return FBS::DataConsumer::CreateGetStatsResponseDirect(
+		  builder,
+		  // timestamp.
+		  DepLibUV::GetTimeMs(),
+		  // label.
+		  this->label.c_str(),
+		  // protocol.
+		  this->protocol.c_str(),
+		  // messagesSent.
+		  this->messagesSent,
+		  // bytesSent.
+		  this->bytesSent,
+		  // bufferedAmount.
+		  this->bufferedAmount);
 	}
 
 	void DataConsumer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_DUMP:
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_DUMP:
 			{
-				json data = json::object();
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				FillJson(data);
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_DataConsumer_DumpResponse, dumpOffset);
 
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_GET_STATS:
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_GET_STATS:
 			{
-				json data = json::array();
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
-				FillJsonStats(data);
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_DataConsumer_GetStatsResponse, responseOffset);
 
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
 			{
 				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
@@ -179,28 +148,26 @@ namespace RTC
 				}
 
 				// Create status response.
-				json data = json::object();
+				auto responseOffset = FBS::DataConsumer::CreateGetBufferedAmountResponse(
+				  request->GetBufferBuilder(), this->sctpAssociation->GetSctpBufferedAmount());
 
-				data["bufferedAmount"] = this->sctpAssociation->GetSctpBufferedAmount();
-
-				request->Accept(data);
+				request->Accept(
+				  FBS::Response::Body::FBS_DataConsumer_GetBufferedAmountResponse, responseOffset);
 
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
 			{
 				if (this->GetType() != DataConsumer::Type::SCTP)
 				{
 					MS_THROW_TYPE_ERROR("invalid DataConsumer type");
 				}
 
-				auto jsonThresholdIt = request->data.find("threshold");
+				const auto* body =
+				  request->data->body_as<FBS::DataConsumer::SetBufferedAmountLowThresholdRequest>();
 
-				if (jsonThresholdIt == request->data.end() || !jsonThresholdIt->is_number_unsigned())
-					MS_THROW_TYPE_ERROR("wrong bufferedAmountThreshold (not an unsigned number)");
-
-				this->bufferedAmountLowThreshold = jsonThresholdIt->get<uint32_t>();
+				this->bufferedAmountLowThreshold = body->threshold();
 
 				request->Accept();
 
@@ -223,20 +190,7 @@ namespace RTC
 				break;
 			}
 
-			default:
-			{
-				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
-			}
-		}
-	}
-
-	void DataConsumer::HandleRequest(PayloadChannel::PayloadChannelRequest* request)
-	{
-		MS_TRACE();
-
-		switch (request->methodId)
-		{
-			case PayloadChannel::PayloadChannelRequest::MethodId::DATA_CONSUMER_SEND:
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_SEND:
 			{
 				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
@@ -248,29 +202,29 @@ namespace RTC
 					MS_THROW_ERROR("no SCTP association present");
 				}
 
-				int ppid;
+				const auto* body = request->data->body_as<FBS::DataConsumer::SendRequest>();
+				const uint8_t* data{ nullptr };
+				size_t len{ 0 };
 
-				// This may throw.
-				// NOTE: If this throws we have to catch the error and throw a MediaSoupError
-				// intead, otherwise the process would crash.
-				try
+				if (body->data_type() == FBS::DataConsumer::Data::String)
 				{
-					ppid = std::stoi(request->data);
+					data = body->data_as_String()->value()->Data();
+					len  = body->data_as_String()->value()->size();
 				}
-				catch (const std::exception& error)
+				else
 				{
-					MS_THROW_TYPE_ERROR("invalid PPID value: %s", error.what());
+					data = body->data_as_Binary()->value()->Data();
+					len  = body->data_as_Binary()->value()->size();
 				}
 
-				const auto* msg = request->payload;
-				auto len        = request->payloadLen;
+				const int ppid = body->ppid();
 
 				if (len > this->maxMessageSize)
 				{
 					MS_THROW_TYPE_ERROR(
 					  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
-					  len,
-					  this->maxMessageSize);
+					  this->maxMessageSize,
+					  len);
 				}
 
 				const auto* cb = new onQueuedCallback(
@@ -279,18 +233,17 @@ namespace RTC
 					  if (queued)
 						  request->Accept();
 					  else
-						  request->Error(
-						    sctpSendBufferFull == true ? "sctpsendbufferfull" : "message send failed");
+						  request->Error(sctpSendBufferFull ? "sctpsendbufferfull" : "message send failed");
 				  });
 
-				SendMessage(ppid, msg, len, cb);
+				SendMessage(ppid, data, len, cb);
 
 				break;
 			}
 
 			default:
 			{
-				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+				MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
 			}
 		}
 	}
@@ -349,12 +302,14 @@ namespace RTC
 			this->forceTriggerBufferedAmountLow = false;
 
 			// Notify the Node DataConsumer.
-			std::string data(R"({"bufferedAmount":)");
+			auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
+			  this->shared->channelNotifier->GetBufferBuilder(), this->bufferedAmount);
 
-			data.append(std::to_string(this->bufferedAmount));
-			data.append("}");
-
-			this->shared->channelNotifier->Emit(this->id, "bufferedamountlow", data);
+			this->shared->channelNotifier->Emit(
+			  this->id,
+			  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
+			  FBS::Notification::Body::FBS_DataConsumer_BufferedAmountLowNotification,
+			  bufferedAmountLowOffset);
 		}
 	}
 
@@ -362,7 +317,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->shared->channelNotifier->Emit(this->id, "sctpsendbufferfull");
+		this->shared->channelNotifier->Emit(
+		  this->id, FBS::Notification::Event::DATACONSUMER_SCTP_SENDBUFFER_FULL);
 	}
 
 	// The caller (Router) is supposed to proceed with the deletion of this DataConsumer
@@ -375,7 +331,8 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer closed [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(this->id, "dataproducerclose");
+		this->shared->channelNotifier->Emit(
+		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_CLOSE);
 
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}

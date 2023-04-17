@@ -1,10 +1,18 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
-import { MediaKind, RtpParameters } from './RtpParameters';
+import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
+import { Event, Notification } from './fbs/notification';
+import { parseRtpStreamRecvStats, RtpStreamRecvStats } from './RtpStream';
 import { AppData } from './types';
+import * as utils from './utils';
+import * as FbsNotification from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsTransport from './fbs/transport';
+import * as FbsProducer from './fbs/producer';
+import * as FbsProducerTraceInfo from './fbs/producer/trace-info';
+import * as FbsRtpParameters from './fbs/rtp-parameters';
 
 export type ProducerOptions<ProducerAppData extends AppData = AppData> =
 {
@@ -107,35 +115,7 @@ export type ProducerVideoOrientation =
 	rotation: number;
 };
 
-export type ProducerStat =
-{
-	// Common to all RtpStreams.
-	type: string;
-	timestamp: number;
-	ssrc: number;
-	rtxSsrc?: number;
-	rid?: string;
-	kind: string;
-	mimeType: string;
-	packetsLost: number;
-	fractionLost: number;
-	packetsDiscarded: number;
-	packetsRetransmitted: number;
-	packetsRepaired: number;
-	nackCount: number;
-	nackPacketCount: number;
-	pliCount: number;
-	firCount: number;
-	score: number;
-	packetCount: number;
-	byteCount: number;
-	bitrate: number;
-	roundTripTime?: number;
-	rtxPacketsDiscarded?: number;
-	// RtpStreamRecv specific.
-	jitter: number;
-	bitrateByLayer?: any;
-};
+export type ProducerStat = RtpStreamRecvStats;
 
 /**
  * Producer type.
@@ -160,6 +140,17 @@ export type ProducerObserverEvents =
 	score: [ProducerScore[]];
 	videoorientationchange: [ProducerVideoOrientation];
 	trace: [ProducerTraceEventData];
+};
+
+type ProducerDump = {
+	id: string;
+	kind: string;
+	type:ProducerType;
+	rtpParameters:RtpParameters;
+	rtpMapping:any;
+	rtpStreams:any;
+	traceEventTypes:string[];
+	paused:boolean;
 };
 
 type ProducerInternal = TransportInternal &
@@ -189,9 +180,6 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	// Channel instance.
 	readonly #channel: Channel;
 
-	// PayloadChannel instance.
-	readonly #payloadChannel: PayloadChannel;
-
 	// Closed flag.
 	#closed = false;
 
@@ -215,7 +203,6 @@ export class Producer<ProducerAppData extends AppData = AppData>
 			internal,
 			data,
 			channel,
-			payloadChannel,
 			appData,
 			paused
 		}:
@@ -223,7 +210,6 @@ export class Producer<ProducerAppData extends AppData = AppData>
 			internal: ProducerInternal;
 			data: ProducerData;
 			channel: Channel;
-			payloadChannel: PayloadChannel;
 			appData?: ProducerAppData;
 			paused: boolean;
 		}
@@ -236,7 +222,6 @@ export class Producer<ProducerAppData extends AppData = AppData>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {} as ProducerAppData;
 		this.#paused = paused;
 
@@ -358,12 +343,18 @@ export class Producer<ProducerAppData extends AppData = AppData>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.producerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
 
-		const reqData = { producerId: this.#internal.producerId };
+		/* Build Request. */
+		const requestOffset = new FbsTransport.CloseProducerRequestT(
+			this.#internal.producerId
+		).pack(this.#channel.bufferBuilder);
 
-		this.#channel.request('transport.closeProducer', this.#internal.transportId, reqData)
-			.catch(() => {});
+		this.#channel.request(
+			FbsRequest.Method.TRANSPORT_CLOSE_PRODUCER,
+			FbsRequest.Body.FBS_Transport_CloseProducerRequest,
+			requestOffset,
+			this.#internal.transportId
+		).catch(() => {});
 
 		this.emit('@close');
 
@@ -389,7 +380,6 @@ export class Producer<ProducerAppData extends AppData = AppData>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.producerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
 
 		this.safeEmit('transportclose');
 
@@ -400,11 +390,23 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	/**
 	 * Dump Producer.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<ProducerDump>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('producer.dump', this.#internal.producerId);
+		const response = await this.#channel.request(
+			FbsRequest.Method.PRODUCER_DUMP,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
+
+		/* Decode Response. */
+		const dumpResponse = new FbsProducer.DumpResponse();
+
+		response.body(dumpResponse);
+
+		return parseProducerDump(dumpResponse);
 	}
 
 	/**
@@ -414,7 +416,19 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	{
 		logger.debug('getStats()');
 
-		return this.#channel.request('producer.getStats', this.#internal.producerId);
+		const response = await this.#channel.request(
+			FbsRequest.Method.PRODUCER_GET_STATS,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
+
+		/* Decode Response. */
+		const data = new FbsProducer.GetStatsResponse();
+
+		response.body(data);
+
+		return parseProducerStats(data);
 	}
 
 	/**
@@ -426,7 +440,12 @@ export class Producer<ProducerAppData extends AppData = AppData>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.request('producer.pause', this.#internal.producerId);
+		await this.#channel.request(
+			FbsRequest.Method.PRODUCER_PAUSE,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
 
 		this.#paused = true;
 
@@ -446,7 +465,12 @@ export class Producer<ProducerAppData extends AppData = AppData>
 
 		const wasPaused = this.#paused;
 
-		await this.#channel.request('producer.resume', this.#internal.producerId);
+		await this.#channel.request(
+			FbsRequest.Method.PRODUCER_RESUME,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
 
 		this.#paused = false;
 
@@ -464,10 +488,26 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	{
 		logger.debug('enableTraceEvent()');
 
-		const reqData = { types };
+		if (!Array.isArray(types))
+		{
+			throw new TypeError('types must be an array');
+		}
+		if (types.find((type) => typeof type !== 'string'))
+		{
+			throw new TypeError('every type must be a string');
+		}
+
+		/* Build Request. */
+		const requestOffset = new FbsProducer.EnableTraceEventRequestT(
+			types
+		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
-			'producer.enableTraceEvent', this.#internal.producerId, reqData);
+			FbsRequest.Method.PRODUCER_ENABLE_TRACE_EVENT,
+			FbsRequest.Body.FBS_Producer_EnableTraceEventRequest,
+			requestOffset,
+			this.#internal.producerId
+		);
 	}
 
 	/**
@@ -480,19 +520,36 @@ export class Producer<ProducerAppData extends AppData = AppData>
 			throw new TypeError('rtpPacket must be a Buffer');
 		}
 
-		this.#payloadChannel.notify(
-			'producer.send', this.#internal.producerId, undefined, rtpPacket);
+		const builder = this.#channel.bufferBuilder;
+		const dataOffset = FbsProducer.SendNotification.createDataVector(builder, rtpPacket);
+		const notificationOffset = FbsProducer.SendNotification.createSendNotification(
+			builder,
+			dataOffset
+		);
+
+		this.#channel.notify(
+			FbsNotification.Event.PRODUCER_SEND,
+			FbsNotification.Body.FBS_Producer_SendNotification,
+			notificationOffset,
+			this.#internal.producerId
+		);
 	}
 
 	private handleWorkerNotifications(): void
 	{
-		this.#channel.on(this.#internal.producerId, (event: string, data?: any) =>
+		this.#channel.on(this.#internal.producerId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case 'score':
+				case Event.PRODUCER_SCORE:
 				{
-					const score = data as ProducerScore[];
+					const notification = new FbsProducer.ScoreNotification();
+
+					data!.body(notification);
+
+					const score: ProducerScore[] = utils.parseVector(
+						notification, 'scores', parseProducerScore
+					);
 
 					this.#score = score;
 
@@ -504,9 +561,13 @@ export class Producer<ProducerAppData extends AppData = AppData>
 					break;
 				}
 
-				case 'videoorientationchange':
+				case Event.PRODUCER_VIDEO_ORIENTATION_CHANGE:
 				{
-					const videoOrientation = data as ProducerVideoOrientation;
+					const notification = new FbsProducer.VideoOrientationChangeNotification();
+
+					data!.body(notification);
+
+					const videoOrientation: ProducerVideoOrientation = notification.unpack();
 
 					this.safeEmit('videoorientationchange', videoOrientation);
 
@@ -516,9 +577,13 @@ export class Producer<ProducerAppData extends AppData = AppData>
 					break;
 				}
 
-				case 'trace':
+				case Event.PRODUCER_TRACE:
 				{
-					const trace = data as ProducerTraceEventData;
+					const notification = new FbsProducer.TraceNotification();
+
+					data!.body(notification);
+
+					const trace: ProducerTraceEventData = parseTraceEventData(notification);
 
 					this.safeEmit('trace', trace);
 
@@ -534,5 +599,85 @@ export class Producer<ProducerAppData extends AppData = AppData>
 				}
 			}
 		});
+	}
+}
+
+export function parseProducerDump(
+	data: FbsProducer.DumpResponse
+): ProducerDump
+{
+	return {
+		id            : data.id()!,
+		kind          : data.kind() === FbsRtpParameters.MediaKind.AUDIO ? 'audio' : 'video',
+		type          : data.type()! as ProducerType,
+		rtpParameters : parseRtpParameters(data.rtpParameters()!),
+		// NOTE: optional values are represented with null instead of undefined.
+		// TODO: Make flatbuffers TS return undefined instead of null.
+		rtpMapping    : data.rtpMapping() ? data.rtpMapping()!.unpack() : undefined,
+		// NOTE: optional values are represented with null instead of undefined.
+		// TODO: Make flatbuffers TS return undefined instead of null.
+		rtpStreams    : data.rtpStreamsLength() > 0 ?
+			utils.parseVector(data, 'rtpStreams', (rtpStream: any) => rtpStream.unpack()) :
+			undefined,
+		traceEventTypes : utils.parseVector(data, 'traceEventTypes'),
+		paused          : data.paused()
+	};
+}
+
+function parseProducerStats(binary: FbsProducer.GetStatsResponse): ProducerStat[]
+{
+	return utils.parseVector(binary, 'stats', parseRtpStreamRecvStats);
+}
+
+function parseProducerScore(
+	binary: FbsProducer.Score
+): ProducerScore
+{
+	return {
+		ssrc  : binary.ssrc(),
+		rid   : binary.rid() ?? undefined,
+		score : binary.score()
+	};
+}
+
+function parseTraceEventData(
+	trace: FbsProducer.TraceNotification
+): ProducerTraceEventData
+{
+	let info: any;
+
+	if (trace.infoType() !== FbsProducer.TraceInfo.NONE)
+	{
+		const accessor = trace.info.bind(trace);
+
+		info = FbsProducerTraceInfo.unionToTraceInfo(trace.infoType(), accessor);
+
+		trace.info(info);
+	}
+
+	return {
+		type      : fbstraceType2String(trace.type()),
+		timestamp : Number(trace.timestamp()),
+		direction : trace.direction() === FbsProducer.TraceDirection.DIRECTION_IN ? 'in' : 'out',
+		info      : info ? info.unpack() : undefined
+	};
+}
+
+function fbstraceType2String(traceType: FbsProducer.TraceType): ProducerTraceEventType
+{
+	switch (traceType)
+	{
+		case FbsProducer.TraceType.KEYFRAME:
+			return 'keyframe';
+		case FbsProducer.TraceType.FIR:
+			return 'fir';
+		case FbsProducer.TraceType.NACK:
+			return 'nack';
+		case FbsProducer.TraceType.PLI:
+			return 'pli';
+		case FbsProducer.TraceType.RTP:
+			return 'rtp';
+		default:
+			throw new TypeError(`invalid TraceType: ${traceType}`);
 	}
 }

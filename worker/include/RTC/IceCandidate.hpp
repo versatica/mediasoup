@@ -2,12 +2,11 @@
 #define MS_RTC_ICE_CANDIDATE_HPP
 
 #include "common.hpp"
+#include "FBS/webRtcTransport_generated.h"
 #include "RTC/TcpServer.hpp"
 #include "RTC/UdpSocket.hpp"
-#include <nlohmann/json.hpp>
+#include <flatbuffers/flatbuffers.h>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -59,7 +58,8 @@ namespace RTC
 		{
 		}
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	private:
 		// Others.

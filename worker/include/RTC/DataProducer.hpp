@@ -4,17 +4,15 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "PayloadChannel/PayloadChannelSocket.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include "RTC/Shared.hpp"
-#include <nlohmann/json.hpp>
 #include <string>
 
 namespace RTC
 {
 	class DataProducer : public Channel::ChannelSocket::RequestHandler,
-	                     public PayloadChannel::PayloadChannelSocket::NotificationHandler
+	                     public Channel::ChannelSocket::NotificationHandler
 	{
 	public:
 		class Listener
@@ -41,12 +39,14 @@ namespace RTC
 		  const std::string& id,
 		  size_t maxMessageSize,
 		  RTC::DataProducer::Listener* listener,
-		  json& data);
+		  const FBS::Transport::ProduceDataRequest* data);
 		virtual ~DataProducer();
 
 	public:
-		void FillJson(json& jsonObject) const;
-		void FillJsonStats(json& jsonArray) const;
+		flatbuffers::Offset<FBS::DataProducer::DumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
+		flatbuffers::Offset<FBS::DataProducer::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 		Type GetType() const
 		{
 			return this->type;
@@ -61,9 +61,9 @@ namespace RTC
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
-		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
+		/* Methods inherited from Channel::ChannelSocket::NotificationHandler. */
 	public:
-		void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
+		void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	public:
 		// Passed by argument.

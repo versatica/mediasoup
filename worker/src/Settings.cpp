@@ -5,10 +5,10 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include <cctype>   // isprint()
+#include <cctype> // isprint()
+#include <flatbuffers/flatbuffers.h>
 #include <iterator> // std::ostream_iterator
 #include <mutex>
-#include <nlohmann/json.hpp>
 #include <sstream> // std::ostringstream
 #include <stdexcept>
 extern "C"
@@ -263,31 +263,28 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
-	switch (request->methodId)
+	switch (request->method)
 	{
-		case Channel::ChannelRequest::MethodId::WORKER_UPDATE_SETTINGS:
+		case Channel::ChannelRequest::Method::WORKER_UPDATE_SETTINGS:
 		{
-			auto jsonLogLevelIt = request->data.find("logLevel");
-			auto jsonLogTagsIt  = request->data.find("logTags");
+			auto body = request->data->body_as<FBS::Worker::UpdateSettingsRequest>();
 
-			// Update logLevel if requested.
-			if (jsonLogLevelIt != request->data.end() && jsonLogLevelIt->is_string())
+			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateSettingsRequest::VT_LOGLEVEL))
 			{
-				std::string logLevel = *jsonLogLevelIt;
+				auto logLevel = body->logLevel()->str();
 
 				// This may throw.
 				Settings::SetLogLevel(logLevel);
 			}
 
 			// Update logTags if requested.
-			if (jsonLogTagsIt != request->data.end() && jsonLogTagsIt->is_array())
+			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateSettingsRequest::VT_LOGTAGS))
 			{
 				std::vector<std::string> logTags;
 
-				for (const auto& logTag : *jsonLogTagsIt)
+				for (const auto& logTag : *body->logTags())
 				{
-					if (logTag.is_string())
-						logTags.push_back(logTag);
+					logTags.push_back(logTag->str());
 				}
 
 				Settings::SetLogTags(logTags);
@@ -303,7 +300,7 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 
 		default:
 		{
-			MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
 		}
 	}
 }

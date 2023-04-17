@@ -25,7 +25,7 @@ use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{TransportId, TransportTraceEventType};
 use crate::webrtc_server::{WebRtcServerDump, WebRtcServerId, WebRtcServerListenInfos};
 use crate::webrtc_transport::{TransportListenIps, WebRtcTransportListen, WebRtcTransportOptions};
-use crate::worker::{WorkerDump, WorkerUpdateSettings};
+use crate::worker::WorkerDump;
 use parking_lot::Mutex;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -160,15 +160,6 @@ request_response!(
 
 request_response!(
     &'static str,
-    "worker.updateSettings",
-    WorkerUpdateSettingsRequest {
-        #[serde(flatten)]
-        data: WorkerUpdateSettings,
-    },
-);
-
-request_response!(
-    &'static str,
     "worker.createWebRtcServer",
     WorkerCreateWebRtcServerRequest {
         #[serde(rename = "webRtcServerId")]
@@ -193,14 +184,6 @@ request_response!(
     "webRtcServer.dump",
     WebRtcServerDumpRequest {},
     WebRtcServerDump,
-);
-
-request_response!(
-    &'static str,
-    "worker.createRouter",
-    WorkerCreateRouterRequest {
-        router_id: RouterId,
-    },
 );
 
 request_response!(

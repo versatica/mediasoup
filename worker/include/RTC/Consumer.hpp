@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
+#include "FBS/consumer_generated.h"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
@@ -17,11 +18,8 @@
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/Shared.hpp"
 #include <absl/container/flat_hash_set.h>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -65,14 +63,20 @@ namespace RTC
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
-		  json& data,
+		  const FBS::Transport::ConsumeRequest* data,
 		  RTC::RtpParameters::Type type);
 		virtual ~Consumer();
 
 	public:
-		virtual void FillJson(json& jsonObject) const;
-		virtual void FillJsonStats(json& jsonArray) const  = 0;
-		virtual void FillJsonScore(json& jsonObject) const = 0;
+		flatbuffers::Offset<FBS::Consumer::BaseConsumerDump> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
+		virtual flatbuffers::Offset<FBS::Consumer::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder) = 0;
+		virtual flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
+		  flatbuffers::FlatBufferBuilder& builder) const
+		{
+			return 0;
+		};
 		RTC::Media::Kind GetKind() const
 		{
 			return this->kind;
@@ -166,6 +170,7 @@ namespace RTC
 		void EmitTraceEventPliType(uint32_t ssrc) const;
 		void EmitTraceEventFirType(uint32_t ssrc) const;
 		void EmitTraceEventNackType() const;
+		void EmitTraceEvent(flatbuffers::Offset<FBS::Consumer::TraceNotification>& notification) const;
 
 	private:
 		virtual void UserOnTransportConnected()    = 0;

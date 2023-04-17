@@ -1,30 +1,51 @@
 import { v4 as uuidv4 } from 'uuid';
+import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as utils from './utils';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { RouterInternal } from './Router';
 import { WebRtcTransportData } from './WebRtcTransport';
 import { PlainTransportData } from './PlainTransport';
 import { PipeTransportData } from './PipeTransport';
 import { DirectTransportData } from './DirectTransport';
 import { Producer, ProducerOptions } from './Producer';
-import { Consumer, ConsumerOptions, ConsumerType } from './Consumer';
+import { Consumer, ConsumerLayers, ConsumerOptions, ConsumerType } from './Consumer';
 import {
 	DataProducer,
 	DataProducerOptions,
-	DataProducerType
+	DataProducerType,
+	parseDataProducerDump
 } from './DataProducer';
 import {
 	DataConsumer,
 	DataConsumerOptions,
-	DataConsumerType
+	DataConsumerType,
+	parseDataConsumerDump
 } from './DataConsumer';
-import { RtpCapabilities } from './RtpParameters';
-import { SctpStreamParameters } from './SctpParameters';
+import {
+	MediaKind,
+	RtpCapabilities,
+	RtpParameters,
+	serializeRtpEncodingParameters,
+	serializeRtpParameters
+} from './RtpParameters';
+import {
+	parseSctpParametersDump,
+	serializeSctpStreamParameters,
+	SctpParameters,
+	SctpStreamParameters
+} from './SctpParameters';
 import { AppData } from './types';
+import * as FbsRequest from './fbs/request';
+import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
+import * as FbsConsumer from './fbs/consumer';
+import * as FbsDataConsumer from './fbs/data-consumer';
+import * as FbsDataProducer from './fbs/data-producer';
+import * as FbsTransport from './fbs/transport';
+import * as FbsRouter from './fbs/router';
+import { SctpState as FbsSctpState } from './fbs/sctp-association/sctp-state';
 
 export type TransportListenIp =
 {
@@ -116,7 +137,6 @@ export type TransportConstructorOptions<TransportAppData> =
 	internal: TransportInternal;
 	data: TransportData;
 	channel: Channel;
-	payloadChannel: PayloadChannel;
 	appData?: TransportAppData;
 	getRouterRtpCapabilities: () => RtpCapabilities;
 	getProducerById: (producerId: string) => Producer | undefined;
@@ -128,11 +148,62 @@ export type TransportInternal = RouterInternal &
 	transportId: string;
 };
 
+export type BaseTransportDump = {
+	id : string;
+	direct : boolean;
+	producerIds : string[];
+	consumerIds : string[];
+	mapSsrcConsumerId : { key: number; value: string }[];
+	mapRtxSsrcConsumerId : { key: number; value: string }[];
+	recvRtpHeaderExtensions : { key: string; value: number }[];
+	rtpListener: RtpListenerDump;
+	maxMessageSize: number;
+	dataProducerIds : string[];
+	dataConsumerIds : string[];
+	sctpParameters? : SctpParameters;
+	sctpState? : SctpState;
+	sctpListener?: SctpListenerDump;
+	traceEventTypes? : string[];
+};
+
+export type BaseTransportStats = {
+	transportId: string;
+	timestamp: number;
+	sctpState?: SctpState;
+	bytesReceived: number;
+	recvBitrate: number;
+	bytesSent: number;
+	sendBitrate: number;
+	rtpBytesReceived: number;
+	rtpRecvBitrate: number;
+	rtpBytesSent: number;
+	rtpSendBitrate: number;
+	rtxBytesReceived: number;
+	rtxRecvBitrate: number;
+	rtxBytesSent: number;
+	rtxSendBitrate: number;
+	probationBytesSent: number;
+	probationSendBitrate: number;
+	availableOutgoingBitrate?: number;
+	availableIncomingBitrate?: number;
+	maxIncomingBitrate?: number;
+};
+
 type TransportData =
   | WebRtcTransportData
   | PlainTransportData
   | PipeTransportData
   | DirectTransportData;
+
+type RtpListenerDump = {
+	ssrcTable : {key: number; value: string}[];
+	midTable : {key: number; value: string}[];
+	ridTable : {key: number; value: string}[];
+};
+
+type SctpListenerDump = {
+	streamIdTable : {key: number; value: string}[];
+};
 
 const logger = new Logger('Transport');
 
@@ -150,9 +221,6 @@ export class Transport
 
 	// Channel instance.
 	protected readonly channel: Channel;
-
-	// PayloadChannel instance.
-	protected readonly payloadChannel: PayloadChannel;
 
 	// Close flag.
 	#closed = false;
@@ -206,7 +274,6 @@ export class Transport
 			internal,
 			data,
 			channel,
-			payloadChannel,
 			appData,
 			getRouterRtpCapabilities,
 			getProducerById,
@@ -221,7 +288,6 @@ export class Transport
 		this.internal = internal;
 		this.#data = data;
 		this.channel = channel;
-		this.payloadChannel = payloadChannel;
 		this.#appData = appData || {} as TransportAppData;
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
@@ -293,12 +359,18 @@ export class Transport
 
 		// Remove notification subscriptions.
 		this.channel.removeAllListeners(this.internal.transportId);
-		this.payloadChannel.removeAllListeners(this.internal.transportId);
 
-		const reqData = { transportId: this.internal.transportId };
+		/* Build Request. */
+		const requestOffset = new FbsRouter.CloseTransportRequestT(
+			this.internal.transportId
+		).pack(this.channel.bufferBuilder);
 
-		this.channel.request('router.closeTransport', this.internal.routerId, reqData)
-			.catch(() => {});
+		this.channel.request(
+			FbsRequest.Method.ROUTER_CLOSE_TRANSPORT,
+			FbsRequest.Body.FBS_Router_CloseTransportRequest,
+			requestOffset,
+			this.internal.routerId
+		).catch(() => {});
 
 		// Close every Producer.
 		for (const producer of this.#producers.values())
@@ -359,7 +431,6 @@ export class Transport
 
 		// Remove notification subscriptions.
 		this.channel.removeAllListeners(this.internal.transportId);
-		this.payloadChannel.removeAllListeners(this.internal.transportId);
 
 		// Close every Producer.
 		for (const producer of this.#producers.values())
@@ -420,7 +491,6 @@ export class Transport
 
 		// Remove notification subscriptions.
 		this.channel.removeAllListeners(this.internal.transportId);
-		this.payloadChannel.removeAllListeners(this.internal.transportId);
 
 		// Close every Producer.
 		for (const producer of this.#producers.values())
@@ -469,12 +539,13 @@ export class Transport
 
 	/**
 	 * Dump Transport.
+	 *
+	 * @abstract
 	 */
 	async dump(): Promise<any>
 	{
-		logger.debug('dump()');
-
-		return this.channel.request('transport.dump', this.internal.transportId);
+		// Should not happen.
+		throw new Error('method not implemented in the subclass');
 	}
 
 	/**
@@ -507,10 +578,16 @@ export class Transport
 	{
 		logger.debug('setMaxIncomingBitrate() [bitrate:%s]', bitrate);
 
-		const reqData = { bitrate };
+		/* Build Request. */
+		const requestOffset = FbsTransport.SetMaxIncomingBitrateRequest
+			.createSetMaxIncomingBitrateRequest(this.channel.bufferBuilder, bitrate);
 
 		await this.channel.request(
-			'transport.setMaxIncomingBitrate', this.internal.transportId, reqData);
+			FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE,
+			FbsRequest.Body.FBS_Transport_SetMaxIncomingBitrateRequest,
+			requestOffset,
+			this.internal.transportId
+		);
 	}
 
 	/**
@@ -520,10 +597,17 @@ export class Transport
 	{
 		logger.debug('setMaxOutgoingBitrate() [bitrate:%s]', bitrate);
 
-		const reqData = { bitrate };
+		/* Build Request. */
+		const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
+			bitrate
+		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
-			'transport.setMaxOutgoingBitrate', this.internal.transportId, reqData);
+			FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE,
+			FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest,
+			requestOffset,
+			this.internal.transportId
+		);
 	}
 
 	/**
@@ -533,10 +617,17 @@ export class Transport
 	{
 		logger.debug('setMinOutgoingBitrate() [bitrate:%s]', bitrate);
 
-		const reqData = { bitrate };
+		/* Build Request. */
+		const requestOffset = new FbsTransport.SetMinOutgoingBitrateRequestT(
+			bitrate
+		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
-			'transport.setMinOutgoingBitrate', this.internal.transportId, reqData);
+			FbsRequest.Method.TRANSPORT_SET_MIN_OUTGOING_BITRATE,
+			FbsRequest.Body.FBS_Transport_SetMinOutgoingBitrateRequest,
+			requestOffset,
+			this.internal.transportId
+		);
 	}
 
 	/**
@@ -613,24 +704,36 @@ export class Transport
 		const consumableRtpParameters = ortc.getConsumableRtpParameters(
 			kind, rtpParameters, routerRtpCapabilities, rtpMapping);
 
-		const reqData =
-		{
-			producerId : id || uuidv4(),
+		const producerId = id || uuidv4();
+		const requestOffset = createProduceRequest({
+			builder : this.channel.bufferBuilder,
+			producerId,
 			kind,
 			rtpParameters,
 			rtpMapping,
 			keyFrameRequestDelay,
 			paused
-		};
+		});
 
-		const status =
-			await this.channel.request('transport.produce', this.internal.transportId, reqData);
+		const response = await this.channel.request(
+			FbsRequest.Method.TRANSPORT_PRODUCE,
+			FbsRequest.Body.FBS_Transport_ProduceRequest,
+			requestOffset,
+			this.internal.transportId
+		);
+
+		/* Decode Response. */
+		const produceResponse = new FbsTransport.ProduceResponse();
+
+		response.body(produceResponse);
+
+		const status = produceResponse.unpack();
 
 		const data =
 		{
 			kind,
 			rtpParameters,
-			type : status.type,
+			type : utils.getProducerType(status.type),
 			consumableRtpParameters
 		};
 
@@ -639,11 +742,10 @@ export class Transport
 				internal :
 				{
 					...this.internal,
-					producerId : reqData.producerId
+					producerId
 				},
 				data,
 				channel        : this.channel,
-				payloadChannel : this.payloadChannel,
 				appData,
 				paused
 			});
@@ -745,21 +847,31 @@ export class Transport
 			}
 		}
 
-		const reqData =
-		{
-			consumerId             : uuidv4(),
-			producerId,
-			kind                   : producer.kind,
+		const consumerId = uuidv4();
+		const consumeRequestOffset = createConsumeRequest({
+			builder : this.channel.bufferBuilder,
+			producer,
+			consumerId,
 			rtpParameters,
-			type                   : pipe ? 'pipe' : producer.type,
-			consumableRtpEncodings : producer.consumableRtpParameters.encodings,
 			paused,
 			preferredLayers,
-			ignoreDtx
-		};
+			ignoreDtx,
+			pipe
+		});
 
-		const status =
-			await this.channel.request('transport.consume', this.internal.transportId, reqData);
+		const response = await this.channel.request(
+			FbsRequest.Method.TRANSPORT_CONSUME,
+			FbsRequest.Body.FBS_Transport_ConsumeRequest,
+			consumeRequestOffset,
+			this.internal.transportId
+		);
+
+		/* Decode Response. */
+		const consumeResponse = new FbsTransport.ConsumeResponse();
+
+		response.body(consumeResponse);
+
+		const status = consumeResponse.unpack();
 
 		const data =
 		{
@@ -774,16 +886,22 @@ export class Transport
 				internal :
 				{
 					...this.internal,
-					consumerId : reqData.consumerId
+					consumerId
 				},
 				data,
 				channel         : this.channel,
-				payloadChannel  : this.payloadChannel,
 				appData,
 				paused          : status.paused,
 				producerPaused  : status.producerPaused,
-				score           : status.score,
-				preferredLayers : status.preferredLayers
+				score           : status.score ?? undefined,
+				preferredLayers : status.preferredLayers ?
+					{
+						spatialLayer  : status.preferredLayers.spatialLayer,
+						temporalLayer : status.preferredLayers.temporalLayer !== null ?
+							status.preferredLayers.temporalLayer :
+							undefined
+					} :
+					undefined
 			});
 
 		this.consumers.set(consumer.id, consumer);
@@ -842,28 +960,38 @@ export class Transport
 			}
 		}
 
-		const reqData =
-		{
-			dataProducerId : id || uuidv4(),
+		const dataProducerId = id || uuidv4();
+		const requestOffset = createProduceDataRequest({
+			builder : this.channel.bufferBuilder,
+			dataProducerId,
 			type,
 			sctpStreamParameters,
 			label,
 			protocol
-		};
+		});
 
-		const data =
-			await this.channel.request('transport.produceData', this.internal.transportId, reqData);
+		const response = await this.channel.request(
+			FbsRequest.Method.TRANSPORT_PRODUCE_DATA,
+			FbsRequest.Body.FBS_Transport_ProduceDataRequest,
+			requestOffset,
+			this.internal.transportId
+		);
 
+		/* Decode Response. */
+		const produceResponse = new FbsDataProducer.DumpResponse();
+
+		response.body(produceResponse);
+
+		const data = parseDataProducerDump(produceResponse);
 		const dataProducer = new DataProducer<DataProducerAppData>(
 			{
 				internal :
 				{
 					...this.internal,
-					dataProducerId : reqData.dataProducerId
+					dataProducerId
 				},
 				data,
 				channel        : this.channel,
-				payloadChannel : this.payloadChannel,
 				appData
 			});
 
@@ -964,30 +1092,40 @@ export class Transport
 		}
 
 		const { label, protocol } = dataProducer;
+		const dataConsumerId = uuidv4();
 
-		const reqData =
-		{
-			dataConsumerId : uuidv4(),
+		const requestOffset = createConsumeDataRequest({
+			builder : this.channel.bufferBuilder,
+			dataConsumerId,
 			dataProducerId,
 			type,
 			sctpStreamParameters,
 			label,
 			protocol
-		};
+		});
 
-		const data =
-			await this.channel.request('transport.consumeData', this.internal.transportId, reqData);
+		const response = await this.channel.request(
+			FbsRequest.Method.TRANSPORT_CONSUME_DATA,
+			FbsRequest.Body.FBS_Transport_ConsumeDataRequest,
+			requestOffset,
+			this.internal.transportId
+		);
 
+		/* Decode Response. */
+		const consumeResponse = new FbsDataConsumer.DumpResponse();
+
+		response.body(consumeResponse);
+
+		const data = parseDataConsumerDump(consumeResponse);
 		const dataConsumer = new DataConsumer<ConsumerAppData>(
 			{
 				internal :
 				{
 					...this.internal,
-					dataConsumerId : reqData.dataConsumerId
+					dataConsumerId
 				},
 				data,
 				channel        : this.channel,
-				payloadChannel : this.payloadChannel,
 				appData
 			});
 
@@ -1022,12 +1160,28 @@ export class Transport
 	 */
 	async enableTraceEvent(types: TransportTraceEventType[] = []): Promise<void>
 	{
-		logger.debug('pause()');
+		logger.debug('enableTraceEvent()');
 
-		const reqData = { types };
+		if (!Array.isArray(types))
+		{
+			throw new TypeError('types must be an array');
+		}
+		if (types.find((type) => typeof type !== 'string'))
+		{
+			throw new TypeError('every type must be a string');
+		}
+
+		/* Build Request. */
+		const requestOffset = new FbsTransport.EnableTraceEventRequestT(
+			types
+		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
-			'transport.enableTraceEvent', this.internal.transportId, reqData);
+			FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT,
+			FbsRequest.Body.FBS_Transport_EnableTraceEventRequest,
+			requestOffset,
+			this.internal.transportId
+		);
 	}
 
 	private getNextSctpStreamId(): number
@@ -1063,4 +1217,421 @@ export class Transport
 
 		throw new Error('no sctpStreamId available');
 	}
+}
+
+export function fbsSctpState2StcpState(fbsSctpState: FbsSctpState): SctpState
+{
+	switch (fbsSctpState)
+	{
+		case FbsSctpState.NEW:
+			return 'new';
+		case FbsSctpState.CONNECTING:
+			return 'connecting';
+		case FbsSctpState.CONNECTED:
+			return 'connected';
+		case FbsSctpState.FAILED:
+			return 'failed';
+		case FbsSctpState.CLOSED:
+			return 'closed';
+		default:
+			throw new TypeError(`invalid SctpState: ${fbsSctpState}`);
+	}
+}
+
+export function parseTuple(binary: FbsTransport.Tuple): TransportTuple
+{
+	return {
+		localIp    : binary.localIp()!,
+		localPort  : binary.localPort(),
+		remoteIp   : binary.remoteIp() ?? undefined,
+		remotePort : binary.remotePort(),
+		protocol   : binary.protocol()! as TransportProtocol
+	};
+}
+
+export function parseBaseTransportDump(
+	binary: FbsTransport.Dump
+): BaseTransportDump
+{
+	// Retrieve producerIds.
+	const producerIds = utils.parseVector<string>(binary, 'producerIds');
+	// Retrieve consumerIds.
+	const consumerIds = utils.parseVector<string>(binary, 'consumerIds');
+	// Retrieve map SSRC consumerId.
+	const mapSsrcConsumerId = utils.parseUint32StringVector(binary, 'mapSsrcConsumerId');
+	// Retrieve map RTX SSRC consumerId.
+	const mapRtxSsrcConsumerId = utils.parseUint32StringVector(binary, 'mapRtxSsrcConsumerId');
+	// Retrieve dataProducerIds.
+	const dataProducerIds = utils.parseVector<string>(binary, 'dataProducerIds');
+	// Retrieve dataConsumerIds.
+	const dataConsumerIds = utils.parseVector<string>(binary, 'dataConsumerIds');
+	// Retrieve recvRtpHeaderExtesions.
+	const recvRtpHeaderExtensions = utils.parseStringUint8Vector(binary, 'recvRtpHeaderExtensions');
+	// Retrieve RtpListener.
+	const rtpListener = parseRtpListenerDump(binary.rtpListener()!);
+
+	// Retrieve SctpParameters.
+	const fbsSctpParameters = binary.sctpParameters();
+	let sctpParameters: SctpParameters | undefined;
+
+	if (fbsSctpParameters)
+	{
+		sctpParameters = parseSctpParametersDump(fbsSctpParameters);
+	}
+
+	// Retrieve sctpState.
+	const sctpState = binary.sctpState() === '' ? undefined : binary.sctpState() as SctpState;
+
+	// Retrive sctpListener.
+	const sctpListener = binary.sctpListener() ?
+		parseSctpListenerDump(binary.sctpListener()!) :
+		undefined;
+
+	// Retrieve traceEventTypes.
+	const traceEventTypes = utils.parseVector<string>(binary, 'traceEventTypes');
+
+	return {
+		id                      : binary.id()!,
+		direct                  : binary.direct(),
+		producerIds             : producerIds,
+		consumerIds             : consumerIds,
+		mapSsrcConsumerId       : mapSsrcConsumerId,
+		mapRtxSsrcConsumerId    : mapRtxSsrcConsumerId,
+		dataProducerIds         : dataProducerIds,
+		dataConsumerIds         : dataConsumerIds,
+		recvRtpHeaderExtensions : recvRtpHeaderExtensions,
+		rtpListener             : rtpListener,
+		maxMessageSize          : binary.maxMessageSize(),
+		sctpParameters          : sctpParameters,
+		sctpState               : sctpState,
+		sctpListener            : sctpListener,
+		traceEventTypes         : traceEventTypes
+	};
+}
+
+export function parseBaseTransportStats(
+	binary: FbsTransport.Stats
+): BaseTransportStats
+{
+	const sctpState = binary.sctpState() === '' ? undefined : binary.sctpState() as SctpState;
+
+	return {
+		transportId              : binary.transportId()!,
+		timestamp                : Number(binary.timestamp()),
+		sctpState,
+		bytesReceived            : Number(binary.bytesReceived()),
+		recvBitrate              : Number(binary.recvBitrate()),
+		bytesSent                : Number(binary.bytesSent()),
+		sendBitrate              : Number(binary.sendBitrate()),
+		rtpBytesReceived         : Number(binary.rtpBytesReceived()),
+		rtpRecvBitrate           : Number(binary.rtpRecvBitrate()),
+		rtpBytesSent             : Number(binary.rtpBytesSent()),
+		rtpSendBitrate           : Number(binary.rtpSendBitrate()),
+		rtxBytesReceived         : Number(binary.rtxBytesReceived()),
+		rtxRecvBitrate           : Number(binary.rtxRecvBitrate()),
+		rtxBytesSent             : Number(binary.rtxBytesSent()),
+		rtxSendBitrate           : Number(binary.rtxSendBitrate()),
+		probationBytesSent       : Number(binary.probationBytesSent()),
+		probationSendBitrate     : Number(binary.probationSendBitrate()),
+		availableOutgoingBitrate : Number(binary.availableOutgoingBitrate()),
+		availableIncomingBitrate : Number(binary.availableIncomingBitrate()),
+		maxIncomingBitrate       : binary.maxIncomingBitrate() ?
+			Number(binary.maxIncomingBitrate()) :
+			undefined
+	};
+}
+
+export function parseTransportTraceEventData(
+	trace: FbsTransport.TraceNotification
+): TransportTraceEventData
+{
+	switch (trace.type())
+	{
+		case FbsTransport.TraceType.BWE:
+		{
+			const info = new FbsTransport.BweTraceInfo();
+
+			trace.info(info);
+
+			return {
+				type      : 'bwe',
+				timestamp : Number(trace.timestamp()),
+				direction : trace.direction() === FbsTransport.TraceDirection.DIRECTION_IN ? 'in' : 'out',
+				info      : parseBweTraceInfo(info!)
+			};
+		}
+
+		case FbsTransport.TraceType.PROBATION:
+		{
+			return {
+				type      : 'probation',
+				timestamp : Number(trace.timestamp()),
+				direction : trace.direction() === FbsTransport.TraceDirection.DIRECTION_IN ? 'in' : 'out',
+				info      : {}
+			};
+		}
+	}
+}
+
+function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo):
+{
+  desiredBitrate:number;
+  effectiveDesiredBitrate:number;
+  minBitrate:number;
+  maxBitrate:number;
+  startBitrate:number;
+  maxPaddingBitrate:number;
+  availableBitrate:number;
+  bweType:'transport-cc' | 'remb';
+}
+{
+	return {
+		desiredBitrate          : binary.desiredBitrate(),
+		effectiveDesiredBitrate : binary.effectiveDesiredBitrate(),
+		minBitrate              : binary.minBitrate(),
+		maxBitrate              : binary.maxBitrate(),
+		startBitrate            : binary.startBitrate(),
+		maxPaddingBitrate       : binary.maxPaddingBitrate(),
+		availableBitrate        : binary.availableBitrate(),
+		bweType                 : binary.bweType() === FbsTransport.BweType.TRANSPORT_CC ?
+			'transport-cc' :
+			'remb'
+	};
+}
+
+function createConsumeRequest({
+	builder,
+	producer,
+	consumerId,
+	rtpParameters,
+	paused,
+	preferredLayers,
+	ignoreDtx,
+	pipe
+} : {
+	builder: flatbuffers.Builder;
+	producer: Producer;
+	consumerId: string;
+	rtpParameters: RtpParameters;
+	paused: boolean;
+	preferredLayers?: ConsumerLayers;
+	ignoreDtx?: boolean;
+	pipe: boolean;
+}): number
+{
+	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
+	const consumerIdOffset = builder.createString(consumerId);
+	const producerIdOffset = builder.createString(producer.id);
+	let consumableRtpEncodingsOffset: number | undefined;
+	let preferredLayersOffset: number | undefined;
+
+	if (producer.consumableRtpParameters.encodings)
+	{
+		consumableRtpEncodingsOffset = serializeRtpEncodingParameters(
+			builder, producer.consumableRtpParameters.encodings
+		);
+	}
+
+	if (preferredLayers)
+	{
+		FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
+		FbsConsumer.ConsumerLayers.addSpatialLayer(builder, preferredLayers.spatialLayer);
+
+		if (preferredLayers.temporalLayer !== undefined)
+		{
+			FbsConsumer.ConsumerLayers.addTemporalLayer(
+				builder, preferredLayers.temporalLayer
+			);
+		}
+
+		preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
+	}
+
+	const ConsumeRequest = FbsTransport.ConsumeRequest;
+
+	// Create Consume Request.
+	ConsumeRequest.startConsumeRequest(builder);
+	ConsumeRequest.addConsumerId(builder, consumerIdOffset);
+	ConsumeRequest.addProducerId(builder, producerIdOffset);
+	ConsumeRequest.addKind(
+		builder, producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
+	ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
+	ConsumeRequest.addType(
+		builder,
+		utils.getRtpParametersType(producer.type, pipe)
+	);
+
+	if (consumableRtpEncodingsOffset)
+	{
+		ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
+	}
+
+	ConsumeRequest.addPaused(builder, paused);
+
+	if (preferredLayersOffset)
+	{
+		ConsumeRequest.addPreferredLayers(builder, preferredLayersOffset);
+	}
+
+	ConsumeRequest.addIgnoreDtx(builder, Boolean(ignoreDtx));
+
+	return ConsumeRequest.endConsumeRequest(builder);
+}
+
+function createProduceRequest({
+	builder,
+	producerId,
+	kind,
+	rtpParameters,
+	rtpMapping,
+	keyFrameRequestDelay,
+	paused
+} : {
+	builder : flatbuffers.Builder;
+	producerId: string;
+	kind: MediaKind;
+	rtpParameters: RtpParameters;
+	rtpMapping: ortc.RtpMapping;
+	keyFrameRequestDelay?: number;
+	paused: boolean;
+}): number
+{
+	const producerIdOffset = builder.createString(producerId);
+	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
+	const rtpMappingOffset = ortc.serializeRtpMapping(builder, rtpMapping);
+
+	FbsTransport.ProduceRequest.startProduceRequest(builder);
+	FbsTransport.ProduceRequest.addProducerId(builder, producerIdOffset);
+	FbsTransport.ProduceRequest.addKind(
+		builder, kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
+	FbsTransport.ProduceRequest.addRtpParameters(builder, rtpParametersOffset);
+	FbsTransport.ProduceRequest.addRtpMapping(builder, rtpMappingOffset);
+	FbsTransport.ProduceRequest.addKeyFrameRequestDelay(builder, keyFrameRequestDelay ?? 0);
+	FbsTransport.ProduceRequest.addPaused(builder, paused);
+
+	return FbsTransport.ProduceRequest.endProduceRequest(builder);
+}
+
+function createProduceDataRequest({
+	builder,
+	dataProducerId,
+	type,
+	sctpStreamParameters,
+	label,
+	protocol
+} : {
+	builder : flatbuffers.Builder;
+	dataProducerId: string;
+	type: DataProducerType;
+	sctpStreamParameters?: SctpStreamParameters;
+	label: string;
+	protocol: string;
+}): number
+{
+	const dataProducerIdOffset = builder.createString(dataProducerId);
+	const typeOffset = builder.createString(type);
+	const labelOffset = builder.createString(label);
+	const protocolOffset = builder.createString(protocol);
+
+	let sctpStreamParametersOffset = 0;
+
+	if (sctpStreamParameters)
+	{
+		sctpStreamParametersOffset = serializeSctpStreamParameters(
+			builder, sctpStreamParameters
+		);
+	}
+
+	FbsTransport.ProduceDataRequest.startProduceDataRequest(builder);
+	FbsTransport.ProduceDataRequest.addDataProducerId(builder, dataProducerIdOffset);
+	FbsTransport.ProduceDataRequest.addType(builder, typeOffset);
+
+	if (sctpStreamParametersOffset)
+	{
+		FbsTransport.ProduceDataRequest.addSctpStreamParameters(
+			builder, sctpStreamParametersOffset
+		);
+	}
+
+	FbsTransport.ProduceDataRequest.addLabel(builder, labelOffset);
+	FbsTransport.ProduceDataRequest.addProtocol(builder, protocolOffset);
+
+	return FbsTransport.ProduceDataRequest.endProduceDataRequest(builder);
+}
+
+function createConsumeDataRequest({
+	builder,
+	dataConsumerId,
+	dataProducerId,
+	type,
+	sctpStreamParameters,
+	label,
+	protocol
+} : {
+	builder : flatbuffers.Builder;
+	dataConsumerId: string;
+	dataProducerId: string;
+	type: DataConsumerType;
+	sctpStreamParameters?: SctpStreamParameters;
+	label: string;
+	protocol: string;
+}): number
+{
+	const dataConsumerIdOffset = builder.createString(dataConsumerId);
+	const dataProducerIdOffset = builder.createString(dataProducerId);
+	const typeOffset = builder.createString(type);
+	const labelOffset = builder.createString(label);
+	const protocolOffset = builder.createString(protocol);
+
+	let sctpStreamParametersOffset = 0;
+
+	if (sctpStreamParameters)
+	{
+		sctpStreamParametersOffset = serializeSctpStreamParameters(
+			builder, sctpStreamParameters
+		);
+	}
+
+	FbsTransport.ConsumeDataRequest.startConsumeDataRequest(builder);
+	FbsTransport.ConsumeDataRequest.addDataConsumerId(builder, dataConsumerIdOffset);
+	FbsTransport.ConsumeDataRequest.addDataProducerId(builder, dataProducerIdOffset);
+	FbsTransport.ConsumeDataRequest.addType(builder, typeOffset);
+
+	if (sctpStreamParametersOffset)
+	{
+		FbsTransport.ConsumeDataRequest.addSctpStreamParameters(
+			builder, sctpStreamParametersOffset
+		);
+	}
+
+	FbsTransport.ConsumeDataRequest.addLabel(builder, labelOffset);
+	FbsTransport.ConsumeDataRequest.addProtocol(builder, protocolOffset);
+
+	return FbsTransport.ConsumeDataRequest.endConsumeDataRequest(builder);
+}
+
+function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump
+{
+	// Retrieve ssrcTable.
+	const ssrcTable = utils.parseUint32StringVector(binary, 'ssrcTable');
+	// Retrieve midTable.
+	const midTable = utils.parseUint32StringVector(binary, 'midTable');
+	// Retrieve ridTable.
+	const ridTable = utils.parseUint32StringVector(binary, 'ridTable');
+
+	return {
+		ssrcTable,
+		midTable,
+		ridTable
+	};
+}
+
+function parseSctpListenerDump(binary: FbsTransport.SctpListener): SctpListenerDump
+{
+	// Retrieve streamIdTable.
+	const streamIdTable = utils.parseUint32StringVector(binary, 'streamIdTable');
+
+	return {
+		streamIdTable
+	};
 }

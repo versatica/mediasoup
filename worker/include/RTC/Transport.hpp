@@ -4,10 +4,10 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "PayloadChannel/PayloadChannelNotification.hpp"
-#include "PayloadChannel/PayloadChannelRequest.hpp"
+#include "FBS/transport_generated.h"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -29,10 +29,7 @@
 #include "RTC/TransportCongestionControlServer.hpp"
 #include "handles/Timer.hpp"
 #include <absl/container/flat_hash_map.h>
-#include <nlohmann/json.hpp>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -44,8 +41,7 @@ namespace RTC
 	                  public RTC::TransportCongestionControlClient::Listener,
 	                  public RTC::TransportCongestionControlServer::Listener,
 	                  public Channel::ChannelSocket::RequestHandler,
-	                  public PayloadChannel::PayloadChannelSocket::RequestHandler,
-	                  public PayloadChannel::PayloadChannelSocket::NotificationHandler,
+	                  public Channel::ChannelSocket::NotificationHandler,
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 	                  public RTC::SenderBandwidthEstimator::Listener,
 #endif
@@ -87,7 +83,7 @@ namespace RTC
 			  uint32_t mappedSsrc,
 			  uint8_t& worstRemoteFractionLost) = 0;
 			virtual void OnTransportNewConsumer(
-			  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) = 0;
+			  RTC::Transport* transport, RTC::Consumer* consumer, const std::string& producerId) = 0;
 			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
 			virtual void OnTransportConsumerProducerClosed(
 			  RTC::Transport* transport, RTC::Consumer* consumer) = 0;
@@ -120,27 +116,27 @@ namespace RTC
 		};
 
 	public:
-		Transport(RTC::Shared* shared, const std::string& id, Listener* listener, json& data);
+		Transport(
+		  RTC::Shared* shared,
+		  const std::string& id,
+		  RTC::Transport::Listener* listener,
+		  const FBS::Transport::Options* options);
 		virtual ~Transport();
 
 	public:
 		void CloseProducersAndConsumers();
 		void ListenServerClosed();
 		// Subclasses must also invoke the parent Close().
-		virtual void FillJson(json& jsonObject) const;
-		virtual void FillJsonStats(json& jsonArray);
+		flatbuffers::Offset<FBS::Transport::Stats> FillBufferStats(flatbuffers::FlatBufferBuilder& builder);
+		flatbuffers::Offset<FBS::Transport::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
-		/* Methods inherited from PayloadChannel::PayloadChannelSocket::RequestHandler. */
+		/* Methods inherited from Channel::ChannelSocket::NotificationHandler. */
 	public:
-		void HandleRequest(PayloadChannel::PayloadChannelRequest* request) override;
-
-		/* Methods inherited from PayloadChannel::PayloadChannelSocket::NotificationHandler. */
-	public:
-		void HandleNotification(PayloadChannel::PayloadChannelNotification* notification) override;
+		void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	protected:
 		// Must be called from the subclass.
@@ -157,16 +153,12 @@ namespace RTC
 		void ReceiveRtpPacket(RTC::RtpPacket* packet);
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
-		void SetNewProducerIdFromData(json& data, std::string& producerId) const;
-		RTC::Producer* GetProducerFromData(json& data) const;
-		void SetNewConsumerIdFromData(json& data, std::string& consumerId) const;
-		RTC::Consumer* GetConsumerFromData(json& data) const;
+		RTC::Producer* GetProducerById(const std::string& producerId) const;
+		RTC::Consumer* GetConsumerById(const std::string& consumerId) const;
 		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
 		RTC::Consumer* GetConsumerByRtxSsrc(uint32_t ssrc) const;
-		void SetNewDataProducerIdFromData(json& data, std::string& dataProducerId) const;
-		RTC::DataProducer* GetDataProducerFromData(json& data) const;
-		void SetNewDataConsumerIdFromData(json& data, std::string& dataConsumerId) const;
-		RTC::DataConsumer* GetDataConsumerFromData(json& data) const;
+		RTC::DataProducer* GetDataProducerById(const std::string& dataProducerId) const;
+		RTC::DataConsumer* GetDataConsumerById(const std::string& dataConsumerId) const;
 
 	private:
 		virtual bool IsConnected() const = 0;
@@ -189,6 +181,9 @@ namespace RTC
 		void ComputeOutgoingDesiredBitrate(bool forceBitrate = false);
 		void EmitTraceEventProbationType(RTC::RtpPacket* packet) const;
 		void EmitTraceEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const;
+		void CheckNoProducer(const std::string& producerId) const;
+		void CheckNoDataProducer(const std::string& dataProducerId) const;
+		void CheckNoDataConsumer(const std::string& dataConsumerId) const;
 
 		/* Pure virtual methods inherited from RTC::Producer::Listener. */
 	public:
@@ -313,7 +308,7 @@ namespace RTC
 		std::shared_ptr<RTC::SenderBandwidthEstimator> senderBwe{ nullptr };
 #endif
 		// Others.
-		bool direct{ false }; // Whether this Transport allows PayloadChannel comm.
+		bool direct{ false }; // Whether this Transport allows direct communication.
 		bool destroying{ false };
 		struct RTC::RtpHeaderExtensionIds recvRtpHeaderExtensionIds;
 		RTC::RtpListener rtpListener;

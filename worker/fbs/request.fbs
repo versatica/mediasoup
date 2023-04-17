@@ -1,0 +1,122 @@
+include "worker.fbs";
+include "router.fbs";
+include "transport.fbs";
+include "producer.fbs";
+include "consumer.fbs";
+include "dataConsumer.fbs";
+include "rtpObserver.fbs";
+
+namespace FBS.Request;
+
+enum Method: uint8 {
+  WORKER_CLOSE = 0,
+  WORKER_DUMP,
+  WORKER_GET_RESOURCE_USAGE,
+  WORKER_UPDATE_SETTINGS,
+  WORKER_CREATE_WEBRTC_SERVER,
+  WORKER_CREATE_ROUTER,
+  WORKER_WEBRTC_SERVER_CLOSE,
+  WORKER_CLOSE_ROUTER,
+  WEBRTC_SERVER_DUMP,
+  ROUTER_DUMP,
+  ROUTER_CREATE_WEBRTC_TRANSPORT,
+  ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER,
+  ROUTER_CREATE_PLAIN_TRANSPORT,
+  ROUTER_CREATE_PIPE_TRANSPORT,
+  ROUTER_CREATE_DIRECT_TRANSPORT,
+  ROUTER_CLOSE_TRANSPORT,
+  ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER,
+  ROUTER_CREATE_AUDIO_LEVEL_OBSERVER,
+  ROUTER_CLOSE_RTP_OBSERVER,
+  TRANSPORT_DUMP,
+  TRANSPORT_GET_STATS,
+  TRANSPORT_CONNECT,
+  TRANSPORT_SET_MAX_INCOMING_BITRATE,
+  TRANSPORT_SET_MAX_OUTGOING_BITRATE,
+  TRANSPORT_SET_MIN_OUTGOING_BITRATE,
+  TRANSPORT_RESTART_ICE,
+  TRANSPORT_PRODUCE,
+  TRANSPORT_PRODUCE_DATA,
+  TRANSPORT_CONSUME,
+  TRANSPORT_CONSUME_DATA,
+  TRANSPORT_ENABLE_TRACE_EVENT,
+  TRANSPORT_CLOSE_PRODUCER,
+  TRANSPORT_CLOSE_CONSUMER,
+  TRANSPORT_CLOSE_DATA_PRODUCER,
+  TRANSPORT_CLOSE_DATA_CONSUMER,
+  PLAIN_TRANSPORT_CONNECT,
+  PIPE_TRANSPORT_CONNECT,
+  WEBRTC_TRANSPORT_CONNECT,
+  PRODUCER_DUMP,
+  PRODUCER_GET_STATS,
+  PRODUCER_PAUSE,
+  PRODUCER_RESUME,
+  PRODUCER_ENABLE_TRACE_EVENT,
+  CONSUMER_DUMP,
+  CONSUMER_GET_STATS,
+  CONSUMER_PAUSE,
+  CONSUMER_RESUME,
+  CONSUMER_SET_PREFERRED_LAYERS,
+  CONSUMER_SET_PRIORITY,
+  CONSUMER_REQUEST_KEY_FRAME,
+  CONSUMER_ENABLE_TRACE_EVENT,
+  DATA_PRODUCER_DUMP,
+  DATA_PRODUCER_GET_STATS,
+  DATA_CONSUMER_DUMP,
+  DATA_CONSUMER_GET_STATS,
+  DATA_CONSUMER_GET_BUFFERED_AMOUNT,
+  DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
+  DATA_CONSUMER_SEND,
+  RTP_OBSERVER_PAUSE,
+  RTP_OBSERVER_RESUME,
+  RTP_OBSERVER_ADD_PRODUCER,
+  RTP_OBSERVER_REMOVE_PRODUCER,
+}
+
+union Body {
+  FBS.Worker.UpdateSettingsRequest,
+  FBS.Worker.CreateWebRtcServerRequest,
+  FBS.Worker.CloseWebRtcServerRequest,
+  FBS.Worker.CreateRouterRequest,
+  FBS.Worker.CloseRouterRequest,
+  FBS.Router.CreateWebRtcTransportRequest,
+  FBS.Router.CreatePlainTransportRequest,
+  FBS.Router.CreatePipeTransportRequest,
+  FBS.Router.CreateDirectTransportRequest,
+  FBS.Router.CreateActiveSpeakerObserverRequest,
+  FBS.Router.CreateAudioLevelObserverRequest,
+  FBS.Router.CloseTransportRequest,
+  FBS.Router.CloseRtpObserverRequest,
+  FBS.Transport.SetMaxIncomingBitrateRequest,
+  FBS.Transport.SetMaxOutgoingBitrateRequest,
+  FBS.Transport.SetMinOutgoingBitrateRequest,
+  FBS.Transport.ProduceRequest,
+  FBS.Transport.ConsumeRequest,
+  FBS.Transport.ProduceDataRequest,
+  FBS.Transport.ConsumeDataRequest,
+  FBS.Transport.EnableTraceEventRequest,
+  FBS.Transport.CloseProducerRequest,
+  FBS.Transport.CloseConsumerRequest,
+  FBS.Transport.CloseDataProducerRequest,
+  FBS.Transport.CloseDataConsumerRequest,
+  FBS.PlainTransport.ConnectRequest,
+  FBS.PipeTransport.ConnectRequest,
+  FBS.WebRtcTransport.ConnectRequest,
+  FBS.Producer.EnableTraceEventRequest,
+  FBS.Consumer.SetPreferredLayersRequest,
+  FBS.Consumer.SetPriorityRequest,
+  FBS.Consumer.EnableTraceEventRequest,
+  FBS.DataConsumer.SetBufferedAmountLowThresholdRequest,
+  FBS.DataConsumer.SendRequest,
+  FBS.RtpObserver.AddProducerRequest,
+  FBS.RtpObserver.RemoveProducerRequest,
+}
+
+table Request {
+  id:uint32;
+  method:Method;
+  handler_id:string;
+  body:Body;
+}
+
+root_type Request;

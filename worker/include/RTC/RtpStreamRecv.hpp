@@ -49,7 +49,8 @@ namespace RTC
 		  bool useRtpInactivityCheck);
 		~RtpStreamRecv();
 
-		void FillJsonStats(json& jsonObject) override;
+		flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder) override;
 		bool ReceivePacket(RTC::RtpPacket* packet);
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();

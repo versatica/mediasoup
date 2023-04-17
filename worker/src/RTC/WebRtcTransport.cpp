@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "FBS/webRtcTransport_generated.h"
 #include <cmath> // std::pow()
 
 namespace RTC
@@ -28,169 +29,91 @@ namespace RTC
 	/* Instance methods. */
 
 	WebRtcTransport::WebRtcTransport(
-	  RTC::Shared* shared, const std::string& id, RTC::Transport::Listener* listener, json& data)
-	  : RTC::Transport::Transport(shared, id, listener, data)
+	  RTC::Shared* shared,
+	  const std::string& id,
+	  RTC::Transport::Listener* listener,
+	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
+	  : RTC::Transport::Transport(shared, id, listener, options->base())
 	{
 		MS_TRACE();
 
-		bool enableUdp{ true };
-		auto jsonEnableUdpIt = data.find("enableUdp");
-
-		if (jsonEnableUdpIt != data.end())
-		{
-			if (!jsonEnableUdpIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong enableUdp (not a boolean)");
-
-			enableUdp = jsonEnableUdpIt->get<bool>();
-		}
-
-		bool enableTcp{ false };
-		auto jsonEnableTcpIt = data.find("enableTcp");
-
-		if (jsonEnableTcpIt != data.end())
-		{
-			if (!jsonEnableTcpIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong enableTcp (not a boolean)");
-
-			enableTcp = jsonEnableTcpIt->get<bool>();
-		}
-
-		bool preferUdp{ false };
-		auto jsonPreferUdpIt = data.find("preferUdp");
-
-		if (jsonPreferUdpIt != data.end())
-		{
-			if (!jsonPreferUdpIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong preferUdp (not a boolean)");
-
-			preferUdp = jsonPreferUdpIt->get<bool>();
-		}
-
-		bool preferTcp{ false };
-		auto jsonPreferTcpIt = data.find("preferTcp");
-
-		if (jsonPreferTcpIt != data.end())
-		{
-			if (!jsonPreferTcpIt->is_boolean())
-				MS_THROW_TYPE_ERROR("wrong preferTcp (not a boolean)");
-
-			preferTcp = jsonPreferTcpIt->get<bool>();
-		}
-
-		auto jsonListenIpsIt = data.find("listenIps");
-
-		if (jsonListenIpsIt == data.end())
-			MS_THROW_TYPE_ERROR("missing listenIps");
-		else if (!jsonListenIpsIt->is_array())
-			MS_THROW_TYPE_ERROR("wrong listenIps (not an array)");
-		else if (jsonListenIpsIt->empty())
-			MS_THROW_TYPE_ERROR("wrong listenIps (empty array)");
-		else if (jsonListenIpsIt->size() > 8)
-			MS_THROW_TYPE_ERROR("wrong listenIps (too many IPs)");
-
-		std::vector<ListenIp> listenIps(jsonListenIpsIt->size());
-
-		for (size_t i{ 0 }; i < jsonListenIpsIt->size(); ++i)
-		{
-			auto& jsonListenIp = (*jsonListenIpsIt)[i];
-			auto& listenIp     = listenIps[i];
-
-			if (!jsonListenIp.is_object())
-				MS_THROW_TYPE_ERROR("wrong listenIp (not an object)");
-
-			auto jsonIpIt = jsonListenIp.find("ip");
-
-			if (jsonIpIt == jsonListenIp.end())
-				MS_THROW_TYPE_ERROR("missing listenIp.ip");
-			else if (!jsonIpIt->is_string())
-				MS_THROW_TYPE_ERROR("wrong listenIp.ip (not an string");
-
-			listenIp.ip.assign(jsonIpIt->get<std::string>());
-
-			// This may throw.
-			Utils::IP::NormalizeIp(listenIp.ip);
-
-			auto jsonAnnouncedIpIt = jsonListenIp.find("announcedIp");
-
-			if (jsonAnnouncedIpIt != jsonListenIp.end())
-			{
-				if (!jsonAnnouncedIpIt->is_string())
-					MS_THROW_TYPE_ERROR("wrong listenIp.announcedIp (not an string)");
-
-				listenIp.announcedIp.assign(jsonAnnouncedIpIt->get<std::string>());
-			}
-		}
-
-		uint16_t port{ 0 };
-		auto jsonPortIt = data.find("port");
-
-		if (jsonPortIt != data.end())
-		{
-			if (!(jsonPortIt->is_number() && Utils::Json::IsPositiveInteger(*jsonPortIt)))
-				MS_THROW_TYPE_ERROR("wrong port (not a positive number)");
-
-			port = jsonPortIt->get<uint16_t>();
-		}
+		const auto* listenInfo = options->listen_as<FBS::WebRtcTransport::ListenIndividual>();
+		const auto* listenIps  = listenInfo->listenIps();
 
 		try
 		{
 			uint16_t iceLocalPreferenceDecrement{ 0 };
 
-			if (enableUdp && enableTcp)
-				this->iceCandidates.reserve(2 * jsonListenIpsIt->size());
+			if (options->enableUdp() && options->enableTcp())
+				this->iceCandidates.reserve(2 * listenIps->size());
 			else
-				this->iceCandidates.reserve(jsonListenIpsIt->size());
+				this->iceCandidates.reserve(listenIps->size());
 
-			for (auto& listenIp : listenIps)
+			for (const auto* listenIp : *listenIps)
 			{
-				if (enableUdp)
+				auto ip = listenIp->ip()->str();
+
+				// This may throw.
+				Utils::IP::NormalizeIp(ip);
+
+				if (options->enableUdp())
 				{
 					uint16_t iceLocalPreference =
 					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
 
-					if (preferUdp)
+					if (options->preferUdp())
 						iceLocalPreference += 1000;
 
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 					// This may throw.
 					RTC::UdpSocket* udpSocket;
-					if (port != 0)
-						udpSocket = new RTC::UdpSocket(this, listenIp.ip, port);
+					if (listenInfo->port() != 0)
+						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port());
 					else
-						udpSocket = new RTC::UdpSocket(this, listenIp.ip);
+						udpSocket = new RTC::UdpSocket(this, ip);
 
-					this->udpSockets[udpSocket] = listenIp.announcedIp;
+					std::string announcedIp;
 
-					if (listenIp.announcedIp.empty())
+					if (flatbuffers::IsFieldPresent(listenIp, FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
+						announcedIp = listenIp->announcedIp()->str();
+
+					this->udpSockets[udpSocket] = announcedIp;
+
+					if (announcedIp.size() == 0)
 						this->iceCandidates.emplace_back(udpSocket, icePriority);
 					else
-						this->iceCandidates.emplace_back(udpSocket, icePriority, listenIp.announcedIp);
+						this->iceCandidates.emplace_back(udpSocket, icePriority, announcedIp);
 				}
 
-				if (enableTcp)
+				if (options->enableTcp())
 				{
 					uint16_t iceLocalPreference =
 					  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
 
-					if (preferTcp)
+					if (options->preferTcp())
 						iceLocalPreference += 1000;
 
-					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
+					const uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 					// This may throw.
 					RTC::TcpServer* tcpServer;
-					if (port != 0)
-						tcpServer = new RTC::TcpServer(this, this, listenIp.ip, port);
+					if (listenInfo->port() != 0)
+						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port());
 					else
-						tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
+						tcpServer = new RTC::TcpServer(this, this, ip);
 
-					this->tcpServers[tcpServer] = listenIp.announcedIp;
+					std::string announcedIp;
 
-					if (listenIp.announcedIp.empty())
+					if (flatbuffers::IsFieldPresent(listenIp, FBS::Transport::ListenIp::VT_ANNOUNCEDIP))
+						announcedIp = listenIp->announcedIp()->str();
+
+					this->tcpServers[tcpServer] = announcedIp;
+
+					if (announcedIp.size() == 0)
 						this->iceCandidates.emplace_back(tcpServer, icePriority);
 					else
-						this->iceCandidates.emplace_back(tcpServer, icePriority, listenIp.announcedIp);
+						this->iceCandidates.emplace_back(tcpServer, icePriority, announcedIp);
 				}
 
 				// Decrement initial ICE local preference for next IP.
@@ -208,8 +131,7 @@ namespace RTC
 			this->shared->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
-			  /*payloadChannelRequestHandler*/ this,
-			  /*payloadChannelNotificationHandler*/ this);
+			  /*channelNotificationHandler*/ this);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -252,8 +174,8 @@ namespace RTC
 	  RTC::Transport::Listener* listener,
 	  WebRtcTransportListener* webRtcTransportListener,
 	  std::vector<RTC::IceCandidate>& iceCandidates,
-	  json& data)
-	  : RTC::Transport::Transport(shared, id, listener, data),
+	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
+	  : RTC::Transport::Transport(shared, id, listener, options->base()),
 	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
 	{
 		MS_TRACE();
@@ -277,8 +199,7 @@ namespace RTC
 			this->shared->channelMessageRegistrator->RegisterHandler(
 			  this->id,
 			  /*channelRequestHandler*/ this,
-			  /*payloadChannelRequestHandler*/ this,
-			  /*payloadChannelNotificationHandler*/ this);
+			  /*channelNotificationHandler*/ this);
 		}
 		catch (const MediaSoupError& error)
 		{
@@ -339,250 +260,249 @@ namespace RTC
 			this->webRtcTransportListener->OnWebRtcTransportClosed(this);
 	}
 
-	void WebRtcTransport::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::WebRtcTransport::DumpResponse> WebRtcTransport::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Call the parent method.
-		RTC::Transport::FillJson(jsonObject);
-
-		// Add iceRole (we are always "controlled").
-		jsonObject["iceRole"] = "controlled";
-
 		// Add iceParameters.
-		jsonObject["iceParameters"] = json::object();
-		auto jsonIceParametersIt    = jsonObject.find("iceParameters");
+		auto iceParameters = FBS::WebRtcTransport::CreateIceParametersDirect(
+		  builder,
+		  this->iceServer->GetUsernameFragment().c_str(),
+		  this->iceServer->GetPassword().c_str(),
+		  true);
 
-		(*jsonIceParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
-		(*jsonIceParametersIt)["password"]         = this->iceServer->GetPassword();
-		(*jsonIceParametersIt)["iceLite"]          = true;
+		std::vector<flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate>> iceCandidates;
+		iceCandidates.reserve(this->iceCandidates.size());
 
-		// Add iceCandidates.
-		jsonObject["iceCandidates"] = json::array();
-		auto jsonIceCandidatesIt    = jsonObject.find("iceCandidates");
-
-		for (size_t i{ 0 }; i < this->iceCandidates.size(); ++i)
+		for (const auto& iceCandidate : this->iceCandidates)
 		{
-			jsonIceCandidatesIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry          = (*jsonIceCandidatesIt)[i];
-			const auto& iceCandidate = this->iceCandidates[i];
-
-			iceCandidate.FillJson(jsonEntry);
+			iceCandidates.emplace_back(iceCandidate.FillBuffer(builder));
 		}
 
 		// Add iceState.
+		std::string iceState;
+
 		switch (this->iceServer->GetState())
 		{
 			case RTC::IceServer::IceState::NEW:
-				jsonObject["iceState"] = "new";
+				iceState = "new";
 				break;
 			case RTC::IceServer::IceState::CONNECTED:
-				jsonObject["iceState"] = "connected";
+				iceState = "connected";
 				break;
 			case RTC::IceServer::IceState::COMPLETED:
-				jsonObject["iceState"] = "completed";
+				iceState = "completed";
 				break;
 			case RTC::IceServer::IceState::DISCONNECTED:
-				jsonObject["iceState"] = "disconnected";
+				iceState = "disconnected";
 				break;
 		}
 
 		// Add iceSelectedTuple.
-		if (this->iceServer->GetSelectedTuple())
-			this->iceServer->GetSelectedTuple()->FillJson(jsonObject["iceSelectedTuple"]);
+		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
 
-		// Add dtlsParameters.
-		jsonObject["dtlsParameters"] = json::object();
-		auto jsonDtlsParametersIt    = jsonObject.find("dtlsParameters");
+		if (this->iceServer->GetSelectedTuple())
+			iceSelectedTuple = this->iceServer->GetSelectedTuple()->FillBuffer(builder);
 
 		// Add dtlsParameters.fingerprints.
-		(*jsonDtlsParametersIt)["fingerprints"] = json::array();
-		auto jsonDtlsParametersFingerprintsIt   = jsonDtlsParametersIt->find("fingerprints");
-		auto& fingerprints                      = this->dtlsTransport->GetLocalFingerprints();
+		std::vector<flatbuffers::Offset<FBS::WebRtcTransport::Fingerprint>> fingerprints;
 
-		for (size_t i{ 0 }; i < fingerprints.size(); ++i)
+		for (const auto& fingerprint : this->dtlsTransport->GetLocalFingerprints())
 		{
-			jsonDtlsParametersFingerprintsIt->emplace_back(json::value_t::object);
+			auto& algorithm   = RTC::DtlsTransport::GetFingerprintAlgorithmString(fingerprint.algorithm);
+			const auto& value = fingerprint.value;
 
-			auto& jsonEntry   = (*jsonDtlsParametersFingerprintsIt)[i];
-			auto& fingerprint = fingerprints[i];
-
-			jsonEntry["algorithm"] =
-			  RTC::DtlsTransport::GetFingerprintAlgorithmString(fingerprint.algorithm);
-			jsonEntry["value"] = fingerprint.value;
+			fingerprints.emplace_back(
+			  FBS::WebRtcTransport::CreateFingerprintDirect(builder, algorithm.c_str(), value.c_str()));
 		}
 
 		// Add dtlsParameters.role.
+		std::string dtlsRole;
+
 		switch (this->dtlsRole)
 		{
 			case RTC::DtlsTransport::Role::NONE:
-				(*jsonDtlsParametersIt)["role"] = "none";
+				dtlsRole = "none";
 				break;
 			case RTC::DtlsTransport::Role::AUTO:
-				(*jsonDtlsParametersIt)["role"] = "auto";
+				dtlsRole = "auto";
 				break;
 			case RTC::DtlsTransport::Role::CLIENT:
-				(*jsonDtlsParametersIt)["role"] = "client";
+				dtlsRole = "client";
 				break;
 			case RTC::DtlsTransport::Role::SERVER:
-				(*jsonDtlsParametersIt)["role"] = "server";
+				dtlsRole = "server";
 				break;
 		}
 
 		// Add dtlsState.
+		std::string dtlsState;
+
 		switch (this->dtlsTransport->GetState())
 		{
 			case RTC::DtlsTransport::DtlsState::NEW:
-				jsonObject["dtlsState"] = "new";
+				dtlsState = "new";
 				break;
 			case RTC::DtlsTransport::DtlsState::CONNECTING:
-				jsonObject["dtlsState"] = "connecting";
+				dtlsState = "connecting";
 				break;
 			case RTC::DtlsTransport::DtlsState::CONNECTED:
-				jsonObject["dtlsState"] = "connected";
+				dtlsState = "connected";
 				break;
 			case RTC::DtlsTransport::DtlsState::FAILED:
-				jsonObject["dtlsState"] = "failed";
+				dtlsState = "failed";
 				break;
 			case RTC::DtlsTransport::DtlsState::CLOSED:
-				jsonObject["dtlsState"] = "closed";
+				dtlsState = "closed";
 				break;
 		}
+
+		// Add base transport dump.
+		auto base = Transport::FillBuffer(builder);
+		// Add dtlsParameters.
+		auto dtlsParameters =
+		  FBS::WebRtcTransport::CreateDtlsParametersDirect(builder, &fingerprints, dtlsRole.c_str());
+
+		return FBS::WebRtcTransport::CreateDumpResponseDirect(
+		  builder,
+		  base,
+		  // iceRole (we are always "controlled").
+		  "controlled",
+		  iceParameters,
+		  &iceCandidates,
+		  iceState.c_str(),
+		  iceSelectedTuple,
+		  dtlsParameters,
+		  dtlsState.c_str());
 	}
 
-	void WebRtcTransport::FillJsonStats(json& jsonArray)
+	flatbuffers::Offset<FBS::WebRtcTransport::GetStatsResponse> WebRtcTransport::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
-		// Call the parent method.
-		RTC::Transport::FillJsonStats(jsonArray);
-
-		auto& jsonObject = jsonArray[0];
-
-		// Add type.
-		jsonObject["type"] = "webrtc-transport";
-
-		// Add iceRole (we are always "controlled").
-		jsonObject["iceRole"] = "controlled";
-
 		// Add iceState.
+		std::string iceState;
+
 		switch (this->iceServer->GetState())
 		{
 			case RTC::IceServer::IceState::NEW:
-				jsonObject["iceState"] = "new";
+				iceState = "new";
 				break;
 			case RTC::IceServer::IceState::CONNECTED:
-				jsonObject["iceState"] = "connected";
+				iceState = "connected";
 				break;
 			case RTC::IceServer::IceState::COMPLETED:
-				jsonObject["iceState"] = "completed";
+				iceState = "completed";
 				break;
 			case RTC::IceServer::IceState::DISCONNECTED:
-				jsonObject["iceState"] = "disconnected";
+				iceState = "disconnected";
 				break;
 		}
 
+		// Add iceSelectedTuple.
+		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
+
 		if (this->iceServer->GetSelectedTuple())
-		{
-			// Add iceSelectedTuple.
-			this->iceServer->GetSelectedTuple()->FillJson(jsonObject["iceSelectedTuple"]);
-		}
+			iceSelectedTuple = this->iceServer->GetSelectedTuple()->FillBuffer(builder);
+
+		std::string dtlsState;
 
 		// Add dtlsState.
 		switch (this->dtlsTransport->GetState())
 		{
 			case RTC::DtlsTransport::DtlsState::NEW:
-				jsonObject["dtlsState"] = "new";
+				dtlsState = "new";
 				break;
 			case RTC::DtlsTransport::DtlsState::CONNECTING:
-				jsonObject["dtlsState"] = "connecting";
+				dtlsState = "connecting";
 				break;
 			case RTC::DtlsTransport::DtlsState::CONNECTED:
-				jsonObject["dtlsState"] = "connected";
+				dtlsState = "connected";
 				break;
 			case RTC::DtlsTransport::DtlsState::FAILED:
-				jsonObject["dtlsState"] = "failed";
+				dtlsState = "failed";
 				break;
 			case RTC::DtlsTransport::DtlsState::CLOSED:
-				jsonObject["dtlsState"] = "closed";
+				dtlsState = "closed";
 				break;
 		}
+
+		// Base Transport stats.
+		auto base = Transport::FillBufferStats(builder);
+
+		return FBS::WebRtcTransport::CreateGetStatsResponseDirect(
+		  builder,
+		  base,
+		  // iceRole (we are always "controlled").
+		  "controlled",
+		  iceState.c_str(),
+		  iceSelectedTuple,
+		  dtlsState.c_str());
 	}
 
 	void WebRtcTransport::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::Method::TRANSPORT_GET_STATS:
+			{
+				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_GetStatsResponse, responseOffset);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::TRANSPORT_DUMP:
+			{
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_DumpResponse, dumpOffset);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::WEBRTC_TRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->connectCalled)
 					MS_THROW_ERROR("connect() already called");
 
+				const auto* body           = request->data->body_as<FBS::WebRtcTransport::ConnectRequest>();
+				const auto* dtlsParameters = body->dtlsParameters();
+
 				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
 				RTC::DtlsTransport::Role dtlsRemoteRole;
 
-				auto jsonDtlsParametersIt = request->data.find("dtlsParameters");
-
-				if (jsonDtlsParametersIt == request->data.end() || !jsonDtlsParametersIt->is_object())
-					MS_THROW_TYPE_ERROR("missing dtlsParameters");
-
-				auto jsonFingerprintsIt = jsonDtlsParametersIt->find("fingerprints");
-
-				if (jsonFingerprintsIt == jsonDtlsParametersIt->end() || !jsonFingerprintsIt->is_array())
-				{
-					MS_THROW_TYPE_ERROR("missing dtlsParameters.fingerprints");
-				}
-				else if (jsonFingerprintsIt->empty())
+				if (dtlsParameters->fingerprints()->size() == 0)
 				{
 					MS_THROW_TYPE_ERROR("empty dtlsParameters.fingerprints array");
 				}
 
 				// NOTE: Just take the first fingerprint.
-				for (auto& jsonFingerprint : *jsonFingerprintsIt)
+				for (const auto& fingerprint : *dtlsParameters->fingerprints())
 				{
-					if (!jsonFingerprint.is_object())
-						MS_THROW_TYPE_ERROR("wrong entry in dtlsParameters.fingerprints (not an object)");
-
-					auto jsonAlgorithmIt = jsonFingerprint.find("algorithm");
-
-					if (jsonAlgorithmIt == jsonFingerprint.end())
-						MS_THROW_TYPE_ERROR("missing fingerprint.algorithm");
-					else if (!jsonAlgorithmIt->is_string())
-						MS_THROW_TYPE_ERROR("wrong fingerprint.algorithm (not a string)");
-
 					dtlsRemoteFingerprint.algorithm =
-					  RTC::DtlsTransport::GetFingerprintAlgorithm(jsonAlgorithmIt->get<std::string>());
+					  RTC::DtlsTransport::GetFingerprintAlgorithm(fingerprint->algorithm()->str());
 
 					if (dtlsRemoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
 					{
 						MS_THROW_TYPE_ERROR("invalid fingerprint.algorithm value");
 					}
 
-					auto jsonValueIt = jsonFingerprint.find("value");
-
-					if (jsonValueIt == jsonFingerprint.end())
-						MS_THROW_TYPE_ERROR("missing fingerprint.value");
-					else if (!jsonValueIt->is_string())
-						MS_THROW_TYPE_ERROR("wrong fingerprint.value (not a string)");
-
-					dtlsRemoteFingerprint.value = jsonValueIt->get<std::string>();
+					dtlsRemoteFingerprint.value = fingerprint->value()->str();
 
 					// Just use the first fingerprint.
 					break;
 				}
 
-				auto jsonRoleIt = jsonDtlsParametersIt->find("role");
-
-				if (jsonRoleIt != jsonDtlsParametersIt->end())
+				if (flatbuffers::IsFieldPresent(dtlsParameters, FBS::WebRtcTransport::DtlsParameters::VT_ROLE))
 				{
-					if (!jsonRoleIt->is_string())
-						MS_THROW_TYPE_ERROR("wrong dtlsParameters.role (not a string)");
-
-					dtlsRemoteRole = RTC::DtlsTransport::StringToRole(jsonRoleIt->get<std::string>());
+					dtlsRemoteRole = RTC::DtlsTransport::StringToRole(dtlsParameters->role()->str());
 
 					if (dtlsRemoteRole == RTC::DtlsTransport::Role::NONE)
 						MS_THROW_TYPE_ERROR("invalid dtlsParameters.role value");
@@ -625,28 +545,31 @@ namespace RTC
 				}
 
 				// Tell the caller about the selected local DTLS role.
-				json data = json::object();
+				std::string dtlsLocalRole;
 
 				switch (this->dtlsRole)
 				{
 					case RTC::DtlsTransport::Role::CLIENT:
-						data["dtlsLocalRole"] = "client";
+						dtlsLocalRole = "client";
 						break;
 
 					case RTC::DtlsTransport::Role::SERVER:
-						data["dtlsLocalRole"] = "server";
+						dtlsLocalRole = "server";
 						break;
 
 					default:
 						MS_ABORT("invalid local DTLS role");
 				}
 
-				request->Accept(data);
+				auto responseOffset = FBS::WebRtcTransport::CreateConnectResponseDirect(
+				  request->GetBufferBuilder(), dtlsLocalRole.c_str());
+
+				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_ConnectResponse, responseOffset);
 
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::TRANSPORT_RESTART_ICE:
+			case Channel::ChannelRequest::Method::TRANSPORT_RESTART_ICE:
 			{
 				const std::string usernameFragment = Utils::Crypto::GetRandomString(32);
 				const std::string password         = Utils::Crypto::GetRandomString(32);
@@ -657,16 +580,14 @@ namespace RTC
 				  "WebRtcTransport ICE usernameFragment and password changed [id:%s]", this->id.c_str());
 
 				// Reply with the updated ICE local parameters.
-				json data = json::object();
+				auto responseOffset = FBS::Transport::CreateRestartIceResponseDirect(
+				  request->GetBufferBuilder(),
+				  this->iceServer->GetUsernameFragment().c_str(),
+				  this->iceServer->GetPassword().c_str(),
+				  true /* iceLite */
+				);
 
-				data["iceParameters"]    = json::object();
-				auto jsonIceParametersIt = data.find("iceParameters");
-
-				(*jsonIceParametersIt)["usernameFragment"] = this->iceServer->GetUsernameFragment();
-				(*jsonIceParametersIt)["password"]         = this->iceServer->GetPassword();
-				(*jsonIceParametersIt)["iceLite"]          = true;
-
-				request->Accept(data);
+				request->Accept(FBS::Response::Body::FBS_Transport_RestartIceResponse, responseOffset);
 
 				break;
 			}
@@ -679,7 +600,7 @@ namespace RTC
 		}
 	}
 
-	void WebRtcTransport::HandleNotification(PayloadChannel::PayloadChannelNotification* notification)
+	void WebRtcTransport::HandleNotification(Channel::ChannelNotification* notification)
 	{
 		MS_TRACE();
 
@@ -1300,11 +1221,17 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE selected tuple");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto tuple = this->iceServer->GetSelectedTuple()->FillBuffer(
+		  this->shared->channelNotifier->GetBufferBuilder());
 
-		this->iceServer->GetSelectedTuple()->FillJson(data["iceSelectedTuple"]);
+		auto notification = FBS::WebRtcTransport::CreateIceSelectedTupleChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), tuple);
 
-		this->shared->channelNotifier->Emit(this->id, "iceselectedtuplechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_IceSelectedTupleChangeNotification,
+		  notification);
 	}
 
 	inline void WebRtcTransport::OnIceServerConnected(const RTC::IceServer* /*iceServer*/)
@@ -1314,11 +1241,14 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE connected");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::IceState::CONNECTED);
 
-		data["iceState"] = "connected";
-
-		this->shared->channelNotifier->Emit(this->id, "icestatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_IceStateChangeNotification,
+		  iceStateChangeOffset);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1337,11 +1267,14 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE completed");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::IceState::COMPLETED);
 
-		data["iceState"] = "completed";
-
-		this->shared->channelNotifier->Emit(this->id, "icestatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_IceStateChangeNotification,
+		  iceStateChangeOffset);
 
 		// If ready, run the DTLS handler.
 		MayRunDtlsTransport();
@@ -1360,11 +1293,15 @@ namespace RTC
 		MS_DEBUG_TAG(ice, "ICE disconnected");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto iceStateChangeOffset = FBS::WebRtcTransport::CreateIceStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::WebRtcTransport::IceState::DISCONNECTED);
 
-		data["iceState"] = "disconnected";
-
-		this->shared->channelNotifier->Emit(this->id, "icestatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_IceStateChangeNotification,
+		  iceStateChangeOffset);
 
 		// If DTLS was already connected, notify the parent class.
 		if (this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED)
@@ -1380,11 +1317,14 @@ namespace RTC
 		MS_DEBUG_TAG(dtls, "DTLS connecting");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::DtlsState::CONNECTING);
 
-		data["dtlsState"] = "connecting";
-
-		this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+		  dtlsStateChangeOffset);
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportConnected(
@@ -1423,12 +1363,16 @@ namespace RTC
 			  RTC::SrtpSession::Type::INBOUND, srtpCryptoSuite, srtpRemoteKey, srtpRemoteKeyLen);
 
 			// Notify the Node WebRtcTransport.
-			json data = json::object();
+			auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotificationDirect(
+			  this->shared->channelNotifier->GetBufferBuilder(),
+			  FBS::WebRtcTransport::DtlsState::CONNECTED,
+			  remoteCert.c_str());
 
-			data["dtlsState"]      = "connected";
-			data["dtlsRemoteCert"] = remoteCert;
-
-			this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
+			this->shared->channelNotifier->Emit(
+			  this->id,
+			  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
+			  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+			  dtlsStateChangeOffset);
 
 			// Tell the parent class.
 			RTC::Transport::Connected();
@@ -1449,11 +1393,14 @@ namespace RTC
 		MS_WARN_TAG(dtls, "DTLS failed");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::DtlsState::FAILED);
 
-		data["dtlsState"] = "failed";
-
-		this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+		  dtlsStateChangeOffset);
 	}
 
 	inline void WebRtcTransport::OnDtlsTransportClosed(const RTC::DtlsTransport* /*dtlsTransport*/)
@@ -1463,11 +1410,14 @@ namespace RTC
 		MS_WARN_TAG(dtls, "DTLS remotely closed");
 
 		// Notify the Node WebRtcTransport.
-		json data = json::object();
+		auto dtlsStateChangeOffset = FBS::WebRtcTransport::CreateDtlsStateChangeNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(), FBS::WebRtcTransport::DtlsState::CLOSED);
 
-		data["dtlsState"] = "closed";
-
-		this->shared->channelNotifier->Emit(this->id, "dtlsstatechange", data);
+		this->shared->channelNotifier->Emit(
+		  this->id,
+		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
+		  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+		  dtlsStateChangeOffset);
 
 		// Tell the parent class.
 		RTC::Transport::Disconnected();

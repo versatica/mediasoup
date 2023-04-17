@@ -15,7 +15,7 @@ use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::Router;
 use crate::rtp_parameters::{MediaKind, RtpEncodingParameters};
 use crate::sctp_parameters::SctpStreamParameters;
-use crate::worker::{Channel, PayloadChannel, RequestError};
+use crate::worker::{Channel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_trait::async_trait;
@@ -333,8 +333,6 @@ pub enum ConsumeDataError {
 pub(super) trait TransportImpl: TransportGeneric {
     fn channel(&self) -> &Channel;
 
-    fn payload_channel(&self) -> &PayloadChannel;
-
     fn executor(&self) -> &Arc<Executor<'static>>;
 
     fn next_mid_for_consumers(&self) -> &AtomicUsize;
@@ -493,7 +491,6 @@ pub(super) trait TransportImpl: TransportGeneric {
             paused,
             Arc::clone(self.executor()),
             self.channel().clone(),
-            self.payload_channel().clone(),
             app_data,
             Arc::new(self.clone()),
             transport_type == TransportType::Direct,
@@ -597,7 +594,6 @@ pub(super) trait TransportImpl: TransportGeneric {
             response.paused,
             Arc::clone(self.executor()),
             self.channel().clone(),
-            self.payload_channel(),
             response.producer_paused,
             response.score,
             response.preferred_layers,
@@ -668,7 +664,6 @@ pub(super) trait TransportImpl: TransportGeneric {
             response.protocol,
             Arc::clone(self.executor()),
             self.channel().clone(),
-            self.payload_channel().clone(),
             app_data,
             Arc::new(self.clone()),
             transport_type == TransportType::Direct,
@@ -764,7 +759,6 @@ pub(super) trait TransportImpl: TransportGeneric {
             data_producer,
             Arc::clone(self.executor()),
             self.channel().clone(),
-            self.payload_channel().clone(),
             app_data,
             Arc::new(self.clone()),
             transport_type == TransportType::Direct,

@@ -2,9 +2,8 @@
 #define MS_RTC_ROUTER_HPP
 
 #include "common.hpp"
+#include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
-#include "PayloadChannel/PayloadChannelNotification.hpp"
-#include "PayloadChannel/PayloadChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
@@ -16,11 +15,8 @@
 #include "RTC/Transport.hpp"
 #include "RTC/WebRtcServer.hpp"
 #include <absl/container/flat_hash_map.h>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_set>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -44,17 +40,18 @@ namespace RTC
 		virtual ~Router();
 
 	public:
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::Router::DumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	private:
-		void SetNewTransportIdFromData(json& data, std::string& transportId) const;
-		RTC::Transport* GetTransportFromData(json& data) const;
-		void SetNewRtpObserverIdFromData(json& data, std::string& rtpObserverId) const;
-		RTC::RtpObserver* GetRtpObserverFromData(json& data) const;
+		RTC::Transport* GetTransportById(const std::string& transportId) const;
+		RTC::RtpObserver* GetRtpObserverById(const std::string& rtpObserverId) const;
+		void CheckNoTransport(const std::string& transportId) const;
+		void CheckNoRtpObserver(const std::string& rtpObserverId) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
@@ -83,7 +80,7 @@ namespace RTC
 		  uint32_t mappedSsrc,
 		  uint8_t& worstRemoteFractionLost) override;
 		void OnTransportNewConsumer(
-		  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) override;
+		  RTC::Transport* transport, RTC::Consumer* consumer, const std::string& producerId) override;
 		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerProducerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
 		void OnTransportConsumerKeyFrameRequested(

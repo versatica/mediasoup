@@ -4,12 +4,11 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { InvalidStateError } from './errors';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { Transport, TransportListenIp } from './Transport';
-import { WebRtcTransport, WebRtcTransportOptions } from './WebRtcTransport';
-import { PlainTransport, PlainTransportOptions } from './PlainTransport';
-import { PipeTransport, PipeTransportOptions } from './PipeTransport';
-import { DirectTransport, DirectTransportOptions } from './DirectTransport';
+import { WebRtcTransport, WebRtcTransportOptions, parseWebRtcTransportDumpResponse } from './WebRtcTransport';
+import { PlainTransport, PlainTransportOptions, parsePlainTransportDumpResponse } from './PlainTransport';
+import { PipeTransport, PipeTransportOptions, parsePipeTransportDumpResponse } from './PipeTransport';
+import { DirectTransport, DirectTransportOptions, parseDirectTransportDumpResponse } from './DirectTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
@@ -20,6 +19,17 @@ import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObser
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 import { AppData } from './types';
+import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
+import * as FbsAudioLevelObserver from './fbs/audio-level-observer';
+import * as FbsRequest from './fbs/request';
+import * as FbsWorker from './fbs/worker';
+import * as FbsRouter from './fbs/router';
+import * as FbsPlainTransport from './fbs/plain-transport';
+import * as FbsPipeTransport from './fbs/pipe-transport';
+import * as FbsDirectTransport from './fbs/direct-transport';
+import * as FbsWebRtcTransport from './fbs/web-rtc-transport';
+import * as FbsTransport from './fbs/transport';
+import * as FbsSctpParameters from './fbs/sctp-parameters';
 
 export type RouterOptions<RouterAppData extends AppData = AppData> =
 {
@@ -143,9 +153,6 @@ export class Router<RouterAppData extends AppData = AppData>
 	// Channel instance.
 	readonly #channel: Channel;
 
-	// PayloadChannel instance.
-	readonly #payloadChannel: PayloadChannel;
-
 	// Closed flag.
 	#closed = false;
 
@@ -180,14 +187,12 @@ export class Router<RouterAppData extends AppData = AppData>
 			internal,
 			data,
 			channel,
-			payloadChannel,
 			appData
 		}:
 		{
 			internal: RouterInternal;
 			data: RouterData;
 			channel: Channel;
-			payloadChannel: PayloadChannel;
 			appData?: RouterAppData;
 		}
 	)
@@ -199,7 +204,6 @@ export class Router<RouterAppData extends AppData = AppData>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#payloadChannel = payloadChannel;
 		this.#appData = appData || {} as RouterAppData;
 	}
 
@@ -274,9 +278,13 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		this.#closed = true;
 
-		const reqData = { routerId: this.#internal.routerId };
+		const requestOffset = new FbsWorker.CloseRouterRequestT(
+			this.#internal.routerId).pack(this.#channel.bufferBuilder);
 
-		this.#channel.request('worker.closeRouter', undefined, reqData)
+		this.#channel.request(
+			FbsRequest.Method.WORKER_CLOSE_ROUTER,
+			FbsRequest.Body.FBS_Worker_CloseRouterRequest,
+			requestOffset)
 			.catch(() => {});
 
 		// Close every Transport.
@@ -354,7 +362,20 @@ export class Router<RouterAppData extends AppData = AppData>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('router.dump', this.#internal.routerId);
+		// Send the request and wait for the response.
+		const response = await this.#channel.request(
+			FbsRequest.Method.ROUTER_DUMP,
+			undefined,
+			undefined,
+			this.#internal.routerId
+		);
+
+		/* Decode Response. */
+		const dump = new FbsRouter.DumpResponse();
+
+		response.body(dump);
+
+		return dump.unpack();
 	}
 
 	/**
@@ -384,6 +405,13 @@ export class Router<RouterAppData extends AppData = AppData>
 		{
 			throw new TypeError('missing webRtcServer and listenIps (one of them is mandatory)');
 		}
+		else if (
+			numSctpStreams &&
+			(typeof numSctpStreams.OS !== 'number' || typeof numSctpStreams.MIS !== 'number')
+		)
+		{
+			throw new TypeError('if given, numSctpStreams must contain OS and MID');
+		}
 		else if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
@@ -391,6 +419,11 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		if (listenIps)
 		{
+			if (listenIps.length === 0)
+			{
+				throw new TypeError('empty listenIps array provided');
+			}
+
 			listenIps = listenIps.map((listenIp) =>
 			{
 				if (typeof listenIp === 'string' && listenIp)
@@ -411,38 +444,85 @@ export class Router<RouterAppData extends AppData = AppData>
 			});
 		}
 
-		const reqData =
+		const transportId = uuidv4();
+
+		/* Build Request. */
+		let webRtcTransportListenServer:
+			FbsWebRtcTransport.ListenServerT | undefined;
+		let webRtcTransportListenIndividual:
+			FbsWebRtcTransport.ListenIndividualT | undefined;
+
+		if (webRtcServer)
 		{
-			transportId    : uuidv4(),
-			webRtcServerId : webRtcServer ? webRtcServer.id : undefined,
-			listenIps,
-			port,
+			webRtcTransportListenServer =
+				new FbsWebRtcTransport.ListenServerT(webRtcServer.id);
+		}
+		else
+		{
+			const fbsListenIps: FbsTransport.ListenIpT[] = [];
+
+			for (const listenIp of listenIps as any[])
+			{
+				fbsListenIps.push(
+					new FbsTransport.ListenIpT(listenIp.ip, listenIp.announcedIp));
+			}
+
+			webRtcTransportListenIndividual =
+				new FbsWebRtcTransport.ListenIndividualT(fbsListenIps, port);
+		}
+
+		const baseTransportOptions = new FbsTransport.OptionsT(
+			undefined /* direct */,
+			undefined /* maxMessageSize */,
+			initialAvailableOutgoingBitrate,
+			enableSctp,
+			new FbsSctpParameters.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS),
+			maxSctpMessageSize,
+			sctpSendBufferSize,
+			true /* isDataChannel */
+		);
+
+		const webRtcTransportOptions = new FbsWebRtcTransport.WebRtcTransportOptionsT(
+			baseTransportOptions,
+			webRtcServer ?
+				FbsWebRtcTransport.Listen.ListenServer :
+				FbsWebRtcTransport.Listen.ListenIndividual,
+			webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual,
 			enableUdp,
 			enableTcp,
 			preferUdp,
-			preferTcp,
-			initialAvailableOutgoingBitrate,
-			enableSctp,
-			numSctpStreams,
-			maxSctpMessageSize,
-			sctpSendBufferSize,
-			isDataChannel  : true
-		};
+			preferTcp
+		);
 
-		const data = webRtcServer
-			? await this.#channel.request('router.createWebRtcTransportWithServer', this.#internal.routerId, reqData)
-			: await this.#channel.request('router.createWebRtcTransport', this.#internal.routerId, reqData);
+		const requestOffset = new FbsRouter.CreateWebRtcTransportRequestT(
+			transportId, webRtcTransportOptions
+		).pack(this.#channel.bufferBuilder);
+
+		const response = await this.#channel.request(
+			webRtcServer
+				? FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER
+				: FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT,
+			FbsRequest.Body.FBS_Router_CreateWebRtcTransportRequest,
+			requestOffset,
+			this.#internal.routerId
+		);
+
+		/* Decode Response. */
+		const data = new FbsWebRtcTransport.DumpResponse();
+
+		response.body(data);
+
+		const webRtcTransportData = parseWebRtcTransportDumpResponse(data);
 
 		const transport = new WebRtcTransport<WebRtcTransportAppData>(
 			{
 				internal :
 				{
 					...this.#internal,
-					transportId : reqData.transportId
+					transportId : transportId
 				},
-				data,
+				data                     : webRtcTransportData,
 				channel                  : this.#channel,
-				payloadChannel           : this.#payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this.#data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer | undefined => (
@@ -523,35 +603,66 @@ export class Router<RouterAppData extends AppData = AppData>
 			throw new TypeError('wrong listenIp');
 		}
 
-		const reqData =
-		{
-			transportId   : uuidv4(),
-			listenIp,
+		const transportId = uuidv4();
+
+		/* Build Request. */
+		const baseTransportOptions = new FbsTransport.OptionsT(
+			undefined /* direct */,
+			undefined /* maxMessageSize */,
+			undefined /* initialAvailableOutgoingBitrate */,
+			enableSctp,
+			new FbsSctpParameters.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS),
+			maxSctpMessageSize,
+			sctpSendBufferSize,
+			false /* isDataChannel */
+		);
+
+		const plainTransportOptions = new FbsPlainTransport.PlainTransportOptionsT(
+			baseTransportOptions,
+			new FbsTransport.ListenIpT(listenIp.ip, listenIp.announcedIp),
 			port,
 			rtcpMux,
 			comedia,
-			enableSctp,
-			numSctpStreams,
-			maxSctpMessageSize,
-			sctpSendBufferSize,
-			isDataChannel : false,
 			enableSrtp,
 			srtpCryptoSuite
-		};
+		);
 
-		const data =
-			await this.#channel.request('router.createPlainTransport', this.#internal.routerId, reqData);
+		let requestOffset;
+
+		try
+		{
+			requestOffset = new FbsRouter.CreatePlainTransportRequestT(
+				transportId, plainTransportOptions
+			).pack(this.#channel.bufferBuilder);
+		}
+		catch (error)
+		{
+			throw new TypeError((error as Error).message);
+		}
+
+		const response = await this.#channel.request(
+			FbsRequest.Method.ROUTER_CREATE_PLAIN_TRANSPORT,
+			FbsRequest.Body.FBS_Router_CreatePlainTransportRequest,
+			requestOffset,
+			this.#internal.routerId
+		);
+
+		/* Decode Response. */
+		const data = new FbsPlainTransport.DumpResponse();
+
+		response.body(data);
+
+		const plainTransportData = parsePlainTransportDumpResponse(data);
 
 		const transport = new PlainTransport<PlainTransportAppData>(
 			{
 				internal :
 				{
 					...this.#internal,
-					transportId : reqData.transportId
+					transportId : transportId
 				},
-				data,
+				data                     : plainTransportData,
 				channel                  : this.#channel,
-				payloadChannel           : this.#payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this.#data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer | undefined => (
@@ -625,33 +736,55 @@ export class Router<RouterAppData extends AppData = AppData>
 			throw new TypeError('wrong listenIp');
 		}
 
-		const reqData =
-		{
-			transportId   : uuidv4(),
-			listenIp,
-			port,
+		const transportId = uuidv4();
+
+		/* Build Request. */
+		const baseTransportOptions = new FbsTransport.OptionsT(
+			undefined /* direct */,
+			undefined /* maxMessageSize */,
+			undefined /* initialAvailableOutgoingBitrate */,
 			enableSctp,
-			numSctpStreams,
+			new FbsSctpParameters.NumSctpStreamsT(numSctpStreams.OS, numSctpStreams.MIS),
 			maxSctpMessageSize,
 			sctpSendBufferSize,
-			isDataChannel : false,
+			false /* isDataChannel */
+		);
+
+		const pipeTransportOptions = new FbsPipeTransport.PipeTransportOptionsT(
+			baseTransportOptions,
+			new FbsTransport.ListenIpT(listenIp.ip, listenIp.announcedIp),
+			port,
 			enableRtx,
 			enableSrtp
-		};
+		);
 
-		const data =
-			await this.#channel.request('router.createPipeTransport', this.#internal.routerId, reqData);
+		const requestOffset = new FbsRouter.CreatePipeTransportRequestT(
+			transportId, pipeTransportOptions
+		).pack(this.#channel.bufferBuilder);
+
+		const response = await this.#channel.request(
+			FbsRequest.Method.ROUTER_CREATE_PIPE_TRANSPORT,
+			FbsRequest.Body.FBS_Router_CreatePipeTransportRequest,
+			requestOffset,
+			this.#internal.routerId
+		);
+
+		/* Decode Response. */
+		const data = new FbsPipeTransport.DumpResponse();
+
+		response.body(data);
+
+		const plainTransportData = parsePipeTransportDumpResponse(data);
 
 		const transport = new PipeTransport<PipeTransportAppData>(
 			{
 				internal :
 				{
 					...this.#internal,
-					transportId : reqData.transportId
+					transportId
 				},
-				data,
+				data                     : plainTransportData,
 				channel                  : this.#channel,
-				payloadChannel           : this.#payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this.#data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer | undefined => (
@@ -695,26 +828,60 @@ export class Router<RouterAppData extends AppData = AppData>
 	{
 		logger.debug('createDirectTransport()');
 
-		const reqData =
+		if (typeof maxMessageSize !== 'number' || maxMessageSize < 0)
 		{
-			transportId : uuidv4(),
-			direct      : true,
-			maxMessageSize
-		};
+			throw new TypeError('if given, maxMessageSize must be a positive number');
+		}
+		else if (appData && typeof appData !== 'object')
+		{
+			throw new TypeError('if given, appData must be an object');
+		}
 
-		const data =
-			await this.#channel.request('router.createDirectTransport', this.#internal.routerId, reqData);
+		const transportId = uuidv4();
+
+		/* Build Request. */
+		const baseTransportOptions = new FbsTransport.OptionsT(
+			true /* direct */,
+			maxMessageSize,
+			undefined /* initialAvailableOutgoingBitrate */,
+			undefined /* enableSctp */,
+			undefined /* numSctpStreams */,
+			undefined /* maxSctpMessageSize */,
+			undefined /* sctpSendBufferSize */,
+			undefined /* isDataChannel */
+		);
+
+		const directTransportOptions = new FbsDirectTransport.DirectTransportOptionsT(
+			baseTransportOptions
+		);
+
+		const requestOffset = new FbsRouter.CreateDirectTransportRequestT(
+			transportId, directTransportOptions
+		).pack(this.#channel.bufferBuilder);
+
+		const response = await this.#channel.request(
+			FbsRequest.Method.ROUTER_CREATE_DIRECT_TRANSPORT,
+			FbsRequest.Body.FBS_Router_CreateDirectTransportRequest,
+			requestOffset,
+			this.#internal.routerId
+		);
+
+		/* Decode Response. */
+		const data = new FbsDirectTransport.DumpResponse();
+
+		response.body(data);
+
+		const directTransportData = parseDirectTransportDumpResponse(data);
 
 		const transport = new DirectTransport<DirectTransportAppData>(
 			{
 				internal :
 				{
 					...this.#internal,
-					transportId : reqData.transportId
+					transportId : transportId
 				},
-				data,
+				data                     : directTransportData,
 				channel                  : this.#channel,
-				payloadChannel           : this.#payloadChannel,
 				appData,
 				getRouterRtpCapabilities : (): RtpCapabilities => this.#data.rtpCapabilities,
 				getProducerById          : (producerId: string): Producer | undefined => (
@@ -1076,34 +1243,50 @@ export class Router<RouterAppData extends AppData = AppData>
 	{
 		logger.debug('createActiveSpeakerObserver()');
 
+		if (typeof interval !== 'number')
+		{
+			throw new TypeError('if given, interval must be an number');
+		}
 		if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
 		}
-		
-		const reqData =
-		{
-			rtpObserverId : uuidv4(),
-			interval
-		};
 
-		await this.#channel.request('router.createActiveSpeakerObserver', this.#internal.routerId, reqData);
+		const rtpObserverId = uuidv4();
+
+		/* Build Request. */
+		const activeRtpObserverOptions =
+			new FbsActiveSpeakerObserver.ActiveSpeakerObserverOptionsT(
+				interval
+			);
+
+		const requestOffset =
+			new FbsRouter.CreateActiveSpeakerObserverRequestT(
+				rtpObserverId,
+				activeRtpObserverOptions
+			).pack(this.#channel.bufferBuilder);
+
+		await this.#channel.request(
+			FbsRequest.Method.ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER,
+			FbsRequest.Body.FBS_Router_CreateActiveSpeakerObserverRequest,
+			requestOffset,
+			this.#internal.routerId
+		);
 
 		const activeSpeakerObserver = new ActiveSpeakerObserver<ActiveSpeakerObserverAppData>(
 			{
 				internal :
 				{
 					...this.#internal,
-					rtpObserverId : reqData.rtpObserverId
+					rtpObserverId : rtpObserverId
 				},
 				channel         : this.#channel,
-				payloadChannel  : this.#payloadChannel,
 				appData,
 				getProducerById : (producerId: string): Producer | undefined => (
 					this.#producers.get(producerId)
 				)
 			});
-		
+
 		this.#rtpObservers.set(activeSpeakerObserver.id, activeSpeakerObserver);
 		activeSpeakerObserver.on('@close', () =>
 		{
@@ -1130,30 +1313,53 @@ export class Router<RouterAppData extends AppData = AppData>
 	{
 		logger.debug('createAudioLevelObserver()');
 
+		if (typeof maxEntries !== 'number' || maxEntries <= 0)
+		{
+			throw new TypeError('if given, maxEntries must be a positive number');
+		}
+		if (typeof threshold !== 'number' || threshold < -127 || threshold > 0)
+		{
+			throw new TypeError('if given, threshole must be a negative number greater than -127');
+		}
+		if (typeof interval !== 'number')
+		{
+			throw new TypeError('if given, interval must be an number');
+		}
 		if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
 		}
 
-		const reqData =
-		{
-			rtpObserverId : uuidv4(),
-			maxEntries,
-			threshold,
-			interval
-		};
+		const rtpObserverId = uuidv4();
 
-		await this.#channel.request('router.createAudioLevelObserver', this.#internal.routerId, reqData);
+		/* Build Request. */
+		const audioLevelObserverOptions =
+			new FbsAudioLevelObserver.AudioLevelObserverOptionsT(
+				maxEntries,
+				threshold,
+				interval
+			);
+
+		const requestOffset = new FbsRouter.CreateAudioLevelObserverRequestT(
+			rtpObserverId,
+			audioLevelObserverOptions
+		).pack(this.#channel.bufferBuilder);
+
+		await this.#channel.request(
+			FbsRequest.Method.ROUTER_CREATE_AUDIO_LEVEL_OBSERVER,
+			FbsRequest.Body.FBS_Router_CreateAudioLevelObserverRequest,
+			requestOffset,
+			this.#internal.routerId
+		);
 
 		const audioLevelObserver = new AudioLevelObserver<AudioLevelObserverAppData>(
 			{
 				internal :
 				{
 					...this.#internal,
-					rtpObserverId : reqData.rtpObserverId
+					rtpObserverId : rtpObserverId
 				},
 				channel         : this.#channel,
-				payloadChannel  : this.#payloadChannel,
 				appData,
 				getProducerById : (producerId: string): Producer | undefined => (
 					this.#producers.get(producerId)

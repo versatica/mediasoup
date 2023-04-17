@@ -21,6 +21,8 @@ INSTALL_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 BUILD_DIR ?= $(INSTALL_DIR)/build
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_VERSION ?= 0.61.5
+FLATC ?= $(BUILD_DIR)/subprojects/flatbuffers-23.3.3/flatc
+FLATC_OUT_DIR ?= ./include/FBS
 # `MESON_ARGS` can be used to provide extra configuration parameters to Meson,
 # such as adding defines or changing optimization options. For instance, use
 # `MESON_ARGS="-Dms_log_trace=true -Dms_log_file_line=true" npm i` to compile
@@ -77,6 +79,7 @@ endif
 	update-wrap-file \
 	mediasoup-worker \
 	libmediasoup-worker \
+	flatc \
 	xcode \
 	lint \
 	format \
@@ -194,15 +197,28 @@ clean-all: clean-subprojects
 update-wrap-file: meson-ninja
 	$(MESON) subprojects update --reset $(SUBPROJECT)
 
-mediasoup-worker: setup
+mediasoup-worker: setup flatc
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker
 endif
 
-libmediasoup-worker: setup
+libmediasoup-worker: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) libmediasoup-worker
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags libmediasoup-worker
+
+flatc:
+	$(MESON) compile -C $(BUILD_DIR) flatc
+	[ -d $(FLATC_OUT_DIR) ] || \
+		$(FLATC) --cpp --cpp-field-case-style lower --reflect-names --scoped-enums \
+			-o $(FLATC_OUT_DIR) ./fbs/*
+
+flatc-clean:
+	$(RM) -rf $(FLATC_OUT_DIR)
+
+flatc-force: flatc-clean flatc
+
+flatc-all: setup flatc
 
 xcode: setup
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode

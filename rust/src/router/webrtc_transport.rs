@@ -22,7 +22,7 @@ use crate::transport::{
     TransportTraceEventType,
 };
 use crate::webrtc_server::WebRtcServer;
-use crate::worker::{Channel, PayloadChannel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
@@ -312,7 +312,6 @@ struct Inner {
     cname_for_producers: Mutex<Option<String>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
-    payload_channel: PayloadChannel,
     handlers: Arc<Handlers>,
     data: Arc<WebRtcTransportData>,
     app_data: AppData,
@@ -565,10 +564,6 @@ impl TransportImpl for WebRtcTransport {
         &self.inner.channel
     }
 
-    fn payload_channel(&self) -> &PayloadChannel {
-        &self.inner.payload_channel
-    }
-
     fn executor(&self) -> &Arc<Executor<'static>> {
         &self.inner.executor
     }
@@ -592,7 +587,6 @@ impl WebRtcTransport {
         id: TransportId,
         executor: Arc<Executor<'static>>,
         channel: Channel,
-        payload_channel: PayloadChannel,
         data: WebRtcTransportData,
         app_data: AppData,
         router: Router,
@@ -697,7 +691,6 @@ impl WebRtcTransport {
             cname_for_producers,
             executor,
             channel,
-            payload_channel,
             handlers,
             data,
             app_data,
