@@ -13,12 +13,9 @@ namespace Channel
 		explicit ChannelNotifier(Channel::ChannelSocket* channel);
 
 	public:
-		static flatbuffers::FlatBufferBuilder bufferBuilder;
-
-	public:
-		flatbuffers::FlatBufferBuilder& GetBufferBuilder() const
+		flatbuffers::FlatBufferBuilder& GetBufferBuilder()
 		{
-			return ChannelNotifier::bufferBuilder;
+			return this->bufferBuilder;
 		}
 
 		template<class Body>
@@ -64,6 +61,8 @@ namespace Channel
 	private:
 		// Passed by argument.
 		Channel::ChannelSocket* channel{ nullptr };
+		// Others.
+		flatbuffers::FlatBufferBuilder bufferBuilder{};
 	};
 } // namespace Channel
 

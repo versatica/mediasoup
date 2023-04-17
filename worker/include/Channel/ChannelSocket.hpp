@@ -117,7 +117,7 @@ namespace Channel
 		ChannelWriteFn channelWriteFn{ nullptr };
 		ChannelWriteCtx channelWriteCtx{ nullptr };
 		uv_async_t* uvReadHandle{ nullptr };
-		flatbuffers::FlatBufferBuilder bufferBuilder{ 1024 };
+		flatbuffers::FlatBufferBuilder bufferBuilder{};
 	};
 } // namespace Channel
 
