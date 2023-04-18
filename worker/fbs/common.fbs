@@ -23,6 +23,6 @@ table Uint32String {
 
 table StringStringArray {
   key:string (required);
-  values:[string];
+  values:[string] (required);
 }
 

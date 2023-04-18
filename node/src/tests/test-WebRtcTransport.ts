@@ -166,7 +166,7 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(data1.dtlsState).toBe(transport1.dtlsState);
 	expect(data1.sctpParameters).toEqual(transport1.sctpParameters);
 	expect(data1.sctpState).toBe(transport1.sctpState);
-	expect(Array.isArray(data1.recvRtpHeaderExtensions)).toBe(true);
+	expect(data1.recvRtpHeaderExtensions).toBeDefined();
 	expect(typeof data1.rtpListener).toBe('object');
 
 	transport1.close();

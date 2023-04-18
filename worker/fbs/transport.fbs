@@ -91,6 +91,14 @@ table SctpListener {
   stream_id_table:[FBS.Common.Uint16String] (required);
 }
 
+table RecvRtpHeaderExtensions {
+  mid:uint8 = null;
+  rid:uint8 = null;
+  rrid:uint8 = null;
+  abs_send_time:uint8 = null;
+  transport_wide_cc01:uint8 = null;
+}
+
 table Dump {
   id:string (required);
   direct:bool=false;
@@ -100,11 +108,11 @@ table Dump {
   map_rtx_ssrc_consumer_id:[FBS.Common.Uint32String] (required);
   data_producer_ids:[string] (required);
   data_consumer_ids:[string] (required);
-  recv_rtp_header_extensions:[FBS.Common.StringUint8] (required);
+  recv_rtp_header_extensions:RecvRtpHeaderExtensions (required);
   rtp_listener:RtpListener (required);
   max_message_size:uint32;
   sctp_parameters:FBS.SctpParameters.SctpParameters;
-  sctp_state:string;
+  sctp_state:FBS.SctpAssociation.SctpState = null;
   sctp_listener: SctpListener;
   trace_event_types:[string] (required);
 }
@@ -123,28 +131,28 @@ table Options {
 table Stats {
   transport_id:string (required);
   timestamp:uint64;
-  sctp_state:string;
+  sctp_state:FBS.SctpAssociation.SctpState = null;
   bytes_received:uint64;
-  recv_bitrate:uint64;
+  recv_bitrate:uint32;
   bytes_sent:uint64;
-  send_bitrate:uint64;
+  send_bitrate:uint32;
   rtp_bytes_received:uint64;
-  rtp_recv_bitrate:uint64;
+  rtp_recv_bitrate:uint32;
   rtp_bytes_sent:uint64;
-  rtp_send_bitrate:uint64;
+  rtp_send_bitrate:uint32;
   rtx_bytes_received:uint64;
-  rtx_recv_bitrate:uint64;
+  rtx_recv_bitrate:uint32;
   rtx_bytes_sent:uint64;
-  rtx_send_bitrate:uint64;
+  rtx_send_bitrate:uint32;
   probation_bytes_sent:uint64;
-  probation_send_bitrate:uint64;
-  available_outgoing_bitrate:uint64;
-  available_incoming_bitrate:uint64;
-  max_incoming_bitrate:uint64;
-  max_outgoing_bitrate:uint64;
-  min_outgoing_bitrate:uint64;
-  rtp_packet_loss_received:uint64;
-  rtp_packet_loss_sent:uint64;
+  probation_send_bitrate:uint32;
+  available_outgoing_bitrate:uint32 = null;
+  available_incoming_bitrate:uint32 = null;
+  max_incoming_bitrate:uint32;
+  max_outgoing_bitrate:uint32;
+  min_outgoing_bitrate:uint32;
+  rtp_packet_loss_received:float64 = null;
+  rtp_packet_loss_sent:float64 = null;
 }
 
 table SetMaxIncomingBitrateRequest {

@@ -135,6 +135,7 @@ fn get_stats_succeeds() {
             .expect("Failed to get stats on Direct transport");
 
         assert_eq!(stats.len(), 1);
+
         assert_eq!(stats[0].transport_id, transport.id());
         assert_eq!(stats[0].bytes_received, 0);
         assert_eq!(stats[0].recv_bitrate, 0);

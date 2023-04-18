@@ -155,7 +155,7 @@ export type BaseTransportDump = {
 	consumerIds : string[];
 	mapSsrcConsumerId : { key: number; value: string }[];
 	mapRtxSsrcConsumerId : { key: number; value: string }[];
-	recvRtpHeaderExtensions : { key: string; value: number }[];
+	recvRtpHeaderExtensions : RecvRtpHeaderExtensions;
 	rtpListener: RtpListenerDump;
 	maxMessageSize: number;
 	dataProducerIds : string[];
@@ -203,6 +203,14 @@ type RtpListenerDump = {
 
 type SctpListenerDump = {
 	streamIdTable : {key: number; value: string}[];
+};
+
+type RecvRtpHeaderExtensions = {
+  mid?: number;
+  rid?: number;
+  rrid?: number;
+  absSendTime?: number;
+  transportWideCc01?: number;
 };
 
 const logger = new Logger('Transport');
@@ -1219,7 +1227,7 @@ export class Transport
 	}
 }
 
-export function fbsSctpState2StcpState(fbsSctpState: FbsSctpState): SctpState
+export function parseSctpState(fbsSctpState: FbsSctpState): SctpState
 {
 	switch (fbsSctpState)
 	{
@@ -1266,7 +1274,7 @@ export function parseBaseTransportDump(
 	// Retrieve dataConsumerIds.
 	const dataConsumerIds = utils.parseVector<string>(binary, 'dataConsumerIds');
 	// Retrieve recvRtpHeaderExtesions.
-	const recvRtpHeaderExtensions = utils.parseStringUint8Vector(binary, 'recvRtpHeaderExtensions');
+	const recvRtpHeaderExtensions = parseRecvRtpHeaderExtensions(binary.recvRtpHeaderExtensions()!);
 	// Retrieve RtpListener.
 	const rtpListener = parseRtpListenerDump(binary.rtpListener()!);
 
@@ -1280,7 +1288,7 @@ export function parseBaseTransportDump(
 	}
 
 	// Retrieve sctpState.
-	const sctpState = binary.sctpState() === '' ? undefined : binary.sctpState() as SctpState;
+	const sctpState = binary.sctpState() === null ? undefined : parseSctpState(binary.sctpState()!);
 
 	// Retrive sctpListener.
 	const sctpListener = binary.sctpListener() ?
@@ -1313,7 +1321,7 @@ export function parseBaseTransportStats(
 	binary: FbsTransport.Stats
 ): BaseTransportStats
 {
-	const sctpState = binary.sctpState() === '' ? undefined : binary.sctpState() as SctpState;
+	const sctpState = binary.sctpState() === null ? undefined : parseSctpState(binary.sctpState()!);
 
 	return {
 		transportId              : binary.transportId()!,
@@ -1371,6 +1379,20 @@ export function parseTransportTraceEventData(
 			};
 		}
 	}
+}
+
+function parseRecvRtpHeaderExtensions(binary: FbsTransport.RecvRtpHeaderExtensions)
+	: RecvRtpHeaderExtensions
+{
+	return {
+		mid               : binary.mid() !== null ? binary.mid()! : undefined,
+		rid               : binary.rid() !== null ? binary.rid()! : undefined,
+		rrid              : binary.rrid() !== null ? binary.rrid()! : undefined,
+		absSendTime       : binary.absSendTime() !== null ? binary.absSendTime()! : undefined,
+		transportWideCc01 : binary.transportWideCc01() !== null ?
+			binary.transportWideCc01()! :
+			undefined
+	};
 }
 
 function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo):

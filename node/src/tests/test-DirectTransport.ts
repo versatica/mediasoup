@@ -52,7 +52,7 @@ test('router.createDirectTransport() succeeds', async () =>
 	expect(data1.consumerIds).toEqual([]);
 	expect(data1.dataProducerIds).toEqual([]);
 	expect(data1.dataConsumerIds).toEqual([]);
-	expect(Array.isArray(data1.recvRtpHeaderExtensions)).toBe(true);
+	expect(data1.recvRtpHeaderExtensions).toBeDefined();
 	expect(typeof data1.rtpListener).toBe('object');
 
 	transport1.close();

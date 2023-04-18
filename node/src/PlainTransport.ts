@@ -1,7 +1,7 @@
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import {
-	fbsSctpState2StcpState,
+	parseSctpState,
 	BaseTransportDump,
 	BaseTransportStats,
 	parseTuple,
@@ -413,7 +413,7 @@ export class PlainTransport<PlainTransportAppData extends AppData = AppData>
 
 					data!.body(notification);
 
-					const sctpState = fbsSctpState2StcpState(notification.sctpState());
+					const sctpState = parseSctpState(notification.sctpState());
 
 					this.#data.sctpState = sctpState;
 

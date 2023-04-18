@@ -11,6 +11,8 @@
 mod tests;
 
 use crate::data_structures::{AppData, ListenIp, Protocol};
+use crate::fbs::transport;
+use crate::fbs::web_rtc_server;
 use crate::messages::{WebRtcServerCloseRequest, WebRtcServerDumpRequest};
 use crate::transport::TransportId;
 use crate::uuid_based_wrapper_type;
@@ -87,6 +89,20 @@ pub struct WebRtcServerListenInfo {
     pub port: Option<u16>,
 }
 
+impl WebRtcServerListenInfo {
+    pub(crate) fn to_fbs(self) -> web_rtc_server::ListenInfo {
+        web_rtc_server::ListenInfo {
+            protocol: match self.protocol {
+                Protocol::Tcp => transport::Protocol::Tcp,
+                Protocol::Udp => transport::Protocol::Udp,
+            },
+            ip: self.listen_ip.ip.to_string(),
+            announced_ip: self.listen_ip.announced_ip.map(|ip| ip.to_string()),
+            port: self.port.unwrap_or(0),
+        }
+    }
+}
+
 /// Struct that protects an invariant of having non-empty list of listen infos.
 #[derive(Debug, Clone, Eq, PartialEq, Serialize)]
 pub struct WebRtcServerListenInfos(Vec<WebRtcServerListenInfo>);
@@ -103,6 +119,13 @@ impl WebRtcServerListenInfos {
     pub fn insert(mut self, listen_info: WebRtcServerListenInfo) -> Self {
         self.0.push(listen_info);
         self
+    }
+
+    pub(crate) fn to_fbs(&self) -> Vec<web_rtc_server::ListenInfo> {
+        self.0
+            .iter()
+            .map(|listen_info| listen_info.to_fbs())
+            .collect()
     }
 }
 
@@ -190,7 +213,7 @@ impl Inner {
                 };
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request("", request).await {
+                        if let Err(error) = channel.request_fbs("", request).await {
                             error!("WebRTC server closing failed on drop: {}", error);
                         }
                     })
@@ -292,7 +315,7 @@ impl WebRtcServer {
 
         self.inner
             .channel
-            .request(self.id(), WebRtcServerDumpRequest {})
+            .request_fbs(self.id(), WebRtcServerDumpRequest {})
             .await
     }
 

@@ -115,7 +115,7 @@ union Body {
 table Request {
   id:uint32;
   method:Method;
-  handler_id:string;
+  handler_id:string (required);
   body:Body;
 }
 

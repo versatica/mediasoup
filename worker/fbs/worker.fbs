@@ -3,15 +3,15 @@ include "webRtcServer.fbs";
 namespace FBS.Worker;
 
 table ChannelMessageHandlers {
-  channel_request_handlers:[string];
-  channel_notification_handlers:[string];
+  channel_request_handlers:[string] (required);
+  channel_notification_handlers:[string] (required);
 }
 
 table DumpResponse {
   pid:uint32;
-  web_rtc_server_ids:[string];
-  router_ids:[string];
-  channel_message_handlers:ChannelMessageHandlers;
+  web_rtc_server_ids:[string] (required);
+  router_ids:[string] (required);
+  channel_message_handlers:ChannelMessageHandlers (required);
 }
 
 table ResourceUsageResponse {
@@ -40,7 +40,7 @@ table UpdateSettingsRequest {
 
 table CreateWebRtcServerRequest {
   web_rtc_server_id:string (required);
-  listen_infos:[FBS.WebRtcServer.ListenInfo];
+  listen_infos:[FBS.WebRtcServer.ListenInfo] (required);
 }
 
 table CloseWebRtcServerRequest {

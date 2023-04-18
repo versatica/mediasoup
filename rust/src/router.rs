@@ -170,7 +170,7 @@ pub struct PipeProducerToRouterPair {
 }
 
 /// Error that caused [`Router::pipe_producer_to_router()`] to fail.
-#[derive(Debug, Error, Eq, PartialEq)]
+#[derive(Debug, Error)]
 pub enum PipeProducerToRouterError {
     /// Destination router must be different
     #[error("Destination router must be different")]
@@ -398,7 +398,7 @@ impl Inner {
                 let request = RouterCloseRequest { router_id: self.id };
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request("", request).await {
+                        if let Err(error) = channel.request_fbs("", request).await {
                             error!("router closing failed on drop: {}", error);
                         }
                     })
@@ -529,7 +529,7 @@ impl Router {
 
         self.inner
             .channel
-            .request(self.inner.id, RouterDumpRequest {})
+            .request_fbs(self.inner.id, RouterDumpRequest {})
             .await
     }
 
@@ -558,7 +558,7 @@ impl Router {
 
         self.inner
             .channel
-            .request(
+            .request_fbs(
                 self.inner.id,
                 RouterCreateDirectTransportRequest {
                     data: RouterCreateDirectTransportData::from_options(

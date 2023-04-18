@@ -7,7 +7,7 @@ import {
 	BaseTransportStats,
 	parseBaseTransportDump,
 	parseBaseTransportStats,
-	fbsSctpState2StcpState,
+	parseSctpState,
 	parseTuple,
 	parseTransportTraceEventData,
 	Transport,
@@ -421,7 +421,7 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 
 					data!.body(notification);
 
-					const sctpState = fbsSctpState2StcpState(notification.sctpState());
+					const sctpState = parseSctpState(notification.sctpState());
 
 					this.#data.sctpState = sctpState;
 

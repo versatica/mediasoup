@@ -72,7 +72,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_PipeTransport_DumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::FBS_DirectTransport_DumpResponse, dumpOffset);
 
 				break;
 			}

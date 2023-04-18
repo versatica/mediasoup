@@ -72,7 +72,7 @@ union Body {
 }
 
 table Notification {
-  handler_id:string;
+  handler_id:string (required);
   event:Event;
   body:Body;
 }

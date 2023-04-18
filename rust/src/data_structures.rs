@@ -3,6 +3,7 @@
 #[cfg(test)]
 mod tests;
 
+use crate::fbs::sctp_association;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -264,6 +265,18 @@ pub enum SctpState {
     Failed,
     /// SCTP state when the transport has been closed.
     Closed,
+}
+
+impl SctpState {
+    pub(crate) fn from_fbs(state: &sctp_association::SctpState) -> Self {
+        match state {
+            sctp_association::SctpState::New => Self::New,
+            sctp_association::SctpState::Connecting => Self::Connecting,
+            sctp_association::SctpState::Connected => Self::Connected,
+            sctp_association::SctpState::Failed => Self::Failed,
+            sctp_association::SctpState::Closed => Self::Closed,
+        }
+    }
 }
 
 /// DTLS role.

@@ -330,7 +330,7 @@ export class Channel extends EnhancedEventEmitter
 
 		const id = this.#nextId;
 
-		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
+		const handlerIdOffset = this.#bufferBuilder.createString(handlerId ?? '');
 
 		let requestOffset: number;
 

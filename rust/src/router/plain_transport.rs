@@ -443,21 +443,28 @@ impl TransportGeneric for PlainTransport {
     async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
+        todo!();
+        /*
         serde_json::from_value(self.dump_impl().await?).map_err(|error| {
             RequestError::FailedToParse {
                 error: error.to_string(),
             }
         })
+        */
     }
 
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
+        todo!();
+
+        /*
         serde_json::from_value(self.get_stats_impl().await?).map_err(|error| {
             RequestError::FailedToParse {
                 error: error.to_string(),
             }
         })
+        */
     }
 }
 

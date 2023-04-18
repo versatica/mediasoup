@@ -5,6 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, SctpState};
+use crate::fbs::{direct_transport, response};
 use crate::messages::{TransportCloseRequest, TransportSendRtcpNotification};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -23,6 +24,7 @@ use log::{debug, error};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Weak};
@@ -57,17 +59,85 @@ pub struct DirectTransportDump {
     pub direct: bool,
     pub producer_ids: Vec<ProducerId>,
     pub consumer_ids: Vec<ConsumerId>,
-    pub map_ssrc_consumer_id: IntMap<u32, ConsumerId>,
-    pub map_rtx_ssrc_consumer_id: IntMap<u32, ConsumerId>,
+    pub map_ssrc_consumer_id: Vec<(u32, ConsumerId)>,
+    pub map_rtx_ssrc_consumer_id: Vec<(u32, ConsumerId)>,
     pub data_producer_ids: Vec<DataProducerId>,
     pub data_consumer_ids: Vec<DataConsumerId>,
     pub recv_rtp_header_extensions: RecvRtpHeaderExtensions,
     pub rtp_listener: RtpListener,
-    pub max_message_size: usize,
+    pub max_message_size: u32,
     pub sctp_parameters: Option<SctpParameters>,
     pub sctp_state: Option<SctpState>,
     pub sctp_listener: Option<SctpListener>,
-    pub trace_event_types: String,
+    pub trace_event_types: Vec<String>,
+}
+
+impl DirectTransportDump {
+    pub(crate) fn from_fbs(dump: direct_transport::DumpResponse) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            id: dump.base.id.parse()?,
+            direct: true,
+            producer_ids: dump
+                .base
+                .producer_ids
+                .iter()
+                .map(|producer_id| Ok(producer_id.parse()?))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            consumer_ids: dump
+                .base
+                .consumer_ids
+                .iter()
+                .map(|consumer_id| Ok(consumer_id.parse()?))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            map_ssrc_consumer_id: dump
+                .base
+                .map_ssrc_consumer_id
+                .iter()
+                .map(|key_value| Ok((key_value.key, key_value.value.parse()?)))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            map_rtx_ssrc_consumer_id: dump
+                .base
+                .map_rtx_ssrc_consumer_id
+                .iter()
+                .map(|key_value| Ok((key_value.key, key_value.value.parse()?)))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            data_producer_ids: dump
+                .base
+                .data_producer_ids
+                .iter()
+                .map(|data_producer_id| Ok(data_producer_id.parse()?))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            data_consumer_ids: dump
+                .base
+                .data_consumer_ids
+                .iter()
+                .map(|data_consumer_id| Ok(data_consumer_id.parse()?))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            recv_rtp_header_extensions: RecvRtpHeaderExtensions::from_fbs(
+                dump.base.recv_rtp_header_extensions.as_ref(),
+            ),
+            rtp_listener: RtpListener::from_fbs(dump.base.rtp_listener.as_ref())?,
+            max_message_size: dump.base.max_message_size,
+            sctp_parameters: dump
+                .base
+                .sctp_parameters
+                .as_ref()
+                .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
+            sctp_state: dump
+                .base
+                .sctp_state
+                .map(|state| SctpState::from_fbs(&state)),
+            sctp_listener: dump.base.sctp_listener.as_ref().map(|listener| {
+                SctpListener::from_fbs(listener.as_ref()).expect("Error parsing SctpListner")
+            }),
+            trace_event_types: dump
+                .base
+                .trace_event_types
+                .iter()
+                .map(|event| event.to_string())
+                .collect(),
+        })
+    }
 }
 
 /// RTC statistics of the direct transport.
@@ -77,34 +147,67 @@ pub struct DirectTransportDump {
 #[allow(missing_docs)]
 pub struct DirectTransportStat {
     // Common to all Transports.
-    // `type` field is present in worker, but ignored here
     pub transport_id: TransportId,
     pub timestamp: u64,
     pub sctp_state: Option<SctpState>,
-    pub bytes_received: usize,
+    pub bytes_received: u64,
     pub recv_bitrate: u32,
-    pub bytes_sent: usize,
+    pub bytes_sent: u64,
     pub send_bitrate: u32,
-    pub rtp_bytes_received: usize,
+    pub rtp_bytes_received: u64,
     pub rtp_recv_bitrate: u32,
-    pub rtp_bytes_sent: usize,
+    pub rtp_bytes_sent: u64,
     pub rtp_send_bitrate: u32,
-    pub rtx_bytes_received: usize,
+    pub rtx_bytes_received: u64,
     pub rtx_recv_bitrate: u32,
-    pub rtx_bytes_sent: usize,
+    pub rtx_bytes_sent: u64,
     pub rtx_send_bitrate: u32,
-    pub probation_bytes_sent: usize,
+    pub probation_bytes_sent: u64,
     pub probation_send_bitrate: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub available_outgoing_bitrate: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub available_incoming_bitrate: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_incoming_bitrate: Option<u32>,
+    pub max_incoming_bitrate: u32,
+    pub max_outgoing_bitrate: u32,
+    pub min_outgoing_bitrate: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rtp_packet_loss_received: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rtp_packet_loss_sent: Option<f64>,
+}
+
+impl DirectTransportStat {
+    pub(crate) fn from_fbs(
+        stats: direct_transport::GetStatsResponse,
+    ) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            transport_id: stats.base.transport_id.parse()?,
+            timestamp: stats.base.timestamp,
+            sctp_state: stats.base.sctp_state.as_ref().map(SctpState::from_fbs),
+            bytes_received: stats.base.bytes_received,
+            recv_bitrate: stats.base.recv_bitrate,
+            bytes_sent: stats.base.bytes_sent,
+            send_bitrate: stats.base.send_bitrate,
+            rtp_bytes_received: stats.base.rtp_bytes_received,
+            rtp_recv_bitrate: stats.base.rtp_recv_bitrate,
+            rtp_bytes_sent: stats.base.rtp_bytes_sent,
+            rtp_send_bitrate: stats.base.rtp_send_bitrate,
+            rtx_bytes_received: stats.base.rtx_bytes_received,
+            rtx_recv_bitrate: stats.base.rtx_recv_bitrate,
+            rtx_bytes_sent: stats.base.rtx_bytes_sent,
+            rtx_send_bitrate: stats.base.rtx_send_bitrate,
+            probation_bytes_sent: stats.base.probation_bytes_sent,
+            probation_send_bitrate: stats.base.probation_send_bitrate,
+            available_outgoing_bitrate: stats.base.available_outgoing_bitrate,
+            available_incoming_bitrate: stats.base.available_incoming_bitrate,
+            max_incoming_bitrate: stats.base.max_incoming_bitrate,
+            max_outgoing_bitrate: stats.base.max_outgoing_bitrate,
+            min_outgoing_bitrate: stats.base.min_outgoing_bitrate,
+            rtp_packet_loss_received: stats.base.rtp_packet_loss_received,
+            rtp_packet_loss_sent: stats.base.rtp_packet_loss_sent,
+        })
+    }
 }
 
 #[derive(Default)]
@@ -367,11 +470,11 @@ impl TransportGeneric for DirectTransport {
     async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
-        serde_json::from_value(self.dump_impl().await?).map_err(|error| {
-            RequestError::FailedToParse {
-                error: error.to_string(),
-            }
-        })
+        if let response::Body::FbsDirectTransportDumpResponse(data) = self.dump_impl().await? {
+            Ok(DirectTransportDump::from_fbs(*data).expect("Error parsing dump response"))
+        } else {
+            panic!("Wrong message from worker");
+        }
     }
 
     /// Returns current RTC statistics of the transport.
@@ -381,11 +484,15 @@ impl TransportGeneric for DirectTransport {
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
-        serde_json::from_value(self.get_stats_impl().await?).map_err(|error| {
-            RequestError::FailedToParse {
-                error: error.to_string(),
-            }
-        })
+        if let response::Body::FbsDirectTransportGetStatsResponse(data) =
+            self.get_stats_impl().await?
+        {
+            Ok(vec![
+                DirectTransportStat::from_fbs(*data).expect("Error parsing dump response")
+            ])
+        } else {
+            panic!("Wrong message from worker");
+        }
     }
 }
 

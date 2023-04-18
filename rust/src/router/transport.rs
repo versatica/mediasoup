@@ -2,9 +2,10 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, BweTraceInfo, RtpPacketTraceInfo, TraceEventDirection};
+use crate::fbs::{response, transport};
 use crate::messages::{
-    TransportConsumeDataRequest, TransportConsumeRequest, TransportDumpRequest,
-    TransportEnableTraceEventRequest, TransportGetStatsRequest, TransportProduceDataRequest,
+    TransportConsumeDataRequest, TransportConsumeRequest, TransportDumpRequestNew,
+    TransportEnableTraceEventRequest, TransportGetStatsRequestNew, TransportProduceDataRequest,
     TransportProduceRequest, TransportSetMaxIncomingBitrateRequest,
     TransportSetMaxOutgoingBitrateRequest, TransportSetMinOutgoingBitrateRequest,
 };
@@ -20,13 +21,11 @@ use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::HandlerId;
-use hash_hasher::HashedMap;
 use log::{error, warn};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use std::error::Error;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -79,12 +78,34 @@ pub enum TransportTraceEventType {
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpListener {
-    /// Map from Ssrc (as string) to producer ID
-    pub mid_table: HashedMap<String, ProducerId>,
-    /// Map from Ssrc (as string) to producer ID
-    pub rid_table: HashedMap<String, ProducerId>,
-    /// Map from Ssrc (as string) to producer ID
-    pub ssrc_table: HashedMap<String, ProducerId>,
+    /// Vector of mid and producer ID
+    pub mid_table: Vec<(String, ProducerId)>,
+    /// Vector of rid and producer ID
+    pub rid_table: Vec<(String, ProducerId)>,
+    /// Vector of Ssrc and producer ID
+    pub ssrc_table: Vec<(u32, ProducerId)>,
+}
+
+impl RtpListener {
+    pub(crate) fn from_fbs(rtp_listener: &transport::RtpListener) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            mid_table: rtp_listener
+                .mid_table
+                .iter()
+                .map(|key_value| Ok((key_value.key.to_string(), key_value.value.parse()?)))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            rid_table: rtp_listener
+                .rid_table
+                .iter()
+                .map(|key_value| Ok((key_value.key.to_string(), key_value.value.parse()?)))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            ssrc_table: rtp_listener
+                .ssrc_table
+                .iter()
+                .map(|key_value| Ok((key_value.key, key_value.value.parse()?)))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+        })
+    }
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
@@ -98,12 +119,36 @@ pub struct RecvRtpHeaderExtensions {
     transport_wide_cc01: Option<u8>,
 }
 
+impl RecvRtpHeaderExtensions {
+    pub(crate) fn from_fbs(extensions: &transport::RecvRtpHeaderExtensions) -> Self {
+        Self {
+            mid: extensions.mid,
+            rid: extensions.rid,
+            rrid: extensions.rrid,
+            abs_send_time: extensions.abs_send_time,
+            transport_wide_cc01: extensions.transport_wide_cc01,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct SctpListener {
-    /// Map from stream ID (as string) to data producer ID
-    stream_id_table: HashedMap<String, DataProducerId>,
+    /// Vector of stream ID (as string) to data producer ID
+    stream_id_table: Vec<(u16, DataProducerId)>,
+}
+
+impl SctpListener {
+    pub(crate) fn from_fbs(listener: &transport::SctpListener) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            stream_id_table: listener
+                .stream_id_table
+                .iter()
+                .map(|key_value| Ok((key_value.key, key_value.value.parse()?)))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+        })
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -255,9 +300,9 @@ pub trait Transport: Debug + Send + Sync {
 pub trait TransportGeneric: Transport + Clone + 'static {
     /// Dump data structure specific to each transport.
     #[doc(hidden)]
-    type Dump: Debug + DeserializeOwned + 'static;
+    type Dump: Debug + 'static;
     /// Stats data structure specific to each transport.
-    type Stat: Debug + DeserializeOwned + 'static;
+    type Stat: Debug + 'static;
 
     /// Dump Transport.
     async fn dump(&self) -> Result<Self::Dump, RequestError>;
@@ -268,7 +313,7 @@ pub trait TransportGeneric: Transport + Clone + 'static {
 }
 
 /// Error that caused [`Transport::produce`] to fail.
-#[derive(Debug, Error, Eq, PartialEq)]
+#[derive(Debug, Error)]
 pub enum ProduceError {
     /// Producer with the same id already exists.
     #[error("Producer with the same id \"{0}\" already exists")]
@@ -285,7 +330,7 @@ pub enum ProduceError {
 }
 
 /// Error that caused [`Transport::consume`] to fail.
-#[derive(Debug, Error, Eq, PartialEq)]
+#[derive(Debug, Error)]
 pub enum ConsumeError {
     /// Producer with specified id not found.
     #[error("Producer with id \"{0}\" not found")]
@@ -302,7 +347,7 @@ pub enum ConsumeError {
 }
 
 /// Error that caused [`Transport::produce_data`] to fail.
-#[derive(Debug, Error, Eq, PartialEq)]
+#[derive(Debug, Error)]
 pub enum ProduceDataError {
     /// Data producer with the same id already exists.
     #[error("Data producer with the same id \"{0}\" already exists")]
@@ -316,7 +361,7 @@ pub enum ProduceDataError {
 }
 
 /// Error that caused [`Transport::consume_data`] to fail.
-#[derive(Debug, Error, Eq, PartialEq)]
+#[derive(Debug, Error)]
 pub enum ConsumeDataError {
     /// Data producer with specified id not found
     #[error("Data producer with id \"{0}\" not found")]
@@ -361,15 +406,15 @@ pub(super) trait TransportImpl: TransportGeneric {
         }
     }
 
-    async fn dump_impl(&self) -> Result<Value, RequestError> {
+    async fn dump_impl(&self) -> Result<response::Body, RequestError> {
         self.channel()
-            .request(self.id(), TransportDumpRequest {})
+            .request_fbs(self.id(), TransportDumpRequestNew {})
             .await
     }
 
-    async fn get_stats_impl(&self) -> Result<Value, RequestError> {
+    async fn get_stats_impl(&self) -> Result<response::Body, RequestError> {
         self.channel()
-            .request(self.id(), TransportGetStatsRequest {})
+            .request_fbs(self.id(), TransportGetStatsRequestNew {})
             .await
     }
 

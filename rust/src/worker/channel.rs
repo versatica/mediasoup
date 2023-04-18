@@ -1,5 +1,5 @@
 use crate::fbs::{message, notification, request, response};
-use crate::messages::{Notification, Request, WorkerCloseRequest};
+use crate::messages::{Notification, Request, RequestFbs, WorkerCloseRequest};
 use crate::worker::common::{
     EventHandlers, FBSEventHandlers, FBSWeakEventHandlers, SubscriptionTarget, WeakEventHandlers,
 };
@@ -12,7 +12,7 @@ use log::{debug, error, trace, warn};
 use lru::LruCache;
 use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
-use planus::{Builder, ReadAsRoot, UnionOffset};
+use planus::ReadAsRoot;
 use serde::Deserialize;
 use serde_json::Value;
 use std::any::TypeId;
@@ -173,13 +173,7 @@ struct FBSRequestsContainer {
     handlers: HashedMap<u32, async_oneshot::Sender<FBSResponseResult>>,
 }
 
-/* TODO: Remove.
-impl Drop for RequestsContainer {
-    fn drop(&mut self) {
-        panic!();
-    }
-}
-*/
+// TODO: Maybe remove
 /*
 struct OutgoingMessageRequest {
     message: Vec<u8>,
@@ -283,7 +277,7 @@ impl Channel {
                 match deserialize_message(message) {
                     ChannelReceiveMessage::Notification(notification) => {
                         let target_id: SubscriptionTarget = SubscriptionTarget::String(
-                            notification.handler_id().unwrap().unwrap().to_string(),
+                            notification.handler_id().unwrap().to_string(),
                         );
 
                         if !non_buffered_notifications.contains(&target_id) {
@@ -529,14 +523,13 @@ impl Channel {
         }
     }
 
-    pub(crate) async fn request_fbs<HandlerId>(
+    pub(crate) async fn request_fbs<R, HandlerId>(
         &self,
-        mut builder: Builder,
         handler_id: HandlerId,
-        method: request::Method,
-        body: Option<UnionOffset<request::Body>>,
-    ) -> Result<Option<response::Body>, RequestError>
+        request: R,
+    ) -> Result<R::Response, RequestError>
     where
+        R: RequestFbs<HandlerId = HandlerId> + 'static,
         HandlerId: Display,
     {
         let id;
@@ -557,15 +550,9 @@ impl Channel {
             requests_container_lock.handlers.insert(id, result_sender);
         }
 
-        debug!("request() [method:{:?}, id:{}]", method, id);
+        debug!("request() [method:{:?}, id:{}]", R::METHOD, id);
 
-        let request =
-            request::Request::create(&mut builder, id, method, handler_id.to_string(), body);
-
-        let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
-
-        let data = builder.finish(message, None).to_vec();
+        let data = request.into_bytes(id, handler_id);
 
         let buffer = Arc::new(AtomicTake::new(data));
 
@@ -577,7 +564,7 @@ impl Channel {
             if let Some(handle) = outgoing_message_buffer.handle {
                 if self.inner.worker_closed.load(Ordering::Acquire) {
                     // Forbid all requests after worker closing except one worker closing request
-                    if method != request::Method::WorkerClose {
+                    if R::METHOD != request::Method::WorkerClose {
                         return Err(RequestError::ChannelClosed);
                     }
                 }
@@ -614,17 +601,23 @@ impl Channel {
 
         match response_result {
             Ok(data) => {
-                debug!("request succeeded [method:{:?}, id:{}]", method, id);
+                debug!("request succeeded [method:{:?}, id:{}]", R::METHOD, id);
 
-                Ok(data)
+                Ok(R::convert_response(data).map_err(RequestError::ResponseConversion)?)
             }
             Err(ResponseError { reason }) => {
                 debug!(
                     "request failed [method:{:?}, id:{}]: {}",
-                    method, id, reason
+                    R::METHOD,
+                    id,
+                    reason
                 );
                 if reason.contains("not found") {
-                    Err(RequestError::ChannelClosed)
+                    if let Some(default_response) = R::default_for_soft_error() {
+                        Ok(default_response)
+                    } else {
+                        Err(RequestError::ChannelClosed)
+                    }
                 } else {
                     Err(RequestError::Response { reason })
                 }

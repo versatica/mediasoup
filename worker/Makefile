@@ -207,7 +207,7 @@ libmediasoup-worker: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) libmediasoup-worker
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags libmediasoup-worker
 
-flatc:
+flatc: setup
 	$(MESON) compile -C $(BUILD_DIR) flatc
 	[ -d $(FLATC_OUT_DIR) ] || \
 		$(FLATC) --cpp --cpp-field-case-style lower --reflect-names --scoped-enums \

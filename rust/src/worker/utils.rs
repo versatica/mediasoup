@@ -2,7 +2,7 @@ mod channel_read_fn;
 mod channel_write_fn;
 
 use crate::worker::channel::BufferMessagesGuard;
-use crate::worker::{Channel, WorkerId};
+use crate::worker::{Channel, SubscriptionTarget, WorkerId};
 pub(super) use channel_read_fn::{prepare_channel_read_fn, PreparedChannelRead};
 pub(super) use channel_write_fn::{prepare_channel_write_fn, PreparedChannelWrite};
 use std::ffi::CString;
@@ -48,9 +48,8 @@ where
 {
     let (channel, prepared_channel_read, prepared_channel_write) =
         Channel::new(Arc::clone(&worker_closed));
-    let buffer_worker_messages_guard = channel.buffer_messages_for(
-        super::common::SubscriptionTarget::String(std::process::id().to_string()),
-    );
+    let buffer_worker_messages_guard =
+        channel.buffer_messages_for(SubscriptionTarget::String(std::process::id().to_string()));
 
     std::thread::Builder::new()
         .name(format!("mediasoup-worker-{id}"))

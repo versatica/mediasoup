@@ -1,5 +1,6 @@
 //! Collection of SCTP-related data structures that are used to specify SCTP association parameters.
 
+use crate::fbs::sctp_parameters;
 use serde::{Deserialize, Serialize};
 
 /// Number of SCTP streams.
@@ -55,7 +56,18 @@ pub struct SctpParameters {
     #[serde(rename = "MIS")]
     pub mis: u16,
     /// Maximum allowed size for SCTP messages.
-    pub max_message_size: usize,
+    pub max_message_size: u32,
+}
+
+impl SctpParameters {
+    pub(crate) fn from_fbs(parameters: &sctp_parameters::SctpParameters) -> Self {
+        Self {
+            port: parameters.port,
+            os: parameters.os,
+            mis: parameters.mis,
+            max_message_size: parameters.max_message_size,
+        }
+    }
 }
 
 /// SCTP stream parameters describe the reliability of a certain SCTP stream.

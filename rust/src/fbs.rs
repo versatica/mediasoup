@@ -1713,9 +1713,7 @@ mod root {
             )]
             pub struct StringStringArray {
                 pub key: ::planus::alloc::string::String,
-                pub values: ::core::option::Option<
-                    ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
-                >,
+                pub values: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
             }
 
             impl StringStringArray {
@@ -1723,9 +1721,7 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_key: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_values: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<[::planus::Offset<str>]>,
-                    >,
+                    field_values: impl ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_key = field_key.prepare(builder);
 
@@ -1735,17 +1731,13 @@ mod root {
                         ::planus::table_writer::TableWriter::<6, 8>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
-                    if prepared_values.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(4);
-                    }
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(4);
 
                     table_writer.finish_calculating();
 
                     unsafe {
                         table_writer.write::<_, _, 4>(0, &prepared_key);
-                        if let ::core::option::Option::Some(prepared_values) = prepared_values {
-                            table_writer.write::<_, _, 4>(1, &prepared_values);
-                        }
+                        table_writer.write::<_, _, 4>(1, &prepared_values);
                     }
 
                     table_writer.finish()
@@ -1794,11 +1786,9 @@ mod root {
                 pub fn values(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
                 > {
-                    self.0.access(1, "StringStringArray", "values")
+                    self.0.access_required(1, "StringStringArray", "values")
                 }
             }
 
@@ -1806,9 +1796,7 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("StringStringArrayRef");
                     f.field("key", &self.key());
-                    if let ::core::option::Option::Some(field_values) = self.values().transpose() {
-                        f.field("values", &field_values);
-                    }
+                    f.field("values", &self.values());
                     f.finish()
                 }
             }
@@ -1820,11 +1808,7 @@ mod root {
                 fn try_from(value: StringStringArrayRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         key: ::core::convert::TryInto::try_into(value.key()?)?,
-                        values: if let ::core::option::Option::Some(values) = value.values()? {
-                            ::core::option::Option::Some(values.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        values: value.values()?.to_vec_result()?,
                     })
                 }
             }
@@ -18064,15 +18048,7 @@ mod root {
             }
 
             #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
+                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub struct GetStatsResponse {
                 pub base: ::planus::alloc::boxed::Box<super::transport::Stats>,
@@ -21447,6 +21423,314 @@ mod root {
                 ::serde::Serialize,
                 ::serde::Deserialize,
             )]
+            pub struct RecvRtpHeaderExtensions {
+                pub mid: ::core::option::Option<u8>,
+                pub rid: ::core::option::Option<u8>,
+                pub rrid: ::core::option::Option<u8>,
+                pub abs_send_time: ::core::option::Option<u8>,
+                pub transport_wide_cc01: ::core::option::Option<u8>,
+            }
+
+            #[allow(clippy::derivable_impls)]
+            impl ::core::default::Default for RecvRtpHeaderExtensions {
+                fn default() -> Self {
+                    Self {
+                        mid: ::core::default::Default::default(),
+                        rid: ::core::default::Default::default(),
+                        rrid: ::core::default::Default::default(),
+                        abs_send_time: ::core::default::Default::default(),
+                        transport_wide_cc01: ::core::default::Default::default(),
+                    }
+                }
+            }
+
+            impl RecvRtpHeaderExtensions {
+                #[allow(clippy::too_many_arguments)]
+                pub fn create(
+                    builder: &mut ::planus::Builder,
+                    field_mid: impl ::planus::WriteAsOptional<u8>,
+                    field_rid: impl ::planus::WriteAsOptional<u8>,
+                    field_rrid: impl ::planus::WriteAsOptional<u8>,
+                    field_abs_send_time: impl ::planus::WriteAsOptional<u8>,
+                    field_transport_wide_cc01: impl ::planus::WriteAsOptional<u8>,
+                ) -> ::planus::Offset<Self> {
+                    let prepared_mid = field_mid.prepare(builder);
+
+                    let prepared_rid = field_rid.prepare(builder);
+
+                    let prepared_rrid = field_rrid.prepare(builder);
+
+                    let prepared_abs_send_time = field_abs_send_time.prepare(builder);
+
+                    let prepared_transport_wide_cc01 = field_transport_wide_cc01.prepare(builder);
+
+                    let mut table_writer =
+                        ::planus::table_writer::TableWriter::<12, 5>::new(builder);
+
+                    if prepared_mid.is_some() {
+                        table_writer.calculate_size::<u8>(2);
+                    }
+                    if prepared_rid.is_some() {
+                        table_writer.calculate_size::<u8>(4);
+                    }
+                    if prepared_rrid.is_some() {
+                        table_writer.calculate_size::<u8>(6);
+                    }
+                    if prepared_abs_send_time.is_some() {
+                        table_writer.calculate_size::<u8>(8);
+                    }
+                    if prepared_transport_wide_cc01.is_some() {
+                        table_writer.calculate_size::<u8>(10);
+                    }
+
+                    table_writer.finish_calculating();
+
+                    unsafe {
+                        if let ::core::option::Option::Some(prepared_mid) = prepared_mid {
+                            table_writer.write::<_, _, 1>(0, &prepared_mid);
+                        }
+                        if let ::core::option::Option::Some(prepared_rid) = prepared_rid {
+                            table_writer.write::<_, _, 1>(1, &prepared_rid);
+                        }
+                        if let ::core::option::Option::Some(prepared_rrid) = prepared_rrid {
+                            table_writer.write::<_, _, 1>(2, &prepared_rrid);
+                        }
+                        if let ::core::option::Option::Some(prepared_abs_send_time) =
+                            prepared_abs_send_time
+                        {
+                            table_writer.write::<_, _, 1>(3, &prepared_abs_send_time);
+                        }
+                        if let ::core::option::Option::Some(prepared_transport_wide_cc01) =
+                            prepared_transport_wide_cc01
+                        {
+                            table_writer.write::<_, _, 1>(4, &prepared_transport_wide_cc01);
+                        }
+                    }
+
+                    table_writer.finish()
+                }
+            }
+
+            impl ::planus::WriteAs<::planus::Offset<RecvRtpHeaderExtensions>> for RecvRtpHeaderExtensions {
+                type Prepared = ::planus::Offset<Self>;
+
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<RecvRtpHeaderExtensions> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl ::planus::WriteAsOptional<::planus::Offset<RecvRtpHeaderExtensions>>
+                for RecvRtpHeaderExtensions
+            {
+                type Prepared = ::planus::Offset<Self>;
+
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<RecvRtpHeaderExtensions>>
+                {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl ::planus::WriteAsOffset<RecvRtpHeaderExtensions> for RecvRtpHeaderExtensions {
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<RecvRtpHeaderExtensions> {
+                    RecvRtpHeaderExtensions::create(
+                        builder,
+                        &self.mid,
+                        &self.rid,
+                        &self.rrid,
+                        &self.abs_send_time,
+                        &self.transport_wide_cc01,
+                    )
+                }
+            }
+
+            #[derive(Copy, Clone)]
+            pub struct RecvRtpHeaderExtensionsRef<'a>(::planus::table_reader::Table<'a>);
+
+            impl<'a> RecvRtpHeaderExtensionsRef<'a> {
+                pub fn mid(&self) -> ::planus::Result<::core::option::Option<u8>> {
+                    self.0.access(0, "RecvRtpHeaderExtensions", "mid")
+                }
+
+                pub fn rid(&self) -> ::planus::Result<::core::option::Option<u8>> {
+                    self.0.access(1, "RecvRtpHeaderExtensions", "rid")
+                }
+
+                pub fn rrid(&self) -> ::planus::Result<::core::option::Option<u8>> {
+                    self.0.access(2, "RecvRtpHeaderExtensions", "rrid")
+                }
+
+                pub fn abs_send_time(&self) -> ::planus::Result<::core::option::Option<u8>> {
+                    self.0.access(3, "RecvRtpHeaderExtensions", "abs_send_time")
+                }
+
+                pub fn transport_wide_cc01(&self) -> ::planus::Result<::core::option::Option<u8>> {
+                    self.0
+                        .access(4, "RecvRtpHeaderExtensions", "transport_wide_cc01")
+                }
+            }
+
+            impl<'a> ::core::fmt::Debug for RecvRtpHeaderExtensionsRef<'a> {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    let mut f = f.debug_struct("RecvRtpHeaderExtensionsRef");
+                    if let ::core::option::Option::Some(field_mid) = self.mid().transpose() {
+                        f.field("mid", &field_mid);
+                    }
+                    if let ::core::option::Option::Some(field_rid) = self.rid().transpose() {
+                        f.field("rid", &field_rid);
+                    }
+                    if let ::core::option::Option::Some(field_rrid) = self.rrid().transpose() {
+                        f.field("rrid", &field_rrid);
+                    }
+                    if let ::core::option::Option::Some(field_abs_send_time) =
+                        self.abs_send_time().transpose()
+                    {
+                        f.field("abs_send_time", &field_abs_send_time);
+                    }
+                    if let ::core::option::Option::Some(field_transport_wide_cc01) =
+                        self.transport_wide_cc01().transpose()
+                    {
+                        f.field("transport_wide_cc01", &field_transport_wide_cc01);
+                    }
+                    f.finish()
+                }
+            }
+
+            impl<'a> ::core::convert::TryFrom<RecvRtpHeaderExtensionsRef<'a>> for RecvRtpHeaderExtensions {
+                type Error = ::planus::Error;
+
+                #[allow(unreachable_code)]
+                fn try_from(value: RecvRtpHeaderExtensionsRef<'a>) -> ::planus::Result<Self> {
+                    ::core::result::Result::Ok(Self {
+                        mid: if let ::core::option::Option::Some(mid) = value.mid()? {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(mid)?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        rid: if let ::core::option::Option::Some(rid) = value.rid()? {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(rid)?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        rrid: if let ::core::option::Option::Some(rrid) = value.rrid()? {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(rrid)?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        abs_send_time: if let ::core::option::Option::Some(abs_send_time) =
+                            value.abs_send_time()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                abs_send_time,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        transport_wide_cc01: if let ::core::option::Option::Some(
+                            transport_wide_cc01,
+                        ) = value.transport_wide_cc01()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                transport_wide_cc01,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                    })
+                }
+            }
+
+            impl<'a> ::planus::TableRead<'a> for RecvRtpHeaderExtensionsRef<'a> {
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
+                        buffer, offset,
+                    )?))
+                }
+            }
+
+            impl<'a> ::planus::VectorReadInner<'a> for RecvRtpHeaderExtensionsRef<'a> {
+                type Error = ::planus::Error;
+                const STRIDE: usize = 4;
+
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[RecvRtpHeaderExtensionsRef]",
+                            "get",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<::planus::Offset<RecvRtpHeaderExtensions>> for RecvRtpHeaderExtensions {
+                type Value = ::planus::Offset<RecvRtpHeaderExtensions>;
+                const STRIDE: usize = 4;
+                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
+                    ::planus::WriteAs::prepare(self, builder)
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[::planus::Offset<RecvRtpHeaderExtensions>],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - (Self::STRIDE * i) as u32,
+                        );
+                    }
+                }
+            }
+
+            impl<'a> ::planus::ReadAsRoot<'a> for RecvRtpHeaderExtensionsRef<'a> {
+                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(
+                        ::planus::SliceWithStartOffset {
+                            buffer: slice,
+                            offset_from_start: 0,
+                        },
+                        0,
+                    )
+                    .map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[RecvRtpHeaderExtensionsRef]",
+                            "read_as_root",
+                            0,
+                        )
+                    })
+                }
+            }
+
+            #[derive(
+                Clone,
+                Debug,
+                PartialEq,
+                PartialOrd,
+                Eq,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
             pub struct Dump {
                 pub id: ::planus::alloc::string::String,
                 pub direct: bool,
@@ -21458,13 +21742,13 @@ mod root {
                 pub data_producer_ids: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
                 pub data_consumer_ids: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
                 pub recv_rtp_header_extensions:
-                    ::planus::alloc::vec::Vec<super::common::StringUint8>,
+                    ::planus::alloc::boxed::Box<self::RecvRtpHeaderExtensions>,
                 pub rtp_listener: ::planus::alloc::boxed::Box<self::RtpListener>,
                 pub max_message_size: u32,
                 pub sctp_parameters: ::core::option::Option<
                     ::planus::alloc::boxed::Box<super::sctp_parameters::SctpParameters>,
                 >,
-                pub sctp_state: ::core::option::Option<::planus::alloc::string::String>,
+                pub sctp_state: ::core::option::Option<super::sctp_association::SctpState>,
                 pub sctp_listener:
                     ::core::option::Option<::planus::alloc::boxed::Box<self::SctpListener>>,
                 pub trace_event_types: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
@@ -21495,16 +21779,14 @@ mod root {
                         ::planus::Offset<[::planus::Offset<str>]>,
                     >,
                     field_recv_rtp_header_extensions: impl ::planus::WriteAs<
-                        ::planus::Offset<[::planus::Offset<super::common::StringUint8>]>,
+                        ::planus::Offset<self::RecvRtpHeaderExtensions>,
                     >,
                     field_rtp_listener: impl ::planus::WriteAs<::planus::Offset<self::RtpListener>>,
                     field_max_message_size: impl ::planus::WriteAsDefault<u32, u32>,
                     field_sctp_parameters: impl ::planus::WriteAsOptional<
                         ::planus::Offset<super::sctp_parameters::SctpParameters>,
                     >,
-                    field_sctp_state: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
-                    >,
+                    field_sctp_state: impl ::planus::WriteAsOptional<super::sctp_association::SctpState>,
                     field_sctp_listener: impl ::planus::WriteAsOptional<
                         ::planus::Offset<self::SctpListener>,
                     >,
@@ -21545,7 +21827,7 @@ mod root {
                     let prepared_trace_event_types = field_trace_event_types.prepare(builder);
 
                     let mut table_writer =
-                        ::planus::table_writer::TableWriter::<32, 57>::new(builder);
+                        ::planus::table_writer::TableWriter::<32, 54>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
                     if prepared_direct.is_some() {
@@ -21557,7 +21839,8 @@ mod root {
                     table_writer.calculate_size::<::planus::Offset<[::planus::Offset<super::common::Uint32String>]>>(12);
                     table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(14);
                     table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(16);
-                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<super::common::StringUint8>]>>(18);
+                    table_writer
+                        .calculate_size::<::planus::Offset<self::RecvRtpHeaderExtensions>>(18);
                     table_writer.calculate_size::<::planus::Offset<self::RtpListener>>(20);
                     if prepared_max_message_size.is_some() {
                         table_writer.calculate_size::<u32>(22);
@@ -21566,7 +21849,7 @@ mod root {
                         table_writer.calculate_size::<::planus::Offset<super::sctp_parameters::SctpParameters>>(24);
                     }
                     if prepared_sctp_state.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<str>>(26);
+                        table_writer.calculate_size::<super::sctp_association::SctpState>(26);
                     }
                     if prepared_sctp_listener.is_some() {
                         table_writer.calculate_size::<::planus::Offset<self::SctpListener>>(28);
@@ -21595,11 +21878,6 @@ mod root {
                         {
                             table_writer.write::<_, _, 4>(11, &prepared_sctp_parameters);
                         }
-                        if let ::core::option::Option::Some(prepared_sctp_state) =
-                            prepared_sctp_state
-                        {
-                            table_writer.write::<_, _, 4>(12, &prepared_sctp_state);
-                        }
                         if let ::core::option::Option::Some(prepared_sctp_listener) =
                             prepared_sctp_listener
                         {
@@ -21608,6 +21886,11 @@ mod root {
                         table_writer.write::<_, _, 4>(14, &prepared_trace_event_types);
                         if let ::core::option::Option::Some(prepared_direct) = prepared_direct {
                             table_writer.write::<_, _, 1>(1, &prepared_direct);
+                        }
+                        if let ::core::option::Option::Some(prepared_sctp_state) =
+                            prepared_sctp_state
+                        {
+                            table_writer.write::<_, _, 1>(12, &prepared_sctp_state);
                         }
                     }
 
@@ -21720,9 +22003,7 @@ mod root {
 
                 pub fn recv_rtp_header_extensions(
                     &self,
-                ) -> ::planus::Result<
-                    ::planus::Vector<'a, ::planus::Result<super::common::StringUint8Ref<'a>>>,
-                > {
+                ) -> ::planus::Result<self::RecvRtpHeaderExtensionsRef<'a>> {
                     self.0
                         .access_required(8, "Dump", "recv_rtp_header_extensions")
                 }
@@ -21747,7 +22028,7 @@ mod root {
 
                 pub fn sctp_state(
                     &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
+                ) -> ::planus::Result<::core::option::Option<super::sctp_association::SctpState>>
                 {
                     self.0.access(12, "Dump", "sctp_state")
                 }
@@ -21821,9 +22102,11 @@ mod root {
                             .to_vec_result()?,
                         data_producer_ids: value.data_producer_ids()?.to_vec_result()?,
                         data_consumer_ids: value.data_consumer_ids()?.to_vec_result()?,
-                        recv_rtp_header_extensions: value
-                            .recv_rtp_header_extensions()?
-                            .to_vec_result()?,
+                        recv_rtp_header_extensions: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(
+                                value.recv_rtp_header_extensions()?,
+                            )?,
+                        ),
                         rtp_listener: ::planus::alloc::boxed::Box::new(
                             ::core::convert::TryInto::try_into(value.rtp_listener()?)?,
                         ),
@@ -22304,41 +22587,33 @@ mod root {
             }
 
             #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
+                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub struct Stats {
                 pub transport_id: ::planus::alloc::string::String,
                 pub timestamp: u64,
-                pub sctp_state: ::core::option::Option<::planus::alloc::string::String>,
+                pub sctp_state: ::core::option::Option<super::sctp_association::SctpState>,
                 pub bytes_received: u64,
-                pub recv_bitrate: u64,
+                pub recv_bitrate: u32,
                 pub bytes_sent: u64,
-                pub send_bitrate: u64,
+                pub send_bitrate: u32,
                 pub rtp_bytes_received: u64,
-                pub rtp_recv_bitrate: u64,
+                pub rtp_recv_bitrate: u32,
                 pub rtp_bytes_sent: u64,
-                pub rtp_send_bitrate: u64,
+                pub rtp_send_bitrate: u32,
                 pub rtx_bytes_received: u64,
-                pub rtx_recv_bitrate: u64,
+                pub rtx_recv_bitrate: u32,
                 pub rtx_bytes_sent: u64,
-                pub rtx_send_bitrate: u64,
+                pub rtx_send_bitrate: u32,
                 pub probation_bytes_sent: u64,
-                pub probation_send_bitrate: u64,
-                pub available_outgoing_bitrate: u64,
-                pub available_incoming_bitrate: u64,
-                pub max_incoming_bitrate: u64,
-                pub max_outgoing_bitrate: u64,
-                pub min_outgoing_bitrate: u64,
-                pub rtp_packet_loss_received: u64,
-                pub rtp_packet_loss_sent: u64,
+                pub probation_send_bitrate: u32,
+                pub available_outgoing_bitrate: ::core::option::Option<u32>,
+                pub available_incoming_bitrate: ::core::option::Option<u32>,
+                pub max_incoming_bitrate: u32,
+                pub max_outgoing_bitrate: u32,
+                pub min_outgoing_bitrate: u32,
+                pub rtp_packet_loss_received: ::core::option::Option<f64>,
+                pub rtp_packet_loss_sent: ::core::option::Option<f64>,
             }
 
             impl Stats {
@@ -22347,30 +22622,28 @@ mod root {
                     builder: &mut ::planus::Builder,
                     field_transport_id: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_timestamp: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_sctp_state: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
-                    >,
+                    field_sctp_state: impl ::planus::WriteAsOptional<super::sctp_association::SctpState>,
                     field_bytes_received: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_recv_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_recv_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                     field_bytes_sent: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_send_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_send_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                     field_rtp_bytes_received: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_rtp_recv_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_rtp_recv_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                     field_rtp_bytes_sent: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_rtp_send_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_rtp_send_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                     field_rtx_bytes_received: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_rtx_recv_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_rtx_recv_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                     field_rtx_bytes_sent: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_rtx_send_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_rtx_send_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                     field_probation_bytes_sent: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_probation_send_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_available_outgoing_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_available_incoming_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_max_incoming_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_max_outgoing_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_min_outgoing_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_rtp_packet_loss_received: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_rtp_packet_loss_sent: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_probation_send_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_available_outgoing_bitrate: impl ::planus::WriteAsOptional<u32>,
+                    field_available_incoming_bitrate: impl ::planus::WriteAsOptional<u32>,
+                    field_max_incoming_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_max_outgoing_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_min_outgoing_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_rtp_packet_loss_received: impl ::planus::WriteAsOptional<f64>,
+                    field_rtp_packet_loss_sent: impl ::planus::WriteAsOptional<f64>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_transport_id = field_transport_id.prepare(builder);
 
@@ -22409,10 +22682,10 @@ mod root {
                         field_probation_send_bitrate.prepare(builder, &0);
 
                     let prepared_available_outgoing_bitrate =
-                        field_available_outgoing_bitrate.prepare(builder, &0);
+                        field_available_outgoing_bitrate.prepare(builder);
 
                     let prepared_available_incoming_bitrate =
-                        field_available_incoming_bitrate.prepare(builder, &0);
+                        field_available_incoming_bitrate.prepare(builder);
 
                     let prepared_max_incoming_bitrate =
                         field_max_incoming_bitrate.prepare(builder, &0);
@@ -22424,83 +22697,82 @@ mod root {
                         field_min_outgoing_bitrate.prepare(builder, &0);
 
                     let prepared_rtp_packet_loss_received =
-                        field_rtp_packet_loss_received.prepare(builder, &0);
+                        field_rtp_packet_loss_received.prepare(builder);
 
-                    let prepared_rtp_packet_loss_sent =
-                        field_rtp_packet_loss_sent.prepare(builder, &0);
+                    let prepared_rtp_packet_loss_sent = field_rtp_packet_loss_sent.prepare(builder);
 
                     let mut table_writer =
-                        ::planus::table_writer::TableWriter::<50, 184>::new(builder);
+                        ::planus::table_writer::TableWriter::<50, 133>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
                     if prepared_timestamp.is_some() {
                         table_writer.calculate_size::<u64>(4);
                     }
                     if prepared_sctp_state.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<str>>(6);
+                        table_writer.calculate_size::<super::sctp_association::SctpState>(6);
                     }
                     if prepared_bytes_received.is_some() {
                         table_writer.calculate_size::<u64>(8);
                     }
                     if prepared_recv_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(10);
+                        table_writer.calculate_size::<u32>(10);
                     }
                     if prepared_bytes_sent.is_some() {
                         table_writer.calculate_size::<u64>(12);
                     }
                     if prepared_send_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(14);
+                        table_writer.calculate_size::<u32>(14);
                     }
                     if prepared_rtp_bytes_received.is_some() {
                         table_writer.calculate_size::<u64>(16);
                     }
                     if prepared_rtp_recv_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(18);
+                        table_writer.calculate_size::<u32>(18);
                     }
                     if prepared_rtp_bytes_sent.is_some() {
                         table_writer.calculate_size::<u64>(20);
                     }
                     if prepared_rtp_send_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(22);
+                        table_writer.calculate_size::<u32>(22);
                     }
                     if prepared_rtx_bytes_received.is_some() {
                         table_writer.calculate_size::<u64>(24);
                     }
                     if prepared_rtx_recv_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(26);
+                        table_writer.calculate_size::<u32>(26);
                     }
                     if prepared_rtx_bytes_sent.is_some() {
                         table_writer.calculate_size::<u64>(28);
                     }
                     if prepared_rtx_send_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(30);
+                        table_writer.calculate_size::<u32>(30);
                     }
                     if prepared_probation_bytes_sent.is_some() {
                         table_writer.calculate_size::<u64>(32);
                     }
                     if prepared_probation_send_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(34);
+                        table_writer.calculate_size::<u32>(34);
                     }
                     if prepared_available_outgoing_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(36);
+                        table_writer.calculate_size::<u32>(36);
                     }
                     if prepared_available_incoming_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(38);
+                        table_writer.calculate_size::<u32>(38);
                     }
                     if prepared_max_incoming_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(40);
+                        table_writer.calculate_size::<u32>(40);
                     }
                     if prepared_max_outgoing_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(42);
+                        table_writer.calculate_size::<u32>(42);
                     }
                     if prepared_min_outgoing_bitrate.is_some() {
-                        table_writer.calculate_size::<u64>(44);
+                        table_writer.calculate_size::<u32>(44);
                     }
                     if prepared_rtp_packet_loss_received.is_some() {
-                        table_writer.calculate_size::<u64>(46);
+                        table_writer.calculate_size::<f64>(46);
                     }
                     if prepared_rtp_packet_loss_sent.is_some() {
-                        table_writer.calculate_size::<u64>(48);
+                        table_writer.calculate_size::<f64>(48);
                     }
 
                     table_writer.finish_calculating();
@@ -22515,95 +22787,35 @@ mod root {
                         {
                             table_writer.write::<_, _, 8>(3, &prepared_bytes_received);
                         }
-                        if let ::core::option::Option::Some(prepared_recv_bitrate) =
-                            prepared_recv_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(4, &prepared_recv_bitrate);
-                        }
                         if let ::core::option::Option::Some(prepared_bytes_sent) =
                             prepared_bytes_sent
                         {
                             table_writer.write::<_, _, 8>(5, &prepared_bytes_sent);
-                        }
-                        if let ::core::option::Option::Some(prepared_send_bitrate) =
-                            prepared_send_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(6, &prepared_send_bitrate);
                         }
                         if let ::core::option::Option::Some(prepared_rtp_bytes_received) =
                             prepared_rtp_bytes_received
                         {
                             table_writer.write::<_, _, 8>(7, &prepared_rtp_bytes_received);
                         }
-                        if let ::core::option::Option::Some(prepared_rtp_recv_bitrate) =
-                            prepared_rtp_recv_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(8, &prepared_rtp_recv_bitrate);
-                        }
                         if let ::core::option::Option::Some(prepared_rtp_bytes_sent) =
                             prepared_rtp_bytes_sent
                         {
                             table_writer.write::<_, _, 8>(9, &prepared_rtp_bytes_sent);
-                        }
-                        if let ::core::option::Option::Some(prepared_rtp_send_bitrate) =
-                            prepared_rtp_send_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(10, &prepared_rtp_send_bitrate);
                         }
                         if let ::core::option::Option::Some(prepared_rtx_bytes_received) =
                             prepared_rtx_bytes_received
                         {
                             table_writer.write::<_, _, 8>(11, &prepared_rtx_bytes_received);
                         }
-                        if let ::core::option::Option::Some(prepared_rtx_recv_bitrate) =
-                            prepared_rtx_recv_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(12, &prepared_rtx_recv_bitrate);
-                        }
                         if let ::core::option::Option::Some(prepared_rtx_bytes_sent) =
                             prepared_rtx_bytes_sent
                         {
                             table_writer.write::<_, _, 8>(13, &prepared_rtx_bytes_sent);
                         }
-                        if let ::core::option::Option::Some(prepared_rtx_send_bitrate) =
-                            prepared_rtx_send_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(14, &prepared_rtx_send_bitrate);
-                        }
                         if let ::core::option::Option::Some(prepared_probation_bytes_sent) =
                             prepared_probation_bytes_sent
                         {
                             table_writer.write::<_, _, 8>(15, &prepared_probation_bytes_sent);
-                        }
-                        if let ::core::option::Option::Some(prepared_probation_send_bitrate) =
-                            prepared_probation_send_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(16, &prepared_probation_send_bitrate);
-                        }
-                        if let ::core::option::Option::Some(prepared_available_outgoing_bitrate) =
-                            prepared_available_outgoing_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(17, &prepared_available_outgoing_bitrate);
-                        }
-                        if let ::core::option::Option::Some(prepared_available_incoming_bitrate) =
-                            prepared_available_incoming_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(18, &prepared_available_incoming_bitrate);
-                        }
-                        if let ::core::option::Option::Some(prepared_max_incoming_bitrate) =
-                            prepared_max_incoming_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(19, &prepared_max_incoming_bitrate);
-                        }
-                        if let ::core::option::Option::Some(prepared_max_outgoing_bitrate) =
-                            prepared_max_outgoing_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(20, &prepared_max_outgoing_bitrate);
-                        }
-                        if let ::core::option::Option::Some(prepared_min_outgoing_bitrate) =
-                            prepared_min_outgoing_bitrate
-                        {
-                            table_writer.write::<_, _, 8>(21, &prepared_min_outgoing_bitrate);
                         }
                         if let ::core::option::Option::Some(prepared_rtp_packet_loss_received) =
                             prepared_rtp_packet_loss_received
@@ -22616,10 +22828,70 @@ mod root {
                             table_writer.write::<_, _, 8>(23, &prepared_rtp_packet_loss_sent);
                         }
                         table_writer.write::<_, _, 4>(0, &prepared_transport_id);
+                        if let ::core::option::Option::Some(prepared_recv_bitrate) =
+                            prepared_recv_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(4, &prepared_recv_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_send_bitrate) =
+                            prepared_send_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(6, &prepared_send_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_rtp_recv_bitrate) =
+                            prepared_rtp_recv_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(8, &prepared_rtp_recv_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_rtp_send_bitrate) =
+                            prepared_rtp_send_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(10, &prepared_rtp_send_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_rtx_recv_bitrate) =
+                            prepared_rtx_recv_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(12, &prepared_rtx_recv_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_rtx_send_bitrate) =
+                            prepared_rtx_send_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(14, &prepared_rtx_send_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_probation_send_bitrate) =
+                            prepared_probation_send_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(16, &prepared_probation_send_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_available_outgoing_bitrate) =
+                            prepared_available_outgoing_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(17, &prepared_available_outgoing_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_available_incoming_bitrate) =
+                            prepared_available_incoming_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(18, &prepared_available_incoming_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_max_incoming_bitrate) =
+                            prepared_max_incoming_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(19, &prepared_max_incoming_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_max_outgoing_bitrate) =
+                            prepared_max_outgoing_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(20, &prepared_max_outgoing_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_min_outgoing_bitrate) =
+                            prepared_min_outgoing_bitrate
+                        {
+                            table_writer.write::<_, _, 4>(21, &prepared_min_outgoing_bitrate);
+                        }
                         if let ::core::option::Option::Some(prepared_sctp_state) =
                             prepared_sctp_state
                         {
-                            table_writer.write::<_, _, 4>(2, &prepared_sctp_state);
+                            table_writer.write::<_, _, 1>(2, &prepared_sctp_state);
                         }
                     }
 
@@ -22692,7 +22964,7 @@ mod root {
 
                 pub fn sctp_state(
                     &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
+                ) -> ::planus::Result<::core::option::Option<super::sctp_association::SctpState>>
                 {
                     self.0.access(2, "Stats", "sctp_state")
                 }
@@ -22703,7 +22975,7 @@ mod root {
                     )
                 }
 
-                pub fn recv_bitrate(&self) -> ::planus::Result<u64> {
+                pub fn recv_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0.access(4, "Stats", "recv_bitrate")?.unwrap_or(0),
                     )
@@ -22715,7 +22987,7 @@ mod root {
                     )
                 }
 
-                pub fn send_bitrate(&self) -> ::planus::Result<u64> {
+                pub fn send_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0.access(6, "Stats", "send_bitrate")?.unwrap_or(0),
                     )
@@ -22729,7 +23001,7 @@ mod root {
                     )
                 }
 
-                pub fn rtp_recv_bitrate(&self) -> ::planus::Result<u64> {
+                pub fn rtp_recv_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0.access(8, "Stats", "rtp_recv_bitrate")?.unwrap_or(0),
                     )
@@ -22741,7 +23013,7 @@ mod root {
                     )
                 }
 
-                pub fn rtp_send_bitrate(&self) -> ::planus::Result<u64> {
+                pub fn rtp_send_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0.access(10, "Stats", "rtp_send_bitrate")?.unwrap_or(0),
                     )
@@ -22755,7 +23027,7 @@ mod root {
                     )
                 }
 
-                pub fn rtx_recv_bitrate(&self) -> ::planus::Result<u64> {
+                pub fn rtx_recv_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0.access(12, "Stats", "rtx_recv_bitrate")?.unwrap_or(0),
                     )
@@ -22767,7 +23039,7 @@ mod root {
                     )
                 }
 
-                pub fn rtx_send_bitrate(&self) -> ::planus::Result<u64> {
+                pub fn rtx_send_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0.access(14, "Stats", "rtx_send_bitrate")?.unwrap_or(0),
                     )
@@ -22781,7 +23053,7 @@ mod root {
                     )
                 }
 
-                pub fn probation_send_bitrate(&self) -> ::planus::Result<u64> {
+                pub fn probation_send_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(16, "Stats", "probation_send_bitrate")?
@@ -22789,23 +23061,19 @@ mod root {
                     )
                 }
 
-                pub fn available_outgoing_bitrate(&self) -> ::planus::Result<u64> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(17, "Stats", "available_outgoing_bitrate")?
-                            .unwrap_or(0),
-                    )
+                pub fn available_outgoing_bitrate(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<u32>> {
+                    self.0.access(17, "Stats", "available_outgoing_bitrate")
                 }
 
-                pub fn available_incoming_bitrate(&self) -> ::planus::Result<u64> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(18, "Stats", "available_incoming_bitrate")?
-                            .unwrap_or(0),
-                    )
+                pub fn available_incoming_bitrate(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<u32>> {
+                    self.0.access(18, "Stats", "available_incoming_bitrate")
                 }
 
-                pub fn max_incoming_bitrate(&self) -> ::planus::Result<u64> {
+                pub fn max_incoming_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(19, "Stats", "max_incoming_bitrate")?
@@ -22813,7 +23081,7 @@ mod root {
                     )
                 }
 
-                pub fn max_outgoing_bitrate(&self) -> ::planus::Result<u64> {
+                pub fn max_outgoing_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(20, "Stats", "max_outgoing_bitrate")?
@@ -22821,7 +23089,7 @@ mod root {
                     )
                 }
 
-                pub fn min_outgoing_bitrate(&self) -> ::planus::Result<u64> {
+                pub fn min_outgoing_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(21, "Stats", "min_outgoing_bitrate")?
@@ -22829,20 +23097,16 @@ mod root {
                     )
                 }
 
-                pub fn rtp_packet_loss_received(&self) -> ::planus::Result<u64> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(22, "Stats", "rtp_packet_loss_received")?
-                            .unwrap_or(0),
-                    )
+                pub fn rtp_packet_loss_received(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<f64>> {
+                    self.0.access(22, "Stats", "rtp_packet_loss_received")
                 }
 
-                pub fn rtp_packet_loss_sent(&self) -> ::planus::Result<u64> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(23, "Stats", "rtp_packet_loss_sent")?
-                            .unwrap_or(0),
-                    )
+                pub fn rtp_packet_loss_sent(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<f64>> {
+                    self.0.access(23, "Stats", "rtp_packet_loss_sent")
                 }
             }
 
@@ -22870,19 +23134,35 @@ mod root {
                     f.field("rtx_send_bitrate", &self.rtx_send_bitrate());
                     f.field("probation_bytes_sent", &self.probation_bytes_sent());
                     f.field("probation_send_bitrate", &self.probation_send_bitrate());
-                    f.field(
-                        "available_outgoing_bitrate",
-                        &self.available_outgoing_bitrate(),
-                    );
-                    f.field(
-                        "available_incoming_bitrate",
-                        &self.available_incoming_bitrate(),
-                    );
+                    if let ::core::option::Option::Some(field_available_outgoing_bitrate) =
+                        self.available_outgoing_bitrate().transpose()
+                    {
+                        f.field(
+                            "available_outgoing_bitrate",
+                            &field_available_outgoing_bitrate,
+                        );
+                    }
+                    if let ::core::option::Option::Some(field_available_incoming_bitrate) =
+                        self.available_incoming_bitrate().transpose()
+                    {
+                        f.field(
+                            "available_incoming_bitrate",
+                            &field_available_incoming_bitrate,
+                        );
+                    }
                     f.field("max_incoming_bitrate", &self.max_incoming_bitrate());
                     f.field("max_outgoing_bitrate", &self.max_outgoing_bitrate());
                     f.field("min_outgoing_bitrate", &self.min_outgoing_bitrate());
-                    f.field("rtp_packet_loss_received", &self.rtp_packet_loss_received());
-                    f.field("rtp_packet_loss_sent", &self.rtp_packet_loss_sent());
+                    if let ::core::option::Option::Some(field_rtp_packet_loss_received) =
+                        self.rtp_packet_loss_received().transpose()
+                    {
+                        f.field("rtp_packet_loss_received", &field_rtp_packet_loss_received);
+                    }
+                    if let ::core::option::Option::Some(field_rtp_packet_loss_sent) =
+                        self.rtp_packet_loss_sent().transpose()
+                    {
+                        f.field("rtp_packet_loss_sent", &field_rtp_packet_loss_sent);
+                    }
                     f.finish()
                 }
             }
@@ -22940,12 +23220,26 @@ mod root {
                         probation_send_bitrate: ::core::convert::TryInto::try_into(
                             value.probation_send_bitrate()?,
                         )?,
-                        available_outgoing_bitrate: ::core::convert::TryInto::try_into(
-                            value.available_outgoing_bitrate()?,
-                        )?,
-                        available_incoming_bitrate: ::core::convert::TryInto::try_into(
-                            value.available_incoming_bitrate()?,
-                        )?,
+                        available_outgoing_bitrate: if let ::core::option::Option::Some(
+                            available_outgoing_bitrate,
+                        ) = value.available_outgoing_bitrate()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                available_outgoing_bitrate,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        available_incoming_bitrate: if let ::core::option::Option::Some(
+                            available_incoming_bitrate,
+                        ) = value.available_incoming_bitrate()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                available_incoming_bitrate,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
                         max_incoming_bitrate: ::core::convert::TryInto::try_into(
                             value.max_incoming_bitrate()?,
                         )?,
@@ -22955,12 +23249,26 @@ mod root {
                         min_outgoing_bitrate: ::core::convert::TryInto::try_into(
                             value.min_outgoing_bitrate()?,
                         )?,
-                        rtp_packet_loss_received: ::core::convert::TryInto::try_into(
-                            value.rtp_packet_loss_received()?,
-                        )?,
-                        rtp_packet_loss_sent: ::core::convert::TryInto::try_into(
-                            value.rtp_packet_loss_sent()?,
-                        )?,
+                        rtp_packet_loss_received: if let ::core::option::Option::Some(
+                            rtp_packet_loss_received,
+                        ) = value.rtp_packet_loss_received()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                rtp_packet_loss_received,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        rtp_packet_loss_sent: if let ::core::option::Option::Some(
+                            rtp_packet_loss_sent,
+                        ) = value.rtp_packet_loss_sent()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                rtp_packet_loss_sent,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
                     })
                 }
             }
@@ -27553,29 +27861,16 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct Notification {
-                pub handler_id: ::core::option::Option<::planus::alloc::string::String>,
+                pub handler_id: ::planus::alloc::string::String,
                 pub event: self::Event,
                 pub body: ::core::option::Option<self::Body>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for Notification {
-                fn default() -> Self {
-                    Self {
-                        handler_id: ::core::default::Default::default(),
-                        event: self::Event::TransportSendRtcp,
-                        body: ::core::default::Default::default(),
-                    }
-                }
             }
 
             impl Notification {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_handler_id: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
-                    >,
+                    field_handler_id: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_event: impl ::planus::WriteAsDefault<self::Event, self::Event>,
                     field_body: impl ::planus::WriteAsOptionalUnion<self::Body>,
                 ) -> ::planus::Offset<Self> {
@@ -27589,9 +27884,7 @@ mod root {
                     let mut table_writer =
                         ::planus::table_writer::TableWriter::<8, 10>::new(builder);
 
-                    if prepared_handler_id.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<str>>(2);
-                    }
+                    table_writer.calculate_size::<::planus::Offset<str>>(2);
                     if prepared_event.is_some() {
                         table_writer.calculate_size::<self::Event>(4);
                     }
@@ -27603,11 +27896,7 @@ mod root {
                     table_writer.finish_calculating();
 
                     unsafe {
-                        if let ::core::option::Option::Some(prepared_handler_id) =
-                            prepared_handler_id
-                        {
-                            table_writer.write::<_, _, 4>(0, &prepared_handler_id);
-                        }
+                        table_writer.write::<_, _, 4>(0, &prepared_handler_id);
                         if let ::core::option::Option::Some(prepared_body) = prepared_body {
                             table_writer.write::<_, _, 4>(3, &prepared_body.offset());
                         }
@@ -27658,11 +27947,8 @@ mod root {
             pub struct NotificationRef<'a>(::planus::table_reader::Table<'a>);
 
             impl<'a> NotificationRef<'a> {
-                pub fn handler_id(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
-                {
-                    self.0.access(0, "Notification", "handler_id")
+                pub fn handler_id(&self) -> ::planus::Result<&'a ::core::primitive::str> {
+                    self.0.access_required(0, "Notification", "handler_id")
                 }
 
                 pub fn event(&self) -> ::planus::Result<self::Event> {
@@ -27681,11 +27967,7 @@ mod root {
             impl<'a> ::core::fmt::Debug for NotificationRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("NotificationRef");
-                    if let ::core::option::Option::Some(field_handler_id) =
-                        self.handler_id().transpose()
-                    {
-                        f.field("handler_id", &field_handler_id);
-                    }
+                    f.field("handler_id", &self.handler_id());
                     f.field("event", &self.event());
                     if let ::core::option::Option::Some(field_body) = self.body().transpose() {
                         f.field("body", &field_body);
@@ -27700,15 +27982,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: NotificationRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        handler_id: if let ::core::option::Option::Some(handler_id) =
-                            value.handler_id()?
-                        {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
-                                handler_id,
-                            )?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        handler_id: ::core::convert::TryInto::try_into(value.handler_id()?)?,
                         event: ::core::convert::TryInto::try_into(value.event()?)?,
                         body: if let ::core::option::Option::Some(body) = value.body()? {
                             ::core::option::Option::Some(::core::convert::TryInto::try_into(body)?)
@@ -28860,20 +29134,8 @@ mod root {
             pub struct Request {
                 pub id: u32,
                 pub method: self::Method,
-                pub handler_id: ::core::option::Option<::planus::alloc::string::String>,
+                pub handler_id: ::planus::alloc::string::String,
                 pub body: ::core::option::Option<self::Body>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for Request {
-                fn default() -> Self {
-                    Self {
-                        id: 0,
-                        method: self::Method::WorkerClose,
-                        handler_id: ::core::default::Default::default(),
-                        body: ::core::default::Default::default(),
-                    }
-                }
             }
 
             impl Request {
@@ -28882,9 +29144,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     field_id: impl ::planus::WriteAsDefault<u32, u32>,
                     field_method: impl ::planus::WriteAsDefault<self::Method, self::Method>,
-                    field_handler_id: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
-                    >,
+                    field_handler_id: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_body: impl ::planus::WriteAsOptionalUnion<self::Body>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_id = field_id.prepare(builder, &0);
@@ -28904,9 +29164,7 @@ mod root {
                     if prepared_method.is_some() {
                         table_writer.calculate_size::<self::Method>(4);
                     }
-                    if prepared_handler_id.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<str>>(6);
-                    }
+                    table_writer.calculate_size::<::planus::Offset<str>>(6);
                     if prepared_body.is_some() {
                         table_writer.calculate_size::<u8>(8);
                         table_writer.calculate_size::<::planus::Offset<self::Body>>(10);
@@ -28918,11 +29176,7 @@ mod root {
                         if let ::core::option::Option::Some(prepared_id) = prepared_id {
                             table_writer.write::<_, _, 4>(0, &prepared_id);
                         }
-                        if let ::core::option::Option::Some(prepared_handler_id) =
-                            prepared_handler_id
-                        {
-                            table_writer.write::<_, _, 4>(2, &prepared_handler_id);
-                        }
+                        table_writer.write::<_, _, 4>(2, &prepared_handler_id);
                         if let ::core::option::Option::Some(prepared_body) = prepared_body {
                             table_writer.write::<_, _, 4>(4, &prepared_body.offset());
                         }
@@ -28985,11 +29239,8 @@ mod root {
                     )
                 }
 
-                pub fn handler_id(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
-                {
-                    self.0.access(2, "Request", "handler_id")
+                pub fn handler_id(&self) -> ::planus::Result<&'a ::core::primitive::str> {
+                    self.0.access_required(2, "Request", "handler_id")
                 }
 
                 pub fn body(&self) -> ::planus::Result<::core::option::Option<self::BodyRef<'a>>> {
@@ -29002,11 +29253,7 @@ mod root {
                     let mut f = f.debug_struct("RequestRef");
                     f.field("id", &self.id());
                     f.field("method", &self.method());
-                    if let ::core::option::Option::Some(field_handler_id) =
-                        self.handler_id().transpose()
-                    {
-                        f.field("handler_id", &field_handler_id);
-                    }
+                    f.field("handler_id", &self.handler_id());
                     if let ::core::option::Option::Some(field_body) = self.body().transpose() {
                         f.field("body", &field_body);
                     }
@@ -29022,15 +29269,7 @@ mod root {
                     ::core::result::Result::Ok(Self {
                         id: ::core::convert::TryInto::try_into(value.id()?)?,
                         method: ::core::convert::TryInto::try_into(value.method()?)?,
-                        handler_id: if let ::core::option::Option::Some(handler_id) =
-                            value.handler_id()?
-                        {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
-                                handler_id,
-                            )?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        handler_id: ::core::convert::TryInto::try_into(value.handler_id()?)?,
                         body: if let ::core::option::Option::Some(body) = value.body()? {
                             ::core::option::Option::Some(::core::convert::TryInto::try_into(body)?)
                         } else {
@@ -30136,32 +30375,20 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct ChannelMessageHandlers {
-                pub channel_request_handlers: ::core::option::Option<
+                pub channel_request_handlers:
                     ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
-                >,
-                pub channel_notification_handlers: ::core::option::Option<
+                pub channel_notification_handlers:
                     ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
-                >,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for ChannelMessageHandlers {
-                fn default() -> Self {
-                    Self {
-                        channel_request_handlers: ::core::default::Default::default(),
-                        channel_notification_handlers: ::core::default::Default::default(),
-                    }
-                }
             }
 
             impl ChannelMessageHandlers {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_channel_request_handlers: impl ::planus::WriteAsOptional<
+                    field_channel_request_handlers: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<str>]>,
                     >,
-                    field_channel_notification_handlers: impl ::planus::WriteAsOptional<
+                    field_channel_notification_handlers: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<str>]>,
                     >,
                 ) -> ::planus::Offset<Self> {
@@ -30174,28 +30401,14 @@ mod root {
                     let mut table_writer =
                         ::planus::table_writer::TableWriter::<6, 8>::new(builder);
 
-                    if prepared_channel_request_handlers.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(2);
-                    }
-                    if prepared_channel_notification_handlers.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(4);
-                    }
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(2);
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(4);
 
                     table_writer.finish_calculating();
 
                     unsafe {
-                        if let ::core::option::Option::Some(prepared_channel_request_handlers) =
-                            prepared_channel_request_handlers
-                        {
-                            table_writer.write::<_, _, 4>(0, &prepared_channel_request_handlers);
-                        }
-                        if let ::core::option::Option::Some(
-                            prepared_channel_notification_handlers,
-                        ) = prepared_channel_notification_handlers
-                        {
-                            table_writer
-                                .write::<_, _, 4>(1, &prepared_channel_notification_handlers);
-                        }
+                        table_writer.write::<_, _, 4>(0, &prepared_channel_request_handlers);
+                        table_writer.write::<_, _, 4>(1, &prepared_channel_notification_handlers);
                     }
 
                     table_writer.finish()
@@ -30247,42 +30460,33 @@ mod root {
                 pub fn channel_request_handlers(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
                 > {
                     self.0
-                        .access(0, "ChannelMessageHandlers", "channel_request_handlers")
+                        .access_required(0, "ChannelMessageHandlers", "channel_request_handlers")
                 }
 
                 pub fn channel_notification_handlers(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
                 > {
-                    self.0
-                        .access(1, "ChannelMessageHandlers", "channel_notification_handlers")
+                    self.0.access_required(
+                        1,
+                        "ChannelMessageHandlers",
+                        "channel_notification_handlers",
+                    )
                 }
             }
 
             impl<'a> ::core::fmt::Debug for ChannelMessageHandlersRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("ChannelMessageHandlersRef");
-                    if let ::core::option::Option::Some(field_channel_request_handlers) =
-                        self.channel_request_handlers().transpose()
-                    {
-                        f.field("channel_request_handlers", &field_channel_request_handlers);
-                    }
-                    if let ::core::option::Option::Some(field_channel_notification_handlers) =
-                        self.channel_notification_handlers().transpose()
-                    {
-                        f.field(
-                            "channel_notification_handlers",
-                            &field_channel_notification_handlers,
-                        );
-                    }
+                    f.field("channel_request_handlers", &self.channel_request_handlers());
+                    f.field(
+                        "channel_notification_handlers",
+                        &self.channel_notification_handlers(),
+                    );
                     f.finish()
                 }
             }
@@ -30293,25 +30497,12 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: ChannelMessageHandlersRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        channel_request_handlers: if let ::core::option::Option::Some(
-                            channel_request_handlers,
-                        ) = value.channel_request_handlers()?
-                        {
-                            ::core::option::Option::Some(channel_request_handlers.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        channel_notification_handlers: if let ::core::option::Option::Some(
-                            channel_notification_handlers,
-                        ) =
-                            value.channel_notification_handlers()?
-                        {
-                            ::core::option::Option::Some(
-                                channel_notification_handlers.to_vec_result()?,
-                            )
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        channel_request_handlers: value
+                            .channel_request_handlers()?
+                            .to_vec_result()?,
+                        channel_notification_handlers: value
+                            .channel_notification_handlers()?
+                            .to_vec_result()?,
                     })
                 }
             }
@@ -30401,27 +30592,10 @@ mod root {
             )]
             pub struct DumpResponse {
                 pub pid: u32,
-                pub web_rtc_server_ids: ::core::option::Option<
-                    ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
-                >,
-                pub router_ids: ::core::option::Option<
-                    ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
-                >,
-                pub channel_message_handlers: ::core::option::Option<
+                pub web_rtc_server_ids: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
+                pub router_ids: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
+                pub channel_message_handlers:
                     ::planus::alloc::boxed::Box<self::ChannelMessageHandlers>,
-                >,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for DumpResponse {
-                fn default() -> Self {
-                    Self {
-                        pid: 0,
-                        web_rtc_server_ids: ::core::default::Default::default(),
-                        router_ids: ::core::default::Default::default(),
-                        channel_message_handlers: ::core::default::Default::default(),
-                    }
-                }
             }
 
             impl DumpResponse {
@@ -30429,13 +30603,11 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_pid: impl ::planus::WriteAsDefault<u32, u32>,
-                    field_web_rtc_server_ids: impl ::planus::WriteAsOptional<
+                    field_web_rtc_server_ids: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<str>]>,
                     >,
-                    field_router_ids: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<[::planus::Offset<str>]>,
-                    >,
-                    field_channel_message_handlers: impl ::planus::WriteAsOptional<
+                    field_router_ids: impl ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    field_channel_message_handlers: impl ::planus::WriteAs<
                         ::planus::Offset<self::ChannelMessageHandlers>,
                     >,
                 ) -> ::planus::Offset<Self> {
@@ -30454,16 +30626,10 @@ mod root {
                     if prepared_pid.is_some() {
                         table_writer.calculate_size::<u32>(2);
                     }
-                    if prepared_web_rtc_server_ids.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(4);
-                    }
-                    if prepared_router_ids.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(6);
-                    }
-                    if prepared_channel_message_handlers.is_some() {
-                        table_writer
-                            .calculate_size::<::planus::Offset<self::ChannelMessageHandlers>>(8);
-                    }
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(4);
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(6);
+                    table_writer
+                        .calculate_size::<::planus::Offset<self::ChannelMessageHandlers>>(8);
 
                     table_writer.finish_calculating();
 
@@ -30471,21 +30637,9 @@ mod root {
                         if let ::core::option::Option::Some(prepared_pid) = prepared_pid {
                             table_writer.write::<_, _, 4>(0, &prepared_pid);
                         }
-                        if let ::core::option::Option::Some(prepared_web_rtc_server_ids) =
-                            prepared_web_rtc_server_ids
-                        {
-                            table_writer.write::<_, _, 4>(1, &prepared_web_rtc_server_ids);
-                        }
-                        if let ::core::option::Option::Some(prepared_router_ids) =
-                            prepared_router_ids
-                        {
-                            table_writer.write::<_, _, 4>(2, &prepared_router_ids);
-                        }
-                        if let ::core::option::Option::Some(prepared_channel_message_handlers) =
-                            prepared_channel_message_handlers
-                        {
-                            table_writer.write::<_, _, 4>(3, &prepared_channel_message_handlers);
-                        }
+                        table_writer.write::<_, _, 4>(1, &prepared_web_rtc_server_ids);
+                        table_writer.write::<_, _, 4>(2, &prepared_router_ids);
+                        table_writer.write::<_, _, 4>(3, &prepared_channel_message_handlers);
                     }
 
                     table_writer.finish()
@@ -30542,28 +30696,25 @@ mod root {
                 pub fn web_rtc_server_ids(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
                 > {
-                    self.0.access(1, "DumpResponse", "web_rtc_server_ids")
+                    self.0
+                        .access_required(1, "DumpResponse", "web_rtc_server_ids")
                 }
 
                 pub fn router_ids(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
                 > {
-                    self.0.access(2, "DumpResponse", "router_ids")
+                    self.0.access_required(2, "DumpResponse", "router_ids")
                 }
 
                 pub fn channel_message_handlers(
                     &self,
-                ) -> ::planus::Result<::core::option::Option<self::ChannelMessageHandlersRef<'a>>>
-                {
-                    self.0.access(3, "DumpResponse", "channel_message_handlers")
+                ) -> ::planus::Result<self::ChannelMessageHandlersRef<'a>> {
+                    self.0
+                        .access_required(3, "DumpResponse", "channel_message_handlers")
                 }
             }
 
@@ -30571,21 +30722,9 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("DumpResponseRef");
                     f.field("pid", &self.pid());
-                    if let ::core::option::Option::Some(field_web_rtc_server_ids) =
-                        self.web_rtc_server_ids().transpose()
-                    {
-                        f.field("web_rtc_server_ids", &field_web_rtc_server_ids);
-                    }
-                    if let ::core::option::Option::Some(field_router_ids) =
-                        self.router_ids().transpose()
-                    {
-                        f.field("router_ids", &field_router_ids);
-                    }
-                    if let ::core::option::Option::Some(field_channel_message_handlers) =
-                        self.channel_message_handlers().transpose()
-                    {
-                        f.field("channel_message_handlers", &field_channel_message_handlers);
-                    }
+                    f.field("web_rtc_server_ids", &self.web_rtc_server_ids());
+                    f.field("router_ids", &self.router_ids());
+                    f.field("channel_message_handlers", &self.channel_message_handlers());
                     f.finish()
                 }
             }
@@ -30597,31 +30736,11 @@ mod root {
                 fn try_from(value: DumpResponseRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         pid: ::core::convert::TryInto::try_into(value.pid()?)?,
-                        web_rtc_server_ids: if let ::core::option::Option::Some(
-                            web_rtc_server_ids,
-                        ) = value.web_rtc_server_ids()?
-                        {
-                            ::core::option::Option::Some(web_rtc_server_ids.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        router_ids: if let ::core::option::Option::Some(router_ids) =
-                            value.router_ids()?
-                        {
-                            ::core::option::Option::Some(router_ids.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        channel_message_handlers: if let ::core::option::Option::Some(
-                            channel_message_handlers,
-                        ) = value.channel_message_handlers()?
-                        {
-                            ::core::option::Option::Some(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryInto::try_into(channel_message_handlers)?,
-                            ))
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        web_rtc_server_ids: value.web_rtc_server_ids()?.to_vec_result()?,
+                        router_ids: value.router_ids()?.to_vec_result()?,
+                        channel_message_handlers: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.channel_message_handlers()?)?,
+                        ),
                     })
                 }
             }
@@ -31477,9 +31596,7 @@ mod root {
             )]
             pub struct CreateWebRtcServerRequest {
                 pub web_rtc_server_id: ::planus::alloc::string::String,
-                pub listen_infos: ::core::option::Option<
-                    ::planus::alloc::vec::Vec<super::web_rtc_server::ListenInfo>,
-                >,
+                pub listen_infos: ::planus::alloc::vec::Vec<super::web_rtc_server::ListenInfo>,
             }
 
             impl CreateWebRtcServerRequest {
@@ -31487,7 +31604,7 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_web_rtc_server_id: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_listen_infos: impl ::planus::WriteAsOptional<
+                    field_listen_infos: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::web_rtc_server::ListenInfo>]>,
                     >,
                 ) -> ::planus::Offset<Self> {
@@ -31499,21 +31616,15 @@ mod root {
                         ::planus::table_writer::TableWriter::<6, 8>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
-                    if prepared_listen_infos.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<
-                            [::planus::Offset<super::web_rtc_server::ListenInfo>],
-                        >>(4);
-                    }
+                    table_writer.calculate_size::<::planus::Offset<
+                        [::planus::Offset<super::web_rtc_server::ListenInfo>],
+                    >>(4);
 
                     table_writer.finish_calculating();
 
                     unsafe {
                         table_writer.write::<_, _, 4>(0, &prepared_web_rtc_server_id);
-                        if let ::core::option::Option::Some(prepared_listen_infos) =
-                            prepared_listen_infos
-                        {
-                            table_writer.write::<_, _, 4>(1, &prepared_listen_infos);
-                        }
+                        table_writer.write::<_, _, 4>(1, &prepared_listen_infos);
                     }
 
                     table_writer.finish()
@@ -31570,15 +31681,13 @@ mod root {
                 pub fn listen_infos(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<
-                            'a,
-                            ::planus::Result<super::web_rtc_server::ListenInfoRef<'a>>,
-                        >,
+                    ::planus::Vector<
+                        'a,
+                        ::planus::Result<super::web_rtc_server::ListenInfoRef<'a>>,
                     >,
                 > {
                     self.0
-                        .access(1, "CreateWebRtcServerRequest", "listen_infos")
+                        .access_required(1, "CreateWebRtcServerRequest", "listen_infos")
                 }
             }
 
@@ -31586,11 +31695,7 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("CreateWebRtcServerRequestRef");
                     f.field("web_rtc_server_id", &self.web_rtc_server_id());
-                    if let ::core::option::Option::Some(field_listen_infos) =
-                        self.listen_infos().transpose()
-                    {
-                        f.field("listen_infos", &field_listen_infos);
-                    }
+                    f.field("listen_infos", &self.listen_infos());
                     f.finish()
                 }
             }
@@ -31604,13 +31709,7 @@ mod root {
                         web_rtc_server_id: ::core::convert::TryInto::try_into(
                             value.web_rtc_server_id()?,
                         )?,
-                        listen_infos: if let ::core::option::Option::Some(listen_infos) =
-                            value.listen_infos()?
-                        {
-                            ::core::option::Option::Some(listen_infos.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        listen_infos: value.listen_infos()?.to_vec_result()?,
                     })
                 }
             }
@@ -32215,25 +32314,18 @@ mod root {
             )]
             pub struct DumpResponse {
                 pub id: ::planus::alloc::string::String,
-                pub transport_ids: ::core::option::Option<
-                    ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
-                >,
-                pub rtp_observer_ids: ::core::option::Option<
-                    ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
-                >,
-                pub map_producer_id_consumer_ids: ::core::option::Option<
+                pub transport_ids: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
+                pub rtp_observer_ids: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
+                pub map_producer_id_consumer_ids:
                     ::planus::alloc::vec::Vec<super::common::StringStringArray>,
-                >,
                 pub map_consumer_id_producer_id:
-                    ::core::option::Option<::planus::alloc::vec::Vec<super::common::StringString>>,
-                pub map_producer_id_observer_ids: ::core::option::Option<
+                    ::planus::alloc::vec::Vec<super::common::StringString>,
+                pub map_producer_id_observer_ids:
                     ::planus::alloc::vec::Vec<super::common::StringStringArray>,
-                >,
-                pub map_data_producer_id_data_consumer_ids: ::core::option::Option<
+                pub map_data_producer_id_data_consumer_ids:
                     ::planus::alloc::vec::Vec<super::common::StringStringArray>,
-                >,
                 pub map_data_consumer_id_data_producer_id:
-                    ::core::option::Option<::planus::alloc::vec::Vec<super::common::StringString>>,
+                    ::planus::alloc::vec::Vec<super::common::StringString>,
             }
 
             impl DumpResponse {
@@ -32241,25 +32333,25 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_id: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_transport_ids: impl ::planus::WriteAsOptional<
+                    field_transport_ids: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<str>]>,
                     >,
-                    field_rtp_observer_ids: impl ::planus::WriteAsOptional<
+                    field_rtp_observer_ids: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<str>]>,
                     >,
-                    field_map_producer_id_consumer_ids: impl ::planus::WriteAsOptional<
+                    field_map_producer_id_consumer_ids: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::common::StringStringArray>]>,
                     >,
-                    field_map_consumer_id_producer_id: impl ::planus::WriteAsOptional<
+                    field_map_consumer_id_producer_id: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::common::StringString>]>,
                     >,
-                    field_map_producer_id_observer_ids: impl ::planus::WriteAsOptional<
+                    field_map_producer_id_observer_ids: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::common::StringStringArray>]>,
                     >,
-                    field_map_data_producer_id_data_consumer_ids: impl ::planus::WriteAsOptional<
+                    field_map_data_producer_id_data_consumer_ids: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::common::StringStringArray>]>,
                     >,
-                    field_map_data_consumer_id_data_producer_id: impl ::planus::WriteAsOptional<
+                    field_map_data_consumer_id_data_producer_id: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::common::StringString>]>,
                     >,
                 ) -> ::planus::Offset<Self> {
@@ -32288,87 +32380,33 @@ mod root {
                         ::planus::table_writer::TableWriter::<18, 32>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
-                    if prepared_transport_ids.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(4);
-                    }
-                    if prepared_rtp_observer_ids.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(6);
-                    }
-                    if prepared_map_producer_id_consumer_ids.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<
-                            [::planus::Offset<super::common::StringStringArray>],
-                        >>(8);
-                    }
-                    if prepared_map_consumer_id_producer_id.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<
-                            [::planus::Offset<super::common::StringString>],
-                        >>(10);
-                    }
-                    if prepared_map_producer_id_observer_ids.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<
-                            [::planus::Offset<super::common::StringStringArray>],
-                        >>(12);
-                    }
-                    if prepared_map_data_producer_id_data_consumer_ids.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<
-                            [::planus::Offset<super::common::StringStringArray>],
-                        >>(14);
-                    }
-                    if prepared_map_data_consumer_id_data_producer_id.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<
-                            [::planus::Offset<super::common::StringString>],
-                        >>(16);
-                    }
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(4);
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(6);
+                    table_writer.calculate_size::<::planus::Offset<
+                        [::planus::Offset<super::common::StringStringArray>],
+                    >>(8);
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<super::common::StringString>]>>(10);
+                    table_writer.calculate_size::<::planus::Offset<
+                        [::planus::Offset<super::common::StringStringArray>],
+                    >>(12);
+                    table_writer.calculate_size::<::planus::Offset<
+                        [::planus::Offset<super::common::StringStringArray>],
+                    >>(14);
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<super::common::StringString>]>>(16);
 
                     table_writer.finish_calculating();
 
                     unsafe {
                         table_writer.write::<_, _, 4>(0, &prepared_id);
-                        if let ::core::option::Option::Some(prepared_transport_ids) =
-                            prepared_transport_ids
-                        {
-                            table_writer.write::<_, _, 4>(1, &prepared_transport_ids);
-                        }
-                        if let ::core::option::Option::Some(prepared_rtp_observer_ids) =
-                            prepared_rtp_observer_ids
-                        {
-                            table_writer.write::<_, _, 4>(2, &prepared_rtp_observer_ids);
-                        }
-                        if let ::core::option::Option::Some(prepared_map_producer_id_consumer_ids) =
-                            prepared_map_producer_id_consumer_ids
-                        {
-                            table_writer
-                                .write::<_, _, 4>(3, &prepared_map_producer_id_consumer_ids);
-                        }
-                        if let ::core::option::Option::Some(prepared_map_consumer_id_producer_id) =
-                            prepared_map_consumer_id_producer_id
-                        {
-                            table_writer.write::<_, _, 4>(4, &prepared_map_consumer_id_producer_id);
-                        }
-                        if let ::core::option::Option::Some(prepared_map_producer_id_observer_ids) =
-                            prepared_map_producer_id_observer_ids
-                        {
-                            table_writer
-                                .write::<_, _, 4>(5, &prepared_map_producer_id_observer_ids);
-                        }
-                        if let ::core::option::Option::Some(
-                            prepared_map_data_producer_id_data_consumer_ids,
-                        ) = prepared_map_data_producer_id_data_consumer_ids
-                        {
-                            table_writer.write::<_, _, 4>(
-                                6,
-                                &prepared_map_data_producer_id_data_consumer_ids,
-                            );
-                        }
-                        if let ::core::option::Option::Some(
-                            prepared_map_data_consumer_id_data_producer_id,
-                        ) = prepared_map_data_consumer_id_data_producer_id
-                        {
-                            table_writer.write::<_, _, 4>(
-                                7,
-                                &prepared_map_data_consumer_id_data_producer_id,
-                            );
-                        }
+                        table_writer.write::<_, _, 4>(1, &prepared_transport_ids);
+                        table_writer.write::<_, _, 4>(2, &prepared_rtp_observer_ids);
+                        table_writer.write::<_, _, 4>(3, &prepared_map_producer_id_consumer_ids);
+                        table_writer.write::<_, _, 4>(4, &prepared_map_consumer_id_producer_id);
+                        table_writer.write::<_, _, 4>(5, &prepared_map_producer_id_observer_ids);
+                        table_writer
+                            .write::<_, _, 4>(6, &prepared_map_data_producer_id_data_consumer_ids);
+                        table_writer
+                            .write::<_, _, 4>(7, &prepared_map_data_consumer_id_data_producer_id);
                     }
 
                     table_writer.finish()
@@ -32427,85 +32465,69 @@ mod root {
                 pub fn transport_ids(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
                 > {
-                    self.0.access(1, "DumpResponse", "transport_ids")
+                    self.0.access_required(1, "DumpResponse", "transport_ids")
                 }
 
                 pub fn rtp_observer_ids(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
                 > {
-                    self.0.access(2, "DumpResponse", "rtp_observer_ids")
+                    self.0
+                        .access_required(2, "DumpResponse", "rtp_observer_ids")
                 }
 
                 pub fn map_producer_id_consumer_ids(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<
-                            'a,
-                            ::planus::Result<super::common::StringStringArrayRef<'a>>,
-                        >,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<super::common::StringStringArrayRef<'a>>>,
                 > {
                     self.0
-                        .access(3, "DumpResponse", "map_producer_id_consumer_ids")
+                        .access_required(3, "DumpResponse", "map_producer_id_consumer_ids")
                 }
 
                 pub fn map_consumer_id_producer_id(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<super::common::StringStringRef<'a>>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<super::common::StringStringRef<'a>>>,
                 > {
                     self.0
-                        .access(4, "DumpResponse", "map_consumer_id_producer_id")
+                        .access_required(4, "DumpResponse", "map_consumer_id_producer_id")
                 }
 
                 pub fn map_producer_id_observer_ids(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<
-                            'a,
-                            ::planus::Result<super::common::StringStringArrayRef<'a>>,
-                        >,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<super::common::StringStringArrayRef<'a>>>,
                 > {
                     self.0
-                        .access(5, "DumpResponse", "map_producer_id_observer_ids")
+                        .access_required(5, "DumpResponse", "map_producer_id_observer_ids")
                 }
 
                 pub fn map_data_producer_id_data_consumer_ids(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<
-                            'a,
-                            ::planus::Result<super::common::StringStringArrayRef<'a>>,
-                        >,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<super::common::StringStringArrayRef<'a>>>,
                 > {
-                    self.0
-                        .access(6, "DumpResponse", "map_data_producer_id_data_consumer_ids")
+                    self.0.access_required(
+                        6,
+                        "DumpResponse",
+                        "map_data_producer_id_data_consumer_ids",
+                    )
                 }
 
                 pub fn map_data_consumer_id_data_producer_id(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<super::common::StringStringRef<'a>>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<super::common::StringStringRef<'a>>>,
                 > {
-                    self.0
-                        .access(7, "DumpResponse", "map_data_consumer_id_data_producer_id")
+                    self.0.access_required(
+                        7,
+                        "DumpResponse",
+                        "map_data_consumer_id_data_producer_id",
+                    )
                 }
             }
 
@@ -32513,58 +32535,28 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("DumpResponseRef");
                     f.field("id", &self.id());
-                    if let ::core::option::Option::Some(field_transport_ids) =
-                        self.transport_ids().transpose()
-                    {
-                        f.field("transport_ids", &field_transport_ids);
-                    }
-                    if let ::core::option::Option::Some(field_rtp_observer_ids) =
-                        self.rtp_observer_ids().transpose()
-                    {
-                        f.field("rtp_observer_ids", &field_rtp_observer_ids);
-                    }
-                    if let ::core::option::Option::Some(field_map_producer_id_consumer_ids) =
-                        self.map_producer_id_consumer_ids().transpose()
-                    {
-                        f.field(
-                            "map_producer_id_consumer_ids",
-                            &field_map_producer_id_consumer_ids,
-                        );
-                    }
-                    if let ::core::option::Option::Some(field_map_consumer_id_producer_id) =
-                        self.map_consumer_id_producer_id().transpose()
-                    {
-                        f.field(
-                            "map_consumer_id_producer_id",
-                            &field_map_consumer_id_producer_id,
-                        );
-                    }
-                    if let ::core::option::Option::Some(field_map_producer_id_observer_ids) =
-                        self.map_producer_id_observer_ids().transpose()
-                    {
-                        f.field(
-                            "map_producer_id_observer_ids",
-                            &field_map_producer_id_observer_ids,
-                        );
-                    }
-                    if let ::core::option::Option::Some(
-                        field_map_data_producer_id_data_consumer_ids,
-                    ) = self.map_data_producer_id_data_consumer_ids().transpose()
-                    {
-                        f.field(
-                            "map_data_producer_id_data_consumer_ids",
-                            &field_map_data_producer_id_data_consumer_ids,
-                        );
-                    }
-                    if let ::core::option::Option::Some(
-                        field_map_data_consumer_id_data_producer_id,
-                    ) = self.map_data_consumer_id_data_producer_id().transpose()
-                    {
-                        f.field(
-                            "map_data_consumer_id_data_producer_id",
-                            &field_map_data_consumer_id_data_producer_id,
-                        );
-                    }
+                    f.field("transport_ids", &self.transport_ids());
+                    f.field("rtp_observer_ids", &self.rtp_observer_ids());
+                    f.field(
+                        "map_producer_id_consumer_ids",
+                        &self.map_producer_id_consumer_ids(),
+                    );
+                    f.field(
+                        "map_consumer_id_producer_id",
+                        &self.map_consumer_id_producer_id(),
+                    );
+                    f.field(
+                        "map_producer_id_observer_ids",
+                        &self.map_producer_id_observer_ids(),
+                    );
+                    f.field(
+                        "map_data_producer_id_data_consumer_ids",
+                        &self.map_data_producer_id_data_consumer_ids(),
+                    );
+                    f.field(
+                        "map_data_consumer_id_data_producer_id",
+                        &self.map_data_consumer_id_data_producer_id(),
+                    );
                     f.finish()
                 }
             }
@@ -32576,72 +32568,23 @@ mod root {
                 fn try_from(value: DumpResponseRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         id: ::core::convert::TryInto::try_into(value.id()?)?,
-                        transport_ids: if let ::core::option::Option::Some(transport_ids) =
-                            value.transport_ids()?
-                        {
-                            ::core::option::Option::Some(transport_ids.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        rtp_observer_ids: if let ::core::option::Option::Some(rtp_observer_ids) =
-                            value.rtp_observer_ids()?
-                        {
-                            ::core::option::Option::Some(rtp_observer_ids.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        map_producer_id_consumer_ids: if let ::core::option::Option::Some(
-                            map_producer_id_consumer_ids,
-                        ) = value.map_producer_id_consumer_ids()?
-                        {
-                            ::core::option::Option::Some(
-                                map_producer_id_consumer_ids.to_vec_result()?,
-                            )
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        map_consumer_id_producer_id: if let ::core::option::Option::Some(
-                            map_consumer_id_producer_id,
-                        ) = value.map_consumer_id_producer_id()?
-                        {
-                            ::core::option::Option::Some(
-                                map_consumer_id_producer_id.to_vec_result()?,
-                            )
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        map_producer_id_observer_ids: if let ::core::option::Option::Some(
-                            map_producer_id_observer_ids,
-                        ) = value.map_producer_id_observer_ids()?
-                        {
-                            ::core::option::Option::Some(
-                                map_producer_id_observer_ids.to_vec_result()?,
-                            )
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        map_data_producer_id_data_consumer_ids:
-                            if let ::core::option::Option::Some(
-                                map_data_producer_id_data_consumer_ids,
-                            ) = value.map_data_producer_id_data_consumer_ids()?
-                            {
-                                ::core::option::Option::Some(
-                                    map_data_producer_id_data_consumer_ids.to_vec_result()?,
-                                )
-                            } else {
-                                ::core::option::Option::None
-                            },
-                        map_data_consumer_id_data_producer_id: if let ::core::option::Option::Some(
-                            map_data_consumer_id_data_producer_id,
-                        ) =
-                            value.map_data_consumer_id_data_producer_id()?
-                        {
-                            ::core::option::Option::Some(
-                                map_data_consumer_id_data_producer_id.to_vec_result()?,
-                            )
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        transport_ids: value.transport_ids()?.to_vec_result()?,
+                        rtp_observer_ids: value.rtp_observer_ids()?.to_vec_result()?,
+                        map_producer_id_consumer_ids: value
+                            .map_producer_id_consumer_ids()?
+                            .to_vec_result()?,
+                        map_consumer_id_producer_id: value
+                            .map_consumer_id_producer_id()?
+                            .to_vec_result()?,
+                        map_producer_id_observer_ids: value
+                            .map_producer_id_observer_ids()?
+                            .to_vec_result()?,
+                        map_data_producer_id_data_consumer_ids: value
+                            .map_data_producer_id_data_consumer_ids()?
+                            .to_vec_result()?,
+                        map_data_consumer_id_data_producer_id: value
+                            .map_data_consumer_id_data_producer_id()?
+                            .to_vec_result()?,
                     })
                 }
             }
@@ -35116,15 +35059,13 @@ mod root {
             )]
             pub struct DumpResponse {
                 pub id: ::planus::alloc::string::String,
-                pub udp_sockets: ::core::option::Option<::planus::alloc::vec::Vec<self::IpPort>>,
-                pub tcp_servers: ::core::option::Option<::planus::alloc::vec::Vec<self::IpPort>>,
-                pub web_rtc_transport_ids: ::core::option::Option<
+                pub udp_sockets: ::planus::alloc::vec::Vec<self::IpPort>,
+                pub tcp_servers: ::planus::alloc::vec::Vec<self::IpPort>,
+                pub web_rtc_transport_ids:
                     ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
-                >,
                 pub local_ice_username_fragments:
-                    ::core::option::Option<::planus::alloc::vec::Vec<self::IceUserNameFragment>>,
-                pub tuple_hashes:
-                    ::core::option::Option<::planus::alloc::vec::Vec<self::TupleHash>>,
+                    ::planus::alloc::vec::Vec<self::IceUserNameFragment>,
+                pub tuple_hashes: ::planus::alloc::vec::Vec<self::TupleHash>,
             }
 
             impl DumpResponse {
@@ -35132,19 +35073,19 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_id: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_udp_sockets: impl ::planus::WriteAsOptional<
+                    field_udp_sockets: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::IpPort>]>,
                     >,
-                    field_tcp_servers: impl ::planus::WriteAsOptional<
+                    field_tcp_servers: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::IpPort>]>,
                     >,
-                    field_web_rtc_transport_ids: impl ::planus::WriteAsOptional<
+                    field_web_rtc_transport_ids: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<str>]>,
                     >,
-                    field_local_ice_username_fragments: impl ::planus::WriteAsOptional<
+                    field_local_ice_username_fragments: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::IceUserNameFragment>]>,
                     >,
-                    field_tuple_hashes: impl ::planus::WriteAsOptional<
+                    field_tuple_hashes: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::TupleHash>]>,
                     >,
                 ) -> ::planus::Offset<Self> {
@@ -35166,58 +35107,26 @@ mod root {
                         ::planus::table_writer::TableWriter::<14, 24>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
-                    if prepared_udp_sockets.is_some() {
-                        table_writer
-                            .calculate_size::<::planus::Offset<[::planus::Offset<self::IpPort>]>>(
-                                4,
-                            );
-                    }
-                    if prepared_tcp_servers.is_some() {
-                        table_writer
-                            .calculate_size::<::planus::Offset<[::planus::Offset<self::IpPort>]>>(
-                                6,
-                            );
-                    }
-                    if prepared_web_rtc_transport_ids.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(8);
-                    }
-                    if prepared_local_ice_username_fragments.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<[::planus::Offset<self::IceUserNameFragment>]>>(10);
-                    }
-                    if prepared_tuple_hashes.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<[::planus::Offset<self::TupleHash>]>>(12);
-                    }
+                    table_writer
+                        .calculate_size::<::planus::Offset<[::planus::Offset<self::IpPort>]>>(4);
+                    table_writer
+                        .calculate_size::<::planus::Offset<[::planus::Offset<self::IpPort>]>>(6);
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<str>]>>(8);
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<self::IceUserNameFragment>]>>(10);
+                    table_writer
+                        .calculate_size::<::planus::Offset<[::planus::Offset<self::TupleHash>]>>(
+                            12,
+                        );
 
                     table_writer.finish_calculating();
 
                     unsafe {
                         table_writer.write::<_, _, 4>(0, &prepared_id);
-                        if let ::core::option::Option::Some(prepared_udp_sockets) =
-                            prepared_udp_sockets
-                        {
-                            table_writer.write::<_, _, 4>(1, &prepared_udp_sockets);
-                        }
-                        if let ::core::option::Option::Some(prepared_tcp_servers) =
-                            prepared_tcp_servers
-                        {
-                            table_writer.write::<_, _, 4>(2, &prepared_tcp_servers);
-                        }
-                        if let ::core::option::Option::Some(prepared_web_rtc_transport_ids) =
-                            prepared_web_rtc_transport_ids
-                        {
-                            table_writer.write::<_, _, 4>(3, &prepared_web_rtc_transport_ids);
-                        }
-                        if let ::core::option::Option::Some(prepared_local_ice_username_fragments) =
-                            prepared_local_ice_username_fragments
-                        {
-                            table_writer
-                                .write::<_, _, 4>(4, &prepared_local_ice_username_fragments);
-                        }
-                        if let ::core::option::Option::Some(prepared_tuple_hashes) =
-                            prepared_tuple_hashes
-                        {
-                            table_writer.write::<_, _, 4>(5, &prepared_tuple_hashes);
-                        }
+                        table_writer.write::<_, _, 4>(1, &prepared_udp_sockets);
+                        table_writer.write::<_, _, 4>(2, &prepared_tcp_servers);
+                        table_writer.write::<_, _, 4>(3, &prepared_web_rtc_transport_ids);
+                        table_writer.write::<_, _, 4>(4, &prepared_local_ice_username_fragments);
+                        table_writer.write::<_, _, 4>(5, &prepared_tuple_hashes);
                     }
 
                     table_writer.finish()
@@ -35273,53 +35182,41 @@ mod root {
 
                 pub fn udp_sockets(
                     &self,
-                ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<self::IpPortRef<'a>>>,
-                    >,
-                > {
-                    self.0.access(1, "DumpResponse", "udp_sockets")
+                ) -> ::planus::Result<::planus::Vector<'a, ::planus::Result<self::IpPortRef<'a>>>>
+                {
+                    self.0.access_required(1, "DumpResponse", "udp_sockets")
                 }
 
                 pub fn tcp_servers(
                     &self,
-                ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<self::IpPortRef<'a>>>,
-                    >,
-                > {
-                    self.0.access(2, "DumpResponse", "tcp_servers")
+                ) -> ::planus::Result<::planus::Vector<'a, ::planus::Result<self::IpPortRef<'a>>>>
+                {
+                    self.0.access_required(2, "DumpResponse", "tcp_servers")
                 }
 
                 pub fn web_rtc_transport_ids(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
                 > {
-                    self.0.access(3, "DumpResponse", "web_rtc_transport_ids")
+                    self.0
+                        .access_required(3, "DumpResponse", "web_rtc_transport_ids")
                 }
 
                 pub fn local_ice_username_fragments(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<self::IceUserNameFragmentRef<'a>>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<self::IceUserNameFragmentRef<'a>>>,
                 > {
                     self.0
-                        .access(4, "DumpResponse", "local_ice_username_fragments")
+                        .access_required(4, "DumpResponse", "local_ice_username_fragments")
                 }
 
                 pub fn tuple_hashes(
                     &self,
-                ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<self::TupleHashRef<'a>>>,
-                    >,
-                > {
-                    self.0.access(5, "DumpResponse", "tuple_hashes")
+                ) -> ::planus::Result<::planus::Vector<'a, ::planus::Result<self::TupleHashRef<'a>>>>
+                {
+                    self.0.access_required(5, "DumpResponse", "tuple_hashes")
                 }
             }
 
@@ -35327,34 +35224,14 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("DumpResponseRef");
                     f.field("id", &self.id());
-                    if let ::core::option::Option::Some(field_udp_sockets) =
-                        self.udp_sockets().transpose()
-                    {
-                        f.field("udp_sockets", &field_udp_sockets);
-                    }
-                    if let ::core::option::Option::Some(field_tcp_servers) =
-                        self.tcp_servers().transpose()
-                    {
-                        f.field("tcp_servers", &field_tcp_servers);
-                    }
-                    if let ::core::option::Option::Some(field_web_rtc_transport_ids) =
-                        self.web_rtc_transport_ids().transpose()
-                    {
-                        f.field("web_rtc_transport_ids", &field_web_rtc_transport_ids);
-                    }
-                    if let ::core::option::Option::Some(field_local_ice_username_fragments) =
-                        self.local_ice_username_fragments().transpose()
-                    {
-                        f.field(
-                            "local_ice_username_fragments",
-                            &field_local_ice_username_fragments,
-                        );
-                    }
-                    if let ::core::option::Option::Some(field_tuple_hashes) =
-                        self.tuple_hashes().transpose()
-                    {
-                        f.field("tuple_hashes", &field_tuple_hashes);
-                    }
+                    f.field("udp_sockets", &self.udp_sockets());
+                    f.field("tcp_servers", &self.tcp_servers());
+                    f.field("web_rtc_transport_ids", &self.web_rtc_transport_ids());
+                    f.field(
+                        "local_ice_username_fragments",
+                        &self.local_ice_username_fragments(),
+                    );
+                    f.field("tuple_hashes", &self.tuple_hashes());
                     f.finish()
                 }
             }
@@ -35366,45 +35243,13 @@ mod root {
                 fn try_from(value: DumpResponseRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         id: ::core::convert::TryInto::try_into(value.id()?)?,
-                        udp_sockets: if let ::core::option::Option::Some(udp_sockets) =
-                            value.udp_sockets()?
-                        {
-                            ::core::option::Option::Some(udp_sockets.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        tcp_servers: if let ::core::option::Option::Some(tcp_servers) =
-                            value.tcp_servers()?
-                        {
-                            ::core::option::Option::Some(tcp_servers.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        web_rtc_transport_ids: if let ::core::option::Option::Some(
-                            web_rtc_transport_ids,
-                        ) = value.web_rtc_transport_ids()?
-                        {
-                            ::core::option::Option::Some(web_rtc_transport_ids.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        local_ice_username_fragments: if let ::core::option::Option::Some(
-                            local_ice_username_fragments,
-                        ) = value.local_ice_username_fragments()?
-                        {
-                            ::core::option::Option::Some(
-                                local_ice_username_fragments.to_vec_result()?,
-                            )
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        tuple_hashes: if let ::core::option::Option::Some(tuple_hashes) =
-                            value.tuple_hashes()?
-                        {
-                            ::core::option::Option::Some(tuple_hashes.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        udp_sockets: value.udp_sockets()?.to_vec_result()?,
+                        tcp_servers: value.tcp_servers()?.to_vec_result()?,
+                        web_rtc_transport_ids: value.web_rtc_transport_ids()?.to_vec_result()?,
+                        local_ice_username_fragments: value
+                            .local_ice_username_fragments()?
+                            .to_vec_result()?,
+                        tuple_hashes: value.tuple_hashes()?.to_vec_result()?,
                     })
                 }
             }
@@ -39333,15 +39178,7 @@ mod root {
             }
 
             #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
+                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub struct GetStatsResponse {
                 pub base: ::planus::alloc::boxed::Box<super::transport::Stats>,
@@ -40705,15 +40542,7 @@ mod root {
             }
 
             #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
+                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub struct GetStatsResponse {
                 pub base: ::planus::alloc::boxed::Box<super::transport::Stats>,
@@ -43565,15 +43394,7 @@ mod root {
             }
 
             #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
+                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub struct GetStatsResponse {
                 pub base: ::planus::alloc::boxed::Box<super::transport::Stats>,

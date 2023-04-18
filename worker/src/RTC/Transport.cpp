@@ -1,7 +1,7 @@
+#include "flatbuffers/stl_emulation.h"
 #define MS_CLASS "RTC::Transport"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/Transport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -19,6 +19,7 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
+#include "RTC/Transport.hpp"
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
 #include <iterator>                                              // std::ostream_iterator
 #include <map>                                                   // std::multimap
@@ -296,44 +297,30 @@ namespace RTC
 		}
 
 		// Add headerExtensionIds.
-		std::vector<flatbuffers::Offset<FBS::Common::StringUint8>> recvRtpHeaderExtensions;
-
-		if (this->recvRtpHeaderExtensionIds.mid != 0u)
-		{
-			recvRtpHeaderExtensions.emplace_back(
-			  FBS::Common::CreateStringUint8Direct(builder, "mid", this->recvRtpHeaderExtensionIds.mid));
-		}
-
-		if (this->recvRtpHeaderExtensionIds.rid != 0u)
-		{
-			recvRtpHeaderExtensions.emplace_back(
-			  FBS::Common::CreateStringUint8Direct(builder, "rid", this->recvRtpHeaderExtensionIds.rid));
-		}
-
-		if (this->recvRtpHeaderExtensionIds.rrid != 0u)
-		{
-			recvRtpHeaderExtensions.emplace_back(FBS::Common::CreateStringUint8Direct(
-			  builder, "rrid", this->recvRtpHeaderExtensionIds.rrid));
-		}
-
-		if (this->recvRtpHeaderExtensionIds.absSendTime != 0u)
-		{
-			recvRtpHeaderExtensions.emplace_back(FBS::Common::CreateStringUint8Direct(
-			  builder, "absSendTime", this->recvRtpHeaderExtensionIds.absSendTime));
-		}
-
-		if (this->recvRtpHeaderExtensionIds.transportWideCc01 != 0u)
-		{
-			recvRtpHeaderExtensions.emplace_back(FBS::Common::CreateStringUint8Direct(
-			  builder, "transportWideCc01", this->recvRtpHeaderExtensionIds.transportWideCc01));
-		}
+		auto recvRtpHeaderExtensions = FBS::Transport::CreateRecvRtpHeaderExtensions(
+		  builder,
+		  this->recvRtpHeaderExtensionIds.mid != 0u
+		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.mid)
+		    : flatbuffers::nullopt,
+		  this->recvRtpHeaderExtensionIds.rid != 0u
+		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.rid)
+		    : flatbuffers::nullopt,
+		  this->recvRtpHeaderExtensionIds.rrid != 0u
+		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.rrid)
+		    : flatbuffers::nullopt,
+		  this->recvRtpHeaderExtensionIds.absSendTime != 0u
+		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.absSendTime)
+		    : flatbuffers::nullopt,
+		  this->recvRtpHeaderExtensionIds.transportWideCc01 != 0u
+		    ? flatbuffers::Optional<uint8_t>(this->recvRtpHeaderExtensionIds.transportWideCc01)
+		    : flatbuffers::nullopt);
 
 		auto rtpListenerOffset = this->rtpListener.FillBuffer(builder);
 
 		// Add sctpParameters.
 		flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters;
 		// Add sctpState.
-		std::string sctpState;
+		FBS::SctpAssociation::SctpState sctpState;
 		// Add sctpListener.
 		flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener;
 
@@ -345,19 +332,19 @@ namespace RTC
 			switch (this->sctpAssociation->GetState())
 			{
 				case RTC::SctpAssociation::SctpState::NEW:
-					sctpState = "new";
+					sctpState = FBS::SctpAssociation::SctpState::NEW;
 					break;
 				case RTC::SctpAssociation::SctpState::CONNECTING:
-					sctpState = "connecting";
+					sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
 					break;
 				case RTC::SctpAssociation::SctpState::CONNECTED:
-					sctpState = "connected";
+					sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
 					break;
 				case RTC::SctpAssociation::SctpState::FAILED:
-					sctpState = "failed";
+					sctpState = FBS::SctpAssociation::SctpState::FAILED;
 					break;
 				case RTC::SctpAssociation::SctpState::CLOSED:
-					sctpState = "closed";
+					sctpState = FBS::SctpAssociation::SctpState::CLOSED;
 					break;
 			}
 
@@ -386,11 +373,12 @@ namespace RTC
 		  &mapRtxSsrcConsumerId,
 		  &dataProducerIds,
 		  &dataConsumerIds,
-		  &recvRtpHeaderExtensions,
+		  recvRtpHeaderExtensions,
 		  rtpListenerOffset,
 		  this->maxMessageSize,
 		  sctpParameters,
-		  sctpState.c_str(),
+		  this->sctpAssociation ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
+		                        : flatbuffers::nullopt,
 		  sctpListener,
 		  &traceEventTypes);
 	}
@@ -403,7 +391,7 @@ namespace RTC
 		auto nowMs = DepLibUV::GetTimeMs();
 
 		// Add sctpState.
-		std::string sctpState;
+		FBS::SctpAssociation::SctpState sctpState;
 
 		if (this->sctpAssociation)
 		{
@@ -411,19 +399,19 @@ namespace RTC
 			switch (this->sctpAssociation->GetState())
 			{
 				case RTC::SctpAssociation::SctpState::NEW:
-					sctpState = "new";
+					sctpState = FBS::SctpAssociation::SctpState::NEW;
 					break;
 				case RTC::SctpAssociation::SctpState::CONNECTING:
-					sctpState = "connecting";
+					sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
 					break;
 				case RTC::SctpAssociation::SctpState::CONNECTED:
-					sctpState = "connected";
+					sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
 					break;
 				case RTC::SctpAssociation::SctpState::FAILED:
-					sctpState = "failed";
+					sctpState = FBS::SctpAssociation::SctpState::FAILED;
 					break;
 				case RTC::SctpAssociation::SctpState::CLOSED:
-					sctpState = "closed";
+					sctpState = FBS::SctpAssociation::SctpState::CLOSED;
 					break;
 			}
 		}
@@ -435,7 +423,8 @@ namespace RTC
 		  // timestamp.
 		  nowMs,
 		  // sctpState.
-		  sctpState.c_str(),
+		  this->sctpAssociation ? flatbuffers::Optional<FBS::SctpAssociation::SctpState>(sctpState)
+		                        : flatbuffers::nullopt,
 		  // bytesReceived.
 		  this->recvTransmission.GetBytes(),
 		  // recvBitrate.
@@ -465,9 +454,11 @@ namespace RTC
 		  // probationSendBitrate.
 		  this->sendProbationTransmission.GetBitrate(nowMs),
 		  // availableOutgoingBitrate.
-		  this->tccClient ? this->tccClient->GetAvailableBitrate() : 0u,
+		  this->tccClient ? flatbuffers::Optional<uint32_t>(this->tccClient->GetAvailableBitrate())
+		                  : flatbuffers::nullopt,
 		  // availableIncomingBitrate.
-		  this->tccServer ? this->tccServer->GetAvailableBitrate() : 0u,
+		  this->tccServer ? flatbuffers::Optional<uint32_t>(this->tccServer->GetAvailableBitrate())
+		                  : flatbuffers::nullopt,
 		  // maxIncomingBitrate.
 		  this->maxIncomingBitrate,
 		  // maxOutgoingBitrate.
@@ -475,9 +466,11 @@ namespace RTC
 		  // minOutgoingBitrate.
 		  this->minOutgoingBitrate,
 		  // packetLossReceived.
-		  this->tccServer ? this->tccServer->GetPacketLoss() : 0u,
+		  this->tccServer ? flatbuffers::Optional<double>(this->tccServer->GetPacketLoss())
+		                  : flatbuffers::nullopt,
 		  // packetLossSent.
-		  this->tccClient ? this->tccClient->GetPacketLoss() : 0u);
+		  this->tccClient ? flatbuffers::Optional<double>(this->tccClient->GetPacketLoss())
+		                  : flatbuffers::nullopt);
 	}
 
 	void Transport::HandleRequest(Channel::ChannelRequest* request)
