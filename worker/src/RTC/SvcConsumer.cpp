@@ -1099,6 +1099,8 @@ namespace RTC
 			MS_DEBUG_TAG(
 			  svc, "target layers changed [spatial:-1, temporal:-1, consumerId:%s]", this->id.c_str());
 
+			this->syncRequired = true;
+
 			EmitLayersChange();
 
 			return;
