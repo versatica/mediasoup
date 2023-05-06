@@ -566,16 +566,14 @@ namespace RTC
 			return;
 		}
 
-		std::memcpy(extenValue, mid.c_str(), midLen);
-
-		SetExtensionLength(this->midExtensionId, midLen);
+		SetExtensionValue(this->midExtensionId, midLen, mid);
 	}
 
 	/**
 	 * The caller is responsible of not setting a length higher than the
 	 * available one (taking into account existing padding bytes).
 	 */
-	bool RtpPacket::SetExtensionLength(uint8_t id, uint8_t len)
+	bool RtpPacket::SetExtensionValue(uint8_t id, uint8_t len, const std::string& value)
 	{
 		MS_TRACE();
 
@@ -600,12 +598,78 @@ namespace RTC
 
 			auto currentLen = extension->len + 1;
 
-			// Fill with 0's if new length is minor.
-			if (len < currentLen)
-				std::memset(extension->value + len, 0, currentLen - len);
+			MS_DEBUG_DEV("set extension id: %" PRIu8 ", length:%" PRIu8 ", currentLen:%" PRIu8 " value:%s", id, len, currentLen, value.c_str());
+			if(len != currentLen) 
+			{
+				// need shift
+				uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->headerExtension) + 4;
+				uint8_t* extensionEnd   = extensionStart + GetHeaderExtensionLength();
+				uint8_t* ptr            = extensionStart;
+				size_t extensionsTotalSize = static_cast<size_t>(len+1);	
+				uint8_t* ptr1 = ptr;
+				//clear current extension
+				std::memset((uint8_t*)extension, 0, currentLen+1);
+				while(ptr < extensionEnd && ptr1<extensionEnd) 
+				{
+					if(ptr >= extensionEnd) 
+					{
+						ptr1++;
+						*ptr1 = 0u;
+						continue;
+					}	
+					const uint8_t tempId = (*ptr & 0xF0) >> 4;
+					const size_t tempLen = static_cast<size_t>(*ptr & 0x0F) + 1;
 
-			// In One-Byte extensions value length 0 means 1.
-			extension->len = len - 1;
+					// id=15 in One-Byte extensions means "stop parsing here".
+					if (tempId == 15u)
+						break;
+					if(tempId != 0u && tempId != id) 
+					{
+						if(ptr1< ptr) 
+						{
+							std::memmove(ptr1, ptr, tempLen+1);
+						}
+						extensionsTotalSize += tempLen + 1;
+						// move forward templen+1
+						ptr += tempLen+1;
+						ptr1 += tempLen+1;
+						MS_DEBUG_DEV("tempId: %" PRIu8 " tempLen:%zd, offset:%ld", tempId, tempLen, ptr-extensionStart);
+					} 
+					else 
+					{
+						ptr++;
+					}
+				}
+				MS_DEBUG_DEV("extensionsTotalSize: %zd headerLength:%zd", extensionsTotalSize, GetHeaderExtensionLength());	
+				auto paddedExtensionsTotalSize =
+							  static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(extensionsTotalSize)));
+				extensionsTotalSize = paddedExtensionsTotalSize;
+				int16_t shift = static_cast<int16_t>(extensionsTotalSize - GetHeaderExtensionLength());
+				MS_DEBUG_DEV("shift:%d paddedExtensionsTotalSize: %zd", shift, paddedExtensionsTotalSize);	
+				//move payload 
+				std::memmove(this->payload + shift, this->payload, this->payloadLength + this->payloadPadding);
+				// clear the shift place, if shift > currentLen, may create some strange extension
+				if(shift>0) 
+				{
+					std::memset(this->payload, 0, shift);
+				}
+				//begin to set current extension
+				ptr = extensionStart + extensionsTotalSize - (len + 1);
+				this->oneByteExtensions[id - 1] = reinterpret_cast<OneByteExtension*>(ptr);
+				extension = this->oneByteExtensions[id - 1];
+				*ptr = (id << 4) | ((len - 1) & 0x0F);	
+				ptr++;
+				std::memcpy(ptr, value.c_str(), len);
+				
+				this->payload += shift;
+				this->size += shift;
+				this->headerExtension->length = htons(extensionsTotalSize / 4);
+			}else {
+				// In One-Byte extensions value length 0 means 1.
+				extension->len = len - 1;
+				std::memcpy(extension->value, value.c_str(), len);
+			}
+
 
 			return true;
 		}
@@ -618,13 +682,69 @@ namespace RTC
 
 			auto* extension = it->second;
 			auto currentLen = extension->len;
+			if(len != currentLen) 
+			{
+				// need shift
+				uint8_t* extensionStart = reinterpret_cast<uint8_t*>(this->headerExtension) + 4;
+				uint8_t* extensionEnd   = extensionStart + GetHeaderExtensionLength();
+				uint8_t* ptr            = extensionStart;
+				size_t extensionsTotalSize = static_cast<size_t>(len + 2);	
+				uint8_t* ptr1 = ptr;
+				//clear current extension valueLen + 2 byteheader
+				std::memset((void *)extension, 0, currentLen + 2);
+				while(ptr + 1 < extensionEnd && ptr1  < extensionEnd) 
+				{
+					if(ptr + 1 >= extensionEnd) {
+						ptr1++;
+						*ptr1 = 0u;
+						continue;
+					}	
+					const uint8_t tempId  = *ptr;
+					const uint8_t tempLen = *(ptr + 1);
 
-			// Fill with 0's if new length is minor.
-			if (len < currentLen)
-				std::memset(extension->value + len, 0, currentLen - len);
-
-			extension->len = len;
-
+					if(tempId != 0u && tempId != id) 
+					{
+						if(ptr1< ptr) 
+						{
+							std::memmove(ptr1, ptr, tempLen+2);
+						}
+						extensionsTotalSize += tempLen + 2;
+						// move forward len+1
+						ptr += tempLen+2;
+						ptr1 += tempLen+2;
+					} else 
+					{
+						ptr++;
+					}
+				}
+				auto paddedExtensionsTotalSize =
+							  static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(extensionsTotalSize)));
+				extensionsTotalSize = paddedExtensionsTotalSize;
+				int16_t shift = static_cast<int16_t>(extensionsTotalSize - GetHeaderExtensionLength());
+				
+				//move payload 
+				std::memmove(this->payload + shift, this->payload, this->payloadLength + this->payloadPadding);
+				if(shift>0) 
+				{
+					std::memset(this->payload, 0, shift);
+				}
+				//begin to set current extension
+				ptr = extensionStart + extensionsTotalSize - (len + 2);
+				this->mapTwoBytesExtensions[id] = reinterpret_cast<TwoBytesExtension*>(ptr);
+				extension = this->mapTwoBytesExtensions[id];
+				*ptr = id;
+				ptr++;
+				*ptr = len;
+				ptr++;
+				std::memcpy(ptr, value.c_str(), len);
+				
+				this->payload += shift;
+				this->size += shift;
+				this->headerExtension->length = htons(extensionsTotalSize / 4);
+			}else {
+				extension->len = len;
+				std::memcpy(extension->value, value.c_str(), len);
+			}
 			return true;
 		}
 		else

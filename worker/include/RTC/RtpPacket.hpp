@@ -547,7 +547,7 @@ namespace RTC
 			}
 		}
 
-		bool SetExtensionLength(uint8_t id, uint8_t len);
+		bool SetExtensionValue(uint8_t id, uint8_t len, const std::string& value);
 
 		uint8_t* GetPayload() const
 		{
