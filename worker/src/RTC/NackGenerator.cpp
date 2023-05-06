@@ -336,7 +336,9 @@ namespace RTC
 
 	inline void NackGenerator::MayRunTimer() const
 	{
-		if (!this->nackList.empty())
+		if (this->nackList.empty())
+			this->timer->Stop();
+		else
 			this->timer->Start(TimerInterval);
 	}
 

@@ -611,12 +611,11 @@ namespace RTC
 		if (this->rtt > 0.0f)
 		{
 			this->hasRtt = true;
-		}
-
-		// Tell it to the NackGenerator.
-		if (this->params.useNack)
-		{
-			this->nackGenerator->UpdateRtt(static_cast<uint32_t>(this->rtt));
+			// Tell it to the NackGenerator.
+			if (this->params.useNack)
+			{
+				this->nackGenerator->UpdateRtt(static_cast<uint32_t>(this->rtt));
+			}
 		}
 	}
 
