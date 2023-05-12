@@ -628,6 +628,7 @@ namespace RTC
 						if(ptr1< ptr) 
 						{
 							std::memmove(ptr1, ptr, tempLen+1);
+							this->oneByteExtensions[tempId - 1] = reinterpret_cast<OneByteExtension*>(ptr1);
 						}
 						extensionsTotalSize += tempLen + 1;
 						// move forward templen+1
@@ -707,6 +708,7 @@ namespace RTC
 						if(ptr1< ptr) 
 						{
 							std::memmove(ptr1, ptr, tempLen+2);
+							this->mapTwoBytesExtensions[tempId] = reinterpret_cast<TwoBytesExtension*>(ptr1);
 						}
 						extensionsTotalSize += tempLen + 2;
 						// move forward len+1

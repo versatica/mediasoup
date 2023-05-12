@@ -632,18 +632,21 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE((extenValue = packet->GetExtension(14, extenLen)));
 		REQUIRE(packet->HasExtension(14) == true);
 		REQUIRE(extenLen == 4);
-		REQUIRE(extenValue[0] == 0x01);
-		REQUIRE(extenValue[1] == 0x02);
-		REQUIRE(extenValue[2] == 0x03);
-		REQUIRE(extenValue[3] == 0x04);
-		//REQUIRE(packet->SetExtensionLength(14, 3) == true);
+		REQUIRE(packet->SetExtensionValue(14, 4, "ABCD"));
 		REQUIRE((extenValue = packet->GetExtension(14, extenLen)));
 		REQUIRE(packet->HasExtension(14) == true);
-		REQUIRE(extenLen == 3);
-		REQUIRE(extenValue[0] == 0x01);
-		REQUIRE(extenValue[1] == 0x02);
-		REQUIRE(extenValue[2] == 0x03);
-		REQUIRE(extenValue[3] == 0x00);
+		REQUIRE(extenLen == 4);
+		REQUIRE(extenValue[0] == 'A');
+		REQUIRE(extenValue[1] == 'B');
+		REQUIRE(extenValue[2] == 'C');
+		REQUIRE(extenValue[3] == 'D');
+
+		// Test all kinds of move 
+		const std::string str = "ABCDEFGHIJK";
+		for(int i=0; i< 10; i++) {
+			int tempLen = rand()%7 + 1;
+			REQUIRE(packet->SetExtensionValue(14, tempLen, str.substr(0, tempLen)) == true);
+		}
 
 		delete packet;
 	}
@@ -744,18 +747,23 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE((extenValue = packet->GetExtension(1, extenLen)));
 		REQUIRE(packet->HasExtension(1) == true);
 		REQUIRE(extenLen == 4);
-		REQUIRE(extenValue[0] == 0x01);
-		REQUIRE(extenValue[1] == 0x02);
-		REQUIRE(extenValue[2] == 0x03);
-		REQUIRE(extenValue[3] == 0x04);
-		//REQUIRE(packet->SetExtensionLength(1, 2) == true);
+		REQUIRE(packet->SetExtensionValue(1, 4, "ABCD") == true);
+		REQUIRE((extenValue = packet->GetExtension(1, extenLen)));
+		REQUIRE(packet->HasExtension(1) == true);
+		REQUIRE(extenLen == 4);
+		REQUIRE(extenValue[0] == 'A');
+		REQUIRE(extenValue[1] == 'B');
+		REQUIRE(extenValue[2] == 'C');
+		REQUIRE(extenValue[3] == 'D');
+		REQUIRE(packet->SetExtensionValue(1, 2, "ABCD") == true);
 		REQUIRE((extenValue = packet->GetExtension(1, extenLen)));
 		REQUIRE(packet->HasExtension(1) == true);
 		REQUIRE(extenLen == 2);
-		REQUIRE(extenValue[0] == 0x01);
-		REQUIRE(extenValue[1] == 0x02);
-		REQUIRE(extenValue[2] == 0x00);
-		REQUIRE(extenValue[3] == 0x00);
+		REQUIRE(extenValue[0] == 'A');
+		REQUIRE(extenValue[1] == 'B');
+		// this may failed 
+		REQUIRE(extenValue[2] != 'C');
+		REQUIRE(extenValue[3] != 'D');
 		REQUIRE(packet->GetExtension(22, extenLen));
 		REQUIRE(packet->HasExtension(22) == true);
 		REQUIRE(extenLen == 11);
@@ -789,6 +797,13 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetExtension(24, extenLen));
 		REQUIRE(packet->HasExtension(24) == true);
 		REQUIRE(extenLen == 4);
+
+		// Test all kinds of move 
+		const std::string str = "ABCDEFGHIJK";
+		for(int i=0; i< 10; i++) {
+			int tempLen = rand()%7 + 1;
+			REQUIRE(packet->SetExtensionValue(24, tempLen, str.substr(0, tempLen)) == true);
+		}
 
 		delete packet;
 	}
