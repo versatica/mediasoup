@@ -6,7 +6,7 @@ project(
     'cpp_std=c++17',
     'default_library=static',
   ],
-  meson_version: '>= 0.58',
+  meson_version: '>= 1.1.0',
 )
 
 cpp_args = [
