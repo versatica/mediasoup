@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* `Worker`: Require C++17 and update subprojects ([PR #1081](https://github.com/versatica/mediasoup/pull/1081)).
+* `Worker`: Require C++17, Meson >= 1.1.0 and update subprojects ([PR #1081](https://github.com/versatica/mediasoup/pull/1081)).
 
 
 ### 3.11.24
