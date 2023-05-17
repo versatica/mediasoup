@@ -144,7 +144,7 @@ export type PipeTransportDump = BaseTransportDump &
 const logger = new Logger('PipeTransport');
 
 export class PipeTransport<PipeTransportAppData extends AppData = AppData>
-	extends Transport<PipeTransportEvents, PipeTransportObserverEvents, PipeTransportAppData>
+	extends Transport<PipeTransportAppData, PipeTransportEvents, PipeTransportObserverEvents>
 {
 	// PipeTransport data.
 	readonly #data: PipeTransportData;

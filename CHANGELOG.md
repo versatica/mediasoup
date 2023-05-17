@@ -1,6 +1,21 @@
 # Changelog
 
 
+### 3.11.25
+
+* `Worker`: Require C++17, Meson >= 1.1.0 and update subprojects ([PR #1081](https://github.com/versatica/mediasoup/pull/1081)).
+
+
+### 3.11.24
+
+* `SeqManager`: Fix performance regression ([PR #1068](https://github.com/versatica/mediasoup/pull/1068), thanks to @vpalmisano for properly reporting).
+
+
+### 3.11.23
+
+* Node: Fix `appData` for `Transport` and `RtpObserver` parent classes  ([PR #1066](https://github.com/versatica/mediasoup/pull/1066)).
+
+
 ### 3.11.22
 
 * `RtpStreamRecv`: Only perform RTP inactivity check on simulcast streams ([PR #1061](https://github.com/versatica/mediasoup/pull/1061)).

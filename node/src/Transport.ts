@@ -208,9 +208,9 @@ type SctpListenerDump = {
 const logger = new Logger('Transport');
 
 export class Transport
-	<Events extends TransportEvents = TransportEvents,
-	ObserverEvents extends TransportObserverEvents = TransportObserverEvents,
-	TransportAppData extends AppData = AppData>
+	<TransportAppData extends AppData = AppData,
+	Events extends TransportEvents = TransportEvents,
+	ObserverEvents extends TransportObserverEvents = TransportObserverEvents>
 	extends EnhancedEventEmitter<Events>
 {
 	// Internal data.

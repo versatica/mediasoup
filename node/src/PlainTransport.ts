@@ -147,7 +147,7 @@ type PlainTransportDump = BaseTransportDump &
 const logger = new Logger('PlainTransport');
 
 export class PlainTransport<PlainTransportAppData extends AppData = AppData>
-	extends Transport<PlainTransportEvents, PlainTransportObserverEvents, PlainTransportAppData>
+	extends Transport<PlainTransportAppData, PlainTransportEvents, PlainTransportObserverEvents>
 {
 	// PlainTransport data.
 	readonly #data: PlainTransportData;

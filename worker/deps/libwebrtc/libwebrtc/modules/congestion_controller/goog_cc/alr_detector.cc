@@ -116,11 +116,11 @@ absl::optional<int64_t> AlrDetector::GetApplicationLimitedRegionStartTime()
 
 absl::optional<int64_t> AlrDetector::GetApplicationLimitedRegionStartTime(
     int64_t at_time_ms) {
-  if (!alr_started_time_ms_ && *last_send_time_ms_) {
+  if (!alr_started_time_ms_ && last_send_time_ms_.has_value()) {
     int64_t delta_time_ms = at_time_ms - *last_send_time_ms_;
     // If ALR is stopped and we haven't sent any packets for a while, force start.
     if (delta_time_ms > alr_timeout_) {
-      MS_WARN_TAG(bwe, "large delta_time_ms: %ld, forcing alr state change",
+      MS_WARN_TAG(bwe, "large delta_time_ms: %" PRIi64 ", forcing alr state change",
         delta_time_ms);
       alr_started_time_ms_.emplace(at_time_ms);
     }
