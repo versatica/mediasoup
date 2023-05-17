@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* `Worker`: Require C++17, Meson >= 1.1.0 and update subprojects ([PR #1081](https://github.com/versatica/mediasoup/pull/1081)).
+
+
 ### 3.11.24
 
 * `SeqManager`: Fix performance regression ([PR #1068](https://github.com/versatica/mediasoup/pull/1068), thanks to @vpalmisano for properly reporting).
