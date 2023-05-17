@@ -1,7 +1,7 @@
 # Changelog
 
 
-### NEXT
+### 3.11.25
 
 * `Worker`: Require C++17, Meson >= 1.1.0 and update subprojects ([PR #1081](https://github.com/versatica/mediasoup/pull/1081)).
 
