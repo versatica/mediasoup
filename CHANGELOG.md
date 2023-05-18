@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.11.26
+
+* `Worker`: Fix NACK timer and avoid negative RTT ([PR #1082](https://github.com/versatica/mediasoup/pull/1082), thanks to o-u-p for his work in ([PR #1076](https://github.com/versatica/mediasoup/pull/1076)).
+
+
 ### 3.11.25
 
 * `Worker`: Require C++17, Meson >= 1.1.0 and update subprojects ([PR #1081](https://github.com/versatica/mediasoup/pull/1081)).
