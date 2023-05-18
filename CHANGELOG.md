@@ -3,7 +3,7 @@
 
 ### Next
 
-* Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1065](https://github.com/versatica/mediasoup/pull/1065)).
+* Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
 
 
 ### 3.11.26
