@@ -608,9 +608,10 @@ namespace RTC
 		this->rtt = static_cast<float>(rtt >> 16) * 1000;
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
-		if (this->rtt > 0.0f)
+		// Avoid negative RTT value since it doesn't make sense.
+		if (this->rtt <= 0.0f)
 		{
-			this->hasRtt = true;
+			this->rtt = 0.0f;
 		}
 
 		// Tell it to the NackGenerator.
