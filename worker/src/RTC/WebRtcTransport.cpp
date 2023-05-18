@@ -86,7 +86,6 @@ namespace RTC
 					{
 						this->iceCandidates.emplace_back(udpSocket, icePriority, announcedIp);
 					}
-					}
 
 					if (listenInfo->sendBufferSize() != 0)
 					{

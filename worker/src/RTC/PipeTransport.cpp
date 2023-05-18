@@ -158,6 +158,7 @@ namespace RTC
 			if (this->listenInfo.announcedIp.empty())
 			{
 				localIp = this->udpSocket->GetLocalIp();
+			}
 			else
 			{
 				localIp = this->listenInfo.announcedIp;
@@ -201,6 +202,7 @@ namespace RTC
 			if (this->listenInfo.announcedIp.empty())
 			{
 				localIp = this->udpSocket->GetLocalIp();
+			}
 			else
 			{
 				localIp = this->listenInfo.announcedIp;

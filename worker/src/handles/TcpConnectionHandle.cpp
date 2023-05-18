@@ -326,7 +326,7 @@ void TcpConnectionHandle::ErrorReceiving()
 	this->listener->OnTcpConnectionClosed(this);
 }
 
-bool TcpConnectionHandler::SetPeerAddress()
+bool TcpConnectionHandle::SetPeerAddress()
 {
 	MS_TRACE();
 
