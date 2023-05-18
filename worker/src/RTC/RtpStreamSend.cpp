@@ -223,9 +223,10 @@ namespace RTC
 		this->rtt = static_cast<float>(rtt >> 16) * 1000;
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
-		if (this->rtt > 0.0f)
+		// Avoid negative RTT value since it doesn't make sense.
+		if (this->rtt <= 0.0f)
 		{
-			this->hasRtt = true;
+			this->rtt = 0.0f;
 		}
 
 		this->packetsLost  = report->GetTotalLost();
@@ -399,7 +400,7 @@ namespace RTC
 
 		// Look for each requested packet.
 		const uint64_t nowMs = DepLibUV::GetTimeMs();
-		const uint16_t rtt   = (this->rtt != 0u ? this->rtt : DefaultRtt);
+		const uint16_t rtt   = (this->rtt > 0.0f ? this->rtt : DefaultRtt);
 		uint16_t currentSeq  = seq;
 		bool requested{ true };
 		size_t containerIdx{ 0 };

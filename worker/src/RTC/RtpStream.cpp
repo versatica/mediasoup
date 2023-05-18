@@ -76,7 +76,7 @@ namespace RTC
 		if (this->rtxStream)
 			jsonObject["rtxPacketsDiscarded"] = this->rtxStream->GetPacketsDiscarded();
 
-		if (this->hasRtt)
+		if (this->rtt > 0.0f)
 			jsonObject["roundTripTime"] = this->rtt;
 	}
 
