@@ -70,6 +70,7 @@ switch (task)
 	{
 		ensureDir(PREBUILD_DIR);
 		createTar([ 'worker/out/Release' ], PREBUILD_TAR_PATH);
+
 		break;
 	}
 
@@ -80,12 +81,14 @@ switch (task)
 			console.error(`Error fetching release: ${error.message}`);
 			process.exitCode = 1;
 		});
+
 		break;
 	}
 
 	case 'prebuild:unpackage':
 	{
 		extractTar(PREBUILD_TAR_PATH, 'worker');
+
 		break;
 	}
 
