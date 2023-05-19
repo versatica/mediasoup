@@ -712,8 +712,8 @@ namespace RTC
 				{
 					if (ptr + 1 >= extensionEnd)
 					{
-						ptr1++;
 						*ptr1 = 0u;
+						ptr1++;
 						continue;
 					}
 					const uint8_t tempId  = *ptr;
