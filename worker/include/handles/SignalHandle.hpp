@@ -1,11 +1,11 @@
-#ifndef MS_SIGNALS_HANDLER_HPP
-#define MS_SIGNALS_HANDLER_HPP
+#ifndef MS_SIGNAL_HANDLE_HPP
+#define MS_SIGNAL_HANDLE_HPP
 
 #include <uv.h>
 #include <string>
 #include <vector>
 
-class SignalsHandler
+class SignalHandle
 {
 public:
 	class Listener
@@ -14,12 +14,12 @@ public:
 		virtual ~Listener() = default;
 
 	public:
-		virtual void OnSignal(SignalsHandler* signalsHandler, int signum) = 0;
+		virtual void OnSignal(SignalHandle* signalsHandler, int signum) = 0;
 	};
 
 public:
-	explicit SignalsHandler(Listener* listener);
-	~SignalsHandler();
+	explicit SignalHandle(Listener* listener);
+	~SignalHandle();
 
 public:
 	void Close();

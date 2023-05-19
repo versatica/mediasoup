@@ -21,8 +21,8 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 	// Set us as Channel's listener.
 	this->channel->SetListener(this);
 
-	// Set the SignalHandler.
-	this->signalsHandler = new SignalsHandler(this);
+	// Set the SignalHandle.
+	this->signalHandle = new SignalHandle(this);
 
 	// Set up the RTC::Shared singleton.
 	this->shared = new RTC::Shared(
@@ -32,8 +32,8 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 #ifdef MS_EXECUTABLE
 	{
 		// Add signals to handle.
-		this->signalsHandler->AddSignal(SIGINT, "INT");
-		this->signalsHandler->AddSignal(SIGTERM, "TERM");
+		this->signalHandle->AddSignal(SIGINT, "INT");
+		this->signalHandle->AddSignal(SIGTERM, "TERM");
 	}
 #endif
 
@@ -66,8 +66,8 @@ void Worker::Close()
 
 	this->closed = true;
 
-	// Delete the SignalsHandler.
-	delete this->signalsHandler;
+	// Delete the SignalHandle.
+	delete this->signalHandle;
 
 	// Delete all Routers.
 	for (auto& kv : this->mapRouters)
@@ -454,7 +454,7 @@ inline void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
 	Close();
 }
 
-inline void Worker::OnSignal(SignalsHandler* /*signalsHandler*/, int signum)
+inline void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 {
 	MS_TRACE();
 

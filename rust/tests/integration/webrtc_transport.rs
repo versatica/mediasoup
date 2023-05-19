@@ -2,7 +2,7 @@ use futures_lite::future;
 use hash_hasher::HashedSet;
 use mediasoup::data_structures::{
     AppData, DtlsFingerprint, DtlsParameters, DtlsRole, DtlsState, IceCandidateTcpType,
-    IceCandidateType, IceRole, IceState, ListenIp, Protocol, SctpState,
+    IceCandidateType, IceRole, IceState, ListenInfo, Protocol, SctpState,
 };
 use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
@@ -12,8 +12,7 @@ use mediasoup::rtp_parameters::{
 use mediasoup::sctp_parameters::{NumSctpStreams, SctpParameters};
 use mediasoup::transport::TransportTraceEventType;
 use mediasoup::webrtc_transport::{
-    TransportListenIps, WebRtcTransportListen, WebRtcTransportOptions,
-    WebRtcTransportRemoteParameters,
+    WebRtcTransportListenInfos, WebRtcTransportOptions, WebRtcTransportRemoteParameters,
 };
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
@@ -95,12 +94,16 @@ fn create_succeeds() {
 
         {
             let transport = router
-                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                    ListenIp {
+                .create_webrtc_transport(WebRtcTransportOptions::new(
+                    WebRtcTransportListenInfos::new(ListenInfo {
+                        protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: Some("9.9.9.1".parse().unwrap()),
-                    },
-                )))
+                        port: None,
+                        send_buffer_size: None,
+                        recv_buffer_size: None,
+                    }),
+                ))
                 .await
                 .expect("Failed to create WebRTC transport");
 
@@ -129,25 +132,34 @@ fn create_succeeds() {
                 .create_webrtc_transport({
                     let mut webrtc_transport_options = WebRtcTransportOptions::new(
                         vec![
-                            ListenIp {
+                            ListenInfo {
+                                protocol: Protocol::Udp,
                                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                                 announced_ip: Some("9.9.9.1".parse().unwrap()),
+                                port: None,
+                                send_buffer_size: None,
+                                recv_buffer_size: None,
                             },
-                            ListenIp {
+                            ListenInfo {
+                                protocol: Protocol::Udp,
                                 ip: IpAddr::V4(Ipv4Addr::UNSPECIFIED),
                                 announced_ip: Some("9.9.9.2".parse().unwrap()),
+                                port: None,
+                                send_buffer_size: None,
+                                recv_buffer_size: None,
                             },
-                            ListenIp {
+                            ListenInfo {
+                                protocol: Protocol::Udp,
                                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                                 announced_ip: None,
+                                port: None,
+                                send_buffer_size: None,
+                                recv_buffer_size: None,
                             },
                         ]
                         .try_into()
                         .unwrap(),
                     );
-                    webrtc_transport_options.enable_tcp = true;
-                    webrtc_transport_options.prefer_udp = true;
-                    webrtc_transport_options.enable_sctp = true;
                     webrtc_transport_options.num_sctp_streams = NumSctpStreams {
                         os: 2048,
                         mis: 2048,
@@ -214,9 +226,9 @@ fn create_succeeds() {
                 assert_eq!(ice_candidates[4].r#type, IceCandidateType::Host);
                 assert_eq!(ice_candidates[4].tcp_type, None);
                 assert!(ice_candidates[0].priority > ice_candidates[1].priority);
-                assert!(ice_candidates[2].priority > ice_candidates[1].priority);
+                assert!(ice_candidates[1].priority > ice_candidates[2].priority);
                 assert!(ice_candidates[2].priority > ice_candidates[3].priority);
-                assert!(ice_candidates[4].priority > ice_candidates[3].priority);
+                assert!(ice_candidates[3].priority > ice_candidates[4].priority);
                 assert!(ice_candidates[4].priority > ice_candidates[5].priority);
             }
 
@@ -258,29 +270,23 @@ fn create_with_fixed_port_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
 
-        let port1 = pick_unused_port().unwrap();
+        let port = pick_unused_port().unwrap();
 
         let transport = router
             .create_webrtc_transport({
-                let mut options = WebRtcTransportOptions::new(TransportListenIps::new(ListenIp {
+                WebRtcTransportOptions::new(WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                }));
-                match &mut options.listen {
-                    WebRtcTransportListen::Individual { port, .. } => {
-                        port.replace(port1);
-                    }
-                    WebRtcTransportListen::Server { .. } => {
-                        unreachable!();
-                    }
-                }
-
-                options
+                    port: Some(port),
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }))
             })
             .await
             .expect("Failed to create WebRTC transport");
 
-        assert_eq!(transport.ice_candidates().get(0).unwrap().port, port1);
+        assert_eq!(transport.ice_candidates().get(0).unwrap().port, port);
     });
 }
 
@@ -290,12 +296,16 @@ fn weak() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -316,12 +326,16 @@ fn create_non_bindable_ip() {
 
         assert!(matches!(
             router
-                .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                    ListenIp {
+                .create_webrtc_transport(WebRtcTransportOptions::new(
+                    WebRtcTransportListenInfos::new(ListenInfo {
+                        protocol: Protocol::Udp,
                         ip: "8.8.8.8".parse().unwrap(),
                         announced_ip: None,
-                    },
-                )))
+                        port: None,
+                        send_buffer_size: None,
+                        recv_buffer_size: None,
+                    },)
+                ))
                 .await,
             Err(RequestError::Response { .. }),
         ));
@@ -334,12 +348,16 @@ fn get_stats_succeeds() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -381,12 +399,16 @@ fn connect_succeeds() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -426,12 +448,16 @@ fn set_max_incoming_bitrate_succeeds() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -454,12 +480,16 @@ fn set_max_outgoing_bitrate_succeeds() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -482,12 +512,16 @@ fn set_min_outgoing_bitrate_succeeds() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -510,12 +544,16 @@ fn set_max_outgoing_bitrate_fails_if_value_is_lower_than_current_min_limit() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -543,12 +581,16 @@ fn set_min_outgoing_bitrate_fails_if_value_is_higher_than_current_max_limit() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -576,12 +618,16 @@ fn restart_ice_succeeds() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -607,12 +653,16 @@ fn enable_trace_event_succeeds() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -669,12 +719,16 @@ fn close_event() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 

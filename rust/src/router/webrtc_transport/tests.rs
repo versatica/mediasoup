@@ -1,11 +1,9 @@
-use crate::data_structures::{IceCandidateType, IceState, ListenIp, Protocol};
+use crate::data_structures::{IceCandidateType, IceState, ListenInfo, Protocol};
 use crate::prelude::WebRtcTransport;
 use crate::router::{NewTransport, Router, RouterOptions};
 use crate::transport::Transport;
-use crate::webrtc_server::{
-    WebRtcServerIpPort, WebRtcServerListenInfo, WebRtcServerListenInfos, WebRtcServerOptions,
-};
-use crate::webrtc_transport::{TransportListenIps, WebRtcTransportOptions};
+use crate::webrtc_server::{WebRtcServerIpPort, WebRtcServerListenInfos, WebRtcServerOptions};
+use crate::webrtc_transport::{WebRtcTransportListenInfos, WebRtcTransportOptions};
 use crate::worker::{Worker, WorkerSettings};
 use crate::worker_manager::WorkerManager;
 use async_io::Timer;
@@ -52,21 +50,21 @@ fn create_with_webrtc_server_succeeds() {
 
         let webrtc_server = worker
             .create_webrtc_server({
-                let listen_infos = WebRtcServerListenInfos::new(WebRtcServerListenInfo {
+                let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
-                    listen_ip: ListenIp {
-                        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: None,
-                    },
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    announced_ip: None,
                     port: Some(port1),
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 });
-                let listen_infos = listen_infos.insert(WebRtcServerListenInfo {
+                let listen_infos = listen_infos.insert(ListenInfo {
                     protocol: Protocol::Tcp,
-                    listen_ip: ListenIp {
-                        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: None,
-                    },
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    announced_ip: None,
                     port: Some(port2),
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 });
                 WebRtcServerOptions::new(listen_infos)
             })
@@ -219,12 +217,16 @@ fn router_close_event() {
         let (_worker, router) = init().await;
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new(TransportListenIps::new(
-                ListenIp {
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
-                },
-            )))
+                    port: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -257,21 +259,21 @@ fn webrtc_server_close_event() {
 
         let webrtc_server = worker
             .create_webrtc_server({
-                let listen_infos = WebRtcServerListenInfos::new(WebRtcServerListenInfo {
+                let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
-                    listen_ip: ListenIp {
-                        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: None,
-                    },
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    announced_ip: None,
                     port: Some(port1),
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 });
-                let listen_infos = listen_infos.insert(WebRtcServerListenInfo {
+                let listen_infos = listen_infos.insert(ListenInfo {
                     protocol: Protocol::Tcp,
-                    listen_ip: ListenIp {
-                        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: None,
-                    },
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    announced_ip: None,
                     port: Some(port2),
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
                 });
                 WebRtcServerOptions::new(listen_infos)
             })

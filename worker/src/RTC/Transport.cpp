@@ -98,7 +98,7 @@ namespace RTC
 		}
 
 		// Create the RTCP timer.
-		this->rtcpTimer = new Timer(this);
+		this->rtcpTimer = new TimerHandle(this);
 	}
 
 	Transport::~Transport()
@@ -2992,7 +2992,7 @@ namespace RTC
 	}
 #endif
 
-	inline void Transport::OnTimer(Timer* timer)
+	inline void Transport::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
 

@@ -1,4 +1,4 @@
-include "webRtcServer.fbs";
+include "transport.fbs";
 
 namespace FBS.Worker;
 
@@ -40,7 +40,7 @@ table UpdateSettingsRequest {
 
 table CreateWebRtcServerRequest {
   web_rtc_server_id:string (required);
-  listen_infos:[FBS.WebRtcServer.ListenInfo];
+  listen_infos:[FBS.Transport.ListenInfo];
 }
 
 table CloseWebRtcServerRequest {

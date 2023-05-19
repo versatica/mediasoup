@@ -34,7 +34,7 @@ namespace RTC
 		else if (this->interval > 5000)
 			this->interval = 5000;
 
-		this->periodicTimer = new Timer(this);
+		this->periodicTimer = new TimerHandle(this);
 
 		this->periodicTimer->Start(this->interval, this->interval);
 
@@ -201,7 +201,7 @@ namespace RTC
 		}
 	}
 
-	inline void AudioLevelObserver::OnTimer(Timer* /*timer*/)
+	inline void AudioLevelObserver::OnTimer(TimerHandle* /*timer*/)
 	{
 		MS_TRACE();
 

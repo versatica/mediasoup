@@ -53,8 +53,8 @@ beforeEach(async () =>
 {
 	transport = await router.createPlainTransport(
 		{
-			listenIp : { ip: '127.0.0.1', announcedIp: '4.4.4.4' },
-			rtcpMux  : false
+			listenInfo : { protocol: 'udp', ip: '127.0.0.1', announcedIp: '4.4.4.4' },
+			rtcpMux    : false
 		});
 });
 
@@ -73,7 +73,7 @@ test('router.createPlainTransport() succeeds', async () =>
 	// Create a separate transport here.
 	const transport1 = await router.createPlainTransport(
 		{
-			listenIp   : { ip: '127.0.0.1', announcedIp: '9.9.9.1' },
+			listenInfo : { protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
 			rtcpMux    : true,
 			enableSctp : true,
 			appData    : { foo: 'bar' }
@@ -121,8 +121,8 @@ test('router.createPlainTransport() succeeds', async () =>
 
 	const transport2 = await router.createPlainTransport(
 		{
-			listenIp : '127.0.0.1',
-			rtcpMux  : false
+			listenInfo : { protocol: 'udp', ip: '127.0.0.1' },
+			rtcpMux    : false
 		});
 
 	expect(typeof transport2.id).toBe('string');
@@ -159,16 +159,25 @@ test('router.createPlainTransport() with wrong arguments rejects with TypeError'
 		.rejects
 		.toThrow(TypeError);
 
+	// TODO: Ideally this should reject with TypeError. See:
+	// https://github.com/versatica/mediasoup/pull/927#issuecomment-1507188359
 	// @ts-ignore
 	await expect(router.createPlainTransport({ listenIp: [ '127.0.0.1' ] }))
+		.rejects
+		.toThrow(Error);
+
+	await expect(router.createPipeTransport(
+		{
+			listenInfo : { protocol: 'tcp', ip: '127.0.0.1' }
+		}))
 		.rejects
 		.toThrow(TypeError);
 
 	await expect(router.createPlainTransport(
 		{
-			listenIp : '127.0.0.1',
+			listenInfo : { protocol: 'udp', ip: '127.0.0.1' },
 			// @ts-ignore
-			appData  : 'NOT-AN-OBJECT'
+			appData    : 'NOT-AN-OBJECT'
 		}))
 		.rejects
 		.toThrow(TypeError);
@@ -421,8 +430,7 @@ test('router.createPlainTransport() with fixed port succeeds', async () =>
 	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const plainTransport = await router.createPlainTransport(
 		{
-			listenIp : '127.0.0.1',
-			port
+			listenInfo : { protocol: 'udp', ip: '127.0.0.1', port }
 		});
 
 	expect(plainTransport.tuple.localPort).toEqual(port);

@@ -1,7 +1,7 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
-import { TransportProtocol } from './Transport';
+import { TransportListenInfo } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';
 import { AppData } from './types';
 import { Body as RequestBody, Method } from './fbs/request';
@@ -13,7 +13,7 @@ export type WebRtcServerOptions<WebRtcServerAppData extends AppData = AppData> =
 	/**
 	 * Listen infos.
 	 */
-	listenInfos: WebRtcServerListenInfo[];
+	listenInfos: TransportListenInfo[];
 
 	/**
 	 * Custom application data.
@@ -21,29 +21,11 @@ export type WebRtcServerOptions<WebRtcServerAppData extends AppData = AppData> =
 	appData?: WebRtcServerAppData;
 };
 
-export type WebRtcServerListenInfo =
-{
-	/**
-	 * Network protocol.
-	 */
-	protocol: TransportProtocol;
-
-	/**
-	 * Listening IPv4 or IPv6.
-	 */
-	ip: string;
-
-	/**
-	 * Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with
-	 * private IP).
-	 */
-	announcedIp?: string;
-
-	/**
-	 * Listening port.
-	 */
-	port?: number;
-};
+/**
+ * @deprecated
+ * Use TransportListenInfo instead.
+ */
+export type WebRtcServerListenInfo = TransportListenInfo;
 
 export type WebRtcServerEvents =
 { 

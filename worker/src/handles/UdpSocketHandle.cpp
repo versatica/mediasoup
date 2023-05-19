@@ -1,7 +1,7 @@
-#define MS_CLASS "UdpSocketHandler"
+#define MS_CLASS "UdpSocketHandle"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "handles/UdpSocketHandler.hpp"
+#include "handles/UdpSocketHandle.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -16,30 +16,36 @@ thread_local static uint8_t ReadBuffer[ReadBufferSize];
 
 inline static void onAlloc(uv_handle_t* handle, size_t suggestedSize, uv_buf_t* buf)
 {
-	auto* socket = static_cast<UdpSocketHandler*>(handle->data);
+	auto* socket = static_cast<UdpSocketHandle*>(handle->data);
 
 	if (socket)
+	{
 		socket->OnUvRecvAlloc(suggestedSize, buf);
+	}
 }
 
 inline static void onRecv(
   uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
-	auto* socket = static_cast<UdpSocketHandler*>(handle->data);
+	auto* socket = static_cast<UdpSocketHandle*>(handle->data);
 
 	if (socket)
+	{
 		socket->OnUvRecv(nread, buf, addr, flags);
+	}
 }
 
 inline static void onSend(uv_udp_send_t* req, int status)
 {
-	auto* sendData = static_cast<UdpSocketHandler::UvSendData*>(req->data);
+	auto* sendData = static_cast<UdpSocketHandle::UvSendData*>(req->data);
 	auto* handle   = req->handle;
-	auto* socket   = static_cast<UdpSocketHandler*>(handle->data);
+	auto* socket   = static_cast<UdpSocketHandle*>(handle->data);
 	auto* cb       = sendData->cb;
 
 	if (socket)
+	{
 		socket->OnUvSend(status, cb);
+	}
 
 	// Delete the UvSendData struct (it will delete the store and cb too).
 	delete sendData;
@@ -53,7 +59,7 @@ inline static void onClose(uv_handle_t* handle)
 /* Instance methods. */
 
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-UdpSocketHandler::UdpSocketHandler(uv_udp_t* uvHandle) : uvHandle(uvHandle)
+UdpSocketHandle::UdpSocketHandle(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 {
 	MS_TRACE();
 
@@ -80,46 +86,52 @@ UdpSocketHandler::UdpSocketHandler(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 	}
 }
 
-UdpSocketHandler::~UdpSocketHandler()
+UdpSocketHandle::~UdpSocketHandle()
 {
 	MS_TRACE();
 
 	if (!this->closed)
+	{
 		Close();
+	}
 }
 
-void UdpSocketHandler::Close()
+void UdpSocketHandle::Close()
 {
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		return;
+	}
 
 	this->closed = true;
 
-	// Tell the UV handle that the UdpSocketHandler has been closed.
+	// Tell the UV handle that the UdpSocketHandle has been closed.
 	this->uvHandle->data = nullptr;
 
 	// Don't read more.
 	const int err = uv_udp_recv_stop(this->uvHandle);
 
 	if (err != 0)
+	{
 		MS_ABORT("uv_udp_recv_stop() failed: %s", uv_strerror(err));
+	}
 
 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
 }
 
-void UdpSocketHandler::Dump() const
+void UdpSocketHandle::Dump() const
 {
-	MS_DUMP("<UdpSocketHandler>");
+	MS_DUMP("<UdpSocketHandle>");
 	MS_DUMP("  localIp   : %s", this->localIp.c_str());
 	MS_DUMP("  localPort : %" PRIu16, static_cast<uint16_t>(this->localPort));
 	MS_DUMP("  closed    : %s", !this->closed ? "open" : "closed");
-	MS_DUMP("</UdpSocketHandler>");
+	MS_DUMP("</UdpSocketHandle>");
 }
 
-void UdpSocketHandler::Send(
-  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocketHandler::onSendCallback* cb)
+void UdpSocketHandle::Send(
+  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocketHandle::onSendCallback* cb)
 {
 	MS_TRACE();
 
@@ -204,7 +216,9 @@ void UdpSocketHandler::Send(
 		MS_WARN_DEV("uv_udp_send() failed: %s", uv_strerror(err));
 
 		if (cb)
+		{
 			(*cb)(false);
+		}
 
 		// Delete the UvSendData struct (it will delete the store and cb too).
 		delete sendData;
@@ -216,7 +230,77 @@ void UdpSocketHandler::Send(
 	}
 }
 
-bool UdpSocketHandler::SetLocalAddress()
+uint32_t UdpSocketHandle::GetSendBufferSize() const
+{
+	MS_TRACE();
+
+	int size{ 0 };
+	int err = uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
+
+	if (err)
+	{
+		MS_THROW_ERROR("uv_send_buffer_size() failed: %s", uv_strerror(err));
+	}
+
+	return static_cast<uint32_t>(size);
+}
+
+void UdpSocketHandle::SetSendBufferSize(uint32_t size)
+{
+	MS_TRACE();
+
+	auto size_int = static_cast<int>(size);
+
+	if (size_int <= 0)
+	{
+		MS_THROW_TYPE_ERROR("invalid size: %d", size_int);
+	}
+
+	int err =
+	  uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size_int));
+
+	if (err)
+	{
+		MS_THROW_ERROR("uv_send_buffer_size() failed: %s", uv_strerror(err));
+	}
+}
+
+uint32_t UdpSocketHandle::GetRecvBufferSize() const
+{
+	MS_TRACE();
+
+	int size{ 0 };
+	int err = uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
+
+	if (err)
+	{
+		MS_THROW_ERROR("uv_recv_buffer_size() failed: %s", uv_strerror(err));
+	}
+
+	return static_cast<uint32_t>(size);
+}
+
+void UdpSocketHandle::SetRecvBufferSize(uint32_t size)
+{
+	MS_TRACE();
+
+	auto size_int = static_cast<int>(size);
+
+	if (size_int <= 0)
+	{
+		MS_THROW_TYPE_ERROR("invalid size: %d", size_int);
+	}
+
+	int err =
+	  uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size_int));
+
+	if (err)
+	{
+		MS_THROW_ERROR("uv_recv_buffer_size() failed: %s", uv_strerror(err));
+	}
+}
+
+bool UdpSocketHandle::SetLocalAddress()
 {
 	MS_TRACE();
 
@@ -241,7 +325,7 @@ bool UdpSocketHandler::SetLocalAddress()
 	return true;
 }
 
-inline void UdpSocketHandler::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
+inline void UdpSocketHandle::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE();
 
@@ -251,14 +335,16 @@ inline void UdpSocketHandler::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* 
 	buf->len = ReadBufferSize;
 }
 
-inline void UdpSocketHandler::OnUvRecv(
+inline void UdpSocketHandle::OnUvRecv(
   ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags)
 {
 	MS_TRACE();
 
 	// NOTE: Ignore if there is nothing to read or if it was an empty datagram.
 	if (nread == 0)
+	{
 		return;
+	}
 
 	// Check flags.
 	if ((flags & UV_UDP_PARTIAL) != 0u)
@@ -284,7 +370,7 @@ inline void UdpSocketHandler::OnUvRecv(
 	}
 }
 
-inline void UdpSocketHandler::OnUvSend(int status, UdpSocketHandler::onSendCallback* cb)
+inline void UdpSocketHandle::OnUvSend(int status, UdpSocketHandle::onSendCallback* cb)
 {
 	MS_TRACE();
 
@@ -293,7 +379,9 @@ inline void UdpSocketHandler::OnUvSend(int status, UdpSocketHandler::onSendCallb
 	if (status == 0)
 	{
 		if (cb)
+		{
 			(*cb)(true);
+		}
 	}
 	else
 	{
@@ -302,6 +390,8 @@ inline void UdpSocketHandler::OnUvSend(int status, UdpSocketHandler::onSendCallb
 #endif
 
 		if (cb)
+		{
 			(*cb)(false);
+		}
 	}
 }

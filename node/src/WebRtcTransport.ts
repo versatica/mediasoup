@@ -9,6 +9,7 @@ import {
 	BaseTransportDump,
 	BaseTransportStats,
 	Transport,
+	TransportListenInfo,
 	TransportListenIp,
 	TransportProtocol,
 	TransportTuple,
@@ -19,8 +20,8 @@ import {
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import { AppData } from './types';
-import { Either, parseVector } from './utils';
+import { AppData, Either } from './types';
+import { parseVector } from './utils';
 import { Event, Notification } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
@@ -31,11 +32,19 @@ import { IceState as FbsIceState } from './fbs/web-rtc-transport/ice-state';
 export type WebRtcTransportOptions<WebRtcTransportAppData extends AppData = AppData> =
 	WebRtcTransportOptionsBase<WebRtcTransportAppData> & WebRtcTransportListen;
 
-export type WebRtcTransportListenIndividual =
+type WebRtcTransportListenIndividualListenInfo =
+{
+	/**
+	 * Listening info.
+	 */
+	listenInfos: TransportListenInfo[];
+};
+
+type WebRtcTransportListenIndividualListenIp =
 {
 	/**
 	 * Listening IP address or addresses in order of preference (first one is the
-	 * preferred one). Mandatory unless webRtcServer is given.
+	 * preferred one).
 	 */
 	listenIps: (TransportListenIp | string)[];
 
@@ -46,36 +55,42 @@ export type WebRtcTransportListenIndividual =
 	port?: number;
 };
 
-export type WebRtcTransportListenServer =
+type WebRtcTransportListenServer =
 {
 	/**
-	 * Instance of WebRtcServer. Mandatory unless listenIps is given.
+	 * Instance of WebRtcServer.
 	 */
 	webRtcServer: WebRtcServer;
 };
 
-export type WebRtcTransportListen =
-	Either<WebRtcTransportListenIndividual, WebRtcTransportListenServer>;
+type WebRtcTransportListen = Either<
+	Either<WebRtcTransportListenIndividualListenInfo, WebRtcTransportListenIndividualListenIp>,
+	WebRtcTransportListenServer
+>;
 
 export type WebRtcTransportOptionsBase<WebRtcTransportAppData> =
 {
 	/**
 	 * Listen in UDP. Default true.
+	 * @deprecated
 	 */
 	enableUdp?: boolean;
 
 	/**
 	 * Listen in TCP. Default false.
+	 * @deprecated
 	 */
 	enableTcp?: boolean;
 
 	/**
 	 * Prefer UDP. Default false.
+	 * @deprecated
 	 */
 	preferUdp?: boolean;
 
 	/**
 	 * Prefer TCP. Default false.
+	 * @deprecated
 	 */
 	preferTcp?: boolean;
 
