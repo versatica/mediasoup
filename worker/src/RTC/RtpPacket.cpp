@@ -615,7 +615,7 @@ namespace RTC
 				uint8_t* ptr1              = ptr;
 				// Clear current extension, we will rewrite after move all extension in right place.
 				std::memset((uint8_t*)extension, 0, currentLen + 1);
-				while (ptr < extensionEnd && ptr1 < extensionEnd)
+				while (ptr < extensionEnd || ptr1 < extensionEnd)
 				{
 					if (ptr >= extensionEnd)
 					{
@@ -708,7 +708,7 @@ namespace RTC
 				uint8_t* ptr1              = ptr;
 				// Clear current extension valueLen + 2 byteheader.
 				std::memset((void*)extension, 0, currentLen + 2);
-				while (ptr + 1 < extensionEnd && ptr1 < extensionEnd)
+				while (ptr + 1 < extensionEnd || ptr1 < extensionEnd)
 				{
 					if (ptr + 1 >= extensionEnd)
 					{
