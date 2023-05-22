@@ -71,10 +71,10 @@ switch (task)
 	{
 		ensureDir(PREBUILD_DIR);
 
-		const buildDir = `worker/out/Release`;
+		const buildDir = 'worker/out/Release';
 		const files = fs.readdirSync(buildDir, { withFileTypes: true })
 			.filter((fileStat) => fileStat.isFile())
-			.map(stat => path.join(buildDir, stat.name));
+			.map((stat) => path.join(buildDir, stat.name));
 
 		createTar(files, PREBUILD_TAR_PATH);
 
