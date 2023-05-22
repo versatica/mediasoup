@@ -3,6 +3,7 @@
 const process = require('process');
 const os = require('os');
 const fs = require('fs');
+const path = require('path');
 const { execSync, spawnSync } = require('child_process');
 const { version, repository } = require('./package.json');
 
@@ -69,7 +70,13 @@ switch (task)
 	case 'prebuild:package':
 	{
 		ensureDir(PREBUILD_DIR);
-		createTar([ 'worker/out/Release' ], PREBUILD_TAR_PATH);
+
+		const buildDir = `worker/out/Release`;
+		const files = fs.readdirSync(buildDir, { withFileTypes: true })
+			.filter((fileStat) => fileStat.isFile())
+			.map(stat => path.join(buildDir, stat.name));
+
+		createTar(files, PREBUILD_TAR_PATH);
 
 		break;
 	}
@@ -439,14 +446,14 @@ function extractTar(source, cwd)
 function extractRemoteTar(tarUrl, cwd)
 {
 	const tar = require('tar');
-	const axios = require('axios');
+	const fetch = require('node-fetch');
 
-	return axios({ url: tarUrl, responseType: 'stream' })
+	return fetch(tarUrl)
 		.then((res) =>
 		{
 			return new Promise((resolve, reject) =>
 			{
-				const sink = res.data.pipe(
+				const sink = res.body.pipe(
 					tar.x({ strip: 1, cwd })
 				);
 
