@@ -15,7 +15,7 @@
 
 ## Worker.
 /worker/out/
-/worker/prebuilds/
+/worker/prebuild/
 /worker/scripts/node_modules
 # Vistual Studio generated Stuff.
 /worker/**/Debug

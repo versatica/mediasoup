@@ -17,7 +17,7 @@ const MAYOR_VERSION = version.split('.')[0];
 // make command to use.
 const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 
-const PREBUILD_DIR = 'worker/prebuilds';
+const PREBUILD_DIR = 'worker/prebuild';
 const PREBUILD_TAR = `mediasoup-worker-${version}-${os.platform()}-${os.arch()}.tgz`;
 const PREBUILD_TAR_PATH =`${PREBUILD_DIR}/${PREBUILD_TAR}`;
 
