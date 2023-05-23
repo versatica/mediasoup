@@ -17,7 +17,7 @@ const MAYOR_VERSION = version.split('.')[0];
 // make command to use.
 const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
 
-const PREBUILD_DIR = 'out';
+const PREBUILD_DIR = 'worker/prebuilds';
 const PREBUILD_TAR = `mediasoup-worker-${version}-${os.platform()}-${os.arch()}.tgz`;
 const PREBUILD_TAR_PATH =`${PREBUILD_DIR}/${PREBUILD_TAR}`;
 
@@ -57,7 +57,7 @@ switch (task)
 			// Attempt to download a prebuild binary
 			downloadPrebuild().catch((error) =>
 			{
-				console.error('Failed to download prebuilt binary, building instead', error.message);
+				console.log('npm-scripts.js [INFO] downloadPrebuild() failed to download prebuilt binary, building instead', error.message);
 				// fallback to building locally
 				buildWorker();
 
@@ -78,7 +78,7 @@ switch (task)
 
 		createTar(files, PREBUILD_TAR_PATH).catch((error) =>
 		{
-			console.error(`Error packaging prebuild: ${error.message}`);
+			console.error('npm-scripts.js [ERROR] createTar() failed to package prebuild', error.message);
 			process.exitCode = 1;
 		});
 
@@ -89,7 +89,7 @@ switch (task)
 	{
 		downloadPrebuild().catch((error) =>
 		{
-			console.error(`Error fetching release: ${error.message}`);
+			console.error('npm-scripts.js [ERROR] downloadPrebuild() failed to download prebuild', error.message);
 			process.exitCode = 1;
 		});
 
@@ -100,7 +100,7 @@ switch (task)
 	{
 		extractTar(PREBUILD_TAR_PATH, 'worker').catch((error) =>
 		{
-			console.error(`Error extracting prebuild: ${error.message}`);
+			console.error('npm-scripts.js [ERROR] extractTar() failed to extract prebuild', error.message);
 			process.exitCode = 1;
 		});
 
