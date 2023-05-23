@@ -47,21 +47,21 @@ switch (task)
 
 	case 'postinstall':
 	{
-
-		if (!process.env.MEDIASOUP_LOCAL_DEV)
+		if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
-			cleanWorker();
-		}
-		else if (!process.env.MEDIASOUP_WORKER_BIN)
-		{
-			// Attempt to download a prebuild binary
-			downloadPrebuild().catch((error) =>
+			if (!process.env.MEDIASOUP_LOCAL_DEV)
 			{
-				console.log('npm-scripts.js [INFO] downloadPrebuild() failed to download prebuilt binary, building instead', error.message);
-				// fallback to building locally
 				buildWorker();
-
-			});
+				cleanWorker();
+			} else {
+				// Attempt to download a prebuild binary
+				downloadPrebuild().catch((error) =>
+				{
+					console.log('npm-scripts.js [INFO] downloadPrebuild() failed to download prebuilt binary, building instead', error.message);
+					// fallback to building locally
+					buildWorker();
+				});
+			}
 		}
 
 		break;
