@@ -47,7 +47,12 @@ switch (task)
 
 	case 'postinstall':
 	{
-		if (!process.env.MEDIASOUP_WORKER_BIN)
+
+		if (!process.env.MEDIASOUP_LOCAL_DEV)
+		{
+			cleanWorker();
+		}
+		else if (!process.env.MEDIASOUP_WORKER_BIN)
 		{
 			// Attempt to download a prebuild binary
 			downloadPrebuild().catch((error) =>
@@ -56,12 +61,7 @@ switch (task)
 				// fallback to building locally
 				buildWorker();
 
-				if (!process.env.MEDIASOUP_LOCAL_DEV)
-				{
-					cleanWorker();
-				}
 			});
-
 		}
 
 		break;
@@ -76,7 +76,11 @@ switch (task)
 			.filter((fileStat) => fileStat.isFile())
 			.map((stat) => path.join(buildDir, stat.name));
 
-		createTar(files, PREBUILD_TAR_PATH);
+		createTar(files, PREBUILD_TAR_PATH).catch((error) =>
+		{
+			console.error(`Error packaging prebuild: ${error.message}`);
+			process.exitCode = 1;
+		});
 
 		break;
 	}
@@ -94,7 +98,11 @@ switch (task)
 
 	case 'prebuild:unpackage':
 	{
-		extractTar(PREBUILD_TAR_PATH, 'worker');
+		extractTar(PREBUILD_TAR_PATH, 'worker').catch((error) =>
+		{
+			console.error(`Error extracting prebuild: ${error.message}`);
+			process.exitCode = 1;
+		});
 
 		break;
 	}
@@ -419,31 +427,33 @@ function ensureDir(dir)
 	}
 }
 
-function createTar(files, dest)
+async function createTar(files, dest)
 {
 	const tar = require('tar');
 
-	tar.create(
-		{
-			gzip : true
-		},
-		files
-	).pipe(fs.createWriteStream(dest));
+	return new Promise((resolve, reject) =>
+	{
+		tar.create({ gzip: true }, files)
+			.pipe(fs.createWriteStream(dest))
+			.on('finish', () => resolve())
+			.on('error', (error) => reject(error));
+	});
 }
 
-function extractTar(source, cwd)
+async function extractTar(source, cwd)
 {
 	const tar = require('tar');
 
-	fs.createReadStream(source).pipe(
-		tar.extract({
-			strip : 1,
-			cwd
-		})
-	);
+	return new Promise((resolve, reject) =>
+	{
+		fs.createReadStream(source)
+			.pipe(tar.extract({ strip: 1, cwd }))
+			.on('finish', () => resolve())
+			.on('error', (error) => reject(error));
+	});
 }
 
-function extractRemoteTar(tarUrl, cwd)
+async function extractRemoteTar(tarUrl, cwd)
 {
 	const tar = require('tar');
 	const fetch = require('node-fetch');
@@ -453,17 +463,15 @@ function extractRemoteTar(tarUrl, cwd)
 		{
 			return new Promise((resolve, reject) =>
 			{
-				const sink = res.body.pipe(
-					tar.x({ strip: 1, cwd })
-				);
-
-				sink.on('finish', () => resolve());
-				sink.on('error', (err) => reject(err));
+				res.body
+					.pipe(tar.x({ strip: 1, cwd }))
+					.on('finish', () => resolve())
+					.on('error', (err) => reject(err));
 			});
 		});
 }
 
-function downloadPrebuild()
+async function downloadPrebuild()
 {
 	const releaseBase = process.env.MEDIASOUP_WORKER_DOWNLOAD_BASE || `${repository.url.replace('.git', '')}/releases/download`;
 
