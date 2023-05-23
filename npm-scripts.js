@@ -3,222 +3,205 @@
 const process = require('process');
 const os = require('os');
 const fs = require('fs');
-const path = require('path');
 const { execSync, spawnSync } = require('child_process');
+const { TscWatchClient } = require('tsc-watch/client');
+const fetch = require('node-fetch');
+const tar = require('tar');
 const { version, repository } = require('./package.json');
 
-const isFreeBSD = os.platform() === 'freebsd';
-const isWindows = os.platform() === 'win32';
-const task = process.argv.slice(2).join(' ');
-
+const IS_FREEBSD = os.platform() === 'freebsd';
+const IS_WINDOWS = os.platform() === 'win32';
 // mediasoup mayor version.
 const MAYOR_VERSION = version.split('.')[0];
-
 // make command to use.
-const MAKE = process.env.MAKE || (isFreeBSD ? 'gmake' : 'make');
+const MAKE = process.env.MAKE || (IS_FREEBSD ? 'gmake' : 'make');
+const WORKER_PATH = 'worker/out/Release/mediasoup-worker';
+// Prebuilt package related constants.
+const WORKER_PREBUILD_DIR = 'worker/prebuild';
+const WORKER_PREBUILD_TAR = `mediasoup-worker-${version}-${os.platform()}-${os.arch()}.tgz`;
+const WORKER_PREBUILD_TAR_PATH =`${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
 
-const PREBUILD_DIR = 'out';
-const PREBUILD_TAR = `mediasoup-worker-${version}-${os.platform()}-${os.arch()}.tgz`;
-const PREBUILD_TAR_PATH =`${PREBUILD_DIR}/${PREBUILD_TAR}`;
+const task = process.argv.slice(2).join(' ');
 
-// eslint-disable-next-line no-console
-console.log(`npm-scripts.js [INFO] running task "${task}"`);
+run(task);
 
-switch (task)
+// eslint-disable-next-line no-shadow
+async function run(task)
 {
-	// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
-	// `prepare` script:
-	//
-	// - Runs BEFORE the package is packed, i.e. during `npm publish` and `npm pack`.
-	// - Runs on local `npm install` without any arguments.
-	// - NOTE: If a package being installed through git contains a `prepare` script,
-	//   its dependencies and devDependencies will be installed, and the `prepare`
-	//   script will be run, before the package is packaged and installed.
-	//
-	// So here we compile TypeScript and flatbuffers to JavaScript.
-	case 'prepare':
+	console.log(`npm-scripts.js [INFO] run() [task:${task}]`);
+
+	switch (task)
 	{
-		buildTypescript(/* force */ false);
-
-		// TODO: Compile flatbuffers.
-
-		break;
-	}
-
-	case 'postinstall':
-	{
-
-		if (!process.env.MEDIASOUP_LOCAL_DEV)
+		// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
+		// `prepare` script:
+		//
+		// - Runs BEFORE the package is packed, i.e. during `npm publish` and
+		//   `npm pack`.
+		// - Runs on local `npm install` without any arguments.
+		// - NOTE: If a package being installed through git contains a `prepare` script,
+		//   its dependencies and devDependencies will be installed, and the `prepare`
+		//   script will be run, before the package is packaged and installed.
+		//
+		// So here we compile TypeScript and flatbuffers to JavaScript.
+		case 'prepare':
 		{
-			cleanWorker();
+			buildTypescript(/* force */ false);
+
+			// TODO: Compile flatbuffers.
+
+			break;
 		}
-		else if (!process.env.MEDIASOUP_WORKER_BIN)
+
+		case 'postinstall':
 		{
-			// Attempt to download a prebuild binary
-			downloadPrebuild().catch((error) =>
+			if (process.env.MEDIASOUP_WORKER_BIN)
 			{
-				console.error('Failed to download prebuilt binary, building instead', error.message);
-				// fallback to building locally
-				buildWorker();
+				console.log('npm-scripts.js [INFO] MEDIASOUP_WORKER_BIN environment variable given, skipping "postinstall" task');
 
-			});
+				break;
+			}
+
+			if (!process.env.MEDIASOUP_LOCAL_DEV)
+			{
+				cleanWorker();
+			}
+
+			// Attempt to download a prebuilt binary.
+			try
+			{
+				await downloadPrebuiltWorker();
+			}
+			catch (error)
+			{
+				console.error(`npm-scripts.js [ERROR] failed to download prebuilt worker, building it locally instead: ${error}`);
+
+				// Fallback to building locally.
+				buildWorker();
+			}
+
+			break;
 		}
 
-		break;
-	}
-
-	case 'prebuild:package':
-	{
-		ensureDir(PREBUILD_DIR);
-
-		const buildDir = 'worker/out/Release';
-		const files = fs.readdirSync(buildDir, { withFileTypes: true })
-			.filter((fileStat) => fileStat.isFile())
-			.map((stat) => path.join(buildDir, stat.name));
-
-		createTar(files, PREBUILD_TAR_PATH).catch((error) =>
+		case 'worker:tar':
 		{
-			console.error(`Error packaging prebuild: ${error.message}`);
-			process.exitCode = 1;
-		});
+			ensureDir(WORKER_PREBUILD_DIR);
+			tarWorker();
 
-		break;
-	}
+			break;
+		}
 
-	case 'prebuild:download':
-	{
-		downloadPrebuild().catch((error) =>
+		case 'typescript:build':
 		{
-			console.error(`Error fetching release: ${error.message}`);
-			process.exitCode = 1;
-		});
+			installNodeDeps();
+			buildTypescript(/* force */ true);
+			replaceVersion();
 
-		break;
-	}
+			break;
+		}
 
-	case 'prebuild:unpackage':
-	{
-		extractTar(PREBUILD_TAR_PATH, 'worker').catch((error) =>
+		case 'typescript:watch':
 		{
-			console.error(`Error extracting prebuild: ${error.message}`);
-			process.exitCode = 1;
-		});
+			deleteNodeLib();
 
-		break;
-	}
+			const watch = new TscWatchClient();
 
-	case 'typescript:build':
-	{
-		installNodeDeps();
-		buildTypescript(/* force */ true);
-		replaceVersion();
+			watch.on('success', replaceVersion);
+			watch.start('--project', 'node', '--pretty');
 
-		break;
-	}
+			break;
+		}
 
-	case 'typescript:watch':
-	{
-		deleteNodeLib();
+		case 'worker:build':
+		{
+			buildWorker();
 
-		const { TscWatchClient } = require('tsc-watch/client');
-		const watch = new TscWatchClient();
+			break;
+		}
 
-		watch.on('success', replaceVersion);
-		watch.start('--project', 'node', '--pretty');
+		case 'lint:node':
+		{
+			lintNode();
 
-		break;
-	}
+			break;
+		}
 
-	case 'worker:build':
-	{
-		buildWorker();
+		case 'lint:worker':
+		{
+			lintWorker();
 
-		break;
-	}
+			break;
+		}
 
-	case 'lint:node':
-	{
-		lintNode();
+		case 'format:worker':
+		{
+			executeCmd(`${MAKE} format -C worker`);
 
-		break;
-	}
+			break;
+		}
 
-	case 'lint:worker':
-	{
-		lintWorker();
+		case 'test:node':
+		{
+			buildTypescript(/* force */ false);
+			replaceVersion();
+			testNode();
 
-		break;
-	}
+			break;
+		}
 
-	case 'format:worker':
-	{
-		executeCmd(`${MAKE} format -C worker`);
+		case 'test:worker':
+		{
+			testWorker();
 
-		break;
-	}
+			break;
+		}
 
-	case 'test:node':
-	{
-		buildTypescript(/* force */ false);
-		replaceVersion();
-		testNode();
+		case 'coverage:node':
+		{
+			buildTypescript(/* force */ false);
+			replaceVersion();
+			executeCmd('jest --coverage');
+			executeCmd('open-cli coverage/lcov-report/index.html');
 
-		break;
-	}
+			break;
+		}
 
-	case 'test:worker':
-	{
-		testWorker();
+		case 'install-deps:node':
+		{
+			installNodeDeps();
 
-		break;
-	}
+			break;
+		}
 
-	case 'coverage:node':
-	{
-		buildTypescript(/* force */ false);
-		replaceVersion();
-		executeCmd('jest --coverage');
-		executeCmd('open-cli coverage/lcov-report/index.html');
+		case 'install-clang-tools':
+		{
+			executeCmd('npm ci --prefix worker/scripts');
 
-		break;
-	}
+			break;
+		}
 
-	case 'install-deps:node':
-	{
-		installNodeDeps();
+		case 'release:check':
+		{
+			checkRelease();
 
-		break;
-	}
+			break;
+		}
 
-	case 'install-clang-tools':
-	{
-		executeCmd('npm ci --prefix worker/scripts');
+		case 'release':
+		{
+			checkRelease();
+			executeCmd(`git commit -am '${version}'`);
+			executeCmd(`git tag -a ${version} -m '${version}'`);
+			executeCmd(`git push origin v${MAYOR_VERSION}`);
+			executeCmd(`git push origin '${version}'`);
+			executeCmd('npm publish');
 
-		break;
-	}
+			break;
+		}
 
-	case 'release:check':
-	{
-		checkRelease();
-
-		break;
-	}
-
-	case 'release':
-	{
-		checkRelease();
-		executeCmd(`git commit -am '${version}'`);
-		executeCmd(`git tag -a ${version} -m '${version}'`);
-		executeCmd(`git push origin v${MAYOR_VERSION}`);
-		executeCmd(`git push origin '${version}'`);
-		executeCmd('npm publish');
-
-		break;
-	}
-
-	default:
-	{
-		throw new TypeError(`unknown task "${task}"`);
+		default:
+		{
+			throw new TypeError(`unknown task "${task}"`);
+		}
 	}
 }
 
@@ -251,7 +234,7 @@ function deleteNodeLib()
 
 	console.log('npm-scripts.js [INFO] deleteNodeLib()');
 
-	if (!isWindows)
+	if (!IS_WINDOWS)
 	{
 		executeCmd('rm -rf node/lib');
 	}
@@ -272,7 +255,6 @@ function buildTypescript(force = false)
 	console.log('npm-scripts.js [INFO] buildTypescript()');
 
 	deleteNodeLib();
-
 	executeCmd('tsc --project node');
 }
 
@@ -280,7 +262,7 @@ function buildWorker()
 {
 	console.log('npm-scripts.js [INFO] buildWorker()');
 
-	if (isWindows)
+	if (IS_WINDOWS)
 	{
 		if (!fs.existsSync('worker/out/msys/bin/make.exe'))
 		{
@@ -309,7 +291,7 @@ function cleanWorker()
 	// Clean PIP/Meson/Ninja.
 	executeCmd(`${MAKE} clean-pip -C worker`);
 
-	if (isWindows)
+	if (IS_WINDOWS)
 	{
 		executeCmd('rd /s /q worker\\out\\msys');
 	}
@@ -374,6 +356,68 @@ function checkRelease()
 	testWorker();
 }
 
+function installMsysMake()
+{
+	console.log('npm-scripts.js [INFO] installMsysMake()');
+
+	let res = spawnSync('where', [ 'python3.exe' ]);
+
+	if (res.status !== 0)
+	{
+		res = spawnSync('where', [ 'python.exe' ]);
+
+		if (res.status !== 0)
+		{
+			console.error('`npm-scripts.js [ERROR] installMsysMake() cannot find Python executable');
+
+			process.exit(1);
+		}
+	}
+
+	executeCmd(`${String(res.stdout).trim()} worker\\scripts\\getmake.py`);
+}
+
+function ensureDir(dir)
+{
+	console.log(`npm-scripts.js [INFO] ensureDir() [dir:${dir}]`);
+
+	if (!fs.existsSync(dir))
+	{
+		fs.mkdirSync(dir, { recursive: true });
+	}
+}
+
+async function tarWorker()
+{
+	console.log('npm-scripts.js [INFO] tarWorker()');
+
+	return new Promise((resolve, reject) =>
+	{
+		tar.create({ gzip: true }, [ WORKER_PATH ])
+			.pipe(fs.createWriteStream(WORKER_PREBUILD_TAR_PATH))
+			.on('finish', resolve)
+			.on('error', reject);
+	});
+}
+
+async function downloadPrebuiltWorker()
+{
+	const releaseBase = process.env.MEDIASOUP_WORKER_DOWNLOAD_BASE || `${repository.url.replace('.git', '')}/releases/download`;
+	const tarUrl = `${releaseBase}/${version}/${WORKER_PREBUILD_TAR}`;
+
+	console.log(`npm-scripts.js [INFO] downloadPrebuiltWorker() [tarUrl:${tarUrl}]`);
+
+	const res = await fetch(tarUrl);
+
+	return new Promise((resolve, reject) =>
+	{
+		res.body
+			.pipe(tar.x({ strip: 1, cwd: WORKER_PREBUILD_DIR }))
+			.on('finish', resolve)
+			.on('error', reject);
+	});
+}
+
 function executeCmd(command, exitOnError = true)
 {
 	console.log(`npm-scripts.js [INFO] executeCmd(): ${command}`);
@@ -397,83 +441,4 @@ function executeCmd(command, exitOnError = true)
 	}
 }
 
-function installMsysMake()
-{
-	console.log('npm-scripts.js [INFO] installMsysMake()');
-
-	let res = spawnSync('where', [ 'python3.exe' ]);
-
-	if (res.status !== 0)
-	{
-		res = spawnSync('where', [ 'python.exe' ]);
-
-		if (res.status !== 0)
-		{
-			// eslint-disable-next-line no-console
-			console.error('`npm-scripts.js [ERROR] installMsysMake() cannot find Python executable');
-
-			process.exit(1);
-		}
-	}
-
-	executeCmd(`${String(res.stdout).trim()} worker\\scripts\\getmake.py`);
-}
-
-function ensureDir(dir)
-{
-	if (!fs.existsSync(dir))
-	{
-		fs.mkdirSync(dir, { recursive: true });
-	}
-}
-
-async function createTar(files, dest)
-{
-	const tar = require('tar');
-
-	return new Promise((resolve, reject) =>
-	{
-		tar.create({ gzip: true }, files)
-			.pipe(fs.createWriteStream(dest))
-			.on('finish', () => resolve())
-			.on('error', (error) => reject(error));
-	});
-}
-
-async function extractTar(source, cwd)
-{
-	const tar = require('tar');
-
-	return new Promise((resolve, reject) =>
-	{
-		fs.createReadStream(source)
-			.pipe(tar.extract({ strip: 1, cwd }))
-			.on('finish', () => resolve())
-			.on('error', (error) => reject(error));
-	});
-}
-
-async function extractRemoteTar(tarUrl, cwd)
-{
-	const tar = require('tar');
-	const fetch = require('node-fetch');
-
-	return fetch(tarUrl)
-		.then((res) =>
-		{
-			return new Promise((resolve, reject) =>
-			{
-				res.body
-					.pipe(tar.x({ strip: 1, cwd }))
-					.on('finish', () => resolve())
-					.on('error', (err) => reject(err));
-			});
-		});
-}
-
-async function downloadPrebuild()
-{
-	const releaseBase = process.env.MEDIASOUP_WORKER_DOWNLOAD_BASE || `${repository.url.replace('.git', '')}/releases/download`;
-
-	return extractRemoteTar(`${releaseBase}/${version}/${PREBUILD_TAR}`, 'worker');
-}
+/* eslint-enable no-console */

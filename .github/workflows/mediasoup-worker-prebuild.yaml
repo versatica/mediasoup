@@ -1,4 +1,4 @@
-name: prebuilds
+name: mediasoup-worker-prebuild
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
           - os: macos-12
           - os: windows-2022
 
@@ -33,10 +33,13 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - run: npm install
-      # Publish prebuild binaries on tag
-      - run: npm run prebuild:package
-      - name: Upload prebuild
+      - run: npm run worker:build
+      - run: npm run test:worker
+        # TODO: Maybe fix this one day.
+        if: runner.os != 'Windows'
+      # Publish prebuild binaries on tag.
+      - run: npm run worker:tar
+      - name: Upload mediasoup-worker tar
         uses: softprops/action-gh-release@v1
         with:
-          files: out/mediasoup-worker-*.tgz
+          files: worker/prebuild/mediasoup-worker-*.tgz
