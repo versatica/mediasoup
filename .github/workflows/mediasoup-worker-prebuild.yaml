@@ -34,12 +34,9 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - run: npm run worker:build
-      - run: npm run test:worker
-        # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
       # Publish prebuild binaries on tag.
-      - run: npm run worker:tar
-      - name: Upload mediasoup-worker tar
+      - run: npm run worker:prebuild
+      - name: Upload mediasoup-worker prebuilt
         uses: softprops/action-gh-release@v1
         with:
           files: worker/prebuild/mediasoup-worker-*.tgz

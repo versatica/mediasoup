@@ -13,7 +13,7 @@ const IS_WINDOWS = os.platform() === 'win32';
 const MAYOR_VERSION = version.split('.')[0];
 // make command to use.
 const MAKE = process.env.MAKE || (IS_FREEBSD ? 'gmake' : 'make');
-const WORKER_PATH = 'worker/out/Release/mediasoup-worker';
+const WORKER_BIN_PATH = 'worker/out/Release/mediasoup-worker';
 // Prebuilt package related constants.
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = `mediasoup-worker-${version}-${os.platform()}-${os.arch()}.tgz`;
@@ -71,19 +71,11 @@ async function run(task)
 			}
 			catch (error)
 			{
-				console.error(`npm-scripts.js [ERROR] failed to download prebuilt worker, building it locally instead: ${error}`);
+				console.warn(`npm-scripts.js [WARN] failed to download prebuilt mediasoup-worker binary, building it locally instead: ${error}`);
 
 				// Fallback to building locally.
 				buildWorker();
 			}
-
-			break;
-		}
-
-		case 'worker:tar':
-		{
-			ensureDir(WORKER_PREBUILD_DIR);
-			tarWorker();
 
 			break;
 		}
@@ -115,6 +107,13 @@ async function run(task)
 		case 'worker:build':
 		{
 			buildWorker();
+
+			break;
+		}
+
+		case 'worker:prebuild':
+		{
+			prebuildWorker();
 
 			break;
 		}
@@ -388,13 +387,15 @@ function ensureDir(dir)
 	}
 }
 
-async function tarWorker()
+async function prebuildWorker()
 {
-	console.log('npm-scripts.js [INFO] tarWorker()');
+	console.log('npm-scripts.js [INFO] prebuildWorker()');
+
+	ensureDir(WORKER_PREBUILD_DIR);
 
 	return new Promise((resolve, reject) =>
 	{
-		tar.create({ gzip: true }, [ WORKER_PATH ])
+		tar.create({ gzip: true }, [ WORKER_BIN_PATH ])
 			.pipe(fs.createWriteStream(WORKER_PREBUILD_TAR_PATH))
 			.on('finish', resolve)
 			.on('error', reject);
@@ -410,6 +411,8 @@ async function downloadPrebuiltWorker()
 	const tarUrl = `${releaseBase}/${version}/${WORKER_PREBUILD_TAR}`;
 
 	console.log(`npm-scripts.js [INFO] downloadPrebuiltWorker() [tarUrl:${tarUrl}]`);
+
+	ensureDir(WORKER_PREBUILD_DIR);
 
 	const res = await fetch(tarUrl);
 
