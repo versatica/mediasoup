@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 const process = require('process');
 const os = require('os');
 const fs = require('fs');
@@ -10,12 +8,9 @@ const tar = require('tar');
 const PKG = JSON.parse(fs.readFileSync('./package.json').toString());
 const IS_FREEBSD = os.platform() === 'freebsd';
 const IS_WINDOWS = os.platform() === 'win32';
-// mediasoup mayor version.
 const MAYOR_VERSION = PKG.version.split('.')[0];
-// make command to use.
 const MAKE = process.env.MAKE || (IS_FREEBSD ? 'gmake' : 'make');
 const WORKER_BIN_PATH = 'worker/out/Release/mediasoup-worker';
-// Prebuilt package related constants.
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}.tgz`;
 const WORKER_PREBUILD_TAR_PATH =`${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
@@ -27,7 +22,7 @@ run(task);
 // eslint-disable-next-line no-shadow
 async function run(task)
 {
-	console.log(`npm-scripts.js [INFO] run() [task:${task}]`);
+	logInfo(`run() [task:${task}]`);
 
 	switch (task)
 	{
@@ -55,27 +50,23 @@ async function run(task)
 		{
 			if (process.env.MEDIASOUP_WORKER_BIN)
 			{
-				console.log('npm-scripts.js [INFO] MEDIASOUP_WORKER_BIN environment variable given, skipping "postinstall" task');
+				logInfo('MEDIASOUP_WORKER_BIN environment variable given, skipping "postinstall" task');
 
 				break;
 			}
-
-			// Attempt to download a prebuilt binary.
-			try
+			else if (process.env.MEDIASOUP_LOCAL_DEV)
 			{
-				await downloadPrebuiltWorker();
+				logInfo('MEDIASOUP_LOCAL_DEV environment variable given, building mediasoup-worker locally');
+
+				buildWorker();
+				cleanWorkerArtifacts();
 			}
-			catch (error)
+			// Attempt to download a prebuilt binary.
+			else if (!(await downloadPrebuiltWorker()))
 			{
-				console.warn(`npm-scripts.js [WARN] failed to download prebuilt mediasoup-worker binary, building it locally instead: ${error}`);
-
 				// Fallback to building locally.
 				buildWorker();
-
-				if (!process.env.MEDIASOUP_LOCAL_DEV)
-				{
-					cleanWorker();
-				}
+				cleanWorkerArtifacts();
 			}
 
 			break;
@@ -208,7 +199,7 @@ async function run(task)
 
 function replaceVersion()
 {
-	console.log('npm-scripts.js [INFO] replaceVersion()');
+	logInfo('replaceVersion()');
 
 	const files =
 	[
@@ -233,7 +224,7 @@ function deleteNodeLib()
 		return;
 	}
 
-	console.log('npm-scripts.js [INFO] deleteNodeLib()');
+	logInfo('deleteNodeLib()');
 
 	if (!IS_WINDOWS)
 	{
@@ -253,7 +244,7 @@ function buildTypescript(force = false)
 		return;
 	}
 
-	console.log('npm-scripts.js [INFO] buildTypescript()');
+	logInfo('buildTypescript()');
 
 	deleteNodeLib();
 	executeCmd('tsc --project node');
@@ -261,7 +252,7 @@ function buildTypescript(force = false)
 
 function buildWorker()
 {
-	console.log('npm-scripts.js [INFO] buildWorker()');
+	logInfo('buildWorker()');
 
 	if (IS_WINDOWS)
 	{
@@ -281,9 +272,12 @@ function buildWorker()
 	executeCmd(`${MAKE} -C worker`);
 }
 
-function cleanWorker()
+function cleanWorkerArtifacts()
 {
-	console.log('npm-scripts.js [INFO] cleanWorker()');
+	logInfo('cleanWorkerArtifacts()');
+
+	console.log('TODO: REMOVE return');
+	return;
 
 	// Clean build artifacts except `mediasoup-worker`.
 	executeCmd(`${MAKE} clean-build -C worker`);
@@ -300,21 +294,21 @@ function cleanWorker()
 
 function lintNode()
 {
-	console.log('npm-scripts.js [INFO] lintNode()');
+	logInfo('lintNode()');
 
 	executeCmd('eslint -c node/.eslintrc.js --max-warnings 0 node/src node/.eslintrc.js npm-scripts.js worker/scripts/gulpfile.js');
 }
 
 function lintWorker()
 {
-	console.log('npm-scripts.js [INFO] lintWorker()');
+	logInfo('lintWorker()');
 
 	executeCmd(`${MAKE} lint -C worker`);
 }
 
 function testNode()
 {
-	console.log('npm-scripts.js [INFO] testNode()');
+	logInfo('testNode()');
 
 	if (!process.env.TEST_FILE)
 	{
@@ -328,14 +322,14 @@ function testNode()
 
 function testWorker()
 {
-	console.log('npm-scripts.js [INFO] testWorker()');
+	logInfo('testWorker()');
 
 	executeCmd(`${MAKE} test -C worker`);
 }
 
 function installNodeDeps()
 {
-	console.log('npm-scripts.js [INFO] installNodeDeps()');
+	logInfo('installNodeDeps()');
 
 	// Install/update Node deps.
 	executeCmd('npm ci --ignore-scripts');
@@ -345,7 +339,7 @@ function installNodeDeps()
 
 function checkRelease()
 {
-	console.log('npm-scripts.js [INFO] checkRelease()');
+	logInfo('checkRelease()');
 
 	installNodeDeps();
 	buildTypescript(/* force */ true);
@@ -359,7 +353,7 @@ function checkRelease()
 
 function installMsysMake()
 {
-	console.log('npm-scripts.js [INFO] installMsysMake()');
+	logInfo('installMsysMake()');
 
 	let res = spawnSync('where', [ 'python3.exe' ]);
 
@@ -369,7 +363,7 @@ function installMsysMake()
 
 		if (res.status !== 0)
 		{
-			console.error('`npm-scripts.js [ERROR] installMsysMake() cannot find Python executable');
+			logError('`installMsysMake() cannot find Python executable');
 
 			process.exit(1);
 		}
@@ -380,7 +374,7 @@ function installMsysMake()
 
 function ensureDir(dir)
 {
-	console.log(`npm-scripts.js [INFO] ensureDir() [dir:${dir}]`);
+	logInfo(`ensureDir() [dir:${dir}]`);
 
 	if (!fs.existsSync(dir))
 	{
@@ -390,7 +384,7 @@ function ensureDir(dir)
 
 async function prebuildWorker()
 {
-	console.log('npm-scripts.js [INFO] prebuildWorker()');
+	logInfo('prebuildWorker()');
 
 	ensureDir(WORKER_PREBUILD_DIR);
 
@@ -403,29 +397,74 @@ async function prebuildWorker()
 	});
 }
 
+// Returns a Promise resolving to true if a prebuilt mediasoup-worker binary
+// was downloaded and uncompressed, false otherwise.
 async function downloadPrebuiltWorker()
 {
 	const releaseBase = process.env.MEDIASOUP_WORKER_DOWNLOAD_BASE || `${PKG.repository.url.replace('.git', '')}/releases/download`;
 	const tarUrl = `${releaseBase}/${PKG.version}/${WORKER_PREBUILD_TAR}`;
 
-	console.log(`npm-scripts.js [INFO] downloadPrebuiltWorker() [tarUrl:${tarUrl}]`);
+	logInfo(`downloadPrebuiltWorker() [tarUrl:${tarUrl}]`);
 
 	ensureDir(WORKER_PREBUILD_DIR);
 
-	const res = await fetch(tarUrl);
+	let res;
 
-	return new Promise((resolve, reject) =>
+	try
 	{
+		res = await fetch(tarUrl);
+
+		if (res.status === 404)
+		{
+			logInfo(
+				'downloadPrebuiltWorker() | no available prebuilt mediasoup-worker binary for current architecture'
+			);
+
+			return false;
+		}
+		else if (!res.ok)
+		{
+			logError(
+				`downloadPrebuiltWorker() | failed to download prebuilt mediasoup-worker binary: ${res.status} ${res.statusText}`
+			);
+
+			return false;
+		}
+	}
+	catch (error)
+	{
+		logError(
+			`downloadPrebuiltWorker() | failed to download prebuilt mediasoup-worker binary: ${error}`
+		);
+
+		return false;
+	}
+
+	return new Promise((resolve) =>
+	{
+		// Extract mediasoup-worker in the official worker path.
 		res.body
-			.pipe(tar.x({ strip: 1, cwd: WORKER_PREBUILD_DIR }))
-			.on('finish', resolve)
-			.on('error', reject);
+			.pipe(tar.extract({ strip: 1, never: false, cwd: WORKER_BIN_PATH }))
+			.on('finish', () =>
+			{
+				logInfo('downloadPrebuiltWorker() | got prebuilt mediasoup-worker binary');
+
+				resolve(true);
+			})
+			.on('error', (error) =>
+			{
+				logError(
+					`downloadPrebuiltWorker() | failed to uncompress downloaded prebuilt mediasoup-worker binary: ${error}`
+				);
+
+				resolve(false);
+			});
 	});
 }
 
 function executeCmd(command, exitOnError = true)
 {
-	console.log(`npm-scripts.js [INFO] executeCmd(): ${command}`);
+	logInfo(`executeCmd(): ${command}`);
 
 	try
 	{
@@ -435,15 +474,32 @@ function executeCmd(command, exitOnError = true)
 	{
 		if (exitOnError)
 		{
-			console.error(`npm-scripts.js [ERROR] executeCmd() failed, exiting: ${error}`);
+			logError(`npm-scripts.js [ERROR] executeCmd() failed, exiting: ${error}`);
 
 			process.exit(1);
 		}
 		else
 		{
-			console.log(`npm-scripts.js [INFO] executeCmd() failed, ignoring: ${error}`);
+			logInfo(`executeCmd() failed, ignoring: ${error}`);
 		}
 	}
 }
 
-/* eslint-enable no-console */
+function logInfo(message)
+{
+	// eslint-disable-next-line no-console
+	console.log('npm-scripts.js \x1b[37m[INFO]\x1b\[0m', message);
+}
+
+// eslint-disable-next-line no-unused-vars
+function logWarn(message)
+{
+	// eslint-disable-next-line no-console
+	console.warn('npm-scripts.js \x1b[33m[WARN]\x1b\[0m', message);
+}
+
+function logError(message)
+{
+	// eslint-disable-next-line no-console
+	console.error('npm-scripts.js \x1b[31m[ERROR]\x1b\[0m', message);
+}

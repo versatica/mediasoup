@@ -23,6 +23,7 @@ jobs:
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
+      MEDIASOUP_LOCAL_DEV: "true"
 
     steps:
       - name: Checkout
