@@ -33,6 +33,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      # We need to install some NPM production deps for npm-scripts.js to work.
+      - run: npm run ci --ignore-scripts --production
       - run: npm run worker:build
       # Publish prebuild binaries on tag.
       - run: npm run worker:prebuild

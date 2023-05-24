@@ -70,6 +70,8 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
+      # We need to install some NPM production deps for npm-scripts.js to work.
+      - run: npm run ci --ignore-scripts --production
       - run: npm run worker:build
       - run: npm run test:worker
         # TODO: Maybe fix this one day.
