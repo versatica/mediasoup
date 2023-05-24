@@ -166,7 +166,12 @@ const eslintConfig =
 		'prefer-rest-params'            : 2,
 		'prefer-spread'                 : 2,
 		'prefer-template'               : 2,
-		'quotes'                        : [ 2, 'single', { avoidEscape: true } ],
+		'quotes'                        : [ 2, 'single',
+			{
+				avoidEscape           : true,
+				allowTemplateLiterals : true
+			}
+		],
 		'semi'                          : [ 2, 'always' ],
 		'semi-spacing'                  : 2,
 		'space-before-blocks'           : 2,

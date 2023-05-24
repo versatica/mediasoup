@@ -66,6 +66,8 @@ async function run(task)
 			// Attempt to download a prebuilt binary.
 			else if (!(await downloadPrebuiltWorker()))
 			{
+				logInfo(`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`);
+
 				// Fallback to building locally.
 				buildWorker();
 				cleanWorkerArtifacts();
