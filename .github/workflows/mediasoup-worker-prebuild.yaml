@@ -39,7 +39,7 @@ jobs:
       - run: npm run worker:build
       # Publish prebuild binaries on tag.
       - run: npm run worker:prebuild
-      - name: Upload mediasoup-worker prebuilt
+      - name: Upload mediasoup-worker prebuilt binary
         uses: softprops/action-gh-release@v1
         with:
           files: worker/prebuild/mediasoup-worker-*.tgz
