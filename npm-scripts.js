@@ -10,10 +10,12 @@ const IS_FREEBSD = os.platform() === 'freebsd';
 const IS_WINDOWS = os.platform() === 'win32';
 const MAYOR_VERSION = PKG.version.split('.')[0];
 const MAKE = process.env.MAKE || (IS_FREEBSD ? 'gmake' : 'make');
-const WORKER_BIN_PATH = 'worker/out/Release/mediasoup-worker';
+const WORKER_RELEASE_DIR = 'worker/out/Release';
+const WORKER_RELEASE_BIN = 'mediasoup-worker';
+const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}.tgz`;
-const WORKER_PREBUILD_TAR_PATH =`${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
+const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
 
 const task = process.argv.slice(2).join(' ');
 
@@ -276,9 +278,6 @@ function cleanWorkerArtifacts()
 {
 	logInfo('cleanWorkerArtifacts()');
 
-	console.log('TODO: REMOVE return');
-	return;
-
 	// Clean build artifacts except `mediasoup-worker`.
 	executeCmd(`${MAKE} clean-build -C worker`);
 	// Clean downloaded dependencies.
@@ -390,7 +389,7 @@ async function prebuildWorker()
 
 	return new Promise((resolve, reject) =>
 	{
-		tar.create({ gzip: true }, [ WORKER_BIN_PATH ])
+		tar.create({ gzip: true }, [ WORKER_RELEASE_BIN_PATH ])
 			.pipe(fs.createWriteStream(WORKER_PREBUILD_TAR_PATH))
 			.on('finish', resolve)
 			.on('error', reject);
@@ -442,14 +441,35 @@ async function downloadPrebuiltWorker()
 
 	return new Promise((resolve) =>
 	{
-		// Extract mediasoup-worker in the official worker path.
+		// Extract mediasoup-worker in the official mediasoup-worker path.
 		res.body
-			.pipe(tar.extract({ strip: 1, never: false, cwd: WORKER_BIN_PATH }))
+			.pipe(tar.extract(
+				{
+					// TODO: This is super controversial and weak. No option to just
+					// "ignore all folders no matter how many levels there are?".
+					strip : 3,
+					newer : false,
+					cwd   : WORKER_RELEASE_DIR
+				}))
 			.on('finish', () =>
 			{
 				logInfo('downloadPrebuiltWorker() | got prebuilt mediasoup-worker binary');
 
-				resolve(true);
+				try
+				{
+					// Give execution permission to the binary.
+					fs.chmodSync(WORKER_RELEASE_BIN_PATH, 0o775);
+
+					resolve(true);
+				}
+				catch (error)
+				{
+					logError(
+						`downloadPrebuiltWorker() | failed to download prebuilt mediasoup-worker binary: ${error}`
+					);
+
+					resolve(false);
+				}
 			})
 			.on('error', (error) =>
 			{
