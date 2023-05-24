@@ -4,7 +4,6 @@ const process = require('process');
 const os = require('os');
 const fs = require('fs');
 const { execSync, spawnSync } = require('child_process');
-const { TscWatchClient } = require('tsc-watch/client');
 const fetch = require('node-fetch');
 const tar = require('tar');
 const { version, repository } = require('./package.json');
@@ -101,6 +100,9 @@ async function run(task)
 
 		case 'typescript:watch':
 		{
+			// NOTE: Load dep here since it's a devDependency.
+			const { TscWatchClient } = require('tsc-watch/client');
+
 			deleteNodeLib();
 
 			const watch = new TscWatchClient();
