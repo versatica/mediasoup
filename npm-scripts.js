@@ -391,7 +391,14 @@ async function prebuildWorker()
 
 	return new Promise((resolve, reject) =>
 	{
-		tar.create({ gzip: true }, [ WORKER_RELEASE_BIN_PATH ])
+		// Generate a gzip file which just contains mediasoup-worker binary without
+		// any folder.
+		tar.create(
+			{
+				cwd  : WORKER_RELEASE_DIR,
+				gzip : true
+			},
+			[ WORKER_RELEASE_BIN ])
 			.pipe(fs.createWriteStream(WORKER_PREBUILD_TAR_PATH))
 			.on('finish', resolve)
 			.on('error', reject);
@@ -447,9 +454,6 @@ async function downloadPrebuiltWorker()
 		res.body
 			.pipe(tar.extract(
 				{
-					// TODO: This is super controversial and weak. No option to just
-					// "ignore all folders no matter how many levels there are?".
-					strip : 3,
 					newer : false,
 					cwd   : WORKER_RELEASE_DIR
 				}))
