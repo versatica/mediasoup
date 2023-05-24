@@ -272,9 +272,9 @@ function buildWorker()
 
 		const msysPath = `${process.cwd()}\\worker\\out\\msys\\bin`;
 
-		if (!process.env['PATH'].includes(msysPath))
+		if (!process.env.PATH.includes(msysPath))
 		{
-			process.env['PATH'] = `${msysPath};${process.env['PATH']}`;
+			process.env.PATH = `${msysPath};${process.env.PATH}`;
 		}
 	}
 
