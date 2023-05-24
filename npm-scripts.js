@@ -60,11 +60,6 @@ async function run(task)
 				break;
 			}
 
-			if (!process.env.MEDIASOUP_LOCAL_DEV)
-			{
-				cleanWorker();
-			}
-
 			// Attempt to download a prebuilt binary.
 			try
 			{
@@ -76,6 +71,11 @@ async function run(task)
 
 				// Fallback to building locally.
 				buildWorker();
+
+				if (!process.env.MEDIASOUP_LOCAL_DEV)
+				{
+					cleanWorker();
+				}
 			}
 
 			break;
