@@ -6,18 +6,18 @@ const fs = require('fs');
 const { execSync, spawnSync } = require('child_process');
 const fetch = require('node-fetch');
 const tar = require('tar');
-const { version, repository } = require('./package.json');
 
+const PKG = JSON.parse(fs.readFileSync('./package.json').toString());
 const IS_FREEBSD = os.platform() === 'freebsd';
 const IS_WINDOWS = os.platform() === 'win32';
 // mediasoup mayor version.
-const MAYOR_VERSION = version.split('.')[0];
+const MAYOR_VERSION = PKG.version.split('.')[0];
 // make command to use.
 const MAKE = process.env.MAKE || (IS_FREEBSD ? 'gmake' : 'make');
 const WORKER_BIN_PATH = 'worker/out/Release/mediasoup-worker';
 // Prebuilt package related constants.
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
-const WORKER_PREBUILD_TAR = `mediasoup-worker-${version}-${os.platform()}-${os.arch()}.tgz`;
+const WORKER_PREBUILD_TAR = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}.tgz`;
 const WORKER_PREBUILD_TAR_PATH =`${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
 
 const task = process.argv.slice(2).join(' ');
@@ -190,10 +190,10 @@ async function run(task)
 		case 'release':
 		{
 			checkRelease();
-			executeCmd(`git commit -am '${version}'`);
-			executeCmd(`git tag -a ${version} -m '${version}'`);
+			executeCmd(`git commit -am '${PKG.version}'`);
+			executeCmd(`git tag -a ${PKG.version} -m '${PKG.version}'`);
 			executeCmd(`git push origin v${MAYOR_VERSION}`);
-			executeCmd(`git push origin '${version}'`);
+			executeCmd(`git push origin '${PKG.version}'`);
 			executeCmd('npm publish');
 
 			break;
@@ -220,7 +220,7 @@ function replaceVersion()
 	for (const file of files)
 	{
 		const text = fs.readFileSync(file, { encoding: 'utf8' });
-		const result = text.replace(/__MEDIASOUP_VERSION__/g, version);
+		const result = text.replace(/__MEDIASOUP_VERSION__/g, PKG.version);
 
 		fs.writeFileSync(file, result, { encoding: 'utf8' });
 	}
@@ -405,8 +405,8 @@ async function prebuildWorker()
 
 async function downloadPrebuiltWorker()
 {
-	const releaseBase = process.env.MEDIASOUP_WORKER_DOWNLOAD_BASE || `${repository.url.replace('.git', '')}/releases/download`;
-	const tarUrl = `${releaseBase}/${version}/${WORKER_PREBUILD_TAR}`;
+	const releaseBase = process.env.MEDIASOUP_WORKER_DOWNLOAD_BASE || `${PKG.repository.url.replace('.git', '')}/releases/download`;
+	const tarUrl = `${releaseBase}/${PKG.version}/${WORKER_PREBUILD_TAR}`;
 
 	console.log(`npm-scripts.js [INFO] downloadPrebuiltWorker() [tarUrl:${tarUrl}]`);
 
