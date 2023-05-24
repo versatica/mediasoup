@@ -4,7 +4,6 @@ const process = require('process');
 const os = require('os');
 const fs = require('fs');
 const { execSync, spawnSync } = require('child_process');
-const fetch = require('node-fetch');
 const tar = require('tar');
 const { version, repository } = require('./package.json');
 
@@ -404,6 +403,9 @@ async function tarWorker()
 
 async function downloadPrebuiltWorker()
 {
+	// NOTE: Load dep here since it's a devDependency.
+	const fetch = require('node-fetch');
+
 	const releaseBase = process.env.MEDIASOUP_WORKER_DOWNLOAD_BASE || `${repository.url.replace('.git', '')}/releases/download`;
 	const tarUrl = `${releaseBase}/${version}/${WORKER_PREBUILD_TAR}`;
 
