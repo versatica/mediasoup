@@ -11,7 +11,7 @@ const IS_WINDOWS = os.platform() === 'win32';
 const MAYOR_VERSION = PKG.version.split('.')[0];
 const MAKE = process.env.MAKE || (IS_FREEBSD ? 'gmake' : 'make');
 const WORKER_RELEASE_DIR = 'worker/out/Release';
-const WORKER_RELEASE_BIN = `mediasoup-worker${IS_WINDOWS ? '.exe' : ''}`;
+const WORKER_RELEASE_BIN = IS_WINDOWS ? 'mediasoup-worker.exe' : 'mediasoup-worker';
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}.tgz`;
@@ -19,12 +19,11 @@ const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`
 
 const task = process.argv.slice(2).join(' ');
 
-run(task);
+run();
 
-// eslint-disable-next-line no-shadow
-async function run(task)
+async function run()
 {
-	logInfo(`run() [task:${task}]`);
+	logInfo('run()');
 
 	switch (task)
 	{
@@ -52,7 +51,7 @@ async function run(task)
 		{
 			if (process.env.MEDIASOUP_WORKER_BIN)
 			{
-				logInfo('MEDIASOUP_WORKER_BIN environment variable given, skipping "postinstall" task');
+				logInfo('MEDIASOUP_WORKER_BIN environment variable given, skipping');
 
 				break;
 			}
@@ -89,10 +88,9 @@ async function run(task)
 		{
 			// NOTE: Load dep here since it's a devDependency.
 			const { TscWatchClient } = require('tsc-watch/client');
+			const watch = new TscWatchClient();
 
 			deleteNodeLib();
-
-			const watch = new TscWatchClient();
 
 			watch.on('success', replaceVersion);
 			watch.start('--project', 'node', '--pretty');
@@ -184,11 +182,35 @@ async function run(task)
 
 		case 'release':
 		{
+			if (!process.env.GITHUB_TOKENs)
+			{
+				logError('missing GITHUB_TOKEN environment variable');
+				exitWithError();
+			}
+
+			// NOTE: Load dep here since it's a devDependency.
+			const { Octokit } = require('@octokit/rest');
+			const octokit = new Octokit(
+				{
+					auth : process.env.GITHUB_TOKEN
+				});
+
 			checkRelease();
 			executeCmd(`git commit -am '${PKG.version}'`);
 			executeCmd(`git tag -a ${PKG.version} -m '${PKG.version}'`);
 			executeCmd(`git push origin v${MAYOR_VERSION}`);
 			executeCmd(`git push origin '${PKG.version}'`);
+
+			await octokit.repos.createRelease(
+				{
+					owner    : 'versatica',
+					repo     : 'mediasoup',
+					name     : PKG.version,
+					// eslint-disable-next-line camelcase
+					tag_name : PKG.version,
+					draft    : false
+				});
+
 			executeCmd('npm publish');
 
 			break;
@@ -196,7 +218,9 @@ async function run(task)
 
 		default:
 		{
-			throw new TypeError(`unknown task "${task}"`);
+			logError('unknown task');
+
+			exitWithError();
 		}
 	}
 }
@@ -364,9 +388,8 @@ function installMsysMake()
 
 		if (res.status !== 0)
 		{
-			logError('`installMsysMake() cannot find Python executable');
-
-			process.exit(1);
+			logError('`installMsysMake() | cannot find Python executable');
+			exitWithError();
 		}
 	}
 
@@ -502,9 +525,8 @@ function executeCmd(command, exitOnError = true)
 	{
 		if (exitOnError)
 		{
-			logError(`npm-scripts.js [ERROR] executeCmd() failed, exiting: ${error}`);
-
-			process.exit(1);
+			logError(`executeCmd() failed, exiting: ${error}`);
+			exitWithError();
 		}
 		else
 		{
@@ -516,18 +538,23 @@ function executeCmd(command, exitOnError = true)
 function logInfo(message)
 {
 	// eslint-disable-next-line no-console
-	console.log('npm-scripts.js \x1b[37m[INFO]\x1b\[0m', message);
+	console.log(`npm-scripts.js \x1b[36m[INFO] [${task}]\x1b\[0m`, message);
 }
 
 // eslint-disable-next-line no-unused-vars
 function logWarn(message)
 {
 	// eslint-disable-next-line no-console
-	console.warn('npm-scripts.js \x1b[33m[WARN]\x1b\[0m', message);
+	console.warn(`npm-scripts.js \x1b[33m[WARN] [${task}]\x1b\[0m`, message);
 }
 
 function logError(message)
 {
 	// eslint-disable-next-line no-console
-	console.error('npm-scripts.js \x1b[31m[ERROR]\x1b\[0m', message);
+	console.error(`npm-scripts.js \x1b[31m[ERROR] [${task}]\x1b\[0m`, message);
+}
+
+function exitWithError()
+{
+	process.exit(1);
 }
