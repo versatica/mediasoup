@@ -55,7 +55,7 @@ async function run()
 
 				break;
 			}
-			else if (process.env.MEDIASOUP_LOCAL_DEV)
+			else if (process.env.MEDIASOUP_LOCAL_DEV || process.env.MEDIASOUP_SKIP_FETCH_PREBUILD)
 			{
 				logInfo('MEDIASOUP_LOCAL_DEV environment variable given, building mediasoup-worker locally');
 

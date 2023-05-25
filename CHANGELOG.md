@@ -1,9 +1,13 @@
 # Changelog
 
 
+### NEXT
+
+* Automate and publish prebuilt `mediasoup-worker` binaries ([PR #1087](https://github.com/versatica/mediasoup/pull/1087), thanks to @barlock for his work in ([PR #1083](https://github.com/versatica/mediasoup/pull/1083)).
+
 ### 3.11.26
 
-* `Worker`: Fix NACK timer and avoid negative RTT ([PR #1082](https://github.com/versatica/mediasoup/pull/1082), thanks to o-u-p for his work in ([PR #1076](https://github.com/versatica/mediasoup/pull/1076)).
+* `Worker`: Fix NACK timer and avoid negative RTT ([PR #1082](https://github.com/versatica/mediasoup/pull/1082), thanks to @o-u-p for his work in ([PR #1076](https://github.com/versatica/mediasoup/pull/1076)).
 
 
 ### 3.11.25

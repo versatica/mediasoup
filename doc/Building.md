@@ -18,6 +18,10 @@ Compiles mediasoup TypeScript code (`lib` folder) JavaScript, places it into the
 
 Builds the `mediasoup-worker` binary. It invokes `make`below.
 
+### `npm run worker:prebuild`
+
+Creates a prebuilt of `mediasoup-worker` in the `worker/prebuild` folder.
+
 ### `npm run lint`
 
 Runs both `npm run lint:node` and `npm run lint:worker`.
