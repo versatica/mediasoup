@@ -14,9 +14,8 @@ jobs:
           - os: ubuntu-22.04
           - os: macos-12
           - os: windows-2022
-
         node:
-          - 16
+          - 18
 
     runs-on: ${{ matrix.build.os }}
 
