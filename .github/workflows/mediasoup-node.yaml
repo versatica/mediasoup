@@ -14,9 +14,9 @@ jobs:
       matrix:
         ci:
           - os: ubuntu-20.04
-            node: 16
-          - os: ubuntu-22.04
             node: 18
+          - os: ubuntu-22.04
+            node: 20
           - os: macos-12
             node: 18
           - os: windows-2022
