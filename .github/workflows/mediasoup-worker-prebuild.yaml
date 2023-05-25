@@ -3,7 +3,8 @@ name: mediasoup-worker-prebuild
 on:
   push:
     tags:
-      - "*.*.*"
+      branches: [prebuilt-pr]
+
   # Only trigger when other workflows succeeded.
   workflow_run:
     workflows: [mediasoup-worker, mediasoup-node, mediasoup-rus]
