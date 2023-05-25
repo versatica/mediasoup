@@ -2,8 +2,7 @@ name: mediasoup-worker-prebuild
 
 on:
   push:
-    tags:
-      - "*.*.*"
+    branches: [prebuilt-pr]
 
 jobs:
   ci:
