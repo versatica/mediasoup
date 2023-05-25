@@ -55,9 +55,9 @@ async function run()
 
 				break;
 			}
-			else if (process.env.MEDIASOUP_LOCAL_DEV || process.env.MEDIASOUP_SKIP_PREBUILD_DOWNLOAD)
+			else if (process.env.MEDIASOUP_LOCAL_DEV || process.env.MEDIASOUP_SKIP_PREBUILT_DOWNLOAD)
 			{
-				logInfo('MEDIASOUP_LOCAL_DEV environment variable given, building mediasoup-worker locally');
+				logInfo('MEDIASOUP_LOCAL_DEV or MEDIASOUP_SKIP_PREBUILT_DOWNLOAD environment variable given, building mediasoup-worker locally');
 
 				buildWorker();
 				cleanWorkerArtifacts();
@@ -188,6 +188,14 @@ async function run()
 				exitWithError();
 			}
 
+			const versionChanges = getVersionChanges();
+
+			if (!versionChanges)
+			{
+				logError(`no entry found in CHANGELOG.md for version '${PKG.version}'`);
+				exitWithError();
+			}
+
 			// NOTE: Load dep here since it's a devDependency.
 			const { Octokit } = require('@octokit/rest');
 			const octokit = new Octokit(
@@ -206,6 +214,7 @@ async function run()
 					owner    : 'versatica',
 					repo     : 'mediasoup',
 					name     : PKG.version,
+					body     : versionChanges,
 					// eslint-disable-next-line camelcase
 					tag_name : PKG.version,
 					draft    : false
@@ -511,6 +520,31 @@ async function downloadPrebuiltWorker()
 				resolve(false);
 			});
 	});
+}
+
+function getVersionChanges()
+{
+	logInfo('getVersionChanges()');
+
+	// NOTE: Load dep here since it's a devDependency.
+	const marked = require('marked');
+	const changelog = fs.readFileSync('./CHANGELOG.md').toString();
+	const entries = marked.lexer(changelog);
+
+	for (let idx = 0; idx < entries.length; ++idx)
+	{
+		const entry = entries[idx];
+
+		if (entry.type === 'heading' && entry.text === PKG.version)
+		{
+			const changes = entries[idx + 1].raw;
+
+			return changes;
+		}
+	}
+
+	// This should not happen (unless author forgot to update CHANGELOG).
+	return undefined;
 }
 
 function executeCmd(command, exitOnError = true)
