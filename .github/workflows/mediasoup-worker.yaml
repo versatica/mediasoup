@@ -44,6 +44,7 @@ jobs:
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
+      MEDIASOUP_SKIP_PREBUILT_DOWNLOAD: "true"
 
     steps:
       - name: Checkout

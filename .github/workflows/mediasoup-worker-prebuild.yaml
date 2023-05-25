@@ -19,8 +19,14 @@ jobs:
       matrix:
         build:
           - os: ubuntu-22.04
+            cc: gcc
+            cxx: g++
           - os: macos-12
+            cc: clang
+            cxx: clang++
           - os: windows-2022
+            cc: cl
+            cxx: cl
         node:
           - 18
 
@@ -29,7 +35,7 @@ jobs:
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
-      MEDIASOUP_LOCAL_DEV: "true"
+      MEDIASOUP_SKIP_PREBUILT_DOWNLOAD: "true"
 
     steps:
       - name: Checkout
