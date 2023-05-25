@@ -448,6 +448,8 @@ async function downloadPrebuiltWorker()
 		return false;
 	}
 
+	ensureDir(WORKER_RELEASE_DIR);
+
 	return new Promise((resolve) =>
 	{
 		// Extract mediasoup-worker in the official mediasoup-worker path.
