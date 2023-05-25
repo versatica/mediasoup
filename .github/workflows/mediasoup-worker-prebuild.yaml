@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - "*.*.*"
+  # Only trigger when other workflows succeeded.
+  workflow_run:
+    workflows: [mediasoup-worker, mediasoup-node, mediasoup-rus]
+    types:
+      - completed
 
 jobs:
   ci:
