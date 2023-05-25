@@ -2,7 +2,8 @@ name: mediasoup-worker-prebuild
 
 on:
   push:
-    branches: [prebuilt-pr]
+    tags:
+      - "*.*.*"
 
 jobs:
   ci:
@@ -33,7 +34,7 @@ jobs:
           node-version: ${{ matrix.node }}
 
       # We need to install some NPM production deps for npm-scripts.js to work.
-      - run: npm ci --ignore-scripts --production
+      - run: npm ci --ignore-scripts --omit=dev
       - run: npm run worker:build
       # Publish prebuild binaries on tag.
       - run: npm run worker:prebuild
