@@ -8,7 +8,7 @@ const tar = require('tar');
 const PKG = JSON.parse(fs.readFileSync('./package.json').toString());
 const IS_FREEBSD = os.platform() === 'freebsd';
 const IS_WINDOWS = os.platform() === 'win32';
-// const MAYOR_VERSION = PKG.version.split('.')[0];
+const MAYOR_VERSION = PKG.version.split('.')[0];
 const MAKE = process.env.MAKE || (IS_FREEBSD ? 'gmake' : 'make');
 const WORKER_RELEASE_DIR = 'worker/out/Release';
 const WORKER_RELEASE_BIN = IS_WINDOWS ? 'mediasoup-worker.exe' : 'mediasoup-worker';
@@ -198,8 +198,7 @@ async function run()
 			checkRelease();
 			executeCmd(`git commit -am '${PKG.version}'`);
 			executeCmd(`git tag -a ${PKG.version} -m '${PKG.version}'`);
-			// executeCmd(`git push origin v${MAYOR_VERSION}`);
-			executeCmd(`git push`);
+			executeCmd(`git push origin v${MAYOR_VERSION}`);
 			executeCmd(`git push origin '${PKG.version}'`);
 
 			await octokit.repos.createRelease(
@@ -212,7 +211,7 @@ async function run()
 					draft    : false
 				});
 
-			// executeCmd('npm publish');
+			executeCmd('npm publish');
 
 			break;
 		}
