@@ -11,7 +11,7 @@ const IS_WINDOWS = os.platform() === 'win32';
 const MAYOR_VERSION = PKG.version.split('.')[0];
 const MAKE = process.env.MAKE || (IS_FREEBSD ? 'gmake' : 'make');
 const WORKER_RELEASE_DIR = 'worker/out/Release';
-const WORKER_RELEASE_BIN = 'mediasoup-worker';
+const WORKER_RELEASE_BIN = `mediasoup-worker${IS_WINDOWS ? '.exe' : ''}`;
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}.tgz`;
