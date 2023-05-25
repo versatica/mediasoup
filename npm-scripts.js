@@ -49,25 +49,33 @@ async function run()
 
 		case 'postinstall':
 		{
+			// If the user/app provides us with a custom mediasoup-worker binary then
+			// don't do anything.
 			if (process.env.MEDIASOUP_WORKER_BIN)
 			{
 				logInfo('MEDIASOUP_WORKER_BIN environment variable given, skipping');
 
 				break;
 			}
-			else if (process.env.MEDIASOUP_LOCAL_DEV || process.env.MEDIASOUP_SKIP_PREBUILT_DOWNLOAD)
+			// If MEDIASOUP_LOCAL_DEV is given, or if MEDIASOUP_SKIP_PREBUILT_DOWNLOAD
+			// env is given, or if mediasoup package is being installed via git+ssh
+			// (instead of via npm) then skip mediasoup-worker prebuilt download.
+			else if (
+				process.env.MEDIASOUP_LOCAL_DEV ||
+				process.env.MEDIASOUP_SKIP_PREBUILT_DOWNLOAD ||
+				process.env.npm_package_resolved?.startsWith('git+ssh://')
+			)
 			{
-				logInfo('MEDIASOUP_LOCAL_DEV or MEDIASOUP_SKIP_PREBUILT_DOWNLOAD environment variable given, building mediasoup-worker locally');
+				logInfo('skipping mediasoup-worker prebuilt download, building it locally');
 
 				buildWorker();
 				cleanWorkerArtifacts();
 			}
-			// Attempt to download a prebuilt binary.
+			// Attempt to download a prebuilt binary. Fallback to building locally.
 			else if (!(await downloadPrebuiltWorker()))
 			{
 				logInfo(`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`);
 
-				// Fallback to building locally.
 				buildWorker();
 				cleanWorkerArtifacts();
 			}
