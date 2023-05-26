@@ -14,6 +14,7 @@ namespace RTC
 
 	static constexpr uint64_t TransportCcFeedbackSendInterval{ 100u }; // In ms.
 	static constexpr uint64_t LimitationRembInterval{ 1500u };         // In ms.
+	static constexpr uint64_t PacketArrivalTimestampWindow{ 500u };    // In ms.
 	static constexpr uint8_t UnlimitedRembNumPackets{ 4u };
 	static constexpr size_t PacketLossHistogramLength{ 24 };
 
@@ -124,59 +125,22 @@ namespace RTC
 					break;
 				}
 
+				if (!this->receivedTransportWideSeqNumber ||
+				   RTC::SeqManager<uint16_t>::IsSeqLowerThan(wideSeqNumber, this->transportCcFeedbackStartSeqNum))
+				{
+					this->transportCcFeedbackStartSeqNum = wideSeqNumber;
+				}
+				this->receivedTransportWideSeqNumber = true;
+
+				auto result = this->mapPacketArrivalTimes.emplace(wideSeqNumber, nowMs);
+				if (result.second)
+				{
+					MayDropOldPacketArrivalTimes(wideSeqNumber, nowMs);
+				}
+
 				// Update the RTCP media SSRC of the ongoing Transport-CC Feedback packet.
 				this->transportCcFeedbackSenderSsrc = 0u;
 				this->transportCcFeedbackMediaSsrc  = packet->GetSsrc();
-
-				this->transportCcFeedbackPacket->SetSenderSsrc(0u);
-				this->transportCcFeedbackPacket->SetMediaSsrc(this->transportCcFeedbackMediaSsrc);
-
-				// Provide the feedback packet with the RTP packet info. If it fails,
-				// send current feedback and add the packet info to a new one.
-				auto result =
-				  this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, nowMs, this->maxRtcpPacketLen);
-
-				switch (result)
-				{
-					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::SUCCESS:
-					{
-						// If the feedback packet is full, send it now.
-						if (this->transportCcFeedbackPacket->IsFull())
-						{
-							MS_DEBUG_DEV("transport-cc feedback packet is full, sending feedback now");
-
-							SendTransportCcFeedback();
-						}
-
-						break;
-					}
-
-					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
-					{
-						// Send ongoing feedback packet and add the new packet info to the
-						// regenerated one.
-						SendTransportCcFeedback();
-
-						this->transportCcFeedbackPacket->AddPacket(wideSeqNumber, nowMs, this->maxRtcpPacketLen);
-
-						break;
-					}
-
-					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::FATAL:
-					{
-						// Create a new feedback packet.
-						this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
-						  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
-
-						// Use current packet count.
-						// NOTE: Do not increment it since the previous ongoing feedback
-						// packet was not sent.
-						this->transportCcFeedbackPacket->SetFeedbackPacketCount(
-						  this->transportCcFeedbackPacketCount);
-
-						break;
-					}
-				}
 
 				MaySendLimitationRembFeedback();
 
@@ -202,6 +166,61 @@ namespace RTC
 				break;
 			}
 		}
+	}
+
+	inline void TransportCongestionControlServer::FillAndSendTransportCcFeedback()
+	{
+		MS_TRACE();
+
+		for (auto it = this->mapPacketArrivalTimes.find(this->transportCcFeedbackStartSeqNum);
+		     it != this->mapPacketArrivalTimes.end();
+		     ++it)
+		{
+			auto result =
+			  this->transportCcFeedbackPacket->AddPacket(it->first, it->second, this->maxRtcpPacketLen);
+
+			switch (result)
+			{
+				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::SUCCESS:
+				{
+					// If the feedback packet is full, send it now.
+					if (this->transportCcFeedbackPacket->IsFull())
+					{
+						MS_DEBUG_DEV("transport-cc feedback packet is full, sending feedback now");
+
+						SendTransportCcFeedback();
+					}
+
+					break;
+				}
+
+				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
+				{
+					// This should not happen
+					MS_DEBUG_DEV("transport-cc feedback packet is exceeded!");
+					// Create a new feedback packet.
+					this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
+					  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+				}
+
+				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::FATAL:
+				{
+					// Create a new feedback packet.
+					this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
+					  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+
+					// Use current packet count.
+					// NOTE: Do not increment it since the previous ongoing feedback
+					// packet was not sent.
+					this->transportCcFeedbackPacket->SetFeedbackPacketCount(
+					  this->transportCcFeedbackPacketCount);
+
+					break;
+				}
+			}
+		}
+
+		SendTransportCcFeedback();
 	}
 
 	void TransportCongestionControlServer::SetMaxIncomingBitrate(uint32_t bitrate)
@@ -233,7 +252,6 @@ namespace RTC
 		}
 
 		auto latestWideSeqNumber = this->transportCcFeedbackPacket->GetLatestSequenceNumber();
-		auto latestTimestamp     = this->transportCcFeedbackPacket->GetLatestTimestamp();
 
 		// Notify the listener.
 		this->listener->OnTransportCongestionControlServerSendRtcpPacket(
@@ -262,12 +280,25 @@ namespace RTC
 
 		// Increment packet count.
 		this->transportCcFeedbackPacket->SetFeedbackPacketCount(++this->transportCcFeedbackPacketCount);
+		this->transportCcFeedbackStartSeqNum = latestWideSeqNumber;
+	}
 
-		// Pass the latest packet info (if any) as pre base for the new feedback packet.
-		if (latestTimestamp > 0u)
+	inline void TransportCongestionControlServer::MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs)
+	{
+		MS_TRACE();
+
+		if (nowMs >= PacketArrivalTimestampWindow)
 		{
-			this->transportCcFeedbackPacket->AddPacket(
-			  latestWideSeqNumber, latestTimestamp, this->maxRtcpPacketLen);
+			auto expiryTimestamp = nowMs - PacketArrivalTimestampWindow;
+			auto it              = this->mapPacketArrivalTimes.begin();
+
+			while (it != this->mapPacketArrivalTimes.end() &&
+			       it->first != this->transportCcFeedbackStartSeqNum &&
+			       RTC::SeqManager<uint16_t>::IsSeqLowerThan(it->first, seqNum) &&
+			       it->second <= expiryTimestamp)
+			{
+				it = this->mapPacketArrivalTimes.erase(it);
+			}
 		}
 	}
 
@@ -389,7 +420,7 @@ namespace RTC
 
 		if (timer == this->transportCcFeedbackSendPeriodicTimer)
 		{
-			SendTransportCcFeedback();
+			FillAndSendTransportCcFeedback();
 		}
 	}
 } // namespace RTC
