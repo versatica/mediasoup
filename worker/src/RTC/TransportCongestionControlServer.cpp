@@ -286,7 +286,7 @@ namespace RTC
 	}
 
 	inline void TransportCongestionControlServer::MayDropOldPacketArrivalTimes(
-		uint16_t seqNum, uint64_t nowMs)
+	  uint16_t seqNum, uint64_t nowMs)
 	{
 		MS_TRACE();
 
