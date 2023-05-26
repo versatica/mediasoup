@@ -1,4 +1,5 @@
 ## Meson.
+/worker/out
 /worker/subprojects/*
 !/worker/subprojects/*.wrap
 !/worker/subprojects/.clang-tidy
@@ -14,8 +15,8 @@
 /target
 
 ## Worker.
-/worker/out
 /worker/scripts/node_modules
+/worker/prebuild
 # Vistual Studio generated Stuff.
 /worker/**/Debug
 /worker/**/Release

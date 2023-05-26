@@ -1,0 +1,57 @@
+name: mediasoup-worker-prebuild
+
+on:
+  push:
+    # Only trigger for production releases.
+    tags:
+      - "*.*.*"
+
+  # Only trigger when other workflows succeeded.
+  workflow_run:
+    workflows: [mediasoup-worker, mediasoup-node, mediasoup-rust]
+    types:
+      - completed
+
+jobs:
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - os: ubuntu-22.04
+            cc: gcc
+            cxx: g++
+          - os: macos-12
+            cc: clang
+            cxx: clang++
+          - os: windows-2022
+            cc: cl
+            cxx: cl
+        node:
+          - 18
+
+    runs-on: ${{ matrix.build.os }}
+
+    env:
+      CC: ${{ matrix.build.cc }}
+      CXX: ${{ matrix.build.cxx }}
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      # We need to install some NPM production deps for npm-scripts.js to work.
+      - run: npm ci --ignore-scripts --omit=dev
+      - run: npm run worker:build
+      # Publish prebuild binaries on tag.
+      - run: npm run worker:prebuild
+      - name: Upload mediasoup-worker prebuilt binary
+        uses: softprops/action-gh-release@v1
+        with:
+          files: worker/prebuild/mediasoup-worker-*.tgz

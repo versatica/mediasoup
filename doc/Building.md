@@ -18,6 +18,10 @@ Compiles mediasoup TypeScript code (`lib` folder) JavaScript, places it into the
 
 Builds the `mediasoup-worker` binary. It invokes `make`below.
 
+### `npm run worker:prebuild`
+
+Creates a prebuilt of `mediasoup-worker` in the `worker/prebuild` folder.
+
 ### `npm run lint`
 
 Runs both `npm run lint:node` and `npm run lint:worker`.
@@ -60,7 +64,7 @@ Installs clang tools needed for local development.
 
 ## Rust
 
-The only special feature in Rust case is special environment variable `KEEP_BUILD_ARTIFACTS`, that when set to `1` will allow incremental recompilation of changed C++ sources during hacking on mediasoup.
+The only special feature in Rust case is special environment variable `"KEEP_BUILD_ARTIFACTS", that when set to `1` will allow incremental recompilation of changed C++ sources during hacking on mediasoup.
 It is not necessary for normal usage of mediasoup as a dependency.
 
 ## Makefile
@@ -132,7 +136,7 @@ MEDIASOUP_WORKER_BIN="/home/xxx/src/foo/mediasoup-worker" node myapp.js
 
 Builds the `libmediasoup-worker` static library at `worker/out/Release/`.
 
-`MEDIASOUP_MAX_CORES` and `MEDIASOUP_BUILDTYPE` environment variables from above still apply for static library build.
+"MEDIASOUP_MAX_CORES"` and "MEDIASOUP_BUILDTYPE" environment variables from above still apply for static library build.
 
 ### `make xcode`
 
@@ -160,7 +164,7 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code
 * [PyYAML](https://pyyaml.org/) is required.
   - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
 
-`MEDIASOUP_TIDY_CHECKS` environment variable with a comma separated list of checks overrides the checks defined in `.clang-tidy` file.
+"MEDIASOUP_TIDY_CHECKS" environment variable with a comma separated list of checks overrides the checks defined in `.clang-tidy` file.
 
 ### `make fuzzer`
 

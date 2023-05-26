@@ -12,17 +12,20 @@ jobs:
   ci:
     strategy:
       matrix:
-        # Different Node versions on Ubuntu, the latest Node on other platforms.
         ci:
-          - os: ubuntu-22.04
-            node: 16
-          - os: ubuntu-22.04
+          - os: ubuntu-20.04
             node: 18
+          - os: ubuntu-22.04
+            node: 20
           - os: macos-12
             node: 18
           - os: windows-2022
             node: 18
+
     runs-on: ${{ matrix.ci.os }}
+
+    env:
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
 
     steps:
       - name: Checkout

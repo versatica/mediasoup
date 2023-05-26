@@ -13,13 +13,13 @@ const eslintConfig =
 	settings      : {},
 	parserOptions :
 	{
-		ecmaVersion  : 2018,
+		ecmaVersion  : 2022,
 		sourceType   : 'module',
 		ecmaFeatures :
 		{
 			impliedStrict : true
 		},
-		lib     : [ 'es2018' ],
+		lib     : [ 'es2022' ],
 		project : 'node/tsconfig.json'
 	},
 	globals :
@@ -78,7 +78,7 @@ const eslintConfig =
 		'max-len' : [ 2, 100,
 			{
 				tabWidth               : 2,
-				comments               : 84,
+				comments               : 88,
 				ignoreUrls             : true,
 				ignoreStrings          : true,
 				ignoreTemplateLiterals : true,
@@ -166,7 +166,12 @@ const eslintConfig =
 		'prefer-rest-params'            : 2,
 		'prefer-spread'                 : 2,
 		'prefer-template'               : 2,
-		'quotes'                        : [ 2, 'single', { avoidEscape: true } ],
+		'quotes'                        : [ 2, 'single',
+			{
+				avoidEscape           : true,
+				allowTemplateLiterals : true
+			}
+		],
 		'semi'                          : [ 2, 'always' ],
 		'semi-spacing'                  : 2,
 		'space-before-blocks'           : 2,
