@@ -1,9 +1,10 @@
 # Changelog
 
 
-### NEXT
+### 3.12.0
 
 * Automate and publish prebuilt `mediasoup-worker` binaries ([PR #1087](https://github.com/versatica/mediasoup/pull/1087), thanks to @barlock for his work in ([PR #1083](https://github.com/versatica/mediasoup/pull/1083)).
+
 
 ### 3.11.26
 
