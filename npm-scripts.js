@@ -530,7 +530,7 @@ async function downloadPrebuiltWorker()
 					// Give execution permission to the binary.
 					fs.chmodSync(WORKER_RELEASE_BIN_PATH, 0o775);
 				}
-				catch ()
+				catch (error)
 				{
 					logWarn(`downloadPrebuiltWorker() | failed to give execution permissions to the mediasoup-worker prebuilt binary: ${error}`);
 				}
