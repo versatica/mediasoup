@@ -529,46 +529,47 @@ async function downloadPrebuiltWorker()
 				{
 					// Give execution permission to the binary.
 					fs.chmodSync(WORKER_RELEASE_BIN_PATH, 0o775);
+				}
+				catch ()
+				{
+					logWarn(`downloadPrebuiltWorker() | failed to give execution permissions to the mediasoup-worker prebuilt binary: ${error}`);
+				}
 
-					// Let's confirm that the fetched mediasoup-worker prebuit binary does
-					// run in current host. This is to prevent weird issues related to
-					// different versions of libc in the system and so on.
-					// So run mediasoup-worker without the required MEDIASOUP_VERSION env and
-					// expect exit code 41 (see main.cpp).
+				// Let's confirm that the fetched mediasoup-worker prebuit binary does
+				// run in current host. This is to prevent weird issues related to
+				// different versions of libc in the system and so on.
+				// So run mediasoup-worker without the required MEDIASOUP_VERSION env and
+				// expect exit code 41 (see main.cpp).
 
-					logInfo(
-						'downloadPrebuiltWorker() | checking fetched mediasoup-worker prebuilt binary in current host'
-					);
+				logInfo(
+					'downloadPrebuiltWorker() | checking fetched mediasoup-worker prebuilt binary in current host'
+				);
 
-					try
-					{
-						execSync(`${WORKER_RELEASE_BIN_PATH}`, { stdio: [ 'ignore', 'ignore', 'ignore' ] });
-					}
-					catch (error)
-					{
-						if (error.status === 41)
-						{
-							resolve(true);
-						}
-						else
-						{
-							logError(
-								`downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary fails to run in this host [status:${error.status}]`
-							);
-
-							fs.unlinkSync(WORKER_RELEASE_BIN_PATH);
-
-							resolve(false);
-						}
-					}
+				try
+				{
+					execSync(`${WORKER_RELEASE_BIN_PATH}`, { stdio: [ 'ignore', 'ignore', 'ignore' ] });
 				}
 				catch (error)
 				{
-					logError(
-						`downloadPrebuiltWorker() | failed to download mediasoup-worker prebuilt binary: ${error}`
-					);
+					if (error.status === 41)
+					{
+						resolve(true);
+					}
+					else
+					{
+						logError(
+							`downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary fails to run in this host [status:${error.status}]`
+						);
 
-					resolve(false);
+						try
+						{
+							fs.unlinkSync(WORKER_RELEASE_BIN_PATH);
+						}
+						catch (error2)
+						{}
+
+						resolve(false);
+					}
 				}
 			})
 			.on('error', (error) =>
