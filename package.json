@@ -65,7 +65,8 @@
     "install-deps:node": "node npm-scripts.js install-deps:node",
     "install-clang-tools": "node npm-scripts.js install-clang-tools",
     "release:check": "node npm-scripts.js release:check",
-    "release": "node npm-scripts.js release"
+    "release": "node npm-scripts.js release",
+    "release:upload-mac-arm-prebuilt-worker": "node npm-scripts.js release:upload-mac-arm-prebuilt-worker"
   },
   "jest": {
     "verbose": true,

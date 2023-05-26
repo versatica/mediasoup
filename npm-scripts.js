@@ -16,6 +16,8 @@ const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}.tgz`;
 const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
+const GH_OWNER = 'versatica';
+const GH_REPO = 'mediasoup';
 
 const task = process.argv.slice(2).join(' ');
 
@@ -23,8 +25,6 @@ run();
 
 async function run()
 {
-	logInfo('run()');
-
 	switch (task)
 	{
 		// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
@@ -100,6 +100,7 @@ async function run()
 		{
 			// NOTE: Load dep here since it's a devDependency.
 			const { TscWatchClient } = require('tsc-watch/client');
+
 			const watch = new TscWatchClient();
 
 			deleteNodeLib();
@@ -119,7 +120,7 @@ async function run()
 
 		case 'worker:prebuild':
 		{
-			prebuildWorker();
+			await prebuildWorker();
 
 			break;
 		}
@@ -194,37 +195,33 @@ async function run()
 
 		case 'release':
 		{
-			if (!process.env.GITHUB_TOKEN)
+			let octokit;
+			let versionChanges;
+
+			try
 			{
-				logError('missing GITHUB_TOKEN environment variable');
+				octokit = getOctokit();
+				versionChanges = getVersionChanges();
+			}
+			catch (error)
+			{
+				logError(error.message);
 				exitWithError();
 			}
-
-			const versionChanges = getVersionChanges();
-
-			if (!versionChanges)
-			{
-				logError(`no entry found in CHANGELOG.md for version '${PKG.version}'`);
-				exitWithError();
-			}
-
-			// NOTE: Load dep here since it's a devDependency.
-			const { Octokit } = require('@octokit/rest');
-			const octokit = new Octokit(
-				{
-					auth : process.env.GITHUB_TOKEN
-				});
 
 			checkRelease();
+
 			executeCmd(`git commit -am '${PKG.version}'`);
 			executeCmd(`git tag -a ${PKG.version} -m '${PKG.version}'`);
 			executeCmd(`git push origin v${MAYOR_VERSION}`);
 			executeCmd(`git push origin '${PKG.version}'`);
 
+			logInfo('creating release in GitHub…');
+
 			await octokit.repos.createRelease(
 				{
-					owner    : 'versatica',
-					repo     : 'mediasoup',
+					owner    : GH_OWNER,
+					repo     : GH_REPO,
 					name     : PKG.version,
 					body     : versionChanges,
 					// eslint-disable-next-line camelcase
@@ -232,7 +229,25 @@ async function run()
 					draft    : false
 				});
 
+			// GitHub mediasoup-worker-prebuild CI action doesn't create mediasoup-worker
+			// prebuilt binary for macOS ARM. If this is a macOS ARM machine, do it here
+			// and upload it to the release.
+			if (os.platform() === 'darwin' && os.arch() === 'arm64')
+			{
+				await uploadMacArmPrebuiltWorker();
+			}
+
 			executeCmd('npm publish');
+
+			break;
+		}
+
+		case 'release:upload-mac-arm-prebuilt-worker':
+		{
+			checkRelease();
+
+			await prebuildWorker();
+			await uploadMacArmPrebuiltWorker();
 
 			break;
 		}
@@ -537,12 +552,64 @@ async function downloadPrebuiltWorker()
 	});
 }
 
+async function uploadMacArmPrebuiltWorker()
+{
+	if (os.platform() !== 'darwin' || os.arch() !== 'arm64')
+	{
+		logWarn('uploadMacArmPrebuiltWorker() | invalid platform or architecture');
+
+		return;
+	}
+
+	const octokit = getOctokit();
+
+	logInfo('uploadMacArmPrebuiltWorker() | getting release info…');
+
+	const release = await octokit.rest.repos.getReleaseByTag(
+		{
+			owner : GH_OWNER,
+			repo  : GH_REPO,
+			tag   : PKG.version
+		});
+
+	logInfo('uploadMacArmPrebuiltWorker() | uploading release asset…');
+
+	await octokit.rest.repos.uploadReleaseAsset(
+		{
+			owner      : GH_OWNER,
+			repo       : GH_REPO,
+			// eslint-disable-next-line camelcase
+			release_id : release.data.id,
+			name       : WORKER_PREBUILD_TAR,
+			data       : fs.readFileSync(WORKER_PREBUILD_TAR_PATH)
+		});
+}
+
+function getOctokit()
+{
+	if (!process.env.GITHUB_TOKEN)
+	{
+		throw new Error('missing GITHUB_TOKEN environment variable');
+	}
+
+	// NOTE: Load dep here since it's a devDependency.
+	const { Octokit } = require('@octokit/rest');
+
+	const octokit = new Octokit(
+		{
+			auth : process.env.GITHUB_TOKEN
+		});
+
+	return octokit;
+}
+
 function getVersionChanges()
 {
 	logInfo('getVersionChanges()');
 
 	// NOTE: Load dep here since it's a devDependency.
 	const marked = require('marked');
+
 	const changelog = fs.readFileSync('./CHANGELOG.md').toString();
 	const entries = marked.lexer(changelog);
 
@@ -559,7 +626,7 @@ function getVersionChanges()
 	}
 
 	// This should not happen (unless author forgot to update CHANGELOG).
-	return undefined;
+	throw new Error(`no entry found in CHANGELOG.md for version '${PKG.version}'`);
 }
 
 function executeCmd(command, exitOnError = true)
@@ -590,7 +657,6 @@ function logInfo(message)
 	console.log(`npm-scripts.js \x1b[36m[INFO] [${task}]\x1b\[0m`, message);
 }
 
-// eslint-disable-next-line no-unused-vars
 function logWarn(message)
 {
 	// eslint-disable-next-line no-console
