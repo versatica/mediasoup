@@ -1,7 +1,7 @@
 # Changelog
 
 
-### Next
+### 3.12.1
 
 * mediasoup-worker prebuild: Fallback to local building if fetched binary doesn't run on current host ([PR #1090](https://github.com/versatica/mediasoup/pull/1090)).
 
