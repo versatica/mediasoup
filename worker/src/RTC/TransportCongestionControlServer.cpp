@@ -125,8 +125,10 @@ namespace RTC
 					break;
 				}
 
-				if (!this->receivedTransportWideSeqNumber ||
-				   RTC::SeqManager<uint16_t>::IsSeqLowerThan(wideSeqNumber, this->transportCcFeedbackStartSeqNum))
+				if (
+				  !this->receivedTransportWideSeqNumber ||
+				  RTC::SeqManager<uint16_t>::IsSeqLowerThan(
+				    wideSeqNumber, this->transportCcFeedbackStartSeqNum))
 				{
 					this->transportCcFeedbackStartSeqNum = wideSeqNumber;
 				}
@@ -283,7 +285,8 @@ namespace RTC
 		this->transportCcFeedbackStartSeqNum = latestWideSeqNumber;
 	}
 
-	inline void TransportCongestionControlServer::MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs)
+	inline void TransportCongestionControlServer::MayDropOldPacketArrivalTimes(
+		uint16_t seqNum, uint64_t nowMs)
 	{
 		MS_TRACE();
 
