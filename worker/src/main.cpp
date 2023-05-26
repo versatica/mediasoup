@@ -18,7 +18,8 @@ int main(int argc, char* argv[])
 	{
 		MS_ERROR_STD("you don't seem to be my real father!");
 
-		std::_Exit(EXIT_FAILURE);
+		// 41 is a custom exit code to notify about "missing MEDIASOUP_VERSION" env.
+		std::_Exit(41);
 	}
 
 	const std::string version = std::getenv("MEDIASOUP_VERSION");
@@ -40,13 +41,5 @@ int main(int argc, char* argv[])
 	  nullptr,
 	  nullptr);
 
-	switch (statusCode)
-	{
-		case 0:
-			std::_Exit(EXIT_SUCCESS);
-		case 1:
-			std::_Exit(EXIT_FAILURE);
-		case 42:
-			std::_Exit(42);
-	}
+	std::_Exit(statusCode);
 }

@@ -216,7 +216,7 @@ async function run()
 			executeCmd(`git push origin v${MAYOR_VERSION}`);
 			executeCmd(`git push origin '${PKG.version}'`);
 
-			logInfo('creating release in GitHub…');
+			logInfo('creating release in GitHub');
 
 			await octokit.repos.createRelease(
 				{
@@ -529,16 +529,47 @@ async function downloadPrebuiltWorker()
 				{
 					// Give execution permission to the binary.
 					fs.chmodSync(WORKER_RELEASE_BIN_PATH, 0o775);
-
-					resolve(true);
 				}
 				catch (error)
 				{
-					logError(
-						`downloadPrebuiltWorker() | failed to download mediasoup-worker prebuilt binary: ${error}`
-					);
+					logWarn(`downloadPrebuiltWorker() | failed to give execution permissions to the mediasoup-worker prebuilt binary: ${error}`);
+				}
 
-					resolve(false);
+				// Let's confirm that the fetched mediasoup-worker prebuit binary does
+				// run in current host. This is to prevent weird issues related to
+				// different versions of libc in the system and so on.
+				// So run mediasoup-worker without the required MEDIASOUP_VERSION env and
+				// expect exit code 41 (see main.cpp).
+
+				logInfo(
+					'downloadPrebuiltWorker() | checking fetched mediasoup-worker prebuilt binary in current host'
+				);
+
+				try
+				{
+					execSync(`${WORKER_RELEASE_BIN_PATH}`, { stdio: [ 'ignore', 'ignore', 'ignore' ] });
+				}
+				catch (error)
+				{
+					if (error.status === 41)
+					{
+						resolve(true);
+					}
+					else
+					{
+						logError(
+							`downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary fails to run in this host [status:${error.status}]`
+						);
+
+						try
+						{
+							fs.unlinkSync(WORKER_RELEASE_BIN_PATH);
+						}
+						catch (error2)
+						{}
+
+						resolve(false);
+					}
 				}
 			})
 			.on('error', (error) =>
@@ -563,7 +594,7 @@ async function uploadMacArmPrebuiltWorker()
 
 	const octokit = getOctokit();
 
-	logInfo('uploadMacArmPrebuiltWorker() | getting release info…');
+	logInfo('uploadMacArmPrebuiltWorker() | getting release info');
 
 	const release = await octokit.rest.repos.getReleaseByTag(
 		{
@@ -572,7 +603,7 @@ async function uploadMacArmPrebuiltWorker()
 			tag   : PKG.version
 		});
 
-	logInfo('uploadMacArmPrebuiltWorker() | uploading release asset…');
+	logInfo('uploadMacArmPrebuiltWorker() | uploading release asset');
 
 	await octokit.rest.repos.uploadReleaseAsset(
 		{
