@@ -547,7 +547,14 @@ async function downloadPrebuiltWorker()
 
 				try
 				{
-					execSync(`${WORKER_RELEASE_BIN_PATH}`, { stdio: [ 'ignore', 'ignore', 'ignore' ] });
+					execSync(
+						`${WORKER_RELEASE_BIN_PATH}`,
+						{
+							stdio : [ 'ignore', 'ignore', 'ignore' ],
+							// Ensure no env is passed to avoid accidents.
+							env   : {}
+						}
+					);
 				}
 				catch (error)
 				{
