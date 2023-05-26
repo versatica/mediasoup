@@ -95,7 +95,6 @@ namespace RTC
 		bool receivedTransportWideSeqNumber{ false };
 		uint16_t transportCcFeedbackStartSeqNum{ 0u };
 		std::map<uint16_t, uint64_t, RTC::SeqManager<uint16_t>::SeqLowerThan> mapPacketArrivalTimes;
-
 	};
 } // namespace RTC
 
