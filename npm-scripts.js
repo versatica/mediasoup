@@ -546,7 +546,7 @@ async function downloadPrebuiltWorker()
 					}
 					catch (error)
 					{
-						if (error.status !== 41)
+						if (error.status === 41)
 						{
 							resolve(true);
 						}
