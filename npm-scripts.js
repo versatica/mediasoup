@@ -57,13 +57,17 @@ async function run()
 
 				break;
 			}
-			// If MEDIASOUP_LOCAL_DEV is given, or if MEDIASOUP_SKIP_PREBUILT_DOWNLOAD
+			// If MEDIASOUP_LOCAL_DEV is given, or if MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD
 			// env is given, or if mediasoup package is being installed via git+ssh
-			// (instead of via npm) then skip mediasoup-worker prebuilt download.
+			// (instead of via npm), and if MEDIASOUP_FORCE_PREBUILT_WORKER_DOWNLOAD env is
+			// not set, then skip mediasoup-worker prebuilt download.
 			else if (
-				process.env.MEDIASOUP_LOCAL_DEV ||
-				process.env.MEDIASOUP_SKIP_PREBUILT_DOWNLOAD ||
-				process.env.npm_package_resolved?.startsWith('git+ssh://')
+				(
+					process.env.MEDIASOUP_LOCAL_DEV ||
+					process.env.MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD ||
+					process.env.npm_package_resolved?.startsWith('git+ssh://')
+				) &&
+				!process.env.MEDIASOUP_FORCE_WORKER_PREBUILT_DOWNLOAD
 			)
 			{
 				logInfo('skipping mediasoup-worker prebuilt download, building it locally');
@@ -445,11 +449,11 @@ async function prebuildWorker()
 	});
 }
 
-// Returns a Promise resolving to true if a prebuilt mediasoup-worker binary
+// Returns a Promise resolving to true if a mediasoup-worker prebuilt binary
 // was downloaded and uncompressed, false otherwise.
 async function downloadPrebuiltWorker()
 {
-	const releaseBase = process.env.MEDIASOUP_WORKER_DOWNLOAD_BASE || `${PKG.repository.url.replace('.git', '')}/releases/download`;
+	const releaseBase = process.env.MEDIASOUP_WORKER_PREBUILT_DOWNLOAD_BASE_URL || `${PKG.repository.url.replace(/\.git$/, '')}/releases/download`;
 	const tarUrl = `${releaseBase}/${PKG.version}/${WORKER_PREBUILD_TAR}`;
 
 	logInfo(`downloadPrebuiltWorker() [tarUrl:${tarUrl}]`);
@@ -465,7 +469,7 @@ async function downloadPrebuiltWorker()
 		if (res.status === 404)
 		{
 			logInfo(
-				'downloadPrebuiltWorker() | no available prebuilt mediasoup-worker binary for current architecture'
+				'downloadPrebuiltWorker() | no available mediasoup-worker prebuilt binary for current architecture'
 			);
 
 			return false;
@@ -473,7 +477,7 @@ async function downloadPrebuiltWorker()
 		else if (!res.ok)
 		{
 			logError(
-				`downloadPrebuiltWorker() | failed to download prebuilt mediasoup-worker binary: ${res.status} ${res.statusText}`
+				`downloadPrebuiltWorker() | failed to download mediasoup-worker prebuilt binary: ${res.status} ${res.statusText}`
 			);
 
 			return false;
@@ -482,7 +486,7 @@ async function downloadPrebuiltWorker()
 	catch (error)
 	{
 		logError(
-			`downloadPrebuiltWorker() | failed to download prebuilt mediasoup-worker binary: ${error}`
+			`downloadPrebuiltWorker() | failed to download mediasoup-worker prebuilt binary: ${error}`
 		);
 
 		return false;
@@ -501,7 +505,7 @@ async function downloadPrebuiltWorker()
 				}))
 			.on('finish', () =>
 			{
-				logInfo('downloadPrebuiltWorker() | got prebuilt mediasoup-worker binary');
+				logInfo('downloadPrebuiltWorker() | got mediasoup-worker prebuilt binary');
 
 				try
 				{
@@ -513,7 +517,7 @@ async function downloadPrebuiltWorker()
 				catch (error)
 				{
 					logError(
-						`downloadPrebuiltWorker() | failed to download prebuilt mediasoup-worker binary: ${error}`
+						`downloadPrebuiltWorker() | failed to download mediasoup-worker prebuilt binary: ${error}`
 					);
 
 					resolve(false);
@@ -522,7 +526,7 @@ async function downloadPrebuiltWorker()
 			.on('error', (error) =>
 			{
 				logError(
-					`downloadPrebuiltWorker() | failed to uncompress downloaded prebuilt mediasoup-worker binary: ${error}`
+					`downloadPrebuiltWorker() | failed to uncompress downloaded mediasoup-worker prebuilt binary: ${error}`
 				);
 
 				resolve(false);

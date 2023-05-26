@@ -78,7 +78,7 @@ const eslintConfig =
 		'max-len' : [ 2, 100,
 			{
 				tabWidth               : 2,
-				comments               : 84,
+				comments               : 88,
 				ignoreUrls             : true,
 				ignoreStrings          : true,
 				ignoreTemplateLiterals : true,
