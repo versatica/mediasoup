@@ -453,7 +453,10 @@ async function prebuildWorker()
 // was downloaded and uncompressed, false otherwise.
 async function downloadPrebuiltWorker()
 {
-	const releaseBase = process.env.MEDIASOUP_WORKER_PREBUILT_DOWNLOAD_BASE_URL || `${PKG.repository.url.replace(/\.git$/, '')}/releases/download`;
+	const releaseBase =
+		process.env.MEDIASOUP_WORKER_PREBUILT_DOWNLOAD_BASE_URL ||
+		`${PKG.repository.url.replace(/\.git$/, '')}/releases/download`;
+
 	const tarUrl = `${releaseBase}/${PKG.version}/${WORKER_PREBUILD_TAR}`;
 
 	logInfo(`downloadPrebuiltWorker() [tarUrl:${tarUrl}]`);
