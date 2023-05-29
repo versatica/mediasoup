@@ -1,6 +1,11 @@
 # Changelog
 
 
+### Next
+
+Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://github.com/versatica/mediasoup/pull/1093)).
+
+
 ### 3.12.2
 
 * CI: Use `ubuntu-20.04` to build mediasoup-worker prebuilt on Linux ([PR #1092](https://github.com/versatica/mediasoup/pull/1092)).
