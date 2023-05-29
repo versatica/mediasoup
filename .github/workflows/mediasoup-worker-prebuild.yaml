@@ -1,16 +1,6 @@
 name: mediasoup-worker-prebuild
 
-on:
-  push:
-    # Only trigger for production releases.
-    tags:
-      - "*.*.*-*"
-
-  # Only trigger when other workflows succeeded.
-  workflow_run:
-    workflows: [mediasoup-worker, mediasoup-node, mediasoup-rust]
-    types:
-      - completed
+on: [push, pull_request]
 
 jobs:
   ci:
@@ -21,12 +11,6 @@ jobs:
           - os: ubuntu-20.04
             cc: gcc
             cxx: g++
-          - os: macos-12
-            cc: clang
-            cxx: clang++
-          - os: windows-2022
-            cc: cl
-            cxx: cl
         node:
           - 18
 
