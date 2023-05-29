@@ -73,7 +73,11 @@ async function run()
 				logInfo('skipping mediasoup-worker prebuilt download, building it locally');
 
 				buildWorker();
-				cleanWorkerArtifacts();
+
+				if (!process.env.MEDIASOUP_LOCAL_DEV)
+				{
+					cleanWorkerArtifacts();
+				}
 			}
 			// Attempt to download a prebuilt binary. Fallback to building locally.
 			else if (!(await downloadPrebuiltWorker()))
