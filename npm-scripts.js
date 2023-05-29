@@ -211,7 +211,7 @@ async function run()
 
 			// checkRelease();
 
-			// executeCmd(`git commit -am '${PKG.version}'`);
+			executeCmd(`git commit -am '${PKG.version}'`);
 			executeCmd(`git tag -a ${PKG.version} -m '${PKG.version}'`);
 			executeCmd(`git push`);
 			executeCmd(`git push origin '${PKG.version}'`);
