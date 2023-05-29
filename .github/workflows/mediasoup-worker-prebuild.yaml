@@ -18,7 +18,11 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - os: ubuntu-22.04
+          # For Linux let's use an old version of Ubuntu (20.04) that builds the
+          # mediasoup-worker binary using an old version of GLib, so it will work
+          # on Linux hosts running more modern GLib versions.
+          # See https://github.com/versatica/mediasoup/issues/1089.
+          - os: ubuntu-20.04
             cc: gcc
             cxx: g++
           - os: macos-12
@@ -46,7 +50,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      # We need to install some NPM production deps for npm-scripts.js to work.
+      # We need to install some NPM production deps for npm-scripts.mjs to work.
       - run: npm ci --ignore-scripts --omit=dev
       - run: npm run worker:build
       # Publish prebuild binaries on tag.
