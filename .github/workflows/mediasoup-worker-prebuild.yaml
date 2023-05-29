@@ -1,6 +1,6 @@
 name: mediasoup-worker-prebuild
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   ci:
