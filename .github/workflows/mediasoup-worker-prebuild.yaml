@@ -4,7 +4,7 @@ on:
   push:
     # Only trigger for production releases.
     tags:
-      - "*.*.*"
+      - "*.*.*-*"
 
   # Only trigger when other workflows succeeded.
   workflow_run:
@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - os: ubuntu-22.04
+          - os: ubuntu-20.04
             cc: gcc
             cxx: g++
           - os: macos-12
