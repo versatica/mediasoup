@@ -605,7 +605,7 @@ namespace RTC
 			  currentLen,
 			  value.c_str());
 
-			// If len == currentLen, just memcpy
+			// If len == currentLen, just memcpy.
 			if (len == currentLen)
 			{
 				std::memcpy(extension->value, value.c_str(), len);
@@ -709,7 +709,7 @@ namespace RTC
 
 			auto* extension = it->second;
 			auto currentLen = extension->len;
-			// If len == currentLen, just memcpy
+			// If len == currentLen, just memcpy.
 			if (len == currentLen)
 			{
 				std::memcpy(extension->value, value.c_str(), len);
