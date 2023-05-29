@@ -1,7 +1,7 @@
 # Changelog
 
 
-### Next
+### 3.12.2
 
 * CI: Use `ubuntu-20.04` to build mediasoup-worker prebuilt on Linux ([PR #1092](https://github.com/versatica/mediasoup/pull/1092)).
 
