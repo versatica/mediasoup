@@ -1,7 +1,7 @@
 # Changelog
 
 
-### Next
+### 3.12.3
 
 Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://github.com/versatica/mediasoup/pull/1093)).
 
