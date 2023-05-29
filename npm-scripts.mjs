@@ -4,6 +4,7 @@ import fs from 'fs';
 import { execSync, spawnSync } from 'child_process';
 import fetch from 'node-fetch';
 import tar from 'tar';
+import 'dotenv/config';
 
 const PKG = JSON.parse(fs.readFileSync('./package.json').toString());
 const IS_FREEBSD = os.platform() === 'freebsd';
