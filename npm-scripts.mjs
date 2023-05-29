@@ -74,7 +74,11 @@ async function run()
 				logInfo('skipping mediasoup-worker prebuilt download, building it locally');
 
 				buildWorker();
-				cleanWorkerArtifacts();
+
+				if (!process.env.MEDIASOUP_LOCAL_DEV)
+				{
+					cleanWorkerArtifacts();
+				}
 			}
 			// Attempt to download a prebuilt binary. Fallback to building locally.
 			else if (!(await downloadPrebuiltWorker()))
@@ -376,7 +380,7 @@ function lintNode()
 {
 	logInfo('lintNode()');
 
-	executeCmd('eslint -c node/.eslintrc.js --ignore-path node/.eslintignore --max-warnings 0 node/src node/.eslintrc.js npm-scripts.mjs worker/scripts/gulpfile.js');
+	executeCmd('eslint -c node/.eslintrc.js --ignore-path node/.eslintignore --max-warnings 0 node/src node/.eslintrc.js npm-scripts.mjs worker/scripts/gulpfile.mjs');
 }
 
 function lintWorker()

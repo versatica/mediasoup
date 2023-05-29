@@ -224,10 +224,10 @@ xcode: setup
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode
 
 lint:
-	$(GULP) --gulpfile ./scripts/gulpfile.js lint:worker
+	$(GULP) --gulpfile ./scripts/gulpfile.mjs lint:worker
 
 format:
-	$(GULP) --gulpfile ./scripts/gulpfile.js format:worker
+	$(GULP) --gulpfile ./scripts/gulpfile.mjs format:worker
 
 test: setup
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test
