@@ -201,7 +201,7 @@ async function run()
 			try
 			{
 				octokit = getOctokit();
-				versionChanges = getVersionChanges();
+				// versionChanges = getVersionChanges();
 			}
 			catch (error)
 			{
@@ -209,11 +209,11 @@ async function run()
 				exitWithError();
 			}
 
-			checkRelease();
+			// checkRelease();
 
-			executeCmd(`git commit -am '${PKG.version}'`);
+			// executeCmd(`git commit -am '${PKG.version}'`);
 			executeCmd(`git tag -a ${PKG.version} -m '${PKG.version}'`);
-			executeCmd(`git push origin v${MAYOR_VERSION}`);
+			executeCmd(`git push`);
 			executeCmd(`git push origin '${PKG.version}'`);
 
 			logInfo('creating release in GitHub');
@@ -223,7 +223,7 @@ async function run()
 					owner    : GH_OWNER,
 					repo     : GH_REPO,
 					name     : PKG.version,
-					body     : versionChanges,
+					// body     : versionChanges,
 					// eslint-disable-next-line camelcase
 					tag_name : PKG.version,
 					draft    : false

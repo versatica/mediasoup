@@ -1,7 +1,7 @@
 # Changelog
 
 
-### 3.12.2-pre1
+### 3.12.2-pre2
 
 * Trigger prebuilt on Linux using Ubuntu 20.04 ([PR #1091](https://github.com/versatica/mediasoup/pull/1091)).
 
