@@ -18,7 +18,11 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - os: ubuntu-22.04
+          # For Linux let's use an old version of Ubuntu (20.04) so it builds
+          # the binary using an old version of GLib which will work in Linux
+          # hosts running more modern GLib versions.
+          # See https://github.com/versatica/mediasoup/issues/1089.
+          - os: ubuntu-20.04
             cc: gcc
             cxx: g++
           - os: macos-12
