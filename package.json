@@ -98,7 +98,7 @@
     "@octokit/rest": "^19.0.11",
     "@types/debug": "^4.1.8",
     "@types/jest": "^29.5.1",
-    "@types/node": "^18.16.16",
+    "@types/node": "^20.2.5",
     "@types/uuid": "^9.0.1",
     "@typescript-eslint/eslint-plugin": "^5.59.7",
     "@typescript-eslint/parser": "^5.59.7",
