@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.12.2-pre1
+
+* Trigger prebuilt on Linux using Ubuntu 20.04 ([PR #1091](https://github.com/versatica/mediasoup/pull/1091)).
+
+
 ### 3.12.1
 
 * mediasoup-worker prebuild: Fallback to local building if fetched binary doesn't run on current host ([PR #1090](https://github.com/versatica/mediasoup/pull/1090)).

@@ -237,7 +237,10 @@ async function run()
 				await uploadMacArmPrebuiltWorker();
 			}
 
-			executeCmd('npm publish');
+			if (!process.env.MEDIASOUP_DO_NOT_PUBLISH_NPM)
+			{
+				executeCmd('npm publish');
+			}
 
 			break;
 		}
