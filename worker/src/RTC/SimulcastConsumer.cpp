@@ -367,11 +367,11 @@ namespace RTC
 
 		MS_DEBUG_TAG(simulcast, "first SenderReport [ssrc:%" PRIu32 "]", rtpStream->GetSsrc());
 
-		// If our current selected RTP stream does not yet have SR, do nothing since
+		// If our TsReference RTP stream does not yet have SR, do nothing since
 		// we know we won't be able to switch.
-		auto* producerCurrentRtpStream = GetProducerCurrentRtpStream();
+		auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
 
-		if (!producerCurrentRtpStream || !producerCurrentRtpStream->GetSenderReportNtpMs())
+		if (!producerTsReferenceRtpStream  || !producerTsReferenceRtpStream ->GetSenderReportNtpMs())
 			return;
 
 		if (IsActive())
