@@ -36,6 +36,11 @@ type PlainTransportListenInfo =
 	 * Listening info.
 	 */
 	listenInfo: TransportListenInfo;
+
+	/**
+	 * Optional listening info for RTCP.
+	 */
+	rtcpListenInfo?: TransportListenInfo;
 };
 
 type PlainTransportListenIp =

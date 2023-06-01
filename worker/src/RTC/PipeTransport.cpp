@@ -88,13 +88,13 @@ namespace RTC
 			if (this->listenInfo.sendBufferSize != 0)
 			{
 				// NOTE: This may throw.
-				udpSocket->SetSendBufferSize(this->listenInfo.sendBufferSize);
+				this->udpSocket->SetSendBufferSize(this->listenInfo.sendBufferSize);
 			}
 
 			if (this->listenInfo.recvBufferSize != 0)
 			{
 				// NOTE: This may throw.
-				udpSocket->SetRecvBufferSize(this->listenInfo.recvBufferSize);
+				this->udpSocket->SetRecvBufferSize(this->listenInfo.recvBufferSize);
 			}
 
 			MS_DEBUG_TAG(
