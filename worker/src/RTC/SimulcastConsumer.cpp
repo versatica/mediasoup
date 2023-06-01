@@ -371,7 +371,7 @@ namespace RTC
 		// we know we won't be able to switch.
 		auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();
 
-		if (!producerTsReferenceRtpStream || !producerTsReferenceRtpStream ->GetSenderReportNtpMs())
+		if (!producerTsReferenceRtpStream || !producerTsReferenceRtpStream->GetSenderReportNtpMs())
 			return;
 
 		if (IsActive())
