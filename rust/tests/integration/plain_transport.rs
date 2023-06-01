@@ -197,6 +197,7 @@ fn create_succeeds() {
         }
 
         {
+            let rtcp_port = pick_unused_port().unwrap();
             let transport2 = router
                 .create_plain_transport({
                     let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
@@ -208,6 +209,15 @@ fn create_succeeds() {
                         recv_buffer_size: None,
                     });
                     plain_transport_options.rtcp_mux = false;
+
+                    plain_transport_options.rtcp_listen_info = Some(ListenInfo {
+                        protocol: Protocol::Udp,
+                        ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                        announced_ip: None,
+                        port: Some(rtcp_port),
+                        send_buffer_size: None,
+                        recv_buffer_size: None,
+                    });
 
                     plain_transport_options
                 })
@@ -229,10 +239,14 @@ fn create_succeeds() {
             }
             assert!(transport2.rtcp_tuple().is_some());
             if let TransportTuple::LocalOnly {
-                local_ip, protocol, ..
+                local_ip,
+                local_port,
+                protocol,
+                ..
             } = transport2.rtcp_tuple().unwrap()
             {
                 assert_eq!(local_ip, "127.0.0.1".parse::<IpAddr>().unwrap());
+                assert_eq!(local_port, rtcp_port);
                 assert_eq!(protocol, Protocol::Udp);
             }
             assert_eq!(transport2.srtp_parameters(), None);
