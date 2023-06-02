@@ -646,7 +646,7 @@ export class Router<RouterAppData extends AppData = AppData>
 		}
 
 		// If rtcpMux is enabled, ignore rtcpListenInfo.
-		if (rtcpMux && rtcpListenInfo !== undefined)
+		if (rtcpMux)
 		{
 			logger.warn('createPlainTransport() | ignoring given rtcpListenInfo since rtcpMux is enabled');
 
