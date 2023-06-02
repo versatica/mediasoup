@@ -615,6 +615,7 @@ export class Router<RouterAppData extends AppData = AppData>
 	async createPlainTransport<PlainTransportAppData extends AppData = AppData>(
 		{
 			listenInfo,
+			rtcpListenInfo,
 			listenIp,
 			port,
 			rtcpMux = true,
@@ -642,6 +643,14 @@ export class Router<RouterAppData extends AppData = AppData>
 		else if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
+		}
+
+		// If rtcpMux is enabled, ignore rtcpListenInfo.
+		if (rtcpMux)
+		{
+			logger.warn('createPlainTransport() | ignoring given rtcpListenInfo since rtcpMux is enabled');
+
+			rtcpListenInfo = undefined;
 		}
 
 		// Convert deprecated TransportListenIps to TransportListenInfos.
@@ -688,6 +697,16 @@ export class Router<RouterAppData extends AppData = AppData>
 				listenInfo!.sendBufferSize,
 				listenInfo!.recvBufferSize
 			),
+			rtcpListenInfo ? new FbsTransport.ListenInfoT(
+				rtcpListenInfo.protocol === 'udp'
+					? FbsTransportProtocol.UDP
+					: FbsTransportProtocol.TCP,
+				rtcpListenInfo.ip,
+				rtcpListenInfo.announcedIp,
+				rtcpListenInfo.port,
+				rtcpListenInfo.sendBufferSize,
+				rtcpListenInfo.recvBufferSize
+			) : undefined,
 			rtcpMux,
 			comedia,
 			enableSrtp,

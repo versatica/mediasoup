@@ -44,6 +44,8 @@ use std::sync::{Arc, Weak};
 pub struct PlainTransportOptions {
     /// Listening info.
     pub listen_info: ListenInfo,
+    /// Optional listening info for RTCP.
+    pub rtcp_listen_info: Option<ListenInfo>,
     /// Use RTCP-mux (RTP and RTCP in the same port).
     /// Default true.
     pub rtcp_mux: bool,
@@ -79,6 +81,7 @@ impl PlainTransportOptions {
     pub fn new(listen_info: ListenInfo) -> Self {
         Self {
             listen_info,
+            rtcp_listen_info: None,
             rtcp_mux: true,
             comedia: false,
             enable_sctp: false,

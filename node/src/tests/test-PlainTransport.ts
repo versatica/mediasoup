@@ -119,10 +119,13 @@ test('router.createPlainTransport() succeeds', async () =>
 
 	expect(typeof anotherTransport).toBe('object');
 
+	const rtpPort = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
+	const rtcpPort = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const transport2 = await router.createPlainTransport(
 		{
-			listenInfo : { protocol: 'udp', ip: '127.0.0.1' },
-			rtcpMux    : false
+			listenInfo     : { protocol: 'udp', ip: '127.0.0.1', port: rtpPort },
+			rtcpListenInfo : { protocol: 'udp', ip: '127.0.0.1', port: rtcpPort },
+			rtcpMux        : false
 		});
 
 	expect(typeof transport2.id).toBe('string');
@@ -130,11 +133,11 @@ test('router.createPlainTransport() succeeds', async () =>
 	expect(transport2.appData).toEqual({});
 	expect(typeof transport2.tuple).toBe('object');
 	expect(transport2.tuple.localIp).toBe('127.0.0.1');
-	expect(typeof transport2.tuple.localPort).toBe('number');
+	expect(transport2.tuple.localPort).toBe(rtpPort);
 	expect(transport2.tuple.protocol).toBe('udp');
 	expect(typeof transport2.rtcpTuple).toBe('object');
 	expect(transport2.rtcpTuple?.localIp).toBe('127.0.0.1');
-	expect(typeof transport2.rtcpTuple?.localPort).toBe('number');
+	expect(transport2.rtcpTuple?.localPort).toBe(rtcpPort);
 	expect(transport2.rtcpTuple?.protocol).toBe('udp');
 	expect(transport2.sctpParameters).toBeUndefined();
 	expect(transport2.sctpState).toBeUndefined();
