@@ -617,18 +617,11 @@ namespace RTC
 				uint8_t* extensionEnd      = extensionStart + GetHeaderExtensionLength();
 				uint8_t* ptr               = extensionStart;
 				size_t extensionsTotalSize = static_cast<size_t>(len + 1);
-				uint8_t* ptr1              = ptr;
+				uint8_t* lastExtensionPtr  = ptr;
 				// Clear current extension, we will rewrite after move all extension in right place.
 				std::memset((uint8_t*)extension, 0, currentLen + 1);
-				while (ptr < extensionEnd || ptr1 < extensionEnd)
+				while (ptr < extensionEnd)
 				{
-					// Means move has end. Fill the rest buffer to 0u.
-					if (ptr >= extensionEnd)
-					{
-						*ptr1 = 0u;
-						ptr1++;
-						continue;
-					}
 					const uint8_t tempExtensionId = (*ptr & 0xF0) >> 4;
 					const size_t tempExtensionLen = static_cast<size_t>(*ptr & 0x0F) + 1;
 
@@ -638,18 +631,18 @@ namespace RTC
 					// Valid extension id.
 					if (tempExtensionId != 0u)
 					{
-						if (ptr1 < ptr)
+						if (lastExtensionPtr < ptr)
 						{
-							std::memmove(ptr1, ptr, tempExtensionLen + 1);
-							// the extension has move from ptr to ptr1, store the One-Byte extension element in an
-							// array.
+							std::memmove(lastExtensionPtr, ptr, tempExtensionLen + 1);
+							// the extension has move from ptr to lastExtensionPtr, store the One-Byte extension
+							// element in an array.
 							// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
 							this->oneByteExtensions[tempExtensionId - 1] =
-							  reinterpret_cast<OneByteExtension*>(ptr1);
+							  reinterpret_cast<OneByteExtension*>(lastExtensionPtr);
 						}
 						extensionsTotalSize += tempExtensionLen + 1;
 						ptr += tempExtensionLen + 1;
-						ptr1 += tempExtensionLen + 1;
+						lastExtensionPtr += tempExtensionLen + 1;
 
 						MS_DEBUG_DEV(
 						  "tempExtensionId: %" PRIu8 " tempExtensionLen:%zd, offset:%ld",
@@ -664,6 +657,9 @@ namespace RTC
 					}
 				}
 
+				// Means move has end. Fill the rest buffer to 0u.
+				std::memset(lastExtensionPtr, 0, extensionEnd - lastExtensionPtr);
+
 				MS_DEBUG_DEV(
 				  "extensionsTotalSize: %zd headerLength:%zd",
 				  extensionsTotalSize,
@@ -677,7 +673,7 @@ namespace RTC
 				MS_DEBUG_DEV("shift:%d paddedExtensionsTotalSize: %zd", shift, paddedExtensionsTotalSize);
 
 				std::memmove(this->payload + shift, this->payload, this->payloadLength + this->payloadPadding);
-				// Clear the shift place, if shift > currentLen, may create some strange extension.
+				// Fill padding with zeroes.
 				if (shift > 0)
 				{
 					std::memset(this->payload, 0, shift);
@@ -721,36 +717,30 @@ namespace RTC
 				uint8_t* extensionEnd      = extensionStart + GetHeaderExtensionLength();
 				uint8_t* ptr               = extensionStart;
 				size_t extensionsTotalSize = static_cast<size_t>(len + 2);
-				uint8_t* ptr1              = ptr;
+				uint8_t* lastExtensionPtr  = ptr;
 				// Clear current extension, valueLen + 2 byteheader. we will rewrite after move all
 				// extension in right place.
 				std::memset((void*)extension, 0, currentLen + 2);
 				// Two-Byte extensions can have length 0.
-				while (ptr + 1 < extensionEnd || ptr1 < extensionEnd)
+				while (ptr + 1 < extensionEnd)
 				{
-					// Means move has end. Fill the rest buffer to 0u.
-					if (ptr + 1 >= extensionEnd)
-					{
-						*ptr1 = 0u;
-						ptr1++;
-						continue;
-					}
 					const uint8_t tempExtensionId  = *ptr;
 					const uint8_t tempExtensionLen = *(ptr + 1);
 
 					// Valid extension id.
 					if (tempExtensionId != 0u)
 					{
-						if (ptr1 < ptr)
+						if (lastExtensionPtr < ptr)
 						{
-							std::memmove(ptr1, ptr, tempExtensionLen + 2);
-							// The extension has moved from ptr to ptr1. Store the Two-Bytes extension element in the map.
+							std::memmove(lastExtensionPtr, ptr, tempExtensionLen + 2);
+							// The extension has moved from ptr to lastExtensionPtr. Store the Two-Bytes extension
+							// element in the map.
 							this->mapTwoBytesExtensions[tempExtensionId] =
-							  reinterpret_cast<TwoBytesExtension*>(ptr1);
+							  reinterpret_cast<TwoBytesExtension*>(lastExtensionPtr);
 						}
 						extensionsTotalSize += tempExtensionLen + 2;
 						ptr += tempExtensionLen + 2;
-						ptr1 += tempExtensionLen + 2;
+						lastExtensionPtr += tempExtensionLen + 2;
 					}
 					// id=0 means alignment.
 					else
@@ -758,13 +748,17 @@ namespace RTC
 						ptr++;
 					}
 				}
+
+				// Means move has end. Fill the rest buffer to 0u.
+				std::memset(lastExtensionPtr, 0, extensionEnd - lastExtensionPtr);
+
 				auto paddedExtensionsTotalSize =
 				  static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(extensionsTotalSize)));
 				extensionsTotalSize = paddedExtensionsTotalSize;
 				int16_t shift = static_cast<int16_t>(extensionsTotalSize - GetHeaderExtensionLength());
 
 				std::memmove(this->payload + shift, this->payload, this->payloadLength + this->payloadPadding);
-				// Clear the shift place, if shift > currentLen, may create some strange extension.
+				// Fill padding with zeroes.
 				if (shift > 0)
 				{
 					std::memset(this->payload, 0, shift);
