@@ -162,12 +162,10 @@ test('router.createPlainTransport() with wrong arguments rejects with TypeError'
 		.rejects
 		.toThrow(TypeError);
 
-	// TODO: Ideally this should reject with TypeError. See:
-	// https://github.com/versatica/mediasoup/pull/927#issuecomment-1507188359
 	// @ts-ignore
 	await expect(router.createPlainTransport({ listenIp: [ '127.0.0.1' ] }))
 		.rejects
-		.toThrow(Error);
+		.toThrow(TypeError);
 
 	await expect(router.createPipeTransport(
 		{

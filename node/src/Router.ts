@@ -432,7 +432,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			(typeof numSctpStreams.OS !== 'number' || typeof numSctpStreams.MIS !== 'number')
 		)
 		{
-			throw new TypeError('if given, numSctpStreams must contain OS and MID');
+			throw new TypeError('if given, numSctpStreams must contain OS and MIS');
 		}
 		else if (appData && typeof appData !== 'object')
 		{

@@ -573,41 +573,34 @@ function createConnectRequest(
 	}
 ): number
 {
-	try
+	let ipOffset = 0;
+	let srtpParametersOffset = 0;
+
+	if (ip)
 	{
-		let ipOffset = 0;
-		let srtpParametersOffset = 0;
-
-		if (ip)
-		{
-			ipOffset = builder.createString(ip);
-		}
-
-		// Serialize SrtpParameters.
-		if (srtpParameters)
-		{
-			srtpParametersOffset = serializeSrtpParameters(builder, srtpParameters);
-		}
-
-		// Create PlainTransportConnectData.
-		FbsPipeTransport.ConnectRequest.startConnectRequest(builder);
-		FbsPipeTransport.ConnectRequest.addIp(builder, ipOffset);
-
-		if (typeof port === 'number')
-		{
-			FbsPipeTransport.ConnectRequest.addPort(builder, port);
-		}
-		if (srtpParameters)
-		{
-			FbsPipeTransport.ConnectRequest.addSrtpParameters(
-				builder, srtpParametersOffset
-			);
-		}
-
-		return FbsPipeTransport.ConnectRequest.endConnectRequest(builder);
+		ipOffset = builder.createString(ip);
 	}
-	catch (error)
+
+	// Serialize SrtpParameters.
+	if (srtpParameters)
 	{
-		throw new TypeError(`${error}`);
+		srtpParametersOffset = serializeSrtpParameters(builder, srtpParameters);
 	}
+
+	// Create PlainTransportConnectData.
+	FbsPipeTransport.ConnectRequest.startConnectRequest(builder);
+	FbsPipeTransport.ConnectRequest.addIp(builder, ipOffset);
+
+	if (typeof port === 'number')
+	{
+		FbsPipeTransport.ConnectRequest.addPort(builder, port);
+	}
+	if (srtpParameters)
+	{
+		FbsPipeTransport.ConnectRequest.addSrtpParameters(
+			builder, srtpParametersOffset
+		);
+	}
+
+	return FbsPipeTransport.ConnectRequest.endConnectRequest(builder);
 }

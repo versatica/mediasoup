@@ -783,29 +783,22 @@ function serializeDtlsParameters(
 {
 	const fingerprints: number[] = [];
 
-	try
+	for (const fingerprint of dtlsParameters.fingerprints)
 	{
-		for (const fingerprint of dtlsParameters.fingerprints)
-		{
-			const algorithmOffset = builder.createString(fingerprint.algorithm);
-			const valueOffset = builder.createString(fingerprint.value);
-			const fingerprintOffset = FbsWebRtcTransport.Fingerprint.createFingerprint(
-				builder, algorithmOffset, valueOffset);
+		const algorithmOffset = builder.createString(fingerprint.algorithm);
+		const valueOffset = builder.createString(fingerprint.value);
+		const fingerprintOffset = FbsWebRtcTransport.Fingerprint.createFingerprint(
+			builder, algorithmOffset, valueOffset);
 
-			fingerprints.push(fingerprintOffset);
-		}
-
-		const fingerprintsOffset = FbsWebRtcTransport.DtlsParameters.createFingerprintsVector(
-			builder, fingerprints);
-		const roleOffset = builder.createString(dtlsParameters.role);
-
-		return FbsWebRtcTransport.DtlsParameters.createDtlsParameters(
-			builder,
-			fingerprintsOffset,
-			roleOffset);
+		fingerprints.push(fingerprintOffset);
 	}
-	catch (error)
-	{
-		throw new TypeError(`${error}`);
-	}
+
+	const fingerprintsOffset = FbsWebRtcTransport.DtlsParameters.createFingerprintsVector(
+		builder, fingerprints);
+	const roleOffset = builder.createString(dtlsParameters.role);
+
+	return FbsWebRtcTransport.DtlsParameters.createDtlsParameters(
+		builder,
+		fingerprintsOffset,
+		roleOffset);
 }
