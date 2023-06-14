@@ -690,6 +690,10 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -790,7 +794,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenLen == 11);
 
 		// Test all kinds of setExtensionValue.
-		/*const std::string randStr = "ABCDEFGHIJK";
+		const std::string randStr = "ABCDEFGHIJK";
 		REQUIRE(packet->SetExtensionValue(15, 2, "AB") == false);
 		size_t headerExtensionLength = packet->GetHeaderExtensionLength();
 		size_t packetSize = packet->GetSize();
@@ -810,7 +814,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		}
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
-*/
+		
 		extensions.clear();
 
 		uint8_t value3[] = { 0x01, 0x02, 0x03, 0x04 };
