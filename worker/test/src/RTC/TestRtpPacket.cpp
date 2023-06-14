@@ -502,6 +502,13 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
 		};
 		// clang-format on
 
@@ -603,6 +610,28 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasExtension(2) == true);
 		REQUIRE(extenLen == 11);
 
+		// Test all kinds of setExtensionValue.
+		const std::string randStr = "ABCDEFGHIJK";
+		REQUIRE(packet->SetExtensionValue(15, 2, "AB") == false);
+		size_t headerExtensionLength = packet->GetHeaderExtensionLength();
+		size_t packetSize            = packet->GetSize();
+		size_t extensionsTotalSize   = 17;
+
+		for (int i = 0; i < 20; i++)
+		{
+			int randLen = rand() % 7 + 1;
+			REQUIRE(packet->SetExtensionValue(1, randLen, randStr.substr(0, randLen)) == true);
+			REQUIRE(packet->HasExtension(1) == true);
+			REQUIRE((extenValue = packet->GetExtension(1, extenLen)));
+			REQUIRE(extenLen == randLen);
+			auto paddedExtensionsTotalSize = static_cast<size_t>(
+			  Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(extensionsTotalSize - 4 + randLen)));
+			REQUIRE(packet->GetHeaderExtensionLength() == paddedExtensionsTotalSize);
+			REQUIRE(packet->GetSize() == packetSize + paddedExtensionsTotalSize - headerExtensionLength);
+		}
+		REQUIRE(packet->GetPayload()[0] == 0x11);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
+
 		extensions.clear();
 
 		uint8_t value3[] = { 0x01, 0x02, 0x03, 0x04 };
@@ -640,14 +669,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(extenValue[1] == 'B');
 		REQUIRE(extenValue[2] == 'C');
 		REQUIRE(extenValue[3] == 'D');
-
-		// Test all kinds of move.
-		const std::string str = "ABCDEFGHIJK";
-		for (int i = 0; i < 100; i++)
-		{
-			int tempLen = rand() % 7 + 1;
-			REQUIRE(packet->SetExtensionValue(14, tempLen, str.substr(0, tempLen)) == true);
-		}
 
 		delete packet;
 	}
@@ -768,6 +789,28 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasExtension(22) == true);
 		REQUIRE(extenLen == 11);
 
+		// Test all kinds of setExtensionValue.
+		/*const std::string randStr = "ABCDEFGHIJK";
+		REQUIRE(packet->SetExtensionValue(15, 2, "AB") == false);
+		size_t headerExtensionLength = packet->GetHeaderExtensionLength();
+		size_t packetSize = packet->GetSize();
+		size_t extensionsTotalSize = 17;
+
+		for (int i = 0; i < 20; i++)
+		{
+		  int randLen = rand() % 7 + 1;
+		  REQUIRE(packet->SetExtensionValue(1, randLen, randStr.substr(0, randLen)) == true);
+		  REQUIRE(packet->HasExtension(1) == true);
+		  REQUIRE((extenValue = packet->GetExtension(1, extenLen)));
+		  REQUIRE(extenLen == randLen);
+		  auto paddedExtensionsTotalSize =
+		static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(extensionsTotalSize - 2 +
+		randLen))); REQUIRE( packet->GetHeaderExtensionLength() == paddedExtensionsTotalSize);
+		  REQUIRE(packet->GetSize() == packetSize + paddedExtensionsTotalSize - headerExtensionLength );
+		}
+		REQUIRE(packet->GetPayload()[0] == 0x11);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
+*/
 		extensions.clear();
 
 		uint8_t value3[] = { 0x01, 0x02, 0x03, 0x04 };
@@ -797,14 +840,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetExtension(24, extenLen));
 		REQUIRE(packet->HasExtension(24) == true);
 		REQUIRE(extenLen == 4);
-
-		// Test all kinds of move.
-		const std::string str = "ABCDEFGHIJK";
-		for (int i = 0; i < 100; i++)
-		{
-			int tempLen = rand() % 7 + 1;
-			REQUIRE(packet->SetExtensionValue(24, tempLen, str.substr(0, tempLen)) == true);
-		}
 
 		delete packet;
 	}

@@ -570,8 +570,8 @@ namespace RTC
 	}
 
 	/**
-	 *  This method only can set exists extension. if len of value changed, this method will
-	 * recaculate and fill padding.
+	 *  This method set the value for an existing extension. If the length of the current value
+	 * changed, it will recalculate it and regenerate the header extension accordingly.
 	 */
 	bool RtpPacket::SetExtensionValue(uint8_t id, uint8_t len, const std::string& value)
 	{
@@ -590,6 +590,9 @@ namespace RTC
 		}
 		else if (HasOneByteExtensions())
 		{
+			if (id > 14)
+				return false;
+
 			// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
 			auto* extension = this->oneByteExtensions[id - 1];
 
@@ -605,7 +608,7 @@ namespace RTC
 			  currentLen,
 			  value.c_str());
 
-			// If len == currentLen, just memcpy.
+			// If len == currentLen, copy the new value.
 			if (len == currentLen)
 			{
 				std::memcpy(extension->value, value.c_str(), len);
@@ -634,7 +637,7 @@ namespace RTC
 						if (lastExtensionPtr < ptr)
 						{
 							std::memmove(lastExtensionPtr, ptr, tempExtensionLen + 1);
-							// the extension has move from ptr to lastExtensionPtr, store the One-Byte extension
+							// The extension has moved from ptr to lastExtensionPtr, store the One-Byte extension
 							// element in an array.
 							// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
 							this->oneByteExtensions[tempExtensionId - 1] =
@@ -657,7 +660,7 @@ namespace RTC
 					}
 				}
 
-				// Means move has end. Fill the rest buffer to 0u.
+				// Fill the rest buffer to 0u.
 				std::memset(lastExtensionPtr, 0, extensionEnd - lastExtensionPtr);
 
 				MS_DEBUG_DEV(
@@ -705,7 +708,7 @@ namespace RTC
 
 			auto* extension = it->second;
 			auto currentLen = extension->len;
-			// If len == currentLen, just memcpy.
+			// If len == currentLen, just copy the new value.
 			if (len == currentLen)
 			{
 				std::memcpy(extension->value, value.c_str(), len);
@@ -718,8 +721,8 @@ namespace RTC
 				uint8_t* ptr               = extensionStart;
 				size_t extensionsTotalSize = static_cast<size_t>(len + 2);
 				uint8_t* lastExtensionPtr  = ptr;
-				// Clear current extension, valueLen + 2 byteheader. we will rewrite after move all
-				// extension in right place.
+				// Clear current extension, valueLen + 2 byteheader. We will rewrite after moving all
+				// extensions in right place.
 				std::memset((void*)extension, 0, currentLen + 2);
 				// Two-Byte extensions can have length 0.
 				while (ptr + 1 < extensionEnd)
@@ -749,7 +752,7 @@ namespace RTC
 					}
 				}
 
-				// Means move has end. Fill the rest buffer to 0u.
+				// Fill the rest buffer to 0u.
 				std::memset(lastExtensionPtr, 0, extensionEnd - lastExtensionPtr);
 
 				auto paddedExtensionsTotalSize =
