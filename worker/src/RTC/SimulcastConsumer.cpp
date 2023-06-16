@@ -7,7 +7,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
-
+#include <stdint.h>
 namespace RTC
 {
 	/* Static. */
@@ -636,7 +636,7 @@ namespace RTC
 		// NOTE: When the Producer enables a higher stream, initially the bitrate of
 		// it could be less than the bitrate of a lower stream. That's why we
 		// iterate all streams here anyway.
-		for (auto sIdx{ static_cast<int16_t>(this->producerRtpStreams.size() - 1) }; sIdx >= 0; --sIdx)
+		for (int16_t sIdx{ static_cast<int16_t>(this->producerRtpStreams.size() - 1) }; sIdx >= 0; --sIdx)
 		{
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
 

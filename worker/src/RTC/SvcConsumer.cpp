@@ -7,6 +7,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#include <stdint.h>
 
 namespace RTC
 {
@@ -564,7 +565,7 @@ namespace RTC
 			// NOTE: When the Producer enables a higher spatial layer, initially the bitrate
 			// oft could be less than the bitrate of a lower one. That's why we iterate all
 			// spatial layers here anyway.
-			for (auto spatialLayer{ this->producerRtpStream->GetSpatialLayers() - 1 }; spatialLayer >= 0;
+			for ( uint8_t spatialLayer{ this->producerRtpStream->GetSpatialLayers() - 1 }; spatialLayer >= 0;
 			     --spatialLayer)
 			{
 				auto spatialLayerBitrate =

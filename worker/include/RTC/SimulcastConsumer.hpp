@@ -6,6 +6,7 @@
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
+#include "stdint.h"
 
 namespace RTC
 {

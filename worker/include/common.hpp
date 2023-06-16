@@ -22,6 +22,7 @@ typedef SSIZE_T ssize_t;
 #include <netinet/in.h> // sockaddr_in, sockaddr_in6
 #include <sys/socket.h> // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
 #endif
+#include <stdint.h>
 
 using ChannelReadCtx    = void*;
 using ChannelReadFreeFn = void (*)(uint8_t*, uint32_t, size_t);

@@ -7,6 +7,7 @@
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
 #include <map>
+#include <stdint.h>
 
 namespace RTC
 {
