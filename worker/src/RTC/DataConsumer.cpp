@@ -63,6 +63,9 @@ namespace RTC
 			this->protocol = data->protocol()->str();
 		}
 
+		// paused is set to false by default.
+		this->paused = data->paused();
+
 		// NOTE: This may throw.
 		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,

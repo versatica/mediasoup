@@ -25,11 +25,17 @@ namespace RTC
 		this->typeString = data->type()->str();
 
 		if (this->typeString == "sctp")
+		{
 			this->type = DataProducer::Type::SCTP;
+		}
 		else if (this->typeString == "direct")
+		{
 			this->type = DataProducer::Type::DIRECT;
+		}
 		else
+		{
 			MS_THROW_TYPE_ERROR("invalid type");
+		}
 
 		if (this->type == DataProducer::Type::SCTP)
 		{
@@ -44,10 +50,16 @@ namespace RTC
 		}
 
 		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ProduceDataRequest::VT_LABEL))
+		{
 			this->label = data->label()->str();
+		}
 
 		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ProduceDataRequest::VT_PROTOCOL))
+		{
 			this->protocol = data->protocol()->str();
+		}
+
+		this->paused = data->paused();
 
 		// NOTE: This may throw.
 		this->shared->channelMessageRegistrator->RegisterHandler(
@@ -82,7 +94,8 @@ namespace RTC
 		  this->typeString.c_str(),
 		  sctpStreamParametersOffset,
 		  this->label.c_str(),
-		  this->protocol.c_str());
+		  this->protocol.c_str(),
+		  this->paused);
 	}
 
 	flatbuffers::Offset<FBS::DataProducer::GetStatsResponse> DataProducer::FillBufferStats(
@@ -227,6 +240,12 @@ namespace RTC
 
 		this->messagesReceived++;
 		this->bytesReceived += len;
+
+		// If paused stop here.
+		if (this->paused)
+		{
+			return;
+		}
 
 		this->listener->OnDataProducerMessageReceived(this, ppid, msg, len);
 	}

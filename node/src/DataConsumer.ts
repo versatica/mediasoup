@@ -375,6 +375,56 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	}
 
 	/**
+	 * Pause the DataConsumer.
+	 */
+	async pause(): Promise<void>
+	{
+		logger.debug('pause()');
+
+		const wasPaused = this.#paused;
+
+		await this.#channel.request(
+			FbsRequest.Method.DATACONSUMER_PAUSE,
+			undefined,
+			undefined,
+			this.#internal.dataConsumerId
+		);
+
+		this.#paused = true;
+
+		// Emit observer event.
+		if (!wasPaused)
+		{
+			this.#observer.safeEmit('pause');
+		}
+	}
+
+	/**
+	 * Resume the DataConsumer.
+	 */
+	async resume(): Promise<void>
+	{
+		logger.debug('resume()');
+
+		const wasPaused = this.#paused;
+
+		await this.#channel.request(
+			FbsRequest.Method.DATACONSUMER_RESUME,
+			undefined,
+			undefined,
+			this.#internal.dataConsumerId
+		);
+
+		this.#paused = false;
+
+		// Emit observer event.
+		if (wasPaused)
+		{
+			this.#observer.safeEmit('resume');
+		}
+	}
+
+	/**
 	 * Set buffered amount low threshold.
 	 */
 	async setBufferedAmountLowThreshold(threshold: number): Promise<void>

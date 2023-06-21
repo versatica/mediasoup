@@ -335,7 +335,7 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 	}
 
 	/**
-	 * Pause the Producer.
+	 * Pause the DataProducer.
 	 */
 	async pause(): Promise<void>
 	{
@@ -427,9 +427,9 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 			message = Buffer.alloc(1);
 		}
 
-		let dataOffset = 0;
-
 		const builder = this.#channel.bufferBuilder;
+
+		let dataOffset = 0;
 
 		if (typeof message === 'string')
 		{
