@@ -29,19 +29,27 @@ namespace RTC
 		this->rtpParameters = RTC::RtpParameters(data->rtpParameters());
 
 		if (this->rtpParameters.encodings.empty())
+		{
 			MS_THROW_TYPE_ERROR("empty rtpParameters.encodings");
+		}
 
 		// All encodings must have SSRCs.
 		for (auto& encoding : this->rtpParameters.encodings)
 		{
 			if (encoding.ssrc == 0)
+			{
 				MS_THROW_TYPE_ERROR("invalid encoding in rtpParameters (missing ssrc)");
+			}
 			else if (encoding.hasRtx && encoding.rtx.ssrc == 0)
+			{
 				MS_THROW_TYPE_ERROR("invalid encoding in rtpParameters (missing rtx.ssrc)");
+			}
 		}
 
 		if (data->consumableRtpEncodings()->size() == 0)
+		{
 			MS_THROW_TYPE_ERROR("empty consumableRtpEncodings");
+		}
 
 		this->consumableRtpEncodings.reserve(data->consumableRtpEncodings()->size());
 
@@ -56,7 +64,9 @@ namespace RTC
 			auto& encoding = this->consumableRtpEncodings[i];
 
 			if (encoding.ssrc == 0u)
+			{
 				MS_THROW_TYPE_ERROR("wrong encoding in consumableRtpEncodings (missing ssrc)");
+			}
 		}
 
 		// Fill RTP header extension ids and their mapped values.
@@ -64,7 +74,9 @@ namespace RTC
 		for (auto& exten : this->rtpParameters.headerExtensions)
 		{
 			if (exten.id == 0u)
+			{
 				MS_THROW_TYPE_ERROR("RTP extension id cannot be 0");
+			}
 
 			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
@@ -109,7 +121,9 @@ namespace RTC
 		for (auto& codec : this->rtpParameters.codecs)
 		{
 			if (codec.mimeType.IsMediaCodec())
+			{
 				this->supportedCodecPayloadTypes[codec.payloadType] = true;
+			}
 		}
 
 		// Fill media SSRCs vector.
@@ -122,14 +136,20 @@ namespace RTC
 		for (auto& encoding : this->rtpParameters.encodings)
 		{
 			if (encoding.hasRtx)
+			{
 				this->rtxSsrcs.push_back(encoding.rtx.ssrc);
+			}
 		}
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
+		}
 		else
+		{
 			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
+		}
 	}
 
 	Consumer::~Consumer()
@@ -160,22 +180,34 @@ namespace RTC
 		for (auto i = 0; i < 128; ++i)
 		{
 			if (this->supportedCodecPayloadTypes[i])
+			{
 				supportedCodecPayloadTypes.push_back(i);
+			}
 		}
 
 		// Add traceEventTypes.
 		std::vector<flatbuffers::Offset<flatbuffers::String>> traceEventTypes;
 
 		if (this->traceEventTypes.rtp)
+		{
 			traceEventTypes.emplace_back(builder.CreateString("rtp"));
+		}
 		if (this->traceEventTypes.keyframe)
+		{
 			traceEventTypes.emplace_back(builder.CreateString("keyframe"));
+		}
 		if (this->traceEventTypes.nack)
+		{
 			traceEventTypes.emplace_back(builder.CreateString("nack"));
+		}
 		if (this->traceEventTypes.pli)
+		{
 			traceEventTypes.emplace_back(builder.CreateString("pli"));
+		}
 		if (this->traceEventTypes.fir)
+		{
 			traceEventTypes.emplace_back(builder.CreateString("fir"));
+		}
 
 		return FBS::Consumer::CreateBaseConsumerDumpDirect(
 		  builder,
@@ -213,7 +245,7 @@ namespace RTC
 				{
 					request->Accept();
 
-					return;
+					break;
 				}
 
 				const bool wasActive = IsActive();
@@ -223,7 +255,9 @@ namespace RTC
 				MS_DEBUG_DEV("Consumer paused [consumerId:%s]", this->id.c_str());
 
 				if (wasActive)
+				{
 					UserOnPaused();
+				}
 
 				request->Accept();
 
@@ -236,7 +270,7 @@ namespace RTC
 				{
 					request->Accept();
 
-					return;
+					break;
 				}
 
 				this->paused = false;
@@ -244,7 +278,9 @@ namespace RTC
 				MS_DEBUG_DEV("Consumer resumed [consumerId:%s]", this->id.c_str());
 
 				if (IsActive())
+				{
 					UserOnResumed();
+				}
 
 				request->Accept();
 
@@ -256,7 +292,9 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Consumer::SetPriorityRequest>();
 
 				if (body->priority() < 1u)
+				{
 					MS_THROW_TYPE_ERROR("wrong priority (must be higher than 0)");
+				}
 
 				this->priority = body->priority();
 
@@ -280,15 +318,25 @@ namespace RTC
 					const auto typeStr = type->str();
 
 					if (typeStr == "rtp")
+					{
 						newTraceEventTypes.rtp = true;
+					}
 					else if (typeStr == "keyframe")
+					{
 						newTraceEventTypes.keyframe = true;
+					}
 					else if (typeStr == "nack")
+					{
 						newTraceEventTypes.nack = true;
+					}
 					else if (typeStr == "pli")
+					{
 						newTraceEventTypes.pli = true;
+					}
 					else if (typeStr == "fir")
+					{
 						newTraceEventTypes.fir = true;
+					}
 				}
 
 				this->traceEventTypes = newTraceEventTypes;
@@ -310,7 +358,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->transportConnected)
+		{
 			return;
+		}
 
 		this->transportConnected = true;
 
@@ -324,7 +374,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->transportConnected)
+		{
 			return;
+		}
 
 		this->transportConnected = false;
 
@@ -338,7 +390,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->producerPaused)
+		{
 			return;
+		}
 
 		const bool wasActive = IsActive();
 
@@ -347,7 +401,9 @@ namespace RTC
 		MS_DEBUG_DEV("Producer paused [consumerId:%s]", this->id.c_str());
 
 		if (wasActive)
+		{
 			UserOnPaused();
+		}
 
 		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::CONSUMER_PRODUCER_PAUSE);
 	}
@@ -357,14 +413,18 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->producerPaused)
+		{
 			return;
+		}
 
 		this->producerPaused = false;
 
 		MS_DEBUG_DEV("Producer resumed [consumerId:%s]", this->id.c_str());
 
 		if (IsActive())
+		{
 			UserOnResumed();
+		}
 
 		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::CONSUMER_PRODUCER_RESUME);
 	}
@@ -433,7 +493,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->traceEventTypes.pli)
+		{
 			return;
+		}
 
 		auto traceInfo =
 		  FBS::Consumer::CreatePliTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
@@ -454,7 +516,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->traceEventTypes.fir)
+		{
 			return;
+		}
 
 		auto traceInfo =
 		  FBS::Consumer::CreateFirTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
@@ -475,7 +539,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->traceEventTypes.nack)
+		{
 			return;
+		}
 
 		auto notification = FBS::Consumer::CreateTraceNotification(
 		  this->shared->channelNotifier->GetBufferBuilder(),

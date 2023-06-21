@@ -128,6 +128,46 @@ namespace RTC
 				break;
 			}
 
+			case Channel::ChannelRequest::Method::DATA_PRODUCER_PAUSE:
+			{
+				if (this->paused)
+				{
+					request->Accept();
+
+					break;
+				}
+
+				this->paused = true;
+
+				MS_DEBUG_DEV("DataProducer paused [dataProducerId:%s]", this->id.c_str());
+
+				this->listener->OnDataProducerPaused(this);
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::DATA_PRODUCER_RESUME:
+			{
+				if (!this->paused)
+				{
+					request->Accept();
+
+					break;
+				}
+
+				this->paused = false;
+
+				MS_DEBUG_DEV("DataProducer resumed [dataProducerId:%s]", this->id.c_str());
+
+				this->listener->OnDataProducerResumed(this);
+
+				request->Accept();
+
+				break;
+			}
+
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->methodCStr);

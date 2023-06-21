@@ -87,6 +87,8 @@ namespace RTC
 		  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) override;
 		void OnTransportNewDataProducer(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
 		void OnTransportDataProducerClosed(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
+		void OnTransportDataProducerPaused(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
+		void OnTransportDataProducerResumed(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
 		void OnTransportDataProducerMessageReceived(
 		  RTC::Transport* transport,
 		  RTC::DataProducer* dataProducer,

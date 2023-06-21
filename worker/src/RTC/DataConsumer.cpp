@@ -135,6 +135,42 @@ namespace RTC
 				break;
 			}
 
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_PAUSE:
+			{
+				if (this->paused)
+				{
+					request->Accept();
+
+					break;
+				}
+
+				this->paused = true;
+
+				MS_DEBUG_DEV("DataConsumer paused [dataConsumerId:%s]", this->id.c_str());
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::DATA_CONSUMER_RESUME:
+			{
+				if (!this->paused)
+				{
+					request->Accept();
+
+					break;
+				}
+
+				this->paused = false;
+
+				MS_DEBUG_DEV("DataConsumer resumed [dataConsumerId:%s]", this->id.c_str());
+
+				request->Accept();
+
+				break;
+			}
+
 			case Channel::ChannelRequest::Method::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
 			{
 				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
@@ -264,6 +300,38 @@ namespace RTC
 		this->transportConnected = false;
 
 		MS_DEBUG_DEV("Transport disconnected [dataConsumerId:%s]", this->id.c_str());
+	}
+
+	void DataConsumer::DataProducerPaused()
+	{
+		MS_TRACE();
+
+		if (this->dataProducerPaused)
+		{
+			return;
+		}
+
+		this->dataProducerPaused = true;
+
+		MS_DEBUG_DEV("DataProducer paused [dataConsumerId:%s]", this->id.c_str());
+
+		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::DATA_CONSUMER_PRODUCER_PAUSE);
+	}
+
+	void Consumer::DataProducerResumed()
+	{
+		MS_TRACE();
+
+		if (!this->dataProducerPaused)
+		{
+			return;
+		}
+
+		this->dataProducerPaused = false;
+
+		MS_DEBUG_DEV("DataProducer resumed [dataConsumerId:%s]", this->id.c_str());
+
+		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::DATA_CONSUMER_PRODUCER_RESUME);
 	}
 
 	void DataConsumer::SctpAssociationConnected()

@@ -849,6 +849,30 @@ namespace RTC
 		this->mapDataProducerDataConsumers.erase(mapDataProducerDataConsumersIt);
 	}
 
+	inline void Router::OnTransportDataProducerPaused(RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
+	{
+		MS_TRACE();
+
+		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
+
+		for (auto* dataConsumer : dataConsumers)
+		{
+			dataConsumer->DataProducerPaused();
+		}
+	}
+
+	inline void Router::OnTransportDataProducerResumed(RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
+	{
+		MS_TRACE();
+
+		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
+
+		for (auto* dataConsumer : dataConsumers)
+		{
+			dataConsumer->DataProducerResumed();
+		}
+	}
+
 	inline void Router::OnTransportDataProducerMessageReceived(
 	  RTC::Transport* /*transport*/,
 	  RTC::DataProducer* dataProducer,
@@ -860,9 +884,9 @@ namespace RTC
 
 		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
 
-		for (auto* consumer : dataConsumers)
+		for (auto* dataConsumer : dataConsumers)
 		{
-			consumer->SendMessage(ppid, msg, len);
+			dataConsumer->SendMessage(ppid, msg, len);
 		}
 	}
 
@@ -874,7 +898,9 @@ namespace RTC
 		auto mapDataProducersIt = this->mapDataProducers.find(dataProducerId);
 
 		if (mapDataProducersIt == this->mapDataProducers.end())
+		{
 			MS_THROW_ERROR("DataProducer not found [dataProducerId:%s]", dataProducerId.c_str());
+		}
 
 		auto* dataProducer                  = mapDataProducersIt->second;
 		auto mapDataProducerDataConsumersIt = this->mapDataProducerDataConsumers.find(dataProducer);

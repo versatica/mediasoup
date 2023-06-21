@@ -2656,6 +2656,20 @@ namespace RTC
 		this->listener->OnTransportDataProducerMessageReceived(this, dataProducer, ppid, msg, len);
 	}
 
+	inline void Transport::OnDataProducerPaused(RTC::DataProducer* dataProducer)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportDataProducerPaused(this, dataProducer);
+	}
+
+	inline void Transport::OnDataProducerResumed(RTC::DataProducer* dataProducer)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportDataProducerResumed(this, dataProducer);
+	}
+
 	inline void Transport::OnDataConsumerSendMessage(
 	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
 	{

@@ -78,6 +78,16 @@ namespace RTC
 		}
 		void TransportConnected();
 		void TransportDisconnected();
+		bool IsPaused() const
+		{
+			return this->paused;
+		}
+		bool IsDataProducerPaused() const
+		{
+			return this->dataProducerPaused;
+		}
+		void DataProducerPaused();
+		void DataProducerResumed();
 		void SctpAssociationConnected();
 		void SctpAssociationClosed();
 		void SctpAssociationBufferedAmount(uint32_t bufferedAmount);
@@ -108,6 +118,8 @@ namespace RTC
 		std::string protocol;
 		bool transportConnected{ false };
 		bool sctpAssociationConnected{ false };
+		bool paused{ false };
+		bool dataProducerPaused{ false };
 		bool dataProducerClosed{ false };
 		size_t messagesSent{ 0u };
 		size_t bytesSent{ 0u };
