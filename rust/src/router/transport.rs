@@ -634,6 +634,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             sctp_stream_parameters,
             label,
             protocol,
+            paused,
             app_data,
         } = data_producer_options;
 
@@ -651,6 +652,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                     sctp_stream_parameters,
                     label,
                     protocol,
+                    paused,
                 },
             )
             .await
@@ -662,6 +664,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             response.sctp_stream_parameters,
             response.label,
             response.protocol,
+            response.paused,
             Arc::clone(self.executor()),
             self.channel().clone(),
             app_data,
@@ -681,6 +684,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             ordered,
             max_packet_life_time,
             max_retransmits,
+            paused,
             app_data,
         } = data_consumer_options;
 
@@ -745,6 +749,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                     sctp_stream_parameters,
                     label: data_producer.label().clone(),
                     protocol: data_producer.protocol().clone(),
+                    paused,
                 },
             )
             .await
@@ -756,9 +761,11 @@ pub(super) trait TransportImpl: TransportGeneric {
             response.sctp_stream_parameters,
             response.label,
             response.protocol,
+            response.paused,
             data_producer,
             Arc::clone(self.executor()),
             self.channel().clone(),
+            response.data_producer_paused,
             app_data,
             Arc::new(self.clone()),
             transport_type == TransportType::Direct,

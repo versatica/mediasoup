@@ -3,15 +3,14 @@ mod tests;
 
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
-    DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
-    DataProducerSendNotification,
+    DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest, DataProducerPauseRequest, DataProducerResumeRequest, DataProducerSendNotification,
 };
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, NotificationError, RequestError};
 use async_executor::Executor;
-use event_listener_primitives::{BagOnce, HandlerId};
+use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -41,6 +40,8 @@ pub struct DataProducerOptions {
     pub label: String,
     /// Name of the sub-protocol used by this DataChannel.
     pub protocol: String,
+    /// Whether the data producer must start in paused mode. Default false.
+    pub paused: bool,
     /// Custom application data.
     pub app_data: AppData,
 }
@@ -56,6 +57,7 @@ impl DataProducerOptions {
             sctp_stream_parameters: Some(sctp_stream_parameters),
             label: "".to_string(),
             protocol: "".to_string(),
+            paused: false,
             app_data: AppData::default(),
         }
     }
@@ -68,6 +70,7 @@ impl DataProducerOptions {
             sctp_stream_parameters: Some(sctp_stream_parameters),
             label: "".to_string(),
             protocol: "".to_string(),
+            paused: false,
             app_data: AppData::default(),
         }
     }
@@ -80,6 +83,7 @@ impl DataProducerOptions {
             sctp_stream_parameters: None,
             label: "".to_string(),
             protocol: "".to_string(),
+            paused: false,
             app_data: AppData::default(),
         }
     }
@@ -105,6 +109,7 @@ pub struct DataProducerDump {
     pub label: String,
     pub protocol: String,
     pub sctp_stream_parameters: Option<SctpStreamParameters>,
+    pub paused: bool,
 }
 
 /// RTC statistics of the data producer.
@@ -124,6 +129,8 @@ pub struct DataProducerStat {
 #[derive(Default)]
 #[allow(clippy::type_complexity)]
 struct Handlers {
+    pause: Bag<Arc<dyn Fn() + Send + Sync>>,
+    resume: Bag<Arc<dyn Fn() + Send + Sync>>,
     transport_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -134,6 +141,7 @@ struct Inner {
     sctp_stream_parameters: Option<SctpStreamParameters>,
     label: String,
     protocol: String,
+    paused: AtomicBool,
     direct: bool,
     executor: Arc<Executor<'static>>,
     channel: Channel,
@@ -193,6 +201,7 @@ impl fmt::Debug for RegularDataProducer {
             .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
             .field("label", &self.inner.label)
             .field("protocol", &self.inner.protocol)
+            .field("paused", &self.inner.paused)
             .field("transport", &self.inner.transport)
             .field("closed", &self.inner.closed)
             .finish()
@@ -220,6 +229,7 @@ impl fmt::Debug for DirectDataProducer {
             .field("sctp_stream_parameters", &self.inner.sctp_stream_parameters)
             .field("label", &self.inner.label)
             .field("protocol", &self.inner.protocol)
+            .field("paused", &self.inner.paused)
             .field("transport", &self.inner.transport)
             .field("closed", &self.inner.closed)
             .finish()
@@ -266,6 +276,7 @@ impl DataProducer {
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
+        paused: bool,
         executor: Arc<Executor<'static>>,
         channel: Channel,
         app_data: AppData,
@@ -294,6 +305,7 @@ impl DataProducer {
             sctp_stream_parameters,
             label,
             protocol,
+            paused: AtomicBool::new(paused),
             direct,
             executor,
             channel,
@@ -334,6 +346,12 @@ impl DataProducer {
     #[must_use]
     pub fn sctp_stream_parameters(&self) -> Option<SctpStreamParameters> {
         self.inner().sctp_stream_parameters
+    }
+
+    /// Whether the DataProducer is paused.
+    #[must_use]
+    pub fn paused(&self) -> bool {
+        self.inner().paused.load(Ordering::SeqCst)
     }
 
     /// The data producer label.
@@ -384,6 +402,46 @@ impl DataProducer {
             .await
     }
 
+    /// Pauses the data producer (no message is sent to its associated data consumers).
+    /// Calls [`DataConsumer::on_data_producer_pause`](crate::data_consumer::DataConsumer::on_data_producer_pause)
+    /// callback on all its associated data consumers.
+    pub async fn pause(&self) -> Result<(), RequestError> {
+        debug!("pause()");
+
+        self.inner()
+            .channel
+            .request(self.id(), DataProducerPauseRequest {})
+            .await?;
+
+        let was_paused = self.inner().paused.swap(true, Ordering::SeqCst);
+
+        if !was_paused {
+            self.inner().handlers.pause.call_simple();
+        }
+
+        Ok(())
+    }
+
+    /// Resumes the data producer (messages are sent to its associated data consumers).
+    /// Calls [`DataConsumer::on_data_producer_resume`](crate::data_consumer::DataConsumer::on_data_producer_resume)
+    /// callback on all its associated data consumers.
+    pub async fn resume(&self) -> Result<(), RequestError> {
+        debug!("resume()");
+
+        self.inner()
+            .channel
+            .request(self.id(), DataProducerResumeRequest {})
+            .await?;
+
+        let was_paused = self.inner().paused.swap(false, Ordering::SeqCst);
+
+        if was_paused {
+            self.inner().handlers.resume.call_simple();
+        }
+
+        Ok(())
+    }
+
     /// Callback is called when the transport this data producer belongs to is closed for whatever
     /// reason. The producer itself is also closed. A `on_data_producer_close` callback is called on
     /// all its associated consumers.
@@ -392,6 +450,16 @@ impl DataProducer {
             .handlers
             .transport_close
             .add(Box::new(callback))
+    }
+
+    /// Callback is called when the data producer is paused.
+    pub fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+        self.inner().handlers.pause.add(Arc::new(callback))
+    }
+
+    /// Callback is called when the data producer is resumed.
+    pub fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+        self.inner().handlers.resume.add(Arc::new(callback))
     }
 
     /// Callback is called when the producer is closed for whatever reason.

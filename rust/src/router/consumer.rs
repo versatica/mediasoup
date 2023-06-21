@@ -4,8 +4,8 @@ mod tests;
 use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventRequest,
-    ConsumerGetStatsRequest, ConsumerPauseRequest, ConsumerRequestKeyFrameRequest,
-    ConsumerResumeRequest, ConsumerSetPreferredLayersRequest, ConsumerSetPriorityRequest,
+    ConsumerGetStatsRequest, ConsumerPauseRequest, ConsumerResumeRequest, ConsumerRequestKeyFrameRequest,
+    ConsumerSetPreferredLayersRequest, ConsumerSetPriorityRequest,
 };
 use crate::producer::{Producer, ProducerId, ProducerStat, ProducerType, WeakProducer};
 use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};

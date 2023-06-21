@@ -5,7 +5,7 @@ use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
     DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
-    DataConsumerGetStatsRequest, DataConsumerSendRequest,
+    DataConsumerGetStatsRequest, DataConsumerPauseRequest, DataConsumerResumeRequest, DataConsumerSendRequest,
     DataConsumerSetBufferedAmountLowThresholdRequest,
 };
 use crate::sctp_parameters::SctpStreamParameters;
@@ -51,6 +51,8 @@ pub struct DataConsumerOptions {
     /// Defaults to the value in the [`DataProducer`](crate::data_producer::DataProducer) if it
     /// has type `Sctp` or unset if it has type `Direct`.
     pub(super) max_retransmits: Option<u16>,
+    /// Whether the DataConsumer must start in paused mode. Default false.
+    pub paused: bool,
     /// Custom application data.
     pub app_data: AppData,
 }
@@ -65,6 +67,7 @@ impl DataConsumerOptions {
             ordered: None,
             max_packet_life_time: None,
             max_retransmits: None,
+            paused: false,
             app_data: AppData::default(),
         }
     }
@@ -77,6 +80,7 @@ impl DataConsumerOptions {
             ordered: Some(true),
             max_packet_life_time: None,
             max_retransmits: None,
+            paused: false,
             app_data: AppData::default(),
         }
     }
@@ -89,6 +93,7 @@ impl DataConsumerOptions {
             ordered: None,
             max_packet_life_time: None,
             max_retransmits: None,
+            paused: false,
             app_data: AppData::default(),
         }
     }
@@ -105,6 +110,7 @@ impl DataConsumerOptions {
             ordered: None,
             max_packet_life_time: Some(max_packet_life_time),
             max_retransmits: None,
+            paused: false,
             app_data: AppData::default(),
         }
     }
@@ -120,6 +126,7 @@ impl DataConsumerOptions {
             ordered: None,
             max_packet_life_time: None,
             max_retransmits: Some(max_retransmits),
+            paused: false,
             app_data: AppData::default(),
         }
     }
@@ -137,6 +144,8 @@ pub struct DataConsumerDump {
     pub protocol: String,
     pub sctp_stream_parameters: Option<SctpStreamParameters>,
     pub buffered_amount_low_threshold: u32,
+    pub paused: bool,
+    pub data_producer_paused: bool,
 }
 
 /// RTC statistics of the data consumer.
@@ -168,6 +177,8 @@ pub enum DataConsumerType {
 #[serde(tag = "event", rename_all = "lowercase", content = "data")]
 enum Notification {
     DataProducerClose,
+    DataProducerPause,
+    DataProducerResume,
     SctpSendBufferFull,
     // TODO.
     // Message { ppid: u32 },
@@ -184,6 +195,10 @@ struct Handlers {
     sctp_send_buffer_full: Bag<Arc<dyn Fn() + Send + Sync>>,
     buffered_amount_low: Bag<Arc<dyn Fn(u32) + Send + Sync>>,
     data_producer_close: BagOnce<Box<dyn FnOnce() + Send>>,
+    pause: Bag<Arc<dyn Fn() + Send + Sync>>,
+    resume: Bag<Arc<dyn Fn() + Send + Sync>>,
+    data_producer_pause: Bag<Arc<dyn Fn() + Send + Sync>>,
+    data_producer_resume: Bag<Arc<dyn Fn() + Send + Sync>>,
     transport_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
@@ -196,6 +211,8 @@ struct Inner {
     protocol: String,
     data_producer_id: DataProducerId,
     direct: bool,
+    paused: Arc<Mutex<bool>>,
+    data_producer_paused: Arc<Mutex<bool>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
     handlers: Arc<Handlers>,
@@ -263,6 +280,8 @@ impl fmt::Debug for RegularDataConsumer {
             .field("label", &self.inner.label)
             .field("protocol", &self.inner.protocol)
             .field("data_producer_id", &self.inner.data_producer_id)
+            .field("paused", &self.inner.paused)
+            .field("data_producer_paused", &self.inner.data_producer_paused)
             .field("transport", &self.inner.transport)
             .field("closed", &self.inner.closed)
             .finish()
@@ -291,6 +310,8 @@ impl fmt::Debug for DirectDataConsumer {
             .field("label", &self.inner.label)
             .field("protocol", &self.inner.protocol)
             .field("data_producer_id", &self.inner.data_producer_id)
+            .field("paused", &self.inner.paused)
+            .field("data_producer_paused", &self.inner.data_producer_paused)
             .field("transport", &self.inner.transport)
             .field("closed", &self.inner.closed)
             .finish()
@@ -338,9 +359,11 @@ impl DataConsumer {
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
+        paused: bool,
         data_producer: DataProducer,
         executor: Arc<Executor<'static>>,
         channel: Channel,
+        data_producer_paused: bool,
         app_data: AppData,
         transport: Arc<dyn Transport>,
         direct: bool,
@@ -349,11 +372,16 @@ impl DataConsumer {
 
         let handlers = Arc::<Handlers>::default();
         let closed = Arc::new(AtomicBool::new(false));
+        let paused = Arc::new(Mutex::new(paused));
+        #[allow(clippy::mutex_atomic)]
+        let data_producer_paused = Arc::new(Mutex::new(data_producer_paused));
 
         let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
             let closed = Arc::clone(&closed);
+            let paused = Arc::clone(&paused);
+            let data_producer_paused = Arc::clone(&data_producer_paused);
             let inner_weak = Arc::clone(&inner_weak);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
@@ -376,6 +404,29 @@ impl DataConsumer {
                                         })
                                         .detach();
                                 }
+                            }
+                        }
+                        Notification::DataProducerPause => {
+                            let mut data_producer_paused = data_producer_paused.lock();
+                            let was_paused = *paused.lock() || *data_producer_paused;
+                            *data_producer_paused = true;
+
+                            handlers.data_producer_pause.call_simple();
+
+                            if !was_paused {
+                                handlers.pause.call_simple();
+                            }
+                        }
+                        Notification::DataProducerResume => {
+                            let mut data_producer_paused = data_producer_paused.lock();
+                            let paused = *paused.lock();
+                            let was_paused = paused || *data_producer_paused;
+                            *data_producer_paused = false;
+
+                            handlers.data_producer_resume.call_simple();
+
+                            if was_paused && !paused {
+                                handlers.resume.call_simple();
                             }
                         }
                         Notification::SctpSendBufferFull => {
@@ -427,6 +478,8 @@ impl DataConsumer {
             label,
             protocol,
             data_producer_id: data_producer.id(),
+            paused,
+            data_producer_paused,
             direct,
             executor,
             channel,
@@ -469,6 +522,19 @@ impl DataConsumer {
     #[must_use]
     pub fn r#type(&self) -> DataConsumerType {
         self.inner().r#type
+    }
+
+    /// Whether the data consumer is paused. It does not take into account whether the
+    /// associated data producer is paused.
+    #[must_use]
+    pub fn paused(&self) -> bool {
+        *self.inner().paused.lock()
+    }
+
+    /// Whether the associate data producer is paused.
+    #[must_use]
+    pub fn producer_paused(&self) -> bool {
+        *self.inner().data_producer_paused.lock()
     }
 
     /// The SCTP stream parameters (just if the data consumer type is `Sctp`).
@@ -523,6 +589,46 @@ impl DataConsumer {
             .channel
             .request(self.id(), DataConsumerGetStatsRequest {})
             .await
+    }
+
+    /// Pauses the data consumer (no mossage is sent to the consuming endpoint).
+    pub async fn pause(&self) -> Result<(), RequestError> {
+        debug!("pause()");
+
+        self.inner()
+            .channel
+            .request(self.id(), DataConsumerPauseRequest {})
+            .await?;
+
+        let mut paused = self.inner().paused.lock();
+        let was_paused = *paused || *self.inner().data_producer_paused.lock();
+        *paused = true;
+
+        if !was_paused {
+            self.inner().handlers.pause.call_simple();
+        }
+
+        Ok(())
+    }
+
+    /// Resumes the data consumer (messages are sent again to the consuming endpoint).
+    pub async fn resume(&self) -> Result<(), RequestError> {
+        debug!("resume()");
+
+        self.inner()
+            .channel
+            .request(self.id(), DataConsumerResumeRequest {})
+            .await?;
+
+        let mut paused = self.inner().paused.lock();
+        let was_paused = *paused || *self.inner().data_producer_paused.lock();
+        *paused = false;
+
+        if was_paused {
+            self.inner().handlers.resume.call_simple();
+        }
+
+        Ok(())
     }
 
     /// Returns the number of bytes of data currently buffered to be sent over the underlying SCTP
@@ -609,6 +715,28 @@ impl DataConsumer {
             .handlers
             .data_producer_close
             .add(Box::new(callback))
+    }
+
+    /// Callback is called when the data consumer or its associated data producer is
+    /// paused and, as result, the data consumer becomes paused.
+    pub fn on_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+        self.inner().handlers.pause.add(Arc::new(callback))
+    }
+
+    /// Callback is called when the data consumer or its associated data producer is
+    /// resumed and, as result, the data consumer is no longer paused.
+    pub fn on_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+        self.inner().handlers.resume.add(Arc::new(callback))
+    }
+
+    /// Callback is called when the associated data producer is paused.
+    pub fn on_data_producer_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+        self.inner().handlers.data_producer_pause.add(Arc::new(callback))
+    }
+
+    /// Callback is called when the associated data producer is resumed.
+    pub fn on_producer_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+        self.inner().handlers.data_producer_resume.add(Arc::new(callback))
     }
 
     /// Callback is called when the transport this data consumer belongs to is closed for whatever

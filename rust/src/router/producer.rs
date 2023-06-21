@@ -617,7 +617,7 @@ impl Producer {
         Ok(())
     }
 
-    /// Resumes the producer (no RTP is sent to its associated consumers). Calls
+    /// Resumes the producer (RTP is sent to its associated consumers). Calls
     /// [`Consumer::on_producer_resume`](crate::consumer::Consumer::on_producer_resume) callback on
     /// all its associated consumers.
     pub async fn resume(&self) -> Result<(), RequestError> {
