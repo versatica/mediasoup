@@ -1,5 +1,5 @@
-#ifndef MS_RTC_DIRECT_TRANSPORT_HPP
-#define MS_RTC_DIRECT_TRANSPORT_HPP
+#ifndef MS_RTC_DIRECTTRANSPORT_HPP
+#define MS_RTC_DIRECTTRANSPORT_HPP
 
 #include "RTC/Shared.hpp"
 #include "RTC/Transport.hpp"

@@ -1,5 +1,5 @@
-#ifndef MS_RTC_WEBRTC_SERVER_HPP
-#define MS_RTC_WEBRTC_SERVER_HPP
+#ifndef MS_RTC_WEBRTCSERVER_HPP
+#define MS_RTC_WEBRTCSERVER_HPP
 
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/IceCandidate.hpp"

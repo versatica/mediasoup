@@ -425,7 +425,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::PLAIN_TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::Method::PLAINTRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->connectCalled)

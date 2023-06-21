@@ -336,7 +336,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_ACTIVESPEAKEROBSERVER:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateActiveSpeakerObserverRequest>();
 				auto rtpObserverId = body->activeSpeakerObserverId()->str();
@@ -357,7 +357,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_AUDIOLEVELOBSERVER:
 			{
 				const auto* body   = request->data->body_as<FBS::Router::CreateAudioLevelObserverRequest>();
 				auto rtpObserverId = body->rtpObserverId()->str();
@@ -403,7 +403,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CLOSE_RTP_OBSERVER:
+			case Channel::ChannelRequest::Method::ROUTER_CLOSE_RTPOBSERVER:
 			{
 				const auto* body   = request->data->body_as<FBS::Router::CloseRtpObserverRequest>();
 				auto rtpObserverId = body->rtpObserverId()->str();

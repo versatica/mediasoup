@@ -252,7 +252,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::PIPE_TRANSPORT_CONNECT:
+			case Channel::ChannelRequest::Method::PIPETRANSPORT_CONNECT:
 			{
 				// Ensure this method is not called twice.
 				if (this->tuple)

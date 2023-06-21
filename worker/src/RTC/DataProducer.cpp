@@ -110,7 +110,7 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::DATA_PRODUCER_DUMP:
+			case Channel::ChannelRequest::Method::DATAPRODUCER_DUMP:
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
@@ -119,7 +119,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_PRODUCER_GET_STATS:
+			case Channel::ChannelRequest::Method::DATAPRODUCER_GET_STATS:
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
@@ -128,7 +128,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_PRODUCER_PAUSE:
+			case Channel::ChannelRequest::Method::DATAPRODUCER_PAUSE:
 			{
 				if (this->paused)
 				{
@@ -148,7 +148,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_PRODUCER_RESUME:
+			case Channel::ChannelRequest::Method::DATAPRODUCER_RESUME:
 			{
 				if (!this->paused)
 				{
@@ -181,7 +181,7 @@ namespace RTC
 
 		switch (notification->event)
 		{
-			case Channel::ChannelNotification::Event::DATA_PRODUCER_SEND:
+			case Channel::ChannelNotification::Event::DATAPRODUCER_SEND:
 			{
 				const auto* body = notification->data->body_as<FBS::DataProducer::SendNotification>();
 				const uint8_t* data{ nullptr };

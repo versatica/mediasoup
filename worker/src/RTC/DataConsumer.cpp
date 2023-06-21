@@ -117,7 +117,7 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_DUMP:
+			case Channel::ChannelRequest::Method::DATACONSUMER_DUMP:
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
@@ -126,7 +126,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_GET_STATS:
+			case Channel::ChannelRequest::Method::DATACONSUMER_GET_STATS:
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
@@ -135,7 +135,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_PAUSE:
+			case Channel::ChannelRequest::Method::DATACONSUMER_PAUSE:
 			{
 				if (this->paused)
 				{
@@ -153,7 +153,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_RESUME:
+			case Channel::ChannelRequest::Method::DATACONSUMER_RESUME:
 			{
 				if (!this->paused)
 				{
@@ -171,7 +171,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
+			case Channel::ChannelRequest::Method::DATACONSUMER_GET_BUFFERED_AMOUNT:
 			{
 				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
@@ -193,7 +193,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
+			case Channel::ChannelRequest::Method::DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
 			{
 				if (this->GetType() != DataConsumer::Type::SCTP)
 				{
@@ -226,7 +226,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_SEND:
+			case Channel::ChannelRequest::Method::DATACONSUMER_SEND:
 			{
 				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
@@ -315,7 +315,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer paused [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::DATA_CONSUMER_PRODUCER_PAUSE);
+		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::DATACONSUMER_PRODUCER_PAUSE);
 	}
 
 	void Consumer::DataProducerResumed()
@@ -331,7 +331,7 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer resumed [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::DATA_CONSUMER_PRODUCER_RESUME);
+		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::DATACONSUMER_PRODUCER_RESUME);
 	}
 
 	void DataConsumer::SctpAssociationConnected()
