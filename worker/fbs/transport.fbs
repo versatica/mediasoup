@@ -23,6 +23,19 @@ table RestartIceResponse {
   ice_lite:bool;
 }
 
+table ProduceRequest {
+  producer_id:string (required);
+  kind:FBS.RtpParameters.MediaKind;
+  rtp_parameters:FBS.RtpParameters.RtpParameters (required);
+  rtp_mapping:FBS.RtpParameters.RtpMapping (required);
+  key_frame_request_delay:uint16;
+  paused:bool = false;
+}
+
+table ProduceResponse {
+  type:FBS.RtpParameters.Type;
+}
+
 table ConsumeRequest {
   consumer_id:string (required);
   producer_id:string (required);
@@ -42,25 +55,13 @@ table ConsumeResponse {
   preferred_layers:FBS.Consumer.ConsumerLayers;
 }
 
-table ProduceRequest {
-  producer_id:string (required);
-  kind:FBS.RtpParameters.MediaKind;
-  rtp_parameters:FBS.RtpParameters.RtpParameters (required);
-  rtp_mapping:FBS.RtpParameters.RtpMapping (required);
-  key_frame_request_delay:uint16;
-  paused:bool = false;
-}
-
-table ProduceResponse {
-  type:FBS.RtpParameters.Type;
-}
-
 table ProduceDataRequest {
   data_producer_id:string (required);
   type:string (required);
   sctp_stream_parameters:FBS.SctpParameters.SctpStreamParameters;
   label:string;
   protocol:string;
+  paused:bool = false;
 }
 
 table ConsumeDataRequest {
@@ -70,6 +71,7 @@ table ConsumeDataRequest {
   sctp_stream_parameters:FBS.SctpParameters.SctpStreamParameters;
   label:string;
   protocol:string;
+  paused:bool = false;
 }
 
 table Tuple {

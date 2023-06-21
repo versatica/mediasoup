@@ -709,7 +709,9 @@ namespace RTC
 
 		// Update the Consumer status based on the Producer status.
 		if (producer->IsPaused())
+		{
 			consumer->ProducerPaused();
+		}
 
 		// Insert the Consumer in the maps.
 		auto& consumers = mapProducerConsumersIt->second;
@@ -849,7 +851,8 @@ namespace RTC
 		this->mapDataProducerDataConsumers.erase(mapDataProducerDataConsumersIt);
 	}
 
-	inline void Router::OnTransportDataProducerPaused(RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
+	inline void Router::OnTransportDataProducerPaused(
+	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
 
@@ -861,7 +864,8 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportDataProducerResumed(RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
+	inline void Router::OnTransportDataProducerResumed(
+	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
 	{
 		MS_TRACE();
 
@@ -911,6 +915,12 @@ namespace RTC
 		MS_ASSERT(
 		  this->mapDataConsumerDataProducer.find(dataConsumer) == this->mapDataConsumerDataProducer.end(),
 		  "DataConsumer already present in mapDataConsumerDataProducer");
+
+		// Update the DataConsumer status based on the DataProducer status.
+		if (dataProducer->IsPaused())
+		{
+			dataConsumer->DataProducerPaused();
+		}
 
 		// Insert the DataConsumer in the maps.
 		auto& dataConsumers = mapDataProducerDataConsumersIt->second;

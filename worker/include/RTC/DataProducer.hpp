@@ -24,8 +24,8 @@ namespace RTC
 			virtual void OnDataProducerReceiveData(RTC::DataProducer* producer, size_t len) = 0;
 			virtual void OnDataProducerMessageReceived(
 			  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
-			virtual void OnDataProducerPaused(RTC::DataProducer* dataProducer) = 0;
-			virtual void OnDataProducerResumed(RTC::DataProducer* dataProducer) = 0;
+			virtual void OnDataProducerPaused(RTC::DataProducer* dataProducer)                = 0;
+			virtual void OnDataProducerResumed(RTC::DataProducer* dataProducer)               = 0;
 		};
 
 	public:

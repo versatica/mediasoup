@@ -37,7 +37,7 @@ export type ConsumerOptions<ConsumerAppData extends AppData = AppData> =
 	rtpCapabilities: RtpCapabilities;
 
 	/**
-	 * Whether the Consumer must start in paused mode. Default false.
+	 * Whether the consumer must start in paused mode. Default false.
 	 *
 	 * When creating a video Consumer, it's recommended to set paused to true,
 	 * then transmit the Consumer parameters to the consuming endpoint and, once
@@ -187,12 +187,14 @@ export type ConsumerObserverEvents =
 	trace: [ConsumerTraceEventData];
 };
 
-export type SimpleConsumerDump = BaseConsumerDump & {
+export type SimpleConsumerDump = BaseConsumerDump &
+{
 	type: string;
 	rtpStream: RtpStreamDump;
 };
 
-export type SimulcastConsumerDump = BaseConsumerDump & {
+export type SimulcastConsumerDump = BaseConsumerDump &
+{
 	type: string;
 	rtpStream: RtpStreamDump;
 	preferredSpatialLayer: number;
@@ -205,7 +207,8 @@ export type SimulcastConsumerDump = BaseConsumerDump & {
 
 export type SvcConsumerDump = SimulcastConsumerDump;
 
-export type PipeConsumerDump = BaseConsumerDump & {
+export type PipeConsumerDump = BaseConsumerDump &
+{
 	type: string;
 	rtpStreams: RtpStreamDump[];
 };
@@ -229,20 +232,22 @@ type ConsumerData =
 	type: ConsumerType;
 };
 
-type BaseConsumerDump = {
+type BaseConsumerDump =
+{
 	id: string;
-	producerId:string;
-	kind:MediaKind;
-	rtpParameters:RtpParameters;
-	consumableRtpEncodings?:RtpEncodingParameters[];
-	supportedCodecPayloadTypes:number[];
-	traceEventTypes:string[];
-	paused:boolean;
-	producerPaused:boolean;
-	priority:number;
+	producerId: string;
+	kind: MediaKind;
+	rtpParameters: RtpParameters;
+	consumableRtpEncodings?: RtpEncodingParameters[];
+	supportedCodecPayloadTypes: number[];
+	traceEventTypes: string[];
+	paused: boolean;
+	producerPaused: boolean;
+	priority: number;
 };
 
-type RtpStreamParameters = {
+type RtpStreamParameters =
+{
 	encodingIdx: number;
 	ssrc: number;
 	payloadType: number;
@@ -261,22 +266,25 @@ type RtpStreamParameters = {
 	temporalLayers: number;
 };
 
-type RtpStreamDump = {
+type RtpStreamDump =
+{
 	params: RtpStreamParameters;
 	score: number;
 	rtxStream?: RtxStreamDump;
 };
 
-type RtxStreamParameters = {
-	ssrc:number;
-	payloadType:number;
-	mimeType:string;
+type RtxStreamParameters =
+{
+	ssrc: number;
+	payloadType: number;
+	mimeType: string;
 	clockRate: number;
-	rrid?:string;
-	cname:string;
+	rrid?: string;
+	cname: string;
 };
 
-type RtxStreamDump = {
+type RtxStreamDump =
+{
 	params: RtxStreamParameters;
 };
 
@@ -353,11 +361,11 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#appData = appData || {} as ConsumerAppData;
 		this.#paused = paused;
 		this.#producerPaused = producerPaused;
 		this.#score = score;
 		this.#preferredLayers = preferredLayers;
+		this.#appData = appData || {} as ConsumerAppData;
 
 		this.handleWorkerNotifications();
 	}
@@ -570,7 +578,7 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 
 		response.body(data);
 
-		return parseConsumerDumpResponse(data);
+		return parseConsumerDump(data);
 	}
 
 	/**
@@ -695,7 +703,8 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 
 			if (status.preferredLayers)
 			{
-				preferredLayers = {
+				preferredLayers =
+				{
 					spatialLayer  : status.preferredLayers.spatialLayer,
 					temporalLayer : status.preferredLayers.temporalLayer !== null ?
 						status.preferredLayers.temporalLayer :
@@ -1139,7 +1148,7 @@ function parsePipeConsumerDump(
 	};
 }
 
-function parseConsumerDumpResponse(data: FbsConsumer.DumpResponse): ConsumerDump
+function parseConsumerDump(data: FbsConsumer.DumpResponse): ConsumerDump
 {
 	switch (data.type())
 	{

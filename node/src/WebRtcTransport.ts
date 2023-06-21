@@ -477,7 +477,7 @@ export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
 
 		// Wait for response.
 		const response = await this.channel.request(
-			FbsRequest.Method.WEBRTC_TRANSPORT_CONNECT,
+			FbsRequest.Method.WEBRTCTRANSPORT_CONNECT,
 			FbsRequest.Body.FBS_WebRtcTransport_ConnectRequest,
 			requestOffset,
 			this.internal.transportId
@@ -512,7 +512,8 @@ export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
 
 		response.body(restartIceResponse);
 
-		const iceParameters = {
+		const iceParameters =
+		{
 			usernameFragment : restartIceResponse.usernameFragment()!,
 			password         : restartIceResponse.password()!,
 			iceLite          : restartIceResponse.iceLite()
@@ -763,7 +764,8 @@ function parseDtlsParameters(binary: FbsWebRtcTransport.DtlsParameters): DtlsPar
 	for (let i=0; i<binary.fingerprintsLength(); ++i)
 	{
 		const fbsFingerprint = binary.fingerprints(i)!;
-		const fingerPrint : DtlsFingerprint = {
+		const fingerPrint : DtlsFingerprint =
+		{
 			algorithm : fbsFingerprint.algorithm()!,
 			value     : fbsFingerprint.value()!
 		};

@@ -553,8 +553,8 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		const response = await this.#channel.request(
 			webRtcServer
-				? FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER
-				: FbsRequest.Method.ROUTER_CREATE_WEBRTC_TRANSPORT,
+				? FbsRequest.Method.ROUTER_CREATE_WEBRTCTRANSPORT_WITH_SERVER
+				: FbsRequest.Method.ROUTER_CREATE_WEBRTCTRANSPORT,
 			FbsRequest.Body.FBS_Router_CreateWebRtcTransportRequest,
 			requestOffset,
 			this.#internal.routerId
@@ -718,7 +718,7 @@ export class Router<RouterAppData extends AppData = AppData>
 		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
-			FbsRequest.Method.ROUTER_CREATE_PLAIN_TRANSPORT,
+			FbsRequest.Method.ROUTER_CREATE_PLAINTRANSPORT,
 			FbsRequest.Body.FBS_Router_CreatePlainTransportRequest,
 			requestOffset,
 			this.#internal.routerId
@@ -854,7 +854,7 @@ export class Router<RouterAppData extends AppData = AppData>
 		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
-			FbsRequest.Method.ROUTER_CREATE_PIPE_TRANSPORT,
+			FbsRequest.Method.ROUTER_CREATE_PIPETRANSPORT,
 			FbsRequest.Body.FBS_Router_CreatePipeTransportRequest,
 			requestOffset,
 			this.#internal.routerId
@@ -951,7 +951,7 @@ export class Router<RouterAppData extends AppData = AppData>
 		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
-			FbsRequest.Method.ROUTER_CREATE_DIRECT_TRANSPORT,
+			FbsRequest.Method.ROUTER_CREATE_DIRECTTRANSPORT,
 			FbsRequest.Body.FBS_Router_CreateDirectTransportRequest,
 			requestOffset,
 			this.#internal.routerId
@@ -1401,7 +1401,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
-			FbsRequest.Method.ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER,
+			FbsRequest.Method.ROUTER_CREATE_ACTIVESPEAKEROBSERVER,
 			FbsRequest.Body.FBS_Router_CreateActiveSpeakerObserverRequest,
 			requestOffset,
 			this.#internal.routerId
@@ -1480,7 +1480,7 @@ export class Router<RouterAppData extends AppData = AppData>
 		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
-			FbsRequest.Method.ROUTER_CREATE_AUDIO_LEVEL_OBSERVER,
+			FbsRequest.Method.ROUTER_CREATE_AUDIOLEVELOBSERVER,
 			FbsRequest.Body.FBS_Router_CreateAudioLevelObserverRequest,
 			requestOffset,
 			this.#internal.routerId

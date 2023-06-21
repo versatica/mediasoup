@@ -29,11 +29,17 @@ namespace RTC
 		this->typeString = data->type()->str();
 
 		if (this->typeString == "sctp")
+		{
 			this->type = DataConsumer::Type::SCTP;
+		}
 		else if (this->typeString == "direct")
+		{
 			this->type = DataConsumer::Type::DIRECT;
+		}
 		else
+		{
 			MS_THROW_TYPE_ERROR("invalid type");
+		}
 
 		if (this->type == DataConsumer::Type::SCTP)
 		{
@@ -48,10 +54,14 @@ namespace RTC
 		}
 
 		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeDataRequest::VT_LABEL))
+		{
 			this->label = data->label()->str();
+		}
 
 		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeDataRequest::VT_PROTOCOL))
+		{
 			this->protocol = data->protocol()->str();
+		}
 
 		// NOTE: This may throw.
 		this->shared->channelMessageRegistrator->RegisterHandler(
@@ -87,7 +97,9 @@ namespace RTC
 		  this->typeString.c_str(),
 		  sctpStreamParametersOffset,
 		  this->label.c_str(),
-		  this->protocol.c_str());
+		  this->protocol.c_str(),
+		  this->paused,
+		  this->dataProducerPaused);
 	}
 
 	flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> DataConsumer::FillBufferStats(
@@ -267,9 +279,13 @@ namespace RTC
 				  [&request](bool queued, bool sctpSendBufferFull)
 				  {
 					  if (queued)
+					  {
 						  request->Accept();
+					  }
 					  else
+					  {
 						  request->Error(sctpSendBufferFull ? "sctpsendbufferfull" : "message send failed");
+					  }
 				  });
 
 				SendMessage(ppid, data, len, cb);
@@ -315,10 +331,11 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer paused [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::DATACONSUMER_PRODUCER_PAUSE);
+		this->shared->channelNotifier->Emit(
+		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_PAUSE);
 	}
 
-	void Consumer::DataProducerResumed()
+	void DataConsumer::DataProducerResumed()
 	{
 		MS_TRACE();
 
@@ -331,7 +348,8 @@ namespace RTC
 
 		MS_DEBUG_DEV("DataProducer resumed [dataConsumerId:%s]", this->id.c_str());
 
-		this->shared->channelNotifier->Emit(this->id, FBS::Notification::Event::DATACONSUMER_PRODUCER_RESUME);
+		this->shared->channelNotifier->Emit(
+		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_RESUME);
 	}
 
 	void DataConsumer::SctpAssociationConnected()
@@ -410,7 +428,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsActive())
+		{
 			return;
+		}
 
 		if (len > this->maxMessageSize)
 		{

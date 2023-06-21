@@ -162,7 +162,7 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 			this.#internal.webRtcServerId).pack(this.#channel.bufferBuilder);
 
 		this.#channel.request(
-			Method.WORKER_WEBRTC_SERVER_CLOSE,
+			Method.WORKER_WEBRTCSERVER_CLOSE,
 			RequestBody.FBS_Worker_CloseWebRtcServerRequest,
 			requestOffset)
 			.catch(() => {});
@@ -217,7 +217,7 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 		logger.debug('dump()');
 
 		const response = await this.#channel.request(
-			Method.WEBRTC_SERVER_DUMP, undefined, undefined, this.#internal.webRtcServerId);
+			Method.WEBRTCSERVER_DUMP, undefined, undefined, this.#internal.webRtcServerId);
 
 		/* Decode Response. */
 		const dump = new FbsWebRtcServer.DumpResponse();

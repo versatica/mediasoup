@@ -68,10 +68,14 @@ namespace RTC
 		}
 		bool IsActive() const
 		{
+			// It's active it DataConsumer and DataProducer are not paused and the transport
+			// is connected.
 			// clang-format off
 			return (
 				this->transportConnected &&
 				(this->type == DataConsumer::Type::DIRECT || this->sctpAssociationConnected) &&
+				!this->paused &&
+				!this->dataProducerPaused &&
 				!this->dataProducerClosed
 			);
 			// clang-format on
