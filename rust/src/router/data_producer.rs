@@ -3,7 +3,8 @@ mod tests;
 
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
-    DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest, DataProducerPauseRequest, DataProducerResumeRequest, DataProducerSendNotification,
+    DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
+    DataProducerPauseRequest, DataProducerResumeRequest, DataProducerSendNotification,
 };
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;

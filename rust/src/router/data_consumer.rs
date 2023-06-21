@@ -5,8 +5,8 @@ use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
     DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
-    DataConsumerGetStatsRequest, DataConsumerPauseRequest, DataConsumerResumeRequest, DataConsumerSendRequest,
-    DataConsumerSetBufferedAmountLowThresholdRequest,
+    DataConsumerGetStatsRequest, DataConsumerPauseRequest, DataConsumerResumeRequest,
+    DataConsumerSendRequest, DataConsumerSetBufferedAmountLowThresholdRequest,
 };
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
@@ -730,13 +730,22 @@ impl DataConsumer {
     }
 
     /// Callback is called when the associated data producer is paused.
-    pub fn on_data_producer_pause<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner().handlers.data_producer_pause.add(Arc::new(callback))
+    pub fn on_data_producer_pause<F: Fn() + Send + Sync + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
+        self.inner()
+            .handlers
+            .data_producer_pause
+            .add(Arc::new(callback))
     }
 
     /// Callback is called when the associated data producer is resumed.
     pub fn on_producer_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
-        self.inner().handlers.data_producer_resume.add(Arc::new(callback))
+        self.inner()
+            .handlers
+            .data_producer_resume
+            .add(Arc::new(callback))
     }
 
     /// Callback is called when the transport this data consumer belongs to is closed for whatever

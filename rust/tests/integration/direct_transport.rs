@@ -179,7 +179,16 @@ fn send_succeeds() {
             .expect("Failed to consume data");
 
         let num_messages = 200_usize;
+        let pause_sending_at_message = 10_usize;
+        let resume_sending_at_message = 20_usize;
+        let pause_receiving_at_message = 40_usize;
+        let resume_receiving_at_message = 60_usize;
+        let expected_received_num_messages = num_messages
+            - (resume_sending_at_message - pause_sending_at_message)
+            - (resume_receiving_at_message - pause_receiving_at_message);
+
         let mut sent_message_bytes = 0_usize;
+        let mut effectively_sent_message_bytes = 0_usize;
         let recv_message_bytes = Arc::new(AtomicUsize::new(0));
         let mut last_sent_message_id = 0_usize;
         let last_recv_message_id = Arc::new(AtomicUsize::new(0));
@@ -234,13 +243,45 @@ fn send_succeeds() {
             last_sent_message_id += 1;
             let id = last_sent_message_id;
 
+            if id == pause_sending_at_message {
+                data_producer
+                    .pause()
+                    .await
+                    .expect("Failed to pause data producer");
+            } else if id == resume_sending_at_message {
+                data_producer
+                    .resume()
+                    .await
+                    .expect("Failed to resume data producer");
+            } else if id == pause_receiving_at_message {
+                data_consumer
+                    .pause()
+                    .await
+                    .expect("Failed to pause data consumer");
+            } else if id == resume_receiving_at_message {
+                data_consumer
+                    .resume()
+                    .await
+                    .expect("Failed to resume data consumer");
+            }
+
             let message = if id < num_messages / 2 {
                 let content = id.to_string();
                 sent_message_bytes += content.len();
+
+                if !data_producer.paused() && !data_consumer.paused() {
+                    effectively_sent_message_bytes += content.len();
+                }
+
                 WebRtcMessage::String(content)
             } else {
                 let content = id.to_string().into_bytes();
                 sent_message_bytes += content.len();
+
+                if !data_producer.paused() && !data_consumer.paused() {
+                    effectively_sent_message_bytes += content.len();
+                }
+
                 WebRtcMessage::Binary(Cow::from(content))
             };
 
@@ -258,10 +299,13 @@ fn send_succeeds() {
             .expect("Failed tor receive all messages");
 
         assert_eq!(last_sent_message_id, num_messages);
-        assert_eq!(last_recv_message_id.load(Ordering::SeqCst), num_messages);
+        assert_eq!(
+            last_recv_message_id.load(Ordering::SeqCst),
+            expected_received_num_messages
+        );
         assert_eq!(
             recv_message_bytes.load(Ordering::SeqCst),
-            sent_message_bytes,
+            effectively_sent_message_bytes,
         );
 
         {
@@ -286,7 +330,7 @@ fn send_succeeds() {
             assert_eq!(stats.len(), 1);
             assert_eq!(&stats[0].label, data_consumer.label());
             assert_eq!(&stats[0].protocol, data_consumer.protocol());
-            assert_eq!(stats[0].messages_sent, num_messages);
+            assert_eq!(stats[0].messages_sent, expected_received_num_messages);
             assert_eq!(
                 stats[0].bytes_sent,
                 recv_message_bytes.load(Ordering::SeqCst),
