@@ -1,5 +1,5 @@
-#ifndef MS_RTC_AUDIOLEVELOBSERVER_HPP
-#define MS_RTC_AUDIOLEVELOBSERVER_HPP
+#ifndef MS_RTC_AUDIO_LEVEL_OBSERVER_HPP
+#define MS_RTC_AUDIO_LEVEL_OBSERVER_HPP
 
 #include "RTC/RtpObserver.hpp"
 #include "RTC/Shared.hpp"

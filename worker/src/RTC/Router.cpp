@@ -205,7 +205,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTC_TRANSPORT:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTCTRANSPORT:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
 
@@ -230,7 +230,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTCTRANSPORT_WITH_SERVER:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
 				auto transportId = body->transportId()->str();
@@ -267,7 +267,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_PLAIN_TRANSPORT:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_PLAINTRANSPORT:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreatePlainTransportRequest>();
 				auto transportId = body->transportId()->str();
@@ -290,7 +290,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_PIPE_TRANSPORT:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_PIPETRANSPORT:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreatePipeTransportRequest>();
 				auto transportId = body->transportId()->str();
@@ -313,7 +313,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_DIRECT_TRANSPORT:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_DIRECTTRANSPORT:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateDirectTransportRequest>();
 				auto transportId = body->transportId()->str();

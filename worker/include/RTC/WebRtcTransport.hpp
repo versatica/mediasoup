@@ -1,5 +1,5 @@
-#ifndef MS_RTC_WEBRTCTRANSPORT_HPP
-#define MS_RTC_WEBRTCTRANSPORT_HPP
+#ifndef MS_RTC_WEBRTC_TRANSPORT_HPP
+#define MS_RTC_WEBRTC_TRANSPORT_HPP
 
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/IceCandidate.hpp"

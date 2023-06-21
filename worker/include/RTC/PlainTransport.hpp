@@ -1,5 +1,5 @@
-#ifndef MS_RTC_PLAINTRANSPORT_HPP
-#define MS_RTC_PLAINTRANSPORT_HPP
+#ifndef MS_RTC_PLAIN_TRANSPORT_HPP
+#define MS_RTC_PLAIN_TRANSPORT_HPP
 
 #include "FBS/plainTransport_generated.h"
 #include "RTC/Shared.hpp"

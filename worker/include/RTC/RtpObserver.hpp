@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTPOBSERVER_HPP
-#define MS_RTC_RTPOBSERVER_HPP
+#ifndef MS_RTC_RTP_OBSERVER_HPP
+#define MS_RTC_RTP_OBSERVER_HPP
 
 #include "common.hpp"
 #include "RTC/Producer.hpp"
