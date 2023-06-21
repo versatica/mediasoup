@@ -518,7 +518,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 					break;
 				}
 
-			case Event.DATACONSUMER_DATAPRODUCER_PAUSE:
+				case Event.DATACONSUMER_DATAPRODUCER_PAUSE:
 				{
 					if (this.#dataProducerPaused)
 					{
