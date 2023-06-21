@@ -578,7 +578,7 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 
 		response.body(data);
 
-		return parseConsumerDump(data);
+		return parseConsumerDumpResponse(data);
 	}
 
 	/**
@@ -1148,7 +1148,7 @@ function parsePipeConsumerDump(
 	};
 }
 
-function parseConsumerDump(data: FbsConsumer.DumpResponse): ConsumerDump
+function parseConsumerDumpResponse(data: FbsConsumer.DumpResponse): ConsumerDump
 {
 	switch (data.type())
 	{
