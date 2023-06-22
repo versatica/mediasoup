@@ -268,7 +268,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			break;
 		}
 
-		case Channel::ChannelRequest::Method::WORKER_CREATE_WEBRTC_SERVER:
+		case Channel::ChannelRequest::Method::WORKER_CREATE_WEBRTCSERVER:
 		{
 			try
 			{
@@ -298,7 +298,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			break;
 		}
 
-		case Channel::ChannelRequest::Method::WORKER_WEBRTC_SERVER_CLOSE:
+		case Channel::ChannelRequest::Method::WORKER_WEBRTCSERVER_CLOSE:
 		{
 			RTC::WebRtcServer* webRtcServer{ nullptr };
 

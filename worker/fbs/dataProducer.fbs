@@ -8,6 +8,7 @@ table DumpResponse {
   sctp_stream_parameters: FBS.SctpParameters.SctpStreamParameters;
   label:string (required);
   protocol:string (required);
+  paused:bool;
 }
 
 table GetStatsResponse {

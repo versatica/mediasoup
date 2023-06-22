@@ -1317,7 +1317,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATA_PRODUCER:
+			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATAPRODUCER:
 			{
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataProducerRequest>();
 
@@ -1352,7 +1352,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATA_CONSUMER:
+			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATACONSUMER:
 			{
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataConsumerRequest>();
 
@@ -2654,6 +2654,20 @@ namespace RTC
 		MS_TRACE();
 
 		this->listener->OnTransportDataProducerMessageReceived(this, dataProducer, ppid, msg, len);
+	}
+
+	inline void Transport::OnDataProducerPaused(RTC::DataProducer* dataProducer)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportDataProducerPaused(this, dataProducer);
+	}
+
+	inline void Transport::OnDataProducerResumed(RTC::DataProducer* dataProducer)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportDataProducerResumed(this, dataProducer);
 	}
 
 	inline void Transport::OnDataConsumerSendMessage(

@@ -87,6 +87,10 @@ namespace RTC
 			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
 			virtual void OnTransportConsumerProducerClosed(
 			  RTC::Transport* transport, RTC::Consumer* consumer) = 0;
+			virtual void OnTransportDataProducerPaused(
+			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
+			virtual void OnTransportDataProducerResumed(
+			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
 			virtual void OnTransportConsumerKeyFrameRequested(
 			  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 			virtual void OnTransportNewDataProducer(
@@ -235,6 +239,8 @@ namespace RTC
 		}
 		void OnDataProducerMessageReceived(
 		  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) override;
+		void OnDataProducerPaused(RTC::DataProducer* dataProducer) override;
+		void OnDataProducerResumed(RTC::DataProducer* dataProducer) override;
 
 		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
 	public:

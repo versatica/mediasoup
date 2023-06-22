@@ -626,12 +626,14 @@ request_response!(
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
+        paused: bool,
     },
     TransportProduceDataResponse {
         r#type: DataProducerType,
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
+        paused: bool,
     },
 );
 
@@ -646,12 +648,15 @@ request_response!(
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
+        paused: bool,
     },
     TransportConsumeDataResponse {
         r#type: DataConsumerType,
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
+        paused: bool,
+        data_producer_paused: bool,
     },
 );
 
@@ -806,6 +811,18 @@ request_response!(
     Vec<DataProducerStat>,
 );
 
+request_response!(
+    DataProducerId,
+    "dataProducer.pause",
+    DataProducerPauseRequest {}
+);
+
+request_response!(
+    DataProducerId,
+    "dataProducer.resume",
+    DataProducerResumeRequest {}
+);
+
 #[derive(Debug, Copy, Clone, Serialize)]
 #[serde(into = "u32")]
 pub(crate) struct DataProducerSendNotification {
@@ -849,6 +866,18 @@ request_response!(
     "dataConsumer.getStats",
     DataConsumerGetStatsRequest {},
     Vec<DataConsumerStat>,
+);
+
+request_response!(
+    DataConsumerId,
+    "dataConsumer.pause",
+    DataConsumerPauseRequest {},
+);
+
+request_response!(
+    DataConsumerId,
+    "dataConsumer.resume",
+    DataConsumerResumeRequest {},
 );
 
 request_response!(

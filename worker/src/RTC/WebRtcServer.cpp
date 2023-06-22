@@ -273,7 +273,7 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::WEBRTC_SERVER_DUMP:
+			case Channel::ChannelRequest::Method::WEBRTCSERVER_DUMP:
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 

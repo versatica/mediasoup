@@ -702,7 +702,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
-			FbsRequest.Method.WORKER_CREATE_WEBRTC_SERVER,
+			FbsRequest.Method.WORKER_CREATE_WEBRTCSERVER,
 			FbsRequest.Body.FBS_Worker_CreateWebRtcServerRequest,
 			createWebRtcServerRequestOffset
 		);

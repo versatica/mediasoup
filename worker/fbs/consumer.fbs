@@ -54,8 +54,8 @@ table BaseConsumerDump {
   consumable_rtp_encodings:[FBS.RtpParameters.RtpEncodingParameters];
   supported_codec_payload_types:[uint8];
   trace_event_types:[string] (required);
-  paused:bool = false;
-  producer_paused:bool = false;
+  paused:bool;
+  producer_paused:bool;
   priority:uint8;
 }
 

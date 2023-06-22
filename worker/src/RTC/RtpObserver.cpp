@@ -26,7 +26,7 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::RTP_OBSERVER_PAUSE:
+			case Channel::ChannelRequest::Method::RTPOBSERVER_PAUSE:
 			{
 				this->Pause();
 
@@ -35,7 +35,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::RTP_OBSERVER_RESUME:
+			case Channel::ChannelRequest::Method::RTPOBSERVER_RESUME:
 			{
 				this->Resume();
 
@@ -44,7 +44,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::RTP_OBSERVER_ADD_PRODUCER:
+			case Channel::ChannelRequest::Method::RTPOBSERVER_ADD_PRODUCER:
 			{
 				const auto* body = request->data->body_as<FBS::RtpObserver::AddProducerRequest>();
 				auto producerId  = body->producerId()->str();
@@ -60,7 +60,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::RTP_OBSERVER_REMOVE_PRODUCER:
+			case Channel::ChannelRequest::Method::RTPOBSERVER_REMOVE_PRODUCER:
 			{
 				const auto* body = request->data->body_as<FBS::RtpObserver::RemoveProducerRequest>();
 				auto producerId  = body->producerId()->str();
