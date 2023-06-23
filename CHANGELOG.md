@@ -5,6 +5,13 @@
 
 * Switch from JSON based messages to `flatbuffers` ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
 * Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
+* Add optional `rtcpListenInfo` in `PlainTransportOptions` ([PR #1099](https://github.com/versatica/mediasoup/pull/1099)).
+* Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
+
+
+### 3.12.4
+
+* Fix downloaded prebuilt binary check on Windows ([PR #1105](https://github.com/versatica/mediasoup/pull/1105) by @woodfe).
 
 
 ### 3.12.3
@@ -15,7 +22,6 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 ### 3.12.2
 
 * CI: Use `ubuntu-20.04` to build mediasoup-worker prebuilt on Linux ([PR #1092](https://github.com/versatica/mediasoup/pull/1092)).
->>>>>>> v3
 
 
 ### 3.12.1

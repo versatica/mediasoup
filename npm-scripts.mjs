@@ -610,8 +610,10 @@ async function downloadPrebuiltWorker()
 
 				try
 				{
+					const resolvedBinPath = path.resolve(WORKER_RELEASE_BIN_PATH);
+
 					execSync(
-						`${WORKER_RELEASE_BIN_PATH}`,
+						resolvedBinPath,
 						{
 							stdio : [ 'ignore', 'ignore', 'ignore' ],
 							// Ensure no env is passed to avoid accidents.
