@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.12.4
+
+* Fix downloaded prebuilt binary check on Windows ([PR #1105](https://github.com/versatica/mediasoup/pull/1105) by @woodfe).
+
+
 ### 3.12.3
 
 Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://github.com/versatica/mediasoup/pull/1093)).
