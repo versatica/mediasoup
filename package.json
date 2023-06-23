@@ -110,7 +110,6 @@
     "pick-port": "^1.0.1",
     "sctp": "^1.0.0",
     "ts-jest": "^29.1.0",
-    "tsc-watch": "^6.0.4",
     "typescript": "^5.1.3"
   }
 }
