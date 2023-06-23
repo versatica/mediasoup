@@ -4,6 +4,7 @@ import fs from 'fs';
 import { execSync, spawnSync } from 'child_process';
 import fetch from 'node-fetch';
 import tar from 'tar';
+import path from 'path';
 
 const PKG = JSON.parse(fs.readFileSync('./package.json').toString());
 const IS_FREEBSD = os.platform() === 'freebsd';
@@ -551,8 +552,9 @@ async function downloadPrebuiltWorker()
 
 				try
 				{
+					const resolvedBinPath = path.resolve(WORKER_RELEASE_BIN_PATH);
 					execSync(
-						`${WORKER_RELEASE_BIN_PATH}`,
+						resolvedBinPath,
 						{
 							stdio : [ 'ignore', 'ignore', 'ignore' ],
 							// Ensure no env is passed to avoid accidents.
