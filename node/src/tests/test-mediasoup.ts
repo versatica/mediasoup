@@ -21,22 +21,6 @@ test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabili
 	expect(rtpCapabilities2).not.toEqual(rtpCapabilities);
 });
 
-test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabilities', () =>
-{
-	const rtpCapabilities = getSupportedRtpCapabilities();
-
-	expect(typeof rtpCapabilities).toBe('object');
-
-	// Mangle retrieved codecs to check that, if called again,
-	// getSupportedRtpCapabilities() returns a cloned object.
-	// @ts-ignore
-	rtpCapabilities.codecs = 'bar';
-
-	const rtpCapabilities2 = getSupportedRtpCapabilities();
-
-	expect(rtpCapabilities2).not.toEqual(rtpCapabilities);
-});
-
 test('parseScalabilityMode() works', () =>
 {
 	expect(parseScalabilityMode('L1T3'))
