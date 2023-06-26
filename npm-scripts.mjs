@@ -263,19 +263,24 @@ function replaceVersion()
 {
 	logInfo('replaceVersion()');
 
-	const files =
-	[
-		'node/lib/index.js',
-		'node/lib/index.d.ts',
-		'node/lib/Worker.js'
-	];
+	const files = fs.readdirSync('node/lib',
+		{
+			withFileTypes : true,
+			recursive     : true
+		});
 
 	for (const file of files)
 	{
-		const text = fs.readFileSync(file, { encoding: 'utf8' });
+		if (!file.isFile())
+		{
+			continue;
+		}
+
+		const filePath = path.join('node/lib', file.name);
+		const text = fs.readFileSync(filePath, { encoding: 'utf8' });
 		const result = text.replace(/__MEDIASOUP_VERSION__/g, PKG.version);
 
-		fs.writeFileSync(file, result, { encoding: 'utf8' });
+		fs.writeFileSync(filePath, result, { encoding: 'utf8' });
 	}
 }
 
