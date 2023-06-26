@@ -19,7 +19,7 @@ test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabili
 	const rtpCapabilities2 = getSupportedRtpCapabilities();
 
 	expect(rtpCapabilities2).not.toEqual(rtpCapabilities);
-}, 500);
+});
 
 test('parseScalabilityMode() works', () =>
 {
@@ -52,4 +52,4 @@ test('parseScalabilityMode() works', () =>
 
 	expect(parseScalabilityMode('L4T7_KEY_SHIFT'))
 		.toEqual({ spatialLayers: 4, temporalLayers: 7, ksvc: true });
-}, 500);
+});
