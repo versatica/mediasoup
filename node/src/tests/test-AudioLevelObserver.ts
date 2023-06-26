@@ -1,4 +1,5 @@
 import * as mediasoup from '../';
+
 const { createWorker } = mediasoup;
 
 let worker: mediasoup.types.Worker;
