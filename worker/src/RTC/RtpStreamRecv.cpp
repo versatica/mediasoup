@@ -510,7 +510,7 @@ namespace RTC
 
 		// Fill the rest of the report.
 		report->SetLastSeq(static_cast<uint32_t>(this->maxSeq) + this->cycles);
-		report->SetJitter(this->jitter);
+		report->SetJitter(this->jitter * (this->params.clockRate / 1000));
 
 		if (this->lastSrReceived != 0)
 		{
