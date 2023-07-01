@@ -41,3 +41,5 @@
 
 # Packaged module.
 *.tgz
+yarn.lock
+package-lock.json
