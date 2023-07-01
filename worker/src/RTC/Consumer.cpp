@@ -22,6 +22,7 @@ namespace RTC
 	  : id(id), producerId(producerId), shared(shared), listener(listener), type(type)
 	{
 		MS_TRACE();
+		jsonData_orig = data;
 
 		auto jsonKindIt = data.find("kind");
 

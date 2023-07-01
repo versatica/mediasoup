@@ -206,6 +206,12 @@ namespace RTC
 		bool paused{ false };
 		bool producerPaused{ false };
 		bool producerClosed{ false };
+	public:
+		json jsonData_orig;
+		uint16_t seq_prev { 0 };
+		uint32_t timestamp_prev {0};
+		uint32_t ts_offset {0};
+		short ts_seq {0};
 	};
 } // namespace RTC
 

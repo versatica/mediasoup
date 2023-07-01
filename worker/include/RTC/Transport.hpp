@@ -331,6 +331,26 @@ namespace RTC
 		uint32_t maxOutgoingBitrate{ 0u };
 		uint32_t minOutgoingBitrate{ 0u };
 		struct TraceEventTypes traceEventTypes;
+
+	public:
+		struct ReplaceOption {
+			uint32_t timestamp {0};
+			uint16_t seq{0};
+			bool logEnable{false};
+
+			std::string consumerId;
+			std::string oproducerId;
+			std::string producerId; 
+			std::string routerId;
+			std::string transportId;
+			json jsonConsumableRtpParameters;
+			std::vector<RTC::RtpEncodingParameters> consumableEncodings; // jsonConsumableRtpParameters 反序列化
+			std::string cname;
+			RTC::SeqManager<uint16_t> seqManager;
+		};
+		bool CreateConsumerWithParameters(json& jsonData, ReplaceOption& option, Channel::ChannelRequest* request = nullptr);
+		bool ReleaseConsumerWithParameters(json& jsonData, ReplaceOption& option, std::string mid="");
+		bool GetConsumerUpdateInputParameters(json& internal, ReplaceOption& option);
 	};
 } // namespace RTC
 

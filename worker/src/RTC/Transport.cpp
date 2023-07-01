@@ -22,6 +22,8 @@
 #include <iterator>                                              // std::ostream_iterator
 #include <map>                                                   // std::multimap
 #include <sstream>                                               // std::ostringstream
+#include <vector> //vector
+#include "RTC/Router.hpp"
 
 namespace RTC
 {
@@ -583,6 +585,378 @@ namespace RTC
 		}
 	}
 
+	static RTC::RtpParameters::Type GetNewType(std::vector<RTC::RtpEncodingParameters>& encodings) {
+		if (encodings.size() == 1) {
+			auto& encoding = encodings[0];
+
+			if (encoding.spatialLayers > 1 || encoding.temporalLayers > 1)
+				return RTC::RtpParameters::Type::SVC;
+			else
+				return RtpParameters::Type::SIMPLE;
+		}
+		else if (encodings.size() > 1)
+		{
+			return RTC::RtpParameters::Type::SIMULCAST;
+		}
+
+		return RTC::RtpParameters::Type::NONE;
+	}
+
+	bool Transport::CreateConsumerWithParameters(json& jsonData, ReplaceOption& option, Channel::ChannelRequest* request) {
+		std::string producerId = option.producerId;
+		std::string consumerId = option.consumerId;
+
+		// Get type.
+		auto jsonTypeIt = jsonData.find("type");
+		if (jsonTypeIt == jsonData.end() || !jsonTypeIt->is_string()) {
+			if(request) {
+				request->Error("Parameter type no exist or error type.");
+			}
+			return false;
+		}
+		// This may throw.
+		auto type = RTC::RtpParameters::GetType(jsonTypeIt->get<std::string>()); // old type
+		/* surpoort [simple,simulcast,svc] <--> [simple,simulcast,svc] */
+		auto type_new = GetNewType(option.consumableEncodings);
+		
+		if(type != type_new) {
+			std::string strOldType = RTC::RtpParameters::GetTypeString(type);
+			std::string strNewType = RTC::RtpParameters::GetTypeString(type_new);
+			MS_DUMP("CreateConsumerWithParameters | update_consume from [type:%s] --> type[type:%s]", strOldType.c_str(), strNewType.c_str());
+			jsonData["type"] = strNewType;
+			type = type_new;
+		}
+
+		RTC::Consumer* consumer{ nullptr };
+		try {
+		  switch (type) {
+				case RTC::RtpParameters::Type::NONE: {
+					MS_THROW_TYPE_ERROR("invalid type 'none'");
+					break;
+			  }
+				case RTC::RtpParameters::Type::SIMPLE: {
+				 // This may throw.
+					consumer = new RTC::SimpleConsumer(this->shared, consumerId, producerId, this, jsonData);
+					((RTC::SimpleConsumer*)consumer)->setSeqManager(option.seqManager);
+					break;
+			  }
+				case RTC::RtpParameters::Type::SIMULCAST: {
+				  // This may throw.
+				  consumer = new RTC::SimulcastConsumer(this->shared, consumerId, producerId, this, jsonData);
+					((RTC::SimulcastConsumer*)consumer)->setSeqManager(option.seqManager);
+				  break;
+			  }
+				case RTC::RtpParameters::Type::SVC: {
+				  // This may throw.
+				  consumer = new RTC::SvcConsumer(this->shared, consumerId, producerId, this, jsonData);
+					((RTC::SvcConsumer*)consumer)->setSeqManager(option.seqManager);
+				  break;
+			  }
+			  case RTC::RtpParameters::Type::PIPE: {
+				  // This may throw.
+				  consumer = new RTC::PipeConsumer(this->shared, consumerId, producerId, this, jsonData);
+				  break;
+			  }
+		  }
+		  if(consumer) 
+			{
+        consumer->timestamp_prev = option.timestamp;
+        consumer->seq_prev = option.seq;
+      }
+		
+			// Notify the listener.
+			// This may throw if no Producer is found.
+			this->listener->OnTransportNewConsumer(this, consumer, producerId);
+		}	
+		catch (const MediaSoupError& error) 
+		{
+			delete consumer;
+			std::string strErrorMessage = "Error: ";
+			strErrorMessage += error.buffer;
+			if(request) 
+			{
+				request->Error(strErrorMessage.c_str());
+			}			
+			return false;
+		}
+		
+		// Insert into the maps.
+		this->mapConsumers[consumerId] = consumer;
+
+		for (auto ssrc : consumer->GetMediaSsrcs()) 
+		{
+			this->mapSsrcConsumer[ssrc] = consumer;
+		}
+
+		for (auto ssrc : consumer->GetRtxSsrcs()) 
+		{
+			this->mapRtxSsrcConsumer[ssrc] = consumer;
+		}
+
+		// Create status response.
+		json data = json::object();
+		data["paused"]         = consumer->IsPaused();
+		data["producerPaused"] = consumer->IsProducerPaused();
+		consumer->FillJsonScore(data["score"]);
+
+		auto preferredLayers = consumer->GetPreferredLayers();
+		if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1) 
+		{
+			data["preferredLayers"]["spatialLayer"]  = preferredLayers.spatial;
+			data["preferredLayers"]["temporalLayer"] = preferredLayers.temporal;
+		}
+		if(request) {
+			request->Accept(data);
+		}
+		
+
+		// Check if Transport Congestion Control client must be created.
+		const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
+		const auto& codecs                = consumer->GetRtpParameters().codecs;
+
+		// Set TransportCongestionControlClient.
+		if (!this->tccClient) { 
+			bool createTccClient{ false };
+			RTC::BweType bweType;
+
+			// Use transport-cc if:
+			// - it's a video Consumer, and
+			// - there is transport-wide-cc-01 RTP header extension, and
+			// - there is "transport-cc" in codecs RTCP feedback.
+			//
+			// clang-format off
+			if (
+				consumer->GetKind() == RTC::Media::Kind::VIDEO && 
+				rtpHeaderExtensionIds.transportWideCc01 != 0u && 
+				std::any_of(codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec) {
+				return std::any_of(codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb){ return fb.type == "transport-cc";}); }) ) {
+					MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with transport-cc");
+					createTccClient = true;
+					bweType         = RTC::BweType::TRANSPORT_CC;
+			}
+			// Use REMB if:
+			// - it's a video Consumer, and
+			// - there is abs-send-time RTP header extension, and
+			// - there is "remb" in codecs RTCP feedback.
+			//
+			// clang-format off
+			else if ( consumer->GetKind() == RTC::Media::Kind::VIDEO && rtpHeaderExtensionIds.absSendTime != 0u && std::any_of( codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec) { return std::any_of(codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb) { return fb.type == "goog-remb"; });}) ) {
+				MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with REMB");
+				createTccClient = true;
+				bweType         = RTC::BweType::REMB;
+			}
+
+			if (createTccClient) 
+			{
+				// Tell all the Consumers that we are gonna manage their bitrate.
+				for (auto& kv : this->mapConsumers) 
+				{
+					auto* consumer = kv.second;
+					consumer->SetExternallyManagedBitrate();
+				};
+
+				this->tccClient = std::make_shared<RTC::TransportCongestionControlClient>(
+					this,
+					bweType,
+					this->initialAvailableOutgoingBitrate,
+					this->maxOutgoingBitrate,
+					this->minOutgoingBitrate);
+
+				if (IsConnected()) 
+				{
+					this->tccClient->TransportConnected();
+				}							
+			}
+		}
+
+		// If applicable, tell the new Consumer that we are gonna manage its bitrate.
+		if (this->tccClient) 
+		{
+			consumer->SetExternallyManagedBitrate();
+		}					
+
+#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
+		// Create SenderBandwidthEstimator if:
+		// - not already created,
+		// - it's a video Consumer, and
+		// - there is transport-wide-cc-01 RTP header extension, and
+		// - there is "transport-cc" in codecs RTCP feedback.
+		//
+		// clang-format off
+		if (
+			!this->senderBwe &&
+			consumer->GetKind() == RTC::Media::Kind::VIDEO &&
+			rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+			std::any_of(
+				codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+				{
+					return std::any_of(
+						codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+						{
+							return fb.type == "transport-cc";
+						});
+				})
+		)
+		// clang-format on
+		{
+			MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");
+
+			// Tell all the Consumers that we are gonna manage their bitrate.
+			for (auto& kv : this->mapConsumers)
+			{
+				auto* consumer = kv.second;
+
+				consumer->SetExternallyManagedBitrate();
+			};
+
+			this->senderBwe = std::make_shared<RTC::SenderBandwidthEstimator>(
+			  this, this->initialAvailableOutgoingBitrate);
+
+			if (IsConnected())
+			{
+				this->senderBwe->TransportConnected();
+			}
+		}
+
+		// If applicable, tell the new Consumer that we are gonna manage its
+		// bitrate.
+		if (this->senderBwe)
+		{
+			consumer->SetExternallyManagedBitrate();
+		}
+#endif
+
+		if (IsConnected()) 
+		{
+			consumer->TransportConnected();
+		}
+
+		return true;		
+	}
+
+	bool Transport::ReleaseConsumerWithParameters(json& jsonData, ReplaceOption& option, std::string mid) 
+	{
+		RTC::Consumer* consumer = nullptr;
+		auto it = this->mapConsumers.find(option.consumerId);
+		if(it == this->mapConsumers.end()) {
+			return false;
+		}
+
+		consumer = it->second;
+		if(consumer) 
+		{
+			jsonData = consumer->jsonData_orig;
+			auto type = consumer->GetType();
+			if(type == RTC::RtpParameters::Type::SIMULCAST) 
+			{
+				option.seqManager = ((RTC::SimulcastConsumer*)consumer)->getSeqManager();
+			} 
+			else if(type == RTC::RtpParameters::Type::SIMPLE) 
+			{
+				option.seqManager = ((RTC::SimpleConsumer*)consumer)->getSeqManager();
+			} 
+			else if(type == RTC::RtpParameters::Type::SVC) 
+			{
+				option.seqManager = ((RTC::SvcConsumer*)consumer)->getSeqManager();
+			}
+
+			if(!mid.empty()) 
+			{
+				jsonData["rtpParameters"]["mid"] = mid;
+			}
+		}
+		
+	
+		this->mapConsumers.erase(option.consumerId);
+		for (auto ssrc : consumer->GetMediaSsrcs()) 
+		{
+			this->mapSsrcConsumer.erase(ssrc);
+			// Tell the child class to clear associated SSRCs.
+			SendStreamClosed(ssrc);
+		}
+
+		for (auto ssrc : consumer->GetRtxSsrcs()) 
+		{
+			this->mapRtxSsrcConsumer.erase(ssrc);
+
+			// Tell the child class to clear associated SSRCs.
+			SendStreamClosed(ssrc);
+		}
+
+		// Notify the listener.
+		this->listener->OnTransportConsumerClosed(this, consumer);
+
+		// save timestamp sequence
+		option.timestamp = consumer->timestamp_prev;
+		option.seq = consumer->seq_prev;
+
+		// Delete it.
+		delete consumer;
+
+		// This may be the latest active Consumer with BWE. If so we have to stop probation.
+		if (this->tccClient) 
+		{
+			ComputeOutgoingDesiredBitrate(/*forceBitrate*/ true);
+		}
+
+		return true;
+	}
+
+	bool Transport::GetConsumerUpdateInputParameters(json& internal, ReplaceOption& option) {
+		std::vector<std::string> vecKeys = 
+		{
+			"consumerId", "oproducerId", "producerId", "routerId", "transportId"
+		};
+
+		for(auto s : vecKeys) {
+			auto it = internal.find(s);
+			if(it == internal.end() || !it->is_string()) 
+			{
+				MS_DUMP("GetConsumerUpdateInputParameters:%s error", s.c_str());
+				return false;
+			}
+			if(s == "consumerId") 
+			{
+				option.consumerId = it->get<std::string>();
+			}
+
+			if(s == "oproducerId") 
+			{
+				option.oproducerId = it->get<std::string>();
+			}
+
+			if(s == "producerId") 
+			{
+				option.producerId = it->get<std::string>();
+			}
+
+			if(s == "routerId") 
+			{
+				option.routerId = it->get<std::string>();
+			}
+
+			if(s == "transportId") 
+			{
+				option.transportId = it->get<std::string>();
+			}
+		}
+
+		auto it = internal.find("consumableRtpParameters");
+		if(it == internal.end() || !it->is_array()) 
+		{
+			MS_DUMP("GetConsumerUpdateInputParameters:consumableRtpParameters error");
+			return false;
+		}
+		option.jsonConsumableRtpParameters = it->get<json>();
+		option.consumableEncodings.reserve(it->size());
+		for(auto& entry: *it) 
+		{
+			option.consumableEncodings.emplace_back(entry);
+		}
+
+		return true;
+	}
+	
 	void Transport::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
@@ -1453,6 +1827,37 @@ namespace RTC
 				delete producer;
 
 				request->Accept();
+
+				break;
+			}
+			case Channel::ChannelRequest::MethodId::CONSUMER_UPDATE: {
+				ReplaceOption option;
+				bool bResult = GetConsumerUpdateInputParameters(request->data, option);
+
+
+				if(!bResult) {
+					request->Error("CONSUMER_UPDATE | Input Parameters Parse error");
+					break;
+				}
+
+				std::string mid = "";
+				json jsonData;
+				bResult = ReleaseConsumerWithParameters(jsonData, option, mid);
+
+				if(!bResult) {
+					request->Error("CONSUMER_UPDATE | No Existing Consumer");
+					break;
+				}
+
+				jsonData["producerId"] = option.producerId;
+				jsonData["consumableRtpEncodings"] = option.jsonConsumableRtpParameters;
+				bResult = CreateConsumerWithParameters(jsonData, option, request);
+
+				if(!bResult) {
+					MS_DUMP();
+					request->Error("CONSUMER_UPDATE | Creating new Consumer Error");
+					break;
+				}
 
 				break;
 			}

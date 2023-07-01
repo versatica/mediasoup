@@ -99,6 +99,10 @@ namespace RTC
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
 
+		RTC::SeqManager<uint16_t>& getSeqManager() { return rtpSeqManager; }
+		void setSeqManager(RTC::SeqManager<uint16_t>& seqManager) {
+			rtpSeqManager = seqManager;
+		}
 	private:
 		// Allocated by this.
 		RTC::RtpStreamSend* rtpStream{ nullptr };

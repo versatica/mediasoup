@@ -70,7 +70,8 @@ namespace Channel
 		{ "rtpObserver.pause",                           ChannelRequest::MethodId::RTP_OBSERVER_PAUSE                               },
 		{ "rtpObserver.resume",                          ChannelRequest::MethodId::RTP_OBSERVER_RESUME                              },
 		{ "rtpObserver.addProducer",                     ChannelRequest::MethodId::RTP_OBSERVER_ADD_PRODUCER                        },
-		{ "rtpObserver.removeProducer",                  ChannelRequest::MethodId::RTP_OBSERVER_REMOVE_PRODUCER                     }
+		{ "rtpObserver.removeProducer",                  ChannelRequest::MethodId::RTP_OBSERVER_REMOVE_PRODUCER                     },
+		{ "consumer.update", ChannelRequest::MethodId::CONSUMER_UPDATE             }
 	};
 	// clang-format on
 

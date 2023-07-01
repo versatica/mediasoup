@@ -11,7 +11,7 @@ import { PlainTransportData } from './PlainTransport';
 import { PipeTransportData } from './PipeTransport';
 import { DirectTransportData } from './DirectTransport';
 import { Producer, ProducerOptions } from './Producer';
-import { Consumer, ConsumerOptions, ConsumerType } from './Consumer';
+import { Consumer, ConsumerOptions, ConsumerType, ReplaceConsumerOptions } from './Consumer';
 import {
 	DataProducer,
 	DataProducerOptions,
@@ -792,6 +792,41 @@ export class Transport
 
 		// Emit observer event.
 		this.#observer.safeEmit('newconsumer', consumer);
+
+		return consumer;
+	}
+	
+	async replaceConsume<ConsumerAppData extends AppData = AppData>(
+		{
+			consumer,
+			producerId,
+			pipe = false
+		}: ReplaceConsumerOptions<ConsumerAppData>
+	): Promise<Consumer<ConsumerAppData>>
+	{
+		if (!producerId || typeof producerId !== 'string')
+			throw new TypeError('missing producerId');
+
+		const producer = this.getProducerById(producerId);
+
+		if (!producer)
+			throw Error(`Producer with id "${producerId}" not found`);
+
+		let reqData;
+
+		if(pipe) {
+			let mid = `${this.#nextMidForConsumers++}`;
+			reqData = { ...this.internal, consumerId: consumer.id, oproducerId: consumer.producerId, producerId, consumableRtpParameters: producer.consumableRtpParameters.encodings, mid };
+			consumer.rtpParameters.mid = mid;
+		} else {
+			reqData = { ...this.internal, consumerId: consumer.id, oproducerId: consumer.producerId, producerId, consumableRtpParameters: producer.consumableRtpParameters.encodings };
+		}
+
+		logger.debug(`replaceConsume() | [reqData:${JSON.stringify(reqData)}]`);
+
+		const status = await this.channel.request('consumer.update', this.internal.transportId, reqData);
+
+		consumer.producerId = producerId;
 
 		return consumer;
 	}

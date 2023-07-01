@@ -315,6 +315,14 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 	}
 
 	/**
+	 * Associated Producer id.
+	 */
+	 set producerId(value)
+	 {
+		 this.#data.producerId = value;
+	 }
+	 
+	/**
 	 * Whether the Consumer is closed.
 	 */
 	get closed(): boolean
@@ -761,4 +769,11 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 				}
 			});
 	}
-}
+};
+
+export type ReplaceConsumerOptions<ConsumerAppData extends AppData = AppData> =
+{
+	producerId: string;
+	consumer: Consumer<ConsumerAppData>;
+	pipe?: boolean
+};
