@@ -1,7 +1,6 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Worker, WorkerSettings } from './Worker';
-import * as utils from './utils';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { RtpCapabilities } from './RtpParameters';
 import * as types from './types';
@@ -90,5 +89,5 @@ export async function createWorker<WorkerAppData extends AppData = AppData>(
  */
 export function getSupportedRtpCapabilities(): RtpCapabilities
 {
-	return utils.clone(supportedRtpCapabilities) as RtpCapabilities;
+	return structuredClone(supportedRtpCapabilities);
 }

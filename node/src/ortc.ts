@@ -1,5 +1,6 @@
 import * as h264 from 'h264-profile-level-id';
 import * as utils from './utils';
+import { getSupportedRtpCapabilities } from '.';
 import { UnsupportedError } from './errors';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { parse as parseScalabilityMode } from './scalabilityModes';
@@ -729,9 +730,8 @@ export function generateRouterRtpCapabilities(
 		throw new TypeError('mediaCodecs must be an Array');
 	}
 
-	const clonedSupportedRtpCapabilities =
-		utils.clone(supportedRtpCapabilities) as RtpCapabilities;
-	const dynamicPayloadTypes = utils.clone(DynamicPayloadTypes) as number[];
+	const clonedSupportedRtpCapabilities = getSupportedRtpCapabilities();
+	const dynamicPayloadTypes = structuredClone(DynamicPayloadTypes);
 	const caps: RtpCapabilities =
 	{
 		codecs           : [],
@@ -756,7 +756,7 @@ export function generateRouterRtpCapabilities(
 		}
 
 		// Clone the supported codec.
-		const codec = utils.clone(matchedSupportedCodec) as RtpCodecCapability;
+		const codec = structuredClone(matchedSupportedCodec);
 
 		// If the given media codec has preferredPayloadType, keep it.
 		if (typeof mediaCodec.preferredPayloadType === 'number')
@@ -1040,11 +1040,11 @@ export function getConsumableRtpParameters(
 	}
 
 	// Clone Producer encodings since we'll mangle them.
-	const consumableEncodings = utils.clone(params.encodings) as RtpEncodingParameters[];
+	const consumableEncodings = structuredClone(params.encodings);
 
-	for (let i = 0; i < consumableEncodings.length; ++i)
+	for (let i = 0; i < (consumableEncodings?.length ?? 0); ++i)
 	{
-		const consumableEncoding = consumableEncodings[i];
+		const consumableEncoding = consumableEncodings![i];
 		const { mappedSsrc } = rtpMapping.encodings[i];
 
 		// Remove useless fields.
@@ -1138,8 +1138,7 @@ export function getConsumerRtpParameters(
 		validateRtpCodecCapability(capCodec);
 	}
 
-	const consumableCodecs =
-		utils.clone(consumableRtpParameters.codecs) as RtpCodecParameters[];
+	const consumableCodecs = structuredClone(consumableRtpParameters.codecs);
 
 	let rtxSupported = false;
 
@@ -1293,14 +1292,13 @@ export function getConsumerRtpParameters(
 	}
 	else
 	{
-		const consumableEncodings =
-			utils.clone(consumableRtpParameters.encodings) as RtpEncodingParameters[];
+		const consumableEncodings = structuredClone(consumableRtpParameters.encodings);
 		const baseSsrc = utils.generateRandomNumber();
 		const baseRtxSsrc = utils.generateRandomNumber();
 
-		for (let i = 0; i < consumableEncodings.length; ++i)
+		for (let i = 0; i < (consumableEncodings?.length ?? 0); ++i)
 		{
-			const encoding = consumableEncodings[i];
+			const encoding = consumableEncodings![i];
 
 			encoding.ssrc = baseSsrc + i;
 
@@ -1345,8 +1343,7 @@ export function getPipeConsumerRtpParameters(
 		rtcp             : consumableRtpParameters.rtcp
 	};
 
-	const consumableCodecs =
-		utils.clone(consumableRtpParameters.codecs) as RtpCodecParameters[];
+	const consumableCodecs = structuredClone(consumableRtpParameters.codecs);
 
 	for (const codec of consumableCodecs)
 	{
@@ -1373,14 +1370,13 @@ export function getPipeConsumerRtpParameters(
 			ext.uri !== 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
 		));
 
-	const consumableEncodings =
-		utils.clone(consumableRtpParameters.encodings) as RtpEncodingParameters[];
+	const consumableEncodings = structuredClone(consumableRtpParameters.encodings);
 	const baseSsrc = utils.generateRandomNumber();
 	const baseRtxSsrc = utils.generateRandomNumber();
 
-	for (let i = 0; i < consumableEncodings.length; ++i)
+	for (let i = 0; i < (consumableEncodings?.length ?? 0); ++i)
 	{
-		const encoding = consumableEncodings[i];
+		const encoding = consumableEncodings![i];
 
 		encoding.ssrc = baseSsrc + i;
 

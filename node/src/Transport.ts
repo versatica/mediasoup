@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import * as utils from './utils';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { PayloadChannel } from './PayloadChannel';
@@ -922,30 +921,29 @@ export class Transport
 		if (this.constructor.name !== 'DirectTransport')
 		{
 			type = 'sctp';
-			sctpStreamParameters =
-				utils.clone(dataProducer.sctpStreamParameters) as SctpStreamParameters;
+			sctpStreamParameters = structuredClone(dataProducer.sctpStreamParameters);
 
 			// Override if given.
 			if (ordered !== undefined)
 			{
-				sctpStreamParameters.ordered = ordered;
+				sctpStreamParameters!.ordered = ordered;
 			}
 
 			if (maxPacketLifeTime !== undefined)
 			{
-				sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
+				sctpStreamParameters!.maxPacketLifeTime = maxPacketLifeTime;
 			}
 
 			if (maxRetransmits !== undefined)
 			{
-				sctpStreamParameters.maxRetransmits = maxRetransmits;
+				sctpStreamParameters!.maxRetransmits = maxRetransmits;
 			}
 
 			// This may throw.
 			sctpStreamId = this.getNextSctpStreamId();
 
 			this.#sctpStreamIds![sctpStreamId] = 1;
-			sctpStreamParameters.streamId = sctpStreamId;
+			sctpStreamParameters!.streamId = sctpStreamId;
 		}
 		// If this is a DirectTransport, sctpStreamParameters must not be used.
 		else
