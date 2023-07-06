@@ -6,6 +6,17 @@ import { TransportInternal } from './Transport';
 import { SctpStreamParameters } from './SctpParameters';
 import { AppData } from './types';
 
+/**
+ * SCTP stream parameters. Identical to {@link SctpStreamParameters} with the
+ * exception that the `streamId` is optional.
+ */
+type DataConsumerOptionsSctpStreamParameters = {
+	/**
+	 * SCTP stream id. If not provided, a free SCTP stream id will be assigned.
+	 */
+	streamId?: number;
+} & Omit<SctpStreamParameters, 'streamId'>;
+
 export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
 {
 	/**
@@ -14,28 +25,10 @@ export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
 	dataProducerId: string;
 
 	/**
-	 * Just if consuming over SCTP.
-	 * Whether data messages must be received in order. If true the messages will
-	 * be sent reliably. Defaults to the value in the DataProducer if it has type
-	 * 'sctp' or to true if it has type 'direct'.
+	 * SCTP parameters defining how the endpoint is sending the data.
+	 * Only if messages are sent over SCTP.
 	 */
-	ordered?: boolean;
-
-	/**
-	 * Just if consuming over SCTP.
-	 * When ordered is false indicates the time (in milliseconds) after which a
-	 * SCTP packet will stop being retransmitted. Defaults to the value in the
-	 * DataProducer if it has type 'sctp' or unset if it has type 'direct'.
-	 */
-	maxPacketLifeTime?: number;
-
-	/**
-	 * Just if consuming over SCTP.
-	 * When ordered is false indicates the maximum number of times a packet will
-	 * be retransmitted. Defaults to the value in the DataProducer if it has type
-	 * 'sctp' or unset if it has type 'direct'.
-	 */
-	maxRetransmits?: number;
+	sctpStreamParameters?: DataConsumerOptionsSctpStreamParameters;
 
 	/**
 	 * Custom application data.

@@ -15,7 +15,7 @@ const dataProducerParameters: mediasoup.types.DataProducerOptions =
 {
 	sctpStreamParameters :
 	{
-		streamId          : 12345,
+		streamId          : 123,
 		ordered           : false,
 		maxPacketLifeTime : 5000
 	},
@@ -51,9 +51,11 @@ test('transport.consumeData() succeeds', async () =>
 
 	dataConsumer1 = await transport2.consumeData(
 		{
-			dataProducerId    : dataProducer.id,
-			maxPacketLifeTime : 4000,
-			appData           : { baz: 'LOL' }
+			dataProducerId       : dataProducer.id,
+			sctpStreamParameters : {
+				maxPacketLifeTime : 4000
+			},
+			appData              : { baz: 'LOL' }
 		});
 
 	expect(onObserverNewDataConsumer).toHaveBeenCalledTimes(1);
@@ -87,6 +89,20 @@ test('transport.consumeData() succeeds', async () =>
 				dataProducerIds : [],
 				dataConsumerIds : [ dataConsumer1.id ]
 			});
+}, 2000);
+
+test('transport.consumeData() with already used streamId rejects with Error', async () =>
+{
+	await expect(transport2.consumeData(
+		{
+			dataProducerId       : dataProducer.id,
+			sctpStreamParameters :
+			{
+				streamId : dataConsumer1.sctpStreamParameters!.streamId
+			}
+		}))
+		.rejects
+		.toThrow(Error);
 }, 2000);
 
 test('dataConsumer.dump() succeeds', async () =>

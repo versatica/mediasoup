@@ -834,7 +834,7 @@ export class Transport
 		{
 			type = 'direct';
 
-			if (sctpStreamParameters)
+			if (sctpStreamParameters !== undefined)
 			{
 				logger.warn(
 					'produceData() | sctpStreamParameters are ignored when producing data on a DirectTransport');
@@ -887,9 +887,7 @@ export class Transport
 	async consumeData<ConsumerAppData extends AppData = AppData>(
 		{
 			dataProducerId,
-			ordered,
-			maxPacketLifeTime,
-			maxRetransmits,
+			sctpStreamParameters: sctpStreamParametersInit,
 			appData
 		}: DataConsumerOptions<ConsumerAppData>
 	): Promise<DataConsumer<ConsumerAppData>>
@@ -914,50 +912,38 @@ export class Transport
 
 		let type: DataConsumerType;
 		let sctpStreamParameters: SctpStreamParameters | undefined;
-		let sctpStreamId: number;
 
 		// If this is not a DirectTransport, use sctpStreamParameters from the
 		// DataProducer (if type 'sctp') unless they are given in method parameters.
 		if (this.constructor.name !== 'DirectTransport')
 		{
 			type = 'sctp';
-			sctpStreamParameters = structuredClone(dataProducer.sctpStreamParameters);
+			sctpStreamParameters = {
+				// Start with the producer's SCTP stream parameters (if any) ...
+				...structuredClone(dataProducer.sctpStreamParameters),
 
-			// Override if given.
-			if (ordered !== undefined)
-			{
-				sctpStreamParameters!.ordered = ordered;
-			}
+				// ... override with given SCTP stream parameters (if any) ...
+				...sctpStreamParametersInit,
 
-			if (maxPacketLifeTime !== undefined)
-			{
-				sctpStreamParameters!.maxPacketLifeTime = maxPacketLifeTime;
-			}
+				// ... but make sure we're not re-using the SCTP stream id of the
+				// producer and instead auto-assign one if necessary or take the one
+				// that was explicitly provided in method parameters.
+				streamId : this.getNextSctpStreamId(sctpStreamParametersInit?.streamId)
+			};
 
-			if (maxRetransmits !== undefined)
-			{
-				sctpStreamParameters!.maxRetransmits = maxRetransmits;
-			}
-
-			// This may throw.
-			sctpStreamId = this.getNextSctpStreamId();
-
-			this.#sctpStreamIds![sctpStreamId] = 1;
-			sctpStreamParameters!.streamId = sctpStreamId;
+			// Validate SCTP stream parameters. This may throw.
+			ortc.validateSctpStreamParameters(sctpStreamParameters);
+			this.#sctpStreamIds![sctpStreamParameters.streamId] = 1;
 		}
 		// If this is a DirectTransport, sctpStreamParameters must not be used.
 		else
 		{
 			type = 'direct';
 
-			if (
-				ordered !== undefined ||
-				maxPacketLifeTime !== undefined ||
-				maxRetransmits !== undefined
-			)
+			if (sctpStreamParametersInit !== undefined)
 			{
 				logger.warn(
-					'consumeData() | ordered, maxPacketLifeTime and maxRetransmits are ignored when consuming data on a DirectTransport');
+					'consumeData() | sctpStreamParameters are ignored when consuming data on a DirectTransport');
 			}
 		}
 
@@ -996,7 +982,7 @@ export class Transport
 
 			if (this.#sctpStreamIds)
 			{
-				this.#sctpStreamIds[sctpStreamId] = 0;
+				this.#sctpStreamIds[sctpStreamParameters!.streamId] = 0;
 			}
 		});
 		dataConsumer.on('@dataproducerclose', () =>
@@ -1005,7 +991,7 @@ export class Transport
 
 			if (this.#sctpStreamIds)
 			{
-				this.#sctpStreamIds[sctpStreamId] = 0;
+				this.#sctpStreamIds[sctpStreamParameters!.streamId] = 0;
 			}
 		});
 
@@ -1028,7 +1014,7 @@ export class Transport
 			'transport.enableTraceEvent', this.internal.transportId, reqData);
 	}
 
-	private getNextSctpStreamId(): number
+	private getNextSctpStreamId(sctpStreamId?: number): number
 	{
 		if (
 			!this.#data.sctpParameters ||
@@ -1045,20 +1031,31 @@ export class Transport
 			this.#sctpStreamIds = Buffer.alloc(numStreams, 0);
 		}
 
-		let sctpStreamId;
-
-		for (let idx = 0; idx < this.#sctpStreamIds.length; ++idx)
+		if (sctpStreamId === undefined)
 		{
-			sctpStreamId = (this.#nextSctpStreamId + idx) % this.#sctpStreamIds.length;
-
-			if (!this.#sctpStreamIds[sctpStreamId])
+			for (let idx = 0; idx < this.#sctpStreamIds.length; ++idx)
 			{
-				this.#nextSctpStreamId = sctpStreamId + 1;
+				sctpStreamId = (this.#nextSctpStreamId + idx) % this.#sctpStreamIds.length;
 
-				return sctpStreamId;
+				if (!this.#sctpStreamIds[sctpStreamId])
+				{
+					this.#nextSctpStreamId = sctpStreamId + 1;
+
+					return sctpStreamId;
+				}
 			}
+
+			throw new Error('no sctpStreamId available');
+		}
+		else if (sctpStreamId >= this.#sctpStreamIds.length)
+		{
+			throw new Error('invalid sctpStreamId');
+		}
+		else if (this.#sctpStreamIds[sctpStreamId])
+		{
+			throw new Error('sctpStreamId already assigned');
 		}
 
-		throw new Error('no sctpStreamId available');
+		return sctpStreamId;
 	}
 }
