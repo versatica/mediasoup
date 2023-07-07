@@ -212,6 +212,8 @@ namespace RTC
 
 					data.append(std::to_string(this->bufferedAmount));
 					data.append("}");
+
+					this->shared->channelNotifier->Emit(this->id, "bufferedamountlow", data);
 				}
 				// Force the trigger of 'bufferedamountlow' once there is less or same
 				// buffered data than the given threshold.
