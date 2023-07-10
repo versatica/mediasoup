@@ -105,9 +105,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Set the destroying flag.
-		this->destroying = true;
-
 		// The destructor must delete and clear everything silently.
 
 		// Delete all Producers.
@@ -1409,6 +1406,13 @@ namespace RTC
 				MS_ERROR("unknown event '%s'", notification->eventCStr);
 			}
 		}
+	}
+
+	void Transport::Destroying()
+	{
+		MS_TRACE();
+
+		this->destroying = true;
 	}
 
 	void Transport::Connected()

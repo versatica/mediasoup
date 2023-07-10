@@ -154,6 +154,7 @@ namespace RTC
 
 	protected:
 		// Must be called from the subclass.
+		void Destroying();
 		void Connected();
 		void Disconnected();
 		void DataReceived(size_t len)
