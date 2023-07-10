@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.12.5
+
+* `DataConsumer`: Fix removed 'bufferedamountlow' notification ([PR #1113](https://github.com/versatica/mediasoup/pull/1113)).
+
+
 ### 3.12.4
 
 * Fix downloaded prebuilt binary check on Windows ([PR #1105](https://github.com/versatica/mediasoup/pull/1105) by @woodfe).
