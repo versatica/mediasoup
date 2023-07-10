@@ -771,7 +771,7 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 	}
 };
 
-export type ReplaceConsumerOptions<ConsumerAppData extends AppData = AppData> =
+export type ReplaceProducerOptions<ConsumerAppData extends AppData = AppData> =
 {
 	producerId: string;
 	consumer: Consumer<ConsumerAppData>;

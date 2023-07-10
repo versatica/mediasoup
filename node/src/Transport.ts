@@ -11,7 +11,7 @@ import { PlainTransportData } from './PlainTransport';
 import { PipeTransportData } from './PipeTransport';
 import { DirectTransportData } from './DirectTransport';
 import { Producer, ProducerOptions } from './Producer';
-import { Consumer, ConsumerOptions, ConsumerType, ReplaceConsumerOptions } from './Consumer';
+import { Consumer, ConsumerOptions, ConsumerType, ReplaceProducerOptions } from './Consumer';
 import {
 	DataProducer,
 	DataProducerOptions,
@@ -796,12 +796,12 @@ export class Transport
 		return consumer;
 	}
 	
-	async replaceConsume<ConsumerAppData extends AppData = AppData>(
+	async replaceProducer<ConsumerAppData extends AppData = AppData>(
 		{
 			consumer,
 			producerId,
 			pipe = false
-		}: ReplaceConsumerOptions<ConsumerAppData>
+		}: ReplaceProducerOptions<ConsumerAppData>
 	): Promise<Consumer<ConsumerAppData>>
 	{
 		if (!producerId || typeof producerId !== 'string')
