@@ -117,6 +117,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Tell the Transport parent class that we are about to destroy
+		// the class instance.
+		Destroying();
+
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->udpSocket;
