@@ -226,10 +226,15 @@ namespace RTC
 				// Trigger 'bufferedamountlow' now.
 				if (this->bufferedAmount <= this->bufferedAmountLowThreshold)
 				{
-					std::string data(R"({"bufferedAmount":)");
+					// Notify the Node DataConsumer.
+					auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
+					  this->shared->channelNotifier->GetBufferBuilder(), this->bufferedAmount);
 
-					data.append(std::to_string(this->bufferedAmount));
-					data.append("}");
+					this->shared->channelNotifier->Emit(
+					  this->id,
+					  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
+					  FBS::Notification::Body::FBS_DataConsumer_BufferedAmountLowNotification,
+					  bufferedAmountLowOffset);
 				}
 				// Force the trigger of 'bufferedamountlow' once there is less or same
 				// buffered data than the given threshold.

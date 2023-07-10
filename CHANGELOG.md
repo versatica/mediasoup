@@ -9,6 +9,12 @@
 * Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
 
 
+### 3.12.5
+
+* `DataConsumer`: Fix removed 'bufferedamountlow' notification ([PR #1113](https://github.com/versatica/mediasoup/pull/1113)).
+>>>>>>> v3
+
+
 ### 3.12.4
 
 * Fix downloaded prebuilt binary check on Windows ([PR #1105](https://github.com/versatica/mediasoup/pull/1105) by @woodfe).
@@ -32,7 +38,6 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 ### 3.12.0
 
 * Automate and publish prebuilt `mediasoup-worker` binaries ([PR #1087](https://github.com/versatica/mediasoup/pull/1087), thanks to @barlock for his work in ([PR #1083](https://github.com/versatica/mediasoup/pull/1083)).
->>>>>>> v3
 
 
 ### 3.11.26
