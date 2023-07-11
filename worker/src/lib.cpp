@@ -19,7 +19,7 @@
 #include <uv.h>
 #include <absl/container/flat_hash_map.h>
 #include <cerrno>
-#include <csignal>  // sigaction()
+#include <csignal> // sigaction()
 #include <string>
 
 void IgnoreSignals();
