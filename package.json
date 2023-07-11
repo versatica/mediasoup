@@ -7,8 +7,8 @@
     "José Luis Millán <jmillan@aliax.net> (https://github.com/jmillan)",
     "Nazar Mokynskyi (https://github.com/nazar-pc)"
   ],
-  "homepage": "https://mediasoup.org",
   "license": "ISC",
+  "homepage": "https://mediasoup.org",
   "repository": {
     "type": "git",
     "url": "https://github.com/versatica/mediasoup.git"
@@ -39,15 +39,15 @@
     "worker/meson_options.txt",
     "npm-scripts.mjs"
   ],
+  "engines": {
+    "node": ">=16"
+  },
   "keywords": [
     "webrtc",
     "ortc",
     "sfu",
     "nodejs"
   ],
-  "engines": {
-    "node": ">=16"
-  },
   "scripts": {
     "prepare": "node npm-scripts.mjs prepare",
     "postinstall": "node npm-scripts.mjs postinstall",
