@@ -139,6 +139,7 @@ namespace RTC
 				this->receivedTransportWideSeqNumber = true;
 
 				auto result = this->mapPacketArrivalTimes.emplace(wideSeqNumber, nowMs);
+
 				if (result.second)
 				{
 					MayDropOldPacketArrivalTimes(wideSeqNumber, nowMs);
