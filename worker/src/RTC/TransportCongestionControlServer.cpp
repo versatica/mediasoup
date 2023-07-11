@@ -125,6 +125,10 @@ namespace RTC
 					break;
 				}
 
+				// We may receive packets with sequence number lower than the one in previous
+				// tcc feedback, these packets may has been reported as lost previously,
+				// therefore we need to reset the start sequence num for the next tcc feedback.
+
 				if (
 				  !this->receivedTransportWideSeqNumber ||
 				  RTC::SeqManager<uint16_t>::IsSeqLowerThan(
