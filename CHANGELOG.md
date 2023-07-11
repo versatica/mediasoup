@@ -1,6 +1,11 @@
 # Changelog
 
 
+### Next
+
+* `Worker`: Add `Transport::Destroying()` protected method ([PR #1114](https://github.com/versatica/mediasoup/pull/1114)).
+
+
 ### 3.12.5
 
 * `DataConsumer`: Fix removed 'bufferedamountlow' notification ([PR #1113](https://github.com/versatica/mediasoup/pull/1113)).
