@@ -14,13 +14,13 @@
 #include <algorithm>
 #include <type_traits>
 
-#include "rtc_base/checks.h"
+// #include "rtc_base/checks.h"
 
 namespace webrtc {
 
 template <unsigned long M>                                    // NOLINT
 inline unsigned long Add(unsigned long a, unsigned long b) {  // NOLINT
-  RTC_DCHECK_LT(a, M);
+  // RTC_DCHECK_LT(a, M);
   unsigned long t = M - b % M;  // NOLINT
   unsigned long res = a - t;    // NOLINT
   if (t > a)
@@ -30,7 +30,7 @@ inline unsigned long Add(unsigned long a, unsigned long b) {  // NOLINT
 
 template <unsigned long M>                                         // NOLINT
 inline unsigned long Subtract(unsigned long a, unsigned long b) {  // NOLINT
-  RTC_DCHECK_LT(a, M);
+  // RTC_DCHECK_LT(a, M);
   unsigned long sub = b % M;  // NOLINT
   if (a < sub)
     return M - (sub - a);
@@ -65,8 +65,8 @@ template <typename T, T M>
 inline typename std::enable_if<(M > 0), T>::type ForwardDiff(T a, T b) {
   static_assert(std::is_unsigned<T>::value,
                 "Type must be an unsigned integer.");
-  RTC_DCHECK_LT(a, M);
-  RTC_DCHECK_LT(b, M);
+  // RTC_DCHECK_LT(a, M);
+  // RTC_DCHECK_LT(b, M);
   return a <= b ? b - a : M - (a - b);
 }
 
@@ -110,8 +110,8 @@ template <typename T, T M>
 inline typename std::enable_if<(M > 0), T>::type ReverseDiff(T a, T b) {
   static_assert(std::is_unsigned<T>::value,
                 "Type must be an unsigned integer.");
-  RTC_DCHECK_LT(a, M);
-  RTC_DCHECK_LT(b, M);
+  // RTC_DCHECK_LT(a, M);
+  // RTC_DCHECK_LT(b, M);
   return b <= a ? a - b : M - (b - a);
 }
 

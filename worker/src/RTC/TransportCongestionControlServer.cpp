@@ -116,15 +116,20 @@ namespace RTC
 	{
 		if (arrival_time > kMaxTimeMs)
 		{
-			MS_WARN_DEV("Arrival time out of bounds:%" PRIu64 "", arrival_time);
+			MS_WARN_DEV("arrival time out of bounds:%" PRIu64 "", arrival_time);
+
 			return;
 		}
+
 		int64_t seq = this->unwrapper.Unwrap(sequence_number);
+
 		if (seq <= 0)
 		{
-			MS_WARN_DEV("Invalid seq_num:%" PRIu16 ", unwrap-seq:%" PRId64 "", sequence_number, seq);
+			MS_WARN_DEV("invalid seq_num:%" PRIu16 ", unwrap-seq:%" PRId64 "", sequence_number, seq);
+
 			return;
 		}
+
 		if (
 		  this->periodicWindowStartSeq &&
 		  this->packetArrivalTimes.lower_bound(*this->periodicWindowStartSeq) ==
@@ -146,12 +151,15 @@ namespace RTC
 
 		// We are only interested in the first time a packet is received.
 		if (this->packetArrivalTimes.find(seq) != this->packetArrivalTimes.end())
+		{
 			return;
+		}
 
 		this->packetArrivalTimes[seq] = arrival_time;
 		// Limit the range of sequence numbers to send feedback for.
 		auto first_arrival_time_to_keep = this->packetArrivalTimes.lower_bound(
 		  this->packetArrivalTimes.rbegin()->first - kMaxNumberOfPackets);
+
 		if (first_arrival_time_to_keep != this->packetArrivalTimes.begin())
 		{
 			this->packetArrivalTimes.erase(this->packetArrivalTimes.begin(), first_arrival_time_to_keep);
@@ -169,7 +177,9 @@ namespace RTC
 		// current feedback packet. Some older may still be in the map, in case a
 		// reordering happens and we need to retransmit them.
 		if (!this->periodicWindowStartSeq)
+		{
 			return;
+		}
 
 		for (auto begin_iterator = this->packetArrivalTimes.lower_bound(*this->periodicWindowStartSeq);
 		     begin_iterator != this->packetArrivalTimes.cend();
@@ -177,12 +187,14 @@ namespace RTC
 		{
 			int64_t next_sequence_number = BuildFeedbackPacket(
 			  *this->periodicWindowStartSeq, begin_iterator, this->packetArrivalTimes.cend());
+
 			// If build feedback packet fail, it will not be sent.
 			if (next_sequence_number < 0)
 			{
 				// Reset and create a new feedback packet for next periodic.
 				this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
 				  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+
 				return;
 			}
 
@@ -208,17 +220,19 @@ namespace RTC
 
 		// RTC_DCHECK(begin_iterator != end_iterator);
 		int64_t next_sequence_number = base_sequence_number;
+
 		for (auto it = begin_iterator; it != end_iterator; ++it)
 		{
 			auto result = this->transportCcFeedbackPacket->AddPacket(
 			  static_cast<uint16_t>(it->first & 0xFFFF), it->second, this->maxRtcpPacketLen);
+
 			if (RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::SUCCESS != result)
 			{
 				// If we can't even add the first seq to the feedback packet, we won't be
 				// able to build it at all.
 				// RTC_CHECK(begin_iterator != it);
 				MS_WARN_DEV(
-				  "Add fail! result:%" PRIu32 ", cur-seq:%" PRId64 ", next-seq:%" PRId64
+				  "add fail! result:%" PRIu32 ", cur-seq:%" PRId64 ", next-seq:%" PRId64
 				  ", base-seq:%" PRId64 "",
 				  static_cast<uint32_t>(result),
 				  it->first,
@@ -226,6 +240,7 @@ namespace RTC
 				  base_sequence_number);
 				// When add not success then update startSeq to current seq.
 				this->periodicWindowStartSeq = it->first;
+
 				// Could not add timestamp, feedback packet max size exceeded. Return and
 				// try again with a fresh packet.
 				if (RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED == result)
@@ -238,14 +253,18 @@ namespace RTC
 					return -1;
 				}
 			}
+
 			next_sequence_number = it->first + 1;
+
 			// If the feedback packet is full, send it now.
 			if (this->transportCcFeedbackPacket->IsFull())
 			{
 				MS_DEBUG_DEV("transport-cc feedback packet is full, sending feedback now");
+
 				break;
 			}
 		}
+
 		return next_sequence_number;
 	}
 
