@@ -18,9 +18,7 @@
 #include <uv.h>
 #include <absl/container/flat_hash_map.h>
 #include <cerrno>
-#include <csignal>  // sigaction()
-#include <cstdlib>  // std::_Exit(), std::genenv()
-#include <iostream> // std::cerr, std::endl
+#include <csignal> // sigaction()
 #include <string>
 
 void IgnoreSignals();
@@ -188,7 +186,9 @@ void IgnoreSignals()
 	err            = sigfillset(&act.sa_mask);
 
 	if (err != 0)
+	{
 		MS_THROW_ERROR("sigfillset() failed: %s", std::strerror(errno));
+	}
 
 	for (auto& kv : ignoredSignals)
 	{
@@ -198,7 +198,9 @@ void IgnoreSignals()
 		err = sigaction(sigId, &act, nullptr);
 
 		if (err != 0)
+		{
 			MS_THROW_ERROR("sigaction() failed for signal %s: %s", sigName.c_str(), std::strerror(errno));
+		}
 	}
 #endif
 }

@@ -3,7 +3,7 @@
 
 #include "MediaSoupErrors.hpp"
 #include "lib.hpp"
-#include <cstdlib> // std::_Exit(), std::genenv()
+#include <cstdlib> // std::_Exit()
 #include <string>
 
 static constexpr int ConsumerChannelFd{ 3 };
