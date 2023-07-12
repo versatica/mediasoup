@@ -114,7 +114,7 @@ namespace RTC
 		uint64_t lastSrReceived{ 0u };
 		// Relative transit time for prev packet.
 		int32_t transit{ 0u };
-		// Jitter in ms.
+		// Jitter in RTP timestamp units.
 		uint32_t jitter{ 0u };
 		uint8_t firSeqNumber{ 0u };
 		uint32_t reportedPacketLost{ 0u };
