@@ -102,9 +102,9 @@ namespace RTC
 			{
 				return uint32_t{ ntohl(this->header->jitter) };
 			}
-			void SetJitter(uint32_t jitter)
+			void SetJitter(float jitter)
 			{
-				this->header->jitter = uint32_t{ htonl(jitter) };
+				this->header->jitter = uint32_t{ htonl(static_cast<uint32_t>(jitter)) };
 			}
 			uint32_t GetLastSenderReport() const
 			{

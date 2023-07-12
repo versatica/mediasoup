@@ -236,7 +236,7 @@ namespace RTC
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
 		jsonObject["type"]        = "inbound-rtp";
-		jsonObject["jitter"]      = this->jitter;
+		jsonObject["jitter"]      = static_cast<uint32_t>(this->jitter);
 		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
 		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
 		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(nowMs);
@@ -716,7 +716,7 @@ namespace RTC
 			d = -d;
 		}
 
-		this->jitter += (1. / 16.) * (static_cast<double>(d) - this->jitter);
+		this->jitter += (1. / 16.) * (static_cast<float>(d) - this->jitter);
 	}
 
 	void RtpStreamRecv::UpdateScore()
