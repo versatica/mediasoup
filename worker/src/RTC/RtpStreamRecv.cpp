@@ -236,7 +236,7 @@ namespace RTC
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
 		jsonObject["type"]        = "inbound-rtp";
-		jsonObject["jitter"]      = this->jitter;
+		jsonObject["jitter"]      = this->jitter / this->params.clockRate * 1000;
 		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
 		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
 		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(nowMs);
@@ -510,7 +510,7 @@ namespace RTC
 
 		// Fill the rest of the report.
 		report->SetLastSeq(static_cast<uint32_t>(this->maxSeq) + this->cycles);
-		report->SetJitter(this->jitter * (this->params.clockRate / 1000));
+		report->SetJitter(this->jitter);
 
 		if (this->lastSrReceived != 0)
 		{
@@ -698,8 +698,8 @@ namespace RTC
 		}
 
 		// NOTE: Based on https://github.com/versatica/mediasoup/issues/1018.
-		auto transit = static_cast<int>(
-		  DepLibUV::GetTimeMs() - (static_cast<uint64_t>(rtpTimestamp) * 1000 / this->params.clockRate));
+		auto transit =
+		  static_cast<int32_t>(DepLibUV::GetTimeMs() * (this->params.clockRate / 1000) - rtpTimestamp);
 		int d = transit - this->transit;
 
 		// First transit calculation, save and return.
