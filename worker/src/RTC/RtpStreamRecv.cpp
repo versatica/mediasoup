@@ -236,7 +236,7 @@ namespace RTC
 		RTC::RtpStream::FillJsonStats(jsonObject);
 
 		jsonObject["type"]        = "inbound-rtp";
-		jsonObject["jitter"]      = this->jitter;
+		jsonObject["jitter"]      = static_cast<uint32_t>(this->jitter);
 		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
 		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
 		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(nowMs);
@@ -692,15 +692,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->params.clockRate == 0u)
+		if (GetClockRate() == 0u)
 		{
 			return;
 		}
 
 		// NOTE: Based on https://github.com/versatica/mediasoup/issues/1018.
-		auto transit = static_cast<int>(
-		  DepLibUV::GetTimeMs() - (static_cast<uint64_t>(rtpTimestamp) * 1000 / this->params.clockRate));
-		int d = transit - this->transit;
+		auto transit = static_cast<int>((DepLibUV::GetTimeMs() * GetClockRate() / 1000) - rtpTimestamp);
+		int d        = transit - this->transit;
 
 		// First transit calculation, save and return.
 		if (this->transit == 0)
@@ -717,7 +716,7 @@ namespace RTC
 			d = -d;
 		}
 
-		this->jitter += (1. / 16.) * (static_cast<double>(d) - this->jitter);
+		this->jitter += (1. / 16.) * (static_cast<float>(d) - this->jitter);
 	}
 
 	void RtpStreamRecv::UpdateScore()
