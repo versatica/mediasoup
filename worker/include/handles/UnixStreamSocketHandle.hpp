@@ -1,11 +1,11 @@
-#ifndef MS_UNIX_STREAM_SOCKET_HPP
-#define MS_UNIX_STREAM_SOCKET_HPP
+#ifndef MS_UNIX_STREAM_SOCKET_HANDLE_HPP
+#define MS_UNIX_STREAM_SOCKET_HANDLE_HPP
 
 #include "common.hpp"
 #include <uv.h>
 #include <string>
 
-class UnixStreamSocket
+class UnixStreamSocketHandle
 {
 public:
 	/* Struct for the data field of uv_req_t when writing data. */
@@ -35,10 +35,10 @@ public:
 	};
 
 public:
-	UnixStreamSocket(int fd, size_t bufferSize, UnixStreamSocket::Role role);
-	UnixStreamSocket& operator=(const UnixStreamSocket&) = delete;
-	UnixStreamSocket(const UnixStreamSocket&)            = delete;
-	virtual ~UnixStreamSocket();
+	UnixStreamSocketHandle(int fd, size_t bufferSize, UnixStreamSocketHandle::Role role);
+	UnixStreamSocketHandle& operator=(const UnixStreamSocketHandle&) = delete;
+	UnixStreamSocketHandle(const UnixStreamSocketHandle&)            = delete;
+	virtual ~UnixStreamSocketHandle();
 
 public:
 	void Close();
@@ -47,6 +47,10 @@ public:
 		return this->closed;
 	}
 	void Write(const uint8_t* data, size_t len);
+	uint32_t GetSendBufferSize() const;
+	void SetSendBufferSize(uint32_t size);
+	uint32_t GetRecvBufferSize() const;
+	void SetRecvBufferSize(uint32_t size);
 
 	/* Callbacks fired by UV events. */
 public:
@@ -70,7 +74,7 @@ private:
 protected:
 	// Passed by argument.
 	size_t bufferSize{ 0u };
-	UnixStreamSocket::Role role;
+	UnixStreamSocketHandle::Role role;
 	// Allocated by this.
 	uint8_t* buffer{ nullptr };
 	// Others.

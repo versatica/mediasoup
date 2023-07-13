@@ -3,10 +3,10 @@ project(
   ['c', 'cpp'],
   default_options : [
     'warning_level=1',
-    'cpp_std=c++11',
+    'cpp_std=c++17',
     'default_library=static',
   ],
-  meson_version: '>= 0.58',
+  meson_version: '>= 1.1.0',
 )
 
 cpp_args = [
@@ -60,12 +60,12 @@ common_sources = [
   'src/Utils/File.cpp',
   'src/Utils/IP.cpp',
   'src/Utils/String.cpp',
-  'src/handles/SignalsHandler.cpp',
-  'src/handles/TcpConnectionHandler.cpp',
-  'src/handles/TcpServerHandler.cpp',
-  'src/handles/Timer.cpp',
-  'src/handles/UdpSocketHandler.cpp',
-  'src/handles/UnixStreamSocket.cpp',
+  'src/handles/SignalHandle.cpp',
+  'src/handles/TcpConnectionHandle.cpp',
+  'src/handles/TcpServerHandle.cpp',
+  'src/handles/TimerHandle.cpp',
+  'src/handles/UdpSocketHandle.cpp',
+  'src/handles/UnixStreamSocketHandle.cpp',
   'src/Channel/ChannelNotifier.cpp',
   'src/Channel/ChannelRequest.cpp',
   'src/Channel/ChannelNotification.cpp',

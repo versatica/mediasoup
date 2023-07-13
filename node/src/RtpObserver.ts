@@ -48,8 +48,8 @@ export type RtpObserverAddRemoveProducerOptions =
 };
 
 export class RtpObserver
-	<Events extends RtpObserverEvents = RtpObserverEvents,
-	RtpObserverAppData extends AppData = AppData>
+	<RtpObserverAppData extends AppData = AppData,
+	Events extends RtpObserverEvents = RtpObserverEvents>
 	extends EnhancedEventEmitter<Events>
 {
 	// Internal data.
@@ -167,7 +167,7 @@ export class RtpObserver
 		).pack(this.channel.bufferBuilder);
 
 		this.channel.request(
-			FbsRequest.Method.ROUTER_CLOSE_RTP_OBSERVER,
+			FbsRequest.Method.ROUTER_CLOSE_RTPOBSERVER,
 			FbsRequest.Body.FBS_Router_CloseRtpObserverRequest,
 			requestOffset,
 			this.internal.routerId
@@ -214,7 +214,7 @@ export class RtpObserver
 		const wasPaused = this.#paused;
 
 		await this.channel.request(
-			FbsRequest.Method.RTP_OBSERVER_PAUSE,
+			FbsRequest.Method.RTPOBSERVER_PAUSE,
 			undefined,
 			undefined,
 			this.internal.rtpObserverId
@@ -239,7 +239,7 @@ export class RtpObserver
 		const wasPaused = this.#paused;
 
 		await this.channel.request(
-			FbsRequest.Method.RTP_OBSERVER_RESUME,
+			FbsRequest.Method.RTPOBSERVER_RESUME,
 			undefined,
 			undefined,
 			this.internal.rtpObserverId
@@ -273,7 +273,7 @@ export class RtpObserver
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
-			FbsRequest.Method.RTP_OBSERVER_ADD_PRODUCER,
+			FbsRequest.Method.RTPOBSERVER_ADD_PRODUCER,
 			FbsRequest.Body.FBS_RtpObserver_AddProducerRequest,
 			requestOffset,
 			this.internal.rtpObserverId
@@ -302,7 +302,7 @@ export class RtpObserver
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
-			FbsRequest.Method.RTP_OBSERVER_REMOVE_PRODUCER,
+			FbsRequest.Method.RTPOBSERVER_REMOVE_PRODUCER,
 			FbsRequest.Body.FBS_RtpObserver_RemoveProducerRequest,
 			requestOffset,
 			this.internal.rtpObserverId

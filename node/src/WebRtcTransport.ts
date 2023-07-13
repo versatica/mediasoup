@@ -9,6 +9,7 @@ import {
 	BaseTransportDump,
 	BaseTransportStats,
 	Transport,
+	TransportListenInfo,
 	TransportListenIp,
 	TransportProtocol,
 	TransportTuple,
@@ -19,8 +20,8 @@ import {
 } from './Transport';
 import { WebRtcServer } from './WebRtcServer';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import { AppData } from './types';
-import { Either, parseVector } from './utils';
+import { AppData, Either } from './types';
+import { parseVector } from './utils';
 import { Event, Notification } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
@@ -31,11 +32,19 @@ import { IceState as FbsIceState } from './fbs/web-rtc-transport/ice-state';
 export type WebRtcTransportOptions<WebRtcTransportAppData extends AppData = AppData> =
 	WebRtcTransportOptionsBase<WebRtcTransportAppData> & WebRtcTransportListen;
 
-export type WebRtcTransportListenIndividual =
+type WebRtcTransportListenIndividualListenInfo =
+{
+	/**
+	 * Listening info.
+	 */
+	listenInfos: TransportListenInfo[];
+};
+
+type WebRtcTransportListenIndividualListenIp =
 {
 	/**
 	 * Listening IP address or addresses in order of preference (first one is the
-	 * preferred one). Mandatory unless webRtcServer is given.
+	 * preferred one).
 	 */
 	listenIps: (TransportListenIp | string)[];
 
@@ -46,36 +55,42 @@ export type WebRtcTransportListenIndividual =
 	port?: number;
 };
 
-export type WebRtcTransportListenServer =
+type WebRtcTransportListenServer =
 {
 	/**
-	 * Instance of WebRtcServer. Mandatory unless listenIps is given.
+	 * Instance of WebRtcServer.
 	 */
 	webRtcServer: WebRtcServer;
 };
 
-export type WebRtcTransportListen =
-	Either<WebRtcTransportListenIndividual, WebRtcTransportListenServer>;
+type WebRtcTransportListen = Either<
+	Either<WebRtcTransportListenIndividualListenInfo, WebRtcTransportListenIndividualListenIp>,
+	WebRtcTransportListenServer
+>;
 
 export type WebRtcTransportOptionsBase<WebRtcTransportAppData> =
 {
 	/**
 	 * Listen in UDP. Default true.
+	 * @deprecated
 	 */
 	enableUdp?: boolean;
 
 	/**
 	 * Listen in TCP. Default false.
+	 * @deprecated
 	 */
 	enableTcp?: boolean;
 
 	/**
 	 * Prefer UDP. Default false.
+	 * @deprecated
 	 */
 	preferUdp?: boolean;
 
 	/**
 	 * Prefer TCP. Default false.
+	 * @deprecated
 	 */
 	preferTcp?: boolean;
 
@@ -214,7 +229,7 @@ type WebRtcTransportDump = BaseTransportDump &
 const logger = new Logger('WebRtcTransport');
 
 export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
-	extends Transport<WebRtcTransportEvents, WebRtcTransportObserverEvents, WebRtcTransportAppData>
+	extends Transport<WebRtcTransportAppData, WebRtcTransportEvents, WebRtcTransportObserverEvents>
 {
 	// WebRtcTransport data.
 	readonly #data: WebRtcTransportData;
@@ -462,7 +477,7 @@ export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
 
 		// Wait for response.
 		const response = await this.channel.request(
-			FbsRequest.Method.WEBRTC_TRANSPORT_CONNECT,
+			FbsRequest.Method.WEBRTCTRANSPORT_CONNECT,
 			FbsRequest.Body.FBS_WebRtcTransport_ConnectRequest,
 			requestOffset,
 			this.internal.transportId
@@ -497,7 +512,8 @@ export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
 
 		response.body(restartIceResponse);
 
-		const iceParameters = {
+		const iceParameters =
+		{
 			usernameFragment : restartIceResponse.usernameFragment()!,
 			password         : restartIceResponse.password()!,
 			iceLite          : restartIceResponse.iceLite()
@@ -748,7 +764,8 @@ function parseDtlsParameters(binary: FbsWebRtcTransport.DtlsParameters): DtlsPar
 	for (let i=0; i<binary.fingerprintsLength(); ++i)
 	{
 		const fbsFingerprint = binary.fingerprints(i)!;
-		const fingerPrint : DtlsFingerprint = {
+		const fingerPrint : DtlsFingerprint =
+		{
 			algorithm : fbsFingerprint.algorithm()!,
 			value     : fbsFingerprint.value()!
 		};
@@ -768,29 +785,22 @@ function serializeDtlsParameters(
 {
 	const fingerprints: number[] = [];
 
-	try
+	for (const fingerprint of dtlsParameters.fingerprints)
 	{
-		for (const fingerprint of dtlsParameters.fingerprints)
-		{
-			const algorithmOffset = builder.createString(fingerprint.algorithm);
-			const valueOffset = builder.createString(fingerprint.value);
-			const fingerprintOffset = FbsWebRtcTransport.Fingerprint.createFingerprint(
-				builder, algorithmOffset, valueOffset);
+		const algorithmOffset = builder.createString(fingerprint.algorithm);
+		const valueOffset = builder.createString(fingerprint.value);
+		const fingerprintOffset = FbsWebRtcTransport.Fingerprint.createFingerprint(
+			builder, algorithmOffset, valueOffset);
 
-			fingerprints.push(fingerprintOffset);
-		}
-
-		const fingerprintsOffset = FbsWebRtcTransport.DtlsParameters.createFingerprintsVector(
-			builder, fingerprints);
-		const roleOffset = builder.createString(dtlsParameters.role);
-
-		return FbsWebRtcTransport.DtlsParameters.createDtlsParameters(
-			builder,
-			fingerprintsOffset,
-			roleOffset);
+		fingerprints.push(fingerprintOffset);
 	}
-	catch (error)
-	{
-		throw new TypeError(`${error}`);
-	}
+
+	const fingerprintsOffset = FbsWebRtcTransport.DtlsParameters.createFingerprintsVector(
+		builder, fingerprints);
+	const roleOffset = builder.createString(dtlsParameters.role);
+
+	return FbsWebRtcTransport.DtlsParameters.createDtlsParameters(
+		builder,
+		fingerprintsOffset,
+		roleOffset);
 }

@@ -59,7 +59,10 @@ namespace RTC
 		if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 		{
 			this->maxInput = input;
-			this->dropped.insert(input);
+			// Insert input in the last position.
+			// Explicitly indicate insert() to add the input at the end, which is
+			// more performant.
+			this->dropped.insert(this->dropped.end(), input);
 
 			ClearDropped();
 		}
@@ -104,15 +107,13 @@ namespace RTC
 		// There are dropped inputs, calculate 'base' for this input.
 		else
 		{
+			auto droppedCount = this->dropped.size();
+
 			// Get the first dropped input which is higher than or equal 'input'.
 			auto it = this->dropped.lower_bound(input);
 
-			// There are dropped inputs lower than 'input'.
-			if (it != this->dropped.begin())
-			{
-				auto count = std::distance(this->dropped.begin(), it);
-				base       = (this->base - count) & MaxValue;
-			}
+			droppedCount -= std::distance(it, this->dropped.end());
+			base = (this->base - droppedCount) & MaxValue;
 		}
 
 	done:

@@ -5,7 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{
-    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenIp,
+    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
     SctpState, TransportTuple,
 };
 use crate::messages::{
@@ -39,25 +39,25 @@ use thiserror::Error;
 
 /// Struct that protects an invariant of having non-empty list of listen IPs
 #[derive(Debug, Clone, Eq, PartialEq, Serialize)]
-pub struct TransportListenIps(Vec<ListenIp>);
+pub struct WebRtcTransportListenInfos(Vec<ListenInfo>);
 
-impl TransportListenIps {
+impl WebRtcTransportListenInfos {
     /// Create transport listen IPs with given IP populated initially.
     #[must_use]
-    pub fn new(listen_ip: ListenIp) -> Self {
-        Self(vec![listen_ip])
+    pub fn new(listen_info: ListenInfo) -> Self {
+        Self(vec![listen_info])
     }
 
     /// Insert another listen IP.
     #[must_use]
-    pub fn insert(mut self, listen_ip: ListenIp) -> Self {
-        self.0.push(listen_ip);
+    pub fn insert(mut self, listen_info: ListenInfo) -> Self {
+        self.0.push(listen_info);
         self
     }
 }
 
-impl Deref for TransportListenIps {
-    type Target = Vec<ListenIp>;
+impl Deref for WebRtcTransportListenInfos {
+    type Target = Vec<ListenInfo>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -69,14 +69,14 @@ impl Deref for TransportListenIps {
 #[error("Empty list of listen IPs provided, should have at least one element")]
 pub struct EmptyListError;
 
-impl TryFrom<Vec<ListenIp>> for TransportListenIps {
+impl TryFrom<Vec<ListenInfo>> for WebRtcTransportListenInfos {
     type Error = EmptyListError;
 
-    fn try_from(listen_ips: Vec<ListenIp>) -> Result<Self, Self::Error> {
-        if listen_ips.is_empty() {
+    fn try_from(listen_infos: Vec<ListenInfo>) -> Result<Self, Self::Error> {
+        if listen_infos.is_empty() {
             Err(EmptyListError)
         } else {
-            Ok(Self(listen_ips))
+            Ok(Self(listen_infos))
         }
     }
 }
@@ -84,18 +84,16 @@ impl TryFrom<Vec<ListenIp>> for TransportListenIps {
 /// How [`WebRtcTransport`] should listen on interfaces.
 ///
 /// # Notes on usage
-/// * Do not use "0.0.0.0" into `listen_ips`. Values in `listen_ips` must be specific bindable IPs
+/// * Do not use "0.0.0.0" into `listen_infos`. Values in `listen_infos` must be specific bindable IPs
 ///   on the host.
-/// * If you use "0.0.0.0" or "::" into `listen_ips`, then you need to also provide `announced_ip`
-///   in the corresponding entry in `listen_ips`.
+/// * If you use "0.0.0.0" or "::" into `listen_infos`, then you need to also provide `announced_ip`
+///   in the corresponding entry in `listen_infos`.
 #[derive(Debug, Clone)]
 pub enum WebRtcTransportListen {
-    /// Listen on individual IP/port combinations specific to this transport.
+    /// Listen on individual protocol/IP/port combinations specific to this transport.
     Individual {
-        /// Listening IP address or addresses in order of preference (first one is the preferred one).
-        listen_ips: TransportListenIps,
-        /// Fixed port to listen on instead of selecting automatically from Worker's port range.
-        port: Option<u16>,
+        /// Listening infos in order of preference (first one is the preferred one).
+        listen_infos: WebRtcTransportListenInfos,
     },
     /// Share [`WebRtcServer`] with other transports withing the same worker.
     Server {
@@ -114,17 +112,6 @@ pub enum WebRtcTransportListen {
 pub struct WebRtcTransportOptions {
     /// How [`WebRtcTransport`] should listen on interfaces.
     pub listen: WebRtcTransportListen,
-    /// Listen in UDP. Default true.
-    pub enable_udp: bool,
-    /// Listen in TCP.
-    /// Default false.
-    pub enable_tcp: bool,
-    /// Prefer UDP.
-    /// Default false.
-    pub prefer_udp: bool,
-    /// Prefer TCP.
-    /// Default false.
-    pub prefer_tcp: bool,
     /// Initial available outgoing bitrate (in bps).
     /// Default 600000.
     pub initial_available_outgoing_bitrate: u32,
@@ -146,16 +133,9 @@ pub struct WebRtcTransportOptions {
 impl WebRtcTransportOptions {
     /// Create [`WebRtcTransport`] options with given listen IPs.
     #[must_use]
-    pub fn new(listen_ips: TransportListenIps) -> Self {
+    pub fn new(listen_infos: WebRtcTransportListenInfos) -> Self {
         Self {
-            listen: WebRtcTransportListen::Individual {
-                listen_ips,
-                port: None,
-            },
-            enable_udp: true,
-            enable_tcp: false,
-            prefer_udp: false,
-            prefer_tcp: false,
+            listen: WebRtcTransportListen::Individual { listen_infos },
             initial_available_outgoing_bitrate: 600_000,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),
@@ -169,10 +149,6 @@ impl WebRtcTransportOptions {
     pub fn new_with_server(webrtc_server: WebRtcServer) -> Self {
         Self {
             listen: WebRtcTransportListen::Server { webrtc_server },
-            enable_udp: true,
-            enable_tcp: false,
-            prefer_udp: false,
-            prefer_tcp: false,
             initial_available_outgoing_bitrate: 600_000,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),

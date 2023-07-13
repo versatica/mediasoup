@@ -14261,6 +14261,8 @@ mod root {
                 >,
                 pub label: ::planus::alloc::string::String,
                 pub protocol: ::planus::alloc::string::String,
+                pub paused: bool,
+                pub data_producer_paused: bool,
             }
 
             impl DumpResponse {
@@ -14275,6 +14277,8 @@ mod root {
                     >,
                     field_label: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_protocol: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_paused: impl ::planus::WriteAsDefault<bool, bool>,
+                    field_data_producer_paused: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_id = field_id.prepare(builder);
 
@@ -14289,8 +14293,13 @@ mod root {
 
                     let prepared_protocol = field_protocol.prepare(builder);
 
+                    let prepared_paused = field_paused.prepare(builder, &false);
+
+                    let prepared_data_producer_paused =
+                        field_data_producer_paused.prepare(builder, &false);
+
                     let mut table_writer =
-                        ::planus::table_writer::TableWriter::<14, 24>::new(builder);
+                        ::planus::table_writer::TableWriter::<18, 26>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
                     table_writer.calculate_size::<::planus::Offset<str>>(4);
@@ -14300,6 +14309,12 @@ mod root {
                     }
                     table_writer.calculate_size::<::planus::Offset<str>>(10);
                     table_writer.calculate_size::<::planus::Offset<str>>(12);
+                    if prepared_paused.is_some() {
+                        table_writer.calculate_size::<bool>(14);
+                    }
+                    if prepared_data_producer_paused.is_some() {
+                        table_writer.calculate_size::<bool>(16);
+                    }
 
                     table_writer.finish_calculating();
 
@@ -14314,6 +14329,14 @@ mod root {
                         }
                         table_writer.write::<_, _, 4>(4, &prepared_label);
                         table_writer.write::<_, _, 4>(5, &prepared_protocol);
+                        if let ::core::option::Option::Some(prepared_paused) = prepared_paused {
+                            table_writer.write::<_, _, 1>(6, &prepared_paused);
+                        }
+                        if let ::core::option::Option::Some(prepared_data_producer_paused) =
+                            prepared_data_producer_paused
+                        {
+                            table_writer.write::<_, _, 1>(7, &prepared_data_producer_paused);
+                        }
                     }
 
                     table_writer.finish()
@@ -14355,6 +14378,8 @@ mod root {
                         &self.sctp_stream_parameters,
                         &self.label,
                         &self.protocol,
+                        &self.paused,
+                        &self.data_producer_paused,
                     )
                 }
             }
@@ -14391,6 +14416,20 @@ mod root {
                 pub fn protocol(&self) -> ::planus::Result<&'a ::core::primitive::str> {
                     self.0.access_required(5, "DumpResponse", "protocol")
                 }
+
+                pub fn paused(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0.access(6, "DumpResponse", "paused")?.unwrap_or(false),
+                    )
+                }
+
+                pub fn data_producer_paused(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(7, "DumpResponse", "data_producer_paused")?
+                            .unwrap_or(false),
+                    )
+                }
             }
 
             impl<'a> ::core::fmt::Debug for DumpResponseRef<'a> {
@@ -14406,6 +14445,8 @@ mod root {
                     }
                     f.field("label", &self.label());
                     f.field("protocol", &self.protocol());
+                    f.field("paused", &self.paused());
+                    f.field("data_producer_paused", &self.data_producer_paused());
                     f.finish()
                 }
             }
@@ -14433,6 +14474,10 @@ mod root {
                         },
                         label: ::core::convert::TryInto::try_into(value.label()?)?,
                         protocol: ::core::convert::TryInto::try_into(value.protocol()?)?,
+                        paused: ::core::convert::TryInto::try_into(value.paused()?)?,
+                        data_producer_paused: ::core::convert::TryInto::try_into(
+                            value.data_producer_paused()?,
+                        )?,
                     })
                 }
             }
@@ -16594,6 +16639,7 @@ mod root {
                 >,
                 pub label: ::planus::alloc::string::String,
                 pub protocol: ::planus::alloc::string::String,
+                pub paused: bool,
             }
 
             impl DumpResponse {
@@ -16607,6 +16653,7 @@ mod root {
                     >,
                     field_label: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_protocol: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_paused: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_id = field_id.prepare(builder);
 
@@ -16619,8 +16666,10 @@ mod root {
 
                     let prepared_protocol = field_protocol.prepare(builder);
 
+                    let prepared_paused = field_paused.prepare(builder, &false);
+
                     let mut table_writer =
-                        ::planus::table_writer::TableWriter::<12, 20>::new(builder);
+                        ::planus::table_writer::TableWriter::<14, 21>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
                     table_writer.calculate_size::<::planus::Offset<str>>(4);
@@ -16629,6 +16678,9 @@ mod root {
                     }
                     table_writer.calculate_size::<::planus::Offset<str>>(8);
                     table_writer.calculate_size::<::planus::Offset<str>>(10);
+                    if prepared_paused.is_some() {
+                        table_writer.calculate_size::<bool>(12);
+                    }
 
                     table_writer.finish_calculating();
 
@@ -16642,6 +16694,9 @@ mod root {
                         }
                         table_writer.write::<_, _, 4>(3, &prepared_label);
                         table_writer.write::<_, _, 4>(4, &prepared_protocol);
+                        if let ::core::option::Option::Some(prepared_paused) = prepared_paused {
+                            table_writer.write::<_, _, 1>(5, &prepared_paused);
+                        }
                     }
 
                     table_writer.finish()
@@ -16682,6 +16737,7 @@ mod root {
                         &self.sctp_stream_parameters,
                         &self.label,
                         &self.protocol,
+                        &self.paused,
                     )
                 }
             }
@@ -16713,6 +16769,12 @@ mod root {
                 pub fn protocol(&self) -> ::planus::Result<&'a ::core::primitive::str> {
                     self.0.access_required(4, "DumpResponse", "protocol")
                 }
+
+                pub fn paused(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0.access(5, "DumpResponse", "paused")?.unwrap_or(false),
+                    )
+                }
             }
 
             impl<'a> ::core::fmt::Debug for DumpResponseRef<'a> {
@@ -16727,6 +16789,7 @@ mod root {
                     }
                     f.field("label", &self.label());
                     f.field("protocol", &self.protocol());
+                    f.field("paused", &self.paused());
                     f.finish()
                 }
             }
@@ -16751,6 +16814,7 @@ mod root {
                         },
                         label: ::core::convert::TryInto::try_into(value.label()?)?,
                         protocol: ::core::convert::TryInto::try_into(value.protocol()?)?,
+                        paused: ::core::convert::TryInto::try_into(value.paused()?)?,
                     })
                 }
             }
@@ -18537,40 +18601,84 @@ mod root {
                 ::serde::Serialize,
                 ::serde::Deserialize,
             )]
-            pub struct ListenIp {
+            pub struct ListenInfo {
+                pub protocol: self::Protocol,
                 pub ip: ::planus::alloc::string::String,
                 pub announced_ip: ::core::option::Option<::planus::alloc::string::String>,
+                pub port: u16,
+                pub send_buffer_size: u32,
+                pub recv_buffer_size: u32,
             }
 
-            impl ListenIp {
+            impl ListenInfo {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
+                    field_protocol: impl ::planus::WriteAsDefault<self::Protocol, self::Protocol>,
                     field_ip: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_announced_ip: impl ::planus::WriteAsOptional<
                         ::planus::Offset<::core::primitive::str>,
                     >,
+                    field_port: impl ::planus::WriteAsDefault<u16, u16>,
+                    field_send_buffer_size: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_recv_buffer_size: impl ::planus::WriteAsDefault<u32, u32>,
                 ) -> ::planus::Offset<Self> {
+                    let prepared_protocol = field_protocol.prepare(builder, &self::Protocol::Udp);
+
                     let prepared_ip = field_ip.prepare(builder);
 
                     let prepared_announced_ip = field_announced_ip.prepare(builder);
 
-                    let mut table_writer =
-                        ::planus::table_writer::TableWriter::<6, 8>::new(builder);
+                    let prepared_port = field_port.prepare(builder, &0);
 
-                    table_writer.calculate_size::<::planus::Offset<str>>(2);
+                    let prepared_send_buffer_size = field_send_buffer_size.prepare(builder, &0);
+
+                    let prepared_recv_buffer_size = field_recv_buffer_size.prepare(builder, &0);
+
+                    let mut table_writer =
+                        ::planus::table_writer::TableWriter::<14, 19>::new(builder);
+
+                    if prepared_protocol.is_some() {
+                        table_writer.calculate_size::<self::Protocol>(2);
+                    }
+                    table_writer.calculate_size::<::planus::Offset<str>>(4);
                     if prepared_announced_ip.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<str>>(4);
+                        table_writer.calculate_size::<::planus::Offset<str>>(6);
+                    }
+                    if prepared_port.is_some() {
+                        table_writer.calculate_size::<u16>(8);
+                    }
+                    if prepared_send_buffer_size.is_some() {
+                        table_writer.calculate_size::<u32>(10);
+                    }
+                    if prepared_recv_buffer_size.is_some() {
+                        table_writer.calculate_size::<u32>(12);
                     }
 
                     table_writer.finish_calculating();
 
                     unsafe {
-                        table_writer.write::<_, _, 4>(0, &prepared_ip);
+                        table_writer.write::<_, _, 4>(1, &prepared_ip);
                         if let ::core::option::Option::Some(prepared_announced_ip) =
                             prepared_announced_ip
                         {
-                            table_writer.write::<_, _, 4>(1, &prepared_announced_ip);
+                            table_writer.write::<_, _, 4>(2, &prepared_announced_ip);
+                        }
+                        if let ::core::option::Option::Some(prepared_send_buffer_size) =
+                            prepared_send_buffer_size
+                        {
+                            table_writer.write::<_, _, 4>(4, &prepared_send_buffer_size);
+                        }
+                        if let ::core::option::Option::Some(prepared_recv_buffer_size) =
+                            prepared_recv_buffer_size
+                        {
+                            table_writer.write::<_, _, 4>(5, &prepared_recv_buffer_size);
+                        }
+                        if let ::core::option::Option::Some(prepared_port) = prepared_port {
+                            table_writer.write::<_, _, 2>(3, &prepared_port);
+                        }
+                        if let ::core::option::Option::Some(prepared_protocol) = prepared_protocol {
+                            table_writer.write::<_, _, 1>(0, &prepared_protocol);
                         }
                     }
 
@@ -18578,66 +18686,107 @@ mod root {
                 }
             }
 
-            impl ::planus::WriteAs<::planus::Offset<ListenIp>> for ListenIp {
+            impl ::planus::WriteAs<::planus::Offset<ListenInfo>> for ListenInfo {
                 type Prepared = ::planus::Offset<Self>;
 
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<ListenIp> {
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<ListenInfo> {
                     ::planus::WriteAsOffset::prepare(self, builder)
                 }
             }
 
-            impl ::planus::WriteAsOptional<::planus::Offset<ListenIp>> for ListenIp {
+            impl ::planus::WriteAsOptional<::planus::Offset<ListenInfo>> for ListenInfo {
                 type Prepared = ::planus::Offset<Self>;
 
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<ListenIp>> {
+                ) -> ::core::option::Option<::planus::Offset<ListenInfo>> {
                     ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
                 }
             }
 
-            impl ::planus::WriteAsOffset<ListenIp> for ListenIp {
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<ListenIp> {
-                    ListenIp::create(builder, &self.ip, &self.announced_ip)
+            impl ::planus::WriteAsOffset<ListenInfo> for ListenInfo {
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<ListenInfo> {
+                    ListenInfo::create(
+                        builder,
+                        &self.protocol,
+                        &self.ip,
+                        &self.announced_ip,
+                        &self.port,
+                        &self.send_buffer_size,
+                        &self.recv_buffer_size,
+                    )
                 }
             }
 
             #[derive(Copy, Clone)]
-            pub struct ListenIpRef<'a>(::planus::table_reader::Table<'a>);
+            pub struct ListenInfoRef<'a>(::planus::table_reader::Table<'a>);
 
-            impl<'a> ListenIpRef<'a> {
+            impl<'a> ListenInfoRef<'a> {
+                pub fn protocol(&self) -> ::planus::Result<self::Protocol> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(0, "ListenInfo", "protocol")?
+                            .unwrap_or(self::Protocol::Udp),
+                    )
+                }
+
                 pub fn ip(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(0, "ListenIp", "ip")
+                    self.0.access_required(1, "ListenInfo", "ip")
                 }
 
                 pub fn announced_ip(
                     &self,
                 ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
                 {
-                    self.0.access(1, "ListenIp", "announced_ip")
+                    self.0.access(2, "ListenInfo", "announced_ip")
+                }
+
+                pub fn port(&self) -> ::planus::Result<u16> {
+                    ::core::result::Result::Ok(self.0.access(3, "ListenInfo", "port")?.unwrap_or(0))
+                }
+
+                pub fn send_buffer_size(&self) -> ::planus::Result<u32> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(4, "ListenInfo", "send_buffer_size")?
+                            .unwrap_or(0),
+                    )
+                }
+
+                pub fn recv_buffer_size(&self) -> ::planus::Result<u32> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(5, "ListenInfo", "recv_buffer_size")?
+                            .unwrap_or(0),
+                    )
                 }
             }
 
-            impl<'a> ::core::fmt::Debug for ListenIpRef<'a> {
+            impl<'a> ::core::fmt::Debug for ListenInfoRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("ListenIpRef");
+                    let mut f = f.debug_struct("ListenInfoRef");
+                    f.field("protocol", &self.protocol());
                     f.field("ip", &self.ip());
                     if let ::core::option::Option::Some(field_announced_ip) =
                         self.announced_ip().transpose()
                     {
                         f.field("announced_ip", &field_announced_ip);
                     }
+                    f.field("port", &self.port());
+                    f.field("send_buffer_size", &self.send_buffer_size());
+                    f.field("recv_buffer_size", &self.recv_buffer_size());
                     f.finish()
                 }
             }
 
-            impl<'a> ::core::convert::TryFrom<ListenIpRef<'a>> for ListenIp {
+            impl<'a> ::core::convert::TryFrom<ListenInfoRef<'a>> for ListenInfo {
                 type Error = ::planus::Error;
 
                 #[allow(unreachable_code)]
-                fn try_from(value: ListenIpRef<'a>) -> ::planus::Result<Self> {
+                fn try_from(value: ListenInfoRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
+                        protocol: ::core::convert::TryInto::try_into(value.protocol()?)?,
                         ip: ::core::convert::TryInto::try_into(value.ip()?)?,
                         announced_ip: if let ::core::option::Option::Some(announced_ip) =
                             value.announced_ip()?
@@ -18648,11 +18797,18 @@ mod root {
                         } else {
                             ::core::option::Option::None
                         },
+                        port: ::core::convert::TryInto::try_into(value.port()?)?,
+                        send_buffer_size: ::core::convert::TryInto::try_into(
+                            value.send_buffer_size()?,
+                        )?,
+                        recv_buffer_size: ::core::convert::TryInto::try_into(
+                            value.recv_buffer_size()?,
+                        )?,
                     })
                 }
             }
 
-            impl<'a> ::planus::TableRead<'a> for ListenIpRef<'a> {
+            impl<'a> ::planus::TableRead<'a> for ListenInfoRef<'a> {
                 fn from_buffer(
                     buffer: ::planus::SliceWithStartOffset<'a>,
                     offset: usize,
@@ -18663,7 +18819,7 @@ mod root {
                 }
             }
 
-            impl<'a> ::planus::VectorReadInner<'a> for ListenIpRef<'a> {
+            impl<'a> ::planus::VectorReadInner<'a> for ListenInfoRef<'a> {
                 type Error = ::planus::Error;
                 const STRIDE: usize = 4;
 
@@ -18673,7 +18829,7 @@ mod root {
                 ) -> ::planus::Result<Self> {
                     ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
                         error_kind.with_error_location(
-                            "[ListenIpRef]",
+                            "[ListenInfoRef]",
                             "get",
                             buffer.offset_from_start,
                         )
@@ -18681,8 +18837,8 @@ mod root {
                 }
             }
 
-            impl ::planus::VectorWrite<::planus::Offset<ListenIp>> for ListenIp {
-                type Value = ::planus::Offset<ListenIp>;
+            impl ::planus::VectorWrite<::planus::Offset<ListenInfo>> for ListenInfo {
+                type Value = ::planus::Offset<ListenInfo>;
                 const STRIDE: usize = 4;
                 fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
                     ::planus::WriteAs::prepare(self, builder)
@@ -18690,7 +18846,7 @@ mod root {
 
                 #[inline]
                 unsafe fn write_values(
-                    values: &[::planus::Offset<ListenIp>],
+                    values: &[::planus::Offset<ListenInfo>],
                     bytes: *mut ::core::mem::MaybeUninit<u8>,
                     buffer_position: u32,
                 ) {
@@ -18705,7 +18861,7 @@ mod root {
                 }
             }
 
-            impl<'a> ::planus::ReadAsRoot<'a> for ListenIpRef<'a> {
+            impl<'a> ::planus::ReadAsRoot<'a> for ListenInfoRef<'a> {
                 fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
                     ::planus::TableRead::from_buffer(
                         ::planus::SliceWithStartOffset {
@@ -18715,7 +18871,7 @@ mod root {
                         0,
                     )
                     .map_err(|error_kind| {
-                        error_kind.with_error_location("[ListenIpRef]", "read_as_root", 0)
+                        error_kind.with_error_location("[ListenInfoRef]", "read_as_root", 0)
                     })
                 }
             }
@@ -18921,6 +19077,468 @@ mod root {
                     )
                     .map_err(|error_kind| {
                         error_kind.with_error_location("[RestartIceResponseRef]", "read_as_root", 0)
+                    })
+                }
+            }
+
+            #[derive(
+                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
+            )]
+            pub struct ProduceRequest {
+                pub producer_id: ::planus::alloc::string::String,
+                pub kind: super::rtp_parameters::MediaKind,
+                pub rtp_parameters:
+                    ::planus::alloc::boxed::Box<super::rtp_parameters::RtpParameters>,
+                pub rtp_mapping: ::planus::alloc::boxed::Box<super::rtp_parameters::RtpMapping>,
+                pub key_frame_request_delay: u16,
+                pub paused: bool,
+            }
+
+            impl ProduceRequest {
+                #[allow(clippy::too_many_arguments)]
+                pub fn create(
+                    builder: &mut ::planus::Builder,
+                    field_producer_id: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_kind: impl ::planus::WriteAsDefault<
+                        super::rtp_parameters::MediaKind,
+                        super::rtp_parameters::MediaKind,
+                    >,
+                    field_rtp_parameters: impl ::planus::WriteAs<
+                        ::planus::Offset<super::rtp_parameters::RtpParameters>,
+                    >,
+                    field_rtp_mapping: impl ::planus::WriteAs<
+                        ::planus::Offset<super::rtp_parameters::RtpMapping>,
+                    >,
+                    field_key_frame_request_delay: impl ::planus::WriteAsDefault<u16, u16>,
+                    field_paused: impl ::planus::WriteAsDefault<bool, bool>,
+                ) -> ::planus::Offset<Self> {
+                    let prepared_producer_id = field_producer_id.prepare(builder);
+
+                    let prepared_kind =
+                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::All);
+
+                    let prepared_rtp_parameters = field_rtp_parameters.prepare(builder);
+
+                    let prepared_rtp_mapping = field_rtp_mapping.prepare(builder);
+
+                    let prepared_key_frame_request_delay =
+                        field_key_frame_request_delay.prepare(builder, &0);
+
+                    let prepared_paused = field_paused.prepare(builder, &false);
+
+                    let mut table_writer =
+                        ::planus::table_writer::TableWriter::<14, 16>::new(builder);
+
+                    table_writer.calculate_size::<::planus::Offset<str>>(2);
+                    if prepared_kind.is_some() {
+                        table_writer.calculate_size::<super::rtp_parameters::MediaKind>(4);
+                    }
+                    table_writer
+                        .calculate_size::<::planus::Offset<super::rtp_parameters::RtpParameters>>(
+                            6,
+                        );
+                    table_writer
+                        .calculate_size::<::planus::Offset<super::rtp_parameters::RtpMapping>>(8);
+                    if prepared_key_frame_request_delay.is_some() {
+                        table_writer.calculate_size::<u16>(10);
+                    }
+                    if prepared_paused.is_some() {
+                        table_writer.calculate_size::<bool>(12);
+                    }
+
+                    table_writer.finish_calculating();
+
+                    unsafe {
+                        table_writer.write::<_, _, 4>(0, &prepared_producer_id);
+                        table_writer.write::<_, _, 4>(2, &prepared_rtp_parameters);
+                        table_writer.write::<_, _, 4>(3, &prepared_rtp_mapping);
+                        if let ::core::option::Option::Some(prepared_key_frame_request_delay) =
+                            prepared_key_frame_request_delay
+                        {
+                            table_writer.write::<_, _, 2>(4, &prepared_key_frame_request_delay);
+                        }
+                        if let ::core::option::Option::Some(prepared_kind) = prepared_kind {
+                            table_writer.write::<_, _, 1>(1, &prepared_kind);
+                        }
+                        if let ::core::option::Option::Some(prepared_paused) = prepared_paused {
+                            table_writer.write::<_, _, 1>(5, &prepared_paused);
+                        }
+                    }
+
+                    table_writer.finish()
+                }
+            }
+
+            impl ::planus::WriteAs<::planus::Offset<ProduceRequest>> for ProduceRequest {
+                type Prepared = ::planus::Offset<Self>;
+
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<ProduceRequest> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl ::planus::WriteAsOptional<::planus::Offset<ProduceRequest>> for ProduceRequest {
+                type Prepared = ::planus::Offset<Self>;
+
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<ProduceRequest>> {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl ::planus::WriteAsOffset<ProduceRequest> for ProduceRequest {
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<ProduceRequest> {
+                    ProduceRequest::create(
+                        builder,
+                        &self.producer_id,
+                        &self.kind,
+                        &self.rtp_parameters,
+                        &self.rtp_mapping,
+                        &self.key_frame_request_delay,
+                        &self.paused,
+                    )
+                }
+            }
+
+            #[derive(Copy, Clone)]
+            pub struct ProduceRequestRef<'a>(::planus::table_reader::Table<'a>);
+
+            impl<'a> ProduceRequestRef<'a> {
+                pub fn producer_id(&self) -> ::planus::Result<&'a ::core::primitive::str> {
+                    self.0.access_required(0, "ProduceRequest", "producer_id")
+                }
+
+                pub fn kind(&self) -> ::planus::Result<super::rtp_parameters::MediaKind> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(1, "ProduceRequest", "kind")?
+                            .unwrap_or(super::rtp_parameters::MediaKind::All),
+                    )
+                }
+
+                pub fn rtp_parameters(
+                    &self,
+                ) -> ::planus::Result<super::rtp_parameters::RtpParametersRef<'a>> {
+                    self.0
+                        .access_required(2, "ProduceRequest", "rtp_parameters")
+                }
+
+                pub fn rtp_mapping(
+                    &self,
+                ) -> ::planus::Result<super::rtp_parameters::RtpMappingRef<'a>> {
+                    self.0.access_required(3, "ProduceRequest", "rtp_mapping")
+                }
+
+                pub fn key_frame_request_delay(&self) -> ::planus::Result<u16> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(4, "ProduceRequest", "key_frame_request_delay")?
+                            .unwrap_or(0),
+                    )
+                }
+
+                pub fn paused(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(5, "ProduceRequest", "paused")?
+                            .unwrap_or(false),
+                    )
+                }
+            }
+
+            impl<'a> ::core::fmt::Debug for ProduceRequestRef<'a> {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    let mut f = f.debug_struct("ProduceRequestRef");
+                    f.field("producer_id", &self.producer_id());
+                    f.field("kind", &self.kind());
+                    f.field("rtp_parameters", &self.rtp_parameters());
+                    f.field("rtp_mapping", &self.rtp_mapping());
+                    f.field("key_frame_request_delay", &self.key_frame_request_delay());
+                    f.field("paused", &self.paused());
+                    f.finish()
+                }
+            }
+
+            impl<'a> ::core::convert::TryFrom<ProduceRequestRef<'a>> for ProduceRequest {
+                type Error = ::planus::Error;
+
+                #[allow(unreachable_code)]
+                fn try_from(value: ProduceRequestRef<'a>) -> ::planus::Result<Self> {
+                    ::core::result::Result::Ok(Self {
+                        producer_id: ::core::convert::TryInto::try_into(value.producer_id()?)?,
+                        kind: ::core::convert::TryInto::try_into(value.kind()?)?,
+                        rtp_parameters: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.rtp_parameters()?)?,
+                        ),
+                        rtp_mapping: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.rtp_mapping()?)?,
+                        ),
+                        key_frame_request_delay: ::core::convert::TryInto::try_into(
+                            value.key_frame_request_delay()?,
+                        )?,
+                        paused: ::core::convert::TryInto::try_into(value.paused()?)?,
+                    })
+                }
+            }
+
+            impl<'a> ::planus::TableRead<'a> for ProduceRequestRef<'a> {
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
+                        buffer, offset,
+                    )?))
+                }
+            }
+
+            impl<'a> ::planus::VectorReadInner<'a> for ProduceRequestRef<'a> {
+                type Error = ::planus::Error;
+                const STRIDE: usize = 4;
+
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[ProduceRequestRef]",
+                            "get",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<::planus::Offset<ProduceRequest>> for ProduceRequest {
+                type Value = ::planus::Offset<ProduceRequest>;
+                const STRIDE: usize = 4;
+                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
+                    ::planus::WriteAs::prepare(self, builder)
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[::planus::Offset<ProduceRequest>],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - (Self::STRIDE * i) as u32,
+                        );
+                    }
+                }
+            }
+
+            impl<'a> ::planus::ReadAsRoot<'a> for ProduceRequestRef<'a> {
+                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(
+                        ::planus::SliceWithStartOffset {
+                            buffer: slice,
+                            offset_from_start: 0,
+                        },
+                        0,
+                    )
+                    .map_err(|error_kind| {
+                        error_kind.with_error_location("[ProduceRequestRef]", "read_as_root", 0)
+                    })
+                }
+            }
+
+            #[derive(
+                Clone,
+                Debug,
+                PartialEq,
+                PartialOrd,
+                Eq,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            pub struct ProduceResponse {
+                pub type_: super::rtp_parameters::Type,
+            }
+
+            #[allow(clippy::derivable_impls)]
+            impl ::core::default::Default for ProduceResponse {
+                fn default() -> Self {
+                    Self {
+                        type_: super::rtp_parameters::Type::None,
+                    }
+                }
+            }
+
+            impl ProduceResponse {
+                #[allow(clippy::too_many_arguments)]
+                pub fn create(
+                    builder: &mut ::planus::Builder,
+                    field_type_: impl ::planus::WriteAsDefault<
+                        super::rtp_parameters::Type,
+                        super::rtp_parameters::Type,
+                    >,
+                ) -> ::planus::Offset<Self> {
+                    let prepared_type_ =
+                        field_type_.prepare(builder, &super::rtp_parameters::Type::None);
+
+                    let mut table_writer =
+                        ::planus::table_writer::TableWriter::<4, 1>::new(builder);
+
+                    if prepared_type_.is_some() {
+                        table_writer.calculate_size::<super::rtp_parameters::Type>(2);
+                    }
+
+                    table_writer.finish_calculating();
+
+                    unsafe {
+                        if let ::core::option::Option::Some(prepared_type_) = prepared_type_ {
+                            table_writer.write::<_, _, 1>(0, &prepared_type_);
+                        }
+                    }
+
+                    table_writer.finish()
+                }
+            }
+
+            impl ::planus::WriteAs<::planus::Offset<ProduceResponse>> for ProduceResponse {
+                type Prepared = ::planus::Offset<Self>;
+
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<ProduceResponse> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl ::planus::WriteAsOptional<::planus::Offset<ProduceResponse>> for ProduceResponse {
+                type Prepared = ::planus::Offset<Self>;
+
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<ProduceResponse>> {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl ::planus::WriteAsOffset<ProduceResponse> for ProduceResponse {
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<ProduceResponse> {
+                    ProduceResponse::create(builder, &self.type_)
+                }
+            }
+
+            #[derive(Copy, Clone)]
+            pub struct ProduceResponseRef<'a>(::planus::table_reader::Table<'a>);
+
+            impl<'a> ProduceResponseRef<'a> {
+                pub fn type_(&self) -> ::planus::Result<super::rtp_parameters::Type> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(0, "ProduceResponse", "type_")?
+                            .unwrap_or(super::rtp_parameters::Type::None),
+                    )
+                }
+            }
+
+            impl<'a> ::core::fmt::Debug for ProduceResponseRef<'a> {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    let mut f = f.debug_struct("ProduceResponseRef");
+                    f.field("type_", &self.type_());
+                    f.finish()
+                }
+            }
+
+            impl<'a> ::core::convert::TryFrom<ProduceResponseRef<'a>> for ProduceResponse {
+                type Error = ::planus::Error;
+
+                #[allow(unreachable_code)]
+                fn try_from(value: ProduceResponseRef<'a>) -> ::planus::Result<Self> {
+                    ::core::result::Result::Ok(Self {
+                        type_: ::core::convert::TryInto::try_into(value.type_()?)?,
+                    })
+                }
+            }
+
+            impl<'a> ::planus::TableRead<'a> for ProduceResponseRef<'a> {
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
+                        buffer, offset,
+                    )?))
+                }
+            }
+
+            impl<'a> ::planus::VectorReadInner<'a> for ProduceResponseRef<'a> {
+                type Error = ::planus::Error;
+                const STRIDE: usize = 4;
+
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[ProduceResponseRef]",
+                            "get",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<::planus::Offset<ProduceResponse>> for ProduceResponse {
+                type Value = ::planus::Offset<ProduceResponse>;
+                const STRIDE: usize = 4;
+                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
+                    ::planus::WriteAs::prepare(self, builder)
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[::planus::Offset<ProduceResponse>],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - (Self::STRIDE * i) as u32,
+                        );
+                    }
+                }
+            }
+
+            impl<'a> ::planus::ReadAsRoot<'a> for ProduceResponseRef<'a> {
+                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(
+                        ::planus::SliceWithStartOffset {
+                            buffer: slice,
+                            offset_from_start: 0,
+                        },
+                        0,
+                    )
+                    .map_err(|error_kind| {
+                        error_kind.with_error_location("[ProduceResponseRef]", "read_as_root", 0)
                     })
                 }
             }
@@ -19574,468 +20192,6 @@ mod root {
             }
 
             #[derive(
-                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
-            )]
-            pub struct ProduceRequest {
-                pub producer_id: ::planus::alloc::string::String,
-                pub kind: super::rtp_parameters::MediaKind,
-                pub rtp_parameters:
-                    ::planus::alloc::boxed::Box<super::rtp_parameters::RtpParameters>,
-                pub rtp_mapping: ::planus::alloc::boxed::Box<super::rtp_parameters::RtpMapping>,
-                pub key_frame_request_delay: u16,
-                pub paused: bool,
-            }
-
-            impl ProduceRequest {
-                #[allow(clippy::too_many_arguments)]
-                pub fn create(
-                    builder: &mut ::planus::Builder,
-                    field_producer_id: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_kind: impl ::planus::WriteAsDefault<
-                        super::rtp_parameters::MediaKind,
-                        super::rtp_parameters::MediaKind,
-                    >,
-                    field_rtp_parameters: impl ::planus::WriteAs<
-                        ::planus::Offset<super::rtp_parameters::RtpParameters>,
-                    >,
-                    field_rtp_mapping: impl ::planus::WriteAs<
-                        ::planus::Offset<super::rtp_parameters::RtpMapping>,
-                    >,
-                    field_key_frame_request_delay: impl ::planus::WriteAsDefault<u16, u16>,
-                    field_paused: impl ::planus::WriteAsDefault<bool, bool>,
-                ) -> ::planus::Offset<Self> {
-                    let prepared_producer_id = field_producer_id.prepare(builder);
-
-                    let prepared_kind =
-                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::All);
-
-                    let prepared_rtp_parameters = field_rtp_parameters.prepare(builder);
-
-                    let prepared_rtp_mapping = field_rtp_mapping.prepare(builder);
-
-                    let prepared_key_frame_request_delay =
-                        field_key_frame_request_delay.prepare(builder, &0);
-
-                    let prepared_paused = field_paused.prepare(builder, &false);
-
-                    let mut table_writer =
-                        ::planus::table_writer::TableWriter::<14, 16>::new(builder);
-
-                    table_writer.calculate_size::<::planus::Offset<str>>(2);
-                    if prepared_kind.is_some() {
-                        table_writer.calculate_size::<super::rtp_parameters::MediaKind>(4);
-                    }
-                    table_writer
-                        .calculate_size::<::planus::Offset<super::rtp_parameters::RtpParameters>>(
-                            6,
-                        );
-                    table_writer
-                        .calculate_size::<::planus::Offset<super::rtp_parameters::RtpMapping>>(8);
-                    if prepared_key_frame_request_delay.is_some() {
-                        table_writer.calculate_size::<u16>(10);
-                    }
-                    if prepared_paused.is_some() {
-                        table_writer.calculate_size::<bool>(12);
-                    }
-
-                    table_writer.finish_calculating();
-
-                    unsafe {
-                        table_writer.write::<_, _, 4>(0, &prepared_producer_id);
-                        table_writer.write::<_, _, 4>(2, &prepared_rtp_parameters);
-                        table_writer.write::<_, _, 4>(3, &prepared_rtp_mapping);
-                        if let ::core::option::Option::Some(prepared_key_frame_request_delay) =
-                            prepared_key_frame_request_delay
-                        {
-                            table_writer.write::<_, _, 2>(4, &prepared_key_frame_request_delay);
-                        }
-                        if let ::core::option::Option::Some(prepared_kind) = prepared_kind {
-                            table_writer.write::<_, _, 1>(1, &prepared_kind);
-                        }
-                        if let ::core::option::Option::Some(prepared_paused) = prepared_paused {
-                            table_writer.write::<_, _, 1>(5, &prepared_paused);
-                        }
-                    }
-
-                    table_writer.finish()
-                }
-            }
-
-            impl ::planus::WriteAs<::planus::Offset<ProduceRequest>> for ProduceRequest {
-                type Prepared = ::planus::Offset<Self>;
-
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<ProduceRequest> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl ::planus::WriteAsOptional<::planus::Offset<ProduceRequest>> for ProduceRequest {
-                type Prepared = ::planus::Offset<Self>;
-
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<ProduceRequest>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl ::planus::WriteAsOffset<ProduceRequest> for ProduceRequest {
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<ProduceRequest> {
-                    ProduceRequest::create(
-                        builder,
-                        &self.producer_id,
-                        &self.kind,
-                        &self.rtp_parameters,
-                        &self.rtp_mapping,
-                        &self.key_frame_request_delay,
-                        &self.paused,
-                    )
-                }
-            }
-
-            #[derive(Copy, Clone)]
-            pub struct ProduceRequestRef<'a>(::planus::table_reader::Table<'a>);
-
-            impl<'a> ProduceRequestRef<'a> {
-                pub fn producer_id(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(0, "ProduceRequest", "producer_id")
-                }
-
-                pub fn kind(&self) -> ::planus::Result<super::rtp_parameters::MediaKind> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(1, "ProduceRequest", "kind")?
-                            .unwrap_or(super::rtp_parameters::MediaKind::All),
-                    )
-                }
-
-                pub fn rtp_parameters(
-                    &self,
-                ) -> ::planus::Result<super::rtp_parameters::RtpParametersRef<'a>> {
-                    self.0
-                        .access_required(2, "ProduceRequest", "rtp_parameters")
-                }
-
-                pub fn rtp_mapping(
-                    &self,
-                ) -> ::planus::Result<super::rtp_parameters::RtpMappingRef<'a>> {
-                    self.0.access_required(3, "ProduceRequest", "rtp_mapping")
-                }
-
-                pub fn key_frame_request_delay(&self) -> ::planus::Result<u16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(4, "ProduceRequest", "key_frame_request_delay")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                pub fn paused(&self) -> ::planus::Result<bool> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(5, "ProduceRequest", "paused")?
-                            .unwrap_or(false),
-                    )
-                }
-            }
-
-            impl<'a> ::core::fmt::Debug for ProduceRequestRef<'a> {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("ProduceRequestRef");
-                    f.field("producer_id", &self.producer_id());
-                    f.field("kind", &self.kind());
-                    f.field("rtp_parameters", &self.rtp_parameters());
-                    f.field("rtp_mapping", &self.rtp_mapping());
-                    f.field("key_frame_request_delay", &self.key_frame_request_delay());
-                    f.field("paused", &self.paused());
-                    f.finish()
-                }
-            }
-
-            impl<'a> ::core::convert::TryFrom<ProduceRequestRef<'a>> for ProduceRequest {
-                type Error = ::planus::Error;
-
-                #[allow(unreachable_code)]
-                fn try_from(value: ProduceRequestRef<'a>) -> ::planus::Result<Self> {
-                    ::core::result::Result::Ok(Self {
-                        producer_id: ::core::convert::TryInto::try_into(value.producer_id()?)?,
-                        kind: ::core::convert::TryInto::try_into(value.kind()?)?,
-                        rtp_parameters: ::planus::alloc::boxed::Box::new(
-                            ::core::convert::TryInto::try_into(value.rtp_parameters()?)?,
-                        ),
-                        rtp_mapping: ::planus::alloc::boxed::Box::new(
-                            ::core::convert::TryInto::try_into(value.rtp_mapping()?)?,
-                        ),
-                        key_frame_request_delay: ::core::convert::TryInto::try_into(
-                            value.key_frame_request_delay()?,
-                        )?,
-                        paused: ::core::convert::TryInto::try_into(value.paused()?)?,
-                    })
-                }
-            }
-
-            impl<'a> ::planus::TableRead<'a> for ProduceRequestRef<'a> {
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
-                        buffer, offset,
-                    )?))
-                }
-            }
-
-            impl<'a> ::planus::VectorReadInner<'a> for ProduceRequestRef<'a> {
-                type Error = ::planus::Error;
-                const STRIDE: usize = 4;
-
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "[ProduceRequestRef]",
-                            "get",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<::planus::Offset<ProduceRequest>> for ProduceRequest {
-                type Value = ::planus::Offset<ProduceRequest>;
-                const STRIDE: usize = 4;
-                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
-                    ::planus::WriteAs::prepare(self, builder)
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[::planus::Offset<ProduceRequest>],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - (Self::STRIDE * i) as u32,
-                        );
-                    }
-                }
-            }
-
-            impl<'a> ::planus::ReadAsRoot<'a> for ProduceRequestRef<'a> {
-                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(
-                        ::planus::SliceWithStartOffset {
-                            buffer: slice,
-                            offset_from_start: 0,
-                        },
-                        0,
-                    )
-                    .map_err(|error_kind| {
-                        error_kind.with_error_location("[ProduceRequestRef]", "read_as_root", 0)
-                    })
-                }
-            }
-
-            #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            pub struct ProduceResponse {
-                pub type_: super::rtp_parameters::Type,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for ProduceResponse {
-                fn default() -> Self {
-                    Self {
-                        type_: super::rtp_parameters::Type::None,
-                    }
-                }
-            }
-
-            impl ProduceResponse {
-                #[allow(clippy::too_many_arguments)]
-                pub fn create(
-                    builder: &mut ::planus::Builder,
-                    field_type_: impl ::planus::WriteAsDefault<
-                        super::rtp_parameters::Type,
-                        super::rtp_parameters::Type,
-                    >,
-                ) -> ::planus::Offset<Self> {
-                    let prepared_type_ =
-                        field_type_.prepare(builder, &super::rtp_parameters::Type::None);
-
-                    let mut table_writer =
-                        ::planus::table_writer::TableWriter::<4, 1>::new(builder);
-
-                    if prepared_type_.is_some() {
-                        table_writer.calculate_size::<super::rtp_parameters::Type>(2);
-                    }
-
-                    table_writer.finish_calculating();
-
-                    unsafe {
-                        if let ::core::option::Option::Some(prepared_type_) = prepared_type_ {
-                            table_writer.write::<_, _, 1>(0, &prepared_type_);
-                        }
-                    }
-
-                    table_writer.finish()
-                }
-            }
-
-            impl ::planus::WriteAs<::planus::Offset<ProduceResponse>> for ProduceResponse {
-                type Prepared = ::planus::Offset<Self>;
-
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<ProduceResponse> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl ::planus::WriteAsOptional<::planus::Offset<ProduceResponse>> for ProduceResponse {
-                type Prepared = ::planus::Offset<Self>;
-
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<ProduceResponse>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl ::planus::WriteAsOffset<ProduceResponse> for ProduceResponse {
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<ProduceResponse> {
-                    ProduceResponse::create(builder, &self.type_)
-                }
-            }
-
-            #[derive(Copy, Clone)]
-            pub struct ProduceResponseRef<'a>(::planus::table_reader::Table<'a>);
-
-            impl<'a> ProduceResponseRef<'a> {
-                pub fn type_(&self) -> ::planus::Result<super::rtp_parameters::Type> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(0, "ProduceResponse", "type_")?
-                            .unwrap_or(super::rtp_parameters::Type::None),
-                    )
-                }
-            }
-
-            impl<'a> ::core::fmt::Debug for ProduceResponseRef<'a> {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("ProduceResponseRef");
-                    f.field("type_", &self.type_());
-                    f.finish()
-                }
-            }
-
-            impl<'a> ::core::convert::TryFrom<ProduceResponseRef<'a>> for ProduceResponse {
-                type Error = ::planus::Error;
-
-                #[allow(unreachable_code)]
-                fn try_from(value: ProduceResponseRef<'a>) -> ::planus::Result<Self> {
-                    ::core::result::Result::Ok(Self {
-                        type_: ::core::convert::TryInto::try_into(value.type_()?)?,
-                    })
-                }
-            }
-
-            impl<'a> ::planus::TableRead<'a> for ProduceResponseRef<'a> {
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
-                        buffer, offset,
-                    )?))
-                }
-            }
-
-            impl<'a> ::planus::VectorReadInner<'a> for ProduceResponseRef<'a> {
-                type Error = ::planus::Error;
-                const STRIDE: usize = 4;
-
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "[ProduceResponseRef]",
-                            "get",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<::planus::Offset<ProduceResponse>> for ProduceResponse {
-                type Value = ::planus::Offset<ProduceResponse>;
-                const STRIDE: usize = 4;
-                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
-                    ::planus::WriteAs::prepare(self, builder)
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[::planus::Offset<ProduceResponse>],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - (Self::STRIDE * i) as u32,
-                        );
-                    }
-                }
-            }
-
-            impl<'a> ::planus::ReadAsRoot<'a> for ProduceResponseRef<'a> {
-                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(
-                        ::planus::SliceWithStartOffset {
-                            buffer: slice,
-                            offset_from_start: 0,
-                        },
-                        0,
-                    )
-                    .map_err(|error_kind| {
-                        error_kind.with_error_location("[ProduceResponseRef]", "read_as_root", 0)
-                    })
-                }
-            }
-
-            #[derive(
                 Clone,
                 Debug,
                 PartialEq,
@@ -20054,6 +20210,7 @@ mod root {
                 >,
                 pub label: ::core::option::Option<::planus::alloc::string::String>,
                 pub protocol: ::core::option::Option<::planus::alloc::string::String>,
+                pub paused: bool,
             }
 
             impl ProduceDataRequest {
@@ -20071,6 +20228,7 @@ mod root {
                     field_protocol: impl ::planus::WriteAsOptional<
                         ::planus::Offset<::core::primitive::str>,
                     >,
+                    field_paused: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_data_producer_id = field_data_producer_id.prepare(builder);
 
@@ -20083,8 +20241,10 @@ mod root {
 
                     let prepared_protocol = field_protocol.prepare(builder);
 
+                    let prepared_paused = field_paused.prepare(builder, &false);
+
                     let mut table_writer =
-                        ::planus::table_writer::TableWriter::<12, 20>::new(builder);
+                        ::planus::table_writer::TableWriter::<14, 21>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
                     table_writer.calculate_size::<::planus::Offset<str>>(4);
@@ -20096,6 +20256,9 @@ mod root {
                     }
                     if prepared_protocol.is_some() {
                         table_writer.calculate_size::<::planus::Offset<str>>(10);
+                    }
+                    if prepared_paused.is_some() {
+                        table_writer.calculate_size::<bool>(12);
                     }
 
                     table_writer.finish_calculating();
@@ -20113,6 +20276,9 @@ mod root {
                         }
                         if let ::core::option::Option::Some(prepared_protocol) = prepared_protocol {
                             table_writer.write::<_, _, 4>(4, &prepared_protocol);
+                        }
+                        if let ::core::option::Option::Some(prepared_paused) = prepared_paused {
+                            table_writer.write::<_, _, 1>(5, &prepared_paused);
                         }
                     }
 
@@ -20154,6 +20320,7 @@ mod root {
                         &self.sctp_stream_parameters,
                         &self.label,
                         &self.protocol,
+                        &self.paused,
                     )
                 }
             }
@@ -20193,6 +20360,14 @@ mod root {
                 {
                     self.0.access(4, "ProduceDataRequest", "protocol")
                 }
+
+                pub fn paused(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(5, "ProduceDataRequest", "paused")?
+                            .unwrap_or(false),
+                    )
+                }
             }
 
             impl<'a> ::core::fmt::Debug for ProduceDataRequestRef<'a> {
@@ -20213,6 +20388,7 @@ mod root {
                     {
                         f.field("protocol", &field_protocol);
                     }
+                    f.field("paused", &self.paused());
                     f.finish()
                 }
             }
@@ -20251,6 +20427,7 @@ mod root {
                         } else {
                             ::core::option::Option::None
                         },
+                        paused: ::core::convert::TryInto::try_into(value.paused()?)?,
                     })
                 }
             }
@@ -20343,6 +20520,7 @@ mod root {
                 >,
                 pub label: ::core::option::Option<::planus::alloc::string::String>,
                 pub protocol: ::core::option::Option<::planus::alloc::string::String>,
+                pub paused: bool,
             }
 
             impl ConsumeDataRequest {
@@ -20361,6 +20539,7 @@ mod root {
                     field_protocol: impl ::planus::WriteAsOptional<
                         ::planus::Offset<::core::primitive::str>,
                     >,
+                    field_paused: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_data_consumer_id = field_data_consumer_id.prepare(builder);
 
@@ -20375,8 +20554,10 @@ mod root {
 
                     let prepared_protocol = field_protocol.prepare(builder);
 
+                    let prepared_paused = field_paused.prepare(builder, &false);
+
                     let mut table_writer =
-                        ::planus::table_writer::TableWriter::<14, 24>::new(builder);
+                        ::planus::table_writer::TableWriter::<16, 25>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
                     table_writer.calculate_size::<::planus::Offset<str>>(4);
@@ -20389,6 +20570,9 @@ mod root {
                     }
                     if prepared_protocol.is_some() {
                         table_writer.calculate_size::<::planus::Offset<str>>(12);
+                    }
+                    if prepared_paused.is_some() {
+                        table_writer.calculate_size::<bool>(14);
                     }
 
                     table_writer.finish_calculating();
@@ -20407,6 +20591,9 @@ mod root {
                         }
                         if let ::core::option::Option::Some(prepared_protocol) = prepared_protocol {
                             table_writer.write::<_, _, 4>(5, &prepared_protocol);
+                        }
+                        if let ::core::option::Option::Some(prepared_paused) = prepared_paused {
+                            table_writer.write::<_, _, 1>(6, &prepared_paused);
                         }
                     }
 
@@ -20449,6 +20636,7 @@ mod root {
                         &self.sctp_stream_parameters,
                         &self.label,
                         &self.protocol,
+                        &self.paused,
                     )
                 }
             }
@@ -20493,6 +20681,14 @@ mod root {
                 {
                     self.0.access(5, "ConsumeDataRequest", "protocol")
                 }
+
+                pub fn paused(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(6, "ConsumeDataRequest", "paused")?
+                            .unwrap_or(false),
+                    )
+                }
             }
 
             impl<'a> ::core::fmt::Debug for ConsumeDataRequestRef<'a> {
@@ -20514,6 +20710,7 @@ mod root {
                     {
                         f.field("protocol", &field_protocol);
                     }
+                    f.field("paused", &self.paused());
                     f.finish()
                 }
             }
@@ -20555,6 +20752,7 @@ mod root {
                         } else {
                             ::core::option::Option::None
                         },
+                        paused: ::core::convert::TryInto::try_into(value.paused()?)?,
                     })
                 }
             }
@@ -21731,6 +21929,383 @@ mod root {
                 ::serde::Serialize,
                 ::serde::Deserialize,
             )]
+            pub struct Options {
+                pub direct: bool,
+                pub max_message_size: u32,
+                pub initial_available_outgoing_bitrate: u32,
+                pub enable_sctp: bool,
+                pub num_sctp_streams: ::core::option::Option<
+                    ::planus::alloc::boxed::Box<super::sctp_parameters::NumSctpStreams>,
+                >,
+                pub max_sctp_message_size: u32,
+                pub sctp_send_buffer_size: u32,
+                pub is_data_channel: bool,
+            }
+
+            #[allow(clippy::derivable_impls)]
+            impl ::core::default::Default for Options {
+                fn default() -> Self {
+                    Self {
+                        direct: false,
+                        max_message_size: 0,
+                        initial_available_outgoing_bitrate: 0,
+                        enable_sctp: false,
+                        num_sctp_streams: ::core::default::Default::default(),
+                        max_sctp_message_size: 0,
+                        sctp_send_buffer_size: 0,
+                        is_data_channel: false,
+                    }
+                }
+            }
+
+            impl Options {
+                #[allow(clippy::too_many_arguments)]
+                pub fn create(
+                    builder: &mut ::planus::Builder,
+                    field_direct: impl ::planus::WriteAsDefault<bool, bool>,
+                    field_max_message_size: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_initial_available_outgoing_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_enable_sctp: impl ::planus::WriteAsDefault<bool, bool>,
+                    field_num_sctp_streams: impl ::planus::WriteAsOptional<
+                        ::planus::Offset<super::sctp_parameters::NumSctpStreams>,
+                    >,
+                    field_max_sctp_message_size: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_sctp_send_buffer_size: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_is_data_channel: impl ::planus::WriteAsDefault<bool, bool>,
+                ) -> ::planus::Offset<Self> {
+                    let prepared_direct = field_direct.prepare(builder, &false);
+
+                    let prepared_max_message_size = field_max_message_size.prepare(builder, &0);
+
+                    let prepared_initial_available_outgoing_bitrate =
+                        field_initial_available_outgoing_bitrate.prepare(builder, &0);
+
+                    let prepared_enable_sctp = field_enable_sctp.prepare(builder, &false);
+
+                    let prepared_num_sctp_streams = field_num_sctp_streams.prepare(builder);
+
+                    let prepared_max_sctp_message_size =
+                        field_max_sctp_message_size.prepare(builder, &0);
+
+                    let prepared_sctp_send_buffer_size =
+                        field_sctp_send_buffer_size.prepare(builder, &0);
+
+                    let prepared_is_data_channel = field_is_data_channel.prepare(builder, &false);
+
+                    let mut table_writer =
+                        ::planus::table_writer::TableWriter::<18, 23>::new(builder);
+
+                    if prepared_direct.is_some() {
+                        table_writer.calculate_size::<bool>(2);
+                    }
+                    if prepared_max_message_size.is_some() {
+                        table_writer.calculate_size::<u32>(4);
+                    }
+                    if prepared_initial_available_outgoing_bitrate.is_some() {
+                        table_writer.calculate_size::<u32>(6);
+                    }
+                    if prepared_enable_sctp.is_some() {
+                        table_writer.calculate_size::<bool>(8);
+                    }
+                    if prepared_num_sctp_streams.is_some() {
+                        table_writer.calculate_size::<::planus::Offset<super::sctp_parameters::NumSctpStreams>>(10);
+                    }
+                    if prepared_max_sctp_message_size.is_some() {
+                        table_writer.calculate_size::<u32>(12);
+                    }
+                    if prepared_sctp_send_buffer_size.is_some() {
+                        table_writer.calculate_size::<u32>(14);
+                    }
+                    if prepared_is_data_channel.is_some() {
+                        table_writer.calculate_size::<bool>(16);
+                    }
+
+                    table_writer.finish_calculating();
+
+                    unsafe {
+                        if let ::core::option::Option::Some(prepared_max_message_size) =
+                            prepared_max_message_size
+                        {
+                            table_writer.write::<_, _, 4>(1, &prepared_max_message_size);
+                        }
+                        if let ::core::option::Option::Some(
+                            prepared_initial_available_outgoing_bitrate,
+                        ) = prepared_initial_available_outgoing_bitrate
+                        {
+                            table_writer
+                                .write::<_, _, 4>(2, &prepared_initial_available_outgoing_bitrate);
+                        }
+                        if let ::core::option::Option::Some(prepared_num_sctp_streams) =
+                            prepared_num_sctp_streams
+                        {
+                            table_writer.write::<_, _, 4>(4, &prepared_num_sctp_streams);
+                        }
+                        if let ::core::option::Option::Some(prepared_max_sctp_message_size) =
+                            prepared_max_sctp_message_size
+                        {
+                            table_writer.write::<_, _, 4>(5, &prepared_max_sctp_message_size);
+                        }
+                        if let ::core::option::Option::Some(prepared_sctp_send_buffer_size) =
+                            prepared_sctp_send_buffer_size
+                        {
+                            table_writer.write::<_, _, 4>(6, &prepared_sctp_send_buffer_size);
+                        }
+                        if let ::core::option::Option::Some(prepared_direct) = prepared_direct {
+                            table_writer.write::<_, _, 1>(0, &prepared_direct);
+                        }
+                        if let ::core::option::Option::Some(prepared_enable_sctp) =
+                            prepared_enable_sctp
+                        {
+                            table_writer.write::<_, _, 1>(3, &prepared_enable_sctp);
+                        }
+                        if let ::core::option::Option::Some(prepared_is_data_channel) =
+                            prepared_is_data_channel
+                        {
+                            table_writer.write::<_, _, 1>(7, &prepared_is_data_channel);
+                        }
+                    }
+
+                    table_writer.finish()
+                }
+            }
+
+            impl ::planus::WriteAs<::planus::Offset<Options>> for Options {
+                type Prepared = ::planus::Offset<Self>;
+
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Options> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl ::planus::WriteAsOptional<::planus::Offset<Options>> for Options {
+                type Prepared = ::planus::Offset<Self>;
+
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<Options>> {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl ::planus::WriteAsOffset<Options> for Options {
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Options> {
+                    Options::create(
+                        builder,
+                        &self.direct,
+                        &self.max_message_size,
+                        &self.initial_available_outgoing_bitrate,
+                        &self.enable_sctp,
+                        &self.num_sctp_streams,
+                        &self.max_sctp_message_size,
+                        &self.sctp_send_buffer_size,
+                        &self.is_data_channel,
+                    )
+                }
+            }
+
+            #[derive(Copy, Clone)]
+            pub struct OptionsRef<'a>(::planus::table_reader::Table<'a>);
+
+            impl<'a> OptionsRef<'a> {
+                pub fn direct(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0.access(0, "Options", "direct")?.unwrap_or(false),
+                    )
+                }
+
+                pub fn max_message_size(&self) -> ::planus::Result<u32> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(1, "Options", "max_message_size")?
+                            .unwrap_or(0),
+                    )
+                }
+
+                pub fn initial_available_outgoing_bitrate(&self) -> ::planus::Result<u32> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(2, "Options", "initial_available_outgoing_bitrate")?
+                            .unwrap_or(0),
+                    )
+                }
+
+                pub fn enable_sctp(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0.access(3, "Options", "enable_sctp")?.unwrap_or(false),
+                    )
+                }
+
+                pub fn num_sctp_streams(
+                    &self,
+                ) -> ::planus::Result<
+                    ::core::option::Option<super::sctp_parameters::NumSctpStreamsRef<'a>>,
+                > {
+                    self.0.access(4, "Options", "num_sctp_streams")
+                }
+
+                pub fn max_sctp_message_size(&self) -> ::planus::Result<u32> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(5, "Options", "max_sctp_message_size")?
+                            .unwrap_or(0),
+                    )
+                }
+
+                pub fn sctp_send_buffer_size(&self) -> ::planus::Result<u32> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(6, "Options", "sctp_send_buffer_size")?
+                            .unwrap_or(0),
+                    )
+                }
+
+                pub fn is_data_channel(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(7, "Options", "is_data_channel")?
+                            .unwrap_or(false),
+                    )
+                }
+            }
+
+            impl<'a> ::core::fmt::Debug for OptionsRef<'a> {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    let mut f = f.debug_struct("OptionsRef");
+                    f.field("direct", &self.direct());
+                    f.field("max_message_size", &self.max_message_size());
+                    f.field(
+                        "initial_available_outgoing_bitrate",
+                        &self.initial_available_outgoing_bitrate(),
+                    );
+                    f.field("enable_sctp", &self.enable_sctp());
+                    if let ::core::option::Option::Some(field_num_sctp_streams) =
+                        self.num_sctp_streams().transpose()
+                    {
+                        f.field("num_sctp_streams", &field_num_sctp_streams);
+                    }
+                    f.field("max_sctp_message_size", &self.max_sctp_message_size());
+                    f.field("sctp_send_buffer_size", &self.sctp_send_buffer_size());
+                    f.field("is_data_channel", &self.is_data_channel());
+                    f.finish()
+                }
+            }
+
+            impl<'a> ::core::convert::TryFrom<OptionsRef<'a>> for Options {
+                type Error = ::planus::Error;
+
+                #[allow(unreachable_code)]
+                fn try_from(value: OptionsRef<'a>) -> ::planus::Result<Self> {
+                    ::core::result::Result::Ok(Self {
+                        direct: ::core::convert::TryInto::try_into(value.direct()?)?,
+                        max_message_size: ::core::convert::TryInto::try_into(
+                            value.max_message_size()?,
+                        )?,
+                        initial_available_outgoing_bitrate: ::core::convert::TryInto::try_into(
+                            value.initial_available_outgoing_bitrate()?,
+                        )?,
+                        enable_sctp: ::core::convert::TryInto::try_into(value.enable_sctp()?)?,
+                        num_sctp_streams: if let ::core::option::Option::Some(num_sctp_streams) =
+                            value.num_sctp_streams()?
+                        {
+                            ::core::option::Option::Some(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryInto::try_into(num_sctp_streams)?,
+                            ))
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        max_sctp_message_size: ::core::convert::TryInto::try_into(
+                            value.max_sctp_message_size()?,
+                        )?,
+                        sctp_send_buffer_size: ::core::convert::TryInto::try_into(
+                            value.sctp_send_buffer_size()?,
+                        )?,
+                        is_data_channel: ::core::convert::TryInto::try_into(
+                            value.is_data_channel()?,
+                        )?,
+                    })
+                }
+            }
+
+            impl<'a> ::planus::TableRead<'a> for OptionsRef<'a> {
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
+                        buffer, offset,
+                    )?))
+                }
+            }
+
+            impl<'a> ::planus::VectorReadInner<'a> for OptionsRef<'a> {
+                type Error = ::planus::Error;
+                const STRIDE: usize = 4;
+
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[OptionsRef]",
+                            "get",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<::planus::Offset<Options>> for Options {
+                type Value = ::planus::Offset<Options>;
+                const STRIDE: usize = 4;
+                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
+                    ::planus::WriteAs::prepare(self, builder)
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[::planus::Offset<Options>],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - (Self::STRIDE * i) as u32,
+                        );
+                    }
+                }
+            }
+
+            impl<'a> ::planus::ReadAsRoot<'a> for OptionsRef<'a> {
+                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(
+                        ::planus::SliceWithStartOffset {
+                            buffer: slice,
+                            offset_from_start: 0,
+                        },
+                        0,
+                    )
+                    .map_err(|error_kind| {
+                        error_kind.with_error_location("[OptionsRef]", "read_as_root", 0)
+                    })
+                }
+            }
+
+            #[derive(
+                Clone,
+                Debug,
+                PartialEq,
+                PartialOrd,
+                Eq,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
             pub struct Dump {
                 pub id: ::planus::alloc::string::String,
                 pub direct: bool,
@@ -22205,383 +22780,6 @@ mod root {
                     )
                     .map_err(|error_kind| {
                         error_kind.with_error_location("[DumpRef]", "read_as_root", 0)
-                    })
-                }
-            }
-
-            #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            pub struct Options {
-                pub direct: bool,
-                pub max_message_size: u32,
-                pub initial_available_outgoing_bitrate: u32,
-                pub enable_sctp: bool,
-                pub num_sctp_streams: ::core::option::Option<
-                    ::planus::alloc::boxed::Box<super::sctp_parameters::NumSctpStreams>,
-                >,
-                pub max_sctp_message_size: u32,
-                pub sctp_send_buffer_size: u32,
-                pub is_data_channel: bool,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for Options {
-                fn default() -> Self {
-                    Self {
-                        direct: false,
-                        max_message_size: 0,
-                        initial_available_outgoing_bitrate: 0,
-                        enable_sctp: false,
-                        num_sctp_streams: ::core::default::Default::default(),
-                        max_sctp_message_size: 0,
-                        sctp_send_buffer_size: 0,
-                        is_data_channel: false,
-                    }
-                }
-            }
-
-            impl Options {
-                #[allow(clippy::too_many_arguments)]
-                pub fn create(
-                    builder: &mut ::planus::Builder,
-                    field_direct: impl ::planus::WriteAsDefault<bool, bool>,
-                    field_max_message_size: impl ::planus::WriteAsDefault<u32, u32>,
-                    field_initial_available_outgoing_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
-                    field_enable_sctp: impl ::planus::WriteAsDefault<bool, bool>,
-                    field_num_sctp_streams: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<super::sctp_parameters::NumSctpStreams>,
-                    >,
-                    field_max_sctp_message_size: impl ::planus::WriteAsDefault<u32, u32>,
-                    field_sctp_send_buffer_size: impl ::planus::WriteAsDefault<u32, u32>,
-                    field_is_data_channel: impl ::planus::WriteAsDefault<bool, bool>,
-                ) -> ::planus::Offset<Self> {
-                    let prepared_direct = field_direct.prepare(builder, &false);
-
-                    let prepared_max_message_size = field_max_message_size.prepare(builder, &0);
-
-                    let prepared_initial_available_outgoing_bitrate =
-                        field_initial_available_outgoing_bitrate.prepare(builder, &0);
-
-                    let prepared_enable_sctp = field_enable_sctp.prepare(builder, &false);
-
-                    let prepared_num_sctp_streams = field_num_sctp_streams.prepare(builder);
-
-                    let prepared_max_sctp_message_size =
-                        field_max_sctp_message_size.prepare(builder, &0);
-
-                    let prepared_sctp_send_buffer_size =
-                        field_sctp_send_buffer_size.prepare(builder, &0);
-
-                    let prepared_is_data_channel = field_is_data_channel.prepare(builder, &false);
-
-                    let mut table_writer =
-                        ::planus::table_writer::TableWriter::<18, 23>::new(builder);
-
-                    if prepared_direct.is_some() {
-                        table_writer.calculate_size::<bool>(2);
-                    }
-                    if prepared_max_message_size.is_some() {
-                        table_writer.calculate_size::<u32>(4);
-                    }
-                    if prepared_initial_available_outgoing_bitrate.is_some() {
-                        table_writer.calculate_size::<u32>(6);
-                    }
-                    if prepared_enable_sctp.is_some() {
-                        table_writer.calculate_size::<bool>(8);
-                    }
-                    if prepared_num_sctp_streams.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<super::sctp_parameters::NumSctpStreams>>(10);
-                    }
-                    if prepared_max_sctp_message_size.is_some() {
-                        table_writer.calculate_size::<u32>(12);
-                    }
-                    if prepared_sctp_send_buffer_size.is_some() {
-                        table_writer.calculate_size::<u32>(14);
-                    }
-                    if prepared_is_data_channel.is_some() {
-                        table_writer.calculate_size::<bool>(16);
-                    }
-
-                    table_writer.finish_calculating();
-
-                    unsafe {
-                        if let ::core::option::Option::Some(prepared_max_message_size) =
-                            prepared_max_message_size
-                        {
-                            table_writer.write::<_, _, 4>(1, &prepared_max_message_size);
-                        }
-                        if let ::core::option::Option::Some(
-                            prepared_initial_available_outgoing_bitrate,
-                        ) = prepared_initial_available_outgoing_bitrate
-                        {
-                            table_writer
-                                .write::<_, _, 4>(2, &prepared_initial_available_outgoing_bitrate);
-                        }
-                        if let ::core::option::Option::Some(prepared_num_sctp_streams) =
-                            prepared_num_sctp_streams
-                        {
-                            table_writer.write::<_, _, 4>(4, &prepared_num_sctp_streams);
-                        }
-                        if let ::core::option::Option::Some(prepared_max_sctp_message_size) =
-                            prepared_max_sctp_message_size
-                        {
-                            table_writer.write::<_, _, 4>(5, &prepared_max_sctp_message_size);
-                        }
-                        if let ::core::option::Option::Some(prepared_sctp_send_buffer_size) =
-                            prepared_sctp_send_buffer_size
-                        {
-                            table_writer.write::<_, _, 4>(6, &prepared_sctp_send_buffer_size);
-                        }
-                        if let ::core::option::Option::Some(prepared_direct) = prepared_direct {
-                            table_writer.write::<_, _, 1>(0, &prepared_direct);
-                        }
-                        if let ::core::option::Option::Some(prepared_enable_sctp) =
-                            prepared_enable_sctp
-                        {
-                            table_writer.write::<_, _, 1>(3, &prepared_enable_sctp);
-                        }
-                        if let ::core::option::Option::Some(prepared_is_data_channel) =
-                            prepared_is_data_channel
-                        {
-                            table_writer.write::<_, _, 1>(7, &prepared_is_data_channel);
-                        }
-                    }
-
-                    table_writer.finish()
-                }
-            }
-
-            impl ::planus::WriteAs<::planus::Offset<Options>> for Options {
-                type Prepared = ::planus::Offset<Self>;
-
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Options> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl ::planus::WriteAsOptional<::planus::Offset<Options>> for Options {
-                type Prepared = ::planus::Offset<Self>;
-
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<Options>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl ::planus::WriteAsOffset<Options> for Options {
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Options> {
-                    Options::create(
-                        builder,
-                        &self.direct,
-                        &self.max_message_size,
-                        &self.initial_available_outgoing_bitrate,
-                        &self.enable_sctp,
-                        &self.num_sctp_streams,
-                        &self.max_sctp_message_size,
-                        &self.sctp_send_buffer_size,
-                        &self.is_data_channel,
-                    )
-                }
-            }
-
-            #[derive(Copy, Clone)]
-            pub struct OptionsRef<'a>(::planus::table_reader::Table<'a>);
-
-            impl<'a> OptionsRef<'a> {
-                pub fn direct(&self) -> ::planus::Result<bool> {
-                    ::core::result::Result::Ok(
-                        self.0.access(0, "Options", "direct")?.unwrap_or(false),
-                    )
-                }
-
-                pub fn max_message_size(&self) -> ::planus::Result<u32> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(1, "Options", "max_message_size")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                pub fn initial_available_outgoing_bitrate(&self) -> ::planus::Result<u32> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(2, "Options", "initial_available_outgoing_bitrate")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                pub fn enable_sctp(&self) -> ::planus::Result<bool> {
-                    ::core::result::Result::Ok(
-                        self.0.access(3, "Options", "enable_sctp")?.unwrap_or(false),
-                    )
-                }
-
-                pub fn num_sctp_streams(
-                    &self,
-                ) -> ::planus::Result<
-                    ::core::option::Option<super::sctp_parameters::NumSctpStreamsRef<'a>>,
-                > {
-                    self.0.access(4, "Options", "num_sctp_streams")
-                }
-
-                pub fn max_sctp_message_size(&self) -> ::planus::Result<u32> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(5, "Options", "max_sctp_message_size")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                pub fn sctp_send_buffer_size(&self) -> ::planus::Result<u32> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(6, "Options", "sctp_send_buffer_size")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                pub fn is_data_channel(&self) -> ::planus::Result<bool> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(7, "Options", "is_data_channel")?
-                            .unwrap_or(false),
-                    )
-                }
-            }
-
-            impl<'a> ::core::fmt::Debug for OptionsRef<'a> {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("OptionsRef");
-                    f.field("direct", &self.direct());
-                    f.field("max_message_size", &self.max_message_size());
-                    f.field(
-                        "initial_available_outgoing_bitrate",
-                        &self.initial_available_outgoing_bitrate(),
-                    );
-                    f.field("enable_sctp", &self.enable_sctp());
-                    if let ::core::option::Option::Some(field_num_sctp_streams) =
-                        self.num_sctp_streams().transpose()
-                    {
-                        f.field("num_sctp_streams", &field_num_sctp_streams);
-                    }
-                    f.field("max_sctp_message_size", &self.max_sctp_message_size());
-                    f.field("sctp_send_buffer_size", &self.sctp_send_buffer_size());
-                    f.field("is_data_channel", &self.is_data_channel());
-                    f.finish()
-                }
-            }
-
-            impl<'a> ::core::convert::TryFrom<OptionsRef<'a>> for Options {
-                type Error = ::planus::Error;
-
-                #[allow(unreachable_code)]
-                fn try_from(value: OptionsRef<'a>) -> ::planus::Result<Self> {
-                    ::core::result::Result::Ok(Self {
-                        direct: ::core::convert::TryInto::try_into(value.direct()?)?,
-                        max_message_size: ::core::convert::TryInto::try_into(
-                            value.max_message_size()?,
-                        )?,
-                        initial_available_outgoing_bitrate: ::core::convert::TryInto::try_into(
-                            value.initial_available_outgoing_bitrate()?,
-                        )?,
-                        enable_sctp: ::core::convert::TryInto::try_into(value.enable_sctp()?)?,
-                        num_sctp_streams: if let ::core::option::Option::Some(num_sctp_streams) =
-                            value.num_sctp_streams()?
-                        {
-                            ::core::option::Option::Some(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryInto::try_into(num_sctp_streams)?,
-                            ))
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        max_sctp_message_size: ::core::convert::TryInto::try_into(
-                            value.max_sctp_message_size()?,
-                        )?,
-                        sctp_send_buffer_size: ::core::convert::TryInto::try_into(
-                            value.sctp_send_buffer_size()?,
-                        )?,
-                        is_data_channel: ::core::convert::TryInto::try_into(
-                            value.is_data_channel()?,
-                        )?,
-                    })
-                }
-            }
-
-            impl<'a> ::planus::TableRead<'a> for OptionsRef<'a> {
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
-                        buffer, offset,
-                    )?))
-                }
-            }
-
-            impl<'a> ::planus::VectorReadInner<'a> for OptionsRef<'a> {
-                type Error = ::planus::Error;
-                const STRIDE: usize = 4;
-
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "[OptionsRef]",
-                            "get",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<::planus::Offset<Options>> for Options {
-                type Value = ::planus::Offset<Options>;
-                const STRIDE: usize = 4;
-                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
-                    ::planus::WriteAs::prepare(self, builder)
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[::planus::Offset<Options>],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - (Self::STRIDE * i) as u32,
-                        );
-                    }
-                }
-            }
-
-            impl<'a> ::planus::ReadAsRoot<'a> for OptionsRef<'a> {
-                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(
-                        ::planus::SliceWithStartOffset {
-                            buffer: slice,
-                            offset_from_start: 0,
-                        },
-                        0,
-                    )
-                    .map_err(|error_kind| {
-                        error_kind.with_error_location("[OptionsRef]", "read_as_root", 0)
                     })
                 }
             }
@@ -27145,7 +27343,7 @@ mod root {
             pub enum Event {
                 TransportSendRtcp = 0,
                 ProducerSend = 1,
-                DataProducerSend = 2,
+                DataproducerSend = 2,
                 WorkerRunning = 3,
                 TransportSctpStateChange = 4,
                 TransportTrace = 5,
@@ -27167,11 +27365,13 @@ mod root {
                 ConsumerTrace = 21,
                 DataconsumerBufferedAmountLow = 22,
                 DataconsumerSctpSendbufferFull = 23,
-                DataconsumerDataproducerClose = 24,
-                DataconsumerMessage = 25,
-                ActivespeakerobserverDominantSpeaker = 26,
-                AudiolevelobserverSilence = 27,
-                AudiolevelobserverVolumes = 28,
+                DataconsumerDataproducerPause = 24,
+                DataconsumerDataproducerResume = 25,
+                DataconsumerDataproducerClose = 26,
+                DataconsumerMessage = 27,
+                ActivespeakerobserverDominantSpeaker = 28,
+                AudiolevelobserverSilence = 29,
+                AudiolevelobserverVolumes = 30,
             }
 
             impl ::core::convert::TryFrom<u8> for Event {
@@ -27184,7 +27384,7 @@ mod root {
                     match value {
                         0 => ::core::result::Result::Ok(Event::TransportSendRtcp),
                         1 => ::core::result::Result::Ok(Event::ProducerSend),
-                        2 => ::core::result::Result::Ok(Event::DataProducerSend),
+                        2 => ::core::result::Result::Ok(Event::DataproducerSend),
                         3 => ::core::result::Result::Ok(Event::WorkerRunning),
                         4 => ::core::result::Result::Ok(Event::TransportSctpStateChange),
                         5 => ::core::result::Result::Ok(Event::TransportTrace),
@@ -27208,13 +27408,15 @@ mod root {
                         21 => ::core::result::Result::Ok(Event::ConsumerTrace),
                         22 => ::core::result::Result::Ok(Event::DataconsumerBufferedAmountLow),
                         23 => ::core::result::Result::Ok(Event::DataconsumerSctpSendbufferFull),
-                        24 => ::core::result::Result::Ok(Event::DataconsumerDataproducerClose),
-                        25 => ::core::result::Result::Ok(Event::DataconsumerMessage),
-                        26 => {
+                        24 => ::core::result::Result::Ok(Event::DataconsumerDataproducerPause),
+                        25 => ::core::result::Result::Ok(Event::DataconsumerDataproducerResume),
+                        26 => ::core::result::Result::Ok(Event::DataconsumerDataproducerClose),
+                        27 => ::core::result::Result::Ok(Event::DataconsumerMessage),
+                        28 => {
                             ::core::result::Result::Ok(Event::ActivespeakerobserverDominantSpeaker)
                         }
-                        27 => ::core::result::Result::Ok(Event::AudiolevelobserverSilence),
-                        28 => ::core::result::Result::Ok(Event::AudiolevelobserverVolumes),
+                        29 => ::core::result::Result::Ok(Event::AudiolevelobserverSilence),
+                        30 => ::core::result::Result::Ok(Event::AudiolevelobserverVolumes),
 
                         _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
                             tag: value as i128,
@@ -28080,21 +28282,21 @@ mod root {
                 WorkerDump = 1,
                 WorkerGetResourceUsage = 2,
                 WorkerUpdateSettings = 3,
-                WorkerCreateWebrtcServer = 4,
+                WorkerCreateWebrtcserver = 4,
                 WorkerCreateRouter = 5,
-                WorkerWebrtcServerClose = 6,
+                WorkerWebrtcserverClose = 6,
                 WorkerCloseRouter = 7,
-                WebrtcServerDump = 8,
+                WebrtcserverDump = 8,
                 RouterDump = 9,
-                RouterCreateWebrtcTransport = 10,
-                RouterCreateWebrtcTransportWithServer = 11,
-                RouterCreatePlainTransport = 12,
-                RouterCreatePipeTransport = 13,
-                RouterCreateDirectTransport = 14,
+                RouterCreateWebrtctransport = 10,
+                RouterCreateWebrtctransportWithServer = 11,
+                RouterCreatePlaintransport = 12,
+                RouterCreatePipetransport = 13,
+                RouterCreateDirecttransport = 14,
                 RouterCloseTransport = 15,
-                RouterCreateActiveSpeakerObserver = 16,
-                RouterCreateAudioLevelObserver = 17,
-                RouterCloseRtpObserver = 18,
+                RouterCreateActivespeakerobserver = 16,
+                RouterCreateAudiolevelobserver = 17,
+                RouterCloseRtpobserver = 18,
                 TransportDump = 19,
                 TransportGetStats = 20,
                 TransportConnect = 21,
@@ -28109,11 +28311,11 @@ mod root {
                 TransportEnableTraceEvent = 30,
                 TransportCloseProducer = 31,
                 TransportCloseConsumer = 32,
-                TransportCloseDataProducer = 33,
-                TransportCloseDataConsumer = 34,
-                PlainTransportConnect = 35,
-                PipeTransportConnect = 36,
-                WebrtcTransportConnect = 37,
+                TransportCloseDataproducer = 33,
+                TransportCloseDataconsumer = 34,
+                PlaintransportConnect = 35,
+                PipetransportConnect = 36,
+                WebrtctransportConnect = 37,
                 ProducerDump = 38,
                 ProducerGetStats = 39,
                 ProducerPause = 40,
@@ -28127,17 +28329,21 @@ mod root {
                 ConsumerSetPriority = 48,
                 ConsumerRequestKeyFrame = 49,
                 ConsumerEnableTraceEvent = 50,
-                DataProducerDump = 51,
-                DataProducerGetStats = 52,
-                DataConsumerDump = 53,
-                DataConsumerGetStats = 54,
-                DataConsumerGetBufferedAmount = 55,
-                DataConsumerSetBufferedAmountLowThreshold = 56,
-                DataConsumerSend = 57,
-                RtpObserverPause = 58,
-                RtpObserverResume = 59,
-                RtpObserverAddProducer = 60,
-                RtpObserverRemoveProducer = 61,
+                DataproducerDump = 51,
+                DataproducerGetStats = 52,
+                DataproducerPause = 53,
+                DataproducerResume = 54,
+                DataconsumerDump = 55,
+                DataconsumerGetStats = 56,
+                DataconsumerPause = 57,
+                DataconsumerResume = 58,
+                DataconsumerGetBufferedAmount = 59,
+                DataconsumerSetBufferedAmountLowThreshold = 60,
+                DataconsumerSend = 61,
+                RtpobserverPause = 62,
+                RtpobserverResume = 63,
+                RtpobserverAddProducer = 64,
+                RtpobserverRemoveProducer = 65,
             }
 
             impl ::core::convert::TryFrom<u8> for Method {
@@ -28152,23 +28358,23 @@ mod root {
                         1 => ::core::result::Result::Ok(Method::WorkerDump),
                         2 => ::core::result::Result::Ok(Method::WorkerGetResourceUsage),
                         3 => ::core::result::Result::Ok(Method::WorkerUpdateSettings),
-                        4 => ::core::result::Result::Ok(Method::WorkerCreateWebrtcServer),
+                        4 => ::core::result::Result::Ok(Method::WorkerCreateWebrtcserver),
                         5 => ::core::result::Result::Ok(Method::WorkerCreateRouter),
-                        6 => ::core::result::Result::Ok(Method::WorkerWebrtcServerClose),
+                        6 => ::core::result::Result::Ok(Method::WorkerWebrtcserverClose),
                         7 => ::core::result::Result::Ok(Method::WorkerCloseRouter),
-                        8 => ::core::result::Result::Ok(Method::WebrtcServerDump),
+                        8 => ::core::result::Result::Ok(Method::WebrtcserverDump),
                         9 => ::core::result::Result::Ok(Method::RouterDump),
-                        10 => ::core::result::Result::Ok(Method::RouterCreateWebrtcTransport),
+                        10 => ::core::result::Result::Ok(Method::RouterCreateWebrtctransport),
                         11 => ::core::result::Result::Ok(
-                            Method::RouterCreateWebrtcTransportWithServer,
+                            Method::RouterCreateWebrtctransportWithServer,
                         ),
-                        12 => ::core::result::Result::Ok(Method::RouterCreatePlainTransport),
-                        13 => ::core::result::Result::Ok(Method::RouterCreatePipeTransport),
-                        14 => ::core::result::Result::Ok(Method::RouterCreateDirectTransport),
+                        12 => ::core::result::Result::Ok(Method::RouterCreatePlaintransport),
+                        13 => ::core::result::Result::Ok(Method::RouterCreatePipetransport),
+                        14 => ::core::result::Result::Ok(Method::RouterCreateDirecttransport),
                         15 => ::core::result::Result::Ok(Method::RouterCloseTransport),
-                        16 => ::core::result::Result::Ok(Method::RouterCreateActiveSpeakerObserver),
-                        17 => ::core::result::Result::Ok(Method::RouterCreateAudioLevelObserver),
-                        18 => ::core::result::Result::Ok(Method::RouterCloseRtpObserver),
+                        16 => ::core::result::Result::Ok(Method::RouterCreateActivespeakerobserver),
+                        17 => ::core::result::Result::Ok(Method::RouterCreateAudiolevelobserver),
+                        18 => ::core::result::Result::Ok(Method::RouterCloseRtpobserver),
                         19 => ::core::result::Result::Ok(Method::TransportDump),
                         20 => ::core::result::Result::Ok(Method::TransportGetStats),
                         21 => ::core::result::Result::Ok(Method::TransportConnect),
@@ -28183,11 +28389,11 @@ mod root {
                         30 => ::core::result::Result::Ok(Method::TransportEnableTraceEvent),
                         31 => ::core::result::Result::Ok(Method::TransportCloseProducer),
                         32 => ::core::result::Result::Ok(Method::TransportCloseConsumer),
-                        33 => ::core::result::Result::Ok(Method::TransportCloseDataProducer),
-                        34 => ::core::result::Result::Ok(Method::TransportCloseDataConsumer),
-                        35 => ::core::result::Result::Ok(Method::PlainTransportConnect),
-                        36 => ::core::result::Result::Ok(Method::PipeTransportConnect),
-                        37 => ::core::result::Result::Ok(Method::WebrtcTransportConnect),
+                        33 => ::core::result::Result::Ok(Method::TransportCloseDataproducer),
+                        34 => ::core::result::Result::Ok(Method::TransportCloseDataconsumer),
+                        35 => ::core::result::Result::Ok(Method::PlaintransportConnect),
+                        36 => ::core::result::Result::Ok(Method::PipetransportConnect),
+                        37 => ::core::result::Result::Ok(Method::WebrtctransportConnect),
                         38 => ::core::result::Result::Ok(Method::ProducerDump),
                         39 => ::core::result::Result::Ok(Method::ProducerGetStats),
                         40 => ::core::result::Result::Ok(Method::ProducerPause),
@@ -28201,19 +28407,23 @@ mod root {
                         48 => ::core::result::Result::Ok(Method::ConsumerSetPriority),
                         49 => ::core::result::Result::Ok(Method::ConsumerRequestKeyFrame),
                         50 => ::core::result::Result::Ok(Method::ConsumerEnableTraceEvent),
-                        51 => ::core::result::Result::Ok(Method::DataProducerDump),
-                        52 => ::core::result::Result::Ok(Method::DataProducerGetStats),
-                        53 => ::core::result::Result::Ok(Method::DataConsumerDump),
-                        54 => ::core::result::Result::Ok(Method::DataConsumerGetStats),
-                        55 => ::core::result::Result::Ok(Method::DataConsumerGetBufferedAmount),
-                        56 => ::core::result::Result::Ok(
-                            Method::DataConsumerSetBufferedAmountLowThreshold,
+                        51 => ::core::result::Result::Ok(Method::DataproducerDump),
+                        52 => ::core::result::Result::Ok(Method::DataproducerGetStats),
+                        53 => ::core::result::Result::Ok(Method::DataproducerPause),
+                        54 => ::core::result::Result::Ok(Method::DataproducerResume),
+                        55 => ::core::result::Result::Ok(Method::DataconsumerDump),
+                        56 => ::core::result::Result::Ok(Method::DataconsumerGetStats),
+                        57 => ::core::result::Result::Ok(Method::DataconsumerPause),
+                        58 => ::core::result::Result::Ok(Method::DataconsumerResume),
+                        59 => ::core::result::Result::Ok(Method::DataconsumerGetBufferedAmount),
+                        60 => ::core::result::Result::Ok(
+                            Method::DataconsumerSetBufferedAmountLowThreshold,
                         ),
-                        57 => ::core::result::Result::Ok(Method::DataConsumerSend),
-                        58 => ::core::result::Result::Ok(Method::RtpObserverPause),
-                        59 => ::core::result::Result::Ok(Method::RtpObserverResume),
-                        60 => ::core::result::Result::Ok(Method::RtpObserverAddProducer),
-                        61 => ::core::result::Result::Ok(Method::RtpObserverRemoveProducer),
+                        61 => ::core::result::Result::Ok(Method::DataconsumerSend),
+                        62 => ::core::result::Result::Ok(Method::RtpobserverPause),
+                        63 => ::core::result::Result::Ok(Method::RtpobserverResume),
+                        64 => ::core::result::Result::Ok(Method::RtpobserverAddProducer),
+                        65 => ::core::result::Result::Ok(Method::RtpobserverRemoveProducer),
 
                         _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
                             tag: value as i128,
@@ -31596,7 +31806,8 @@ mod root {
             )]
             pub struct CreateWebRtcServerRequest {
                 pub web_rtc_server_id: ::planus::alloc::string::String,
-                pub listen_infos: ::planus::alloc::vec::Vec<super::web_rtc_server::ListenInfo>,
+                pub listen_infos:
+                    ::core::option::Option<::planus::alloc::vec::Vec<super::transport::ListenInfo>>,
             }
 
             impl CreateWebRtcServerRequest {
@@ -31604,8 +31815,8 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_web_rtc_server_id: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_listen_infos: impl ::planus::WriteAs<
-                        ::planus::Offset<[::planus::Offset<super::web_rtc_server::ListenInfo>]>,
+                    field_listen_infos: impl ::planus::WriteAsOptional<
+                        ::planus::Offset<[::planus::Offset<super::transport::ListenInfo>]>,
                     >,
                 ) -> ::planus::Offset<Self> {
                     let prepared_web_rtc_server_id = field_web_rtc_server_id.prepare(builder);
@@ -31616,15 +31827,21 @@ mod root {
                         ::planus::table_writer::TableWriter::<6, 8>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<str>>(2);
-                    table_writer.calculate_size::<::planus::Offset<
-                        [::planus::Offset<super::web_rtc_server::ListenInfo>],
-                    >>(4);
+                    if prepared_listen_infos.is_some() {
+                        table_writer.calculate_size::<::planus::Offset<
+                            [::planus::Offset<super::transport::ListenInfo>],
+                        >>(4);
+                    }
 
                     table_writer.finish_calculating();
 
                     unsafe {
                         table_writer.write::<_, _, 4>(0, &prepared_web_rtc_server_id);
-                        table_writer.write::<_, _, 4>(1, &prepared_listen_infos);
+                        if let ::core::option::Option::Some(prepared_listen_infos) =
+                            prepared_listen_infos
+                        {
+                            table_writer.write::<_, _, 4>(1, &prepared_listen_infos);
+                        }
                     }
 
                     table_writer.finish()
@@ -31681,13 +31898,12 @@ mod root {
                 pub fn listen_infos(
                     &self,
                 ) -> ::planus::Result<
-                    ::planus::Vector<
-                        'a,
-                        ::planus::Result<super::web_rtc_server::ListenInfoRef<'a>>,
+                    ::core::option::Option<
+                        ::planus::Vector<'a, ::planus::Result<super::transport::ListenInfoRef<'a>>>,
                     >,
                 > {
                     self.0
-                        .access_required(1, "CreateWebRtcServerRequest", "listen_infos")
+                        .access(1, "CreateWebRtcServerRequest", "listen_infos")
                 }
             }
 
@@ -31695,7 +31911,11 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("CreateWebRtcServerRequestRef");
                     f.field("web_rtc_server_id", &self.web_rtc_server_id());
-                    f.field("listen_infos", &self.listen_infos());
+                    if let ::core::option::Option::Some(field_listen_infos) =
+                        self.listen_infos().transpose()
+                    {
+                        f.field("listen_infos", &field_listen_infos);
+                    }
                     f.finish()
                 }
             }
@@ -31709,7 +31929,13 @@ mod root {
                         web_rtc_server_id: ::core::convert::TryInto::try_into(
                             value.web_rtc_server_id()?,
                         )?,
-                        listen_infos: value.listen_infos()?.to_vec_result()?,
+                        listen_infos: if let ::core::option::Option::Some(listen_infos) =
+                            value.listen_infos()?
+                        {
+                            ::core::option::Option::Some(listen_infos.to_vec_result()?)
+                        } else {
+                            ::core::option::Option::None
+                        },
                     })
                 }
             }
@@ -34240,246 +34466,6 @@ mod root {
             }
         }
         pub mod web_rtc_server {
-            #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            pub struct ListenInfo {
-                pub protocol: super::transport::Protocol,
-                pub ip: ::planus::alloc::string::String,
-                pub announced_ip: ::core::option::Option<::planus::alloc::string::String>,
-                pub port: u16,
-            }
-
-            impl ListenInfo {
-                #[allow(clippy::too_many_arguments)]
-                pub fn create(
-                    builder: &mut ::planus::Builder,
-                    field_protocol: impl ::planus::WriteAsDefault<
-                        super::transport::Protocol,
-                        super::transport::Protocol,
-                    >,
-                    field_ip: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_announced_ip: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
-                    >,
-                    field_port: impl ::planus::WriteAsDefault<u16, u16>,
-                ) -> ::planus::Offset<Self> {
-                    let prepared_protocol =
-                        field_protocol.prepare(builder, &super::transport::Protocol::Udp);
-
-                    let prepared_ip = field_ip.prepare(builder);
-
-                    let prepared_announced_ip = field_announced_ip.prepare(builder);
-
-                    let prepared_port = field_port.prepare(builder, &0);
-
-                    let mut table_writer =
-                        ::planus::table_writer::TableWriter::<10, 11>::new(builder);
-
-                    if prepared_protocol.is_some() {
-                        table_writer.calculate_size::<super::transport::Protocol>(2);
-                    }
-                    table_writer.calculate_size::<::planus::Offset<str>>(4);
-                    if prepared_announced_ip.is_some() {
-                        table_writer.calculate_size::<::planus::Offset<str>>(6);
-                    }
-                    if prepared_port.is_some() {
-                        table_writer.calculate_size::<u16>(8);
-                    }
-
-                    table_writer.finish_calculating();
-
-                    unsafe {
-                        table_writer.write::<_, _, 4>(1, &prepared_ip);
-                        if let ::core::option::Option::Some(prepared_announced_ip) =
-                            prepared_announced_ip
-                        {
-                            table_writer.write::<_, _, 4>(2, &prepared_announced_ip);
-                        }
-                        if let ::core::option::Option::Some(prepared_port) = prepared_port {
-                            table_writer.write::<_, _, 2>(3, &prepared_port);
-                        }
-                        if let ::core::option::Option::Some(prepared_protocol) = prepared_protocol {
-                            table_writer.write::<_, _, 1>(0, &prepared_protocol);
-                        }
-                    }
-
-                    table_writer.finish()
-                }
-            }
-
-            impl ::planus::WriteAs<::planus::Offset<ListenInfo>> for ListenInfo {
-                type Prepared = ::planus::Offset<Self>;
-
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<ListenInfo> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl ::planus::WriteAsOptional<::planus::Offset<ListenInfo>> for ListenInfo {
-                type Prepared = ::planus::Offset<Self>;
-
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<ListenInfo>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl ::planus::WriteAsOffset<ListenInfo> for ListenInfo {
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<ListenInfo> {
-                    ListenInfo::create(
-                        builder,
-                        &self.protocol,
-                        &self.ip,
-                        &self.announced_ip,
-                        &self.port,
-                    )
-                }
-            }
-
-            #[derive(Copy, Clone)]
-            pub struct ListenInfoRef<'a>(::planus::table_reader::Table<'a>);
-
-            impl<'a> ListenInfoRef<'a> {
-                pub fn protocol(&self) -> ::planus::Result<super::transport::Protocol> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(0, "ListenInfo", "protocol")?
-                            .unwrap_or(super::transport::Protocol::Udp),
-                    )
-                }
-
-                pub fn ip(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(1, "ListenInfo", "ip")
-                }
-
-                pub fn announced_ip(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
-                {
-                    self.0.access(2, "ListenInfo", "announced_ip")
-                }
-
-                pub fn port(&self) -> ::planus::Result<u16> {
-                    ::core::result::Result::Ok(self.0.access(3, "ListenInfo", "port")?.unwrap_or(0))
-                }
-            }
-
-            impl<'a> ::core::fmt::Debug for ListenInfoRef<'a> {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("ListenInfoRef");
-                    f.field("protocol", &self.protocol());
-                    f.field("ip", &self.ip());
-                    if let ::core::option::Option::Some(field_announced_ip) =
-                        self.announced_ip().transpose()
-                    {
-                        f.field("announced_ip", &field_announced_ip);
-                    }
-                    f.field("port", &self.port());
-                    f.finish()
-                }
-            }
-
-            impl<'a> ::core::convert::TryFrom<ListenInfoRef<'a>> for ListenInfo {
-                type Error = ::planus::Error;
-
-                #[allow(unreachable_code)]
-                fn try_from(value: ListenInfoRef<'a>) -> ::planus::Result<Self> {
-                    ::core::result::Result::Ok(Self {
-                        protocol: ::core::convert::TryInto::try_into(value.protocol()?)?,
-                        ip: ::core::convert::TryInto::try_into(value.ip()?)?,
-                        announced_ip: if let ::core::option::Option::Some(announced_ip) =
-                            value.announced_ip()?
-                        {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
-                                announced_ip,
-                            )?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        port: ::core::convert::TryInto::try_into(value.port()?)?,
-                    })
-                }
-            }
-
-            impl<'a> ::planus::TableRead<'a> for ListenInfoRef<'a> {
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
-                        buffer, offset,
-                    )?))
-                }
-            }
-
-            impl<'a> ::planus::VectorReadInner<'a> for ListenInfoRef<'a> {
-                type Error = ::planus::Error;
-                const STRIDE: usize = 4;
-
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "[ListenInfoRef]",
-                            "get",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<::planus::Offset<ListenInfo>> for ListenInfo {
-                type Value = ::planus::Offset<ListenInfo>;
-                const STRIDE: usize = 4;
-                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
-                    ::planus::WriteAs::prepare(self, builder)
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[::planus::Offset<ListenInfo>],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - (Self::STRIDE * i) as u32,
-                        );
-                    }
-                }
-            }
-
-            impl<'a> ::planus::ReadAsRoot<'a> for ListenInfoRef<'a> {
-                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(
-                        ::planus::SliceWithStartOffset {
-                            buffer: slice,
-                            offset_from_start: 0,
-                        },
-                        0,
-                    )
-                    .map_err(|error_kind| {
-                        error_kind.with_error_location("[ListenInfoRef]", "read_as_root", 0)
-                    })
-                }
-            }
-
             #[derive(
                 Clone,
                 Debug,
@@ -38266,8 +38252,7 @@ mod root {
             )]
             pub struct PipeTransportOptions {
                 pub base: ::planus::alloc::boxed::Box<super::transport::Options>,
-                pub listen_ip: ::planus::alloc::boxed::Box<super::transport::ListenIp>,
-                pub port: u16,
+                pub listen_info: ::planus::alloc::boxed::Box<super::transport::ListenInfo>,
                 pub enable_rtx: bool,
                 pub enable_srtp: bool,
             }
@@ -38277,55 +38262,47 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_base: impl ::planus::WriteAs<::planus::Offset<super::transport::Options>>,
-                    field_listen_ip: impl ::planus::WriteAs<
-                        ::planus::Offset<super::transport::ListenIp>,
+                    field_listen_info: impl ::planus::WriteAs<
+                        ::planus::Offset<super::transport::ListenInfo>,
                     >,
-                    field_port: impl ::planus::WriteAsDefault<u16, u16>,
                     field_enable_rtx: impl ::planus::WriteAsDefault<bool, bool>,
                     field_enable_srtp: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_base = field_base.prepare(builder);
 
-                    let prepared_listen_ip = field_listen_ip.prepare(builder);
-
-                    let prepared_port = field_port.prepare(builder, &0);
+                    let prepared_listen_info = field_listen_info.prepare(builder);
 
                     let prepared_enable_rtx = field_enable_rtx.prepare(builder, &false);
 
                     let prepared_enable_srtp = field_enable_srtp.prepare(builder, &false);
 
                     let mut table_writer =
-                        ::planus::table_writer::TableWriter::<12, 12>::new(builder);
+                        ::planus::table_writer::TableWriter::<10, 10>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<super::transport::Options>>(2);
-                    table_writer.calculate_size::<::planus::Offset<super::transport::ListenIp>>(4);
-                    if prepared_port.is_some() {
-                        table_writer.calculate_size::<u16>(6);
-                    }
+                    table_writer
+                        .calculate_size::<::planus::Offset<super::transport::ListenInfo>>(4);
                     if prepared_enable_rtx.is_some() {
-                        table_writer.calculate_size::<bool>(8);
+                        table_writer.calculate_size::<bool>(6);
                     }
                     if prepared_enable_srtp.is_some() {
-                        table_writer.calculate_size::<bool>(10);
+                        table_writer.calculate_size::<bool>(8);
                     }
 
                     table_writer.finish_calculating();
 
                     unsafe {
                         table_writer.write::<_, _, 4>(0, &prepared_base);
-                        table_writer.write::<_, _, 4>(1, &prepared_listen_ip);
-                        if let ::core::option::Option::Some(prepared_port) = prepared_port {
-                            table_writer.write::<_, _, 2>(2, &prepared_port);
-                        }
+                        table_writer.write::<_, _, 4>(1, &prepared_listen_info);
                         if let ::core::option::Option::Some(prepared_enable_rtx) =
                             prepared_enable_rtx
                         {
-                            table_writer.write::<_, _, 1>(3, &prepared_enable_rtx);
+                            table_writer.write::<_, _, 1>(2, &prepared_enable_rtx);
                         }
                         if let ::core::option::Option::Some(prepared_enable_srtp) =
                             prepared_enable_srtp
                         {
-                            table_writer.write::<_, _, 1>(4, &prepared_enable_srtp);
+                            table_writer.write::<_, _, 1>(3, &prepared_enable_srtp);
                         }
                     }
 
@@ -38364,8 +38341,7 @@ mod root {
                     PipeTransportOptions::create(
                         builder,
                         &self.base,
-                        &self.listen_ip,
-                        &self.port,
+                        &self.listen_info,
                         &self.enable_rtx,
                         &self.enable_srtp,
                     )
@@ -38380,23 +38356,15 @@ mod root {
                     self.0.access_required(0, "PipeTransportOptions", "base")
                 }
 
-                pub fn listen_ip(&self) -> ::planus::Result<super::transport::ListenIpRef<'a>> {
+                pub fn listen_info(&self) -> ::planus::Result<super::transport::ListenInfoRef<'a>> {
                     self.0
-                        .access_required(1, "PipeTransportOptions", "listen_ip")
-                }
-
-                pub fn port(&self) -> ::planus::Result<u16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(2, "PipeTransportOptions", "port")?
-                            .unwrap_or(0),
-                    )
+                        .access_required(1, "PipeTransportOptions", "listen_info")
                 }
 
                 pub fn enable_rtx(&self) -> ::planus::Result<bool> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(3, "PipeTransportOptions", "enable_rtx")?
+                            .access(2, "PipeTransportOptions", "enable_rtx")?
                             .unwrap_or(false),
                     )
                 }
@@ -38404,7 +38372,7 @@ mod root {
                 pub fn enable_srtp(&self) -> ::planus::Result<bool> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(4, "PipeTransportOptions", "enable_srtp")?
+                            .access(3, "PipeTransportOptions", "enable_srtp")?
                             .unwrap_or(false),
                     )
                 }
@@ -38414,8 +38382,7 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("PipeTransportOptionsRef");
                     f.field("base", &self.base());
-                    f.field("listen_ip", &self.listen_ip());
-                    f.field("port", &self.port());
+                    f.field("listen_info", &self.listen_info());
                     f.field("enable_rtx", &self.enable_rtx());
                     f.field("enable_srtp", &self.enable_srtp());
                     f.finish()
@@ -38431,10 +38398,9 @@ mod root {
                         base: ::planus::alloc::boxed::Box::new(::core::convert::TryInto::try_into(
                             value.base()?,
                         )?),
-                        listen_ip: ::planus::alloc::boxed::Box::new(
-                            ::core::convert::TryInto::try_into(value.listen_ip()?)?,
+                        listen_info: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.listen_info()?)?,
                         ),
-                        port: ::core::convert::TryInto::try_into(value.port()?)?,
                         enable_rtx: ::core::convert::TryInto::try_into(value.enable_rtx()?)?,
                         enable_srtp: ::core::convert::TryInto::try_into(value.enable_srtp()?)?,
                     })
@@ -39365,8 +39331,10 @@ mod root {
             pub struct PlainTransportOptions {
                 pub base:
                     ::core::option::Option<::planus::alloc::boxed::Box<super::transport::Options>>,
-                pub listen_ip: ::planus::alloc::boxed::Box<super::transport::ListenIp>,
-                pub port: u16,
+                pub listen_info: ::planus::alloc::boxed::Box<super::transport::ListenInfo>,
+                pub rtcp_listen_info: ::core::option::Option<
+                    ::planus::alloc::boxed::Box<super::transport::ListenInfo>,
+                >,
                 pub rtcp_mux: bool,
                 pub comedia: bool,
                 pub enable_srtp: bool,
@@ -39380,10 +39348,12 @@ mod root {
                     field_base: impl ::planus::WriteAsOptional<
                         ::planus::Offset<super::transport::Options>,
                     >,
-                    field_listen_ip: impl ::planus::WriteAs<
-                        ::planus::Offset<super::transport::ListenIp>,
+                    field_listen_info: impl ::planus::WriteAs<
+                        ::planus::Offset<super::transport::ListenInfo>,
                     >,
-                    field_port: impl ::planus::WriteAsDefault<u16, u16>,
+                    field_rtcp_listen_info: impl ::planus::WriteAsOptional<
+                        ::planus::Offset<super::transport::ListenInfo>,
+                    >,
                     field_rtcp_mux: impl ::planus::WriteAsDefault<bool, bool>,
                     field_comedia: impl ::planus::WriteAsDefault<bool, bool>,
                     field_enable_srtp: impl ::planus::WriteAsDefault<bool, bool>,
@@ -39393,9 +39363,9 @@ mod root {
                 ) -> ::planus::Offset<Self> {
                     let prepared_base = field_base.prepare(builder);
 
-                    let prepared_listen_ip = field_listen_ip.prepare(builder);
+                    let prepared_listen_info = field_listen_info.prepare(builder);
 
-                    let prepared_port = field_port.prepare(builder, &0);
+                    let prepared_rtcp_listen_info = field_rtcp_listen_info.prepare(builder);
 
                     let prepared_rtcp_mux = field_rtcp_mux.prepare(builder, &false);
 
@@ -39406,15 +39376,17 @@ mod root {
                     let prepared_srtp_crypto_suite = field_srtp_crypto_suite.prepare(builder);
 
                     let mut table_writer =
-                        ::planus::table_writer::TableWriter::<16, 17>::new(builder);
+                        ::planus::table_writer::TableWriter::<16, 19>::new(builder);
 
                     if prepared_base.is_some() {
                         table_writer
                             .calculate_size::<::planus::Offset<super::transport::Options>>(2);
                     }
-                    table_writer.calculate_size::<::planus::Offset<super::transport::ListenIp>>(4);
-                    if prepared_port.is_some() {
-                        table_writer.calculate_size::<u16>(6);
+                    table_writer
+                        .calculate_size::<::planus::Offset<super::transport::ListenInfo>>(4);
+                    if prepared_rtcp_listen_info.is_some() {
+                        table_writer
+                            .calculate_size::<::planus::Offset<super::transport::ListenInfo>>(6);
                     }
                     if prepared_rtcp_mux.is_some() {
                         table_writer.calculate_size::<bool>(8);
@@ -39435,14 +39407,16 @@ mod root {
                         if let ::core::option::Option::Some(prepared_base) = prepared_base {
                             table_writer.write::<_, _, 4>(0, &prepared_base);
                         }
-                        table_writer.write::<_, _, 4>(1, &prepared_listen_ip);
+                        table_writer.write::<_, _, 4>(1, &prepared_listen_info);
+                        if let ::core::option::Option::Some(prepared_rtcp_listen_info) =
+                            prepared_rtcp_listen_info
+                        {
+                            table_writer.write::<_, _, 4>(2, &prepared_rtcp_listen_info);
+                        }
                         if let ::core::option::Option::Some(prepared_srtp_crypto_suite) =
                             prepared_srtp_crypto_suite
                         {
                             table_writer.write::<_, _, 4>(6, &prepared_srtp_crypto_suite);
-                        }
-                        if let ::core::option::Option::Some(prepared_port) = prepared_port {
-                            table_writer.write::<_, _, 2>(2, &prepared_port);
                         }
                         if let ::core::option::Option::Some(prepared_rtcp_mux) = prepared_rtcp_mux {
                             table_writer.write::<_, _, 1>(3, &prepared_rtcp_mux);
@@ -39492,8 +39466,8 @@ mod root {
                     PlainTransportOptions::create(
                         builder,
                         &self.base,
-                        &self.listen_ip,
-                        &self.port,
+                        &self.listen_info,
+                        &self.rtcp_listen_info,
                         &self.rtcp_mux,
                         &self.comedia,
                         &self.enable_srtp,
@@ -39513,17 +39487,17 @@ mod root {
                     self.0.access(0, "PlainTransportOptions", "base")
                 }
 
-                pub fn listen_ip(&self) -> ::planus::Result<super::transport::ListenIpRef<'a>> {
+                pub fn listen_info(&self) -> ::planus::Result<super::transport::ListenInfoRef<'a>> {
                     self.0
-                        .access_required(1, "PlainTransportOptions", "listen_ip")
+                        .access_required(1, "PlainTransportOptions", "listen_info")
                 }
 
-                pub fn port(&self) -> ::planus::Result<u16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(2, "PlainTransportOptions", "port")?
-                            .unwrap_or(0),
-                    )
+                pub fn rtcp_listen_info(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<super::transport::ListenInfoRef<'a>>>
+                {
+                    self.0
+                        .access(2, "PlainTransportOptions", "rtcp_listen_info")
                 }
 
                 pub fn rtcp_mux(&self) -> ::planus::Result<bool> {
@@ -39565,8 +39539,12 @@ mod root {
                     if let ::core::option::Option::Some(field_base) = self.base().transpose() {
                         f.field("base", &field_base);
                     }
-                    f.field("listen_ip", &self.listen_ip());
-                    f.field("port", &self.port());
+                    f.field("listen_info", &self.listen_info());
+                    if let ::core::option::Option::Some(field_rtcp_listen_info) =
+                        self.rtcp_listen_info().transpose()
+                    {
+                        f.field("rtcp_listen_info", &field_rtcp_listen_info);
+                    }
                     f.field("rtcp_mux", &self.rtcp_mux());
                     f.field("comedia", &self.comedia());
                     f.field("enable_srtp", &self.enable_srtp());
@@ -39592,10 +39570,18 @@ mod root {
                         } else {
                             ::core::option::Option::None
                         },
-                        listen_ip: ::planus::alloc::boxed::Box::new(
-                            ::core::convert::TryInto::try_into(value.listen_ip()?)?,
+                        listen_info: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.listen_info()?)?,
                         ),
-                        port: ::core::convert::TryInto::try_into(value.port()?)?,
+                        rtcp_listen_info: if let ::core::option::Option::Some(rtcp_listen_info) =
+                            value.rtcp_listen_info()?
+                        {
+                            ::core::option::Option::Some(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryInto::try_into(rtcp_listen_info)?,
+                            ))
+                        } else {
+                            ::core::option::Option::None
+                        },
                         rtcp_mux: ::core::convert::TryInto::try_into(value.rtcp_mux()?)?,
                         comedia: ::core::convert::TryInto::try_into(value.comedia()?)?,
                         enable_srtp: ::core::convert::TryInto::try_into(value.enable_srtp()?)?,
@@ -41150,38 +41136,28 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct ListenIndividual {
-                pub listen_ips: ::planus::alloc::vec::Vec<super::transport::ListenIp>,
-                pub port: u16,
+                pub listen_infos: ::planus::alloc::vec::Vec<super::transport::ListenInfo>,
             }
 
             impl ListenIndividual {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_listen_ips: impl ::planus::WriteAs<
-                        ::planus::Offset<[::planus::Offset<super::transport::ListenIp>]>,
+                    field_listen_infos: impl ::planus::WriteAs<
+                        ::planus::Offset<[::planus::Offset<super::transport::ListenInfo>]>,
                     >,
-                    field_port: impl ::planus::WriteAsDefault<u16, u16>,
                 ) -> ::planus::Offset<Self> {
-                    let prepared_listen_ips = field_listen_ips.prepare(builder);
-
-                    let prepared_port = field_port.prepare(builder, &0);
+                    let prepared_listen_infos = field_listen_infos.prepare(builder);
 
                     let mut table_writer =
-                        ::planus::table_writer::TableWriter::<6, 6>::new(builder);
+                        ::planus::table_writer::TableWriter::<4, 4>::new(builder);
 
-                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<super::transport::ListenIp>]>>(2);
-                    if prepared_port.is_some() {
-                        table_writer.calculate_size::<u16>(4);
-                    }
+                    table_writer.calculate_size::<::planus::Offset<[::planus::Offset<super::transport::ListenInfo>]>>(2);
 
                     table_writer.finish_calculating();
 
                     unsafe {
-                        table_writer.write::<_, _, 4>(0, &prepared_listen_ips);
-                        if let ::core::option::Option::Some(prepared_port) = prepared_port {
-                            table_writer.write::<_, _, 2>(1, &prepared_port);
-                        }
+                        table_writer.write::<_, _, 4>(0, &prepared_listen_infos);
                     }
 
                     table_writer.finish()
@@ -41215,7 +41191,7 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<ListenIndividual> {
-                    ListenIndividual::create(builder, &self.listen_ips, &self.port)
+                    ListenIndividual::create(builder, &self.listen_infos)
                 }
             }
 
@@ -41223,26 +41199,20 @@ mod root {
             pub struct ListenIndividualRef<'a>(::planus::table_reader::Table<'a>);
 
             impl<'a> ListenIndividualRef<'a> {
-                pub fn listen_ips(
+                pub fn listen_infos(
                     &self,
                 ) -> ::planus::Result<
-                    ::planus::Vector<'a, ::planus::Result<super::transport::ListenIpRef<'a>>>,
+                    ::planus::Vector<'a, ::planus::Result<super::transport::ListenInfoRef<'a>>>,
                 > {
-                    self.0.access_required(0, "ListenIndividual", "listen_ips")
-                }
-
-                pub fn port(&self) -> ::planus::Result<u16> {
-                    ::core::result::Result::Ok(
-                        self.0.access(1, "ListenIndividual", "port")?.unwrap_or(0),
-                    )
+                    self.0
+                        .access_required(0, "ListenIndividual", "listen_infos")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for ListenIndividualRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("ListenIndividualRef");
-                    f.field("listen_ips", &self.listen_ips());
-                    f.field("port", &self.port());
+                    f.field("listen_infos", &self.listen_infos());
                     f.finish()
                 }
             }
@@ -41253,8 +41223,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: ListenIndividualRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        listen_ips: value.listen_ips()?.to_vec_result()?,
-                        port: ::core::convert::TryInto::try_into(value.port()?)?,
+                        listen_infos: value.listen_infos()?.to_vec_result()?,
                     })
                 }
             }
@@ -41607,10 +41576,6 @@ mod root {
             pub struct WebRtcTransportOptions {
                 pub base: ::planus::alloc::boxed::Box<super::transport::Options>,
                 pub listen: self::Listen,
-                pub enable_udp: bool,
-                pub enable_tcp: bool,
-                pub prefer_udp: bool,
-                pub prefer_tcp: bool,
             }
 
             impl WebRtcTransportOptions {
@@ -41619,41 +41584,17 @@ mod root {
                     builder: &mut ::planus::Builder,
                     field_base: impl ::planus::WriteAs<::planus::Offset<super::transport::Options>>,
                     field_listen: impl ::planus::WriteAsUnion<self::Listen>,
-                    field_enable_udp: impl ::planus::WriteAsDefault<bool, bool>,
-                    field_enable_tcp: impl ::planus::WriteAsDefault<bool, bool>,
-                    field_prefer_udp: impl ::planus::WriteAsDefault<bool, bool>,
-                    field_prefer_tcp: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_base = field_base.prepare(builder);
 
                     let prepared_listen = field_listen.prepare(builder);
 
-                    let prepared_enable_udp = field_enable_udp.prepare(builder, &true);
-
-                    let prepared_enable_tcp = field_enable_tcp.prepare(builder, &false);
-
-                    let prepared_prefer_udp = field_prefer_udp.prepare(builder, &false);
-
-                    let prepared_prefer_tcp = field_prefer_tcp.prepare(builder, &false);
-
                     let mut table_writer =
-                        ::planus::table_writer::TableWriter::<16, 13>::new(builder);
+                        ::planus::table_writer::TableWriter::<6, 9>::new(builder);
 
                     table_writer.calculate_size::<::planus::Offset<super::transport::Options>>(2);
                     table_writer.calculate_size::<u8>(4);
                     table_writer.calculate_size::<::planus::Offset<self::Listen>>(6);
-                    if prepared_enable_udp.is_some() {
-                        table_writer.calculate_size::<bool>(8);
-                    }
-                    if prepared_enable_tcp.is_some() {
-                        table_writer.calculate_size::<bool>(10);
-                    }
-                    if prepared_prefer_udp.is_some() {
-                        table_writer.calculate_size::<bool>(12);
-                    }
-                    if prepared_prefer_tcp.is_some() {
-                        table_writer.calculate_size::<bool>(14);
-                    }
 
                     table_writer.finish_calculating();
 
@@ -41661,26 +41602,6 @@ mod root {
                         table_writer.write::<_, _, 4>(0, &prepared_base);
                         table_writer.write::<_, _, 4>(2, &prepared_listen.offset());
                         table_writer.write::<_, _, 1>(1, &prepared_listen.tag());
-                        if let ::core::option::Option::Some(prepared_enable_udp) =
-                            prepared_enable_udp
-                        {
-                            table_writer.write::<_, _, 1>(3, &prepared_enable_udp);
-                        }
-                        if let ::core::option::Option::Some(prepared_enable_tcp) =
-                            prepared_enable_tcp
-                        {
-                            table_writer.write::<_, _, 1>(4, &prepared_enable_tcp);
-                        }
-                        if let ::core::option::Option::Some(prepared_prefer_udp) =
-                            prepared_prefer_udp
-                        {
-                            table_writer.write::<_, _, 1>(5, &prepared_prefer_udp);
-                        }
-                        if let ::core::option::Option::Some(prepared_prefer_tcp) =
-                            prepared_prefer_tcp
-                        {
-                            table_writer.write::<_, _, 1>(6, &prepared_prefer_tcp);
-                        }
                     }
 
                     table_writer.finish()
@@ -41717,15 +41638,7 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<WebRtcTransportOptions> {
-                    WebRtcTransportOptions::create(
-                        builder,
-                        &self.base,
-                        &self.listen,
-                        &self.enable_udp,
-                        &self.enable_tcp,
-                        &self.prefer_udp,
-                        &self.prefer_tcp,
-                    )
+                    WebRtcTransportOptions::create(builder, &self.base, &self.listen)
                 }
             }
 
@@ -41741,38 +41654,6 @@ mod root {
                     self.0
                         .access_union_required(1, "WebRtcTransportOptions", "listen")
                 }
-
-                pub fn enable_udp(&self) -> ::planus::Result<bool> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(3, "WebRtcTransportOptions", "enable_udp")?
-                            .unwrap_or(true),
-                    )
-                }
-
-                pub fn enable_tcp(&self) -> ::planus::Result<bool> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(4, "WebRtcTransportOptions", "enable_tcp")?
-                            .unwrap_or(false),
-                    )
-                }
-
-                pub fn prefer_udp(&self) -> ::planus::Result<bool> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(5, "WebRtcTransportOptions", "prefer_udp")?
-                            .unwrap_or(false),
-                    )
-                }
-
-                pub fn prefer_tcp(&self) -> ::planus::Result<bool> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(6, "WebRtcTransportOptions", "prefer_tcp")?
-                            .unwrap_or(false),
-                    )
-                }
             }
 
             impl<'a> ::core::fmt::Debug for WebRtcTransportOptionsRef<'a> {
@@ -41780,10 +41661,6 @@ mod root {
                     let mut f = f.debug_struct("WebRtcTransportOptionsRef");
                     f.field("base", &self.base());
                     f.field("listen", &self.listen());
-                    f.field("enable_udp", &self.enable_udp());
-                    f.field("enable_tcp", &self.enable_tcp());
-                    f.field("prefer_udp", &self.prefer_udp());
-                    f.field("prefer_tcp", &self.prefer_tcp());
                     f.finish()
                 }
             }
@@ -41798,10 +41675,6 @@ mod root {
                             value.base()?,
                         )?),
                         listen: ::core::convert::TryInto::try_into(value.listen()?)?,
-                        enable_udp: ::core::convert::TryInto::try_into(value.enable_udp()?)?,
-                        enable_tcp: ::core::convert::TryInto::try_into(value.enable_tcp()?)?,
-                        prefer_udp: ::core::convert::TryInto::try_into(value.prefer_udp()?)?,
-                        prefer_tcp: ::core::convert::TryInto::try_into(value.prefer_tcp()?)?,
                     })
                 }
             }

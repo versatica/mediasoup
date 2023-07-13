@@ -27,7 +27,7 @@
 #endif
 #include "RTC/TransportCongestionControlClient.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
-#include "handles/Timer.hpp"
+#include "handles/TimerHandle.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <string>
 
@@ -45,7 +45,7 @@ namespace RTC
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
 	                  public RTC::SenderBandwidthEstimator::Listener,
 #endif
-	                  public Timer::Listener
+	                  public TimerHandle::Listener
 	{
 	protected:
 		using onSendCallback   = const std::function<void(bool sent)>;
@@ -87,6 +87,10 @@ namespace RTC
 			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
 			virtual void OnTransportConsumerProducerClosed(
 			  RTC::Transport* transport, RTC::Consumer* consumer) = 0;
+			virtual void OnTransportDataProducerPaused(
+			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
+			virtual void OnTransportDataProducerResumed(
+			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
 			virtual void OnTransportConsumerKeyFrameRequested(
 			  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 			virtual void OnTransportNewDataProducer(
@@ -106,6 +110,16 @@ namespace RTC
 			virtual void OnTransportDataConsumerDataProducerClosed(
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer)         = 0;
 			virtual void OnTransportListenServerClosed(RTC::Transport* transport) = 0;
+		};
+
+	public:
+		struct ListenInfo
+		{
+			std::string ip;
+			std::string announcedIp;
+			uint16_t port{ 0u };
+			uint32_t sendBufferSize{ 0u };
+			uint32_t recvBufferSize{ 0u };
 		};
 
 	private:
@@ -140,6 +154,7 @@ namespace RTC
 
 	protected:
 		// Must be called from the subclass.
+		void Destroying();
 		void Connected();
 		void Disconnected();
 		void DataReceived(size_t len)
@@ -225,6 +240,8 @@ namespace RTC
 		}
 		void OnDataProducerMessageReceived(
 		  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) override;
+		void OnDataProducerPaused(RTC::DataProducer* dataProducer) override;
+		void OnDataProducerResumed(RTC::DataProducer* dataProducer) override;
 
 		/* Pure virtual methods inherited from RTC::DataConsumer::Listener. */
 	public:
@@ -277,9 +294,9 @@ namespace RTC
 		  uint32_t previousAvailableBitrate) override;
 #endif
 
-		/* Pure virtual methods inherited from Timer::Listener. */
+		/* Pure virtual methods inherited from TimerHandle::Listener. */
 	public:
-		void OnTimer(Timer* timer) override;
+		void OnTimer(TimerHandle* timer) override;
 
 	public:
 		// Passed by argument.
@@ -301,7 +318,7 @@ namespace RTC
 		absl::flat_hash_map<std::string, RTC::DataConsumer*> mapDataConsumers;
 		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapSsrcConsumer;
 		absl::flat_hash_map<uint32_t, RTC::Consumer*> mapRtxSsrcConsumer;
-		Timer* rtcpTimer{ nullptr };
+		TimerHandle* rtcpTimer{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlClient> tccClient{ nullptr };
 		std::shared_ptr<RTC::TransportCongestionControlServer> tccServer{ nullptr };
 #ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR

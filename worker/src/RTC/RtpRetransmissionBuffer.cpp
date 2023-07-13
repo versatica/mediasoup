@@ -489,7 +489,7 @@ namespace RTC
 
 		if (numItemsRemoved)
 		{
-			MS_DEBUG_DEV("removed 1 blank slot from the front");
+			MS_DEBUG_DEV("removed %zu blank slots from the front", numItemsRemoved);
 		}
 	}
 

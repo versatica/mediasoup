@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::fbs::sctp_association;
+use crate::fbs::{sctp_association, transport};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -45,18 +45,45 @@ impl AppData {
     }
 }
 
-/// IP to listen on.
+/// Listening protocol, IP and port for [`WebRtcServer`] to listen on.
 ///
 /// # Notes on usage
 /// If you use "0.0.0.0" or "::" as ip value, then you need to also provide `announced_ip`.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ListenIp {
+pub struct ListenInfo {
+    /// Network protocol.
+    pub protocol: Protocol,
     /// Listening IPv4 or IPv6.
     pub ip: IpAddr,
     /// Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with private IP).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub announced_ip: Option<IpAddr>,
+    /// Listening port.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port: Option<u16>,
+    /// Send buffer size (bytes).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub send_buffer_size: Option<u32>,
+    /// Recv buffer size (bytes).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recv_buffer_size: Option<u32>,
+}
+
+impl ListenInfo {
+    pub(crate) fn to_fbs(self) -> transport::ListenInfo {
+        transport::ListenInfo {
+            protocol: match self.protocol {
+                Protocol::Tcp => transport::Protocol::Tcp,
+                Protocol::Udp => transport::Protocol::Udp,
+            },
+            ip: self.ip.to_string(),
+            announced_ip: self.announced_ip.map(|ip| ip.to_string()),
+            port: self.port.unwrap_or(0),
+            send_buffer_size: self.send_buffer_size.unwrap_or(0),
+            recv_buffer_size: self.recv_buffer_size.unwrap_or(0),
+        }
+    }
 }
 
 /// ICE role.

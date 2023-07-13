@@ -200,9 +200,13 @@ namespace RTC
 
 		// Set the RTCP report generation interval.
 		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
 			this->maxRtcpInterval = RTC::RTCP::MaxAudioIntervalMs;
+		}
 		else
+		{
 			this->maxRtcpInterval = RTC::RTCP::MaxVideoIntervalMs;
+		}
 
 		// Create a KeyFrameRequestManager.
 		if (this->kind == RTC::Media::Kind::VIDEO)
@@ -284,7 +288,9 @@ namespace RTC
 		for (const auto* rtpStream : this->rtpStreamByEncodingIdx)
 		{
 			if (!rtpStream)
+			{
 				continue;
+			}
 
 			rtpStreams.emplace_back(rtpStream->FillBuffer(builder));
 		}
@@ -293,15 +299,25 @@ namespace RTC
 		std::vector<flatbuffers::Offset<flatbuffers::String>> traceEventTypes;
 
 		if (this->traceEventTypes.rtp)
+		{
 			traceEventTypes.emplace_back(builder.CreateString("rtp"));
+		}
 		if (this->traceEventTypes.keyframe)
+		{
 			traceEventTypes.emplace_back(builder.CreateString("keyframe"));
+		}
 		if (this->traceEventTypes.nack)
+		{
 			traceEventTypes.emplace_back(builder.CreateString("nack"));
+		}
 		if (this->traceEventTypes.pli)
+		{
 			traceEventTypes.emplace_back(builder.CreateString("pli"));
+		}
 		if (this->traceEventTypes.fir)
+		{
 			traceEventTypes.emplace_back(builder.CreateString("fir"));
+		}
 
 		return FBS::Producer::CreateDumpResponseDirect(
 		  builder,
@@ -326,7 +342,9 @@ namespace RTC
 		for (auto* rtpStream : this->rtpStreamByEncodingIdx)
 		{
 			if (!rtpStream)
+			{
 				continue;
+			}
 
 			rtpStreams.emplace_back(rtpStream->FillBufferStats(builder));
 		}
@@ -364,7 +382,7 @@ namespace RTC
 				{
 					request->Accept();
 
-					return;
+					break;
 				}
 
 				// Pause all streams.
@@ -392,7 +410,7 @@ namespace RTC
 				{
 					request->Accept();
 
-					return;
+					break;
 				}
 
 				// Resume all streams.
@@ -439,15 +457,25 @@ namespace RTC
 					const auto typeStr = type->str();
 
 					if (typeStr == "rtp")
+					{
 						newTraceEventTypes.rtp = true;
+					}
 					else if (typeStr == "keyframe")
+					{
 						newTraceEventTypes.keyframe = true;
+					}
 					else if (typeStr == "nack")
+					{
 						newTraceEventTypes.nack = true;
+					}
 					else if (typeStr == "pli")
+					{
 						newTraceEventTypes.pli = true;
+					}
 					else if (typeStr == "fir")
+					{
 						newTraceEventTypes.fir = true;
+					}
 				}
 
 				this->traceEventTypes = newTraceEventTypes;
@@ -485,9 +513,12 @@ namespace RTC
 					break;
 				}
 
-				// If this is the first time to receive a RTP packet then allocate the receiving buffer now.
+				// If this is the first time to receive a RTP packet then allocate the
+				// receiving buffer now.
 				if (!Producer::buffer)
+				{
 					Producer::buffer = new uint8_t[RTC::MtuSize + 100];
+				}
 
 				// Copy the received packet into this buffer so it can be expanded later.
 				std::memcpy(Producer::buffer, body->data()->data(), static_cast<size_t>(len));
@@ -553,7 +584,9 @@ namespace RTC
 			{
 				// May have to announce a new RTP stream to the listener.
 				if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
+				{
 					NotifyNewRtpStream(rtpStream);
+				}
 
 				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::RECV_RTP_STREAM_DISCARDED);
 
@@ -590,7 +623,9 @@ namespace RTC
 
 			// Tell the keyFrameRequestManager.
 			if (this->keyFrameRequestManager)
+			{
 				this->keyFrameRequestManager->KeyFrameReceived(packet->GetSsrc());
+			}
 		}
 
 		// May have to announce a new RTP stream to the listener.
@@ -599,7 +634,9 @@ namespace RTC
 			// Request a key frame for this stream since we may have lost the first packets
 			// (do not do it if this is a key frame).
 			if (this->keyFrameRequestManager && !this->paused && !packet->IsKeyFrame())
+			{
 				this->keyFrameRequestManager->ForceKeyFrameNeeded(packet->GetSsrc());
+			}
 
 			// Update current packet.
 			this->currentRtpPacket = packet;
@@ -612,14 +649,18 @@ namespace RTC
 
 		// If paused stop here.
 		if (this->paused)
+		{
 			return result;
+		}
 
 		// May emit 'trace' event.
 		EmitTraceEventRtpAndKeyFrameTypes(packet, isRtx);
 
 		// Mangle the packet before providing the listener with it.
 		if (!MangleRtpPacket(packet, rtpStream))
+		{
 			return ReceiveRtpPacketResult::DISCARDED;
+		}
 
 		// Post-process the packet.
 		PostProcessRtpPacket(packet);
@@ -685,7 +726,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+		{
 			return true;
+		}
 
 		std::vector<RTCP::ReceiverReport*> receiverReports;
 		RTCP::ReceiverReferenceTime* receiverReferenceTimeReport{ nullptr };
@@ -700,7 +743,9 @@ namespace RTC
 			auto* rtxReport = rtpStream->GetRtxRtcpReceiverReport();
 
 			if (rtxReport)
+			{
 				receiverReports.push_back(rtxReport);
+			}
 		}
 
 		// Add a receiver reference time report if no present in the packet.
@@ -715,7 +760,9 @@ namespace RTC
 
 		// RTCP Compound packet buffer cannot hold the data.
 		if (!packet->Add(receiverReports, receiverReferenceTimeReport))
+		{
 			return false;
+		}
 
 		this->lastRtcpSentTime = nowMs;
 
@@ -727,7 +774,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->keyFrameRequestManager || this->paused)
+		{
 			return;
+		}
 
 		auto it = this->mapMappedSsrcSsrc.find(mappedSsrc);
 
@@ -851,7 +900,9 @@ namespace RTC
 				auto& encoding = this->rtpParameters.encodings[i];
 
 				if (encoding.rid != rid)
+				{
 					continue;
+				}
 
 				const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
 				const auto* rtxCodec     = this->rtpParameters.GetRtxCodecForEncoding(encoding);
@@ -1086,7 +1137,9 @@ namespace RTC
 
 		// If the Producer is paused tell it to the new RtpStreamRecv.
 		if (this->paused)
+		{
 			rtpStream->Pause();
+		}
 
 		// Emit the first score event right now.
 		EmitScore();
@@ -1151,7 +1204,9 @@ namespace RTC
 
 			// This happens just once.
 			if (extensions.capacity() != 24)
+			{
 				extensions.reserve(24);
+			}
 
 			extensions.clear();
 
@@ -1374,7 +1429,9 @@ namespace RTC
 		for (const auto* rtpStream : this->rtpStreamByEncodingIdx)
 		{
 			if (!rtpStream)
+			{
 				continue;
+			}
 
 			scores.emplace_back(FBS::Producer::CreateScoreDirect(
 			  this->shared->channelNotifier->GetBufferBuilder(),
@@ -1434,7 +1491,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->traceEventTypes.pli)
+		{
 			return;
+		}
 
 		auto traceInfo =
 		  FBS::Producer::CreatePliTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
@@ -1455,7 +1514,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->traceEventTypes.fir)
+		{
 			return;
+		}
 
 		auto traceInfo =
 		  FBS::Producer::CreateFirTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), ssrc);
@@ -1476,7 +1537,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->traceEventTypes.nack)
+		{
 			return;
+		}
 
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->channelNotifier->GetBufferBuilder(),

@@ -211,7 +211,7 @@ namespace RTC
 		{
 			// Run the RTP inactivity periodic timer (use a different timeout if DTX is
 			// enabled).
-			this->inactivityCheckPeriodicTimer = new Timer(this);
+			this->inactivityCheckPeriodicTimer = new TimerHandle(this);
 
 			this->inactivityCheckPeriodicTimer->Start(
 			  this->params.useDtx ? InactivityCheckIntervalWithDtx : InactivityCheckInterval);
@@ -255,7 +255,7 @@ namespace RTC
 		auto stats = FBS::RtpStream::CreateRecvStatsDirect(
 		  builder,
 		  baseStats,
-		  this->jitter,
+		  static_cast<uint32_t>(this->jitter),
 		  this->transmissionCounter.GetPacketCount(),
 		  this->transmissionCounter.GetBytes(),
 		  this->transmissionCounter.GetBitrate(nowMs),
@@ -615,9 +615,10 @@ namespace RTC
 		this->rtt = static_cast<float>(rtt >> 16) * 1000;
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
-		if (this->rtt > 0.0f)
+		// Avoid negative RTT value since it doesn't make sense.
+		if (this->rtt <= 0.0f)
 		{
-			this->hasRtt = true;
+			this->rtt = 0.0f;
 		}
 
 		// Tell it to the NackGenerator.
@@ -698,15 +699,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->params.clockRate == 0u)
+		if (GetClockRate() == 0u)
 		{
 			return;
 		}
 
 		// NOTE: Based on https://github.com/versatica/mediasoup/issues/1018.
-		auto transit = static_cast<int>(
-		  DepLibUV::GetTimeMs() - (static_cast<uint64_t>(rtpTimestamp) * 1000 / this->params.clockRate));
-		int d = transit - this->transit;
+		auto transit = static_cast<int>((DepLibUV::GetTimeMs() * GetClockRate() / 1000) - rtpTimestamp);
+		int d        = transit - this->transit;
 
 		// First transit calculation, save and return.
 		if (this->transit == 0)
@@ -723,7 +723,7 @@ namespace RTC
 			d = -d;
 		}
 
-		this->jitter += (1. / 16.) * (static_cast<double>(d) - this->jitter);
+		this->jitter += (1. / 16.) * (static_cast<float>(d) - this->jitter);
 	}
 
 	void RtpStreamRecv::UpdateScore()
@@ -853,7 +853,7 @@ namespace RTC
 		// Nothing to do.
 	}
 
-	inline void RtpStreamRecv::OnTimer(Timer* timer)
+	inline void RtpStreamRecv::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
 

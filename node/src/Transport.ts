@@ -16,13 +16,13 @@ import {
 	DataProducer,
 	DataProducerOptions,
 	DataProducerType,
-	parseDataProducerDump
+	parseDataProducerDumpResponse
 } from './DataProducer';
 import {
 	DataConsumer,
 	DataConsumerOptions,
 	DataConsumerType,
-	parseDataConsumerDump
+	parseDataConsumerDumpResponse
 } from './DataConsumer';
 import {
 	MediaKind,
@@ -47,6 +47,44 @@ import * as FbsTransport from './fbs/transport';
 import * as FbsRouter from './fbs/router';
 import { SctpState as FbsSctpState } from './fbs/sctp-association/sctp-state';
 
+export type TransportListenInfo =
+{
+	/**
+	 * Network protocol.
+	 */
+	protocol: TransportProtocol;
+
+	/**
+	 * Listening IPv4 or IPv6.
+	 */
+	ip: string;
+
+	/**
+	 * Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with
+	 * private IP).
+	 */
+	announcedIp?: string;
+
+	/**
+	 * Listening port.
+	 */
+	port?: number;
+
+	/**
+	 * Send buffer size (bytes).
+	 */
+	sendBufferSize?: number;
+
+	/**
+	 * Recv buffer size (bytes).
+	 */
+	recvBufferSize?: number;
+};
+
+/**
+ * Use TransportListenInfo instead.
+ * @deprecated
+ */
 export type TransportListenIp =
 {
 	/**
@@ -148,7 +186,8 @@ export type TransportInternal = RouterInternal &
 	transportId: string;
 };
 
-export type BaseTransportDump = {
+export type BaseTransportDump =
+{
 	id : string;
 	direct : boolean;
 	producerIds : string[];
@@ -166,7 +205,8 @@ export type BaseTransportDump = {
 	traceEventTypes? : string[];
 };
 
-export type BaseTransportStats = {
+export type BaseTransportStats =
+{
 	transportId: string;
 	timestamp: number;
 	sctpState?: SctpState;
@@ -195,13 +235,15 @@ type TransportData =
   | PipeTransportData
   | DirectTransportData;
 
-type RtpListenerDump = {
+type RtpListenerDump =
+{
 	ssrcTable : {key: number; value: string}[];
 	midTable : {key: number; value: string}[];
 	ridTable : {key: number; value: string}[];
 };
 
-type SctpListenerDump = {
+type SctpListenerDump =
+{
 	streamIdTable : {key: number; value: string}[];
 };
 
@@ -216,9 +258,9 @@ type RecvRtpHeaderExtensions = {
 const logger = new Logger('Transport');
 
 export class Transport
-	<Events extends TransportEvents = TransportEvents,
-	ObserverEvents extends TransportObserverEvents = TransportObserverEvents,
-	TransportAppData extends AppData = AppData>
+	<TransportAppData extends AppData = AppData,
+	Events extends TransportEvents = TransportEvents,
+	ObserverEvents extends TransportObserverEvents = TransportObserverEvents>
 	extends EnhancedEventEmitter<Events>
 {
 	// Internal data.
@@ -856,7 +898,7 @@ export class Transport
 		}
 
 		const consumerId = uuidv4();
-		const consumeRequestOffset = createConsumeRequest({
+		const requestOffset = createConsumeRequest({
 			builder : this.channel.bufferBuilder,
 			producer,
 			consumerId,
@@ -870,7 +912,7 @@ export class Transport
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONSUME,
 			FbsRequest.Body.FBS_Transport_ConsumeRequest,
-			consumeRequestOffset,
+			requestOffset,
 			this.internal.transportId
 		);
 
@@ -931,6 +973,7 @@ export class Transport
 			sctpStreamParameters,
 			label = '',
 			protocol = '',
+			paused = false,
 			appData
 		}: DataProducerOptions<DataProducerAppData> = {}
 	): Promise<DataProducer<DataProducerAppData>>
@@ -975,7 +1018,8 @@ export class Transport
 			type,
 			sctpStreamParameters,
 			label,
-			protocol
+			protocol,
+			paused
 		});
 
 		const response = await this.channel.request(
@@ -986,11 +1030,12 @@ export class Transport
 		);
 
 		/* Decode Response. */
-		const produceResponse = new FbsDataProducer.DumpResponse();
+		const produceDataResponse = new FbsDataProducer.DumpResponse();
 
-		response.body(produceResponse);
+		response.body(produceDataResponse);
 
-		const data = parseDataProducerDump(produceResponse);
+		const dump = parseDataProducerDumpResponse(produceDataResponse);
+
 		const dataProducer = new DataProducer<DataProducerAppData>(
 			{
 				internal :
@@ -998,8 +1043,15 @@ export class Transport
 					...this.internal,
 					dataProducerId
 				},
-				data,
-				channel        : this.channel,
+				data :
+				{
+					type                 : dump.type,
+					sctpStreamParameters : dump.sctpStreamParameters,
+					label                : dump.label,
+					protocol             : dump.protocol
+				},
+				channel : this.channel,
+				paused,
 				appData
 			});
 
@@ -1027,6 +1079,7 @@ export class Transport
 			ordered,
 			maxPacketLifeTime,
 			maxRetransmits,
+			paused = false,
 			appData
 		}: DataConsumerOptions<ConsumerAppData>
 	): Promise<DataConsumer<ConsumerAppData>>
@@ -1109,7 +1162,8 @@ export class Transport
 			type,
 			sctpStreamParameters,
 			label,
-			protocol
+			protocol,
+			paused
 		});
 
 		const response = await this.channel.request(
@@ -1120,11 +1174,12 @@ export class Transport
 		);
 
 		/* Decode Response. */
-		const consumeResponse = new FbsDataConsumer.DumpResponse();
+		const consumeDataResponse = new FbsDataConsumer.DumpResponse();
 
-		response.body(consumeResponse);
+		response.body(consumeDataResponse);
 
-		const data = parseDataConsumerDump(consumeResponse);
+		const dump = parseDataConsumerDumpResponse(consumeDataResponse);
+
 		const dataConsumer = new DataConsumer<ConsumerAppData>(
 			{
 				internal :
@@ -1132,8 +1187,17 @@ export class Transport
 					...this.internal,
 					dataConsumerId
 				},
-				data,
-				channel        : this.channel,
+				data :
+				{
+					dataProducerId       : dump.dataProducerId,
+					type                 : dump.type,
+					sctpStreamParameters : dump.sctpStreamParameters,
+					label                : dump.label,
+					protocol             : dump.protocol
+				},
+				channel            : this.channel,
+				paused             : dump.paused,
+				dataProducerPaused : dump.dataProducerPaused,
 				appData
 			});
 
@@ -1540,7 +1604,8 @@ function createProduceDataRequest({
 	type,
 	sctpStreamParameters,
 	label,
-	protocol
+	protocol,
+	paused
 } : {
 	builder : flatbuffers.Builder;
 	dataProducerId: string;
@@ -1548,6 +1613,7 @@ function createProduceDataRequest({
 	sctpStreamParameters?: SctpStreamParameters;
 	label: string;
 	protocol: string;
+	paused: boolean;
 }): number
 {
 	const dataProducerIdOffset = builder.createString(dataProducerId);
@@ -1577,6 +1643,7 @@ function createProduceDataRequest({
 
 	FbsTransport.ProduceDataRequest.addLabel(builder, labelOffset);
 	FbsTransport.ProduceDataRequest.addProtocol(builder, protocolOffset);
+	FbsTransport.ProduceDataRequest.addPaused(builder, paused);
 
 	return FbsTransport.ProduceDataRequest.endProduceDataRequest(builder);
 }
@@ -1588,7 +1655,8 @@ function createConsumeDataRequest({
 	type,
 	sctpStreamParameters,
 	label,
-	protocol
+	protocol,
+	paused
 } : {
 	builder : flatbuffers.Builder;
 	dataConsumerId: string;
@@ -1597,6 +1665,7 @@ function createConsumeDataRequest({
 	sctpStreamParameters?: SctpStreamParameters;
 	label: string;
 	protocol: string;
+	paused: boolean;
 }): number
 {
 	const dataConsumerIdOffset = builder.createString(dataConsumerId);
@@ -1628,6 +1697,7 @@ function createConsumeDataRequest({
 
 	FbsTransport.ConsumeDataRequest.addLabel(builder, labelOffset);
 	FbsTransport.ConsumeDataRequest.addProtocol(builder, protocolOffset);
+	FbsTransport.ConsumeDataRequest.addPaused(builder, paused);
 
 	return FbsTransport.ConsumeDataRequest.endConsumeDataRequest(builder);
 }

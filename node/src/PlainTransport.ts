@@ -9,6 +9,7 @@ import {
 	parseBaseTransportStats,
 	parseTransportTraceEventData,
 	Transport,
+	TransportListenInfo,
 	TransportListenIp,
 	TransportTuple,
 	TransportEvents,
@@ -23,13 +24,26 @@ import {
 	SrtpParameters,
 	SrtpCryptoSuite
 } from './SrtpParameters';
-import { AppData } from './types';
+import { AppData, Either } from './types';
 import { Event, Notification } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
 import * as FbsPlainTransport from './fbs/plain-transport';
 
-export type PlainTransportOptions<PlainTransportAppData extends AppData = AppData> =
+type PlainTransportListenInfo =
+{
+	/**
+	 * Listening info.
+	 */
+	listenInfo: TransportListenInfo;
+
+	/**
+	 * Optional listening info for RTCP.
+	 */
+	rtcpListenInfo?: TransportListenInfo;
+};
+
+type PlainTransportListenIp =
 {
 	/**
 	 * Listening IP address.
@@ -41,7 +55,12 @@ export type PlainTransportOptions<PlainTransportAppData extends AppData = AppDat
 	 * range.
 	 */
 	port?: number;
+};
 
+type PlainTransportListen = Either<PlainTransportListenInfo, PlainTransportListenIp>;
+
+export type PlainTransportOptions<PlainTransportAppData extends AppData = AppData> =
+{
 	/**
 	 * Use RTCP-mux (RTP and RTCP in the same port). Default true.
 	 */
@@ -93,7 +112,7 @@ export type PlainTransportOptions<PlainTransportAppData extends AppData = AppDat
 	 * Custom application data.
 	 */
 	appData?: PlainTransportAppData;
-};
+} & PlainTransportListen;
 
 export type PlainTransportStat = BaseTransportStats &
 {
@@ -147,7 +166,7 @@ type PlainTransportDump = BaseTransportDump &
 const logger = new Logger('PlainTransport');
 
 export class PlainTransport<PlainTransportAppData extends AppData = AppData>
-	extends Transport<PlainTransportEvents, PlainTransportObserverEvents, PlainTransportAppData>
+	extends Transport<PlainTransportAppData, PlainTransportEvents, PlainTransportObserverEvents>
 {
 	// PlainTransport data.
 	readonly #data: PlainTransportData;
@@ -336,7 +355,7 @@ export class PlainTransport<PlainTransportAppData extends AppData = AppData>
 
 		// Wait for response.
 		const response = await this.channel.request(
-			FbsRequest.Method.PLAIN_TRANSPORT_CONNECT,
+			FbsRequest.Method.PLAINTRANSPORT_CONNECT,
 			FbsRequest.Body.FBS_PlainTransport_ConnectRequest,
 			requestOffset,
 			this.internal.transportId
@@ -520,45 +539,38 @@ function createConnectRequest(
 	}
 ): number
 {
-	try
+	let ipOffset = 0;
+	let srtpParametersOffset = 0;
+
+	if (ip)
 	{
-		let ipOffset = 0;
-		let srtpParametersOffset = 0;
-
-		if (ip)
-		{
-			ipOffset = builder.createString(ip);
-		}
-
-		// Serialize SrtpParameters.
-		if (srtpParameters)
-		{
-			srtpParametersOffset = serializeSrtpParameters(builder, srtpParameters);
-		}
-
-		// Create PlainTransportConnectData.
-		FbsPlainTransport.ConnectRequest.startConnectRequest(builder);
-		FbsPlainTransport.ConnectRequest.addIp(builder, ipOffset);
-
-		if (typeof port === 'number')
-		{
-			FbsPlainTransport.ConnectRequest.addPort(builder, port);
-		}
-		if (typeof rtcpPort === 'number')
-		{
-			FbsPlainTransport.ConnectRequest.addRtcpPort(builder, rtcpPort);
-		}
-		if (srtpParameters)
-		{
-			FbsPlainTransport.ConnectRequest.addSrtpParameters(
-				builder, srtpParametersOffset
-			);
-		}
-
-		return FbsPlainTransport.ConnectRequest.endConnectRequest(builder);
+		ipOffset = builder.createString(ip);
 	}
-	catch (error)
+
+	// Serialize SrtpParameters.
+	if (srtpParameters)
 	{
-		throw new TypeError(`${error}`);
+		srtpParametersOffset = serializeSrtpParameters(builder, srtpParameters);
 	}
+
+	// Create PlainTransportConnectData.
+	FbsPlainTransport.ConnectRequest.startConnectRequest(builder);
+	FbsPlainTransport.ConnectRequest.addIp(builder, ipOffset);
+
+	if (typeof port === 'number')
+	{
+		FbsPlainTransport.ConnectRequest.addPort(builder, port);
+	}
+	if (typeof rtcpPort === 'number')
+	{
+		FbsPlainTransport.ConnectRequest.addRtcpPort(builder, rtcpPort);
+	}
+	if (srtpParameters)
+	{
+		FbsPlainTransport.ConnectRequest.addSrtpParameters(
+			builder, srtpParametersOffset
+		);
+	}
+
+	return FbsPlainTransport.ConnectRequest.endConnectRequest(builder);
 }

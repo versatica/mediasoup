@@ -33,6 +33,11 @@ export type DataProducerOptions<DataProducerAppData extends AppData = AppData> =
 	protocol?: string;
 
 	/**
+	 * Whether the data producer must start in paused mode. Default false.
+	 */
+	paused?: boolean;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: DataProducerAppData;
@@ -63,10 +68,14 @@ export type DataProducerEvents =
 export type DataProducerObserverEvents =
 {
 	close: [];
+	pause: [];
+	resume: [];
 };
 
-type DataProducerDump = DataProducerData & {
+type DataProducerDump = DataProducerData &
+{
 	id: string;
+	paused: boolean;
 };
 
 type DataProducerInternal = TransportInternal &
@@ -99,6 +108,9 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 	// Closed flag.
 	#closed = false;
 
+	// Paused flag.
+	#paused = false;
+
 	// Custom app data.
 	#appData: DataProducerAppData;
 
@@ -113,12 +125,14 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 			internal,
 			data,
 			channel,
+			paused,
 			appData
 		}:
 		{
 			internal: DataProducerInternal;
 			data: DataProducerData;
 			channel: Channel;
+			paused: boolean;
 			appData?: DataProducerAppData;
 		}
 	)
@@ -130,6 +144,7 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
+		this.#paused = paused;
 		this.#appData = appData || {} as DataProducerAppData;
 
 		this.handleWorkerNotifications();
@@ -184,6 +199,14 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 	}
 
 	/**
+	 * Whether the DataProducer is paused.
+	 */
+	get paused(): boolean
+	{
+		return this.#paused;
+	}
+
+	/**
 	 * App custom data.
 	 */
 	get appData(): DataProducerAppData
@@ -230,7 +253,7 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 		).pack(this.#channel.bufferBuilder);
 
 		this.#channel.request(
-			FbsRequest.Method.TRANSPORT_CLOSE_DATA_PRODUCER,
+			FbsRequest.Method.TRANSPORT_CLOSE_DATAPRODUCER,
 			FbsRequest.Body.FBS_Transport_CloseDataProducerRequest,
 			requestOffset,
 			this.#internal.transportId
@@ -275,7 +298,7 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 		logger.debug('dump()');
 
 		const response = await this.#channel.request(
-			FbsRequest.Method.DATA_PRODUCER_DUMP,
+			FbsRequest.Method.DATAPRODUCER_DUMP,
 			undefined,
 			undefined,
 			this.#internal.dataProducerId
@@ -286,7 +309,7 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 
 		response.body(produceResponse);
 
-		return parseDataProducerDump(produceResponse);
+		return parseDataProducerDumpResponse(produceResponse);
 	}
 
 	/**
@@ -297,7 +320,7 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 		logger.debug('getStats()');
 
 		const response = await this.#channel.request(
-			FbsRequest.Method.DATA_PRODUCER_GET_STATS,
+			FbsRequest.Method.DATAPRODUCER_GET_STATS,
 			undefined,
 			undefined,
 			this.#internal.dataProducerId
@@ -309,6 +332,56 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 		response.body(data);
 
 		return [ parseDataProducerStats(data) ];
+	}
+
+	/**
+	 * Pause the DataProducer.
+	 */
+	async pause(): Promise<void>
+	{
+		logger.debug('pause()');
+
+		const wasPaused = this.#paused;
+
+		await this.#channel.request(
+			FbsRequest.Method.DATAPRODUCER_PAUSE,
+			undefined,
+			undefined,
+			this.#internal.dataProducerId
+		);
+
+		this.#paused = true;
+
+		// Emit observer event.
+		if (!wasPaused)
+		{
+			this.#observer.safeEmit('pause');
+		}
+	}
+
+	/**
+	 * Resume the DataProducer.
+	 */
+	async resume(): Promise<void>
+	{
+		logger.debug('resume()');
+
+		const wasPaused = this.#paused;
+
+		await this.#channel.request(
+			FbsRequest.Method.DATAPRODUCER_RESUME,
+			undefined,
+			undefined,
+			this.#internal.dataProducerId
+		);
+
+		this.#paused = false;
+
+		// Emit observer event.
+		if (wasPaused)
+		{
+			this.#observer.safeEmit('resume');
+		}
 	}
 
 	/**
@@ -354,9 +427,9 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 			message = Buffer.alloc(1);
 		}
 
-		let dataOffset = 0;
-
 		const builder = this.#channel.bufferBuilder;
+
+		let dataOffset = 0;
 
 		if (typeof message === 'string')
 		{
@@ -381,7 +454,7 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 		);
 
 		this.#channel.notify(
-			FbsNotification.Event.DATA_PRODUCER_SEND,
+			FbsNotification.Event.DATAPRODUCER_SEND,
 			FbsNotification.Body.FBS_DataProducer_SendNotification,
 			notificationOffset,
 			this.#internal.dataProducerId
@@ -394,7 +467,7 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 	}
 }
 
-export function parseDataProducerDump(
+export function parseDataProducerDumpResponse(
 	data: FbsDataProducer.DumpResponse
 ): DataProducerDump
 {
@@ -405,7 +478,8 @@ export function parseDataProducerDump(
 			parseSctpStreamParameters(data.sctpStreamParameters()!) :
 			undefined,
 		label    : data.label()!,
-		protocol : data.protocol()!
+		protocol : data.protocol()!,
+		paused   : data.paused()
 	};
 }
 

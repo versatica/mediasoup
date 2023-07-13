@@ -3,12 +3,12 @@
 
 #include "RTC/RtpObserver.hpp"
 #include "RTC/Shared.hpp"
-#include "handles/Timer.hpp"
+#include "handles/TimerHandle.hpp"
 #include <absl/container/flat_hash_map.h>
 
 namespace RTC
 {
-	class AudioLevelObserver : public RTC::RtpObserver, public Timer::Listener
+	class AudioLevelObserver : public RTC::RtpObserver, public TimerHandle::Listener
 	{
 	private:
 		struct DBovs
@@ -38,9 +38,9 @@ namespace RTC
 		void Update();
 		void ResetMapProducerDBovs();
 
-		/* Pure virtual methods inherited from Timer. */
+		/* Pure virtual methods inherited from TimerHandle. */
 	protected:
-		void OnTimer(Timer* timer) override;
+		void OnTimer(TimerHandle* timer) override;
 
 	private:
 		// Passed by argument.
@@ -48,7 +48,7 @@ namespace RTC
 		int8_t threshold{ -80 };
 		uint16_t interval{ 1000u };
 		// Allocated by this.
-		Timer* periodicTimer{ nullptr };
+		TimerHandle* periodicTimer{ nullptr };
 		// Others.
 		absl::flat_hash_map<RTC::Producer*, DBovs> mapProducerDBovs;
 		bool silence{ true };

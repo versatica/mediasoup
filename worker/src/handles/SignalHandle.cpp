@@ -1,7 +1,7 @@
-#define MS_CLASS "SignalsHandler"
+#define MS_CLASS "SignalHandle"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "handles/SignalsHandler.hpp"
+#include "handles/SignalHandle.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
@@ -10,7 +10,7 @@
 
 inline static void onSignal(uv_signal_t* handle, int signum)
 {
-	static_cast<SignalsHandler*>(handle->data)->OnUvSignal(signum);
+	static_cast<SignalHandle*>(handle->data)->OnUvSignal(signum);
 }
 
 inline static void onClose(uv_handle_t* handle)
@@ -20,25 +20,29 @@ inline static void onClose(uv_handle_t* handle)
 
 /* Instance methods. */
 
-SignalsHandler::SignalsHandler(Listener* listener) : listener(listener)
+SignalHandle::SignalHandle(Listener* listener) : listener(listener)
 {
 	MS_TRACE();
 }
 
-SignalsHandler::~SignalsHandler()
+SignalHandle::~SignalHandle()
 {
 	MS_TRACE();
 
 	if (!this->closed)
+	{
 		Close();
+	}
 }
 
-void SignalsHandler::Close()
+void SignalHandle::Close()
 {
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		return;
+	}
 
 	this->closed = true;
 
@@ -48,12 +52,14 @@ void SignalsHandler::Close()
 	}
 }
 
-void SignalsHandler::AddSignal(int signum, const std::string& name)
+void SignalHandle::AddSignal(int signum, const std::string& name)
 {
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		MS_THROW_ERROR("closed");
+	}
 
 	int err;
 	auto* uvHandle = new uv_signal_t;
@@ -72,13 +78,15 @@ void SignalsHandler::AddSignal(int signum, const std::string& name)
 	err = uv_signal_start(uvHandle, static_cast<uv_signal_cb>(onSignal), signum);
 
 	if (err != 0)
+	{
 		MS_THROW_ERROR("uv_signal_start() failed for signal %s: %s", name.c_str(), uv_strerror(err));
+	}
 
 	// Enter the UV handle into the vector.
 	this->uvHandles.push_back(uvHandle);
 }
 
-inline void SignalsHandler::OnUvSignal(int signum)
+inline void SignalHandle::OnUvSignal(int signum)
 {
 	MS_TRACE();
 

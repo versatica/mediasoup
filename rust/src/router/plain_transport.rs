@@ -4,7 +4,7 @@ mod tests;
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{AppData, ListenIp, SctpState, TransportTuple};
+use crate::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
 use crate::messages::{PlainTransportData, TransportCloseRequest, TransportConnectPlainRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -42,10 +42,10 @@ use std::sync::{Arc, Weak};
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct PlainTransportOptions {
-    /// Listening IP address.
-    pub listen_ip: ListenIp,
-    /// Fixed port to listen on instead of selecting automatically from Worker's port range.
-    pub port: Option<u16>,
+    /// Listening info.
+    pub listen_info: ListenInfo,
+    /// Optional listening info for RTCP.
+    pub rtcp_listen_info: Option<ListenInfo>,
     /// Use RTCP-mux (RTP and RTCP in the same port).
     /// Default true.
     pub rtcp_mux: bool,
@@ -78,10 +78,10 @@ pub struct PlainTransportOptions {
 impl PlainTransportOptions {
     /// Create Plain transport options with given listen IP.
     #[must_use]
-    pub fn new(listen_ip: ListenIp) -> Self {
+    pub fn new(listen_info: ListenInfo) -> Self {
         Self {
-            listen_ip,
-            port: None,
+            listen_info,
+            rtcp_listen_info: None,
             rtcp_mux: true,
             comedia: false,
             enable_sctp: false,

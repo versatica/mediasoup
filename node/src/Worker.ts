@@ -12,7 +12,7 @@ import { AppData } from './types';
 import { Event } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsWorker from './fbs/worker';
-import * as FbsWebRtcServer from './fbs/web-rtc-server';
+import * as FbsTransport from './fbs/transport';
 import { Protocol as FbsTransportProtocol } from './fbs/transport/protocol';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
@@ -679,34 +679,30 @@ export class Worker<WorkerAppData extends AppData = AppData>
 		}
 
 		// Build the request.
-		const fbsListenInfos: FbsWebRtcServer.ListenInfoT[] = [];
+		const fbsListenInfos: FbsTransport.ListenInfoT[] = [];
 
 		for (const listenInfo of listenInfos)
 		{
-			fbsListenInfos.push(new FbsWebRtcServer.ListenInfoT(
-				listenInfo.protocol === 'udp' ? FbsTransportProtocol.UDP : FbsTransportProtocol.TCP,
+			fbsListenInfos.push(new FbsTransport.ListenInfoT(
+				listenInfo.protocol === 'udp'
+					? FbsTransportProtocol.UDP
+					: FbsTransportProtocol.TCP,
 				listenInfo.ip,
 				listenInfo.announcedIp,
-				listenInfo.port)
+				listenInfo.port,
+				listenInfo.sendBufferSize,
+				listenInfo.recvBufferSize)
 			);
 		}
 
 		const webRtcServerId = uuidv4();
 
-		let createWebRtcServerRequestOffset;
-
-		try
-		{
-			createWebRtcServerRequestOffset = new FbsWorker.CreateWebRtcServerRequestT(
-				webRtcServerId, fbsListenInfos).pack(this.#channel.bufferBuilder);
-		}
-		catch (error)
-		{
-			throw new TypeError((error as Error).message);
-		}
+		const createWebRtcServerRequestOffset = new FbsWorker.CreateWebRtcServerRequestT(
+			webRtcServerId, fbsListenInfos
+		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
-			FbsRequest.Method.WORKER_CREATE_WEBRTC_SERVER,
+			FbsRequest.Method.WORKER_CREATE_WEBRTCSERVER,
 			FbsRequest.Body.FBS_Worker_CreateWebRtcServerRequest,
 			createWebRtcServerRequestOffset
 		);

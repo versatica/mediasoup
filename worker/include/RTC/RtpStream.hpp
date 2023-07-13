@@ -214,8 +214,7 @@ namespace RTC
 		uint64_t lastSenderReportNtpMs{ 0u };
 		// RTP timestamp in last Sender Report.
 		uint32_t lastSenderReportTs{ 0u };
-		float rtt{ 0 };
-		bool hasRtt{ false };
+		float rtt{ 0.0f };
 		// Instance of RtxStream.
 		RTC::RtxStream* rtxStream{ nullptr };
 

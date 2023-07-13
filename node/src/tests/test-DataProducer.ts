@@ -56,6 +56,7 @@ test('transport1.produceData() succeeds', async () =>
 	expect(dataProducer1.sctpStreamParameters?.maxRetransmits).toBeUndefined();
 	expect(dataProducer1.label).toBe('foo');
 	expect(dataProducer1.protocol).toBe('bar');
+	expect(dataProducer1.paused).toBe(false);
 	expect(dataProducer1.appData).toEqual({ foo: 1, bar: '2' });
 
 	const dump = await router.dump();
@@ -92,6 +93,7 @@ test('transport2.produceData() succeeds', async () =>
 			},
 			label    : 'foo',
 			protocol : 'bar',
+			paused   : true,
 			appData  : { foo: 1, bar: '2' }
 		});
 
@@ -107,6 +109,7 @@ test('transport2.produceData() succeeds', async () =>
 	expect(dataProducer2.sctpStreamParameters?.maxRetransmits).toBe(3);
 	expect(dataProducer2.label).toBe('foo');
 	expect(dataProducer2.protocol).toBe('bar');
+	expect(dataProducer2.paused).toBe(true);
 	expect(dataProducer2.appData).toEqual({ foo: 1, bar: '2' });
 
 	const dump = await router.dump();
@@ -187,6 +190,7 @@ test('dataProducer.dump() succeeds', async () =>
 	expect(data.sctpStreamParameters!.maxRetransmits).toBeUndefined();
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
+	expect(data.paused).toBe(false);
 
 	data = await dataProducer2.dump();
 
@@ -199,6 +203,7 @@ test('dataProducer.dump() succeeds', async () =>
 	expect(data.sctpStreamParameters!.maxRetransmits).toBe(3);
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
+	expect(data.paused).toBe(true);
 }, 2000);
 
 test('dataProducer.getStats() succeeds', async () =>
@@ -228,6 +233,27 @@ test('dataProducer.getStats() succeeds', async () =>
 					bytesReceived    : 0
 				}
 			]);
+}, 2000);
+
+test('dataProducer.pause() and resume() succeed', async () =>
+{
+	let data;
+
+	await dataProducer1.pause();
+
+	expect(dataProducer1.paused).toBe(true);
+
+	data = await dataProducer1.dump();
+
+	expect(data.paused).toBe(true);
+
+	await dataProducer1.resume();
+
+	expect(dataProducer1.paused).toBe(false);
+
+	data = await dataProducer1.dump();
+
+	expect(data.paused).toBe(false);
 }, 2000);
 
 test('dataProducer.close() succeeds', async () =>

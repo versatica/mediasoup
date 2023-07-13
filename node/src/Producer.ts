@@ -142,15 +142,16 @@ export type ProducerObserverEvents =
 	trace: [ProducerTraceEventData];
 };
 
-type ProducerDump = {
+type ProducerDump =
+{
 	id: string;
 	kind: string;
-	type:ProducerType;
-	rtpParameters:RtpParameters;
-	rtpMapping:any;
-	rtpStreams:any;
-	traceEventTypes:string[];
-	paused:boolean;
+	type: ProducerType;
+	rtpParameters: RtpParameters;
+	rtpMapping: any;
+	rtpStreams: any;
+	traceEventTypes: string[];
+	paused: boolean;
 };
 
 type ProducerInternal = TransportInternal &
@@ -183,11 +184,11 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	// Closed flag.
 	#closed = false;
 
-	// Custom app data.
-	#appData: ProducerAppData;
-
 	// Paused flag.
 	#paused = false;
+
+	// Custom app data.
+	#appData: ProducerAppData;
 
 	// Current score.
 	#score: ProducerScore[] = [];
@@ -222,8 +223,8 @@ export class Producer<ProducerAppData extends AppData = AppData>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#appData = appData || {} as ProducerAppData;
 		this.#paused = paused;
+		this.#appData = appData || {} as ProducerAppData;
 
 		this.handleWorkerNotifications();
 	}

@@ -117,7 +117,17 @@ test('dataProducer.send() succeeds', async () =>
 			dataProducerId : dataProducer.id
 		});
 	const numMessages = 200;
+	const pauseSendingAtMessage = 10;
+	const resumeSendingAtMessage = 20;
+	const pauseReceivingAtMessage = 40;
+	const resumeReceivingAtMessage = 60;
+	const expectedReceivedNumMessages =
+		numMessages -
+		(resumeSendingAtMessage - pauseSendingAtMessage) -
+		(resumeReceivingAtMessage - pauseReceivingAtMessage);
+
 	let sentMessageBytes = 0;
+	let effectivelySentMessageBytes = 0;
 	let recvMessageBytes = 0;
 	let lastSentMessageId = 0;
 	let lastRecvMessageId = 0;
@@ -131,6 +141,23 @@ test('dataProducer.send() succeeds', async () =>
 			let ppid;
 			let message;
 
+			if (id === pauseSendingAtMessage)
+			{
+				dataProducer.pause();
+			}
+			else if (id === resumeSendingAtMessage)
+			{
+				dataProducer.resume();
+			}
+			else if (id === pauseReceivingAtMessage)
+			{
+				dataConsumer.pause();
+			}
+			else if (id === resumeReceivingAtMessage)
+			{
+				dataConsumer.resume();
+			}
+
 			// Send string (WebRTC DataChannel string).
 			if (id < numMessages / 2)
 			{
@@ -143,7 +170,15 @@ test('dataProducer.send() succeeds', async () =>
 			}
 
 			dataProducer.send(message, ppid);
-			sentMessageBytes += Buffer.from(message).byteLength;
+
+			const messageSize = Buffer.from(message).byteLength;
+
+			sentMessageBytes += messageSize;
+
+			if (!dataProducer.paused && !dataConsumer.paused)
+			{
+				effectivelySentMessageBytes += messageSize;
+			}
 
 			if (id === numMessages)
 			{
@@ -178,8 +213,8 @@ test('dataProducer.send() succeeds', async () =>
 	});
 
 	expect(lastSentMessageId).toBe(numMessages);
-	expect(lastRecvMessageId).toBe(numMessages);
-	expect(recvMessageBytes).toBe(sentMessageBytes);
+	expect(lastRecvMessageId).toBe(expectedReceivedNumMessages);
+	expect(recvMessageBytes).toBe(effectivelySentMessageBytes);
 
 	await expect(dataProducer.getStats())
 		.resolves
@@ -202,7 +237,7 @@ test('dataProducer.send() succeeds', async () =>
 					type         : 'data-consumer',
 					label        : dataConsumer.label,
 					protocol     : dataConsumer.protocol,
-					messagesSent : numMessages,
+					messagesSent : expectedReceivedNumMessages,
 					bytesSent    : recvMessageBytes
 				}
 			]);

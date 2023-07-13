@@ -1,5 +1,5 @@
-#ifndef MS_RTC_PIPE_CONSUMER_HPP
-#define MS_RTC_PIPE_CONSUMER_HPP
+#ifndef MS_RTC_PIPECONSUMER_HPP
+#define MS_RTC_PIPECONSUMER_HPP
 
 #include "RTC/Consumer.hpp"
 #include "RTC/RtpStreamSend.hpp"

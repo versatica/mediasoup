@@ -5,8 +5,8 @@ namespace FBS.PlainTransport;
 
 table PlainTransportOptions {
   base:FBS.Transport.Options;
-  listen_ip:FBS.Transport.ListenIp (required);
-  port:uint16;
+  listen_info:FBS.Transport.ListenInfo (required);
+  rtcp_listen_info:FBS.Transport.ListenInfo;
   rtcp_mux:bool;
   comedia:bool;
   enable_srtp:bool;

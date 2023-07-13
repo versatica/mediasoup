@@ -20,7 +20,7 @@ PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
 INSTALL_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 BUILD_DIR ?= $(INSTALL_DIR)/build
 MESON ?= $(PIP_DIR)/bin/meson
-MESON_VERSION ?= 0.61.5
+MESON_VERSION ?= 1.1.0
 FLATC ?= $(BUILD_DIR)/subprojects/flatbuffers-23.3.3/flatc
 FLATC_OUT_DIR ?= ./include/FBS
 # `MESON_ARGS` can be used to provide extra configuration parameters to Meson,
@@ -224,10 +224,10 @@ xcode: setup
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode
 
 lint:
-	$(GULP) --gulpfile ./scripts/gulpfile.js lint:worker
+	$(GULP) --gulpfile ./scripts/gulpfile.mjs lint:worker
 
 format:
-	$(GULP) --gulpfile ./scripts/gulpfile.js format:worker
+	$(GULP) --gulpfile ./scripts/gulpfile.mjs format:worker
 
 test: setup
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test

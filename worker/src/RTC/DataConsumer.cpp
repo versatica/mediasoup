@@ -29,11 +29,17 @@ namespace RTC
 		this->typeString = data->type()->str();
 
 		if (this->typeString == "sctp")
+		{
 			this->type = DataConsumer::Type::SCTP;
+		}
 		else if (this->typeString == "direct")
+		{
 			this->type = DataConsumer::Type::DIRECT;
+		}
 		else
+		{
 			MS_THROW_TYPE_ERROR("invalid type");
+		}
 
 		if (this->type == DataConsumer::Type::SCTP)
 		{
@@ -48,10 +54,17 @@ namespace RTC
 		}
 
 		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeDataRequest::VT_LABEL))
+		{
 			this->label = data->label()->str();
+		}
 
 		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeDataRequest::VT_PROTOCOL))
+		{
 			this->protocol = data->protocol()->str();
+		}
+
+		// paused is set to false by default.
+		this->paused = data->paused();
 
 		// NOTE: This may throw.
 		this->shared->channelMessageRegistrator->RegisterHandler(
@@ -87,7 +100,9 @@ namespace RTC
 		  this->typeString.c_str(),
 		  sctpStreamParametersOffset,
 		  this->label.c_str(),
-		  this->protocol.c_str());
+		  this->protocol.c_str(),
+		  this->paused,
+		  this->dataProducerPaused);
 	}
 
 	flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> DataConsumer::FillBufferStats(
@@ -117,7 +132,7 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_DUMP:
+			case Channel::ChannelRequest::Method::DATACONSUMER_DUMP:
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
@@ -126,7 +141,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_GET_STATS:
+			case Channel::ChannelRequest::Method::DATACONSUMER_GET_STATS:
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
@@ -135,7 +150,43 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_GET_BUFFERED_AMOUNT:
+			case Channel::ChannelRequest::Method::DATACONSUMER_PAUSE:
+			{
+				if (this->paused)
+				{
+					request->Accept();
+
+					break;
+				}
+
+				this->paused = true;
+
+				MS_DEBUG_DEV("DataConsumer paused [dataConsumerId:%s]", this->id.c_str());
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::DATACONSUMER_RESUME:
+			{
+				if (!this->paused)
+				{
+					request->Accept();
+
+					break;
+				}
+
+				this->paused = false;
+
+				MS_DEBUG_DEV("DataConsumer resumed [dataConsumerId:%s]", this->id.c_str());
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::DATACONSUMER_GET_BUFFERED_AMOUNT:
 			{
 				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
@@ -157,7 +208,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
+			case Channel::ChannelRequest::Method::DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD:
 			{
 				if (this->GetType() != DataConsumer::Type::SCTP)
 				{
@@ -175,10 +226,15 @@ namespace RTC
 				// Trigger 'bufferedamountlow' now.
 				if (this->bufferedAmount <= this->bufferedAmountLowThreshold)
 				{
-					std::string data(R"({"bufferedAmount":)");
+					// Notify the Node DataConsumer.
+					auto bufferedAmountLowOffset = FBS::DataConsumer::CreateBufferedAmountLowNotification(
+					  this->shared->channelNotifier->GetBufferBuilder(), this->bufferedAmount);
 
-					data.append(std::to_string(this->bufferedAmount));
-					data.append("}");
+					this->shared->channelNotifier->Emit(
+					  this->id,
+					  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
+					  FBS::Notification::Body::FBS_DataConsumer_BufferedAmountLowNotification,
+					  bufferedAmountLowOffset);
 				}
 				// Force the trigger of 'bufferedamountlow' once there is less or same
 				// buffered data than the given threshold.
@@ -190,7 +246,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_CONSUMER_SEND:
+			case Channel::ChannelRequest::Method::DATACONSUMER_SEND:
 			{
 				if (this->GetType() != RTC::DataConsumer::Type::SCTP)
 				{
@@ -231,9 +287,13 @@ namespace RTC
 				  [&request](bool queued, bool sctpSendBufferFull)
 				  {
 					  if (queued)
+					  {
 						  request->Accept();
+					  }
 					  else
+					  {
 						  request->Error(sctpSendBufferFull ? "sctpsendbufferfull" : "message send failed");
+					  }
 				  });
 
 				SendMessage(ppid, data, len, cb);
@@ -264,6 +324,40 @@ namespace RTC
 		this->transportConnected = false;
 
 		MS_DEBUG_DEV("Transport disconnected [dataConsumerId:%s]", this->id.c_str());
+	}
+
+	void DataConsumer::DataProducerPaused()
+	{
+		MS_TRACE();
+
+		if (this->dataProducerPaused)
+		{
+			return;
+		}
+
+		this->dataProducerPaused = true;
+
+		MS_DEBUG_DEV("DataProducer paused [dataConsumerId:%s]", this->id.c_str());
+
+		this->shared->channelNotifier->Emit(
+		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_PAUSE);
+	}
+
+	void DataConsumer::DataProducerResumed()
+	{
+		MS_TRACE();
+
+		if (!this->dataProducerPaused)
+		{
+			return;
+		}
+
+		this->dataProducerPaused = false;
+
+		MS_DEBUG_DEV("DataProducer resumed [dataConsumerId:%s]", this->id.c_str());
+
+		this->shared->channelNotifier->Emit(
+		  this->id, FBS::Notification::Event::DATACONSUMER_DATAPRODUCER_RESUME);
 	}
 
 	void DataConsumer::SctpAssociationConnected()
@@ -342,7 +436,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsActive())
+		{
 			return;
+		}
 
 		if (len > this->maxMessageSize)
 		{

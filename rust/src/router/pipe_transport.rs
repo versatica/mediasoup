@@ -4,7 +4,7 @@ mod tests;
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{AppData, ListenIp, SctpState, TransportTuple};
+use crate::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
 use crate::messages::{PipeTransportData, TransportCloseRequest, TransportConnectPipeRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -33,10 +33,8 @@ use std::sync::{Arc, Weak};
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct PipeTransportOptions {
-    /// Listening IP address.
-    pub listen_ip: ListenIp,
-    /// Fixed port to listen on instead of selecting automatically from Worker's port range.
-    pub port: Option<u16>,
+    /// Listening info.
+    pub listen_info: ListenInfo,
     /// Create a SCTP association.
     /// Default false.
     pub enable_sctp: bool,
@@ -64,10 +62,9 @@ pub struct PipeTransportOptions {
 impl PipeTransportOptions {
     /// Create Pipe transport options with given listen IP.
     #[must_use]
-    pub fn new(listen_ip: ListenIp) -> Self {
+    pub fn new(listen_info: ListenInfo) -> Self {
         Self {
-            listen_ip,
-            port: None,
+            listen_info,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),
             max_sctp_message_size: 268_435_456,

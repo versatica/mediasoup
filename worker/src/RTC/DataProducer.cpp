@@ -25,11 +25,17 @@ namespace RTC
 		this->typeString = data->type()->str();
 
 		if (this->typeString == "sctp")
+		{
 			this->type = DataProducer::Type::SCTP;
+		}
 		else if (this->typeString == "direct")
+		{
 			this->type = DataProducer::Type::DIRECT;
+		}
 		else
+		{
 			MS_THROW_TYPE_ERROR("invalid type");
+		}
 
 		if (this->type == DataProducer::Type::SCTP)
 		{
@@ -44,10 +50,16 @@ namespace RTC
 		}
 
 		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ProduceDataRequest::VT_LABEL))
+		{
 			this->label = data->label()->str();
+		}
 
 		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ProduceDataRequest::VT_PROTOCOL))
+		{
 			this->protocol = data->protocol()->str();
+		}
+
+		this->paused = data->paused();
 
 		// NOTE: This may throw.
 		this->shared->channelMessageRegistrator->RegisterHandler(
@@ -82,7 +94,8 @@ namespace RTC
 		  this->typeString.c_str(),
 		  sctpStreamParametersOffset,
 		  this->label.c_str(),
-		  this->protocol.c_str());
+		  this->protocol.c_str(),
+		  this->paused);
 	}
 
 	flatbuffers::Offset<FBS::DataProducer::GetStatsResponse> DataProducer::FillBufferStats(
@@ -110,7 +123,7 @@ namespace RTC
 
 		switch (request->method)
 		{
-			case Channel::ChannelRequest::Method::DATA_PRODUCER_DUMP:
+			case Channel::ChannelRequest::Method::DATAPRODUCER_DUMP:
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
@@ -119,11 +132,51 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::DATA_PRODUCER_GET_STATS:
+			case Channel::ChannelRequest::Method::DATAPRODUCER_GET_STATS:
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
 				request->Accept(FBS::Response::Body::FBS_DataProducer_GetStatsResponse, responseOffset);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::DATAPRODUCER_PAUSE:
+			{
+				if (this->paused)
+				{
+					request->Accept();
+
+					break;
+				}
+
+				this->paused = true;
+
+				MS_DEBUG_DEV("DataProducer paused [dataProducerId:%s]", this->id.c_str());
+
+				this->listener->OnDataProducerPaused(this);
+
+				request->Accept();
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::DATAPRODUCER_RESUME:
+			{
+				if (!this->paused)
+				{
+					request->Accept();
+
+					break;
+				}
+
+				this->paused = false;
+
+				MS_DEBUG_DEV("DataProducer resumed [dataProducerId:%s]", this->id.c_str());
+
+				this->listener->OnDataProducerResumed(this);
+
+				request->Accept();
 
 				break;
 			}
@@ -141,7 +194,7 @@ namespace RTC
 
 		switch (notification->event)
 		{
-			case Channel::ChannelNotification::Event::DATA_PRODUCER_SEND:
+			case Channel::ChannelNotification::Event::DATAPRODUCER_SEND:
 			{
 				const auto* body = notification->data->body_as<FBS::DataProducer::SendNotification>();
 				const uint8_t* data{ nullptr };
@@ -187,6 +240,12 @@ namespace RTC
 
 		this->messagesReceived++;
 		this->bytesReceived += len;
+
+		// If paused stop here.
+		if (this->paused)
+		{
+			return;
+		}
 
 		this->listener->OnDataProducerMessageReceived(this, ppid, msg, len);
 	}

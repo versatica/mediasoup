@@ -44,6 +44,7 @@ jobs:
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
 
     steps:
       - name: Checkout
@@ -54,6 +55,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      # We need to install some NPM production deps for npm-scripts.mjs to work.
+      - run: npm ci --ignore-scripts --omit=dev
       - run: npm run install-clang-tools
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'

@@ -69,6 +69,7 @@ test('transport.consumeData() succeeds', async () =>
 	expect(dataConsumer1.sctpStreamParameters?.maxRetransmits).toBeUndefined();
 	expect(dataConsumer1.label).toBe('foo');
 	expect(dataConsumer1.protocol).toBe('bar');
+	expect(dataConsumer1.paused).toBe(false);
 	expect(dataConsumer1.appData).toEqual({ baz: 'LOL' });
 
 	const dump = await router.dump();
@@ -108,6 +109,7 @@ test('dataConsumer.dump() succeeds', async () =>
 	expect(data.sctpStreamParameters!.maxRetransmits).toBeUndefined();
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
+	expect(data.paused).toBe(false);
 }, 2000);
 
 test('dataConsumer.getStats() succeeds', async () =>
@@ -135,6 +137,7 @@ test('transport.consumeData() on a DirectTransport succeeds', async () =>
 	dataConsumer2 = await transport3.consumeData(
 		{
 			dataProducerId : dataProducer.id,
+			paused         : true,
 			appData        : { hehe: 'HEHE' }
 		});
 
@@ -147,6 +150,7 @@ test('transport.consumeData() on a DirectTransport succeeds', async () =>
 	expect(dataConsumer2.sctpStreamParameters).toBeUndefined();
 	expect(dataConsumer2.label).toBe('foo');
 	expect(dataConsumer2.protocol).toBe('bar');
+	expect(dataConsumer2.paused).toBe(true);
 	expect(dataConsumer2.appData).toEqual({ hehe: 'HEHE' });
 
 	await expect(transport3.dump())
@@ -169,6 +173,7 @@ test('dataConsumer.dump() on a DirectTransport succeeds', async () =>
 	expect(data.sctpStreamParameters).toBeUndefined();
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
+	expect(data.paused).toBe(true);
 }, 2000);
 
 test('dataConsumer.getStats() on a DirectTransport succeeds', async () =>
@@ -185,6 +190,27 @@ test('dataConsumer.getStats() on a DirectTransport succeeds', async () =>
 					bytesSent    : 0
 				}
 			]);
+}, 2000);
+
+test('dataConsumer.pause() and resume() succeed', async () =>
+{
+	let data;
+
+	await dataConsumer1.pause();
+
+	expect(dataConsumer1.paused).toBe(true);
+
+	data = await dataConsumer1.dump();
+
+	expect(data.paused).toBe(true);
+
+	await dataConsumer1.resume();
+
+	expect(dataConsumer1.paused).toBe(false);
+
+	data = await dataConsumer1.dump();
+
+	expect(data.paused).toBe(false);
 }, 2000);
 
 test('dataConsumer.close() succeeds', async () =>

@@ -23,13 +23,6 @@ namespace RTC
 	                        public RTC::IceServer::Listener,
 	                        public RTC::DtlsTransport::Listener
 	{
-	private:
-		struct ListenIp
-		{
-			std::string ip;
-			std::string announcedIp;
-		};
-
 	public:
 		class WebRtcTransportListener
 		{
@@ -60,7 +53,7 @@ namespace RTC
 		  const std::string& id,
 		  RTC::Transport::Listener* listener,
 		  WebRtcTransportListener* webRtcTransportListener,
-		  std::vector<RTC::IceCandidate>& iceCandidates,
+		  const std::vector<RTC::IceCandidate>& iceCandidates,
 		  const FBS::WebRtcTransport::WebRtcTransportOptions* options);
 		~WebRtcTransport() override;
 
@@ -167,7 +160,8 @@ namespace RTC
 		RTC::SrtpSession* srtpRecvSession{ nullptr };
 		RTC::SrtpSession* srtpSendSession{ nullptr };
 		// Others.
-		bool connectCalled{ false }; // Whether connect() was succesfully called.
+		// Whether connect() was succesfully called.
+		bool connectCalled{ false };
 		std::vector<RTC::IceCandidate> iceCandidates;
 		RTC::DtlsTransport::Role dtlsRole{ RTC::DtlsTransport::Role::AUTO };
 	};

@@ -1,11 +1,11 @@
-#ifndef MS_UDP_SOCKET_HPP
-#define MS_UDP_SOCKET_HPP
+#ifndef MS_UDP_SOCKET_HANDLE_HPP
+#define MS_UDP_SOCKET_HANDLE_HPP
 
 #include "common.hpp"
 #include <uv.h>
 #include <string>
 
-class UdpSocketHandler
+class UdpSocketHandle
 {
 protected:
 	using onSendCallback = const std::function<void(bool sent)>;
@@ -30,17 +30,17 @@ public:
 
 		uv_udp_send_t req;
 		uint8_t* store{ nullptr };
-		UdpSocketHandler::onSendCallback* cb{ nullptr };
+		UdpSocketHandle::onSendCallback* cb{ nullptr };
 	};
 
 public:
 	/**
 	 * uvHandle must be an already initialized and binded uv_udp_t pointer.
 	 */
-	explicit UdpSocketHandler(uv_udp_t* uvHandle);
-	UdpSocketHandler& operator=(const UdpSocketHandler&) = delete;
-	UdpSocketHandler(const UdpSocketHandler&)            = delete;
-	virtual ~UdpSocketHandler();
+	explicit UdpSocketHandle(uv_udp_t* uvHandle);
+	UdpSocketHandle& operator=(const UdpSocketHandle&) = delete;
+	UdpSocketHandle(const UdpSocketHandle&)            = delete;
+	virtual ~UdpSocketHandle();
 
 public:
 	void Close();
@@ -50,7 +50,7 @@ public:
 	}
 	virtual void Dump() const;
 	void Send(
-	  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocketHandler::onSendCallback* cb);
+	  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocketHandle::onSendCallback* cb);
 	const struct sockaddr* GetLocalAddress() const
 	{
 		return reinterpret_cast<const struct sockaddr*>(&this->localAddr);
@@ -75,6 +75,10 @@ public:
 	{
 		return this->sentBytes;
 	}
+	uint32_t GetSendBufferSize() const;
+	void SetSendBufferSize(uint32_t size);
+	uint32_t GetRecvBufferSize() const;
+	void SetRecvBufferSize(uint32_t size);
 
 private:
 	bool SetLocalAddress();
@@ -83,7 +87,7 @@ private:
 public:
 	void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
-	void OnUvSend(int status, UdpSocketHandler::onSendCallback* cb);
+	void OnUvSend(int status, UdpSocketHandle::onSendCallback* cb);
 
 	/* Pure virtual methods that must be implemented by the subclass. */
 protected:

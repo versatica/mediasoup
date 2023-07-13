@@ -1,5 +1,5 @@
-const gulp = require('gulp');
-const clangFormat = require('gulp-clang-format');
+import gulp from 'gulp';
+import clangFormat from 'gulp-clang-format';
 
 const workerFiles =
 [

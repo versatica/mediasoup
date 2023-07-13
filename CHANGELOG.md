@@ -1,6 +1,66 @@
 # Changelog
 
 
+### Next
+
+* Switch from JSON based messages to `flatbuffers` ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
+* Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
+* Add optional `rtcpListenInfo` in `PlainTransportOptions` ([PR #1099](https://github.com/versatica/mediasoup/pull/1099)).
+* Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
+* `Worker`: Add `Transport::Destroying()` protected method ([PR #1114](https://github.com/versatica/mediasoup/pull/1114)).
+* `RtpStreamRecv`: Fix jitter calculation ([PR #1117](https://github.com/versatica/mediasoup/pull/1117), thanks to @penguinol).
+
+
+### 3.12.5
+
+* `DataConsumer`: Fix removed 'bufferedamountlow' notification ([PR #1113](https://github.com/versatica/mediasoup/pull/1113)).
+
+
+### 3.12.4
+
+* Fix downloaded prebuilt binary check on Windows ([PR #1105](https://github.com/versatica/mediasoup/pull/1105) by @woodfe).
+
+
+### 3.12.3
+
+Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://github.com/versatica/mediasoup/pull/1093)).
+
+
+### 3.12.2
+
+* CI: Use `ubuntu-20.04` to build mediasoup-worker prebuilt on Linux ([PR #1092](https://github.com/versatica/mediasoup/pull/1092)).
+
+
+### 3.12.1
+
+* mediasoup-worker prebuild: Fallback to local building if fetched binary doesn't run on current host ([PR #1090](https://github.com/versatica/mediasoup/pull/1090)).
+
+
+### 3.12.0
+
+* Automate and publish prebuilt `mediasoup-worker` binaries ([PR #1087](https://github.com/versatica/mediasoup/pull/1087), thanks to @barlock for his work in ([PR #1083](https://github.com/versatica/mediasoup/pull/1083)).
+
+
+### 3.11.26
+
+* `Worker`: Fix NACK timer and avoid negative RTT ([PR #1082](https://github.com/versatica/mediasoup/pull/1082), thanks to @o-u-p for his work in ([PR #1076](https://github.com/versatica/mediasoup/pull/1076)).
+
+
+### 3.11.25
+
+* `Worker`: Require C++17, Meson >= 1.1.0 and update subprojects ([PR #1081](https://github.com/versatica/mediasoup/pull/1081)).
+
+
+### 3.11.24
+
+* `SeqManager`: Fix performance regression ([PR #1068](https://github.com/versatica/mediasoup/pull/1068), thanks to @vpalmisano for properly reporting).
+
+
+### 3.11.23
+
+* Node: Fix `appData` for `Transport` and `RtpObserver` parent classes  ([PR #1066](https://github.com/versatica/mediasoup/pull/1066)).
+
+
 ### 3.11.22
 
 * `RtpStreamRecv`: Only perform RTP inactivity check on simulcast streams ([PR #1061](https://github.com/versatica/mediasoup/pull/1061)).

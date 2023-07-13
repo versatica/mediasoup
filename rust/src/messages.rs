@@ -7,8 +7,8 @@ use crate::consumer::{
 use crate::data_consumer::{DataConsumerDump, DataConsumerId, DataConsumerStat, DataConsumerType};
 use crate::data_producer::{DataProducerDump, DataProducerId, DataProducerStat, DataProducerType};
 use crate::data_structures::{
-    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenIp,
-    SctpState, TransportTuple,
+    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
+    ListenInfo, SctpState, TransportTuple,
 };
 use crate::direct_transport::DirectTransportOptions;
 use crate::fbs::{direct_transport, message, request, response, router, transport, worker};
@@ -28,7 +28,9 @@ use crate::webrtc_server::{
     WebRtcServerDump, WebRtcServerIceUsernameFragment, WebRtcServerId, WebRtcServerIpPort,
     WebRtcServerListenInfos, WebRtcServerTupleHash,
 };
-use crate::webrtc_transport::{TransportListenIps, WebRtcTransportListen, WebRtcTransportOptions};
+use crate::webrtc_transport::{
+    WebRtcTransportListen, WebRtcTransportListenInfos, WebRtcTransportOptions,
+};
 use crate::worker::{ChannelMessageHandlers, WorkerDump, WorkerUpdateSettings};
 use parking_lot::Mutex;
 use planus::Builder;
@@ -413,7 +415,7 @@ pub(crate) struct WorkerCreateWebRtcServerRequest {
 }
 
 impl RequestFbs for WorkerCreateWebRtcServerRequest {
-    const METHOD: request::Method = request::Method::WorkerCreateWebrtcServer;
+    const METHOD: request::Method = request::Method::WorkerCreateWebrtcserver;
     type HandlerId = &'static str;
     type Response = ();
 
@@ -451,7 +453,7 @@ pub(crate) struct WebRtcServerCloseRequest {
 }
 
 impl RequestFbs for WebRtcServerCloseRequest {
-    const METHOD: request::Method = request::Method::WorkerWebrtcServerClose;
+    const METHOD: request::Method = request::Method::WorkerWebrtcserverClose;
     type HandlerId = &'static str;
     type Response = ();
 
@@ -487,7 +489,7 @@ impl RequestFbs for WebRtcServerCloseRequest {
 pub(crate) struct WebRtcServerDumpRequest {}
 
 impl RequestFbs for WebRtcServerDumpRequest {
-    const METHOD: request::Method = request::Method::WebrtcServerDump;
+    const METHOD: request::Method = request::Method::WebrtcserverDump;
     type HandlerId = WebRtcServerId;
     type Response = WebRtcServerDump;
 
@@ -770,7 +772,7 @@ pub(crate) struct RouterCreateDirectTransportRequest {
 }
 
 impl RequestFbs for RouterCreateDirectTransportRequest {
-    const METHOD: request::Method = request::Method::RouterCreateDirectTransport;
+    const METHOD: request::Method = request::Method::RouterCreateDirecttransport;
     type HandlerId = RouterId;
     type Response = ();
 
@@ -808,9 +810,7 @@ impl RequestFbs for RouterCreateDirectTransportRequest {
 enum RouterCreateWebrtcTransportListen {
     #[serde(rename_all = "camelCase")]
     Individual {
-        listen_ips: TransportListenIps,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        port: Option<u16>,
+        listen_infos: WebRtcTransportListenInfos,
     },
     Server {
         #[serde(rename = "webRtcServerId")]
@@ -824,10 +824,6 @@ pub(crate) struct RouterCreateWebrtcTransportRequest {
     transport_id: TransportId,
     #[serde(flatten)]
     listen: RouterCreateWebrtcTransportListen,
-    enable_udp: bool,
-    enable_tcp: bool,
-    prefer_udp: bool,
-    prefer_tcp: bool,
     initial_available_outgoing_bitrate: u32,
     enable_sctp: bool,
     num_sctp_streams: NumSctpStreams,
@@ -844,10 +840,9 @@ impl RouterCreateWebrtcTransportRequest {
         Self {
             transport_id,
             listen: match &webrtc_transport_options.listen {
-                WebRtcTransportListen::Individual { listen_ips, port } => {
+                WebRtcTransportListen::Individual { listen_infos } => {
                     RouterCreateWebrtcTransportListen::Individual {
-                        listen_ips: listen_ips.clone(),
-                        port: *port,
+                        listen_infos: listen_infos.clone(),
                     }
                 }
                 WebRtcTransportListen::Server { webrtc_server } => {
@@ -856,10 +851,6 @@ impl RouterCreateWebrtcTransportRequest {
                     }
                 }
             },
-            enable_udp: webrtc_transport_options.enable_udp,
-            enable_tcp: webrtc_transport_options.enable_tcp,
-            prefer_udp: webrtc_transport_options.prefer_udp,
-            prefer_tcp: webrtc_transport_options.prefer_tcp,
             initial_available_outgoing_bitrate: webrtc_transport_options
                 .initial_available_outgoing_bitrate,
             enable_sctp: webrtc_transport_options.enable_sctp,
@@ -904,9 +895,7 @@ impl Request for RouterCreateWebrtcTransportRequest {
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreatePlainTransportData {
     transport_id: TransportId,
-    listen_ip: ListenIp,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    port: Option<u16>,
+    listen_info: ListenInfo,
     rtcp_mux: bool,
     comedia: bool,
     enable_sctp: bool,
@@ -925,8 +914,7 @@ impl RouterCreatePlainTransportData {
     ) -> Self {
         Self {
             transport_id,
-            listen_ip: plain_transport_options.listen_ip,
-            port: plain_transport_options.port,
+            listen_info: plain_transport_options.listen_info,
             rtcp_mux: plain_transport_options.rtcp_mux,
             comedia: plain_transport_options.comedia,
             enable_sctp: plain_transport_options.enable_sctp,
@@ -963,9 +951,7 @@ request_response!(
 #[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreatePipeTransportData {
     transport_id: TransportId,
-    listen_ip: ListenIp,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    port: Option<u16>,
+    listen_info: ListenInfo,
     enable_sctp: bool,
     num_sctp_streams: NumSctpStreams,
     max_sctp_message_size: u32,
@@ -982,8 +968,7 @@ impl RouterCreatePipeTransportData {
     ) -> Self {
         Self {
             transport_id,
-            listen_ip: pipe_transport_options.listen_ip,
-            port: pipe_transport_options.port,
+            listen_info: pipe_transport_options.listen_info,
             enable_sctp: pipe_transport_options.enable_sctp,
             num_sctp_streams: pipe_transport_options.num_sctp_streams,
             max_sctp_message_size: pipe_transport_options.max_sctp_message_size,
@@ -1286,12 +1271,14 @@ request_response!(
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
+        paused: bool,
     },
     TransportProduceDataResponse {
         r#type: DataProducerType,
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
+        paused: bool,
     },
 );
 
@@ -1306,12 +1293,15 @@ request_response!(
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
+        paused: bool,
     },
     TransportConsumeDataResponse {
         r#type: DataConsumerType,
         sctp_stream_parameters: Option<SctpStreamParameters>,
         label: String,
         protocol: String,
+        paused: bool,
+        data_producer_paused: bool,
     },
 );
 
@@ -1466,6 +1456,18 @@ request_response!(
     Vec<DataProducerStat>,
 );
 
+request_response!(
+    DataProducerId,
+    "dataProducer.pause",
+    DataProducerPauseRequest {}
+);
+
+request_response!(
+    DataProducerId,
+    "dataProducer.resume",
+    DataProducerResumeRequest {}
+);
+
 #[derive(Debug, Copy, Clone, Serialize)]
 #[serde(into = "u32")]
 pub(crate) struct DataProducerSendNotification {
@@ -1509,6 +1511,18 @@ request_response!(
     "dataConsumer.getStats",
     DataConsumerGetStatsRequest {},
     Vec<DataConsumerStat>,
+);
+
+request_response!(
+    DataConsumerId,
+    "dataConsumer.pause",
+    DataConsumerPauseRequest {},
+);
+
+request_response!(
+    DataConsumerId,
+    "dataConsumer.resume",
+    DataConsumerResumeRequest {},
 );
 
 request_response!(

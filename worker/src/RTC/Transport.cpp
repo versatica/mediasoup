@@ -99,15 +99,12 @@ namespace RTC
 		}
 
 		// Create the RTCP timer.
-		this->rtcpTimer = new Timer(this);
+		this->rtcpTimer = new TimerHandle(this);
 	}
 
 	Transport::~Transport()
 	{
 		MS_TRACE();
-
-		// Set the destroying flag.
-		this->destroying = true;
 
 		// The destructor must delete and clear everything silently.
 
@@ -1310,7 +1307,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATA_PRODUCER:
+			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATAPRODUCER:
 			{
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataProducerRequest>();
 
@@ -1345,7 +1342,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATA_CONSUMER:
+			case Channel::ChannelRequest::Method::TRANSPORT_CLOSE_DATACONSUMER:
 			{
 				const auto* body = request->data->body_as<FBS::Transport::CloseDataConsumerRequest>();
 
@@ -1402,6 +1399,13 @@ namespace RTC
 				MS_ERROR("unknown event '%s'", notification->eventCStr);
 			}
 		}
+	}
+
+	void Transport::Destroying()
+	{
+		MS_TRACE();
+
+		this->destroying = true;
 	}
 
 	void Transport::Connected()
@@ -2649,6 +2653,20 @@ namespace RTC
 		this->listener->OnTransportDataProducerMessageReceived(this, dataProducer, ppid, msg, len);
 	}
 
+	inline void Transport::OnDataProducerPaused(RTC::DataProducer* dataProducer)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportDataProducerPaused(this, dataProducer);
+	}
+
+	inline void Transport::OnDataProducerResumed(RTC::DataProducer* dataProducer)
+	{
+		MS_TRACE();
+
+		this->listener->OnTransportDataProducerResumed(this, dataProducer);
+	}
+
 	inline void Transport::OnDataConsumerSendMessage(
 	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
 	{
@@ -2985,7 +3003,7 @@ namespace RTC
 	}
 #endif
 
-	inline void Transport::OnTimer(Timer* timer)
+	inline void Transport::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
 

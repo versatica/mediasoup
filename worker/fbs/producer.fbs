@@ -15,7 +15,7 @@ table DumpResponse {
   rtp_mapping:FBS.RtpParameters.RtpMapping (required);
   rtp_streams:[FBS.RtpStream.Dump];
   trace_event_types:[string] (required);
-  paused:bool = false;
+  paused:bool;
 }
 
 table GetStatsResponse {

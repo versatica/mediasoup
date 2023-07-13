@@ -205,7 +205,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTC_TRANSPORT:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTCTRANSPORT:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
 
@@ -230,7 +230,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTC_TRANSPORT_WITH_SERVER:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_WEBRTCTRANSPORT_WITH_SERVER:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateWebRtcTransportRequest>();
 				auto transportId = body->transportId()->str();
@@ -248,8 +248,7 @@ namespace RTC
 				if (!webRtcServer)
 					MS_THROW_ERROR("wrong webRtcServerId (no associated WebRtcServer found)");
 
-				auto iceCandidates = webRtcServer->GetIceCandidates(
-				  options->enableUdp(), options->enableTcp(), options->preferUdp(), options->preferTcp());
+				auto& iceCandidates = webRtcServer->GetIceCandidates();
 
 				// This may throw.
 				auto* webRtcTransport = new RTC::WebRtcTransport(
@@ -268,7 +267,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_PLAIN_TRANSPORT:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_PLAINTRANSPORT:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreatePlainTransportRequest>();
 				auto transportId = body->transportId()->str();
@@ -291,7 +290,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_PIPE_TRANSPORT:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_PIPETRANSPORT:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreatePipeTransportRequest>();
 				auto transportId = body->transportId()->str();
@@ -314,7 +313,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_DIRECT_TRANSPORT:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_DIRECTTRANSPORT:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateDirectTransportRequest>();
 				auto transportId = body->transportId()->str();
@@ -337,7 +336,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_ACTIVE_SPEAKER_OBSERVER:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_ACTIVESPEAKEROBSERVER:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateActiveSpeakerObserverRequest>();
 				auto rtpObserverId = body->activeSpeakerObserverId()->str();
@@ -358,7 +357,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CREATE_AUDIO_LEVEL_OBSERVER:
+			case Channel::ChannelRequest::Method::ROUTER_CREATE_AUDIOLEVELOBSERVER:
 			{
 				const auto* body   = request->data->body_as<FBS::Router::CreateAudioLevelObserverRequest>();
 				auto rtpObserverId = body->rtpObserverId()->str();
@@ -404,7 +403,7 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::Method::ROUTER_CLOSE_RTP_OBSERVER:
+			case Channel::ChannelRequest::Method::ROUTER_CLOSE_RTPOBSERVER:
 			{
 				const auto* body   = request->data->body_as<FBS::Router::CloseRtpObserverRequest>();
 				auto rtpObserverId = body->rtpObserverId()->str();
@@ -710,7 +709,9 @@ namespace RTC
 
 		// Update the Consumer status based on the Producer status.
 		if (producer->IsPaused())
+		{
 			consumer->ProducerPaused();
+		}
 
 		// Insert the Consumer in the maps.
 		auto& consumers = mapProducerConsumersIt->second;
@@ -850,6 +851,32 @@ namespace RTC
 		this->mapDataProducerDataConsumers.erase(mapDataProducerDataConsumersIt);
 	}
 
+	inline void Router::OnTransportDataProducerPaused(
+	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
+	{
+		MS_TRACE();
+
+		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
+
+		for (auto* dataConsumer : dataConsumers)
+		{
+			dataConsumer->DataProducerPaused();
+		}
+	}
+
+	inline void Router::OnTransportDataProducerResumed(
+	  RTC::Transport* /*transport*/, RTC::DataProducer* dataProducer)
+	{
+		MS_TRACE();
+
+		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
+
+		for (auto* dataConsumer : dataConsumers)
+		{
+			dataConsumer->DataProducerResumed();
+		}
+	}
+
 	inline void Router::OnTransportDataProducerMessageReceived(
 	  RTC::Transport* /*transport*/,
 	  RTC::DataProducer* dataProducer,
@@ -861,9 +888,9 @@ namespace RTC
 
 		auto& dataConsumers = this->mapDataProducerDataConsumers.at(dataProducer);
 
-		for (auto* consumer : dataConsumers)
+		for (auto* dataConsumer : dataConsumers)
 		{
-			consumer->SendMessage(ppid, msg, len);
+			dataConsumer->SendMessage(ppid, msg, len);
 		}
 	}
 
@@ -875,7 +902,9 @@ namespace RTC
 		auto mapDataProducersIt = this->mapDataProducers.find(dataProducerId);
 
 		if (mapDataProducersIt == this->mapDataProducers.end())
+		{
 			MS_THROW_ERROR("DataProducer not found [dataProducerId:%s]", dataProducerId.c_str());
+		}
 
 		auto* dataProducer                  = mapDataProducersIt->second;
 		auto mapDataProducerDataConsumersIt = this->mapDataProducerDataConsumers.find(dataProducer);
@@ -886,6 +915,12 @@ namespace RTC
 		MS_ASSERT(
 		  this->mapDataConsumerDataProducer.find(dataConsumer) == this->mapDataConsumerDataProducer.end(),
 		  "DataConsumer already present in mapDataConsumerDataProducer");
+
+		// Update the DataConsumer status based on the DataProducer status.
+		if (dataProducer->IsPaused())
+		{
+			dataConsumer->DataProducerPaused();
+		}
 
 		// Insert the DataConsumer in the maps.
 		auto& dataConsumers = mapDataProducerDataConsumersIt->second;

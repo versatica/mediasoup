@@ -24,6 +24,8 @@ namespace RTC
 			virtual void OnDataProducerReceiveData(RTC::DataProducer* producer, size_t len) = 0;
 			virtual void OnDataProducerMessageReceived(
 			  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
+			virtual void OnDataProducerPaused(RTC::DataProducer* dataProducer)                = 0;
+			virtual void OnDataProducerResumed(RTC::DataProducer* dataProducer)               = 0;
 		};
 
 	public:
@@ -55,6 +57,10 @@ namespace RTC
 		{
 			return this->sctpStreamParameters;
 		}
+		bool IsPaused() const
+		{
+			return this->paused;
+		}
 		void ReceiveMessage(uint32_t ppid, const uint8_t* msg, size_t len);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
@@ -80,6 +86,7 @@ namespace RTC
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;
 		std::string protocol;
+		bool paused{ false };
 		size_t messagesReceived{ 0u };
 		size_t bytesReceived{ 0u };
 	};

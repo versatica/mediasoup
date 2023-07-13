@@ -41,6 +41,11 @@ export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
 	maxRetransmits?: number;
 
 	/**
+	 * Whether the data consumer must start in paused mode. Default false.
+	 */
+	paused?: boolean;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: DataConsumerAppData;
@@ -66,6 +71,8 @@ export type DataConsumerEvents =
 {
 	transportclose: [];
 	dataproducerclose: [];
+	dataproducerpause: [];
+	dataproducerresume: [];
 	message: [Buffer, number];
 	sctpsendbufferfull: [];
 	bufferedamountlow: [number];
@@ -77,10 +84,15 @@ export type DataConsumerEvents =
 export type DataConsumerObserverEvents =
 {
 	close: [];
+	pause: [];
+	resume: [];
 };
 
-type DataConsumerDump = DataConsumerData & {
+type DataConsumerDump = DataConsumerData &
+{
 	id: string;
+	paused: boolean;
+	dataProducerPaused: boolean;
 };
 
 type DataConsumerInternal = TransportInternal &
@@ -114,6 +126,12 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	// Closed flag.
 	#closed = false;
 
+	// Paused flag.
+	#paused = false;
+
+	// Associated DataProducer paused flag.
+	#dataProducerPaused = false;
+
 	// Custom app data.
 	#appData: DataConsumerAppData;
 
@@ -128,12 +146,16 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 			internal,
 			data,
 			channel,
+			paused,
+			dataProducerPaused,
 			appData
 		}:
 		{
 			internal: DataConsumerInternal;
 			data: DataConsumerData;
 			channel: Channel;
+			paused: boolean;
+			dataProducerPaused: boolean;
 			appData?: DataConsumerAppData;
 		}
 	)
@@ -145,6 +167,8 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
+		this.#paused = paused;
+		this.#dataProducerPaused = dataProducerPaused;
 		this.#appData = appData || {} as DataConsumerAppData;
 
 		this.handleWorkerNotifications();
@@ -207,6 +231,22 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	}
 
 	/**
+	 * Whether the DataConsumer is paused.
+	 */
+	get paused(): boolean
+	{
+		return this.#paused;
+	}
+
+	/**
+	 * Whether the associate DataProducer is paused.
+	 */
+	get dataProducerPaused(): boolean
+	{
+		return this.#dataProducerPaused;
+	}
+
+	/**
 	 * App custom data.
 	 */
 	get appData(): DataConsumerAppData
@@ -253,7 +293,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		).pack(this.#channel.bufferBuilder);
 
 		this.#channel.request(
-			FbsRequest.Method.TRANSPORT_CLOSE_DATA_CONSUMER,
+			FbsRequest.Method.TRANSPORT_CLOSE_DATACONSUMER,
 			FbsRequest.Body.FBS_Transport_CloseDataConsumerRequest,
 			requestOffset,
 			this.#internal.transportId
@@ -298,7 +338,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		logger.debug('dump()');
 
 		const response = await this.#channel.request(
-			FbsRequest.Method.DATA_CONSUMER_DUMP,
+			FbsRequest.Method.DATACONSUMER_DUMP,
 			undefined,
 			undefined,
 			this.#internal.dataConsumerId
@@ -309,7 +349,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 
 		response.body(dumpResponse);
 
-		return parseDataConsumerDump(dumpResponse);
+		return parseDataConsumerDumpResponse(dumpResponse);
 	}
 
 	/**
@@ -320,7 +360,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		logger.debug('getStats()');
 
 		const response = await this.#channel.request(
-			FbsRequest.Method.DATA_CONSUMER_GET_STATS,
+			FbsRequest.Method.DATACONSUMER_GET_STATS,
 			undefined,
 			undefined,
 			this.#internal.dataConsumerId
@@ -335,6 +375,56 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	}
 
 	/**
+	 * Pause the DataConsumer.
+	 */
+	async pause(): Promise<void>
+	{
+		logger.debug('pause()');
+
+		const wasPaused = this.#paused;
+
+		await this.#channel.request(
+			FbsRequest.Method.DATACONSUMER_PAUSE,
+			undefined,
+			undefined,
+			this.#internal.dataConsumerId
+		);
+
+		this.#paused = true;
+
+		// Emit observer event.
+		if (!wasPaused)
+		{
+			this.#observer.safeEmit('pause');
+		}
+	}
+
+	/**
+	 * Resume the DataConsumer.
+	 */
+	async resume(): Promise<void>
+	{
+		logger.debug('resume()');
+
+		const wasPaused = this.#paused;
+
+		await this.#channel.request(
+			FbsRequest.Method.DATACONSUMER_RESUME,
+			undefined,
+			undefined,
+			this.#internal.dataConsumerId
+		);
+
+		this.#paused = false;
+
+		// Emit observer event.
+		if (wasPaused)
+		{
+			this.#observer.safeEmit('resume');
+		}
+	}
+
+	/**
 	 * Set buffered amount low threshold.
 	 */
 	async setBufferedAmountLowThreshold(threshold: number): Promise<void>
@@ -346,7 +436,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 			createSetBufferedAmountLowThresholdRequest(this.#channel.bufferBuilder, threshold);
 
 		await this.#channel.request(
-			FbsRequest.Method.DATA_CONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
+			FbsRequest.Method.DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
 			FbsRequest.Body.FBS_DataConsumer_SetBufferedAmountLowThresholdRequest,
 			requestOffset,
 			this.#internal.dataConsumerId
@@ -423,7 +513,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		);
 
 		await this.#channel.request(
-			FbsRequest.Method.DATA_CONSUMER_SEND,
+			FbsRequest.Method.DATACONSUMER_SEND,
 			FbsRequest.Body.FBS_DataConsumer_SendRequest,
 			requestOffset,
 			this.#internal.dataConsumerId
@@ -438,7 +528,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		logger.debug('getBufferedAmount()');
 
 		const response = await this.#channel.request(
-			FbsRequest.Method.DATA_CONSUMER_GET_BUFFERED_AMOUNT,
+			FbsRequest.Method.DATACONSUMER_GET_BUFFERED_AMOUNT,
 			undefined,
 			undefined,
 			this.#internal.dataConsumerId
@@ -474,6 +564,50 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 
 					// Emit observer event.
 					this.#observer.safeEmit('close');
+
+					break;
+				}
+
+				case Event.DATACONSUMER_DATAPRODUCER_PAUSE:
+				{
+					if (this.#dataProducerPaused)
+					{
+						break;
+					}
+
+					const wasPaused = this.#paused || this.#dataProducerPaused;
+
+					this.#dataProducerPaused = true;
+
+					this.safeEmit('dataproducerpause');
+
+					// Emit observer event.
+					if (!wasPaused)
+					{
+						this.#observer.safeEmit('pause');
+					}
+
+					break;
+				}
+
+				case Event.DATACONSUMER_DATAPRODUCER_RESUME:
+				{
+					if (!this.#dataProducerPaused)
+					{
+						break;
+					}
+
+					const wasPaused = this.#paused || this.#dataProducerPaused;
+
+					this.#dataProducerPaused = false;
+
+					this.safeEmit('dataproducerresume');
+
+					// Emit observer event.
+					if (wasPaused && !this.#paused)
+					{
+						this.#observer.safeEmit('resume');
+					}
 
 					break;
 				}
@@ -527,7 +661,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	}
 }
 
-export function parseDataConsumerDump(
+export function parseDataConsumerDumpResponse(
 	data: FbsDataConsumer.DumpResponse
 ): DataConsumerDump
 {
@@ -538,8 +672,11 @@ export function parseDataConsumerDump(
 		sctpStreamParameters : data.sctpStreamParameters() !== null ?
 			parseSctpStreamParameters(data.sctpStreamParameters()!) :
 			undefined,
-		label    : data.label()!,
-		protocol : data.protocol()!
+		label              : data.label()!,
+		protocol           : data.protocol()!,
+		paused             : data.paused(),
+		dataProducerPaused : data.dataProducerPaused()
+
 	};
 }
 

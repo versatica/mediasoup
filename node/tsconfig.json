@@ -11,5 +11,11 @@
 		"declaration": true,
 		"declarationMap": true
 	},
-	"include": [ "src" ]
+	"include": [ "src" ],
+	"watchOptions": {
+	  "watchFile": "useFsEvents",
+	  "watchDirectory": "useFsEvents",
+	  "fallbackPolling": "dynamicPriority",
+	  "synchronousWatchDirectory": true
+	}
 }
