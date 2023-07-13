@@ -157,7 +157,7 @@ Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or 
 
 ### 'make test-asan'
 
-Run test with Address Sanitizer
+Run test with Address Sanitizer.
 
 ### `make tidy`
 

@@ -326,6 +326,7 @@ test_sources = [
     'test/src/Utils/TestString.cpp',
     'test/src/Utils/TestTime.cpp',
 ]
+
 mediasoup_worker_test = executable(
   'mediasoup-worker-test',
   build_by_default: false,
@@ -373,7 +374,6 @@ mediasoup_worker_test_asan = executable(
     '-fsanitize=address',
   ],
 )
-
 
 test(
   'mediasoup-worker-test-asan',

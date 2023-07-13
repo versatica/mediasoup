@@ -81,6 +81,7 @@ endif
 	lint \
 	format \
 	test \
+	test-asan \
 	tidy \
 	fuzzer \
 	fuzzer-run-all \
