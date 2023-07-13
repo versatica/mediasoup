@@ -154,6 +154,11 @@ Rewrites mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/
 
 Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test/` folder.
 
+
+### 'make test-asan'
+
+Run test with Address Sanitizer
+
 ### `make tidy`
 
 Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code checks following `worker/.clang-tidy` rules.

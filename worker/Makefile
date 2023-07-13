@@ -225,6 +225,11 @@ else
 	$(BUILD_DIR)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 endif
 
+test-asan: setup
+	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test-asan
+	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-test-asan
+	ASAN_OPTIONS=detect_leaks=1 $(BUILD_DIR)/mediasoup-worker-test-asan --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
+
 tidy:
 	$(PYTHON) ./scripts/clang-tidy.py \
 		-clang-tidy-binary=./scripts/node_modules/.bin/clang-tidy \

@@ -280,15 +280,7 @@ executable(
   cpp_args: cpp_args + ['-DMS_EXECUTABLE'],
 )
 
-mediasoup_worker_test = executable(
-  'mediasoup-worker-test',
-  build_by_default: false,
-  install: true,
-  install_tag: 'mediasoup-worker-test',
-  dependencies: dependencies + [
-    catch2_proj.get_variable('catch2_dep'),
-  ],
-  sources: common_sources + [
+test_sources = [
     'test/src/tests.cpp',
     'test/src/PayloadChannel/TestPayloadChannelNotification.cpp',
     'test/src/PayloadChannel/TestPayloadChannelRequest.cpp',
@@ -333,7 +325,16 @@ mediasoup_worker_test = executable(
     'test/src/Utils/TestJson.cpp',
     'test/src/Utils/TestString.cpp',
     'test/src/Utils/TestTime.cpp',
+]
+mediasoup_worker_test = executable(
+  'mediasoup-worker-test',
+  build_by_default: false,
+  install: true,
+  install_tag: 'mediasoup-worker-test',
+  dependencies: dependencies + [
+    catch2_proj.get_variable('catch2_dep'),
   ],
+  sources: common_sources + test_sources,
   include_directories: include_directories(
     'include',
     'test/include',
@@ -347,6 +348,36 @@ mediasoup_worker_test = executable(
 test(
   'mediasoup-worker-test',
   mediasoup_worker_test,
+  workdir: meson.project_source_root(),
+)
+
+mediasoup_worker_test_asan = executable(
+  'mediasoup-worker-test-asan',
+  build_by_default: false,
+  install: true,
+  install_tag: 'mediasoup-worker-test-asan',
+  dependencies: dependencies + [
+    catch2_proj.get_variable('catch2_dep'),
+  ],
+  sources: common_sources + test_sources,
+  include_directories: include_directories(
+    'include',
+    'test/include',
+  ),
+  cpp_args: cpp_args + [
+    '-DMS_LOG_STD',
+    '-DMS_TEST',
+    '-fsanitize=address',
+  ],
+  link_args: [
+    '-fsanitize=address',
+  ],
+)
+
+
+test(
+  'mediasoup-worker-test-asan',
+  mediasoup_worker_test_asan,
   workdir: meson.project_source_root(),
 )
 
