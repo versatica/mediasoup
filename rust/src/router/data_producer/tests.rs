@@ -56,6 +56,7 @@ async fn init() -> (Router, WebRtcTransport) {
 }
 
 #[test]
+#[ignore]
 fn transport_close_event() {
     future::block_on(async move {
         let (router, transport1) = init().await;

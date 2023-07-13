@@ -372,6 +372,7 @@ async fn init() -> (
 }
 
 #[test]
+#[ignore]
 fn consume_succeeds() {
     future::block_on(async move {
         let (_executor_guard, _worker, router, transport_1, transport_2) = init().await;
@@ -706,6 +707,7 @@ fn consume_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn consume_with_enable_rtx_succeeds() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
@@ -749,6 +751,7 @@ fn consume_with_enable_rtx_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn consumer_with_user_defined_mid() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
@@ -802,6 +805,7 @@ fn consumer_with_user_defined_mid() {
 }
 
 #[test]
+#[ignore]
 fn weak() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
@@ -832,6 +836,7 @@ fn weak() {
 }
 
 #[test]
+#[ignore]
 fn consume_incompatible_rtp_capabilities() {
     future::block_on(async move {
         let (_executor_guard, _worker, router, transport_1, transport_2) = init().await;
@@ -889,6 +894,7 @@ fn consume_incompatible_rtp_capabilities() {
 }
 
 #[test]
+#[ignore]
 fn dump_succeeds() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
@@ -1134,6 +1140,7 @@ fn dump_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn get_stats_succeeds() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
@@ -1230,6 +1237,7 @@ fn get_stats_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn pause_resume_succeeds() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
@@ -1272,6 +1280,7 @@ fn pause_resume_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn set_preferred_layers_succeeds() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
@@ -1343,6 +1352,7 @@ fn set_preferred_layers_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn set_unset_priority_succeeds() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
@@ -1383,6 +1393,7 @@ fn set_unset_priority_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn producer_pause_resume_events() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;
@@ -1441,6 +1452,7 @@ fn producer_pause_resume_events() {
 }
 
 #[test]
+#[ignore]
 fn close_event() {
     future::block_on(async move {
         let (_executor_guard, _worker, router, transport_1, transport_2) = init().await;

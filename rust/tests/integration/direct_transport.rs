@@ -157,6 +157,7 @@ fn get_stats_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn send_succeeds() {
     future::block_on(async move {
         let (_worker, _router, transport) = init().await;

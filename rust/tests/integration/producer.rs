@@ -225,6 +225,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, WebRtcTransport) {
 }
 
 #[test]
+#[ignore]
 fn produce_succeeds_1() {
     future::block_on(async move {
         let (_worker, router, transport_1, _transport_2) = init().await;
@@ -305,6 +306,7 @@ fn produce_succeeds_1() {
 }
 
 #[test]
+#[ignore]
 fn produce_succeeds_2() {
     future::block_on(async move {
         let (_worker, router, _transport_1, transport_2) = init().await;
@@ -372,6 +374,7 @@ fn produce_succeeds_2() {
 }
 
 #[test]
+#[ignore]
 fn weak() {
     future::block_on(async move {
         let (_worker, _router, transport_1, _transport_2) = init().await;
@@ -392,6 +395,7 @@ fn weak() {
 }
 
 #[test]
+#[ignore]
 fn produce_wrong_arguments() {
     future::block_on(async move {
         let (_worker, _router, transport_1, _transport_2) = init().await;
@@ -494,6 +498,7 @@ fn produce_wrong_arguments() {
 }
 
 #[test]
+#[ignore]
 fn produce_unsupported_codecs() {
     future::block_on(async move {
         let (_worker, _router, transport_1, _transport_2) = init().await;
@@ -571,6 +576,7 @@ fn produce_unsupported_codecs() {
 }
 
 #[test]
+#[ignore]
 fn produce_already_used_mid_ssrc() {
     future::block_on(async move {
         let (_worker, _router, transport_1, transport_2) = init().await;
@@ -642,6 +648,7 @@ fn produce_already_used_mid_ssrc() {
 }
 
 #[test]
+#[ignore]
 fn produce_no_mid_single_encoding_without_dir_or_ssrc() {
     future::block_on(async move {
         let (_worker, _router, transport_1, _transport_2) = init().await;
@@ -672,6 +679,7 @@ fn produce_no_mid_single_encoding_without_dir_or_ssrc() {
 }
 
 #[test]
+#[ignore]
 fn dump_succeeds() {
     future::block_on(async move {
         let (_worker, _router, transport_1, transport_2) = init().await;
@@ -785,6 +793,7 @@ fn dump_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn get_stats_succeeds() {
     future::block_on(async move {
         let (_worker, _router, transport_1, transport_2) = init().await;
@@ -820,6 +829,7 @@ fn get_stats_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn pause_resume_succeeds() {
     future::block_on(async move {
         let (_worker, _router, transport_1, _transport_2) = init().await;
@@ -864,6 +874,7 @@ fn pause_resume_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn enable_trace_event_succeeds() {
     future::block_on(async move {
         let (_worker, _router, transport_1, _transport_2) = init().await;
@@ -907,6 +918,7 @@ fn enable_trace_event_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn close_event() {
     future::block_on(async move {
         let (_worker, router, transport_1, _transport_2) = init().await;

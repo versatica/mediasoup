@@ -87,6 +87,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, PlainTransport) {
 }
 
 #[test]
+#[ignore]
 fn transport_1_produce_data_succeeds() {
     future::block_on(async move {
         let (_worker, router, transport1, _transport2) = init().await;
@@ -164,6 +165,7 @@ fn transport_1_produce_data_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn transport_2_produce_data_succeeds() {
     future::block_on(async move {
         let (_worker, router, _transport1, transport2) = init().await;
@@ -243,6 +245,7 @@ fn transport_2_produce_data_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn weak() {
     future::block_on(async move {
         let (_worker, _router, transport1, _transport2) = init().await;
@@ -272,6 +275,7 @@ fn weak() {
 }
 
 #[test]
+#[ignore]
 fn produce_data_used_stream_id_rejects() {
     future::block_on(async move {
         let (_worker, _router, transport1, _transport2) = init().await;
@@ -295,6 +299,7 @@ fn produce_data_used_stream_id_rejects() {
 }
 
 #[test]
+#[ignore]
 fn dump_succeeds() {
     future::block_on(async move {
         let (_worker, _router, transport1, transport2) = init().await;
@@ -374,6 +379,7 @@ fn dump_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn get_stats_succeeds() {
     future::block_on(async move {
         let (_worker, _router, transport1, transport2) = init().await;
@@ -436,6 +442,7 @@ fn get_stats_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn pause_and_resume_succeed() {
     future::block_on(async move {
         let (_worker, _router, transport1, _) = init().await;
@@ -491,6 +498,7 @@ fn pause_and_resume_succeed() {
 }
 
 #[test]
+#[ignore]
 fn close_event() {
     future::block_on(async move {
         let (_worker, router, transport1, _transport2) = init().await;

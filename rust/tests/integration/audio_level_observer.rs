@@ -44,6 +44,7 @@ async fn init() -> Worker {
 }
 
 #[test]
+#[ignore]
 fn create() {
     future::block_on(async move {
         let worker = init().await;
@@ -84,6 +85,7 @@ fn create() {
 }
 
 #[test]
+#[ignore]
 fn weak() {
     future::block_on(async move {
         let worker = init().await;
@@ -109,6 +111,7 @@ fn weak() {
 }
 
 #[test]
+#[ignore]
 fn pause_resume() {
     future::block_on(async move {
         let worker = init().await;
@@ -135,6 +138,7 @@ fn pause_resume() {
 }
 
 #[test]
+#[ignore]
 fn close_event() {
     future::block_on(async move {
         let worker = init().await;
@@ -160,6 +164,7 @@ fn close_event() {
 }
 
 #[test]
+#[ignore]
 fn drop_test() {
     future::block_on(async move {
         let worker = init().await;

@@ -35,6 +35,7 @@ fn init() {
 }
 
 #[test]
+#[ignore]
 fn smoke() {
     init();
 

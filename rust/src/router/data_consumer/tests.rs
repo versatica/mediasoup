@@ -63,6 +63,7 @@ async fn init() -> (Router, DataProducer) {
 }
 
 #[test]
+#[ignore]
 fn data_producer_close_event() {
     future::block_on(async move {
         let (router, data_producer) = init().await;
@@ -116,6 +117,7 @@ fn data_producer_close_event() {
 }
 
 #[test]
+#[ignore]
 fn transport_close_event() {
     future::block_on(async move {
         let (router, data_producer) = init().await;

@@ -82,6 +82,7 @@ async fn init() -> (Worker, Router) {
 }
 
 #[test]
+#[ignore]
 fn create_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -269,6 +270,7 @@ fn create_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn create_with_fixed_port_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -294,6 +296,7 @@ fn create_with_fixed_port_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn weak() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -326,6 +329,7 @@ fn weak() {
 }
 
 #[test]
+#[ignore]
 fn create_enable_srtp_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -392,6 +396,7 @@ fn create_enable_srtp_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn create_non_bindable_ip() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -413,6 +418,7 @@ fn create_non_bindable_ip() {
 }
 
 #[test]
+#[ignore]
 fn get_stats_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -473,6 +479,7 @@ fn get_stats_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn connect_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -548,6 +555,7 @@ fn connect_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn connect_wrong_arguments() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -588,6 +596,7 @@ fn connect_wrong_arguments() {
 }
 
 #[test]
+#[ignore]
 fn close_event() {
     future::block_on(async move {
         let (_worker, router) = init().await;

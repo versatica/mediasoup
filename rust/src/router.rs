@@ -606,6 +606,9 @@ impl Router {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///             port: None,
+    ///             send_buffer_size: None,
+    ///             recv_buffer_size: None,
     ///         },
     ///     )))
     ///     .await?;
@@ -671,6 +674,9 @@ impl Router {
     ///         protocol: Protocol::Udp,
     ///         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///         announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///         port: None,
+    ///         send_buffer_size: None,
+    ///         recv_buffer_size: None,
     ///     }))
     ///     .await?;
     /// # Ok(())
@@ -733,6 +739,9 @@ impl Router {
     ///         protocol: Protocol::Udp,
     ///         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///         announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///         port: None,
+    ///         send_buffer_size: None,
+    ///         recv_buffer_size: None,
     ///     }))
     ///     .await?;
     /// # Ok(())
@@ -940,6 +949,9 @@ impl Router {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///             port: None,
+    ///             send_buffer_size: None,
+    ///             recv_buffer_size: None,
     ///         },
     ///     )))
     ///     .await?;
@@ -979,6 +991,9 @@ impl Router {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///             port: None,
+    ///             send_buffer_size: None,
+    ///             recv_buffer_size: None,
     ///         },
     ///     )))
     ///     .await?;
@@ -1161,6 +1176,9 @@ impl Router {
     ///                 protocol: Protocol::Udp,
     ///                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///                 announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///                 port: None,
+    ///                 send_buffer_size: None,
+    ///                 recv_buffer_size: None,
     ///             },
     ///         ));
     ///         options.enable_sctp = true;
@@ -1189,6 +1207,9 @@ impl Router {
     ///                 protocol: Protocol::Udp,
     ///                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///                 announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///                 port: None,
+    ///                 send_buffer_size: None,
+    ///                 recv_buffer_size: None,
     ///             },
     ///         ));
     ///         options.enable_sctp = true;

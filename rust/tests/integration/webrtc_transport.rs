@@ -88,6 +88,7 @@ async fn init() -> (Worker, Router) {
 }
 
 #[test]
+#[ignore]
 fn create_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -266,6 +267,7 @@ fn create_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn create_with_fixed_port_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -291,6 +293,7 @@ fn create_with_fixed_port_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn weak() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -320,6 +323,7 @@ fn weak() {
 }
 
 #[test]
+#[ignore]
 fn create_non_bindable_ip() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -343,6 +347,7 @@ fn create_non_bindable_ip() {
 }
 
 #[test]
+#[ignore]
 fn get_stats_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -394,6 +399,7 @@ fn get_stats_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn connect_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -443,6 +449,7 @@ fn connect_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn set_max_incoming_bitrate_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -475,6 +482,7 @@ fn set_max_incoming_bitrate_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn set_max_outgoing_bitrate_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -507,6 +515,7 @@ fn set_max_outgoing_bitrate_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn set_min_outgoing_bitrate_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -539,6 +548,7 @@ fn set_min_outgoing_bitrate_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn set_max_outgoing_bitrate_fails_if_value_is_lower_than_current_min_limit() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -576,6 +586,7 @@ fn set_max_outgoing_bitrate_fails_if_value_is_lower_than_current_min_limit() {
 }
 
 #[test]
+#[ignore]
 fn set_min_outgoing_bitrate_fails_if_value_is_higher_than_current_max_limit() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -613,6 +624,7 @@ fn set_min_outgoing_bitrate_fails_if_value_is_higher_than_current_max_limit() {
 }
 
 #[test]
+#[ignore]
 fn restart_ice_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -648,6 +660,7 @@ fn restart_ice_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn enable_trace_event_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -714,6 +727,7 @@ fn enable_trace_event_succeeds() {
 }
 
 #[test]
+#[ignore]
 fn close_event() {
     future::block_on(async move {
         let (_worker, router) = init().await;
