@@ -1,7 +1,7 @@
 # Changelog
 
 
-### Next
+### 3.12.6
 
 * `Worker`: Add `Transport::Destroying()` protected method ([PR #1114](https://github.com/versatica/mediasoup/pull/1114)).
 * `RtpStreamRecv`: Fix jitter calculation ([PR #1117](https://github.com/versatica/mediasoup/pull/1117), thanks to @penguinol).
