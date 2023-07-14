@@ -28,7 +28,7 @@ public:
 	void Insert(uint16_t seq, uint32_t timestamp)
 	{
 		// clang-format off
-		uint8_t rtpBuffer[] =
+		uint8_t rtpBuffer[1500] =
 		{
 			0b10000000, 0b01111011, 0b01010010, 0b00001110,
 			0b01011011, 0b01101011, 0b11001010, 0b10110101,
@@ -36,7 +36,7 @@ public:
 		};
 		// clang-format on
 
-		auto* packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
+		auto* packet = RtpPacket::Parse(rtpBuffer, 12);
 
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);

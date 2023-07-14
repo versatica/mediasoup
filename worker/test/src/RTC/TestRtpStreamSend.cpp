@@ -57,7 +57,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	};
 
 	// clang-format off
-	uint8_t rtpBuffer1[] =
+	uint8_t rtpBuffer1[1500] =
 	{
 		0b10000000, 0b01111011, 0b01010010, 0b00001110,
 		0b01011011, 0b01101011, 0b11001010, 0b10110101,
