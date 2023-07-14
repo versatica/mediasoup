@@ -138,6 +138,11 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		CheckRtxPacket(rtxPacket5, packet5->GetSequenceNumber(), packet5->GetTimestamp());
 
 		delete stream;
+		delete packet1;
+		delete packet2;
+		delete packet3;
+		delete packet4;
+		delete packet5;
 	}
 
 	SECTION("receive NACK and get zero retransmitted packets if useNack is not set")
@@ -191,6 +196,11 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		testRtpStreamListener.retransmittedPackets.clear();
 
 		delete stream;
+		delete packet1;
+		delete packet2;
+		delete packet3;
+		delete packet4;
+		delete packet5;
 	}
 
 	SECTION("receive NACK and get zero retransmitted packets for audio")
@@ -244,6 +254,11 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		testRtpStreamListener.retransmittedPackets.clear();
 
 		delete stream;
+		delete packet1;
+		delete packet2;
+		delete packet3;
+		delete packet4;
+		delete packet5;
 	}
 
 	SECTION("receive NACK in different RtpStreamSend instances and get retransmitted packets")
@@ -317,6 +332,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 		delete stream1;
 		delete stream2;
+		delete packet1;
+		delete packet2;
 	}
 
 	SECTION("packets get retransmitted as long as they don't exceed MaxRetransmissionDelayForVideoMs")
@@ -369,6 +386,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		CheckRtxPacket(rtxPacket2, packet2->GetSequenceNumber(), packet2->GetTimestamp());
 
 		delete stream;
+		delete packet1;
+		delete packet2;
 	}
 
 	SECTION("packets don't get retransmitted if MaxRetransmissionDelayForVideoMs is exceeded")
@@ -424,6 +443,9 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		CheckRtxPacket(rtxPacket2, packet2->GetSequenceNumber(), packet2->GetTimestamp());
 
 		delete stream;
+		delete packet1;
+		delete packet2;
+		delete packet3;
 	}
 
 	SECTION("packets get removed from the retransmission buffer if seq number of the stream is reset")
@@ -469,6 +491,10 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 0);
 
 		delete stream;
+		delete packet1;
+		delete packet2;
+		delete packet3;
+		delete packet4;
 	}
 
 #ifdef PERFORMANCE_TEST

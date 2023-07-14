@@ -57,7 +57,7 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		packet1->Serialize(bufferPacket1);
 
 		// Create a new packet out of the external buffer.
-		auto packet2 = ExtendedReportPacket::Parse(bufferPacket1, packet1->GetSize());
+		auto packet2 = std::unique_ptr<ExtendedReportPacket>(ExtendedReportPacket::Parse(bufferPacket1, packet1->GetSize()));
 
 		REQUIRE(packet2->GetType() == packet1->GetType());
 		REQUIRE(packet2->GetCount() == packet1->GetCount());
@@ -130,7 +130,7 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		packet1->Serialize(bufferPacket1);
 
 		// Create a new packet out of the external buffer.
-		auto packet2 = ExtendedReportPacket::Parse(bufferPacket1, packet1->GetSize());
+		auto packet2 = std::unique_ptr<ExtendedReportPacket>(ExtendedReportPacket::Parse(bufferPacket1, packet1->GetSize()));
 
 		REQUIRE(packet2->GetType() == packet1->GetType());
 		REQUIRE(packet2->GetCount() == packet1->GetCount());

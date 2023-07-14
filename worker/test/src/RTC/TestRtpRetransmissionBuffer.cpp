@@ -36,7 +36,7 @@ public:
 		};
 		// clang-format on
 
-		auto* packet = RtpPacket::Parse(rtpBuffer, 12);
+		auto* packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
 
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
@@ -44,6 +44,7 @@ public:
 		std::shared_ptr<RtpPacket> sharedPacket;
 
 		RtpRetransmissionBuffer::Insert(packet, sharedPacket);
+		delete packet;
 	}
 
 	void AssertBuffer(std::vector<VerificationItem> verificationBuffer)
