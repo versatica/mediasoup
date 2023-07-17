@@ -132,10 +132,14 @@ test('dataProducer.send() succeeds', async () =>
 	let lastSentMessageId = 0;
 	let lastRecvMessageId = 0;
 
-	await new Promise<void>((resolve) =>
+	// eslint-disable-next-line no-async-promise-executor
+	await new Promise<void>(async (resolve) =>
 	{
 		// Send messages over the sctpSendStream created above.
-		const interval = setInterval(() =>
+
+		sendNextMessage();
+
+		async function sendNextMessage()
 		{
 			const id = ++lastSentMessageId;
 			let ppid;
@@ -143,19 +147,19 @@ test('dataProducer.send() succeeds', async () =>
 
 			if (id === pauseSendingAtMessage)
 			{
-				dataProducer.pause();
+				await dataProducer.pause();
 			}
 			else if (id === resumeSendingAtMessage)
 			{
-				dataProducer.resume();
+				await dataProducer.resume();
 			}
 			else if (id === pauseReceivingAtMessage)
 			{
-				dataConsumer.pause();
+				await dataConsumer.pause();
 			}
 			else if (id === resumeReceivingAtMessage)
 			{
-				dataConsumer.resume();
+				await dataConsumer.resume();
 			}
 
 			// Send string (WebRTC DataChannel string).
@@ -180,11 +184,11 @@ test('dataProducer.send() succeeds', async () =>
 				effectivelySentMessageBytes += messageSize;
 			}
 
-			if (id === numMessages)
+			if (id < numMessages)
 			{
-				clearInterval(interval);
+				sendNextMessage();
 			}
-		}, 0);
+		}
 
 		dataConsumer.on('message', (message, ppid) =>
 		{
@@ -195,7 +199,6 @@ test('dataProducer.send() succeeds', async () =>
 
 			if (id === numMessages)
 			{
-				clearInterval(interval);
 				resolve();
 			}
 
