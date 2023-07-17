@@ -1,7 +1,7 @@
 # Changelog
 
 
-### Next
+### 3.12.6
 
 * Switch from JSON based messages to `flatbuffers` ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
 * Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
