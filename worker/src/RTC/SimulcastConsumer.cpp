@@ -345,9 +345,14 @@ namespace RTC
 
 		if (RTC::Consumer::IsActive())
 		{
+			// All Producer streams are dead.
+			if (!IsActive())
+			{
+				UpdateTargetLayers(-1, -1);
+			}
 			// Just check target layers if the stream has died or reborned.
 			// clang-format off
-			if (
+			else if (
 				!this->externallyManagedBitrate ||
 				(score == 0u || previousScore == 0u)
 			)
@@ -1334,22 +1339,7 @@ namespace RTC
 			if (this->externallyManagedBitrate)
 			{
 				if (newTargetSpatialLayer != this->targetSpatialLayer || force)
-				{
-					// NOTE: Caution here.
-					// If we just call listener->OnConsumerNeedBitrateChange() it may happen
-					// that Transport ignores this consumer in case our IsActive() is false,
-					// and that will happen if the score of all streams in the producer is 0,
-					// so we wouldn't have any chance to notify the user about layers change.
-					// So, if that's the case, manually update target layers.
-					if (IsActive())
-					{
-						this->listener->OnConsumerNeedBitrateChange(this);
-					}
-					else
-					{
-						UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
-					}
-				}
+					this->listener->OnConsumerNeedBitrateChange(this);
 			}
 			else
 			{
