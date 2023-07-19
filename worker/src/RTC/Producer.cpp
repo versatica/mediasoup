@@ -1223,8 +1223,12 @@ namespace RTC
 			}
 		}
 
-		// Only perform RTP inactivity check on simulcast.
-		auto useRtpInactivityCheck = this->type == RtpParameters::Type::SIMULCAST;
+		// Only perform RTP inactivity check on simulcast and only if there are
+		// more than 1 stream.
+		auto useRtpInactivityCheck =
+		  this->type == RtpParameters::Type::SIMULCAST && this->rtpMapping.encodings.size() > 1;
+
+		MS_DUMP("---------- useRtpInactivityCheck:%d", useRtpInactivityCheck);
 
 		// Create a RtpStreamRecv for receiving a media stream.
 		auto* rtpStream = new RTC::RtpStreamRecv(this, params, SendNackDelay, useRtpInactivityCheck);
@@ -1255,7 +1259,7 @@ namespace RTC
 		auto mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
 
 		// Notify the listener.
-		this->listener->OnProducerNewRtpStream(this, static_cast<RTC::RtpStream*>(rtpStream), mappedSsrc);
+		this->listener->OnProducerNewRtpStream(this, rtpStream, mappedSsrc);
 	}
 
 	inline void Producer::PreProcessRtpPacket(RTC::RtpPacket* packet)
@@ -1637,7 +1641,7 @@ namespace RTC
 		this->rtpStreamScores[rtpStream->GetEncodingIdx()] = score;
 
 		// Notify the listener.
-		this->listener->OnProducerRtpStreamScore(this, rtpStream, score, previousScore);
+		this->listener->OnProducerRtpStreamScore(this, static_cast<RTC::RtpStreamRecv*>(rtpStream), score, previousScore);
 
 		// Emit the score event.
 		EmitScore();

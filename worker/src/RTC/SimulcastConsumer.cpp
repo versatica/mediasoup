@@ -1,3 +1,4 @@
+
 #define MS_CLASS "RTC::SimulcastConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 
@@ -302,7 +303,7 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -315,7 +316,7 @@ namespace RTC
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 	}
 
-	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -335,15 +336,19 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::ProducerRtpStreamScore(
-	  RTC::RtpStream* /*rtpStream*/, uint8_t score, uint8_t previousScore)
+	  RTC::RtpStreamRecv* /*rtpStream*/, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
+
+		MS_DUMP("----------- 1. score:%" PRIu8, score);
 
 		// Emit the score event.
 		EmitScore();
 
 		if (RTC::Consumer::IsActive())
 		{
+			MS_DUMP("----------- 2. score:%" PRIu8, score);
+
 			// Just check target layers if the stream has died or reborned.
 			// clang-format off
 			if (
@@ -352,12 +357,13 @@ namespace RTC
 			)
 			// clang-format on
 			{
+				MS_DUMP("----------- 3. score:%" PRIu8, score);
 				MayChangeLayers();
 			}
 		}
 	}
 
-	void SimulcastConsumer::ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first)
+	void SimulcastConsumer::ProducerRtcpSenderReport(RTC::RtpStreamRecv* rtpStream, bool first)
 	{
 		MS_TRACE();
 
@@ -383,6 +389,8 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
+
+		MS_DUMP("1. IsActive():%d, Parent.IsActive():%d", IsActive(), RTC::Consumer::IsActive());
 
 		if (!IsActive())
 			return 0u;
@@ -1332,11 +1340,17 @@ namespace RTC
 			// will let us change it when it considers.
 			if (this->externallyManagedBitrate)
 			{
+				MS_DUMP("----------- 1.a");
+
 				if (newTargetSpatialLayer != this->targetSpatialLayer || force)
+				{
+					MS_DUMP("----------- 2.a");
 					this->listener->OnConsumerNeedBitrateChange(this);
+				}
 			}
 			else
 			{
+				MS_DUMP("----------- 1.b");
 				UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
 			}
 		}
@@ -1533,7 +1547,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(this->id, "layerschange", data);
 	}
 
-	inline RTC::RtpStream* SimulcastConsumer::GetProducerCurrentRtpStream() const
+	inline RTC::RtpStreamRecv* SimulcastConsumer::GetProducerCurrentRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1544,7 +1558,7 @@ namespace RTC
 		return this->producerRtpStreams.at(this->currentSpatialLayer);
 	}
 
-	inline RTC::RtpStream* SimulcastConsumer::GetProducerTargetRtpStream() const
+	inline RTC::RtpStreamRecv* SimulcastConsumer::GetProducerTargetRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1555,7 +1569,7 @@ namespace RTC
 		return this->producerRtpStreams.at(this->targetSpatialLayer);
 	}
 
-	inline RTC::RtpStream* SimulcastConsumer::GetProducerTsReferenceRtpStream() const
+	inline RTC::RtpStreamRecv* SimulcastConsumer::GetProducerTsReferenceRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1567,20 +1581,27 @@ namespace RTC
 	}
 
 	inline void SimulcastConsumer::OnRtpStreamScore(
-	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
+	  RTC::RtpStream* /*rtpStream*/, uint8_t score, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
+
+		MS_DUMP("----------- 1. score:%" PRIu8, score);
 
 		// Emit the score event.
 		EmitScore();
 
 		if (IsActive())
 		{
+			MS_DUMP("----------- 2. score:%" PRIu8, score);
+
 			// Just check target layers if our bitrate is not externally managed.
 			// NOTE: For now this is a bit useless since, when locally managed, we do
 			// not check the Consumer score at all.
 			if (!this->externallyManagedBitrate)
+			{
+				MS_DUMP("----------- 3. score:%" PRIu8, score);
 				MayChangeLayers();
+			}
 		}
 	}
 
