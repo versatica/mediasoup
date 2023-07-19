@@ -1596,9 +1596,7 @@ namespace RTC
 			// NOTE: For now this is a bit useless since, when locally managed, we do
 			// not check the Consumer score at all.
 			if (!this->externallyManagedBitrate)
-			{
 				MayChangeLayers();
-			}
 		}
 	}
 
