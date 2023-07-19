@@ -340,15 +340,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DUMP("----------- 1. score:%" PRIu8, score);
-
 		// Emit the score event.
 		EmitScore();
 
 		if (RTC::Consumer::IsActive())
 		{
-			MS_DUMP("----------- 2. score:%" PRIu8, score);
-
 			// Just check target layers if the stream has died or reborned.
 			// clang-format off
 			if (
@@ -357,7 +353,6 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				MS_DUMP("----------- 3. score:%" PRIu8, score);
 				MayChangeLayers();
 			}
 		}
@@ -389,8 +384,6 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-
-		MS_DUMP("1. IsActive():%d, Parent.IsActive():%d", IsActive(), RTC::Consumer::IsActive());
 
 		if (!IsActive())
 			return 0u;
@@ -1340,17 +1333,26 @@ namespace RTC
 			// will let us change it when it considers.
 			if (this->externallyManagedBitrate)
 			{
-				MS_DUMP("----------- 1.a");
-
 				if (newTargetSpatialLayer != this->targetSpatialLayer || force)
 				{
-					MS_DUMP("----------- 2.a");
-					this->listener->OnConsumerNeedBitrateChange(this);
+					// NOTE: Caution here.
+					// If we just call listener->OnConsumerNeedBitrateChange() it may happen
+					// that Transport ignores this consumer in case our IsActive() is false,
+					// and that will happen if the score of all streams in the producer is 0,
+					// so we wouldn't have any chance to notify the user about layers change.
+					// So, if that's the case, manually update target layers.
+					if (IsActive())
+					{
+						this->listener->OnConsumerNeedBitrateChange(this);
+					}
+					else
+					{
+						UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
+					}
 				}
 			}
 			else
 			{
-				MS_DUMP("----------- 1.b");
 				UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
 			}
 		}
@@ -1585,21 +1587,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DUMP("----------- 1. score:%" PRIu8, score);
-
 		// Emit the score event.
 		EmitScore();
 
 		if (IsActive())
 		{
-			MS_DUMP("----------- 2. score:%" PRIu8, score);
-
 			// Just check target layers if our bitrate is not externally managed.
 			// NOTE: For now this is a bit useless since, when locally managed, we do
 			// not check the Consumer score at all.
 			if (!this->externallyManagedBitrate)
 			{
-				MS_DUMP("----------- 3. score:%" PRIu8, score);
 				MayChangeLayers();
 			}
 		}

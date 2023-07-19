@@ -74,7 +74,10 @@ namespace RTC
 		  uint8_t score,
 		  uint8_t previousScore) override;
 		void OnTransportProducerRtcpSenderReport(
-		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, bool first) override;
+		  RTC::Transport* transport,
+		  RTC::Producer* producer,
+		  RTC::RtpStreamRecv* rtpStream,
+		  bool first) override;
 		void OnTransportProducerRtpPacketReceived(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
 		void OnTransportNeedWorstRemoteFractionLost(

@@ -659,7 +659,10 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerNewRtpStream(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
+	  RTC::Transport* /*transport*/,
+	  RTC::Producer* producer,
+	  RTC::RtpStreamRecv* rtpStream,
+	  uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
