@@ -1,3 +1,4 @@
+
 #define MS_CLASS "RTC::SimulcastConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 
@@ -282,7 +283,7 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -295,7 +296,7 @@ namespace RTC
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 	}
 
-	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -315,7 +316,7 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::ProducerRtpStreamScore(
-	  RTC::RtpStream* /*rtpStream*/, uint8_t score, uint8_t previousScore)
+	  RTC::RtpStreamRecv* /*rtpStream*/, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -324,9 +325,14 @@ namespace RTC
 
 		if (RTC::Consumer::IsActive())
 		{
+			// All Producer streams are dead.
+			if (!IsActive())
+			{
+				UpdateTargetLayers(-1, -1);
+			}
 			// Just check target layers if the stream has died or reborned.
 			// clang-format off
-			if (
+			else if (
 				!this->externallyManagedBitrate ||
 				(score == 0u || previousScore == 0u)
 			)
@@ -337,7 +343,7 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first)
+	void SimulcastConsumer::ProducerRtcpSenderReport(RTC::RtpStreamRecv* rtpStream, bool first)
 	{
 		MS_TRACE();
 
@@ -1523,7 +1529,7 @@ namespace RTC
 		  notificationOffset);
 	}
 
-	inline RTC::RtpStream* SimulcastConsumer::GetProducerCurrentRtpStream() const
+	inline RTC::RtpStreamRecv* SimulcastConsumer::GetProducerCurrentRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1534,7 +1540,7 @@ namespace RTC
 		return this->producerRtpStreams.at(this->currentSpatialLayer);
 	}
 
-	inline RTC::RtpStream* SimulcastConsumer::GetProducerTargetRtpStream() const
+	inline RTC::RtpStreamRecv* SimulcastConsumer::GetProducerTargetRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1545,7 +1551,7 @@ namespace RTC
 		return this->producerRtpStreams.at(this->targetSpatialLayer);
 	}
 
-	inline RTC::RtpStream* SimulcastConsumer::GetProducerTsReferenceRtpStream() const
+	inline RTC::RtpStreamRecv* SimulcastConsumer::GetProducerTsReferenceRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1557,7 +1563,7 @@ namespace RTC
 	}
 
 	inline void SimulcastConsumer::OnRtpStreamScore(
-	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
+	  RTC::RtpStream* /*rtpStream*/, uint8_t score, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 

@@ -1,15 +1,23 @@
 # Changelog
 
-
-### 3.12.6
+### Next
 
 * Switch from JSON based messages to `flatbuffers` ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
 * Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
 * Add optional `rtcpListenInfo` in `PlainTransportOptions` ([PR #1099](https://github.com/versatica/mediasoup/pull/1099)).
 * Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
+
+
+### 3.12.7
+
+* `SimulcastConsumer`: Fix lack of "consumerlayerschange" event when all streams in the producer die ([PR #1122](https://github.com/versatica/mediasoup/pull/1122)).
+
+
+### 3.12.6
+
 * `Worker`: Add `Transport::Destroying()` protected method ([PR #1114](https://github.com/versatica/mediasoup/pull/1114)).
 * `RtpStreamRecv`: Fix jitter calculation ([PR #1117](https://github.com/versatica/mediasoup/pull/1117), thanks to @penguinol).
-* Revert "Node: make `types.ts` only export types rather than the entire class/code" ([PR #1109](https://github.com/versatica/mediasoup/pull/1109)) because it requires `typescript` >= 5 in the apps that import mediasoup and we don't want to be that strict yet.
+* Revert "Node: make types.ts only export types rather than the entire class/code" ([PR #1109](https://github.com/versatica/mediasoup/pull/1109)) because it requires `typescript` >= 5 in the apps that import mediasoup and we don't want to be that strict yet.
 
 
 ### 3.12.5

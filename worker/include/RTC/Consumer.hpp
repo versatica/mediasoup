@@ -15,6 +15,7 @@
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
+#include "RTC/RtpStreamRecv.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/Shared.hpp"
 #include <absl/container/flat_hash_set.h>
@@ -133,12 +134,12 @@ namespace RTC
 		}
 		void ProducerPaused();
 		void ProducerResumed();
-		virtual void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc)    = 0;
-		virtual void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
+		virtual void ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)    = 0;
+		virtual void ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
 		void ProducerRtpStreamScores(const std::vector<uint8_t>* scores);
 		virtual void ProducerRtpStreamScore(
-		  RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
-		virtual void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) = 0;
+		  RTC::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
+		virtual void ProducerRtcpSenderReport(RTC::RtpStreamRecv* rtpStream, bool first) = 0;
 		void ProducerClosed();
 		void SetExternallyManagedBitrate()
 		{
