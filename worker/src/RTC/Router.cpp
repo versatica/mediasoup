@@ -659,7 +659,10 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerNewRtpStream(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	  RTC::Transport* /*transport*/,
+	  RTC::Producer* producer,
+	  RTC::RtpStreamRecv* rtpStream,
+	  uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -674,7 +677,7 @@ namespace RTC
 	inline void Router::OnTransportProducerRtpStreamScore(
 	  RTC::Transport* /*transport*/,
 	  RTC::Producer* producer,
-	  RTC::RtpStream* rtpStream,
+	  RTC::RtpStreamRecv* rtpStream,
 	  uint8_t score,
 	  uint8_t previousScore)
 	{
@@ -689,7 +692,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerRtcpSenderReport(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, bool first)
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, bool first)
 	{
 		MS_TRACE();
 

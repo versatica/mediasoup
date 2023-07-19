@@ -11,7 +11,7 @@
 #include "RTC/Producer.hpp"
 #include "RTC/RtpObserver.hpp"
 #include "RTC/RtpPacket.hpp"
-#include "RTC/RtpStream.hpp"
+#include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/Transport.hpp"
 #include "RTC/WebRtcServer.hpp"
@@ -65,16 +65,19 @@ namespace RTC
 		void OnTransportProducerNewRtpStream(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RtpStream* rtpStream,
+		  RTC::RtpStreamRecv* rtpStream,
 		  uint32_t mappedSsrc) override;
 		void OnTransportProducerRtpStreamScore(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,
-		  RTC::RtpStream* rtpStream,
+		  RTC::RtpStreamRecv* rtpStream,
 		  uint8_t score,
 		  uint8_t previousScore) override;
 		void OnTransportProducerRtcpSenderReport(
-		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpStream* rtpStream, bool first) override;
+		  RTC::Transport* transport,
+		  RTC::Producer* producer,
+		  RTC::RtpStreamRecv* rtpStream,
+		  bool first) override;
 		void OnTransportProducerRtpPacketReceived(
 		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
 		void OnTransportNeedWorstRemoteFractionLost(

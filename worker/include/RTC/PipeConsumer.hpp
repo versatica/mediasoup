@@ -2,7 +2,6 @@
 #define MS_RTC_PIPE_CONSUMER_HPP
 
 #include "RTC/Consumer.hpp"
-#include "RTC/RtpStreamSend.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
 
@@ -23,10 +22,11 @@ namespace RTC
 		void FillJson(json& jsonObject) const override;
 		void FillJsonStats(json& jsonArray) const override;
 		void FillJsonScore(json& jsonObject) const override;
-		void ProducerRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
-		void ProducerNewRtpStream(RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
-		void ProducerRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void ProducerRtcpSenderReport(RTC::RtpStream* rtpStream, bool first) override;
+		void ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
+		void ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
+		void ProducerRtpStreamScore(
+		  RTC::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
+		void ProducerRtcpSenderReport(RTC::RtpStreamRecv* rtpStream, bool first) override;
 		uint8_t GetBitratePriority() const override;
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;

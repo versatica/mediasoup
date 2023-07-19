@@ -1,5 +1,9 @@
 # Changelog
 
+### Next
+
+* `SimulcastConsumer`: Fix lack of "consumerlayerschange" event when all streams in the producer die ([PR #1122](https://github.com/versatica/mediasoup/pull/1122)).
+
 
 ### 3.12.6
 

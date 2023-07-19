@@ -76,6 +76,10 @@ namespace RTC
 		{
 			return this->transmissionCounter.GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
 		}
+		bool HasRtpInactivityCheckEnabled() const
+		{
+			return this->useRtpInactivityCheck;
+		}
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
