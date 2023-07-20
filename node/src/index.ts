@@ -1,6 +1,6 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import { Worker, WorkerSettings } from './Worker';
+import { workerBin, Worker, WorkerSettings } from './Worker';
 import * as utils from './utils';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { RtpCapabilities } from './RtpParameters';
@@ -35,6 +35,11 @@ const observer = new EnhancedEventEmitter<ObserverEvents>();
  * Observer.
  */
 export { observer };
+
+/**
+ * Full path of the mediasoup-worker binary.
+ */
+export { workerBin };
 
 /**
  * Create a Worker.

@@ -195,7 +195,7 @@ export type WorkerObserverEvents =
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
-const workerBin = process.env.MEDIASOUP_WORKER_BIN
+export const workerBin = process.env.MEDIASOUP_WORKER_BIN
 	? process.env.MEDIASOUP_WORKER_BIN
 	: process.env.MEDIASOUP_BUILDTYPE === 'Debug'
 		? path.join(__dirname, '..', '..', 'worker', 'out', 'Debug', 'mediasoup-worker')
