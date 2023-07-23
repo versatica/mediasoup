@@ -1,4 +1,6 @@
-import * as dgram from 'dgram';
+import * as dgram from 'node:dgram';
+import { setInterval } from 'node:timers/promises';
+
 // @ts-ignore
 import * as sctp from 'sctp';
 import * as mediasoup from '../';
@@ -135,38 +137,10 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 	// It must be zero because it's the first DataConsumer on the transport.
 	expect(dataConsumer.sctpStreamParameters?.streamId).toBe(0);
 
-	await new Promise<void>((resolve) =>
+	sctpSocket.on('stream', onStream);
+
+	const sctpSocketPromise = new Promise<void>((resolve) =>
 	{
-		// Send SCTP messages over the sctpSendStream created above.
-		const interval = setInterval(() =>
-		{
-			const id = ++lastSentMessageId;
-			const data = Buffer.from(String(id));
-
-			// Set ppid of type WebRTC DataChannel string.
-			if (id < numMessages / 2)
-			{
-				// @ts-ignore
-				data.ppid = sctp.PPID.WEBRTC_STRING;
-			}
-			// Set ppid of type WebRTC DataChannel binary.
-			else
-			{
-				// @ts-ignore
-				data.ppid = sctp.PPID.WEBRTC_BINARY;
-			}
-
-			sctpSendStream.write(data);
-			sentMessageBytes += data.byteLength;
-
-			if (id === numMessages)
-			{
-				clearInterval(interval);
-			}
-		}, 10);
-
-		sctpSocket.on('stream', onStream);
-
 		// Handle the generated SCTP incoming stream and SCTP messages receives on it.
 		// @ts-ignore
 		sctpSocket.on('stream', (stream, streamId) =>
@@ -184,7 +158,6 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 
 				if (id === numMessages)
 				{
-					clearInterval(interval);
 					resolve();
 				}
 
@@ -203,6 +176,34 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 			});
 		});
 	});
+
+	// Send SCTP messages over the sctpSendStream created above.
+	for await (const _ of setInterval(10))
+	{
+		const id = ++lastSentMessageId;
+		const data = Buffer.from(String(id));
+
+		// Set ppid of type WebRTC DataChannel string.
+		if (id < numMessages / 2)
+		{
+			// @ts-ignore
+			data.ppid = sctp.PPID.WEBRTC_STRING;
+		}
+		// Set ppid of type WebRTC DataChannel binary.
+		else
+		{
+			// @ts-ignore
+			data.ppid = sctp.PPID.WEBRTC_BINARY;
+		}
+
+		sctpSendStream.write(data);
+		sentMessageBytes += data.byteLength;
+
+		if (id === numMessages) { break; }
+	}
+
+	// Wait for all messages to be delivered.
+	await sctpSocketPromise;
 
 	expect(onStream).toHaveBeenCalledTimes(1);
 	expect(lastSentMessageId).toBe(numMessages);

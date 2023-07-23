@@ -1,3 +1,5 @@
+import { setInterval } from 'node:timers/promises';
+
 import * as mediasoup from '../';
 
 const { createWorker } = mediasoup;
@@ -122,35 +124,8 @@ test('dataProducer.send() succeeds', async () =>
 	let lastSentMessageId = 0;
 	let lastRecvMessageId = 0;
 
-	await new Promise<void>((resolve) =>
+	const dataConsumerPromise = new Promise<void>((resolve) =>
 	{
-		// Send messages over the sctpSendStream created above.
-		const interval = setInterval(() =>
-		{
-			const id = ++lastSentMessageId;
-			let ppid;
-			let message;
-
-			// Send string (WebRTC DataChannel string).
-			if (id < numMessages / 2)
-			{
-				message = String(id);
-			}
-			// Send string (WebRTC DataChannel binary).
-			else
-			{
-				message = Buffer.from(String(id));
-			}
-
-			dataProducer.send(message, ppid);
-			sentMessageBytes += Buffer.from(message).byteLength;
-
-			if (id === numMessages)
-			{
-				clearInterval(interval);
-			}
-		}, 0);
-
 		dataConsumer.on('message', (message, ppid) =>
 		{
 			// message is always a Buffer.
@@ -160,7 +135,6 @@ test('dataProducer.send() succeeds', async () =>
 
 			if (id === numMessages)
 			{
-				clearInterval(interval);
 				resolve();
 			}
 
@@ -176,6 +150,33 @@ test('dataProducer.send() succeeds', async () =>
 			expect(id).toBe(++lastRecvMessageId);
 		});
 	});
+
+	// Send messages over the sctpSendStream created above.
+	for await (const _ of setInterval(0))
+	{
+		const id = ++lastSentMessageId;
+		let ppid;
+		let message;
+
+		// Send string (WebRTC DataChannel string).
+		if (id < numMessages / 2)
+		{
+			message = String(id);
+		}
+		// Send string (WebRTC DataChannel binary).
+		else
+		{
+			message = Buffer.from(String(id));
+		}
+
+		dataProducer.send(message, ppid);
+		sentMessageBytes += Buffer.from(message).byteLength;
+
+		if (id === numMessages) { break; }
+	}
+
+	// Wait for all messages to be delivered.
+	await dataConsumerPromise;
 
 	expect(lastSentMessageId).toBe(numMessages);
 	expect(lastRecvMessageId).toBe(numMessages);
