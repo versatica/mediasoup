@@ -152,6 +152,7 @@ test('dataProducer.send() succeeds', async () =>
 	});
 
 	// Send messages over the sctpSendStream created above.
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	for await (const _ of setInterval(0))
 	{
 		const id = ++lastSentMessageId;

@@ -178,6 +178,7 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 	});
 
 	// Send SCTP messages over the sctpSendStream created above.
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	for await (const _ of setInterval(10))
 	{
 		const id = ++lastSentMessageId;
