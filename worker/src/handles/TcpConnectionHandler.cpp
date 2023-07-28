@@ -40,9 +40,16 @@ inline static void onWrite(uv_write_t* req, int status)
 	delete writeData;
 }
 
-inline static void onClose(uv_handle_t* handle)
+// NOTE: We have different onCloseXxx() callbacks to avoid an ASAN warning by
+// ensuring that we call `delete xxx` with same type as `new xxx` before.
+inline static void onCloseTcp(uv_handle_t* handle)
 {
-	delete handle;
+	delete reinterpret_cast<uv_tcp_t*>(handle);
+}
+
+inline static void onCloseShutdown(uv_handle_t* handle)
+{
+	delete reinterpret_cast<uv_shutdown_t*>(handle);
 }
 
 inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
@@ -52,7 +59,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 	delete req;
 
 	// Now do close the handle.
-	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onClose));
+	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onCloseShutdown));
 }
 
 /* Instance methods. */
@@ -114,7 +121,7 @@ void TcpConnectionHandler::Close()
 	// Otherwise directly close the socket.
 	else
 	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 	}
 }
 

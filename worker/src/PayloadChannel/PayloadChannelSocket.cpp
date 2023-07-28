@@ -25,9 +25,9 @@ namespace PayloadChannel
 		}
 	}
 
-	inline static void onClose(uv_handle_t* handle)
+	inline static void onCloseAsync(uv_handle_t* handle)
 	{
-		delete handle;
+		delete reinterpret_cast<uv_async_t*>(handle);
 	}
 
 	/* Instance methods. */
@@ -102,7 +102,8 @@ namespace PayloadChannel
 
 		if (this->uvReadHandle)
 		{
-			uv_close(reinterpret_cast<uv_handle_t*>(this->uvReadHandle), static_cast<uv_close_cb>(onClose));
+			uv_close(
+			  reinterpret_cast<uv_handle_t*>(this->uvReadHandle), static_cast<uv_close_cb>(onCloseAsync));
 		}
 
 		if (this->consumerSocket)

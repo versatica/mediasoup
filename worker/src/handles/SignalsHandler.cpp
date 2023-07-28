@@ -13,9 +13,9 @@ inline static void onSignal(uv_signal_t* handle, int signum)
 	static_cast<SignalsHandler*>(handle->data)->OnUvSignal(signum);
 }
 
-inline static void onClose(uv_handle_t* handle)
+inline static void onCloseSignal(uv_handle_t* handle)
 {
-	delete handle;
+	delete reinterpret_cast<uv_signal_t*>(handle);
 }
 
 /* Instance methods. */
@@ -44,7 +44,7 @@ void SignalsHandler::Close()
 
 	for (auto* uvHandle : this->uvHandles)
 	{
-		uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+		uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseSignal));
 	}
 }
 

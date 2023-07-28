@@ -11,9 +11,9 @@ thread_local uv_loop_t* DepLibUV::loop{ nullptr };
 
 /* Static methods for UV callbacks. */
 
-inline static void onClose(uv_handle_t* handle)
+inline static void onCloseLoop(uv_handle_t* handle)
 {
-	delete handle;
+	delete reinterpret_cast<uv_loop_t*>(handle);
 }
 
 inline static void onWalk(uv_handle_t* handle, void* /*arg*/)
@@ -27,7 +27,7 @@ inline static void onWalk(uv_handle_t* handle, void* /*arg*/)
 	  uv_has_ref(handle));
 
 	if (!uv_is_closing(handle))
-		uv_close(handle, onClose);
+		uv_close(handle, onCloseLoop);
 }
 
 /* Static methods. */
