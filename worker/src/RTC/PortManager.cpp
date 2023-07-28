@@ -12,9 +12,16 @@
 
 /* Static methods for UV callbacks. */
 
-static inline void onClose(uv_handle_t* handle)
+// NOTE: We have different onCloseXxx() callbacks to avoid an ASAN warning by
+// ensuring that we call `delete xxx` with same type as `new xxx` before.
+static inline void onCloseUdp(uv_handle_t* handle)
 {
-	delete handle;
+	delete reinterpret_cast<uv_udp_t*>(handle);
+}
+
+static inline void onCloseTcp(uv_handle_t* handle)
+{
+	delete reinterpret_cast<uv_tcp_t*>(handle);
 }
 
 inline static void onFakeConnection(uv_stream_t* /*handle*/, int /*status*/)
@@ -161,20 +168,41 @@ namespace RTC
 			switch (transport)
 			{
 				case Transport::UDP:
+				{
 					uvHandle = reinterpret_cast<uv_handle_t*>(new uv_udp_t());
 					err      = uv_udp_init_ex(
             DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
+
 					break;
+				}
 
 				case Transport::TCP:
+				{
 					uvHandle = reinterpret_cast<uv_handle_t*>(new uv_tcp_t());
 					err      = uv_tcp_init(DepLibUV::GetLoop(), reinterpret_cast<uv_tcp_t*>(uvHandle));
+
 					break;
+				}
 			}
 
 			if (err != 0)
 			{
-				delete uvHandle;
+				switch (transport)
+				{
+					case Transport::UDP:
+					{
+						delete reinterpret_cast<uv_udp_t*>(uvHandle);
+
+						break;
+					}
+
+					case Transport::TCP:
+					{
+						delete reinterpret_cast<uv_tcp_t*>(uvHandle);
+
+						break;
+					}
+				}
 
 				switch (transport)
 				{
@@ -259,7 +287,22 @@ namespace RTC
 				break;
 
 			// If it failed, close the handle and check the reason.
-			uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+			switch (transport)
+			{
+				case Transport::UDP:
+				{
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseUdp));
+
+					break;
+				};
+
+				case Transport::TCP:
+				{
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
+
+					break;
+				}
+			}
 
 			switch (err)
 			{
@@ -400,7 +443,22 @@ namespace RTC
 
 		if (err != 0)
 		{
-			delete uvHandle;
+			switch (transport)
+			{
+				case Transport::UDP:
+				{
+					delete reinterpret_cast<uv_udp_t*>(uvHandle);
+
+					break;
+				}
+
+				case Transport::TCP:
+				{
+					delete reinterpret_cast<uv_tcp_t*>(uvHandle);
+
+					break;
+				}
+			}
 
 			switch (transport)
 			{
@@ -426,7 +484,7 @@ namespace RTC
 				if (err != 0)
 				{
 					// If it failed, close the handle and check the reason.
-					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseUdp));
 
 					MS_THROW_ERROR(
 					  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
@@ -449,7 +507,7 @@ namespace RTC
 				if (err != 0)
 				{
 					// If it failed, close the handle and check the reason.
-					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 
 					MS_THROW_ERROR(
 					  "uv_tcp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
@@ -469,7 +527,7 @@ namespace RTC
 				if (err != 0)
 				{
 					// If it failed, close the handle and check the reason.
-					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 
 					MS_THROW_ERROR(
 					  "uv_listen() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",

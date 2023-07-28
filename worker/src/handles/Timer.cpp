@@ -13,9 +13,9 @@ inline static void onTimer(uv_timer_t* handle)
 	static_cast<Timer*>(handle->data)->OnUvTimer();
 }
 
-inline static void onClose(uv_handle_t* handle)
+inline static void onCloseTimer(uv_handle_t* handle)
 {
-	delete handle;
+	delete reinterpret_cast<uv_timer_t*>(handle);
 }
 
 /* Instance methods. */
@@ -59,7 +59,7 @@ void Timer::Close()
 
 	this->closed = true;
 
-	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTimer));
 }
 
 void Timer::Start(uint64_t timeout, uint64_t repeat)
