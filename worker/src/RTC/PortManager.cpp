@@ -193,6 +193,8 @@ namespace RTC
 					{
 						delete reinterpret_cast<uv_udp_t*>(uvHandle);
 
+						MS_THROW_ERROR("uv_udp_init_ex() failed: %s", uv_strerror(err));
+
 						break;
 					}
 
@@ -200,19 +202,10 @@ namespace RTC
 					{
 						delete reinterpret_cast<uv_tcp_t*>(uvHandle);
 
+						MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
+
 						break;
 					}
-				}
-
-				switch (transport)
-				{
-					case Transport::UDP:
-						MS_THROW_ERROR("uv_udp_init_ex() failed: %s", uv_strerror(err));
-						break;
-
-					case Transport::TCP:
-						MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
-						break;
 				}
 			}
 
@@ -449,6 +442,8 @@ namespace RTC
 				{
 					delete reinterpret_cast<uv_udp_t*>(uvHandle);
 
+					MS_THROW_ERROR("uv_udp_init_ex() failed: %s", uv_strerror(err));
+
 					break;
 				}
 
@@ -456,19 +451,10 @@ namespace RTC
 				{
 					delete reinterpret_cast<uv_tcp_t*>(uvHandle);
 
+					MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
+
 					break;
 				}
-			}
-
-			switch (transport)
-			{
-				case Transport::UDP:
-					MS_THROW_ERROR("uv_udp_init_ex() failed: %s", uv_strerror(err));
-					break;
-
-				case Transport::TCP:
-					MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
-					break;
 			}
 		}
 
