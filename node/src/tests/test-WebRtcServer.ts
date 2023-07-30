@@ -1,11 +1,10 @@
 // @ts-ignore
 import * as pickPort from 'pick-port';
 import * as mediasoup from '../';
-import { InvalidStateError } from '../errors';
 
-const { createWorker } = mediasoup;
+const { createWorker, types: { InvalidStateError, Worker } } = mediasoup;
 
-let worker: mediasoup.types.Worker;
+let worker: Worker;
 
 beforeEach(() => worker && !worker.closed && worker.close());
 afterEach(() => worker && !worker.closed && worker.close());

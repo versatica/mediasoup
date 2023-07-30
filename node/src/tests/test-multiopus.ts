@@ -1,7 +1,6 @@
 import * as mediasoup from '../';
-import { UnsupportedError } from '../errors';
 
-const { createWorker } = mediasoup;
+const { createWorker, types: { UnsupportedError } } = mediasoup;
 
 let worker: mediasoup.types.Worker;
 let router: mediasoup.types.Router;

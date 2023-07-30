@@ -2,11 +2,12 @@ import * as os from 'os';
 import * as process from 'process';
 import * as path from 'path';
 import * as mediasoup from '../';
-import { InvalidStateError } from '../errors';
 
-const { createWorker, observer } = mediasoup;
+const {
+	createWorker, observer, types: { InvalidStateError, Worker }
+} = mediasoup;
 
-let worker: mediasoup.types.Worker;
+let worker: Worker;
 
 beforeEach(() => worker && !worker.closed && worker.close());
 afterEach(() => worker && !worker.closed && worker.close());

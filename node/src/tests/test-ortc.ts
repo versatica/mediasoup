@@ -1,6 +1,7 @@
 import * as mediasoup from '../';
 import * as ortc from '../ortc';
-import { UnsupportedError } from '../errors';
+
+const { types: { UnsupportedError } } = mediasoup;
 
 test('generateRouterRtpCapabilities() succeeds', () =>
 {

@@ -1,7 +1,6 @@
 import * as mediasoup from '../';
-import { InvalidStateError } from '../errors';
 
-const { createWorker } = mediasoup;
+const { createWorker, types: { InvalidStateError } } = mediasoup;
 
 let worker: mediasoup.types.Worker;
 
