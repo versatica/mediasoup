@@ -11,7 +11,6 @@
 /node/src/fbs
 
 ## Rust.
-/Cargo.lock
 /rust/examples-frontend/*/node_modules
 /rust/examples-frontend/*/package-lock.json
 /target
