@@ -4,15 +4,19 @@
 #[cfg(test)]
 mod tests;
 
+use crate::fbs::rtp_parameters;
 use crate::scalability_modes::ScalabilityMode;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
+use std::error::Error;
 use std::fmt;
 use std::iter::FromIterator;
 use std::num::{NonZeroU32, NonZeroU8};
+use std::str::FromStr;
+use thiserror::Error;
 
 /// Codec specific parameters. Some parameters (such as `packetization-mode` and `profile-level-id`
 /// in H264 or `profile-id` in VP9) are critical for codec matching.
@@ -200,6 +204,17 @@ pub enum MediaKind {
     Video,
 }
 
+/// Error that caused [`MimeType`] parsing error.
+#[derive(Debug, Error, Eq, PartialEq)]
+pub enum ParseMimeTypeError {
+    /// Invalid input string
+    #[error("Invalid input string")]
+    InvalidInput,
+    /// Unknown MIME type
+    #[error("Unknown MIME type")]
+    UnknownMimeType,
+}
+
 /// Known Audio or Video MIME type.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
@@ -208,6 +223,30 @@ pub enum MimeType {
     Audio(MimeTypeAudio),
     /// Video
     Video(MimeTypeVideo),
+}
+
+impl FromStr for MimeType {
+    type Err = ParseMimeTypeError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.starts_with("audio/") {
+            MimeTypeAudio::from_str(s).map(Self::Audio)
+        } else if s.starts_with("video/") {
+            MimeTypeVideo::from_str(s).map(Self::Video)
+        } else {
+            Err(ParseMimeTypeError::InvalidInput)
+        }
+    }
+}
+
+impl MimeType {
+    /// String representation of MIME type.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Audio(mime_type) => mime_type.as_str(),
+            Self::Video(mime_type) => mime_type.as_str(),
+        }
+    }
 }
 
 /// Known Audio MIME types.
@@ -252,6 +291,52 @@ pub enum MimeTypeAudio {
     Red,
 }
 
+impl FromStr for MimeTypeAudio {
+    type Err = ParseMimeTypeError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "audio/opus" => Ok(Self::Opus),
+            "audio/multiopus" => Ok(Self::MultiChannelOpus),
+            "audio/PCMU" => Ok(Self::Pcmu),
+            "audio/PCMA" => Ok(Self::Pcma),
+            "audio/ISAC" => Ok(Self::Isac),
+            "audio/G722" => Ok(Self::G722),
+            "audio/iLBC" => Ok(Self::Ilbc),
+            "audio/SILK" => Ok(Self::Silk),
+            "audio/CN" => Ok(Self::Cn),
+            "audio/telephone-event" => Ok(Self::TelephoneEvent),
+            "audio/rtx" => Ok(Self::Rtx),
+            "audio/red" => Ok(Self::Red),
+            s => Err(if s.starts_with("audio/") {
+                ParseMimeTypeError::UnknownMimeType
+            } else {
+                ParseMimeTypeError::InvalidInput
+            }),
+        }
+    }
+}
+
+impl MimeTypeAudio {
+    /// String representation of MIME type.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Opus => "audio/opus",
+            Self::MultiChannelOpus => "audio/multiopus",
+            Self::Pcmu => "audio/PCMU",
+            Self::Pcma => "audio/PCMA",
+            Self::Isac => "audio/ISAC",
+            Self::G722 => "audio/G722",
+            Self::Ilbc => "audio/iLBC",
+            Self::Silk => "audio/SILK",
+            Self::Cn => "audio/CN",
+            Self::TelephoneEvent => "audio/telephone-event",
+            Self::Rtx => "audio/rtx",
+            Self::Red => "audio/red",
+        }
+    }
+}
+
 /// Known Video MIME types.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub enum MimeTypeVideo {
@@ -279,6 +364,44 @@ pub enum MimeTypeVideo {
     /// ULPFEC
     #[serde(rename = "video/ulpfec")]
     Ulpfec,
+}
+
+impl FromStr for MimeTypeVideo {
+    type Err = ParseMimeTypeError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "video/VP8" => Ok(Self::Vp8),
+            "video/VP9" => Ok(Self::Vp9),
+            "video/H264" => Ok(Self::H264),
+            "video/H264-SVC" => Ok(Self::H264Svc),
+            "video/H265" => Ok(Self::H265),
+            "video/rtx" => Ok(Self::Rtx),
+            "video/red" => Ok(Self::Red),
+            "video/ulpfec" => Ok(Self::Ulpfec),
+            s => Err(if s.starts_with("video/") {
+                ParseMimeTypeError::UnknownMimeType
+            } else {
+                ParseMimeTypeError::InvalidInput
+            }),
+        }
+    }
+}
+
+impl MimeTypeVideo {
+    /// String representation of MIME type.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Vp8 => "video/VP8",
+            Self::Vp9 => "video/VP9",
+            Self::H264 => "video/H264",
+            Self::H264Svc => "video/H264-SVC",
+            Self::H265 => "video/H265",
+            Self::Rtx => "video/rtx",
+            Self::Red => "video/red",
+            Self::Ulpfec => "video/ulpfec",
+        }
+    }
 }
 
 /// Provides information on the capabilities of a codec within the RTP capabilities. The list of
@@ -402,6 +525,14 @@ impl Default for RtpHeaderExtensionDirection {
     }
 }
 
+/// Error that caused [`RtpHeaderExtensionUri`] parsing error.
+#[derive(Debug, Error, Eq, PartialEq)]
+pub enum RtpHeaderExtensionUriParseError {
+    /// Unsupported
+    #[error("Unsupported")]
+    Unsupported,
+}
+
 /// URI for supported RTP header extension
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub enum RtpHeaderExtensionUri {
@@ -441,6 +572,33 @@ pub enum RtpHeaderExtensionUri {
     #[doc(hidden)]
     #[serde(other, rename = "unsupported")]
     Unsupported,
+}
+
+impl FromStr for RtpHeaderExtensionUri {
+    type Err = RtpHeaderExtensionUriParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "urn:ietf:params:rtp-hdrext:sdes:mid" => Ok(Self::Mid),
+            "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id" => Ok(Self::RtpStreamId),
+            "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id" => Ok(Self::RepairRtpStreamId),
+            "http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07" => {
+                Ok(Self::FrameMarkingDraft07)
+            }
+            "urn:ietf:params:rtp-hdrext:framemarking" => Ok(Self::FrameMarking),
+            "urn:ietf:params:rtp-hdrext:ssrc-audio-level" => Ok(Self::AudioLevel),
+            "urn:3gpp:video-orientation" => Ok(Self::VideoOrientation),
+            "urn:ietf:params:rtp-hdrext:toffset" => Ok(Self::TimeOffset),
+            "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01" => {
+                Ok(Self::TransportWideCcDraft01)
+            }
+            "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time" => Ok(Self::AbsSendTime),
+            "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time" => {
+                Ok(Self::AbsCaptureTime)
+            }
+            _ => Err(RtpHeaderExtensionUriParseError::Unsupported),
+        }
+    }
 }
 
 impl RtpHeaderExtensionUri {
@@ -543,6 +701,216 @@ pub struct RtpParameters {
     pub encodings: Vec<RtpEncodingParameters>,
     /// Parameters used for RTCP.
     pub rtcp: RtcpParameters,
+}
+
+impl RtpParameters {
+    pub(crate) fn from_fbs(
+        rtp_parameters: rtp_parameters::RtpParameters,
+    ) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            mid: rtp_parameters.mid,
+            codecs: rtp_parameters
+                .codecs
+                .into_iter()
+                .map(|codec| {
+                    let parameters = codec
+                        .parameters
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(|parameters| {
+                            Ok((
+                                Cow::Owned(parameters.name),
+                                match parameters.value.ok_or("Value must always be specified")? {
+                                    rtp_parameters::Value::Boolean(_)
+                                    | rtp_parameters::Value::Double(_)
+                                    | rtp_parameters::Value::IntegerArray(_) => {
+                                        // TODO: Above value variant should not exist in the
+                                        //  first place
+                                        panic!("Invalid parameter")
+                                    }
+                                    rtp_parameters::Value::Integer(n) => {
+                                        RtpCodecParametersParametersValue::Number(
+                                            n.value.try_into()?,
+                                        )
+                                    }
+                                    rtp_parameters::Value::String(s) => {
+                                        RtpCodecParametersParametersValue::String(
+                                            s.value.unwrap_or_default().into(),
+                                        )
+                                    }
+                                },
+                            ))
+                        })
+                        .collect::<Result<_, Box<dyn Error>>>()?;
+                    let rtcp_feedback = codec
+                        .rtcp_feedback
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(|rtcp_feedback| {
+                            RtcpFeedback::from_type_parameter(
+                                &rtcp_feedback.type_,
+                                &rtcp_feedback.parameter.unwrap_or_default(),
+                            )
+                        })
+                        .collect::<Result<_, _>>()?;
+
+                    Ok(match MimeType::from_str(&codec.mime_type)? {
+                        MimeType::Audio(mime_type) => RtpCodecParameters::Audio {
+                            mime_type,
+                            payload_type: codec.payload_type,
+                            clock_rate: codec.clock_rate.try_into()?,
+                            channels: codec
+                                .channels
+                                .ok_or("Audio must have channels specified")?
+                                .try_into()?,
+                            parameters,
+                            rtcp_feedback: vec![],
+                        },
+                        MimeType::Video(mime_type) => RtpCodecParameters::Video {
+                            mime_type,
+                            payload_type: codec.payload_type,
+                            clock_rate: codec.clock_rate.try_into()?,
+                            parameters,
+                            rtcp_feedback,
+                        },
+                    })
+                })
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            header_extensions: rtp_parameters
+                .header_extensions
+                .unwrap_or_default()
+                .into_iter()
+                .map(|header_extension_parameters| {
+                    Ok(RtpHeaderExtensionParameters {
+                        uri: header_extension_parameters.uri.parse()?,
+                        id: u16::from(header_extension_parameters.id),
+                        encrypt: header_extension_parameters.encrypt,
+                    })
+                })
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            encodings: rtp_parameters
+                .encodings
+                .unwrap_or_default()
+                .into_iter()
+                .map(|encoding| {
+                    Ok(RtpEncodingParameters {
+                        ssrc: encoding.ssrc,
+                        rid: encoding.rid,
+                        codec_payload_type: encoding.codec_payload_type,
+                        rtx: encoding
+                            .rtx
+                            .map(|rtx| RtpEncodingParametersRtx { ssrc: rtx.ssrc }),
+                        dtx: Some(encoding.dtx),
+                        scalability_mode: encoding.scalability_mode.unwrap_or_default().parse()?,
+                        scale_resolution_down_by: None,
+                        max_bitrate: encoding.max_bitrate,
+                    })
+                })
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            rtcp: rtp_parameters
+                .rtcp
+                .map(|rtcp| RtcpParameters {
+                    cname: rtcp.cname,
+                    reduced_size: rtcp.reduced_size,
+                    mux: None,
+                })
+                .unwrap_or_default(),
+        })
+    }
+
+    pub(crate) fn into_fbs(self) -> rtp_parameters::RtpParameters {
+        rtp_parameters::RtpParameters {
+            mid: self.mid,
+            codecs: self
+                .codecs
+                .into_iter()
+                .map(|codec| rtp_parameters::RtpCodecParameters {
+                    mime_type: codec.mime_type().as_str().to_string(),
+                    payload_type: codec.payload_type(),
+                    clock_rate: codec.clock_rate().get(),
+                    channels: match &codec {
+                        RtpCodecParameters::Audio { channels, .. } => Some(channels.get()),
+                        RtpCodecParameters::Video { .. } => None,
+                    },
+                    parameters: Some(
+                        codec
+                            .parameters()
+                            .iter()
+                            .map(|(name, value)| rtp_parameters::Parameter {
+                                name: name.to_string(),
+                                value: Some(match value {
+                                    RtpCodecParametersParametersValue::String(s) => {
+                                        rtp_parameters::Value::String(Box::new(
+                                            rtp_parameters::String {
+                                                value: Some(s.to_string()),
+                                            },
+                                        ))
+                                    }
+                                    RtpCodecParametersParametersValue::Number(n) => {
+                                        rtp_parameters::Value::Integer(Box::new(
+                                            rtp_parameters::Integer { value: *n as i32 },
+                                        ))
+                                    }
+                                }),
+                            })
+                            .collect(),
+                    ),
+                    rtcp_feedback: match &codec {
+                        RtpCodecParameters::Audio { .. } => None,
+                        RtpCodecParameters::Video { rtcp_feedback, .. } => Some(
+                            rtcp_feedback
+                                .iter()
+                                .map(|rtcp_feedback| {
+                                    let (r#type, parameter) = rtcp_feedback.as_type_parameter();
+                                    rtp_parameters::RtcpFeedback {
+                                        type_: r#type.to_string(),
+                                        parameter: Some(parameter.to_string()),
+                                    }
+                                })
+                                .collect(),
+                        ),
+                    },
+                })
+                .collect(),
+            header_extensions: Some(
+                self.header_extensions
+                    .into_iter()
+                    .map(|header_extension_parameters| {
+                        rtp_parameters::RtpHeaderExtensionParameters {
+                            uri: header_extension_parameters.uri.as_str().to_string(),
+                            id: header_extension_parameters.id as u8,
+                            encrypt: header_extension_parameters.encrypt,
+                            parameters: None,
+                        }
+                    })
+                    .collect(),
+            ),
+            encodings: Some(
+                self.encodings
+                    .into_iter()
+                    .map(|encoding| rtp_parameters::RtpEncodingParameters {
+                        ssrc: encoding.ssrc,
+                        rid: encoding.rid,
+                        codec_payload_type: encoding.codec_payload_type,
+                        rtx: encoding
+                            .rtx
+                            .map(|rtx| Box::new(rtp_parameters::Rtx { ssrc: rtx.ssrc })),
+                        dtx: encoding.dtx.unwrap_or_default(),
+                        scalability_mode: if encoding.scalability_mode.is_none() {
+                            None
+                        } else {
+                            Some(encoding.scalability_mode.as_str().to_string())
+                        },
+                        max_bitrate: encoding.max_bitrate,
+                    })
+                    .collect(),
+            ),
+            rtcp: Some(Box::new(rtp_parameters::RtcpParameters {
+                cname: self.rtcp.cname,
+                reduced_size: self.rtcp.reduced_size,
+            })),
+        }
+    }
 }
 
 /// Single value used in RTP codec parameters.
@@ -654,6 +1022,11 @@ impl RtpCodecParameters {
         *payload_type
     }
 
+    pub(crate) fn clock_rate(&self) -> NonZeroU32 {
+        let (Self::Audio { clock_rate, .. } | Self::Video { clock_rate, .. }) = self;
+        *clock_rate
+    }
+
     pub(crate) fn parameters(&self) -> &RtpCodecParametersParameters {
         let (Self::Audio { parameters, .. } | Self::Video { parameters, .. }) = self;
         parameters
@@ -690,32 +1063,9 @@ impl Serialize for RtcpFeedback {
         S: Serializer,
     {
         let mut rtcp_feedback = serializer.serialize_struct("RtcpFeedback", 2)?;
-        match self {
-            RtcpFeedback::Nack => {
-                rtcp_feedback.serialize_field("type", "nack")?;
-                rtcp_feedback.serialize_field("parameter", "")?;
-            }
-            RtcpFeedback::NackPli => {
-                rtcp_feedback.serialize_field("type", "nack")?;
-                rtcp_feedback.serialize_field("parameter", "pli")?;
-            }
-            RtcpFeedback::CcmFir => {
-                rtcp_feedback.serialize_field("type", "ccm")?;
-                rtcp_feedback.serialize_field("parameter", "fir")?;
-            }
-            RtcpFeedback::GoogRemb => {
-                rtcp_feedback.serialize_field("type", "goog-remb")?;
-                rtcp_feedback.serialize_field("parameter", "")?;
-            }
-            RtcpFeedback::TransportCc => {
-                rtcp_feedback.serialize_field("type", "transport-cc")?;
-                rtcp_feedback.serialize_field("parameter", "")?;
-            }
-            RtcpFeedback::Unsupported => {
-                rtcp_feedback.serialize_field("type", "unknown")?;
-                rtcp_feedback.serialize_field("parameter", "")?;
-            }
-        }
+        let (r#type, parameter) = self.as_type_parameter();
+        rtcp_feedback.serialize_field("type", r#type)?;
+        rtcp_feedback.serialize_field("parameter", parameter)?;
         rtcp_feedback.end()
     }
 }
@@ -767,19 +1117,51 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
                 }
                 let r#type = r#type.ok_or_else(|| de::Error::missing_field("type"))?;
 
-                Ok(match (r#type.as_ref(), parameter.as_ref()) {
-                    ("nack", "") => RtcpFeedback::Nack,
-                    ("nack", "pli") => RtcpFeedback::NackPli,
-                    ("ccm", "fir") => RtcpFeedback::CcmFir,
-                    ("goog-remb", "") => RtcpFeedback::GoogRemb,
-                    ("transport-cc", "") => RtcpFeedback::TransportCc,
-                    _ => RtcpFeedback::Unsupported,
-                })
+                Ok(
+                    RtcpFeedback::from_type_parameter(r#type.as_ref(), parameter.as_ref())
+                        .unwrap_or(RtcpFeedback::Unsupported),
+                )
             }
         }
 
         const FIELDS: &[&str] = &["type", "parameter"];
         deserializer.deserialize_struct("RtcpFeedback", FIELDS, RtcpFeedbackVisitor)
+    }
+}
+
+/// Error of failure to create [`RtcpFeedback`] from type and parameter.
+#[derive(Debug, Error, Eq, PartialEq)]
+pub enum RtcpFeedbackFromTypeParameterError {
+    /// Unsupported
+    #[error("Unsupported")]
+    Unsupported,
+}
+
+impl RtcpFeedback {
+    pub(crate) fn from_type_parameter(
+        r#type: &str,
+        parameter: &str,
+    ) -> Result<Self, RtcpFeedbackFromTypeParameterError> {
+        match (r#type, parameter) {
+            ("nack", "") => Ok(RtcpFeedback::Nack),
+            ("nack", "pli") => Ok(RtcpFeedback::NackPli),
+            ("ccm", "fir") => Ok(RtcpFeedback::CcmFir),
+            ("goog-remb", "") => Ok(RtcpFeedback::GoogRemb),
+            ("transport-cc", "") => Ok(RtcpFeedback::TransportCc),
+            ("unknown", "") => Ok(RtcpFeedback::Unsupported),
+            _ => Err(RtcpFeedbackFromTypeParameterError::Unsupported),
+        }
+    }
+
+    pub(crate) fn as_type_parameter(&self) -> (&'static str, &'static str) {
+        match self {
+            RtcpFeedback::Nack => ("nack", ""),
+            RtcpFeedback::NackPli => ("nack", "pli"),
+            RtcpFeedback::CcmFir => ("ccm", "fir"),
+            RtcpFeedback::GoogRemb => ("goog-remb", ""),
+            RtcpFeedback::TransportCc => ("transport-cc", ""),
+            RtcpFeedback::Unsupported => ("unknown", ""),
+        }
     }
 }
 
