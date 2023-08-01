@@ -804,14 +804,10 @@ impl RtpParameters {
                     })
                 })
                 .collect::<Result<_, Box<dyn Error>>>()?,
-            rtcp: rtp_parameters
-                .rtcp
-                .map(|rtcp| RtcpParameters {
-                    cname: rtcp.cname,
-                    reduced_size: rtcp.reduced_size,
-                    mux: None,
-                })
-                .unwrap_or_default(),
+            rtcp: RtcpParameters {
+                cname: rtp_parameters.rtcp.cname,
+                reduced_size: rtp_parameters.rtcp.reduced_size,
+            },
         })
     }
 
@@ -901,10 +897,10 @@ impl RtpParameters {
                     max_bitrate: encoding.max_bitrate,
                 })
                 .collect(),
-            rtcp: Some(Box::new(rtp_parameters::RtcpParameters {
+            rtcp: Box::new(rtp_parameters::RtcpParameters {
                 cname: self.rtcp.cname,
                 reduced_size: self.rtcp.reduced_size,
-            })),
+            }),
         }
     }
 }
@@ -1236,9 +1232,6 @@ pub struct RtcpParameters {
     /// Whether reduced size RTCP RFC 5506 is configured (if true) or compound RTCP
     /// as specified in RFC 3550 (if false). Default true.
     pub reduced_size: bool,
-    /// Whether RTCP-mux is used. Default true.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mux: Option<bool>,
 }
 
 impl Default for RtcpParameters {
@@ -1246,7 +1239,6 @@ impl Default for RtcpParameters {
         Self {
             cname: None,
             reduced_size: true,
-            mux: None,
         }
     }
 }

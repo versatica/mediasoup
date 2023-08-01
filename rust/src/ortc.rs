@@ -603,7 +603,6 @@ pub(crate) fn get_consumable_rtp_parameters(
     consumable_params.rtcp = RtcpParameters {
         cname: params.rtcp.cname.clone(),
         reduced_size: true,
-        mux: Some(true),
     };
 
     consumable_params

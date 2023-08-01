@@ -16797,7 +16797,7 @@ mod root {
                 /// The field `encodings` in the table `RtpParameters`
                 pub encodings: ::planus::alloc::vec::Vec<self::RtpEncodingParameters>,
                 /// The field `rtcp` in the table `RtpParameters`
-                pub rtcp: ::core::option::Option<::planus::alloc::boxed::Box<self::RtcpParameters>>,
+                pub rtcp: ::planus::alloc::boxed::Box<self::RtcpParameters>,
             }
 
             impl RtpParameters {
@@ -16820,7 +16820,7 @@ mod root {
                     field_encodings: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>,
                     >,
-                    field_rtcp: impl ::planus::WriteAsOptional<::planus::Offset<self::RtcpParameters>>,
+                    field_rtcp: impl ::planus::WriteAs<::planus::Offset<self::RtcpParameters>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_mid = field_mid.prepare(builder);
                     let prepared_codecs = field_codecs.prepare(builder);
@@ -16840,9 +16840,7 @@ mod root {
                         >>(2);
                     }
                     table_writer.write_entry::<::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>>(3);
-                    if prepared_rtcp.is_some() {
-                        table_writer.write_entry::<::planus::Offset<self::RtcpParameters>>(4);
-                    }
+                    table_writer.write_entry::<::planus::Offset<self::RtcpParameters>>(4);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
@@ -16856,9 +16854,7 @@ mod root {
                                 object_writer.write::<_, _, 4>(&prepared_header_extensions);
                             }
                             object_writer.write::<_, _, 4>(&prepared_encodings);
-                            if let ::core::option::Option::Some(prepared_rtcp) = prepared_rtcp {
-                                object_writer.write::<_, _, 4>(&prepared_rtcp);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_rtcp);
                         });
                     }
                     builder.current_offset()
@@ -16990,17 +16986,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn rtcp<T4>(self, value: T4) -> RtpParametersBuilder<(T0, T1, T2, T3, T4)>
                 where
-                    T4: ::planus::WriteAsOptional<::planus::Offset<self::RtcpParameters>>,
+                    T4: ::planus::WriteAs<::planus::Offset<self::RtcpParameters>>,
                 {
                     let (v0, v1, v2, v3) = self.0;
                     RtpParametersBuilder((v0, v1, v2, v3, value))
-                }
-
-                /// Sets the [`rtcp` field](RtpParameters#structfield.rtcp) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn rtcp_as_null(self) -> RtpParametersBuilder<(T0, T1, T2, T3, ())> {
-                    self.rtcp(())
                 }
             }
 
@@ -17029,7 +17018,7 @@ mod root {
                     T3: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>,
                     >,
-                    T4: ::planus::WriteAsOptional<::planus::Offset<self::RtcpParameters>>,
+                    T4: ::planus::WriteAs<::planus::Offset<self::RtcpParameters>>,
                 > ::planus::WriteAs<::planus::Offset<RtpParameters>>
                 for RtpParametersBuilder<(T0, T1, T2, T3, T4)>
             {
@@ -17055,7 +17044,7 @@ mod root {
                     T3: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>,
                     >,
-                    T4: ::planus::WriteAsOptional<::planus::Offset<self::RtcpParameters>>,
+                    T4: ::planus::WriteAs<::planus::Offset<self::RtcpParameters>>,
                 > ::planus::WriteAsOptional<::planus::Offset<RtpParameters>>
                 for RtpParametersBuilder<(T0, T1, T2, T3, T4)>
             {
@@ -17081,7 +17070,7 @@ mod root {
                     T3: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>,
                     >,
-                    T4: ::planus::WriteAsOptional<::planus::Offset<self::RtcpParameters>>,
+                    T4: ::planus::WriteAs<::planus::Offset<self::RtcpParameters>>,
                 > ::planus::WriteAsOffset<RtpParameters>
                 for RtpParametersBuilder<(T0, T1, T2, T3, T4)>
             {
@@ -17146,11 +17135,8 @@ mod root {
 
                 /// Getter for the [`rtcp` field](RtpParameters#structfield.rtcp).
                 #[inline]
-                pub fn rtcp(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<self::RtcpParametersRef<'a>>>
-                {
-                    self.0.access(4, "RtpParameters", "rtcp")
+                pub fn rtcp(&self) -> ::planus::Result<self::RtcpParametersRef<'a>> {
+                    self.0.access_required(4, "RtpParameters", "rtcp")
                 }
             }
 
@@ -17167,9 +17153,7 @@ mod root {
                         f.field("header_extensions", &field_header_extensions);
                     }
                     f.field("encodings", &self.encodings());
-                    if let ::core::option::Option::Some(field_rtcp) = self.rtcp().transpose() {
-                        f.field("rtcp", &field_rtcp);
-                    }
+                    f.field("rtcp", &self.rtcp());
                     f.finish()
                 }
             }
@@ -17194,13 +17178,9 @@ mod root {
                             ::core::option::Option::None
                         },
                         encodings: value.encodings()?.to_vec_result()?,
-                        rtcp: if let ::core::option::Option::Some(rtcp) = value.rtcp()? {
-                            ::core::option::Option::Some(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryInto::try_into(rtcp)?,
-                            ))
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        rtcp: ::planus::alloc::boxed::Box::new(::core::convert::TryInto::try_into(
+                            value.rtcp()?,
+                        )?),
                     })
                 }
             }

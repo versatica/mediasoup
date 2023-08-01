@@ -83,7 +83,7 @@ table RtpParameters {
   codecs:[RtpCodecParameters] (required);
   header_extensions:[RtpHeaderExtensionParameters];
   encodings:[RtpEncodingParameters] (required);
-  rtcp:RtcpParameters;
+  rtcp:RtcpParameters (required);
 }
 
 table CodecMapping {
