@@ -776,7 +776,6 @@ impl RtpParameters {
                 .collect::<Result<_, Box<dyn Error>>>()?,
             header_extensions: rtp_parameters
                 .header_extensions
-                .unwrap_or_default()
                 .into_iter()
                 .map(|header_extension_parameters| {
                     Ok(RtpHeaderExtensionParameters {
@@ -864,19 +863,18 @@ impl RtpParameters {
                     },
                 })
                 .collect(),
-            header_extensions: Some(
-                self.header_extensions
-                    .into_iter()
-                    .map(|header_extension_parameters| {
-                        rtp_parameters::RtpHeaderExtensionParameters {
-                            uri: header_extension_parameters.uri.as_str().to_string(),
-                            id: header_extension_parameters.id as u8,
-                            encrypt: header_extension_parameters.encrypt,
-                            parameters: None,
-                        }
-                    })
-                    .collect(),
-            ),
+            header_extensions: self
+                .header_extensions
+                .into_iter()
+                .map(
+                    |header_extension_parameters| rtp_parameters::RtpHeaderExtensionParameters {
+                        uri: header_extension_parameters.uri.as_str().to_string(),
+                        id: header_extension_parameters.id as u8,
+                        encrypt: header_extension_parameters.encrypt,
+                        parameters: None,
+                    },
+                )
+                .collect(),
             encodings: self
                 .encodings
                 .into_iter()

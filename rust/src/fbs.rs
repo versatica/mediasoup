@@ -16791,9 +16791,8 @@ mod root {
                 /// The field `codecs` in the table `RtpParameters`
                 pub codecs: ::planus::alloc::vec::Vec<self::RtpCodecParameters>,
                 /// The field `header_extensions` in the table `RtpParameters`
-                pub header_extensions: ::core::option::Option<
+                pub header_extensions:
                     ::planus::alloc::vec::Vec<self::RtpHeaderExtensionParameters>,
-                >,
                 /// The field `encodings` in the table `RtpParameters`
                 pub encodings: ::planus::alloc::vec::Vec<self::RtpEncodingParameters>,
                 /// The field `rtcp` in the table `RtpParameters`
@@ -16814,7 +16813,7 @@ mod root {
                     field_codecs: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpCodecParameters>]>,
                     >,
-                    field_header_extensions: impl ::planus::WriteAsOptional<
+                    field_header_extensions: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpHeaderExtensionParameters>]>,
                     >,
                     field_encodings: impl ::planus::WriteAs<
@@ -16834,11 +16833,9 @@ mod root {
                         table_writer.write_entry::<::planus::Offset<str>>(0);
                     }
                     table_writer.write_entry::<::planus::Offset<[::planus::Offset<self::RtpCodecParameters>]>>(1);
-                    if prepared_header_extensions.is_some() {
-                        table_writer.write_entry::<::planus::Offset<
-                            [::planus::Offset<self::RtpHeaderExtensionParameters>],
-                        >>(2);
-                    }
+                    table_writer.write_entry::<::planus::Offset<
+                        [::planus::Offset<self::RtpHeaderExtensionParameters>],
+                    >>(2);
                     table_writer.write_entry::<::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>>(3);
                     table_writer.write_entry::<::planus::Offset<self::RtcpParameters>>(4);
 
@@ -16848,11 +16845,7 @@ mod root {
                                 object_writer.write::<_, _, 4>(&prepared_mid);
                             }
                             object_writer.write::<_, _, 4>(&prepared_codecs);
-                            if let ::core::option::Option::Some(prepared_header_extensions) =
-                                prepared_header_extensions
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_header_extensions);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_header_extensions);
                             object_writer.write::<_, _, 4>(&prepared_encodings);
                             object_writer.write::<_, _, 4>(&prepared_rtcp);
                         });
@@ -16949,19 +16942,12 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn header_extensions<T2>(self, value: T2) -> RtpParametersBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAsOptional<
+                    T2: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpHeaderExtensionParameters>]>,
                     >,
                 {
                     let (v0, v1) = self.0;
                     RtpParametersBuilder((v0, v1, value))
-                }
-
-                /// Sets the [`header_extensions` field](RtpParameters#structfield.header_extensions) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn header_extensions_as_null(self) -> RtpParametersBuilder<(T0, T1, ())> {
-                    self.header_extensions(())
                 }
             }
 
@@ -17012,7 +16998,7 @@ mod root {
                     T1: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpCodecParameters>]>,
                     >,
-                    T2: ::planus::WriteAsOptional<
+                    T2: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpHeaderExtensionParameters>]>,
                     >,
                     T3: ::planus::WriteAs<
@@ -17038,7 +17024,7 @@ mod root {
                     T1: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpCodecParameters>]>,
                     >,
-                    T2: ::planus::WriteAsOptional<
+                    T2: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpHeaderExtensionParameters>]>,
                     >,
                     T3: ::planus::WriteAs<
@@ -17064,7 +17050,7 @@ mod root {
                     T1: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpCodecParameters>]>,
                     >,
-                    T2: ::planus::WriteAsOptional<
+                    T2: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpHeaderExtensionParameters>]>,
                     >,
                     T3: ::planus::WriteAs<
@@ -17113,14 +17099,13 @@ mod root {
                 pub fn header_extensions(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<
-                            'a,
-                            ::planus::Result<self::RtpHeaderExtensionParametersRef<'a>>,
-                        >,
+                    ::planus::Vector<
+                        'a,
+                        ::planus::Result<self::RtpHeaderExtensionParametersRef<'a>>,
                     >,
                 > {
-                    self.0.access(2, "RtpParameters", "header_extensions")
+                    self.0
+                        .access_required(2, "RtpParameters", "header_extensions")
                 }
 
                 /// Getter for the [`encodings` field](RtpParameters#structfield.encodings).
@@ -17147,11 +17132,7 @@ mod root {
                         f.field("mid", &field_mid);
                     }
                     f.field("codecs", &self.codecs());
-                    if let ::core::option::Option::Some(field_header_extensions) =
-                        self.header_extensions().transpose()
-                    {
-                        f.field("header_extensions", &field_header_extensions);
-                    }
+                    f.field("header_extensions", &self.header_extensions());
                     f.field("encodings", &self.encodings());
                     f.field("rtcp", &self.rtcp());
                     f.finish()
@@ -17170,13 +17151,7 @@ mod root {
                             ::core::option::Option::None
                         },
                         codecs: value.codecs()?.to_vec_result()?,
-                        header_extensions: if let ::core::option::Option::Some(header_extensions) =
-                            value.header_extensions()?
-                        {
-                            ::core::option::Option::Some(header_extensions.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        header_extensions: value.header_extensions()?.to_vec_result()?,
                         encodings: value.encodings()?.to_vec_result()?,
                         rtcp: ::planus::alloc::boxed::Box::new(::core::convert::TryInto::try_into(
                             value.rtcp()?,

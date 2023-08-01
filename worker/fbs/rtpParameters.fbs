@@ -81,7 +81,7 @@ table RtcpParameters {
 table RtpParameters {
   mid:string;
   codecs:[RtpCodecParameters] (required);
-  header_extensions:[RtpHeaderExtensionParameters];
+  header_extensions:[RtpHeaderExtensionParameters] (required);
   encodings:[RtpEncodingParameters] (required);
   rtcp:RtcpParameters (required);
 }
