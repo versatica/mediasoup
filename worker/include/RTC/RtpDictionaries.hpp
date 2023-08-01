@@ -295,7 +295,6 @@ namespace RTC
 		std::vector<RtpEncodingParameters> encodings;
 		std::vector<RtpHeaderExtensionParameters> headerExtensions;
 		RtcpParameters rtcp;
-		bool hasRtcp{ false };
 	};
 } // namespace RTC
 

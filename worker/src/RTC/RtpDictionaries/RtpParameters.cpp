@@ -128,10 +128,6 @@ namespace RTC
 		if (this->codecs.empty())
 			MS_THROW_TYPE_ERROR("empty codecs");
 
-		// encodings is mandatory.
-		if (!flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpParameters::VT_ENCODINGS))
-			MS_THROW_TYPE_ERROR("missing encodings");
-
 		this->encodings.reserve(data->encodings()->size());
 
 		for (const auto* entry : *data->encodings())
@@ -143,25 +139,16 @@ namespace RTC
 		if (this->encodings.empty())
 			MS_THROW_TYPE_ERROR("empty encodings");
 
-		// headerExtensions is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpParameters::VT_HEADEREXTENSIONS))
-		{
-			this->headerExtensions.reserve(data->headerExtensions()->size());
+		this->headerExtensions.reserve(data->headerExtensions()->size());
 
-			for (const auto* entry : *data->headerExtensions())
-			{
-				// This may throw due the constructor of RTC::RtpHeaderExtensionParameters.
-				this->headerExtensions.emplace_back(entry);
-			}
+		for (const auto* entry : *data->headerExtensions())
+		{
+			// This may throw due the constructor of RTC::RtpHeaderExtensionParameters.
+			this->headerExtensions.emplace_back(entry);
 		}
 
-		// rtcp is optional.
-		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpParameters::VT_RTCP))
-		{
-			// This may throw.
-			this->rtcp    = RTC::RtcpParameters(data->rtcp());
-			this->hasRtcp = true;
-		}
+		// This may throw.
+		this->rtcp = RTC::RtcpParameters(data->rtcp());
 
 		// Validate RTP parameters.
 		ValidateCodecs();
@@ -203,8 +190,7 @@ namespace RTC
 		// Add rtcp.
 		flatbuffers::Offset<FBS::RtpParameters::RtcpParameters> rtcp;
 
-		if (this->hasRtcp)
-			rtcp = this->rtcp.FillBuffer(builder);
+		rtcp = this->rtcp.FillBuffer(builder);
 
 		return FBS::RtpParameters::CreateRtpParametersDirect(
 		  builder, mid.c_str(), &codecs, &headerExtensions, &encodings, rtcp);
