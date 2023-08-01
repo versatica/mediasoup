@@ -82,7 +82,7 @@ table RtpParameters {
   mid:string;
   codecs:[RtpCodecParameters] (required);
   header_extensions:[RtpHeaderExtensionParameters];
-  encodings:[RtpEncodingParameters];
+  encodings:[RtpEncodingParameters] (required);
   rtcp:RtcpParameters;
 }
 

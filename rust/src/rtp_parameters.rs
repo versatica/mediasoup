@@ -788,7 +788,6 @@ impl RtpParameters {
                 .collect::<Result<_, Box<dyn Error>>>()?,
             encodings: rtp_parameters
                 .encodings
-                .unwrap_or_default()
                 .into_iter()
                 .map(|encoding| {
                     Ok(RtpEncodingParameters {
@@ -883,26 +882,25 @@ impl RtpParameters {
                     })
                     .collect(),
             ),
-            encodings: Some(
-                self.encodings
-                    .into_iter()
-                    .map(|encoding| rtp_parameters::RtpEncodingParameters {
-                        ssrc: encoding.ssrc,
-                        rid: encoding.rid,
-                        codec_payload_type: encoding.codec_payload_type,
-                        rtx: encoding
-                            .rtx
-                            .map(|rtx| Box::new(rtp_parameters::Rtx { ssrc: rtx.ssrc })),
-                        dtx: encoding.dtx.unwrap_or_default(),
-                        scalability_mode: if encoding.scalability_mode.is_none() {
-                            None
-                        } else {
-                            Some(encoding.scalability_mode.as_str().to_string())
-                        },
-                        max_bitrate: encoding.max_bitrate,
-                    })
-                    .collect(),
-            ),
+            encodings: self
+                .encodings
+                .into_iter()
+                .map(|encoding| rtp_parameters::RtpEncodingParameters {
+                    ssrc: encoding.ssrc,
+                    rid: encoding.rid,
+                    codec_payload_type: encoding.codec_payload_type,
+                    rtx: encoding
+                        .rtx
+                        .map(|rtx| Box::new(rtp_parameters::Rtx { ssrc: rtx.ssrc })),
+                    dtx: encoding.dtx.unwrap_or_default(),
+                    scalability_mode: if encoding.scalability_mode.is_none() {
+                        None
+                    } else {
+                        Some(encoding.scalability_mode.as_str().to_string())
+                    },
+                    max_bitrate: encoding.max_bitrate,
+                })
+                .collect(),
             rtcp: Some(Box::new(rtp_parameters::RtcpParameters {
                 cname: self.rtcp.cname,
                 reduced_size: self.rtcp.reduced_size,
