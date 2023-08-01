@@ -368,7 +368,6 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
         RtcpParameters {
             cname: rtp_parameters.rtcp.cname.clone(),
             reduced_size: true,
-            mux: Some(true),
         }
     );
 
@@ -543,7 +542,6 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
         RtcpParameters {
             cname: rtp_parameters.rtcp.cname.clone(),
             reduced_size: true,
-            mux: Some(true),
         },
     );
 
@@ -650,7 +648,6 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
         RtcpParameters {
             cname: rtp_parameters.rtcp.cname,
             reduced_size: true,
-            mux: Some(true),
         },
     );
 }
