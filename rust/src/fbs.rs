@@ -14245,7 +14245,7 @@ mod root {
                 /// The field `type` in the table `RtcpFeedback`
                 pub type_: ::planus::alloc::string::String,
                 /// The field `parameter` in the table `RtcpFeedback`
-                pub parameter: ::core::option::Option<::planus::alloc::string::String>,
+                pub parameter: ::planus::alloc::string::String,
             }
 
             impl RtcpFeedback {
@@ -14259,9 +14259,7 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_type_: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_parameter: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
-                    >,
+                    field_parameter: impl ::planus::WriteAs<::planus::Offset<str>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_type_ = field_type_.prepare(builder);
                     let prepared_parameter = field_parameter.prepare(builder);
@@ -14269,18 +14267,12 @@ mod root {
                     let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<str>>(0);
-                    if prepared_parameter.is_some() {
-                        table_writer.write_entry::<::planus::Offset<str>>(1);
-                    }
+                    table_writer.write_entry::<::planus::Offset<str>>(1);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_type_);
-                            if let ::core::option::Option::Some(prepared_parameter) =
-                                prepared_parameter
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_parameter);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_parameter);
                         });
                     }
                     builder.current_offset()
@@ -14346,17 +14338,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn parameter<T1>(self, value: T1) -> RtcpFeedbackBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
                 {
                     let (v0,) = self.0;
                     RtcpFeedbackBuilder((v0, value))
-                }
-
-                /// Sets the [`parameter` field](RtcpFeedback#structfield.parameter) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn parameter_as_null(self) -> RtcpFeedbackBuilder<(T0, ())> {
-                    self.parameter(())
                 }
             }
 
@@ -14376,7 +14361,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAs<::planus::Offset<RtcpFeedback>>
                 for RtcpFeedbackBuilder<(T0, T1)>
             {
@@ -14393,7 +14378,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAsOptional<::planus::Offset<RtcpFeedback>>
                 for RtcpFeedbackBuilder<(T0, T1)>
             {
@@ -14410,7 +14395,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAsOffset<RtcpFeedback> for RtcpFeedbackBuilder<(T0, T1)>
             {
                 #[inline]
@@ -14436,11 +14421,8 @@ mod root {
 
                 /// Getter for the [`parameter` field](RtcpFeedback#structfield.parameter).
                 #[inline]
-                pub fn parameter(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
-                {
-                    self.0.access(1, "RtcpFeedback", "parameter")
+                pub fn parameter(&self) -> ::planus::Result<&'a ::core::primitive::str> {
+                    self.0.access_required(1, "RtcpFeedback", "parameter")
                 }
             }
 
@@ -14448,11 +14430,7 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("RtcpFeedbackRef");
                     f.field("type_", &self.type_());
-                    if let ::core::option::Option::Some(field_parameter) =
-                        self.parameter().transpose()
-                    {
-                        f.field("parameter", &field_parameter);
-                    }
+                    f.field("parameter", &self.parameter());
                     f.finish()
                 }
             }
@@ -14464,15 +14442,7 @@ mod root {
                 fn try_from(value: RtcpFeedbackRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         type_: ::core::convert::TryInto::try_into(value.type_()?)?,
-                        parameter: if let ::core::option::Option::Some(parameter) =
-                            value.parameter()?
-                        {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
-                                parameter,
-                            )?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        parameter: ::core::convert::TryInto::try_into(value.parameter()?)?,
                     })
                 }
             }

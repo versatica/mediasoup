@@ -747,7 +747,7 @@ impl RtpParameters {
                         .map(|rtcp_feedback| {
                             RtcpFeedback::from_type_parameter(
                                 &rtcp_feedback.type_,
-                                &rtcp_feedback.parameter.unwrap_or_default(),
+                                &rtcp_feedback.parameter,
                             )
                         })
                         .collect::<Result<_, _>>()?;
@@ -862,7 +862,7 @@ impl RtpParameters {
                                     let (r#type, parameter) = rtcp_feedback.as_type_parameter();
                                     rtp_parameters::RtcpFeedback {
                                         type_: r#type.to_string(),
-                                        parameter: Some(parameter.to_string()),
+                                        parameter: parameter.to_string(),
                                     }
                                 })
                                 .collect(),

@@ -40,7 +40,7 @@ table Parameter {
 
 table RtcpFeedback {
   type:string (required);
-  parameter:string;
+  parameter:string (required);
 }
 
 table RtpCodecParameters {
