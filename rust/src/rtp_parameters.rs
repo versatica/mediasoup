@@ -799,7 +799,6 @@ impl RtpParameters {
                             .map(|rtx| RtpEncodingParametersRtx { ssrc: rtx.ssrc }),
                         dtx: Some(encoding.dtx),
                         scalability_mode: encoding.scalability_mode.unwrap_or_default().parse()?,
-                        scale_resolution_down_by: None,
                         max_bitrate: encoding.max_bitrate,
                     })
                 })
@@ -1190,9 +1189,6 @@ pub struct RtpEncodingParameters {
     /// Number of spatial and temporal layers in the RTP stream.
     #[serde(default, skip_serializing_if = "ScalabilityMode::is_none")]
     pub scalability_mode: ScalabilityMode,
-    /// Factor by which to reduce the size of a video track during encoding.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub scale_resolution_down_by: Option<f64>,
     /// Maximum number of bits per second to allow a track encoded with this encoding to use.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_bitrate: Option<u32>,

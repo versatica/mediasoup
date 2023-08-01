@@ -714,7 +714,6 @@ fn dump_succeeds() {
                     rtx: None,
                     dtx: None,
                     scalability_mode: ScalabilityMode::None,
-                    scale_resolution_down_by: None,
                     max_bitrate: None
                 }],
             );
@@ -752,7 +751,6 @@ fn dump_succeeds() {
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222223 }),
                         dtx: None,
                         scalability_mode: "L1T3".parse().unwrap(),
-                        scale_resolution_down_by: None,
                         max_bitrate: None
                     },
                     RtpEncodingParameters {
@@ -762,7 +760,6 @@ fn dump_succeeds() {
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222225 }),
                         dtx: None,
                         scalability_mode: ScalabilityMode::None,
-                        scale_resolution_down_by: None,
                         max_bitrate: None
                     },
                     RtpEncodingParameters {
@@ -772,7 +769,6 @@ fn dump_succeeds() {
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222227 }),
                         dtx: None,
                         scalability_mode: ScalabilityMode::None,
-                        scale_resolution_down_by: None,
                         max_bitrate: None
                     },
                     RtpEncodingParameters {
@@ -782,7 +778,6 @@ fn dump_succeeds() {
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222229 }),
                         dtx: None,
                         scalability_mode: ScalabilityMode::None,
-                        scale_resolution_down_by: None,
                         max_bitrate: None
                     },
                 ],

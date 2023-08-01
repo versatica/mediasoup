@@ -976,7 +976,6 @@ fn dump_succeeds() {
                     rtx: None,
                     dtx: None,
                     scalability_mode: ScalabilityMode::None,
-                    scale_resolution_down_by: None,
                     ssrc: audio_consumer
                         .rtp_parameters()
                         .encodings
@@ -1104,7 +1103,6 @@ fn dump_succeeds() {
                         .rtx,
                     dtx: None,
                     scalability_mode: "L4T1".parse().unwrap(),
-                    scale_resolution_down_by: None,
                     rid: None,
                     max_bitrate: None,
                 }],
