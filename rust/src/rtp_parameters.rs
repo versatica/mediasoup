@@ -720,7 +720,7 @@ impl RtpParameters {
                         .map(|parameters| {
                             Ok((
                                 Cow::Owned(parameters.name),
-                                match parameters.value.ok_or("Value must always be specified")? {
+                                match parameters.value {
                                     rtp_parameters::Value::Boolean(_)
                                     | rtp_parameters::Value::Double(_)
                                     | rtp_parameters::Value::IntegerArray(_) => {
@@ -838,7 +838,7 @@ impl RtpParameters {
                             .iter()
                             .map(|(name, value)| rtp_parameters::Parameter {
                                 name: name.to_string(),
-                                value: Some(match value {
+                                value: match value {
                                     RtpCodecParametersParametersValue::String(s) => {
                                         rtp_parameters::Value::String(Box::new(
                                             rtp_parameters::String {
@@ -851,7 +851,7 @@ impl RtpParameters {
                                             rtp_parameters::Integer { value: *n as i32 },
                                         ))
                                     }
-                                }),
+                                },
                             })
                             .collect(),
                     ),

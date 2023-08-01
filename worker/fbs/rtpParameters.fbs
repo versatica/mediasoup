@@ -35,7 +35,7 @@ union Value {
 
 table Parameter {
   name: string (required);
-  value: Value;
+  value: Value (required);
 }
 
 table RtcpFeedback {

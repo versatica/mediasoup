@@ -13999,7 +13999,7 @@ mod root {
                 /// The field `name` in the table `Parameter`
                 pub name: ::planus::alloc::string::String,
                 /// The field `value` in the table `Parameter`
-                pub value: ::core::option::Option<self::Value>,
+                pub value: self::Value,
             }
 
             impl Parameter {
@@ -14013,7 +14013,7 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_name: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_value: impl ::planus::WriteAsOptionalUnion<self::Value>,
+                    field_value: impl ::planus::WriteAsUnion<self::Value>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_name = field_name.prepare(builder);
                     let prepared_value = field_value.prepare(builder);
@@ -14021,22 +14021,14 @@ mod root {
                     let mut table_writer: ::planus::table_writer::TableWriter<10> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<str>>(0);
-                    if prepared_value.is_some() {
-                        table_writer.write_entry::<::planus::Offset<self::Value>>(2);
-                    }
-                    if prepared_value.is_some() {
-                        table_writer.write_entry::<u8>(1);
-                    }
+                    table_writer.write_entry::<::planus::Offset<self::Value>>(2);
+                    table_writer.write_entry::<u8>(1);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_name);
-                            if let ::core::option::Option::Some(prepared_value) = prepared_value {
-                                object_writer.write::<_, _, 4>(&prepared_value.offset());
-                            }
-                            if let ::core::option::Option::Some(prepared_value) = prepared_value {
-                                object_writer.write::<_, _, 1>(&prepared_value.tag());
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_value.offset());
+                            object_writer.write::<_, _, 1>(&prepared_value.tag());
                         });
                     }
                     builder.current_offset()
@@ -14096,17 +14088,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn value<T1>(self, value: T1) -> ParameterBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAsOptionalUnion<self::Value>,
+                    T1: ::planus::WriteAsUnion<self::Value>,
                 {
                     let (v0,) = self.0;
                     ParameterBuilder((v0, value))
-                }
-
-                /// Sets the [`value` field](Parameter#structfield.value) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn value_as_null(self) -> ParameterBuilder<(T0, ())> {
-                    self.value(())
                 }
             }
 
@@ -14123,7 +14108,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptionalUnion<self::Value>,
+                    T1: ::planus::WriteAsUnion<self::Value>,
                 > ::planus::WriteAs<::planus::Offset<Parameter>> for ParameterBuilder<(T0, T1)>
             {
                 type Prepared = ::planus::Offset<Parameter>;
@@ -14136,7 +14121,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptionalUnion<self::Value>,
+                    T1: ::planus::WriteAsUnion<self::Value>,
                 > ::planus::WriteAsOptional<::planus::Offset<Parameter>>
                 for ParameterBuilder<(T0, T1)>
             {
@@ -14153,7 +14138,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptionalUnion<self::Value>,
+                    T1: ::planus::WriteAsUnion<self::Value>,
                 > ::planus::WriteAsOffset<Parameter> for ParameterBuilder<(T0, T1)>
             {
                 #[inline]
@@ -14176,10 +14161,8 @@ mod root {
 
                 /// Getter for the [`value` field](Parameter#structfield.value).
                 #[inline]
-                pub fn value(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<self::ValueRef<'a>>> {
-                    self.0.access_union(1, "Parameter", "value")
+                pub fn value(&self) -> ::planus::Result<self::ValueRef<'a>> {
+                    self.0.access_union_required(1, "Parameter", "value")
                 }
             }
 
@@ -14187,9 +14170,7 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("ParameterRef");
                     f.field("name", &self.name());
-                    if let ::core::option::Option::Some(field_value) = self.value().transpose() {
-                        f.field("value", &field_value);
-                    }
+                    f.field("value", &self.value());
                     f.finish()
                 }
             }
@@ -14201,11 +14182,7 @@ mod root {
                 fn try_from(value: ParameterRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         name: ::core::convert::TryInto::try_into(value.name()?)?,
-                        value: if let ::core::option::Option::Some(value) = value.value()? {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(value)?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        value: ::core::convert::TryInto::try_into(value.value()?)?,
                     })
                 }
             }
