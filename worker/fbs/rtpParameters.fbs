@@ -22,7 +22,7 @@ table Double {
 }
 
 table String {
-  value:string;
+  value:string (required);
 }
 
 union Value {

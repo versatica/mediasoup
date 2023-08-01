@@ -734,9 +734,7 @@ impl RtpParameters {
                                         )
                                     }
                                     rtp_parameters::Value::String(s) => {
-                                        RtpCodecParametersParametersValue::String(
-                                            s.value.unwrap_or_default().into(),
-                                        )
+                                        RtpCodecParametersParametersValue::String(s.value.into())
                                     }
                                 },
                             ))
@@ -842,7 +840,7 @@ impl RtpParameters {
                                     RtpCodecParametersParametersValue::String(s) => {
                                         rtp_parameters::Value::String(Box::new(
                                             rtp_parameters::String {
-                                                value: Some(s.to_string()),
+                                                value: s.to_string(),
                                             },
                                         ))
                                     }

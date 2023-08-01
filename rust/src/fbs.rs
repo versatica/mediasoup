@@ -13389,16 +13389,7 @@ mod root {
             )]
             pub struct String {
                 /// The field `value` in the table `String`
-                pub value: ::core::option::Option<::planus::alloc::string::String>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for String {
-                fn default() -> Self {
-                    Self {
-                        value: ::core::default::Default::default(),
-                    }
-                }
+                pub value: ::planus::alloc::string::String,
             }
 
             impl String {
@@ -13411,23 +13402,17 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_value: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
-                    >,
+                    field_value: impl ::planus::WriteAs<::planus::Offset<str>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_value = field_value.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    if prepared_value.is_some() {
-                        table_writer.write_entry::<::planus::Offset<str>>(0);
-                    }
+                    table_writer.write_entry::<::planus::Offset<str>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_value) = prepared_value {
-                                object_writer.write::<_, _, 4>(&prepared_value);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_value);
                         });
                     }
                     builder.current_offset()
@@ -13475,16 +13460,9 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn value<T0>(self, value: T0) -> StringBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T0: ::planus::WriteAs<::planus::Offset<str>>,
                 {
                     StringBuilder((value,))
-                }
-
-                /// Sets the [`value` field](String#structfield.value) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn value_as_null(self) -> StringBuilder<((),)> {
-                    self.value(())
                 }
             }
 
@@ -13499,7 +13477,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<str>>>
                 ::planus::WriteAs<::planus::Offset<String>> for StringBuilder<(T0,)>
             {
                 type Prepared = ::planus::Offset<String>;
@@ -13510,7 +13488,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<str>>>
                 ::planus::WriteAsOptional<::planus::Offset<String>> for StringBuilder<(T0,)>
             {
                 type Prepared = ::planus::Offset<String>;
@@ -13524,8 +13502,8 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>>
-                ::planus::WriteAsOffset<String> for StringBuilder<(T0,)>
+            impl<T0: ::planus::WriteAs<::planus::Offset<str>>> ::planus::WriteAsOffset<String>
+                for StringBuilder<(T0,)>
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<String> {
@@ -13541,20 +13519,15 @@ mod root {
             impl<'a> StringRef<'a> {
                 /// Getter for the [`value` field](String#structfield.value).
                 #[inline]
-                pub fn value(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
-                {
-                    self.0.access(0, "String", "value")
+                pub fn value(&self) -> ::planus::Result<&'a ::core::primitive::str> {
+                    self.0.access_required(0, "String", "value")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for StringRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("StringRef");
-                    if let ::core::option::Option::Some(field_value) = self.value().transpose() {
-                        f.field("value", &field_value);
-                    }
+                    f.field("value", &self.value());
                     f.finish()
                 }
             }
@@ -13565,11 +13538,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: StringRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        value: if let ::core::option::Option::Some(value) = value.value()? {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(value)?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        value: ::core::convert::TryInto::try_into(value.value()?)?,
                     })
                 }
             }
