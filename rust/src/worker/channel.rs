@@ -602,6 +602,7 @@ impl Channel {
         match response_result {
             Ok(data) => {
                 debug!("request succeeded [method:{:?}, id:{}]", R::METHOD, id);
+                trace!("{data:?}");
 
                 Ok(R::convert_response(data).map_err(RequestError::ResponseConversion)?)
             }

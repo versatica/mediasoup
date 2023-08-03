@@ -760,7 +760,7 @@ impl Router {
         let data = self
             .inner
             .channel
-            .request(
+            .request_fbs(
                 self.inner.id,
                 RouterCreatePlainTransportRequest {
                     data: RouterCreatePlainTransportData::from_options(

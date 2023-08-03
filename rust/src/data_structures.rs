@@ -146,6 +146,17 @@ pub enum Protocol {
     Udp,
 }
 
+impl Protocol {
+    // TODO: Use the Protocol FBS type.
+    pub(crate) fn from_fbs(protocol: &str) -> Self {
+        match protocol {
+            "tcp" => Protocol::Tcp,
+            "udp" => Protocol::Udp,
+            _ => todo!(),
+        }
+    }
+}
+
 /// ICE candidate
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -258,6 +269,28 @@ impl TransportTuple {
             Some(*remote_port)
         } else {
             None
+        }
+    }
+
+    pub(crate) fn from_fbs(tuple: &transport::Tuple) -> TransportTuple {
+        match &tuple.remote_ip {
+            Some(_remote_ip) => TransportTuple::WithRemote {
+                local_ip: tuple.local_ip.parse().expect("Error parsing IP address"),
+                local_port: tuple.local_port,
+                remote_ip: tuple
+                    .remote_ip
+                    .as_ref()
+                    .unwrap()
+                    .parse()
+                    .expect("Error parsing IP address"),
+                remote_port: tuple.remote_port,
+                protocol: Protocol::from_fbs(tuple.protocol.as_str()),
+            },
+            None => TransportTuple::LocalOnly {
+                local_ip: tuple.local_ip.parse().expect("Error parsing IP address"),
+                local_port: tuple.local_port,
+                protocol: Protocol::from_fbs(tuple.protocol.as_str()),
+            },
         }
     }
 }

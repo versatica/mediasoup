@@ -43,6 +43,15 @@ impl Default for NumSctpStreams {
     }
 }
 
+impl NumSctpStreams {
+    pub(crate) fn to_fbs(self) -> sctp_parameters::NumSctpStreams {
+        sctp_parameters::NumSctpStreams {
+            os: self.os,
+            mis: self.mis,
+        }
+    }
+}
+
 /// Parameters of the SCTP association.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]

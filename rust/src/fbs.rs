@@ -27376,9 +27376,9 @@ mod root {
             )]
             pub struct NumSctpStreams {
                 /// The field `os` in the table `NumSctpStreams`
-                pub os: u32,
+                pub os: u16,
                 /// The field `mis` in the table `NumSctpStreams`
-                pub mis: u32,
+                pub mis: u16,
             }
 
             #[allow(clippy::derivable_impls)]
@@ -27401,8 +27401,8 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_os: impl ::planus::WriteAsDefault<u32, u32>,
-                    field_mis: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_os: impl ::planus::WriteAsDefault<u16, u16>,
+                    field_mis: impl ::planus::WriteAsDefault<u16, u16>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_os = field_os.prepare(builder, &1024);
                     let prepared_mis = field_mis.prepare(builder, &1024);
@@ -27410,19 +27410,19 @@ mod root {
                     let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
                     if prepared_os.is_some() {
-                        table_writer.write_entry::<u32>(0);
+                        table_writer.write_entry::<u16>(0);
                     }
                     if prepared_mis.is_some() {
-                        table_writer.write_entry::<u32>(1);
+                        table_writer.write_entry::<u16>(1);
                     }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             if let ::core::option::Option::Some(prepared_os) = prepared_os {
-                                object_writer.write::<_, _, 4>(&prepared_os);
+                                object_writer.write::<_, _, 2>(&prepared_os);
                             }
                             if let ::core::option::Option::Some(prepared_mis) = prepared_mis {
-                                object_writer.write::<_, _, 4>(&prepared_mis);
+                                object_writer.write::<_, _, 2>(&prepared_mis);
                             }
                         });
                     }
@@ -27477,7 +27477,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn os<T0>(self, value: T0) -> NumSctpStreamsBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsDefault<u32, u32>,
+                    T0: ::planus::WriteAsDefault<u16, u16>,
                 {
                     NumSctpStreamsBuilder((value,))
                 }
@@ -27496,7 +27496,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn mis<T1>(self, value: T1) -> NumSctpStreamsBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAsDefault<u32, u32>,
+                    T1: ::planus::WriteAsDefault<u16, u16>,
                 {
                     let (v0,) = self.0;
                     NumSctpStreamsBuilder((v0, value))
@@ -27525,8 +27525,8 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<u32, u32>,
-                    T1: ::planus::WriteAsDefault<u32, u32>,
+                    T0: ::planus::WriteAsDefault<u16, u16>,
+                    T1: ::planus::WriteAsDefault<u16, u16>,
                 > ::planus::WriteAs<::planus::Offset<NumSctpStreams>>
                 for NumSctpStreamsBuilder<(T0, T1)>
             {
@@ -27542,8 +27542,8 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<u32, u32>,
-                    T1: ::planus::WriteAsDefault<u32, u32>,
+                    T0: ::planus::WriteAsDefault<u16, u16>,
+                    T1: ::planus::WriteAsDefault<u16, u16>,
                 > ::planus::WriteAsOptional<::planus::Offset<NumSctpStreams>>
                 for NumSctpStreamsBuilder<(T0, T1)>
             {
@@ -27559,8 +27559,8 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<u32, u32>,
-                    T1: ::planus::WriteAsDefault<u32, u32>,
+                    T0: ::planus::WriteAsDefault<u16, u16>,
+                    T1: ::planus::WriteAsDefault<u16, u16>,
                 > ::planus::WriteAsOffset<NumSctpStreams> for NumSctpStreamsBuilder<(T0, T1)>
             {
                 #[inline]
@@ -27580,7 +27580,7 @@ mod root {
             impl<'a> NumSctpStreamsRef<'a> {
                 /// Getter for the [`os` field](NumSctpStreams#structfield.os).
                 #[inline]
-                pub fn os(&self) -> ::planus::Result<u32> {
+                pub fn os(&self) -> ::planus::Result<u16> {
                     ::core::result::Result::Ok(
                         self.0.access(0, "NumSctpStreams", "os")?.unwrap_or(1024),
                     )
@@ -27588,7 +27588,7 @@ mod root {
 
                 /// Getter for the [`mis` field](NumSctpStreams#structfield.mis).
                 #[inline]
-                pub fn mis(&self) -> ::planus::Result<u32> {
+                pub fn mis(&self) -> ::planus::Result<u16> {
                     ::core::result::Result::Ok(
                         self.0.access(1, "NumSctpStreams", "mis")?.unwrap_or(1024),
                     )
@@ -35980,7 +35980,7 @@ mod root {
                 /// The field `local_port` in the table `Tuple`
                 pub local_port: u16,
                 /// The field `remote_ip` in the table `Tuple`
-                pub remote_ip: ::planus::alloc::string::String,
+                pub remote_ip: ::core::option::Option<::planus::alloc::string::String>,
                 /// The field `remote_port` in the table `Tuple`
                 pub remote_port: u16,
                 /// The field `protocol` in the table `Tuple`
@@ -35999,7 +35999,9 @@ mod root {
                     builder: &mut ::planus::Builder,
                     field_local_ip: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_local_port: impl ::planus::WriteAsDefault<u16, u16>,
-                    field_remote_ip: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_remote_ip: impl ::planus::WriteAsOptional<
+                        ::planus::Offset<::core::primitive::str>,
+                    >,
                     field_remote_port: impl ::planus::WriteAsDefault<u16, u16>,
                     field_protocol: impl ::planus::WriteAs<::planus::Offset<str>>,
                 ) -> ::planus::Offset<Self> {
@@ -36012,7 +36014,9 @@ mod root {
                     let mut table_writer: ::planus::table_writer::TableWriter<14> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<str>>(0);
-                    table_writer.write_entry::<::planus::Offset<str>>(2);
+                    if prepared_remote_ip.is_some() {
+                        table_writer.write_entry::<::planus::Offset<str>>(2);
+                    }
                     table_writer.write_entry::<::planus::Offset<str>>(4);
                     if prepared_local_port.is_some() {
                         table_writer.write_entry::<u16>(1);
@@ -36024,7 +36028,11 @@ mod root {
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_local_ip);
-                            object_writer.write::<_, _, 4>(&prepared_remote_ip);
+                            if let ::core::option::Option::Some(prepared_remote_ip) =
+                                prepared_remote_ip
+                            {
+                                object_writer.write::<_, _, 4>(&prepared_remote_ip);
+                            }
                             object_writer.write::<_, _, 4>(&prepared_protocol);
                             if let ::core::option::Option::Some(prepared_local_port) =
                                 prepared_local_port
@@ -36122,10 +36130,17 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn remote_ip<T2>(self, value: T2) -> TupleBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T2: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                 {
                     let (v0, v1) = self.0;
                     TupleBuilder((v0, v1, value))
+                }
+
+                /// Sets the [`remote_ip` field](Tuple#structfield.remote_ip) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn remote_ip_as_null(self) -> TupleBuilder<(T0, T1, ())> {
+                    self.remote_ip(())
                 }
             }
 
@@ -36178,7 +36193,7 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
                     T1: ::planus::WriteAsDefault<u16, u16>,
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T2: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T3: ::planus::WriteAsDefault<u16, u16>,
                     T4: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAs<::planus::Offset<Tuple>>
@@ -36195,7 +36210,7 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
                     T1: ::planus::WriteAsDefault<u16, u16>,
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T2: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T3: ::planus::WriteAsDefault<u16, u16>,
                     T4: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAsOptional<::planus::Offset<Tuple>>
@@ -36215,7 +36230,7 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
                     T1: ::planus::WriteAsDefault<u16, u16>,
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T2: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T3: ::planus::WriteAsDefault<u16, u16>,
                     T4: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAsOffset<Tuple> for TupleBuilder<(T0, T1, T2, T3, T4)>
@@ -36248,8 +36263,11 @@ mod root {
 
                 /// Getter for the [`remote_ip` field](Tuple#structfield.remote_ip).
                 #[inline]
-                pub fn remote_ip(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(2, "Tuple", "remote_ip")
+                pub fn remote_ip(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
+                {
+                    self.0.access(2, "Tuple", "remote_ip")
                 }
 
                 /// Getter for the [`remote_port` field](Tuple#structfield.remote_port).
@@ -36272,7 +36290,11 @@ mod root {
                     let mut f = f.debug_struct("TupleRef");
                     f.field("local_ip", &self.local_ip());
                     f.field("local_port", &self.local_port());
-                    f.field("remote_ip", &self.remote_ip());
+                    if let ::core::option::Option::Some(field_remote_ip) =
+                        self.remote_ip().transpose()
+                    {
+                        f.field("remote_ip", &field_remote_ip);
+                    }
                     f.field("remote_port", &self.remote_port());
                     f.field("protocol", &self.protocol());
                     f.finish()
@@ -36287,7 +36309,15 @@ mod root {
                     ::core::result::Result::Ok(Self {
                         local_ip: ::core::convert::TryInto::try_into(value.local_ip()?)?,
                         local_port: ::core::convert::TryInto::try_into(value.local_port()?)?,
-                        remote_ip: ::core::convert::TryInto::try_into(value.remote_ip()?)?,
+                        remote_ip: if let ::core::option::Option::Some(remote_ip) =
+                            value.remote_ip()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                remote_ip,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
                         remote_port: ::core::convert::TryInto::try_into(value.remote_port()?)?,
                         protocol: ::core::convert::TryInto::try_into(value.protocol()?)?,
                     })
@@ -50568,6 +50598,11 @@ mod root {
                     ::planus::alloc::boxed::Box<super::transport::CloseDataConsumerRequest>,
                 ),
 
+                /// The variant `PlainTransport_ConnectRequest` in the union `Body`
+                PlainTransportConnectRequest(
+                    ::planus::alloc::boxed::Box<super::plain_transport::ConnectRequest>,
+                ),
+
                 /// The variant of type `FBS.WebRtcTransport.ConnectRequest` in the union `Body`
                 ConnectRequest(
                     ::planus::alloc::boxed::Box<super::web_rtc_transport::ConnectRequest>,
@@ -50814,11 +50849,19 @@ mod root {
                 }
 
                 #[inline]
+                pub fn create_plain_transport_connect_request(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::plain_transport::ConnectRequest>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(26, value.prepare(builder).downcast())
+                }
+
+                #[inline]
                 pub fn create_connect_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(26, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(27, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50826,7 +50869,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(27, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(28, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50834,7 +50877,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(28, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(29, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50844,7 +50887,7 @@ mod root {
                         super::data_consumer::SetBufferedAmountLowThresholdRequest,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(29, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(30, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50852,7 +50895,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(30, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(31, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50860,7 +50903,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(31, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(32, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50868,7 +50911,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(32, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(33, value.prepare(builder).downcast())
                 }
             }
 
@@ -50946,6 +50989,9 @@ mod root {
                         }
                         Self::CloseDataConsumerRequest(value) => {
                             Self::create_close_data_consumer_request(builder, value)
+                        }
+                        Self::PlainTransportConnectRequest(value) => {
+                            Self::create_plain_transport_connect_request(builder, value)
                         }
                         Self::ConnectRequest(value) => Self::create_connect_request(builder, value),
                         Self::SetPreferredLayersRequest(value) => {
@@ -51286,12 +51332,24 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
+                /// Creates an instance of the [`PlainTransport_ConnectRequest` variant](Body#variant.PlainTransportConnectRequest).
+                #[inline]
+                pub fn plain_transport_connect_request<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<26, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::plain_transport::ConnectRequest>,
+                {
+                    BodyBuilder(::planus::Initialized(value))
+                }
+
                 /// Creates an instance of the [`ConnectRequest` variant](Body#variant.ConnectRequest).
                 #[inline]
                 pub fn connect_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<26, T>>
+                ) -> BodyBuilder<::planus::Initialized<27, T>>
                 where
                     T: ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
                 {
@@ -51303,7 +51361,7 @@ mod root {
                 pub fn set_preferred_layers_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<27, T>>
+                ) -> BodyBuilder<::planus::Initialized<28, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
                 {
@@ -51315,7 +51373,7 @@ mod root {
                 pub fn set_priority_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<28, T>>
+                ) -> BodyBuilder<::planus::Initialized<29, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
                 {
@@ -51327,7 +51385,7 @@ mod root {
                 pub fn set_buffered_amount_low_threshold_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<29, T>>
+                ) -> BodyBuilder<::planus::Initialized<30, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::data_consumer::SetBufferedAmountLowThresholdRequest,
@@ -51338,7 +51396,7 @@ mod root {
 
                 /// Creates an instance of the [`SendRequest` variant](Body#variant.SendRequest).
                 #[inline]
-                pub fn send_request<T>(self, value: T) -> BodyBuilder<::planus::Initialized<30, T>>
+                pub fn send_request<T>(self, value: T) -> BodyBuilder<::planus::Initialized<31, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
                 {
@@ -51350,7 +51408,7 @@ mod root {
                 pub fn add_producer_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<31, T>>
+                ) -> BodyBuilder<::planus::Initialized<32, T>>
                 where
                     T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
                 {
@@ -51362,7 +51420,7 @@ mod root {
                 pub fn remove_producer_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<32, T>>
+                ) -> BodyBuilder<::planus::Initialized<33, T>>
                 where
                     T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
                 {
@@ -51933,7 +51991,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<26, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
+                T: ::planus::WriteAsOffset<super::plain_transport::ConnectRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -51943,7 +52001,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<26, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
+                T: ::planus::WriteAsOffset<super::plain_transport::ConnectRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -51955,7 +52013,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<27, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -51965,7 +52023,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<27, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -51977,7 +52035,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<28, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
+                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -51987,7 +52045,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<28, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
+                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -51999,9 +52057,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<29, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
-                >,
+                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -52011,9 +52067,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<29, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
-                >,
+                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -52025,7 +52079,9 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<30, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
+                T: ::planus::WriteAsOffset<
+                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
+                >,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -52035,7 +52091,9 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<30, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
+                T: ::planus::WriteAsOffset<
+                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
+                >,
             {
                 #[inline]
                 fn prepare(
@@ -52047,7 +52105,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<31, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -52057,7 +52115,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<31, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -52069,7 +52127,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<32, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
+                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -52078,6 +52136,28 @@ mod root {
             }
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<32, T>>
+            where
+                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Body>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<33, T>>
+            where
+                T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
+                    ::planus::UnionOffset::new(33, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<33, T>>
             where
                 T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
             {
@@ -52122,6 +52202,7 @@ mod root {
                 CloseConsumerRequest(super::transport::CloseConsumerRequestRef<'a>),
                 CloseDataProducerRequest(super::transport::CloseDataProducerRequestRef<'a>),
                 CloseDataConsumerRequest(super::transport::CloseDataConsumerRequestRef<'a>),
+                PlainTransportConnectRequest(super::plain_transport::ConnectRequestRef<'a>),
                 ConnectRequest(super::web_rtc_transport::ConnectRequestRef<'a>),
                 SetPreferredLayersRequest(super::consumer::SetPreferredLayersRequestRef<'a>),
                 SetPriorityRequest(super::consumer::SetPriorityRequestRef<'a>),
@@ -52290,6 +52371,12 @@ mod root {
                             ))
                         }
 
+                        BodyRef::PlainTransportConnectRequest(value) => {
+                            Self::PlainTransportConnectRequest(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
                         BodyRef::ConnectRequest(value) => {
                             Self::ConnectRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
@@ -52419,27 +52506,30 @@ mod root {
                         25 => ::core::result::Result::Ok(Self::CloseDataConsumerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        26 => ::core::result::Result::Ok(Self::ConnectRequest(
+                        26 => ::core::result::Result::Ok(Self::PlainTransportConnectRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        27 => ::core::result::Result::Ok(Self::SetPreferredLayersRequest(
+                        27 => ::core::result::Result::Ok(Self::ConnectRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        28 => ::core::result::Result::Ok(Self::SetPriorityRequest(
+                        28 => ::core::result::Result::Ok(Self::SetPreferredLayersRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        29 => {
+                        29 => ::core::result::Result::Ok(Self::SetPriorityRequest(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        30 => {
                             ::core::result::Result::Ok(Self::SetBufferedAmountLowThresholdRequest(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ))
                         }
-                        30 => ::core::result::Result::Ok(Self::SendRequest(
+                        31 => ::core::result::Result::Ok(Self::SendRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        31 => ::core::result::Result::Ok(Self::AddProducerRequest(
+                        32 => ::core::result::Result::Ok(Self::AddProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        32 => ::core::result::Result::Ok(Self::RemoveProducerRequest(
+                        33 => ::core::result::Result::Ok(Self::RemoveProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         _ => ::core::result::Result::Err(
@@ -69986,8 +70076,7 @@ mod root {
             )]
             pub struct PlainTransportOptions {
                 /// The field `base` in the table `PlainTransportOptions`
-                pub base:
-                    ::core::option::Option<::planus::alloc::boxed::Box<super::transport::Options>>,
+                pub base: ::planus::alloc::boxed::Box<super::transport::Options>,
                 /// The field `listen_info` in the table `PlainTransportOptions`
                 pub listen_info: ::planus::alloc::boxed::Box<super::transport::ListenInfo>,
                 /// The field `rtcp_listen_info` in the table `PlainTransportOptions`
@@ -70014,9 +70103,7 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_base: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::Options>,
-                    >,
+                    field_base: impl ::planus::WriteAs<::planus::Offset<super::transport::Options>>,
                     field_listen_info: impl ::planus::WriteAs<
                         ::planus::Offset<super::transport::ListenInfo>,
                     >,
@@ -70040,9 +70127,7 @@ mod root {
 
                     let mut table_writer: ::planus::table_writer::TableWriter<18> =
                         ::core::default::Default::default();
-                    if prepared_base.is_some() {
-                        table_writer.write_entry::<::planus::Offset<super::transport::Options>>(0);
-                    }
+                    table_writer.write_entry::<::planus::Offset<super::transport::Options>>(0);
                     table_writer.write_entry::<::planus::Offset<super::transport::ListenInfo>>(1);
                     if prepared_rtcp_listen_info.is_some() {
                         table_writer
@@ -70063,9 +70148,7 @@ mod root {
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_base) = prepared_base {
-                                object_writer.write::<_, _, 4>(&prepared_base);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_base);
                             object_writer.write::<_, _, 4>(&prepared_listen_info);
                             if let ::core::option::Option::Some(prepared_rtcp_listen_info) =
                                 prepared_rtcp_listen_info
@@ -70154,16 +70237,9 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn base<T0>(self, value: T0) -> PlainTransportOptionsBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptional<::planus::Offset<super::transport::Options>>,
+                    T0: ::planus::WriteAs<::planus::Offset<super::transport::Options>>,
                 {
                     PlainTransportOptionsBuilder((value,))
-                }
-
-                /// Sets the [`base` field](PlainTransportOptions#structfield.base) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn base_as_null(self) -> PlainTransportOptionsBuilder<((),)> {
-                    self.base(())
                 }
             }
 
@@ -70323,7 +70399,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsOptional<::planus::Offset<super::transport::Options>>,
+                    T0: ::planus::WriteAs<::planus::Offset<super::transport::Options>>,
                     T1: ::planus::WriteAs<::planus::Offset<super::transport::ListenInfo>>,
                     T2: ::planus::WriteAsOptional<::planus::Offset<super::transport::ListenInfo>>,
                     T3: ::planus::WriteAsDefault<bool, bool>,
@@ -70345,7 +70421,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsOptional<::planus::Offset<super::transport::Options>>,
+                    T0: ::planus::WriteAs<::planus::Offset<super::transport::Options>>,
                     T1: ::planus::WriteAs<::planus::Offset<super::transport::ListenInfo>>,
                     T2: ::planus::WriteAsOptional<::planus::Offset<super::transport::ListenInfo>>,
                     T3: ::planus::WriteAsDefault<bool, bool>,
@@ -70368,7 +70444,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsOptional<::planus::Offset<super::transport::Options>>,
+                    T0: ::planus::WriteAs<::planus::Offset<super::transport::Options>>,
                     T1: ::planus::WriteAs<::planus::Offset<super::transport::ListenInfo>>,
                     T2: ::planus::WriteAsOptional<::planus::Offset<super::transport::ListenInfo>>,
                     T3: ::planus::WriteAsDefault<bool, bool>,
@@ -70395,11 +70471,8 @@ mod root {
             impl<'a> PlainTransportOptionsRef<'a> {
                 /// Getter for the [`base` field](PlainTransportOptions#structfield.base).
                 #[inline]
-                pub fn base(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<super::transport::OptionsRef<'a>>>
-                {
-                    self.0.access(0, "PlainTransportOptions", "base")
+                pub fn base(&self) -> ::planus::Result<super::transport::OptionsRef<'a>> {
+                    self.0.access_required(0, "PlainTransportOptions", "base")
                 }
 
                 /// Getter for the [`listen_info` field](PlainTransportOptions#structfield.listen_info).
@@ -70463,9 +70536,7 @@ mod root {
             impl<'a> ::core::fmt::Debug for PlainTransportOptionsRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("PlainTransportOptionsRef");
-                    if let ::core::option::Option::Some(field_base) = self.base().transpose() {
-                        f.field("base", &field_base);
-                    }
+                    f.field("base", &self.base());
                     f.field("listen_info", &self.listen_info());
                     if let ::core::option::Option::Some(field_rtcp_listen_info) =
                         self.rtcp_listen_info().transpose()
@@ -70490,13 +70561,9 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: PlainTransportOptionsRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        base: if let ::core::option::Option::Some(base) = value.base()? {
-                            ::core::option::Option::Some(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryInto::try_into(base)?,
-                            ))
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        base: ::planus::alloc::boxed::Box::new(::core::convert::TryInto::try_into(
+                            value.base()?,
+                        )?),
                         listen_info: ::planus::alloc::boxed::Box::new(
                             ::core::convert::TryInto::try_into(value.listen_info()?)?,
                         ),
@@ -71487,8 +71554,7 @@ mod root {
                 /// The field `comedia` in the table `DumpResponse`
                 pub comedia: bool,
                 /// The field `tuple` in the table `DumpResponse`
-                pub tuple:
-                    ::core::option::Option<::planus::alloc::boxed::Box<super::transport::Tuple>>,
+                pub tuple: ::planus::alloc::boxed::Box<super::transport::Tuple>,
                 /// The field `rtcp_tuple` in the table `DumpResponse`
                 pub rtcp_tuple:
                     ::core::option::Option<::planus::alloc::boxed::Box<super::transport::Tuple>>,
@@ -71511,9 +71577,7 @@ mod root {
                     field_base: impl ::planus::WriteAs<::planus::Offset<super::transport::Dump>>,
                     field_rtcp_mux: impl ::planus::WriteAsDefault<bool, bool>,
                     field_comedia: impl ::planus::WriteAsDefault<bool, bool>,
-                    field_tuple: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::Tuple>,
-                    >,
+                    field_tuple: impl ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     field_rtcp_tuple: impl ::planus::WriteAsOptional<
                         ::planus::Offset<super::transport::Tuple>,
                     >,
@@ -71531,9 +71595,7 @@ mod root {
                     let mut table_writer: ::planus::table_writer::TableWriter<16> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<super::transport::Dump>>(0);
-                    if prepared_tuple.is_some() {
-                        table_writer.write_entry::<::planus::Offset<super::transport::Tuple>>(3);
-                    }
+                    table_writer.write_entry::<::planus::Offset<super::transport::Tuple>>(3);
                     if prepared_rtcp_tuple.is_some() {
                         table_writer.write_entry::<::planus::Offset<super::transport::Tuple>>(4);
                     }
@@ -71551,9 +71613,7 @@ mod root {
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_base);
-                            if let ::core::option::Option::Some(prepared_tuple) = prepared_tuple {
-                                object_writer.write::<_, _, 4>(&prepared_tuple);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_tuple);
                             if let ::core::option::Option::Some(prepared_rtcp_tuple) =
                                 prepared_rtcp_tuple
                             {
@@ -71690,17 +71750,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn tuple<T3>(self, value: T3) -> DumpResponseBuilder<(T0, T1, T2, T3)>
                 where
-                    T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
+                    T3: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                 {
                     let (v0, v1, v2) = self.0;
                     DumpResponseBuilder((v0, v1, v2, value))
-                }
-
-                /// Sets the [`tuple` field](DumpResponse#structfield.tuple) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn tuple_as_null(self) -> DumpResponseBuilder<(T0, T1, T2, ())> {
-                    self.tuple(())
                 }
             }
 
@@ -71769,7 +71822,7 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Dump>>,
                     T1: ::planus::WriteAsDefault<bool, bool>,
                     T2: ::planus::WriteAsDefault<bool, bool>,
-                    T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
+                    T3: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T4: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
                 > ::planus::WriteAs<::planus::Offset<DumpResponse>>
@@ -71790,7 +71843,7 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Dump>>,
                     T1: ::planus::WriteAsDefault<bool, bool>,
                     T2: ::planus::WriteAsDefault<bool, bool>,
-                    T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
+                    T3: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T4: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
                 > ::planus::WriteAsOptional<::planus::Offset<DumpResponse>>
@@ -71811,7 +71864,7 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Dump>>,
                     T1: ::planus::WriteAsDefault<bool, bool>,
                     T2: ::planus::WriteAsDefault<bool, bool>,
-                    T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
+                    T3: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T4: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
                 > ::planus::WriteAsOffset<DumpResponse>
@@ -71860,11 +71913,8 @@ mod root {
 
                 /// Getter for the [`tuple` field](DumpResponse#structfield.tuple).
                 #[inline]
-                pub fn tuple(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<super::transport::TupleRef<'a>>>
-                {
-                    self.0.access(3, "DumpResponse", "tuple")
+                pub fn tuple(&self) -> ::planus::Result<super::transport::TupleRef<'a>> {
+                    self.0.access_required(3, "DumpResponse", "tuple")
                 }
 
                 /// Getter for the [`rtcp_tuple` field](DumpResponse#structfield.rtcp_tuple).
@@ -71892,9 +71942,7 @@ mod root {
                     f.field("base", &self.base());
                     f.field("rtcp_mux", &self.rtcp_mux());
                     f.field("comedia", &self.comedia());
-                    if let ::core::option::Option::Some(field_tuple) = self.tuple().transpose() {
-                        f.field("tuple", &field_tuple);
-                    }
+                    f.field("tuple", &self.tuple());
                     if let ::core::option::Option::Some(field_rtcp_tuple) =
                         self.rtcp_tuple().transpose()
                     {
@@ -71920,13 +71968,9 @@ mod root {
                         )?),
                         rtcp_mux: ::core::convert::TryInto::try_into(value.rtcp_mux()?)?,
                         comedia: ::core::convert::TryInto::try_into(value.comedia()?)?,
-                        tuple: if let ::core::option::Option::Some(tuple) = value.tuple()? {
-                            ::core::option::Option::Some(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryInto::try_into(tuple)?,
-                            ))
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        tuple: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.tuple()?)?,
+                        ),
                         rtcp_tuple: if let ::core::option::Option::Some(rtcp_tuple) =
                             value.rtcp_tuple()?
                         {

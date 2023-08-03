@@ -5,7 +5,8 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
-use crate::messages::{PlainTransportData, TransportCloseRequest, TransportConnectPlainRequest};
+use crate::fbs::{plain_transport, response};
+use crate::messages::{PlainTransportData, TransportCloseRequestFbs, TransportConnectPlainRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::Router;
@@ -24,6 +25,7 @@ use log::{debug, error};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 use std::fmt;
 use std::net::IpAddr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -111,7 +113,7 @@ pub struct PlainTransportDump {
     pub data_consumer_ids: Vec<DataConsumerId>,
     pub recv_rtp_header_extensions: RecvRtpHeaderExtensions,
     pub rtp_listener: RtpListener,
-    pub max_message_size: usize,
+    pub max_message_size: u32,
     pub sctp_parameters: Option<SctpParameters>,
     pub sctp_state: Option<SctpState>,
     pub sctp_listener: Option<SctpListener>,
@@ -122,6 +124,85 @@ pub struct PlainTransportDump {
     pub tuple: TransportTuple,
     pub rtcp_tuple: Option<TransportTuple>,
     pub srtp_parameters: Option<SrtpParameters>,
+}
+
+impl PlainTransportDump {
+    pub(crate) fn from_fbs(dump: plain_transport::DumpResponse) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            // Common to all Transports.
+            id: dump.base.id.parse()?,
+            direct: false,
+            producer_ids: dump
+                .base
+                .producer_ids
+                .iter()
+                .map(|producer_id| Ok(producer_id.parse()?))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            consumer_ids: dump
+                .base
+                .consumer_ids
+                .iter()
+                .map(|consumer_id| Ok(consumer_id.parse()?))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            map_ssrc_consumer_id: dump
+                .base
+                .map_ssrc_consumer_id
+                .iter()
+                .map(|key_value| Ok((key_value.key, key_value.value.parse()?)))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            map_rtx_ssrc_consumer_id: dump
+                .base
+                .map_rtx_ssrc_consumer_id
+                .iter()
+                .map(|key_value| Ok((key_value.key, key_value.value.parse()?)))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            data_producer_ids: dump
+                .base
+                .data_producer_ids
+                .iter()
+                .map(|data_producer_id| Ok(data_producer_id.parse()?))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            data_consumer_ids: dump
+                .base
+                .data_consumer_ids
+                .iter()
+                .map(|data_consumer_id| Ok(data_consumer_id.parse()?))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            recv_rtp_header_extensions: RecvRtpHeaderExtensions::from_fbs(
+                dump.base.recv_rtp_header_extensions.as_ref(),
+            ),
+            rtp_listener: RtpListener::from_fbs(dump.base.rtp_listener.as_ref())?,
+            max_message_size: dump.base.max_message_size,
+            sctp_parameters: dump
+                .base
+                .sctp_parameters
+                .as_ref()
+                .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
+            sctp_state: dump
+                .base
+                .sctp_state
+                .map(|state| SctpState::from_fbs(&state)),
+            sctp_listener: dump.base.sctp_listener.as_ref().map(|listener| {
+                SctpListener::from_fbs(listener.as_ref()).expect("Error parsing SctpListner")
+            }),
+            trace_event_types: dump
+                .base
+                .trace_event_types
+                .iter()
+                .map(|event| event.to_string())
+                .collect(),
+            // PlainTransport specific.
+            rtcp_mux: dump.rtcp_mux,
+            comedia: dump.comedia,
+            tuple: TransportTuple::from_fbs(dump.tuple.as_ref()),
+            rtcp_tuple: dump
+                .rtcp_tuple
+                .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+            srtp_parameters: dump
+                .srtp_parameters
+                .map(|parameters| SrtpParameters::from_fbs(parameters.as_ref())),
+        })
+    }
 }
 
 /// RTC statistics of the plain transport.
@@ -135,26 +216,27 @@ pub struct PlainTransportStat {
     pub transport_id: TransportId,
     pub timestamp: u64,
     pub sctp_state: Option<SctpState>,
-    pub bytes_received: usize,
+    pub bytes_received: u64,
     pub recv_bitrate: u32,
-    pub bytes_sent: usize,
+    pub bytes_sent: u64,
     pub send_bitrate: u32,
-    pub rtp_bytes_received: usize,
+    pub rtp_bytes_received: u64,
     pub rtp_recv_bitrate: u32,
-    pub rtp_bytes_sent: usize,
+    pub rtp_bytes_sent: u64,
     pub rtp_send_bitrate: u32,
-    pub rtx_bytes_received: usize,
+    pub rtx_bytes_received: u64,
     pub rtx_recv_bitrate: u32,
-    pub rtx_bytes_sent: usize,
+    pub rtx_bytes_sent: u64,
     pub rtx_send_bitrate: u32,
-    pub probation_bytes_sent: usize,
+    pub probation_bytes_sent: u64,
     pub probation_send_bitrate: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub available_outgoing_bitrate: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub available_incoming_bitrate: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_incoming_bitrate: Option<u32>,
+    pub max_incoming_bitrate: u32,
+    pub max_outgoing_bitrate: u32,
+    pub min_outgoing_bitrate: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rtp_packet_loss_received: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -162,8 +244,48 @@ pub struct PlainTransportStat {
     // PlainTransport specific.
     pub rtcp_mux: bool,
     pub comedia: bool,
-    pub tuple: Option<TransportTuple>,
+    pub tuple: TransportTuple,
     pub rtcp_tuple: Option<TransportTuple>,
+}
+
+impl PlainTransportStat {
+    pub(crate) fn from_fbs(
+        stats: plain_transport::GetStatsResponse,
+    ) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            transport_id: stats.base.transport_id.parse()?,
+            timestamp: stats.base.timestamp,
+            sctp_state: stats.base.sctp_state.as_ref().map(SctpState::from_fbs),
+            bytes_received: stats.base.bytes_received,
+            recv_bitrate: stats.base.recv_bitrate,
+            bytes_sent: stats.base.bytes_sent,
+            send_bitrate: stats.base.send_bitrate,
+            rtp_bytes_received: stats.base.rtp_bytes_received,
+            rtp_recv_bitrate: stats.base.rtp_recv_bitrate,
+            rtp_bytes_sent: stats.base.rtp_bytes_sent,
+            rtp_send_bitrate: stats.base.rtp_send_bitrate,
+            rtx_bytes_received: stats.base.rtx_bytes_received,
+            rtx_recv_bitrate: stats.base.rtx_recv_bitrate,
+            rtx_bytes_sent: stats.base.rtx_bytes_sent,
+            rtx_send_bitrate: stats.base.rtx_send_bitrate,
+            probation_bytes_sent: stats.base.probation_bytes_sent,
+            probation_send_bitrate: stats.base.probation_send_bitrate,
+            available_outgoing_bitrate: stats.base.available_outgoing_bitrate,
+            available_incoming_bitrate: stats.base.available_incoming_bitrate,
+            max_incoming_bitrate: stats.base.max_incoming_bitrate,
+            max_outgoing_bitrate: stats.base.max_outgoing_bitrate,
+            min_outgoing_bitrate: stats.base.min_outgoing_bitrate,
+            rtp_packet_loss_received: stats.base.rtp_packet_loss_received,
+            rtp_packet_loss_sent: stats.base.rtp_packet_loss_sent,
+            // PlainTransport specific.
+            rtcp_mux: stats.rtcp_mux,
+            comedia: stats.comedia,
+            tuple: TransportTuple::from_fbs(stats.tuple.as_ref()),
+            rtcp_tuple: stats
+                .rtcp_tuple
+                .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+        })
+    }
 }
 
 /// Remote parameters for plain transport.
@@ -254,13 +376,13 @@ impl Inner {
             if close_request {
                 let channel = self.channel.clone();
                 let router_id = self.router.id();
-                let request = TransportCloseRequest {
+                let request = TransportCloseRequestFbs {
                     transport_id: self.id,
                 };
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(router_id, request).await {
+                        if let Err(error) = channel.request_fbs(router_id, request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
                     })
@@ -443,28 +565,25 @@ impl TransportGeneric for PlainTransport {
     async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
-        todo!();
-        /*
-        serde_json::from_value(self.dump_impl().await?).map_err(|error| {
-            RequestError::FailedToParse {
-                error: error.to_string(),
-            }
-        })
-        */
+        if let response::Body::FbsPlainTransportDumpResponse(data) = self.dump_impl().await? {
+            Ok(PlainTransportDump::from_fbs(*data).expect("Error parsing dump response"))
+        } else {
+            panic!("Wrong message from worker");
+        }
     }
 
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
-        todo!();
-
-        /*
-        serde_json::from_value(self.get_stats_impl().await?).map_err(|error| {
-            RequestError::FailedToParse {
-                error: error.to_string(),
-            }
-        })
-        */
+        if let response::Body::FbsPlainTransportGetStatsResponse(data) =
+            self.get_stats_impl().await?
+        {
+            Ok(vec![
+                PlainTransportStat::from_fbs(*data).expect("Error parsing dump response")
+            ])
+        } else {
+            panic!("Wrong message from worker");
+        }
     }
 }
 
@@ -688,7 +807,7 @@ impl PlainTransport {
         let response = self
             .inner
             .channel
-            .request(
+            .request_fbs(
                 self.inner.id,
                 TransportConnectPlainRequest {
                     ip: remote_parameters.ip,
@@ -699,9 +818,7 @@ impl PlainTransport {
             )
             .await?;
 
-        if let Some(tuple) = response.tuple {
-            *self.inner.data.tuple.lock() = tuple;
-        }
+        *self.inner.data.tuple.lock() = response.tuple;
 
         if let Some(rtcp_tuple) = response.rtcp_tuple {
             self.inner.data.rtcp_tuple.lock().replace(rtcp_tuple);
