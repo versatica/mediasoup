@@ -22,9 +22,9 @@ inline static void onConnection(uv_stream_t* handle, int status)
 	}
 }
 
-inline static void onClose(uv_handle_t* handle)
+inline static void onCloseTcp(uv_handle_t* handle)
 {
-	delete handle;
+	delete reinterpret_cast<uv_tcp_t*>(handle);
 }
 
 /* Instance methods. */
@@ -45,7 +45,7 @@ TcpServerHandle::TcpServerHandle(uv_tcp_t* uvHandle) : uvHandle(uvHandle)
 
 	if (err != 0)
 	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 
 		MS_THROW_ERROR("uv_listen() failed: %s", uv_strerror(err));
 	}
@@ -53,7 +53,7 @@ TcpServerHandle::TcpServerHandle(uv_tcp_t* uvHandle) : uvHandle(uvHandle)
 	// Set local address.
 	if (!SetLocalAddress())
 	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 
 		MS_THROW_ERROR("error setting local IP and port");
 	}
@@ -90,7 +90,7 @@ void TcpServerHandle::Close()
 		delete connection;
 	}
 
-	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClose));
+	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 }
 
 void TcpServerHandle::Dump() const
