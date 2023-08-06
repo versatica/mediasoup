@@ -22,7 +22,7 @@ table Double {
 }
 
 table String {
-  value:string;
+  value:string (required);
 }
 
 union Value {
@@ -35,12 +35,12 @@ union Value {
 
 table Parameter {
   name: string (required);
-  value: Value;
+  value: Value (required);
 }
 
 table RtcpFeedback {
   type:string (required);
-  parameter:string;
+  parameter:string (required);
 }
 
 table RtpCodecParameters {
@@ -81,9 +81,9 @@ table RtcpParameters {
 table RtpParameters {
   mid:string;
   codecs:[RtpCodecParameters] (required);
-  header_extensions:[RtpHeaderExtensionParameters];
-  encodings:[RtpEncodingParameters];
-  rtcp:RtcpParameters;
+  header_extensions:[RtpHeaderExtensionParameters] (required);
+  encodings:[RtpEncodingParameters] (required);
+  rtcp:RtcpParameters (required);
 }
 
 table CodecMapping {

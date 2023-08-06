@@ -720,7 +720,7 @@ impl RtpParameters {
                         .map(|parameters| {
                             Ok((
                                 Cow::Owned(parameters.name),
-                                match parameters.value.ok_or("Value must always be specified")? {
+                                match parameters.value {
                                     rtp_parameters::Value::Boolean(_)
                                     | rtp_parameters::Value::Double(_)
                                     | rtp_parameters::Value::IntegerArray(_) => {
@@ -734,9 +734,7 @@ impl RtpParameters {
                                         )
                                     }
                                     rtp_parameters::Value::String(s) => {
-                                        RtpCodecParametersParametersValue::String(
-                                            s.value.unwrap_or_default().into(),
-                                        )
+                                        RtpCodecParametersParametersValue::String(s.value.into())
                                     }
                                 },
                             ))
@@ -749,7 +747,7 @@ impl RtpParameters {
                         .map(|rtcp_feedback| {
                             RtcpFeedback::from_type_parameter(
                                 &rtcp_feedback.type_,
-                                &rtcp_feedback.parameter.unwrap_or_default(),
+                                &rtcp_feedback.parameter,
                             )
                         })
                         .collect::<Result<_, _>>()?;
@@ -778,7 +776,6 @@ impl RtpParameters {
                 .collect::<Result<_, Box<dyn Error>>>()?,
             header_extensions: rtp_parameters
                 .header_extensions
-                .unwrap_or_default()
                 .into_iter()
                 .map(|header_extension_parameters| {
                     Ok(RtpHeaderExtensionParameters {
@@ -790,7 +787,6 @@ impl RtpParameters {
                 .collect::<Result<_, Box<dyn Error>>>()?,
             encodings: rtp_parameters
                 .encodings
-                .unwrap_or_default()
                 .into_iter()
                 .map(|encoding| {
                     Ok(RtpEncodingParameters {
@@ -802,19 +798,14 @@ impl RtpParameters {
                             .map(|rtx| RtpEncodingParametersRtx { ssrc: rtx.ssrc }),
                         dtx: Some(encoding.dtx),
                         scalability_mode: encoding.scalability_mode.unwrap_or_default().parse()?,
-                        scale_resolution_down_by: None,
                         max_bitrate: encoding.max_bitrate,
                     })
                 })
                 .collect::<Result<_, Box<dyn Error>>>()?,
-            rtcp: rtp_parameters
-                .rtcp
-                .map(|rtcp| RtcpParameters {
-                    cname: rtcp.cname,
-                    reduced_size: rtcp.reduced_size,
-                    mux: None,
-                })
-                .unwrap_or_default(),
+            rtcp: RtcpParameters {
+                cname: rtp_parameters.rtcp.cname,
+                reduced_size: rtp_parameters.rtcp.reduced_size,
+            },
         })
     }
 
@@ -838,11 +829,11 @@ impl RtpParameters {
                             .iter()
                             .map(|(name, value)| rtp_parameters::Parameter {
                                 name: name.to_string(),
-                                value: Some(match value {
+                                value: match value {
                                     RtpCodecParametersParametersValue::String(s) => {
                                         rtp_parameters::Value::String(Box::new(
                                             rtp_parameters::String {
-                                                value: Some(s.to_string()),
+                                                value: s.to_string(),
                                             },
                                         ))
                                     }
@@ -851,7 +842,7 @@ impl RtpParameters {
                                             rtp_parameters::Integer { value: *n as i32 },
                                         ))
                                     }
-                                }),
+                                },
                             })
                             .collect(),
                     ),
@@ -864,7 +855,7 @@ impl RtpParameters {
                                     let (r#type, parameter) = rtcp_feedback.as_type_parameter();
                                     rtp_parameters::RtcpFeedback {
                                         type_: r#type.to_string(),
-                                        parameter: Some(parameter.to_string()),
+                                        parameter: parameter.to_string(),
                                     }
                                 })
                                 .collect(),
@@ -872,43 +863,41 @@ impl RtpParameters {
                     },
                 })
                 .collect(),
-            header_extensions: Some(
-                self.header_extensions
-                    .into_iter()
-                    .map(|header_extension_parameters| {
-                        rtp_parameters::RtpHeaderExtensionParameters {
-                            uri: header_extension_parameters.uri.as_str().to_string(),
-                            id: header_extension_parameters.id as u8,
-                            encrypt: header_extension_parameters.encrypt,
-                            parameters: None,
-                        }
-                    })
-                    .collect(),
-            ),
-            encodings: Some(
-                self.encodings
-                    .into_iter()
-                    .map(|encoding| rtp_parameters::RtpEncodingParameters {
-                        ssrc: encoding.ssrc,
-                        rid: encoding.rid,
-                        codec_payload_type: encoding.codec_payload_type,
-                        rtx: encoding
-                            .rtx
-                            .map(|rtx| Box::new(rtp_parameters::Rtx { ssrc: rtx.ssrc })),
-                        dtx: encoding.dtx.unwrap_or_default(),
-                        scalability_mode: if encoding.scalability_mode.is_none() {
-                            None
-                        } else {
-                            Some(encoding.scalability_mode.as_str().to_string())
-                        },
-                        max_bitrate: encoding.max_bitrate,
-                    })
-                    .collect(),
-            ),
-            rtcp: Some(Box::new(rtp_parameters::RtcpParameters {
+            header_extensions: self
+                .header_extensions
+                .into_iter()
+                .map(
+                    |header_extension_parameters| rtp_parameters::RtpHeaderExtensionParameters {
+                        uri: header_extension_parameters.uri.as_str().to_string(),
+                        id: header_extension_parameters.id as u8,
+                        encrypt: header_extension_parameters.encrypt,
+                        parameters: None,
+                    },
+                )
+                .collect(),
+            encodings: self
+                .encodings
+                .into_iter()
+                .map(|encoding| rtp_parameters::RtpEncodingParameters {
+                    ssrc: encoding.ssrc,
+                    rid: encoding.rid,
+                    codec_payload_type: encoding.codec_payload_type,
+                    rtx: encoding
+                        .rtx
+                        .map(|rtx| Box::new(rtp_parameters::Rtx { ssrc: rtx.ssrc })),
+                    dtx: encoding.dtx.unwrap_or_default(),
+                    scalability_mode: if encoding.scalability_mode.is_none() {
+                        None
+                    } else {
+                        Some(encoding.scalability_mode.as_str().to_string())
+                    },
+                    max_bitrate: encoding.max_bitrate,
+                })
+                .collect(),
+            rtcp: Box::new(rtp_parameters::RtcpParameters {
                 cname: self.rtcp.cname,
                 reduced_size: self.rtcp.reduced_size,
-            })),
+            }),
         }
     }
 }
@@ -1198,9 +1187,6 @@ pub struct RtpEncodingParameters {
     /// Number of spatial and temporal layers in the RTP stream.
     #[serde(default, skip_serializing_if = "ScalabilityMode::is_none")]
     pub scalability_mode: ScalabilityMode,
-    /// Factor by which to reduce the size of a video track during encoding.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub scale_resolution_down_by: Option<f64>,
     /// Maximum number of bits per second to allow a track encoded with this encoding to use.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_bitrate: Option<u32>,
@@ -1240,9 +1226,6 @@ pub struct RtcpParameters {
     /// Whether reduced size RTCP RFC 5506 is configured (if true) or compound RTCP
     /// as specified in RFC 3550 (if false). Default true.
     pub reduced_size: bool,
-    /// Whether RTCP-mux is used. Default true.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mux: Option<bool>,
 }
 
 impl Default for RtcpParameters {
@@ -1250,7 +1233,6 @@ impl Default for RtcpParameters {
         Self {
             cname: None,
             reduced_size: true,
-            mux: None,
         }
     }
 }

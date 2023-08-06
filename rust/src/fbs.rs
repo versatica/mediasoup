@@ -13389,16 +13389,7 @@ mod root {
             )]
             pub struct String {
                 /// The field `value` in the table `String`
-                pub value: ::core::option::Option<::planus::alloc::string::String>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for String {
-                fn default() -> Self {
-                    Self {
-                        value: ::core::default::Default::default(),
-                    }
-                }
+                pub value: ::planus::alloc::string::String,
             }
 
             impl String {
@@ -13411,23 +13402,17 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_value: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
-                    >,
+                    field_value: impl ::planus::WriteAs<::planus::Offset<str>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_value = field_value.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    if prepared_value.is_some() {
-                        table_writer.write_entry::<::planus::Offset<str>>(0);
-                    }
+                    table_writer.write_entry::<::planus::Offset<str>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_value) = prepared_value {
-                                object_writer.write::<_, _, 4>(&prepared_value);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_value);
                         });
                     }
                     builder.current_offset()
@@ -13475,16 +13460,9 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn value<T0>(self, value: T0) -> StringBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T0: ::planus::WriteAs<::planus::Offset<str>>,
                 {
                     StringBuilder((value,))
-                }
-
-                /// Sets the [`value` field](String#structfield.value) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn value_as_null(self) -> StringBuilder<((),)> {
-                    self.value(())
                 }
             }
 
@@ -13499,7 +13477,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<str>>>
                 ::planus::WriteAs<::planus::Offset<String>> for StringBuilder<(T0,)>
             {
                 type Prepared = ::planus::Offset<String>;
@@ -13510,7 +13488,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<str>>>
                 ::planus::WriteAsOptional<::planus::Offset<String>> for StringBuilder<(T0,)>
             {
                 type Prepared = ::planus::Offset<String>;
@@ -13524,8 +13502,8 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>>
-                ::planus::WriteAsOffset<String> for StringBuilder<(T0,)>
+            impl<T0: ::planus::WriteAs<::planus::Offset<str>>> ::planus::WriteAsOffset<String>
+                for StringBuilder<(T0,)>
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<String> {
@@ -13541,20 +13519,15 @@ mod root {
             impl<'a> StringRef<'a> {
                 /// Getter for the [`value` field](String#structfield.value).
                 #[inline]
-                pub fn value(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
-                {
-                    self.0.access(0, "String", "value")
+                pub fn value(&self) -> ::planus::Result<&'a ::core::primitive::str> {
+                    self.0.access_required(0, "String", "value")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for StringRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("StringRef");
-                    if let ::core::option::Option::Some(field_value) = self.value().transpose() {
-                        f.field("value", &field_value);
-                    }
+                    f.field("value", &self.value());
                     f.finish()
                 }
             }
@@ -13565,11 +13538,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: StringRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        value: if let ::core::option::Option::Some(value) = value.value()? {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(value)?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        value: ::core::convert::TryInto::try_into(value.value()?)?,
                     })
                 }
             }
@@ -13999,7 +13968,7 @@ mod root {
                 /// The field `name` in the table `Parameter`
                 pub name: ::planus::alloc::string::String,
                 /// The field `value` in the table `Parameter`
-                pub value: ::core::option::Option<self::Value>,
+                pub value: self::Value,
             }
 
             impl Parameter {
@@ -14013,7 +13982,7 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_name: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_value: impl ::planus::WriteAsOptionalUnion<self::Value>,
+                    field_value: impl ::planus::WriteAsUnion<self::Value>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_name = field_name.prepare(builder);
                     let prepared_value = field_value.prepare(builder);
@@ -14021,22 +13990,14 @@ mod root {
                     let mut table_writer: ::planus::table_writer::TableWriter<10> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<str>>(0);
-                    if prepared_value.is_some() {
-                        table_writer.write_entry::<::planus::Offset<self::Value>>(2);
-                    }
-                    if prepared_value.is_some() {
-                        table_writer.write_entry::<u8>(1);
-                    }
+                    table_writer.write_entry::<::planus::Offset<self::Value>>(2);
+                    table_writer.write_entry::<u8>(1);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_name);
-                            if let ::core::option::Option::Some(prepared_value) = prepared_value {
-                                object_writer.write::<_, _, 4>(&prepared_value.offset());
-                            }
-                            if let ::core::option::Option::Some(prepared_value) = prepared_value {
-                                object_writer.write::<_, _, 1>(&prepared_value.tag());
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_value.offset());
+                            object_writer.write::<_, _, 1>(&prepared_value.tag());
                         });
                     }
                     builder.current_offset()
@@ -14096,17 +14057,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn value<T1>(self, value: T1) -> ParameterBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAsOptionalUnion<self::Value>,
+                    T1: ::planus::WriteAsUnion<self::Value>,
                 {
                     let (v0,) = self.0;
                     ParameterBuilder((v0, value))
-                }
-
-                /// Sets the [`value` field](Parameter#structfield.value) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn value_as_null(self) -> ParameterBuilder<(T0, ())> {
-                    self.value(())
                 }
             }
 
@@ -14123,7 +14077,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptionalUnion<self::Value>,
+                    T1: ::planus::WriteAsUnion<self::Value>,
                 > ::planus::WriteAs<::planus::Offset<Parameter>> for ParameterBuilder<(T0, T1)>
             {
                 type Prepared = ::planus::Offset<Parameter>;
@@ -14136,7 +14090,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptionalUnion<self::Value>,
+                    T1: ::planus::WriteAsUnion<self::Value>,
                 > ::planus::WriteAsOptional<::planus::Offset<Parameter>>
                 for ParameterBuilder<(T0, T1)>
             {
@@ -14153,7 +14107,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptionalUnion<self::Value>,
+                    T1: ::planus::WriteAsUnion<self::Value>,
                 > ::planus::WriteAsOffset<Parameter> for ParameterBuilder<(T0, T1)>
             {
                 #[inline]
@@ -14176,10 +14130,8 @@ mod root {
 
                 /// Getter for the [`value` field](Parameter#structfield.value).
                 #[inline]
-                pub fn value(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<self::ValueRef<'a>>> {
-                    self.0.access_union(1, "Parameter", "value")
+                pub fn value(&self) -> ::planus::Result<self::ValueRef<'a>> {
+                    self.0.access_union_required(1, "Parameter", "value")
                 }
             }
 
@@ -14187,9 +14139,7 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("ParameterRef");
                     f.field("name", &self.name());
-                    if let ::core::option::Option::Some(field_value) = self.value().transpose() {
-                        f.field("value", &field_value);
-                    }
+                    f.field("value", &self.value());
                     f.finish()
                 }
             }
@@ -14201,11 +14151,7 @@ mod root {
                 fn try_from(value: ParameterRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         name: ::core::convert::TryInto::try_into(value.name()?)?,
-                        value: if let ::core::option::Option::Some(value) = value.value()? {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(value)?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        value: ::core::convert::TryInto::try_into(value.value()?)?,
                     })
                 }
             }
@@ -14299,7 +14245,7 @@ mod root {
                 /// The field `type` in the table `RtcpFeedback`
                 pub type_: ::planus::alloc::string::String,
                 /// The field `parameter` in the table `RtcpFeedback`
-                pub parameter: ::core::option::Option<::planus::alloc::string::String>,
+                pub parameter: ::planus::alloc::string::String,
             }
 
             impl RtcpFeedback {
@@ -14313,9 +14259,7 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_type_: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_parameter: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
-                    >,
+                    field_parameter: impl ::planus::WriteAs<::planus::Offset<str>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_type_ = field_type_.prepare(builder);
                     let prepared_parameter = field_parameter.prepare(builder);
@@ -14323,18 +14267,12 @@ mod root {
                     let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<str>>(0);
-                    if prepared_parameter.is_some() {
-                        table_writer.write_entry::<::planus::Offset<str>>(1);
-                    }
+                    table_writer.write_entry::<::planus::Offset<str>>(1);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_type_);
-                            if let ::core::option::Option::Some(prepared_parameter) =
-                                prepared_parameter
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_parameter);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_parameter);
                         });
                     }
                     builder.current_offset()
@@ -14400,17 +14338,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn parameter<T1>(self, value: T1) -> RtcpFeedbackBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
                 {
                     let (v0,) = self.0;
                     RtcpFeedbackBuilder((v0, value))
-                }
-
-                /// Sets the [`parameter` field](RtcpFeedback#structfield.parameter) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn parameter_as_null(self) -> RtcpFeedbackBuilder<(T0, ())> {
-                    self.parameter(())
                 }
             }
 
@@ -14430,7 +14361,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAs<::planus::Offset<RtcpFeedback>>
                 for RtcpFeedbackBuilder<(T0, T1)>
             {
@@ -14447,7 +14378,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAsOptional<::planus::Offset<RtcpFeedback>>
                 for RtcpFeedbackBuilder<(T0, T1)>
             {
@@ -14464,7 +14395,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAsOffset<RtcpFeedback> for RtcpFeedbackBuilder<(T0, T1)>
             {
                 #[inline]
@@ -14490,11 +14421,8 @@ mod root {
 
                 /// Getter for the [`parameter` field](RtcpFeedback#structfield.parameter).
                 #[inline]
-                pub fn parameter(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
-                {
-                    self.0.access(1, "RtcpFeedback", "parameter")
+                pub fn parameter(&self) -> ::planus::Result<&'a ::core::primitive::str> {
+                    self.0.access_required(1, "RtcpFeedback", "parameter")
                 }
             }
 
@@ -14502,11 +14430,7 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("RtcpFeedbackRef");
                     f.field("type_", &self.type_());
-                    if let ::core::option::Option::Some(field_parameter) =
-                        self.parameter().transpose()
-                    {
-                        f.field("parameter", &field_parameter);
-                    }
+                    f.field("parameter", &self.parameter());
                     f.finish()
                 }
             }
@@ -14518,15 +14442,7 @@ mod root {
                 fn try_from(value: RtcpFeedbackRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         type_: ::core::convert::TryInto::try_into(value.type_()?)?,
-                        parameter: if let ::core::option::Option::Some(parameter) =
-                            value.parameter()?
-                        {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
-                                parameter,
-                            )?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        parameter: ::core::convert::TryInto::try_into(value.parameter()?)?,
                     })
                 }
             }
@@ -16875,14 +16791,12 @@ mod root {
                 /// The field `codecs` in the table `RtpParameters`
                 pub codecs: ::planus::alloc::vec::Vec<self::RtpCodecParameters>,
                 /// The field `header_extensions` in the table `RtpParameters`
-                pub header_extensions: ::core::option::Option<
+                pub header_extensions:
                     ::planus::alloc::vec::Vec<self::RtpHeaderExtensionParameters>,
-                >,
                 /// The field `encodings` in the table `RtpParameters`
-                pub encodings:
-                    ::core::option::Option<::planus::alloc::vec::Vec<self::RtpEncodingParameters>>,
+                pub encodings: ::planus::alloc::vec::Vec<self::RtpEncodingParameters>,
                 /// The field `rtcp` in the table `RtpParameters`
-                pub rtcp: ::core::option::Option<::planus::alloc::boxed::Box<self::RtcpParameters>>,
+                pub rtcp: ::planus::alloc::boxed::Box<self::RtcpParameters>,
             }
 
             impl RtpParameters {
@@ -16899,13 +16813,13 @@ mod root {
                     field_codecs: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpCodecParameters>]>,
                     >,
-                    field_header_extensions: impl ::planus::WriteAsOptional<
+                    field_header_extensions: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpHeaderExtensionParameters>]>,
                     >,
-                    field_encodings: impl ::planus::WriteAsOptional<
+                    field_encodings: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>,
                     >,
-                    field_rtcp: impl ::planus::WriteAsOptional<::planus::Offset<self::RtcpParameters>>,
+                    field_rtcp: impl ::planus::WriteAs<::planus::Offset<self::RtcpParameters>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_mid = field_mid.prepare(builder);
                     let prepared_codecs = field_codecs.prepare(builder);
@@ -16919,19 +16833,11 @@ mod root {
                         table_writer.write_entry::<::planus::Offset<str>>(0);
                     }
                     table_writer.write_entry::<::planus::Offset<[::planus::Offset<self::RtpCodecParameters>]>>(1);
-                    if prepared_header_extensions.is_some() {
-                        table_writer.write_entry::<::planus::Offset<
-                            [::planus::Offset<self::RtpHeaderExtensionParameters>],
-                        >>(2);
-                    }
-                    if prepared_encodings.is_some() {
-                        table_writer.write_entry::<::planus::Offset<
-                            [::planus::Offset<self::RtpEncodingParameters>],
-                        >>(3);
-                    }
-                    if prepared_rtcp.is_some() {
-                        table_writer.write_entry::<::planus::Offset<self::RtcpParameters>>(4);
-                    }
+                    table_writer.write_entry::<::planus::Offset<
+                        [::planus::Offset<self::RtpHeaderExtensionParameters>],
+                    >>(2);
+                    table_writer.write_entry::<::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>>(3);
+                    table_writer.write_entry::<::planus::Offset<self::RtcpParameters>>(4);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
@@ -16939,19 +16845,9 @@ mod root {
                                 object_writer.write::<_, _, 4>(&prepared_mid);
                             }
                             object_writer.write::<_, _, 4>(&prepared_codecs);
-                            if let ::core::option::Option::Some(prepared_header_extensions) =
-                                prepared_header_extensions
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_header_extensions);
-                            }
-                            if let ::core::option::Option::Some(prepared_encodings) =
-                                prepared_encodings
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_encodings);
-                            }
-                            if let ::core::option::Option::Some(prepared_rtcp) = prepared_rtcp {
-                                object_writer.write::<_, _, 4>(&prepared_rtcp);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_header_extensions);
+                            object_writer.write::<_, _, 4>(&prepared_encodings);
+                            object_writer.write::<_, _, 4>(&prepared_rtcp);
                         });
                     }
                     builder.current_offset()
@@ -17046,19 +16942,12 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn header_extensions<T2>(self, value: T2) -> RtpParametersBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAsOptional<
+                    T2: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpHeaderExtensionParameters>]>,
                     >,
                 {
                     let (v0, v1) = self.0;
                     RtpParametersBuilder((v0, v1, value))
-                }
-
-                /// Sets the [`header_extensions` field](RtpParameters#structfield.header_extensions) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn header_extensions_as_null(self) -> RtpParametersBuilder<(T0, T1, ())> {
-                    self.header_extensions(())
                 }
             }
 
@@ -17068,19 +16957,12 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn encodings<T3>(self, value: T3) -> RtpParametersBuilder<(T0, T1, T2, T3)>
                 where
-                    T3: ::planus::WriteAsOptional<
+                    T3: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>,
                     >,
                 {
                     let (v0, v1, v2) = self.0;
                     RtpParametersBuilder((v0, v1, v2, value))
-                }
-
-                /// Sets the [`encodings` field](RtpParameters#structfield.encodings) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn encodings_as_null(self) -> RtpParametersBuilder<(T0, T1, T2, ())> {
-                    self.encodings(())
                 }
             }
 
@@ -17090,17 +16972,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn rtcp<T4>(self, value: T4) -> RtpParametersBuilder<(T0, T1, T2, T3, T4)>
                 where
-                    T4: ::planus::WriteAsOptional<::planus::Offset<self::RtcpParameters>>,
+                    T4: ::planus::WriteAs<::planus::Offset<self::RtcpParameters>>,
                 {
                     let (v0, v1, v2, v3) = self.0;
                     RtpParametersBuilder((v0, v1, v2, v3, value))
-                }
-
-                /// Sets the [`rtcp` field](RtpParameters#structfield.rtcp) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn rtcp_as_null(self) -> RtpParametersBuilder<(T0, T1, T2, T3, ())> {
-                    self.rtcp(())
                 }
             }
 
@@ -17123,13 +16998,13 @@ mod root {
                     T1: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpCodecParameters>]>,
                     >,
-                    T2: ::planus::WriteAsOptional<
+                    T2: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpHeaderExtensionParameters>]>,
                     >,
-                    T3: ::planus::WriteAsOptional<
+                    T3: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>,
                     >,
-                    T4: ::planus::WriteAsOptional<::planus::Offset<self::RtcpParameters>>,
+                    T4: ::planus::WriteAs<::planus::Offset<self::RtcpParameters>>,
                 > ::planus::WriteAs<::planus::Offset<RtpParameters>>
                 for RtpParametersBuilder<(T0, T1, T2, T3, T4)>
             {
@@ -17149,13 +17024,13 @@ mod root {
                     T1: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpCodecParameters>]>,
                     >,
-                    T2: ::planus::WriteAsOptional<
+                    T2: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpHeaderExtensionParameters>]>,
                     >,
-                    T3: ::planus::WriteAsOptional<
+                    T3: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>,
                     >,
-                    T4: ::planus::WriteAsOptional<::planus::Offset<self::RtcpParameters>>,
+                    T4: ::planus::WriteAs<::planus::Offset<self::RtcpParameters>>,
                 > ::planus::WriteAsOptional<::planus::Offset<RtpParameters>>
                 for RtpParametersBuilder<(T0, T1, T2, T3, T4)>
             {
@@ -17175,13 +17050,13 @@ mod root {
                     T1: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpCodecParameters>]>,
                     >,
-                    T2: ::planus::WriteAsOptional<
+                    T2: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpHeaderExtensionParameters>]>,
                     >,
-                    T3: ::planus::WriteAsOptional<
+                    T3: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::RtpEncodingParameters>]>,
                     >,
-                    T4: ::planus::WriteAsOptional<::planus::Offset<self::RtcpParameters>>,
+                    T4: ::planus::WriteAs<::planus::Offset<self::RtcpParameters>>,
                 > ::planus::WriteAsOffset<RtpParameters>
                 for RtpParametersBuilder<(T0, T1, T2, T3, T4)>
             {
@@ -17224,14 +17099,13 @@ mod root {
                 pub fn header_extensions(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<
-                            'a,
-                            ::planus::Result<self::RtpHeaderExtensionParametersRef<'a>>,
-                        >,
+                    ::planus::Vector<
+                        'a,
+                        ::planus::Result<self::RtpHeaderExtensionParametersRef<'a>>,
                     >,
                 > {
-                    self.0.access(2, "RtpParameters", "header_extensions")
+                    self.0
+                        .access_required(2, "RtpParameters", "header_extensions")
                 }
 
                 /// Getter for the [`encodings` field](RtpParameters#structfield.encodings).
@@ -17239,20 +17113,15 @@ mod root {
                 pub fn encodings(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<self::RtpEncodingParametersRef<'a>>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<self::RtpEncodingParametersRef<'a>>>,
                 > {
-                    self.0.access(3, "RtpParameters", "encodings")
+                    self.0.access_required(3, "RtpParameters", "encodings")
                 }
 
                 /// Getter for the [`rtcp` field](RtpParameters#structfield.rtcp).
                 #[inline]
-                pub fn rtcp(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<self::RtcpParametersRef<'a>>>
-                {
-                    self.0.access(4, "RtpParameters", "rtcp")
+                pub fn rtcp(&self) -> ::planus::Result<self::RtcpParametersRef<'a>> {
+                    self.0.access_required(4, "RtpParameters", "rtcp")
                 }
             }
 
@@ -17263,19 +17132,9 @@ mod root {
                         f.field("mid", &field_mid);
                     }
                     f.field("codecs", &self.codecs());
-                    if let ::core::option::Option::Some(field_header_extensions) =
-                        self.header_extensions().transpose()
-                    {
-                        f.field("header_extensions", &field_header_extensions);
-                    }
-                    if let ::core::option::Option::Some(field_encodings) =
-                        self.encodings().transpose()
-                    {
-                        f.field("encodings", &field_encodings);
-                    }
-                    if let ::core::option::Option::Some(field_rtcp) = self.rtcp().transpose() {
-                        f.field("rtcp", &field_rtcp);
-                    }
+                    f.field("header_extensions", &self.header_extensions());
+                    f.field("encodings", &self.encodings());
+                    f.field("rtcp", &self.rtcp());
                     f.finish()
                 }
             }
@@ -17292,27 +17151,11 @@ mod root {
                             ::core::option::Option::None
                         },
                         codecs: value.codecs()?.to_vec_result()?,
-                        header_extensions: if let ::core::option::Option::Some(header_extensions) =
-                            value.header_extensions()?
-                        {
-                            ::core::option::Option::Some(header_extensions.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        encodings: if let ::core::option::Option::Some(encodings) =
-                            value.encodings()?
-                        {
-                            ::core::option::Option::Some(encodings.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        rtcp: if let ::core::option::Option::Some(rtcp) = value.rtcp()? {
-                            ::core::option::Option::Some(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryInto::try_into(rtcp)?,
-                            ))
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        header_extensions: value.header_extensions()?.to_vec_result()?,
+                        encodings: value.encodings()?.to_vec_result()?,
+                        rtcp: ::planus::alloc::boxed::Box::new(::core::convert::TryInto::try_into(
+                            value.rtcp()?,
+                        )?),
                     })
                 }
             }
