@@ -106,7 +106,7 @@ type PipeTransportPair =
 };
 
 export type RouterEvents =
-{ 
+{
 	workerclose: [];
 	// Private events.
 	'@close': [];
@@ -465,13 +465,13 @@ export class Router<RouterAppData extends AppData = AppData>
 			this.#dataProducers.delete(dataProducer.id)
 		));
 
+		// Emit observer event.
+		this.#observer.safeEmit('newtransport', transport);
+
 		if (webRtcServer)
 		{
 			webRtcServer.handleWebRtcTransport(transport);
 		}
-
-		// Emit observer event.
-		this.#observer.safeEmit('newtransport', transport);
 
 		return transport;
 	}
@@ -1080,7 +1080,7 @@ export class Router<RouterAppData extends AppData = AppData>
 		{
 			throw new TypeError('if given, appData must be an object');
 		}
-		
+
 		const reqData =
 		{
 			rtpObserverId : uuidv4(),
@@ -1103,7 +1103,7 @@ export class Router<RouterAppData extends AppData = AppData>
 					this.#producers.get(producerId)
 				)
 			});
-		
+
 		this.#rtpObservers.set(activeSpeakerObserver.id, activeSpeakerObserver);
 		activeSpeakerObserver.on('@close', () =>
 		{
