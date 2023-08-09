@@ -164,15 +164,20 @@ namespace RTC
 
 			// Then check that there are 0, 1, 2 or 3 (no more) null octets that pad
 			// the chunk to 4 bytes.
-			auto neededAdditionalNullOctets = Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(chunkLength)) -
+			uint16_t neededAdditionalNullOctets = Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(chunkLength)) -
 			                                  static_cast<uint16_t>(chunkLength);
 			uint16_t foundAdditionalNullOctets{ 0u };
 
 			for (uint16_t i{ 0u }; len > offset && i < neededAdditionalNullOctets; ++i)
 			{
-				if (Utils::Byte::Get1Byte(data, offset + i) != 0u)
+				if (Utils::Byte::Get1Byte(data, offset) != 0u)
 				{
-					MS_WARN_TAG(rtcp, "invalid SDES chunk (missing additional null octets), discarded");
+					MS_WARN_TAG(
+					  rtcp,
+					  "invalid SDES chunk (missing additional null octets [needed:%" PRIu16 ", found:%" PRIu16
+					  "]), discarded",
+					  neededAdditionalNullOctets,
+					  foundAdditionalNullOctets);
 
 					return nullptr;
 				}
@@ -184,7 +189,12 @@ namespace RTC
 
 			if (foundAdditionalNullOctets != neededAdditionalNullOctets)
 			{
-				MS_WARN_TAG(rtcp, "invalid SDES chunk (missing additional null octets), discarded");
+				MS_WARN_TAG(
+				  rtcp,
+				  "invalid SDES chunk (missing additional null octets [needed:%" PRIu16 ", found:%" PRIu16
+				  "]), discarded",
+				  neededAdditionalNullOctets,
+				  foundAdditionalNullOctets);
 
 				return nullptr;
 			}

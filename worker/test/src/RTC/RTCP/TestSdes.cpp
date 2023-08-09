@@ -99,6 +99,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 		SdesPacket* packet = SdesPacket::Parse(buffer1, sizeof(buffer1));
 		auto* header       = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer1);
 
+		REQUIRE(packet);
 		REQUIRE(ntohs(header->length) == 6);
 		REQUIRE(packet->GetSize() == 28);
 		REQUIRE(packet->GetCount() == 1);
@@ -171,6 +172,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 		SdesPacket* packet = SdesPacket::Parse(buffer2, sizeof(buffer2));
 		auto* header       = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer2);
 
+		REQUIRE(packet);
 		REQUIRE(ntohs(header->length) == 13);
 		// Despite total buffer size is 56 bytes, our GetSize() method doesn't not
 		// consider RTCP padding (4 bytes in this case).
@@ -298,6 +300,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 		SdesPacket* packet = SdesPacket::Parse(buffer3, sizeof(buffer3));
 		auto* header       = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer3);
 
+		REQUIRE(packet);
 		REQUIRE(ntohs(header->length) == 3);
 		REQUIRE(packet->GetSize() == 16);
 		REQUIRE(packet->GetCount() == 1);
@@ -353,7 +356,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 			auto* chunk1          = *it;
 			uint8_t* chunk1Buffer = buffer3 + Packet::CommonHeaderSize;
 
-			// NOTE: Length of first chunk (including null octets) is 24.
+			// NOTE: Length of first chunk (including null octets) is 12.
 			uint8_t serialized1[12] = { 0 };
 
 			chunk1->Serialize(serialized1);
