@@ -133,7 +133,7 @@ type PipeTransportPair =
 };
 
 export type RouterEvents =
-{ 
+{
 	workerclose: [];
 	// Private events.
 	'@close': [];
@@ -598,13 +598,13 @@ export class Router<RouterAppData extends AppData = AppData>
 			this.#dataProducers.delete(dataProducer.id)
 		));
 
+		// Emit observer event.
+		this.#observer.safeEmit('newtransport', transport);
+
 		if (webRtcServer)
 		{
 			webRtcServer.handleWebRtcTransport(transport);
 		}
-
-		// Emit observer event.
-		this.#observer.safeEmit('newtransport', transport);
 
 		return transport;
 	}

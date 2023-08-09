@@ -1,11 +1,17 @@
 # Changelog
 
+
 ### Next
 
 * Switch from JSON based messages to `flatbuffers` ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
 * Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
 * Add optional `rtcpListenInfo` in `PlainTransportOptions` ([PR #1099](https://github.com/versatica/mediasoup/pull/1099)).
 * Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
+
+
+### 3.12.9
+
+* Fix RTCP SDES ([PR #1139](https://github.com/versatica/mediasoup/pull/1139)).
 
 
 ### 3.12.8

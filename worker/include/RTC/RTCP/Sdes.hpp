@@ -121,6 +121,9 @@ namespace RTC
 					size += item->GetSize();
 				}
 
+				// Add the mandatory null octet.
+				++size;
+
 				// Consider pading to 32 bits (4 bytes) boundary.
 				// http://stackoverflow.com/questions/11642210/computing-padding-required-for-n-byte-alignment
 				return (size + 3) & ~3;
