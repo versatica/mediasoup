@@ -61,7 +61,9 @@ namespace RTC
 			auto it = SdesItem::type2String.find(type);
 
 			if (it == SdesItem::type2String.end())
+			{
 				return Unknown;
+			}
 
 			return it->second;
 		}
@@ -127,17 +129,64 @@ namespace RTC
 
 			std::unique_ptr<SdesChunk> chunk(new SdesChunk(ssrc));
 
-			size_t offset = 4u /* ssrc */;
+			size_t offset{ 4u }; /* ssrc */
+			size_t chunkLength{ 4u };
 
 			while (len > offset)
 			{
-				SdesItem* item = SdesItem::Parse(data + offset, len - offset);
+				auto* item = SdesItem::Parse(data + offset, len - offset);
 
 				if (!item)
+				{
 					break;
+				}
 
 				chunk->AddItem(item);
+				chunkLength += item->GetSize();
 				offset += item->GetSize();
+			}
+
+			// Once all items have been parsed, there must be 1, 2, 3 or 4 null octets
+			// (this is mandatory). The first one (AKA item type 0) means "end of
+			// items", and the others maybe needed for padding the chunk to 4 bytes.
+
+			// First ensure that there is at least one null octet.
+			if (offset == len || (offset < len && Utils::Byte::Get1Byte(data, offset) != 0u))
+			{
+				MS_WARN_TAG(rtcp, "invalid SDES chunk (missing mandatory null octet), discarded");
+
+				return nullptr;
+			}
+
+			// So we have the mandatory null octet.
+			++chunkLength;
+			++offset;
+
+			// Then check that there are 0, 1, 2 or 3 (no more) null octets that pad
+			// the chunk to 4 bytes.
+			auto neededAdditionalNullOctets = Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(chunkLength)) -
+			                                  static_cast<uint16_t>(chunkLength);
+			uint16_t foundAdditionalNullOctets{ 0u };
+
+			for (uint16_t i{ 0u }; len > offset && i < neededAdditionalNullOctets; ++i)
+			{
+				if (Utils::Byte::Get1Byte(data, offset + i) != 0u)
+				{
+					MS_WARN_TAG(rtcp, "invalid SDES chunk (missing additional null octets), discarded");
+
+					return nullptr;
+				}
+
+				++foundAdditionalNullOctets;
+				++chunkLength;
+				++offset;
+			}
+
+			if (foundAdditionalNullOctets != neededAdditionalNullOctets)
+			{
+				MS_WARN_TAG(rtcp, "invalid SDES chunk (missing additional null octets), discarded");
+
+				return nullptr;
 			}
 
 			return chunk.release();
@@ -159,10 +208,15 @@ namespace RTC
 				offset += item->Serialize(buffer + offset);
 			}
 
+			// Add the mandatory null octet.
+			buffer[offset] = 0;
+
+			++offset;
+
 			// 32 bits padding.
 			const size_t padding = (-offset) & 3;
 
-			for (size_t i{ 0 }; i < padding; ++i)
+			for (size_t i{ 0u }; i < padding; ++i)
 			{
 				buffer[offset + i] = 0;
 			}
@@ -199,9 +253,9 @@ namespace RTC
 			size_t offset = Packet::CommonHeaderSize;
 			uint8_t count = header->count;
 
-			while ((count-- != 0u) && (len > offset))
+			while (count-- && (len > offset))
 			{
-				SdesChunk* chunk = SdesChunk::Parse(data + offset, len - offset);
+				auto* chunk = SdesChunk::Parse(data + offset, len - offset);
 
 				if (chunk != nullptr)
 				{
@@ -210,8 +264,15 @@ namespace RTC
 				}
 				else
 				{
-					return packet.release();
+					break;
 				}
+			}
+
+			if (packet->GetCount() != header->count)
+			{
+				MS_WARN_TAG(rtcp, "RTCP count value doesn't match found number of chunks, discarded");
+
+				return nullptr;
 			}
 
 			return packet.release();
@@ -227,7 +288,7 @@ namespace RTC
 			size_t length   = 0;
 			uint8_t* header = { nullptr };
 
-			for (size_t i = 0; i < this->GetCount(); i++)
+			for (size_t i{ 0u }; i < this->GetCount(); ++i)
 			{
 				// Create a new SDES packet header for each 31 chunks.
 				if (i % MaxChunksPerPacket == 0)
