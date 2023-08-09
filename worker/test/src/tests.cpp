@@ -40,6 +40,10 @@ int main(int argc, char* argv[])
 	{
 		Settings::configuration.logTags.rtp = true;
 	}
+	if (std::getenv("MS_TEST_LOG_TAG_RTCP"))
+	{
+		Settings::configuration.logTags.rtcp = true;
+	}
 
 	// Initialize static stuff.
 	DepLibUV::ClassInit();
