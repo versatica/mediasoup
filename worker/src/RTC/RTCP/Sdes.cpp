@@ -164,8 +164,9 @@ namespace RTC
 
 			// Then check that there are 0, 1, 2 or 3 (no more) null octets that pad
 			// the chunk to 4 bytes.
-			uint16_t neededAdditionalNullOctets = Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(chunkLength)) -
-			                                  static_cast<uint16_t>(chunkLength);
+			uint16_t neededAdditionalNullOctets =
+			  Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(chunkLength)) -
+			  static_cast<uint16_t>(chunkLength);
 			uint16_t foundAdditionalNullOctets{ 0u };
 
 			for (uint16_t i{ 0u }; len > offset && i < neededAdditionalNullOctets; ++i)
