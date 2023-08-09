@@ -28,8 +28,6 @@ namespace TestSdes
 	};
 	// clang-format on
 
-	uint8_t* chunkBuffer1 = buffer1 + Packet::CommonHeaderSize;
-
 	// First chunk (chunk 1).
 	uint32_t ssrc1{ 0x9f65e742 };
 	// First item (item 1).
@@ -58,8 +56,6 @@ namespace TestSdes
 	};
 	// clang-format on
 
-	uint8_t* chunkBuffer2 = buffer2 + Packet::CommonHeaderSize;
-
 	// First chunk (chunk 2).
 	uint32_t ssrc2{ 1234 };
 	// First item (item 2).
@@ -87,69 +83,74 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 	{
 		SdesPacket* packet = SdesPacket::Parse(buffer1, sizeof(buffer1));
 		auto* header       = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer1);
-		size_t chunkIdx{ 0u };
-		size_t itemIdx{ 0u };
 
 		REQUIRE(ntohs(header->length) == 6);
 		REQUIRE(packet->GetSize() == 28);
 		REQUIRE(packet->GetCount() == 1);
 
-		// TODO: We never exit this loop!!!
-		// for (auto* chunk = *(packet->Begin()); chunk != *(packet->End()); ++chunk, ++chunkIdx)
-		// {
-		// 	MS_DUMP("---- parse packet 1 | chunkIdx:%zu, chunk address:%llu", chunkIdx, chunk);
+		size_t chunkIdx{ 0u };
 
-		// 	switch (chunkIdx)
-		// 	{
-		// 		/* First chunk (chunk 1). */
-		// 		case 0:
-		// 		{
-		// 			// Chunk size must be 24 bytes (including 4 null octets).
-		// 			REQUIRE(chunk->GetSize() == 24);
-		// 			REQUIRE(chunk->GetSsrc() == ssrc1);
+		for (auto it = packet->Begin(); it != packet->End(); ++it, ++chunkIdx)
+		{
+			auto* chunk = *it;
 
-		// 			// TODO: We never exit this loop!!!
-		// 			for (auto* item = *(chunk->Begin()); item != *(chunk->End()); ++item, ++itemIdx)
-		// 			{
-		// 				MS_DUMP("---- parse packet 1 | itemIdx:%zu, item address:%llu", itemIdx, item);
+			MS_DUMP("---- parse packet 1 | chunkIdx:%zu, chunk address:%llu", chunkIdx, chunk);
 
-		// 				switch (itemIdx)
-		// 				{
-		// 					/* First item (item 1). */
-		// 					case 0:
-		// 					{
-		// 						REQUIRE(item->GetType() == item1Type);
-		// 						REQUIRE(item->GetLength() == item1Length);
-		// 						REQUIRE(std::string(item->GetValue(), item1Length) == item1Value);
+			switch (chunkIdx)
+			{
+				/* First chunk (chunk 1). */
+				case 0:
+				{
+					// Chunk size must be 24 bytes (including 4 null octets).
+					REQUIRE(chunk->GetSize() == 24);
+					REQUIRE(chunk->GetSsrc() == ssrc1);
 
-		// 						break;
-		// 					}
-		// 				}
-		// 			}
+					size_t itemIdx{ 0u };
 
-		// 			// There is 1 item.
-		// 			REQUIRE(itemIdx == 0);
+					for (auto it2 = chunk->Begin(); it2 != chunk->End(); ++it2, ++itemIdx)
+					{
+						auto* item = *it2;
 
-		// 			SECTION("serialize SdesChunk instance")
-		// 			{
-		// 				// NOTE: Length of first chunk (including null octets) is 24.
-		// 				uint8_t serialized[24] = { 0 };
+						MS_DUMP("---- parse packet 1 | itemIdx:%zu, item address:%llu", itemIdx, item);
 
-		// 				chunk->Serialize(serialized);
+						switch (itemIdx)
+						{
+							/* First item (item 1). */
+							case 0:
+							{
+								REQUIRE(item->GetType() == item1Type);
+								REQUIRE(item->GetLength() == item1Length);
+								REQUIRE(std::string(item->GetValue(), item1Length) == item1Value);
 
-		// 				SECTION("compare serialized SdesChunk with original buffer")
-		// 				{
-		// 					REQUIRE(std::memcmp(chunkBuffer1, serialized, 24) == 0);
-		// 				}
-		// 			}
+								break;
+							}
+						}
+					}
 
-		// 			break;
-		// 		}
-		// 	}
-		// }
+					// There is 1 item.
+					REQUIRE(itemIdx == 1);
 
-		// // There is 1 chunk.
-		// REQUIRE(chunkIdx == 0);
+					break;
+				}
+			}
+		}
+
+		// There is 1 chunk.
+		REQUIRE(chunkIdx == 1);
+
+		SECTION("serialize SdesChunk instance")
+		{
+			auto it = packet->Begin();
+			auto* chunk1 = *it;
+			uint8_t* chunk1Buffer = buffer1 + Packet::CommonHeaderSize;
+
+			// NOTE: Length of first chunk (including null octets) is 24.
+			uint8_t serialized1[24] = { 0 };
+
+			chunk1->Serialize(serialized1);
+
+			REQUIRE(std::memcmp(chunk1Buffer, serialized1, 24) == 0);
+		}
 
 		delete packet;
 	}
@@ -158,115 +159,129 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 	{
 		SdesPacket* packet = SdesPacket::Parse(buffer2, sizeof(buffer2));
 		auto* header       = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer2);
-		size_t chunkIdx{ 0u };
-		size_t itemIdx{ 0u };
 
 		REQUIRE(ntohs(header->length) == 12);
 		REQUIRE(packet->GetSize() == 52);
 		REQUIRE(packet->GetCount() == 2);
 
-		// for (auto* chunk = *(packet->Begin()); chunk != *(packet->End()); ++chunk, ++chunkIdx)
-		// {
-		// 	switch (chunkIdx)
-		// 	{
-		// 		/* First chunk (chunk 2). */
-		// 		case 0:
-		// 		{
-		// 			// Chunk size must be 24 bytes (including 4 null octets).
-		// 			REQUIRE(chunk->GetSize() == 24);
-		// 			REQUIRE(chunk->GetSsrc() == ssrc2);
+		size_t chunkIdx{ 0u };
 
-		// 			for (auto* item = *(chunk->Begin()); item != *(chunk->End()); ++item, ++itemIdx)
-		// 			{
-		// 				switch (itemIdx)
-		// 				{
-		// 					/* First item (item 2). */
-		// 					case 0:
-		// 					{
-		// 						REQUIRE(item->GetType() == item2Type);
-		// 						REQUIRE(item->GetLength() == item2Length);
-		// 						REQUIRE(std::string(item->GetValue(), item2Length) == item2Value);
+		for (auto it = packet->Begin(); it != packet->End(); ++it, ++chunkIdx)
+		{
+			auto* chunk = *it;
 
-		// 						break;
-		// 					}
+			MS_DUMP("---- parse packet 2 | chunkIdx:%zu, chunk address:%llu", chunkIdx, chunk);
 
-		// 					/* Second item (item 3). */
-		// 					case 1:
-		// 					{
-		// 						REQUIRE(item->GetType() == item3Type);
-		// 						REQUIRE(item->GetLength() == item3Length);
-		// 						REQUIRE(std::string(item->GetValue(), item3Length) == item3Value);
+			switch (chunkIdx)
+			{
+				/* First chunk (chunk 2). */
+				case 0:
+				{
+					// Chunk size must be 24 bytes (including 4 null octets).
+					REQUIRE(chunk->GetSize() == 24);
+					REQUIRE(chunk->GetSsrc() == ssrc2);
 
-		// 						break;
-		// 					}
-		// 				}
-		// 			}
+					size_t itemIdx{ 0u };
 
-		// 			// There are 2 items.
-		// 			REQUIRE(itemIdx == 1);
+					for (auto it2 = chunk->Begin(); it2 != chunk->End(); ++it2, ++itemIdx)
+					{
+						auto* item = *it2;
 
-		// 			SECTION("serialize SdesChunk instance")
-		// 			{
-		// 				// NOTE: Length of first chunk (including null octets) is 24.
-		// 				uint8_t serialized[24] = { 0 };
+						MS_DUMP("---- parse packet 2 | itemIdx:%zu, item address:%llu", itemIdx, item);
 
-		// 				chunk->Serialize(serialized);
+						switch (itemIdx)
+						{
+							/* First item (item 2). */
+							case 0:
+							{
+								REQUIRE(item->GetType() == item2Type);
+								REQUIRE(item->GetLength() == item2Length);
+								REQUIRE(std::string(item->GetValue(), item2Length) == item2Value);
 
-		// 				SECTION("compare serialized SdesChunk with original buffer")
-		// 				{
-		// 					REQUIRE(std::memcmp(chunkBuffer2, serialized, 24) == 0);
-		// 				}
-		// 			}
+								break;
+							}
 
-		// 			break;
-		// 		}
+							/* Second item (item 3). */
+							case 1:
+							{
+								REQUIRE(item->GetType() == item3Type);
+								REQUIRE(item->GetLength() == item3Length);
+								REQUIRE(std::string(item->GetValue(), item3Length) == item3Value);
 
-		// 		/* Second chunk (chunk 3). */
-		// 		case 1:
-		// 		{
-		// 			// Chunk size must be 24 bytes (including 1 null octet).
-		// 			REQUIRE(chunk->GetSize() == 24);
-		// 			REQUIRE(chunk->GetSsrc() == ssrc3);
+								break;
+							}
+						}
+					}
 
-		// 			for (auto* item = *(chunk->Begin()); item != *(chunk->End()); ++item, ++itemIdx)
-		// 			{
-		// 				switch (itemIdx)
-		// 				{
-		// 					/* First item (item 4). */
-		// 					case 0:
-		// 					{
-		// 						REQUIRE(item->GetType() == item4Type);
-		// 						REQUIRE(item->GetLength() == item4Length);
-		// 						REQUIRE(std::string(item->GetValue(), item4Length) == item4Value);
+					// There are 2 items.
+					REQUIRE(itemIdx == 2);
 
-		// 						break;
-		// 					}
-		// 				}
-		// 			}
+					break;
+				}
 
-		// 			// There is 1 item.
-		// 			REQUIRE(itemIdx == 0);
+				/* Second chunk (chunk 3). */
+				case 1:
+				{
+					// Chunk size must be 24 bytes (including 1 null octet).
+					REQUIRE(chunk->GetSize() == 24);
+					REQUIRE(chunk->GetSsrc() == ssrc3);
 
-		// 			SECTION("serialize SdesChunk instance")
-		// 			{
-		// 				// NOTE: Length of second chunk (including null octets) is 24.
-		// 				uint8_t serialized[24] = { 0 };
+					size_t itemIdx{ 0u };
 
-		// 				chunk->Serialize(serialized);
+					for (auto it2 = chunk->Begin(); it2 != chunk->End(); ++it2, ++itemIdx)
+					{
+						auto* item = *it2;
 
-		// 				SECTION("compare serialized SdesChunk with original buffer")
-		// 				{
-		// 					REQUIRE(std::memcmp(chunkBuffer2 + 4 + 24, serialized, 24) == 0);
-		// 				}
-		// 			}
+						MS_DUMP("---- parse packet 2 | itemIdx:%zu, item address:%llu", itemIdx, item);
 
-		// 			break;
-		// 		}
-		// 	}
-		// }
+						switch (itemIdx)
+						{
+							/* First item (item 4). */
+							case 0:
+							{
+								REQUIRE(item->GetType() == item4Type);
+								REQUIRE(item->GetLength() == item4Length);
+								REQUIRE(std::string(item->GetValue(), item4Length) == item4Value);
 
-		// // There are 2 chunks.
-		// REQUIRE(chunkIdx == 1);
+								break;
+							}
+						}
+					}
+
+					// There is 1 item.
+					REQUIRE(itemIdx == 1);
+
+					break;
+				}
+			}
+		}
+
+		// There are 2 chunks.
+		REQUIRE(chunkIdx == 2);
+
+		SECTION("serialize SdesChunk instances")
+		{
+			auto it = packet->Begin();
+			auto* chunk1 = *it;
+			uint8_t* chunk1Buffer = buffer2 + Packet::CommonHeaderSize;
+
+			// NOTE: Length of first chunk (including null octets) is 24.
+			uint8_t serialized1[24] = { 0 };
+
+			chunk1->Serialize(serialized1);
+
+			REQUIRE(std::memcmp(chunk1Buffer, serialized1, 24) == 0);
+
+			auto* chunk2 = *(++it);
+			uint8_t* chunk2Buffer = buffer2 + Packet::CommonHeaderSize + 24;
+
+			// NOTE: Length of second chunk (including null octets) is 24.
+			uint8_t serialized2[24] = { 0 };
+
+			chunk2->Serialize(serialized2);
+
+			REQUIRE(std::memcmp(chunk2Buffer, serialized2, 24) == 0);
+		}
 
 		delete packet;
 	}
