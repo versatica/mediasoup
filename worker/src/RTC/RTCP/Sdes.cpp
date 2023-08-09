@@ -36,16 +36,20 @@ namespace RTC
 			// Get the header.
 			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
+			// If item type is 0, there is no need for length field (unless padding
+			// is needed).
+			if (len > 0 && header->type == SdesItem::Type::END)
+			{
+				return nullptr;
+			}
+
 			// data size must be >= header + length value.
-			if (len < HeaderSize || len < (1u * 2) + header->length)
+			if (len < HeaderSize || len < HeaderSize + header->length)
 			{
 				MS_WARN_TAG(rtcp, "not enough space for SDES item, discarded");
 
 				return nullptr;
 			}
-
-			if (header->type == SdesItem::Type::END)
-				return nullptr;
 
 			return new SdesItem(header);
 		}
