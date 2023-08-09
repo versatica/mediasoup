@@ -24,7 +24,7 @@ namespace TestSdes
 		0x6d, 0x6b, 0x59, 0x6e,
 		0x43, 0x6d, 0x34, 0x36,
 		0x4f, 0x63, 0x49, 0x4e,
-		0x79, 0x2f, 0x00, 0x00  // 2 null octects
+		0x79, 0x2f, 0x00, 0x00  // 2 null octets
 	};
 	// clang-format on
 
@@ -47,14 +47,14 @@ namespace TestSdes
 		0x65, 0x72, 0x74, 0x79,
 		0x06, 0x06, 0x69, 0xc3, // Item Type: 6 (TOOL), Length: 6, Text: "iñaki"
 		0xb1, 0x61, 0x6b, 0x69,
-		0x00, 0x00, 0x00, 0x00, // 4 null octects
+		0x00, 0x00, 0x00, 0x00, // 4 null octets
 		// Chunk 3
 		0x00, 0x00, 0x16, 0x2e, // SSRC: 5678
 		0x05, 0x11, 0x73, 0x6f, // Item Type: 5 (LOC), Length: 17, Text: "somewhere œæ€"
 		0x6d, 0x65, 0x77, 0x68,
 		0x65, 0x72, 0x65, 0x20,
 		0xc5, 0x93, 0xc3, 0xa6,
-		0xe2, 0x82, 0xac, 0x00  // 1 null octect
+		0xe2, 0x82, 0xac, 0x00  // 1 null octet
 	};
 	// clang-format on
 
@@ -104,7 +104,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 				/* First chunk (chunk 1). */
 				case 0:
 				{
-					// Chunk size must be 24 bytes (including 4 null octects).
+					// Chunk size must be 24 bytes (including 4 null octets).
 					REQUIRE(chunk->GetSize() == 24);
 					REQUIRE(chunk->GetSsrc() == ssrc1);
 
@@ -132,7 +132,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 					SECTION("serialize SdesChunk instance")
 					{
-						// NOTE: Length of first chunk (including null octects) is 24.
+						// NOTE: Length of first chunk (including null octets) is 24.
 						uint8_t serialized[24] = { 0 };
 
 						chunk->Serialize(serialized);
@@ -174,7 +174,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 				/* First chunk (chunk 2). */
 				case 0:
 				{
-					// Chunk size must be 24 bytes (including 4 null octects).
+					// Chunk size must be 24 bytes (including 4 null octets).
 					REQUIRE(chunk->GetSize() == 24);
 					REQUIRE(chunk->GetSsrc() == ssrc2);
 
@@ -209,7 +209,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 					SECTION("serialize SdesChunk instance")
 					{
-						// NOTE: Length of first chunk (including null octects) is 24.
+						// NOTE: Length of first chunk (including null octets) is 24.
 						uint8_t serialized[24] = { 0 };
 
 						chunk->Serialize(serialized);
@@ -226,7 +226,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 				/* Second chunk (chunk 3). */
 				case 1:
 				{
-					// Chunk size must be 24 bytes (including 1 null octect).
+					// Chunk size must be 24 bytes (including 1 null octet).
 					REQUIRE(chunk->GetSize() == 24);
 					REQUIRE(chunk->GetSsrc() == ssrc3);
 
@@ -251,7 +251,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 					SECTION("serialize SdesChunk instance")
 					{
-						// NOTE: Length of second chunk (including null octects) is 24.
+						// NOTE: Length of second chunk (including null octets) is 24.
 						uint8_t serialized[24] = { 0 };
 
 						chunk->Serialize(serialized);
