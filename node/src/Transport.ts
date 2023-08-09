@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as utils from './utils';
@@ -595,7 +595,7 @@ export class Transport
 			// do not include CNAME, create a random one.
 			else if (!this.#cnameForProducers)
 			{
-				this.#cnameForProducers = uuidv4().substr(0, 8);
+				this.#cnameForProducers = randomUUID().substring(0, 8);
 			}
 
 			// Override Producer's CNAME.
@@ -615,7 +615,7 @@ export class Transport
 
 		const reqData =
 		{
-			producerId : id || uuidv4(),
+			producerId : id ?? randomUUID(),
 			kind,
 			rtpParameters,
 			rtpMapping,
@@ -747,7 +747,7 @@ export class Transport
 
 		const reqData =
 		{
-			consumerId             : uuidv4(),
+			consumerId             : randomUUID(),
 			producerId,
 			kind                   : producer.kind,
 			rtpParameters,
@@ -844,7 +844,7 @@ export class Transport
 
 		const reqData =
 		{
-			dataProducerId : id || uuidv4(),
+			dataProducerId : id ?? randomUUID(),
 			type,
 			sctpStreamParameters,
 			label,
@@ -967,7 +967,7 @@ export class Transport
 
 		const reqData =
 		{
-			dataConsumerId : uuidv4(),
+			dataConsumerId : randomUUID(),
 			dataProducerId,
 			type,
 			sctpStreamParameters,

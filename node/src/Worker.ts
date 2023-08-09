@@ -1,7 +1,7 @@
 import * as process from 'process';
 import * as path from 'path';
 import { spawn, ChildProcess } from 'child_process';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
@@ -635,7 +635,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 
 		const reqData =
 		{
-			webRtcServerId : uuidv4(),
+			webRtcServerId : randomUUID(),
 			listenInfos
 		};
 
@@ -676,7 +676,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 		// This may throw.
 		const rtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
 
-		const reqData = { routerId: uuidv4() };
+		const reqData = { routerId: randomUUID() };
 
 		await this.#channel.request('worker.createRouter', undefined, reqData);
 

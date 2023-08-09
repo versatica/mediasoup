@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
@@ -413,7 +413,7 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		const reqData =
 		{
-			transportId    : uuidv4(),
+			transportId    : randomUUID(),
 			webRtcServerId : webRtcServer ? webRtcServer.id : undefined,
 			listenIps,
 			port,
@@ -525,7 +525,7 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		const reqData =
 		{
-			transportId   : uuidv4(),
+			transportId   : randomUUID(),
 			listenIp,
 			port,
 			rtcpMux,
@@ -627,7 +627,7 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		const reqData =
 		{
-			transportId   : uuidv4(),
+			transportId   : randomUUID(),
 			listenIp,
 			port,
 			enableSctp,
@@ -697,7 +697,7 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		const reqData =
 		{
-			transportId : uuidv4(),
+			transportId : randomUUID(),
 			direct      : true,
 			maxMessageSize
 		};
@@ -1083,7 +1083,7 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		const reqData =
 		{
-			rtpObserverId : uuidv4(),
+			rtpObserverId : randomUUID(),
 			interval
 		};
 
@@ -1137,7 +1137,7 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		const reqData =
 		{
-			rtpObserverId : uuidv4(),
+			rtpObserverId : randomUUID(),
 			maxEntries,
 			threshold,
 			interval

@@ -91,15 +91,13 @@
     "h264-profile-level-id": "^1.0.1",
     "node-fetch": "^3.3.2",
     "supports-color": "^9.4.0",
-    "tar": "^6.1.15",
-    "uuid": "^9.0.0"
+    "tar": "^6.1.15"
   },
   "devDependencies": {
     "@octokit/rest": "^20.0.1",
     "@types/debug": "^4.1.8",
     "@types/jest": "^29.5.3",
     "@types/node": "^20.4.9",
-    "@types/uuid": "^9.0.2",
     "@typescript-eslint/eslint-plugin": "^6.3.0",
     "@typescript-eslint/parser": "^6.3.0",
     "eslint": "^8.46.0",

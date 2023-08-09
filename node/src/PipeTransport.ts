@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { Logger } from './Logger';
 import * as ortc from './ortc';
 import {
@@ -322,7 +322,7 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 
 		const reqData =
 		{
-			consumerId             : uuidv4(),
+			consumerId             : randomUUID(),
 			producerId,
 			kind                   : producer.kind,
 			rtpParameters,
