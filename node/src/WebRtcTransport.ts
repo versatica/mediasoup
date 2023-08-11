@@ -392,11 +392,11 @@ export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
 	}
 
 	/**
-	 * Called when closing the associated WebRtcServer.
+	 * Called when closing the associated listenServer (WebRtcServer).
 	 *
 	 * @private
 	 */
-	webRtcServerClosed(): void
+	listenServerClosed(): void
 	{
 		if (this.closed)
 		{
