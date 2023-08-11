@@ -1,5 +1,11 @@
 # Changelog
 
+
+### 3.12.10
+
+* Node: Rename `WebRtcTransport.webRtcServerClosed()` to `listenServerClosed()` ([PR #1141](https://github.com/versatica/mediasoup/pull/1141) by @piranna).
+
+
 ### 3.12.9
 
 * Fix RTCP SDES ([PR #1139](https://github.com/versatica/mediasoup/pull/1139)).
