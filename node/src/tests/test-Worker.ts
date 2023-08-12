@@ -1,6 +1,6 @@
-import * as os from 'os';
-import * as process from 'process';
-import * as path from 'path';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import * as process from 'node:process';
 import * as mediasoup from '../';
 import { InvalidStateError } from '../errors';
 

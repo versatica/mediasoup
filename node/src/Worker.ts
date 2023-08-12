@@ -1,6 +1,6 @@
-import * as process from 'process';
-import * as path from 'path';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, ChildProcess } from 'node:child_process';
+import * as path from 'node:path';
+import * as process from 'node:process';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';

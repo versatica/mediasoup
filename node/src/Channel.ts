@@ -1,5 +1,5 @@
-import * as os from 'os';
-import { Duplex } from 'stream';
+import * as os from 'node:os';
+import { Duplex } from 'node:stream';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
