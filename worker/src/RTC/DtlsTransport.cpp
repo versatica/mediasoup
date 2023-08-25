@@ -53,6 +53,19 @@ inline static unsigned int onSslDtlsTimer(SSL* /*ssl*/, unsigned int timerUs)
 		return 2 * timerUs;
 }
 
+long sslBioOutCallback(
+  BIO* bio, int operationType, const char* argp, size_t len, int argi, long argl, int ret, size_t* processed)
+{
+	long resultOfcallback = (operationType == BIO_CB_RETURN) ? ret : 1;
+	if (operationType == BIO_CB_WRITE && argp && len > 0)
+	{
+		MS_DEBUG_DEV("%i bytes of DTLS data ready to sent to the peer", static_cast<int>(len));
+		RTC::DtlsTransport* dtls = (RTC::DtlsTransport*)BIO_get_callback_arg(bio);
+		dtls->SendDtlsData((void*)argp, len);
+	}
+	return resultOfcallback;
+}
+
 namespace RTC
 {
 	/* Static. */
@@ -538,6 +551,8 @@ namespace RTC
 			goto error;
 		}
 
+		BIO_set_callback_ex(this->sslBioToNetwork, sslBioOutCallback);
+		BIO_set_callback_arg(this->sslBioToNetwork, (char*)this);
 		SSL_set_bio(this->ssl, this->sslBioFromNetwork, this->sslBioToNetwork);
 
 		// Set the MTU so that we don't send packets that are too large with no fragmentation.
@@ -578,7 +593,6 @@ namespace RTC
 		{
 			// Send close alert to the peer.
 			SSL_shutdown(this->ssl);
-			SendPendingOutgoingDtlsData();
 		}
 
 		if (this->ssl)
@@ -679,7 +693,6 @@ namespace RTC
 
 				SSL_set_connect_state(this->ssl);
 				SSL_do_handshake(this->ssl);
-				SendPendingOutgoingDtlsData();
 				SetTimeout();
 
 				break;
@@ -753,9 +766,6 @@ namespace RTC
 		// Must call SSL_read() to process received DTLS data.
 		read = SSL_read(this->ssl, static_cast<void*>(DtlsTransport::sslReadBuffer), SslReadBufferSize);
 
-		// Send data if it's ready.
-		SendPendingOutgoingDtlsData();
-
 		// Check SSL status and return if it is bad/closed.
 		if (!CheckStatus(read))
 			return;
@@ -816,9 +826,6 @@ namespace RTC
 			MS_WARN_TAG(
 			  dtls, "OpenSSL SSL_write() wrote less (%d bytes) than given data (%zu bytes)", written, len);
 		}
-
-		// Send data.
-		SendPendingOutgoingDtlsData();
 	}
 
 	void DtlsTransport::Reset()
@@ -950,30 +957,13 @@ namespace RTC
 		}
 	}
 
-	inline void DtlsTransport::SendPendingOutgoingDtlsData()
+	inline void DtlsTransport::SendDtlsData(void* data, int size)
 	{
 		MS_TRACE();
 
-		if (BIO_eof(this->sslBioToNetwork))
-			return;
-
-		int64_t read;
-		char* data{ nullptr };
-
-		read = BIO_get_mem_data(this->sslBioToNetwork, &data); // NOLINT
-
-		if (read <= 0)
-			return;
-
-		MS_DEBUG_DEV("%" PRIu64 " bytes of DTLS data ready to sent to the peer", read);
-
 		// Notify the listener.
 		this->listener->OnDtlsTransportSendData(
-		  this, reinterpret_cast<uint8_t*>(data), static_cast<size_t>(read));
-
-		// Clear the BIO buffer.
-		// NOTE: the (void) avoids the -Wunused-value warning.
-		(void)BIO_reset(this->sslBioToNetwork);
+		  this, reinterpret_cast<uint8_t*>(data), static_cast<size_t>(size));
 	}
 
 	inline bool DtlsTransport::SetTimeout()
@@ -1429,9 +1419,6 @@ namespace RTC
 
 		if (ret == 1)
 		{
-			// If required, send DTLS data.
-			SendPendingOutgoingDtlsData();
-
 			// Set the DTLS timer again.
 			SetTimeout();
 		}
