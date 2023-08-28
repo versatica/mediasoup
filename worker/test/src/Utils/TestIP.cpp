@@ -10,6 +10,7 @@
 #include <netinet/in.h> // sockaddr_in, sockaddr_in6
 #include <sys/socket.h> // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
 #endif
+
 using namespace Utils;
 
 SCENARIO("Utils::IP::GetFamily()")
