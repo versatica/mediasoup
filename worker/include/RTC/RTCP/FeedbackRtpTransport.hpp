@@ -242,7 +242,8 @@ namespace RTC
 			{
 				return this->referenceTime;
 			}
-			void SetReferenceTime(uint64_t referenceTime) // We only use this for testing purpose.
+			// NOTE: We only use this for testing purpose.
+			void SetReferenceTime(int64_t referenceTime)
 			{
 				this->referenceTime = (referenceTime % TimeWrapPeriod) / BaseTimeTick;
 			}
@@ -315,7 +316,8 @@ namespace RTC
 
 		private:
 			uint16_t baseSequenceNumber{ 0u };
-			uint32_t referenceTime{ 0 };
+			// 24 bits signed integer.
+			int32_t referenceTime{ 0 };
 			// Just for locally generated packets.
 			uint16_t latestSequenceNumber{ 0u };
 			// Just for locally generated packets.

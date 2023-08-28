@@ -513,11 +513,11 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetSize() == sizeof(data));
 		REQUIRE(packet->GetBaseSequenceNumber() == 39);
 		REQUIRE(packet->GetPacketStatusCount() == 0);
-		REQUIRE(packet->GetReferenceTime() == 16777214); // 0xFFFFFE (unsigned 24 bits)
+		REQUIRE(packet->GetReferenceTime() == -2); // 0xFFFFFE = -2 (signed 24 bits)
 		REQUIRE(
 		  packet->GetReferenceTimestamp() ==
 		  FeedbackRtpTransportPacket::TimeWrapPeriod +
-		    static_cast<int64_t>(16777214) * FeedbackRtpTransportPacket::BaseTimeTick);
+		    static_cast<int64_t>(-2) * FeedbackRtpTransportPacket::BaseTimeTick);
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
 
 		SECTION("serialize packet")
@@ -552,11 +552,11 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetSize() == sizeof(data));
 		REQUIRE(packet->GetBaseSequenceNumber() == 1);
 		REQUIRE(packet->GetPacketStatusCount() == 2);
-		REQUIRE(packet->GetReferenceTime() == 12408746);
+		REQUIRE(packet->GetReferenceTime() == -4368470);
 		REQUIRE(
 		  packet->GetReferenceTimestamp() ==
 		  FeedbackRtpTransportPacket::TimeWrapPeriod +
-		    static_cast<int64_t>(12408746) * FeedbackRtpTransportPacket::BaseTimeTick);
+		    static_cast<int64_t>(-4368470) * FeedbackRtpTransportPacket::BaseTimeTick);
 
 		REQUIRE(packet->GetFeedbackPacketCount() == 0);
 
@@ -576,8 +576,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 	{
 		using FeedbackPacketsMeta = struct
 		{
-			uint32_t baseTimeRaw;
-			uint64_t baseTimeMs;
+			int32_t baseTimeRaw;
+			int64_t baseTimeMs;
 			uint16_t baseSequence;
 			size_t packetStatusCount;
 			std::vector<int16_t> deltas;
@@ -624,8 +624,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			                                  0x00, 0x00, 0x10, 0x00, 0x04, 0x00, 0x08, 0x00, 0x08,
 			                                  0x00, 0x08, 0x00, 0x08, 0x00, 0x04, 0x00, 0x10 } },
 
-			{ .baseTimeRaw       = 12408746,
-			  .baseTimeMs        = 1867901568,
+			{ .baseTimeRaw       = -4368470,
+			  .baseTimeMs        = 794159744,
 			  .baseSequence      = 1,
 			  .packetStatusCount = 2,
 			  .deltas            = std::vector<int16_t>{ 35, 17 },

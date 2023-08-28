@@ -2,8 +2,6 @@
 #include "Utils.hpp"
 #include <catch2/catch.hpp>
 
-using namespace Utils;
-
 SCENARIO("Utils::Bits::CountSetBits()")
 {
 	uint16_t mask;

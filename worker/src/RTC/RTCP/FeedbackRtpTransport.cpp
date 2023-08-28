@@ -79,7 +79,7 @@ namespace RTC
 
 			this->baseSequenceNumber  = Utils::Byte::Get2Bytes(data, 0);
 			this->packetStatusCount   = Utils::Byte::Get2Bytes(data, 2);
-			this->referenceTime       = Utils::Byte::Get3Bytes(data, 4);
+			this->referenceTime       = Utils::Byte::Get3BytesSigned(data, 4);
 			this->feedbackPacketCount = Utils::Byte::Get1Byte(data, 7);
 			this->size                = len;
 
@@ -238,7 +238,7 @@ namespace RTC
 			offset += 2;
 
 			// Reference time.
-			Utils::Byte::Set3Bytes(buffer, offset, static_cast<uint32_t>(this->referenceTime));
+			Utils::Byte::Set3BytesSigned(buffer, offset, this->referenceTime);
 			offset += 3;
 
 			// Feedback packet count.

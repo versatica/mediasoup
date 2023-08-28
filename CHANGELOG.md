@@ -9,6 +9,11 @@
 * Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
 
 
+### 3.12.11
+
+* Google Transport Feedback: Read Reference Time field as 24bits signed as per spec ([PR #1145](https://github.com/versatica/mediasoup/pull/1145)).
+
+
 ### 3.12.10
 
 * Node: Rename `WebRtcTransport.webRtcServerClosed()` to `listenServerClosed()` ([PR #1141](https://github.com/versatica/mediasoup/pull/1141) by @piranna).
