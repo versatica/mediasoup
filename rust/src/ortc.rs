@@ -666,7 +666,7 @@ pub(crate) fn get_consumer_rtp_parameters(
         if let Some(matched_cap_codec) = remote_rtp_capabilities
             .codecs
             .iter()
-            .find(|cap_codec| match_codecs(cap_codec.deref().into(), (&codec).into(), true).is_ok())
+            .find(|cap_codec| match_codecs((*cap_codec).into(), (&codec).into(), true).is_ok())
         {
             *codec.rtcp_feedback_mut() = matched_cap_codec
                 .rtcp_feedback()
