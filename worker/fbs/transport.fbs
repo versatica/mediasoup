@@ -77,7 +77,7 @@ table ConsumeDataRequest {
 table Tuple {
   local_ip:string (required);
   local_port:uint16;
-  remote_ip:string (required);
+  remote_ip:string;
   remote_port:uint16;
   protocol:string (required);
 }

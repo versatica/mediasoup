@@ -356,7 +356,7 @@ export class PlainTransport<PlainTransportAppData extends AppData = AppData>
 		// Wait for response.
 		const response = await this.channel.request(
 			FbsRequest.Method.PLAINTRANSPORT_CONNECT,
-			FbsRequest.Body.FBS_PlainTransport_ConnectRequest,
+			FbsRequest.Body.PlainTransport_ConnectRequest,
 			requestOffset,
 			this.internal.transportId
 		);

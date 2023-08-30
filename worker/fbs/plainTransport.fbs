@@ -4,7 +4,7 @@ include "sctpParameters.fbs";
 namespace FBS.PlainTransport;
 
 table PlainTransportOptions {
-  base:FBS.Transport.Options;
+  base:FBS.Transport.Options (required);
   listen_info:FBS.Transport.ListenInfo (required);
   rtcp_listen_info:FBS.Transport.ListenInfo;
   rtcp_mux:bool;
@@ -30,7 +30,7 @@ table DumpResponse {
   base:FBS.Transport.Dump (required);
   rtcp_mux:bool;
   comedia:bool;
-  tuple:FBS.Transport.Tuple;
+  tuple:FBS.Transport.Tuple (required);
   rtcp_tuple:FBS.Transport.Tuple;
   srtp_parameters:FBS.Transport.SrtpParameters;
 }

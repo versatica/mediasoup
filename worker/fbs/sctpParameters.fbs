@@ -2,8 +2,8 @@
 namespace FBS.SctpParameters;
 
 table NumSctpStreams {
-  os:uint32 = 1024;
-  mis:uint32 = 1024;
+  os:uint16 = 1024;
+  mis:uint16 = 1024;
 }
 
 table SctpParameters {

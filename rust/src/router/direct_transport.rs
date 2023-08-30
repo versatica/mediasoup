@@ -6,7 +6,7 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, Da
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, SctpState};
 use crate::fbs::{direct_transport, response};
-use crate::messages::{TransportCloseRequest, TransportSendRtcpNotification};
+use crate::messages::{TransportCloseRequestFbs, TransportSendRtcpNotification};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::Router;
@@ -35,7 +35,7 @@ use std::sync::{Arc, Weak};
 pub struct DirectTransportOptions {
     /// Maximum allowed size for direct messages sent from DataProducers.
     /// Default 262_144.
-    pub max_message_size: usize,
+    pub max_message_size: u32,
     /// Custom application data.
     pub app_data: AppData,
 }
@@ -266,13 +266,13 @@ impl Inner {
             if close_request {
                 let channel = self.channel.clone();
                 let router_id = self.router.id();
-                let request = TransportCloseRequest {
+                let request = TransportCloseRequestFbs {
                     transport_id: self.id,
                 };
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(router_id, request).await {
+                        if let Err(error) = channel.request_fbs(router_id, request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
                     })
