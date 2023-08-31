@@ -1310,6 +1310,30 @@ export function parseSctpState(fbsSctpState: FbsSctpState): SctpState
 	}
 }
 
+export function parseProtocol(protocol: FbsTransport.Protocol): TransportProtocol
+{
+	switch (protocol)
+	{
+		case FbsTransport.Protocol.UDP:
+			return 'udp';
+
+		case FbsTransport.Protocol.TCP:
+			return 'tcp';
+	}
+}
+
+export function serializeProtocol(protocol: TransportProtocol): FbsTransport.Protocol
+{
+	switch (protocol)
+	{
+		case 'udp':
+			return FbsTransport.Protocol.UDP;
+
+		case 'tcp':
+			return FbsTransport.Protocol.TCP;
+	}
+}
+
 export function parseTuple(binary: FbsTransport.Tuple): TransportTuple
 {
 	return {
@@ -1317,7 +1341,7 @@ export function parseTuple(binary: FbsTransport.Tuple): TransportTuple
 		localPort  : binary.localPort(),
 		remoteIp   : binary.remoteIp() ?? undefined,
 		remotePort : binary.remotePort(),
-		protocol   : binary.protocol()! as TransportProtocol
+		protocol   : parseProtocol(binary.protocol())
 	};
 }
 

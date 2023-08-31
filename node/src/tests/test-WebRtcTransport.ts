@@ -5,6 +5,7 @@ import * as mediasoup from '../';
 import { Notification, Body as NotificationBody, Event } from '../fbs/notification';
 import * as FbsTransport from '../fbs/transport';
 import * as FbsWebRtcTransport from '../fbs/web-rtc-transport';
+import { serializeProtocol, TransportTuple } from '../Transport';
 
 const { createWorker } = mediasoup;
 
@@ -517,7 +518,7 @@ test('WebRtcTransport events succeed', async () =>
 	builder.clear();
 
 	const onIceSelectedTuple = jest.fn();
-	const iceSelectedTuple =
+	const iceSelectedTuple: TransportTuple =
 	{
 		localIp    : '1.1.1.1',
 		localPort  : 1111,
@@ -536,7 +537,7 @@ test('WebRtcTransport events succeed', async () =>
 				iceSelectedTuple.localPort,
 				iceSelectedTuple.remoteIp,
 				iceSelectedTuple.remotePort,
-				iceSelectedTuple.protocol)
+				serializeProtocol(iceSelectedTuple.protocol))
 		);
 
 	notificationOffset = Notification.createNotification(

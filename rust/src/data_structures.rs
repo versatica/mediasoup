@@ -147,12 +147,10 @@ pub enum Protocol {
 }
 
 impl Protocol {
-    // TODO: Use the Protocol FBS type.
-    pub(crate) fn from_fbs(protocol: &str) -> Self {
+    pub(crate) fn from_fbs(protocol: transport::Protocol) -> Self {
         match protocol {
-            "tcp" => Protocol::Tcp,
-            "udp" => Protocol::Udp,
-            _ => todo!(),
+            transport::Protocol::Tcp => Protocol::Tcp,
+            transport::Protocol::Udp => Protocol::Udp,
         }
     }
 }
@@ -284,12 +282,12 @@ impl TransportTuple {
                     .parse()
                     .expect("Error parsing IP address"),
                 remote_port: tuple.remote_port,
-                protocol: Protocol::from_fbs(tuple.protocol.as_str()),
+                protocol: Protocol::from_fbs(tuple.protocol),
             },
             None => TransportTuple::LocalOnly {
                 local_ip: tuple.local_ip.parse().expect("Error parsing IP address"),
                 local_port: tuple.local_port,
-                protocol: Protocol::from_fbs(tuple.protocol.as_str()),
+                protocol: Protocol::from_fbs(tuple.protocol),
             },
         }
     }

@@ -23,6 +23,9 @@ namespace RTC
 			TCP
 		};
 
+		static Protocol ProtocolFromFbs(FBS::Transport::Protocol protocol);
+		static FBS::Transport::Protocol ProtocolToFbs(Protocol protocol);
+
 	public:
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
 		  : udpSocket(udpSocket), udpRemoteAddr((struct sockaddr*)udpRemoteAddr), protocol(Protocol::UDP)
