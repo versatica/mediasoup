@@ -13,18 +13,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::string protocol;
-
-		switch (this->protocol)
-		{
-			case Protocol::UDP:
-				protocol = "udp";
-				break;
-
-			case Protocol::TCP:
-				protocol = "tcp";
-				break;
-		}
+		auto protocol = TransportTuple::ProtocolToFbs(this->protocol);
 
 		std::string type;
 
@@ -56,7 +45,7 @@ namespace RTC
 		  // ip.
 		  this->ip.c_str(),
 		  // protocol.
-		  protocol.c_str(),
+		  protocol,
 		  // port.
 		  this->port,
 		  // type.

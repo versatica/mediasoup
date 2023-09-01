@@ -4,6 +4,7 @@ import {
 	parseSctpState,
 	parseBaseTransportDump,
 	parseBaseTransportStats,
+	parseProtocol,
 	parseTransportTraceEventData,
 	parseTuple,
 	BaseTransportDump,
@@ -741,7 +742,7 @@ function parseIceCandidate(binary: FbsWebRtcTransport.IceCandidate): IceCandidat
 		foundation : binary.foundation()!,
 		priority   : binary.priority(),
 		ip         : binary.ip()!,
-		protocol   : binary.protocol() as TransportProtocol,
+		protocol   : parseProtocol(binary.protocol()),
 		port       : binary.port(),
 		type       : 'host',
 		tcpType    : binary.tcpType() === 'passive' ? 'passive' : undefined

@@ -35827,7 +35827,7 @@ mod root {
                 /// The field `remote_port` in the table `Tuple`
                 pub remote_port: u16,
                 /// The field `protocol` in the table `Tuple`
-                pub protocol: ::planus::alloc::string::String,
+                pub protocol: self::Protocol,
             }
 
             impl Tuple {
@@ -35846,13 +35846,13 @@ mod root {
                         ::planus::Offset<::core::primitive::str>,
                     >,
                     field_remote_port: impl ::planus::WriteAsDefault<u16, u16>,
-                    field_protocol: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_protocol: impl ::planus::WriteAsDefault<self::Protocol, self::Protocol>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_local_ip = field_local_ip.prepare(builder);
                     let prepared_local_port = field_local_port.prepare(builder, &0);
                     let prepared_remote_ip = field_remote_ip.prepare(builder);
                     let prepared_remote_port = field_remote_port.prepare(builder, &0);
-                    let prepared_protocol = field_protocol.prepare(builder);
+                    let prepared_protocol = field_protocol.prepare(builder, &self::Protocol::Udp);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<14> =
                         ::core::default::Default::default();
@@ -35860,12 +35860,14 @@ mod root {
                     if prepared_remote_ip.is_some() {
                         table_writer.write_entry::<::planus::Offset<str>>(2);
                     }
-                    table_writer.write_entry::<::planus::Offset<str>>(4);
                     if prepared_local_port.is_some() {
                         table_writer.write_entry::<u16>(1);
                     }
                     if prepared_remote_port.is_some() {
                         table_writer.write_entry::<u16>(3);
+                    }
+                    if prepared_protocol.is_some() {
+                        table_writer.write_entry::<self::Protocol>(4);
                     }
 
                     unsafe {
@@ -35876,7 +35878,6 @@ mod root {
                             {
                                 object_writer.write::<_, _, 4>(&prepared_remote_ip);
                             }
-                            object_writer.write::<_, _, 4>(&prepared_protocol);
                             if let ::core::option::Option::Some(prepared_local_port) =
                                 prepared_local_port
                             {
@@ -35886,6 +35887,11 @@ mod root {
                                 prepared_remote_port
                             {
                                 object_writer.write::<_, _, 2>(&prepared_remote_port);
+                            }
+                            if let ::core::option::Option::Some(prepared_protocol) =
+                                prepared_protocol
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_protocol);
                             }
                         });
                     }
@@ -35923,7 +35929,7 @@ mod root {
                         self.local_port,
                         &self.remote_ip,
                         self.remote_port,
-                        &self.protocol,
+                        self.protocol,
                     )
                 }
             }
@@ -36015,10 +36021,19 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn protocol<T4>(self, value: T4) -> TupleBuilder<(T0, T1, T2, T3, T4)>
                 where
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::Protocol, self::Protocol>,
                 {
                     let (v0, v1, v2, v3) = self.0;
                     TupleBuilder((v0, v1, v2, v3, value))
+                }
+
+                /// Sets the [`protocol` field](Tuple#structfield.protocol) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn protocol_as_default(
+                    self,
+                ) -> TupleBuilder<(T0, T1, T2, T3, ::planus::DefaultValue)> {
+                    self.protocol(::planus::DefaultValue)
                 }
             }
 
@@ -36038,7 +36053,7 @@ mod root {
                     T1: ::planus::WriteAsDefault<u16, u16>,
                     T2: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T3: ::planus::WriteAsDefault<u16, u16>,
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::Protocol, self::Protocol>,
                 > ::planus::WriteAs<::planus::Offset<Tuple>>
                 for TupleBuilder<(T0, T1, T2, T3, T4)>
             {
@@ -36055,7 +36070,7 @@ mod root {
                     T1: ::planus::WriteAsDefault<u16, u16>,
                     T2: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T3: ::planus::WriteAsDefault<u16, u16>,
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::Protocol, self::Protocol>,
                 > ::planus::WriteAsOptional<::planus::Offset<Tuple>>
                 for TupleBuilder<(T0, T1, T2, T3, T4)>
             {
@@ -36075,7 +36090,7 @@ mod root {
                     T1: ::planus::WriteAsDefault<u16, u16>,
                     T2: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T3: ::planus::WriteAsDefault<u16, u16>,
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::Protocol, self::Protocol>,
                 > ::planus::WriteAsOffset<Tuple> for TupleBuilder<(T0, T1, T2, T3, T4)>
             {
                 #[inline]
@@ -36123,8 +36138,12 @@ mod root {
 
                 /// Getter for the [`protocol` field](Tuple#structfield.protocol).
                 #[inline]
-                pub fn protocol(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(4, "Tuple", "protocol")
+                pub fn protocol(&self) -> ::planus::Result<self::Protocol> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(4, "Tuple", "protocol")?
+                            .unwrap_or(self::Protocol::Udp),
+                    )
                 }
             }
 
@@ -74929,7 +74948,7 @@ mod root {
                 /// The field `ip` in the table `IceCandidate`
                 pub ip: ::planus::alloc::string::String,
                 /// The field `protocol` in the table `IceCandidate`
-                pub protocol: ::planus::alloc::string::String,
+                pub protocol: super::transport::Protocol,
                 /// The field `port` in the table `IceCandidate`
                 pub port: u16,
                 /// The field `type` in the table `IceCandidate`
@@ -74951,7 +74970,10 @@ mod root {
                     field_foundation: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_priority: impl ::planus::WriteAsDefault<u32, u32>,
                     field_ip: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_protocol: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_protocol: impl ::planus::WriteAsDefault<
+                        super::transport::Protocol,
+                        super::transport::Protocol,
+                    >,
                     field_port: impl ::planus::WriteAsDefault<u16, u16>,
                     field_type_: impl ::planus::WriteAsOptional<
                         ::planus::Offset<::core::primitive::str>,
@@ -74963,7 +74985,8 @@ mod root {
                     let prepared_foundation = field_foundation.prepare(builder);
                     let prepared_priority = field_priority.prepare(builder, &0);
                     let prepared_ip = field_ip.prepare(builder);
-                    let prepared_protocol = field_protocol.prepare(builder);
+                    let prepared_protocol =
+                        field_protocol.prepare(builder, &super::transport::Protocol::Udp);
                     let prepared_port = field_port.prepare(builder, &0);
                     let prepared_type_ = field_type_.prepare(builder);
                     let prepared_tcp_type = field_tcp_type.prepare(builder);
@@ -74975,7 +74998,6 @@ mod root {
                         table_writer.write_entry::<u32>(1);
                     }
                     table_writer.write_entry::<::planus::Offset<str>>(2);
-                    table_writer.write_entry::<::planus::Offset<str>>(3);
                     if prepared_type_.is_some() {
                         table_writer.write_entry::<::planus::Offset<str>>(5);
                     }
@@ -74984,6 +75006,9 @@ mod root {
                     }
                     if prepared_port.is_some() {
                         table_writer.write_entry::<u16>(4);
+                    }
+                    if prepared_protocol.is_some() {
+                        table_writer.write_entry::<super::transport::Protocol>(3);
                     }
 
                     unsafe {
@@ -74995,7 +75020,6 @@ mod root {
                                 object_writer.write::<_, _, 4>(&prepared_priority);
                             }
                             object_writer.write::<_, _, 4>(&prepared_ip);
-                            object_writer.write::<_, _, 4>(&prepared_protocol);
                             if let ::core::option::Option::Some(prepared_type_) = prepared_type_ {
                                 object_writer.write::<_, _, 4>(&prepared_type_);
                             }
@@ -75006,6 +75030,11 @@ mod root {
                             }
                             if let ::core::option::Option::Some(prepared_port) = prepared_port {
                                 object_writer.write::<_, _, 2>(&prepared_port);
+                            }
+                            if let ::core::option::Option::Some(prepared_protocol) =
+                                prepared_protocol
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_protocol);
                             }
                         });
                     }
@@ -75048,7 +75077,7 @@ mod root {
                         &self.foundation,
                         self.priority,
                         &self.ip,
-                        &self.protocol,
+                        self.protocol,
                         self.port,
                         &self.type_,
                         &self.tcp_type,
@@ -75116,10 +75145,22 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn protocol<T3>(self, value: T3) -> IceCandidateBuilder<(T0, T1, T2, T3)>
                 where
-                    T3: ::planus::WriteAs<::planus::Offset<str>>,
+                    T3: ::planus::WriteAsDefault<
+                        super::transport::Protocol,
+                        super::transport::Protocol,
+                    >,
                 {
                     let (v0, v1, v2) = self.0;
                     IceCandidateBuilder((v0, v1, v2, value))
+                }
+
+                /// Sets the [`protocol` field](IceCandidate#structfield.protocol) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn protocol_as_default(
+                    self,
+                ) -> IceCandidateBuilder<(T0, T1, T2, ::planus::DefaultValue)> {
+                    self.protocol(::planus::DefaultValue)
                 }
             }
 
@@ -75206,7 +75247,10 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
                     T1: ::planus::WriteAsDefault<u32, u32>,
                     T2: ::planus::WriteAs<::planus::Offset<str>>,
-                    T3: ::planus::WriteAs<::planus::Offset<str>>,
+                    T3: ::planus::WriteAsDefault<
+                        super::transport::Protocol,
+                        super::transport::Protocol,
+                    >,
                     T4: ::planus::WriteAsDefault<u16, u16>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T6: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
@@ -75228,7 +75272,10 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
                     T1: ::planus::WriteAsDefault<u32, u32>,
                     T2: ::planus::WriteAs<::planus::Offset<str>>,
-                    T3: ::planus::WriteAs<::planus::Offset<str>>,
+                    T3: ::planus::WriteAsDefault<
+                        super::transport::Protocol,
+                        super::transport::Protocol,
+                    >,
                     T4: ::planus::WriteAsDefault<u16, u16>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T6: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
@@ -75250,7 +75297,10 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
                     T1: ::planus::WriteAsDefault<u32, u32>,
                     T2: ::planus::WriteAs<::planus::Offset<str>>,
-                    T3: ::planus::WriteAs<::planus::Offset<str>>,
+                    T3: ::planus::WriteAsDefault<
+                        super::transport::Protocol,
+                        super::transport::Protocol,
+                    >,
                     T4: ::planus::WriteAsDefault<u16, u16>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T6: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
@@ -75294,8 +75344,12 @@ mod root {
 
                 /// Getter for the [`protocol` field](IceCandidate#structfield.protocol).
                 #[inline]
-                pub fn protocol(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(3, "IceCandidate", "protocol")
+                pub fn protocol(&self) -> ::planus::Result<super::transport::Protocol> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(3, "IceCandidate", "protocol")?
+                            .unwrap_or(super::transport::Protocol::Udp),
+                    )
                 }
 
                 /// Getter for the [`port` field](IceCandidate#structfield.port).

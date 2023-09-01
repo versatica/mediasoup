@@ -41,7 +41,7 @@ table IceCandidate {
   foundation:string (required);
   priority:uint32;
   ip:string (required);
-  protocol:string (required);
+  protocol:FBS.Transport.Protocol=UDP;
   port:uint16;
   type:string;
   tcp_type:string;

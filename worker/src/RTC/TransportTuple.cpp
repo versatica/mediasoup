@@ -7,6 +7,32 @@
 
 namespace RTC
 {
+	/* Static methods. */
+
+	TransportTuple::Protocol TransportTuple::ProtocolFromFbs(FBS::Transport::Protocol protocol)
+	{
+		switch (protocol)
+		{
+			case FBS::Transport::Protocol::UDP:
+				return TransportTuple::Protocol::UDP;
+
+			case FBS::Transport::Protocol::TCP:
+				return TransportTuple::Protocol::TCP;
+		}
+	}
+
+	FBS::Transport::Protocol TransportTuple::ProtocolToFbs(TransportTuple::Protocol protocol)
+	{
+		switch (protocol)
+		{
+			case TransportTuple::Protocol::UDP:
+				return FBS::Transport::Protocol::UDP;
+
+			case TransportTuple::Protocol::TCP:
+				return FBS::Transport::Protocol::TCP;
+		}
+	}
+
 	/* Instance methods. */
 
 	flatbuffers::Offset<FBS::Transport::Tuple> TransportTuple::FillBuffer(
@@ -27,22 +53,10 @@ namespace RTC
 
 		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, remoteIp, remotePort);
 
-		std::string protocol;
-
-		// Add protocol.
-		switch (GetProtocol())
-		{
-			case Protocol::UDP:
-				protocol = "udp";
-				break;
-
-			case Protocol::TCP:
-				protocol = "tcp";
-				break;
-		}
+		auto protocol = TransportTuple::ProtocolToFbs(GetProtocol());
 
 		return FBS::Transport::CreateTupleDirect(
-		  builder, localIp.c_str(), localPort, remoteIp.c_str(), remotePort, protocol.c_str());
+		  builder, localIp.c_str(), localPort, remoteIp.c_str(), remotePort, protocol);
 	}
 
 	void TransportTuple::Dump() const

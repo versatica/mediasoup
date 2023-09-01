@@ -79,7 +79,7 @@ table Tuple {
   local_port:uint16;
   remote_ip:string;
   remote_port:uint16;
-  protocol:string (required);
+  protocol:FBS.Transport.Protocol=UDP;
 }
 
 table SrtpParameters {

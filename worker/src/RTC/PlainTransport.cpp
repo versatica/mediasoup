@@ -296,7 +296,7 @@ namespace RTC
 			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
-			  builder, localIp.c_str(), this->udpSocket->GetLocalPort(), nullptr, 0, "udp");
+			  builder, localIp.c_str(), this->udpSocket->GetLocalPort(), nullptr, 0, FBS::Transport::Protocol::UDP);
 		}
 
 		// Add rtcpTuple.
@@ -322,7 +322,7 @@ namespace RTC
 				}
 
 				rtcpTuple = FBS::Transport::CreateTupleDirect(
-				  builder, localIp.c_str(), this->rtcpUdpSocket->GetLocalPort(), nullptr, 0, "udp");
+				  builder, localIp.c_str(), this->rtcpUdpSocket->GetLocalPort(), nullptr, 0, FBS::Transport::Protocol::UDP);
 			}
 		}
 
@@ -381,7 +381,7 @@ namespace RTC
 					// remotePort.
 					0,
 					// protocol.
-					"udp"
+					FBS::Transport::Protocol::UDP
 					);
 		}
 

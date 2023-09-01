@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "FBS/webRtcTransport_generated.h"
 #include "RTC/TcpServer.hpp"
+#include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
 #include <flatbuffers/flatbuffers.h>
 #include <string>
@@ -12,12 +13,7 @@ namespace RTC
 {
 	class IceCandidate
 	{
-	public:
-		enum class Protocol
-		{
-			UDP = 1,
-			TCP
-		};
+		using Protocol = TransportTuple::Protocol;
 
 	public:
 		enum class CandidateType
