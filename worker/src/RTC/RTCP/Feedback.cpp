@@ -61,7 +61,7 @@ namespace RTC
 		}
 
 		template<typename T>
-		FeedbackPacket<T>::~FeedbackPacket<T>()
+		FeedbackPacket<T>::~FeedbackPacket()
 		{
 			delete[] this->raw;
 		}
