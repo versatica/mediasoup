@@ -105,7 +105,7 @@ union Body {
   FBS.Transport.CloseDataConsumerRequest,
   PlainTransport_ConnectRequest: FBS.PlainTransport.ConnectRequest,
   PipeTransport_ConnectRequest: FBS.PipeTransport.ConnectRequest,
-  FBS.WebRtcTransport.ConnectRequest,
+  WebRtcTransport_ConnectRequest: FBS.WebRtcTransport.ConnectRequest,
   FBS.Producer.EnableTraceEventRequest,
   FBS.Consumer.SetPreferredLayersRequest,
   FBS.Consumer.SetPriorityRequest,

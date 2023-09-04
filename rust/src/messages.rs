@@ -13,7 +13,7 @@ use crate::data_structures::{
 use crate::direct_transport::DirectTransportOptions;
 use crate::fbs::{
     direct_transport, message, pipe_transport, plain_transport, request, response, router,
-    transport, worker,
+    transport, web_rtc_transport, worker,
 };
 use crate::ortc::RtpMapping;
 use crate::pipe_transport::PipeTransportOptions;
@@ -821,9 +821,31 @@ enum RouterCreateWebrtcTransportListen {
     },
 }
 
+impl RouterCreateWebrtcTransportListen {
+    pub(crate) fn to_fbs(&self) -> web_rtc_transport::Listen {
+        match self {
+            RouterCreateWebrtcTransportListen::Individual { listen_infos } => {
+                web_rtc_transport::Listen::ListenIndividual(Box::new(
+                    web_rtc_transport::ListenIndividual {
+                        listen_infos: listen_infos
+                            .iter()
+                            .map(|listen_info| listen_info.to_fbs())
+                            .collect(),
+                    },
+                ))
+            }
+            RouterCreateWebrtcTransportListen::Server { webrtc_server_id } => {
+                web_rtc_transport::Listen::ListenServer(Box::new(web_rtc_transport::ListenServer {
+                    web_rtc_server_id: webrtc_server_id.to_string(),
+                }))
+            }
+        }
+    }
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct RouterCreateWebrtcTransportRequest {
+pub(crate) struct RouterCreateWebrtcTransportData {
     transport_id: TransportId,
     #[serde(flatten)]
     listen: RouterCreateWebrtcTransportListen,
@@ -835,7 +857,7 @@ pub(crate) struct RouterCreateWebrtcTransportRequest {
     is_data_channel: bool,
 }
 
-impl RouterCreateWebrtcTransportRequest {
+impl RouterCreateWebrtcTransportData {
     pub(crate) fn from_options(
         transport_id: TransportId,
         webrtc_transport_options: &WebRtcTransportOptions,
@@ -863,6 +885,22 @@ impl RouterCreateWebrtcTransportRequest {
             is_data_channel: true,
         }
     }
+
+    pub(crate) fn to_fbs(&self) -> web_rtc_transport::WebRtcTransportOptions {
+        web_rtc_transport::WebRtcTransportOptions {
+            base: Box::new(transport::Options {
+                direct: false,
+                max_message_size: 0,
+                initial_available_outgoing_bitrate: self.initial_available_outgoing_bitrate,
+                enable_sctp: self.enable_sctp,
+                num_sctp_streams: Some(Box::new(self.num_sctp_streams.to_fbs())),
+                max_sctp_message_size: self.max_sctp_message_size,
+                sctp_send_buffer_size: self.sctp_send_buffer_size,
+                is_data_channel: true,
+            }),
+            listen: self.listen.to_fbs(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -880,17 +918,71 @@ pub(crate) struct WebRtcTransportData {
     pub(crate) sctp_state: Mutex<Option<SctpState>>,
 }
 
-impl Request for RouterCreateWebrtcTransportRequest {
+#[derive(Debug)]
+pub(crate) struct RouterCreateWebRtcTransportRequest {
+    pub(crate) data: RouterCreateWebrtcTransportData,
+}
+
+impl RequestFbs for RouterCreateWebRtcTransportRequest {
+    const METHOD: request::Method = request::Method::RouterCreateWebrtctransport;
     type HandlerId = RouterId;
     type Response = WebRtcTransportData;
 
-    fn as_method(&self) -> &'static str {
-        match &self.listen {
-            RouterCreateWebrtcTransportListen::Individual { .. } => "router.createWebRtcTransport",
-            RouterCreateWebrtcTransportListen::Server { .. } => {
-                "router.createWebRtcTransportWithServer"
-            }
-        }
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let data = router::CreateWebRtcTransportRequest::create(
+            &mut builder,
+            self.data.transport_id.to_string(),
+            self.data.to_fbs(),
+        );
+        let request_body =
+            request::Body::create_create_web_rtc_transport_request(&mut builder, data);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::Body::FbsWebRtcTransportDumpResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        Ok(WebRtcTransportData {
+            ice_role: IceRole::from_fbs(data.ice_role),
+            ice_parameters: IceParameters::from_fbs(*data.ice_parameters),
+            ice_candidates: data
+                .ice_candidates
+                .iter()
+                .map(IceCandidate::from_fbs)
+                .collect(),
+            ice_state: Mutex::new(IceState::from_fbs(data.ice_state)),
+            ice_selected_tuple: Mutex::new(
+                data.ice_selected_tuple
+                    .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+            ),
+            dtls_parameters: Mutex::new(DtlsParameters::from_fbs(*data.dtls_parameters)),
+            dtls_state: Mutex::new(DtlsState::from_fbs(data.dtls_state)),
+            dtls_remote_cert: Mutex::new(None),
+            sctp_parameters: data
+                .base
+                .sctp_parameters
+                .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
+            sctp_state: Mutex::new(
+                data.base
+                    .sctp_state
+                    .map(|state| SctpState::from_fbs(&state)),
+            ),
+        })
     }
 }
 
@@ -951,7 +1043,7 @@ impl RouterCreatePlainTransportData {
             rtcp_mux: self.rtcp_mux,
             comedia: self.comedia,
             enable_srtp: self.enable_srtp,
-            srtp_crypto_suite: Some(self.srtp_crypto_suite.to_string()),
+            srtp_crypto_suite: Some(SrtpCryptoSuite::to_fbs(self.srtp_crypto_suite)),
         }
     }
 }
@@ -1268,16 +1360,52 @@ impl RequestFbs for TransportCloseRequestFbs {
     }
 }
 
-request_response!(
-    TransportId,
-    "transport.connect",
-    TransportConnectWebRtcRequest {
-        dtls_parameters: DtlsParameters,
-    },
-    TransportConnectResponseWebRtc {
-        dtls_local_role: DtlsRole,
-    },
-);
+#[derive(Debug)]
+pub(crate) struct WebRtcTransportConnectResponse {
+    pub(crate) dtls_local_role: DtlsRole,
+}
+
+#[derive(Debug)]
+pub(crate) struct WebRtcTransportConnectRequest {
+    pub(crate) dtls_parameters: DtlsParameters,
+}
+
+impl RequestFbs for WebRtcTransportConnectRequest {
+    const METHOD: request::Method = request::Method::WebrtctransportConnect;
+    type HandlerId = TransportId;
+    type Response = WebRtcTransportConnectResponse;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let data =
+            web_rtc_transport::ConnectRequest::create(&mut builder, self.dtls_parameters.to_fbs());
+        let request_body =
+            request::Body::create_web_rtc_transport_connect_request(&mut builder, data);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::Body::FbsWebRtcTransportConnectResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        Ok(WebRtcTransportConnectResponse {
+            dtls_local_role: DtlsRole::from_fbs(data.dtls_local_role),
+        })
+    }
+}
 
 #[derive(Debug)]
 pub(crate) struct PipeTransportConnectResponse {
@@ -1321,7 +1449,7 @@ impl RequestFbs for PipeTransportConnectRequest {
     fn convert_response(
         response: Option<response::Body>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::FbsPlainTransportConnectResponse(data)) = response else {
+        let Some(response::Body::FbsPipeTransportConnectResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
 
@@ -1412,15 +1540,43 @@ request_response!(
     TransportSetMinOutgoingBitrateRequest { bitrate: u32 },
 );
 
-request_response!(
-    TransportId,
-    "transport.restartIce",
-    TransportRestartIceRequest {},
-    TransportRestartIceResponse {
-        ice_parameters: IceParameters,
-    },
-);
+#[derive(Debug)]
+pub(crate) struct TransportRestartIceRequest {}
 
+impl RequestFbs for TransportRestartIceRequest {
+    const METHOD: request::Method = request::Method::TransportRestartIce;
+    type HandlerId = TransportId;
+    type Response = IceParameters;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::Body::FbsTransportRestartIceResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        Ok(IceParameters::from_fbs(web_rtc_transport::IceParameters {
+            username_fragment: data.username_fragment,
+            password: data.password,
+            ice_lite: data.ice_lite,
+        }))
+    }
+}
 request_response!(
     TransportId,
     "transport.produce",

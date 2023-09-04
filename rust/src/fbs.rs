@@ -31651,7 +31651,7 @@ mod root {
             /// The enum `Protocol` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `Protocol` in the file `../worker/fbs/transport.fbs:9`
+            /// * Enum `Protocol` in the file `../worker/fbs/transport.fbs:10`
             #[derive(
                 Copy,
                 Clone,
@@ -31821,7 +31821,7 @@ mod root {
             /// The table `ListenInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ListenInfo` in the file `../worker/fbs/transport.fbs:11`
+            /// * Table `ListenInfo` in the file `../worker/fbs/transport.fbs:12`
             #[derive(
                 Clone,
                 Debug,
@@ -32335,7 +32335,7 @@ mod root {
             /// The table `RestartIceResponse` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `RestartIceResponse` in the file `../worker/fbs/transport.fbs:20`
+            /// * Table `RestartIceResponse` in the file `../worker/fbs/transport.fbs:21`
             #[derive(
                 Clone,
                 Debug,
@@ -32684,7 +32684,7 @@ mod root {
             /// The table `ProduceRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ProduceRequest` in the file `../worker/fbs/transport.fbs:26`
+            /// * Table `ProduceRequest` in the file `../worker/fbs/transport.fbs:27`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -33192,7 +33192,7 @@ mod root {
             /// The table `ProduceResponse` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ProduceResponse` in the file `../worker/fbs/transport.fbs:35`
+            /// * Table `ProduceResponse` in the file `../worker/fbs/transport.fbs:36`
             #[derive(
                 Clone,
                 Debug,
@@ -33493,7 +33493,7 @@ mod root {
             /// The table `ConsumeRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ConsumeRequest` in the file `../worker/fbs/transport.fbs:39`
+            /// * Table `ConsumeRequest` in the file `../worker/fbs/transport.fbs:40`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -34200,7 +34200,7 @@ mod root {
             /// The table `ConsumeResponse` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ConsumeResponse` in the file `../worker/fbs/transport.fbs:51`
+            /// * Table `ConsumeResponse` in the file `../worker/fbs/transport.fbs:52`
             #[derive(
                 Clone,
                 Debug,
@@ -34673,7 +34673,7 @@ mod root {
             /// The table `ProduceDataRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ProduceDataRequest` in the file `../worker/fbs/transport.fbs:58`
+            /// * Table `ProduceDataRequest` in the file `../worker/fbs/transport.fbs:59`
             #[derive(
                 Clone,
                 Debug,
@@ -35221,7 +35221,7 @@ mod root {
             /// The table `ConsumeDataRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ConsumeDataRequest` in the file `../worker/fbs/transport.fbs:67`
+            /// * Table `ConsumeDataRequest` in the file `../worker/fbs/transport.fbs:68`
             #[derive(
                 Clone,
                 Debug,
@@ -35805,7 +35805,7 @@ mod root {
             /// The table `Tuple` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Tuple` in the file `../worker/fbs/transport.fbs:77`
+            /// * Table `Tuple` in the file `../worker/fbs/transport.fbs:78`
             #[derive(
                 Clone,
                 Debug,
@@ -36256,301 +36256,10 @@ mod root {
                 }
             }
 
-            /// The table `SrtpParameters` in the namespace `FBS.Transport`
-            ///
-            /// Generated from these locations:
-            /// * Table `SrtpParameters` in the file `../worker/fbs/transport.fbs:85`
-            #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            pub struct SrtpParameters {
-                /// The field `crypto_suite` in the table `SrtpParameters`
-                pub crypto_suite: ::planus::alloc::string::String,
-                /// The field `key_base64` in the table `SrtpParameters`
-                pub key_base64: ::planus::alloc::string::String,
-            }
-
-            impl SrtpParameters {
-                /// Creates a [SrtpParametersBuilder] for serializing an instance of this table.
-                #[inline]
-                pub fn builder() -> SrtpParametersBuilder<()> {
-                    SrtpParametersBuilder(())
-                }
-
-                #[allow(clippy::too_many_arguments)]
-                pub fn create(
-                    builder: &mut ::planus::Builder,
-                    field_crypto_suite: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_key_base64: impl ::planus::WriteAs<::planus::Offset<str>>,
-                ) -> ::planus::Offset<Self> {
-                    let prepared_crypto_suite = field_crypto_suite.prepare(builder);
-                    let prepared_key_base64 = field_key_base64.prepare(builder);
-
-                    let mut table_writer: ::planus::table_writer::TableWriter<8> =
-                        ::core::default::Default::default();
-                    table_writer.write_entry::<::planus::Offset<str>>(0);
-                    table_writer.write_entry::<::planus::Offset<str>>(1);
-
-                    unsafe {
-                        table_writer.finish(builder, |object_writer| {
-                            object_writer.write::<_, _, 4>(&prepared_crypto_suite);
-                            object_writer.write::<_, _, 4>(&prepared_key_base64);
-                        });
-                    }
-                    builder.current_offset()
-                }
-            }
-
-            impl ::planus::WriteAs<::planus::Offset<SrtpParameters>> for SrtpParameters {
-                type Prepared = ::planus::Offset<Self>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SrtpParameters> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl ::planus::WriteAsOptional<::planus::Offset<SrtpParameters>> for SrtpParameters {
-                type Prepared = ::planus::Offset<Self>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<SrtpParameters>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl ::planus::WriteAsOffset<SrtpParameters> for SrtpParameters {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SrtpParameters> {
-                    SrtpParameters::create(builder, &self.crypto_suite, &self.key_base64)
-                }
-            }
-
-            /// Builder for serializing an instance of the [SrtpParameters] type.
-            ///
-            /// Can be created using the [SrtpParameters::builder] method.
-            #[derive(Debug)]
-            #[must_use]
-            pub struct SrtpParametersBuilder<State>(State);
-
-            impl SrtpParametersBuilder<()> {
-                /// Setter for the [`crypto_suite` field](SrtpParameters#structfield.crypto_suite).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn crypto_suite<T0>(self, value: T0) -> SrtpParametersBuilder<(T0,)>
-                where
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
-                {
-                    SrtpParametersBuilder((value,))
-                }
-            }
-
-            impl<T0> SrtpParametersBuilder<(T0,)> {
-                /// Setter for the [`key_base64` field](SrtpParameters#structfield.key_base64).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn key_base64<T1>(self, value: T1) -> SrtpParametersBuilder<(T0, T1)>
-                where
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
-                {
-                    let (v0,) = self.0;
-                    SrtpParametersBuilder((v0, value))
-                }
-            }
-
-            impl<T0, T1> SrtpParametersBuilder<(T0, T1)> {
-                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [SrtpParameters].
-                #[inline]
-                pub fn finish(
-                    self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SrtpParameters>
-                where
-                    Self: ::planus::WriteAsOffset<SrtpParameters>,
-                {
-                    ::planus::WriteAsOffset::prepare(&self, builder)
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
-                > ::planus::WriteAs<::planus::Offset<SrtpParameters>>
-                for SrtpParametersBuilder<(T0, T1)>
-            {
-                type Prepared = ::planus::Offset<SrtpParameters>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SrtpParameters> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
-                > ::planus::WriteAsOptional<::planus::Offset<SrtpParameters>>
-                for SrtpParametersBuilder<(T0, T1)>
-            {
-                type Prepared = ::planus::Offset<SrtpParameters>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<SrtpParameters>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
-                > ::planus::WriteAsOffset<SrtpParameters> for SrtpParametersBuilder<(T0, T1)>
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SrtpParameters> {
-                    let (v0, v1) = &self.0;
-                    SrtpParameters::create(builder, v0, v1)
-                }
-            }
-
-            /// Reference to a deserialized [SrtpParameters].
-            #[derive(Copy, Clone)]
-            pub struct SrtpParametersRef<'a>(::planus::table_reader::Table<'a>);
-
-            impl<'a> SrtpParametersRef<'a> {
-                /// Getter for the [`crypto_suite` field](SrtpParameters#structfield.crypto_suite).
-                #[inline]
-                pub fn crypto_suite(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(0, "SrtpParameters", "crypto_suite")
-                }
-
-                /// Getter for the [`key_base64` field](SrtpParameters#structfield.key_base64).
-                #[inline]
-                pub fn key_base64(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(1, "SrtpParameters", "key_base64")
-                }
-            }
-
-            impl<'a> ::core::fmt::Debug for SrtpParametersRef<'a> {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("SrtpParametersRef");
-                    f.field("crypto_suite", &self.crypto_suite());
-                    f.field("key_base64", &self.key_base64());
-                    f.finish()
-                }
-            }
-
-            impl<'a> ::core::convert::TryFrom<SrtpParametersRef<'a>> for SrtpParameters {
-                type Error = ::planus::Error;
-
-                #[allow(unreachable_code)]
-                fn try_from(value: SrtpParametersRef<'a>) -> ::planus::Result<Self> {
-                    ::core::result::Result::Ok(Self {
-                        crypto_suite: ::core::convert::TryInto::try_into(value.crypto_suite()?)?,
-                        key_base64: ::core::convert::TryInto::try_into(value.key_base64()?)?,
-                    })
-                }
-            }
-
-            impl<'a> ::planus::TableRead<'a> for SrtpParametersRef<'a> {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
-                        buffer, offset,
-                    )?))
-                }
-            }
-
-            impl<'a> ::planus::VectorReadInner<'a> for SrtpParametersRef<'a> {
-                type Error = ::planus::Error;
-                const STRIDE: usize = 4;
-
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "[SrtpParametersRef]",
-                            "get",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<::planus::Offset<SrtpParameters>> for SrtpParameters {
-                type Value = ::planus::Offset<SrtpParameters>;
-                const STRIDE: usize = 4;
-                #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
-                    ::planus::WriteAs::prepare(self, builder)
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[::planus::Offset<SrtpParameters>],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - (Self::STRIDE * i) as u32,
-                        );
-                    }
-                }
-            }
-
-            impl<'a> ::planus::ReadAsRoot<'a> for SrtpParametersRef<'a> {
-                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(
-                        ::planus::SliceWithStartOffset {
-                            buffer: slice,
-                            offset_from_start: 0,
-                        },
-                        0,
-                    )
-                    .map_err(|error_kind| {
-                        error_kind.with_error_location("[SrtpParametersRef]", "read_as_root", 0)
-                    })
-                }
-            }
-
             /// The table `RtpListener` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `RtpListener` in the file `../worker/fbs/transport.fbs:90`
+            /// * Table `RtpListener` in the file `../worker/fbs/transport.fbs:86`
             #[derive(
                 Clone,
                 Debug,
@@ -36913,7 +36622,7 @@ mod root {
             /// The table `SctpListener` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SctpListener` in the file `../worker/fbs/transport.fbs:96`
+            /// * Table `SctpListener` in the file `../worker/fbs/transport.fbs:92`
             #[derive(
                 Clone,
                 Debug,
@@ -37187,7 +36896,7 @@ mod root {
             /// The table `RecvRtpHeaderExtensions` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `RecvRtpHeaderExtensions` in the file `../worker/fbs/transport.fbs:100`
+            /// * Table `RecvRtpHeaderExtensions` in the file `../worker/fbs/transport.fbs:96`
             #[derive(
                 Clone,
                 Debug,
@@ -37710,7 +37419,7 @@ mod root {
             /// The table `Options` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Options` in the file `../worker/fbs/transport.fbs:108`
+            /// * Table `Options` in the file `../worker/fbs/transport.fbs:104`
             #[derive(
                 Clone,
                 Debug,
@@ -38391,7 +38100,7 @@ mod root {
             /// The table `Dump` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:119`
+            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:115`
             #[derive(
                 Clone,
                 Debug,
@@ -39428,7 +39137,7 @@ mod root {
             /// The table `Stats` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:137`
+            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:133`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -42065,7 +41774,7 @@ mod root {
             /// The table `SetMaxIncomingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:164`
+            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:160`
             #[derive(
                 Clone,
                 Debug,
@@ -42373,7 +42082,7 @@ mod root {
             /// The table `SetMaxOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:168`
+            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:164`
             #[derive(
                 Clone,
                 Debug,
@@ -42681,7 +42390,7 @@ mod root {
             /// The table `SetMinOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:172`
+            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:168`
             #[derive(
                 Clone,
                 Debug,
@@ -42989,7 +42698,7 @@ mod root {
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:176`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:172`
             #[derive(
                 Clone,
                 Debug,
@@ -43261,7 +42970,7 @@ mod root {
             /// The table `CloseProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:180`
+            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:176`
             #[derive(
                 Clone,
                 Debug,
@@ -43527,7 +43236,7 @@ mod root {
             /// The table `CloseConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:184`
+            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:180`
             #[derive(
                 Clone,
                 Debug,
@@ -43793,7 +43502,7 @@ mod root {
             /// The table `CloseDataProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:188`
+            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:184`
             #[derive(
                 Clone,
                 Debug,
@@ -44068,7 +43777,7 @@ mod root {
             /// The table `CloseDataConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:192`
+            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:188`
             #[derive(
                 Clone,
                 Debug,
@@ -44343,7 +44052,7 @@ mod root {
             /// The table `SendRtcpNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:198`
+            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:194`
             #[derive(
                 Clone,
                 Debug,
@@ -44608,7 +44317,7 @@ mod root {
             /// The table `SctpStateChangeNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:204`
+            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:200`
             #[derive(
                 Clone,
                 Debug,
@@ -44929,7 +44638,7 @@ mod root {
             /// The enum `TraceType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceType` in the file `../worker/fbs/transport.fbs:208`
+            /// * Enum `TraceType` in the file `../worker/fbs/transport.fbs:204`
             #[derive(
                 Copy,
                 Clone,
@@ -45099,7 +44808,7 @@ mod root {
             /// The enum `TraceDirection` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceDirection` in the file `../worker/fbs/transport.fbs:210`
+            /// * Enum `TraceDirection` in the file `../worker/fbs/transport.fbs:206`
             #[derive(
                 Copy,
                 Clone,
@@ -45269,7 +44978,7 @@ mod root {
             /// The union `TraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:212`
+            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:208`
             #[derive(
                 Clone,
                 Debug,
@@ -45422,7 +45131,7 @@ mod root {
             /// The enum `BweType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:216`
+            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:212`
             #[derive(
                 Copy,
                 Clone,
@@ -45592,7 +45301,7 @@ mod root {
             /// The table `BweTraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:218`
+            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:214`
             #[derive(
                 Clone,
                 Debug,
@@ -46275,7 +45984,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:229`
+            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:225`
             #[derive(
                 Clone,
                 Debug,
@@ -46917,6 +46626,508 @@ mod root {
                             buffer_position - i as u32,
                         );
                     }
+                }
+            }
+        }
+        /// The namespace `FBS.SrtpParameters`
+        ///
+        /// Generated from these locations:
+        /// * File `../worker/fbs/srtpParameters.fbs`
+        pub mod srtp_parameters {
+            /// The enum `SrtpCryptoSuite` in the namespace `FBS.SrtpParameters`
+            ///
+            /// Generated from these locations:
+            /// * Enum `SrtpCryptoSuite` in the file `../worker/fbs/srtpParameters.fbs:4`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum SrtpCryptoSuite {
+                /// The variant `AEAD_AES_256_GCM` in the enum `SrtpCryptoSuite`
+                AeadAes256Gcm = 0,
+
+                /// The variant `AEAD_AES_128_GCM` in the enum `SrtpCryptoSuite`
+                AeadAes128Gcm = 1,
+
+                /// The variant `AES_CM_128_HMAC_SHA1_80` in the enum `SrtpCryptoSuite`
+                AesCm128HmacSha180 = 2,
+
+                /// The variant `AES_CM_128_HMAC_SHA1_32` in the enum `SrtpCryptoSuite`
+                AesCm128HmacSha132 = 3,
+            }
+
+            impl SrtpCryptoSuite {
+                /// Array containing all valid variants of SrtpCryptoSuite
+                pub const ENUM_VALUES: [Self; 4] = [
+                    Self::AeadAes256Gcm,
+                    Self::AeadAes128Gcm,
+                    Self::AesCm128HmacSha180,
+                    Self::AesCm128HmacSha132,
+                ];
+            }
+
+            impl ::core::convert::TryFrom<u8> for SrtpCryptoSuite {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(SrtpCryptoSuite::AeadAes256Gcm),
+                        1 => ::core::result::Result::Ok(SrtpCryptoSuite::AeadAes128Gcm),
+                        2 => ::core::result::Result::Ok(SrtpCryptoSuite::AesCm128HmacSha180),
+                        3 => ::core::result::Result::Ok(SrtpCryptoSuite::AesCm128HmacSha132),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<SrtpCryptoSuite> for u8 {
+                #[inline]
+                fn from(value: SrtpCryptoSuite) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for SrtpCryptoSuite {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<SrtpCryptoSuite> for SrtpCryptoSuite {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<SrtpCryptoSuite> for SrtpCryptoSuite {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> SrtpCryptoSuite {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<SrtpCryptoSuite, SrtpCryptoSuite> for SrtpCryptoSuite {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &SrtpCryptoSuite,
+                ) -> ::core::option::Option<SrtpCryptoSuite> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<SrtpCryptoSuite> for SrtpCryptoSuite {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<SrtpCryptoSuite> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for SrtpCryptoSuite {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for SrtpCryptoSuite {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "SrtpCryptoSuite",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<SrtpCryptoSuite> for SrtpCryptoSuite {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
+            /// The table `SrtpParameters` in the namespace `FBS.SrtpParameters`
+            ///
+            /// Generated from these locations:
+            /// * Table `SrtpParameters` in the file `../worker/fbs/srtpParameters.fbs:11`
+            #[derive(
+                Clone,
+                Debug,
+                PartialEq,
+                PartialOrd,
+                Eq,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            pub struct SrtpParameters {
+                /// The field `crypto_suite` in the table `SrtpParameters`
+                pub crypto_suite: self::SrtpCryptoSuite,
+                /// The field `key_base64` in the table `SrtpParameters`
+                pub key_base64: ::planus::alloc::string::String,
+            }
+
+            impl SrtpParameters {
+                /// Creates a [SrtpParametersBuilder] for serializing an instance of this table.
+                #[inline]
+                pub fn builder() -> SrtpParametersBuilder<()> {
+                    SrtpParametersBuilder(())
+                }
+
+                #[allow(clippy::too_many_arguments)]
+                pub fn create(
+                    builder: &mut ::planus::Builder,
+                    field_crypto_suite: impl ::planus::WriteAsDefault<
+                        self::SrtpCryptoSuite,
+                        self::SrtpCryptoSuite,
+                    >,
+                    field_key_base64: impl ::planus::WriteAs<::planus::Offset<str>>,
+                ) -> ::planus::Offset<Self> {
+                    let prepared_crypto_suite =
+                        field_crypto_suite.prepare(builder, &self::SrtpCryptoSuite::AeadAes256Gcm);
+                    let prepared_key_base64 = field_key_base64.prepare(builder);
+
+                    let mut table_writer: ::planus::table_writer::TableWriter<8> =
+                        ::core::default::Default::default();
+                    table_writer.write_entry::<::planus::Offset<str>>(1);
+                    if prepared_crypto_suite.is_some() {
+                        table_writer.write_entry::<self::SrtpCryptoSuite>(0);
+                    }
+
+                    unsafe {
+                        table_writer.finish(builder, |object_writer| {
+                            object_writer.write::<_, _, 4>(&prepared_key_base64);
+                            if let ::core::option::Option::Some(prepared_crypto_suite) =
+                                prepared_crypto_suite
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_crypto_suite);
+                            }
+                        });
+                    }
+                    builder.current_offset()
+                }
+            }
+
+            impl ::planus::WriteAs<::planus::Offset<SrtpParameters>> for SrtpParameters {
+                type Prepared = ::planus::Offset<Self>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SrtpParameters> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl ::planus::WriteAsOptional<::planus::Offset<SrtpParameters>> for SrtpParameters {
+                type Prepared = ::planus::Offset<Self>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<SrtpParameters>> {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl ::planus::WriteAsOffset<SrtpParameters> for SrtpParameters {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SrtpParameters> {
+                    SrtpParameters::create(builder, self.crypto_suite, &self.key_base64)
+                }
+            }
+
+            /// Builder for serializing an instance of the [SrtpParameters] type.
+            ///
+            /// Can be created using the [SrtpParameters::builder] method.
+            #[derive(Debug)]
+            #[must_use]
+            pub struct SrtpParametersBuilder<State>(State);
+
+            impl SrtpParametersBuilder<()> {
+                /// Setter for the [`crypto_suite` field](SrtpParameters#structfield.crypto_suite).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn crypto_suite<T0>(self, value: T0) -> SrtpParametersBuilder<(T0,)>
+                where
+                    T0: ::planus::WriteAsDefault<self::SrtpCryptoSuite, self::SrtpCryptoSuite>,
+                {
+                    SrtpParametersBuilder((value,))
+                }
+
+                /// Sets the [`crypto_suite` field](SrtpParameters#structfield.crypto_suite) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn crypto_suite_as_default(
+                    self,
+                ) -> SrtpParametersBuilder<(::planus::DefaultValue,)> {
+                    self.crypto_suite(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0> SrtpParametersBuilder<(T0,)> {
+                /// Setter for the [`key_base64` field](SrtpParameters#structfield.key_base64).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn key_base64<T1>(self, value: T1) -> SrtpParametersBuilder<(T0, T1)>
+                where
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                {
+                    let (v0,) = self.0;
+                    SrtpParametersBuilder((v0, value))
+                }
+            }
+
+            impl<T0, T1> SrtpParametersBuilder<(T0, T1)> {
+                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [SrtpParameters].
+                #[inline]
+                pub fn finish(
+                    self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SrtpParameters>
+                where
+                    Self: ::planus::WriteAsOffset<SrtpParameters>,
+                {
+                    ::planus::WriteAsOffset::prepare(&self, builder)
+                }
+            }
+
+            impl<
+                    T0: ::planus::WriteAsDefault<self::SrtpCryptoSuite, self::SrtpCryptoSuite>,
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                > ::planus::WriteAs<::planus::Offset<SrtpParameters>>
+                for SrtpParametersBuilder<(T0, T1)>
+            {
+                type Prepared = ::planus::Offset<SrtpParameters>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SrtpParameters> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl<
+                    T0: ::planus::WriteAsDefault<self::SrtpCryptoSuite, self::SrtpCryptoSuite>,
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                > ::planus::WriteAsOptional<::planus::Offset<SrtpParameters>>
+                for SrtpParametersBuilder<(T0, T1)>
+            {
+                type Prepared = ::planus::Offset<SrtpParameters>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<SrtpParameters>> {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl<
+                    T0: ::planus::WriteAsDefault<self::SrtpCryptoSuite, self::SrtpCryptoSuite>,
+                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                > ::planus::WriteAsOffset<SrtpParameters> for SrtpParametersBuilder<(T0, T1)>
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SrtpParameters> {
+                    let (v0, v1) = &self.0;
+                    SrtpParameters::create(builder, v0, v1)
+                }
+            }
+
+            /// Reference to a deserialized [SrtpParameters].
+            #[derive(Copy, Clone)]
+            pub struct SrtpParametersRef<'a>(::planus::table_reader::Table<'a>);
+
+            impl<'a> SrtpParametersRef<'a> {
+                /// Getter for the [`crypto_suite` field](SrtpParameters#structfield.crypto_suite).
+                #[inline]
+                pub fn crypto_suite(&self) -> ::planus::Result<self::SrtpCryptoSuite> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(0, "SrtpParameters", "crypto_suite")?
+                            .unwrap_or(self::SrtpCryptoSuite::AeadAes256Gcm),
+                    )
+                }
+
+                /// Getter for the [`key_base64` field](SrtpParameters#structfield.key_base64).
+                #[inline]
+                pub fn key_base64(&self) -> ::planus::Result<&'a ::core::primitive::str> {
+                    self.0.access_required(1, "SrtpParameters", "key_base64")
+                }
+            }
+
+            impl<'a> ::core::fmt::Debug for SrtpParametersRef<'a> {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    let mut f = f.debug_struct("SrtpParametersRef");
+                    f.field("crypto_suite", &self.crypto_suite());
+                    f.field("key_base64", &self.key_base64());
+                    f.finish()
+                }
+            }
+
+            impl<'a> ::core::convert::TryFrom<SrtpParametersRef<'a>> for SrtpParameters {
+                type Error = ::planus::Error;
+
+                #[allow(unreachable_code)]
+                fn try_from(value: SrtpParametersRef<'a>) -> ::planus::Result<Self> {
+                    ::core::result::Result::Ok(Self {
+                        crypto_suite: ::core::convert::TryInto::try_into(value.crypto_suite()?)?,
+                        key_base64: ::core::convert::TryInto::try_into(value.key_base64()?)?,
+                    })
+                }
+            }
+
+            impl<'a> ::planus::TableRead<'a> for SrtpParametersRef<'a> {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
+                        buffer, offset,
+                    )?))
+                }
+            }
+
+            impl<'a> ::planus::VectorReadInner<'a> for SrtpParametersRef<'a> {
+                type Error = ::planus::Error;
+                const STRIDE: usize = 4;
+
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[SrtpParametersRef]",
+                            "get",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<::planus::Offset<SrtpParameters>> for SrtpParameters {
+                type Value = ::planus::Offset<SrtpParameters>;
+                const STRIDE: usize = 4;
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
+                    ::planus::WriteAs::prepare(self, builder)
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[::planus::Offset<SrtpParameters>],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - (Self::STRIDE * i) as u32,
+                        );
+                    }
+                }
+            }
+
+            impl<'a> ::planus::ReadAsRoot<'a> for SrtpParametersRef<'a> {
+                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(
+                        ::planus::SliceWithStartOffset {
+                            buffer: slice,
+                            offset_from_start: 0,
+                        },
+                        0,
+                    )
+                    .map_err(|error_kind| {
+                        error_kind.with_error_location("[SrtpParametersRef]", "read_as_root", 0)
+                    })
                 }
             }
         }
@@ -50470,8 +50681,8 @@ mod root {
                     ::planus::alloc::boxed::Box<super::pipe_transport::ConnectRequest>,
                 ),
 
-                /// The variant of type `FBS.WebRtcTransport.ConnectRequest` in the union `Body`
-                ConnectRequest(
+                /// The variant `WebRtcTransport_ConnectRequest` in the union `Body`
+                WebRtcTransportConnectRequest(
                     ::planus::alloc::boxed::Box<super::web_rtc_transport::ConnectRequest>,
                 ),
 
@@ -50732,7 +50943,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_connect_request(
+                pub fn create_web_rtc_transport_connect_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -50871,7 +51082,9 @@ mod root {
                         Self::PipeTransportConnectRequest(value) => {
                             Self::create_pipe_transport_connect_request(builder, value)
                         }
-                        Self::ConnectRequest(value) => Self::create_connect_request(builder, value),
+                        Self::WebRtcTransportConnectRequest(value) => {
+                            Self::create_web_rtc_transport_connect_request(builder, value)
+                        }
                         Self::SetPreferredLayersRequest(value) => {
                             Self::create_set_preferred_layers_request(builder, value)
                         }
@@ -51234,9 +51447,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`ConnectRequest` variant](Body#variant.ConnectRequest).
+                /// Creates an instance of the [`WebRtcTransport_ConnectRequest` variant](Body#variant.WebRtcTransportConnectRequest).
                 #[inline]
-                pub fn connect_request<T>(
+                pub fn web_rtc_transport_connect_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<28, T>>
@@ -52116,7 +52329,7 @@ mod root {
                 CloseDataConsumerRequest(super::transport::CloseDataConsumerRequestRef<'a>),
                 PlainTransportConnectRequest(super::plain_transport::ConnectRequestRef<'a>),
                 PipeTransportConnectRequest(super::pipe_transport::ConnectRequestRef<'a>),
-                ConnectRequest(super::web_rtc_transport::ConnectRequestRef<'a>),
+                WebRtcTransportConnectRequest(super::web_rtc_transport::ConnectRequestRef<'a>),
                 SetPreferredLayersRequest(super::consumer::SetPreferredLayersRequestRef<'a>),
                 SetPriorityRequest(super::consumer::SetPriorityRequestRef<'a>),
                 SetBufferedAmountLowThresholdRequest(
@@ -52296,8 +52509,8 @@ mod root {
                             ))
                         }
 
-                        BodyRef::ConnectRequest(value) => {
-                            Self::ConnectRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::WebRtcTransportConnectRequest(value) => {
+                            Self::WebRtcTransportConnectRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -52431,7 +52644,7 @@ mod root {
                         27 => ::core::result::Result::Ok(Self::PipeTransportConnectRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        28 => ::core::result::Result::Ok(Self::ConnectRequest(
+                        28 => ::core::result::Result::Ok(Self::WebRtcTransportConnectRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         29 => ::core::result::Result::Ok(Self::SetPreferredLayersRequest(
@@ -68203,7 +68416,7 @@ mod root {
             /// The table `PipeTransportOptions` in the namespace `FBS.PipeTransport`
             ///
             /// Generated from these locations:
-            /// * Table `PipeTransportOptions` in the file `../worker/fbs/pipeTransport.fbs:5`
+            /// * Table `PipeTransportOptions` in the file `../worker/fbs/pipeTransport.fbs:6`
             #[derive(
                 Clone,
                 Debug,
@@ -68616,7 +68829,7 @@ mod root {
             /// The table `ConnectRequest` in the namespace `FBS.PipeTransport`
             ///
             /// Generated from these locations:
-            /// * Table `ConnectRequest` in the file `../worker/fbs/pipeTransport.fbs:12`
+            /// * Table `ConnectRequest` in the file `../worker/fbs/pipeTransport.fbs:13`
             #[derive(
                 Clone,
                 Debug,
@@ -68635,7 +68848,7 @@ mod root {
                 pub port: ::core::option::Option<u16>,
                 /// The field `srtp_parameters` in the table `ConnectRequest`
                 pub srtp_parameters: ::core::option::Option<
-                    ::planus::alloc::boxed::Box<super::transport::SrtpParameters>,
+                    ::planus::alloc::boxed::Box<super::srtp_parameters::SrtpParameters>,
                 >,
             }
 
@@ -68652,7 +68865,7 @@ mod root {
                     field_ip: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_port: impl ::planus::WriteAsOptional<u16>,
                     field_srtp_parameters: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::SrtpParameters>,
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
                     >,
                 ) -> ::planus::Offset<Self> {
                     let prepared_ip = field_ip.prepare(builder);
@@ -68663,8 +68876,7 @@ mod root {
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<str>>(0);
                     if prepared_srtp_parameters.is_some() {
-                        table_writer
-                            .write_entry::<::planus::Offset<super::transport::SrtpParameters>>(2);
+                        table_writer.write_entry::<::planus::Offset<super::srtp_parameters::SrtpParameters>>(2);
                     }
                     if prepared_port.is_some() {
                         table_writer.write_entry::<u16>(1);
@@ -68767,7 +68979,7 @@ mod root {
                 pub fn srtp_parameters<T2>(self, value: T2) -> ConnectRequestBuilder<(T0, T1, T2)>
                 where
                     T2: ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::SrtpParameters>,
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
                     >,
                 {
                     let (v0, v1) = self.0;
@@ -68799,7 +69011,9 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
                     T1: ::planus::WriteAsOptional<u16>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T2: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAs<::planus::Offset<ConnectRequest>>
                 for ConnectRequestBuilder<(T0, T1, T2)>
             {
@@ -68817,7 +69031,9 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
                     T1: ::planus::WriteAsOptional<u16>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T2: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAsOptional<::planus::Offset<ConnectRequest>>
                 for ConnectRequestBuilder<(T0, T1, T2)>
             {
@@ -68835,7 +69051,9 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
                     T1: ::planus::WriteAsOptional<u16>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T2: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAsOffset<ConnectRequest> for ConnectRequestBuilder<(T0, T1, T2)>
             {
                 #[inline]
@@ -68869,8 +69087,9 @@ mod root {
                 #[inline]
                 pub fn srtp_parameters(
                     &self,
-                ) -> ::planus::Result<::core::option::Option<super::transport::SrtpParametersRef<'a>>>
-                {
+                ) -> ::planus::Result<
+                    ::core::option::Option<super::srtp_parameters::SrtpParametersRef<'a>>,
+                > {
                     self.0.access(2, "ConnectRequest", "srtp_parameters")
                 }
             }
@@ -68989,7 +69208,7 @@ mod root {
             /// The table `ConnectResponse` in the namespace `FBS.PipeTransport`
             ///
             /// Generated from these locations:
-            /// * Table `ConnectResponse` in the file `../worker/fbs/pipeTransport.fbs:18`
+            /// * Table `ConnectResponse` in the file `../worker/fbs/pipeTransport.fbs:19`
             #[derive(
                 Clone,
                 Debug,
@@ -69003,17 +69222,7 @@ mod root {
             )]
             pub struct ConnectResponse {
                 /// The field `tuple` in the table `ConnectResponse`
-                pub tuple:
-                    ::core::option::Option<::planus::alloc::boxed::Box<super::transport::Tuple>>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for ConnectResponse {
-                fn default() -> Self {
-                    Self {
-                        tuple: ::core::default::Default::default(),
-                    }
-                }
+                pub tuple: ::planus::alloc::boxed::Box<super::transport::Tuple>,
             }
 
             impl ConnectResponse {
@@ -69026,23 +69235,17 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_tuple: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::Tuple>,
-                    >,
+                    field_tuple: impl ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_tuple = field_tuple.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    if prepared_tuple.is_some() {
-                        table_writer.write_entry::<::planus::Offset<super::transport::Tuple>>(0);
-                    }
+                    table_writer.write_entry::<::planus::Offset<super::transport::Tuple>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_tuple) = prepared_tuple {
-                                object_writer.write::<_, _, 4>(&prepared_tuple);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_tuple);
                         });
                     }
                     builder.current_offset()
@@ -69096,16 +69299,9 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn tuple<T0>(self, value: T0) -> ConnectResponseBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
+                    T0: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                 {
                     ConnectResponseBuilder((value,))
-                }
-
-                /// Sets the [`tuple` field](ConnectResponse#structfield.tuple) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn tuple_as_null(self) -> ConnectResponseBuilder<((),)> {
-                    self.tuple(())
                 }
             }
 
@@ -69123,7 +69319,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>>
                 ::planus::WriteAs<::planus::Offset<ConnectResponse>>
                 for ConnectResponseBuilder<(T0,)>
             {
@@ -69138,7 +69334,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>>
                 ::planus::WriteAsOptional<::planus::Offset<ConnectResponse>>
                 for ConnectResponseBuilder<(T0,)>
             {
@@ -69153,7 +69349,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>>
                 ::planus::WriteAsOffset<ConnectResponse> for ConnectResponseBuilder<(T0,)>
             {
                 #[inline]
@@ -69173,20 +69369,15 @@ mod root {
             impl<'a> ConnectResponseRef<'a> {
                 /// Getter for the [`tuple` field](ConnectResponse#structfield.tuple).
                 #[inline]
-                pub fn tuple(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<super::transport::TupleRef<'a>>>
-                {
-                    self.0.access(0, "ConnectResponse", "tuple")
+                pub fn tuple(&self) -> ::planus::Result<super::transport::TupleRef<'a>> {
+                    self.0.access_required(0, "ConnectResponse", "tuple")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for ConnectResponseRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("ConnectResponseRef");
-                    if let ::core::option::Option::Some(field_tuple) = self.tuple().transpose() {
-                        f.field("tuple", &field_tuple);
-                    }
+                    f.field("tuple", &self.tuple());
                     f.finish()
                 }
             }
@@ -69197,13 +69388,9 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: ConnectResponseRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        tuple: if let ::core::option::Option::Some(tuple) = value.tuple()? {
-                            ::core::option::Option::Some(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryInto::try_into(tuple)?,
-                            ))
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        tuple: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.tuple()?)?,
+                        ),
                     })
                 }
             }
@@ -69281,7 +69468,7 @@ mod root {
             /// The table `DumpResponse` in the namespace `FBS.PipeTransport`
             ///
             /// Generated from these locations:
-            /// * Table `DumpResponse` in the file `../worker/fbs/pipeTransport.fbs:22`
+            /// * Table `DumpResponse` in the file `../worker/fbs/pipeTransport.fbs:23`
             #[derive(
                 Clone,
                 Debug,
@@ -69302,7 +69489,7 @@ mod root {
                 pub rtx: bool,
                 /// The field `srtp_parameters` in the table `DumpResponse`
                 pub srtp_parameters: ::core::option::Option<
-                    ::planus::alloc::boxed::Box<super::transport::SrtpParameters>,
+                    ::planus::alloc::boxed::Box<super::srtp_parameters::SrtpParameters>,
                 >,
             }
 
@@ -69320,7 +69507,7 @@ mod root {
                     field_tuple: impl ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     field_rtx: impl ::planus::WriteAsDefault<bool, bool>,
                     field_srtp_parameters: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::SrtpParameters>,
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
                     >,
                 ) -> ::planus::Offset<Self> {
                     let prepared_base = field_base.prepare(builder);
@@ -69333,8 +69520,7 @@ mod root {
                     table_writer.write_entry::<::planus::Offset<super::transport::Dump>>(0);
                     table_writer.write_entry::<::planus::Offset<super::transport::Tuple>>(1);
                     if prepared_srtp_parameters.is_some() {
-                        table_writer
-                            .write_entry::<::planus::Offset<super::transport::SrtpParameters>>(3);
+                        table_writer.write_entry::<::planus::Offset<super::srtp_parameters::SrtpParameters>>(3);
                     }
                     if prepared_rtx.is_some() {
                         table_writer.write_entry::<bool>(2);
@@ -69459,7 +69645,7 @@ mod root {
                 pub fn srtp_parameters<T3>(self, value: T3) -> DumpResponseBuilder<(T0, T1, T2, T3)>
                 where
                     T3: ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::SrtpParameters>,
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
                     >,
                 {
                     let (v0, v1, v2) = self.0;
@@ -69492,7 +69678,9 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Dump>>,
                     T1: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T2: ::planus::WriteAsDefault<bool, bool>,
-                    T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T3: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAs<::planus::Offset<DumpResponse>>
                 for DumpResponseBuilder<(T0, T1, T2, T3)>
             {
@@ -69511,7 +69699,9 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Dump>>,
                     T1: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T2: ::planus::WriteAsDefault<bool, bool>,
-                    T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T3: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAsOptional<::planus::Offset<DumpResponse>>
                 for DumpResponseBuilder<(T0, T1, T2, T3)>
             {
@@ -69530,7 +69720,9 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Dump>>,
                     T1: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T2: ::planus::WriteAsDefault<bool, bool>,
-                    T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T3: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAsOffset<DumpResponse> for DumpResponseBuilder<(T0, T1, T2, T3)>
             {
                 #[inline]
@@ -69572,8 +69764,9 @@ mod root {
                 #[inline]
                 pub fn srtp_parameters(
                     &self,
-                ) -> ::planus::Result<::core::option::Option<super::transport::SrtpParametersRef<'a>>>
-                {
+                ) -> ::planus::Result<
+                    ::core::option::Option<super::srtp_parameters::SrtpParametersRef<'a>>,
+                > {
                     self.0.access(3, "DumpResponse", "srtp_parameters")
                 }
             }
@@ -69692,7 +69885,7 @@ mod root {
             /// The table `GetStatsResponse` in the namespace `FBS.PipeTransport`
             ///
             /// Generated from these locations:
-            /// * Table `GetStatsResponse` in the file `../worker/fbs/pipeTransport.fbs:29`
+            /// * Table `GetStatsResponse` in the file `../worker/fbs/pipeTransport.fbs:30`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -69984,7 +70177,7 @@ mod root {
             /// The table `PlainTransportOptions` in the namespace `FBS.PlainTransport`
             ///
             /// Generated from these locations:
-            /// * Table `PlainTransportOptions` in the file `../worker/fbs/plainTransport.fbs:6`
+            /// * Table `PlainTransportOptions` in the file `../worker/fbs/plainTransport.fbs:7`
             #[derive(
                 Clone,
                 Debug,
@@ -70012,7 +70205,8 @@ mod root {
                 /// The field `enable_srtp` in the table `PlainTransportOptions`
                 pub enable_srtp: bool,
                 /// The field `srtp_crypto_suite` in the table `PlainTransportOptions`
-                pub srtp_crypto_suite: ::core::option::Option<::planus::alloc::string::String>,
+                pub srtp_crypto_suite:
+                    ::core::option::Option<super::srtp_parameters::SrtpCryptoSuite>,
             }
 
             impl PlainTransportOptions {
@@ -70036,7 +70230,7 @@ mod root {
                     field_comedia: impl ::planus::WriteAsDefault<bool, bool>,
                     field_enable_srtp: impl ::planus::WriteAsDefault<bool, bool>,
                     field_srtp_crypto_suite: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
+                        super::srtp_parameters::SrtpCryptoSuite,
                     >,
                 ) -> ::planus::Offset<Self> {
                     let prepared_base = field_base.prepare(builder);
@@ -70055,9 +70249,6 @@ mod root {
                         table_writer
                             .write_entry::<::planus::Offset<super::transport::ListenInfo>>(2);
                     }
-                    if prepared_srtp_crypto_suite.is_some() {
-                        table_writer.write_entry::<::planus::Offset<str>>(6);
-                    }
                     if prepared_rtcp_mux.is_some() {
                         table_writer.write_entry::<bool>(3);
                     }
@@ -70066,6 +70257,9 @@ mod root {
                     }
                     if prepared_enable_srtp.is_some() {
                         table_writer.write_entry::<bool>(5);
+                    }
+                    if prepared_srtp_crypto_suite.is_some() {
+                        table_writer.write_entry::<super::srtp_parameters::SrtpCryptoSuite>(6);
                     }
 
                     unsafe {
@@ -70076,11 +70270,6 @@ mod root {
                                 prepared_rtcp_listen_info
                             {
                                 object_writer.write::<_, _, 4>(&prepared_rtcp_listen_info);
-                            }
-                            if let ::core::option::Option::Some(prepared_srtp_crypto_suite) =
-                                prepared_srtp_crypto_suite
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_srtp_crypto_suite);
                             }
                             if let ::core::option::Option::Some(prepared_rtcp_mux) =
                                 prepared_rtcp_mux
@@ -70095,6 +70284,11 @@ mod root {
                                 prepared_enable_srtp
                             {
                                 object_writer.write::<_, _, 1>(&prepared_enable_srtp);
+                            }
+                            if let ::core::option::Option::Some(prepared_srtp_crypto_suite) =
+                                prepared_srtp_crypto_suite
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_srtp_crypto_suite);
                             }
                         });
                     }
@@ -70141,7 +70335,7 @@ mod root {
                         self.rtcp_mux,
                         self.comedia,
                         self.enable_srtp,
-                        &self.srtp_crypto_suite,
+                        self.srtp_crypto_suite,
                     )
                 }
             }
@@ -70290,7 +70484,7 @@ mod root {
                     value: T6,
                 ) -> PlainTransportOptionsBuilder<(T0, T1, T2, T3, T4, T5, T6)>
                 where
-                    T6: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T6: ::planus::WriteAsOptional<super::srtp_parameters::SrtpCryptoSuite>,
                 {
                     let (v0, v1, v2, v3, v4, v5) = self.0;
                     PlainTransportOptionsBuilder((v0, v1, v2, v3, v4, v5, value))
@@ -70327,7 +70521,7 @@ mod root {
                     T3: ::planus::WriteAsDefault<bool, bool>,
                     T4: ::planus::WriteAsDefault<bool, bool>,
                     T5: ::planus::WriteAsDefault<bool, bool>,
-                    T6: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T6: ::planus::WriteAsOptional<super::srtp_parameters::SrtpCryptoSuite>,
                 > ::planus::WriteAs<::planus::Offset<PlainTransportOptions>>
                 for PlainTransportOptionsBuilder<(T0, T1, T2, T3, T4, T5, T6)>
             {
@@ -70349,7 +70543,7 @@ mod root {
                     T3: ::planus::WriteAsDefault<bool, bool>,
                     T4: ::planus::WriteAsDefault<bool, bool>,
                     T5: ::planus::WriteAsDefault<bool, bool>,
-                    T6: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T6: ::planus::WriteAsOptional<super::srtp_parameters::SrtpCryptoSuite>,
                 > ::planus::WriteAsOptional<::planus::Offset<PlainTransportOptions>>
                 for PlainTransportOptionsBuilder<(T0, T1, T2, T3, T4, T5, T6)>
             {
@@ -70372,7 +70566,7 @@ mod root {
                     T3: ::planus::WriteAsDefault<bool, bool>,
                     T4: ::planus::WriteAsDefault<bool, bool>,
                     T5: ::planus::WriteAsDefault<bool, bool>,
-                    T6: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T6: ::planus::WriteAsOptional<super::srtp_parameters::SrtpCryptoSuite>,
                 > ::planus::WriteAsOffset<PlainTransportOptions>
                 for PlainTransportOptionsBuilder<(T0, T1, T2, T3, T4, T5, T6)>
             {
@@ -70448,7 +70642,7 @@ mod root {
                 #[inline]
                 pub fn srtp_crypto_suite(
                     &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
+                ) -> ::planus::Result<::core::option::Option<super::srtp_parameters::SrtpCryptoSuite>>
                 {
                     self.0
                         .access(6, "PlainTransportOptions", "srtp_crypto_suite")
@@ -70591,7 +70785,7 @@ mod root {
             /// The table `ConnectRequest` in the namespace `FBS.PlainTransport`
             ///
             /// Generated from these locations:
-            /// * Table `ConnectRequest` in the file `../worker/fbs/plainTransport.fbs:16`
+            /// * Table `ConnectRequest` in the file `../worker/fbs/plainTransport.fbs:17`
             #[derive(
                 Clone,
                 Debug,
@@ -70612,7 +70806,7 @@ mod root {
                 pub rtcp_port: ::core::option::Option<u16>,
                 /// The field `srtp_parameters` in the table `ConnectRequest`
                 pub srtp_parameters: ::core::option::Option<
-                    ::planus::alloc::boxed::Box<super::transport::SrtpParameters>,
+                    ::planus::alloc::boxed::Box<super::srtp_parameters::SrtpParameters>,
                 >,
             }
 
@@ -70642,7 +70836,7 @@ mod root {
                     field_port: impl ::planus::WriteAsOptional<u16>,
                     field_rtcp_port: impl ::planus::WriteAsOptional<u16>,
                     field_srtp_parameters: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::SrtpParameters>,
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
                     >,
                 ) -> ::planus::Offset<Self> {
                     let prepared_ip = field_ip.prepare(builder);
@@ -70656,8 +70850,7 @@ mod root {
                         table_writer.write_entry::<::planus::Offset<str>>(0);
                     }
                     if prepared_srtp_parameters.is_some() {
-                        table_writer
-                            .write_entry::<::planus::Offset<super::transport::SrtpParameters>>(3);
+                        table_writer.write_entry::<::planus::Offset<super::srtp_parameters::SrtpParameters>>(3);
                     }
                     if prepared_port.is_some() {
                         table_writer.write_entry::<u16>(1);
@@ -70806,7 +70999,7 @@ mod root {
                 ) -> ConnectRequestBuilder<(T0, T1, T2, T3)>
                 where
                     T3: ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::SrtpParameters>,
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
                     >,
                 {
                     let (v0, v1, v2) = self.0;
@@ -70839,7 +71032,9 @@ mod root {
                     T0: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T1: ::planus::WriteAsOptional<u16>,
                     T2: ::planus::WriteAsOptional<u16>,
-                    T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T3: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAs<::planus::Offset<ConnectRequest>>
                 for ConnectRequestBuilder<(T0, T1, T2, T3)>
             {
@@ -70858,7 +71053,9 @@ mod root {
                     T0: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T1: ::planus::WriteAsOptional<u16>,
                     T2: ::planus::WriteAsOptional<u16>,
-                    T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T3: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAsOptional<::planus::Offset<ConnectRequest>>
                 for ConnectRequestBuilder<(T0, T1, T2, T3)>
             {
@@ -70877,7 +71074,9 @@ mod root {
                     T0: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T1: ::planus::WriteAsOptional<u16>,
                     T2: ::planus::WriteAsOptional<u16>,
-                    T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T3: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAsOffset<ConnectRequest>
                 for ConnectRequestBuilder<(T0, T1, T2, T3)>
             {
@@ -70921,8 +71120,9 @@ mod root {
                 #[inline]
                 pub fn srtp_parameters(
                     &self,
-                ) -> ::planus::Result<::core::option::Option<super::transport::SrtpParametersRef<'a>>>
-                {
+                ) -> ::planus::Result<
+                    ::core::option::Option<super::srtp_parameters::SrtpParametersRef<'a>>,
+                > {
                     self.0.access(3, "ConnectRequest", "srtp_parameters")
                 }
             }
@@ -71061,7 +71261,7 @@ mod root {
             /// The table `ConnectResponse` in the namespace `FBS.PlainTransport`
             ///
             /// Generated from these locations:
-            /// * Table `ConnectResponse` in the file `../worker/fbs/plainTransport.fbs:23`
+            /// * Table `ConnectResponse` in the file `../worker/fbs/plainTransport.fbs:24`
             #[derive(
                 Clone,
                 Debug,
@@ -71081,7 +71281,7 @@ mod root {
                     ::core::option::Option<::planus::alloc::boxed::Box<super::transport::Tuple>>,
                 /// The field `srtp_parameters` in the table `ConnectResponse`
                 pub srtp_parameters: ::core::option::Option<
-                    ::planus::alloc::boxed::Box<super::transport::SrtpParameters>,
+                    ::planus::alloc::boxed::Box<super::srtp_parameters::SrtpParameters>,
                 >,
             }
 
@@ -71100,7 +71300,7 @@ mod root {
                         ::planus::Offset<super::transport::Tuple>,
                     >,
                     field_srtp_parameters: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::SrtpParameters>,
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
                     >,
                 ) -> ::planus::Offset<Self> {
                     let prepared_tuple = field_tuple.prepare(builder);
@@ -71114,8 +71314,7 @@ mod root {
                         table_writer.write_entry::<::planus::Offset<super::transport::Tuple>>(1);
                     }
                     if prepared_srtp_parameters.is_some() {
-                        table_writer
-                            .write_entry::<::planus::Offset<super::transport::SrtpParameters>>(2);
+                        table_writer.write_entry::<::planus::Offset<super::srtp_parameters::SrtpParameters>>(2);
                     }
 
                     unsafe {
@@ -71222,7 +71421,7 @@ mod root {
                 pub fn srtp_parameters<T2>(self, value: T2) -> ConnectResponseBuilder<(T0, T1, T2)>
                 where
                     T2: ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::SrtpParameters>,
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
                     >,
                 {
                     let (v0, v1) = self.0;
@@ -71254,7 +71453,9 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T1: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T2: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAs<::planus::Offset<ConnectResponse>>
                 for ConnectResponseBuilder<(T0, T1, T2)>
             {
@@ -71272,7 +71473,9 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T1: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T2: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAsOptional<::planus::Offset<ConnectResponse>>
                 for ConnectResponseBuilder<(T0, T1, T2)>
             {
@@ -71290,7 +71493,9 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T1: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T2: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAsOffset<ConnectResponse>
                 for ConnectResponseBuilder<(T0, T1, T2)>
             {
@@ -71328,8 +71533,9 @@ mod root {
                 #[inline]
                 pub fn srtp_parameters(
                     &self,
-                ) -> ::planus::Result<::core::option::Option<super::transport::SrtpParametersRef<'a>>>
-                {
+                ) -> ::planus::Result<
+                    ::core::option::Option<super::srtp_parameters::SrtpParametersRef<'a>>,
+                > {
                     self.0.access(2, "ConnectResponse", "srtp_parameters")
                 }
             }
@@ -71456,7 +71662,7 @@ mod root {
             /// The table `DumpResponse` in the namespace `FBS.PlainTransport`
             ///
             /// Generated from these locations:
-            /// * Table `DumpResponse` in the file `../worker/fbs/plainTransport.fbs:29`
+            /// * Table `DumpResponse` in the file `../worker/fbs/plainTransport.fbs:30`
             #[derive(
                 Clone,
                 Debug,
@@ -71482,7 +71688,7 @@ mod root {
                     ::core::option::Option<::planus::alloc::boxed::Box<super::transport::Tuple>>,
                 /// The field `srtp_parameters` in the table `DumpResponse`
                 pub srtp_parameters: ::core::option::Option<
-                    ::planus::alloc::boxed::Box<super::transport::SrtpParameters>,
+                    ::planus::alloc::boxed::Box<super::srtp_parameters::SrtpParameters>,
                 >,
             }
 
@@ -71504,7 +71710,7 @@ mod root {
                         ::planus::Offset<super::transport::Tuple>,
                     >,
                     field_srtp_parameters: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::SrtpParameters>,
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
                     >,
                 ) -> ::planus::Offset<Self> {
                     let prepared_base = field_base.prepare(builder);
@@ -71522,8 +71728,7 @@ mod root {
                         table_writer.write_entry::<::planus::Offset<super::transport::Tuple>>(4);
                     }
                     if prepared_srtp_parameters.is_some() {
-                        table_writer
-                            .write_entry::<::planus::Offset<super::transport::SrtpParameters>>(5);
+                        table_writer.write_entry::<::planus::Offset<super::srtp_parameters::SrtpParameters>>(5);
                     }
                     if prepared_rtcp_mux.is_some() {
                         table_writer.write_entry::<bool>(1);
@@ -71709,7 +71914,7 @@ mod root {
                 ) -> DumpResponseBuilder<(T0, T1, T2, T3, T4, T5)>
                 where
                     T5: ::planus::WriteAsOptional<
-                        ::planus::Offset<super::transport::SrtpParameters>,
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
                     >,
                 {
                     let (v0, v1, v2, v3, v4) = self.0;
@@ -71746,7 +71951,9 @@ mod root {
                     T2: ::planus::WriteAsDefault<bool, bool>,
                     T3: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T4: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
-                    T5: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T5: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAs<::planus::Offset<DumpResponse>>
                 for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5)>
             {
@@ -71767,7 +71974,9 @@ mod root {
                     T2: ::planus::WriteAsDefault<bool, bool>,
                     T3: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T4: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
-                    T5: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T5: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAsOptional<::planus::Offset<DumpResponse>>
                 for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5)>
             {
@@ -71788,7 +71997,9 @@ mod root {
                     T2: ::planus::WriteAsDefault<bool, bool>,
                     T3: ::planus::WriteAs<::planus::Offset<super::transport::Tuple>>,
                     T4: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
-                    T5: ::planus::WriteAsOptional<::planus::Offset<super::transport::SrtpParameters>>,
+                    T5: ::planus::WriteAsOptional<
+                        ::planus::Offset<super::srtp_parameters::SrtpParameters>,
+                    >,
                 > ::planus::WriteAsOffset<DumpResponse>
                 for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5)>
             {
@@ -71852,8 +72063,9 @@ mod root {
                 #[inline]
                 pub fn srtp_parameters(
                     &self,
-                ) -> ::planus::Result<::core::option::Option<super::transport::SrtpParametersRef<'a>>>
-                {
+                ) -> ::planus::Result<
+                    ::core::option::Option<super::srtp_parameters::SrtpParametersRef<'a>>,
+                > {
                     self.0.access(5, "DumpResponse", "srtp_parameters")
                 }
             }
@@ -71988,7 +72200,7 @@ mod root {
             /// The table `GetStatsResponse` in the namespace `FBS.PlainTransport`
             ///
             /// Generated from these locations:
-            /// * Table `GetStatsResponse` in the file `../worker/fbs/plainTransport.fbs:38`
+            /// * Table `GetStatsResponse` in the file `../worker/fbs/plainTransport.fbs:39`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -72444,7 +72656,7 @@ mod root {
             /// The table `TupleNotification` in the namespace `FBS.PlainTransport`
             ///
             /// Generated from these locations:
-            /// * Table `TupleNotification` in the file `../worker/fbs/plainTransport.fbs:48`
+            /// * Table `TupleNotification` in the file `../worker/fbs/plainTransport.fbs:49`
             #[derive(
                 Clone,
                 Debug,
@@ -72704,7 +72916,7 @@ mod root {
             /// The table `RtcpTupleNotification` in the namespace `FBS.PlainTransport`
             ///
             /// Generated from these locations:
-            /// * Table `RtcpTupleNotification` in the file `../worker/fbs/plainTransport.fbs:52`
+            /// * Table `RtcpTupleNotification` in the file `../worker/fbs/plainTransport.fbs:53`
             #[derive(
                 Clone,
                 Debug,
@@ -74028,10 +74240,198 @@ mod root {
                 }
             }
 
+            /// The enum `FingerprintAlgorithm` in the namespace `FBS.WebRtcTransport`
+            ///
+            /// Generated from these locations:
+            /// * Enum `FingerprintAlgorithm` in the file `../worker/fbs/webRtcTransport.fbs:24`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum FingerprintAlgorithm {
+                /// The variant `SHA1` in the enum `FingerprintAlgorithm`
+                Sha1 = 0,
+
+                /// The variant `SHA224` in the enum `FingerprintAlgorithm`
+                Sha224 = 1,
+
+                /// The variant `SHA256` in the enum `FingerprintAlgorithm`
+                Sha256 = 2,
+
+                /// The variant `SHA384` in the enum `FingerprintAlgorithm`
+                Sha384 = 3,
+
+                /// The variant `SHA512` in the enum `FingerprintAlgorithm`
+                Sha512 = 4,
+            }
+
+            impl FingerprintAlgorithm {
+                /// Array containing all valid variants of FingerprintAlgorithm
+                pub const ENUM_VALUES: [Self; 5] = [
+                    Self::Sha1,
+                    Self::Sha224,
+                    Self::Sha256,
+                    Self::Sha384,
+                    Self::Sha512,
+                ];
+            }
+
+            impl ::core::convert::TryFrom<u8> for FingerprintAlgorithm {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(FingerprintAlgorithm::Sha1),
+                        1 => ::core::result::Result::Ok(FingerprintAlgorithm::Sha224),
+                        2 => ::core::result::Result::Ok(FingerprintAlgorithm::Sha256),
+                        3 => ::core::result::Result::Ok(FingerprintAlgorithm::Sha384),
+                        4 => ::core::result::Result::Ok(FingerprintAlgorithm::Sha512),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<FingerprintAlgorithm> for u8 {
+                #[inline]
+                fn from(value: FingerprintAlgorithm) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for FingerprintAlgorithm {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<FingerprintAlgorithm> for FingerprintAlgorithm {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<FingerprintAlgorithm> for FingerprintAlgorithm {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> FingerprintAlgorithm {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<FingerprintAlgorithm, FingerprintAlgorithm> for FingerprintAlgorithm {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &FingerprintAlgorithm,
+                ) -> ::core::option::Option<FingerprintAlgorithm> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<FingerprintAlgorithm> for FingerprintAlgorithm {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<FingerprintAlgorithm> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for FingerprintAlgorithm {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for FingerprintAlgorithm {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "FingerprintAlgorithm",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<FingerprintAlgorithm> for FingerprintAlgorithm {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
             /// The table `Fingerprint` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `Fingerprint` in the file `../worker/fbs/webRtcTransport.fbs:24`
+            /// * Table `Fingerprint` in the file `../worker/fbs/webRtcTransport.fbs:32`
             #[derive(
                 Clone,
                 Debug,
@@ -74045,7 +74445,7 @@ mod root {
             )]
             pub struct Fingerprint {
                 /// The field `algorithm` in the table `Fingerprint`
-                pub algorithm: ::planus::alloc::string::String,
+                pub algorithm: self::FingerprintAlgorithm,
                 /// The field `value` in the table `Fingerprint`
                 pub value: ::planus::alloc::string::String,
             }
@@ -74060,21 +74460,31 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_algorithm: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_algorithm: impl ::planus::WriteAsDefault<
+                        self::FingerprintAlgorithm,
+                        self::FingerprintAlgorithm,
+                    >,
                     field_value: impl ::planus::WriteAs<::planus::Offset<str>>,
                 ) -> ::planus::Offset<Self> {
-                    let prepared_algorithm = field_algorithm.prepare(builder);
+                    let prepared_algorithm =
+                        field_algorithm.prepare(builder, &self::FingerprintAlgorithm::Sha1);
                     let prepared_value = field_value.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
-                    table_writer.write_entry::<::planus::Offset<str>>(0);
                     table_writer.write_entry::<::planus::Offset<str>>(1);
+                    if prepared_algorithm.is_some() {
+                        table_writer.write_entry::<self::FingerprintAlgorithm>(0);
+                    }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            object_writer.write::<_, _, 4>(&prepared_algorithm);
                             object_writer.write::<_, _, 4>(&prepared_value);
+                            if let ::core::option::Option::Some(prepared_algorithm) =
+                                prepared_algorithm
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_algorithm);
+                            }
                         });
                     }
                     builder.current_offset()
@@ -74111,7 +74521,7 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<Fingerprint> {
-                    Fingerprint::create(builder, &self.algorithm, &self.value)
+                    Fingerprint::create(builder, self.algorithm, &self.value)
                 }
             }
 
@@ -74128,9 +74538,19 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn algorithm<T0>(self, value: T0) -> FingerprintBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
+                    T0: ::planus::WriteAsDefault<
+                        self::FingerprintAlgorithm,
+                        self::FingerprintAlgorithm,
+                    >,
                 {
                     FingerprintBuilder((value,))
+                }
+
+                /// Sets the [`algorithm` field](Fingerprint#structfield.algorithm) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn algorithm_as_default(self) -> FingerprintBuilder<(::planus::DefaultValue,)> {
+                    self.algorithm(::planus::DefaultValue)
                 }
             }
 
@@ -74162,7 +74582,10 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
+                    T0: ::planus::WriteAsDefault<
+                        self::FingerprintAlgorithm,
+                        self::FingerprintAlgorithm,
+                    >,
                     T1: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAs<::planus::Offset<Fingerprint>>
                 for FingerprintBuilder<(T0, T1)>
@@ -74179,7 +74602,10 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
+                    T0: ::planus::WriteAsDefault<
+                        self::FingerprintAlgorithm,
+                        self::FingerprintAlgorithm,
+                    >,
                     T1: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAsOptional<::planus::Offset<Fingerprint>>
                 for FingerprintBuilder<(T0, T1)>
@@ -74196,7 +74622,10 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
+                    T0: ::planus::WriteAsDefault<
+                        self::FingerprintAlgorithm,
+                        self::FingerprintAlgorithm,
+                    >,
                     T1: ::planus::WriteAs<::planus::Offset<str>>,
                 > ::planus::WriteAsOffset<Fingerprint> for FingerprintBuilder<(T0, T1)>
             {
@@ -74217,8 +74646,12 @@ mod root {
             impl<'a> FingerprintRef<'a> {
                 /// Getter for the [`algorithm` field](Fingerprint#structfield.algorithm).
                 #[inline]
-                pub fn algorithm(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(0, "Fingerprint", "algorithm")
+                pub fn algorithm(&self) -> ::planus::Result<self::FingerprintAlgorithm> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(0, "Fingerprint", "algorithm")?
+                            .unwrap_or(self::FingerprintAlgorithm::Sha1),
+                    )
                 }
 
                 /// Getter for the [`value` field](Fingerprint#structfield.value).
@@ -74319,10 +74752,372 @@ mod root {
                 }
             }
 
+            /// The enum `DtlsRole` in the namespace `FBS.WebRtcTransport`
+            ///
+            /// Generated from these locations:
+            /// * Enum `DtlsRole` in the file `../worker/fbs/webRtcTransport.fbs:37`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum DtlsRole {
+                /// The variant `AUTO` in the enum `DtlsRole`
+                Auto = 0,
+
+                /// The variant `CLIENT` in the enum `DtlsRole`
+                Client = 1,
+
+                /// The variant `SERVER` in the enum `DtlsRole`
+                Server = 2,
+            }
+
+            impl DtlsRole {
+                /// Array containing all valid variants of DtlsRole
+                pub const ENUM_VALUES: [Self; 3] = [Self::Auto, Self::Client, Self::Server];
+            }
+
+            impl ::core::convert::TryFrom<u8> for DtlsRole {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(DtlsRole::Auto),
+                        1 => ::core::result::Result::Ok(DtlsRole::Client),
+                        2 => ::core::result::Result::Ok(DtlsRole::Server),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<DtlsRole> for u8 {
+                #[inline]
+                fn from(value: DtlsRole) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for DtlsRole {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<DtlsRole> for DtlsRole {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<DtlsRole> for DtlsRole {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> DtlsRole {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<DtlsRole, DtlsRole> for DtlsRole {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &DtlsRole,
+                ) -> ::core::option::Option<DtlsRole> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<DtlsRole> for DtlsRole {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<DtlsRole> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for DtlsRole {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for DtlsRole {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "DtlsRole",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<DtlsRole> for DtlsRole {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
+            /// The enum `DtlsState` in the namespace `FBS.WebRtcTransport`
+            ///
+            /// Generated from these locations:
+            /// * Enum `DtlsState` in the file `../worker/fbs/webRtcTransport.fbs:43`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum DtlsState {
+                /// The variant `NEW` in the enum `DtlsState`
+                New = 0,
+
+                /// The variant `CONNECTING` in the enum `DtlsState`
+                Connecting = 1,
+
+                /// The variant `CONNECTED` in the enum `DtlsState`
+                Connected = 2,
+
+                /// The variant `FAILED` in the enum `DtlsState`
+                Failed = 3,
+
+                /// The variant `CLOSED` in the enum `DtlsState`
+                Closed = 4,
+            }
+
+            impl DtlsState {
+                /// Array containing all valid variants of DtlsState
+                pub const ENUM_VALUES: [Self; 5] = [
+                    Self::New,
+                    Self::Connecting,
+                    Self::Connected,
+                    Self::Failed,
+                    Self::Closed,
+                ];
+            }
+
+            impl ::core::convert::TryFrom<u8> for DtlsState {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(DtlsState::New),
+                        1 => ::core::result::Result::Ok(DtlsState::Connecting),
+                        2 => ::core::result::Result::Ok(DtlsState::Connected),
+                        3 => ::core::result::Result::Ok(DtlsState::Failed),
+                        4 => ::core::result::Result::Ok(DtlsState::Closed),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<DtlsState> for u8 {
+                #[inline]
+                fn from(value: DtlsState) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for DtlsState {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<DtlsState> for DtlsState {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<DtlsState> for DtlsState {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> DtlsState {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<DtlsState, DtlsState> for DtlsState {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &DtlsState,
+                ) -> ::core::option::Option<DtlsState> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<DtlsState> for DtlsState {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<DtlsState> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for DtlsState {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for DtlsState {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "DtlsState",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<DtlsState> for DtlsState {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
             /// The table `DtlsParameters` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `DtlsParameters` in the file `../worker/fbs/webRtcTransport.fbs:29`
+            /// * Table `DtlsParameters` in the file `../worker/fbs/webRtcTransport.fbs:51`
             #[derive(
                 Clone,
                 Debug,
@@ -74338,7 +75133,7 @@ mod root {
                 /// The field `fingerprints` in the table `DtlsParameters`
                 pub fingerprints: ::planus::alloc::vec::Vec<self::Fingerprint>,
                 /// The field `role` in the table `DtlsParameters`
-                pub role: ::core::option::Option<::planus::alloc::string::String>,
+                pub role: ::core::option::Option<self::DtlsRole>,
             }
 
             impl DtlsParameters {
@@ -74354,7 +75149,7 @@ mod root {
                     field_fingerprints: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::Fingerprint>]>,
                     >,
-                    field_role: impl ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    field_role: impl ::planus::WriteAsOptional<self::DtlsRole>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_fingerprints = field_fingerprints.prepare(builder);
                     let prepared_role = field_role.prepare(builder);
@@ -74364,14 +75159,14 @@ mod root {
                     table_writer
                         .write_entry::<::planus::Offset<[::planus::Offset<self::Fingerprint>]>>(0);
                     if prepared_role.is_some() {
-                        table_writer.write_entry::<::planus::Offset<str>>(1);
+                        table_writer.write_entry::<self::DtlsRole>(1);
                     }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_fingerprints);
                             if let ::core::option::Option::Some(prepared_role) = prepared_role {
-                                object_writer.write::<_, _, 4>(&prepared_role);
+                                object_writer.write::<_, _, 1>(&prepared_role);
                             }
                         });
                     }
@@ -74409,7 +75204,7 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<DtlsParameters> {
-                    DtlsParameters::create(builder, &self.fingerprints, &self.role)
+                    DtlsParameters::create(builder, &self.fingerprints, self.role)
                 }
             }
 
@@ -74438,7 +75233,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn role<T1>(self, value: T1) -> DtlsParametersBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAsOptional<self::DtlsRole>,
                 {
                     let (v0,) = self.0;
                     DtlsParametersBuilder((v0, value))
@@ -74468,7 +75263,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::Fingerprint>]>>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAsOptional<self::DtlsRole>,
                 > ::planus::WriteAs<::planus::Offset<DtlsParameters>>
                 for DtlsParametersBuilder<(T0, T1)>
             {
@@ -74485,7 +75280,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::Fingerprint>]>>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAsOptional<self::DtlsRole>,
                 > ::planus::WriteAsOptional<::planus::Offset<DtlsParameters>>
                 for DtlsParametersBuilder<(T0, T1)>
             {
@@ -74502,7 +75297,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::Fingerprint>]>>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAsOptional<self::DtlsRole>,
                 > ::planus::WriteAsOffset<DtlsParameters> for DtlsParametersBuilder<(T0, T1)>
             {
                 #[inline]
@@ -74532,10 +75327,7 @@ mod root {
 
                 /// Getter for the [`role` field](DtlsParameters#structfield.role).
                 #[inline]
-                pub fn role(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
-                {
+                pub fn role(&self) -> ::planus::Result<::core::option::Option<self::DtlsRole>> {
                     self.0.access(1, "DtlsParameters", "role")
                 }
             }
@@ -74640,7 +75432,7 @@ mod root {
             /// The table `IceParameters` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `IceParameters` in the file `../worker/fbs/webRtcTransport.fbs:34`
+            /// * Table `IceParameters` in the file `../worker/fbs/webRtcTransport.fbs:56`
             #[derive(
                 Clone,
                 Debug,
@@ -74985,10 +75777,695 @@ mod root {
                 }
             }
 
+            /// The enum `IceCandidateType` in the namespace `FBS.WebRtcTransport`
+            ///
+            /// Generated from these locations:
+            /// * Enum `IceCandidateType` in the file `../worker/fbs/webRtcTransport.fbs:62`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum IceCandidateType {
+                /// The variant `HOST` in the enum `IceCandidateType`
+                Host = 0,
+            }
+
+            impl IceCandidateType {
+                /// Array containing all valid variants of IceCandidateType
+                pub const ENUM_VALUES: [Self; 1] = [Self::Host];
+            }
+
+            impl ::core::convert::TryFrom<u8> for IceCandidateType {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(IceCandidateType::Host),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<IceCandidateType> for u8 {
+                #[inline]
+                fn from(value: IceCandidateType) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for IceCandidateType {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<IceCandidateType> for IceCandidateType {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<IceCandidateType> for IceCandidateType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> IceCandidateType {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<IceCandidateType, IceCandidateType> for IceCandidateType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &IceCandidateType,
+                ) -> ::core::option::Option<IceCandidateType> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<IceCandidateType> for IceCandidateType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<IceCandidateType> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for IceCandidateType {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for IceCandidateType {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "IceCandidateType",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<IceCandidateType> for IceCandidateType {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
+            /// The enum `IceCandidateTcpType` in the namespace `FBS.WebRtcTransport`
+            ///
+            /// Generated from these locations:
+            /// * Enum `IceCandidateTcpType` in the file `../worker/fbs/webRtcTransport.fbs:63`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum IceCandidateTcpType {
+                /// The variant `PASSIVE` in the enum `IceCandidateTcpType`
+                Passive = 0,
+            }
+
+            impl IceCandidateTcpType {
+                /// Array containing all valid variants of IceCandidateTcpType
+                pub const ENUM_VALUES: [Self; 1] = [Self::Passive];
+            }
+
+            impl ::core::convert::TryFrom<u8> for IceCandidateTcpType {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(IceCandidateTcpType::Passive),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<IceCandidateTcpType> for u8 {
+                #[inline]
+                fn from(value: IceCandidateTcpType) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for IceCandidateTcpType {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<IceCandidateTcpType> for IceCandidateTcpType {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<IceCandidateTcpType> for IceCandidateTcpType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> IceCandidateTcpType {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<IceCandidateTcpType, IceCandidateTcpType> for IceCandidateTcpType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &IceCandidateTcpType,
+                ) -> ::core::option::Option<IceCandidateTcpType> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<IceCandidateTcpType> for IceCandidateTcpType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<IceCandidateTcpType> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for IceCandidateTcpType {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for IceCandidateTcpType {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "IceCandidateTcpType",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<IceCandidateTcpType> for IceCandidateTcpType {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
+            /// The enum `IceRole` in the namespace `FBS.WebRtcTransport`
+            ///
+            /// Generated from these locations:
+            /// * Enum `IceRole` in the file `../worker/fbs/webRtcTransport.fbs:64`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum IceRole {
+                /// The variant `CONTROLLED` in the enum `IceRole`
+                Controlled = 0,
+
+                /// The variant `CONTROLLING` in the enum `IceRole`
+                Controlling = 1,
+            }
+
+            impl IceRole {
+                /// Array containing all valid variants of IceRole
+                pub const ENUM_VALUES: [Self; 2] = [Self::Controlled, Self::Controlling];
+            }
+
+            impl ::core::convert::TryFrom<u8> for IceRole {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(IceRole::Controlled),
+                        1 => ::core::result::Result::Ok(IceRole::Controlling),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<IceRole> for u8 {
+                #[inline]
+                fn from(value: IceRole) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for IceRole {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<IceRole> for IceRole {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<IceRole> for IceRole {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> IceRole {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<IceRole, IceRole> for IceRole {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &IceRole,
+                ) -> ::core::option::Option<IceRole> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<IceRole> for IceRole {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<IceRole> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for IceRole {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for IceRole {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "IceRole",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<IceRole> for IceRole {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
+            /// The enum `IceState` in the namespace `FBS.WebRtcTransport`
+            ///
+            /// Generated from these locations:
+            /// * Enum `IceState` in the file `../worker/fbs/webRtcTransport.fbs:65`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum IceState {
+                /// The variant `NEW` in the enum `IceState`
+                New = 0,
+
+                /// The variant `CONNECTED` in the enum `IceState`
+                Connected = 1,
+
+                /// The variant `COMPLETED` in the enum `IceState`
+                Completed = 2,
+
+                /// The variant `DISCONNECTED` in the enum `IceState`
+                Disconnected = 3,
+            }
+
+            impl IceState {
+                /// Array containing all valid variants of IceState
+                pub const ENUM_VALUES: [Self; 4] = [
+                    Self::New,
+                    Self::Connected,
+                    Self::Completed,
+                    Self::Disconnected,
+                ];
+            }
+
+            impl ::core::convert::TryFrom<u8> for IceState {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(IceState::New),
+                        1 => ::core::result::Result::Ok(IceState::Connected),
+                        2 => ::core::result::Result::Ok(IceState::Completed),
+                        3 => ::core::result::Result::Ok(IceState::Disconnected),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<IceState> for u8 {
+                #[inline]
+                fn from(value: IceState) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for IceState {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<IceState> for IceState {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<IceState> for IceState {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> IceState {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<IceState, IceState> for IceState {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &IceState,
+                ) -> ::core::option::Option<IceState> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<IceState> for IceState {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<IceState> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for IceState {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for IceState {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "IceState",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<IceState> for IceState {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
             /// The table `IceCandidate` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `IceCandidate` in the file `../worker/fbs/webRtcTransport.fbs:40`
+            /// * Table `IceCandidate` in the file `../worker/fbs/webRtcTransport.fbs:72`
             #[derive(
                 Clone,
                 Debug,
@@ -75012,9 +76489,9 @@ mod root {
                 /// The field `port` in the table `IceCandidate`
                 pub port: u16,
                 /// The field `type` in the table `IceCandidate`
-                pub type_: ::core::option::Option<::planus::alloc::string::String>,
+                pub type_: self::IceCandidateType,
                 /// The field `tcp_type` in the table `IceCandidate`
-                pub tcp_type: ::core::option::Option<::planus::alloc::string::String>,
+                pub tcp_type: ::core::option::Option<self::IceCandidateTcpType>,
             }
 
             impl IceCandidate {
@@ -75035,12 +76512,11 @@ mod root {
                         super::transport::Protocol,
                     >,
                     field_port: impl ::planus::WriteAsDefault<u16, u16>,
-                    field_type_: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
+                    field_type_: impl ::planus::WriteAsDefault<
+                        self::IceCandidateType,
+                        self::IceCandidateType,
                     >,
-                    field_tcp_type: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<::core::primitive::str>,
-                    >,
+                    field_tcp_type: impl ::planus::WriteAsOptional<self::IceCandidateTcpType>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_foundation = field_foundation.prepare(builder);
                     let prepared_priority = field_priority.prepare(builder, &0);
@@ -75048,7 +76524,8 @@ mod root {
                     let prepared_protocol =
                         field_protocol.prepare(builder, &super::transport::Protocol::Udp);
                     let prepared_port = field_port.prepare(builder, &0);
-                    let prepared_type_ = field_type_.prepare(builder);
+                    let prepared_type_ =
+                        field_type_.prepare(builder, &self::IceCandidateType::Host);
                     let prepared_tcp_type = field_tcp_type.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<18> =
@@ -75058,17 +76535,17 @@ mod root {
                         table_writer.write_entry::<u32>(1);
                     }
                     table_writer.write_entry::<::planus::Offset<str>>(2);
-                    if prepared_type_.is_some() {
-                        table_writer.write_entry::<::planus::Offset<str>>(5);
-                    }
-                    if prepared_tcp_type.is_some() {
-                        table_writer.write_entry::<::planus::Offset<str>>(6);
-                    }
                     if prepared_port.is_some() {
                         table_writer.write_entry::<u16>(4);
                     }
                     if prepared_protocol.is_some() {
                         table_writer.write_entry::<super::transport::Protocol>(3);
+                    }
+                    if prepared_type_.is_some() {
+                        table_writer.write_entry::<self::IceCandidateType>(5);
+                    }
+                    if prepared_tcp_type.is_some() {
+                        table_writer.write_entry::<self::IceCandidateTcpType>(6);
                     }
 
                     unsafe {
@@ -75080,14 +76557,6 @@ mod root {
                                 object_writer.write::<_, _, 4>(&prepared_priority);
                             }
                             object_writer.write::<_, _, 4>(&prepared_ip);
-                            if let ::core::option::Option::Some(prepared_type_) = prepared_type_ {
-                                object_writer.write::<_, _, 4>(&prepared_type_);
-                            }
-                            if let ::core::option::Option::Some(prepared_tcp_type) =
-                                prepared_tcp_type
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_tcp_type);
-                            }
                             if let ::core::option::Option::Some(prepared_port) = prepared_port {
                                 object_writer.write::<_, _, 2>(&prepared_port);
                             }
@@ -75095,6 +76564,14 @@ mod root {
                                 prepared_protocol
                             {
                                 object_writer.write::<_, _, 1>(&prepared_protocol);
+                            }
+                            if let ::core::option::Option::Some(prepared_type_) = prepared_type_ {
+                                object_writer.write::<_, _, 1>(&prepared_type_);
+                            }
+                            if let ::core::option::Option::Some(prepared_tcp_type) =
+                                prepared_tcp_type
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_tcp_type);
                             }
                         });
                     }
@@ -75139,8 +76616,8 @@ mod root {
                         &self.ip,
                         self.protocol,
                         self.port,
-                        &self.type_,
-                        &self.tcp_type,
+                        self.type_,
+                        self.tcp_type,
                     )
                 }
             }
@@ -75252,17 +76729,20 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn type_<T5>(self, value: T5) -> IceCandidateBuilder<(T0, T1, T2, T3, T4, T5)>
                 where
-                    T5: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T5: ::planus::WriteAsDefault<self::IceCandidateType, self::IceCandidateType>,
                 {
                     let (v0, v1, v2, v3, v4) = self.0;
                     IceCandidateBuilder((v0, v1, v2, v3, v4, value))
                 }
 
-                /// Sets the [`type` field](IceCandidate#structfield.type_) to null.
+                /// Sets the [`type` field](IceCandidate#structfield.type_) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn type_as_null(self) -> IceCandidateBuilder<(T0, T1, T2, T3, T4, ())> {
-                    self.type_(())
+                pub fn type_as_default(
+                    self,
+                ) -> IceCandidateBuilder<(T0, T1, T2, T3, T4, ::planus::DefaultValue)>
+                {
+                    self.type_(::planus::DefaultValue)
                 }
             }
 
@@ -75275,7 +76755,7 @@ mod root {
                     value: T6,
                 ) -> IceCandidateBuilder<(T0, T1, T2, T3, T4, T5, T6)>
                 where
-                    T6: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T6: ::planus::WriteAsOptional<self::IceCandidateTcpType>,
                 {
                     let (v0, v1, v2, v3, v4, v5) = self.0;
                     IceCandidateBuilder((v0, v1, v2, v3, v4, v5, value))
@@ -75312,8 +76792,8 @@ mod root {
                         super::transport::Protocol,
                     >,
                     T4: ::planus::WriteAsDefault<u16, u16>,
-                    T5: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
-                    T6: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T5: ::planus::WriteAsDefault<self::IceCandidateType, self::IceCandidateType>,
+                    T6: ::planus::WriteAsOptional<self::IceCandidateTcpType>,
                 > ::planus::WriteAs<::planus::Offset<IceCandidate>>
                 for IceCandidateBuilder<(T0, T1, T2, T3, T4, T5, T6)>
             {
@@ -75337,8 +76817,8 @@ mod root {
                         super::transport::Protocol,
                     >,
                     T4: ::planus::WriteAsDefault<u16, u16>,
-                    T5: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
-                    T6: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T5: ::planus::WriteAsDefault<self::IceCandidateType, self::IceCandidateType>,
+                    T6: ::planus::WriteAsOptional<self::IceCandidateTcpType>,
                 > ::planus::WriteAsOptional<::planus::Offset<IceCandidate>>
                 for IceCandidateBuilder<(T0, T1, T2, T3, T4, T5, T6)>
             {
@@ -75362,8 +76842,8 @@ mod root {
                         super::transport::Protocol,
                     >,
                     T4: ::planus::WriteAsDefault<u16, u16>,
-                    T5: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
-                    T6: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T5: ::planus::WriteAsDefault<self::IceCandidateType, self::IceCandidateType>,
+                    T6: ::planus::WriteAsOptional<self::IceCandidateTcpType>,
                 > ::planus::WriteAsOffset<IceCandidate>
                 for IceCandidateBuilder<(T0, T1, T2, T3, T4, T5, T6)>
             {
@@ -75422,18 +76902,19 @@ mod root {
 
                 /// Getter for the [`type` field](IceCandidate#structfield.type_).
                 #[inline]
-                pub fn type_(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
-                {
-                    self.0.access(5, "IceCandidate", "type_")
+                pub fn type_(&self) -> ::planus::Result<self::IceCandidateType> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(5, "IceCandidate", "type_")?
+                            .unwrap_or(self::IceCandidateType::Host),
+                    )
                 }
 
                 /// Getter for the [`tcp_type` field](IceCandidate#structfield.tcp_type).
                 #[inline]
                 pub fn tcp_type(
                     &self,
-                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
+                ) -> ::planus::Result<::core::option::Option<self::IceCandidateTcpType>>
                 {
                     self.0.access(6, "IceCandidate", "tcp_type")
                 }
@@ -75447,9 +76928,7 @@ mod root {
                     f.field("ip", &self.ip());
                     f.field("protocol", &self.protocol());
                     f.field("port", &self.port());
-                    if let ::core::option::Option::Some(field_type_) = self.type_().transpose() {
-                        f.field("type_", &field_type_);
-                    }
+                    f.field("type_", &self.type_());
                     if let ::core::option::Option::Some(field_tcp_type) =
                         self.tcp_type().transpose()
                     {
@@ -75470,11 +76949,7 @@ mod root {
                         ip: ::core::convert::TryInto::try_into(value.ip()?)?,
                         protocol: ::core::convert::TryInto::try_into(value.protocol()?)?,
                         port: ::core::convert::TryInto::try_into(value.port()?)?,
-                        type_: if let ::core::option::Option::Some(type_) = value.type_()? {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(type_)?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        type_: ::core::convert::TryInto::try_into(value.type_()?)?,
                         tcp_type: if let ::core::option::Option::Some(tcp_type) =
                             value.tcp_type()?
                         {
@@ -75561,7 +77036,7 @@ mod root {
             /// The table `ConnectRequest` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `ConnectRequest` in the file `../worker/fbs/webRtcTransport.fbs:50`
+            /// * Table `ConnectRequest` in the file `../worker/fbs/webRtcTransport.fbs:82`
             #[derive(
                 Clone,
                 Debug,
@@ -75824,7 +77299,7 @@ mod root {
             /// The table `ConnectResponse` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `ConnectResponse` in the file `../worker/fbs/webRtcTransport.fbs:54`
+            /// * Table `ConnectResponse` in the file `../worker/fbs/webRtcTransport.fbs:86`
             #[derive(
                 Clone,
                 Debug,
@@ -75838,7 +77313,16 @@ mod root {
             )]
             pub struct ConnectResponse {
                 /// The field `dtls_local_role` in the table `ConnectResponse`
-                pub dtls_local_role: ::planus::alloc::string::String,
+                pub dtls_local_role: self::DtlsRole,
+            }
+
+            #[allow(clippy::derivable_impls)]
+            impl ::core::default::Default for ConnectResponse {
+                fn default() -> Self {
+                    Self {
+                        dtls_local_role: self::DtlsRole::Auto,
+                    }
+                }
             }
 
             impl ConnectResponse {
@@ -75851,17 +77335,24 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_dtls_local_role: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_dtls_local_role: impl ::planus::WriteAsDefault<self::DtlsRole, self::DtlsRole>,
                 ) -> ::planus::Offset<Self> {
-                    let prepared_dtls_local_role = field_dtls_local_role.prepare(builder);
+                    let prepared_dtls_local_role =
+                        field_dtls_local_role.prepare(builder, &self::DtlsRole::Auto);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    table_writer.write_entry::<::planus::Offset<str>>(0);
+                    if prepared_dtls_local_role.is_some() {
+                        table_writer.write_entry::<self::DtlsRole>(0);
+                    }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            object_writer.write::<_, _, 4>(&prepared_dtls_local_role);
+                            if let ::core::option::Option::Some(prepared_dtls_local_role) =
+                                prepared_dtls_local_role
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_dtls_local_role);
+                            }
                         });
                     }
                     builder.current_offset()
@@ -75898,7 +77389,7 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<ConnectResponse> {
-                    ConnectResponse::create(builder, &self.dtls_local_role)
+                    ConnectResponse::create(builder, self.dtls_local_role)
                 }
             }
 
@@ -75915,9 +77406,18 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn dtls_local_role<T0>(self, value: T0) -> ConnectResponseBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
+                    T0: ::planus::WriteAsDefault<self::DtlsRole, self::DtlsRole>,
                 {
                     ConnectResponseBuilder((value,))
+                }
+
+                /// Sets the [`dtls_local_role` field](ConnectResponse#structfield.dtls_local_role) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn dtls_local_role_as_default(
+                    self,
+                ) -> ConnectResponseBuilder<(::planus::DefaultValue,)> {
+                    self.dtls_local_role(::planus::DefaultValue)
                 }
             }
 
@@ -75935,7 +77435,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<str>>>
+            impl<T0: ::planus::WriteAsDefault<self::DtlsRole, self::DtlsRole>>
                 ::planus::WriteAs<::planus::Offset<ConnectResponse>>
                 for ConnectResponseBuilder<(T0,)>
             {
@@ -75950,7 +77450,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<str>>>
+            impl<T0: ::planus::WriteAsDefault<self::DtlsRole, self::DtlsRole>>
                 ::planus::WriteAsOptional<::planus::Offset<ConnectResponse>>
                 for ConnectResponseBuilder<(T0,)>
             {
@@ -75965,7 +77465,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<str>>>
+            impl<T0: ::planus::WriteAsDefault<self::DtlsRole, self::DtlsRole>>
                 ::planus::WriteAsOffset<ConnectResponse> for ConnectResponseBuilder<(T0,)>
             {
                 #[inline]
@@ -75985,9 +77485,12 @@ mod root {
             impl<'a> ConnectResponseRef<'a> {
                 /// Getter for the [`dtls_local_role` field](ConnectResponse#structfield.dtls_local_role).
                 #[inline]
-                pub fn dtls_local_role(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0
-                        .access_required(0, "ConnectResponse", "dtls_local_role")
+                pub fn dtls_local_role(&self) -> ::planus::Result<self::DtlsRole> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(0, "ConnectResponse", "dtls_local_role")?
+                            .unwrap_or(self::DtlsRole::Auto),
+                    )
                 }
             }
 
@@ -76085,7 +77588,7 @@ mod root {
             /// The table `DumpResponse` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `DumpResponse` in the file `../worker/fbs/webRtcTransport.fbs:58`
+            /// * Table `DumpResponse` in the file `../worker/fbs/webRtcTransport.fbs:90`
             #[derive(
                 Clone,
                 Debug,
@@ -76101,20 +77604,20 @@ mod root {
                 /// The field `base` in the table `DumpResponse`
                 pub base: ::planus::alloc::boxed::Box<super::transport::Dump>,
                 /// The field `ice_role` in the table `DumpResponse`
-                pub ice_role: ::planus::alloc::string::String,
+                pub ice_role: self::IceRole,
                 /// The field `ice_parameters` in the table `DumpResponse`
                 pub ice_parameters: ::planus::alloc::boxed::Box<self::IceParameters>,
                 /// The field `ice_candidates` in the table `DumpResponse`
                 pub ice_candidates: ::planus::alloc::vec::Vec<self::IceCandidate>,
                 /// The field `ice_state` in the table `DumpResponse`
-                pub ice_state: ::planus::alloc::string::String,
+                pub ice_state: self::IceState,
                 /// The field `ice_selected_tuple` in the table `DumpResponse`
                 pub ice_selected_tuple:
                     ::core::option::Option<::planus::alloc::boxed::Box<super::transport::Tuple>>,
                 /// The field `dtls_parameters` in the table `DumpResponse`
                 pub dtls_parameters: ::planus::alloc::boxed::Box<self::DtlsParameters>,
                 /// The field `dtls_state` in the table `DumpResponse`
-                pub dtls_state: ::planus::alloc::string::String,
+                pub dtls_state: self::DtlsState,
             }
 
             impl DumpResponse {
@@ -76128,57 +77631,77 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_base: impl ::planus::WriteAs<::planus::Offset<super::transport::Dump>>,
-                    field_ice_role: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_ice_role: impl ::planus::WriteAsDefault<self::IceRole, self::IceRole>,
                     field_ice_parameters: impl ::planus::WriteAs<::planus::Offset<self::IceParameters>>,
                     field_ice_candidates: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::IceCandidate>]>,
                     >,
-                    field_ice_state: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_ice_state: impl ::planus::WriteAsDefault<self::IceState, self::IceState>,
                     field_ice_selected_tuple: impl ::planus::WriteAsOptional<
                         ::planus::Offset<super::transport::Tuple>,
                     >,
                     field_dtls_parameters: impl ::planus::WriteAs<
                         ::planus::Offset<self::DtlsParameters>,
                     >,
-                    field_dtls_state: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_dtls_state: impl ::planus::WriteAsDefault<self::DtlsState, self::DtlsState>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_base = field_base.prepare(builder);
-                    let prepared_ice_role = field_ice_role.prepare(builder);
+                    let prepared_ice_role =
+                        field_ice_role.prepare(builder, &self::IceRole::Controlled);
                     let prepared_ice_parameters = field_ice_parameters.prepare(builder);
                     let prepared_ice_candidates = field_ice_candidates.prepare(builder);
-                    let prepared_ice_state = field_ice_state.prepare(builder);
+                    let prepared_ice_state = field_ice_state.prepare(builder, &self::IceState::New);
                     let prepared_ice_selected_tuple = field_ice_selected_tuple.prepare(builder);
                     let prepared_dtls_parameters = field_dtls_parameters.prepare(builder);
-                    let prepared_dtls_state = field_dtls_state.prepare(builder);
+                    let prepared_dtls_state =
+                        field_dtls_state.prepare(builder, &self::DtlsState::New);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<20> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<super::transport::Dump>>(0);
-                    table_writer.write_entry::<::planus::Offset<str>>(1);
                     table_writer.write_entry::<::planus::Offset<self::IceParameters>>(2);
                     table_writer
                         .write_entry::<::planus::Offset<[::planus::Offset<self::IceCandidate>]>>(3);
-                    table_writer.write_entry::<::planus::Offset<str>>(4);
                     if prepared_ice_selected_tuple.is_some() {
                         table_writer.write_entry::<::planus::Offset<super::transport::Tuple>>(5);
                     }
                     table_writer.write_entry::<::planus::Offset<self::DtlsParameters>>(6);
-                    table_writer.write_entry::<::planus::Offset<str>>(7);
+                    if prepared_ice_role.is_some() {
+                        table_writer.write_entry::<self::IceRole>(1);
+                    }
+                    if prepared_ice_state.is_some() {
+                        table_writer.write_entry::<self::IceState>(4);
+                    }
+                    if prepared_dtls_state.is_some() {
+                        table_writer.write_entry::<self::DtlsState>(7);
+                    }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_base);
-                            object_writer.write::<_, _, 4>(&prepared_ice_role);
                             object_writer.write::<_, _, 4>(&prepared_ice_parameters);
                             object_writer.write::<_, _, 4>(&prepared_ice_candidates);
-                            object_writer.write::<_, _, 4>(&prepared_ice_state);
                             if let ::core::option::Option::Some(prepared_ice_selected_tuple) =
                                 prepared_ice_selected_tuple
                             {
                                 object_writer.write::<_, _, 4>(&prepared_ice_selected_tuple);
                             }
                             object_writer.write::<_, _, 4>(&prepared_dtls_parameters);
-                            object_writer.write::<_, _, 4>(&prepared_dtls_state);
+                            if let ::core::option::Option::Some(prepared_ice_role) =
+                                prepared_ice_role
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_ice_role);
+                            }
+                            if let ::core::option::Option::Some(prepared_ice_state) =
+                                prepared_ice_state
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_ice_state);
+                            }
+                            if let ::core::option::Option::Some(prepared_dtls_state) =
+                                prepared_dtls_state
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_dtls_state);
+                            }
                         });
                     }
                     builder.current_offset()
@@ -76218,13 +77741,13 @@ mod root {
                     DumpResponse::create(
                         builder,
                         &self.base,
-                        &self.ice_role,
+                        self.ice_role,
                         &self.ice_parameters,
                         &self.ice_candidates,
-                        &self.ice_state,
+                        self.ice_state,
                         &self.ice_selected_tuple,
                         &self.dtls_parameters,
-                        &self.dtls_state,
+                        self.dtls_state,
                     )
                 }
             }
@@ -76254,10 +77777,19 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn ice_role<T1>(self, value: T1) -> DumpResponseBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsDefault<self::IceRole, self::IceRole>,
                 {
                     let (v0,) = self.0;
                     DumpResponseBuilder((v0, value))
+                }
+
+                /// Sets the [`ice_role` field](DumpResponse#structfield.ice_role) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn ice_role_as_default(
+                    self,
+                ) -> DumpResponseBuilder<(T0, ::planus::DefaultValue)> {
+                    self.ice_role(::planus::DefaultValue)
                 }
             }
 
@@ -76293,10 +77825,19 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn ice_state<T4>(self, value: T4) -> DumpResponseBuilder<(T0, T1, T2, T3, T4)>
                 where
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::IceState, self::IceState>,
                 {
                     let (v0, v1, v2, v3) = self.0;
                     DumpResponseBuilder((v0, v1, v2, v3, value))
+                }
+
+                /// Sets the [`ice_state` field](DumpResponse#structfield.ice_state) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn ice_state_as_default(
+                    self,
+                ) -> DumpResponseBuilder<(T0, T1, T2, T3, ::planus::DefaultValue)> {
+                    self.ice_state(::planus::DefaultValue)
                 }
             }
 
@@ -76350,10 +77891,20 @@ mod root {
                     value: T7,
                 ) -> DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
                 where
-                    T7: ::planus::WriteAs<::planus::Offset<str>>,
+                    T7: ::planus::WriteAsDefault<self::DtlsState, self::DtlsState>,
                 {
                     let (v0, v1, v2, v3, v4, v5, v6) = self.0;
                     DumpResponseBuilder((v0, v1, v2, v3, v4, v5, v6, value))
+                }
+
+                /// Sets the [`dtls_state` field](DumpResponse#structfield.dtls_state) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn dtls_state_as_default(
+                    self,
+                ) -> DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, ::planus::DefaultValue)>
+                {
+                    self.dtls_state(::planus::DefaultValue)
                 }
             }
 
@@ -76373,13 +77924,13 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Dump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsDefault<self::IceRole, self::IceRole>,
                     T2: ::planus::WriteAs<::planus::Offset<self::IceParameters>>,
                     T3: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::IceCandidate>]>>,
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::IceState, self::IceState>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
                     T6: ::planus::WriteAs<::planus::Offset<self::DtlsParameters>>,
-                    T7: ::planus::WriteAs<::planus::Offset<str>>,
+                    T7: ::planus::WriteAsDefault<self::DtlsState, self::DtlsState>,
                 > ::planus::WriteAs<::planus::Offset<DumpResponse>>
                 for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
@@ -76396,13 +77947,13 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Dump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsDefault<self::IceRole, self::IceRole>,
                     T2: ::planus::WriteAs<::planus::Offset<self::IceParameters>>,
                     T3: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::IceCandidate>]>>,
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::IceState, self::IceState>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
                     T6: ::planus::WriteAs<::planus::Offset<self::DtlsParameters>>,
-                    T7: ::planus::WriteAs<::planus::Offset<str>>,
+                    T7: ::planus::WriteAsDefault<self::DtlsState, self::DtlsState>,
                 > ::planus::WriteAsOptional<::planus::Offset<DumpResponse>>
                 for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
@@ -76419,13 +77970,13 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Dump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsDefault<self::IceRole, self::IceRole>,
                     T2: ::planus::WriteAs<::planus::Offset<self::IceParameters>>,
                     T3: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::IceCandidate>]>>,
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::IceState, self::IceState>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
                     T6: ::planus::WriteAs<::planus::Offset<self::DtlsParameters>>,
-                    T7: ::planus::WriteAs<::planus::Offset<str>>,
+                    T7: ::planus::WriteAsDefault<self::DtlsState, self::DtlsState>,
                 > ::planus::WriteAsOffset<DumpResponse>
                 for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
@@ -76452,8 +78003,12 @@ mod root {
 
                 /// Getter for the [`ice_role` field](DumpResponse#structfield.ice_role).
                 #[inline]
-                pub fn ice_role(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(1, "DumpResponse", "ice_role")
+                pub fn ice_role(&self) -> ::planus::Result<self::IceRole> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(1, "DumpResponse", "ice_role")?
+                            .unwrap_or(self::IceRole::Controlled),
+                    )
                 }
 
                 /// Getter for the [`ice_parameters` field](DumpResponse#structfield.ice_parameters).
@@ -76474,8 +78029,12 @@ mod root {
 
                 /// Getter for the [`ice_state` field](DumpResponse#structfield.ice_state).
                 #[inline]
-                pub fn ice_state(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(4, "DumpResponse", "ice_state")
+                pub fn ice_state(&self) -> ::planus::Result<self::IceState> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(4, "DumpResponse", "ice_state")?
+                            .unwrap_or(self::IceState::New),
+                    )
                 }
 
                 /// Getter for the [`ice_selected_tuple` field](DumpResponse#structfield.ice_selected_tuple).
@@ -76495,8 +78054,12 @@ mod root {
 
                 /// Getter for the [`dtls_state` field](DumpResponse#structfield.dtls_state).
                 #[inline]
-                pub fn dtls_state(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(7, "DumpResponse", "dtls_state")
+                pub fn dtls_state(&self) -> ::planus::Result<self::DtlsState> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(7, "DumpResponse", "dtls_state")?
+                            .unwrap_or(self::DtlsState::New),
+                    )
                 }
             }
 
@@ -76625,7 +78188,7 @@ mod root {
             /// The table `GetStatsResponse` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `GetStatsResponse` in the file `../worker/fbs/webRtcTransport.fbs:69`
+            /// * Table `GetStatsResponse` in the file `../worker/fbs/webRtcTransport.fbs:101`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -76633,14 +78196,14 @@ mod root {
                 /// The field `base` in the table `GetStatsResponse`
                 pub base: ::planus::alloc::boxed::Box<super::transport::Stats>,
                 /// The field `ice_role` in the table `GetStatsResponse`
-                pub ice_role: ::planus::alloc::string::String,
+                pub ice_role: self::IceRole,
                 /// The field `ice_state` in the table `GetStatsResponse`
-                pub ice_state: ::planus::alloc::string::String,
+                pub ice_state: self::IceState,
                 /// The field `ice_selected_tuple` in the table `GetStatsResponse`
                 pub ice_selected_tuple:
                     ::core::option::Option<::planus::alloc::boxed::Box<super::transport::Tuple>>,
                 /// The field `dtls_state` in the table `GetStatsResponse`
-                pub dtls_state: ::planus::alloc::string::String,
+                pub dtls_state: self::DtlsState,
             }
 
             impl GetStatsResponse {
@@ -76654,40 +78217,60 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_base: impl ::planus::WriteAs<::planus::Offset<super::transport::Stats>>,
-                    field_ice_role: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_ice_state: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_ice_role: impl ::planus::WriteAsDefault<self::IceRole, self::IceRole>,
+                    field_ice_state: impl ::planus::WriteAsDefault<self::IceState, self::IceState>,
                     field_ice_selected_tuple: impl ::planus::WriteAsOptional<
                         ::planus::Offset<super::transport::Tuple>,
                     >,
-                    field_dtls_state: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_dtls_state: impl ::planus::WriteAsDefault<self::DtlsState, self::DtlsState>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_base = field_base.prepare(builder);
-                    let prepared_ice_role = field_ice_role.prepare(builder);
-                    let prepared_ice_state = field_ice_state.prepare(builder);
+                    let prepared_ice_role =
+                        field_ice_role.prepare(builder, &self::IceRole::Controlled);
+                    let prepared_ice_state = field_ice_state.prepare(builder, &self::IceState::New);
                     let prepared_ice_selected_tuple = field_ice_selected_tuple.prepare(builder);
-                    let prepared_dtls_state = field_dtls_state.prepare(builder);
+                    let prepared_dtls_state =
+                        field_dtls_state.prepare(builder, &self::DtlsState::New);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<14> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<super::transport::Stats>>(0);
-                    table_writer.write_entry::<::planus::Offset<str>>(1);
-                    table_writer.write_entry::<::planus::Offset<str>>(2);
                     if prepared_ice_selected_tuple.is_some() {
                         table_writer.write_entry::<::planus::Offset<super::transport::Tuple>>(3);
                     }
-                    table_writer.write_entry::<::planus::Offset<str>>(4);
+                    if prepared_ice_role.is_some() {
+                        table_writer.write_entry::<self::IceRole>(1);
+                    }
+                    if prepared_ice_state.is_some() {
+                        table_writer.write_entry::<self::IceState>(2);
+                    }
+                    if prepared_dtls_state.is_some() {
+                        table_writer.write_entry::<self::DtlsState>(4);
+                    }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_base);
-                            object_writer.write::<_, _, 4>(&prepared_ice_role);
-                            object_writer.write::<_, _, 4>(&prepared_ice_state);
                             if let ::core::option::Option::Some(prepared_ice_selected_tuple) =
                                 prepared_ice_selected_tuple
                             {
                                 object_writer.write::<_, _, 4>(&prepared_ice_selected_tuple);
                             }
-                            object_writer.write::<_, _, 4>(&prepared_dtls_state);
+                            if let ::core::option::Option::Some(prepared_ice_role) =
+                                prepared_ice_role
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_ice_role);
+                            }
+                            if let ::core::option::Option::Some(prepared_ice_state) =
+                                prepared_ice_state
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_ice_state);
+                            }
+                            if let ::core::option::Option::Some(prepared_dtls_state) =
+                                prepared_dtls_state
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_dtls_state);
+                            }
                         });
                     }
                     builder.current_offset()
@@ -76727,10 +78310,10 @@ mod root {
                     GetStatsResponse::create(
                         builder,
                         &self.base,
-                        &self.ice_role,
-                        &self.ice_state,
+                        self.ice_role,
+                        self.ice_state,
                         &self.ice_selected_tuple,
-                        &self.dtls_state,
+                        self.dtls_state,
                     )
                 }
             }
@@ -76760,10 +78343,19 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn ice_role<T1>(self, value: T1) -> GetStatsResponseBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsDefault<self::IceRole, self::IceRole>,
                 {
                     let (v0,) = self.0;
                     GetStatsResponseBuilder((v0, value))
+                }
+
+                /// Sets the [`ice_role` field](GetStatsResponse#structfield.ice_role) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn ice_role_as_default(
+                    self,
+                ) -> GetStatsResponseBuilder<(T0, ::planus::DefaultValue)> {
+                    self.ice_role(::planus::DefaultValue)
                 }
             }
 
@@ -76773,10 +78365,19 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn ice_state<T2>(self, value: T2) -> GetStatsResponseBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T2: ::planus::WriteAsDefault<self::IceState, self::IceState>,
                 {
                     let (v0, v1) = self.0;
                     GetStatsResponseBuilder((v0, v1, value))
+                }
+
+                /// Sets the [`ice_state` field](GetStatsResponse#structfield.ice_state) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn ice_state_as_default(
+                    self,
+                ) -> GetStatsResponseBuilder<(T0, T1, ::planus::DefaultValue)> {
+                    self.ice_state(::planus::DefaultValue)
                 }
             }
 
@@ -76814,10 +78415,20 @@ mod root {
                     value: T4,
                 ) -> GetStatsResponseBuilder<(T0, T1, T2, T3, T4)>
                 where
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::DtlsState, self::DtlsState>,
                 {
                     let (v0, v1, v2, v3) = self.0;
                     GetStatsResponseBuilder((v0, v1, v2, v3, value))
+                }
+
+                /// Sets the [`dtls_state` field](GetStatsResponse#structfield.dtls_state) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn dtls_state_as_default(
+                    self,
+                ) -> GetStatsResponseBuilder<(T0, T1, T2, T3, ::planus::DefaultValue)>
+                {
+                    self.dtls_state(::planus::DefaultValue)
                 }
             }
 
@@ -76837,10 +78448,10 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Stats>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsDefault<self::IceRole, self::IceRole>,
+                    T2: ::planus::WriteAsDefault<self::IceState, self::IceState>,
                     T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::DtlsState, self::DtlsState>,
                 > ::planus::WriteAs<::planus::Offset<GetStatsResponse>>
                 for GetStatsResponseBuilder<(T0, T1, T2, T3, T4)>
             {
@@ -76857,10 +78468,10 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Stats>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsDefault<self::IceRole, self::IceRole>,
+                    T2: ::planus::WriteAsDefault<self::IceState, self::IceState>,
                     T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::DtlsState, self::DtlsState>,
                 > ::planus::WriteAsOptional<::planus::Offset<GetStatsResponse>>
                 for GetStatsResponseBuilder<(T0, T1, T2, T3, T4)>
             {
@@ -76877,10 +78488,10 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Stats>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsDefault<self::IceRole, self::IceRole>,
+                    T2: ::planus::WriteAsDefault<self::IceState, self::IceState>,
                     T3: ::planus::WriteAsOptional<::planus::Offset<super::transport::Tuple>>,
-                    T4: ::planus::WriteAs<::planus::Offset<str>>,
+                    T4: ::planus::WriteAsDefault<self::DtlsState, self::DtlsState>,
                 > ::planus::WriteAsOffset<GetStatsResponse>
                 for GetStatsResponseBuilder<(T0, T1, T2, T3, T4)>
             {
@@ -76907,14 +78518,22 @@ mod root {
 
                 /// Getter for the [`ice_role` field](GetStatsResponse#structfield.ice_role).
                 #[inline]
-                pub fn ice_role(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(1, "GetStatsResponse", "ice_role")
+                pub fn ice_role(&self) -> ::planus::Result<self::IceRole> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(1, "GetStatsResponse", "ice_role")?
+                            .unwrap_or(self::IceRole::Controlled),
+                    )
                 }
 
                 /// Getter for the [`ice_state` field](GetStatsResponse#structfield.ice_state).
                 #[inline]
-                pub fn ice_state(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(2, "GetStatsResponse", "ice_state")
+                pub fn ice_state(&self) -> ::planus::Result<self::IceState> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(2, "GetStatsResponse", "ice_state")?
+                            .unwrap_or(self::IceState::New),
+                    )
                 }
 
                 /// Getter for the [`ice_selected_tuple` field](GetStatsResponse#structfield.ice_selected_tuple).
@@ -76928,8 +78547,12 @@ mod root {
 
                 /// Getter for the [`dtls_state` field](GetStatsResponse#structfield.dtls_state).
                 #[inline]
-                pub fn dtls_state(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(4, "GetStatsResponse", "dtls_state")
+                pub fn dtls_state(&self) -> ::planus::Result<self::DtlsState> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(4, "GetStatsResponse", "dtls_state")?
+                            .unwrap_or(self::DtlsState::New),
+                    )
                 }
             }
 
@@ -77048,7 +78671,7 @@ mod root {
             /// The table `IceSelectedTupleChangeNotification` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `IceSelectedTupleChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:79`
+            /// * Table `IceSelectedTupleChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:111`
             #[derive(
                 Clone,
                 Debug,
@@ -77328,386 +78951,10 @@ mod root {
                 }
             }
 
-            /// The enum `IceState` in the namespace `FBS.WebRtcTransport`
-            ///
-            /// Generated from these locations:
-            /// * Enum `IceState` in the file `../worker/fbs/webRtcTransport.fbs:83`
-            #[derive(
-                Copy,
-                Clone,
-                Debug,
-                PartialEq,
-                Eq,
-                PartialOrd,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            #[repr(u8)]
-            pub enum IceState {
-                /// The variant `NEW` in the enum `IceState`
-                New = 0,
-
-                /// The variant `CONNECTED` in the enum `IceState`
-                Connected = 1,
-
-                /// The variant `COMPLETED` in the enum `IceState`
-                Completed = 2,
-
-                /// The variant `DISCONNECTED` in the enum `IceState`
-                Disconnected = 3,
-
-                /// The variant `CLOSED` in the enum `IceState`
-                Closed = 4,
-            }
-
-            impl IceState {
-                /// Array containing all valid variants of IceState
-                pub const ENUM_VALUES: [Self; 5] = [
-                    Self::New,
-                    Self::Connected,
-                    Self::Completed,
-                    Self::Disconnected,
-                    Self::Closed,
-                ];
-            }
-
-            impl ::core::convert::TryFrom<u8> for IceState {
-                type Error = ::planus::errors::UnknownEnumTagKind;
-                #[inline]
-                fn try_from(
-                    value: u8,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
-                {
-                    #[allow(clippy::match_single_binding)]
-                    match value {
-                        0 => ::core::result::Result::Ok(IceState::New),
-                        1 => ::core::result::Result::Ok(IceState::Connected),
-                        2 => ::core::result::Result::Ok(IceState::Completed),
-                        3 => ::core::result::Result::Ok(IceState::Disconnected),
-                        4 => ::core::result::Result::Ok(IceState::Closed),
-
-                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
-                            tag: value as i128,
-                        }),
-                    }
-                }
-            }
-
-            impl ::core::convert::From<IceState> for u8 {
-                #[inline]
-                fn from(value: IceState) -> Self {
-                    value as u8
-                }
-            }
-
-            impl ::planus::Primitive for IceState {
-                const ALIGNMENT: usize = 1;
-                const SIZE: usize = 1;
-            }
-
-            impl ::planus::WriteAsPrimitive<IceState> for IceState {
-                #[inline]
-                fn write<const N: usize>(
-                    &self,
-                    cursor: ::planus::Cursor<'_, N>,
-                    buffer_position: u32,
-                ) {
-                    (*self as u8).write(cursor, buffer_position);
-                }
-            }
-
-            impl ::planus::WriteAs<IceState> for IceState {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> IceState {
-                    *self
-                }
-            }
-
-            impl ::planus::WriteAsDefault<IceState, IceState> for IceState {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                    default: &IceState,
-                ) -> ::core::option::Option<IceState> {
-                    if self == default {
-                        ::core::option::Option::None
-                    } else {
-                        ::core::option::Option::Some(*self)
-                    }
-                }
-            }
-
-            impl ::planus::WriteAsOptional<IceState> for IceState {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<IceState> {
-                    ::core::option::Option::Some(*self)
-                }
-            }
-
-            impl<'buf> ::planus::TableRead<'buf> for IceState {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
-                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
-                }
-            }
-
-            impl<'buf> ::planus::VectorReadInner<'buf> for IceState {
-                type Error = ::planus::errors::UnknownEnumTag;
-                const STRIDE: usize = 1;
-                #[inline]
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
-                {
-                    let value = *buffer.buffer.get_unchecked(offset);
-                    let value: ::core::result::Result<Self, _> =
-                        ::core::convert::TryInto::try_into(value);
-                    value.map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "IceState",
-                            "VectorRead::from_buffer",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<IceState> for IceState {
-                const STRIDE: usize = 1;
-
-                type Value = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
-                    *self
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[Self],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - i as u32,
-                        );
-                    }
-                }
-            }
-
-            /// The enum `DtlsState` in the namespace `FBS.WebRtcTransport`
-            ///
-            /// Generated from these locations:
-            /// * Enum `DtlsState` in the file `../worker/fbs/webRtcTransport.fbs:84`
-            #[derive(
-                Copy,
-                Clone,
-                Debug,
-                PartialEq,
-                Eq,
-                PartialOrd,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            #[repr(u8)]
-            pub enum DtlsState {
-                /// The variant `NEW` in the enum `DtlsState`
-                New = 0,
-
-                /// The variant `CONNECTING` in the enum `DtlsState`
-                Connecting = 1,
-
-                /// The variant `CONNECTED` in the enum `DtlsState`
-                Connected = 2,
-
-                /// The variant `FAILED` in the enum `DtlsState`
-                Failed = 3,
-
-                /// The variant `CLOSED` in the enum `DtlsState`
-                Closed = 4,
-            }
-
-            impl DtlsState {
-                /// Array containing all valid variants of DtlsState
-                pub const ENUM_VALUES: [Self; 5] = [
-                    Self::New,
-                    Self::Connecting,
-                    Self::Connected,
-                    Self::Failed,
-                    Self::Closed,
-                ];
-            }
-
-            impl ::core::convert::TryFrom<u8> for DtlsState {
-                type Error = ::planus::errors::UnknownEnumTagKind;
-                #[inline]
-                fn try_from(
-                    value: u8,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
-                {
-                    #[allow(clippy::match_single_binding)]
-                    match value {
-                        0 => ::core::result::Result::Ok(DtlsState::New),
-                        1 => ::core::result::Result::Ok(DtlsState::Connecting),
-                        2 => ::core::result::Result::Ok(DtlsState::Connected),
-                        3 => ::core::result::Result::Ok(DtlsState::Failed),
-                        4 => ::core::result::Result::Ok(DtlsState::Closed),
-
-                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
-                            tag: value as i128,
-                        }),
-                    }
-                }
-            }
-
-            impl ::core::convert::From<DtlsState> for u8 {
-                #[inline]
-                fn from(value: DtlsState) -> Self {
-                    value as u8
-                }
-            }
-
-            impl ::planus::Primitive for DtlsState {
-                const ALIGNMENT: usize = 1;
-                const SIZE: usize = 1;
-            }
-
-            impl ::planus::WriteAsPrimitive<DtlsState> for DtlsState {
-                #[inline]
-                fn write<const N: usize>(
-                    &self,
-                    cursor: ::planus::Cursor<'_, N>,
-                    buffer_position: u32,
-                ) {
-                    (*self as u8).write(cursor, buffer_position);
-                }
-            }
-
-            impl ::planus::WriteAs<DtlsState> for DtlsState {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> DtlsState {
-                    *self
-                }
-            }
-
-            impl ::planus::WriteAsDefault<DtlsState, DtlsState> for DtlsState {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                    default: &DtlsState,
-                ) -> ::core::option::Option<DtlsState> {
-                    if self == default {
-                        ::core::option::Option::None
-                    } else {
-                        ::core::option::Option::Some(*self)
-                    }
-                }
-            }
-
-            impl ::planus::WriteAsOptional<DtlsState> for DtlsState {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<DtlsState> {
-                    ::core::option::Option::Some(*self)
-                }
-            }
-
-            impl<'buf> ::planus::TableRead<'buf> for DtlsState {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
-                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
-                }
-            }
-
-            impl<'buf> ::planus::VectorReadInner<'buf> for DtlsState {
-                type Error = ::planus::errors::UnknownEnumTag;
-                const STRIDE: usize = 1;
-                #[inline]
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
-                {
-                    let value = *buffer.buffer.get_unchecked(offset);
-                    let value: ::core::result::Result<Self, _> =
-                        ::core::convert::TryInto::try_into(value);
-                    value.map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "DtlsState",
-                            "VectorRead::from_buffer",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<DtlsState> for DtlsState {
-                const STRIDE: usize = 1;
-
-                type Value = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
-                    *self
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[Self],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - i as u32,
-                        );
-                    }
-                }
-            }
-
             /// The table `IceStateChangeNotification` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `IceStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:86`
+            /// * Table `IceStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:115`
             #[derive(
                 Clone,
                 Debug,
@@ -78008,7 +79255,7 @@ mod root {
             /// The table `DtlsStateChangeNotification` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `DtlsStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:90`
+            /// * Table `DtlsStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:119`
             #[derive(
                 Clone,
                 Debug,

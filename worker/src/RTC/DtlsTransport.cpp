@@ -149,6 +149,101 @@ namespace RTC
 			SSL_CTX_free(DtlsTransport::sslCtx);
 	}
 
+	DtlsTransport::Role DtlsTransport::RoleFromFbs(FBS::WebRtcTransport::DtlsRole role)
+	{
+		switch (role)
+		{
+			case FBS::WebRtcTransport::DtlsRole::AUTO:
+				return DtlsTransport::Role::AUTO;
+
+			case FBS::WebRtcTransport::DtlsRole::CLIENT:
+				return DtlsTransport::Role::CLIENT;
+
+			case FBS::WebRtcTransport::DtlsRole::SERVER:
+				return DtlsTransport::Role::SERVER;
+		}
+	}
+
+	FBS::WebRtcTransport::DtlsRole DtlsTransport::RoleToFbs(DtlsTransport::Role role)
+	{
+		switch (role)
+		{
+			case DtlsTransport::Role::AUTO:
+				return FBS::WebRtcTransport::DtlsRole::AUTO;
+
+			case DtlsTransport::Role::CLIENT:
+				return FBS::WebRtcTransport::DtlsRole::CLIENT;
+
+			case DtlsTransport::Role::SERVER:
+				return FBS::WebRtcTransport::DtlsRole::SERVER;
+		}
+	}
+
+	FBS::WebRtcTransport::DtlsState DtlsTransport::StateToFbs(DtlsTransport::DtlsState state)
+	{
+		switch (state)
+		{
+			case DtlsTransport::DtlsState::NEW:
+				return FBS::WebRtcTransport::DtlsState::NEW;
+
+			case DtlsTransport::DtlsState::CONNECTING:
+				return FBS::WebRtcTransport::DtlsState::CONNECTING;
+
+			case DtlsTransport::DtlsState::CONNECTED:
+				return FBS::WebRtcTransport::DtlsState::CONNECTED;
+
+			case DtlsTransport::DtlsState::FAILED:
+				return FBS::WebRtcTransport::DtlsState::FAILED;
+
+			case DtlsTransport::DtlsState::CLOSED:
+				return FBS::WebRtcTransport::DtlsState::CLOSED;
+		}
+	}
+
+	DtlsTransport::FingerprintAlgorithm DtlsTransport::AlgorithmFromFbs(
+	  FBS::WebRtcTransport::FingerprintAlgorithm algorithm)
+	{
+		switch (algorithm)
+		{
+			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA1:
+				return DtlsTransport::FingerprintAlgorithm::SHA1;
+
+			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA224:
+				return DtlsTransport::FingerprintAlgorithm::SHA224;
+
+			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA256:
+				return DtlsTransport::FingerprintAlgorithm::SHA256;
+
+			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA384:
+				return DtlsTransport::FingerprintAlgorithm::SHA384;
+
+			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA512:
+				return DtlsTransport::FingerprintAlgorithm::SHA512;
+		}
+	}
+
+	FBS::WebRtcTransport::FingerprintAlgorithm DtlsTransport::AlgorithmToFbs(
+	  DtlsTransport::FingerprintAlgorithm algorithm)
+	{
+		switch (algorithm)
+		{
+			case DtlsTransport::FingerprintAlgorithm::SHA1:
+				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA1;
+
+			case DtlsTransport::FingerprintAlgorithm::SHA224:
+				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA224;
+
+			case DtlsTransport::FingerprintAlgorithm::SHA256:
+				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA256;
+
+			case DtlsTransport::FingerprintAlgorithm::SHA384:
+				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA384;
+
+			case DtlsTransport::FingerprintAlgorithm::SHA512:
+				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA512;
+		}
+	}
+
 	void DtlsTransport::GenerateCertificateAndPrivateKey()
 	{
 		MS_TRACE();
@@ -488,7 +583,7 @@ namespace RTC
 			// Store it in the vector.
 			DtlsTransport::Fingerprint fingerprint;
 
-			fingerprint.algorithm = DtlsTransport::GetFingerprintAlgorithm(algorithmString);
+			fingerprint.algorithm = algorithm;
 			fingerprint.value     = hexFingerprint;
 
 			DtlsTransport::localFingerprints.push_back(fingerprint);
@@ -618,18 +713,21 @@ namespace RTC
 			default:;
 		}
 
-		switch (this->localRole)
+		if (this->localRole.has_value())
 		{
-			case Role::AUTO:
-				role = "auto";
-				break;
-			case Role::SERVER:
-				role = "server";
-				break;
-			case Role::CLIENT:
-				role = "client";
-				break;
-			default:;
+			switch (this->localRole.value())
+			{
+				case Role::AUTO:
+					role = "auto";
+					break;
+				case Role::SERVER:
+					role = "server";
+					break;
+				case Role::CLIENT:
+					role = "client";
+					break;
+				default:;
+			}
 		}
 
 		MS_DUMP("<DtlsTransport>");
@@ -647,7 +745,7 @@ namespace RTC
 		  localRole == Role::CLIENT || localRole == Role::SERVER,
 		  "local DTLS role must be 'client' or 'server'");
 
-		const Role previousLocalRole = this->localRole;
+		const auto previousLocalRole = this->localRole.value();
 
 		if (localRole == previousLocalRole)
 		{
@@ -671,33 +769,36 @@ namespace RTC
 		this->state = DtlsState::CONNECTING;
 		this->listener->OnDtlsTransportConnecting(this);
 
-		switch (this->localRole)
+		if (this->localRole.has_value())
 		{
-			case Role::CLIENT:
+			switch (this->localRole.value())
 			{
-				MS_DEBUG_TAG(dtls, "running [role:client]");
+				case Role::CLIENT:
+				{
+					MS_DEBUG_TAG(dtls, "running [role:client]");
 
-				SSL_set_connect_state(this->ssl);
-				SSL_do_handshake(this->ssl);
-				SendPendingOutgoingDtlsData();
-				SetTimeout();
+					SSL_set_connect_state(this->ssl);
+					SSL_do_handshake(this->ssl);
+					SendPendingOutgoingDtlsData();
+					SetTimeout();
 
-				break;
-			}
+					break;
+				}
 
-			case Role::SERVER:
-			{
-				MS_DEBUG_TAG(dtls, "running [role:server]");
+				case Role::SERVER:
+				{
+					MS_DEBUG_TAG(dtls, "running [role:server]");
 
-				SSL_set_accept_state(this->ssl);
-				SSL_do_handshake(this->ssl);
+					SSL_set_accept_state(this->ssl);
+					SSL_do_handshake(this->ssl);
 
-				break;
-			}
+					break;
+				}
 
-			default:
-			{
-				MS_ABORT("invalid local DTLS role");
+				default:
+				{
+					MS_ABORT("invalid local DTLS role");
+				}
 			}
 		}
 	}
@@ -705,9 +806,6 @@ namespace RTC
 	bool DtlsTransport::SetRemoteFingerprint(const Fingerprint& fingerprint)
 	{
 		MS_TRACE();
-
-		MS_ASSERT(
-		  fingerprint.algorithm != FingerprintAlgorithm::NONE, "no fingerprint algorithm provided");
 
 		this->remoteFingerprint = fingerprint;
 
@@ -840,7 +938,7 @@ namespace RTC
 		// SendPendingOutgoingDTLSData().
 		SSL_shutdown(this->ssl);
 
-		this->localRole        = Role::NONE;
+		this->localRole.reset();
 		this->state            = DtlsState::NEW;
 		this->handshakeDone    = false;
 		this->handshakeDoneNow = false;
@@ -913,7 +1011,7 @@ namespace RTC
 			this->timer->Stop();
 
 			// Process the handshake just once (ignore if DTLS renegotiation).
-			if (!wasHandshakeDone && this->remoteFingerprint.algorithm != FingerprintAlgorithm::NONE)
+			if (!wasHandshakeDone)
 				return ProcessHandshake();
 
 			return true;
@@ -1031,8 +1129,6 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ASSERT(this->handshakeDone, "handshake not done yet");
-		MS_ASSERT(
-		  this->remoteFingerprint.algorithm != FingerprintAlgorithm::NONE, "remote fingerprint not set");
 
 		// Validate the remote fingerprint.
 		if (!CheckRemoteFingerprint())
@@ -1047,12 +1143,12 @@ namespace RTC
 		}
 
 		// Get the negotiated SRTP crypto suite.
-		RTC::SrtpSession::CryptoSuite srtpCryptoSuite = GetNegotiatedSrtpCryptoSuite();
+		auto srtpCryptoSuite = GetNegotiatedSrtpCryptoSuite();
 
-		if (srtpCryptoSuite != RTC::SrtpSession::CryptoSuite::NONE)
+		if (srtpCryptoSuite)
 		{
 			// Extract the SRTP keys (will notify the listener with them).
-			ExtractSrtpKeys(srtpCryptoSuite);
+			ExtractSrtpKeys(srtpCryptoSuite.value());
 
 			return true;
 		}
@@ -1074,8 +1170,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->remoteFingerprint.algorithm != FingerprintAlgorithm::NONE, "remote fingerprint not set");
+		MS_ASSERT(this->remoteFingerprint.has_value(), "remote fingerprint not set");
 
 		X509* certificate;
 		uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
@@ -1093,7 +1188,7 @@ namespace RTC
 			return false;
 		}
 
-		switch (this->remoteFingerprint.algorithm)
+		switch (this->remoteFingerprint->algorithm)
 		{
 			case FingerprintAlgorithm::SHA1:
 				hashFunction = EVP_sha1();
@@ -1138,13 +1233,13 @@ namespace RTC
 		}
 		hexFingerprint[(size * 3) - 1] = '\0';
 
-		if (this->remoteFingerprint.value != hexFingerprint)
+		if (this->remoteFingerprint->value != hexFingerprint)
 		{
 			MS_WARN_TAG(
 			  dtls,
 			  "fingerprint in the remote certificate (%s) does not match the announced one (%s)",
 			  hexFingerprint,
-			  this->remoteFingerprint.value.c_str());
+			  this->remoteFingerprint->value.c_str());
 
 			X509_free(certificate);
 
@@ -1253,8 +1348,9 @@ namespace RTC
 		  this->ssl, srtpMaterial, srtpMasterLength * 2, "EXTRACTOR-dtls_srtp", 19, nullptr, 0, 0);
 
 		MS_ASSERT(ret != 0, "SSL_export_keying_material() failed");
+		MS_ASSERT(this->localRole.has_value(), "no DTLS role set");
 
-		switch (this->localRole)
+		switch (this->localRole.value())
 		{
 			case Role::SERVER:
 			{
@@ -1305,11 +1401,11 @@ namespace RTC
 		delete[] srtpRemoteMasterKey;
 	}
 
-	inline RTC::SrtpSession::CryptoSuite DtlsTransport::GetNegotiatedSrtpCryptoSuite()
+	inline std::optional<RTC::SrtpSession::CryptoSuite> DtlsTransport::GetNegotiatedSrtpCryptoSuite()
 	{
 		MS_TRACE();
 
-		RTC::SrtpSession::CryptoSuite negotiatedSrtpCryptoSuite = RTC::SrtpSession::CryptoSuite::NONE;
+		std::optional<RTC::SrtpSession::CryptoSuite> negotiatedSrtpCryptoSuite;
 
 		// Ensure that the SRTP crypto suite has been negotiated.
 		// NOTE: This is a OpenSSL type.
@@ -1332,8 +1428,7 @@ namespace RTC
 		}
 
 		MS_ASSERT(
-		  negotiatedSrtpCryptoSuite != RTC::SrtpSession::CryptoSuite::NONE,
-		  "chosen SRTP crypto suite is not an available one");
+		  negotiatedSrtpCryptoSuite.has_value(), "chosen SRTP crypto suite is not an available one");
 
 		return negotiatedSrtpCryptoSuite;
 	}

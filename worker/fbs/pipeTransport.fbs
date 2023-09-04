@@ -1,4 +1,5 @@
 include "transport.fbs";
+include "srtpParameters.fbs";
 
 namespace FBS.PipeTransport;
 
@@ -12,18 +13,18 @@ table PipeTransportOptions {
 table ConnectRequest {
   ip:string (required);
   port:uint16 = null;
-  srtp_parameters:FBS.Transport.SrtpParameters;
+  srtp_parameters:FBS.SrtpParameters.SrtpParameters;
 }
 
 table ConnectResponse {
-  tuple:FBS.Transport.Tuple;
+  tuple:FBS.Transport.Tuple (required);
 }
 
 table DumpResponse {
   base:FBS.Transport.Dump (required);
   tuple:FBS.Transport.Tuple (required);
   rtx:bool;
-  srtp_parameters:FBS.Transport.SrtpParameters;
+  srtp_parameters:FBS.SrtpParameters.SrtpParameters;
 }
 
 table GetStatsResponse {

@@ -3,6 +3,7 @@ include "consumer.fbs";
 include "rtpParameters.fbs";
 include "sctpAssociation.fbs";
 include "sctpParameters.fbs";
+include "srtpParameters.fbs";
 
 namespace FBS.Transport;
 
@@ -80,11 +81,6 @@ table Tuple {
   remote_ip:string;
   remote_port:uint16;
   protocol:FBS.Transport.Protocol=UDP;
-}
-
-table SrtpParameters {
-  crypto_suite:string (required);
-  key_base64:string (required);
 }
 
 table RtpListener {

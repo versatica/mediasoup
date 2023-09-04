@@ -1,9 +1,8 @@
 //! Collection of SRTP-related data structures that are used to specify SRTP encryption/decryption
 //! parameters.
 
-use crate::fbs::transport;
+use crate::fbs::srtp_parameters;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 
 /// SRTP parameters.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
@@ -16,16 +15,16 @@ pub struct SrtpParameters {
 }
 
 impl SrtpParameters {
-    pub(crate) fn from_fbs(tuple: &transport::SrtpParameters) -> Self {
+    pub(crate) fn from_fbs(tuple: &srtp_parameters::SrtpParameters) -> Self {
         Self {
-            crypto_suite: tuple.crypto_suite.parse().unwrap(),
+            crypto_suite: SrtpCryptoSuite::from_fbs(tuple.crypto_suite),
             key_base64: String::from(tuple.key_base64.as_str()),
         }
     }
 
-    pub(crate) fn to_fbs(&self) -> transport::SrtpParameters {
-        transport::SrtpParameters {
-            crypto_suite: self.crypto_suite.to_string(),
+    pub(crate) fn to_fbs(&self) -> srtp_parameters::SrtpParameters {
+        srtp_parameters::SrtpParameters {
+            crypto_suite: SrtpCryptoSuite::to_fbs(self.crypto_suite),
             key_base64: String::from(self.key_base64.as_str()),
         }
     }
@@ -48,39 +47,28 @@ pub enum SrtpCryptoSuite {
     AesCm128HmacSha132,
 }
 
+impl SrtpCryptoSuite {
+    pub(crate) fn from_fbs(crypto_suite: srtp_parameters::SrtpCryptoSuite) -> Self {
+        match crypto_suite {
+            srtp_parameters::SrtpCryptoSuite::AeadAes256Gcm => Self::AeadAes256Gcm,
+            srtp_parameters::SrtpCryptoSuite::AeadAes128Gcm => Self::AeadAes128Gcm,
+            srtp_parameters::SrtpCryptoSuite::AesCm128HmacSha180 => Self::AesCm128HmacSha180,
+            srtp_parameters::SrtpCryptoSuite::AesCm128HmacSha132 => Self::AesCm128HmacSha132,
+        }
+    }
+
+    pub(crate) fn to_fbs(self) -> srtp_parameters::SrtpCryptoSuite {
+        match self {
+            Self::AeadAes256Gcm => srtp_parameters::SrtpCryptoSuite::AeadAes256Gcm,
+            Self::AeadAes128Gcm => srtp_parameters::SrtpCryptoSuite::AeadAes128Gcm,
+            Self::AesCm128HmacSha180 => srtp_parameters::SrtpCryptoSuite::AesCm128HmacSha180,
+            Self::AesCm128HmacSha132 => srtp_parameters::SrtpCryptoSuite::AesCm128HmacSha132,
+        }
+    }
+}
+
 impl Default for SrtpCryptoSuite {
     fn default() -> Self {
         Self::AesCm128HmacSha180
-    }
-}
-
-// TODO: Remove once SrtpCryptoSuite is defined in fbs.
-impl ToString for SrtpCryptoSuite {
-    fn to_string(&self) -> String {
-        match self {
-            Self::AeadAes256Gcm => String::from("AEAD_AES_256_GCM"),
-            Self::AeadAes128Gcm => String::from("AEAD_AES_128_GCM"),
-            Self::AesCm128HmacSha180 => String::from("AES_CM_128_HMAC_SHA1_80"),
-            Self::AesCm128HmacSha132 => String::from("AES_CM_128_HMAC_SHA1_32"),
-        }
-    }
-}
-
-/// Error that caused [`SrtpCryptoSuite`] parsing error.
-#[derive(Debug, Eq, PartialEq)]
-pub struct ParseCryptoSuiteError;
-
-// TODO: Remove once SrtpCryptoSuite is defined in fbs.
-impl FromStr for SrtpCryptoSuite {
-    type Err = ParseCryptoSuiteError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "AEAD_AES_256_GCM" => Ok(Self::AeadAes256Gcm),
-            "AEAD_AES_128_GCM" => Ok(Self::AeadAes128Gcm),
-            "AES_CM_128_HMAC_SHA1_80" => Ok(Self::AesCm128HmacSha180),
-            "AES_CM_128_HMAC_SHA1_32" => Ok(Self::AesCm128HmacSha132),
-            _ => Err(ParseCryptoSuiteError),
-        }
     }
 }

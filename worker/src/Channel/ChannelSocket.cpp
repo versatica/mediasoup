@@ -182,7 +182,7 @@ namespace Channel
 			// TMP: For debugging.
 			auto s = flatbuffers::FlatBufferToString(
 			  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
-			MS_ERROR("%s", s.c_str());
+			MS_DUMP("%s", s.c_str());
 
 			if (message->type() == FBS::Message::Type::REQUEST)
 			{
@@ -259,9 +259,9 @@ namespace Channel
 		auto* message = FBS::Message::GetMessage(msg);
 
 		// TMP: For debugging.
-		// auto s = flatbuffers::FlatBufferToString(
-		//   reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
-		// MS_ERROR("%s", s.c_str());
+		auto s = flatbuffers::FlatBufferToString(
+		  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+		MS_DUMP("%s", s.c_str());
 
 		if (message->type() == FBS::Message::Type::REQUEST)
 		{

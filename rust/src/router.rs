@@ -36,7 +36,8 @@ use crate::messages::{
     RouterCreateAudioLevelObserverRequest, RouterCreateDirectTransportData,
     RouterCreateDirectTransportRequest, RouterCreatePipeTransportData,
     RouterCreatePipeTransportRequest, RouterCreatePlainTransportData,
-    RouterCreatePlainTransportRequest, RouterCreateWebrtcTransportRequest, RouterDumpRequest,
+    RouterCreatePlainTransportRequest, RouterCreateWebRtcTransportRequest,
+    RouterCreateWebrtcTransportData, RouterDumpRequest,
 };
 use crate::pipe_transport::{
     PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,
@@ -628,12 +629,14 @@ impl Router {
         let data = self
             .inner
             .channel
-            .request(
+            .request_fbs(
                 self.inner.id,
-                RouterCreateWebrtcTransportRequest::from_options(
-                    transport_id,
-                    &webrtc_transport_options,
-                ),
+                RouterCreateWebRtcTransportRequest {
+                    data: RouterCreateWebrtcTransportData::from_options(
+                        transport_id,
+                        &webrtc_transport_options,
+                    ),
+                },
             )
             .await?;
 

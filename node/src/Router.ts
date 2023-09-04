@@ -24,6 +24,7 @@ import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObser
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 import { AppData, Either } from './types';
+import { cryptoSuiteToFbs } from './SrtpParameters';
 import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
 import * as FbsAudioLevelObserver from './fbs/audio-level-observer';
 import * as FbsRequest from './fbs/request';
@@ -710,7 +711,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			rtcpMux,
 			comedia,
 			enableSrtp,
-			srtpCryptoSuite
+			cryptoSuiteToFbs(srtpCryptoSuite)
 		);
 
 		const requestOffset = new FbsRouter.CreatePlainTransportRequestT(

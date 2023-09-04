@@ -6,6 +6,47 @@
 
 namespace RTC
 {
+	/* Class methods. */
+
+	IceCandidate::CandidateType IceCandidate::CandidateTypeFromFbs(
+	  FBS::WebRtcTransport::IceCandidateType type)
+	{
+		switch (type)
+		{
+			case FBS::WebRtcTransport::IceCandidateType::HOST:
+				return IceCandidate::CandidateType::HOST;
+		}
+	}
+
+	FBS::WebRtcTransport::IceCandidateType IceCandidate::CandidateTypeToFbs(IceCandidate::CandidateType type)
+	{
+		switch (type)
+		{
+			case IceCandidate::CandidateType::HOST:
+				return FBS::WebRtcTransport::IceCandidateType::HOST;
+		}
+	}
+
+	IceCandidate::TcpCandidateType IceCandidate::TcpCandidateTypeFromFbs(
+	  FBS::WebRtcTransport::IceCandidateTcpType type)
+	{
+		switch (type)
+		{
+			case FBS::WebRtcTransport::IceCandidateTcpType::PASSIVE:
+				return IceCandidate::TcpCandidateType::PASSIVE;
+		}
+	}
+
+	FBS::WebRtcTransport::IceCandidateTcpType IceCandidate::TcpCandidateTypeToFbs(
+	  IceCandidate::TcpCandidateType type)
+	{
+		switch (type)
+		{
+			case IceCandidate::TcpCandidateType::PASSIVE:
+				return FBS::WebRtcTransport::IceCandidateTcpType::PASSIVE;
+		}
+	}
+
 	/* Instance methods. */
 
 	flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate> IceCandidate::FillBuffer(
@@ -14,26 +55,12 @@ namespace RTC
 		MS_TRACE();
 
 		auto protocol = TransportTuple::ProtocolToFbs(this->protocol);
-
-		std::string type;
-
-		switch (this->type)
-		{
-			case CandidateType::HOST:
-				type = "host";
-				break;
-		}
-
-		std::string tcpType;
+		auto type     = CandidateTypeToFbs(this->type);
+		flatbuffers::Optional<FBS::WebRtcTransport::IceCandidateTcpType> tcpType;
 
 		if (this->protocol == Protocol::TCP)
 		{
-			switch (this->tcpType)
-			{
-				case TcpCandidateType::PASSIVE:
-					tcpType = "passive";
-					break;
-			}
+			tcpType.emplace(TcpCandidateTypeToFbs(this->tcpType));
 		}
 
 		return FBS::WebRtcTransport::CreateIceCandidateDirect(
@@ -49,8 +76,8 @@ namespace RTC
 		  // port.
 		  this->port,
 		  // type.
-		  type.c_str(),
+		  type,
 		  // tcpType.
-		  tcpType.c_str());
+		  tcpType);
 	}
 } // namespace RTC

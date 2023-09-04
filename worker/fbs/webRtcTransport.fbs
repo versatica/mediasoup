@@ -21,14 +21,36 @@ table WebRtcTransportOptions {
   listen:Listen (required);
 }
 
+enum FingerprintAlgorithm: uint8 {
+  SHA1,
+  SHA224,
+  SHA256,
+  SHA384,
+  SHA512,
+}
+
 table Fingerprint {
-  algorithm:string (required);
+  algorithm:FingerprintAlgorithm;
   value:string (required);
+}
+
+enum DtlsRole: uint8 {
+  AUTO,
+  CLIENT,
+  SERVER
+}
+
+enum DtlsState: uint8 {
+  NEW,
+  CONNECTING,
+  CONNECTED,
+  FAILED,
+  CLOSED
 }
 
 table DtlsParameters {
   fingerprints:[Fingerprint] (required);
-  role:string;
+  role:DtlsRole = null;
 }
 
 table IceParameters {
@@ -37,14 +59,24 @@ table IceParameters {
  ice_lite:bool = true;
 }
 
+enum IceCandidateType: uint8 { HOST }
+enum IceCandidateTcpType: uint8 { PASSIVE }
+enum IceRole: uint8 { CONTROLLED, CONTROLLING }
+enum IceState: uint8 {
+  NEW,
+  CONNECTED,
+  COMPLETED,
+  DISCONNECTED,
+}
+
 table IceCandidate {
   foundation:string (required);
   priority:uint32;
   ip:string (required);
   protocol:FBS.Transport.Protocol=UDP;
   port:uint16;
-  type:string;
-  tcp_type:string;
+  type:IceCandidateType;
+  tcp_type:IceCandidateTcpType = null;
 }
 
 table ConnectRequest {
@@ -52,26 +84,26 @@ table ConnectRequest {
 }
 
 table ConnectResponse {
-  dtls_local_role:string (required);
+  dtls_local_role:DtlsRole;
 }
 
 table DumpResponse {
   base:FBS.Transport.Dump (required);
-  ice_role:string (required);
+  ice_role:IceRole;
   ice_parameters:IceParameters (required);
   ice_candidates:[IceCandidate] (required);
-  ice_state:string (required);
+  ice_state:IceState;
   ice_selected_tuple:FBS.Transport.Tuple;
   dtls_parameters:DtlsParameters (required);
-  dtls_state:string (required);
+  dtls_state:DtlsState;
 }
 
 table GetStatsResponse {
   base:FBS.Transport.Stats (required);
-  ice_role:string (required);
-  ice_state:string (required);
+  ice_role:IceRole;
+  ice_state:IceState;
   ice_selected_tuple:FBS.Transport.Tuple;
-  dtls_state:string (required);
+  dtls_state:DtlsState;
 }
 
 // Notifications from Worker.
@@ -79,9 +111,6 @@ table GetStatsResponse {
 table IceSelectedTupleChangeNotification {
   tuple:FBS.Transport.Tuple (required);
 }
-
-enum IceState: uint8 { NEW = 0, CONNECTED, COMPLETED, DISCONNECTED, CLOSED }
-enum DtlsState: uint8 { NEW = 0, CONNECTING, CONNECTED, FAILED, CLOSED }
 
 table IceStateChangeNotification {
   ice_state:IceState;

@@ -15,7 +15,6 @@ namespace RTC
 	RTC::SrtpSession::CryptoSuite PipeTransport::srtpCryptoSuite{
 		RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM
 	};
-	std::string PipeTransport::srtpCryptoSuiteString{ "AEAD_AES_256_GCM" };
 	// MAster length of AEAD_AES_256_GCM.
 	size_t PipeTransport::srtpMasterLength{ 44 };
 
@@ -173,12 +172,14 @@ namespace RTC
 		}
 
 		// Add srtpParameters.
-		flatbuffers::Offset<FBS::Transport::SrtpParameters> srtpParameters;
+		flatbuffers::Offset<FBS::SrtpParameters::SrtpParameters> srtpParameters;
 
 		if (HasSrtp())
 		{
-			srtpParameters = FBS::Transport::CreateSrtpParametersDirect(
-			  builder, PipeTransport::srtpCryptoSuiteString.c_str(), this->srtpKeyBase64.c_str());
+			srtpParameters = FBS::SrtpParameters::CreateSrtpParametersDirect(
+			  builder,
+			  SrtpSession::CryptoSuiteToFbs(PipeTransport::srtpCryptoSuite),
+			  this->srtpKeyBase64.c_str());
 		}
 
 		// Add base transport dump.
@@ -288,7 +289,7 @@ namespace RTC
 
 						// NOTE: We just use AEAD_AES_256_GCM as SRTP crypto suite in
 						// PipeTransport.
-						if (srtpParameters->cryptoSuite()->str() != PipeTransport::srtpCryptoSuiteString)
+						if (srtpParameters->cryptoSuite() != FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_256_GCM)
 						{
 							MS_THROW_TYPE_ERROR("invalid/unsupported srtpParameters.cryptoSuite");
 						}

@@ -2,12 +2,14 @@
 #define MS_RTC_DTLS_TRANSPORT_HPP
 
 #include "common.hpp"
+#include "FBS/webRtcTransport_generated.h"
 #include "RTC/SrtpSession.hpp"
 #include "handles/TimerHandle.hpp"
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
 #include <absl/container/flat_hash_map.h>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -28,7 +30,6 @@ namespace RTC
 	public:
 		enum class Role
 		{
-			NONE = 0,
 			AUTO = 1,
 			CLIENT,
 			SERVER
@@ -37,7 +38,6 @@ namespace RTC
 	public:
 		enum class FingerprintAlgorithm
 		{
-			NONE = 0,
 			SHA1 = 1,
 			SHA224,
 			SHA256,
@@ -48,7 +48,7 @@ namespace RTC
 	public:
 		struct Fingerprint
 		{
-			FingerprintAlgorithm algorithm{ FingerprintAlgorithm::NONE };
+			FingerprintAlgorithm algorithm;
 			std::string value;
 		};
 
@@ -97,30 +97,11 @@ namespace RTC
 	public:
 		static void ClassInit();
 		static void ClassDestroy();
-		static Role StringToRole(const std::string& role)
-		{
-			auto it = DtlsTransport::string2Role.find(role);
-
-			if (it != DtlsTransport::string2Role.end())
-				return it->second;
-			else
-				return DtlsTransport::Role::NONE;
-		}
-		static FingerprintAlgorithm GetFingerprintAlgorithm(const std::string& fingerprint)
-		{
-			auto it = DtlsTransport::string2FingerprintAlgorithm.find(fingerprint);
-
-			if (it != DtlsTransport::string2FingerprintAlgorithm.end())
-				return it->second;
-			else
-				return DtlsTransport::FingerprintAlgorithm::NONE;
-		}
-		static std::string& GetFingerprintAlgorithmString(FingerprintAlgorithm fingerprint)
-		{
-			auto it = DtlsTransport::fingerprintAlgorithm2String.find(fingerprint);
-
-			return it->second;
-		}
+		static Role RoleFromFbs(FBS::WebRtcTransport::DtlsRole role);
+		static FBS::WebRtcTransport::DtlsRole RoleToFbs(Role role);
+		static FBS::WebRtcTransport::DtlsState StateToFbs(DtlsState state);
+		static FingerprintAlgorithm AlgorithmFromFbs(FBS::WebRtcTransport::FingerprintAlgorithm algorithm);
+		static FBS::WebRtcTransport::FingerprintAlgorithm AlgorithmToFbs(FingerprintAlgorithm algorithm);
 		static bool IsDtls(const uint8_t* data, size_t len)
 		{
 			// clang-format off
@@ -167,7 +148,7 @@ namespace RTC
 		{
 			return this->state;
 		}
-		Role GetLocalRole() const
+		std::optional<Role> GetLocalRole() const
 		{
 			return this->localRole;
 		}
@@ -198,7 +179,7 @@ namespace RTC
 		bool ProcessHandshake();
 		bool CheckRemoteFingerprint();
 		void ExtractSrtpKeys(RTC::SrtpSession::CryptoSuite srtpCryptoSuite);
-		RTC::SrtpSession::CryptoSuite GetNegotiatedSrtpCryptoSuite();
+		std::optional<RTC::SrtpSession::CryptoSuite> GetNegotiatedSrtpCryptoSuite();
 
 		/* Callbacks fired by OpenSSL events. */
 	public:
@@ -218,8 +199,8 @@ namespace RTC
 		TimerHandle* timer{ nullptr };
 		// Others.
 		DtlsState state{ DtlsState::NEW };
-		Role localRole{ Role::NONE };
-		Fingerprint remoteFingerprint;
+		std::optional<Role> localRole;
+		std::optional<Fingerprint> remoteFingerprint;
 		bool handshakeDone{ false };
 		bool handshakeDoneNow{ false };
 		std::string remoteCert;
