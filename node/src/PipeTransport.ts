@@ -313,7 +313,7 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 		// Wait for response.
 		const response = await this.channel.request(
 			FbsRequest.Method.PIPETRANSPORT_CONNECT,
-			FbsRequest.Body.FBS_PipeTransport_ConnectRequest,
+			FbsRequest.Body.PipeTransport_ConnectRequest,
 			requestOffset,
 			this.internal.transportId
 		);

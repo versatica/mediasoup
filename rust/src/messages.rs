@@ -12,7 +12,8 @@ use crate::data_structures::{
 };
 use crate::direct_transport::DirectTransportOptions;
 use crate::fbs::{
-    direct_transport, message, plain_transport, request, response, router, transport, worker,
+    direct_transport, message, pipe_transport, plain_transport, request, response, router,
+    transport, worker,
 };
 use crate::ortc::RtpMapping;
 use crate::pipe_transport::PipeTransportOptions;
@@ -1278,19 +1279,57 @@ request_response!(
     },
 );
 
-request_response!(
-    TransportId,
-    "transport.connect",
-    TransportConnectPipeRequest {
-        ip: IpAddr,
-        port: u16,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        srtp_parameters: Option<SrtpParameters>,
-    },
-    TransportConnectResponsePipe {
-        tuple: TransportTuple,
-    },
-);
+#[derive(Debug)]
+pub(crate) struct PipeTransportConnectResponse {
+    pub(crate) tuple: TransportTuple,
+}
+
+#[derive(Debug)]
+pub(crate) struct PipeTransportConnectRequest {
+    pub(crate) ip: IpAddr,
+    pub(crate) port: u16,
+    pub(crate) srtp_parameters: Option<SrtpParameters>,
+}
+
+impl RequestFbs for PipeTransportConnectRequest {
+    const METHOD: request::Method = request::Method::PipetransportConnect;
+    type HandlerId = TransportId;
+    type Response = PipeTransportConnectResponse;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let data = pipe_transport::ConnectRequest::create(
+            &mut builder,
+            self.ip.to_string(),
+            self.port,
+            self.srtp_parameters.map(|parameters| parameters.to_fbs()),
+        );
+        let request_body = request::Body::create_pipe_transport_connect_request(&mut builder, data);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::Body::FbsPlainTransportConnectResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        Ok(PipeTransportConnectResponse {
+            tuple: TransportTuple::from_fbs(data.tuple.as_ref()),
+        })
+    }
+}
 
 #[derive(Debug)]
 pub(crate) struct PlainTransportConnectResponse {

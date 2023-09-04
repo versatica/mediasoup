@@ -104,7 +104,7 @@ union Body {
   FBS.Transport.CloseDataProducerRequest,
   FBS.Transport.CloseDataConsumerRequest,
   PlainTransport_ConnectRequest: FBS.PlainTransport.ConnectRequest,
-  FBS.PipeTransport.ConnectRequest,
+  PipeTransport_ConnectRequest: FBS.PipeTransport.ConnectRequest,
   FBS.WebRtcTransport.ConnectRequest,
   FBS.Producer.EnableTraceEventRequest,
   FBS.Consumer.SetPreferredLayersRequest,

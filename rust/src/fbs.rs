@@ -50465,6 +50465,11 @@ mod root {
                     ::planus::alloc::boxed::Box<super::plain_transport::ConnectRequest>,
                 ),
 
+                /// The variant `PipeTransport_ConnectRequest` in the union `Body`
+                PipeTransportConnectRequest(
+                    ::planus::alloc::boxed::Box<super::pipe_transport::ConnectRequest>,
+                ),
+
                 /// The variant of type `FBS.WebRtcTransport.ConnectRequest` in the union `Body`
                 ConnectRequest(
                     ::planus::alloc::boxed::Box<super::web_rtc_transport::ConnectRequest>,
@@ -50719,11 +50724,19 @@ mod root {
                 }
 
                 #[inline]
+                pub fn create_pipe_transport_connect_request(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::pipe_transport::ConnectRequest>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(27, value.prepare(builder).downcast())
+                }
+
+                #[inline]
                 pub fn create_connect_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(27, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(28, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50731,7 +50744,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(28, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(29, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50739,7 +50752,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(29, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(30, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50749,7 +50762,7 @@ mod root {
                         super::data_consumer::SetBufferedAmountLowThresholdRequest,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(30, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(31, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50757,7 +50770,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(31, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(32, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50765,7 +50778,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(32, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(33, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50773,7 +50786,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(33, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(34, value.prepare(builder).downcast())
                 }
             }
 
@@ -50854,6 +50867,9 @@ mod root {
                         }
                         Self::PlainTransportConnectRequest(value) => {
                             Self::create_plain_transport_connect_request(builder, value)
+                        }
+                        Self::PipeTransportConnectRequest(value) => {
+                            Self::create_pipe_transport_connect_request(builder, value)
                         }
                         Self::ConnectRequest(value) => Self::create_connect_request(builder, value),
                         Self::SetPreferredLayersRequest(value) => {
@@ -51206,12 +51222,24 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
+                /// Creates an instance of the [`PipeTransport_ConnectRequest` variant](Body#variant.PipeTransportConnectRequest).
+                #[inline]
+                pub fn pipe_transport_connect_request<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<27, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::pipe_transport::ConnectRequest>,
+                {
+                    BodyBuilder(::planus::Initialized(value))
+                }
+
                 /// Creates an instance of the [`ConnectRequest` variant](Body#variant.ConnectRequest).
                 #[inline]
                 pub fn connect_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<27, T>>
+                ) -> BodyBuilder<::planus::Initialized<28, T>>
                 where
                     T: ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
                 {
@@ -51223,7 +51251,7 @@ mod root {
                 pub fn set_preferred_layers_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<28, T>>
+                ) -> BodyBuilder<::planus::Initialized<29, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
                 {
@@ -51235,7 +51263,7 @@ mod root {
                 pub fn set_priority_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<29, T>>
+                ) -> BodyBuilder<::planus::Initialized<30, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
                 {
@@ -51247,7 +51275,7 @@ mod root {
                 pub fn set_buffered_amount_low_threshold_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<30, T>>
+                ) -> BodyBuilder<::planus::Initialized<31, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::data_consumer::SetBufferedAmountLowThresholdRequest,
@@ -51258,7 +51286,7 @@ mod root {
 
                 /// Creates an instance of the [`SendRequest` variant](Body#variant.SendRequest).
                 #[inline]
-                pub fn send_request<T>(self, value: T) -> BodyBuilder<::planus::Initialized<31, T>>
+                pub fn send_request<T>(self, value: T) -> BodyBuilder<::planus::Initialized<32, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
                 {
@@ -51270,7 +51298,7 @@ mod root {
                 pub fn add_producer_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<32, T>>
+                ) -> BodyBuilder<::planus::Initialized<33, T>>
                 where
                     T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
                 {
@@ -51282,7 +51310,7 @@ mod root {
                 pub fn remove_producer_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<33, T>>
+                ) -> BodyBuilder<::planus::Initialized<34, T>>
                 where
                     T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
                 {
@@ -51875,7 +51903,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<27, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
+                T: ::planus::WriteAsOffset<super::pipe_transport::ConnectRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -51885,7 +51913,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<27, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
+                T: ::planus::WriteAsOffset<super::pipe_transport::ConnectRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -51897,7 +51925,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<28, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -51907,7 +51935,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<28, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::ConnectRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -51919,7 +51947,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<29, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
+                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -51929,7 +51957,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<29, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
+                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -51941,9 +51969,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<30, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
-                >,
+                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -51953,9 +51979,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<30, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
-                >,
+                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -51967,7 +51991,9 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<31, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
+                T: ::planus::WriteAsOffset<
+                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
+                >,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -51977,7 +52003,9 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<31, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
+                T: ::planus::WriteAsOffset<
+                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
+                >,
             {
                 #[inline]
                 fn prepare(
@@ -51989,7 +52017,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<32, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -51999,7 +52027,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<32, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -52011,7 +52039,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<33, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
+                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -52020,6 +52048,28 @@ mod root {
             }
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<33, T>>
+            where
+                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Body>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<34, T>>
+            where
+                T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
+                    ::planus::UnionOffset::new(34, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<34, T>>
             where
                 T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
             {
@@ -52065,6 +52115,7 @@ mod root {
                 CloseDataProducerRequest(super::transport::CloseDataProducerRequestRef<'a>),
                 CloseDataConsumerRequest(super::transport::CloseDataConsumerRequestRef<'a>),
                 PlainTransportConnectRequest(super::plain_transport::ConnectRequestRef<'a>),
+                PipeTransportConnectRequest(super::pipe_transport::ConnectRequestRef<'a>),
                 ConnectRequest(super::web_rtc_transport::ConnectRequestRef<'a>),
                 SetPreferredLayersRequest(super::consumer::SetPreferredLayersRequestRef<'a>),
                 SetPriorityRequest(super::consumer::SetPriorityRequestRef<'a>),
@@ -52239,6 +52290,12 @@ mod root {
                             ))
                         }
 
+                        BodyRef::PipeTransportConnectRequest(value) => {
+                            Self::PipeTransportConnectRequest(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
                         BodyRef::ConnectRequest(value) => {
                             Self::ConnectRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
@@ -52371,27 +52428,30 @@ mod root {
                         26 => ::core::result::Result::Ok(Self::PlainTransportConnectRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        27 => ::core::result::Result::Ok(Self::ConnectRequest(
+                        27 => ::core::result::Result::Ok(Self::PipeTransportConnectRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        28 => ::core::result::Result::Ok(Self::SetPreferredLayersRequest(
+                        28 => ::core::result::Result::Ok(Self::ConnectRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        29 => ::core::result::Result::Ok(Self::SetPriorityRequest(
+                        29 => ::core::result::Result::Ok(Self::SetPreferredLayersRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        30 => {
+                        30 => ::core::result::Result::Ok(Self::SetPriorityRequest(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        31 => {
                             ::core::result::Result::Ok(Self::SetBufferedAmountLowThresholdRequest(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ))
                         }
-                        31 => ::core::result::Result::Ok(Self::SendRequest(
+                        32 => ::core::result::Result::Ok(Self::SendRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        32 => ::core::result::Result::Ok(Self::AddProducerRequest(
+                        33 => ::core::result::Result::Ok(Self::AddProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        33 => ::core::result::Result::Ok(Self::RemoveProducerRequest(
+                        34 => ::core::result::Result::Ok(Self::RemoveProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         _ => ::core::result::Result::Err(
