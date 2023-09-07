@@ -1730,9 +1730,11 @@ function createConsumeDataRequest({
 
 	if (subchannels)
 	{
-		// TODO: Obviously this is wrong since I have to serialize the array into FBS
-		// format.
-		FbsTransport.ConsumeDataRequest.addSubchannels(builder, subchannels);
+		const subchannelsOffset = FbsTransport.ConsumeDataRequest.createSubchannelsVector(
+			builder, subchannels
+		);
+
+		FbsTransport.ConsumeDataRequest.addSubchannels(builder, subchannelsOffset);
 	}
 
 	return FbsTransport.ConsumeDataRequest.endConsumeDataRequest(builder);
