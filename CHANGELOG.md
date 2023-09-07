@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.12.12
+
+* Support C++20 ([PR #1150](https://github.com/versatica/mediasoup/pull/1150) by @o-u-p).
+
+
 ### 3.12.11
 
 * Google Transport Feedback: Read Reference Time field as 24bits signed as per spec ([PR #1145](https://github.com/versatica/mediasoup/pull/1145)).
