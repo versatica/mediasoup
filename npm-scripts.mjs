@@ -265,7 +265,7 @@ function replaceVersion()
 	const files = fs.readdirSync('node/lib',
 		{
 			withFileTypes : true,
-			recursive     : true
+			recursive     : false
 		});
 
 	for (const file of files)
