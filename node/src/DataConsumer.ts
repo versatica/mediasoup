@@ -8,6 +8,7 @@ import { Event, Notification } from './fbs/notification';
 import * as FbsTransport from './fbs/transport';
 import * as FbsRequest from './fbs/request';
 import * as FbsDataConsumer from './fbs/data-consumer';
+import * as utils from './utils';
 
 export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
 {
@@ -258,6 +259,14 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	get dataProducerPaused(): boolean
 	{
 		return this.#dataProducerPaused;
+	}
+
+	/**
+	 * Get current subchannels this data consumer is subscribed to.
+	 */
+	get subchannels(): number[]
+	{
+		return Array.from(this.#subchannels);
 	}
 
 	/**
@@ -555,6 +564,38 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		return data.bufferedAmount();
 	}
 
+	/**
+	 * Set subchannels.
+	 */
+	async setSubchannels(subchannels: number[]): Promise<void>
+	{
+		logger.debug('setSubchannels()');
+
+		console.log('TODO');
+
+		subchannels = [...new Set(subchannels)];
+
+		// /* Build Request. */
+		// const requestOffset = new FbsTransport.SetSubchannelsRequestT(
+		// 	this.#internal.dataConsumerId,
+		// 	subchannels
+		// ).pack(this.#channel.bufferBuilder);
+
+		// const response = await this.#channel.request(
+		// 	FbsRequest.Method.DATACONSUMER_SET_SUBCHANNELS,
+		// 	FbsRequest.Body.FBS_DATA_CONSUMER_SetSubchannelsRequest,,
+		// 	requestOffset,
+		// 	this.#internal.dataConsumerId
+		// );
+
+		// /* Decode Response. */
+		// const data = new FbsDataConsumer.SetSubchannelsResponse();
+
+		// response.body(data);
+
+		// return parseSubchannels(data);
+	}
+
 	private handleWorkerNotifications(): void
 	{
 		this.#channel.on(this.#internal.dataConsumerId, (event: Event, data?: Notification) =>
@@ -690,8 +731,7 @@ export function parseDataConsumerDumpResponse(
 		protocol           : data.protocol()!,
 		paused             : data.paused(),
 		dataProducerPaused : data.dataProducerPaused(),
-		subchannels        : data.subchannels()
-
+		subchannels        : utils.parseVector(data, 'subchannels')
 	};
 }
 

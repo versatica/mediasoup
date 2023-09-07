@@ -36,10 +36,10 @@ namespace RTC
 
 				case Value::Type::INTEGER:
 				{
-					auto valueOffset = FBS::RtpParameters::CreateInteger(builder, value.integerValue);
+					auto valueOffset = FBS::RtpParameters::CreateInteger32(builder, value.integerValue);
 
 					parameters.emplace_back(FBS::RtpParameters::CreateParameterDirect(
-					  builder, key.c_str(), FBS::RtpParameters::Value::Integer, valueOffset.Union()));
+					  builder, key.c_str(), FBS::RtpParameters::Value::Integer32, valueOffset.Union()));
 
 					break;
 				}
@@ -68,10 +68,10 @@ namespace RTC
 				case Value::Type::ARRAY_OF_INTEGERS:
 				{
 					auto valueOffset =
-					  FBS::RtpParameters::CreateIntegerArrayDirect(builder, &value.arrayOfIntegers);
+					  FBS::RtpParameters::CreateInteger32ArrayDirect(builder, &value.arrayOfIntegers);
 
 					parameters.emplace_back(FBS::RtpParameters::CreateParameterDirect(
-					  builder, key.c_str(), FBS::RtpParameters::Value::IntegerArray, valueOffset.Union()));
+					  builder, key.c_str(), FBS::RtpParameters::Value::Integer32Array, valueOffset.Union()));
 
 					break;
 				}
@@ -99,9 +99,9 @@ namespace RTC
 					break;
 				}
 
-				case FBS::RtpParameters::Value::Integer:
+				case FBS::RtpParameters::Value::Integer32:
 				{
-					this->mapKeyValues.emplace(key, Value(parameter->value_as_Integer()->value()));
+					this->mapKeyValues.emplace(key, Value(parameter->value_as_Integer32()->value()));
 
 					break;
 				}
@@ -120,9 +120,9 @@ namespace RTC
 					break;
 				}
 
-				case FBS::RtpParameters::Value::IntegerArray:
+				case FBS::RtpParameters::Value::Integer32Array:
 				{
-					this->mapKeyValues.emplace(key, Value(parameter->value_as_IntegerArray()->value()));
+					this->mapKeyValues.emplace(key, Value(parameter->value_as_Integer32Array()->value()));
 
 					break;
 				}

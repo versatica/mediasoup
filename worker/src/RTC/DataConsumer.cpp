@@ -66,6 +66,14 @@ namespace RTC
 		// paused is set to false by default.
 		this->paused = data->paused();
 
+		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeDataRequest::VT_SUBCHANNELS))
+		{
+			for (const auto subchannel : *data->subchannels())
+			{
+				this->subchannels.insert(subchannel);
+			}
+		}
+
 		// NOTE: This may throw.
 		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
