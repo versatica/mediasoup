@@ -571,29 +571,25 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	{
 		logger.debug('setSubchannels()');
 
-		console.log('TODO');
+		/* Build Request. */
+		const requestOffset = new FbsDataConsumer.SetSubchannelsRequestT(
+			subchannels
+		).pack(this.#channel.bufferBuilder);
 
-		const subchannelsSet = new Set(subchannels);
+		const response = await this.#channel.request(
+			FbsRequest.Method.DATACONSUMER_SET_SUBCHANNELS,
+			FbsRequest.Body.FBS_DataConsumer_SetSubchannelsRequest,
+			requestOffset,
+			this.#internal.dataConsumerId
+		);
 
-		// /* Build Request. */
-		// const requestOffset = new FbsTransport.SetSubchannelsRequestT(
-		// 	this.#internal.dataConsumerId,
-		// 	subchannels
-		// ).pack(this.#channel.bufferBuilder);
+		/* Decode Response. */
+		const data = new FbsDataConsumer.SetSubchannelsResponse();
 
-		// const response = await this.#channel.request(
-		// 	FbsRequest.Method.DATACONSUMER_SET_SUBCHANNELS,
-		// 	FbsRequest.Body.FBS_DATA_CONSUMER_SetSubchannelsRequest,,
-		// 	requestOffset,
-		// 	this.#internal.dataConsumerId
-		// );
+		response.body(data);
 
-		// /* Decode Response. */
-		// const data = new FbsDataConsumer.SetSubchannelsResponse();
-
-		// response.body(data);
-
-		// return parseSubchannels(data);
+		// Update subchannels.
+		this.#subchannels = utils.parseVector(data, 'subchannels');
 	}
 
 	private handleWorkerNotifications(): void

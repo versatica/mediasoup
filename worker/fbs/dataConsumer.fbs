@@ -50,6 +50,14 @@ table SendRequest {
   data:Data (required);
 }
 
+table SetSubchannelsRequest {
+  subchannels:[uint16];
+}
+
+table SetSubchannelsResponse {
+  subchannels:[uint16];
+}
+
 // Notifications from Worker.
 
 table BufferedAmountLowNotification {

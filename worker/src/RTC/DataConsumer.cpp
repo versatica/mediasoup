@@ -120,7 +120,7 @@ namespace RTC
 		  this->protocol.c_str(),
 		  this->paused,
 		  this->dataProducerPaused,
-		  &subchannelsArray);
+		  std::addressof(subchannelsArray));
 	}
 
 	flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> DataConsumer::FillBufferStats(
@@ -315,6 +315,35 @@ namespace RTC
 				  });
 
 				SendMessage(ppid, data, len, cb);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::DATACONSUMER_SET_SUBCHANNELS:
+			{
+				const auto* body = request->data->body_as<FBS::DataConsumer::SetSubchannelsRequest>();
+
+				this->subchannels.clear();
+
+				for (const auto subchannel : *body->subchannels())
+				{
+					this->subchannels.insert(subchannel);
+				}
+
+				std::vector<uint16_t> subchannelsArray;
+
+				subchannelsArray.reserve(this->subchannels.size());
+
+				for (auto subchannel : this->subchannels)
+				{
+					subchannelsArray.emplace_back(subchannel);
+				}
+
+				// Create response.
+				auto responseOffset = FBS::DataConsumer::CreateSetSubchannelsResponseDirect(
+				  request->GetBufferBuilder(), std::addressof(subchannelsArray));
+
+				request->Accept(FBS::Response::Body::FBS_DataConsumer_SetSubchannelsResponse, responseOffset);
 
 				break;
 			}
