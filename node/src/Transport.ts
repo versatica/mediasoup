@@ -1080,6 +1080,7 @@ export class Transport
 			maxPacketLifeTime,
 			maxRetransmits,
 			paused = false,
+			subchannels,
 			appData
 		}: DataConsumerOptions<ConsumerAppData>
 	): Promise<DataConsumer<ConsumerAppData>>
@@ -1163,7 +1164,8 @@ export class Transport
 			sctpStreamParameters,
 			label,
 			protocol,
-			paused
+			paused,
+			subchannels
 		});
 
 		const response = await this.channel.request(
@@ -1197,6 +1199,7 @@ export class Transport
 				},
 				channel            : this.channel,
 				paused             : dump.paused,
+				subchannels        : dump.subchannels,
 				dataProducerPaused : dump.dataProducerPaused,
 				appData
 			});
@@ -1680,9 +1683,10 @@ function createConsumeDataRequest({
 	sctpStreamParameters,
 	label,
 	protocol,
-	paused
+	paused,
+	subchannels
 } : {
-	builder : flatbuffers.Builder;
+	builder: flatbuffers.Builder;
 	dataConsumerId: string;
 	dataProducerId: string;
 	type: DataConsumerType;
@@ -1690,6 +1694,7 @@ function createConsumeDataRequest({
 	label: string;
 	protocol: string;
 	paused: boolean;
+	subchannels?: number[];
 }): number
 {
 	const dataConsumerIdOffset = builder.createString(dataConsumerId);
@@ -1722,6 +1727,13 @@ function createConsumeDataRequest({
 	FbsTransport.ConsumeDataRequest.addLabel(builder, labelOffset);
 	FbsTransport.ConsumeDataRequest.addProtocol(builder, protocolOffset);
 	FbsTransport.ConsumeDataRequest.addPaused(builder, paused);
+
+	if (subchannels)
+	{
+		// TODO: Obviously this is wrong since I have to serialize the array into FBS
+		// format.
+		FbsTransport.ConsumeDataRequest.addSubchannels(builder, subchannels);
+	}
 
 	return FbsTransport.ConsumeDataRequest.endConsumeDataRequest(builder);
 }

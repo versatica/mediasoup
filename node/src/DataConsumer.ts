@@ -46,6 +46,13 @@ export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
 	paused?: boolean;
 
 	/**
+	 * Subchannels this data consumer initially subscribes to.
+	 * Only used in case this data consumer receives messages from a local data
+	 * producer that specifies subchannel(s) when calling send().
+	 */
+	subchannels?: number[];
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: DataConsumerAppData;
@@ -93,6 +100,7 @@ type DataConsumerDump = DataConsumerData &
 	id: string;
 	paused: boolean;
 	dataProducerPaused: boolean;
+	subchannels: number[];
 };
 
 type DataConsumerInternal = TransportInternal &
@@ -132,6 +140,9 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	// Associated DataProducer paused flag.
 	#dataProducerPaused = false;
 
+	// Subchannels subscribed to.
+	#subchannels: number[];
+
 	// Custom app data.
 	#appData: DataConsumerAppData;
 
@@ -148,6 +159,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 			channel,
 			paused,
 			dataProducerPaused,
+			subchannels,
 			appData
 		}:
 		{
@@ -156,6 +168,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 			channel: Channel;
 			paused: boolean;
 			dataProducerPaused: boolean;
+			subchannels: number[];
 			appData?: DataConsumerAppData;
 		}
 	)
@@ -169,6 +182,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		this.#channel = channel;
 		this.#paused = paused;
 		this.#dataProducerPaused = dataProducerPaused;
+		this.#subchannels = subchannels;
 		this.#appData = appData || {} as DataConsumerAppData;
 
 		this.handleWorkerNotifications();
@@ -675,14 +689,15 @@ export function parseDataConsumerDumpResponse(
 		label              : data.label()!,
 		protocol           : data.protocol()!,
 		paused             : data.paused(),
-		dataProducerPaused : data.dataProducerPaused()
+		dataProducerPaused : data.dataProducerPaused(),
+		subchannels        : data.subchannels()
 
 	};
 }
 
 function parseDataConsumerStats(
 	binary: FbsDataConsumer.GetStatsResponse
-):DataConsumerStat
+): DataConsumerStat
 {
 	return {
 		type           : 'data-consumer',
