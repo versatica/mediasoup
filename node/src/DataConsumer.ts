@@ -573,7 +573,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 
 		console.log('TODO');
 
-		subchannels = [...new Set(subchannels)];
+		const subchannelsSet = new Set(subchannels);
 
 		// /* Build Request. */
 		// const requestOffset = new FbsTransport.SetSubchannelsRequestT(
