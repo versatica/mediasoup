@@ -1684,7 +1684,7 @@ function createConsumeDataRequest({
 	label,
 	protocol,
 	paused,
-	subchannels
+	subchannels = []
 } : {
 	builder: flatbuffers.Builder;
 	dataConsumerId: string;
@@ -1712,6 +1712,10 @@ function createConsumeDataRequest({
 		);
 	}
 
+	const subchannelsOffset = FbsTransport.ConsumeDataRequest.createSubchannelsVector(
+		builder, subchannels
+	);
+
 	FbsTransport.ConsumeDataRequest.startConsumeDataRequest(builder);
 	FbsTransport.ConsumeDataRequest.addDataConsumerId(builder, dataConsumerIdOffset);
 	FbsTransport.ConsumeDataRequest.addDataProducerId(builder, dataProducerIdOffset);
@@ -1727,15 +1731,7 @@ function createConsumeDataRequest({
 	FbsTransport.ConsumeDataRequest.addLabel(builder, labelOffset);
 	FbsTransport.ConsumeDataRequest.addProtocol(builder, protocolOffset);
 	FbsTransport.ConsumeDataRequest.addPaused(builder, paused);
-
-	if (subchannels)
-	{
-		const subchannelsOffset = FbsTransport.ConsumeDataRequest.createSubchannelsVector(
-			builder, subchannels
-		);
-
-		FbsTransport.ConsumeDataRequest.addSubchannels(builder, subchannelsOffset);
-	}
+	FbsTransport.ConsumeDataRequest.addSubchannels(builder, subchannelsOffset);
 
 	return FbsTransport.ConsumeDataRequest.endConsumeDataRequest(builder);
 }

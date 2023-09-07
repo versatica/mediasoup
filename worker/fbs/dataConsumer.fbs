@@ -20,7 +20,7 @@ table DumpResponse {
   protocol:string (required);
   paused:bool;
   data_producer_paused:bool;
-  subchannels:[uint16] (required);
+  subchannels:[uint16];
 }
 
 table GetStatsResponse {
