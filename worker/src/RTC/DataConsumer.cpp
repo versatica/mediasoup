@@ -93,12 +93,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> sctpStreamParametersOffset;
+		flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> sctpStreamParameters;
 
 		// Add sctpStreamParameters.
 		if (this->type == DataConsumer::Type::SCTP)
 		{
-			sctpStreamParametersOffset = this->sctpStreamParameters.FillBuffer(builder);
+			sctpStreamParameters = this->sctpStreamParameters.FillBuffer(builder);
+		}
+
+		std::vector<uint16_t> subchannelsArray;
+
+		subchannelsArray.reserve(this->subchannels.size());
+
+		for (auto subchannel : this->subchannels)
+		{
+			subchannelsArray.emplace_back(subchannel);
 		}
 
 		return FBS::DataConsumer::CreateDumpResponseDirect(
@@ -106,11 +115,12 @@ namespace RTC
 		  this->id.c_str(),
 		  this->dataProducerId.c_str(),
 		  this->typeString.c_str(),
-		  sctpStreamParametersOffset,
+		  sctpStreamParameters,
 		  this->label.c_str(),
 		  this->protocol.c_str(),
 		  this->paused,
-		  this->dataProducerPaused);
+		  this->dataProducerPaused,
+		  &subchannelsArray);
 	}
 
 	flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> DataConsumer::FillBufferStats(
