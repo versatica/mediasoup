@@ -17,6 +17,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <string>
+#include <vector>
 
 namespace RTC
 {
@@ -96,9 +97,11 @@ namespace RTC
 		void OnTransportDataProducerMessageReceived(
 		  RTC::Transport* transport,
 		  RTC::DataProducer* dataProducer,
-		  uint32_t ppid,
 		  const uint8_t* msg,
-		  size_t len) override;
+		  size_t len,
+		  uint32_t ppid,
+		  std::vector<uint16_t>& subchannels,
+		  std::optional<uint16_t> requiredSubchannel) override;
 		void OnTransportNewDataConsumer(
 		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer, std::string& dataProducerId) override;
 		void OnTransportDataConsumerClosed(RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;

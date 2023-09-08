@@ -213,7 +213,7 @@ namespace RTC
 	}
 
 	void DirectTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 

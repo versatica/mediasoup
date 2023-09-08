@@ -7,6 +7,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <stdexcept>
+#include <vector>
 
 namespace RTC
 {
@@ -219,7 +220,23 @@ namespace RTC
 					  len);
 				}
 
-				this->ReceiveMessage(body->ppid(), data, len);
+				std::vector<uint16_t> subchannels;
+
+				subchannels.reserve(body->subchannels()->size());
+
+				for (const auto subchannel : *body->subchannels())
+				{
+					subchannels.emplace_back(subchannel);
+				}
+
+				std::optional<uint16_t> requiredSubchannel{ std::nullopt };
+
+				if (body->requiredSubchannel().has_value())
+				{
+					requiredSubchannel = body->requiredSubchannel().value();
+				}
+
+				ReceiveMessage(data, len, body->ppid(), subchannels, requiredSubchannel);
 
 				// Increase receive transmission.
 				this->listener->OnDataProducerReceiveData(this, len);
@@ -234,7 +251,12 @@ namespace RTC
 		}
 	}
 
-	void DataProducer::ReceiveMessage(uint32_t ppid, const uint8_t* msg, size_t len)
+	void DataProducer::ReceiveMessage(
+	  const uint8_t* msg,
+	  size_t len,
+	  uint32_t ppid,
+	  std::vector<uint16_t>& subchannels,
+	  std::optional<uint16_t> requiredSubchannel)
 	{
 		MS_TRACE();
 
@@ -247,6 +269,7 @@ namespace RTC
 			return;
 		}
 
-		this->listener->OnDataProducerMessageReceived(this, ppid, msg, len);
+		this->listener->OnDataProducerMessageReceived(
+		  this, msg, len, ppid, subchannels, requiredSubchannel);
 	}
 } // namespace RTC

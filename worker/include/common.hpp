@@ -7,6 +7,7 @@
 #include <cstdint>    // uint8_t, etc
 #include <functional> // std::function
 #include <memory>     // std::addressof()
+#include <optional>
 #ifdef _WIN32
 #include <winsock2.h>
 // Avoid uv/win.h: error C2628 'intptr_t' followed by 'int' is illegal.

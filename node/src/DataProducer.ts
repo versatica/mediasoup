@@ -387,7 +387,12 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 	/**
 	 * Send data (just valid for DataProducers created on a DirectTransport).
 	 */
-	send(message: string | Buffer, ppid?: number): void
+	send(
+		message: string | Buffer,
+		ppid?: number,
+		subchannels?: number[],
+		requiredSubchannel?: number
+	): void
 	{
 		if (typeof message !== 'string' && !Buffer.isBuffer(message))
 		{
@@ -431,6 +436,10 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 
 		let dataOffset = 0;
 
+		const subchannelsOffset = FbsDataProducer.SendNotification.createSubchannelsVector(
+			builder, subchannels ?? []
+		);
+
 		if (typeof message === 'string')
 		{
 			const messageOffset = builder.createString(message);
@@ -450,7 +459,9 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 			typeof message === 'string' ?
 				FbsDataProducer.Data.String :
 				FbsDataProducer.Data.Binary,
-			dataOffset
+			dataOffset,
+			subchannelsOffset,
+			requiredSubchannel ?? null
 		);
 
 		this.#channel.notify(

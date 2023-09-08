@@ -29,9 +29,9 @@ namespace RTC
 		public:
 			virtual void OnDataConsumerSendMessage(
 			  RTC::DataConsumer* dataConsumer,
-			  uint32_t ppid,
 			  const uint8_t* msg,
 			  size_t len,
+			  uint32_t ppid,
 			  onQueuedCallback* cb)                                                        = 0;
 			virtual void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) = 0;
 		};
@@ -98,7 +98,13 @@ namespace RTC
 		void SctpAssociationBufferedAmount(uint32_t bufferedAmount);
 		void SctpAssociationSendBufferFull();
 		void DataProducerClosed();
-		void SendMessage(uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* = nullptr);
+		void SendMessage(
+		  const uint8_t* msg,
+		  size_t len,
+		  uint32_t ppid,
+		  std::vector<uint16_t>& subchannels,
+		  std::optional<uint16_t> requiredSubchannel,
+		  onQueuedCallback* = nullptr);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:

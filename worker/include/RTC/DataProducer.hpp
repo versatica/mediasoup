@@ -8,6 +8,7 @@
 #include "RTC/SctpDictionaries.hpp"
 #include "RTC/Shared.hpp"
 #include <string>
+#include <vector>
 
 namespace RTC
 {
@@ -23,9 +24,14 @@ namespace RTC
 		public:
 			virtual void OnDataProducerReceiveData(RTC::DataProducer* producer, size_t len) = 0;
 			virtual void OnDataProducerMessageReceived(
-			  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) = 0;
-			virtual void OnDataProducerPaused(RTC::DataProducer* dataProducer)                = 0;
-			virtual void OnDataProducerResumed(RTC::DataProducer* dataProducer)               = 0;
+			  RTC::DataProducer* dataProducer,
+			  const uint8_t* msg,
+			  size_t len,
+			  uint32_t ppid,
+			  std::vector<uint16_t>& subchannels,
+			  std::optional<uint16_t> requiredSubchannel)                       = 0;
+			virtual void OnDataProducerPaused(RTC::DataProducer* dataProducer)  = 0;
+			virtual void OnDataProducerResumed(RTC::DataProducer* dataProducer) = 0;
 		};
 
 	public:
@@ -61,7 +67,12 @@ namespace RTC
 		{
 			return this->paused;
 		}
-		void ReceiveMessage(uint32_t ppid, const uint8_t* msg, size_t len);
+		void ReceiveMessage(
+		  const uint8_t* msg,
+		  size_t len,
+		  uint32_t ppid,
+		  std::vector<uint16_t>& subchannels,
+		  std::optional<uint16_t> requiredSubchannel);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:

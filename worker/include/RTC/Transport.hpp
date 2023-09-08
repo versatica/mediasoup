@@ -30,6 +30,7 @@
 #include "handles/TimerHandle.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <string>
+#include <vector>
 
 namespace RTC
 {
@@ -103,9 +104,11 @@ namespace RTC
 			virtual void OnTransportDataProducerMessageReceived(
 			  RTC::Transport* transport,
 			  RTC::DataProducer* dataProducer,
-			  uint32_t ppid,
 			  const uint8_t* msg,
-			  size_t len) = 0;
+			  size_t len,
+			  uint32_t ppid,
+			  std::vector<uint16_t>& subchannels,
+			  std::optional<uint16_t> requiredSubchannel) = 0;
 			virtual void OnTransportNewDataConsumer(
 			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer, std::string& dataProducerId) = 0;
 			virtual void OnTransportDataConsumerClosed(
@@ -188,9 +191,9 @@ namespace RTC
 		virtual void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) = 0;
 		virtual void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
-		  uint32_t ppid,
 		  const uint8_t* msg,
 		  size_t len,
+		  uint32_t ppid,
 		  onQueuedCallback* = nullptr)                             = 0;
 		virtual void SendSctpData(const uint8_t* data, size_t len) = 0;
 		virtual void RecvStreamClosed(uint32_t ssrc)               = 0;
@@ -245,7 +248,12 @@ namespace RTC
 			this->DataReceived(len);
 		}
 		void OnDataProducerMessageReceived(
-		  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len) override;
+		  RTC::DataProducer* dataProducer,
+		  const uint8_t* msg,
+		  size_t len,
+		  uint32_t ppid,
+		  std::vector<uint16_t>& subchannels,
+		  std::optional<uint16_t> requiredSubchannel) override;
 		void OnDataProducerPaused(RTC::DataProducer* dataProducer) override;
 		void OnDataProducerResumed(RTC::DataProducer* dataProducer) override;
 
@@ -253,9 +261,9 @@ namespace RTC
 	public:
 		void OnDataConsumerSendMessage(
 		  RTC::DataConsumer* dataConsumer,
-		  uint32_t ppid,
 		  const uint8_t* msg,
 		  size_t len,
+		  uint32_t ppid,
 		  onQueuedCallback* = nullptr) override;
 		void OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer) override;
 
@@ -270,9 +278,9 @@ namespace RTC
 		void OnSctpAssociationMessageReceived(
 		  RTC::SctpAssociation* sctpAssociation,
 		  uint16_t streamId,
-		  uint32_t ppid,
 		  const uint8_t* msg,
-		  size_t len) override;
+		  size_t len,
+		  uint32_t ppid) override;
 		void OnSctpAssociationBufferedAmount(
 		  RTC::SctpAssociation* sctpAssociation, uint32_t bufferedAmount) override;
 

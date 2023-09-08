@@ -2646,11 +2646,17 @@ namespace RTC
 	}
 
 	inline void Transport::OnDataProducerMessageReceived(
-	  RTC::DataProducer* dataProducer, uint32_t ppid, const uint8_t* msg, size_t len)
+	  RTC::DataProducer* dataProducer,
+	  const uint8_t* msg,
+	  size_t len,
+	  uint32_t ppid,
+	  std::vector<uint16_t>& subchannels,
+	  std::optional<uint16_t> requiredSubchannel)
 	{
 		MS_TRACE();
 
-		this->listener->OnTransportDataProducerMessageReceived(this, dataProducer, ppid, msg, len);
+		this->listener->OnTransportDataProducerMessageReceived(
+		  this, dataProducer, msg, len, ppid, subchannels, requiredSubchannel);
 	}
 
 	inline void Transport::OnDataProducerPaused(RTC::DataProducer* dataProducer)
@@ -2668,11 +2674,11 @@ namespace RTC
 	}
 
 	inline void Transport::OnDataConsumerSendMessage(
-	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
-		SendMessage(dataConsumer, ppid, msg, len, cb);
+		SendMessage(dataConsumer, msg, len, ppid, cb);
 	}
 
 	inline void Transport::OnDataConsumerDataProducerClosed(RTC::DataConsumer* dataConsumer)
@@ -2811,9 +2817,9 @@ namespace RTC
 	inline void Transport::OnSctpAssociationMessageReceived(
 	  RTC::SctpAssociation* /*sctpAssociation*/,
 	  uint16_t streamId,
-	  uint32_t ppid,
 	  const uint8_t* msg,
-	  size_t len)
+	  size_t len,
+	  uint32_t ppid)
 	{
 		MS_TRACE();
 
@@ -2830,7 +2836,10 @@ namespace RTC
 		// Pass the SCTP message to the corresponding DataProducer.
 		try
 		{
-			dataProducer->ReceiveMessage(ppid, msg, len);
+			static std::vector<uint16_t> EmptySubchannels;
+
+			dataProducer->ReceiveMessage(
+			  msg, len, ppid, EmptySubchannels, /*requiredSubchannel*/ std::nullopt);
 		}
 		catch (std::exception& error)
 		{

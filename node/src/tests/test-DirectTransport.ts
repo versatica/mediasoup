@@ -246,6 +246,158 @@ test('dataProducer.send() succeeds', async () =>
 			]);
 }, 5000);
 
+test('dataProducer.send() with subchannels succeeds', async () =>
+{
+	const transport2 = await router.createDirectTransport();
+	const dataProducer = await transport2.produceData(
+		{
+			label    : 'foo',
+			protocol : 'bar',
+			appData  : { foo: 'bar' }
+		});
+	const dataConsumer1 = await transport2.consumeData(
+		{
+			dataProducerId : dataProducer.id,
+			subchannels    : [ 1, 11, 666 ]
+		});
+	const dataConsumer2 = await transport2.consumeData(
+		{
+			dataProducerId : dataProducer.id,
+			subchannels    : [ 2, 22, 666 ]
+		});
+	const expectedReceivedNumMessages1 = 7;
+	const expectedReceivedNumMessages2 = 5;
+	const receivedMessages1: string[] = [];
+	const receivedMessages2: string[] = [];
+
+	// eslint-disable-next-line no-async-promise-executor
+	await new Promise<void>(async (resolve) =>
+	{
+		// Must be received by dataConsumer1 and dataConsumer2.
+		dataProducer.send(
+			'both',
+			/* ppid */ undefined,
+			/* subchannels */ undefined,
+			/* requiredSubchannel */ undefined
+		);
+
+		// Must be received by dataConsumer1 and dataConsumer2.
+		dataProducer.send(
+			'both',
+			/* ppid */ undefined,
+			/* subchannels */ [ 1, 2 ],
+			/* requiredSubchannel */ undefined
+		);
+
+		// Must be received by dataConsumer1 and dataConsumer2.
+		dataProducer.send(
+			'both',
+			/* ppid */ undefined,
+			/* subchannels */ [ 11, 22, 33 ],
+			/* requiredSubchannel */ 666
+		);
+
+		// Must not be received by neither dataConsumer1 nor dataConsumer2.
+		dataProducer.send(
+			'none',
+			/* ppid */ undefined,
+			/* subchannels */ [ 3 ],
+			/* requiredSubchannel */ 666
+		);
+
+		// Must not be received by neither dataConsumer1 nor dataConsumer2.
+		dataProducer.send(
+			'none',
+			/* ppid */ undefined,
+			/* subchannels */ [ 666 ],
+			/* requiredSubchannel */ 3
+		);
+
+		// Must be received by dataConsumer1.
+		dataProducer.send(
+			'dc1',
+			/* ppid */ undefined,
+			/* subchannels */ [ 1 ],
+			/* requiredSubchannel */ undefined
+		);
+
+		// Must be received by dataConsumer1.
+		dataProducer.send(
+			'dc1',
+			/* ppid */ undefined,
+			/* subchannels */ [ 11 ],
+			/* requiredSubchannel */ 1
+		);
+
+		// Must be received by dataConsumer1.
+		dataProducer.send(
+			'dc1',
+			/* ppid */ undefined,
+			/* subchannels */ [ 666 ],
+			/* requiredSubchannel */ 11
+		);
+
+		// Must be received by dataConsumer2.
+		dataProducer.send(
+			'dc2',
+			/* ppid */ undefined,
+			/* subchannels */ [ 666 ],
+			/* requiredSubchannel */ 2
+		);
+
+		// Make dataConsumer2 also subscribe to subchannel 1.
+		// NOTE: No need to await for this call.
+		void dataConsumer2.setSubchannels([ ...dataConsumer2.subchannels, 1 ]);
+
+		// Must be received by dataConsumer1 and dataConsumer2.
+		dataProducer.send(
+			'both',
+			/* ppid */ undefined,
+			/* subchannels */ [ 1 ],
+			/* requiredSubchannel */ 666
+		);
+
+		dataConsumer1.on('message', (message) =>
+		{
+			receivedMessages1.push(message.toString('utf8'));
+
+			if (
+				receivedMessages1.length === expectedReceivedNumMessages1 &&
+				receivedMessages2.length === expectedReceivedNumMessages2
+			)
+			{
+				resolve();
+			}
+		});
+
+		dataConsumer2.on('message', (message) =>
+		{
+			receivedMessages2.push(message.toString('utf8'));
+
+			if (
+				receivedMessages1.length === expectedReceivedNumMessages1 &&
+				receivedMessages2.length === expectedReceivedNumMessages2
+			)
+			{
+				resolve();
+			}
+		});
+	});
+
+	expect(receivedMessages1.length).toBe(expectedReceivedNumMessages1);
+	expect(receivedMessages2.length).toBe(expectedReceivedNumMessages2);
+
+	for (const message of receivedMessages1)
+	{
+		expect([ 'both', 'dc1' ].includes(message)).toBe(true);
+	}
+
+	for (const message of receivedMessages2)
+	{
+		expect([ 'both', 'dc2' ].includes(message)).toBe(true);
+	}
+}, 5000);
+
 test('DirectTransport methods reject if closed', async () =>
 {
 	const onObserverClose = jest.fn();
