@@ -249,12 +249,7 @@ test('dataProducer.send() succeeds', async () =>
 test('dataProducer.send() with subchannels succeeds', async () =>
 {
 	const transport2 = await router.createDirectTransport();
-	const dataProducer = await transport2.produceData(
-		{
-			label    : 'foo',
-			protocol : 'bar',
-			appData  : { foo: 'bar' }
-		});
+	const dataProducer = await transport2.produceData();
 	const dataConsumer1 = await transport2.consumeData(
 		{
 			dataProducerId : dataProducer.id,
