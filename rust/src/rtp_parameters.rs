@@ -812,6 +812,9 @@ impl RtpParameters {
         })
     }
 
+    #[allow(dead_code)]
+    /// TODO: This is not yet used but will be once flatbuffers is fully
+    /// implemented in mediasoup-rust.
     pub(crate) fn into_fbs(self) -> rtp_parameters::RtpParameters {
         rtp_parameters::RtpParameters {
             mid: self.mid,
