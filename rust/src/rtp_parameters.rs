@@ -704,6 +704,7 @@ pub struct RtpParameters {
 }
 
 impl RtpParameters {
+    #[allow(dead_code)]
     pub(crate) fn from_fbs(
         rtp_parameters: rtp_parameters::RtpParameters,
     ) -> Result<Self, Box<dyn Error>> {
@@ -1011,6 +1012,7 @@ impl RtpCodecParameters {
         *payload_type
     }
 
+    #[allow(dead_code)]
     pub(crate) fn clock_rate(&self) -> NonZeroU32 {
         let (Self::Audio { clock_rate, .. } | Self::Video { clock_rate, .. }) = self;
         *clock_rate
