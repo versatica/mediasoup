@@ -812,9 +812,9 @@ impl RtpParameters {
         })
     }
 
-    #[allow(dead_code)]
     /// TODO: This is not yet used but will be once flatbuffers is fully
     /// implemented in mediasoup-rust.
+    #[allow(dead_code)]
     pub(crate) fn into_fbs(self) -> rtp_parameters::RtpParameters {
         rtp_parameters::RtpParameters {
             mid: self.mid,
@@ -1017,9 +1017,9 @@ impl RtpCodecParameters {
         *payload_type
     }
 
-    #[allow(dead_code)]
     /// NOTE: This is not used in mediasoup code. However there is no reason to
     /// not expose it as public API since it could be used by the user.
+    #[allow(dead_code)]
     pub(crate) fn clock_rate(&self) -> NonZeroU32 {
         let (Self::Audio { clock_rate, .. } | Self::Video { clock_rate, .. }) = self;
         *clock_rate
