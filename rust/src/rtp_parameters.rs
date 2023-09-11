@@ -726,12 +726,12 @@ impl RtpParameters {
                                 match parameters.value {
                                     rtp_parameters::Value::Boolean(_)
                                     | rtp_parameters::Value::Double(_)
-                                    | rtp_parameters::Value::IntegerArray(_) => {
+                                    | rtp_parameters::Value::Integer32Array(_) => {
                                         // TODO: Above value variant should not exist in the
                                         //  first place
                                         panic!("Invalid parameter")
                                     }
-                                    rtp_parameters::Value::Integer(n) => {
+                                    rtp_parameters::Value::Integer32(n) => {
                                         RtpCodecParametersParametersValue::Number(
                                             n.value.try_into()?,
                                         )
@@ -844,8 +844,8 @@ impl RtpParameters {
                                         ))
                                     }
                                     RtpCodecParametersParametersValue::Number(n) => {
-                                        rtp_parameters::Value::Integer(Box::new(
-                                            rtp_parameters::Integer { value: *n as i32 },
+                                        rtp_parameters::Value::Integer32(Box::new(
+                                            rtp_parameters::Integer32 { value: *n as i32 },
                                         ))
                                     }
                                 },

@@ -12576,10 +12576,10 @@ mod root {
                 }
             }
 
-            /// The table `Integer` in the namespace `FBS.RtpParameters`
+            /// The table `Integer32` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Integer` in the file `../worker/fbs/rtpParameters.fbs:12`
+            /// * Table `Integer32` in the file `../worker/fbs/rtpParameters.fbs:12`
             #[derive(
                 Clone,
                 Debug,
@@ -12591,23 +12591,23 @@ mod root {
                 ::serde::Serialize,
                 ::serde::Deserialize,
             )]
-            pub struct Integer {
-                /// The field `value` in the table `Integer`
+            pub struct Integer32 {
+                /// The field `value` in the table `Integer32`
                 pub value: i32,
             }
 
             #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for Integer {
+            impl ::core::default::Default for Integer32 {
                 fn default() -> Self {
                     Self { value: 0 }
                 }
             }
 
-            impl Integer {
-                /// Creates a [IntegerBuilder] for serializing an instance of this table.
+            impl Integer32 {
+                /// Creates a [Integer32Builder] for serializing an instance of this table.
                 #[inline]
-                pub fn builder() -> IntegerBuilder<()> {
-                    IntegerBuilder(())
+                pub fn builder() -> Integer32Builder<()> {
+                    Integer32Builder(())
                 }
 
                 #[allow(clippy::too_many_arguments)]
@@ -12634,138 +12634,138 @@ mod root {
                 }
             }
 
-            impl ::planus::WriteAs<::planus::Offset<Integer>> for Integer {
+            impl ::planus::WriteAs<::planus::Offset<Integer32>> for Integer32 {
                 type Prepared = ::planus::Offset<Self>;
 
                 #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Integer> {
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Integer32> {
                     ::planus::WriteAsOffset::prepare(self, builder)
                 }
             }
 
-            impl ::planus::WriteAsOptional<::planus::Offset<Integer>> for Integer {
+            impl ::planus::WriteAsOptional<::planus::Offset<Integer32>> for Integer32 {
                 type Prepared = ::planus::Offset<Self>;
 
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<Integer>> {
+                ) -> ::core::option::Option<::planus::Offset<Integer32>> {
                     ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
                 }
             }
 
-            impl ::planus::WriteAsOffset<Integer> for Integer {
+            impl ::planus::WriteAsOffset<Integer32> for Integer32 {
                 #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Integer> {
-                    Integer::create(builder, self.value)
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Integer32> {
+                    Integer32::create(builder, self.value)
                 }
             }
 
-            /// Builder for serializing an instance of the [Integer] type.
+            /// Builder for serializing an instance of the [Integer32] type.
             ///
-            /// Can be created using the [Integer::builder] method.
+            /// Can be created using the [Integer32::builder] method.
             #[derive(Debug)]
             #[must_use]
-            pub struct IntegerBuilder<State>(State);
+            pub struct Integer32Builder<State>(State);
 
-            impl IntegerBuilder<()> {
-                /// Setter for the [`value` field](Integer#structfield.value).
+            impl Integer32Builder<()> {
+                /// Setter for the [`value` field](Integer32#structfield.value).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn value<T0>(self, value: T0) -> IntegerBuilder<(T0,)>
+                pub fn value<T0>(self, value: T0) -> Integer32Builder<(T0,)>
                 where
                     T0: ::planus::WriteAsDefault<i32, i32>,
                 {
-                    IntegerBuilder((value,))
+                    Integer32Builder((value,))
                 }
 
-                /// Sets the [`value` field](Integer#structfield.value) to the default value.
+                /// Sets the [`value` field](Integer32#structfield.value) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn value_as_default(self) -> IntegerBuilder<(::planus::DefaultValue,)> {
+                pub fn value_as_default(self) -> Integer32Builder<(::planus::DefaultValue,)> {
                     self.value(::planus::DefaultValue)
                 }
             }
 
-            impl<T0> IntegerBuilder<(T0,)> {
-                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [Integer].
+            impl<T0> Integer32Builder<(T0,)> {
+                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [Integer32].
                 #[inline]
-                pub fn finish(self, builder: &mut ::planus::Builder) -> ::planus::Offset<Integer>
+                pub fn finish(self, builder: &mut ::planus::Builder) -> ::planus::Offset<Integer32>
                 where
-                    Self: ::planus::WriteAsOffset<Integer>,
+                    Self: ::planus::WriteAsOffset<Integer32>,
                 {
                     ::planus::WriteAsOffset::prepare(&self, builder)
                 }
             }
 
             impl<T0: ::planus::WriteAsDefault<i32, i32>>
-                ::planus::WriteAs<::planus::Offset<Integer>> for IntegerBuilder<(T0,)>
+                ::planus::WriteAs<::planus::Offset<Integer32>> for Integer32Builder<(T0,)>
             {
-                type Prepared = ::planus::Offset<Integer>;
+                type Prepared = ::planus::Offset<Integer32>;
 
                 #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Integer> {
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Integer32> {
                     ::planus::WriteAsOffset::prepare(self, builder)
                 }
             }
 
             impl<T0: ::planus::WriteAsDefault<i32, i32>>
-                ::planus::WriteAsOptional<::planus::Offset<Integer>> for IntegerBuilder<(T0,)>
+                ::planus::WriteAsOptional<::planus::Offset<Integer32>> for Integer32Builder<(T0,)>
             {
-                type Prepared = ::planus::Offset<Integer>;
+                type Prepared = ::planus::Offset<Integer32>;
 
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<Integer>> {
+                ) -> ::core::option::Option<::planus::Offset<Integer32>> {
                     ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<i32, i32>> ::planus::WriteAsOffset<Integer>
-                for IntegerBuilder<(T0,)>
+            impl<T0: ::planus::WriteAsDefault<i32, i32>> ::planus::WriteAsOffset<Integer32>
+                for Integer32Builder<(T0,)>
             {
                 #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Integer> {
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Integer32> {
                     let (v0,) = &self.0;
-                    Integer::create(builder, v0)
+                    Integer32::create(builder, v0)
                 }
             }
 
-            /// Reference to a deserialized [Integer].
+            /// Reference to a deserialized [Integer32].
             #[derive(Copy, Clone)]
-            pub struct IntegerRef<'a>(::planus::table_reader::Table<'a>);
+            pub struct Integer32Ref<'a>(::planus::table_reader::Table<'a>);
 
-            impl<'a> IntegerRef<'a> {
-                /// Getter for the [`value` field](Integer#structfield.value).
+            impl<'a> Integer32Ref<'a> {
+                /// Getter for the [`value` field](Integer32#structfield.value).
                 #[inline]
                 pub fn value(&self) -> ::planus::Result<i32> {
-                    ::core::result::Result::Ok(self.0.access(0, "Integer", "value")?.unwrap_or(0))
+                    ::core::result::Result::Ok(self.0.access(0, "Integer32", "value")?.unwrap_or(0))
                 }
             }
 
-            impl<'a> ::core::fmt::Debug for IntegerRef<'a> {
+            impl<'a> ::core::fmt::Debug for Integer32Ref<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("IntegerRef");
+                    let mut f = f.debug_struct("Integer32Ref");
                     f.field("value", &self.value());
                     f.finish()
                 }
             }
 
-            impl<'a> ::core::convert::TryFrom<IntegerRef<'a>> for Integer {
+            impl<'a> ::core::convert::TryFrom<Integer32Ref<'a>> for Integer32 {
                 type Error = ::planus::Error;
 
                 #[allow(unreachable_code)]
-                fn try_from(value: IntegerRef<'a>) -> ::planus::Result<Self> {
+                fn try_from(value: Integer32Ref<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         value: ::core::convert::TryInto::try_into(value.value()?)?,
                     })
                 }
             }
 
-            impl<'a> ::planus::TableRead<'a> for IntegerRef<'a> {
+            impl<'a> ::planus::TableRead<'a> for Integer32Ref<'a> {
                 #[inline]
                 fn from_buffer(
                     buffer: ::planus::SliceWithStartOffset<'a>,
@@ -12777,7 +12777,7 @@ mod root {
                 }
             }
 
-            impl<'a> ::planus::VectorReadInner<'a> for IntegerRef<'a> {
+            impl<'a> ::planus::VectorReadInner<'a> for Integer32Ref<'a> {
                 type Error = ::planus::Error;
                 const STRIDE: usize = 4;
 
@@ -12787,7 +12787,7 @@ mod root {
                 ) -> ::planus::Result<Self> {
                     ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
                         error_kind.with_error_location(
-                            "[IntegerRef]",
+                            "[Integer32Ref]",
                             "get",
                             buffer.offset_from_start,
                         )
@@ -12795,8 +12795,8 @@ mod root {
                 }
             }
 
-            impl ::planus::VectorWrite<::planus::Offset<Integer>> for Integer {
-                type Value = ::planus::Offset<Integer>;
+            impl ::planus::VectorWrite<::planus::Offset<Integer32>> for Integer32 {
+                type Value = ::planus::Offset<Integer32>;
                 const STRIDE: usize = 4;
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
@@ -12805,7 +12805,7 @@ mod root {
 
                 #[inline]
                 unsafe fn write_values(
-                    values: &[::planus::Offset<Integer>],
+                    values: &[::planus::Offset<Integer32>],
                     bytes: *mut ::core::mem::MaybeUninit<u8>,
                     buffer_position: u32,
                 ) {
@@ -12820,7 +12820,7 @@ mod root {
                 }
             }
 
-            impl<'a> ::planus::ReadAsRoot<'a> for IntegerRef<'a> {
+            impl<'a> ::planus::ReadAsRoot<'a> for Integer32Ref<'a> {
                 fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
                     ::planus::TableRead::from_buffer(
                         ::planus::SliceWithStartOffset {
@@ -12830,15 +12830,15 @@ mod root {
                         0,
                     )
                     .map_err(|error_kind| {
-                        error_kind.with_error_location("[IntegerRef]", "read_as_root", 0)
+                        error_kind.with_error_location("[Integer32Ref]", "read_as_root", 0)
                     })
                 }
             }
 
-            /// The table `IntegerArray` in the namespace `FBS.RtpParameters`
+            /// The table `Integer32Array` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `IntegerArray` in the file `../worker/fbs/rtpParameters.fbs:16`
+            /// * Table `Integer32Array` in the file `../worker/fbs/rtpParameters.fbs:16`
             #[derive(
                 Clone,
                 Debug,
@@ -12850,13 +12850,13 @@ mod root {
                 ::serde::Serialize,
                 ::serde::Deserialize,
             )]
-            pub struct IntegerArray {
-                /// The field `value` in the table `IntegerArray`
+            pub struct Integer32Array {
+                /// The field `value` in the table `Integer32Array`
                 pub value: ::core::option::Option<::planus::alloc::vec::Vec<i32>>,
             }
 
             #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for IntegerArray {
+            impl ::core::default::Default for Integer32Array {
                 fn default() -> Self {
                     Self {
                         value: ::core::default::Default::default(),
@@ -12864,11 +12864,11 @@ mod root {
                 }
             }
 
-            impl IntegerArray {
-                /// Creates a [IntegerArrayBuilder] for serializing an instance of this table.
+            impl Integer32Array {
+                /// Creates a [Integer32ArrayBuilder] for serializing an instance of this table.
                 #[inline]
-                pub fn builder() -> IntegerArrayBuilder<()> {
-                    IntegerArrayBuilder(())
+                pub fn builder() -> Integer32ArrayBuilder<()> {
+                    Integer32ArrayBuilder(())
                 }
 
                 #[allow(clippy::too_many_arguments)]
@@ -12895,140 +12895,141 @@ mod root {
                 }
             }
 
-            impl ::planus::WriteAs<::planus::Offset<IntegerArray>> for IntegerArray {
+            impl ::planus::WriteAs<::planus::Offset<Integer32Array>> for Integer32Array {
                 type Prepared = ::planus::Offset<Self>;
 
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<IntegerArray> {
+                ) -> ::planus::Offset<Integer32Array> {
                     ::planus::WriteAsOffset::prepare(self, builder)
                 }
             }
 
-            impl ::planus::WriteAsOptional<::planus::Offset<IntegerArray>> for IntegerArray {
+            impl ::planus::WriteAsOptional<::planus::Offset<Integer32Array>> for Integer32Array {
                 type Prepared = ::planus::Offset<Self>;
 
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<IntegerArray>> {
+                ) -> ::core::option::Option<::planus::Offset<Integer32Array>> {
                     ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
                 }
             }
 
-            impl ::planus::WriteAsOffset<IntegerArray> for IntegerArray {
+            impl ::planus::WriteAsOffset<Integer32Array> for Integer32Array {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<IntegerArray> {
-                    IntegerArray::create(builder, &self.value)
+                ) -> ::planus::Offset<Integer32Array> {
+                    Integer32Array::create(builder, &self.value)
                 }
             }
 
-            /// Builder for serializing an instance of the [IntegerArray] type.
+            /// Builder for serializing an instance of the [Integer32Array] type.
             ///
-            /// Can be created using the [IntegerArray::builder] method.
+            /// Can be created using the [Integer32Array::builder] method.
             #[derive(Debug)]
             #[must_use]
-            pub struct IntegerArrayBuilder<State>(State);
+            pub struct Integer32ArrayBuilder<State>(State);
 
-            impl IntegerArrayBuilder<()> {
-                /// Setter for the [`value` field](IntegerArray#structfield.value).
+            impl Integer32ArrayBuilder<()> {
+                /// Setter for the [`value` field](Integer32Array#structfield.value).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn value<T0>(self, value: T0) -> IntegerArrayBuilder<(T0,)>
+                pub fn value<T0>(self, value: T0) -> Integer32ArrayBuilder<(T0,)>
                 where
                     T0: ::planus::WriteAsOptional<::planus::Offset<[i32]>>,
                 {
-                    IntegerArrayBuilder((value,))
+                    Integer32ArrayBuilder((value,))
                 }
 
-                /// Sets the [`value` field](IntegerArray#structfield.value) to null.
+                /// Sets the [`value` field](Integer32Array#structfield.value) to null.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn value_as_null(self) -> IntegerArrayBuilder<((),)> {
+                pub fn value_as_null(self) -> Integer32ArrayBuilder<((),)> {
                     self.value(())
                 }
             }
 
-            impl<T0> IntegerArrayBuilder<(T0,)> {
-                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [IntegerArray].
+            impl<T0> Integer32ArrayBuilder<(T0,)> {
+                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [Integer32Array].
                 #[inline]
                 pub fn finish(
                     self,
                     builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<IntegerArray>
+                ) -> ::planus::Offset<Integer32Array>
                 where
-                    Self: ::planus::WriteAsOffset<IntegerArray>,
+                    Self: ::planus::WriteAsOffset<Integer32Array>,
                 {
                     ::planus::WriteAsOffset::prepare(&self, builder)
                 }
             }
 
             impl<T0: ::planus::WriteAsOptional<::planus::Offset<[i32]>>>
-                ::planus::WriteAs<::planus::Offset<IntegerArray>> for IntegerArrayBuilder<(T0,)>
+                ::planus::WriteAs<::planus::Offset<Integer32Array>>
+                for Integer32ArrayBuilder<(T0,)>
             {
-                type Prepared = ::planus::Offset<IntegerArray>;
+                type Prepared = ::planus::Offset<Integer32Array>;
 
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<IntegerArray> {
+                ) -> ::planus::Offset<Integer32Array> {
                     ::planus::WriteAsOffset::prepare(self, builder)
                 }
             }
 
             impl<T0: ::planus::WriteAsOptional<::planus::Offset<[i32]>>>
-                ::planus::WriteAsOptional<::planus::Offset<IntegerArray>>
-                for IntegerArrayBuilder<(T0,)>
+                ::planus::WriteAsOptional<::planus::Offset<Integer32Array>>
+                for Integer32ArrayBuilder<(T0,)>
             {
-                type Prepared = ::planus::Offset<IntegerArray>;
+                type Prepared = ::planus::Offset<Integer32Array>;
 
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<IntegerArray>> {
+                ) -> ::core::option::Option<::planus::Offset<Integer32Array>> {
                     ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
                 }
             }
 
             impl<T0: ::planus::WriteAsOptional<::planus::Offset<[i32]>>>
-                ::planus::WriteAsOffset<IntegerArray> for IntegerArrayBuilder<(T0,)>
+                ::planus::WriteAsOffset<Integer32Array> for Integer32ArrayBuilder<(T0,)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<IntegerArray> {
+                ) -> ::planus::Offset<Integer32Array> {
                     let (v0,) = &self.0;
-                    IntegerArray::create(builder, v0)
+                    Integer32Array::create(builder, v0)
                 }
             }
 
-            /// Reference to a deserialized [IntegerArray].
+            /// Reference to a deserialized [Integer32Array].
             #[derive(Copy, Clone)]
-            pub struct IntegerArrayRef<'a>(::planus::table_reader::Table<'a>);
+            pub struct Integer32ArrayRef<'a>(::planus::table_reader::Table<'a>);
 
-            impl<'a> IntegerArrayRef<'a> {
-                /// Getter for the [`value` field](IntegerArray#structfield.value).
+            impl<'a> Integer32ArrayRef<'a> {
+                /// Getter for the [`value` field](Integer32Array#structfield.value).
                 #[inline]
                 pub fn value(
                     &self,
                 ) -> ::planus::Result<::core::option::Option<::planus::Vector<'a, i32>>>
                 {
-                    self.0.access(0, "IntegerArray", "value")
+                    self.0.access(0, "Integer32Array", "value")
                 }
             }
 
-            impl<'a> ::core::fmt::Debug for IntegerArrayRef<'a> {
+            impl<'a> ::core::fmt::Debug for Integer32ArrayRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("IntegerArrayRef");
+                    let mut f = f.debug_struct("Integer32ArrayRef");
                     if let ::core::option::Option::Some(field_value) = self.value().transpose() {
                         f.field("value", &field_value);
                     }
@@ -13036,11 +13037,11 @@ mod root {
                 }
             }
 
-            impl<'a> ::core::convert::TryFrom<IntegerArrayRef<'a>> for IntegerArray {
+            impl<'a> ::core::convert::TryFrom<Integer32ArrayRef<'a>> for Integer32Array {
                 type Error = ::planus::Error;
 
                 #[allow(unreachable_code)]
-                fn try_from(value: IntegerArrayRef<'a>) -> ::planus::Result<Self> {
+                fn try_from(value: Integer32ArrayRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         value: if let ::core::option::Option::Some(value) = value.value()? {
                             ::core::option::Option::Some(value.to_vec()?)
@@ -13051,7 +13052,7 @@ mod root {
                 }
             }
 
-            impl<'a> ::planus::TableRead<'a> for IntegerArrayRef<'a> {
+            impl<'a> ::planus::TableRead<'a> for Integer32ArrayRef<'a> {
                 #[inline]
                 fn from_buffer(
                     buffer: ::planus::SliceWithStartOffset<'a>,
@@ -13063,7 +13064,7 @@ mod root {
                 }
             }
 
-            impl<'a> ::planus::VectorReadInner<'a> for IntegerArrayRef<'a> {
+            impl<'a> ::planus::VectorReadInner<'a> for Integer32ArrayRef<'a> {
                 type Error = ::planus::Error;
                 const STRIDE: usize = 4;
 
@@ -13073,7 +13074,7 @@ mod root {
                 ) -> ::planus::Result<Self> {
                     ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
                         error_kind.with_error_location(
-                            "[IntegerArrayRef]",
+                            "[Integer32ArrayRef]",
                             "get",
                             buffer.offset_from_start,
                         )
@@ -13081,8 +13082,8 @@ mod root {
                 }
             }
 
-            impl ::planus::VectorWrite<::planus::Offset<IntegerArray>> for IntegerArray {
-                type Value = ::planus::Offset<IntegerArray>;
+            impl ::planus::VectorWrite<::planus::Offset<Integer32Array>> for Integer32Array {
+                type Value = ::planus::Offset<Integer32Array>;
                 const STRIDE: usize = 4;
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
@@ -13091,7 +13092,7 @@ mod root {
 
                 #[inline]
                 unsafe fn write_values(
-                    values: &[::planus::Offset<IntegerArray>],
+                    values: &[::planus::Offset<Integer32Array>],
                     bytes: *mut ::core::mem::MaybeUninit<u8>,
                     buffer_position: u32,
                 ) {
@@ -13106,7 +13107,7 @@ mod root {
                 }
             }
 
-            impl<'a> ::planus::ReadAsRoot<'a> for IntegerArrayRef<'a> {
+            impl<'a> ::planus::ReadAsRoot<'a> for Integer32ArrayRef<'a> {
                 fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
                     ::planus::TableRead::from_buffer(
                         ::planus::SliceWithStartOffset {
@@ -13116,7 +13117,7 @@ mod root {
                         0,
                     )
                     .map_err(|error_kind| {
-                        error_kind.with_error_location("[IntegerArrayRef]", "read_as_root", 0)
+                        error_kind.with_error_location("[Integer32ArrayRef]", "read_as_root", 0)
                     })
                 }
             }
@@ -13624,8 +13625,8 @@ mod root {
                 /// The variant of type `Boolean` in the union `Value`
                 Boolean(::planus::alloc::boxed::Box<self::Boolean>),
 
-                /// The variant of type `Integer` in the union `Value`
-                Integer(::planus::alloc::boxed::Box<self::Integer>),
+                /// The variant of type `Integer32` in the union `Value`
+                Integer32(::planus::alloc::boxed::Box<self::Integer32>),
 
                 /// The variant of type `Double` in the union `Value`
                 Double(::planus::alloc::boxed::Box<self::Double>),
@@ -13633,8 +13634,8 @@ mod root {
                 /// The variant of type `String` in the union `Value`
                 String(::planus::alloc::boxed::Box<self::String>),
 
-                /// The variant of type `IntegerArray` in the union `Value`
-                IntegerArray(::planus::alloc::boxed::Box<self::IntegerArray>),
+                /// The variant of type `Integer32Array` in the union `Value`
+                Integer32Array(::planus::alloc::boxed::Box<self::Integer32Array>),
             }
 
             impl Value {
@@ -13653,9 +13654,9 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_integer(
+                pub fn create_integer32(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<self::Integer>,
+                    value: impl ::planus::WriteAsOffset<self::Integer32>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(2, value.prepare(builder).downcast())
                 }
@@ -13677,9 +13678,9 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_integer_array(
+                pub fn create_integer32_array(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<self::IntegerArray>,
+                    value: impl ::planus::WriteAsOffset<self::Integer32Array>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(5, value.prepare(builder).downcast())
                 }
@@ -13690,10 +13691,10 @@ mod root {
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Self> {
                     match self {
                         Self::Boolean(value) => Self::create_boolean(builder, value),
-                        Self::Integer(value) => Self::create_integer(builder, value),
+                        Self::Integer32(value) => Self::create_integer32(builder, value),
                         Self::Double(value) => Self::create_double(builder, value),
                         Self::String(value) => Self::create_string(builder, value),
-                        Self::IntegerArray(value) => Self::create_integer_array(builder, value),
+                        Self::Integer32Array(value) => Self::create_integer32_array(builder, value),
                     }
                 }
             }
@@ -13725,11 +13726,11 @@ mod root {
                     ValueBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`Integer` variant](Value#variant.Integer).
+                /// Creates an instance of the [`Integer32` variant](Value#variant.Integer32).
                 #[inline]
-                pub fn integer<T>(self, value: T) -> ValueBuilder<::planus::Initialized<2, T>>
+                pub fn integer32<T>(self, value: T) -> ValueBuilder<::planus::Initialized<2, T>>
                 where
-                    T: ::planus::WriteAsOffset<self::Integer>,
+                    T: ::planus::WriteAsOffset<self::Integer32>,
                 {
                     ValueBuilder(::planus::Initialized(value))
                 }
@@ -13752,11 +13753,14 @@ mod root {
                     ValueBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`IntegerArray` variant](Value#variant.IntegerArray).
+                /// Creates an instance of the [`Integer32Array` variant](Value#variant.Integer32Array).
                 #[inline]
-                pub fn integer_array<T>(self, value: T) -> ValueBuilder<::planus::Initialized<5, T>>
+                pub fn integer32_array<T>(
+                    self,
+                    value: T,
+                ) -> ValueBuilder<::planus::Initialized<5, T>>
                 where
-                    T: ::planus::WriteAsOffset<self::IntegerArray>,
+                    T: ::planus::WriteAsOffset<self::Integer32Array>,
                 {
                     ValueBuilder(::planus::Initialized(value))
                 }
@@ -13797,7 +13801,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Value> for ValueBuilder<::planus::Initialized<2, T>>
             where
-                T: ::planus::WriteAsOffset<self::Integer>,
+                T: ::planus::WriteAsOffset<self::Integer32>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Value> {
@@ -13807,7 +13811,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Value> for ValueBuilder<::planus::Initialized<2, T>>
             where
-                T: ::planus::WriteAsOffset<self::Integer>,
+                T: ::planus::WriteAsOffset<self::Integer32>,
             {
                 #[inline]
                 fn prepare(
@@ -13863,7 +13867,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Value> for ValueBuilder<::planus::Initialized<5, T>>
             where
-                T: ::planus::WriteAsOffset<self::IntegerArray>,
+                T: ::planus::WriteAsOffset<self::Integer32Array>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Value> {
@@ -13873,7 +13877,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Value> for ValueBuilder<::planus::Initialized<5, T>>
             where
-                T: ::planus::WriteAsOffset<self::IntegerArray>,
+                T: ::planus::WriteAsOffset<self::Integer32Array>,
             {
                 #[inline]
                 fn prepare(
@@ -13888,10 +13892,10 @@ mod root {
             #[derive(Copy, Clone, Debug)]
             pub enum ValueRef<'a> {
                 Boolean(self::BooleanRef<'a>),
-                Integer(self::IntegerRef<'a>),
+                Integer32(self::Integer32Ref<'a>),
                 Double(self::DoubleRef<'a>),
                 String(self::StringRef<'a>),
-                IntegerArray(self::IntegerArrayRef<'a>),
+                Integer32Array(self::Integer32ArrayRef<'a>),
             }
 
             impl<'a> ::core::convert::TryFrom<ValueRef<'a>> for Value {
@@ -13905,8 +13909,8 @@ mod root {
                             ))
                         }
 
-                        ValueRef::Integer(value) => {
-                            Self::Integer(::planus::alloc::boxed::Box::new(
+                        ValueRef::Integer32(value) => {
+                            Self::Integer32(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -13919,8 +13923,8 @@ mod root {
                             ::core::convert::TryFrom::try_from(value)?,
                         )),
 
-                        ValueRef::IntegerArray(value) => {
-                            Self::IntegerArray(::planus::alloc::boxed::Box::new(
+                        ValueRef::Integer32Array(value) => {
+                            Self::Integer32Array(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -13938,7 +13942,7 @@ mod root {
                         1 => ::core::result::Result::Ok(Self::Boolean(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        2 => ::core::result::Result::Ok(Self::Integer(
+                        2 => ::core::result::Result::Ok(Self::Integer32(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         3 => ::core::result::Result::Ok(Self::Double(
@@ -13947,7 +13951,7 @@ mod root {
                         4 => ::core::result::Result::Ok(Self::String(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        5 => ::core::result::Result::Ok(Self::IntegerArray(
+                        5 => ::core::result::Result::Ok(Self::Integer32Array(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         _ => ::core::result::Result::Err(
@@ -24549,6 +24553,8 @@ mod root {
                 pub paused: bool,
                 /// The field `data_producer_paused` in the table `DumpResponse`
                 pub data_producer_paused: bool,
+                /// The field `subchannels` in the table `DumpResponse`
+                pub subchannels: ::core::option::Option<::planus::alloc::vec::Vec<u16>>,
             }
 
             impl DumpResponse {
@@ -24571,6 +24577,7 @@ mod root {
                     field_protocol: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_paused: impl ::planus::WriteAsDefault<bool, bool>,
                     field_data_producer_paused: impl ::planus::WriteAsDefault<bool, bool>,
+                    field_subchannels: impl ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_id = field_id.prepare(builder);
                     let prepared_data_producer_id = field_data_producer_id.prepare(builder);
@@ -24582,8 +24589,9 @@ mod root {
                     let prepared_paused = field_paused.prepare(builder, &false);
                     let prepared_data_producer_paused =
                         field_data_producer_paused.prepare(builder, &false);
+                    let prepared_subchannels = field_subchannels.prepare(builder);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<20> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<22> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<str>>(0);
                     table_writer.write_entry::<::planus::Offset<str>>(1);
@@ -24593,6 +24601,9 @@ mod root {
                     }
                     table_writer.write_entry::<::planus::Offset<str>>(4);
                     table_writer.write_entry::<::planus::Offset<str>>(5);
+                    if prepared_subchannels.is_some() {
+                        table_writer.write_entry::<::planus::Offset<[u16]>>(8);
+                    }
                     if prepared_paused.is_some() {
                         table_writer.write_entry::<bool>(6);
                     }
@@ -24612,6 +24623,11 @@ mod root {
                             }
                             object_writer.write::<_, _, 4>(&prepared_label);
                             object_writer.write::<_, _, 4>(&prepared_protocol);
+                            if let ::core::option::Option::Some(prepared_subchannels) =
+                                prepared_subchannels
+                            {
+                                object_writer.write::<_, _, 4>(&prepared_subchannels);
+                            }
                             if let ::core::option::Option::Some(prepared_paused) = prepared_paused {
                                 object_writer.write::<_, _, 1>(&prepared_paused);
                             }
@@ -24666,6 +24682,7 @@ mod root {
                         &self.protocol,
                         self.paused,
                         self.data_producer_paused,
+                        &self.subchannels,
                     )
                 }
             }
@@ -24824,6 +24841,31 @@ mod root {
             }
 
             impl<T0, T1, T2, T3, T4, T5, T6, T7> DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)> {
+                /// Setter for the [`subchannels` field](DumpResponse#structfield.subchannels).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn subchannels<T8>(
+                    self,
+                    value: T8,
+                ) -> DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>
+                where
+                    T8: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                {
+                    let (v0, v1, v2, v3, v4, v5, v6, v7) = self.0;
+                    DumpResponseBuilder((v0, v1, v2, v3, v4, v5, v6, v7, value))
+                }
+
+                /// Sets the [`subchannels` field](DumpResponse#structfield.subchannels) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn subchannels_as_null(
+                    self,
+                ) -> DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, ())> {
+                    self.subchannels(())
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8)> {
                 /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [DumpResponse].
                 #[inline]
                 pub fn finish(
@@ -24848,8 +24890,9 @@ mod root {
                     T5: ::planus::WriteAs<::planus::Offset<str>>,
                     T6: ::planus::WriteAsDefault<bool, bool>,
                     T7: ::planus::WriteAsDefault<bool, bool>,
+                    T8: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
                 > ::planus::WriteAs<::planus::Offset<DumpResponse>>
-                for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
+                for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>
             {
                 type Prepared = ::planus::Offset<DumpResponse>;
 
@@ -24873,8 +24916,9 @@ mod root {
                     T5: ::planus::WriteAs<::planus::Offset<str>>,
                     T6: ::planus::WriteAsDefault<bool, bool>,
                     T7: ::planus::WriteAsDefault<bool, bool>,
+                    T8: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
                 > ::planus::WriteAsOptional<::planus::Offset<DumpResponse>>
-                for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
+                for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>
             {
                 type Prepared = ::planus::Offset<DumpResponse>;
 
@@ -24898,16 +24942,17 @@ mod root {
                     T5: ::planus::WriteAs<::planus::Offset<str>>,
                     T6: ::planus::WriteAsDefault<bool, bool>,
                     T7: ::planus::WriteAsDefault<bool, bool>,
+                    T8: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
                 > ::planus::WriteAsOffset<DumpResponse>
-                for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
+                for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<DumpResponse> {
-                    let (v0, v1, v2, v3, v4, v5, v6, v7) = &self.0;
-                    DumpResponse::create(builder, v0, v1, v2, v3, v4, v5, v6, v7)
+                    let (v0, v1, v2, v3, v4, v5, v6, v7, v8) = &self.0;
+                    DumpResponse::create(builder, v0, v1, v2, v3, v4, v5, v6, v7, v8)
                 }
             }
 
@@ -24974,6 +25019,15 @@ mod root {
                             .unwrap_or(false),
                     )
                 }
+
+                /// Getter for the [`subchannels` field](DumpResponse#structfield.subchannels).
+                #[inline]
+                pub fn subchannels(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<::planus::Vector<'a, u16>>>
+                {
+                    self.0.access(8, "DumpResponse", "subchannels")
+                }
             }
 
             impl<'a> ::core::fmt::Debug for DumpResponseRef<'a> {
@@ -24991,6 +25045,11 @@ mod root {
                     f.field("protocol", &self.protocol());
                     f.field("paused", &self.paused());
                     f.field("data_producer_paused", &self.data_producer_paused());
+                    if let ::core::option::Option::Some(field_subchannels) =
+                        self.subchannels().transpose()
+                    {
+                        f.field("subchannels", &field_subchannels);
+                    }
                     f.finish()
                 }
             }
@@ -25022,6 +25081,13 @@ mod root {
                         data_producer_paused: ::core::convert::TryInto::try_into(
                             value.data_producer_paused()?,
                         )?,
+                        subchannels: if let ::core::option::Option::Some(subchannels) =
+                            value.subchannels()?
+                        {
+                            ::core::option::Option::Some(subchannels.to_vec()?)
+                        } else {
+                            ::core::option::Option::None
+                        },
                     })
                 }
             }
@@ -25099,7 +25165,7 @@ mod root {
             /// The table `GetStatsResponse` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Table `GetStatsResponse` in the file `../worker/fbs/dataConsumer.fbs:25`
+            /// * Table `GetStatsResponse` in the file `../worker/fbs/dataConsumer.fbs:26`
             #[derive(
                 Clone,
                 Debug,
@@ -25608,7 +25674,7 @@ mod root {
             /// The table `String` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Table `String` in the file `../worker/fbs/dataConsumer.fbs:34`
+            /// * Table `String` in the file `../worker/fbs/dataConsumer.fbs:35`
             #[derive(
                 Clone,
                 Debug,
@@ -25849,7 +25915,7 @@ mod root {
             /// The table `Binary` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Table `Binary` in the file `../worker/fbs/dataConsumer.fbs:38`
+            /// * Table `Binary` in the file `../worker/fbs/dataConsumer.fbs:39`
             #[derive(
                 Clone,
                 Debug,
@@ -26090,7 +26156,7 @@ mod root {
             /// The union `Data` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Union `Data` in the file `../worker/fbs/dataConsumer.fbs:42`
+            /// * Union `Data` in the file `../worker/fbs/dataConsumer.fbs:43`
             #[derive(
                 Clone,
                 Debug,
@@ -26283,7 +26349,7 @@ mod root {
             /// The table `SendRequest` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Table `SendRequest` in the file `../worker/fbs/dataConsumer.fbs:47`
+            /// * Table `SendRequest` in the file `../worker/fbs/dataConsumer.fbs:48`
             #[derive(
                 Clone,
                 Debug,
@@ -26579,10 +26645,612 @@ mod root {
                 }
             }
 
+            /// The table `SetSubchannelsRequest` in the namespace `FBS.DataConsumer`
+            ///
+            /// Generated from these locations:
+            /// * Table `SetSubchannelsRequest` in the file `../worker/fbs/dataConsumer.fbs:53`
+            #[derive(
+                Clone,
+                Debug,
+                PartialEq,
+                PartialOrd,
+                Eq,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            pub struct SetSubchannelsRequest {
+                /// The field `subchannels` in the table `SetSubchannelsRequest`
+                pub subchannels: ::core::option::Option<::planus::alloc::vec::Vec<u16>>,
+            }
+
+            #[allow(clippy::derivable_impls)]
+            impl ::core::default::Default for SetSubchannelsRequest {
+                fn default() -> Self {
+                    Self {
+                        subchannels: ::core::default::Default::default(),
+                    }
+                }
+            }
+
+            impl SetSubchannelsRequest {
+                /// Creates a [SetSubchannelsRequestBuilder] for serializing an instance of this table.
+                #[inline]
+                pub fn builder() -> SetSubchannelsRequestBuilder<()> {
+                    SetSubchannelsRequestBuilder(())
+                }
+
+                #[allow(clippy::too_many_arguments)]
+                pub fn create(
+                    builder: &mut ::planus::Builder,
+                    field_subchannels: impl ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                ) -> ::planus::Offset<Self> {
+                    let prepared_subchannels = field_subchannels.prepare(builder);
+
+                    let mut table_writer: ::planus::table_writer::TableWriter<6> =
+                        ::core::default::Default::default();
+                    if prepared_subchannels.is_some() {
+                        table_writer.write_entry::<::planus::Offset<[u16]>>(0);
+                    }
+
+                    unsafe {
+                        table_writer.finish(builder, |object_writer| {
+                            if let ::core::option::Option::Some(prepared_subchannels) =
+                                prepared_subchannels
+                            {
+                                object_writer.write::<_, _, 4>(&prepared_subchannels);
+                            }
+                        });
+                    }
+                    builder.current_offset()
+                }
+            }
+
+            impl ::planus::WriteAs<::planus::Offset<SetSubchannelsRequest>> for SetSubchannelsRequest {
+                type Prepared = ::planus::Offset<Self>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetSubchannelsRequest> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl ::planus::WriteAsOptional<::planus::Offset<SetSubchannelsRequest>> for SetSubchannelsRequest {
+                type Prepared = ::planus::Offset<Self>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<SetSubchannelsRequest>>
+                {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl ::planus::WriteAsOffset<SetSubchannelsRequest> for SetSubchannelsRequest {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetSubchannelsRequest> {
+                    SetSubchannelsRequest::create(builder, &self.subchannels)
+                }
+            }
+
+            /// Builder for serializing an instance of the [SetSubchannelsRequest] type.
+            ///
+            /// Can be created using the [SetSubchannelsRequest::builder] method.
+            #[derive(Debug)]
+            #[must_use]
+            pub struct SetSubchannelsRequestBuilder<State>(State);
+
+            impl SetSubchannelsRequestBuilder<()> {
+                /// Setter for the [`subchannels` field](SetSubchannelsRequest#structfield.subchannels).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn subchannels<T0>(self, value: T0) -> SetSubchannelsRequestBuilder<(T0,)>
+                where
+                    T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                {
+                    SetSubchannelsRequestBuilder((value,))
+                }
+
+                /// Sets the [`subchannels` field](SetSubchannelsRequest#structfield.subchannels) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn subchannels_as_null(self) -> SetSubchannelsRequestBuilder<((),)> {
+                    self.subchannels(())
+                }
+            }
+
+            impl<T0> SetSubchannelsRequestBuilder<(T0,)> {
+                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [SetSubchannelsRequest].
+                #[inline]
+                pub fn finish(
+                    self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetSubchannelsRequest>
+                where
+                    Self: ::planus::WriteAsOffset<SetSubchannelsRequest>,
+                {
+                    ::planus::WriteAsOffset::prepare(&self, builder)
+                }
+            }
+
+            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+                ::planus::WriteAs<::planus::Offset<SetSubchannelsRequest>>
+                for SetSubchannelsRequestBuilder<(T0,)>
+            {
+                type Prepared = ::planus::Offset<SetSubchannelsRequest>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetSubchannelsRequest> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+                ::planus::WriteAsOptional<::planus::Offset<SetSubchannelsRequest>>
+                for SetSubchannelsRequestBuilder<(T0,)>
+            {
+                type Prepared = ::planus::Offset<SetSubchannelsRequest>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<SetSubchannelsRequest>>
+                {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+                ::planus::WriteAsOffset<SetSubchannelsRequest>
+                for SetSubchannelsRequestBuilder<(T0,)>
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetSubchannelsRequest> {
+                    let (v0,) = &self.0;
+                    SetSubchannelsRequest::create(builder, v0)
+                }
+            }
+
+            /// Reference to a deserialized [SetSubchannelsRequest].
+            #[derive(Copy, Clone)]
+            pub struct SetSubchannelsRequestRef<'a>(::planus::table_reader::Table<'a>);
+
+            impl<'a> SetSubchannelsRequestRef<'a> {
+                /// Getter for the [`subchannels` field](SetSubchannelsRequest#structfield.subchannels).
+                #[inline]
+                pub fn subchannels(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<::planus::Vector<'a, u16>>>
+                {
+                    self.0.access(0, "SetSubchannelsRequest", "subchannels")
+                }
+            }
+
+            impl<'a> ::core::fmt::Debug for SetSubchannelsRequestRef<'a> {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    let mut f = f.debug_struct("SetSubchannelsRequestRef");
+                    if let ::core::option::Option::Some(field_subchannels) =
+                        self.subchannels().transpose()
+                    {
+                        f.field("subchannels", &field_subchannels);
+                    }
+                    f.finish()
+                }
+            }
+
+            impl<'a> ::core::convert::TryFrom<SetSubchannelsRequestRef<'a>> for SetSubchannelsRequest {
+                type Error = ::planus::Error;
+
+                #[allow(unreachable_code)]
+                fn try_from(value: SetSubchannelsRequestRef<'a>) -> ::planus::Result<Self> {
+                    ::core::result::Result::Ok(Self {
+                        subchannels: if let ::core::option::Option::Some(subchannels) =
+                            value.subchannels()?
+                        {
+                            ::core::option::Option::Some(subchannels.to_vec()?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                    })
+                }
+            }
+
+            impl<'a> ::planus::TableRead<'a> for SetSubchannelsRequestRef<'a> {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
+                        buffer, offset,
+                    )?))
+                }
+            }
+
+            impl<'a> ::planus::VectorReadInner<'a> for SetSubchannelsRequestRef<'a> {
+                type Error = ::planus::Error;
+                const STRIDE: usize = 4;
+
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[SetSubchannelsRequestRef]",
+                            "get",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<::planus::Offset<SetSubchannelsRequest>> for SetSubchannelsRequest {
+                type Value = ::planus::Offset<SetSubchannelsRequest>;
+                const STRIDE: usize = 4;
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
+                    ::planus::WriteAs::prepare(self, builder)
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[::planus::Offset<SetSubchannelsRequest>],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - (Self::STRIDE * i) as u32,
+                        );
+                    }
+                }
+            }
+
+            impl<'a> ::planus::ReadAsRoot<'a> for SetSubchannelsRequestRef<'a> {
+                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(
+                        ::planus::SliceWithStartOffset {
+                            buffer: slice,
+                            offset_from_start: 0,
+                        },
+                        0,
+                    )
+                    .map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[SetSubchannelsRequestRef]",
+                            "read_as_root",
+                            0,
+                        )
+                    })
+                }
+            }
+
+            /// The table `SetSubchannelsResponse` in the namespace `FBS.DataConsumer`
+            ///
+            /// Generated from these locations:
+            /// * Table `SetSubchannelsResponse` in the file `../worker/fbs/dataConsumer.fbs:57`
+            #[derive(
+                Clone,
+                Debug,
+                PartialEq,
+                PartialOrd,
+                Eq,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            pub struct SetSubchannelsResponse {
+                /// The field `subchannels` in the table `SetSubchannelsResponse`
+                pub subchannels: ::core::option::Option<::planus::alloc::vec::Vec<u16>>,
+            }
+
+            #[allow(clippy::derivable_impls)]
+            impl ::core::default::Default for SetSubchannelsResponse {
+                fn default() -> Self {
+                    Self {
+                        subchannels: ::core::default::Default::default(),
+                    }
+                }
+            }
+
+            impl SetSubchannelsResponse {
+                /// Creates a [SetSubchannelsResponseBuilder] for serializing an instance of this table.
+                #[inline]
+                pub fn builder() -> SetSubchannelsResponseBuilder<()> {
+                    SetSubchannelsResponseBuilder(())
+                }
+
+                #[allow(clippy::too_many_arguments)]
+                pub fn create(
+                    builder: &mut ::planus::Builder,
+                    field_subchannels: impl ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                ) -> ::planus::Offset<Self> {
+                    let prepared_subchannels = field_subchannels.prepare(builder);
+
+                    let mut table_writer: ::planus::table_writer::TableWriter<6> =
+                        ::core::default::Default::default();
+                    if prepared_subchannels.is_some() {
+                        table_writer.write_entry::<::planus::Offset<[u16]>>(0);
+                    }
+
+                    unsafe {
+                        table_writer.finish(builder, |object_writer| {
+                            if let ::core::option::Option::Some(prepared_subchannels) =
+                                prepared_subchannels
+                            {
+                                object_writer.write::<_, _, 4>(&prepared_subchannels);
+                            }
+                        });
+                    }
+                    builder.current_offset()
+                }
+            }
+
+            impl ::planus::WriteAs<::planus::Offset<SetSubchannelsResponse>> for SetSubchannelsResponse {
+                type Prepared = ::planus::Offset<Self>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetSubchannelsResponse> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl ::planus::WriteAsOptional<::planus::Offset<SetSubchannelsResponse>>
+                for SetSubchannelsResponse
+            {
+                type Prepared = ::planus::Offset<Self>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<SetSubchannelsResponse>>
+                {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl ::planus::WriteAsOffset<SetSubchannelsResponse> for SetSubchannelsResponse {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetSubchannelsResponse> {
+                    SetSubchannelsResponse::create(builder, &self.subchannels)
+                }
+            }
+
+            /// Builder for serializing an instance of the [SetSubchannelsResponse] type.
+            ///
+            /// Can be created using the [SetSubchannelsResponse::builder] method.
+            #[derive(Debug)]
+            #[must_use]
+            pub struct SetSubchannelsResponseBuilder<State>(State);
+
+            impl SetSubchannelsResponseBuilder<()> {
+                /// Setter for the [`subchannels` field](SetSubchannelsResponse#structfield.subchannels).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn subchannels<T0>(self, value: T0) -> SetSubchannelsResponseBuilder<(T0,)>
+                where
+                    T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                {
+                    SetSubchannelsResponseBuilder((value,))
+                }
+
+                /// Sets the [`subchannels` field](SetSubchannelsResponse#structfield.subchannels) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn subchannels_as_null(self) -> SetSubchannelsResponseBuilder<((),)> {
+                    self.subchannels(())
+                }
+            }
+
+            impl<T0> SetSubchannelsResponseBuilder<(T0,)> {
+                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [SetSubchannelsResponse].
+                #[inline]
+                pub fn finish(
+                    self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetSubchannelsResponse>
+                where
+                    Self: ::planus::WriteAsOffset<SetSubchannelsResponse>,
+                {
+                    ::planus::WriteAsOffset::prepare(&self, builder)
+                }
+            }
+
+            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+                ::planus::WriteAs<::planus::Offset<SetSubchannelsResponse>>
+                for SetSubchannelsResponseBuilder<(T0,)>
+            {
+                type Prepared = ::planus::Offset<SetSubchannelsResponse>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetSubchannelsResponse> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+                ::planus::WriteAsOptional<::planus::Offset<SetSubchannelsResponse>>
+                for SetSubchannelsResponseBuilder<(T0,)>
+            {
+                type Prepared = ::planus::Offset<SetSubchannelsResponse>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<SetSubchannelsResponse>>
+                {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+                ::planus::WriteAsOffset<SetSubchannelsResponse>
+                for SetSubchannelsResponseBuilder<(T0,)>
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<SetSubchannelsResponse> {
+                    let (v0,) = &self.0;
+                    SetSubchannelsResponse::create(builder, v0)
+                }
+            }
+
+            /// Reference to a deserialized [SetSubchannelsResponse].
+            #[derive(Copy, Clone)]
+            pub struct SetSubchannelsResponseRef<'a>(::planus::table_reader::Table<'a>);
+
+            impl<'a> SetSubchannelsResponseRef<'a> {
+                /// Getter for the [`subchannels` field](SetSubchannelsResponse#structfield.subchannels).
+                #[inline]
+                pub fn subchannels(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<::planus::Vector<'a, u16>>>
+                {
+                    self.0.access(0, "SetSubchannelsResponse", "subchannels")
+                }
+            }
+
+            impl<'a> ::core::fmt::Debug for SetSubchannelsResponseRef<'a> {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    let mut f = f.debug_struct("SetSubchannelsResponseRef");
+                    if let ::core::option::Option::Some(field_subchannels) =
+                        self.subchannels().transpose()
+                    {
+                        f.field("subchannels", &field_subchannels);
+                    }
+                    f.finish()
+                }
+            }
+
+            impl<'a> ::core::convert::TryFrom<SetSubchannelsResponseRef<'a>> for SetSubchannelsResponse {
+                type Error = ::planus::Error;
+
+                #[allow(unreachable_code)]
+                fn try_from(value: SetSubchannelsResponseRef<'a>) -> ::planus::Result<Self> {
+                    ::core::result::Result::Ok(Self {
+                        subchannels: if let ::core::option::Option::Some(subchannels) =
+                            value.subchannels()?
+                        {
+                            ::core::option::Option::Some(subchannels.to_vec()?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                    })
+                }
+            }
+
+            impl<'a> ::planus::TableRead<'a> for SetSubchannelsResponseRef<'a> {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
+                        buffer, offset,
+                    )?))
+                }
+            }
+
+            impl<'a> ::planus::VectorReadInner<'a> for SetSubchannelsResponseRef<'a> {
+                type Error = ::planus::Error;
+                const STRIDE: usize = 4;
+
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[SetSubchannelsResponseRef]",
+                            "get",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<::planus::Offset<SetSubchannelsResponse>> for SetSubchannelsResponse {
+                type Value = ::planus::Offset<SetSubchannelsResponse>;
+                const STRIDE: usize = 4;
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
+                    ::planus::WriteAs::prepare(self, builder)
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[::planus::Offset<SetSubchannelsResponse>],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - (Self::STRIDE * i) as u32,
+                        );
+                    }
+                }
+            }
+
+            impl<'a> ::planus::ReadAsRoot<'a> for SetSubchannelsResponseRef<'a> {
+                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(
+                        ::planus::SliceWithStartOffset {
+                            buffer: slice,
+                            offset_from_start: 0,
+                        },
+                        0,
+                    )
+                    .map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[SetSubchannelsResponseRef]",
+                            "read_as_root",
+                            0,
+                        )
+                    })
+                }
+            }
+
             /// The table `BufferedAmountLowNotification` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Table `BufferedAmountLowNotification` in the file `../worker/fbs/dataConsumer.fbs:54`
+            /// * Table `BufferedAmountLowNotification` in the file `../worker/fbs/dataConsumer.fbs:63`
             #[derive(
                 Clone,
                 Debug,
@@ -26887,7 +27555,7 @@ mod root {
             /// The table `MessageNotification` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Table `MessageNotification` in the file `../worker/fbs/dataConsumer.fbs:58`
+            /// * Table `MessageNotification` in the file `../worker/fbs/dataConsumer.fbs:67`
             #[derive(
                 Clone,
                 Debug,
@@ -30311,6 +30979,10 @@ mod root {
                 pub ppid: u8,
                 /// The field `data` in the table `SendNotification`
                 pub data: self::Data,
+                /// The field `subchannels` in the table `SendNotification`
+                pub subchannels: ::core::option::Option<::planus::alloc::vec::Vec<u16>>,
+                /// The field `required_subchannel` in the table `SendNotification`
+                pub required_subchannel: ::core::option::Option<u16>,
             }
 
             impl SendNotification {
@@ -30325,13 +30997,23 @@ mod root {
                     builder: &mut ::planus::Builder,
                     field_ppid: impl ::planus::WriteAsDefault<u8, u8>,
                     field_data: impl ::planus::WriteAsUnion<self::Data>,
+                    field_subchannels: impl ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                    field_required_subchannel: impl ::planus::WriteAsOptional<u16>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_ppid = field_ppid.prepare(builder, &0);
                     let prepared_data = field_data.prepare(builder);
+                    let prepared_subchannels = field_subchannels.prepare(builder);
+                    let prepared_required_subchannel = field_required_subchannel.prepare(builder);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<10> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<14> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<self::Data>>(2);
+                    if prepared_subchannels.is_some() {
+                        table_writer.write_entry::<::planus::Offset<[u16]>>(3);
+                    }
+                    if prepared_required_subchannel.is_some() {
+                        table_writer.write_entry::<u16>(4);
+                    }
                     if prepared_ppid.is_some() {
                         table_writer.write_entry::<u8>(0);
                     }
@@ -30340,6 +31022,16 @@ mod root {
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_data.offset());
+                            if let ::core::option::Option::Some(prepared_subchannels) =
+                                prepared_subchannels
+                            {
+                                object_writer.write::<_, _, 4>(&prepared_subchannels);
+                            }
+                            if let ::core::option::Option::Some(prepared_required_subchannel) =
+                                prepared_required_subchannel
+                            {
+                                object_writer.write::<_, _, 2>(&prepared_required_subchannel);
+                            }
                             if let ::core::option::Option::Some(prepared_ppid) = prepared_ppid {
                                 object_writer.write::<_, _, 1>(&prepared_ppid);
                             }
@@ -30380,7 +31072,13 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<SendNotification> {
-                    SendNotification::create(builder, self.ppid, &self.data)
+                    SendNotification::create(
+                        builder,
+                        self.ppid,
+                        &self.data,
+                        &self.subchannels,
+                        self.required_subchannel,
+                    )
                 }
             }
 
@@ -30424,6 +31122,51 @@ mod root {
             }
 
             impl<T0, T1> SendNotificationBuilder<(T0, T1)> {
+                /// Setter for the [`subchannels` field](SendNotification#structfield.subchannels).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn subchannels<T2>(self, value: T2) -> SendNotificationBuilder<(T0, T1, T2)>
+                where
+                    T2: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                {
+                    let (v0, v1) = self.0;
+                    SendNotificationBuilder((v0, v1, value))
+                }
+
+                /// Sets the [`subchannels` field](SendNotification#structfield.subchannels) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn subchannels_as_null(self) -> SendNotificationBuilder<(T0, T1, ())> {
+                    self.subchannels(())
+                }
+            }
+
+            impl<T0, T1, T2> SendNotificationBuilder<(T0, T1, T2)> {
+                /// Setter for the [`required_subchannel` field](SendNotification#structfield.required_subchannel).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn required_subchannel<T3>(
+                    self,
+                    value: T3,
+                ) -> SendNotificationBuilder<(T0, T1, T2, T3)>
+                where
+                    T3: ::planus::WriteAsOptional<u16>,
+                {
+                    let (v0, v1, v2) = self.0;
+                    SendNotificationBuilder((v0, v1, v2, value))
+                }
+
+                /// Sets the [`required_subchannel` field](SendNotification#structfield.required_subchannel) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn required_subchannel_as_null(
+                    self,
+                ) -> SendNotificationBuilder<(T0, T1, T2, ())> {
+                    self.required_subchannel(())
+                }
+            }
+
+            impl<T0, T1, T2, T3> SendNotificationBuilder<(T0, T1, T2, T3)> {
                 /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [SendNotification].
                 #[inline]
                 pub fn finish(
@@ -30437,9 +31180,13 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<u8, u8>, T1: ::planus::WriteAsUnion<self::Data>>
-                ::planus::WriteAs<::planus::Offset<SendNotification>>
-                for SendNotificationBuilder<(T0, T1)>
+            impl<
+                    T0: ::planus::WriteAsDefault<u8, u8>,
+                    T1: ::planus::WriteAsUnion<self::Data>,
+                    T2: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                    T3: ::planus::WriteAsOptional<u16>,
+                > ::planus::WriteAs<::planus::Offset<SendNotification>>
+                for SendNotificationBuilder<(T0, T1, T2, T3)>
             {
                 type Prepared = ::planus::Offset<SendNotification>;
 
@@ -30452,9 +31199,13 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<u8, u8>, T1: ::planus::WriteAsUnion<self::Data>>
-                ::planus::WriteAsOptional<::planus::Offset<SendNotification>>
-                for SendNotificationBuilder<(T0, T1)>
+            impl<
+                    T0: ::planus::WriteAsDefault<u8, u8>,
+                    T1: ::planus::WriteAsUnion<self::Data>,
+                    T2: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                    T3: ::planus::WriteAsOptional<u16>,
+                > ::planus::WriteAsOptional<::planus::Offset<SendNotification>>
+                for SendNotificationBuilder<(T0, T1, T2, T3)>
             {
                 type Prepared = ::planus::Offset<SendNotification>;
 
@@ -30467,16 +31218,21 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<u8, u8>, T1: ::planus::WriteAsUnion<self::Data>>
-                ::planus::WriteAsOffset<SendNotification> for SendNotificationBuilder<(T0, T1)>
+            impl<
+                    T0: ::planus::WriteAsDefault<u8, u8>,
+                    T1: ::planus::WriteAsUnion<self::Data>,
+                    T2: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                    T3: ::planus::WriteAsOptional<u16>,
+                > ::planus::WriteAsOffset<SendNotification>
+                for SendNotificationBuilder<(T0, T1, T2, T3)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<SendNotification> {
-                    let (v0, v1) = &self.0;
-                    SendNotification::create(builder, v0, v1)
+                    let (v0, v1, v2, v3) = &self.0;
+                    SendNotification::create(builder, v0, v1, v2, v3)
                 }
             }
 
@@ -30498,6 +31254,21 @@ mod root {
                 pub fn data(&self) -> ::planus::Result<self::DataRef<'a>> {
                     self.0.access_union_required(1, "SendNotification", "data")
                 }
+
+                /// Getter for the [`subchannels` field](SendNotification#structfield.subchannels).
+                #[inline]
+                pub fn subchannels(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<::planus::Vector<'a, u16>>>
+                {
+                    self.0.access(3, "SendNotification", "subchannels")
+                }
+
+                /// Getter for the [`required_subchannel` field](SendNotification#structfield.required_subchannel).
+                #[inline]
+                pub fn required_subchannel(&self) -> ::planus::Result<::core::option::Option<u16>> {
+                    self.0.access(4, "SendNotification", "required_subchannel")
+                }
             }
 
             impl<'a> ::core::fmt::Debug for SendNotificationRef<'a> {
@@ -30505,6 +31276,16 @@ mod root {
                     let mut f = f.debug_struct("SendNotificationRef");
                     f.field("ppid", &self.ppid());
                     f.field("data", &self.data());
+                    if let ::core::option::Option::Some(field_subchannels) =
+                        self.subchannels().transpose()
+                    {
+                        f.field("subchannels", &field_subchannels);
+                    }
+                    if let ::core::option::Option::Some(field_required_subchannel) =
+                        self.required_subchannel().transpose()
+                    {
+                        f.field("required_subchannel", &field_required_subchannel);
+                    }
                     f.finish()
                 }
             }
@@ -30517,6 +31298,23 @@ mod root {
                     ::core::result::Result::Ok(Self {
                         ppid: ::core::convert::TryInto::try_into(value.ppid()?)?,
                         data: ::core::convert::TryInto::try_into(value.data()?)?,
+                        subchannels: if let ::core::option::Option::Some(subchannels) =
+                            value.subchannels()?
+                        {
+                            ::core::option::Option::Some(subchannels.to_vec()?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        required_subchannel: if let ::core::option::Option::Some(
+                            required_subchannel,
+                        ) = value.required_subchannel()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                required_subchannel,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
                     })
                 }
             }
@@ -35250,6 +36048,8 @@ mod root {
                 pub protocol: ::core::option::Option<::planus::alloc::string::String>,
                 /// The field `paused` in the table `ConsumeDataRequest`
                 pub paused: bool,
+                /// The field `subchannels` in the table `ConsumeDataRequest`
+                pub subchannels: ::core::option::Option<::planus::alloc::vec::Vec<u16>>,
             }
 
             impl ConsumeDataRequest {
@@ -35275,6 +36075,7 @@ mod root {
                         ::planus::Offset<::core::primitive::str>,
                     >,
                     field_paused: impl ::planus::WriteAsDefault<bool, bool>,
+                    field_subchannels: impl ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_data_consumer_id = field_data_consumer_id.prepare(builder);
                     let prepared_data_producer_id = field_data_producer_id.prepare(builder);
@@ -35284,8 +36085,9 @@ mod root {
                     let prepared_label = field_label.prepare(builder);
                     let prepared_protocol = field_protocol.prepare(builder);
                     let prepared_paused = field_paused.prepare(builder, &false);
+                    let prepared_subchannels = field_subchannels.prepare(builder);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<18> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<20> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<str>>(0);
                     table_writer.write_entry::<::planus::Offset<str>>(1);
@@ -35298,6 +36100,9 @@ mod root {
                     }
                     if prepared_protocol.is_some() {
                         table_writer.write_entry::<::planus::Offset<str>>(5);
+                    }
+                    if prepared_subchannels.is_some() {
+                        table_writer.write_entry::<::planus::Offset<[u16]>>(7);
                     }
                     if prepared_paused.is_some() {
                         table_writer.write_entry::<bool>(6);
@@ -35320,6 +36125,11 @@ mod root {
                                 prepared_protocol
                             {
                                 object_writer.write::<_, _, 4>(&prepared_protocol);
+                            }
+                            if let ::core::option::Option::Some(prepared_subchannels) =
+                                prepared_subchannels
+                            {
+                                object_writer.write::<_, _, 4>(&prepared_subchannels);
                             }
                             if let ::core::option::Option::Some(prepared_paused) = prepared_paused {
                                 object_writer.write::<_, _, 1>(&prepared_paused);
@@ -35369,6 +36179,7 @@ mod root {
                         &self.label,
                         &self.protocol,
                         self.paused,
+                        &self.subchannels,
                     )
                 }
             }
@@ -35517,6 +36328,31 @@ mod root {
             }
 
             impl<T0, T1, T2, T3, T4, T5, T6> ConsumeDataRequestBuilder<(T0, T1, T2, T3, T4, T5, T6)> {
+                /// Setter for the [`subchannels` field](ConsumeDataRequest#structfield.subchannels).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn subchannels<T7>(
+                    self,
+                    value: T7,
+                ) -> ConsumeDataRequestBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
+                where
+                    T7: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                {
+                    let (v0, v1, v2, v3, v4, v5, v6) = self.0;
+                    ConsumeDataRequestBuilder((v0, v1, v2, v3, v4, v5, v6, value))
+                }
+
+                /// Sets the [`subchannels` field](ConsumeDataRequest#structfield.subchannels) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn subchannels_as_null(
+                    self,
+                ) -> ConsumeDataRequestBuilder<(T0, T1, T2, T3, T4, T5, T6, ())> {
+                    self.subchannels(())
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6, T7> ConsumeDataRequestBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)> {
                 /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [ConsumeDataRequest].
                 #[inline]
                 pub fn finish(
@@ -35540,8 +36376,9 @@ mod root {
                     T4: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T6: ::planus::WriteAsDefault<bool, bool>,
+                    T7: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
                 > ::planus::WriteAs<::planus::Offset<ConsumeDataRequest>>
-                for ConsumeDataRequestBuilder<(T0, T1, T2, T3, T4, T5, T6)>
+                for ConsumeDataRequestBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
                 type Prepared = ::planus::Offset<ConsumeDataRequest>;
 
@@ -35564,8 +36401,9 @@ mod root {
                     T4: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T6: ::planus::WriteAsDefault<bool, bool>,
+                    T7: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
                 > ::planus::WriteAsOptional<::planus::Offset<ConsumeDataRequest>>
-                for ConsumeDataRequestBuilder<(T0, T1, T2, T3, T4, T5, T6)>
+                for ConsumeDataRequestBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
                 type Prepared = ::planus::Offset<ConsumeDataRequest>;
 
@@ -35588,16 +36426,17 @@ mod root {
                     T4: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T5: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     T6: ::planus::WriteAsDefault<bool, bool>,
+                    T7: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
                 > ::planus::WriteAsOffset<ConsumeDataRequest>
-                for ConsumeDataRequestBuilder<(T0, T1, T2, T3, T4, T5, T6)>
+                for ConsumeDataRequestBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<ConsumeDataRequest> {
-                    let (v0, v1, v2, v3, v4, v5, v6) = &self.0;
-                    ConsumeDataRequest::create(builder, v0, v1, v2, v3, v4, v5, v6)
+                    let (v0, v1, v2, v3, v4, v5, v6, v7) = &self.0;
+                    ConsumeDataRequest::create(builder, v0, v1, v2, v3, v4, v5, v6, v7)
                 }
             }
 
@@ -35664,6 +36503,15 @@ mod root {
                             .unwrap_or(false),
                     )
                 }
+
+                /// Getter for the [`subchannels` field](ConsumeDataRequest#structfield.subchannels).
+                #[inline]
+                pub fn subchannels(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<::planus::Vector<'a, u16>>>
+                {
+                    self.0.access(7, "ConsumeDataRequest", "subchannels")
+                }
             }
 
             impl<'a> ::core::fmt::Debug for ConsumeDataRequestRef<'a> {
@@ -35686,6 +36534,11 @@ mod root {
                         f.field("protocol", &field_protocol);
                     }
                     f.field("paused", &self.paused());
+                    if let ::core::option::Option::Some(field_subchannels) =
+                        self.subchannels().transpose()
+                    {
+                        f.field("subchannels", &field_subchannels);
+                    }
                     f.finish()
                 }
             }
@@ -35728,6 +36581,13 @@ mod root {
                             ::core::option::Option::None
                         },
                         paused: ::core::convert::TryInto::try_into(value.paused()?)?,
+                        subchannels: if let ::core::option::Option::Some(subchannels) =
+                            value.subchannels()?
+                        {
+                            ::core::option::Option::Some(subchannels.to_vec()?)
+                        } else {
+                            ::core::option::Option::None
+                        },
                     })
                 }
             }
@@ -35805,7 +36665,7 @@ mod root {
             /// The table `Tuple` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Tuple` in the file `../worker/fbs/transport.fbs:77`
+            /// * Table `Tuple` in the file `../worker/fbs/transport.fbs:78`
             #[derive(
                 Clone,
                 Debug,
@@ -36259,7 +37119,7 @@ mod root {
             /// The table `SrtpParameters` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SrtpParameters` in the file `../worker/fbs/transport.fbs:85`
+            /// * Table `SrtpParameters` in the file `../worker/fbs/transport.fbs:86`
             #[derive(
                 Clone,
                 Debug,
@@ -36550,7 +37410,7 @@ mod root {
             /// The table `RtpListener` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `RtpListener` in the file `../worker/fbs/transport.fbs:90`
+            /// * Table `RtpListener` in the file `../worker/fbs/transport.fbs:91`
             #[derive(
                 Clone,
                 Debug,
@@ -36913,7 +37773,7 @@ mod root {
             /// The table `SctpListener` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SctpListener` in the file `../worker/fbs/transport.fbs:96`
+            /// * Table `SctpListener` in the file `../worker/fbs/transport.fbs:97`
             #[derive(
                 Clone,
                 Debug,
@@ -37187,7 +38047,7 @@ mod root {
             /// The table `RecvRtpHeaderExtensions` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `RecvRtpHeaderExtensions` in the file `../worker/fbs/transport.fbs:100`
+            /// * Table `RecvRtpHeaderExtensions` in the file `../worker/fbs/transport.fbs:101`
             #[derive(
                 Clone,
                 Debug,
@@ -37710,7 +38570,7 @@ mod root {
             /// The table `Options` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Options` in the file `../worker/fbs/transport.fbs:108`
+            /// * Table `Options` in the file `../worker/fbs/transport.fbs:109`
             #[derive(
                 Clone,
                 Debug,
@@ -38391,7 +39251,7 @@ mod root {
             /// The table `Dump` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:119`
+            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:120`
             #[derive(
                 Clone,
                 Debug,
@@ -39428,7 +40288,7 @@ mod root {
             /// The table `Stats` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:137`
+            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:138`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -42065,7 +42925,7 @@ mod root {
             /// The table `SetMaxIncomingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:164`
+            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:165`
             #[derive(
                 Clone,
                 Debug,
@@ -42373,7 +43233,7 @@ mod root {
             /// The table `SetMaxOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:168`
+            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:169`
             #[derive(
                 Clone,
                 Debug,
@@ -42681,7 +43541,7 @@ mod root {
             /// The table `SetMinOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:172`
+            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:173`
             #[derive(
                 Clone,
                 Debug,
@@ -42989,7 +43849,7 @@ mod root {
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:176`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:177`
             #[derive(
                 Clone,
                 Debug,
@@ -43261,7 +44121,7 @@ mod root {
             /// The table `CloseProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:180`
+            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:181`
             #[derive(
                 Clone,
                 Debug,
@@ -43527,7 +44387,7 @@ mod root {
             /// The table `CloseConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:184`
+            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:185`
             #[derive(
                 Clone,
                 Debug,
@@ -43793,7 +44653,7 @@ mod root {
             /// The table `CloseDataProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:188`
+            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:189`
             #[derive(
                 Clone,
                 Debug,
@@ -44068,7 +44928,7 @@ mod root {
             /// The table `CloseDataConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:192`
+            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:193`
             #[derive(
                 Clone,
                 Debug,
@@ -44343,7 +45203,7 @@ mod root {
             /// The table `SendRtcpNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:198`
+            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:199`
             #[derive(
                 Clone,
                 Debug,
@@ -44608,7 +45468,7 @@ mod root {
             /// The table `SctpStateChangeNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:204`
+            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:205`
             #[derive(
                 Clone,
                 Debug,
@@ -44929,7 +45789,7 @@ mod root {
             /// The enum `TraceType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceType` in the file `../worker/fbs/transport.fbs:208`
+            /// * Enum `TraceType` in the file `../worker/fbs/transport.fbs:209`
             #[derive(
                 Copy,
                 Clone,
@@ -45099,7 +45959,7 @@ mod root {
             /// The enum `TraceDirection` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceDirection` in the file `../worker/fbs/transport.fbs:210`
+            /// * Enum `TraceDirection` in the file `../worker/fbs/transport.fbs:211`
             #[derive(
                 Copy,
                 Clone,
@@ -45269,7 +46129,7 @@ mod root {
             /// The union `TraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:212`
+            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:213`
             #[derive(
                 Clone,
                 Debug,
@@ -45422,7 +46282,7 @@ mod root {
             /// The enum `BweType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:216`
+            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:217`
             #[derive(
                 Copy,
                 Clone,
@@ -45592,7 +46452,7 @@ mod root {
             /// The table `BweTraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:218`
+            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:219`
             #[derive(
                 Clone,
                 Debug,
@@ -46275,7 +47135,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:229`
+            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:230`
             #[derive(
                 Clone,
                 Debug,
@@ -50040,22 +50900,25 @@ mod root {
                 /// The variant `DATACONSUMER_SEND` in the enum `Method`
                 DataconsumerSend = 61,
 
+                /// The variant `DATACONSUMER_SET_SUBCHANNELS` in the enum `Method`
+                DataconsumerSetSubchannels = 62,
+
                 /// The variant `RTPOBSERVER_PAUSE` in the enum `Method`
-                RtpobserverPause = 62,
+                RtpobserverPause = 63,
 
                 /// The variant `RTPOBSERVER_RESUME` in the enum `Method`
-                RtpobserverResume = 63,
+                RtpobserverResume = 64,
 
                 /// The variant `RTPOBSERVER_ADD_PRODUCER` in the enum `Method`
-                RtpobserverAddProducer = 64,
+                RtpobserverAddProducer = 65,
 
                 /// The variant `RTPOBSERVER_REMOVE_PRODUCER` in the enum `Method`
-                RtpobserverRemoveProducer = 65,
+                RtpobserverRemoveProducer = 66,
             }
 
             impl Method {
                 /// Array containing all valid variants of Method
-                pub const ENUM_VALUES: [Self; 66] = [
+                pub const ENUM_VALUES: [Self; 67] = [
                     Self::WorkerClose,
                     Self::WorkerDump,
                     Self::WorkerGetResourceUsage,
@@ -50118,6 +50981,7 @@ mod root {
                     Self::DataconsumerGetBufferedAmount,
                     Self::DataconsumerSetBufferedAmountLowThreshold,
                     Self::DataconsumerSend,
+                    Self::DataconsumerSetSubchannels,
                     Self::RtpobserverPause,
                     Self::RtpobserverResume,
                     Self::RtpobserverAddProducer,
@@ -50200,10 +51064,11 @@ mod root {
                             Method::DataconsumerSetBufferedAmountLowThreshold,
                         ),
                         61 => ::core::result::Result::Ok(Method::DataconsumerSend),
-                        62 => ::core::result::Result::Ok(Method::RtpobserverPause),
-                        63 => ::core::result::Result::Ok(Method::RtpobserverResume),
-                        64 => ::core::result::Result::Ok(Method::RtpobserverAddProducer),
-                        65 => ::core::result::Result::Ok(Method::RtpobserverRemoveProducer),
+                        62 => ::core::result::Result::Ok(Method::DataconsumerSetSubchannels),
+                        63 => ::core::result::Result::Ok(Method::RtpobserverPause),
+                        64 => ::core::result::Result::Ok(Method::RtpobserverResume),
+                        65 => ::core::result::Result::Ok(Method::RtpobserverAddProducer),
+                        66 => ::core::result::Result::Ok(Method::RtpobserverRemoveProducer),
 
                         _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
                             tag: value as i128,
@@ -50336,7 +51201,7 @@ mod root {
             /// The union `Body` in the namespace `FBS.Request`
             ///
             /// Generated from these locations:
-            /// * Union `Body` in the file `../worker/fbs/request.fbs:80`
+            /// * Union `Body` in the file `../worker/fbs/request.fbs:81`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -50494,6 +51359,11 @@ mod root {
 
                 /// The variant of type `FBS.DataConsumer.SendRequest` in the union `Body`
                 SendRequest(::planus::alloc::boxed::Box<super::data_consumer::SendRequest>),
+
+                /// The variant of type `FBS.DataConsumer.SetSubchannelsRequest` in the union `Body`
+                SetSubchannelsRequest(
+                    ::planus::alloc::boxed::Box<super::data_consumer::SetSubchannelsRequest>,
+                ),
 
                 /// The variant of type `FBS.RtpObserver.AddProducerRequest` in the union `Body`
                 AddProducerRequest(
@@ -50774,11 +51644,19 @@ mod root {
                 }
 
                 #[inline]
+                pub fn create_set_subchannels_request(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsRequest>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(33, value.prepare(builder).downcast())
+                }
+
+                #[inline]
                 pub fn create_add_producer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(33, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(34, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -50786,7 +51664,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(34, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(35, value.prepare(builder).downcast())
                 }
             }
 
@@ -50882,6 +51760,9 @@ mod root {
                             Self::create_set_buffered_amount_low_threshold_request(builder, value)
                         }
                         Self::SendRequest(value) => Self::create_send_request(builder, value),
+                        Self::SetSubchannelsRequest(value) => {
+                            Self::create_set_subchannels_request(builder, value)
+                        }
                         Self::AddProducerRequest(value) => {
                             Self::create_add_producer_request(builder, value)
                         }
@@ -51293,12 +52174,24 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
+                /// Creates an instance of the [`SetSubchannelsRequest` variant](Body#variant.SetSubchannelsRequest).
+                #[inline]
+                pub fn set_subchannels_request<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<33, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsRequest>,
+                {
+                    BodyBuilder(::planus::Initialized(value))
+                }
+
                 /// Creates an instance of the [`AddProducerRequest` variant](Body#variant.AddProducerRequest).
                 #[inline]
                 pub fn add_producer_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<33, T>>
+                ) -> BodyBuilder<::planus::Initialized<34, T>>
                 where
                     T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
                 {
@@ -51310,7 +52203,7 @@ mod root {
                 pub fn remove_producer_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<34, T>>
+                ) -> BodyBuilder<::planus::Initialized<35, T>>
                 where
                     T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
                 {
@@ -52039,7 +52932,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<33, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+                T: ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -52049,7 +52942,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<33, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+                T: ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -52061,7 +52954,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<34, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
+                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -52070,6 +52963,28 @@ mod root {
             }
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<34, T>>
+            where
+                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Body>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<35, T>>
+            where
+                T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
+                    ::planus::UnionOffset::new(35, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<35, T>>
             where
                 T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
             {
@@ -52123,6 +53038,7 @@ mod root {
                     super::data_consumer::SetBufferedAmountLowThresholdRequestRef<'a>,
                 ),
                 SendRequest(super::data_consumer::SendRequestRef<'a>),
+                SetSubchannelsRequest(super::data_consumer::SetSubchannelsRequestRef<'a>),
                 AddProducerRequest(super::rtp_observer::AddProducerRequestRef<'a>),
                 RemoveProducerRequest(super::rtp_observer::RemoveProducerRequestRef<'a>),
             }
@@ -52328,6 +53244,12 @@ mod root {
                             ))
                         }
 
+                        BodyRef::SetSubchannelsRequest(value) => {
+                            Self::SetSubchannelsRequest(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
                         BodyRef::AddProducerRequest(value) => {
                             Self::AddProducerRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
@@ -52448,10 +53370,13 @@ mod root {
                         32 => ::core::result::Result::Ok(Self::SendRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        33 => ::core::result::Result::Ok(Self::AddProducerRequest(
+                        33 => ::core::result::Result::Ok(Self::SetSubchannelsRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        34 => ::core::result::Result::Ok(Self::RemoveProducerRequest(
+                        34 => ::core::result::Result::Ok(Self::AddProducerRequest(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        35 => ::core::result::Result::Ok(Self::RemoveProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         _ => ::core::result::Result::Err(
@@ -52464,7 +53389,7 @@ mod root {
             /// The table `Request` in the namespace `FBS.Request`
             ///
             /// Generated from these locations:
-            /// * Table `Request` in the file `../worker/fbs/request.fbs:119`
+            /// * Table `Request` in the file `../worker/fbs/request.fbs:121`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -52987,6 +53912,11 @@ mod root {
                 FbsDataConsumerGetStatsResponse(
                     ::planus::alloc::boxed::Box<super::data_consumer::GetStatsResponse>,
                 ),
+
+                /// The variant `FBS_DataConsumer_SetSubchannelsResponse` in the union `Body`
+                FbsDataConsumerSetSubchannelsResponse(
+                    ::planus::alloc::boxed::Box<super::data_consumer::SetSubchannelsResponse>,
+                ),
             }
 
             impl Body {
@@ -53227,6 +54157,14 @@ mod root {
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(29, value.prepare(builder).downcast())
                 }
+
+                #[inline]
+                pub fn create_fbs_data_consumer_set_subchannels_response(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsResponse>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(30, value.prepare(builder).downcast())
+                }
             }
 
             impl ::planus::WriteAsUnion<Body> for Body {
@@ -53321,6 +54259,9 @@ mod root {
                         }
                         Self::FbsDataConsumerGetStatsResponse(value) => {
                             Self::create_fbs_data_consumer_get_stats_response(builder, value)
+                        }
+                        Self::FbsDataConsumerSetSubchannelsResponse(value) => {
+                            Self::create_fbs_data_consumer_set_subchannels_response(builder, value)
                         }
                     }
                 }
@@ -53688,6 +54629,18 @@ mod root {
                 ) -> BodyBuilder<::planus::Initialized<29, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::GetStatsResponse>,
+                {
+                    BodyBuilder(::planus::Initialized(value))
+                }
+
+                /// Creates an instance of the [`FBS_DataConsumer_SetSubchannelsResponse` variant](Body#variant.FbsDataConsumerSetSubchannelsResponse).
+                #[inline]
+                pub fn fbs_data_consumer_set_subchannels_response<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<30, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsResponse>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
@@ -54342,6 +55295,28 @@ mod root {
                     ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
                 }
             }
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<30, T>>
+            where
+                T: ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsResponse>,
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
+                    ::planus::UnionOffset::new(30, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<30, T>>
+            where
+                T: ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsResponse>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Body>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
 
             /// Reference to a deserialized [Body].
             #[derive(Copy, Clone, Debug)]
@@ -54383,6 +55358,9 @@ mod root {
                 ),
                 FbsDataConsumerDumpResponse(super::data_consumer::DumpResponseRef<'a>),
                 FbsDataConsumerGetStatsResponse(super::data_consumer::GetStatsResponseRef<'a>),
+                FbsDataConsumerSetSubchannelsResponse(
+                    super::data_consumer::SetSubchannelsResponseRef<'a>,
+                ),
             }
 
             impl<'a> ::core::convert::TryFrom<BodyRef<'a>> for Body {
@@ -54579,6 +55557,14 @@ mod root {
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
+
+                        BodyRef::FbsDataConsumerSetSubchannelsResponse(value) => {
+                            Self::FbsDataConsumerSetSubchannelsResponse(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
                     })
                 }
             }
@@ -54681,6 +55667,11 @@ mod root {
                         29 => ::core::result::Result::Ok(Self::FbsDataConsumerGetStatsResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
+                        30 => {
+                            ::core::result::Result::Ok(Self::FbsDataConsumerSetSubchannelsResponse(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ))
+                        }
                         _ => ::core::result::Result::Err(
                             ::planus::errors::ErrorKind::UnknownUnionTag { tag },
                         ),
@@ -54691,7 +55682,7 @@ mod root {
             /// The table `Response` in the namespace `FBS.Response`
             ///
             /// Generated from these locations:
-            /// * Table `Response` in the file `../worker/fbs/response.fbs:44`
+            /// * Table `Response` in the file `../worker/fbs/response.fbs:45`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
