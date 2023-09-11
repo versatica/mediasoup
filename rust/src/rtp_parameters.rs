@@ -704,6 +704,8 @@ pub struct RtpParameters {
 }
 
 impl RtpParameters {
+    /// TODO: This is not yet used but will be once flatbuffers is fully
+    /// implemented in mediasoup-rust.
     #[allow(dead_code)]
     pub(crate) fn from_fbs(
         rtp_parameters: rtp_parameters::RtpParameters,
@@ -1013,6 +1015,8 @@ impl RtpCodecParameters {
     }
 
     #[allow(dead_code)]
+    /// NOTE: This is used in mediasoup code. However there is no reason to not
+    /// expose it as public API since it could be used by the user.
     pub(crate) fn clock_rate(&self) -> NonZeroU32 {
         let (Self::Audio { clock_rate, .. } | Self::Video { clock_rate, .. }) = self;
         *clock_rate
