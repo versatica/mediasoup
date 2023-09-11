@@ -20,6 +20,7 @@ table DumpResponse {
   protocol:string (required);
   paused:bool;
   data_producer_paused:bool;
+  subchannels:[uint16];
 }
 
 table GetStatsResponse {
@@ -47,6 +48,14 @@ union Data {
 table SendRequest {
   ppid:uint8;
   data:Data (required);
+}
+
+table SetSubchannelsRequest {
+  subchannels:[uint16];
+}
+
+table SetSubchannelsResponse {
+  subchannels:[uint16];
 }
 
 // Notifications from Worker.

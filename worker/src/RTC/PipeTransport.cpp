@@ -541,11 +541,11 @@ namespace RTC
 	}
 
 	void PipeTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
-		this->sctpAssociation->SendSctpMessage(dataConsumer, ppid, msg, len, cb);
+		this->sctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
 	}
 
 	void PipeTransport::SendSctpData(const uint8_t* data, size_t len)

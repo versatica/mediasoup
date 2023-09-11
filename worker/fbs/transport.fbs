@@ -72,6 +72,7 @@ table ConsumeDataRequest {
   label:string;
   protocol:string;
   paused:bool = false;
+  subchannels:[uint16];
 }
 
 table Tuple {

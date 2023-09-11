@@ -66,6 +66,11 @@ namespace RTC
 		// paused is set to false by default.
 		this->paused = data->paused();
 
+		for (const auto subchannel : *data->subchannels())
+		{
+			this->subchannels.insert(subchannel);
+		}
+
 		// NOTE: This may throw.
 		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
@@ -85,12 +90,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> sctpStreamParametersOffset;
+		flatbuffers::Offset<FBS::SctpParameters::SctpStreamParameters> sctpStreamParameters;
 
 		// Add sctpStreamParameters.
 		if (this->type == DataConsumer::Type::SCTP)
 		{
-			sctpStreamParametersOffset = this->sctpStreamParameters.FillBuffer(builder);
+			sctpStreamParameters = this->sctpStreamParameters.FillBuffer(builder);
+		}
+
+		std::vector<uint16_t> subchannels;
+
+		subchannels.reserve(this->subchannels.size());
+
+		for (auto subchannel : this->subchannels)
+		{
+			subchannels.emplace_back(subchannel);
 		}
 
 		return FBS::DataConsumer::CreateDumpResponseDirect(
@@ -98,11 +112,12 @@ namespace RTC
 		  this->id.c_str(),
 		  this->dataProducerId.c_str(),
 		  this->typeString.c_str(),
-		  sctpStreamParametersOffset,
+		  sctpStreamParameters,
 		  this->label.c_str(),
 		  this->protocol.c_str(),
 		  this->paused,
-		  this->dataProducerPaused);
+		  this->dataProducerPaused,
+		  std::addressof(subchannels));
 	}
 
 	flatbuffers::Offset<FBS::DataConsumer::GetStatsResponse> DataConsumer::FillBufferStats(
@@ -296,7 +311,38 @@ namespace RTC
 					  }
 				  });
 
-				SendMessage(ppid, data, len, cb);
+				static std::vector<uint16_t> EmptySubchannels;
+
+				SendMessage(data, len, ppid, EmptySubchannels, std::nullopt, cb);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::DATACONSUMER_SET_SUBCHANNELS:
+			{
+				const auto* body = request->data->body_as<FBS::DataConsumer::SetSubchannelsRequest>();
+
+				this->subchannels.clear();
+
+				for (const auto subchannel : *body->subchannels())
+				{
+					this->subchannels.insert(subchannel);
+				}
+
+				std::vector<uint16_t> subchannels;
+
+				subchannels.reserve(this->subchannels.size());
+
+				for (auto subchannel : this->subchannels)
+				{
+					subchannels.emplace_back(subchannel);
+				}
+
+				// Create response.
+				auto responseOffset = FBS::DataConsumer::CreateSetSubchannelsResponseDirect(
+				  request->GetBufferBuilder(), std::addressof(subchannels));
+
+				request->Accept(FBS::Response::Body::FBS_DataConsumer_SetSubchannelsResponse, responseOffset);
 
 				break;
 			}
@@ -431,13 +477,50 @@ namespace RTC
 		this->listener->OnDataConsumerDataProducerClosed(this);
 	}
 
-	void DataConsumer::SendMessage(uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
+	void DataConsumer::SendMessage(
+	  const uint8_t* msg,
+	  size_t len,
+	  uint32_t ppid,
+	  std::vector<uint16_t>& subchannels,
+	  std::optional<uint16_t> requiredSubchannel,
+	  onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
 		if (!IsActive())
 		{
 			return;
+		}
+
+		// If a required subchannel is given, verify that this data consumer is
+		// subscribed to it.
+		if (
+		  requiredSubchannel.has_value() &&
+		  this->subchannels.find(requiredSubchannel.value()) == this->subchannels.end())
+		{
+			return;
+		}
+
+		// If subchannels are given, verify that this data consumer is subscribed
+		// to at least one of them.
+		if (subchannels.size() > 0)
+		{
+			bool subchannelMatched{ false };
+
+			for (const auto subchannel : subchannels)
+			{
+				if (this->subchannels.find(subchannel) != this->subchannels.end())
+				{
+					subchannelMatched = true;
+
+					break;
+				}
+			}
+
+			if (!subchannelMatched)
+			{
+				return;
+			}
 		}
 
 		if (len > this->maxMessageSize)
@@ -454,6 +537,6 @@ namespace RTC
 		this->messagesSent++;
 		this->bytesSent += len;
 
-		this->listener->OnDataConsumerSendMessage(this, ppid, msg, len, cb);
+		this->listener->OnDataConsumerSendMessage(this, msg, len, ppid, cb);
 	}
 } // namespace RTC

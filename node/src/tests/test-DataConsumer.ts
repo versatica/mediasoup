@@ -53,6 +53,9 @@ test('transport.consumeData() succeeds', async () =>
 		{
 			dataProducerId    : dataProducer.id,
 			maxPacketLifeTime : 4000,
+			// Valid values are 0...65535 so others and duplicated ones will be
+			// discarded.
+			subchannels       : [ 0, 1, 1, 1, 2, 65535, 65536, 65537, 100 ],
 			appData           : { baz: 'LOL' }
 		});
 
@@ -70,6 +73,7 @@ test('transport.consumeData() succeeds', async () =>
 	expect(dataConsumer1.label).toBe('foo');
 	expect(dataConsumer1.protocol).toBe('bar');
 	expect(dataConsumer1.paused).toBe(false);
+	expect(dataConsumer1.subchannels.sort((a, b) => a - b)).toEqual([ 0, 1, 2, 100, 65535 ]);
 	expect(dataConsumer1.appData).toEqual({ baz: 'LOL' });
 
 	const dump = await router.dump();
@@ -126,6 +130,13 @@ test('dataConsumer.getStats() succeeds', async () =>
 					bytesSent    : 0
 				}
 			]);
+}, 2000);
+
+test('dataConsumer.setSubchannels() succeeds', async () =>
+{
+	await dataConsumer1.setSubchannels([ 999, 999, 998, 65536 ]);
+
+	expect(dataConsumer1.subchannels.sort((a, b) => a - b)).toEqual([ 0, 998, 999 ]);
 }, 2000);
 
 test('transport.consumeData() on a DirectTransport succeeds', async () =>

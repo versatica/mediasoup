@@ -2,8 +2,8 @@ import * as flatbuffers from 'flatbuffers';
 import {
 	Boolean as FbsBoolean,
 	Double as FbsDouble,
-	Integer as FbsInteger,
-	IntegerArray as FbsIntegerArray,
+	Integer32 as FbsInteger32,
+	Integer32Array as FbsInteger32Array,
 	String as FbsString,
 	Parameter as FbsParameter,
 	RtcpFeedback as FbsRtcpFeedback,
@@ -564,16 +564,15 @@ export function serializeParameters(
 				builder, keyOffset, FbsValue.Boolean, value === true ? 1:0
 			);
 		}
-
 		else if (typeof value === 'number')
 		{
 			// Integer.
 			if (value % 1 === 0)
 			{
-				const valueOffset = FbsInteger.createInteger(builder, value);
+				const valueOffset = FbsInteger32.createInteger32(builder, value);
 
 				parameterOffset = FbsParameter.createParameter(
-					builder, keyOffset, FbsValue.Integer, valueOffset
+					builder, keyOffset, FbsValue.Integer32, valueOffset
 				);
 			}
 			// Float.
@@ -586,7 +585,6 @@ export function serializeParameters(
 				);
 			}
 		}
-
 		else if (typeof value === 'string')
 		{
 			const valueOffset = FbsString.createString(builder, builder.createString(value));
@@ -595,16 +593,14 @@ export function serializeParameters(
 				builder, keyOffset, FbsValue.String, valueOffset
 			);
 		}
-
 		else if (Array.isArray(value))
 		{
-			const valueOffset = FbsIntegerArray.createValueVector(builder, value);
+			const valueOffset = FbsInteger32Array.createValueVector(builder, value);
 
 			parameterOffset = FbsParameter.createParameter(
-				builder, keyOffset, FbsValue.IntegerArray, valueOffset
+				builder, keyOffset, FbsValue.Integer32Array, valueOffset
 			);
 		}
-
 		else
 		{
 			throw new Error(`invalid parameter type [key:'${key}', value:${value}]`);
@@ -645,9 +641,9 @@ export function parseParameters(data: any): any
 				break;
 			}
 
-			case FbsValue.Integer:
+			case FbsValue.Integer32:
 			{
-				const value = new FbsInteger();
+				const value = new FbsInteger32();
 
 				fbsParameter.value(value);
 
@@ -678,9 +674,9 @@ export function parseParameters(data: any): any
 				break;
 			}
 
-			case FbsValue.IntegerArray:
+			case FbsValue.Integer32Array:
 			{
-				const value = new FbsIntegerArray();
+				const value = new FbsInteger32Array();
 
 				fbsParameter.value(value);
 

@@ -3,16 +3,27 @@ import { ProducerType } from './Producer';
 import { Type as FbsRtpParametersType } from './fbs/rtp-parameters';
 
 /**
- * Clones the given object/array.
+ * Clones the given value.
  */
-export function clone(data: any): any
+export function clone<T>(value: T): T
 {
-	if (typeof data !== 'object')
+	if (value === undefined)
 	{
-		return {};
+		return undefined as unknown as T;
 	}
-
-	return JSON.parse(JSON.stringify(data));
+	else if (Number.isNaN(value))
+	{
+		return NaN as unknown as T;
+	}
+	else if (typeof structuredClone === 'function')
+	{
+		// Available in Node >= 18.
+		return structuredClone(value);
+	}
+	else
+	{
+		return JSON.parse(JSON.stringify(value));
+	}
 }
 
 /**

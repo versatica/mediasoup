@@ -36,4 +36,6 @@ union Data {
 table SendNotification {
   ppid:uint8;
   data:Data (required);
+  subchannels:[uint16];
+  required_subchannel:uint16 = null;
 }

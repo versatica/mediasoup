@@ -39,6 +39,7 @@ union Body {
   FBS_DataConsumer_GetBufferedAmountResponse: FBS.DataConsumer.GetBufferedAmountResponse,
   FBS_DataConsumer_DumpResponse: FBS.DataConsumer.DumpResponse,
   FBS_DataConsumer_GetStatsResponse: FBS.DataConsumer.GetStatsResponse,
+  FBS_DataConsumer_SetSubchannelsResponse: FBS.DataConsumer.SetSubchannelsResponse,
 }
 
 table Response {
