@@ -37,5 +37,5 @@ table SendNotification {
   ppid:uint8;
   data:Data (required);
   subchannels:[uint16];
-  requiredSubchannel:uint16 = null;
+  required_subchannel:uint16 = null;
 }
