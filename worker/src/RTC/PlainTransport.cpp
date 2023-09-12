@@ -870,7 +870,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->sctpAssociation->SendSctpMessage(dataConsumer, msg, len,ppid,  cb);
+		this->sctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
 	}
 
 	void PlainTransport::SendSctpData(const uint8_t* data, size_t len)

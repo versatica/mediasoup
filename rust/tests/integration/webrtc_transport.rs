@@ -1,8 +1,8 @@
 use futures_lite::future;
 use hash_hasher::HashedSet;
 use mediasoup::data_structures::{
-    AppData, DtlsFingerprint, DtlsParameters, DtlsRole, DtlsState, IceCandidateTcpType,
-    IceCandidateType, IceRole, IceState, ListenInfo, Protocol, SctpState,
+    AppData, DtlsFingerprint, DtlsParameters, DtlsRole, DtlsState, IceCandidateType, IceRole,
+    IceState, ListenInfo, Protocol, SctpState,
 };
 use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
