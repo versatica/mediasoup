@@ -1,3 +1,4 @@
+//! Flatbuffers data structures compiled from `.fbs` files
 pub use root::fbs::*;
 
 const _: () = ::planus::check_version_compatibility("planus-0.4.0");
