@@ -970,13 +970,10 @@ impl WebRtcTransport {
     pub async fn restart_ice(&self) -> Result<IceParameters, RequestError> {
         debug!("restart_ice()");
 
-        let response = self
-            .inner
+        self.inner
             .channel
             .request_fbs(self.id(), TransportRestartIceRequest {})
-            .await?;
-
-        Ok(response)
+            .await
     }
 
     /// Callback is called when the WebRTC server used during creation of this transport is closed
