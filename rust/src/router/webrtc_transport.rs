@@ -518,6 +518,7 @@ impl TransportGeneric for WebRtcTransport {
         debug!("dump()");
 
         todo!();
+
         /*
         serde_json::from_value(self.dump_impl().await?).map_err(|error| {
             RequestError::FailedToParse {
