@@ -478,12 +478,10 @@ pub enum DtlsFingerprint {
 }
 
 fn hex_as_bytes(input: &str, output: &mut [u8]) {
-    for (i, v) in output.iter_mut().enumerate() {
-        *v = u8::from_str_radix(&input[i * 3..(i * 3) + 2], 16)
-            .map_err(|error| {
-                panic!("Failed to parse value {input} as series of hex bytes: {error}")
-            })
-            .unwrap();
+    for (i, o) in input.split(':').zip(&mut output.into_iter()) {
+        *o = u8::from_str_radix(i, 16).unwrap_or_else(|error| {
+            panic!("Failed to parse value {i} as series of hex bytes: {error}")
+        });
     }
 }
 
