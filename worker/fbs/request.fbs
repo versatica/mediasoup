@@ -71,6 +71,7 @@ enum Method: uint8 {
   DATACONSUMER_GET_BUFFERED_AMOUNT,
   DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
   DATACONSUMER_SEND,
+  DATACONSUMER_SET_SUBCHANNELS,
   RTPOBSERVER_PAUSE,
   RTPOBSERVER_RESUME,
   RTPOBSERVER_ADD_PRODUCER,
@@ -112,6 +113,7 @@ union Body {
   FBS.Consumer.EnableTraceEventRequest,
   FBS.DataConsumer.SetBufferedAmountLowThresholdRequest,
   FBS.DataConsumer.SendRequest,
+  FBS.DataConsumer.SetSubchannelsRequest,
   FBS.RtpObserver.AddProducerRequest,
   FBS.RtpObserver.RemoveProducerRequest,
 }

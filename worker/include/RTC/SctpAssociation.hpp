@@ -47,9 +47,9 @@ namespace RTC
 			virtual void OnSctpAssociationMessageReceived(
 			  RTC::SctpAssociation* sctpAssociation,
 			  uint16_t streamId,
-			  uint32_t ppid,
 			  const uint8_t* msg,
-			  size_t len) = 0;
+			  size_t len,
+			  uint32_t ppid) = 0;
 			virtual void OnSctpAssociationBufferedAmount(
 			  RTC::SctpAssociation* sctpAssociation, uint32_t len) = 0;
 		};
@@ -92,9 +92,9 @@ namespace RTC
 		void ProcessSctpData(const uint8_t* data, size_t len);
 		void SendSctpMessage(
 		  RTC::DataConsumer* dataConsumer,
-		  uint32_t ppid,
 		  const uint8_t* msg,
 		  size_t len,
+		  uint32_t ppid,
 		  onQueuedCallback* cb = nullptr);
 		void HandleDataConsumer(RTC::DataConsumer* dataConsumer);
 		void DataProducerClosed(RTC::DataProducer* dataProducer);

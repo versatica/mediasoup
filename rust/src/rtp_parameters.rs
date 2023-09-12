@@ -704,6 +704,9 @@ pub struct RtpParameters {
 }
 
 impl RtpParameters {
+    /// TODO: This is not yet used but will be once flatbuffers is fully
+    /// implemented in mediasoup-rust.
+    #[allow(dead_code)]
     pub(crate) fn from_fbs(
         rtp_parameters: rtp_parameters::RtpParameters,
     ) -> Result<Self, Box<dyn Error>> {
@@ -723,12 +726,12 @@ impl RtpParameters {
                                 match parameters.value {
                                     rtp_parameters::Value::Boolean(_)
                                     | rtp_parameters::Value::Double(_)
-                                    | rtp_parameters::Value::IntegerArray(_) => {
+                                    | rtp_parameters::Value::Integer32Array(_) => {
                                         // TODO: Above value variant should not exist in the
                                         //  first place
                                         panic!("Invalid parameter")
                                     }
-                                    rtp_parameters::Value::Integer(n) => {
+                                    rtp_parameters::Value::Integer32(n) => {
                                         RtpCodecParametersParametersValue::Number(
                                             n.value.try_into()?,
                                         )
@@ -809,6 +812,9 @@ impl RtpParameters {
         })
     }
 
+    /// TODO: This is not yet used but will be once flatbuffers is fully
+    /// implemented in mediasoup-rust.
+    #[allow(dead_code)]
     pub(crate) fn into_fbs(self) -> rtp_parameters::RtpParameters {
         rtp_parameters::RtpParameters {
             mid: self.mid,
@@ -838,8 +844,8 @@ impl RtpParameters {
                                         ))
                                     }
                                     RtpCodecParametersParametersValue::Number(n) => {
-                                        rtp_parameters::Value::Integer(Box::new(
-                                            rtp_parameters::Integer { value: *n as i32 },
+                                        rtp_parameters::Value::Integer32(Box::new(
+                                            rtp_parameters::Integer32 { value: *n as i32 },
                                         ))
                                     }
                                 },
@@ -1011,6 +1017,9 @@ impl RtpCodecParameters {
         *payload_type
     }
 
+    /// NOTE: This is not used in mediasoup code. However there is no reason to
+    /// not expose it as public API since it could be used by the user.
+    #[allow(dead_code)]
     pub(crate) fn clock_rate(&self) -> NonZeroU32 {
         let (Self::Audio { clock_rate, .. } | Self::Video { clock_rate, .. }) = self;
         *clock_rate

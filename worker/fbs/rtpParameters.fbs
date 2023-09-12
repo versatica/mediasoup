@@ -9,11 +9,11 @@ table Boolean {
   value:uint8;
 }
 
-table Integer {
+table Integer32 {
   value:int32;
 }
 
-table IntegerArray {
+table Integer32Array {
   value:[int32];
 }
 
@@ -27,10 +27,10 @@ table String {
 
 union Value {
   Boolean,
-  Integer,
+  Integer32,
   Double,
   String,
-  IntegerArray,
+  Integer32Array,
 }
 
 table Parameter {

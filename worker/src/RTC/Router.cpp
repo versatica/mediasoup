@@ -883,9 +883,11 @@ namespace RTC
 	inline void Router::OnTransportDataProducerMessageReceived(
 	  RTC::Transport* /*transport*/,
 	  RTC::DataProducer* dataProducer,
-	  uint32_t ppid,
 	  const uint8_t* msg,
-	  size_t len)
+	  size_t len,
+	  uint32_t ppid,
+	  std::vector<uint16_t>& subchannels,
+	  std::optional<uint16_t> requiredSubchannel)
 	{
 		MS_TRACE();
 
@@ -893,7 +895,7 @@ namespace RTC
 
 		for (auto* dataConsumer : dataConsumers)
 		{
-			dataConsumer->SendMessage(ppid, msg, len);
+			dataConsumer->SendMessage(msg, len, ppid, subchannels, requiredSubchannel);
 		}
 	}
 

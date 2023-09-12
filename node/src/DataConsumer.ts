@@ -8,6 +8,7 @@ import { Event, Notification } from './fbs/notification';
 import * as FbsTransport from './fbs/transport';
 import * as FbsRequest from './fbs/request';
 import * as FbsDataConsumer from './fbs/data-consumer';
+import * as utils from './utils';
 
 export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
 {
@@ -44,6 +45,13 @@ export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
 	 * Whether the data consumer must start in paused mode. Default false.
 	 */
 	paused?: boolean;
+
+	/**
+	 * Subchannels this data consumer initially subscribes to.
+	 * Only used in case this data consumer receives messages from a local data
+	 * producer that specifies subchannel(s) when calling send().
+	 */
+	subchannels?: number[];
 
 	/**
 	 * Custom application data.
@@ -93,6 +101,7 @@ type DataConsumerDump = DataConsumerData &
 	id: string;
 	paused: boolean;
 	dataProducerPaused: boolean;
+	subchannels: number[];
 };
 
 type DataConsumerInternal = TransportInternal &
@@ -132,6 +141,9 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	// Associated DataProducer paused flag.
 	#dataProducerPaused = false;
 
+	// Subchannels subscribed to.
+	#subchannels: number[];
+
 	// Custom app data.
 	#appData: DataConsumerAppData;
 
@@ -148,6 +160,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 			channel,
 			paused,
 			dataProducerPaused,
+			subchannels,
 			appData
 		}:
 		{
@@ -156,6 +169,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 			channel: Channel;
 			paused: boolean;
 			dataProducerPaused: boolean;
+			subchannels: number[];
 			appData?: DataConsumerAppData;
 		}
 	)
@@ -169,6 +183,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		this.#channel = channel;
 		this.#paused = paused;
 		this.#dataProducerPaused = dataProducerPaused;
+		this.#subchannels = subchannels;
 		this.#appData = appData || {} as DataConsumerAppData;
 
 		this.handleWorkerNotifications();
@@ -244,6 +259,14 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	get dataProducerPaused(): boolean
 	{
 		return this.#dataProducerPaused;
+	}
+
+	/**
+	 * Get current subchannels this data consumer is subscribed to.
+	 */
+	get subchannels(): number[]
+	{
+		return Array.from(this.#subchannels);
 	}
 
 	/**
@@ -541,6 +564,34 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		return data.bufferedAmount();
 	}
 
+	/**
+	 * Set subchannels.
+	 */
+	async setSubchannels(subchannels: number[]): Promise<void>
+	{
+		logger.debug('setSubchannels()');
+
+		/* Build Request. */
+		const requestOffset = new FbsDataConsumer.SetSubchannelsRequestT(
+			subchannels
+		).pack(this.#channel.bufferBuilder);
+
+		const response = await this.#channel.request(
+			FbsRequest.Method.DATACONSUMER_SET_SUBCHANNELS,
+			FbsRequest.Body.FBS_DataConsumer_SetSubchannelsRequest,
+			requestOffset,
+			this.#internal.dataConsumerId
+		);
+
+		/* Decode Response. */
+		const data = new FbsDataConsumer.SetSubchannelsResponse();
+
+		response.body(data);
+
+		// Update subchannels.
+		this.#subchannels = utils.parseVector(data, 'subchannels');
+	}
+
 	private handleWorkerNotifications(): void
 	{
 		this.#channel.on(this.#internal.dataConsumerId, (event: Event, data?: Notification) =>
@@ -675,14 +726,14 @@ export function parseDataConsumerDumpResponse(
 		label              : data.label()!,
 		protocol           : data.protocol()!,
 		paused             : data.paused(),
-		dataProducerPaused : data.dataProducerPaused()
-
+		dataProducerPaused : data.dataProducerPaused(),
+		subchannels        : utils.parseVector(data, 'subchannels')
 	};
 }
 
 function parseDataConsumerStats(
 	binary: FbsDataConsumer.GetStatsResponse
-):DataConsumerStat
+): DataConsumerStat
 {
 	return {
 		type           : 'data-consumer',

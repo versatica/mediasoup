@@ -32,9 +32,9 @@ namespace RTC
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;
 		void SendMessage(
 		  RTC::DataConsumer* dataConsumer,
-		  uint32_t ppid,
 		  const uint8_t* msg,
 		  size_t len,
+		  uint32_t ppid,
 		  onQueuedCallback* cb = nullptr) override;
 		void SendSctpData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
