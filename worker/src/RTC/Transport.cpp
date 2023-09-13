@@ -45,10 +45,17 @@ namespace RTC
 		if (options->direct())
 		{
 			this->direct         = true;
-			this->maxMessageSize = options->maxMessageSize();
+
+			if (options->maxMessageSize().has_value())
+			{
+				this->maxMessageSize = options->maxMessageSize().value();
+			}
 		}
 
-		this->initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
+		if (options->initialAvailableOutgoingBitrate().has_value())
+		{
+			this->initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate().value();
+		}
 
 		if (options->enableSctp())
 		{

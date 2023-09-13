@@ -757,8 +757,8 @@ impl RouterCreateDirectTransportData {
         direct_transport::DirectTransportOptions {
             base: Box::new(transport::Options {
                 direct: true,
-                max_message_size: self.max_message_size,
-                initial_available_outgoing_bitrate: 0,
+                max_message_size: Some(self.max_message_size),
+                initial_available_outgoing_bitrate: None,
                 enable_sctp: false,
                 num_sctp_streams: None,
                 max_sctp_message_size: 0,
@@ -890,8 +890,8 @@ impl RouterCreateWebrtcTransportData {
         web_rtc_transport::WebRtcTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
-                max_message_size: 0,
-                initial_available_outgoing_bitrate: self.initial_available_outgoing_bitrate,
+                max_message_size: None,
+                initial_available_outgoing_bitrate: Some(self.initial_available_outgoing_bitrate),
                 enable_sctp: self.enable_sctp,
                 num_sctp_streams: Some(Box::new(self.num_sctp_streams.to_fbs())),
                 max_sctp_message_size: self.max_sctp_message_size,
@@ -1028,13 +1028,13 @@ impl RouterCreatePlainTransportData {
         plain_transport::PlainTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
-                initial_available_outgoing_bitrate: 0,
+                max_message_size: None,
+                initial_available_outgoing_bitrate: None,
                 enable_sctp: self.enable_sctp,
                 num_sctp_streams: Some(Box::new(self.num_sctp_streams.to_fbs())),
                 max_sctp_message_size: self.max_sctp_message_size,
                 sctp_send_buffer_size: self.sctp_send_buffer_size,
                 is_data_channel: self.is_data_channel,
-                max_message_size: self.max_sctp_message_size,
             }),
             listen_info: Box::new(self.listen_info.to_fbs()),
             rtcp_listen_info: self

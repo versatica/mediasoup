@@ -104,8 +104,9 @@ table RecvRtpHeaderExtensions {
 
 table Options {
   direct:bool = false;
-  max_message_size:uint32;
-  initial_available_outgoing_bitrate:uint32;
+  /// Only needed for DirectTransport. This value is handled by base Transport.
+  max_message_size:uint32 = null;
+  initial_available_outgoing_bitrate:uint32 = null;
   enable_sctp:bool = false;
   num_sctp_streams:FBS.SctpParameters.NumSctpStreams;
   max_sctp_message_size:uint32;

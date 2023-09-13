@@ -38294,10 +38294,10 @@ mod root {
             pub struct Options {
                 /// The field `direct` in the table `Options`
                 pub direct: bool,
-                /// The field `max_message_size` in the table `Options`
-                pub max_message_size: u32,
+                ///  Only needed for DirectTransport. This value is handled by base Transport.
+                pub max_message_size: ::core::option::Option<u32>,
                 /// The field `initial_available_outgoing_bitrate` in the table `Options`
-                pub initial_available_outgoing_bitrate: u32,
+                pub initial_available_outgoing_bitrate: ::core::option::Option<u32>,
                 /// The field `enable_sctp` in the table `Options`
                 pub enable_sctp: bool,
                 /// The field `num_sctp_streams` in the table `Options`
@@ -38317,8 +38317,8 @@ mod root {
                 fn default() -> Self {
                     Self {
                         direct: false,
-                        max_message_size: 0,
-                        initial_available_outgoing_bitrate: 0,
+                        max_message_size: ::core::default::Default::default(),
+                        initial_available_outgoing_bitrate: ::core::default::Default::default(),
                         enable_sctp: false,
                         num_sctp_streams: ::core::default::Default::default(),
                         max_sctp_message_size: 0,
@@ -38339,8 +38339,8 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_direct: impl ::planus::WriteAsDefault<bool, bool>,
-                    field_max_message_size: impl ::planus::WriteAsDefault<u32, u32>,
-                    field_initial_available_outgoing_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_max_message_size: impl ::planus::WriteAsOptional<u32>,
+                    field_initial_available_outgoing_bitrate: impl ::planus::WriteAsOptional<u32>,
                     field_enable_sctp: impl ::planus::WriteAsDefault<bool, bool>,
                     field_num_sctp_streams: impl ::planus::WriteAsOptional<
                         ::planus::Offset<super::sctp_parameters::NumSctpStreams>,
@@ -38350,9 +38350,9 @@ mod root {
                     field_is_data_channel: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_direct = field_direct.prepare(builder, &false);
-                    let prepared_max_message_size = field_max_message_size.prepare(builder, &0);
+                    let prepared_max_message_size = field_max_message_size.prepare(builder);
                     let prepared_initial_available_outgoing_bitrate =
-                        field_initial_available_outgoing_bitrate.prepare(builder, &0);
+                        field_initial_available_outgoing_bitrate.prepare(builder);
                     let prepared_enable_sctp = field_enable_sctp.prepare(builder, &false);
                     let prepared_num_sctp_streams = field_num_sctp_streams.prepare(builder);
                     let prepared_max_sctp_message_size =
@@ -38506,19 +38506,17 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn max_message_size<T1>(self, value: T1) -> OptionsBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAsDefault<u32, u32>,
+                    T1: ::planus::WriteAsOptional<u32>,
                 {
                     let (v0,) = self.0;
                     OptionsBuilder((v0, value))
                 }
 
-                /// Sets the [`max_message_size` field](Options#structfield.max_message_size) to the default value.
+                /// Sets the [`max_message_size` field](Options#structfield.max_message_size) to null.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn max_message_size_as_default(
-                    self,
-                ) -> OptionsBuilder<(T0, ::planus::DefaultValue)> {
-                    self.max_message_size(::planus::DefaultValue)
+                pub fn max_message_size_as_null(self) -> OptionsBuilder<(T0, ())> {
+                    self.max_message_size(())
                 }
             }
 
@@ -38531,19 +38529,19 @@ mod root {
                     value: T2,
                 ) -> OptionsBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAsDefault<u32, u32>,
+                    T2: ::planus::WriteAsOptional<u32>,
                 {
                     let (v0, v1) = self.0;
                     OptionsBuilder((v0, v1, value))
                 }
 
-                /// Sets the [`initial_available_outgoing_bitrate` field](Options#structfield.initial_available_outgoing_bitrate) to the default value.
+                /// Sets the [`initial_available_outgoing_bitrate` field](Options#structfield.initial_available_outgoing_bitrate) to null.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn initial_available_outgoing_bitrate_as_default(
+                pub fn initial_available_outgoing_bitrate_as_null(
                     self,
-                ) -> OptionsBuilder<(T0, T1, ::planus::DefaultValue)> {
-                    self.initial_available_outgoing_bitrate(::planus::DefaultValue)
+                ) -> OptionsBuilder<(T0, T1, ())> {
+                    self.initial_available_outgoing_bitrate(())
                 }
             }
 
@@ -38681,8 +38679,8 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAsDefault<bool, bool>,
-                    T1: ::planus::WriteAsDefault<u32, u32>,
-                    T2: ::planus::WriteAsDefault<u32, u32>,
+                    T1: ::planus::WriteAsOptional<u32>,
+                    T2: ::planus::WriteAsOptional<u32>,
                     T3: ::planus::WriteAsDefault<bool, bool>,
                     T4: ::planus::WriteAsOptional<
                         ::planus::Offset<super::sctp_parameters::NumSctpStreams>,
@@ -38703,8 +38701,8 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAsDefault<bool, bool>,
-                    T1: ::planus::WriteAsDefault<u32, u32>,
-                    T2: ::planus::WriteAsDefault<u32, u32>,
+                    T1: ::planus::WriteAsOptional<u32>,
+                    T2: ::planus::WriteAsOptional<u32>,
                     T3: ::planus::WriteAsDefault<bool, bool>,
                     T4: ::planus::WriteAsOptional<
                         ::planus::Offset<super::sctp_parameters::NumSctpStreams>,
@@ -38728,8 +38726,8 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAsDefault<bool, bool>,
-                    T1: ::planus::WriteAsDefault<u32, u32>,
-                    T2: ::planus::WriteAsDefault<u32, u32>,
+                    T1: ::planus::WriteAsOptional<u32>,
+                    T2: ::planus::WriteAsOptional<u32>,
                     T3: ::planus::WriteAsDefault<bool, bool>,
                     T4: ::planus::WriteAsOptional<
                         ::planus::Offset<super::sctp_parameters::NumSctpStreams>,
@@ -38762,22 +38760,17 @@ mod root {
 
                 /// Getter for the [`max_message_size` field](Options#structfield.max_message_size).
                 #[inline]
-                pub fn max_message_size(&self) -> ::planus::Result<u32> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(1, "Options", "max_message_size")?
-                            .unwrap_or(0),
-                    )
+                pub fn max_message_size(&self) -> ::planus::Result<::core::option::Option<u32>> {
+                    self.0.access(1, "Options", "max_message_size")
                 }
 
                 /// Getter for the [`initial_available_outgoing_bitrate` field](Options#structfield.initial_available_outgoing_bitrate).
                 #[inline]
-                pub fn initial_available_outgoing_bitrate(&self) -> ::planus::Result<u32> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(2, "Options", "initial_available_outgoing_bitrate")?
-                            .unwrap_or(0),
-                    )
+                pub fn initial_available_outgoing_bitrate(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<u32>> {
+                    self.0
+                        .access(2, "Options", "initial_available_outgoing_bitrate")
                 }
 
                 /// Getter for the [`enable_sctp` field](Options#structfield.enable_sctp).
@@ -38833,11 +38826,19 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("OptionsRef");
                     f.field("direct", &self.direct());
-                    f.field("max_message_size", &self.max_message_size());
-                    f.field(
-                        "initial_available_outgoing_bitrate",
-                        &self.initial_available_outgoing_bitrate(),
-                    );
+                    if let ::core::option::Option::Some(field_max_message_size) =
+                        self.max_message_size().transpose()
+                    {
+                        f.field("max_message_size", &field_max_message_size);
+                    }
+                    if let ::core::option::Option::Some(field_initial_available_outgoing_bitrate) =
+                        self.initial_available_outgoing_bitrate().transpose()
+                    {
+                        f.field(
+                            "initial_available_outgoing_bitrate",
+                            &field_initial_available_outgoing_bitrate,
+                        );
+                    }
                     f.field("enable_sctp", &self.enable_sctp());
                     if let ::core::option::Option::Some(field_num_sctp_streams) =
                         self.num_sctp_streams().transpose()
@@ -38858,12 +38859,26 @@ mod root {
                 fn try_from(value: OptionsRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         direct: ::core::convert::TryInto::try_into(value.direct()?)?,
-                        max_message_size: ::core::convert::TryInto::try_into(
-                            value.max_message_size()?,
-                        )?,
-                        initial_available_outgoing_bitrate: ::core::convert::TryInto::try_into(
-                            value.initial_available_outgoing_bitrate()?,
-                        )?,
+                        max_message_size: if let ::core::option::Option::Some(max_message_size) =
+                            value.max_message_size()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                max_message_size,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        initial_available_outgoing_bitrate: if let ::core::option::Option::Some(
+                            initial_available_outgoing_bitrate,
+                        ) =
+                            value.initial_available_outgoing_bitrate()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                initial_available_outgoing_bitrate,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
                         enable_sctp: ::core::convert::TryInto::try_into(value.enable_sctp()?)?,
                         num_sctp_streams: if let ::core::option::Option::Some(num_sctp_streams) =
                             value.num_sctp_streams()?
@@ -38960,7 +38975,7 @@ mod root {
             /// The table `Dump` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:116`
+            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:117`
             #[derive(
                 Clone,
                 Debug,
@@ -39997,7 +40012,7 @@ mod root {
             /// The table `Stats` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:134`
+            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:135`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -42634,7 +42649,7 @@ mod root {
             /// The table `SetMaxIncomingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:161`
+            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:162`
             #[derive(
                 Clone,
                 Debug,
@@ -42942,7 +42957,7 @@ mod root {
             /// The table `SetMaxOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:165`
+            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:166`
             #[derive(
                 Clone,
                 Debug,
@@ -43250,7 +43265,7 @@ mod root {
             /// The table `SetMinOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:169`
+            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:170`
             #[derive(
                 Clone,
                 Debug,
@@ -43558,7 +43573,7 @@ mod root {
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:173`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:174`
             #[derive(
                 Clone,
                 Debug,
@@ -43830,7 +43845,7 @@ mod root {
             /// The table `CloseProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:177`
+            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:178`
             #[derive(
                 Clone,
                 Debug,
@@ -44096,7 +44111,7 @@ mod root {
             /// The table `CloseConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:181`
+            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:182`
             #[derive(
                 Clone,
                 Debug,
@@ -44362,7 +44377,7 @@ mod root {
             /// The table `CloseDataProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:185`
+            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:186`
             #[derive(
                 Clone,
                 Debug,
@@ -44637,7 +44652,7 @@ mod root {
             /// The table `CloseDataConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:189`
+            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:190`
             #[derive(
                 Clone,
                 Debug,
@@ -44912,7 +44927,7 @@ mod root {
             /// The table `SendRtcpNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:195`
+            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:196`
             #[derive(
                 Clone,
                 Debug,
@@ -45177,7 +45192,7 @@ mod root {
             /// The table `SctpStateChangeNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:201`
+            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:202`
             #[derive(
                 Clone,
                 Debug,
@@ -45498,7 +45513,7 @@ mod root {
             /// The enum `TraceType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceType` in the file `../worker/fbs/transport.fbs:205`
+            /// * Enum `TraceType` in the file `../worker/fbs/transport.fbs:206`
             #[derive(
                 Copy,
                 Clone,
@@ -45668,7 +45683,7 @@ mod root {
             /// The enum `TraceDirection` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceDirection` in the file `../worker/fbs/transport.fbs:207`
+            /// * Enum `TraceDirection` in the file `../worker/fbs/transport.fbs:208`
             #[derive(
                 Copy,
                 Clone,
@@ -45838,7 +45853,7 @@ mod root {
             /// The union `TraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:209`
+            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:210`
             #[derive(
                 Clone,
                 Debug,
@@ -45991,7 +46006,7 @@ mod root {
             /// The enum `BweType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:213`
+            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:214`
             #[derive(
                 Copy,
                 Clone,
@@ -46161,7 +46176,7 @@ mod root {
             /// The table `BweTraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:215`
+            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:216`
             #[derive(
                 Clone,
                 Debug,
@@ -46844,7 +46859,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:226`
+            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:227`
             #[derive(
                 Clone,
                 Debug,
