@@ -1042,7 +1042,8 @@ export function getConsumableRtpParameters(
 	}
 
 	// Clone Producer encodings since we'll mangle them.
-	const consumableEncodings = utils.clone(params.encodings) as RtpEncodingParameters[];
+	const consumableEncodings =
+		(utils.clone(params.encodings) ?? []) as RtpEncodingParameters[];
 
 	for (let i = 0; i < consumableEncodings.length; ++i)
 	{
@@ -1140,7 +1141,7 @@ export function getConsumerRtpParameters(
 	}
 
 	const consumableCodecs =
-		utils.clone(consumableRtpParameters.codecs) as RtpCodecParameters[];
+		(utils.clone(consumableRtpParameters.codecs) ?? []) as RtpCodecParameters[];
 
 	let rtxSupported = false;
 
@@ -1295,7 +1296,7 @@ export function getConsumerRtpParameters(
 	else
 	{
 		const consumableEncodings =
-			utils.clone(consumableRtpParameters.encodings) as RtpEncodingParameters[];
+			(utils.clone(consumableRtpParameters.encodings) ?? []) as RtpEncodingParameters[];
 		const baseSsrc = utils.generateRandomNumber();
 		const baseRtxSsrc = utils.generateRandomNumber();
 
@@ -1347,7 +1348,7 @@ export function getPipeConsumerRtpParameters(
 	};
 
 	const consumableCodecs =
-		utils.clone(consumableRtpParameters.codecs) as RtpCodecParameters[];
+		(utils.clone(consumableRtpParameters.codecs) ?? []) as RtpCodecParameters[];
 
 	for (const codec of consumableCodecs)
 	{
@@ -1375,7 +1376,7 @@ export function getPipeConsumerRtpParameters(
 		));
 
 	const consumableEncodings =
-		utils.clone(consumableRtpParameters.encodings) as RtpEncodingParameters[];
+		(utils.clone(consumableRtpParameters.encodings) ?? []) as RtpEncodingParameters[];
 	const baseSsrc = utils.generateRandomNumber();
 	const baseRtxSsrc = utils.generateRandomNumber();
 

@@ -1113,7 +1113,7 @@ export class Transport
 		{
 			type = 'sctp';
 			sctpStreamParameters =
-				utils.clone(dataProducer.sctpStreamParameters) as SctpStreamParameters;
+				(utils.clone(dataProducer.sctpStreamParameters) ?? {}) as SctpStreamParameters;
 
 			// Override if given.
 			if (ordered !== undefined)
