@@ -9,7 +9,6 @@
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
 #include <absl/container/flat_hash_map.h>
-#include <optional>
 #include <string>
 #include <vector>
 
