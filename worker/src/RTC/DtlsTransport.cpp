@@ -769,36 +769,33 @@ namespace RTC
 		this->state = DtlsState::CONNECTING;
 		this->listener->OnDtlsTransportConnecting(this);
 
-		if (this->localRole.has_value())
+		switch (this->localRole.value())
 		{
-			switch (this->localRole.value())
+			case Role::CLIENT:
 			{
-				case Role::CLIENT:
-				{
-					MS_DEBUG_TAG(dtls, "running [role:client]");
+				MS_DEBUG_TAG(dtls, "running [role:client]");
 
-					SSL_set_connect_state(this->ssl);
-					SSL_do_handshake(this->ssl);
-					SendPendingOutgoingDtlsData();
-					SetTimeout();
+				SSL_set_connect_state(this->ssl);
+				SSL_do_handshake(this->ssl);
+				SendPendingOutgoingDtlsData();
+				SetTimeout();
 
-					break;
-				}
+				break;
+			}
 
-				case Role::SERVER:
-				{
-					MS_DEBUG_TAG(dtls, "running [role:server]");
+			case Role::SERVER:
+			{
+				MS_DEBUG_TAG(dtls, "running [role:server]");
 
-					SSL_set_accept_state(this->ssl);
-					SSL_do_handshake(this->ssl);
+				SSL_set_accept_state(this->ssl);
+				SSL_do_handshake(this->ssl);
 
-					break;
-				}
+				break;
+			}
 
-				default:
-				{
-					MS_ABORT("invalid local DTLS role");
-				}
+			default:
+			{
+				MS_ABORT("invalid local DTLS role");
 			}
 		}
 	}
