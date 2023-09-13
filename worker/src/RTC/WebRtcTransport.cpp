@@ -439,14 +439,7 @@ namespace RTC
 					break;
 				}
 
-				if (dtlsParameters->role().has_value())
-				{
-					dtlsRemoteRole = RTC::DtlsTransport::RoleFromFbs(dtlsParameters->role().value());
-				}
-				else
-				{
-					dtlsRemoteRole = RTC::DtlsTransport::Role::AUTO;
-				}
+				dtlsRemoteRole = RTC::DtlsTransport::RoleFromFbs(dtlsParameters->role());
 
 				// Set local DTLS role.
 				switch (dtlsRemoteRole)

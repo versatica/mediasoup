@@ -76163,7 +76163,7 @@ mod root {
                 /// The field `fingerprints` in the table `DtlsParameters`
                 pub fingerprints: ::planus::alloc::vec::Vec<self::Fingerprint>,
                 /// The field `role` in the table `DtlsParameters`
-                pub role: ::core::option::Option<self::DtlsRole>,
+                pub role: self::DtlsRole,
             }
 
             impl DtlsParameters {
@@ -76179,10 +76179,10 @@ mod root {
                     field_fingerprints: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::Fingerprint>]>,
                     >,
-                    field_role: impl ::planus::WriteAsOptional<self::DtlsRole>,
+                    field_role: impl ::planus::WriteAsDefault<self::DtlsRole, self::DtlsRole>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_fingerprints = field_fingerprints.prepare(builder);
-                    let prepared_role = field_role.prepare(builder);
+                    let prepared_role = field_role.prepare(builder, &self::DtlsRole::Auto);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
@@ -76263,17 +76263,19 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn role<T1>(self, value: T1) -> DtlsParametersBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAsOptional<self::DtlsRole>,
+                    T1: ::planus::WriteAsDefault<self::DtlsRole, self::DtlsRole>,
                 {
                     let (v0,) = self.0;
                     DtlsParametersBuilder((v0, value))
                 }
 
-                /// Sets the [`role` field](DtlsParameters#structfield.role) to null.
+                /// Sets the [`role` field](DtlsParameters#structfield.role) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn role_as_null(self) -> DtlsParametersBuilder<(T0, ())> {
-                    self.role(())
+                pub fn role_as_default(
+                    self,
+                ) -> DtlsParametersBuilder<(T0, ::planus::DefaultValue)> {
+                    self.role(::planus::DefaultValue)
                 }
             }
 
@@ -76293,7 +76295,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::Fingerprint>]>>,
-                    T1: ::planus::WriteAsOptional<self::DtlsRole>,
+                    T1: ::planus::WriteAsDefault<self::DtlsRole, self::DtlsRole>,
                 > ::planus::WriteAs<::planus::Offset<DtlsParameters>>
                 for DtlsParametersBuilder<(T0, T1)>
             {
@@ -76310,7 +76312,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::Fingerprint>]>>,
-                    T1: ::planus::WriteAsOptional<self::DtlsRole>,
+                    T1: ::planus::WriteAsDefault<self::DtlsRole, self::DtlsRole>,
                 > ::planus::WriteAsOptional<::planus::Offset<DtlsParameters>>
                 for DtlsParametersBuilder<(T0, T1)>
             {
@@ -76327,7 +76329,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::Fingerprint>]>>,
-                    T1: ::planus::WriteAsOptional<self::DtlsRole>,
+                    T1: ::planus::WriteAsDefault<self::DtlsRole, self::DtlsRole>,
                 > ::planus::WriteAsOffset<DtlsParameters> for DtlsParametersBuilder<(T0, T1)>
             {
                 #[inline]
@@ -76357,8 +76359,12 @@ mod root {
 
                 /// Getter for the [`role` field](DtlsParameters#structfield.role).
                 #[inline]
-                pub fn role(&self) -> ::planus::Result<::core::option::Option<self::DtlsRole>> {
-                    self.0.access(1, "DtlsParameters", "role")
+                pub fn role(&self) -> ::planus::Result<self::DtlsRole> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(1, "DtlsParameters", "role")?
+                            .unwrap_or(self::DtlsRole::Auto),
+                    )
                 }
             }
 
@@ -76366,9 +76372,7 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("DtlsParametersRef");
                     f.field("fingerprints", &self.fingerprints());
-                    if let ::core::option::Option::Some(field_role) = self.role().transpose() {
-                        f.field("role", &field_role);
-                    }
+                    f.field("role", &self.role());
                     f.finish()
                 }
             }
@@ -76380,11 +76384,7 @@ mod root {
                 fn try_from(value: DtlsParametersRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         fingerprints: value.fingerprints()?.to_vec_result()?,
-                        role: if let ::core::option::Option::Some(role) = value.role()? {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(role)?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        role: ::core::convert::TryInto::try_into(value.role()?)?,
                     })
                 }
             }

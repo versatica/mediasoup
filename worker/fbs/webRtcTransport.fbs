@@ -50,7 +50,7 @@ enum DtlsState: uint8 {
 
 table DtlsParameters {
   fingerprints:[Fingerprint] (required);
-  role:DtlsRole = null;
+  role:DtlsRole = AUTO;
 }
 
 table IceParameters {

@@ -1002,7 +1002,7 @@ pub struct DtlsParameters {
 impl DtlsParameters {
     pub(crate) fn to_fbs(&self) -> web_rtc_transport::DtlsParameters {
         web_rtc_transport::DtlsParameters {
-            role: Some(self.role.to_fbs()),
+            role: self.role.to_fbs(),
             fingerprints: self
                 .fingerprints
                 .iter()
@@ -1013,7 +1013,7 @@ impl DtlsParameters {
 
     pub(crate) fn from_fbs(parameters: web_rtc_transport::DtlsParameters) -> DtlsParameters {
         DtlsParameters {
-            role: DtlsRole::from_fbs(parameters.role.unwrap_or(web_rtc_transport::DtlsRole::Auto)),
+            role: DtlsRole::from_fbs(parameters.role),
             fingerprints: parameters
                 .fingerprints
                 .iter()

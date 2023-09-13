@@ -904,7 +904,9 @@ function serializeDtlsParameters(
 
 	const fingerprintsOffset = FbsWebRtcTransport.DtlsParameters.createFingerprintsVector(
 		builder, fingerprints);
-	const role = dtlsParameters.role !== undefined ? dtlsRoleToFbs(dtlsParameters.role) : null;
+	const role = dtlsParameters.role !== undefined ?
+		dtlsRoleToFbs(dtlsParameters.role) :
+		FbsWebRtcTransport.DtlsRole.AUTO;
 
 	return FbsWebRtcTransport.DtlsParameters.createDtlsParameters(
 		builder,
