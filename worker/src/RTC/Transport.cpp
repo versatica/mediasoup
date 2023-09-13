@@ -464,11 +464,14 @@ namespace RTC
 		  this->tccServer ? flatbuffers::Optional<uint32_t>(this->tccServer->GetAvailableBitrate())
 		                  : flatbuffers::nullopt,
 		  // maxIncomingBitrate.
-		  this->maxIncomingBitrate,
+		  this->maxIncomingBitrate ? flatbuffers::Optional<uint32_t>(this->maxIncomingBitrate)
+		                           : flatbuffers::nullopt,
 		  // maxOutgoingBitrate.
-		  this->maxOutgoingBitrate,
+		  this->maxOutgoingBitrate ? flatbuffers::Optional<uint32_t>(this->maxOutgoingBitrate)
+		                           : flatbuffers::nullopt,
 		  // minOutgoingBitrate.
-		  this->minOutgoingBitrate,
+		  this->minOutgoingBitrate ? flatbuffers::Optional<uint32_t>(this->minOutgoingBitrate)
+		                           : flatbuffers::nullopt,
 		  // packetLossReceived.
 		  this->tccServer ? flatbuffers::Optional<double>(this->tccServer->GetPacketLoss())
 		                  : flatbuffers::nullopt,

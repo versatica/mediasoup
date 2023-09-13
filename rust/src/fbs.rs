@@ -40056,11 +40056,11 @@ mod root {
                 /// The field `available_incoming_bitrate` in the table `Stats`
                 pub available_incoming_bitrate: ::core::option::Option<u32>,
                 /// The field `max_incoming_bitrate` in the table `Stats`
-                pub max_incoming_bitrate: u32,
+                pub max_incoming_bitrate: ::core::option::Option<u32>,
                 /// The field `max_outgoing_bitrate` in the table `Stats`
-                pub max_outgoing_bitrate: u32,
+                pub max_outgoing_bitrate: ::core::option::Option<u32>,
                 /// The field `min_outgoing_bitrate` in the table `Stats`
-                pub min_outgoing_bitrate: u32,
+                pub min_outgoing_bitrate: ::core::option::Option<u32>,
                 /// The field `rtp_packet_loss_received` in the table `Stats`
                 pub rtp_packet_loss_received: ::core::option::Option<f64>,
                 /// The field `rtp_packet_loss_sent` in the table `Stats`
@@ -40096,9 +40096,9 @@ mod root {
                     field_probation_send_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                     field_available_outgoing_bitrate: impl ::planus::WriteAsOptional<u32>,
                     field_available_incoming_bitrate: impl ::planus::WriteAsOptional<u32>,
-                    field_max_incoming_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
-                    field_max_outgoing_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
-                    field_min_outgoing_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_max_incoming_bitrate: impl ::planus::WriteAsOptional<u32>,
+                    field_max_outgoing_bitrate: impl ::planus::WriteAsOptional<u32>,
+                    field_min_outgoing_bitrate: impl ::planus::WriteAsOptional<u32>,
                     field_rtp_packet_loss_received: impl ::planus::WriteAsOptional<f64>,
                     field_rtp_packet_loss_sent: impl ::planus::WriteAsOptional<f64>,
                 ) -> ::planus::Offset<Self> {
@@ -40125,12 +40125,9 @@ mod root {
                         field_available_outgoing_bitrate.prepare(builder);
                     let prepared_available_incoming_bitrate =
                         field_available_incoming_bitrate.prepare(builder);
-                    let prepared_max_incoming_bitrate =
-                        field_max_incoming_bitrate.prepare(builder, &0);
-                    let prepared_max_outgoing_bitrate =
-                        field_max_outgoing_bitrate.prepare(builder, &0);
-                    let prepared_min_outgoing_bitrate =
-                        field_min_outgoing_bitrate.prepare(builder, &0);
+                    let prepared_max_incoming_bitrate = field_max_incoming_bitrate.prepare(builder);
+                    let prepared_max_outgoing_bitrate = field_max_outgoing_bitrate.prepare(builder);
+                    let prepared_min_outgoing_bitrate = field_min_outgoing_bitrate.prepare(builder);
                     let prepared_rtp_packet_loss_received =
                         field_rtp_packet_loss_received.prepare(builder);
                     let prepared_rtp_packet_loss_sent = field_rtp_packet_loss_sent.prepare(builder);
@@ -41290,7 +41287,7 @@ mod root {
                     T19,
                 )>
                 where
-                    T19: ::planus::WriteAsDefault<u32, u32>,
+                    T19: ::planus::WriteAsOptional<u32>,
                 {
                     let (
                         v0,
@@ -41319,10 +41316,10 @@ mod root {
                     ))
                 }
 
-                /// Sets the [`max_incoming_bitrate` field](Stats#structfield.max_incoming_bitrate) to the default value.
+                /// Sets the [`max_incoming_bitrate` field](Stats#structfield.max_incoming_bitrate) to null.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn max_incoming_bitrate_as_default(
+                pub fn max_incoming_bitrate_as_null(
                     self,
                 ) -> StatsBuilder<(
                     T0,
@@ -41344,9 +41341,9 @@ mod root {
                     T16,
                     T17,
                     T18,
-                    ::planus::DefaultValue,
+                    (),
                 )> {
-                    self.max_incoming_bitrate(::planus::DefaultValue)
+                    self.max_incoming_bitrate(())
                 }
             }
 
@@ -41425,7 +41422,7 @@ mod root {
                     T20,
                 )>
                 where
-                    T20: ::planus::WriteAsDefault<u32, u32>,
+                    T20: ::planus::WriteAsOptional<u32>,
                 {
                     let (
                         v0,
@@ -41455,10 +41452,10 @@ mod root {
                     ))
                 }
 
-                /// Sets the [`max_outgoing_bitrate` field](Stats#structfield.max_outgoing_bitrate) to the default value.
+                /// Sets the [`max_outgoing_bitrate` field](Stats#structfield.max_outgoing_bitrate) to null.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn max_outgoing_bitrate_as_default(
+                pub fn max_outgoing_bitrate_as_null(
                     self,
                 ) -> StatsBuilder<(
                     T0,
@@ -41481,9 +41478,9 @@ mod root {
                     T17,
                     T18,
                     T19,
-                    ::planus::DefaultValue,
+                    (),
                 )> {
-                    self.max_outgoing_bitrate(::planus::DefaultValue)
+                    self.max_outgoing_bitrate(())
                 }
             }
 
@@ -41565,7 +41562,7 @@ mod root {
                     T21,
                 )>
                 where
-                    T21: ::planus::WriteAsDefault<u32, u32>,
+                    T21: ::planus::WriteAsOptional<u32>,
                 {
                     let (
                         v0,
@@ -41596,10 +41593,10 @@ mod root {
                     ))
                 }
 
-                /// Sets the [`min_outgoing_bitrate` field](Stats#structfield.min_outgoing_bitrate) to the default value.
+                /// Sets the [`min_outgoing_bitrate` field](Stats#structfield.min_outgoing_bitrate) to null.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn min_outgoing_bitrate_as_default(
+                pub fn min_outgoing_bitrate_as_null(
                     self,
                 ) -> StatsBuilder<(
                     T0,
@@ -41623,9 +41620,9 @@ mod root {
                     T18,
                     T19,
                     T20,
-                    ::planus::DefaultValue,
+                    (),
                 )> {
-                    self.min_outgoing_bitrate(::planus::DefaultValue)
+                    self.min_outgoing_bitrate(())
                 }
             }
 
@@ -42011,9 +42008,9 @@ mod root {
                     T16: ::planus::WriteAsDefault<u32, u32>,
                     T17: ::planus::WriteAsOptional<u32>,
                     T18: ::planus::WriteAsOptional<u32>,
-                    T19: ::planus::WriteAsDefault<u32, u32>,
-                    T20: ::planus::WriteAsDefault<u32, u32>,
-                    T21: ::planus::WriteAsDefault<u32, u32>,
+                    T19: ::planus::WriteAsOptional<u32>,
+                    T20: ::planus::WriteAsOptional<u32>,
+                    T21: ::planus::WriteAsOptional<u32>,
                     T22: ::planus::WriteAsOptional<f64>,
                     T23: ::planus::WriteAsOptional<f64>,
                 > ::planus::WriteAs<::planus::Offset<Stats>>
@@ -42072,9 +42069,9 @@ mod root {
                     T16: ::planus::WriteAsDefault<u32, u32>,
                     T17: ::planus::WriteAsOptional<u32>,
                     T18: ::planus::WriteAsOptional<u32>,
-                    T19: ::planus::WriteAsDefault<u32, u32>,
-                    T20: ::planus::WriteAsDefault<u32, u32>,
-                    T21: ::planus::WriteAsDefault<u32, u32>,
+                    T19: ::planus::WriteAsOptional<u32>,
+                    T20: ::planus::WriteAsOptional<u32>,
+                    T21: ::planus::WriteAsOptional<u32>,
                     T22: ::planus::WriteAsOptional<f64>,
                     T23: ::planus::WriteAsOptional<f64>,
                 > ::planus::WriteAsOptional<::planus::Offset<Stats>>
@@ -42136,9 +42133,9 @@ mod root {
                     T16: ::planus::WriteAsDefault<u32, u32>,
                     T17: ::planus::WriteAsOptional<u32>,
                     T18: ::planus::WriteAsOptional<u32>,
-                    T19: ::planus::WriteAsDefault<u32, u32>,
-                    T20: ::planus::WriteAsDefault<u32, u32>,
-                    T21: ::planus::WriteAsDefault<u32, u32>,
+                    T19: ::planus::WriteAsOptional<u32>,
+                    T20: ::planus::WriteAsOptional<u32>,
+                    T21: ::planus::WriteAsOptional<u32>,
                     T22: ::planus::WriteAsOptional<f64>,
                     T23: ::planus::WriteAsOptional<f64>,
                 > ::planus::WriteAsOffset<Stats>
@@ -42368,32 +42365,26 @@ mod root {
 
                 /// Getter for the [`max_incoming_bitrate` field](Stats#structfield.max_incoming_bitrate).
                 #[inline]
-                pub fn max_incoming_bitrate(&self) -> ::planus::Result<u32> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(19, "Stats", "max_incoming_bitrate")?
-                            .unwrap_or(0),
-                    )
+                pub fn max_incoming_bitrate(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<u32>> {
+                    self.0.access(19, "Stats", "max_incoming_bitrate")
                 }
 
                 /// Getter for the [`max_outgoing_bitrate` field](Stats#structfield.max_outgoing_bitrate).
                 #[inline]
-                pub fn max_outgoing_bitrate(&self) -> ::planus::Result<u32> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(20, "Stats", "max_outgoing_bitrate")?
-                            .unwrap_or(0),
-                    )
+                pub fn max_outgoing_bitrate(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<u32>> {
+                    self.0.access(20, "Stats", "max_outgoing_bitrate")
                 }
 
                 /// Getter for the [`min_outgoing_bitrate` field](Stats#structfield.min_outgoing_bitrate).
                 #[inline]
-                pub fn min_outgoing_bitrate(&self) -> ::planus::Result<u32> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(21, "Stats", "min_outgoing_bitrate")?
-                            .unwrap_or(0),
-                    )
+                pub fn min_outgoing_bitrate(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<u32>> {
+                    self.0.access(21, "Stats", "min_outgoing_bitrate")
                 }
 
                 /// Getter for the [`rtp_packet_loss_received` field](Stats#structfield.rtp_packet_loss_received).
@@ -42453,9 +42444,21 @@ mod root {
                             &field_available_incoming_bitrate,
                         );
                     }
-                    f.field("max_incoming_bitrate", &self.max_incoming_bitrate());
-                    f.field("max_outgoing_bitrate", &self.max_outgoing_bitrate());
-                    f.field("min_outgoing_bitrate", &self.min_outgoing_bitrate());
+                    if let ::core::option::Option::Some(field_max_incoming_bitrate) =
+                        self.max_incoming_bitrate().transpose()
+                    {
+                        f.field("max_incoming_bitrate", &field_max_incoming_bitrate);
+                    }
+                    if let ::core::option::Option::Some(field_max_outgoing_bitrate) =
+                        self.max_outgoing_bitrate().transpose()
+                    {
+                        f.field("max_outgoing_bitrate", &field_max_outgoing_bitrate);
+                    }
+                    if let ::core::option::Option::Some(field_min_outgoing_bitrate) =
+                        self.min_outgoing_bitrate().transpose()
+                    {
+                        f.field("min_outgoing_bitrate", &field_min_outgoing_bitrate);
+                    }
                     if let ::core::option::Option::Some(field_rtp_packet_loss_received) =
                         self.rtp_packet_loss_received().transpose()
                     {
@@ -42543,15 +42546,36 @@ mod root {
                         } else {
                             ::core::option::Option::None
                         },
-                        max_incoming_bitrate: ::core::convert::TryInto::try_into(
-                            value.max_incoming_bitrate()?,
-                        )?,
-                        max_outgoing_bitrate: ::core::convert::TryInto::try_into(
-                            value.max_outgoing_bitrate()?,
-                        )?,
-                        min_outgoing_bitrate: ::core::convert::TryInto::try_into(
-                            value.min_outgoing_bitrate()?,
-                        )?,
+                        max_incoming_bitrate: if let ::core::option::Option::Some(
+                            max_incoming_bitrate,
+                        ) = value.max_incoming_bitrate()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                max_incoming_bitrate,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        max_outgoing_bitrate: if let ::core::option::Option::Some(
+                            max_outgoing_bitrate,
+                        ) = value.max_outgoing_bitrate()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                max_outgoing_bitrate,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        min_outgoing_bitrate: if let ::core::option::Option::Some(
+                            min_outgoing_bitrate,
+                        ) = value.min_outgoing_bitrate()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                min_outgoing_bitrate,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
                         rtp_packet_loss_received: if let ::core::option::Option::Some(
                             rtp_packet_loss_received,
                         ) = value.rtp_packet_loss_received()?

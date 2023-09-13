@@ -152,9 +152,9 @@ table Stats {
   probation_send_bitrate:uint32;
   available_outgoing_bitrate:uint32 = null;
   available_incoming_bitrate:uint32 = null;
-  max_incoming_bitrate:uint32;
-  max_outgoing_bitrate:uint32;
-  min_outgoing_bitrate:uint32;
+  max_incoming_bitrate:uint32 = null;
+  max_outgoing_bitrate:uint32 = null;
+  min_outgoing_bitrate:uint32 = null;
   rtp_packet_loss_received:float64 = null;
   rtp_packet_loss_sent:float64 = null;
 }
