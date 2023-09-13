@@ -179,10 +179,11 @@ namespace Channel
 		{
 			const auto* message = FBS::Message::GetMessage(msg);
 
-			// TMP: For debugging.
+#if MS_LOG_DEV_LEVEL == 3
 			auto s = flatbuffers::FlatBufferToString(
 			  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
 			MS_DUMP("%s", s.c_str());
+#endif
 
 			if (message->type() == FBS::Message::Type::REQUEST)
 			{
@@ -256,12 +257,13 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		auto* message = FBS::Message::GetMessage(msg);
+		const auto* message = FBS::Message::GetMessage(msg);
 
-		// TMP: For debugging.
+#if MS_LOG_DEV_LEVEL == 3
 		auto s = flatbuffers::FlatBufferToString(
 		  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
 		MS_DUMP("%s", s.c_str());
+#endif
 
 		if (message->type() == FBS::Message::Type::REQUEST)
 		{
