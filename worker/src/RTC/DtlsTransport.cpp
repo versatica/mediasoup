@@ -726,7 +726,6 @@ namespace RTC
 				case Role::CLIENT:
 					role = "client";
 					break;
-				default:;
 			}
 		}
 
@@ -1206,9 +1205,6 @@ namespace RTC
 			case FingerprintAlgorithm::SHA512:
 				hashFunction = EVP_sha512();
 				break;
-
-			default:
-				MS_ABORT("unknown algorithm");
 		}
 
 		// Compare the remote fingerprint with the value given via signaling.
@@ -1324,11 +1320,6 @@ namespace RTC
 				srtpMasterLength = SrtpMasterLength;
 
 				break;
-			}
-
-			default:
-			{
-				MS_ABORT("unknown SRTP crypto suite");
 			}
 		}
 
