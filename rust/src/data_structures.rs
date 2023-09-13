@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::fbs::{sctp_association, transport};
+use crate::fbs::{sctp_association, transport, web_rtc_transport};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -96,6 +96,15 @@ pub enum IceRole {
     Controlling,
 }
 
+impl IceRole {
+    pub(crate) fn from_fbs(role: web_rtc_transport::IceRole) -> Self {
+        match role {
+            web_rtc_transport::IceRole::Controlled => IceRole::Controlled,
+            web_rtc_transport::IceRole::Controlling => IceRole::Controlling,
+        }
+    }
+}
+
 /// ICE parameters.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -106,6 +115,16 @@ pub struct IceParameters {
     pub password: String,
     /// ICE Lite.
     pub ice_lite: Option<bool>,
+}
+
+impl IceParameters {
+    pub(crate) fn from_fbs(parameters: web_rtc_transport::IceParameters) -> Self {
+        Self {
+            username_fragment: parameters.username_fragment.to_string(),
+            password: parameters.password.to_string(),
+            ice_lite: Some(parameters.ice_lite),
+        }
+    }
 }
 
 /// ICE candidate type.
@@ -128,12 +147,28 @@ pub enum IceCandidateType {
     Relay,
 }
 
+impl IceCandidateType {
+    pub(crate) fn from_fbs(candidate_type: web_rtc_transport::IceCandidateType) -> Self {
+        match candidate_type {
+            web_rtc_transport::IceCandidateType::Host => IceCandidateType::Host,
+        }
+    }
+}
+
 /// ICE candidate TCP type (always `Passive`).
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum IceCandidateTcpType {
     /// Passive.
     Passive,
+}
+
+impl IceCandidateTcpType {
+    pub(crate) fn from_fbs(candidate_type: web_rtc_transport::IceCandidateTcpType) -> Self {
+        match candidate_type {
+            web_rtc_transport::IceCandidateTcpType::Passive => IceCandidateTcpType::Passive,
+        }
+    }
 }
 
 /// Transport protocol.
@@ -177,6 +212,20 @@ pub struct IceCandidate {
     pub tcp_type: Option<IceCandidateTcpType>,
 }
 
+impl IceCandidate {
+    pub(crate) fn from_fbs(candidate: &web_rtc_transport::IceCandidate) -> Self {
+        Self {
+            foundation: candidate.foundation.clone(),
+            priority: candidate.priority,
+            ip: candidate.ip.parse().expect("Error parsing IP address"),
+            protocol: Protocol::from_fbs(candidate.protocol),
+            port: candidate.port,
+            r#type: IceCandidateType::from_fbs(candidate.type_),
+            tcp_type: candidate.tcp_type.map(IceCandidateTcpType::from_fbs),
+        }
+    }
+}
+
 /// ICE state.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -192,8 +241,17 @@ pub enum IceState {
     /// ICE was `Connected` or `Completed` but it has suddenly failed (this can just happen if the
     /// selected tuple has `Tcp` protocol).
     Disconnected,
-    /// ICE state when the transport has been closed.
-    Closed,
+}
+
+impl IceState {
+    pub(crate) fn from_fbs(state: web_rtc_transport::IceState) -> Self {
+        match state {
+            web_rtc_transport::IceState::New => IceState::New,
+            web_rtc_transport::IceState::Connected => IceState::Connected,
+            web_rtc_transport::IceState::Completed => IceState::Completed,
+            web_rtc_transport::IceState::Disconnected => IceState::Disconnected,
+        }
+    }
 }
 
 /// Tuple of local IP/port/protocol + optional remote IP/port.
@@ -309,6 +367,18 @@ pub enum DtlsState {
     Closed,
 }
 
+impl DtlsState {
+    pub(crate) fn from_fbs(state: web_rtc_transport::DtlsState) -> Self {
+        match state {
+            web_rtc_transport::DtlsState::New => DtlsState::New,
+            web_rtc_transport::DtlsState::Connecting => DtlsState::Connecting,
+            web_rtc_transport::DtlsState::Connected => DtlsState::Connected,
+            web_rtc_transport::DtlsState::Failed => DtlsState::Failed,
+            web_rtc_transport::DtlsState::Closed => DtlsState::Closed,
+        }
+    }
+}
+
 /// SCTP state.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -351,6 +421,24 @@ pub enum DtlsRole {
     Server,
 }
 
+impl DtlsRole {
+    pub(crate) fn to_fbs(self) -> web_rtc_transport::DtlsRole {
+        match self {
+            DtlsRole::Auto => web_rtc_transport::DtlsRole::Auto,
+            DtlsRole::Client => web_rtc_transport::DtlsRole::Client,
+            DtlsRole::Server => web_rtc_transport::DtlsRole::Server,
+        }
+    }
+
+    pub(crate) fn from_fbs(role: web_rtc_transport::DtlsRole) -> Self {
+        match role {
+            web_rtc_transport::DtlsRole::Auto => DtlsRole::Auto,
+            web_rtc_transport::DtlsRole::Client => DtlsRole::Client,
+            web_rtc_transport::DtlsRole::Server => DtlsRole::Server,
+        }
+    }
+}
+
 impl Default for DtlsRole {
     fn default() -> Self {
         Self::Auto
@@ -387,6 +475,91 @@ pub enum DtlsFingerprint {
         /// Certificate fingerprint value.
         value: [u8; 64],
     },
+}
+
+fn hex_as_bytes(input: &str, output: &mut [u8]) {
+    for (i, o) in input.split(':').zip(&mut output.iter_mut()) {
+        *o = u8::from_str_radix(i, 16).unwrap_or_else(|error| {
+            panic!("Failed to parse value {i} as series of hex bytes: {error}")
+        });
+    }
+}
+
+impl DtlsFingerprint {
+    pub(crate) fn to_fbs(self) -> web_rtc_transport::Fingerprint {
+        match self {
+            DtlsFingerprint::Sha1 { .. } => web_rtc_transport::Fingerprint {
+                algorithm: web_rtc_transport::FingerprintAlgorithm::Sha1,
+                value: self.value_string(),
+            },
+            DtlsFingerprint::Sha224 { .. } => web_rtc_transport::Fingerprint {
+                algorithm: web_rtc_transport::FingerprintAlgorithm::Sha224,
+                value: self.value_string(),
+            },
+            DtlsFingerprint::Sha256 { .. } => web_rtc_transport::Fingerprint {
+                algorithm: web_rtc_transport::FingerprintAlgorithm::Sha256,
+                value: self.value_string(),
+            },
+            DtlsFingerprint::Sha384 { .. } => web_rtc_transport::Fingerprint {
+                algorithm: web_rtc_transport::FingerprintAlgorithm::Sha384,
+                value: self.value_string(),
+            },
+            DtlsFingerprint::Sha512 { .. } => web_rtc_transport::Fingerprint {
+                algorithm: web_rtc_transport::FingerprintAlgorithm::Sha512,
+                value: self.value_string(),
+            },
+        }
+    }
+
+    pub(crate) fn from_fbs(fingerprint: &web_rtc_transport::Fingerprint) -> DtlsFingerprint {
+        match fingerprint.algorithm {
+            web_rtc_transport::FingerprintAlgorithm::Sha1 => {
+                let mut value_result = [0_u8; 20];
+
+                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+
+                DtlsFingerprint::Sha1 {
+                    value: value_result,
+                }
+            }
+            web_rtc_transport::FingerprintAlgorithm::Sha224 => {
+                let mut value_result = [0_u8; 28];
+
+                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+
+                DtlsFingerprint::Sha224 {
+                    value: value_result,
+                }
+            }
+            web_rtc_transport::FingerprintAlgorithm::Sha256 => {
+                let mut value_result = [0_u8; 32];
+
+                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+
+                DtlsFingerprint::Sha256 {
+                    value: value_result,
+                }
+            }
+            web_rtc_transport::FingerprintAlgorithm::Sha384 => {
+                let mut value_result = [0_u8; 48];
+
+                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+
+                DtlsFingerprint::Sha384 {
+                    value: value_result,
+                }
+            }
+            web_rtc_transport::FingerprintAlgorithm::Sha512 => {
+                let mut value_result = [0_u8; 64];
+
+                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+
+                DtlsFingerprint::Sha512 {
+                    value: value_result,
+                }
+            }
+        }
+    }
 }
 
 impl fmt::Debug for DtlsFingerprint {
@@ -824,6 +997,30 @@ pub struct DtlsParameters {
     pub role: DtlsRole,
     /// DTLS fingerprints.
     pub fingerprints: Vec<DtlsFingerprint>,
+}
+
+impl DtlsParameters {
+    pub(crate) fn to_fbs(&self) -> web_rtc_transport::DtlsParameters {
+        web_rtc_transport::DtlsParameters {
+            role: self.role.to_fbs(),
+            fingerprints: self
+                .fingerprints
+                .iter()
+                .map(|fingerprint| fingerprint.to_fbs())
+                .collect(),
+        }
+    }
+
+    pub(crate) fn from_fbs(parameters: web_rtc_transport::DtlsParameters) -> DtlsParameters {
+        DtlsParameters {
+            role: DtlsRole::from_fbs(parameters.role),
+            fingerprints: parameters
+                .fingerprints
+                .iter()
+                .map(DtlsFingerprint::from_fbs)
+                .collect(),
+        }
+    }
 }
 
 /// Trace event direction

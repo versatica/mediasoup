@@ -209,9 +209,9 @@ pub struct PipeTransportStat {
     pub available_outgoing_bitrate: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub available_incoming_bitrate: Option<u32>,
-    pub max_incoming_bitrate: u32,
-    pub max_outgoing_bitrate: u32,
-    pub min_outgoing_bitrate: u32,
+    pub max_incoming_bitrate: Option<u32>,
+    pub max_outgoing_bitrate: Option<u32>,
+    pub min_outgoing_bitrate: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rtp_packet_loss_received: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]

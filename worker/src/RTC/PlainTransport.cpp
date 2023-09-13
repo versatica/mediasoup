@@ -26,22 +26,6 @@ namespace RTC
 
 	/* Class variables. */
 
-	// clang-format off
-	absl::flat_hash_map<std::string, RTC::SrtpSession::CryptoSuite> PlainTransport::string2SrtpCryptoSuite =
-	{
-		{ "AEAD_AES_256_GCM",        RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM        },
-		{ "AEAD_AES_128_GCM",        RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM        },
-		{ "AES_CM_128_HMAC_SHA1_80", RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80 },
-		{ "AES_CM_128_HMAC_SHA1_32", RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32 }
-	};
-	absl::flat_hash_map<RTC::SrtpSession::CryptoSuite, std::string> PlainTransport::srtpCryptoSuite2String =
-	{
-		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM,        "AEAD_AES_256_GCM"        },
-		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM,        "AEAD_AES_128_GCM"        },
-		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80, "AES_CM_128_HMAC_SHA1_80" },
-		{ RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32, "AES_CM_128_HMAC_SHA1_32" }
-	};
-
 	/* Instance methods. */
 
 	PlainTransport::PlainTransport(
@@ -70,12 +54,14 @@ namespace RTC
 
 		this->listenInfo.port = options->listenInfo()->port();
 
-		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_SENDBUFFERSIZE))
+		if (flatbuffers::IsFieldPresent(
+		      options->listenInfo(), FBS::Transport::ListenInfo::VT_SENDBUFFERSIZE))
 		{
 			this->listenInfo.sendBufferSize = options->listenInfo()->sendBufferSize();
 		}
 
-		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_RECVBUFFERSIZE))
+		if (flatbuffers::IsFieldPresent(
+		      options->listenInfo(), FBS::Transport::ListenInfo::VT_RECVBUFFERSIZE))
 		{
 			this->listenInfo.recvBufferSize = options->listenInfo()->recvBufferSize();
 		}
@@ -85,7 +71,8 @@ namespace RTC
 
 		if (!this->rtcpMux)
 		{
-			if (flatbuffers::IsFieldPresent(options, FBS::PlainTransport::PlainTransportOptions::VT_RTCPLISTENINFO))
+			if (flatbuffers::IsFieldPresent(
+			      options, FBS::PlainTransport::PlainTransportOptions::VT_RTCPLISTENINFO))
 			{
 				if (options->rtcpListenInfo()->protocol() != FBS::Transport::Protocol::UDP)
 				{
@@ -97,19 +84,22 @@ namespace RTC
 				// This may throw.
 				Utils::IP::NormalizeIp(this->rtcpListenInfo.ip);
 
-				if (flatbuffers::IsFieldPresent(options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
+				if (flatbuffers::IsFieldPresent(
+				      options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
 				{
 					this->rtcpListenInfo.announcedIp.assign(options->rtcpListenInfo()->announcedIp()->str());
 				}
 
 				this->rtcpListenInfo.port = options->rtcpListenInfo()->port();
 
-				if (flatbuffers::IsFieldPresent(options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_SENDBUFFERSIZE))
+				if (flatbuffers::IsFieldPresent(
+				      options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_SENDBUFFERSIZE))
 				{
 					this->rtcpListenInfo.sendBufferSize = options->rtcpListenInfo()->sendBufferSize();
 				}
 
-				if (flatbuffers::IsFieldPresent(options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_RECVBUFFERSIZE))
+				if (flatbuffers::IsFieldPresent(
+				      options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_RECVBUFFERSIZE))
 				{
 					this->rtcpListenInfo.recvBufferSize = options->rtcpListenInfo()->recvBufferSize();
 				}
@@ -123,22 +113,13 @@ namespace RTC
 
 		if (options->enableSrtp())
 		{
-			if (!flatbuffers::IsFieldPresent(
-			      options, FBS::PlainTransport::PlainTransportOptions::VT_SRTPCRYPTOSUITE))
+			if (!options->srtpCryptoSuite().has_value())
 			{
 				MS_THROW_TYPE_ERROR("missing srtpCryptoSuite");
 			}
 
-			// Ensure it's a crypto suite supported by us.
-			auto it = PlainTransport::string2SrtpCryptoSuite.find(options->srtpCryptoSuite()->str());
-
-			if (it == PlainTransport::string2SrtpCryptoSuite.end())
-			{
-				MS_THROW_TYPE_ERROR("invalid/unsupported srtpCryptoSuite");
-			}
-
 			// NOTE: The SRTP crypto suite may change later on connect().
-			this->srtpCryptoSuite = it->second;
+			this->srtpCryptoSuite = SrtpSession::CryptoSuiteFromFbs(options->srtpCryptoSuite().value());
 
 			switch (this->srtpCryptoSuite)
 			{
@@ -203,7 +184,8 @@ namespace RTC
 				// This may throw.
 				if (this->rtcpListenInfo.port != 0)
 				{
-					this->rtcpUdpSocket = new RTC::UdpSocket(this, this->rtcpListenInfo.ip, this->rtcpListenInfo.port);
+					this->rtcpUdpSocket =
+					  new RTC::UdpSocket(this, this->rtcpListenInfo.ip, this->rtcpListenInfo.port);
 				}
 				else
 				{
@@ -296,7 +278,12 @@ namespace RTC
 			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
-			  builder, localIp.c_str(), this->udpSocket->GetLocalPort(), nullptr, 0, FBS::Transport::Protocol::UDP);
+			  builder,
+			  localIp.c_str(),
+			  this->udpSocket->GetLocalPort(),
+			  nullptr,
+			  0,
+			  FBS::Transport::Protocol::UDP);
 		}
 
 		// Add rtcpTuple.
@@ -322,19 +309,22 @@ namespace RTC
 				}
 
 				rtcpTuple = FBS::Transport::CreateTupleDirect(
-				  builder, localIp.c_str(), this->rtcpUdpSocket->GetLocalPort(), nullptr, 0, FBS::Transport::Protocol::UDP);
+				  builder,
+				  localIp.c_str(),
+				  this->rtcpUdpSocket->GetLocalPort(),
+				  nullptr,
+				  0,
+				  FBS::Transport::Protocol::UDP);
 			}
 		}
 
 		// Add srtpParameters.
-		flatbuffers::Offset<FBS::Transport::SrtpParameters> srtpParameters;
+		flatbuffers::Offset<FBS::SrtpParameters::SrtpParameters> srtpParameters;
 
 		if (HasSrtp())
 		{
-			srtpParameters = FBS::Transport::CreateSrtpParametersDirect(
-			  builder,
-			  PlainTransport::srtpCryptoSuite2String[this->srtpCryptoSuite].c_str(),
-			  this->srtpKeyBase64.c_str());
+			srtpParameters = FBS::SrtpParameters::CreateSrtpParametersDirect(
+			  builder, SrtpSession::CryptoSuiteToFbs(this->srtpCryptoSuite), this->srtpKeyBase64.c_str());
 		}
 
 		// Add base transport dump.
@@ -345,7 +335,7 @@ namespace RTC
 	}
 
 	flatbuffers::Offset<FBS::PlainTransport::GetStatsResponse> PlainTransport::FillBufferStats(
-			flatbuffers::FlatBufferBuilder& builder)
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
@@ -360,7 +350,6 @@ namespace RTC
 		{
 			std::string localIp;
 
-
 			if (this->listenInfo.announcedIp.empty())
 			{
 				localIp = this->udpSocket->GetLocalIp();
@@ -371,18 +360,17 @@ namespace RTC
 			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
-					builder,
-					// localIp.
-					localIp.c_str(),
-					// localPort,
-					this->udpSocket->GetLocalPort(),
-					// remoteIp.
-					nullptr,
-					// remotePort.
-					0,
-					// protocol.
-					FBS::Transport::Protocol::UDP
-					);
+			  builder,
+			  // localIp.
+			  localIp.c_str(),
+			  // localPort,
+			  this->udpSocket->GetLocalPort(),
+			  // remoteIp.
+			  nullptr,
+			  // remotePort.
+			  0,
+			  // protocol.
+			  FBS::Transport::Protocol::UDP);
 		}
 
 		// Add rtcpTuple.
@@ -397,12 +385,7 @@ namespace RTC
 		auto base = Transport::FillBufferStats(builder);
 
 		return FBS::PlainTransport::CreateGetStatsResponse(
-				builder,
-				base,
-				this->rtcpMux,
-				this->comedia,
-				tuple,
-				rtcpTuple);
+		  builder, base, this->rtcpMux, this->comedia, tuple, rtcpTuple);
 	}
 
 	void PlainTransport::HandleRequest(Channel::ChannelRequest* request)
@@ -444,10 +427,10 @@ namespace RTC
 					uint16_t rtcpPort{ 0u };
 					std::string srtpKeyBase64;
 
-					const auto *body = request->data->body_as<FBS::PlainTransport::ConnectRequest>();
+					const auto* body = request->data->body_as<FBS::PlainTransport::ConnectRequest>();
 
 					auto srtpParametersPresent = flatbuffers::IsFieldPresent(
-							body, FBS::PlainTransport::ConnectRequest::VT_SRTPPARAMETERS);
+					  body, FBS::PlainTransport::ConnectRequest::VT_SRTPPARAMETERS);
 
 					if (!HasSrtp() && srtpParametersPresent)
 					{
@@ -460,19 +443,11 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing srtpParameters (SRTP enabled)");
 						}
 
-						const auto *srtpParameters = body->srtpParameters();
-						// Ensure it's a crypto suite supported by us.
-						auto it =
-						  PlainTransport::string2SrtpCryptoSuite.find(srtpParameters->cryptoSuite()->str());
-
-						if (it == PlainTransport::string2SrtpCryptoSuite.end())
-						{
-							MS_THROW_TYPE_ERROR("invalid/unsupported srtpParameters.cryptoSuite");
-						}
+						const auto srtpParameters = body->srtpParameters();
 
 						// Update out SRTP crypto suite with the one used by the remote.
 						auto previousSrtpCryptoSuite = this->srtpCryptoSuite;
-						this->srtpCryptoSuite        = it->second;
+						this->srtpCryptoSuite = SrtpSession::CryptoSuiteFromFbs(srtpParameters->cryptoSuite());
 
 						switch (this->srtpCryptoSuite)
 						{
@@ -723,7 +698,7 @@ namespace RTC
 				// Tell the caller about the selected local DTLS role.
 				flatbuffers::Offset<FBS::Transport::Tuple> tupleOffset;
 				flatbuffers::Offset<FBS::Transport::Tuple> rtcpTupleOffset;
-				flatbuffers::Offset<FBS::Transport::SrtpParameters> srtpParametersOffset;
+				flatbuffers::Offset<FBS::SrtpParameters::SrtpParameters> srtpParametersOffset;
 
 				if (this->tuple)
 				{
@@ -737,15 +712,13 @@ namespace RTC
 
 				if (HasSrtp())
 				{
-					srtpParametersOffset = FBS::Transport::CreateSrtpParametersDirect(
-							request->GetBufferBuilder(),
-							PlainTransport::srtpCryptoSuite2String[this->srtpCryptoSuite].c_str(),
-							this->srtpKeyBase64.c_str()
-							);
+					srtpParametersOffset = FBS::SrtpParameters::CreateSrtpParametersDirect(
+					  request->GetBufferBuilder(),
+					  SrtpSession::CryptoSuiteToFbs(this->srtpCryptoSuite),
+					  this->srtpKeyBase64.c_str());
 				}
 
-				auto responseOffset =
-				  FBS::PlainTransport::CreateConnectResponse(
+				auto responseOffset = FBS::PlainTransport::CreateConnectResponse(
 				  request->GetBufferBuilder(), tupleOffset, rtcpTupleOffset, srtpParametersOffset);
 
 				request->Accept(FBS::Response::Body::FBS_PlainTransport_ConnectResponse, responseOffset);
@@ -897,7 +870,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->sctpAssociation->SendSctpMessage(dataConsumer, msg, len,ppid,  cb);
+		this->sctpAssociation->SendSctpMessage(dataConsumer, msg, len, ppid, cb);
 	}
 
 	void PlainTransport::SendSctpData(const uint8_t* data, size_t len)
@@ -1211,30 +1184,28 @@ namespace RTC
 
 	inline void PlainTransport::EmitTuple() const
 	{
-		auto tuple = this->tuple->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
+		auto tuple        = this->tuple->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
 		auto notification = FBS::PlainTransport::CreateTupleNotification(
-				this->shared->channelNotifier->GetBufferBuilder(),
-				tuple);
+		  this->shared->channelNotifier->GetBufferBuilder(), tuple);
 
 		this->shared->channelNotifier->Emit(
-				this->id,
-				FBS::Notification::Event::PLAINTRANSPORT_TUPLE,
-				FBS::Notification::Body::FBS_PlainTransport_TupleNotification,
-				notification);
+		  this->id,
+		  FBS::Notification::Event::PLAINTRANSPORT_TUPLE,
+		  FBS::Notification::Body::FBS_PlainTransport_TupleNotification,
+		  notification);
 	}
 
 	inline void PlainTransport::EmitRtcpTuple() const
 	{
 		auto rtcpTuple = this->rtcpTuple->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
 		auto notification = FBS::PlainTransport::CreateRtcpTupleNotification(
-				this->shared->channelNotifier->GetBufferBuilder(),
-				rtcpTuple);
+		  this->shared->channelNotifier->GetBufferBuilder(), rtcpTuple);
 
 		this->shared->channelNotifier->Emit(
-				this->id,
-				FBS::Notification::Event::PLAINTRANSPORT_RTCP_TUPLE,
-				FBS::Notification::Body::FBS_PlainTransport_RtcpTupleNotification,
-				notification);
+		  this->id,
+		  FBS::Notification::Event::PLAINTRANSPORT_RTCP_TUPLE,
+		  FBS::Notification::Body::FBS_PlainTransport_RtcpTupleNotification,
+		  notification);
 	}
 
 	inline void PlainTransport::OnUdpSocketPacketReceived(

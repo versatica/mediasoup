@@ -28,7 +28,12 @@ import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
 import * as FbsWebRtcTransport from './fbs/web-rtc-transport';
 import { DtlsState as FbsDtlsState } from './fbs/web-rtc-transport/dtls-state';
+import { DtlsRole as FbsDtlsRole } from './fbs/web-rtc-transport/dtls-role';
+import { FingerprintAlgorithm as FbsFingerprintAlgorithm } from './fbs/web-rtc-transport/fingerprint-algorithm';
 import { IceState as FbsIceState } from './fbs/web-rtc-transport/ice-state';
+import { IceRole as FbsIceRole } from './fbs/web-rtc-transport/ice-role';
+import { IceCandidateType as FbsIceCandidateType } from './fbs/web-rtc-transport/ice-candidate-type';
+import { IceCandidateTcpType as FbsIceCandidateTcpType } from './fbs/web-rtc-transport/ice-candidate-tcp-type';
 
 export type WebRtcTransportOptions<WebRtcTransportAppData extends AppData = AppData> =
 	WebRtcTransportOptionsBase<WebRtcTransportAppData> & WebRtcTransportListen;
@@ -142,8 +147,8 @@ export type IceCandidate =
 	ip: string;
 	protocol: TransportProtocol;
 	port: number;
-	type: 'host';
-	tcpType: 'passive' | undefined;
+	type: IceCandidateType;
+	tcpType?: IceCandidateTcpType;
 };
 
 export type DtlsParameters =
@@ -154,17 +159,28 @@ export type DtlsParameters =
 
 /**
  * The hash function algorithm (as defined in the "Hash function Textual Names"
- * registry initially specified in RFC 4572 Section 8) and its corresponding
- * certificate fingerprint value (in lowercase hex string as expressed utilizing
- * the syntax of "fingerprint" in RFC 4572 Section 5).
+ * registry initially specified in RFC 4572 Section 8).
+ */
+export type FingerprintAlgorithm = 'sha-1'| 'sha-224'| 'sha-256'| 'sha-384'| 'sha-512';
+
+/**
+ * The hash function algorithm and its corresponding certificate fingerprint
+ * value (in lowercase hex string as expressed utilizing the syntax of
+ * "fingerprint" in RFC 4572 Section 5).
  */
 export type DtlsFingerprint =
 {
-	algorithm: string;
+	algorithm: FingerprintAlgorithm;
 	value: string;
 };
 
+export type IceRole = 'controlled' | 'controlling';
+
 export type IceState = 'new' | 'connected' | 'completed' | 'disconnected' | 'closed';
+
+export type IceCandidateType = 'host';
+
+export type IceCandidateTcpType = 'passive';
 
 export type DtlsRole = 'auto' | 'client' | 'server';
 
@@ -479,7 +495,7 @@ export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
 		// Wait for response.
 		const response = await this.channel.request(
 			FbsRequest.Method.WEBRTCTRANSPORT_CONNECT,
-			FbsRequest.Body.FBS_WebRtcTransport_ConnectRequest,
+			FbsRequest.Body.WebRtcTransport_ConnectRequest,
 			requestOffset,
 			this.internal.transportId
 		);
@@ -490,8 +506,7 @@ export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
 		response.body(data);
 
 		// Update data.
-		this.#data.dtlsParameters.role =
-			data.dtlsLocalRole()! as DtlsRole;
+		this.#data.dtlsParameters.role = dtlsRoleFromFbs(data.dtlsLocalRole());
 	}
 
 	/**
@@ -537,7 +552,7 @@ export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
 
 					data!.body(notification);
 
-					const iceState = fbsIceState2IceState(notification.iceState());
+					const iceState = iceStateFromFbs(notification.iceState());
 
 					this.#data.iceState = iceState;
 
@@ -574,7 +589,7 @@ export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
 
 					data!.body(notification);
 
-					const dtlsState = fbsDtlsState2DtlsState(notification.dtlsState());
+					const dtlsState = dtlsStateFromFbs(notification.dtlsState());
 
 					this.#data.dtlsState = dtlsState;
 
@@ -634,7 +649,7 @@ export class WebRtcTransport<WebRtcTransportAppData extends AppData = AppData>
 	}
 }
 
-export function fbsIceState2IceState(fbsIceState: FbsIceState): IceState
+function iceStateFromFbs(fbsIceState: FbsIceState): IceState
 {
 	switch (fbsIceState)
 	{
@@ -646,14 +661,39 @@ export function fbsIceState2IceState(fbsIceState: FbsIceState): IceState
 			return 'completed';
 		case FbsIceState.DISCONNECTED:
 			return 'disconnected';
-		case FbsIceState.CLOSED:
-			return 'closed';
-		default:
-			throw new TypeError(`invalid SctpState: ${fbsIceState}`);
 	}
 }
 
-export function fbsDtlsState2DtlsState(fbsDtlsState: FbsDtlsState): DtlsState
+function iceRoleFromFbs(role: FbsIceRole): IceRole
+{
+	switch (role)
+	{
+		case FbsIceRole.CONTROLLED:
+			return 'controlled';
+		case FbsIceRole.CONTROLLING:
+			return 'controlling';
+	}
+}
+
+function iceCandidateTypeFromFbs(type: FbsIceCandidateType): IceCandidateType
+{
+	switch (type)
+	{
+		case FbsIceCandidateType.HOST:
+			return 'host';
+	}
+}
+
+function iceCandidateTcpTypeFromFbs(type: FbsIceCandidateTcpType): IceCandidateTcpType
+{
+	switch (type)
+	{
+		case FbsIceCandidateTcpType.PASSIVE:
+			return 'passive';
+	}
+}
+
+function dtlsStateFromFbs(fbsDtlsState: FbsDtlsState): DtlsState
 {
 	switch (fbsDtlsState)
 	{
@@ -667,8 +707,72 @@ export function fbsDtlsState2DtlsState(fbsDtlsState: FbsDtlsState): DtlsState
 			return 'failed';
 		case FbsDtlsState.CLOSED:
 			return 'closed';
+	}
+}
+
+function dtlsRoleFromFbs(role: FbsDtlsRole): DtlsRole
+{
+	switch (role)
+	{
+		case FbsDtlsRole.AUTO:
+			return 'auto';
+		case FbsDtlsRole.CLIENT:
+			return 'client';
+		case FbsDtlsRole.SERVER:
+			return 'server';
+	}
+}
+
+function fingerprintAlgorithmsFromFbs(algorithm: FbsFingerprintAlgorithm)
+	: FingerprintAlgorithm
+{
+	switch (algorithm)
+	{
+		case FbsFingerprintAlgorithm.SHA1:
+			return 'sha-1';
+		case FbsFingerprintAlgorithm.SHA224:
+			return 'sha-224';
+		case FbsFingerprintAlgorithm.SHA256:
+			return 'sha-256';
+		case FbsFingerprintAlgorithm.SHA384:
+			return 'sha-384';
+		case FbsFingerprintAlgorithm.SHA512:
+			return 'sha-512';
+	}
+}
+
+function fingerprintAlgorithmToFbs(algorithm: FingerprintAlgorithm)
+	: FbsFingerprintAlgorithm
+{
+	switch (algorithm)
+	{
+		case 'sha-1':
+			return FbsFingerprintAlgorithm.SHA1;
+		case 'sha-224':
+			return FbsFingerprintAlgorithm.SHA224;
+		case 'sha-256':
+			return FbsFingerprintAlgorithm.SHA256;
+		case 'sha-384':
+			return FbsFingerprintAlgorithm.SHA384;
+		case 'sha-512':
+			return FbsFingerprintAlgorithm.SHA512;
 		default:
-			throw new TypeError(`invalid SctpState: ${fbsDtlsState}`);
+			throw new TypeError(`invalid fingerprint algorithm: ${algorithm}`);
+	}
+}
+
+function dtlsRoleToFbs(role: DtlsRole): FbsDtlsRole
+{
+	switch (role)
+	{
+		case 'auto':
+			return FbsDtlsRole.AUTO;
+		case 'client':
+			return FbsDtlsRole.CLIENT;
+		case 'server':
+			return FbsDtlsRole.SERVER;
+		default:
+			throw new TypeError(`invalid dtls role: ${role}`);
 	}
 }
 
@@ -692,9 +796,9 @@ export function parseWebRtcTransportDumpResponse(
 		iceRole        : 'controlled',
 		iceParameters  : iceParameters,
 		iceCandidates  : iceCandidates,
-		iceState       : binary.iceState() as IceState,
+		iceState       : iceStateFromFbs(binary.iceState()),
 		dtlsParameters : dtlsParameters,
-		dtlsState      : binary.dtlsState() as DtlsState
+		dtlsState      : dtlsStateFromFbs(binary.dtlsState())
 	};
 }
 
@@ -727,12 +831,12 @@ function parseGetStatsResponse(
 	return {
 		...base,
 		type             : 'webrtc-transport',
-		iceRole          : binary.iceRole()!,
-		iceState         : binary.iceState() as IceState,
+		iceRole          : iceRoleFromFbs(binary.iceRole()),
+		iceState         : iceStateFromFbs(binary.iceState()),
 		iceSelectedTuple : binary.iceSelectedTuple() ?
 			parseTuple(binary.iceSelectedTuple()!) :
 			undefined,
-		dtlsState : binary.dtlsState() as DtlsState
+		dtlsState : dtlsStateFromFbs(binary.dtlsState())
 	};
 }
 
@@ -744,8 +848,10 @@ function parseIceCandidate(binary: FbsWebRtcTransport.IceCandidate): IceCandidat
 		ip         : binary.ip()!,
 		protocol   : parseProtocol(binary.protocol()),
 		port       : binary.port(),
-		type       : 'host',
-		tcpType    : binary.tcpType() === 'passive' ? 'passive' : undefined
+		type       : iceCandidateTypeFromFbs(binary.type()),
+		tcpType    : binary.tcpType() === null ?
+			undefined :
+			iceCandidateTcpTypeFromFbs(binary.tcpType()!)
 	};
 }
 
@@ -767,7 +873,7 @@ function parseDtlsParameters(binary: FbsWebRtcTransport.DtlsParameters): DtlsPar
 		const fbsFingerprint = binary.fingerprints(i)!;
 		const fingerPrint : DtlsFingerprint =
 		{
-			algorithm : fbsFingerprint.algorithm()!,
+			algorithm : fingerprintAlgorithmsFromFbs(fbsFingerprint.algorithm()),
 			value     : fbsFingerprint.value()!
 		};
 
@@ -776,7 +882,7 @@ function parseDtlsParameters(binary: FbsWebRtcTransport.DtlsParameters): DtlsPar
 
 	return {
 		fingerprints : fingerprints,
-		role         : binary.role()! as DtlsRole
+		role         : binary.role() === null? undefined : dtlsRoleFromFbs(binary.role()!)
 	};
 }
 
@@ -788,20 +894,22 @@ function serializeDtlsParameters(
 
 	for (const fingerprint of dtlsParameters.fingerprints)
 	{
-		const algorithmOffset = builder.createString(fingerprint.algorithm);
+		const algorithm = fingerprintAlgorithmToFbs(fingerprint.algorithm);
 		const valueOffset = builder.createString(fingerprint.value);
 		const fingerprintOffset = FbsWebRtcTransport.Fingerprint.createFingerprint(
-			builder, algorithmOffset, valueOffset);
+			builder, algorithm, valueOffset);
 
 		fingerprints.push(fingerprintOffset);
 	}
 
 	const fingerprintsOffset = FbsWebRtcTransport.DtlsParameters.createFingerprintsVector(
 		builder, fingerprints);
-	const roleOffset = builder.createString(dtlsParameters.role);
+	const role = dtlsParameters.role !== undefined ?
+		dtlsRoleToFbs(dtlsParameters.role) :
+		FbsWebRtcTransport.DtlsRole.AUTO;
 
 	return FbsWebRtcTransport.DtlsParameters.createDtlsParameters(
 		builder,
 		fingerprintsOffset,
-		roleOffset);
+		role);
 }

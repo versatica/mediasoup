@@ -292,6 +292,11 @@ test('webRtcTransport.connect() succeeds', async () =>
 	expect(transport.dtlsParameters.role).toBe('server');
 }, 2000);
 
+/**
+ * When are we going to rely on the type system in the API?
+ * We are testing invalid type values which adds extra checks in the code that should be
+ * simply guarded by the type system.
+ */
 test('webRtcTransport.connect() with wrong arguments rejects with TypeError', async () =>
 {
 	let dtlsRemoteParameters: mediasoup.types.DtlsParameters;
@@ -306,6 +311,7 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 		fingerprints :
 		[
 			{
+				// @ts-ignore.
 				algorithm : 'sha-256000',
 				value     : '82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD'
 			}

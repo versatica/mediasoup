@@ -316,23 +316,7 @@ namespace RTC
 		}
 
 		// Add iceState.
-		std::string iceState;
-
-		switch (this->iceServer->GetState())
-		{
-			case RTC::IceServer::IceState::NEW:
-				iceState = "new";
-				break;
-			case RTC::IceServer::IceState::CONNECTED:
-				iceState = "connected";
-				break;
-			case RTC::IceServer::IceState::COMPLETED:
-				iceState = "completed";
-				break;
-			case RTC::IceServer::IceState::DISCONNECTED:
-				iceState = "disconnected";
-				break;
-		}
+		auto iceState = RTC::IceServer::IceStateToFbs(this->iceServer->GetState());
 
 		// Add iceSelectedTuple.
 		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
@@ -345,71 +329,33 @@ namespace RTC
 
 		for (const auto& fingerprint : this->dtlsTransport->GetLocalFingerprints())
 		{
-			auto& algorithm   = RTC::DtlsTransport::GetFingerprintAlgorithmString(fingerprint.algorithm);
+			auto algorithm    = DtlsTransport::AlgorithmToFbs(fingerprint.algorithm);
 			const auto& value = fingerprint.value;
 
 			fingerprints.emplace_back(
-			  FBS::WebRtcTransport::CreateFingerprintDirect(builder, algorithm.c_str(), value.c_str()));
+			  FBS::WebRtcTransport::CreateFingerprintDirect(builder, algorithm, value.c_str()));
 		}
 
 		// Add dtlsParameters.role.
-		std::string dtlsRole;
-
-		switch (this->dtlsRole)
-		{
-			case RTC::DtlsTransport::Role::NONE:
-				dtlsRole = "none";
-				break;
-			case RTC::DtlsTransport::Role::AUTO:
-				dtlsRole = "auto";
-				break;
-			case RTC::DtlsTransport::Role::CLIENT:
-				dtlsRole = "client";
-				break;
-			case RTC::DtlsTransport::Role::SERVER:
-				dtlsRole = "server";
-				break;
-		}
-
-		// Add dtlsState.
-		std::string dtlsState;
-
-		switch (this->dtlsTransport->GetState())
-		{
-			case RTC::DtlsTransport::DtlsState::NEW:
-				dtlsState = "new";
-				break;
-			case RTC::DtlsTransport::DtlsState::CONNECTING:
-				dtlsState = "connecting";
-				break;
-			case RTC::DtlsTransport::DtlsState::CONNECTED:
-				dtlsState = "connected";
-				break;
-			case RTC::DtlsTransport::DtlsState::FAILED:
-				dtlsState = "failed";
-				break;
-			case RTC::DtlsTransport::DtlsState::CLOSED:
-				dtlsState = "closed";
-				break;
-		}
+		auto dtlsRole  = DtlsTransport::RoleToFbs(this->dtlsRole);
+		auto dtlsState = DtlsTransport::StateToFbs(this->dtlsTransport->GetState());
 
 		// Add base transport dump.
 		auto base = Transport::FillBuffer(builder);
 		// Add dtlsParameters.
 		auto dtlsParameters =
-		  FBS::WebRtcTransport::CreateDtlsParametersDirect(builder, &fingerprints, dtlsRole.c_str());
+		  FBS::WebRtcTransport::CreateDtlsParametersDirect(builder, &fingerprints, dtlsRole);
 
 		return FBS::WebRtcTransport::CreateDumpResponseDirect(
 		  builder,
 		  base,
-		  // iceRole (we are always "controlled").
-		  "controlled",
+		  FBS::WebRtcTransport::IceRole::CONTROLLED,
 		  iceParameters,
 		  &iceCandidates,
-		  iceState.c_str(),
+		  iceState,
 		  iceSelectedTuple,
 		  dtlsParameters,
-		  dtlsState.c_str());
+		  dtlsState);
 	}
 
 	flatbuffers::Offset<FBS::WebRtcTransport::GetStatsResponse> WebRtcTransport::FillBufferStats(
@@ -418,23 +364,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Add iceState.
-		std::string iceState;
-
-		switch (this->iceServer->GetState())
-		{
-			case RTC::IceServer::IceState::NEW:
-				iceState = "new";
-				break;
-			case RTC::IceServer::IceState::CONNECTED:
-				iceState = "connected";
-				break;
-			case RTC::IceServer::IceState::COMPLETED:
-				iceState = "completed";
-				break;
-			case RTC::IceServer::IceState::DISCONNECTED:
-				iceState = "disconnected";
-				break;
-		}
+		auto iceState = RTC::IceServer::IceStateToFbs(this->iceServer->GetState());
 
 		// Add iceSelectedTuple.
 		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
@@ -442,39 +372,19 @@ namespace RTC
 		if (this->iceServer->GetSelectedTuple())
 			iceSelectedTuple = this->iceServer->GetSelectedTuple()->FillBuffer(builder);
 
-		std::string dtlsState;
-
-		// Add dtlsState.
-		switch (this->dtlsTransport->GetState())
-		{
-			case RTC::DtlsTransport::DtlsState::NEW:
-				dtlsState = "new";
-				break;
-			case RTC::DtlsTransport::DtlsState::CONNECTING:
-				dtlsState = "connecting";
-				break;
-			case RTC::DtlsTransport::DtlsState::CONNECTED:
-				dtlsState = "connected";
-				break;
-			case RTC::DtlsTransport::DtlsState::FAILED:
-				dtlsState = "failed";
-				break;
-			case RTC::DtlsTransport::DtlsState::CLOSED:
-				dtlsState = "closed";
-				break;
-		}
+		auto dtlsState = DtlsTransport::StateToFbs(this->dtlsTransport->GetState());
 
 		// Base Transport stats.
 		auto base = Transport::FillBufferStats(builder);
 
-		return FBS::WebRtcTransport::CreateGetStatsResponseDirect(
+		return FBS::WebRtcTransport::CreateGetStatsResponse(
 		  builder,
 		  base,
 		  // iceRole (we are always "controlled").
-		  "controlled",
-		  iceState.c_str(),
+		  FBS::WebRtcTransport::IceRole::CONTROLLED,
+		  iceState,
 		  iceSelectedTuple,
-		  dtlsState.c_str());
+		  dtlsState);
 	}
 
 	void WebRtcTransport::HandleRequest(Channel::ChannelRequest* request)
@@ -521,13 +431,7 @@ namespace RTC
 				// NOTE: Just take the first fingerprint.
 				for (const auto& fingerprint : *dtlsParameters->fingerprints())
 				{
-					dtlsRemoteFingerprint.algorithm =
-					  RTC::DtlsTransport::GetFingerprintAlgorithm(fingerprint->algorithm()->str());
-
-					if (dtlsRemoteFingerprint.algorithm == RTC::DtlsTransport::FingerprintAlgorithm::NONE)
-					{
-						MS_THROW_TYPE_ERROR("invalid fingerprint.algorithm value");
-					}
+					dtlsRemoteFingerprint.algorithm = DtlsTransport::AlgorithmFromFbs(fingerprint->algorithm());
 
 					dtlsRemoteFingerprint.value = fingerprint->value()->str();
 
@@ -535,17 +439,7 @@ namespace RTC
 					break;
 				}
 
-				if (flatbuffers::IsFieldPresent(dtlsParameters, FBS::WebRtcTransport::DtlsParameters::VT_ROLE))
-				{
-					dtlsRemoteRole = RTC::DtlsTransport::StringToRole(dtlsParameters->role()->str());
-
-					if (dtlsRemoteRole == RTC::DtlsTransport::Role::NONE)
-						MS_THROW_TYPE_ERROR("invalid dtlsParameters.role value");
-				}
-				else
-				{
-					dtlsRemoteRole = RTC::DtlsTransport::Role::AUTO;
-				}
+				dtlsRemoteRole = RTC::DtlsTransport::RoleFromFbs(dtlsParameters->role());
 
 				// Set local DTLS role.
 				switch (dtlsRemoteRole)
@@ -564,10 +458,6 @@ namespace RTC
 
 						break;
 					}
-					case RTC::DtlsTransport::Role::NONE:
-					{
-						MS_THROW_TYPE_ERROR("invalid remote DTLS role");
-					}
 				}
 
 				this->connectCalled = true;
@@ -580,24 +470,10 @@ namespace RTC
 				}
 
 				// Tell the caller about the selected local DTLS role.
-				std::string dtlsLocalRole;
+				auto dtlsLocalRole = DtlsTransport::RoleToFbs(this->dtlsRole);
 
-				switch (this->dtlsRole)
-				{
-					case RTC::DtlsTransport::Role::CLIENT:
-						dtlsLocalRole = "client";
-						break;
-
-					case RTC::DtlsTransport::Role::SERVER:
-						dtlsLocalRole = "server";
-						break;
-
-					default:
-						MS_ABORT("invalid local DTLS role");
-				}
-
-				auto responseOffset = FBS::WebRtcTransport::CreateConnectResponseDirect(
-				  request->GetBufferBuilder(), dtlsLocalRole.c_str());
+				auto responseOffset =
+				  FBS::WebRtcTransport::CreateConnectResponse(request->GetBufferBuilder(), dtlsLocalRole);
 
 				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_ConnectResponse, responseOffset);
 
@@ -777,11 +653,6 @@ namespace RTC
 				}
 
 				break;
-			}
-
-			case RTC::DtlsTransport::Role::NONE:
-			{
-				MS_ABORT("local DTLS role not set");
 			}
 		}
 	}

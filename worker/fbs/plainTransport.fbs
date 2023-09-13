@@ -1,5 +1,6 @@
 include "transport.fbs";
 include "sctpParameters.fbs";
+include "srtpParameters.fbs";
 
 namespace FBS.PlainTransport;
 
@@ -10,20 +11,20 @@ table PlainTransportOptions {
   rtcp_mux:bool;
   comedia:bool;
   enable_srtp:bool;
-  srtp_crypto_suite:string;
+  srtp_crypto_suite:FBS.SrtpParameters.SrtpCryptoSuite = null;
 }
 
 table ConnectRequest {
   ip:string;
   port:uint16 = null;
   rtcp_port:uint16 = null;
-  srtp_parameters:FBS.Transport.SrtpParameters;
+  srtp_parameters:FBS.SrtpParameters.SrtpParameters;
 }
 
 table ConnectResponse {
   tuple:FBS.Transport.Tuple (required);
   rtcp_tuple:FBS.Transport.Tuple;
-  srtp_parameters:FBS.Transport.SrtpParameters;
+  srtp_parameters:FBS.SrtpParameters.SrtpParameters;
 }
 
 table DumpResponse {
@@ -32,7 +33,7 @@ table DumpResponse {
   comedia:bool;
   tuple:FBS.Transport.Tuple (required);
   rtcp_tuple:FBS.Transport.Tuple;
-  srtp_parameters:FBS.Transport.SrtpParameters;
+  srtp_parameters:FBS.SrtpParameters.SrtpParameters;
 }
 
 table GetStatsResponse {

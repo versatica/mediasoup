@@ -28,6 +28,12 @@ namespace RTC
 		};
 
 	public:
+		static CandidateType CandidateTypeFromFbs(FBS::WebRtcTransport::IceCandidateType type);
+		static FBS::WebRtcTransport::IceCandidateType CandidateTypeToFbs(CandidateType type);
+		static TcpCandidateType TcpCandidateTypeFromFbs(FBS::WebRtcTransport::IceCandidateTcpType type);
+		static FBS::WebRtcTransport::IceCandidateTcpType TcpCandidateTypeToFbs(TcpCandidateType type);
+
+	public:
 		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority)
 		  : foundation("udpcandidate"), priority(priority), ip(udpSocket->GetLocalIp()),
 		    protocol(Protocol::UDP), port(udpSocket->GetLocalPort()), type(CandidateType::HOST)

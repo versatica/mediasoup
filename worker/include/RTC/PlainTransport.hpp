@@ -13,10 +13,6 @@ namespace RTC
 {
 	class PlainTransport : public RTC::Transport, public RTC::UdpSocket::Listener
 	{
-	private:
-		static absl::flat_hash_map<std::string, RTC::SrtpSession::CryptoSuite> string2SrtpCryptoSuite;
-		static absl::flat_hash_map<RTC::SrtpSession::CryptoSuite, std::string> srtpCryptoSuite2String;
-
 	public:
 		PlainTransport(
 		  RTC::Shared* shared,
