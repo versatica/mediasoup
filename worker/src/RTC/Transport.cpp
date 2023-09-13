@@ -44,7 +44,7 @@ namespace RTC
 
 		if (options->direct())
 		{
-			this->direct         = true;
+			this->direct = true;
 
 			if (options->maxMessageSize().has_value())
 			{

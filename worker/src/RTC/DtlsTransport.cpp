@@ -745,9 +745,7 @@ namespace RTC
 		  localRole == Role::CLIENT || localRole == Role::SERVER,
 		  "local DTLS role must be 'client' or 'server'");
 
-		const auto previousLocalRole = this->localRole.value();
-
-		if (localRole == previousLocalRole)
+		if (this->localRole.has_value() && localRole == this->localRole.value())
 		{
 			MS_ERROR("same local DTLS role provided, doing nothing");
 
@@ -755,7 +753,9 @@ namespace RTC
 		}
 
 		// If the previous local DTLS role was 'client' or 'server' do reset.
-		if (previousLocalRole == Role::CLIENT || previousLocalRole == Role::SERVER)
+		if (
+		  this->localRole.has_value() &&
+		  (this->localRole.value() == Role::CLIENT || this->localRole.value() == Role::SERVER))
 		{
 			MS_DEBUG_TAG(dtls, "resetting DTLS due to local role change");
 
