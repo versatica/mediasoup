@@ -38972,10 +38972,180 @@ mod root {
                 }
             }
 
+            /// The enum `TraceEventType` in the namespace `FBS.Transport`
+            ///
+            /// Generated from these locations:
+            /// * Enum `TraceEventType` in the file `../worker/fbs/transport.fbs:117`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum TraceEventType {
+                /// The variant `PROBATION` in the enum `TraceEventType`
+                Probation = 0,
+
+                /// The variant `BWE` in the enum `TraceEventType`
+                Bwe = 1,
+            }
+
+            impl TraceEventType {
+                /// Array containing all valid variants of TraceEventType
+                pub const ENUM_VALUES: [Self; 2] = [Self::Probation, Self::Bwe];
+            }
+
+            impl ::core::convert::TryFrom<u8> for TraceEventType {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(TraceEventType::Probation),
+                        1 => ::core::result::Result::Ok(TraceEventType::Bwe),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<TraceEventType> for u8 {
+                #[inline]
+                fn from(value: TraceEventType) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for TraceEventType {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<TraceEventType> for TraceEventType {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceEventType {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<TraceEventType, TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &TraceEventType,
+                ) -> ::core::option::Option<TraceEventType> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<TraceEventType> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for TraceEventType {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for TraceEventType {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "TraceEventType",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<TraceEventType> for TraceEventType {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
             /// The table `Dump` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:117`
+            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:119`
             #[derive(
                 Clone,
                 Debug,
@@ -39022,7 +39192,7 @@ mod root {
                 pub sctp_listener:
                     ::core::option::Option<::planus::alloc::boxed::Box<self::SctpListener>>,
                 /// The field `trace_event_types` in the table `Dump`
-                pub trace_event_types: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
+                pub trace_event_types: ::planus::alloc::vec::Vec<self::TraceEventType>,
             }
 
             impl Dump {
@@ -39068,7 +39238,7 @@ mod root {
                         ::planus::Offset<self::SctpListener>,
                     >,
                     field_trace_event_types: impl ::planus::WriteAs<
-                        ::planus::Offset<[::planus::Offset<str>]>,
+                        ::planus::Offset<[self::TraceEventType]>,
                     >,
                 ) -> ::planus::Offset<Self> {
                     let prepared_id = field_id.prepare(builder);
@@ -39109,7 +39279,7 @@ mod root {
                     if prepared_sctp_listener.is_some() {
                         table_writer.write_entry::<::planus::Offset<self::SctpListener>>(13);
                     }
-                    table_writer.write_entry::<::planus::Offset<[::planus::Offset<str>]>>(14);
+                    table_writer.write_entry::<::planus::Offset<[self::TraceEventType]>>(14);
                     if prepared_direct.is_some() {
                         table_writer.write_entry::<bool>(1);
                     }
@@ -39518,7 +39688,7 @@ mod root {
                     T14,
                 )>
                 where
-                    T14: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T14: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 {
                     let (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13) = self.0;
                     DumpBuilder((
@@ -39577,7 +39747,7 @@ mod root {
                     >,
                     T12: ::planus::WriteAsOptional<super::sctp_association::SctpState>,
                     T13: ::planus::WriteAsOptional<::planus::Offset<self::SctpListener>>,
-                    T14: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T14: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 > ::planus::WriteAs<::planus::Offset<Dump>>
                 for DumpBuilder<(
                     T0,
@@ -39626,7 +39796,7 @@ mod root {
                     >,
                     T12: ::planus::WriteAsOptional<super::sctp_association::SctpState>,
                     T13: ::planus::WriteAsOptional<::planus::Offset<self::SctpListener>>,
-                    T14: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T14: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 > ::planus::WriteAsOptional<::planus::Offset<Dump>>
                 for DumpBuilder<(
                     T0,
@@ -39678,7 +39848,7 @@ mod root {
                     >,
                     T12: ::planus::WriteAsOptional<super::sctp_association::SctpState>,
                     T13: ::planus::WriteAsOptional<::planus::Offset<self::SctpListener>>,
-                    T14: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T14: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 > ::planus::WriteAsOffset<Dump>
                 for DumpBuilder<(
                     T0,
@@ -39841,7 +40011,13 @@ mod root {
                 pub fn trace_event_types(
                     &self,
                 ) -> ::planus::Result<
-                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
+                    ::planus::Vector<
+                        'a,
+                        ::core::result::Result<
+                            self::TraceEventType,
+                            ::planus::errors::UnknownEnumTag,
+                        >,
+                    >,
                 > {
                     self.0.access_required(14, "Dump", "trace_event_types")
                 }
@@ -40012,7 +40188,7 @@ mod root {
             /// The table `Stats` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:135`
+            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:137`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -42673,7 +42849,7 @@ mod root {
             /// The table `SetMaxIncomingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:162`
+            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:164`
             #[derive(
                 Clone,
                 Debug,
@@ -42981,7 +43157,7 @@ mod root {
             /// The table `SetMaxOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:166`
+            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:168`
             #[derive(
                 Clone,
                 Debug,
@@ -43289,7 +43465,7 @@ mod root {
             /// The table `SetMinOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:170`
+            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:172`
             #[derive(
                 Clone,
                 Debug,
@@ -43597,7 +43773,7 @@ mod root {
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:174`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:176`
             #[derive(
                 Clone,
                 Debug,
@@ -43611,7 +43787,7 @@ mod root {
             )]
             pub struct EnableTraceEventRequest {
                 /// The field `events` in the table `EnableTraceEventRequest`
-                pub events: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
+                pub events: ::planus::alloc::vec::Vec<self::TraceEventType>,
             }
 
             impl EnableTraceEventRequest {
@@ -43624,13 +43800,13 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_events: impl ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    field_events: impl ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_events = field_events.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    table_writer.write_entry::<::planus::Offset<[::planus::Offset<str>]>>(0);
+                    table_writer.write_entry::<::planus::Offset<[self::TraceEventType]>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
@@ -43691,7 +43867,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn events<T0>(self, value: T0) -> EnableTraceEventRequestBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 {
                     EnableTraceEventRequestBuilder((value,))
                 }
@@ -43711,7 +43887,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>>
                 ::planus::WriteAs<::planus::Offset<EnableTraceEventRequest>>
                 for EnableTraceEventRequestBuilder<(T0,)>
             {
@@ -43726,7 +43902,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>>
                 ::planus::WriteAsOptional<::planus::Offset<EnableTraceEventRequest>>
                 for EnableTraceEventRequestBuilder<(T0,)>
             {
@@ -43742,7 +43918,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>>
                 ::planus::WriteAsOffset<EnableTraceEventRequest>
                 for EnableTraceEventRequestBuilder<(T0,)>
             {
@@ -43766,7 +43942,13 @@ mod root {
                 pub fn events(
                     &self,
                 ) -> ::planus::Result<
-                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
+                    ::planus::Vector<
+                        'a,
+                        ::core::result::Result<
+                            self::TraceEventType,
+                            ::planus::errors::UnknownEnumTag,
+                        >,
+                    >,
                 > {
                     self.0
                         .access_required(0, "EnableTraceEventRequest", "events")
@@ -43869,7 +44051,7 @@ mod root {
             /// The table `CloseProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:178`
+            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:180`
             #[derive(
                 Clone,
                 Debug,
@@ -44135,7 +44317,7 @@ mod root {
             /// The table `CloseConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:182`
+            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:184`
             #[derive(
                 Clone,
                 Debug,
@@ -44401,7 +44583,7 @@ mod root {
             /// The table `CloseDataProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:186`
+            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:188`
             #[derive(
                 Clone,
                 Debug,
@@ -44676,7 +44858,7 @@ mod root {
             /// The table `CloseDataConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:190`
+            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:192`
             #[derive(
                 Clone,
                 Debug,
@@ -44951,7 +45133,7 @@ mod root {
             /// The table `SendRtcpNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:196`
+            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:198`
             #[derive(
                 Clone,
                 Debug,
@@ -45216,7 +45398,7 @@ mod root {
             /// The table `SctpStateChangeNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:202`
+            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:204`
             #[derive(
                 Clone,
                 Debug,
@@ -45534,180 +45716,10 @@ mod root {
                 }
             }
 
-            /// The enum `TraceType` in the namespace `FBS.Transport`
-            ///
-            /// Generated from these locations:
-            /// * Enum `TraceType` in the file `../worker/fbs/transport.fbs:206`
-            #[derive(
-                Copy,
-                Clone,
-                Debug,
-                PartialEq,
-                Eq,
-                PartialOrd,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            #[repr(u8)]
-            pub enum TraceType {
-                /// The variant `PROBATION` in the enum `TraceType`
-                Probation = 0,
-
-                /// The variant `BWE` in the enum `TraceType`
-                Bwe = 1,
-            }
-
-            impl TraceType {
-                /// Array containing all valid variants of TraceType
-                pub const ENUM_VALUES: [Self; 2] = [Self::Probation, Self::Bwe];
-            }
-
-            impl ::core::convert::TryFrom<u8> for TraceType {
-                type Error = ::planus::errors::UnknownEnumTagKind;
-                #[inline]
-                fn try_from(
-                    value: u8,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
-                {
-                    #[allow(clippy::match_single_binding)]
-                    match value {
-                        0 => ::core::result::Result::Ok(TraceType::Probation),
-                        1 => ::core::result::Result::Ok(TraceType::Bwe),
-
-                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
-                            tag: value as i128,
-                        }),
-                    }
-                }
-            }
-
-            impl ::core::convert::From<TraceType> for u8 {
-                #[inline]
-                fn from(value: TraceType) -> Self {
-                    value as u8
-                }
-            }
-
-            impl ::planus::Primitive for TraceType {
-                const ALIGNMENT: usize = 1;
-                const SIZE: usize = 1;
-            }
-
-            impl ::planus::WriteAsPrimitive<TraceType> for TraceType {
-                #[inline]
-                fn write<const N: usize>(
-                    &self,
-                    cursor: ::planus::Cursor<'_, N>,
-                    buffer_position: u32,
-                ) {
-                    (*self as u8).write(cursor, buffer_position);
-                }
-            }
-
-            impl ::planus::WriteAs<TraceType> for TraceType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceType {
-                    *self
-                }
-            }
-
-            impl ::planus::WriteAsDefault<TraceType, TraceType> for TraceType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                    default: &TraceType,
-                ) -> ::core::option::Option<TraceType> {
-                    if self == default {
-                        ::core::option::Option::None
-                    } else {
-                        ::core::option::Option::Some(*self)
-                    }
-                }
-            }
-
-            impl ::planus::WriteAsOptional<TraceType> for TraceType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<TraceType> {
-                    ::core::option::Option::Some(*self)
-                }
-            }
-
-            impl<'buf> ::planus::TableRead<'buf> for TraceType {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
-                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
-                }
-            }
-
-            impl<'buf> ::planus::VectorReadInner<'buf> for TraceType {
-                type Error = ::planus::errors::UnknownEnumTag;
-                const STRIDE: usize = 1;
-                #[inline]
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
-                {
-                    let value = *buffer.buffer.get_unchecked(offset);
-                    let value: ::core::result::Result<Self, _> =
-                        ::core::convert::TryInto::try_into(value);
-                    value.map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "TraceType",
-                            "VectorRead::from_buffer",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<TraceType> for TraceType {
-                const STRIDE: usize = 1;
-
-                type Value = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
-                    *self
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[Self],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - i as u32,
-                        );
-                    }
-                }
-            }
-
             /// The enum `TraceDirection` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceDirection` in the file `../worker/fbs/transport.fbs:208`
+            /// * Enum `TraceDirection` in the file `../worker/fbs/transport.fbs:209`
             #[derive(
                 Copy,
                 Clone,
@@ -45877,7 +45889,7 @@ mod root {
             /// The union `TraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:210`
+            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:211`
             #[derive(
                 Clone,
                 Debug,
@@ -46030,7 +46042,7 @@ mod root {
             /// The enum `BweType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:214`
+            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:215`
             #[derive(
                 Copy,
                 Clone,
@@ -46200,7 +46212,7 @@ mod root {
             /// The table `BweTraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:216`
+            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:217`
             #[derive(
                 Clone,
                 Debug,
@@ -46883,7 +46895,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:227`
+            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:228`
             #[derive(
                 Clone,
                 Debug,
@@ -46897,7 +46909,7 @@ mod root {
             )]
             pub struct TraceNotification {
                 /// The field `type` in the table `TraceNotification`
-                pub type_: self::TraceType,
+                pub type_: self::TraceEventType,
                 /// The field `timestamp` in the table `TraceNotification`
                 pub timestamp: u64,
                 /// The field `direction` in the table `TraceNotification`
@@ -46910,7 +46922,7 @@ mod root {
             impl ::core::default::Default for TraceNotification {
                 fn default() -> Self {
                     Self {
-                        type_: self::TraceType::Probation,
+                        type_: self::TraceEventType::Probation,
                         timestamp: 0,
                         direction: self::TraceDirection::DirectionIn,
                         info: ::core::default::Default::default(),
@@ -46928,7 +46940,10 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_type_: impl ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    field_type_: impl ::planus::WriteAsDefault<
+                        self::TraceEventType,
+                        self::TraceEventType,
+                    >,
                     field_timestamp: impl ::planus::WriteAsDefault<u64, u64>,
                     field_direction: impl ::planus::WriteAsDefault<
                         self::TraceDirection,
@@ -46936,7 +46951,8 @@ mod root {
                     >,
                     field_info: impl ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 ) -> ::planus::Offset<Self> {
-                    let prepared_type_ = field_type_.prepare(builder, &self::TraceType::Probation);
+                    let prepared_type_ =
+                        field_type_.prepare(builder, &self::TraceEventType::Probation);
                     let prepared_timestamp = field_timestamp.prepare(builder, &0);
                     let prepared_direction =
                         field_direction.prepare(builder, &self::TraceDirection::DirectionIn);
@@ -46951,7 +46967,7 @@ mod root {
                         table_writer.write_entry::<::planus::Offset<self::TraceInfo>>(4);
                     }
                     if prepared_type_.is_some() {
-                        table_writer.write_entry::<self::TraceType>(0);
+                        table_writer.write_entry::<self::TraceEventType>(0);
                     }
                     if prepared_direction.is_some() {
                         table_writer.write_entry::<self::TraceDirection>(2);
@@ -47040,7 +47056,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn type_<T0>(self, value: T0) -> TraceNotificationBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                 {
                     TraceNotificationBuilder((value,))
                 }
@@ -47134,7 +47150,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
                     T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
@@ -47153,7 +47169,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
                     T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
@@ -47172,7 +47188,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
                     T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
@@ -47196,11 +47212,11 @@ mod root {
             impl<'a> TraceNotificationRef<'a> {
                 /// Getter for the [`type` field](TraceNotification#structfield.type_).
                 #[inline]
-                pub fn type_(&self) -> ::planus::Result<self::TraceType> {
+                pub fn type_(&self) -> ::planus::Result<self::TraceEventType> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(0, "TraceNotification", "type_")?
-                            .unwrap_or(self::TraceType::Probation),
+                            .unwrap_or(self::TraceEventType::Probation),
                     )
                 }
 
@@ -51550,9 +51566,9 @@ mod root {
                     ::planus::alloc::boxed::Box<super::transport::ConsumeDataRequest>,
                 ),
 
-                /// The variant of type `FBS.Consumer.EnableTraceEventRequest` in the union `Body`
-                EnableTraceEventRequest(
-                    ::planus::alloc::boxed::Box<super::consumer::EnableTraceEventRequest>,
+                /// The variant `Transport_EnableTraceEventRequest` in the union `Body`
+                TransportEnableTraceEventRequest(
+                    ::planus::alloc::boxed::Box<super::transport::EnableTraceEventRequest>,
                 ),
 
                 /// The variant of type `FBS.Transport.CloseProducerRequest` in the union `Body`
@@ -51590,6 +51606,11 @@ mod root {
                     ::planus::alloc::boxed::Box<super::web_rtc_transport::ConnectRequest>,
                 ),
 
+                /// The variant `Producer_EnableTraceEventRequest` in the union `Body`
+                ProducerEnableTraceEventRequest(
+                    ::planus::alloc::boxed::Box<super::producer::EnableTraceEventRequest>,
+                ),
+
                 /// The variant of type `FBS.Consumer.SetPreferredLayersRequest` in the union `Body`
                 SetPreferredLayersRequest(
                     ::planus::alloc::boxed::Box<super::consumer::SetPreferredLayersRequest>,
@@ -51598,6 +51619,11 @@ mod root {
                 /// The variant of type `FBS.Consumer.SetPriorityRequest` in the union `Body`
                 SetPriorityRequest(
                     ::planus::alloc::boxed::Box<super::consumer::SetPriorityRequest>,
+                ),
+
+                /// The variant `Consumer_EnableTraceEventRequest` in the union `Body`
+                ConsumerEnableTraceEventRequest(
+                    ::planus::alloc::boxed::Box<super::consumer::EnableTraceEventRequest>,
                 ),
 
                 /// The variant of type `FBS.DataConsumer.SetBufferedAmountLowThresholdRequest` in the union `Body`
@@ -51796,9 +51822,9 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_enable_trace_event_request(
+                pub fn create_transport_enable_trace_event_request(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::consumer::EnableTraceEventRequest>,
+                    value: impl ::planus::WriteAsOffset<super::transport::EnableTraceEventRequest>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(21, value.prepare(builder).downcast())
                 }
@@ -51860,11 +51886,19 @@ mod root {
                 }
 
                 #[inline]
+                pub fn create_producer_enable_trace_event_request(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::producer::EnableTraceEventRequest>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(29, value.prepare(builder).downcast())
+                }
+
+                #[inline]
                 pub fn create_set_preferred_layers_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(29, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(30, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -51872,7 +51906,15 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(30, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(31, value.prepare(builder).downcast())
+                }
+
+                #[inline]
+                pub fn create_consumer_enable_trace_event_request(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::consumer::EnableTraceEventRequest>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(32, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -51882,7 +51924,7 @@ mod root {
                         super::data_consumer::SetBufferedAmountLowThresholdRequest,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(31, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(33, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -51890,7 +51932,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(32, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(34, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -51898,7 +51940,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(33, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(35, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -51906,7 +51948,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(34, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(36, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -51914,7 +51956,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(35, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(37, value.prepare(builder).downcast())
                 }
             }
 
@@ -51978,8 +52020,8 @@ mod root {
                         Self::ConsumeDataRequest(value) => {
                             Self::create_consume_data_request(builder, value)
                         }
-                        Self::EnableTraceEventRequest(value) => {
-                            Self::create_enable_trace_event_request(builder, value)
+                        Self::TransportEnableTraceEventRequest(value) => {
+                            Self::create_transport_enable_trace_event_request(builder, value)
                         }
                         Self::CloseProducerRequest(value) => {
                             Self::create_close_producer_request(builder, value)
@@ -52002,11 +52044,17 @@ mod root {
                         Self::WebRtcTransportConnectRequest(value) => {
                             Self::create_web_rtc_transport_connect_request(builder, value)
                         }
+                        Self::ProducerEnableTraceEventRequest(value) => {
+                            Self::create_producer_enable_trace_event_request(builder, value)
+                        }
                         Self::SetPreferredLayersRequest(value) => {
                             Self::create_set_preferred_layers_request(builder, value)
                         }
                         Self::SetPriorityRequest(value) => {
                             Self::create_set_priority_request(builder, value)
+                        }
+                        Self::ConsumerEnableTraceEventRequest(value) => {
+                            Self::create_consumer_enable_trace_event_request(builder, value)
                         }
                         Self::SetBufferedAmountLowThresholdRequest(value) => {
                             Self::create_set_buffered_amount_low_threshold_request(builder, value)
@@ -52283,14 +52331,14 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`EnableTraceEventRequest` variant](Body#variant.EnableTraceEventRequest).
+                /// Creates an instance of the [`Transport_EnableTraceEventRequest` variant](Body#variant.TransportEnableTraceEventRequest).
                 #[inline]
-                pub fn enable_trace_event_request<T>(
+                pub fn transport_enable_trace_event_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<21, T>>
                 where
-                    T: ::planus::WriteAsOffset<super::consumer::EnableTraceEventRequest>,
+                    T: ::planus::WriteAsOffset<super::transport::EnableTraceEventRequest>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
@@ -52379,12 +52427,24 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
+                /// Creates an instance of the [`Producer_EnableTraceEventRequest` variant](Body#variant.ProducerEnableTraceEventRequest).
+                #[inline]
+                pub fn producer_enable_trace_event_request<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<29, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::producer::EnableTraceEventRequest>,
+                {
+                    BodyBuilder(::planus::Initialized(value))
+                }
+
                 /// Creates an instance of the [`SetPreferredLayersRequest` variant](Body#variant.SetPreferredLayersRequest).
                 #[inline]
                 pub fn set_preferred_layers_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<29, T>>
+                ) -> BodyBuilder<::planus::Initialized<30, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
                 {
@@ -52396,9 +52456,21 @@ mod root {
                 pub fn set_priority_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<30, T>>
+                ) -> BodyBuilder<::planus::Initialized<31, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
+                {
+                    BodyBuilder(::planus::Initialized(value))
+                }
+
+                /// Creates an instance of the [`Consumer_EnableTraceEventRequest` variant](Body#variant.ConsumerEnableTraceEventRequest).
+                #[inline]
+                pub fn consumer_enable_trace_event_request<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<32, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::consumer::EnableTraceEventRequest>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
@@ -52408,7 +52480,7 @@ mod root {
                 pub fn set_buffered_amount_low_threshold_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<31, T>>
+                ) -> BodyBuilder<::planus::Initialized<33, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::data_consumer::SetBufferedAmountLowThresholdRequest,
@@ -52419,7 +52491,7 @@ mod root {
 
                 /// Creates an instance of the [`SendRequest` variant](Body#variant.SendRequest).
                 #[inline]
-                pub fn send_request<T>(self, value: T) -> BodyBuilder<::planus::Initialized<32, T>>
+                pub fn send_request<T>(self, value: T) -> BodyBuilder<::planus::Initialized<34, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
                 {
@@ -52431,7 +52503,7 @@ mod root {
                 pub fn set_subchannels_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<33, T>>
+                ) -> BodyBuilder<::planus::Initialized<35, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsRequest>,
                 {
@@ -52443,7 +52515,7 @@ mod root {
                 pub fn add_producer_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<34, T>>
+                ) -> BodyBuilder<::planus::Initialized<36, T>>
                 where
                     T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
                 {
@@ -52455,7 +52527,7 @@ mod root {
                 pub fn remove_producer_request<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<35, T>>
+                ) -> BodyBuilder<::planus::Initialized<37, T>>
                 where
                     T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
                 {
@@ -52916,7 +52988,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<21, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::EnableTraceEventRequest>,
+                T: ::planus::WriteAsOffset<super::transport::EnableTraceEventRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -52926,7 +52998,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<21, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::EnableTraceEventRequest>,
+                T: ::planus::WriteAsOffset<super::transport::EnableTraceEventRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -53092,7 +53164,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<29, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
+                T: ::planus::WriteAsOffset<super::producer::EnableTraceEventRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -53102,7 +53174,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<29, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
+                T: ::planus::WriteAsOffset<super::producer::EnableTraceEventRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -53114,7 +53186,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<30, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
+                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -53124,7 +53196,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<30, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
+                T: ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -53136,9 +53208,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<31, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
-                >,
+                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -53148,9 +53218,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<31, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
-                >,
+                T: ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -53162,7 +53230,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<32, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
+                T: ::planus::WriteAsOffset<super::consumer::EnableTraceEventRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -53172,7 +53240,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<32, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
+                T: ::planus::WriteAsOffset<super::consumer::EnableTraceEventRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -53184,7 +53252,9 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<33, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsRequest>,
+                T: ::planus::WriteAsOffset<
+                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
+                >,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -53194,7 +53264,9 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<33, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsRequest>,
+                T: ::planus::WriteAsOffset<
+                    super::data_consumer::SetBufferedAmountLowThresholdRequest,
+                >,
             {
                 #[inline]
                 fn prepare(
@@ -53206,7 +53278,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<34, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -53216,7 +53288,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<34, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+                T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
             {
                 #[inline]
                 fn prepare(
@@ -53228,7 +53300,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<35, T>>
             where
-                T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
+                T: ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsRequest>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -53237,6 +53309,50 @@ mod root {
             }
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<35, T>>
+            where
+                T: ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsRequest>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Body>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<36, T>>
+            where
+                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
+                    ::planus::UnionOffset::new(36, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<36, T>>
+            where
+                T: ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Body>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<37, T>>
+            where
+                T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
+                    ::planus::UnionOffset::new(37, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<37, T>>
             where
                 T: ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
             {
@@ -53276,7 +53392,7 @@ mod root {
                 ConsumeRequest(super::transport::ConsumeRequestRef<'a>),
                 ProduceDataRequest(super::transport::ProduceDataRequestRef<'a>),
                 ConsumeDataRequest(super::transport::ConsumeDataRequestRef<'a>),
-                EnableTraceEventRequest(super::consumer::EnableTraceEventRequestRef<'a>),
+                TransportEnableTraceEventRequest(super::transport::EnableTraceEventRequestRef<'a>),
                 CloseProducerRequest(super::transport::CloseProducerRequestRef<'a>),
                 CloseConsumerRequest(super::transport::CloseConsumerRequestRef<'a>),
                 CloseDataProducerRequest(super::transport::CloseDataProducerRequestRef<'a>),
@@ -53284,8 +53400,10 @@ mod root {
                 PlainTransportConnectRequest(super::plain_transport::ConnectRequestRef<'a>),
                 PipeTransportConnectRequest(super::pipe_transport::ConnectRequestRef<'a>),
                 WebRtcTransportConnectRequest(super::web_rtc_transport::ConnectRequestRef<'a>),
+                ProducerEnableTraceEventRequest(super::producer::EnableTraceEventRequestRef<'a>),
                 SetPreferredLayersRequest(super::consumer::SetPreferredLayersRequestRef<'a>),
                 SetPriorityRequest(super::consumer::SetPriorityRequestRef<'a>),
+                ConsumerEnableTraceEventRequest(super::consumer::EnableTraceEventRequestRef<'a>),
                 SetBufferedAmountLowThresholdRequest(
                     super::data_consumer::SetBufferedAmountLowThresholdRequestRef<'a>,
                 ),
@@ -53422,10 +53540,12 @@ mod root {
                             ))
                         }
 
-                        BodyRef::EnableTraceEventRequest(value) => {
-                            Self::EnableTraceEventRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
+                        BodyRef::TransportEnableTraceEventRequest(value) => {
+                            Self::TransportEnableTraceEventRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
                         }
 
                         BodyRef::CloseProducerRequest(value) => {
@@ -53470,6 +53590,12 @@ mod root {
                             ))
                         }
 
+                        BodyRef::ProducerEnableTraceEventRequest(value) => {
+                            Self::ProducerEnableTraceEventRequest(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
                         BodyRef::SetPreferredLayersRequest(value) => {
                             Self::SetPreferredLayersRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
@@ -53478,6 +53604,12 @@ mod root {
 
                         BodyRef::SetPriorityRequest(value) => {
                             Self::SetPriorityRequest(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::ConsumerEnableTraceEventRequest(value) => {
+                            Self::ConsumerEnableTraceEventRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -53584,7 +53716,7 @@ mod root {
                         20 => ::core::result::Result::Ok(Self::ConsumeDataRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        21 => ::core::result::Result::Ok(Self::EnableTraceEventRequest(
+                        21 => ::core::result::Result::Ok(Self::TransportEnableTraceEventRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         22 => ::core::result::Result::Ok(Self::CloseProducerRequest(
@@ -53608,27 +53740,33 @@ mod root {
                         28 => ::core::result::Result::Ok(Self::WebRtcTransportConnectRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        29 => ::core::result::Result::Ok(Self::SetPreferredLayersRequest(
+                        29 => ::core::result::Result::Ok(Self::ProducerEnableTraceEventRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        30 => ::core::result::Result::Ok(Self::SetPriorityRequest(
+                        30 => ::core::result::Result::Ok(Self::SetPreferredLayersRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        31 => {
+                        31 => ::core::result::Result::Ok(Self::SetPriorityRequest(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        32 => ::core::result::Result::Ok(Self::ConsumerEnableTraceEventRequest(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        33 => {
                             ::core::result::Result::Ok(Self::SetBufferedAmountLowThresholdRequest(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ))
                         }
-                        32 => ::core::result::Result::Ok(Self::SendRequest(
+                        34 => ::core::result::Result::Ok(Self::SendRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        33 => ::core::result::Result::Ok(Self::SetSubchannelsRequest(
+                        35 => ::core::result::Result::Ok(Self::SetSubchannelsRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        34 => ::core::result::Result::Ok(Self::AddProducerRequest(
+                        36 => ::core::result::Result::Ok(Self::AddProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        35 => ::core::result::Result::Ok(Self::RemoveProducerRequest(
+                        37 => ::core::result::Result::Ok(Self::RemoveProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         _ => ::core::result::Result::Err(

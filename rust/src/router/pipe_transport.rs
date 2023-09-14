@@ -98,7 +98,7 @@ pub struct PipeTransportDump {
     pub sctp_parameters: Option<SctpParameters>,
     pub sctp_state: Option<SctpState>,
     pub sctp_listener: Option<SctpListener>,
-    pub trace_event_types: String,
+    pub trace_event_types: Vec<TransportTraceEventType>,
     // PipeTransport specific.
     pub tuple: TransportTuple,
     pub rtx: bool,
@@ -168,9 +168,9 @@ impl PipeTransportDump {
                 .base
                 .trace_event_types
                 .iter()
-                .map(|event| event.to_string())
+                .map(TransportTraceEventType::from_fbs)
                 .collect(),
-            // PlainTransport specific.
+            // PipeTransport specific.
             tuple: TransportTuple::from_fbs(dump.tuple.as_ref()),
             rtx: dump.rtx,
             srtp_parameters: dump

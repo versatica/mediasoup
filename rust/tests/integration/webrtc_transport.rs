@@ -428,7 +428,6 @@ fn connect_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn set_max_incoming_bitrate_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -461,7 +460,6 @@ fn set_max_incoming_bitrate_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn set_max_outgoing_bitrate_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -494,7 +492,6 @@ fn set_max_outgoing_bitrate_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn set_min_outgoing_bitrate_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -527,7 +524,6 @@ fn set_min_outgoing_bitrate_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn set_max_outgoing_bitrate_fails_if_value_is_lower_than_current_min_limit() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -565,7 +561,6 @@ fn set_max_outgoing_bitrate_fails_if_value_is_lower_than_current_min_limit() {
 }
 
 #[test]
-#[ignore]
 fn set_min_outgoing_bitrate_fails_if_value_is_higher_than_current_max_limit() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -638,7 +633,6 @@ fn restart_ice_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn enable_trace_event_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
@@ -668,7 +662,10 @@ fn enable_trace_event_succeeds() {
                 .await
                 .expect("Failed to dump WebRTC transport");
 
-            assert_eq!(dump.trace_event_types.as_str(), "probation");
+            assert_eq!(
+                dump.trace_event_types,
+                vec![TransportTraceEventType::Probation]
+            );
         }
 
         {
@@ -685,7 +682,13 @@ fn enable_trace_event_succeeds() {
                 .await
                 .expect("Failed to dump WebRTC transport");
 
-            assert_eq!(dump.trace_event_types.as_str(), "probation,bwe");
+            assert_eq!(
+                dump.trace_event_types,
+                vec![
+                    TransportTraceEventType::Probation,
+                    TransportTraceEventType::Bwe,
+                ]
+            );
         }
 
         {
@@ -699,7 +702,7 @@ fn enable_trace_event_succeeds() {
                 .await
                 .expect("Failed to dump WebRTC transport");
 
-            assert_eq!(dump.trace_event_types.as_str(), "");
+            assert_eq!(dump.trace_event_types, vec![]);
         }
     });
 }

@@ -1246,14 +1246,26 @@ export class Transport
 			throw new TypeError('every type must be a string');
 		}
 
+		// Convert event types.
+		const fbsEventTypes: FbsTransport.TraceEventType[] = [];
+
+		for (const eventType of types)
+		{
+			try
+			{
+				fbsEventTypes.push(transportTraceEventTypeToFbs(eventType));
+			}
+			catch (error) { /* Ignore invalid event types */ }
+		}
+
 		/* Build Request. */
 		const requestOffset = new FbsTransport.EnableTraceEventRequestT(
-			types
+			fbsEventTypes
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT,
-			FbsRequest.Body.FBS_Transport_EnableTraceEventRequest,
+			FbsRequest.Body.Transport_EnableTraceEventRequest,
 			requestOffset,
 			this.internal.transportId
 		);
@@ -1291,6 +1303,32 @@ export class Transport
 		}
 
 		throw new Error('no sctpStreamId available');
+	}
+}
+
+function transportTraceEventTypeToFbs(eventType: TransportTraceEventType)
+	: FbsTransport.TraceEventType
+{
+	switch (eventType)
+	{
+		case 'probation':
+			return FbsTransport.TraceEventType.PROBATION;
+		case 'bwe':
+			return FbsTransport.TraceEventType.BWE;
+		default:
+			throw new TypeError(`invalid transport event type: ${eventType}`);
+	}
+}
+
+function transportTraceEventTypeFromFbs(eventType: FbsTransport.TraceEventType)
+	: TransportTraceEventType
+{
+	switch (eventType)
+	{
+		case FbsTransport.TraceEventType.PROBATION:
+			return 'probation';
+		case FbsTransport.TraceEventType.BWE:
+			return 'bwe';
 	}
 }
 
@@ -1387,7 +1425,7 @@ export function parseBaseTransportDump(
 		undefined;
 
 	// Retrieve traceEventTypes.
-	const traceEventTypes = utils.parseVector<string>(binary, 'traceEventTypes');
+	const traceEventTypes = utils.parseVector<TransportTraceEventType>(binary, 'traceEventTypes', transportTraceEventTypeFromFbs);
 
 	return {
 		id                      : binary.id()!,
@@ -1446,7 +1484,7 @@ export function parseTransportTraceEventData(
 {
 	switch (trace.type())
 	{
-		case FbsTransport.TraceType.BWE:
+		case FbsTransport.TraceEventType.BWE:
 		{
 			const info = new FbsTransport.BweTraceInfo();
 
@@ -1460,7 +1498,7 @@ export function parseTransportTraceEventData(
 			};
 		}
 
-		case FbsTransport.TraceType.PROBATION:
+		case FbsTransport.TraceEventType.PROBATION:
 		{
 			return {
 				type      : 'probation',
