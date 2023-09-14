@@ -1522,23 +1522,113 @@ impl RequestFbs for TransportConnectPlainRequest {
     }
 }
 
-request_response!(
-    TransportId,
-    "transport.setMaxIncomingBitrate",
-    TransportSetMaxIncomingBitrateRequest { bitrate: u32 },
-);
+#[derive(Debug)]
+pub(crate) struct TransportSetMaxIncomingBitrateRequest {
+    pub(crate) bitrate: u32,
+}
 
-request_response!(
-    TransportId,
-    "transport.setMaxOutgoingBitrate",
-    TransportSetMaxOutgoingBitrateRequest { bitrate: u32 },
-);
+impl RequestFbs for TransportSetMaxIncomingBitrateRequest {
+    const METHOD: request::Method = request::Method::TransportSetMaxIncomingBitrate;
+    type HandlerId = TransportId;
+    type Response = ();
 
-request_response!(
-    TransportId,
-    "transport.setMinOutgoingBitrate",
-    TransportSetMinOutgoingBitrateRequest { bitrate: u32 },
-);
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data = transport::SetMaxIncomingBitrateRequest::create(&mut builder, self.bitrate);
+        let request_body =
+            request::Body::create_set_max_incoming_bitrate_request(&mut builder, data);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct TransportSetMaxOutgoingBitrateRequest {
+    pub(crate) bitrate: u32,
+}
+
+impl RequestFbs for TransportSetMaxOutgoingBitrateRequest {
+    const METHOD: request::Method = request::Method::TransportSetMaxOutgoingBitrate;
+    type HandlerId = TransportId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data = transport::SetMaxOutgoingBitrateRequest::create(&mut builder, self.bitrate);
+        let request_body =
+            request::Body::create_set_max_outgoing_bitrate_request(&mut builder, data);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct TransportSetMinOutgoingBitrateRequest {
+    pub(crate) bitrate: u32,
+}
+
+impl RequestFbs for TransportSetMinOutgoingBitrateRequest {
+    const METHOD: request::Method = request::Method::TransportSetMinOutgoingBitrate;
+    type HandlerId = TransportId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data = transport::SetMinOutgoingBitrateRequest::create(&mut builder, self.bitrate);
+        let request_body =
+            request::Body::create_set_min_outgoing_bitrate_request(&mut builder, data);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
 
 #[derive(Debug)]
 pub(crate) struct TransportRestartIceRequest {}
@@ -1659,13 +1749,51 @@ request_response!(
     },
 );
 
-request_response!(
-    TransportId,
-    "transport.enableTraceEvent",
-    TransportEnableTraceEventRequest {
-        types: Vec<TransportTraceEventType>,
-    },
-);
+#[derive(Debug)]
+pub(crate) struct TransportEnableTraceEventRequest {
+    pub(crate) types: Vec<TransportTraceEventType>,
+}
+
+impl RequestFbs for TransportEnableTraceEventRequest {
+    const METHOD: request::Method = request::Method::TransportEnableTraceEvent;
+    type HandlerId = TransportId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data = transport::EnableTraceEventRequest {
+            events: self
+                .types
+                .into_iter()
+                .map(TransportTraceEventType::to_fbs)
+                .collect(),
+        };
+
+        let request_body = request::Body::TransportEnableTraceEventRequest(Box::new(data));
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+
+    fn default_for_soft_error() -> Option<Self::Response> {
+        None
+    }
+}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

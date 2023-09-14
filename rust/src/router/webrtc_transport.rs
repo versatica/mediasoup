@@ -181,7 +181,7 @@ pub struct WebRtcTransportDump {
     pub sctp_parameters: Option<SctpParameters>,
     pub sctp_state: Option<SctpState>,
     pub sctp_listener: Option<SctpListener>,
-    pub trace_event_types: String,
+    pub trace_event_types: Vec<TransportTraceEventType>,
     // WebRtcTransport specific.
     pub dtls_parameters: DtlsParameters,
     pub dtls_state: DtlsState,
@@ -255,7 +255,7 @@ impl WebRtcTransportDump {
                 .base
                 .trace_event_types
                 .iter()
-                .map(|event| event.to_string())
+                .map(TransportTraceEventType::from_fbs)
                 .collect(),
             // WebRtcTransport specific.
             dtls_parameters: DtlsParameters::from_fbs(*dump.dtls_parameters),

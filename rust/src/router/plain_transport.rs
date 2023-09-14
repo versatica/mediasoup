@@ -117,7 +117,7 @@ pub struct PlainTransportDump {
     pub sctp_parameters: Option<SctpParameters>,
     pub sctp_state: Option<SctpState>,
     pub sctp_listener: Option<SctpListener>,
-    pub trace_event_types: String,
+    pub trace_event_types: Vec<TransportTraceEventType>,
     // PlainTransport specific.
     pub rtcp_mux: bool,
     pub comedia: bool,
@@ -189,7 +189,7 @@ impl PlainTransportDump {
                 .base
                 .trace_event_types
                 .iter()
-                .map(|event| event.to_string())
+                .map(TransportTraceEventType::from_fbs)
                 .collect(),
             // PlainTransport specific.
             rtcp_mux: dump.rtcp_mux,

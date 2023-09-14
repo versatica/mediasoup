@@ -796,7 +796,7 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 
 		await this.#channel.request(
 			FbsRequest.Method.CONSUMER_ENABLE_TRACE_EVENT,
-			FbsRequest.Body.FBS_Consumer_EnableTraceEventRequest,
+			FbsRequest.Body.Consumer_EnableTraceEventRequest,
 			requestOffset,
 			this.#internal.consumerId
 		);

@@ -505,7 +505,7 @@ export class Producer<ProducerAppData extends AppData = AppData>
 
 		await this.#channel.request(
 			FbsRequest.Method.PRODUCER_ENABLE_TRACE_EVENT,
-			FbsRequest.Body.FBS_Producer_EnableTraceEventRequest,
+			FbsRequest.Body.Producer_EnableTraceEventRequest,
 			requestOffset,
 			this.#internal.producerId
 		);

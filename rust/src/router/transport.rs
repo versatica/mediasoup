@@ -74,6 +74,22 @@ pub enum TransportTraceEventType {
     Bwe,
 }
 
+impl TransportTraceEventType {
+    pub(crate) fn to_fbs(self) -> transport::TraceEventType {
+        match self {
+            TransportTraceEventType::Probation => transport::TraceEventType::Probation,
+            TransportTraceEventType::Bwe => transport::TraceEventType::Bwe,
+        }
+    }
+
+    pub(crate) fn from_fbs(event_type: &transport::TraceEventType) -> Self {
+        match event_type {
+            transport::TraceEventType::Probation => TransportTraceEventType::Probation,
+            transport::TraceEventType::Bwe => TransportTraceEventType::Bwe,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
@@ -420,13 +436,13 @@ pub(super) trait TransportImpl: TransportGeneric {
 
     async fn set_max_incoming_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
         self.channel()
-            .request(self.id(), TransportSetMaxIncomingBitrateRequest { bitrate })
+            .request_fbs(self.id(), TransportSetMaxIncomingBitrateRequest { bitrate })
             .await
     }
 
     async fn set_max_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
         self.channel()
-            .request(self.id(), TransportSetMaxOutgoingBitrateRequest { bitrate })
+            .request_fbs(self.id(), TransportSetMaxOutgoingBitrateRequest { bitrate })
             .await
     }
 
@@ -435,13 +451,13 @@ pub(super) trait TransportImpl: TransportGeneric {
         types: Vec<TransportTraceEventType>,
     ) -> Result<(), RequestError> {
         self.channel()
-            .request(self.id(), TransportEnableTraceEventRequest { types })
+            .request_fbs(self.id(), TransportEnableTraceEventRequest { types })
             .await
     }
 
     async fn set_min_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
         self.channel()
-            .request(self.id(), TransportSetMinOutgoingBitrateRequest { bitrate })
+            .request_fbs(self.id(), TransportSetMinOutgoingBitrateRequest { bitrate })
             .await
     }
 

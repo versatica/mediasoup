@@ -114,6 +114,8 @@ table Options {
   is_data_channel:bool = false;
 }
 
+enum TraceEventType: uint8 { PROBATION = 0, BWE }
+
 table Dump {
   id:string (required);
   direct:bool=false;
@@ -129,7 +131,7 @@ table Dump {
   sctp_parameters:FBS.SctpParameters.SctpParameters;
   sctp_state:FBS.SctpAssociation.SctpState = null;
   sctp_listener: SctpListener;
-  trace_event_types:[string] (required);
+  trace_event_types:[TraceEventType] (required);
 }
 
 table Stats {
@@ -172,7 +174,7 @@ table SetMinOutgoingBitrateRequest {
 }
 
 table EnableTraceEventRequest {
-  events:[string] (required);
+  events:[TraceEventType] (required);
 }
 
 table CloseProducerRequest {
@@ -203,7 +205,6 @@ table SctpStateChangeNotification {
   sctp_state:FBS.SctpAssociation.SctpState;
 }
 
-enum TraceType: uint8 { PROBATION = 0, BWE }
 // NOTE (windows): IN|OUT are macros defined in windef.h.
 enum TraceDirection: uint8 { DIRECTION_IN = 0, DIRECTION_OUT }
 
@@ -225,7 +226,7 @@ table BweTraceInfo {
 }
 
 table TraceNotification {
-  type: TraceType;
+  type: TraceEventType;
   timestamp: uint64;
   direction: TraceDirection;
   info: TraceInfo;

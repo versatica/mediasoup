@@ -356,15 +356,15 @@ namespace RTC
 		}
 
 		// Add traceEventTypes.
-		std::vector<flatbuffers::Offset<flatbuffers::String>> traceEventTypes;
+		std::vector<FBS::Transport::TraceEventType> traceEventTypes;
 
 		if (this->traceEventTypes.probation)
 		{
-			traceEventTypes.emplace_back(builder.CreateString("probation"));
+			traceEventTypes.emplace_back(FBS::Transport::TraceEventType::PROBATION);
 		}
 		if (this->traceEventTypes.bwe)
 		{
-			traceEventTypes.emplace_back(builder.CreateString("bwe"));
+			traceEventTypes.emplace_back(FBS::Transport::TraceEventType::BWE);
 		}
 
 		return FBS::Transport::CreateDumpDirect(
@@ -1213,15 +1213,21 @@ namespace RTC
 
 				for (const auto& type : *body->events())
 				{
-					const auto typeStr = type->str();
+					switch (type)
+					{
+						case FBS::Transport::TraceEventType::PROBATION:
+						{
+							newTraceEventTypes.probation = true;
 
-					if (typeStr == "probation")
-					{
-						newTraceEventTypes.probation = true;
-					}
-					else if (typeStr == "bwe")
-					{
-						newTraceEventTypes.bwe = true;
+							break;
+						}
+
+						case FBS::Transport::TraceEventType::BWE:
+						{
+							newTraceEventTypes.bwe = true;
+
+							break;
+						}
 					}
 				}
 
@@ -2287,7 +2293,7 @@ namespace RTC
 
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->channelNotifier->GetBufferBuilder(),
-		  FBS::Transport::TraceType::PROBATION,
+		  FBS::Transport::TraceEventType::PROBATION,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Transport::TraceDirection::DIRECTION_OUT);
 
@@ -2323,7 +2329,7 @@ namespace RTC
 
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->channelNotifier->GetBufferBuilder(),
-		  FBS::Transport::TraceType::BWE,
+		  FBS::Transport::TraceEventType::BWE,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Transport::TraceDirection::DIRECTION_OUT,
 		  FBS::Transport::TraceInfo::BweTraceInfo,
