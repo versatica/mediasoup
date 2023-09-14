@@ -1255,7 +1255,10 @@ export class Transport
 			{
 				fbsEventTypes.push(transportTraceEventTypeToFbs(eventType));
 			}
-			catch (error) { /* Ignore invalid event types */ }
+			catch (error)
+			{
+				// Ignore invalid event types.
+			}
 		}
 
 		/* Build Request. */
