@@ -1560,7 +1560,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::PRODUCER_TRACE,
-		  FBS::Notification::Body::FBS_Producer_TraceNotification,
+		  FBS::Notification::Body::Producer_TraceNotification,
 		  notification);
 	}
 

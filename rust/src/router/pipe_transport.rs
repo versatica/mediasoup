@@ -5,7 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
-use crate::fbs::{pipe_transport, response};
+use crate::fbs::{notification, pipe_transport, response, transport};
 use crate::messages::{PipeTransportConnectRequest, PipeTransportData, TransportCloseRequestFbs};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -279,16 +279,6 @@ struct Handlers {
     trace: Bag<Arc<dyn Fn(&TransportTraceEventData) + Send + Sync>, TransportTraceEventData>,
     router_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(tag = "event", rename_all = "lowercase", content = "data")]
-enum Notification {
-    #[serde(rename_all = "camelCase")]
-    SctpStateChange {
-        sctp_state: SctpState,
-    },
-    Trace(TransportTraceEventData),
 }
 
 struct Inner {
@@ -585,25 +575,39 @@ impl PipeTransport {
             let handlers = Arc::clone(&handlers);
             let data = Arc::clone(&data);
 
-            channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_slice::<Notification>(notification) {
-                    Ok(notification) => match notification {
-                        Notification::SctpStateChange { sctp_state } => {
-                            data.sctp_state.lock().replace(sctp_state);
+            channel.subscribe_to_fbs_notifications(
+                id.into(),
+                move |notification| match notification.event().unwrap() {
+                    notification::Event::TransportSctpStateChange => {
+                        let Ok(Some(notification::BodyRef::SctpStateChangeNotification(body))) =
+                            notification.body()
+                        else {
+                            panic!("Wrong message from worker: {notification:?}");
+                        };
 
-                            handlers.sctp_state_change.call(|callback| {
-                                callback(sctp_state);
-                            });
-                        }
-                        Notification::Trace(trace_event_data) => {
-                            handlers.trace.call_simple(&trace_event_data);
-                        }
-                    },
-                    Err(error) => {
-                        error!("Failed to parse notification: {}", error);
+                        let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
+
+                        data.sctp_state.lock().replace(sctp_state);
+                        handlers.sctp_state_change.call(|callback| {
+                            callback(sctp_state);
+                        });
                     }
-                }
-            })
+                    notification::Event::TransportTrace => {
+                        let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
+                            notification.body()
+                        else {
+                            panic!("Wrong message from worker: {notification:?}");
+                        };
+
+                        let trace_event_data =
+                            transport::TraceNotification::try_from(body).unwrap();
+                        handlers
+                            .trace
+                            .call_simple(&TransportTraceEventData::from_fbs(trace_event_data));
+                    }
+                    _ => unimplemented!(),
+                },
+            )
         };
 
         let next_mid_for_consumers = AtomicUsize::default();

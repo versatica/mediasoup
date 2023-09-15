@@ -559,7 +559,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::CONSUMER_TRACE,
-		  FBS::Notification::Body::FBS_Consumer_TraceNotification,
+		  FBS::Notification::Body::Consumer_TraceNotification,
 		  notification);
 	}
 } // namespace RTC

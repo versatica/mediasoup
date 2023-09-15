@@ -5,7 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, SctpState};
-use crate::fbs::{direct_transport, response};
+use crate::fbs::{direct_transport, notification, response, transport};
 use crate::messages::{TransportCloseRequestFbs, TransportSendRtcpNotification};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -221,14 +221,6 @@ struct Handlers {
     trace: Bag<Arc<dyn Fn(&TransportTraceEventData) + Send + Sync>, TransportTraceEventData>,
     router_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(tag = "event", rename_all = "lowercase", content = "data")]
-enum Notification {
-    Trace(TransportTraceEventData),
-    // TODO.
-    // Rtcp,
 }
 
 struct Inner {
@@ -533,25 +525,34 @@ impl DirectTransport {
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_slice::<Notification>(notification) {
-                    Ok(notification) => match notification {
-                        Notification::Trace(trace_event_data) => {
-                            handlers.trace.call_simple(&trace_event_data);
-                        } /*
-                           * TODO.
-                          Notification::Rtcp => {
-                              handlers.rtcp.call(|callback| {
-                                  callback(notification);
-                              });
-                          }
-                          */
-                    },
-                    Err(error) => {
-                        error!("Failed to parse notification: {}", error);
+            channel.subscribe_to_fbs_notifications(
+                id.into(),
+                move |notification| match notification.event().unwrap() {
+                    notification::Event::TransportTrace => {
+                        let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
+                            notification.body()
+                        else {
+                            panic!("Wrong message from worker: {notification:?}");
+                        };
+
+                        let trace_event_data =
+                            transport::TraceNotification::try_from(body).unwrap();
+                        handlers
+                            .trace
+                            .call_simple(&TransportTraceEventData::from_fbs(trace_event_data));
                     }
-                }
-            })
+                    notification::Event::DirecttransportRtcp => {
+                        let Ok(Some(notification::BodyRef::RtcpNotification(_body))) =
+                            notification.body()
+                        else {
+                            panic!("Wrong message from worker: {notification:?}");
+                        };
+
+                        // TODO.
+                    }
+                    _ => unimplemented!(),
+                },
+            )
         };
 
         let next_mid_for_consumers = AtomicUsize::default();

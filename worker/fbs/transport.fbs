@@ -215,6 +215,7 @@ union TraceInfo {
 enum BweType: uint8 { TRANSPORT_CC = 0, REMB }
 
 table BweTraceInfo {
+  bwe_type:BweType;
   desired_bitrate:uint32;
   effective_desired_bitrate:uint32;
   min_bitrate:uint32;
@@ -222,7 +223,6 @@ table BweTraceInfo {
   start_bitrate:uint32;
   max_padding_bitrate:uint32;
   available_bitrate:uint32;
-  bwe_type:BweType;
 }
 
 table TraceNotification {
