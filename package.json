@@ -88,6 +88,10 @@
         }
       ]
     },
+    "coveragePathIgnorePatterns": [
+      "node/src/fbs",
+      "node/src/tests"
+    ],
     "cacheDirectory": ".cache/jest"
   },
   "dependencies": {
